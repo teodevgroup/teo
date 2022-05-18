@@ -8,3 +8,20 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+actix-web = "4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+mongodb = { version = "2.2" }
+bson = { version = "2.2", features = ["chrono-0_4", "serde_with"] }
+chrono = { version = "0.4", features = ["serde"] }
+env_logger = "0.9"
+log = "0.4"
+random-string = "1.0"
+jsonwebtoken = "8"
+futures = "0.3"
+futures-util = "0.3"
+actix-http = "3"
+regex = "1.5.5"
+tokio = "1.18"
+async-trait = "0.1.53"
+sqlx = { version = "0.5", features = [ "runtime-tokio-rustls" ] }
