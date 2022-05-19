@@ -18,9 +18,34 @@ async fn make_graph() -> Graph {
         g.model("Simple", |m| {
             m.field("objectId", |f| {
                 f.optional().object_id();
-            })
+            });
+            m.field("string", |f| {
+                f.optional().string();
+            });
+            m.field("bool", |f| {
+                f.optional().bool();
+            });
+
         })
     })
+}
+
+#[tokio::test]
+async fn if_no_input_value_is_none() {
+    let graph = make_graph().await;
+    let simple = graph.new_object("Simple");
+    simple.set_json(json!({})).await;
+    let value = simple.get_value("objectId").unwrap();
+    assert_eq!(value, None);
+}
+
+#[tokio::test]
+async fn if_input_is_null_value_is_none() {
+    let graph = make_graph().await;
+    let simple = graph.new_object("Simple");
+    simple.set_json(json!({"objectId": null})).await;
+    let value = simple.get_value("objectId").unwrap();
+    assert_eq!(value, None);
 }
 
 #[tokio::test]
@@ -42,26 +67,37 @@ async fn object_id_output_is_string() {
 }
 
 #[tokio::test]
-async fn object_id_if_no_input_value_is_none() {
+async fn string_input_is_string() {
     let graph = make_graph().await;
     let simple = graph.new_object("Simple");
-    simple.set_json(json!({})).await;
-    let value = simple.get_value("objectId").unwrap();
-    assert_eq!(value, None);
+    simple.set_json(json!({"string": "strval"})).await;
+    let value = simple.get_value("string").unwrap().unwrap();
+    assert_eq!(value, Value::String("strval".to_string()));
 }
 
 #[tokio::test]
-async fn object_id_if_input_is_null_value_is_none() {
+async fn string_output_is_string() {
     let graph = make_graph().await;
     let simple = graph.new_object("Simple");
-    simple.set_json(json!({"objectId": null})).await;
-    let value = simple.get_value("objectId").unwrap();
-    assert_eq!(value, None);
+    simple.set_json(json!({"string": "strval"})).await;
+    let json_output = simple.to_json();
+    assert_eq!(json_output.as_object().unwrap().get("string").unwrap().as_str().unwrap(), "strval");
 }
 
 #[tokio::test]
-async fn see_null() {
-    let null1 = Value::Null;
-    let null2 = Value::Null;
-    assert_eq!(null1, null2);
+async fn bool_input_is_bool() {
+    let graph = make_graph().await;
+    let simple = graph.new_object("Simple");
+    simple.set_json(json!({"bool": false})).await;
+    let value = simple.get_value("bool").unwrap().unwrap();
+    assert_eq!(value, Value::Bool(false));
+}
+
+#[tokio::test]
+async fn bool_output_is_bool() {
+    let graph = make_graph().await;
+    let simple = graph.new_object("Simple");
+    simple.set_json(json!({"bool": true})).await;
+    let json_output = simple.to_json();
+    assert_eq!(json_output.as_object().unwrap().get("bool").unwrap().as_bool().unwrap(), true);
 }
