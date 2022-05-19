@@ -14,22 +14,15 @@ use crate::core::value::Value;
 use crate::error::ActionError;
 
 
+#[derive(Clone)]
 pub struct Object {
-    pub model: Arc<Model>,
-    pub is_initialized: AtomicBool,
-    pub is_new: AtomicBool,
-    pub is_modified: AtomicBool,
-    pub is_partial: bool,
-    pub is_deleted: bool,
-    pub selected_fields: RefCell<HashSet<String>>,
-    pub modified_fields: RefCell<HashSet<String>>,
-    pub previous_values: RefCell<HashMap<String, Value>>,
-    pub value_map: RefCell<HashMap<String, Value>>,
+    pub(crate) inner: Arc<ObjectInner>
 }
 
 impl Object {
-    pub(crate) fn new(model: Arc<Model>) -> Arc<Object> {
-        return Arc::new(Object {
+
+    pub(crate) fn new(model: Arc<Model>) -> Object {
+        Object { inner: Arc::new(ObjectInner {
             model,
             is_initialized: AtomicBool::new(false),
             is_new: AtomicBool::new(true),
@@ -40,36 +33,36 @@ impl Object {
             modified_fields: RefCell::new(HashSet::new()),
             previous_values: RefCell::new(HashMap::new()),
             value_map: RefCell::new(HashMap::new())
-        });
+        }) }
     }
 
-    pub async fn set_json(self: Arc<Object>, json_value: JsonValue) -> Result<Arc<Object>, ActionError> {
+    pub async fn set_json(&self, json_value: JsonValue) -> Result<(), ActionError> {
         self.set_or_update_json(json_value, true).await
     }
 
-    pub async fn update_json(self: Arc<Object>, json_value: JsonValue) -> Result<Arc<Object>, ActionError> {
+    pub async fn update_json(&self, json_value: JsonValue) -> Result<(), ActionError> {
         self.set_or_update_json(json_value, false).await
     }
 
-    pub fn set_value(self: Arc<Object>, key: &'static str, value: Value) -> Result<Arc<Object>, ActionError> {
-        let model_keys = &self.clone().model.save_keys;
+    pub fn set_value(&self, key: &'static str, value: Value) -> Result<(), ActionError> {
+        let model_keys = &self.inner.model.save_keys;
         if !model_keys.contains(&key) {
             return Err(ActionError::keys_unallowed());
         }
-        self.value_map.borrow_mut().insert(key.to_string(), value);
-        if !self.is_new.load(Ordering::SeqCst) {
-            self.is_modified.store(true, Ordering::SeqCst);
-            self.modified_fields.borrow_mut().insert(key.to_string());
+        self.inner.value_map.borrow_mut().insert(key.to_string(), value);
+        if !self.inner.is_new.load(Ordering::SeqCst) {
+            self.inner.is_modified.store(true, Ordering::SeqCst);
+            self.inner.modified_fields.borrow_mut().insert(key.to_string());
         }
-        return Ok(self)
+        Ok(())
     }
 
-    pub fn get_value(self: Arc<Object>, key: &'static str) -> Result<Option<Value>, ActionError> {
-        let model_keys = &self.clone().model.all_getable_keys; // TODO: should be all keys
+    pub fn get_value(&self, key: &'static str) -> Result<Option<Value>, ActionError> {
+        let model_keys = &self.inner.model.all_getable_keys; // TODO: should be all keys
         if !model_keys.contains(&key) {
             return Err(ActionError::keys_unallowed());
         }
-        match self.value_map.borrow().get(key) {
+        match self.inner.value_map.borrow().get(key) {
             Some(value) => {
                 Ok(Some(value.clone()))
             }
@@ -79,28 +72,28 @@ impl Object {
         }
     }
 
-    pub fn select(self: Arc<Object>, keys: HashSet<String>) -> Result<Arc<Object>, ActionError> {
-        self.selected_fields.borrow_mut().extend(keys);
-        return Ok(self);
+    pub fn select(&self, keys: HashSet<String>) -> Result<(), ActionError> {
+        self.inner.selected_fields.borrow_mut().extend(keys);
+        Ok(())
     }
 
-    pub fn deselect(self: Arc<Object>, keys: HashSet<String>) -> Result<Arc<Object>, ActionError> {
-        if self.selected_fields.borrow().len() == 0 {
-            self.selected_fields.borrow_mut().extend(self.model.output_keys.iter().map(|s| { s.to_string()}));
+    pub fn deselect(&self, keys: HashSet<String>) -> Result<(), ActionError> {
+        if self.inner.selected_fields.borrow().len() == 0 {
+            self.inner.selected_fields.borrow_mut().extend(self.inner.model.output_keys.iter().map(|s| { s.to_string()}));
         }
         for key in keys {
-            self.selected_fields.borrow_mut().remove(&key);
+            self.inner.selected_fields.borrow_mut().remove(&key);
         }
-        return Ok(self);
+        return Ok(());
     }
 
-    pub async fn save(self: Arc<Object>) -> Result<Arc<Object>, ActionError> {
+    pub async fn save(&self) -> Result<(), ActionError> {
         // apply on save pipeline first
-        let model_keys = &self.clone().model.save_keys;
+        let model_keys = &self.inner.model.save_keys;
         for key in model_keys {
-            let field = self.model.field(&key);
+            let field = self.inner.model.field(&key);
             if field.on_save_pipeline._has_any_modifier() {
-                let mut stage = match self.value_map.borrow().deref().get(&key.to_string()) {
+                let mut stage = match self.inner.value_map.borrow().deref().get(&key.to_string()) {
                     Some(value) => {
                         Stage::Value(value.clone())
                     }
@@ -114,10 +107,10 @@ impl Object {
                         return Err(ActionError::invalid_input(key, s));
                     }
                     Stage::Value(v) => {
-                        self.value_map.borrow_mut().insert(key.to_string(), v);
-                        if !self.is_new.load(Ordering::SeqCst) {
-                            self.is_modified.store(true, Ordering::SeqCst);
-                            self.modified_fields.borrow_mut().insert(key.to_string());
+                        self.inner.value_map.borrow_mut().insert(key.to_string(), v);
+                        if !self.inner.is_new.load(Ordering::SeqCst) {
+                            self.inner.is_modified.store(true, Ordering::SeqCst);
+                            self.inner.modified_fields.borrow_mut().insert(key.to_string());
                         }
                     }
                     Stage::ConditionTrue(_) => {
@@ -130,43 +123,39 @@ impl Object {
             }
         }
         // then do nothing haha
-        return Ok(self);
+        Ok(())
     }
 
     pub fn delete(&self) -> &Object {
-        return self;
+        self
     }
 
     pub fn to_json(&self) -> &Self {
-        return self;
+        self
     }
 
     pub async fn include(&self) -> &Object {
-        return self;
+        self
     }
 
-    async fn set_or_update_json(
-        self: Arc<Object>,
-        json_value: JsonValue,
-        validate_and_transform: bool) -> Result<Arc<Object>, ActionError> {
+    async fn set_or_update_json(&self, json_value: JsonValue, process: bool) -> Result<(), ActionError> {
         let json_object = json_value.as_object().unwrap();
         // check keys first
         let json_keys: Vec<&str> = json_object.keys().map(|k| { k.as_str() }).collect();
-        let model_keys = if validate_and_transform {
-            &self.model.input_keys
+        let model_keys = if process {
+            &self.inner.model.input_keys
         } else {
-            &self.model.save_keys
+            &self.inner.model.save_keys
         };
         let keys_valid = json_keys.iter().all(|&item| model_keys.contains(&item));
         if !keys_valid {
             return Err(ActionError::keys_unallowed());
         }
         // assign values
-        let initialized = self.is_initialized.load(Ordering::SeqCst);
+        let initialized = self.inner.is_initialized.load(Ordering::SeqCst);
         let keys_to_iterate = if initialized { &json_keys } else { model_keys };
-        let this = self.clone();
         for key in keys_to_iterate {
-            let field = this.model.field(&key);
+            let field = self.inner.model.field(&key);
             let json_has_value = if initialized { true } else {
                 json_keys.contains(key)
             };
@@ -191,13 +180,13 @@ impl Object {
                     Type::DateTime => { Value::DateTime(DateTime::from(DateTime::parse_from_rfc3339(&json_value.to_string()).ok().unwrap())) }
                     _ => { panic!() }
                 };
-                if validate_and_transform {
+                if process {
                     // pipeline
                     let mut stage = Stage::Value(value);
                     stage = field.on_set_pipeline._process(stage.clone(), self.clone()).await;
                     match stage {
-                        Stage::Invalid(_) => {
-                            return Err(ActionError::keys_unallowed())
+                        Stage::Invalid(s) => {
+                            return Err(ActionError::invalid_input(field.name, s));
                         }
                         Stage::Value(v) => {
                             value = v
@@ -210,10 +199,10 @@ impl Object {
                         }
                     }
                 }
-                self.value_map.borrow_mut().insert(key.to_string(), value);
-                if !self.is_new.load(Ordering::SeqCst) {
-                    self.is_modified.store(true, Ordering::SeqCst);
-                    self.modified_fields.borrow_mut().insert(key.to_string());
+                self.inner.value_map.borrow_mut().insert(key.to_string(), value);
+                if !self.inner.is_new.load(Ordering::SeqCst) {
+                    self.inner.is_modified.store(true, Ordering::SeqCst);
+                    self.inner.modified_fields.borrow_mut().insert(key.to_string());
                 }
             } else {
                 // apply default values
@@ -221,15 +210,15 @@ impl Object {
                     if let Some(argument) = &field.default {
                         match argument {
                             Argument::ValueArgument(value) => {
-                                self.value_map.borrow_mut().insert(key.to_string(), value.clone());
+                                self.inner.value_map.borrow_mut().insert(key.to_string(), value.clone());
                             }
                             Argument::PipelineArgument(pipeline) => {
                                 let stage = pipeline._process(Stage::Value(Value::Null), self.clone()).await;
-                                self.value_map.borrow_mut().insert(key.to_string(), stage.value().unwrap());
+                                self.inner.value_map.borrow_mut().insert(key.to_string(), stage.value().unwrap());
                             }
                             Argument::FunctionArgument(farg) => {
                                 let stage = farg.call(Value::Null, self.clone()).await;
-                                self.value_map.borrow_mut().insert(key.to_string(), stage.value().unwrap());
+                                self.inner.value_map.borrow_mut().insert(key.to_string(), stage.value().unwrap());
                             }
                         }
                     }
@@ -237,20 +226,33 @@ impl Object {
             }
         };
         // set flag
-        self.is_initialized.store(true, Ordering::SeqCst);
-        Ok(self)
+        self.inner.is_initialized.store(true, Ordering::SeqCst);
+        Ok(())
     }
+}
+
+pub(crate) struct ObjectInner {
+    pub(crate) model: Arc<Model>,
+    pub(crate) is_initialized: AtomicBool,
+    pub(crate) is_new: AtomicBool,
+    pub(crate) is_modified: AtomicBool,
+    pub(crate) is_partial: bool,
+    pub(crate) is_deleted: bool,
+    pub(crate) selected_fields: RefCell<HashSet<String>>,
+    pub(crate) modified_fields: RefCell<HashSet<String>>,
+    pub(crate) previous_values: RefCell<HashMap<String, Value>>,
+    pub(crate) value_map: RefCell<HashMap<String, Value>>,
 }
 
 impl Debug for Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut result = f.debug_struct(self.model.name);
-        for (key, value) in self.value_map.borrow().iter() {
+        let mut result = f.debug_struct(self.inner.model.name);
+        for (key, value) in self.inner.value_map.borrow().iter() {
             result.field(key, value);
         }
         result.finish()
     }
 }
 
-unsafe impl Send for Object {}
-unsafe impl Sync for Object {}
+unsafe impl Send for ObjectInner {}
+unsafe impl Sync for ObjectInner {}

@@ -9,9 +9,9 @@ use crate::core::value::Value;
 
 
 pub struct GraphBuilder {
-    pub enums: HashMap<&'static str, Vec<&'static str>>,
-    pub models: Vec<ModelBuilder>,
-    pub connector: Option<Arc<dyn Connector>>,
+    pub(crate) enums: HashMap<&'static str, Vec<&'static str>>,
+    pub(crate) models: Vec<ModelBuilder>,
+    pub(crate) connector: Option<Arc<dyn Connector>>,
 }
 
 impl GraphBuilder {

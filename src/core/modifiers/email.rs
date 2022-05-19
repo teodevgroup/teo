@@ -27,7 +27,7 @@ impl Modifier for EmailModifier {
         "email"
     }
 
-    async fn call(&self, stage: Stage, _object: Arc<Object>) -> Stage {
+    async fn call(&self, stage: Stage, _object: Object) -> Stage {
         return if let Some(value) = stage.value() {
             return if let Value::String(s) = value {
                 if self.regex.is_match(&s) {

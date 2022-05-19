@@ -1,5 +1,6 @@
+use std::sync::Arc;
 use crate::core::builders::ModelBuilder;
-use crate::core::graph::Graph;
+use crate::core::graph::{Graph, GraphInner};
 use crate::core::field::Field;
 use crate::core::field::ReadRule::NoRead;
 use crate::core::field::Store::{Calculated, Temp};
@@ -8,21 +9,21 @@ use crate::core::field::WriteRule::NoWrite;
 
 #[derive(Debug)]
 pub struct Model {
-    pub name: &'static str,
-    pub localized_name: &'static str,
-    pub description: &'static str,
-    pub identity: bool,
-    pub fields: Vec<Field>,
-    pub graph: *const Graph,
-    pub input_keys: Vec<&'static str>,
-    pub save_keys: Vec<&'static str>,
-    pub output_keys: Vec<&'static str>,
-    pub all_getable_keys: Vec<&'static str>,
+    pub(crate) name: &'static str,
+    pub(crate) localized_name: &'static str,
+    pub(crate) description: &'static str,
+    pub(crate) identity: bool,
+    pub(crate) fields: Vec<Field>,
+    pub(crate) graph: *const GraphInner,
+    pub(crate) input_keys: Vec<&'static str>,
+    pub(crate) save_keys: Vec<&'static str>,
+    pub(crate) output_keys: Vec<&'static str>,
+    pub(crate) all_getable_keys: Vec<&'static str>,
 }
 
 impl Model {
 
-    pub fn new(builder: &ModelBuilder, graph_ptr: *const Graph) -> Self {
+    pub(crate) fn new(builder: &ModelBuilder, graph_ptr: *const GraphInner) -> Self {
         let input_keys = Self::allowed_input_keys(builder);
         let save_keys = Self::allowed_save_keys(builder);
         let output_keys = Self::allowed_output_keys(builder);
@@ -68,9 +69,9 @@ impl Model {
             .collect()
     }
 
-    pub(crate) fn graph(&self) -> &Graph {
+    pub(crate) fn graph(&self) -> &GraphInner {
         unsafe {
-            return &(*self.graph);
+            &(*self.graph)
         }
     }
 

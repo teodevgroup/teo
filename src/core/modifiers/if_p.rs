@@ -27,7 +27,7 @@ impl Modifier for IfPModifier {
         "if_p"
     }
 
-    async fn call(&self, stage: Stage, _object: Arc<Object>) -> Stage {
+    async fn call(&self, stage: Stage, _object: Object) -> Stage {
         let result = self.pipeline._process(stage.clone(), _object).await;
         match result {
             StageValue(value) => {

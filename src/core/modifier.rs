@@ -8,5 +8,5 @@ use crate::core::object::Object;
 #[async_trait]
 pub trait Modifier: Debug + Send + Sync {
     fn name(&self) -> &'static str;
-    async fn call(&self, stage: Stage, object: Arc<Object>) -> Stage;
+    async fn call(&self, stage: Stage, object: Object) -> Stage;
 }

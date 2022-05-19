@@ -10,7 +10,7 @@ use crate::core::object::Object;
 #[async_trait]
 pub trait FnArgument: Debug + Send + Sync {
     fn name(&self) -> String;
-    async fn call(&self, value: Value, object: Arc<Object>) -> Stage;
+    async fn call(&self, value: Value, object: Object) -> Stage;
 }
 
 #[derive(Debug, Clone)]

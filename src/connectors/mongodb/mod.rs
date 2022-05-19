@@ -1,12 +1,12 @@
 use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use serde_json::{Value as JsonValue};
 use async_trait::async_trait;
 use mongodb::{options::ClientOptions, Client, Database, Collection};
 use crate::core::connector::Connector;
-use crate::core::graph::Graph;
+use crate::core::graph::{Graph, GraphInner};
 use crate::core::object::Object;
 use crate::core::builders::GraphBuilder;
 use crate::core::model::Model;
@@ -38,29 +38,32 @@ impl Connector for MongoDBConnector {
         let database = client.database(&self.options.default_database.clone().unwrap());
         *self.client.borrow_mut() = Some(client);
         *self.database.borrow_mut() = Some(database);
+        self.connected.store(true, Ordering::SeqCst);
     }
 
-    async fn sync_graph(self: Arc<MongoDBConnector>, graph: &Graph) {
+    async fn disconnect(self: Arc<MongoDBConnector>) { }
+
+    async fn sync_graph(self: Arc<MongoDBConnector>, graph: Arc<GraphInner>) {
         todo!()
     }
 
-    async fn save_object(self: Arc<MongoDBConnector>, object: Arc<Object>) {
+    async fn save_object(self: Arc<MongoDBConnector>, object: Object) {
         todo!()
     }
 
-    async fn delete_object(self: Arc<MongoDBConnector>, object: Arc<Object>) {
+    async fn delete_object(self: Arc<MongoDBConnector>, object: Object) {
         todo!()
     }
 
-    async fn find_unique(self: Arc<MongoDBConnector>, model: &Model, finder: JsonValue) -> Arc<Object> {
+    async fn find_unique(self: Arc<MongoDBConnector>, model: &Model, finder: JsonValue) -> Object {
         todo!()
     }
 
-    async fn find_one(self: Arc<MongoDBConnector>, model: &Model, finder: JsonValue) -> Arc<Object> {
+    async fn find_one(self: Arc<MongoDBConnector>, model: &Model, finder: JsonValue) -> Object {
         todo!()
     }
 
-    async fn find_many(self: Arc<MongoDBConnector>, model: &Model, finder: JsonValue) -> Vec<Arc<Object>> {
+    async fn find_many(self: Arc<MongoDBConnector>, model: &Model, finder: JsonValue) -> Vec<Object> {
         todo!()
     }
 }

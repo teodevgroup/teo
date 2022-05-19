@@ -26,7 +26,7 @@ impl Modifier for AddFModifier {
         "addf"
     }
 
-    async fn call(&self, stage: Stage, _object: Arc<Object>) -> Stage {
+    async fn call(&self, stage: Stage, _object: Object) -> Stage {
         return if let Some(value) = stage.value() {
             return if let Value::F32(f) = value {
                 Stage::Value(Value::F32(f + self.addend as f32))

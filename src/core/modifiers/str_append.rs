@@ -26,7 +26,7 @@ impl Modifier for StrAppendModifier {
         "str_append"
     }
 
-    async fn call(&self, stage: Stage, _object: Arc<Object>) -> Stage {
+    async fn call(&self, stage: Stage, _object: Object) -> Stage {
         return if let Some(value) = stage.value() {
             return if let Value::String(s) = value {
                 let mut r = String::new();

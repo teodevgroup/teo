@@ -27,7 +27,7 @@ impl Modifier for ElsePModifier {
         "else_p"
     }
 
-    async fn call(&self, stage: Stage, _object: Arc<Object>) -> Stage {
+    async fn call(&self, stage: Stage, _object: Object) -> Stage {
         return match stage {
             ConditionFalse(value) => {
                 self.pipeline._process(StageValue(value), _object).await

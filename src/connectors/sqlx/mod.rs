@@ -7,7 +7,7 @@ use serde_json::{Value as JsonValue};
 use async_trait::async_trait;
 use sqlx::{Pool, Database};
 use crate::core::connector::Connector;
-use crate::core::graph::Graph;
+use crate::core::graph::{Graph, GraphInner};
 use crate::core::object::Object;
 use crate::core::builders::GraphBuilder;
 use crate::core::model::Model;
@@ -32,27 +32,29 @@ impl<DB> SqlxConnector<DB> where DB: Database {
 impl<DB> Connector for SqlxConnector<DB> where DB: Database {
     async fn connect(self: Arc<SqlxConnector<DB>>) { }
 
-    async fn sync_graph(self: Arc<SqlxConnector<DB>>, graph: &Graph) {
+    async fn disconnect(self: Arc<SqlxConnector<DB>>) { }
+
+    async fn sync_graph(self: Arc<SqlxConnector<DB>>, graph: Arc<GraphInner>) {
         todo!()
     }
 
-    async fn save_object(self: Arc<SqlxConnector<DB>>, object: Arc<Object>) {
+    async fn save_object(self: Arc<SqlxConnector<DB>>, object: Object) {
         todo!()
     }
 
-    async fn delete_object(self: Arc<SqlxConnector<DB>>, object: Arc<Object>) {
+    async fn delete_object(self: Arc<SqlxConnector<DB>>, object: Object) {
         todo!()
     }
 
-    async fn find_unique(self: Arc<SqlxConnector<DB>>, model: &Model, finder: JsonValue) -> Arc<Object> {
+    async fn find_unique(self: Arc<SqlxConnector<DB>>, model: &Model, finder: JsonValue) -> Object {
         todo!()
     }
 
-    async fn find_one(self: Arc<SqlxConnector<DB>>, model: &Model, finder: JsonValue) -> Arc<Object> {
+    async fn find_one(self: Arc<SqlxConnector<DB>>, model: &Model, finder: JsonValue) -> Object {
         todo!()
     }
 
-    async fn find_many(self: Arc<SqlxConnector<DB>>, model: &Model, finder: JsonValue) -> Vec<Arc<Object>> {
+    async fn find_many(self: Arc<SqlxConnector<DB>>, model: &Model, finder: JsonValue) -> Vec<Object> {
         todo!()
     }
 }

@@ -26,7 +26,7 @@ impl Modifier for AddIModifier {
         "addi"
     }
 
-    async fn call(&self, stage: Stage, _object: Arc<Object>) -> Stage {
+    async fn call(&self, stage: Stage, _object: Object) -> Stage {
         return if let Some(value) = stage.value() {
             return if let Value::I8(i) = value {
                 Stage::Value(Value::I8(i + self.addend as i8))
