@@ -1,6 +1,10 @@
+use chrono::DateTime;
+use serde_json::{Value as JsonValue};
 use crate::core::argument::Argument;
 use crate::core::builders::FieldBuilder;
 use crate::core::pipeline::Pipeline;
+use crate::core::value::Value;
+use crate::error::ActionError;
 
 
 #[derive(Debug)]
@@ -27,6 +31,141 @@ pub enum Type {
     Vec(Box<Field>),
     Map(Box<Field>),
     Object(&'static str)
+}
+
+impl Type {
+
+    pub(crate) fn decode_value(&self, json_value: &JsonValue) -> Result<Value, ActionError> {
+        if *json_value == JsonValue::Null {
+            Ok(Value::Null)
+        } else {
+            match self {
+                Type::Undefined => { Ok(Value::Null) }
+                Type::ObjectId => {
+                    if json_value.is_string() {
+                        Ok(Value::ObjectId(json_value.as_str().unwrap().to_string()))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::Bool => {
+                    if json_value.is_boolean() {
+                        Ok(Value::Bool(json_value.as_bool().unwrap()))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::I8 => {
+                    if json_value.is_number() {
+                        Ok(Value::I8(json_value.as_i64().unwrap() as i8))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::I16 => {
+                    if json_value.is_number() {
+                        Ok(Value::I16(json_value.as_i64().unwrap() as i16))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::I32 => {
+                    if json_value.is_number() {
+                        Ok(Value::I32(json_value.as_i64().unwrap() as i32))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::I64 => {
+                    if json_value.is_number() {
+                        Ok(Value::I64(json_value.as_i64().unwrap()))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::I128 => {
+                    if json_value.is_number() {
+                        Ok(Value::I128(json_value.as_i64().unwrap() as i128))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::U8 => {
+                    if json_value.is_number() {
+                        Ok(Value::U8(json_value.as_i64().unwrap() as u8))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::U16 => {
+                    if json_value.is_number() {
+                        Ok(Value::U16(json_value.as_i64().unwrap() as u16))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::U32 => {
+                    if json_value.is_number() {
+                        Ok(Value::U32(json_value.as_i64().unwrap() as u32))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::U64 => {
+                    if json_value.is_number() {
+                        Ok(Value::U64(json_value.as_i64().unwrap() as u64))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::U128 => {
+                    if json_value.is_number() {
+                        Ok(Value::U128(json_value.as_i64().unwrap() as u128))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::F32 => {
+                    if json_value.is_number() {
+                        Ok(Value::F32(json_value.as_f64().unwrap() as f32))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::F64 => {
+                    if json_value.is_number() {
+                        Ok(Value::F64(json_value.as_f64().unwrap() as f64))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::String => {
+                    if json_value.is_string() {
+                        Ok(Value::String(String::from(json_value.as_str().unwrap())))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::DateTime => {
+                    if json_value.is_string() {
+                        Ok(Value::DateTime(DateTime::from(DateTime::parse_from_rfc3339(&json_value.to_string()).ok().unwrap())))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                Type::Enum(_enum_name) => {
+                    if json_value.is_string() {
+                        Ok(Value::String(String::from(json_value.as_str().unwrap())))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                _ => {
+                    panic!()
+                }
+            }
+        }
+    }
 }
 
 impl Clone for Type {

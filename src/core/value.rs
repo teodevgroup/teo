@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use chrono::prelude::{Date, DateTime, Utc};
+use serde_json::{Map, Number, Value as JsonValue};
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Null,
     ObjectId(String),
@@ -25,6 +26,80 @@ pub enum Value {
     Enum(&'static str),
     Vec(Vec<Value>),
     Map(HashMap<String, Value>)
+}
+
+impl Value {
+    pub(crate) fn to_json_value(&self) -> JsonValue {
+        match self {
+            Value::Null => {
+                JsonValue::Null
+            }
+            Value::ObjectId(val) => {
+                JsonValue::String(val.clone())
+            }
+            Value::Bool(val) => {
+                JsonValue::Bool(val.clone())
+            }
+            Value::I8(val) => {
+                JsonValue::Number(Number::from(*val))
+            }
+            Value::I16(val) => {
+                JsonValue::Number(Number::from(*val))
+            }
+            Value::I32(val) => {
+                JsonValue::Number(Number::from(*val))
+            }
+            Value::I64(val) => {
+                JsonValue::Number(Number::from(*val))
+            }
+            Value::I128(val) => {
+                JsonValue::Number(Number::from(*val as i64))
+            }
+            Value::U8(val) => {
+                JsonValue::Number(Number::from(*val))
+            }
+            Value::U16(val) => {
+                JsonValue::Number(Number::from(*val))
+            }
+            Value::U32(val) => {
+                JsonValue::Number(Number::from(*val))
+            }
+            Value::U64(val) => {
+                JsonValue::Number(Number::from(*val))
+            }
+            Value::U128(val) => {
+                JsonValue::Number(Number::from(*val as u64))
+            }
+            Value::F32(val) => {
+                JsonValue::Number(Number::from_f64(*val as f64).unwrap())
+            }
+            Value::F64(val) => {
+                JsonValue::Number(Number::from_f64(*val).unwrap())
+            }
+            Value::String(val) => {
+                JsonValue::String(val.clone())
+            }
+            Value::Date(val) => {
+                JsonValue::String(val.to_string())
+            }
+            Value::DateTime(val) => {
+                JsonValue::String(val.to_rfc3339())
+            }
+            Value::Enum(val) => {
+                JsonValue::String(val.to_string())
+            }
+            Value::Vec(val) => {
+                JsonValue::Array(val.iter().map(|i| { i.to_json_value() }).collect())
+            }
+            Value::Map(val) => {
+                let mut map = Map::new();
+                for (k, v) in val {
+                    map.insert(k.to_string(), v.to_json_value());
+                }
+                JsonValue::Object(map)
+            }
+        }
+    }
 }
 
 impl From<bool> for Value {

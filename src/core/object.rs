@@ -5,7 +5,7 @@ use std::ops::Deref;
 use std::sync::{Arc};
 use std::sync::atomic::{AtomicBool, Ordering};
 use chrono::prelude::{DateTime};
-use serde_json::{Value as JsonValue};
+use serde_json::{Map, Value as JsonValue};
 use crate::core::argument::Argument;
 use crate::core::field::Type;
 use crate::core::model::Model;
@@ -49,7 +49,11 @@ impl Object {
         if !model_keys.contains(&key) {
             return Err(ActionError::keys_unallowed());
         }
-        self.inner.value_map.borrow_mut().insert(key.to_string(), value);
+        if value == Value::Null {
+            self.inner.value_map.borrow_mut().remove(key);
+        } else {
+            self.inner.value_map.borrow_mut().insert(key.to_string(), value);
+        }
         if !self.inner.is_new.load(Ordering::SeqCst) {
             self.inner.is_modified.store(true, Ordering::SeqCst);
             self.inner.modified_fields.borrow_mut().insert(key.to_string());
@@ -130,8 +134,21 @@ impl Object {
         self
     }
 
-    pub fn to_json(&self) -> &Self {
-        self
+    pub fn to_json(&self) -> JsonValue {
+        let mut map: Map<String, JsonValue> = Map::new();
+        let keys = &self.inner.model.output_keys;
+        for key in keys {
+            let value = self.get_value(key).unwrap();
+            match value {
+                Some(v) => {
+                    if v != Value::Null {
+                        map.insert(key.to_string(), v.to_json_value());
+                    }
+                }
+                None => {}
+            }
+        }
+        return JsonValue::Object(map)
     }
 
     pub async fn include(&self) -> &Object {
@@ -161,25 +178,12 @@ impl Object {
             };
             if json_has_value {
                 let json_value = &json_object[&key.to_string()];
-                let mut value = match field.r#type {
-                    Type::ObjectId => { Value::ObjectId(json_value.to_string()) }
-                    Type::Bool => { Value::Bool(json_value.as_bool().unwrap()) }
-                    Type::I8 => { Value::I8(json_value.as_i64().unwrap() as i8) }
-                    Type::I16 => { Value::I16(json_value.as_i64().unwrap() as i16) }
-                    Type::I32 => { Value::I32(json_value.as_i64().unwrap() as i32) }
-                    Type::I64 => { Value::I64(json_value.as_i64().unwrap()) }
-                    Type::I128 => { Value::I128(json_value.as_i64().unwrap() as i128) }
-                    Type::U8 => { Value::U8(json_value.as_i64().unwrap() as u8) }
-                    Type::U16 => { Value::U16(json_value.as_i64().unwrap() as u16) }
-                    Type::U32 => { Value::U32(json_value.as_i64().unwrap() as u32) }
-                    Type::U64 => { Value::U64(json_value.as_i64().unwrap() as u64) }
-                    Type::U128 => { Value::U128(json_value.as_i64().unwrap() as u128) }
-                    Type::F32 => { Value::F32(json_value.as_f64().unwrap() as f32) }
-                    Type::F64 => { Value::F64(json_value.as_f64().unwrap() as f64) }
-                    Type::String => { Value::String(String::from(json_value.as_str().unwrap())) }
-                    Type::DateTime => { Value::DateTime(DateTime::from(DateTime::parse_from_rfc3339(&json_value.to_string()).ok().unwrap())) }
-                    _ => { panic!() }
-                };
+                let mut value_result = field.r#type.decode_value(json_value);
+                let mut value;
+                match value_result {
+                    Ok(v) => { value = v }
+                    Err(e) => { return Err(e) }
+                }
                 if process {
                     // pipeline
                     let mut stage = Stage::Value(value);
@@ -199,7 +203,13 @@ impl Object {
                         }
                     }
                 }
-                self.inner.value_map.borrow_mut().insert(key.to_string(), value);
+                if value == Value::Null {
+                    if self.inner.is_new.load(Ordering::SeqCst) == false {
+                        self.inner.value_map.borrow_mut().remove(*key);
+                    }
+                } else {
+                    self.inner.value_map.borrow_mut().insert(key.to_string(), value);
+                }
                 if !self.inner.is_new.load(Ordering::SeqCst) {
                     self.inner.is_modified.store(true, Ordering::SeqCst);
                     self.inner.modified_fields.borrow_mut().insert(key.to_string());

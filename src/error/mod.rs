@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 
 
+#[derive(Debug)]
 pub enum ActionErrorType {
     KeysUnallowed,
     ActionUnrecognized,
     InvalidInput,
+    WrongInputType,
     InternalServerError,
 }
 
@@ -14,11 +16,13 @@ impl ActionErrorType {
             ActionErrorType::KeysUnallowed => { 400 }
             ActionErrorType::ActionUnrecognized => { 400 }
             ActionErrorType::InvalidInput => { 400 }
+            ActionErrorType::WrongInputType => { 400 }
             ActionErrorType::InternalServerError => { 500 }
         }
     }
 }
 
+#[derive(Debug)]
 pub struct ActionError {
     pub r#type: ActionErrorType,
     pub message: String,
@@ -49,6 +53,14 @@ impl ActionError {
             r#type: ActionErrorType::InvalidInput,
             message: "Invalid value found in input values.".to_string(),
             errors: Some(fields)
+        }
+    }
+
+    pub fn wrong_input_type() -> Self {
+        ActionError {
+            r#type: ActionErrorType::WrongInputType,
+            message: "Input type is unexpected.".to_string(),
+            errors: None
         }
     }
 
