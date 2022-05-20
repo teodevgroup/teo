@@ -1,5 +1,5 @@
 use crate::core::builders::ModelBuilder;
-use crate::core::graph::{Graph, GraphInner};
+use crate::core::graph::{GraphInner};
 use crate::core::field::Field;
 use crate::core::field::ReadRule::NoRead;
 use crate::core::field::Store::{Calculated, Temp};

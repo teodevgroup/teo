@@ -9,6 +9,7 @@ pub enum ActionErrorType {
     WrongInputType,
     WrongDateFormat,
     WrongDateTimeFormat,
+    WrongEnumChoice,
     InternalServerError,
 }
 
@@ -21,6 +22,7 @@ impl ActionErrorType {
             ActionErrorType::WrongInputType => { 400 }
             ActionErrorType::WrongDateFormat => { 400 }
             ActionErrorType::WrongDateTimeFormat => { 400 }
+            ActionErrorType::WrongEnumChoice => { 400 }
             ActionErrorType::InternalServerError => { 500 }
         }
     }
@@ -80,6 +82,14 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::WrongDateTimeFormat,
             message: "Datetime format is unexpected.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn wrong_enum_choice() -> Self {
+        ActionError {
+            r#type: ActionErrorType::WrongEnumChoice,
+            message: "Enum value is unexpected.".to_string(),
             errors: None
         }
     }

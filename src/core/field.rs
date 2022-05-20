@@ -1,7 +1,8 @@
 use chrono::{Date, DateTime, NaiveDate, Utc};
-use serde_json::{from_str, Value as JsonValue};
+use serde_json::{Value as JsonValue};
 use crate::core::argument::Argument;
 use crate::core::builders::FieldBuilder;
+use crate::core::graph::GraphInner;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
 use crate::error::ActionError;
@@ -35,7 +36,7 @@ pub enum Type {
 
 impl Type {
 
-    pub(crate) fn decode_value(&self, json_value: &JsonValue) -> Result<Value, ActionError> {
+    pub(crate) fn decode_value(&self, json_value: &JsonValue, graph: &GraphInner) -> Result<Value, ActionError> {
         if *json_value == JsonValue::Null {
             Ok(Value::Null)
         } else {
@@ -176,9 +177,16 @@ impl Type {
                         Err(ActionError::wrong_input_type())
                     }
                 }
-                Type::Enum(_enum_name) => {
+                Type::Enum(enum_name) => {
                     if json_value.is_string() {
-                        Ok(Value::String(String::from(json_value.as_str().unwrap())))
+                        let string = String::from(json_value.as_str().unwrap());
+                        let enums = graph.enums.read().unwrap();
+                        let vals = enums.get(enum_name).unwrap();
+                        if vals.contains(&&*string) {
+                            Ok(Value::String(string))
+                        } else {
+                            Err(ActionError::wrong_enum_choice())
+                        }
                     } else {
                         Err(ActionError::wrong_input_type())
                     }

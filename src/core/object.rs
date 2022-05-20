@@ -178,7 +178,7 @@ impl Object {
             };
             if json_has_value {
                 let json_value = &json_object[&key.to_string()];
-                let mut value_result = field.r#type.decode_value(json_value);
+                let mut value_result = field.r#type.decode_value(json_value, self.inner.model.graph());
                 let mut value;
                 match value_result {
                     Ok(v) => { value = v }

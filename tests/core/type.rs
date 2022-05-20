@@ -19,6 +19,8 @@ async fn make_graph() -> Graph {
 
         g.mongodb(options.clone());
 
+        g.r#enum("Sex", vec!["MALE", "FEMALE"]);
+
         g.model("Simple", |m| {
             m.field("objectId", |f| {
                 f.optional().object_id();
@@ -71,6 +73,9 @@ async fn make_graph() -> Graph {
             m.field("datetime", |f| {
                 f.optional().datetime();
             });
+            m.field("sex", |f| {
+                f.optional().r#enum("Sex");
+            })
         })
     })
 }
@@ -415,4 +420,30 @@ async fn returns_err_if_datetime_format_is_unexpected() {
     let simple = graph.new_object("Simple");
     let result = simple.set_json(json!({"datetime": "2022-05-20::04:27:16.428"})).await;
     assert_eq!(result.err().unwrap(), ActionError::wrong_datetime_format());
+}
+
+#[test]
+async fn enum_input_is_string() {
+    let graph = make_graph().await;
+    let simple = graph.new_object("Simple");
+    simple.set_json(json!({"sex": "MALE"})).await;
+    let value = simple.get_value("sex").unwrap().unwrap();
+    assert_eq!(value, Value::String("MALE".to_string()));
+}
+
+#[test]
+async fn enum_output_is_string() {
+    let graph = make_graph().await;
+    let simple = graph.new_object("Simple");
+    simple.set_json(json!({"sex": "FEMALE"})).await;
+    let json_output = simple.to_json();
+    assert_eq!(json_output.as_object().unwrap().get("sex").unwrap().as_str().unwrap(), "FEMALE");
+}
+
+#[test]
+async fn returns_err_if_enum_value_is_unexpected() {
+    let graph = make_graph().await;
+    let simple = graph.new_object("Simple");
+    let result = simple.set_json(json!({"sex": "NAM"})).await;
+    assert_eq!(result.err().unwrap(), ActionError::wrong_enum_choice());
 }

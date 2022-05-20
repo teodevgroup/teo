@@ -24,7 +24,6 @@ pub enum Value {
     String(String),
     Date(Date<Utc>),
     DateTime(DateTime<Utc>),
-    Enum(&'static str),
     Vec(Vec<Value>),
     Map(HashMap<String, Value>)
 }
@@ -85,9 +84,6 @@ impl Value {
             }
             Value::DateTime(val) => {
                 JsonValue::String(val.to_rfc3339_opts(SecondsFormat::Millis, true))
-            }
-            Value::Enum(val) => {
-                JsonValue::String(val.to_string())
             }
             Value::Vec(val) => {
                 JsonValue::Array(val.iter().map(|i| { i.to_json_value() }).collect())
