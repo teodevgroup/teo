@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use crate::core::builders::ModelBuilder;
 use crate::core::graph::{Graph, GraphInner};
 use crate::core::field::Field;

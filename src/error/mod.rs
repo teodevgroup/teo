@@ -7,6 +7,8 @@ pub enum ActionErrorType {
     ActionUnrecognized,
     InvalidInput,
     WrongInputType,
+    WrongDateFormat,
+    WrongDateTimeFormat,
     InternalServerError,
 }
 
@@ -17,6 +19,8 @@ impl ActionErrorType {
             ActionErrorType::ActionUnrecognized => { 400 }
             ActionErrorType::InvalidInput => { 400 }
             ActionErrorType::WrongInputType => { 400 }
+            ActionErrorType::WrongDateFormat => { 400 }
+            ActionErrorType::WrongDateTimeFormat => { 400 }
             ActionErrorType::InternalServerError => { 500 }
         }
     }
@@ -60,6 +64,22 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::WrongInputType,
             message: "Input type is unexpected.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn wrong_date_format() -> Self {
+        ActionError {
+            r#type: ActionErrorType::WrongDateFormat,
+            message: "Date format is unexpected.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn wrong_datetime_format() -> Self {
+        ActionError {
+            r#type: ActionErrorType::WrongDateTimeFormat,
+            message: "Datetime format is unexpected.".to_string(),
             errors: None
         }
     }

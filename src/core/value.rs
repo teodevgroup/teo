@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use chrono::prelude::{Date, DateTime, Utc};
+use chrono::SecondsFormat;
 use serde_json::{Map, Number, Value as JsonValue};
 
 
@@ -80,10 +81,10 @@ impl Value {
                 JsonValue::String(val.clone())
             }
             Value::Date(val) => {
-                JsonValue::String(val.to_string())
+                JsonValue::String(val.format("%Y-%m-%d").to_string())
             }
             Value::DateTime(val) => {
-                JsonValue::String(val.to_rfc3339())
+                JsonValue::String(val.to_rfc3339_opts(SecondsFormat::Millis, true))
             }
             Value::Enum(val) => {
                 JsonValue::String(val.to_string())

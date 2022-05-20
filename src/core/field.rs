@@ -1,5 +1,5 @@
-use chrono::DateTime;
-use serde_json::{Value as JsonValue};
+use chrono::{Date, DateTime, NaiveDate, Utc};
+use serde_json::{from_str, Value as JsonValue};
 use crate::core::argument::Argument;
 use crate::core::builders::FieldBuilder;
 use crate::core::pipeline::Pipeline;
@@ -146,9 +146,19 @@ impl Type {
                         Err(ActionError::wrong_input_type())
                     }
                 }
+                Type::Date => {
+                    if json_value.is_string() {
+                        let naive_date = NaiveDate::parse_from_str(&json_value.as_str().unwrap(), "%Y-%m-%d").unwrap();
+                        let date: Date<Utc> = Date::from_utc(naive_date, Utc);
+                        Ok(Value::Date(date))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
                 Type::DateTime => {
                     if json_value.is_string() {
-                        Ok(Value::DateTime(DateTime::from(DateTime::parse_from_rfc3339(&json_value.to_string()).ok().unwrap())))
+                        let datetime: DateTime<Utc> = DateTime::parse_from_rfc3339(&json_value.as_str().unwrap()).unwrap().with_timezone(&Utc);
+                        Ok(Value::DateTime(datetime))
                     } else {
                         Err(ActionError::wrong_input_type())
                     }
