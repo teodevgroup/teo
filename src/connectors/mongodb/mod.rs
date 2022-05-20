@@ -13,6 +13,7 @@ use crate::core::graph::{Graph, GraphInner};
 use crate::core::object::Object;
 use crate::core::builders::GraphBuilder;
 use crate::core::model::Model;
+use crate::error::ActionError;
 
 
 #[derive(Debug)]
@@ -45,7 +46,7 @@ impl Connector for MongoDBConnector {
         todo!()
     }
 
-    async fn save_object(self: Arc<MongoDBConnector>, object: Object) {
+    async fn save_object(&self, object: Object) -> Result<(), ActionError> {
         todo!()
     }
 

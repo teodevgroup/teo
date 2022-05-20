@@ -5,6 +5,7 @@ use serde_json::{Value as JsonValue};
 use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::graph::{GraphInner};
+use crate::error::ActionError;
 
 
 #[async_trait]
@@ -14,7 +15,7 @@ pub(crate) trait Connector: Debug + Send + Sync {
 
     async fn sync_graph(self: Arc<Self>, graph: Arc<GraphInner>);
 
-    async fn save_object(self: Arc<Self>, object: Object);
+    async fn save_object(&self, object: Object) -> Result<(), ActionError>;
 
     async fn delete_object(self: Arc<Self>, object: Object);
 

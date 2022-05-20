@@ -11,6 +11,7 @@ use crate::core::graph::{Graph, GraphInner};
 use crate::core::object::Object;
 use crate::core::builders::GraphBuilder;
 use crate::core::model::Model;
+use crate::error::ActionError;
 
 
 #[derive(Debug)]
@@ -39,7 +40,7 @@ impl<DB> Connector for SqlxConnector<DB> where DB: Database {
         todo!()
     }
 
-    async fn save_object(self: Arc<SqlxConnector<DB>>, object: Object) {
+    async fn save_object(&self, object: Object) -> Result<(), ActionError> {
         todo!()
     }
 

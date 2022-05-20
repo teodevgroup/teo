@@ -57,7 +57,7 @@ pub(crate) struct GraphInner {
     pub(crate) enums: RwLock<HashMap<&'static str, Vec<&'static str>>>,
     pub(crate) models: RwLock<Vec<Arc<Model>>>,
     pub(crate) models_map: RwLock<HashMap<&'static str, Arc<Model>>>,
-    pub(crate) connector: Option<RwLock<Arc<dyn Connector>>>,
+    pub(crate) connector: Option<Arc<dyn Connector>>,
 }
 
 impl GraphInner {
@@ -76,7 +76,7 @@ impl GraphInner {
         let mut mut_graph = Arc::get_mut(&mut GraphInner).unwrap();
         mut_graph.enums = RwLock::new(builder.enums.clone());
         mut_graph.models = RwLock::new(models);
-        mut_graph.connector = Some(RwLock::new(builder.connector().clone()));
+        mut_graph.connector = Some(builder.connector().clone());
         let mut map: HashMap<&'static str, Arc<Model>> = HashMap::new();
         for model in mut_graph.models.read().unwrap().iter() {
             map.insert(model.name, model.clone());
@@ -96,7 +96,7 @@ impl GraphInner {
     pub(crate) async fn connect(self: Arc<Self>) {
         match &self.connector {
             Some(connector) => {
-                connector.read().unwrap().clone().sync_graph(self.clone()).await;
+                connector.clone().sync_graph(self.clone()).await;
             }
             None => {
                 panic!();
@@ -112,7 +112,7 @@ impl GraphInner {
         let model = &self.model(model_name);
         match &self.connector {
             Some(connector) => {
-                connector.read().unwrap().clone().find_unique(model, finder).await
+                connector.clone().find_unique(model, finder).await
             }
             None => {
                 panic!()
@@ -124,7 +124,7 @@ impl GraphInner {
         let model = &self.model(model_name);
         match &self.connector {
             Some(connector) => {
-                connector.read().unwrap().clone().find_one(model, finder).await
+                connector.clone().find_one(model, finder).await
             }
             None => {
                 panic!()
@@ -136,7 +136,7 @@ impl GraphInner {
         let model = &self.model(model_name);
         match &self.connector {
             Some(connector) => {
-                connector.read().unwrap().clone().find_many(model, finder).await
+                connector.clone().find_many(model, finder).await
             }
             None => {
                 panic!()
@@ -147,7 +147,18 @@ impl GraphInner {
     pub(crate) async fn drop_database(&self) {
         match &self.connector {
             Some(connector) => {
-                connector.read().unwrap().clone().drop_database();
+                connector.clone().drop_database();
+            }
+            None => {
+                panic!()
+            }
+        }
+    }
+
+    pub(crate) fn connector(&self) -> Arc<dyn Connector> {
+        match &self.connector {
+            Some(connector) => {
+                connector.clone()
             }
             None => {
                 panic!()

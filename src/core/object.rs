@@ -124,6 +124,13 @@ impl Object {
                 }
             }
         }
+        // send to database to save
+        let connector = self.inner.model.graph().connector();
+        let save_result = connector.save_object(self.clone()).await;
+        // apply properties
+        self.inner.is_new.store(false, Ordering::SeqCst);
+        self.inner.is_modified.store(false, Ordering::SeqCst);
+        *self.inner.modified_fields.borrow_mut() = HashSet::new();
         // then do nothing haha
         Ok(())
     }
