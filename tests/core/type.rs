@@ -81,24 +81,6 @@ async fn make_graph() -> Graph {
 }
 
 #[test]
-async fn if_no_input_value_is_none() {
-    let graph = make_graph().await;
-    let simple = graph.new_object("Simple");
-    simple.set_json(json!({})).await;
-    let value = simple.get_value("objectId").unwrap();
-    assert_eq!(value, None);
-}
-
-#[test]
-async fn if_input_is_null_value_is_none() {
-    let graph = make_graph().await;
-    let simple = graph.new_object("Simple");
-    simple.set_json(json!({"objectId": null})).await;
-    let value = simple.get_value("objectId").unwrap();
-    assert_eq!(value, None);
-}
-
-#[test]
 async fn object_id_input_is_string() {
     let graph = make_graph().await;
     let simple = graph.new_object("Simple");

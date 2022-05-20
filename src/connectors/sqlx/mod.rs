@@ -30,10 +30,11 @@ impl<DB> SqlxConnector<DB> where DB: Database {
 
 #[async_trait]
 impl<DB> Connector for SqlxConnector<DB> where DB: Database {
-    async fn connect(self: Arc<SqlxConnector<DB>>) { }
 
-    async fn disconnect(self: Arc<SqlxConnector<DB>>) { }
-
+    async fn drop_database(self: Arc<Self>) {
+        todo!()
+    }
+    
     async fn sync_graph(self: Arc<SqlxConnector<DB>>, graph: Arc<GraphInner>) {
         todo!()
     }

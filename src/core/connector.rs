@@ -4,15 +4,13 @@ use async_trait::async_trait;
 use serde_json::{Value as JsonValue};
 use crate::core::model::Model;
 use crate::core::object::Object;
-use crate::core::graph::{Graph, GraphInner};
+use crate::core::graph::{GraphInner};
 
 
 #[async_trait]
 pub(crate) trait Connector: Debug + Send + Sync {
 
-    async fn connect(self: Arc<Self>);
-
-    async fn disconnect(self: Arc<Self>);
+    async fn drop_database(self: Arc<Self>);
 
     async fn sync_graph(self: Arc<Self>, graph: Arc<GraphInner>);
 

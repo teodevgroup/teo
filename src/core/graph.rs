@@ -46,6 +46,10 @@ impl Graph {
     pub(crate) async fn connect(&self) {
         self.inner.clone().connect().await
     }
+
+    pub async fn drop_database(&self) {
+        self.inner.drop_database();
+    }
 }
 
 #[derive(Debug)]
@@ -92,7 +96,6 @@ impl GraphInner {
     pub(crate) async fn connect(self: Arc<Self>) {
         match &self.connector {
             Some(connector) => {
-                connector.read().unwrap().clone().connect().await;
                 connector.read().unwrap().clone().sync_graph(self.clone()).await;
             }
             None => {
@@ -134,6 +137,17 @@ impl GraphInner {
         match &self.connector {
             Some(connector) => {
                 connector.read().unwrap().clone().find_many(model, finder).await
+            }
+            None => {
+                panic!()
+            }
+        }
+    }
+
+    pub(crate) async fn drop_database(&self) {
+        match &self.connector {
+            Some(connector) => {
+                connector.read().unwrap().clone().drop_database();
             }
             None => {
                 panic!()

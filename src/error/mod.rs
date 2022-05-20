@@ -10,6 +10,7 @@ pub enum ActionErrorType {
     WrongDateFormat,
     WrongDateTimeFormat,
     WrongEnumChoice,
+    ValueRequired,
     InternalServerError,
 }
 
@@ -23,6 +24,7 @@ impl ActionErrorType {
             ActionErrorType::WrongDateFormat => { 400 }
             ActionErrorType::WrongDateTimeFormat => { 400 }
             ActionErrorType::WrongEnumChoice => { 400 }
+            ActionErrorType::ValueRequired => { 400 }
             ActionErrorType::InternalServerError => { 500 }
         }
     }
@@ -90,6 +92,14 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::WrongEnumChoice,
             message: "Enum value is unexpected.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn value_required() -> Self {
+        ActionError {
+            r#type: ActionErrorType::ValueRequired,
+            message: "Value is required.".to_string(),
             errors: None
         }
     }

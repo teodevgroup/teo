@@ -1,10 +1,13 @@
 use std::cell::RefCell;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug};
+use std::ops::Deref;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use serde_json::{Value as JsonValue};
 use async_trait::async_trait;
 use mongodb::{options::ClientOptions, Client, Database, Collection};
+use mongodb::change_stream::event::OperationType::DropDatabase;
+use mongodb::options::DropDatabaseOptions;
 use crate::core::connector::Connector;
 use crate::core::graph::{Graph, GraphInner};
 use crate::core::object::Object;
@@ -14,34 +17,29 @@ use crate::core::model::Model;
 
 #[derive(Debug)]
 pub struct MongoDBConnector {
-    options: ClientOptions,
-    connected: AtomicBool,
-    client: RefCell<Option<Client>>,
-    database: RefCell<Option<Database>>
+    client: Client,
+    database: Database,
 }
 
 impl MongoDBConnector {
     pub fn new(options: ClientOptions) -> Arc<MongoDBConnector> {
+        let client = Client::with_options(options.clone()).unwrap();
+        let database = client.database(&options.default_database.clone().unwrap());
+
         Arc::new(MongoDBConnector {
-            options,
-            connected: AtomicBool::new(false),
-            client: RefCell::new(None),
-            database: RefCell::new(None),
+            client: client,
+            database: database,
         })
     }
 }
 
 #[async_trait]
 impl Connector for MongoDBConnector {
-    async fn connect(self: Arc<MongoDBConnector>) {
-        let client = Client::with_options(self.options.clone()).unwrap();
-        let database = client.database(&self.options.default_database.clone().unwrap());
-        *self.client.borrow_mut() = Some(client);
-        *self.database.borrow_mut() = Some(database);
-        self.connected.store(true, Ordering::SeqCst);
-    }
 
-    async fn disconnect(self: Arc<MongoDBConnector>) { }
+    async fn drop_database(self: Arc<Self>) {
+        let options = DropDatabaseOptions::builder().build();
+        &self.database.drop(options).await;
+    }
 
     async fn sync_graph(self: Arc<MongoDBConnector>, graph: Arc<GraphInner>) {
         todo!()
@@ -80,3 +78,4 @@ impl MongoDBConnectorHelpers for GraphBuilder {
 }
 
 unsafe impl Sync for MongoDBConnector {}
+unsafe impl Send for MongoDBConnector {}
