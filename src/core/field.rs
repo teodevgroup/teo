@@ -148,17 +148,30 @@ impl Type {
                 }
                 Type::Date => {
                     if json_value.is_string() {
-                        let naive_date = NaiveDate::parse_from_str(&json_value.as_str().unwrap(), "%Y-%m-%d").unwrap();
-                        let date: Date<Utc> = Date::from_utc(naive_date, Utc);
-                        Ok(Value::Date(date))
+                        match NaiveDate::parse_from_str(&json_value.as_str().unwrap(), "%Y-%m-%d") {
+                            Ok(naive_date) => {
+                                let date: Date<Utc> = Date::from_utc(naive_date, Utc);
+                                Ok(Value::Date(date))
+                            }
+                            Err(error) => {
+                                Err(ActionError::wrong_date_format())
+                            }
+                        }
                     } else {
                         Err(ActionError::wrong_input_type())
                     }
                 }
                 Type::DateTime => {
                     if json_value.is_string() {
-                        let datetime: DateTime<Utc> = DateTime::parse_from_rfc3339(&json_value.as_str().unwrap()).unwrap().with_timezone(&Utc);
-                        Ok(Value::DateTime(datetime))
+                        match DateTime::parse_from_rfc3339(&json_value.as_str().unwrap()) {
+                            Ok(fixed_offset_datetime) => {
+                                let datetime: DateTime<Utc> = fixed_offset_datetime.with_timezone(&Utc);
+                                Ok(Value::DateTime(datetime))
+                            }
+                            Err(error) => {
+                                Err(ActionError::wrong_datetime_format())
+                            }
+                        }
                     } else {
                         Err(ActionError::wrong_input_type())
                     }

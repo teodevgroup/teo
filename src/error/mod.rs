@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ActionErrorType {
     KeysUnallowed,
     ActionUnrecognized,
@@ -26,7 +26,7 @@ impl ActionErrorType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ActionError {
     pub r#type: ActionErrorType,
     pub message: String,
