@@ -1,5 +1,4 @@
 use std::borrow::BorrowMut;
-use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;

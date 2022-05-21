@@ -15,7 +15,7 @@ async fn make_graph() -> &'static Graph {
 
     let options = ClientOptions::parse("mongodb://localhost:27017/teotesttype").await.unwrap();
 
-    Graph::new(|g| {
+    Box::leak(Box::new(Graph::new(|g| {
 
         g.mongodb(options.clone());
 
@@ -77,7 +77,7 @@ async fn make_graph() -> &'static Graph {
                 f.optional().r#enum("Sex");
             })
         })
-    })
+    })))
 }
 
 #[test]

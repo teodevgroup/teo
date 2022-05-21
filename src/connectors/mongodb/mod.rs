@@ -1,12 +1,9 @@
-use std::cell::RefCell;
 use std::fmt::{Debug};
-use std::ops::Deref;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{Ordering};
 use serde_json::{Value as JsonValue};
 use async_trait::async_trait;
 use mongodb::{options::ClientOptions, Client, Database, Collection};
-use mongodb::change_stream::event::OperationType::DropDatabase;
 use mongodb::options::DropDatabaseOptions;
 use crate::core::connector::Connector;
 use crate::core::graph::{Graph};

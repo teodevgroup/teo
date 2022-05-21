@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::ptr::addr_of;
 use std::sync::{Arc};
 use serde_json::{Value as JsonValue};
 use crate::core::builders::GraphBuilder;
@@ -11,34 +12,36 @@ use crate::core::object::Object;
 pub struct Graph {
     enums: HashMap<&'static str, Vec<&'static str>>,
     models_vec: Vec<Model>,
-    models_map: HashMap<&'static str, &'static Model>,
+    models_map: HashMap<&'static str, * const Model>,
     connector: Arc<dyn Connector>,
 }
 
 impl Graph {
 
-    pub fn new<F: Fn(&mut GraphBuilder)>(build: F) -> &'static Graph {
+    pub fn new<'a, F: Fn(&mut GraphBuilder)>(build: F) -> Graph {
         let mut builder = GraphBuilder::new();
         build(&mut builder);
-        let mut graph = Box::leak(Box::new(Graph {
+        let mut graph = Graph {
             enums: HashMap::new(),
             models_vec: Vec::new(),
             models_map: HashMap::new(),
             connector: builder.connector().clone()
-        }));
+        };
         let models_vec: Vec<Model> = builder.models.iter().map(move |mb| Model::new(mb)).collect();
         graph.enums = builder.enums.clone();
         graph.models_vec = models_vec;
-        let mut map: HashMap<&'static str, &'static Model> = HashMap::new();
+        let mut map: HashMap<&'static str, * const Model> = HashMap::new();
         for model in graph.models_vec.iter() {
-            map.insert(model.name(), model);
+            map.insert(model.name(), addr_of!(*model));
         }
         graph.models_map = map.clone();
         graph
     }
 
     pub(crate) fn model(&'static self, name: &str) -> &'static Model {
-        self.models_map.get(name).unwrap()
+        unsafe {
+            &(**self.models_map.get(name).unwrap())
+        }
     }
 
     pub(crate) fn r#enum(&self, name: &str) -> &Vec<&'static str> {
