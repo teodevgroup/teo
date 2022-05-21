@@ -9,7 +9,7 @@ use mongodb::{options::ClientOptions, Client, Database, Collection};
 use mongodb::change_stream::event::OperationType::DropDatabase;
 use mongodb::options::DropDatabaseOptions;
 use crate::core::connector::Connector;
-use crate::core::graph::{Graph, GraphInner};
+use crate::core::graph::{Graph};
 use crate::core::object::Object;
 use crate::core::builders::GraphBuilder;
 use crate::core::model::Model;

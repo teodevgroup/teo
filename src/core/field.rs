@@ -2,7 +2,7 @@ use chrono::{Date, DateTime, NaiveDate, Utc};
 use serde_json::{Value as JsonValue};
 use crate::core::argument::Argument;
 use crate::core::builders::FieldBuilder;
-use crate::core::graph::{Graph, GraphInner};
+use crate::core::graph::{Graph};
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
 use crate::error::ActionError;
@@ -36,7 +36,7 @@ pub enum Type {
 
 impl Type {
 
-    pub(crate) fn decode_value(&self, json_value: &JsonValue, graph: &Graph) -> Result<Value, ActionError> {
+    pub(crate) fn decode_value(&self, json_value: &JsonValue, graph: &'static Graph) -> Result<Value, ActionError> {
         if *json_value == JsonValue::Null {
             Ok(Value::Null)
         } else {

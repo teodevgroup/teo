@@ -15,7 +15,7 @@ async fn make_graph() -> &'static Graph {
 
     let options = ClientOptions::parse("mongodb://localhost:27017/teotestproperties").await.unwrap();
 
-    let graph = Box::leak(Box::new(Graph::new(|g| {
+    let graph = Graph::new(|g| {
 
         g.mongodb(options.clone());
 
@@ -48,7 +48,7 @@ async fn make_graph() -> &'static Graph {
                 f.internal().optional().string();
             })
         });
-    })));
+    });
 
     graph.drop_database();
 

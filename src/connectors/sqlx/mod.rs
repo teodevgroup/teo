@@ -7,7 +7,7 @@ use serde_json::{Value as JsonValue};
 use async_trait::async_trait;
 use sqlx::{Pool, Database};
 use crate::core::connector::Connector;
-use crate::core::graph::{Graph, GraphInner};
+use crate::core::graph::{Graph};
 use crate::core::object::Object;
 use crate::core::builders::GraphBuilder;
 use crate::core::model::Model;
