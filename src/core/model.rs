@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use inflector::Inflector;
 use crate::core::builders::ModelBuilder;
 use crate::core::field::Field;
@@ -7,83 +6,28 @@ use crate::core::field::Store::{Calculated, Temp};
 use crate::core::field::WriteRule::NoWrite;
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct Model {
-    inner: Arc<ModelInner>
+    name: &'static str,
+    table_name: String,
+    localized_name: &'static str,
+    description: &'static str,
+    identity: bool,
+    fields: Vec<Field>,
+    input_keys: Vec<&'static str>,
+    save_keys: Vec<&'static str>,
+    output_keys: Vec<&'static str>,
+    get_value_keys: Vec<&'static str>,
 }
 
 impl Model {
-    pub(crate) fn new(builder: &ModelBuilder) -> Self {
-        Model { inner: Arc::new(ModelInner::new(builder))}
-    }
-
-    pub(crate) fn name(&self) -> &'static str {
-        self.inner.name
-    }
-
-    pub(crate) fn table_name(&self) -> &String {
-        &self.inner.table_name
-    }
-
-    pub(crate) fn localized_name(&self) -> &'static str {
-        self.inner.localized_name
-    }
-
-    pub(crate) fn description(&self) -> &'static str {
-        self.inner.description
-    }
-
-    pub(crate) fn identity(&self) -> bool {
-        self.inner.identity
-    }
-
-    pub(crate) fn fields(&self) -> &Vec<Field> {
-        return &self.inner.fields
-    }
-
-    pub(crate) fn input_keys(&self) -> &Vec<&'static str> {
-        &self.inner.input_keys
-    }
-
-    pub(crate) fn save_keys(&self) -> &Vec<&'static str> {
-        &self.inner.save_keys
-    }
-
-    pub(crate) fn output_keys(&self) -> &Vec<&'static str> {
-        &self.inner.output_keys
-    }
-
-    pub(crate) fn all_getable_keys(&self) -> &Vec<&'static str> {
-        &self.inner.all_getable_keys
-    }
-
-    pub(crate) fn field(&self, name: &str) -> &Field {
-        self.inner.fields.iter().find(|f| { f.name == name}).unwrap()
-    }
-}
-
-#[derive(Debug)]
-struct ModelInner {
-    pub(crate) name: &'static str,
-    pub(crate) table_name: String,
-    pub(crate) localized_name: &'static str,
-    pub(crate) description: &'static str,
-    pub(crate) identity: bool,
-    pub(crate) fields: Vec<Field>,
-    pub(crate) input_keys: Vec<&'static str>,
-    pub(crate) save_keys: Vec<&'static str>,
-    pub(crate) output_keys: Vec<&'static str>,
-    pub(crate) all_getable_keys: Vec<&'static str>,
-}
-
-impl ModelInner {
 
     pub(crate) fn new(builder: &ModelBuilder) -> Self {
         let input_keys = Self::allowed_input_keys(builder);
         let save_keys = Self::allowed_save_keys(builder);
         let output_keys = Self::allowed_output_keys(builder);
-        let all_getable_keys = Self::all_getable_keys(builder);
-        return ModelInner {
+        let get_value_keys = Self::get_get_value_keys(builder);
+        return Model {
             name: builder.name,
             table_name: if builder.table_name == "" { builder.name.to_lowercase().to_plural() } else { builder.table_name.to_string() },
             localized_name: builder.localized_name,
@@ -93,8 +37,48 @@ impl ModelInner {
             input_keys,
             save_keys,
             output_keys,
-            all_getable_keys
+            get_value_keys
         }
+    }
+
+    pub(crate) fn name(&self) -> &'static str {
+        self.name
+    }
+
+    pub(crate) fn table_name(&self) -> &String {
+        &self.table_name
+    }
+
+    pub(crate) fn localized_name(&self) -> &'static str {
+        self.localized_name
+    }
+
+    pub(crate) fn description(&self) -> &'static str {
+        self.description
+    }
+
+    pub(crate) fn identity(&self) -> bool {
+        self.identity
+    }
+
+    pub(crate) fn fields(&self) -> &Vec<Field> {
+        return &self.fields
+    }
+
+    pub(crate) fn input_keys(&self) -> &Vec<&'static str> {
+        &self.input_keys
+    }
+
+    pub(crate) fn save_keys(&self) -> &Vec<&'static str> {
+        &self.save_keys
+    }
+
+    pub(crate) fn output_keys(&self) -> &Vec<&'static str> {
+        &self.output_keys
+    }
+
+    pub(crate) fn get_value_keys(&self) -> &Vec<&'static str> {
+        &self.get_value_keys
     }
 
     fn allowed_input_keys(builder: &ModelBuilder) -> Vec<&'static str> {
@@ -118,14 +102,14 @@ impl ModelInner {
             .collect()
     }
 
-    fn all_getable_keys(builder: &ModelBuilder) -> Vec<&'static str> {
+    pub(crate) fn get_get_value_keys(builder: &ModelBuilder) -> Vec<&'static str> {
         builder.fields.iter()
             .map(|f| { f.name })
             .collect()
     }
 
     pub fn field(&self, name: &str) -> &Field {
-        self.fields.iter().find(|f| { f.name == name}).unwrap()
+        self.fields.iter().find(|f| { f.name == name }).unwrap()
     }
 }
 

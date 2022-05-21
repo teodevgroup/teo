@@ -9,7 +9,7 @@ use crate::error::ActionError;
 
 
 #[derive(Debug)]
-pub enum Type {
+pub(crate) enum Type {
     Undefined,
     ObjectId,
     Bool,
@@ -332,27 +332,27 @@ pub enum FieldIndex {
 }
 
 #[derive(Debug)]
-pub struct Field {
-    pub name: &'static str,
-    pub r#type: Type,
-    pub availability: Availability,
-    pub store: Store,
-    pub primary: bool,
-    pub read_rule: ReadRule,
-    pub write_rule: WriteRule,
-    pub index: FieldIndex,
-    pub query_ability: QueryAbility,
-    pub object_assignment: ObjectAssignment,
-    pub assigned_by_database: bool,
-    pub auth_identity: bool,
-    pub default: Option<Argument>,
-    pub on_set_pipeline: Pipeline,
-    pub on_save_pipeline: Pipeline,
-    pub on_output_pipeline: Pipeline,
+pub(crate) struct Field {
+    pub(crate) name: &'static str,
+    pub(crate) r#type: Type,
+    pub(crate) availability: Availability,
+    pub(crate) store: Store,
+    pub(crate) primary: bool,
+    pub(crate) read_rule: ReadRule,
+    pub(crate) write_rule: WriteRule,
+    pub(crate) index: FieldIndex,
+    pub(crate) query_ability: QueryAbility,
+    pub(crate) object_assignment: ObjectAssignment,
+    pub(crate) assigned_by_database: bool,
+    pub(crate) auth_identity: bool,
+    pub(crate) default: Option<Argument>,
+    pub(crate) on_set_pipeline: Pipeline,
+    pub(crate) on_save_pipeline: Pipeline,
+    pub(crate) on_output_pipeline: Pipeline,
 }
 
 impl Field {
-    pub fn new(builder: &FieldBuilder) -> Field {
+    pub(crate) fn new(builder: &FieldBuilder) -> Field {
         return Field {
             name: builder.name,
             r#type: builder.r#type.clone(),

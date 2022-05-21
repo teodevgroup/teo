@@ -62,7 +62,7 @@ impl Object {
     }
 
     pub fn get_value(&self, key: &'static str) -> Result<Option<Value>, ActionError> {
-        let model_keys = &self.inner.model.all_getable_keys(); // TODO: should be all keys
+        let model_keys = &self.inner.model.get_value_keys(); // TODO: should be all keys
         if !model_keys.contains(&key) {
             return Err(ActionError::keys_unallowed());
         }
