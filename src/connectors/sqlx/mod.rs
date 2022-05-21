@@ -34,10 +34,6 @@ impl<DB> Connector for SqlxConnector<DB> where DB: Database {
     async fn drop_database(&self) {
         todo!()
     }
-    
-    async fn sync_graph(&self, graph: &Graph) {
-        todo!()
-    }
 
     async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
         todo!()
@@ -59,16 +55,16 @@ impl<DB> Connector for SqlxConnector<DB> where DB: Database {
         todo!()
     }
 }
-
-pub trait SqlxConnectorHelpers {
-    fn sqlx<DB>(&mut self, pool: Pool<DB>) where DB: Database;
-}
-
-impl SqlxConnectorHelpers for GraphBuilder {
-
-    fn sqlx<DB>(&mut self, pool: Pool<DB>) where DB: Database {
-        self.connector = Some(SqlxConnector::new(pool))
-    }
-}
+//
+// pub trait SqlxConnectorHelpers {
+//     fn sqlx<DB>(&mut self, pool: Pool<DB>) where DB: Database;
+// }
+//
+// impl SqlxConnectorHelpers for GraphBuilder {
+//
+//     fn sqlx<DB>(&mut self, pool: Pool<DB>) where DB: Database {
+//         self.connector_builder = Some(SqlxConnector::new(pool))
+//     }
+// }
 
 unsafe impl<DB> Sync for SqlxConnector<DB> where DB: Database {}

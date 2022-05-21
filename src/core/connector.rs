@@ -12,8 +12,6 @@ pub(crate) trait Connector: Debug + Send + Sync {
 
     async fn drop_database(&self);
 
-    async fn sync_graph(&self, graph: &Graph);
-
     async fn save_object(&self, object: &Object) -> Result<(), ActionError>;
 
     async fn delete_object(&self, object: &Object);
@@ -23,4 +21,10 @@ pub(crate) trait Connector: Debug + Send + Sync {
     async fn find_one(&self, model: &Model, finder: JsonValue) -> Option<Object>;
 
     async fn find_many(&self, model: &Model, finder: JsonValue) -> Vec<Object>;
+}
+
+#[async_trait]
+pub(crate) trait ConnectorBuilder: Debug + Send + Sync {
+
+    async fn build_connector(&self, models: &Vec<Model>) -> Box<dyn Connector>;
 }

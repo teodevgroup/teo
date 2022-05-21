@@ -10,6 +10,7 @@ use crate::core::field::WriteRule::NoWrite;
 pub(crate) struct Model {
     name: &'static str,
     table_name: String,
+    url_segment_name: String,
     localized_name: &'static str,
     description: &'static str,
     identity: bool,
@@ -30,6 +31,7 @@ impl Model {
         return Model {
             name: builder.name,
             table_name: if builder.table_name == "" { builder.name.to_lowercase().to_plural() } else { builder.table_name.to_string() },
+            url_segment_name: if builder.url_segment_name == "" { builder.name.to_kebab_case().to_plural() } else { builder.url_segment_name.to_string() },
             localized_name: builder.localized_name,
             description: builder.description,
             identity: builder.identity,
@@ -47,6 +49,10 @@ impl Model {
 
     pub(crate) fn table_name(&self) -> &String {
         &self.table_name
+    }
+
+    pub(crate) fn url_segment_name(&self) -> &String {
+        &self.url_segment_name
     }
 
     pub(crate) fn localized_name(&self) -> &'static str {

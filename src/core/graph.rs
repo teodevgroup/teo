@@ -1,3 +1,4 @@
+use std::borrow::BorrowMut;
 use std::collections::HashMap;
 use std::ptr::addr_of;
 use std::sync::{Arc};
@@ -13,29 +14,35 @@ pub struct Graph {
     enums: HashMap<&'static str, Vec<&'static str>>,
     models_vec: Vec<Model>,
     models_map: HashMap<&'static str, * const Model>,
-    connector: Arc<dyn Connector>,
+    connector: Option<Box<dyn Connector>>,
 }
 
 impl Graph {
 
-    pub fn new<'a, F: Fn(&mut GraphBuilder)>(build: F) -> Graph {
+    pub async fn new<'a, F: Fn(&mut GraphBuilder)>(build: F) -> Graph {
         let mut builder = GraphBuilder::new();
         build(&mut builder);
         let mut graph = Graph {
-            enums: HashMap::new(),
+            enums: builder.enums.clone(),
             models_vec: Vec::new(),
             models_map: HashMap::new(),
-            connector: builder.connector().clone()
+            connector: None
         };
-        let models_vec: Vec<Model> = builder.models.iter().map(move |mb| Model::new(mb)).collect();
-        graph.enums = builder.enums.clone();
-        graph.models_vec = models_vec;
-        let mut map: HashMap<&'static str, * const Model> = HashMap::new();
+        graph.models_vec = builder.models.iter().map(move |mb| Model::new(mb)).collect();
+        let mut models_map: HashMap<&'static str, * const Model> = HashMap::new();
         for model in graph.models_vec.iter() {
-            map.insert(model.name(), addr_of!(*model));
+            models_map.insert(model.name(), addr_of!(*model));
         }
-        graph.models_map = map.clone();
+        graph.models_map = models_map;
+        graph.connector = Some(builder.connector_builder().build_connector(&graph.models_vec).await);
         graph
+    }
+
+    pub(crate) fn connector(&self) -> &dyn Connector {
+        match &self.connector {
+            Some(c) => { c.as_ref() }
+            None => { panic!() }
+        }
     }
 
     pub(crate) fn model(&'static self, name: &str) -> &'static Model {
@@ -61,27 +68,19 @@ impl Graph {
     }
 
     pub(crate) async fn find_unique(&'static self, model_name: &'static str, finder: JsonValue) -> Option<Object> {
-        self.connector.find_unique(self.model(model_name), finder).await
+        self.connector().find_unique(self.model(model_name), finder).await
     }
 
     pub(crate) async fn find_one(&'static self, model_name: &'static str, finder: JsonValue) -> Option<Object> {
-        self.connector.find_one(self.model(model_name), finder).await
+        self.connector().find_one(self.model(model_name), finder).await
     }
 
     pub(crate) async fn find_many(&'static self, model_name: &'static str, finder: JsonValue) -> Vec<Object> {
-        self.connector.find_many(self.model(model_name), finder).await
+        self.connector().find_many(self.model(model_name), finder).await
     }
 
     pub async fn drop_database(&self) {
-        self.connector.drop_database().await;
-    }
-
-    pub(crate) async fn connect(&self) {
-        self.connector.sync_graph(self).await
-    }
-
-    pub(crate) fn connector(&self) -> &Arc<dyn Connector> {
-        &self.connector
+        self.connector().drop_database().await;
     }
 }
 

@@ -75,7 +75,7 @@ async fn make_graph() -> &'static Graph {
                 f.optional().r#enum("Sex");
             })
         })
-    })))
+    }).await))
 }
 
 #[test]

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use crate::core::argument::{Argument, FnArgument};
 use crate::core::argument::Argument::{PipelineArgument, ValueArgument};
-use crate::core::connector::Connector;
+use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::field::*;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
@@ -11,7 +11,7 @@ use crate::core::value::Value;
 pub struct GraphBuilder {
     pub(crate) enums: HashMap<&'static str, Vec<&'static str>>,
     pub(crate) models: Vec<ModelBuilder>,
-    pub(crate) connector: Option<Arc<dyn Connector>>,
+    pub(crate) connector_builder: Option<Box<dyn ConnectorBuilder>>,
 }
 
 impl GraphBuilder {
@@ -20,12 +20,12 @@ impl GraphBuilder {
         GraphBuilder {
             enums: HashMap::new(),
             models: Vec::new(),
-            connector: None,
+            connector_builder: None,
         }
     }
 
-    pub(crate) fn connector(&self) -> Arc<dyn Connector> {
-        if let Some(c) = &self.connector { c.clone() } else { panic!() }
+    pub(crate) fn connector_builder(&self) -> &Box<dyn ConnectorBuilder> {
+        self.connector_builder.as_ref().unwrap()
     }
 
     pub fn r#enum(&mut self, name: &'static str, values: Vec<&'static str>) {
@@ -42,6 +42,7 @@ impl GraphBuilder {
 pub struct ModelBuilder {
     pub name: &'static str,
     pub table_name: &'static str,
+    pub url_segment_name: &'static str,
     pub localized_name: &'static str,
     pub description: &'static str,
     pub identity: bool,
@@ -54,6 +55,7 @@ impl ModelBuilder {
         return ModelBuilder {
             name,
             table_name: "",
+            url_segment_name: "",
             localized_name: "",
             description: "",
             identity: false,
@@ -63,6 +65,10 @@ impl ModelBuilder {
 
     pub fn table_name(&mut self, table_name: &'static str) {
         self.table_name = table_name;
+    }
+
+    pub fn url_segment_name(&mut self, url_segment_name: &'static str) {
+        self.url_segment_name = url_segment_name;
     }
 
     pub fn localized_name(&mut self, localized_name: &'static str) {
