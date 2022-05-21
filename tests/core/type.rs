@@ -11,11 +11,11 @@ use teo::core::value::Value;
 use teo::error::ActionError;
 
 
-async fn make_graph() -> Graph {
+async fn make_graph() -> &'static Graph {
 
     let options = ClientOptions::parse("mongodb://localhost:27017/teotesttype").await.unwrap();
 
-    Graph::new(|g| {
+    Box::leak(Box::new(Graph::new(|g| {
 
         g.mongodb(options.clone());
 
@@ -77,7 +77,7 @@ async fn make_graph() -> Graph {
                 f.optional().r#enum("Sex");
             })
         })
-    })
+    })))
 }
 
 #[test]
@@ -356,7 +356,7 @@ async fn date_input_is_string() {
     let simple = graph.new_object("Simple");
     simple.set_json(json!({"date": "2022-05-20"})).await;
     let value = simple.get_value("date").unwrap().unwrap();
-    let date = Utc::today();
+    let date = Date::from_utc(NaiveDate::parse_from_str("2022-05-20", "%Y-%m-%d").unwrap(), Utc);
     assert_eq!(value, Value::Date(date));
 }
 

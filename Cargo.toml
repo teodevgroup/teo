@@ -25,3 +25,4 @@ regex = "1.5.5"
 tokio = "1.18"
 async-trait = "0.1.53"
 sqlx = { version = "0.5", features = [ "runtime-tokio-rustls" ] }
+Inflector = "*"

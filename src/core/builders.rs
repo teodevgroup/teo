@@ -41,6 +41,7 @@ impl GraphBuilder {
 
 pub struct ModelBuilder {
     pub name: &'static str,
+    pub table_name: &'static str,
     pub localized_name: &'static str,
     pub description: &'static str,
     pub identity: bool,
@@ -52,11 +53,16 @@ impl ModelBuilder {
     pub fn new(name: &'static str) -> ModelBuilder {
         return ModelBuilder {
             name,
+            table_name: "",
             localized_name: "",
             description: "",
             identity: false,
             fields: Vec::new()
         }
+    }
+
+    pub fn table_name(&mut self, table_name: &'static str) {
+        self.table_name = table_name;
     }
 
     pub fn localized_name(&mut self, localized_name: &'static str) {

@@ -6,6 +6,7 @@ use std::sync::{Arc};
 use std::sync::atomic::{AtomicBool, Ordering};
 use serde_json::{Map, Value as JsonValue};
 use crate::core::argument::Argument;
+use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::stage::Stage;
 use crate::core::value::Value;
@@ -19,9 +20,10 @@ pub struct Object {
 
 impl Object {
 
-    pub(crate) fn new(model: Arc<Model>) -> Object {
+    pub(crate) fn new(model: &'static Model, graph: &'static Graph) -> Object {
         Object { inner: Arc::new(ObjectInner {
             model,
+            graph,
             is_initialized: AtomicBool::new(false),
             is_new: AtomicBool::new(true),
             is_modified: AtomicBool::new(false),
@@ -43,7 +45,7 @@ impl Object {
     }
 
     pub fn set_value(&self, key: &'static str, value: Value) -> Result<(), ActionError> {
-        let model_keys = &self.inner.model.save_keys;
+        let model_keys = self.inner.model.save_keys();
         if !model_keys.contains(&key) {
             return Err(ActionError::keys_unallowed());
         }
@@ -60,7 +62,7 @@ impl Object {
     }
 
     pub fn get_value(&self, key: &'static str) -> Result<Option<Value>, ActionError> {
-        let model_keys = &self.inner.model.all_getable_keys; // TODO: should be all keys
+        let model_keys = &self.inner.model.all_getable_keys(); // TODO: should be all keys
         if !model_keys.contains(&key) {
             return Err(ActionError::keys_unallowed());
         }
@@ -81,7 +83,7 @@ impl Object {
 
     pub fn deselect(&self, keys: HashSet<String>) -> Result<(), ActionError> {
         if self.inner.selected_fields.borrow().len() == 0 {
-            self.inner.selected_fields.borrow_mut().extend(self.inner.model.output_keys.iter().map(|s| { s.to_string()}));
+            self.inner.selected_fields.borrow_mut().extend(self.inner.model.output_keys().iter().map(|s| { s.to_string()}));
         }
         for key in keys {
             self.inner.selected_fields.borrow_mut().remove(&key);
@@ -91,7 +93,7 @@ impl Object {
 
     pub async fn save(&self) -> Result<(), ActionError> {
         // apply on save pipeline first
-        let model_keys = &self.inner.model.save_keys;
+        let model_keys = self.inner.model.save_keys();
         for key in model_keys {
             let field = self.inner.model.field(&key);
             if field.on_save_pipeline._has_any_modifier() {
@@ -125,8 +127,8 @@ impl Object {
             }
         }
         // send to database to save
-        let connector = self.inner.model.graph().connector();
-        let save_result = connector.save_object(self.clone()).await;
+        let connector = self.inner.graph.connector();
+        let save_result = connector.save_object(self).await;
         // apply properties
         self.inner.is_new.store(false, Ordering::SeqCst);
         self.inner.is_modified.store(false, Ordering::SeqCst);
@@ -141,7 +143,7 @@ impl Object {
 
     pub fn to_json(&self) -> JsonValue {
         let mut map: Map<String, JsonValue> = Map::new();
-        let keys = &self.inner.model.output_keys;
+        let keys = self.inner.model.output_keys();
         for key in keys {
             let value = self.get_value(key).unwrap();
             match value {
@@ -161,13 +163,13 @@ impl Object {
     }
 
     async fn set_or_update_json(&self, json_value: JsonValue, process: bool) -> Result<(), ActionError> {
-        let json_object = json_value.as_object().unwrap();
+        let json_object = json_value.as_object().unwrap().clone();
         // check keys first
         let json_keys: Vec<&str> = json_object.keys().map(|k| { k.as_str() }).collect();
         let model_keys = if process {
-            &self.inner.model.input_keys
+            self.inner.model.input_keys()
         } else {
-            &self.inner.model.save_keys
+            self.inner.model.save_keys()
         };
         let keys_valid = json_keys.iter().all(|&item| model_keys.contains(&item));
         if !keys_valid {
@@ -183,7 +185,7 @@ impl Object {
             };
             if json_has_value {
                 let json_value = &json_object[&key.to_string()];
-                let mut value_result = field.r#type.decode_value(json_value, self.inner.model.graph());
+                let mut value_result = field.r#type.decode_value(json_value, self.inner.graph);
                 let mut value;
                 match value_result {
                     Ok(v) => { value = v }
@@ -247,7 +249,8 @@ impl Object {
 }
 
 pub(crate) struct ObjectInner {
-    pub(crate) model: Arc<Model>,
+    pub(crate) model: &'static Model,
+    pub(crate) graph: &'static Graph,
     pub(crate) is_initialized: AtomicBool,
     pub(crate) is_new: AtomicBool,
     pub(crate) is_modified: AtomicBool,
@@ -261,7 +264,7 @@ pub(crate) struct ObjectInner {
 
 impl Debug for Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut result = f.debug_struct(self.inner.model.name);
+        let mut result = f.debug_struct(self.inner.model.name());
         for (key, value) in self.inner.value_map.borrow().iter() {
             result.field(key, value);
         }

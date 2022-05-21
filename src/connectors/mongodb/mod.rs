@@ -23,46 +23,54 @@ pub struct MongoDBConnector {
 }
 
 impl MongoDBConnector {
-    pub fn new(options: ClientOptions) -> Arc<MongoDBConnector> {
+    pub fn new(options: ClientOptions) -> MongoDBConnector {
         let client = Client::with_options(options.clone()).unwrap();
         let database = client.database(&options.default_database.clone().unwrap());
-
-        Arc::new(MongoDBConnector {
+        MongoDBConnector {
             client: client,
             database: database,
-        })
+        }
     }
 }
 
 #[async_trait]
 impl Connector for MongoDBConnector {
 
-    async fn drop_database(self: Arc<Self>) {
+    async fn drop_database(&self) {
         let options = DropDatabaseOptions::builder().build();
         &self.database.drop(options).await;
     }
 
-    async fn sync_graph(self: Arc<MongoDBConnector>, graph: Arc<GraphInner>) {
+    async fn sync_graph(&self, graph: &Graph) {
+
+    }
+
+    async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
+        let is_new = object.inner.is_new.load(Ordering::SeqCst);
+        let keys = if is_new {
+            object.inner.model.save_keys().clone()
+        } else {
+            object.inner.model.save_keys().iter().filter(|k| {
+                object.inner.modified_fields.borrow().contains(&k.to_string())
+            }).map(|k| {*k}).collect()
+        };
+
+        Ok(())
+    }
+
+    async fn delete_object(&self, object: &Object) {
         todo!()
     }
 
-    async fn save_object(&self, object: Object) -> Result<(), ActionError> {
+    async fn find_unique(&self, model: &Model, finder: JsonValue) -> Option<Object> {
         todo!()
     }
 
-    async fn delete_object(self: Arc<MongoDBConnector>, object: Object) {
+    async fn find_one(&self, model: &Model, finder: JsonValue) -> Option<Object> {
         todo!()
     }
 
-    async fn find_unique(self: Arc<MongoDBConnector>, model: &Model, finder: JsonValue) -> Object {
-        todo!()
-    }
-
-    async fn find_one(self: Arc<MongoDBConnector>, model: &Model, finder: JsonValue) -> Object {
-        todo!()
-    }
-
-    async fn find_many(self: Arc<MongoDBConnector>, model: &Model, finder: JsonValue) -> Vec<Object> {
+    async fn find_many(&self, model: &Model, finder: JsonValue) -> Vec<Object> {
         todo!()
     }
 }
@@ -74,7 +82,7 @@ pub trait MongoDBConnectorHelpers {
 impl MongoDBConnectorHelpers for GraphBuilder {
 
     fn mongodb(&mut self, options: ClientOptions) {
-        self.connector = Some(MongoDBConnector::new(options))
+        self.connector = Some(Arc::new(MongoDBConnector::new(options)))
     }
 }
 

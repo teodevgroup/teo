@@ -32,31 +32,31 @@ impl<DB> SqlxConnector<DB> where DB: Database {
 #[async_trait]
 impl<DB> Connector for SqlxConnector<DB> where DB: Database {
 
-    async fn drop_database(self: Arc<Self>) {
+    async fn drop_database(&self) {
         todo!()
     }
     
-    async fn sync_graph(self: Arc<SqlxConnector<DB>>, graph: Arc<GraphInner>) {
+    async fn sync_graph(&self, graph: &Graph) {
         todo!()
     }
 
-    async fn save_object(&self, object: Object) -> Result<(), ActionError> {
+    async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
         todo!()
     }
 
-    async fn delete_object(self: Arc<SqlxConnector<DB>>, object: Object) {
+    async fn delete_object(&self, object: &Object) {
         todo!()
     }
 
-    async fn find_unique(self: Arc<SqlxConnector<DB>>, model: &Model, finder: JsonValue) -> Object {
+    async fn find_unique(&self, model: &Model, finder: JsonValue) -> Option<Object> {
         todo!()
     }
 
-    async fn find_one(self: Arc<SqlxConnector<DB>>, model: &Model, finder: JsonValue) -> Object {
+    async fn find_one(&self, model: &Model, finder: JsonValue) -> Option<Object> {
         todo!()
     }
 
-    async fn find_many(self: Arc<SqlxConnector<DB>>, model: &Model, finder: JsonValue) -> Vec<Object> {
+    async fn find_many(&self, model: &Model, finder: JsonValue) -> Vec<Object> {
         todo!()
     }
 }

@@ -19,23 +19,23 @@ impl Graph {
         Graph { inner: GraphInner::new(build) }
     }
 
-    pub fn new_object(&self, model: &'static str) -> Object {
-        self.inner.new_object(model)
+    pub fn new_object(&'static self, model: &'static str) -> Object {
+        Object::new(self.model(model), self)
     }
 
-    pub async fn find_unique(&self, model_name: &'static str, finder: JsonValue) -> Object {
+    pub async fn find_unique(&'static self, model_name: &'static str, finder: JsonValue) -> Option<Object> {
         self.inner.find_unique(model_name, finder).await
     }
 
-    pub async fn find_one(&self, model_name: &'static str, finder: JsonValue) -> Object {
+    pub async fn find_one(&'static self, model_name: &'static str, finder: JsonValue) -> Option<Object> {
         self.inner.find_one(model_name, finder).await
     }
 
-    pub async fn find_many(&self, model_name: &'static str, finder: JsonValue) -> Vec<Object> {
+    pub async fn find_many(&'static self, model_name: &'static str, finder: JsonValue) -> Vec<Object> {
         self.inner.find_many(model_name, finder).await
     }
 
-    pub(crate) fn model(&self, name: &str) -> Arc<Model> {
+    pub(crate) fn model(&'static self, name: &str) -> &'static Model {
         self.inner.model(name)
     }
 
@@ -44,20 +44,28 @@ impl Graph {
     }
 
     pub(crate) async fn connect(&self) {
-        self.inner.clone().connect().await
+        self.inner.connector.sync_graph(self).await
     }
 
     pub async fn drop_database(&self) {
-        self.inner.drop_database();
+        self.inner.drop_database().await;
+    }
+
+    pub(crate) fn connector(&self) -> &Arc<dyn Connector> {
+        &self.inner.connector
+    }
+
+    pub(crate) fn enums(&self) -> &HashMap<&'static str, Vec<&'static str>> {
+        &self.inner.enums
     }
 }
 
 #[derive(Debug)]
 pub(crate) struct GraphInner {
-    pub(crate) enums: RwLock<HashMap<&'static str, Vec<&'static str>>>,
-    pub(crate) models: RwLock<Vec<Arc<Model>>>,
-    pub(crate) models_map: RwLock<HashMap<&'static str, Arc<Model>>>,
-    pub(crate) connector: Option<Arc<dyn Connector>>,
+    pub(crate) enums: HashMap<&'static str, Vec<&'static str>>,
+    pub(crate) models: Vec<Model>,
+    pub(crate) models_map: HashMap<&'static str, Model>,
+    pub(crate) connector: Arc<dyn Connector>,
 }
 
 impl GraphInner {
@@ -65,105 +73,51 @@ impl GraphInner {
     pub(crate) fn new<F: Fn(&mut GraphBuilder)>(build: F) -> Arc<GraphInner> {
         let mut builder = GraphBuilder::new();
         build(&mut builder);
-        let mut GraphInner = Arc::new(GraphInner {
-            enums: RwLock::new(HashMap::new()),
-            models: RwLock::new(Vec::new()),
-            models_map: RwLock::new(HashMap::new()),
-            connector: None
+        let mut graph_inner = Arc::new(GraphInner {
+            enums: HashMap::new(),
+            models: Vec::new(),
+            models_map: HashMap::new(),
+            connector: builder.connector().clone()
         });
-        let addr = addr_of!(*GraphInner);
-        let models: Vec<Arc<Model>> = builder.models.iter().map(move |mb| Arc::new(Model::new(mb, addr))).collect();
-        let mut mut_graph = Arc::get_mut(&mut GraphInner).unwrap();
-        mut_graph.enums = RwLock::new(builder.enums.clone());
-        mut_graph.models = RwLock::new(models);
-        mut_graph.connector = Some(builder.connector().clone());
-        let mut map: HashMap<&'static str, Arc<Model>> = HashMap::new();
-        for model in mut_graph.models.read().unwrap().iter() {
-            map.insert(model.name, model.clone());
+        let addr = addr_of!(*graph_inner);
+        let models: Vec<Model> = builder.models.iter().map(move |mb| Model::new(mb)).collect();
+        let mut mut_graph = Arc::get_mut(&mut graph_inner).unwrap();
+        mut_graph.enums = builder.enums.clone();
+        mut_graph.models = models;
+        let mut map: HashMap<&'static str, Model> = HashMap::new();
+        for model in mut_graph.models.iter() {
+            map.insert(model.name(), model.clone());
         }
-        mut_graph.models_map = RwLock::new(map);
-        return GraphInner;
+        mut_graph.models_map = map;
+        return graph_inner;
     }
 
-    pub(crate) fn model(&self, name: &str) -> Arc<Model> {
-        self.models_map.read().unwrap().get(name).unwrap().clone()
+    pub(crate) fn model(&'static self, name: &str) -> &'static Model {
+        self.models_map.get(name).unwrap()
     }
 
     pub(crate) fn r#enum(&self, name: &str) -> Vec<&'static str> {
-        self.enums.read().unwrap().get(name).unwrap().clone()
+        self.enums.get(name).unwrap().clone()
     }
 
-    pub(crate) async fn connect(self: Arc<Self>) {
-        match &self.connector {
-            Some(connector) => {
-                connector.clone().sync_graph(self.clone()).await;
-            }
-            None => {
-                panic!();
-            }
-        }
+    pub(crate) async fn find_unique(&'static self, model_name: &'static str, finder: JsonValue) -> Option<Object> {
+        self.connector.find_unique(self.model(model_name), finder).await
     }
 
-    pub(crate) fn new_object(&self, model: &'static str) -> Object {
-        Object::new(self.model(model))
+    pub(crate) async fn find_one(&'static self, model_name: &'static str, finder: JsonValue) -> Option<Object> {
+        self.connector.find_one(self.model(model_name), finder).await
     }
 
-    pub(crate) async fn find_unique(&self, model_name: &'static str, finder: JsonValue) -> Object {
-        let model = &self.model(model_name);
-        match &self.connector {
-            Some(connector) => {
-                connector.clone().find_unique(model, finder).await
-            }
-            None => {
-                panic!()
-            }
-        }
-    }
-
-    pub(crate) async fn find_one(&self, model_name: &'static str, finder: JsonValue) -> Object {
-        let model = &self.model(model_name);
-        match &self.connector {
-            Some(connector) => {
-                connector.clone().find_one(model, finder).await
-            }
-            None => {
-                panic!()
-            }
-        }
-    }
-
-    pub(crate) async fn find_many(&self, model_name: &'static str, finder: JsonValue) -> Vec<Object> {
-        let model = &self.model(model_name);
-        match &self.connector {
-            Some(connector) => {
-                connector.clone().find_many(model, finder).await
-            }
-            None => {
-                panic!()
-            }
-        }
+    pub(crate) async fn find_many(&'static self, model_name: &'static str, finder: JsonValue) -> Vec<Object> {
+        self.connector.find_many(self.model(model_name), finder).await
     }
 
     pub(crate) async fn drop_database(&self) {
-        match &self.connector {
-            Some(connector) => {
-                connector.clone().drop_database();
-            }
-            None => {
-                panic!()
-            }
-        }
+        self.connector.drop_database().await;
     }
 
     pub(crate) fn connector(&self) -> Arc<dyn Connector> {
-        match &self.connector {
-            Some(connector) => {
-                connector.clone()
-            }
-            None => {
-                panic!()
-            }
-        }
+        self.connector.clone()
     }
 }
 
