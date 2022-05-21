@@ -1,8 +1,6 @@
-use std::sync::Arc;
-use chrono::{NaiveDate, NaiveTime, Utc};
-use chrono::format::Fixed::TimezoneOffset;
+use chrono::{NaiveDate, Utc};
 use mongodb::options::ClientOptions;
-use serde_json::{json, from_str};
+use serde_json::{json};
 use chrono::prelude::{Date, DateTime};
 use tokio::test;
 use teo::connectors::mongodb::MongoDBConnectorHelpers;

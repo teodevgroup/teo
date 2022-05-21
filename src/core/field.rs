@@ -154,7 +154,7 @@ impl Type {
                                 let date: Date<Utc> = Date::from_utc(naive_date, Utc);
                                 Ok(Value::Date(date))
                             }
-                            Err(error) => {
+                            Err(_) => {
                                 Err(ActionError::wrong_date_format())
                             }
                         }
@@ -169,7 +169,7 @@ impl Type {
                                 let datetime: DateTime<Utc> = fixed_offset_datetime.with_timezone(&Utc);
                                 Ok(Value::DateTime(datetime))
                             }
-                            Err(error) => {
+                            Err(_) => {
                                 Err(ActionError::wrong_datetime_format())
                             }
                         }

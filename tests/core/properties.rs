@@ -1,9 +1,5 @@
-use std::sync::Arc;
-use chrono::{NaiveDate, NaiveTime, Utc};
-use chrono::format::Fixed::TimezoneOffset;
 use mongodb::options::ClientOptions;
-use serde_json::{json, from_str};
-use chrono::prelude::{Date, DateTime};
+use serde_json::{json};
 use tokio::test;
 use teo::connectors::mongodb::MongoDBConnectorHelpers;
 use teo::core::graph::Graph;
