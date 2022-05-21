@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use crate::core::argument::{Argument, FnArgument};
 use crate::core::argument::Argument::{PipelineArgument, ValueArgument};
-use crate::core::connector::{Connector, ConnectorBuilder};
+use crate::core::connector::{ConnectorBuilder};
 use crate::core::field::*;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;

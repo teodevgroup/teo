@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::{Debug};
-use std::sync::Arc;
 use std::sync::atomic::{Ordering};
-use actix_web::options;
 use serde_json::{Value as JsonValue};
 use async_trait::async_trait;
 use bson::Document;
@@ -24,13 +22,19 @@ pub struct MongoDBConnector {
 }
 
 impl MongoDBConnector {
-    pub(crate) fn new(options: ClientOptions, models: &Vec<Model>) -> MongoDBConnector {
+    pub(crate) async fn new(options: ClientOptions, models: &Vec<Model>) -> MongoDBConnector {
         let client = Client::with_options(options.clone()).unwrap();
         let database = client.database(&options.default_database.clone().unwrap());
+        let mut collections: HashMap<&'static str, Collection<Document>> = HashMap::new();
+        for model in models {
+            let name = model.name();
+            let collection: Collection<Document> = database.collection(model.table_name());
+            collections.insert(name, collection);
+        }
         MongoDBConnector {
             client: client,
             database: database,
-            collections: HashMap::new()
+            collections: collections
         }
     }
 }
@@ -91,7 +95,7 @@ impl ConnectorBuilder for MongoDBConnectorBuilder {
         //     let col: Collection<Document> = self.database.collection(model.table_name());
         //     self.collections.insert(model.name(), col);
         // }
-        Box::new(MongoDBConnector::new(self.options.clone(), models))
+        Box::new(MongoDBConnector::new(self.options.clone(), models).await)
     }
 }
 
