@@ -52,6 +52,36 @@ impl MongoDBConnector {
     }
 }
 
+impl MongoDBConnector {
+    fn _handle_write_error(&self, error_kind: ErrorKind) -> ActionError {
+        match error_kind {
+            ErrorKind::Write(write) => {
+                match write {
+                    WriteFailure::WriteError(write_error) => {
+                        match write_error.code {
+                            11000 => {
+                                let regex = Regex::new(r"dup key: \{ (.+):").unwrap();
+                                let match_result = regex.captures(write_error.message.as_str()).unwrap().get(1);
+                                return ActionError::unique_value_duplicated(match_result.unwrap().as_str())
+                            }
+                            _ => {
+                                return ActionError::unknown_database_write_error()
+                            }
+                        }
+                    }
+                    _ => {
+                        return ActionError::unknown_database_write_error()
+                    }
+                }
+            }
+            _ => {
+                return ActionError::unknown_database_write_error()
+            }
+        }
+    }
+
+}
+
 #[async_trait]
 impl Connector for MongoDBConnector {
 
@@ -91,30 +121,7 @@ impl Connector for MongoDBConnector {
                     }
                 }
                 Err(error) => {
-                    match *error.kind {
-                        ErrorKind::Write(write) => {
-                            match write {
-                                WriteFailure::WriteError(write_error) => {
-                                    match write_error.code {
-                                        11000 => {
-                                            let regex = Regex::new(r"dup key: \{ (.+):").unwrap();
-                                            let match_result = regex.captures(write_error.message.as_str()).unwrap().get(1);
-                                            return Err(ActionError::unique_value_duplicated(match_result.unwrap().as_str()));
-                                        }
-                                        _ => {
-                                            return Err(ActionError::unknown_database_write_error())
-                                        }
-                                    }
-                                }
-                                _ => {
-                                    return Err(ActionError::unknown_database_write_error())
-                                }
-                            }
-                        }
-                        _ => {
-                            return Err(ActionError::unknown_database_write_error())
-                        }
-                    }
+                    return Err(self._handle_write_error(*error.kind));
                 }
             }
         } else {
@@ -132,7 +139,15 @@ impl Connector for MongoDBConnector {
                 };
                 set.insert(key, json_val);
             }
-            let _ = col.update_one(doc!{"_id": object_id}, doc!{"$set": set}, None).await;
+            let result = col.update_one(doc!{"_id": object_id}, doc!{"$set": set}, None).await;
+            match result {
+                Ok(update_result) => {
+                    return Ok(());
+                }
+                Err(error) => {
+                    return Err(self._handle_write_error(*error.kind));
+                }
+            }
         }
         Ok(())
     }
