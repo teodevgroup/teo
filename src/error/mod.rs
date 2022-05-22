@@ -11,6 +11,8 @@ pub enum ActionErrorType {
     WrongDateTimeFormat,
     WrongEnumChoice,
     ValueRequired,
+    ValidationError,
+    UnknownDatabaseWriteError,
     InternalServerError,
 }
 
@@ -25,6 +27,8 @@ impl ActionErrorType {
             ActionErrorType::WrongDateTimeFormat => { 400 }
             ActionErrorType::WrongEnumChoice => { 400 }
             ActionErrorType::ValueRequired => { 400 }
+            ActionErrorType::ValidationError => { 400 }
+            ActionErrorType::UnknownDatabaseWriteError => { 500 }
             ActionErrorType::InternalServerError => { 500 }
         }
     }
@@ -34,7 +38,7 @@ impl ActionErrorType {
 pub struct ActionError {
     pub r#type: ActionErrorType,
     pub message: String,
-    pub errors: Option<HashMap<&'static str, String>>
+    pub errors: Option<HashMap<String, String>>
 }
 
 impl ActionError {
@@ -56,7 +60,7 @@ impl ActionError {
 
     pub fn invalid_input(key: &'static str, reason: String) -> Self {
         let mut fields = HashMap::with_capacity(1);
-        fields.insert(key, reason);
+        fields.insert(key.to_string(), reason);
         ActionError {
             r#type: ActionErrorType::InvalidInput,
             message: "Invalid value found in input values.".to_string(),
@@ -104,10 +108,28 @@ impl ActionError {
         }
     }
 
+    pub fn unique_value_duplicated(field: &str) -> Self {
+        let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
+        errors.insert(field.to_string(), "Unique value duplicated.".to_string());
+        ActionError {
+            r#type: ActionErrorType::ValidationError,
+            message: "Input is not valid.".to_string(),
+            errors: Some(errors)
+        }
+    }
+
     pub fn internal_server_error(reason: String) -> Self {
         ActionError {
             r#type: ActionErrorType::InternalServerError,
             message: reason,
+            errors: None
+        }
+    }
+
+    pub fn unknown_database_write_error() -> Self {
+        ActionError {
+            r#type: ActionErrorType::UnknownDatabaseWriteError,
+            message: "An unknown database write error occurred.".to_string(),
             errors: None
         }
     }

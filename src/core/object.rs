@@ -129,12 +129,19 @@ impl Object {
         // send to database to save
         let connector = self.inner.graph.connector();
         let save_result = connector.save_object(self).await;
-        // apply properties
-        self.inner.is_new.store(false, Ordering::SeqCst);
-        self.inner.is_modified.store(false, Ordering::SeqCst);
-        *self.inner.modified_fields.borrow_mut() = HashSet::new();
-        // then do nothing haha
-        Ok(())
+        match save_result {
+            Ok(()) => {
+                // apply properties
+                self.inner.is_new.store(false, Ordering::SeqCst);
+                self.inner.is_modified.store(false, Ordering::SeqCst);
+                *self.inner.modified_fields.borrow_mut() = HashSet::new();
+                // then do nothing haha
+                Ok(())
+            }
+            Err(error) => {
+                Err(error)
+            }
+        }
     }
 
     pub fn delete(&self) -> &Object {

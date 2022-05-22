@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::ptr::{addr_of, null};
 use inflector::Inflector;
 use crate::core::builders::ModelBuilder;
-use crate::core::field::Field;
+use crate::core::field::{Field, FieldIndex};
 use crate::core::field::ReadRule::NoRead;
 use crate::core::field::Store::{Calculated, Temp};
 use crate::core::field::WriteRule::NoWrite;
@@ -33,33 +33,36 @@ impl Model {
         let save_keys = Self::allowed_save_keys(builder);
         let output_keys = Self::allowed_output_keys(builder);
         let get_value_keys = Self::get_get_value_keys(builder);
-        let mut model = Model {
+        let fields_vec: Vec<Field> = builder.fields.iter().map(|fb| { Field::new(fb) }).collect();
+        let mut fields_map: HashMap<&'static str, * const Field> = HashMap::new();
+        let mut primary_field: * const Field = null();
+        let mut index_fields: Vec<* const Field> = Vec::new();
+        for field in fields_vec.iter() {
+            let addr = addr_of!(*field);
+            fields_map.insert(field.name, addr);
+            if field.primary {
+                primary_field = addr_of!(*field);
+            }
+            if field.index != FieldIndex::NoIndex {
+                index_fields.push(addr);
+            }
+        }
+        Model {
             name: builder.name,
             table_name: if builder.table_name == "" { builder.name.to_lowercase().to_plural() } else { builder.table_name.to_string() },
             url_segment_name: if builder.url_segment_name == "" { builder.name.to_kebab_case().to_plural() } else { builder.url_segment_name.to_string() },
             localized_name: builder.localized_name,
             description: builder.description,
             identity: builder.identity,
-            fields_vec: builder.fields.iter().map(|fb| { Field::new(fb) }).collect(),
-            fields_map: HashMap::new(),
-            primary_field: null(),
-            index_fields: Vec::new(),
+            fields_vec,
+            fields_map,
+            primary_field,
+            index_fields,
             input_keys,
             save_keys,
             output_keys,
             get_value_keys
-        };
-        let mut fields_map: HashMap<&'static str, * const Field> = HashMap::new();
-        let mut primary_field: * const Field = null();
-        for field in model.fields_vec.iter() {
-            fields_map.insert(field.name, addr_of!(*field));
-            if field.primary {
-                primary_field = addr_of!(*field);
-            }
         }
-        model.fields_map = fields_map;
-        model.primary_field = primary_field;
-        model
     }
 
     pub(crate) fn name(&self) -> &'static str {
@@ -94,13 +97,18 @@ impl Model {
         unsafe {
             &(**self.fields_map.get(name).unwrap())
         }
-        // self.fields_vec.iter().find(|f| { f.name == name }).unwrap()
     }
 
-    pub(crate) fn primary_field(&self) -> &Field {
-        unsafe {
-            &*self.primary_field
+    pub(crate) fn primary_field(&self) -> Option<&Field> {
+        if self.primary_field == null() {
+            None
+        } else {
+            Some(unsafe { &*self.primary_field })
         }
+    }
+
+    pub(crate) fn index_fields(&self) -> Vec<&Field> {
+        self.index_fields.iter().map(|f| { unsafe { &**f } }).collect()
     }
 
     pub(crate) fn input_keys(&self) -> &Vec<&'static str> {

@@ -46,7 +46,7 @@ async fn make_graph() -> &'static Graph {
         });
     }).await));
 
-    graph.drop_database();
+    graph.drop_database().await;
 
     graph
 }

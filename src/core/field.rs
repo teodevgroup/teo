@@ -272,7 +272,7 @@ impl Clone for Type {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Availability {
     Optional,
     Required
@@ -322,7 +322,7 @@ pub enum ObjectAssignment {
     Copy,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FieldIndex {
     NoIndex,
     Index,
