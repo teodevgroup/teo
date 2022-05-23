@@ -25,7 +25,10 @@ impl GraphBuilder {
     }
 
     pub(crate) fn connector_builder(&self) -> &Box<dyn ConnectorBuilder> {
-        self.connector_builder.as_ref().unwrap()
+        match &self.connector_builder {
+            Some(connector_builder) => connector_builder,
+            None => panic!("Graph doesn't has a database connector.")
+        }
     }
 
     pub fn r#enum(&mut self, name: &'static str, values: Vec<&'static str>) {
@@ -104,6 +107,7 @@ pub struct FieldBuilder {
     pub(crate) query_ability: QueryAbility,
     pub(crate) object_assignment: ObjectAssignment,
     pub(crate) assigned_by_database: bool,
+    pub(crate) auto_increment: bool,
     pub(crate) auth_identity: bool,
     pub(crate) default: Option<Argument>,
     pub(crate) on_set_pipeline: Pipeline,
@@ -127,6 +131,7 @@ impl FieldBuilder {
             query_ability: QueryAbility::Queryable,
             object_assignment: ObjectAssignment::Reference,
             assigned_by_database: false,
+            auto_increment: false,
             auth_identity: false,
             default: None,
             on_set_pipeline: Pipeline::new(),
@@ -318,22 +323,22 @@ impl FieldBuilder {
 
     pub fn required(&mut self) -> &mut Self {
         self.availability = Availability::Required;
-        return self;
+        self
     }
 
     pub fn linked_by(&mut self, field: &'static str) -> &mut Self {
         self.store = Store::ForeignKey(field);
-        return self;
+        self
     }
 
     pub fn link_to(&mut self) -> &mut Self {
         self.store = Store::LocalKey;
-        return self;
+        self
     }
 
     pub fn temp(&mut self) -> &mut Self {
         self.store = Store::Temp;
-        return self;
+        self
     }
 
     pub fn calculated(&mut self) -> &mut Self {
@@ -344,22 +349,28 @@ impl FieldBuilder {
 
     pub fn copy(&mut self) -> &mut Self {
         self.object_assignment = ObjectAssignment::Copy;
-        return self;
+        self
     }
 
     pub fn auth_identity(&mut self) -> &mut Self {
         self.auth_identity = true;
-        return self;
+        self
     }
 
     pub fn assigned_by_database(&mut self) -> &mut Self {
         self.assigned_by_database = true;
-        return self;
+        self
+    }
+
+    pub fn auto_increment(&mut self) -> &mut Self {
+        self.assigned_by_database = true;
+        self.auto_increment = true;
+        self
     }
 
     pub fn on_set<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {
         build(&mut self.on_set_pipeline);
-        return self;
+        self
     }
 
     pub fn on_save<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {

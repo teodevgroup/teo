@@ -5,13 +5,11 @@ edition = "2021"
 description = "Backend Framework, Redefined"
 license = "MIT"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 actix-web = "4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-mongodb = { version = "2.2" }
+mongodb = { version = "2.2", optional = true }
 bson = { version = "2.2", features = ["chrono-0_4", "serde_with"] }
 chrono = { version = "0.4", features = ["serde"] }
 env_logger = "0.9"
@@ -24,5 +22,26 @@ actix-http = "3"
 regex = "1.5.5"
 tokio = "1.18"
 async-trait = "0.1.53"
-sqlx = { version = "0.5", features = [ "runtime-tokio-rustls" ] }
+sqlx = { version = "0.5", features = ["mysql", "runtime-tokio-rustls"], optional = true }
+sea-query = { version = "^0", features = ["backend-mysql", "backend-postgres", "sqlx-mysql", "sqlx-postgres"], optional = true }
 Inflector = "*"
+
+[features]
+mongo = ["mongodb"]
+mysql = ["sqlx", "sea-query"]
+postgres = ["sqlx", "sea-query"]
+
+[[test]]
+name = "test-core"
+path = "tests/core/mod.rs"
+required-features = ["mongo", "mysql", "postgres"]
+
+[[test]]
+name = "test-mongodb-connector"
+path = "tests/connectors/mongodb/tests.rs"
+required-features = ["mongo"]
+
+[[test]]
+name = "test-sql-connector"
+path = "tests/connectors/sqlx/tests.rs"
+required-features = ["mysql", "postgres"]
