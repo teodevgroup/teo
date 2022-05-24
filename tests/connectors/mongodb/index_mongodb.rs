@@ -19,7 +19,10 @@ async fn make_mongodb_graph() -> &'static Graph {
     let options = make_client_options().await;
 
     let graph = Box::leak(Box::new(Graph::new(|g| {
+
         g.mongodb(options.clone());
+
+        g.reset_database();
 
         g.model("UniqueIndex", |m| {
             m.field("unique", |f| {
@@ -45,8 +48,6 @@ async fn make_mongodb_graph() -> &'static Graph {
             })
         });
     }).await));
-
-    graph.drop_database().await;
 
     graph
 }

@@ -44,8 +44,6 @@ async fn make_mysql_graph() -> &'static Graph {
 
     }).await));
 
-    graph.drop_database().await;
-
     graph
 }
 

@@ -12,15 +12,17 @@ pub struct GraphBuilder {
     pub(crate) enums: HashMap<&'static str, Vec<&'static str>>,
     pub(crate) models: Vec<ModelBuilder>,
     pub(crate) connector_builder: Option<Box<dyn ConnectorBuilder>>,
+    pub(crate) reset_database: bool,
 }
 
 impl GraphBuilder {
 
-    pub fn new() -> GraphBuilder {
+    pub(crate) fn new() -> GraphBuilder {
         GraphBuilder {
             enums: HashMap::new(),
             models: Vec::new(),
             connector_builder: None,
+            reset_database: false
         }
     }
 
@@ -39,6 +41,10 @@ impl GraphBuilder {
         let mut model: ModelBuilder = ModelBuilder::new(name);
         build(&mut model);
         self.models.push(model);
+    }
+
+    pub fn reset_database(&mut self) {
+        self.reset_database = true;
     }
 }
 

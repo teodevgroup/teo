@@ -25,9 +25,12 @@ pub struct MongoDBConnector {
 }
 
 impl MongoDBConnector {
-    pub(crate) async fn new(options: ClientOptions, models: &Vec<Model>) -> MongoDBConnector {
+    pub(crate) async fn new(options: ClientOptions, models: &Vec<Model>, reset_database: bool) -> MongoDBConnector {
         let client = Client::with_options(options.clone()).unwrap();
         let database = client.database(&options.default_database.clone().unwrap());
+        if reset_database {
+            database.drop(None).await;
+        }
         let mut collections: HashMap<&'static str, Collection<Document>> = HashMap::new();
         for model in models {
             let name = model.name();
@@ -84,11 +87,6 @@ impl MongoDBConnector {
 #[async_trait]
 impl Connector for MongoDBConnector {
 
-    async fn drop_database(&self) {
-        let options = DropDatabaseOptions::builder().build();
-        &self.database.drop(options).await;
-    }
-
     async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
         let is_new = object.inner.is_new.load(Ordering::SeqCst);
         let keys = if is_new {
@@ -112,7 +110,7 @@ impl Connector for MongoDBConnector {
             let result = col.insert_one(doc, None).await;
             match result {
                 Ok(insert_one_result) => {
-                    let id = insert_one_result.inserted_id.as_str().unwrap().to_string();
+                    let id = insert_one_result.inserted_id.as_object_id().unwrap().to_hex();
                     if let Some(primary_field) = object.inner.model.primary_field() {
                         object.set_value(primary_field.name, Value::ObjectId(id));
                     } else {
@@ -181,12 +179,12 @@ impl MongoDBConnectorBuilder {
 
 #[async_trait]
 impl ConnectorBuilder for MongoDBConnectorBuilder {
-    async fn build_connector(&self, models: &Vec<Model>) -> Box<dyn Connector> {
+    async fn build_connector(&self, models: &Vec<Model>, reset_database: bool) -> Box<dyn Connector> {
         // for model in graph.models() {
         //     let col: Collection<Document> = self.database.collection(model.table_name());
         //     self.collections.insert(model.name(), col);
         // }
-        Box::new(MongoDBConnector::new(self.options.clone(), models).await)
+        Box::new(MongoDBConnector::new(self.options.clone(), models, reset_database).await)
     }
 }
 

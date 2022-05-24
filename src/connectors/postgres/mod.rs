@@ -29,10 +29,6 @@ impl PostgresConnector {
 
 #[async_trait]
 impl Connector for PostgresConnector {
-    async fn drop_database(&self) {
-        let database_name = &self.database_name;
-        sqlx::query(&format!("DROP DATABASE IF EXISTS {database_name}")).execute(&self.pool).await;
-    }
 
     async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
         todo!()
@@ -71,7 +67,7 @@ impl PostgresConnectorBuilder {
 
 #[async_trait]
 impl ConnectorBuilder for PostgresConnectorBuilder {
-    async fn build_connector(&self, models: &Vec<Model>) -> Box<dyn Connector> {
+    async fn build_connector(&self, models: &Vec<Model>, reset_database: bool) -> Box<dyn Connector> {
         let url = Url::parse(self.url);
         match url {
             Ok(mut url) => {
@@ -79,6 +75,9 @@ impl ConnectorBuilder for PostgresConnectorBuilder {
                 url.set_path("/");
                 let string_url = url.to_string();
                 let pool = PgPool::connect(&string_url).await.unwrap();
+                if reset_database {
+                    sqlx::query(&format!("DROP DATABASE IF EXISTS {database_name}")).execute(&pool).await;
+                }
                 sqlx::query(&format!("CREATE DATABASE IF NOT EXISTS {database_name}")).execute(&pool).await;
                 sqlx::query(&format!("USE DATABASE {database_name}")).execute(&pool).await;
                 Box::new(PostgresConnector::new(pool, database_name, models).await)

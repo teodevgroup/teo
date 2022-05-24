@@ -21,6 +21,7 @@ impl MySQLConnector {
     pub async fn new(pool: MySqlPool, database_name: String, models: &Vec<Model>) -> MySQLConnector {
         for model in models {
             let stmt_string = table_create_statement(model).to_string(MysqlQueryBuilder);
+            println!("{}", stmt_string);
             sqlx::query(&stmt_string).execute(&pool).await;
         }
         MySQLConnector { pool, database_name }
@@ -29,10 +30,6 @@ impl MySQLConnector {
 
 #[async_trait]
 impl Connector for MySQLConnector {
-    async fn drop_database(&self) {
-        let database_name = &self.database_name;
-        sqlx::query(&format!("DROP DATABASE IF EXISTS {database_name}")).execute(&self.pool).await;
-    }
 
     async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
         todo!()
@@ -71,7 +68,7 @@ impl MySQLConnectorBuilder {
 
 #[async_trait]
 impl ConnectorBuilder for MySQLConnectorBuilder {
-    async fn build_connector(&self, models: &Vec<Model>) -> Box<dyn Connector> {
+    async fn build_connector(&self, models: &Vec<Model>, reset_database: bool) -> Box<dyn Connector> {
         let url = Url::parse(self.url);
         match url {
             Ok(mut url) => {
@@ -79,6 +76,9 @@ impl ConnectorBuilder for MySQLConnectorBuilder {
                 url.set_path("/");
                 let string_url = url.to_string();
                 let pool = MySqlPool::connect(&string_url).await.unwrap();
+                if reset_database {
+                    sqlx::query(&format!("DROP DATABASE IF EXISTS {database_name}")).execute(&pool).await;
+                }
                 sqlx::query(&format!("CREATE DATABASE IF NOT EXISTS {database_name}")).execute(&pool).await;
                 sqlx::query(&format!("USE DATABASE {database_name}")).execute(&pool).await;
                 Box::new(MySQLConnector::new(pool, database_name, models).await)

@@ -15,6 +15,8 @@ async fn make_graph() -> &'static Graph {
 
         g.mongodb(options.clone());
 
+        g.reset_database();
+
         g.model("Required", |m| {
             m.field("string", |f| {
                 f.required().string();
@@ -45,8 +47,6 @@ async fn make_graph() -> &'static Graph {
             })
         });
     }).await));
-
-    graph.drop_database().await;
 
     graph
 }

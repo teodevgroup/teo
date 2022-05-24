@@ -32,7 +32,7 @@ impl Graph {
             models_map.insert(model.name(), addr_of!(*model));
         }
         graph.models_map = models_map;
-        graph.connector = Some(builder.connector_builder().build_connector(&graph.models_vec).await);
+        graph.connector = Some(builder.connector_builder().build_connector(&graph.models_vec, builder.reset_database).await);
         graph
     }
 
@@ -77,9 +77,6 @@ impl Graph {
         self.connector().find_many(self.model(model_name), finder).await
     }
 
-    pub async fn drop_database(&self) {
-        self.connector().drop_database().await;
-    }
 }
 
 unsafe impl Send for Graph {}
