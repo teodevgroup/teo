@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::ptr::addr_of;
+use actix_http::Method;
 use actix_web::{App, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_utils::future::ok;
@@ -95,8 +96,14 @@ impl Graph {
                         let model_url_segment_name = &path[1..path.len() - 7];
                         match self.model_name_for_url_segment_name(model_url_segment_name) {
                             Some(model_name) => {
-                                let http_response = HttpResponse::Ok().json(json!({"hello": "world!"}));
-                                ok(r.into_response(http_response))
+                                if r.method() == Method::POST {
+
+                                    let http_response = HttpResponse::Ok().json(json!({"hello": "world!"}));
+                                    ok(r.into_response(http_response))
+                                } else {
+                                    let http_response = HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
+                                    ok(r.into_response(http_response))
+                                }
                             }
                             None => {
                                 let http_response = HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
