@@ -34,7 +34,7 @@ postgres = ["sqlx", "sea-query"]
 
 [[test]]
 name = "test-core"
-path = "tests/core/mod.rs"
+path = "tests/core/tests.rs"
 required-features = ["mongo", "mysql", "postgres"]
 
 [[test]]
@@ -43,6 +43,11 @@ path = "tests/connectors/mongodb/tests.rs"
 required-features = ["mongo"]
 
 [[test]]
-name = "test-sql-connector"
-path = "tests/connectors/sqlx/tests.rs"
-required-features = ["mysql", "postgres"]
+name = "test-mysql-connector"
+path = "tests/connectors/mysql/tests.rs"
+required-features = ["mysql"]
+
+[[test]]
+name = "test-postgres-connector"
+path = "tests/connectors/postgres/tests.rs"
+required-features = ["postgres"]

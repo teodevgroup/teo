@@ -18,7 +18,7 @@ use teo::error::ActionError;
 //     pool
 // }
 
-async fn make_sqlx_graph() -> &'static Graph {
+async fn make_mysql_graph() -> &'static Graph {
 
     let graph = Box::leak(Box::new(Graph::new(|g| {
 
@@ -51,7 +51,7 @@ async fn make_sqlx_graph() -> &'static Graph {
 
 #[test]
 async fn unique_value_cannot_have_duplications_on_create() {
-    let graph = make_sqlx_graph().await;
+    let graph = make_mysql_graph().await;
     let object1 = graph.new_object("UniqueIndex");
     object1.set_value("unique", Value::String("123".to_string()));
     object1.save().await;
@@ -63,7 +63,7 @@ async fn unique_value_cannot_have_duplications_on_create() {
 
 #[test]
 async fn unique_value_cannot_have_duplications_on_update() {
-    let graph = make_sqlx_graph().await;
+    let graph = make_mysql_graph().await;
     let object1 = graph.new_object("UniqueIndex");
     object1.set_value("unique", Value::String("123".to_string()));
     object1.save().await;
@@ -77,7 +77,7 @@ async fn unique_value_cannot_have_duplications_on_update() {
 
 #[test]
 async fn unique_value_can_have_duplicated_nulls() {
-    let graph = make_sqlx_graph().await;
+    let graph = make_mysql_graph().await;
     let object1 = graph.new_object("UniqueIndex");
     object1.save().await;
     let object2 = graph.new_object("UniqueIndex");
@@ -87,5 +87,5 @@ async fn unique_value_can_have_duplicated_nulls() {
 
 #[test]
 async fn index_field_is_indexed() {
-    let graph = make_sqlx_graph().await;
+    let graph = make_mysql_graph().await;
 }
