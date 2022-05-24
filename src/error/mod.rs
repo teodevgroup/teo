@@ -1,7 +1,8 @@
 use std::collections::HashMap;
+use serde::Serialize;
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub enum ActionErrorType {
     KeysUnallowed,
     ActionUnrecognized,
@@ -13,6 +14,7 @@ pub enum ActionErrorType {
     ValueRequired,
     ValidationError,
     UnknownDatabaseWriteError,
+    NotFound,
     InternalServerError,
 }
 
@@ -29,12 +31,13 @@ impl ActionErrorType {
             ActionErrorType::ValueRequired => { 400 }
             ActionErrorType::ValidationError => { 400 }
             ActionErrorType::UnknownDatabaseWriteError => { 500 }
+            ActionErrorType::NotFound => { 404 }
             ActionErrorType::InternalServerError => { 500 }
         }
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct ActionError {
     pub r#type: ActionErrorType,
     pub message: String,
@@ -130,6 +133,14 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::UnknownDatabaseWriteError,
             message: "An unknown database write error occurred.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn not_found() -> Self {
+        ActionError {
+            r#type: ActionErrorType::NotFound,
+            message: "Not found.".to_string(),
             errors: None
         }
     }

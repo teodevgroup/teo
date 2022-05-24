@@ -6,3 +6,5 @@ mod properties;
 mod object;
 #[path = "definitions.rs"]
 mod definitions;
+#[path = "server.rs"]
+mod server;
