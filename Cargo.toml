@@ -22,9 +22,10 @@ actix-http = "3"
 regex = "1.5.5"
 tokio = "1.18"
 async-trait = "0.1.53"
-sqlx = { version = "0.5", features = ["mysql", "runtime-tokio-rustls"], optional = true }
+sqlx = { version = "0.5", features = ["mysql", "postgres", "runtime-tokio-rustls"], optional = true }
 sea-query = { version = "^0", features = ["backend-mysql", "backend-postgres", "sqlx-mysql", "sqlx-postgres"], optional = true }
 Inflector = "*"
+url = "2.2.2"
 
 [features]
 mongo = ["mongodb"]

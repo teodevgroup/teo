@@ -27,7 +27,7 @@ impl GraphBuilder {
     pub(crate) fn connector_builder(&self) -> &Box<dyn ConnectorBuilder> {
         match &self.connector_builder {
             Some(connector_builder) => connector_builder,
-            None => panic!("Graph doesn't has a database connector.")
+            None => panic!("Graph doesn't have a database connector.")
         }
     }
 

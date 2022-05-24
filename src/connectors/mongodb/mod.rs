@@ -9,7 +9,6 @@ use mongodb::error::{ErrorKind, WriteFailure};
 use mongodb::options::{CreateIndexOptions, DropDatabaseOptions, IndexOptions};
 use regex::Regex;
 use crate::core::connector::{Connector, ConnectorBuilder};
-use crate::core::graph::{Graph};
 use crate::core::object::Object;
 use crate::core::builders::GraphBuilder;
 use crate::core::field::{Availability, FieldIndex};
