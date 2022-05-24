@@ -26,5 +26,5 @@ async fn make_graph() -> &'static Graph {
 #[test]
 async fn server_should_start() -> std::io::Result<()> {
     let graph = make_graph().await;
-    graph.start_server(5000)
+    graph.start_server(5000).await
 }
