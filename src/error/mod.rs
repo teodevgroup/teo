@@ -20,6 +20,8 @@ pub enum ActionErrorType {
     MissingActionName,
     UndefinedAction,
     UnallowedAction,
+    MissingInputSection,
+    ObjectNotFound,
 }
 
 impl ActionErrorType {
@@ -41,6 +43,8 @@ impl ActionErrorType {
             ActionErrorType::UnknownDatabaseWriteError => { 500 }
             ActionErrorType::NotFound => { 404 }
             ActionErrorType::InternalServerError => { 500 }
+            ActionErrorType::MissingInputSection => { 400 }
+            ActionErrorType::ObjectNotFound => { 404 }
         }
     }
 }
@@ -181,6 +185,22 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::UnallowedAction,
             message: "Unallowed action.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn missing_input_section() -> Self {
+        ActionError {
+            r#type: ActionErrorType::MissingInputSection,
+            message: "Input incomplete.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn object_not_found() -> Self {
+        ActionError {
+            r#type: ActionErrorType::ObjectNotFound,
+            message: "The requested object is not exist.".to_string(),
             errors: None
         }
     }

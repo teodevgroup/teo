@@ -36,11 +36,11 @@ impl Object {
         }) }
     }
 
-    pub async fn set_json(&self, json_value: JsonValue) -> Result<(), ActionError> {
+    pub async fn set_json(&self, json_value: &JsonValue) -> Result<(), ActionError> {
         self.set_or_update_json(json_value, true).await
     }
 
-    pub async fn update_json(&self, json_value: JsonValue) -> Result<(), ActionError> {
+    pub async fn update_json(&self, json_value: &JsonValue) -> Result<(), ActionError> {
         self.set_or_update_json(json_value, false).await
     }
 
@@ -169,7 +169,7 @@ impl Object {
         self
     }
 
-    async fn set_or_update_json(&self, json_value: JsonValue, process: bool) -> Result<(), ActionError> {
+    async fn set_or_update_json(&self, json_value: &JsonValue, process: bool) -> Result<(), ActionError> {
         let json_object = json_value.as_object().unwrap().clone();
         // check keys first
         let json_keys: Vec<&str> = json_object.keys().map(|k| { k.as_str() }).collect();

@@ -153,15 +153,15 @@ impl Connector for MongoDBConnector {
         todo!()
     }
 
-    async fn find_unique(&self, model: &Model, finder: JsonValue) -> Option<Object> {
+    async fn find_unique(&self, model: &Model, finder: &JsonValue) -> Option<Object> {
         todo!()
     }
 
-    async fn find_one(&self, model: &Model, finder: JsonValue) -> Option<Object> {
+    async fn find_first(&self, model: &Model, finder: &JsonValue) -> Option<Object> {
         todo!()
     }
 
-    async fn find_many(&self, model: &Model, finder: JsonValue) -> Vec<Object> {
+    async fn find_many(&self, model: &Model, finder: &JsonValue) -> Vec<Object> {
         todo!()
     }
 }

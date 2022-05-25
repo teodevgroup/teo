@@ -11,6 +11,7 @@ use crate::core::builders::GraphBuilder;
 use crate::core::connector::Connector;
 use crate::core::model::Model;
 use crate::core::object::Object;
+use crate::core::value::Value;
 use crate::error::ActionError;
 
 
@@ -73,16 +74,16 @@ impl Graph {
         &self.enums
     }
 
-    pub(crate) async fn find_unique(&'static self, model_name: &'static str, finder: JsonValue) -> Option<Object> {
-        self.connector().find_unique(self.model(model_name), finder).await
+    pub(crate) async fn find_unique(&'static self, model: &Model, finder: &JsonValue) -> Option<Object> {
+        self.connector().find_unique(model, finder).await
     }
 
-    pub(crate) async fn find_one(&'static self, model_name: &'static str, finder: JsonValue) -> Option<Object> {
-        self.connector().find_one(self.model(model_name), finder).await
+    pub(crate) async fn find_first(&'static self, model: &Model, finder: &JsonValue) -> Option<Object> {
+        self.connector().find_first(model, finder).await
     }
 
-    pub(crate) async fn find_many(&'static self, model_name: &'static str, finder: JsonValue) -> Vec<Object> {
-        self.connector().find_many(self.model(model_name), finder).await
+    pub(crate) async fn find_many(&'static self, model: &Model, finder: &JsonValue) -> Vec<Object> {
+        self.connector().find_many(model, finder).await
     }
 
     pub fn new_object(&'static self, model: &'static str) -> Object {
@@ -184,7 +185,6 @@ impl Graph {
                                                             return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_action_name()}));
                                                         }
                                                     }
-                                                    return HttpResponse::Ok().json(json!({"data": json_body}));
                                                 }
                                                 None => {
                                                     return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
@@ -222,19 +222,92 @@ impl Graph {
     }
 
     async fn handle_find_unique(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
-        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+        let r#where = input.get("where");
+        match r#where {
+            Some(where_input) => {
+                let result = self.find_unique(model, where_input).await;
+                match result {
+                    Some(obj) => {
+                        let json_data = obj.to_json();
+                        return HttpResponse::Ok().json(json!({"data": json_data}));
+                    }
+                    None => {
+                        return HttpResponse::NotFound().json(json!({"error": ActionError::object_not_found()}));
+                    }
+                }
+            }
+            None => {
+                return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}));
+            }
+        }
     }
 
     async fn handle_find_first(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
-        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+        let r#where = input.get("where");
+        match r#where {
+            Some(where_input) => {
+                let result = self.find_first(model, where_input).await;
+                match result {
+                    Some(obj) => {
+                        let json_data = obj.to_json();
+                        return HttpResponse::Ok().json(json!({"data": json_data}));
+                    }
+                    None => {
+                        return HttpResponse::NotFound().json(json!({"error": ActionError::object_not_found()}));
+                    }
+                }
+            }
+            None => {
+                return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}));
+            }
+        }
     }
 
     async fn handle_find_many(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
-        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+        let r#where = input.get("where");
+        match r#where {
+            Some(where_input) => {
+                let result = self.find_many(model, where_input).await;
+                let count = self.count(model, where_input).await;
+                let result_json: Vec<JsonValue> = result.iter().map(|i| { i.to_json() }).collect();
+                return HttpResponse::Ok().json(json!({
+                    "meta": {"count": count},
+                    "data": result_json
+                }));
+            }
+            None => {
+                return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}));
+            }
+        }
     }
 
     async fn handle_create(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
-        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+        let create = input.get("create");
+        let obj = self.new_object(model.name());
+        let set_json_result = match create {
+            Some(create) => {
+                obj.set_json(create).await
+            }
+            None => {
+                let empty = JsonValue::Map(HashMap::new());
+                obj.set_json(empty).await
+            }
+        };
+        return match set_json_result {
+            Ok(_) => {
+                match obj.save().await {
+                    Ok(_) => {
+                        HttpResponse::Ok().json(json!({"data": obj.to_json()}))
+                    }
+                    Err(err) => {
+                        HttpResponse::BadRequest().json(json!({"error": err}))
+                    }
+                }
+            }
+            Err(err) => {
+                HttpResponse::BadRequest().json(json!({"error": err}))
+            }
+        }
     }
 
     async fn handle_update(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
