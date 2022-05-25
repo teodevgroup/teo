@@ -324,7 +324,48 @@ impl Graph {
     }
 
     async fn handle_update(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
-        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+        let r#where = input.get("where");
+        match r#where {
+            Some(where_input) => {
+                let result = self.find_unique(model, where_input).await;
+                match result {
+                    Ok(obj) => {
+                        // find the object here
+                        let update = input.get("update");
+                        let set_json_result = match update {
+                            Some(update) => {
+                                obj.set_json(update).await
+                            }
+                            None => {
+                                let empty = JsonValue::Object(Map::new());
+                                obj.set_json(&empty).await
+                            }
+                        };
+                        match set_json_result {
+                            Ok(_) => {
+                                match obj.save().await {
+                                    Ok(_) => {
+                                        HttpResponse::Ok().json(json!({"data": obj.to_json()}))
+                                    }
+                                    Err(err) => {
+                                        HttpResponse::BadRequest().json(json!({"error": err}))
+                                    }
+                                }
+                            }
+                            Err(err) => {
+                                return HttpResponse::BadRequest().json(json!({"error": err}));
+                            }
+                        }
+                    }
+                    Err(err) => {
+                        return HttpResponse::NotFound().json(json!({"error": err}));
+                    }
+                }
+            }
+            None => {
+                return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}));
+            }
+        }
     }
 
     async fn handle_upsert(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
