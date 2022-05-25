@@ -56,7 +56,7 @@ impl Graph {
         }
     }
 
-    pub(crate) fn model(&'static self, name: &str) -> &'static Model {
+    pub(crate) fn model(&self, name: &str) -> &Model {
         unsafe {
             &(**self.models_map.get(name).unwrap())
         }
@@ -74,16 +74,20 @@ impl Graph {
         &self.enums
     }
 
-    pub(crate) async fn find_unique(&'static self, model: &Model, finder: &JsonValue) -> Option<Object> {
-        self.connector().find_unique(model, finder).await
+    pub(crate) async fn find_unique(&self, model: &Model, finder: &JsonValue) -> Result<Object, ActionError> {
+        self.connector().find_unique(self, model, finder).await
     }
 
-    pub(crate) async fn find_first(&'static self, model: &Model, finder: &JsonValue) -> Option<Object> {
-        self.connector().find_first(model, finder).await
+    pub(crate) async fn find_first(&self, model: &Model, finder: &JsonValue) -> Result<Object, ActionError> {
+        self.connector().find_first(self, model, finder).await
     }
 
-    pub(crate) async fn find_many(&'static self, model: &Model, finder: &JsonValue) -> Vec<Object> {
-        self.connector().find_many(model, finder).await
+    pub(crate) async fn find_many(&self, model: &Model, finder: &JsonValue) -> Result<Vec<Object>, ActionError> {
+        self.connector().find_many(self, model, finder).await
+    }
+
+    pub(crate) async fn count(&self, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
+        self.connector().count(self, model, finder).await
     }
 
     pub fn new_object(&'static self, model: &'static str) -> Object {
@@ -223,65 +227,74 @@ impl Graph {
 
     async fn handle_find_unique(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
         let r#where = input.get("where");
-        match r#where {
+        return match r#where {
             Some(where_input) => {
                 let result = self.find_unique(model, where_input).await;
                 match result {
-                    Some(obj) => {
+                    Ok(obj) => {
                         let json_data = obj.to_json();
-                        return HttpResponse::Ok().json(json!({"data": json_data}));
+                        HttpResponse::Ok().json(json!({"data": json_data}))
                     }
-                    None => {
-                        return HttpResponse::NotFound().json(json!({"error": ActionError::object_not_found()}));
+                    Err(err) => {
+                        HttpResponse::NotFound().json(json!({"error": err}))
                     }
                 }
             }
             None => {
-                return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}));
+                HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}))
             }
         }
     }
 
     async fn handle_find_first(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
         let r#where = input.get("where");
-        match r#where {
+        return match r#where {
             Some(where_input) => {
                 let result = self.find_first(model, where_input).await;
                 match result {
-                    Some(obj) => {
+                    Ok(obj) => {
                         let json_data = obj.to_json();
-                        return HttpResponse::Ok().json(json!({"data": json_data}));
+                        HttpResponse::Ok().json(json!({"data": json_data}))
                     }
-                    None => {
-                        return HttpResponse::NotFound().json(json!({"error": ActionError::object_not_found()}));
+                    Err(err) => {
+                        HttpResponse::NotFound().json(json!({"error": err}))
                     }
                 }
             }
             None => {
-                return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}));
+                HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}))
             }
         }
     }
 
     async fn handle_find_many(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
         let r#where = input.get("where");
-        match r#where {
+        return match r#where {
             Some(where_input) => {
                 let result = self.find_many(model, where_input).await;
-                let count = self.count(model, where_input).await;
-                let result_json: Vec<JsonValue> = result.iter().map(|i| { i.to_json() }).collect();
-                return HttpResponse::Ok().json(json!({
-                    "meta": {"count": count},
-                    "data": result_json
-                }));
+                match result {
+                    Ok(results) => {
+                        let count = self.count(model, where_input).await.unwrap();
+                        let result_json: Vec<JsonValue> = results.iter().map(|i| { i.to_json() }).collect();
+                        HttpResponse::Ok().json(json!({
+                            "meta": {"count": count},
+                            "data": result_json
+                        }))
+                    }
+                    Err(err) => {
+                        HttpResponse::BadRequest().json(json!({
+                            "error": err
+                        }))
+                    }
+                }
             }
             None => {
-                return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}));
+                HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}))
             }
         }
     }
 
-    async fn handle_create(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+    async fn handle_create(&'static self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
         let create = input.get("create");
         let obj = self.new_object(model.name());
         let set_json_result = match create {
@@ -289,8 +302,8 @@ impl Graph {
                 obj.set_json(create).await
             }
             None => {
-                let empty = JsonValue::Map(HashMap::new());
-                obj.set_json(empty).await
+                let empty = JsonValue::Object(Map::new());
+                obj.set_json(&empty).await
             }
         };
         return match set_json_result {

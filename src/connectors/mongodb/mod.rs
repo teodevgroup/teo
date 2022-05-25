@@ -12,6 +12,7 @@ use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::object::Object;
 use crate::core::builders::GraphBuilder;
 use crate::core::field::{Availability, FieldIndex};
+use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::value::Value;
 use crate::error::ActionError;
@@ -52,9 +53,7 @@ impl MongoDBConnector {
             collections: collections
         }
     }
-}
 
-impl MongoDBConnector {
     fn _handle_write_error(&self, error_kind: ErrorKind) -> ActionError {
         match error_kind {
             ErrorKind::Write(write) => {
@@ -81,7 +80,6 @@ impl MongoDBConnector {
             }
         }
     }
-
 }
 
 #[async_trait]
@@ -149,19 +147,23 @@ impl Connector for MongoDBConnector {
         Ok(())
     }
 
-    async fn delete_object(&self, object: &Object) {
+    async fn delete_object(&self, object: &Object) -> Result<(), ActionError> {
         todo!()
     }
 
-    async fn find_unique(&self, model: &Model, finder: &JsonValue) -> Option<Object> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<Object, ActionError> {
         todo!()
     }
 
-    async fn find_first(&self, model: &Model, finder: &JsonValue) -> Option<Object> {
+    async fn find_first(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<Object, ActionError> {
         todo!()
     }
 
-    async fn find_many(&self, model: &Model, finder: &JsonValue) -> Vec<Object> {
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<Vec<Object>, ActionError> {
+        todo!()
+    }
+
+    async fn count(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
         todo!()
     }
 }

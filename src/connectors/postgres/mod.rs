@@ -6,6 +6,7 @@ use async_trait::async_trait;
 use crate::connectors::sql_shared::table_create_statement;
 use crate::core::builders::GraphBuilder;
 use crate::core::connector::{Connector, ConnectorBuilder};
+use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::error::ActionError;
@@ -34,19 +35,23 @@ impl Connector for PostgresConnector {
         todo!()
     }
 
-    async fn delete_object(&self, object: &Object) {
+    async fn delete_object(&self, object: &Object) -> Result<(), ActionError> {
         todo!()
     }
 
-    async fn find_unique(&self, model: &Model, finder: &JsonValue) -> Option<Object> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<Object, ActionError> {
         todo!()
     }
 
-    async fn find_first(&self, model: &Model, finder: &JsonValue) -> Option<Object> {
+    async fn find_first(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<Object, ActionError> {
         todo!()
     }
 
-    async fn find_many(&self, model: &Model, finder: &JsonValue) -> Vec<Object> {
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<Vec<Object>, ActionError> {
+        todo!()
+    }
+
+    async fn count(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
         todo!()
     }
 }

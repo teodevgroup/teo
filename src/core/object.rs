@@ -20,7 +20,7 @@ pub struct Object {
 
 impl Object {
 
-    pub(crate) fn new(graph: &'static Graph, model: &'static Model) -> Object {
+    pub(crate) fn new<'g>(graph: &'static Graph, model: &'static Model) -> Object {
         Object { inner: Arc::new(ObjectInner {
             model,
             graph,
