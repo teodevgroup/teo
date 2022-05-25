@@ -35,4 +35,23 @@ impl ActionType {
             ActionType::GroupBy
         ].iter().map(|x| *x))
     }
+
+    pub(crate) fn from_str(str: &str) -> Option<ActionType> {
+        match str {
+            "FindUnique" => Some(ActionType::FindUnique),
+            "FindFirst" => Some(ActionType::FindFirst),
+            "FindMany" => Some(ActionType::FindMany),
+            "Create" => Some(ActionType::Create),
+            "Update" => Some(ActionType::Update),
+            "Upsert" => Some(ActionType::Upsert),
+            "Delete" => Some(ActionType::Delete),
+            "CreateMany" => Some(ActionType::CreateMany),
+            "UpdateMany" => Some(ActionType::UpdateMany),
+            "DeleteMany" => Some(ActionType::DeleteMany),
+            "Count" => Some(ActionType::Count),
+            "Aggregate" => Some(ActionType::Aggregate),
+            "GroupBy" => Some(ActionType::GroupBy),
+            _ => None
+        }
+    }
 }

@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 use std::ptr::addr_of;
-use actix_http::Method;
-use actix_web::{App, HttpResponse, HttpServer, web};
+use actix_http::{HttpMessage, Method};
+use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_utils::future::ok;
-use serde_json::{json, Value as JsonValue};
+use futures_util::StreamExt;
+use serde_json::{json, Map, Value as JsonValue};
+use crate::action::action::ActionType;
 use crate::core::builders::GraphBuilder;
 use crate::core::connector::Connector;
 use crate::core::model::Model;
@@ -89,32 +91,122 @@ impl Graph {
 
     pub async fn start_server(&'static self, port: u16) -> std::io::Result<()> {
         HttpServer::new(|| {
+            let this: &'static Graph = self;
             App::new()
-                .default_service(|r: ServiceRequest| {
+                .default_service(web::route().to(move |r: HttpRequest, mut payload: web::Payload| async move {
                     let path = r.path();
                     if path.len() > 7 && path.ends_with("/action") {
                         let model_url_segment_name = &path[1..path.len() - 7];
-                        match self.model_name_for_url_segment_name(model_url_segment_name) {
+                        match this.model_name_for_url_segment_name(model_url_segment_name) {
                             Some(model_name) => {
                                 if r.method() == Method::POST {
-
-                                    let http_response = HttpResponse::Ok().json(json!({"hello": "world!"}));
-                                    ok(r.into_response(http_response))
+                                    let mut body = web::BytesMut::new();
+                                    while let Some(chunk) = payload.next().await {
+                                        let chunk = chunk.unwrap();
+                                        // limit max size of in-memory payload
+                                        if (body.len() + chunk.len()) > 262_144usize {
+                                            return HttpResponse::InternalServerError()
+                                                .json(json!({"error": ActionError::internal_server_error("Memory overflow.".to_string())}));
+                                        }
+                                        body.extend_from_slice(&chunk);
+                                    }
+                                    let parsed_body: Result<JsonValue, serde_json::Error> = serde_json::from_slice(&body);
+                                    match parsed_body {
+                                        Ok(json_body) => {
+                                            match json_body.as_object() {
+                                                Some(map) => {
+                                                    let action_name = map.get("action");
+                                                    match action_name {
+                                                        Some(name) => {
+                                                            match name.as_str() {
+                                                                Some(name) => {
+                                                                    let action = ActionType::from_str(name);
+                                                                    match action {
+                                                                        Some(action_type) => {
+                                                                            let model_def = this.model(model_name);
+                                                                            if model_def.has_action(action_type) {
+                                                                                match action_type {
+                                                                                    ActionType::FindUnique => {
+                                                                                        return this.handle_find_unique(map, model_def).await;
+                                                                                    }
+                                                                                    ActionType::FindFirst => {
+                                                                                        return this.handle_find_first(map, model_def).await;
+                                                                                    }
+                                                                                    ActionType::FindMany => {
+                                                                                        return this.handle_find_many(map, model_def).await;
+                                                                                    }
+                                                                                    ActionType::Create => {
+                                                                                        return this.handle_create(map, model_def).await;
+                                                                                    }
+                                                                                    ActionType::Update => {
+                                                                                        return this.handle_update(map, model_def).await;
+                                                                                    }
+                                                                                    ActionType::Upsert => {
+                                                                                        return this.handle_upsert(map, model_def).await;
+                                                                                    }
+                                                                                    ActionType::Delete => {
+                                                                                        return this.handle_delete(map, model_def).await;
+                                                                                    }
+                                                                                    ActionType::CreateMany => {
+                                                                                        return this.handle_create_many(map, model_def).await;
+                                                                                    }
+                                                                                    ActionType::UpdateMany => {
+                                                                                        return this.handle_update_many(map, model_def).await;
+                                                                                    }
+                                                                                    ActionType::DeleteMany => {
+                                                                                        return this.handle_delete_many(map, model_def).await;
+                                                                                    }
+                                                                                    ActionType::Count => {
+                                                                                        return this.handle_count(map, model_def).await;
+                                                                                    }
+                                                                                    ActionType::Aggregate => {
+                                                                                        return this.handle_aggregate(map, model_def).await;
+                                                                                    }
+                                                                                    ActionType::GroupBy => {
+                                                                                        return this.handle_group_by(map, model_def).await;
+                                                                                    }
+                                                                                }
+                                                                            } else {
+                                                                                return HttpResponse::BadRequest().json(json!({"error": ActionError::unallowed_action()}));
+                                                                            }
+                                                                        }
+                                                                        None => {
+                                                                            return HttpResponse::BadRequest().json(json!({"error": ActionError::undefined_action()}));
+                                                                        }
+                                                                    }
+                                                                }
+                                                                None => {
+                                                                    return HttpResponse::BadRequest().json(json!({"error": ActionError::undefined_action()}));
+                                                                }
+                                                            }
+                                                        }
+                                                        None => {
+                                                            return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_action_name()}));
+                                                        }
+                                                    }
+                                                    return HttpResponse::Ok().json(json!({"data": json_body}));
+                                                }
+                                                None => {
+                                                    return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
+                                                }
+                                            }
+                                        }
+                                        Err(_) => {
+                                            return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
+                                        }
+                                    }
                                 } else {
-                                    let http_response = HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
-                                    ok(r.into_response(http_response))
+                                    return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
                                 }
                             }
                             None => {
-                                let http_response = HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
-                                ok(r.into_response(http_response))
+                                return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
                             }
                         }
                     } else {
-                        let http_response = HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
-                        ok(r.into_response(http_response))
+                        return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
                     }
-                })
+                }))
         })
             .bind(("127.0.0.1", port))
             .unwrap()
@@ -128,6 +220,59 @@ impl Graph {
             None => None
         }
     }
+
+    async fn handle_find_unique(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+    }
+
+    async fn handle_find_first(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+    }
+
+    async fn handle_find_many(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+    }
+
+    async fn handle_create(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+    }
+
+    async fn handle_update(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+    }
+
+    async fn handle_upsert(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+    }
+
+    async fn handle_delete(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+    }
+
+    async fn handle_create_many(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+    }
+
+    async fn handle_update_many(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+    }
+
+    async fn handle_delete_many(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+    }
+
+    async fn handle_count(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+    }
+
+    async fn handle_aggregate(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+    }
+
+    async fn handle_group_by(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+    }
+
 }
 
 unsafe impl Send for Graph {}

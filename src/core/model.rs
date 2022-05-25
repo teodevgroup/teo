@@ -1,6 +1,7 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ptr::{addr_of, null};
 use inflector::Inflector;
+use crate::action::action::ActionType;
 use crate::core::builders::ModelBuilder;
 use crate::core::field::{Field, FieldIndex};
 use crate::core::field::ReadRule::NoRead;
@@ -16,6 +17,7 @@ pub(crate) struct Model {
     localized_name: &'static str,
     description: &'static str,
     identity: bool,
+    actions: HashSet<ActionType>,
     fields_vec: Vec<Field>,
     fields_map: HashMap<&'static str, * const Field>,
     primary_field: * const Field,
@@ -54,6 +56,7 @@ impl Model {
             localized_name: builder.localized_name,
             description: builder.description,
             identity: builder.identity,
+            actions: builder.actions.clone(),
             fields_vec,
             fields_map,
             primary_field,
@@ -152,6 +155,10 @@ impl Model {
         builder.fields.iter()
             .map(|f| { f.name })
             .collect()
+    }
+
+    pub(crate) fn has_action(&self, action: ActionType) -> bool {
+        self.actions.contains(&action)
     }
 }
 

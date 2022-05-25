@@ -11,11 +11,15 @@ pub enum ActionErrorType {
     WrongDateFormat,
     WrongDateTimeFormat,
     WrongEnumChoice,
+    WrongJSONFormat,
     ValueRequired,
     ValidationError,
     UnknownDatabaseWriteError,
     NotFound,
     InternalServerError,
+    MissingActionName,
+    UndefinedAction,
+    UnallowedAction,
 }
 
 impl ActionErrorType {
@@ -30,6 +34,10 @@ impl ActionErrorType {
             ActionErrorType::WrongEnumChoice => { 400 }
             ActionErrorType::ValueRequired => { 400 }
             ActionErrorType::ValidationError => { 400 }
+            ActionErrorType::WrongJSONFormat => { 400 }
+            ActionErrorType::MissingActionName => { 400 }
+            ActionErrorType::UndefinedAction => { 400 }
+            ActionErrorType::UnallowedAction => { 400 }
             ActionErrorType::UnknownDatabaseWriteError => { 500 }
             ActionErrorType::NotFound => { 404 }
             ActionErrorType::InternalServerError => { 500 }
@@ -141,6 +149,38 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::NotFound,
             message: "Not found.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn wrong_json_format() -> Self {
+        ActionError {
+            r#type: ActionErrorType::WrongJSONFormat,
+            message: "Wrong JSON format.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn missing_action_name() -> Self {
+        ActionError {
+            r#type: ActionErrorType::MissingActionName,
+            message: "Missing action name.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn undefined_action() -> Self {
+        ActionError {
+            r#type: ActionErrorType::UndefinedAction,
+            message: "Undefined action.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn unallowed_action() -> Self {
+        ActionError {
+            r#type: ActionErrorType::UnallowedAction,
+            message: "Unallowed action.".to_string(),
             errors: None
         }
     }

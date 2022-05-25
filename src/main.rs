@@ -13,8 +13,8 @@ async fn make_graph() -> &'static Graph {
 
         g.reset_database();
 
-        g.model("Required", |m| {
-            m.field("string", |f| {
+        g.model("User", |m| {
+            m.field("name", |f| {
                 f.required().string();
             });
         });
