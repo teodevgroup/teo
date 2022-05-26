@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::ptr::addr_of;
 use actix_http::{HttpMessage, Method};
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web};
-use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_utils::future::ok;
 use futures_util::StreamExt;
 use serde_json::{json, Map, Value as JsonValue};

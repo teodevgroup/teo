@@ -4,6 +4,7 @@ use std::sync::atomic::{Ordering};
 use serde_json::{Value as JsonValue};
 use async_trait::async_trait;
 use bson::{Bson, DateTime, doc, Document, oid::ObjectId};
+use chrono::Date;
 use mongodb::{options::ClientOptions, Client, Database, Collection, IndexModel};
 use mongodb::error::{ErrorKind, WriteFailure};
 use mongodb::options::{CreateIndexOptions, DropDatabaseOptions, IndexOptions};
@@ -11,9 +12,10 @@ use regex::Regex;
 use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::object::Object;
 use crate::core::builders::GraphBuilder;
-use crate::core::field::{Availability, FieldIndex};
+use crate::core::field::{Availability, FieldIndex, Type};
 use crate::core::graph::Graph;
 use crate::core::model::Model;
+use crate::core::stage::Stage::Value;
 use crate::core::value::Value;
 use crate::error::ActionError;
 
@@ -54,7 +56,7 @@ impl MongoDBConnector {
         }
     }
 
-    fn document_to_object(&self, document: &Document, object: &Object) {
+    fn document_to_object(&self, document: &Document, object: &Object) -> Result<(), ActionError> {
         let primary_name = if let Some(primary_field) = object.inner.model.primary_field() {
             primary_field.name
         } else {
@@ -62,8 +64,218 @@ impl MongoDBConnector {
         };
         for key in document.keys() {
             let object_key = if key == "_id" { primary_name } else { key };
-
+            let field_type = if key == "_id" { Type::ObjectId } else { &object.inner.model.field(key).r#type };
+            let bson_value = document.get(key).unwrap();
+            let value_result = self.bson_value_to_type(object_key, bson_value, field_type);
+            match value_result {
+                Ok(value) => {
+                    object.inner.value_map.borrow_mut().insert(object_key.to_string(), value);
+                }
+                Err(err) => {
+                    return Err(err);
+                }
+            }
         }
+        Ok(())
+    }
+
+    fn bson_value_to_type(&self, field_name: &str, bson_value: &Bson, field_type: Type) -> Result<Value, ActionError> {
+        match field_type {
+            Type::Undefined => {
+                panic!()
+            }
+            Type::ObjectId => {
+                match bson_value.as_str() {
+                    Some(str) => {
+                        Value::ObjectId(str.to_string())
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+
+            }
+            Type::Bool => {
+                match bson_value.as_bool() {
+                    Some(bool) => {
+                        Value::Bool(bool)
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::I8 => {
+                match bson_value.as_i32() {
+                    Some(val) => {
+                        Value::I8(val as i8)
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::I16 => {
+                match bson_value.as_i32() {
+                    Some(val) => {
+                        Value::I16(val as i16)
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::I32 => {
+                match bson_value.as_i32() {
+                    Some(val) => {
+                        Value::I32(val as i32)
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::I64 => {
+                match bson_value.as_i64() {
+                    Some(val) => {
+                        Value::I64(val)
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::I128 => {
+                match bson_value.as_i64() {
+                    Some(val) => {
+                        Value::I128(val as i128)
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::U8 => {
+                match bson_value.as_i32() {
+                    Some(val) => {
+                        Value::U8(val as u8)
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::U16 => {
+                match bson_value.as_i32() {
+                    Some(val) => {
+                        Value::U16(val as u16)
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::U32 => {
+                match bson_value.as_i64() {
+                    Some(val) => {
+                        Value::U32(val as u32)
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::U64 => {
+                match bson_value.as_i64() {
+                    Some(val) => {
+                        Value::U64(val as u64)
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::U128 => {
+                match bson_value.as_i64() {
+                    Some(val) => {
+                        Value::U128(val as u128)
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::F32 => {
+                match bson_value.as_f64() {
+                    Some(val) => {
+                        Value::F32(val as f32)
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::F64 => {
+                match bson_value.as_f64() {
+                    Some(val) => {
+                        Value::F64(val)
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::String => {
+                match bson_value.as_str() {
+                    Some(val) => {
+                        Value::String(val.to_string())
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::Date => {
+                match bson_value.as_datetime() {
+                    Some(val) => {
+                        Value::Date(val.to_chrono().date())
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::DateTime => {
+                match bson_value.as_datetime() {
+                    Some(val) => {
+                        Value::DateTime(val.to_chrono())
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::Enum(_) => {
+                match bson_value.as_str() {
+                    Some(val) => {
+                        Value::String(val.to_string())
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
+            Type::Vec(_) => {
+                panic!()
+            }
+            Type::Map(_) => {
+                panic!()
+            }
+            Type::Object(_) => {
+                panic!()
+            }
+        }
+        Ok(Value::Null)
     }
 
     fn _handle_write_error(&self, error_kind: ErrorKind) -> ActionError {

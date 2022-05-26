@@ -25,7 +25,8 @@ pub enum ActionErrorType {
     MissingInputSection,
     ObjectNotFound,
     ObjectIsNotSaved,
-    FieldIsNotUnique
+    FieldIsNotUnique,
+    UnmatchedDataTypeInDatabase
 }
 
 impl ActionErrorType {
@@ -48,6 +49,7 @@ impl ActionErrorType {
             ActionErrorType::UnknownDatabaseWriteError => { 500 }
             ActionErrorType::UnknownDatabaseDeleteError => { 500 }
             ActionErrorType::UnknownDatabaseFindUniqueError => { 500 }
+            ActionErrorType::UnmatchedDataTypeInDatabase => { 500 }
             ActionErrorType::NotFound => { 404 }
             ActionErrorType::InternalServerError => { 500 }
             ActionErrorType::MissingInputSection => { 400 }
@@ -241,6 +243,14 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::UnknownDatabaseFindUniqueError,
             message: "An unknown query unique error occurred.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn unmatched_data_type_in_database(field_name: &str) -> Self {
+        ActionError {
+            r#type: ActionErrorType::UnmatchedDataTypeInDatabase,
+            message: format!("Unmatched data type for field '{field_name}' in database."),
             errors: None
         }
     }
