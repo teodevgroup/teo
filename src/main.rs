@@ -11,9 +11,10 @@ async fn make_graph() -> &'static Graph {
     let graph = Box::leak(Box::new(Graph::new(|g| {
         g.mongodb(options.clone());
 
-        g.reset_database();
-
         g.model("User", |m| {
+            m.field("id", |f| {
+                f.required().primary().readonly().object_id().assigned_by_database();
+            });
             m.field("name", |f| {
                 f.required().string();
             });

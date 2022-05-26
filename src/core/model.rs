@@ -116,6 +116,13 @@ impl Model {
         }
     }
 
+    pub(crate) fn primary_field_name(&self) -> Option<&'static str> {
+        match self.primary_field() {
+            Some(field) => Some(field.name),
+            None => None
+        }
+    }
+
     pub(crate) fn index_fields(&self) -> Vec<&Field> {
         self.index_fields.iter().map(|f| { unsafe { &**f } }).collect()
     }

@@ -9,13 +9,13 @@ use mongodb::{options::ClientOptions, Client, Database, Collection, IndexModel};
 use mongodb::error::{ErrorKind, WriteFailure};
 use mongodb::options::{CreateIndexOptions, DropDatabaseOptions, IndexOptions};
 use regex::Regex;
+use serde::de::Unexpected::Option;
 use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::object::Object;
 use crate::core::builders::GraphBuilder;
 use crate::core::field::{Availability, FieldIndex, Type};
 use crate::core::graph::Graph;
 use crate::core::model::Model;
-use crate::core::stage::Stage::Value;
 use crate::core::value::Value;
 use crate::error::ActionError;
 
@@ -64,7 +64,7 @@ impl MongoDBConnector {
         };
         for key in document.keys() {
             let object_key = if key == "_id" { primary_name } else { key };
-            let field_type = if key == "_id" { Type::ObjectId } else { &object.inner.model.field(key).r#type };
+            let field_type = if key == "_id" { &Type::ObjectId } else { &object.inner.model.field(key).r#type };
             let bson_value = document.get(key).unwrap();
             let value_result = self.bson_value_to_type(object_key, bson_value, field_type);
             match value_result {
@@ -79,15 +79,15 @@ impl MongoDBConnector {
         Ok(())
     }
 
-    fn bson_value_to_type(&self, field_name: &str, bson_value: &Bson, field_type: Type) -> Result<Value, ActionError> {
-        match field_type {
+    fn bson_value_to_type(&self, field_name: &str, bson_value: &Bson, field_type: &Type) -> Result<Value, ActionError> {
+        return match field_type {
             Type::Undefined => {
                 panic!()
             }
             Type::ObjectId => {
-                match bson_value.as_str() {
-                    Some(str) => {
-                        Value::ObjectId(str.to_string())
+                match bson_value.as_object_id() {
+                    Some(object_id) => {
+                        Ok(Value::ObjectId(object_id.to_hex()))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -98,7 +98,7 @@ impl MongoDBConnector {
             Type::Bool => {
                 match bson_value.as_bool() {
                     Some(bool) => {
-                        Value::Bool(bool)
+                        Ok(Value::Bool(bool))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -108,7 +108,7 @@ impl MongoDBConnector {
             Type::I8 => {
                 match bson_value.as_i32() {
                     Some(val) => {
-                        Value::I8(val as i8)
+                        Ok(Value::I8(val as i8))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -118,7 +118,7 @@ impl MongoDBConnector {
             Type::I16 => {
                 match bson_value.as_i32() {
                     Some(val) => {
-                        Value::I16(val as i16)
+                        Ok(Value::I16(val as i16))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -128,7 +128,7 @@ impl MongoDBConnector {
             Type::I32 => {
                 match bson_value.as_i32() {
                     Some(val) => {
-                        Value::I32(val as i32)
+                        Ok(Value::I32(val as i32))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -138,7 +138,7 @@ impl MongoDBConnector {
             Type::I64 => {
                 match bson_value.as_i64() {
                     Some(val) => {
-                        Value::I64(val)
+                        Ok(Value::I64(val))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -148,7 +148,7 @@ impl MongoDBConnector {
             Type::I128 => {
                 match bson_value.as_i64() {
                     Some(val) => {
-                        Value::I128(val as i128)
+                        Ok(Value::I128(val as i128))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -158,7 +158,7 @@ impl MongoDBConnector {
             Type::U8 => {
                 match bson_value.as_i32() {
                     Some(val) => {
-                        Value::U8(val as u8)
+                        Ok(Value::U8(val as u8))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -168,7 +168,7 @@ impl MongoDBConnector {
             Type::U16 => {
                 match bson_value.as_i32() {
                     Some(val) => {
-                        Value::U16(val as u16)
+                        Ok(Value::U16(val as u16))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -178,7 +178,7 @@ impl MongoDBConnector {
             Type::U32 => {
                 match bson_value.as_i64() {
                     Some(val) => {
-                        Value::U32(val as u32)
+                        Ok(Value::U32(val as u32))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -188,7 +188,7 @@ impl MongoDBConnector {
             Type::U64 => {
                 match bson_value.as_i64() {
                     Some(val) => {
-                        Value::U64(val as u64)
+                        Ok(Value::U64(val as u64))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -198,7 +198,7 @@ impl MongoDBConnector {
             Type::U128 => {
                 match bson_value.as_i64() {
                     Some(val) => {
-                        Value::U128(val as u128)
+                        Ok(Value::U128(val as u128))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -208,7 +208,7 @@ impl MongoDBConnector {
             Type::F32 => {
                 match bson_value.as_f64() {
                     Some(val) => {
-                        Value::F32(val as f32)
+                        Ok(Value::F32(val as f32))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -218,7 +218,7 @@ impl MongoDBConnector {
             Type::F64 => {
                 match bson_value.as_f64() {
                     Some(val) => {
-                        Value::F64(val)
+                        Ok(Value::F64(val))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -228,7 +228,7 @@ impl MongoDBConnector {
             Type::String => {
                 match bson_value.as_str() {
                     Some(val) => {
-                        Value::String(val.to_string())
+                        Ok(Value::String(val.to_string()))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -238,7 +238,7 @@ impl MongoDBConnector {
             Type::Date => {
                 match bson_value.as_datetime() {
                     Some(val) => {
-                        Value::Date(val.to_chrono().date())
+                        Ok(Value::Date(val.to_chrono().date()))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -248,7 +248,7 @@ impl MongoDBConnector {
             Type::DateTime => {
                 match bson_value.as_datetime() {
                     Some(val) => {
-                        Value::DateTime(val.to_chrono())
+                        Ok(Value::DateTime(val.to_chrono()))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -258,7 +258,7 @@ impl MongoDBConnector {
             Type::Enum(_) => {
                 match bson_value.as_str() {
                     Some(val) => {
-                        Value::String(val.to_string())
+                        Ok(Value::String(val.to_string()))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))
@@ -274,8 +274,7 @@ impl MongoDBConnector {
             Type::Object(_) => {
                 panic!()
             }
-        }
-        Ok(Value::Null)
+        };
     }
 
     fn _handle_write_error(&self, error_kind: ErrorKind) -> ActionError {
@@ -311,6 +310,7 @@ impl Connector for MongoDBConnector {
 
     async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
         let is_new = object.inner.is_new.load(Ordering::SeqCst);
+        let primary_name = object.inner.model.primary_field_name();
         let keys = if is_new {
             object.inner.model.save_keys().clone()
         } else {
@@ -323,6 +323,11 @@ impl Connector for MongoDBConnector {
             let mut doc = doc!{};
             for key in keys {
                 let val = object.get_value(key).unwrap();
+                if Some(key) == primary_name {
+                    if val == None {
+                        continue;
+                    }
+                }
                 let json_val = match val {
                     None => Bson::Null,
                     Some(v) => v.to_bson_value()
@@ -356,7 +361,20 @@ impl Connector for MongoDBConnector {
                     None => Bson::Null,
                     Some(v) => v.to_bson_value()
                 };
-                set.insert(key, json_val);
+                match primary_name {
+                    Some(name) => {
+                        if key == name {
+                            if json_val != Bson::Null {
+                                set.insert("_id", json_val);
+                            }
+                        } else {
+                            set.insert(key, json_val);
+                        }
+                    }
+                    None => {
+                        set.insert(key, json_val);
+                    }
+                }
             }
             let result = col.update_one(doc!{"_id": object_id}, doc!{"$set": set}, None).await;
             return match result {
@@ -410,11 +428,12 @@ impl Connector for MongoDBConnector {
         // cast value
         let value = values.values().next().unwrap();
         let field = model.field(key);
+        let query_key = if field.primary { "_id" } else { key };
         let decode_result = field.r#type.decode_value(value, graph);
         match decode_result {
             Ok(value) => {
                 let col = &self.collections[model.name()];
-                let find_result = col.find_one(doc!{key: value.to_bson_value()}, None).await;
+                let find_result = col.find_one(doc!{query_key: value.to_bson_value()}, None).await;
                 match find_result {
                     Ok(document_option) => {
                         match document_option {
