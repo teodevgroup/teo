@@ -144,8 +144,17 @@ impl Object {
         }
     }
 
-    pub fn delete(&self) -> &Object {
-        self
+    pub async fn delete(&self) -> Result<(), ActionError> {
+        let connector = self.inner.graph.connector();
+        let delete_result = connector.delete_object(self).await;
+        match delete_result {
+            Ok(_) => {
+                Ok(())
+            }
+            Err(err) => {
+                Err(err)
+            }
+        }
     }
 
     pub fn to_json(&self) -> JsonValue {

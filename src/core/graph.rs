@@ -445,8 +445,14 @@ impl Graph {
                 match result {
                     Ok(obj) => {
                         // find the object here
-                        obj.delete();
-                        return HttpResponse::Ok().json(json!({"data": obj.to_json()}));
+                        return match obj.delete().await {
+                            Ok(_) => {
+                                HttpResponse::Ok().json(json!({"data": obj.to_json()}))
+                            }
+                            Err(err) => {
+                                HttpResponse::BadRequest().json(json!({"error": err}))
+                            }
+                        }
                     }
                     Err(err) => {
                         return HttpResponse::NotFound().json(json!({"error": err}));

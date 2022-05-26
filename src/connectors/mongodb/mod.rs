@@ -76,6 +76,8 @@ impl MongoDBConnector {
                 }
             }
         }
+        object.inner.is_initialized.store(true, Ordering::SeqCst);
+        object.inner.is_new.store(false, Ordering::SeqCst);
         Ok(())
     }
 
