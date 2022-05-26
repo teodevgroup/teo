@@ -3,7 +3,7 @@ use std::ptr::{addr_of, null};
 use inflector::Inflector;
 use crate::action::action::ActionType;
 use crate::core::builders::ModelBuilder;
-use crate::core::field::{Field, FieldIndex};
+use crate::core::field::{Field, FieldIndex, QueryAbility};
 use crate::core::field::ReadRule::NoRead;
 use crate::core::field::Store::{Calculated, Temp};
 use crate::core::field::WriteRule::NoWrite;
@@ -26,6 +26,8 @@ pub(crate) struct Model {
     save_keys: Vec<&'static str>,
     output_keys: Vec<&'static str>,
     get_value_keys: Vec<&'static str>,
+    query_keys: Vec<&'static str>,
+    unique_query_keys: Vec<&'static str>,
 }
 
 impl Model {
@@ -35,6 +37,8 @@ impl Model {
         let save_keys = Self::allowed_save_keys(builder);
         let output_keys = Self::allowed_output_keys(builder);
         let get_value_keys = Self::get_get_value_keys(builder);
+        let query_keys = Self::get_query_keys(builder);
+        let unique_query_keys = Self::get_unique_query_keys(builder);
         let fields_vec: Vec<Field> = builder.fields.iter().map(|fb| { Field::new(fb) }).collect();
         let mut fields_map: HashMap<&'static str, * const Field> = HashMap::new();
         let mut primary_field: * const Field = null();
@@ -64,7 +68,9 @@ impl Model {
             input_keys,
             save_keys,
             output_keys,
-            get_value_keys
+            get_value_keys,
+            query_keys,
+            unique_query_keys
         }
     }
 
@@ -130,6 +136,14 @@ impl Model {
         &self.get_value_keys
     }
 
+    pub(crate) fn query_keys(&self) -> &Vec<&'static str> {
+        &self.query_keys
+    }
+
+    pub(crate) fn unique_query_keys(&self) -> &Vec<&'static str> {
+        &self.unique_query_keys
+    }
+
     fn allowed_input_keys(builder: &ModelBuilder) -> Vec<&'static str> {
         builder.fields.iter()
             .filter(|&f| { f.write_rule != NoWrite })
@@ -153,6 +167,20 @@ impl Model {
 
     pub(crate) fn get_get_value_keys(builder: &ModelBuilder) -> Vec<&'static str> {
         builder.fields.iter()
+            .map(|f| { f.name })
+            .collect()
+    }
+
+    pub(crate) fn get_query_keys(builder: &ModelBuilder) -> Vec<&'static str> {
+        builder.fields.iter()
+            .filter(|&f| { f.query_ability == QueryAbility::Queryable })
+            .map(|f| { f.name })
+            .collect()
+    }
+
+    pub(crate) fn get_unique_query_keys(builder: &ModelBuilder) -> Vec<&'static str> {
+        builder.fields.iter()
+            .filter(|&f| { f.query_ability == QueryAbility::Queryable && (f.index == FieldIndex::Unique || f.primary == true) })
             .map(|f| { f.name })
             .collect()
     }

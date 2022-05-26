@@ -15,6 +15,8 @@ pub enum ActionErrorType {
     ValueRequired,
     ValidationError,
     UnknownDatabaseWriteError,
+    UnknownDatabaseDeleteError,
+    UnknownDatabaseFindUniqueError,
     NotFound,
     InternalServerError,
     MissingActionName,
@@ -22,6 +24,8 @@ pub enum ActionErrorType {
     UnallowedAction,
     MissingInputSection,
     ObjectNotFound,
+    ObjectIsNotSaved,
+    FieldIsNotUnique
 }
 
 impl ActionErrorType {
@@ -40,11 +44,15 @@ impl ActionErrorType {
             ActionErrorType::MissingActionName => { 400 }
             ActionErrorType::UndefinedAction => { 400 }
             ActionErrorType::UnallowedAction => { 400 }
+            ActionErrorType::ObjectIsNotSaved => { 400 }
             ActionErrorType::UnknownDatabaseWriteError => { 500 }
+            ActionErrorType::UnknownDatabaseDeleteError => { 500 }
+            ActionErrorType::UnknownDatabaseFindUniqueError => { 500 }
             ActionErrorType::NotFound => { 404 }
             ActionErrorType::InternalServerError => { 500 }
             ActionErrorType::MissingInputSection => { 400 }
             ActionErrorType::ObjectNotFound => { 404 }
+            ActionErrorType::FieldIsNotUnique => { 400 }
         }
     }
 }
@@ -149,6 +157,14 @@ impl ActionError {
         }
     }
 
+    pub fn unknown_database_delete_error() -> Self {
+        ActionError {
+            r#type: ActionErrorType::UnknownDatabaseDeleteError,
+            message: "An unknown database delete error occurred.".to_string(),
+            errors: None
+        }
+    }
+
     pub fn not_found() -> Self {
         ActionError {
             r#type: ActionErrorType::NotFound,
@@ -201,6 +217,30 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::ObjectNotFound,
             message: "The requested object is not exist.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn object_is_not_saved() -> Self {
+        ActionError {
+            r#type: ActionErrorType::ObjectIsNotSaved,
+            message: "This object is not saved thus can't be deleted.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn field_is_not_unique(key: &str) -> Self {
+        ActionError {
+            r#type: ActionErrorType::FieldIsNotUnique,
+            message: format!("Field '{key}' is not unique."),
+            errors: None
+        }
+    }
+
+    pub fn unknown_database_find_unique_error() -> Self {
+        ActionError {
+            r#type: ActionErrorType::UnknownDatabaseFindUniqueError,
+            message: "An unknown query unique error occurred.".to_string(),
             errors: None
         }
     }

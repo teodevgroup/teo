@@ -74,19 +74,19 @@ impl Graph {
         &self.enums
     }
 
-    pub(crate) async fn find_unique(&self, model: &Model, finder: &JsonValue) -> Result<Object, ActionError> {
+    pub(crate) async fn find_unique(&'static self, model: &'static Model, finder: &JsonValue) -> Result<Object, ActionError> {
         self.connector().find_unique(self, model, finder).await
     }
 
-    pub(crate) async fn find_first(&self, model: &Model, finder: &JsonValue) -> Result<Object, ActionError> {
+    pub(crate) async fn find_first(&'static self, model: &'static Model, finder: &JsonValue) -> Result<Object, ActionError> {
         self.connector().find_first(self, model, finder).await
     }
 
-    pub(crate) async fn find_many(&self, model: &Model, finder: &JsonValue) -> Result<Vec<Object>, ActionError> {
+    pub(crate) async fn find_many(&'static self, model: &'static Model, finder: &JsonValue) -> Result<Vec<Object>, ActionError> {
         self.connector().find_many(self, model, finder).await
     }
 
-    pub(crate) async fn count(&self, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
+    pub(crate) async fn count(&'static self, model: &'static Model, finder: &JsonValue) -> Result<usize, ActionError> {
         self.connector().count(self, model, finder).await
     }
 
@@ -225,7 +225,7 @@ impl Graph {
         }
     }
 
-    async fn handle_find_unique(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+    async fn handle_find_unique(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
         let r#where = input.get("where");
         return match r#where {
             Some(where_input) => {
@@ -246,7 +246,7 @@ impl Graph {
         }
     }
 
-    async fn handle_find_first(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+    async fn handle_find_first(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
         let r#where = input.get("where");
         return match r#where {
             Some(where_input) => {
@@ -267,7 +267,7 @@ impl Graph {
         }
     }
 
-    async fn handle_find_many(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+    async fn handle_find_many(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
         let r#where = input.get("where");
         return match r#where {
             Some(where_input) => {
@@ -323,7 +323,7 @@ impl Graph {
         }
     }
 
-    async fn handle_update(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+    async fn handle_update(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
         let r#where = input.get("where");
         match r#where {
             Some(where_input) => {
@@ -368,7 +368,7 @@ impl Graph {
         }
     }
 
-    async fn handle_upsert(&'static self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+    async fn handle_upsert(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
         let r#where = input.get("where");
         match r#where {
             Some(where_input) => {
@@ -438,7 +438,7 @@ impl Graph {
         }
     }
 
-    async fn handle_delete(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+    async fn handle_delete(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
         let r#where = input.get("where");
         match r#where {
             Some(where_input) => {

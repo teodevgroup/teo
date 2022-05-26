@@ -48,9 +48,21 @@ impl MongoDBConnector {
             collections.insert(name, collection);
         }
         MongoDBConnector {
-            client: client,
-            database: database,
-            collections: collections
+            client,
+            database,
+            collections
+        }
+    }
+
+    fn document_to_object(&self, document: &Document, object: &Object) {
+        let primary_name = if let Some(primary_field) = object.inner.model.primary_field() {
+            primary_field.name
+        } else {
+            "__id"
+        };
+        for key in document.keys() {
+            let object_key = if key == "_id" { primary_name } else { key };
+
         }
     }
 
@@ -135,12 +147,12 @@ impl Connector for MongoDBConnector {
                 set.insert(key, json_val);
             }
             let result = col.update_one(doc!{"_id": object_id}, doc!{"$set": set}, None).await;
-            match result {
+            return match result {
                 Ok(update_result) => {
-                    return Ok(());
+                    Ok(())
                 }
                 Err(error) => {
-                    return Err(self._handle_write_error(*error.kind));
+                    Err(self._handle_write_error(*error.kind))
                 }
             }
         }
@@ -148,22 +160,83 @@ impl Connector for MongoDBConnector {
     }
 
     async fn delete_object(&self, object: &Object) -> Result<(), ActionError> {
+        if object.inner.is_new.load(Ordering::SeqCst) {
+            return Err(ActionError::object_is_not_saved());
+        }
+        let object_id = if let Some(primary_field) = object.inner.model.primary_field() {
+            object.get_value(primary_field.name).unwrap().unwrap().to_bson_value()
+        } else {
+            object.inner.value_map.borrow().get("__id").unwrap().to_bson_value()
+        };
+        let col = &self.collections[object.inner.model.name()];
+        let result = col.delete_one(doc!{"_id": object_id}, None).await;
+        return match result {
+            Ok(_result) => {
+                Ok(())
+            }
+            Err(_err) => {
+                Err(ActionError::unknown_database_delete_error())
+            }
+        }
+
+    }
+
+    async fn find_unique(&self, graph: &'static Graph, model: &'static Model, finder: &JsonValue) -> Result<Object, ActionError> {
+        if !finder.is_object() {
+            return Err(ActionError::wrong_json_format());
+        }
+        let values = finder.as_object().unwrap();
+        // only allow single key for now
+        if values.len() != 1 {
+            return Err(ActionError::wrong_json_format());
+        }
+        // see if key is valid
+        let key = values.keys().next().unwrap().as_str();
+        if !model.unique_query_keys().contains(&key) {
+            return Err(ActionError::field_is_not_unique(key))
+        }
+        // cast value
+        let value = values.values().next().unwrap();
+        let field = model.field(key);
+        let decode_result = field.r#type.decode_value(value, graph);
+        match decode_result {
+            Ok(value) => {
+                let col = &self.collections[model.name()];
+                let find_result = col.find_one(doc!{key: value.to_bson_value()}, None).await;
+                match find_result {
+                    Ok(document_option) => {
+                        match document_option {
+                            Some(document) => {
+                                let mut object = graph.new_object(model.name());
+                                self.document_to_object(&document, &mut object);
+                                return Ok(object);
+                            }
+                            None => {
+                                return Err(ActionError::object_not_found())
+                            }
+                        }
+                    }
+                    Err(err) => {
+                        return Err(ActionError::unknown_database_find_unique_error());
+                    }
+                }
+            }
+            Err(err) => {
+                return Err(err);
+            }
+        }
+        return Err(ActionError::wrong_json_format());
+    }
+
+    async fn find_first(&self, graph: &'static Graph, model: &'static Model, finder: &JsonValue) -> Result<Object, ActionError> {
         todo!()
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<Object, ActionError> {
+    async fn find_many(&self, graph: &'static Graph, model: &'static Model, finder: &JsonValue) -> Result<Vec<Object>, ActionError> {
         todo!()
     }
 
-    async fn find_first(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<Object, ActionError> {
-        todo!()
-    }
-
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<Vec<Object>, ActionError> {
-        todo!()
-    }
-
-    async fn count(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
+    async fn count(&self, graph: &'static Graph, model: &'static Model, finder: &JsonValue) -> Result<usize, ActionError> {
         todo!()
     }
 }
