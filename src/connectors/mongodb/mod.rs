@@ -5,8 +5,9 @@ use serde_json::{Map, Value as JsonValue};
 use async_trait::async_trait;
 use bson::{Bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
 use chrono::{Date, NaiveDate, Utc, DateTime};
+use futures_util::{StreamExt, TryStreamExt};
 use mongodb::{options::ClientOptions, Client, Database, Collection, IndexModel};
-use mongodb::error::{ErrorKind, WriteFailure};
+use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
 use mongodb::options::{CreateIndexOptions, DropDatabaseOptions, IndexOptions};
 use regex::Regex;
 use crate::core::connector::{Connector, ConnectorBuilder};
@@ -1182,12 +1183,51 @@ impl Connector for MongoDBConnector {
         let skip = finder.get("skip");
         let col = &self.collections[model.name()];
         let where_input = self.build_where_input(model, r#where, graph);
-        let cur = col.find().await;
-
+        if let Err(err) = where_input {
+            return Err(err);
+        }
+        let where_input = where_input.unwrap();
+        let mut cur = col.find(where_input, None).await;
+        match cur {
+            Ok(cur) => {
+                let mut result: Vec<Object> = vec![];
+                let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
+                for doc in results {
+                    let obj = graph.new_object(model.name());
+                    match self.document_to_object(&doc.unwrap(), &obj) {
+                        Ok(_) => {
+                            result.push(obj);
+                        }
+                        Err(err) => {
+                            return Err(err);
+                        }
+                    }
+                }
+                return Ok(result);
+            }
+            Err(err) => {
+                return Err(ActionError::unknown_database_find_error());
+            }
+        }
     }
 
     async fn count(&self, graph: &'static Graph, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<usize, ActionError> {
-        todo!()
+        let r#where = finder.get("where");
+        let col = &self.collections[model.name()];
+        let where_input = self.build_where_input(model, r#where, graph);
+        if let Err(err) = where_input {
+            return Err(err);
+        }
+        let where_input = where_input.unwrap();
+        let result = col.count_documents(where_input, None).await;
+        match result {
+            Ok(val) => {
+                Ok(val as usize)
+            }
+            Err(_) => {
+                Err(ActionError::unknown_database_count_error())
+            }
+        }
     }
 }
 

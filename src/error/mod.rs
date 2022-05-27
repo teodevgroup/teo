@@ -17,7 +17,9 @@ pub enum ActionErrorType {
     ValidationError,
     UnknownDatabaseWriteError,
     UnknownDatabaseDeleteError,
+    UnknownDatabaseFindError,
     UnknownDatabaseFindUniqueError,
+    UnknownDatabaseCountError,
     NotFound,
     InternalServerError,
     MissingActionName,
@@ -52,7 +54,9 @@ impl ActionErrorType {
             ActionErrorType::UndefinedEnumValue => { 400 }
             ActionErrorType::UnknownDatabaseWriteError => { 500 }
             ActionErrorType::UnknownDatabaseDeleteError => { 500 }
+            ActionErrorType::UnknownDatabaseFindError => { 500 }
             ActionErrorType::UnknownDatabaseFindUniqueError => { 500 }
+            ActionErrorType::UnknownDatabaseCountError => { 500 }
             ActionErrorType::UnmatchedDataTypeInDatabase => { 500 }
             ActionErrorType::NotFound => { 404 }
             ActionErrorType::InternalServerError => { 500 }
@@ -251,10 +255,26 @@ impl ActionError {
         }
     }
 
+    pub fn unknown_database_find_error() -> Self {
+        ActionError {
+            r#type: ActionErrorType::UnknownDatabaseFindError,
+            message: "An unknown query error occurred.".to_string(),
+            errors: None
+        }
+    }
+
     pub fn unknown_database_find_unique_error() -> Self {
         ActionError {
             r#type: ActionErrorType::UnknownDatabaseFindUniqueError,
             message: "An unknown query unique error occurred.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn unknown_database_count_error() -> Self {
+        ActionError {
+            r#type: ActionErrorType::UnknownDatabaseCountError,
+            message: "An unknown count error occurred.".to_string(),
             errors: None
         }
     }
