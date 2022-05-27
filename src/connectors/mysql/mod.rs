@@ -4,7 +4,7 @@ use serde_json::{Map, Value as JsonValue};
 use sqlx::MySqlPool;
 use async_trait::async_trait;
 use crate::connectors::sql_shared::table_create_statement;
-use crate::core::builders::GraphBuilder;
+use crate::core::builders::graph_builder::GraphBuilder;
 use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::graph::Graph;
 use crate::core::model::Model;

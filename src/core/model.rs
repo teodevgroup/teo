@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::ptr::{addr_of, null};
 use inflector::Inflector;
 use crate::action::action::ActionType;
-use crate::core::builders::ModelBuilder;
+use crate::core::builders::model_builder::ModelBuilder;
 use crate::core::field::{Field, FieldIndex, QueryAbility};
 use crate::core::field::ReadRule::NoRead;
 use crate::core::field::Store::{Calculated, Temp};

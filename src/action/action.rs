@@ -14,7 +14,8 @@ pub enum ActionType {
     DeleteMany,
     Count,
     Aggregate,
-    GroupBy
+    GroupBy,
+    SignIn
 }
 
 impl ActionType {
@@ -51,6 +52,7 @@ impl ActionType {
             "Count" => Some(ActionType::Count),
             "Aggregate" => Some(ActionType::Aggregate),
             "GroupBy" => Some(ActionType::GroupBy),
+            "SignIn" => Some(ActionType::SignIn),
             _ => None
         }
     }

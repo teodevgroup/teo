@@ -1,7 +1,7 @@
 use chrono::{Date, DateTime, NaiveDate, Utc};
 use serde_json::{Value as JsonValue};
 use crate::core::argument::Argument;
-use crate::core::builders::FieldBuilder;
+use crate::core::builders::field_builder::FieldBuilder;
 use crate::core::graph::{Graph};
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;

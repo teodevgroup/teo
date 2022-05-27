@@ -7,7 +7,7 @@ use sqlx::{Pool, Database, MySqlPool, PgPool, Executor, MySql, Postgres};
 use url::Url;
 use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::object::Object;
-use crate::core::builders::GraphBuilder;
+use crate::core::builders::graph_builder::GraphBuilder;
 use crate::core::field::{Availability, Type};
 use crate::core::model::Model;
 use crate::error::ActionError;

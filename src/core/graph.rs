@@ -6,7 +6,7 @@ use actix_utils::future::ok;
 use futures_util::StreamExt;
 use serde_json::{json, Map, Value as JsonValue};
 use crate::action::action::ActionType;
-use crate::core::builders::GraphBuilder;
+use crate::core::builders::graph_builder::GraphBuilder;
 use crate::core::connector::Connector;
 use crate::core::model::Model;
 use crate::core::object::Object;
@@ -168,6 +168,9 @@ impl Graph {
                                                                                     }
                                                                                     ActionType::GroupBy => {
                                                                                         return this.handle_group_by(map, model_def).await;
+                                                                                    }
+                                                                                    ActionType::SignIn => {
+                                                                                        return this.handle_sign_in(map, model_def).await;
                                                                                     }
                                                                                 }
                                                                             } else {
@@ -473,6 +476,9 @@ impl Graph {
         HttpResponse::Ok().json(json!({"Hello": "World!"}))
     }
 
+    async fn handle_sign_in(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+    }
 }
 
 unsafe impl Send for Graph {}
