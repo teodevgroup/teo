@@ -1,6 +1,6 @@
 use url::Url;
 use sea_query::{MySqlQueryBuilder, MysqlQueryBuilder};
-use serde_json::{Value as JsonValue};
+use serde_json::{Map, Value as JsonValue};
 use sqlx::MySqlPool;
 use async_trait::async_trait;
 use crate::connectors::sql_shared::table_create_statement;
@@ -44,15 +44,15 @@ impl Connector for MySQLConnector {
         todo!()
     }
 
-    async fn find_first(&self, graph: &'static Graph, model: &'static Model, finder: &JsonValue) -> Result<Object, ActionError> {
+    async fn find_first(&self, graph: &'static Graph, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
         todo!()
     }
 
-    async fn find_many(&self, graph: &'static Graph, model: &'static Model, finder: &JsonValue) -> Result<Vec<Object>, ActionError> {
+    async fn find_many(&self, graph: &'static Graph, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Vec<Object>, ActionError> {
         todo!()
     }
 
-    async fn count(&self, graph: &'static Graph, model: &'static Model, finder: &JsonValue) -> Result<usize, ActionError> {
+    async fn count(&self, graph: &'static Graph, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<usize, ActionError> {
         todo!()
     }
 }

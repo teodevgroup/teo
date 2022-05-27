@@ -8,6 +8,7 @@ pub enum ActionErrorType {
     ActionUnrecognized,
     InvalidInput,
     WrongInputType,
+    WrongWhereType,
     WrongDateFormat,
     WrongDateTimeFormat,
     WrongEnumChoice,
@@ -26,7 +27,8 @@ pub enum ActionErrorType {
     ObjectNotFound,
     ObjectIsNotSaved,
     FieldIsNotUnique,
-    UnmatchedDataTypeInDatabase
+    UnmatchedDataTypeInDatabase,
+    UndefinedEnumValue,
 }
 
 impl ActionErrorType {
@@ -36,6 +38,7 @@ impl ActionErrorType {
             ActionErrorType::ActionUnrecognized => { 400 }
             ActionErrorType::InvalidInput => { 400 }
             ActionErrorType::WrongInputType => { 400 }
+            ActionErrorType::WrongWhereType => { 400 }
             ActionErrorType::WrongDateFormat => { 400 }
             ActionErrorType::WrongDateTimeFormat => { 400 }
             ActionErrorType::WrongEnumChoice => { 400 }
@@ -46,6 +49,7 @@ impl ActionErrorType {
             ActionErrorType::UndefinedAction => { 400 }
             ActionErrorType::UnallowedAction => { 400 }
             ActionErrorType::ObjectIsNotSaved => { 400 }
+            ActionErrorType::UndefinedEnumValue => { 400 }
             ActionErrorType::UnknownDatabaseWriteError => { 500 }
             ActionErrorType::UnknownDatabaseDeleteError => { 500 }
             ActionErrorType::UnknownDatabaseFindUniqueError => { 500 }
@@ -97,6 +101,14 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::WrongInputType,
             message: "Input type is unexpected.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn wrong_where_type() -> Self {
+        ActionError {
+            r#type: ActionErrorType::WrongWhereType,
+            message: "Where type is unexpected.".to_string(),
             errors: None
         }
     }
@@ -251,6 +263,14 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::UnmatchedDataTypeInDatabase,
             message: format!("Unmatched data type for field '{field_name}' in database."),
+            errors: None
+        }
+    }
+
+    pub fn undefined_enum_value() -> Self {
+        ActionError {
+            r#type: ActionErrorType::UndefinedEnumValue,
+            message: "Undefined enum value is not acceptable.".to_string(),
             errors: None
         }
     }

@@ -77,15 +77,15 @@ impl Graph {
         self.connector().find_unique(self, model, finder).await
     }
 
-    pub(crate) async fn find_first(&'static self, model: &'static Model, finder: &JsonValue) -> Result<Object, ActionError> {
+    pub(crate) async fn find_first(&'static self, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
         self.connector().find_first(self, model, finder).await
     }
 
-    pub(crate) async fn find_many(&'static self, model: &'static Model, finder: &JsonValue) -> Result<Vec<Object>, ActionError> {
+    pub(crate) async fn find_many(&'static self, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Vec<Object>, ActionError> {
         self.connector().find_many(self, model, finder).await
     }
 
-    pub(crate) async fn count(&'static self, model: &'static Model, finder: &JsonValue) -> Result<usize, ActionError> {
+    pub(crate) async fn count(&'static self, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<usize, ActionError> {
         self.connector().count(self, model, finder).await
     }
 
@@ -246,49 +246,33 @@ impl Graph {
     }
 
     async fn handle_find_first(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
-        let r#where = input.get("where");
-        return match r#where {
-            Some(where_input) => {
-                let result = self.find_first(model, where_input).await;
-                match result {
-                    Ok(obj) => {
-                        let json_data = obj.to_json();
-                        HttpResponse::Ok().json(json!({"data": json_data}))
-                    }
-                    Err(err) => {
-                        HttpResponse::NotFound().json(json!({"error": err}))
-                    }
-                }
+        let result = self.find_first(model, input).await;
+        match result {
+            Ok(obj) => {
+                let json_data = obj.to_json();
+                HttpResponse::Ok().json(json!({"data": json_data}))
             }
-            None => {
-                HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}))
+            Err(err) => {
+                HttpResponse::NotFound().json(json!({"error": err}))
             }
         }
     }
 
     async fn handle_find_many(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
-        let r#where = input.get("where");
-        return match r#where {
-            Some(where_input) => {
-                let result = self.find_many(model, where_input).await;
-                match result {
-                    Ok(results) => {
-                        let count = self.count(model, where_input).await.unwrap();
-                        let result_json: Vec<JsonValue> = results.iter().map(|i| { i.to_json() }).collect();
-                        HttpResponse::Ok().json(json!({
-                            "meta": {"count": count},
-                            "data": result_json
-                        }))
-                    }
-                    Err(err) => {
-                        HttpResponse::BadRequest().json(json!({
-                            "error": err
-                        }))
-                    }
-                }
+        let result = self.find_many(model, input).await;
+        match result {
+            Ok(results) => {
+                let count = self.count(model, input).await.unwrap();
+                let result_json: Vec<JsonValue> = results.iter().map(|i| { i.to_json() }).collect();
+                HttpResponse::Ok().json(json!({
+                    "meta": {"count": count},
+                    "data": result_json
+                }))
             }
-            None => {
-                HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}))
+            Err(err) => {
+                HttpResponse::BadRequest().json(json!({
+                    "error": err
+                }))
             }
         }
     }
