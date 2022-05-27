@@ -646,7 +646,7 @@ impl MongoDBConnector {
                                     options: if self.has_i_mode(map) { "i".to_string() } else { "".to_string() }
                                 };
                                 let regex = Bson::RegularExpression(bson_regex);
-                                result.insert("$match", regex);
+                                result.insert("$regex", regex);
                             }
                             "startsWith" => {
                                 let bson_regex = BsonRegex {
@@ -654,7 +654,7 @@ impl MongoDBConnector {
                                     options: if self.has_i_mode(map) { "i".to_string() } else { "".to_string() }
                                 };
                                 let regex = Bson::RegularExpression(bson_regex);
-                                result.insert("$match", regex);
+                                result.insert("$regex", regex);
                             }
                             "endsWith" => {
                                 let bson_regex = BsonRegex {
@@ -662,7 +662,7 @@ impl MongoDBConnector {
                                     options: if self.has_i_mode(map) { "i".to_string() } else { "".to_string() }
                                 };
                                 let regex = Bson::RegularExpression(bson_regex);
-                                result.insert("$match", regex);
+                                result.insert("$regex", regex);
                             }
                             "matches" => {
                                 let bson_regex = BsonRegex {
@@ -670,7 +670,7 @@ impl MongoDBConnector {
                                     options: if self.has_i_mode(map) { "i".to_string() } else { "".to_string() }
                                 };
                                 let regex = Bson::RegularExpression(bson_regex);
-                                result.insert("$match", regex);
+                                result.insert("$regex", regex);
                             }
                             "mode" => { }
                             &_ => {
@@ -1187,6 +1187,7 @@ impl Connector for MongoDBConnector {
             return Err(err);
         }
         let where_input = where_input.unwrap();
+        println!("where input see: {}", where_input);
         let mut cur = col.find(where_input, None).await;
         match cur {
             Ok(cur) => {
