@@ -26,7 +26,7 @@ impl Modifier for RandomDigitsModifier {
         "random_digits"
     }
 
-    async fn call(&self, _stage: Stage, _object: Object) -> Stage {
+    async fn call(&self, _stage: Stage, _object: &Object) -> Stage {
         return Stage::Value(Value::String(generate(self.len, "1234567890")))
     }
 }

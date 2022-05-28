@@ -21,7 +21,7 @@ impl Modifier for AlphaModifier {
         "alpha"
     }
 
-    async fn call(&self, stage: Stage, _object: Object) -> Stage {
+    async fn call(&self, stage: Stage, _object: &Object) -> Stage {
         return if let Some(value) = stage.value() {
             return if let Value::String(s) = value {
                 for c in s.chars() {

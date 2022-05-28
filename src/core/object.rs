@@ -105,7 +105,7 @@ impl Object {
                         Stage::Value(Value::Null)
                     }
                 };
-                stage = field.on_save_pipeline._process(stage.clone(), self.clone()).await;
+                stage = field.on_save_pipeline._process(stage.clone(), &self).await;
                 match stage {
                     Stage::Invalid(s) => {
                         return Err(ActionError::invalid_input(key, s));
@@ -210,7 +210,7 @@ impl Object {
                 if process {
                     // pipeline
                     let mut stage = Stage::Value(value);
-                    stage = field.on_set_pipeline._process(stage.clone(), self.clone()).await;
+                    stage = field.on_set_pipeline._process(stage.clone(), &self).await;
                     match stage {
                         Stage::Invalid(s) => {
                             return Err(ActionError::invalid_input(field.name, s));
@@ -246,7 +246,7 @@ impl Object {
                                 self.inner.value_map.borrow_mut().insert(key.to_string(), value.clone());
                             }
                             Argument::PipelineArgument(pipeline) => {
-                                let stage = pipeline._process(Stage::Value(Value::Null), self.clone()).await;
+                                let stage = pipeline._process(Stage::Value(Value::Null), &self).await;
                                 self.inner.value_map.borrow_mut().insert(key.to_string(), stage.value().unwrap());
                             }
                             Argument::FunctionArgument(farg) => {

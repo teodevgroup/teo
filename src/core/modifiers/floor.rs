@@ -21,7 +21,7 @@ impl Modifier for FloorModifier {
         "floor"
     }
 
-    async fn call(&self, stage: Stage, _object: Object) -> Stage {
+    async fn call(&self, stage: Stage, _object: &Object) -> Stage {
         return if let Some(value) = stage.value() {
             return if let Value::F32(f) = value {
                 Stage::Value(Value::F32(f.floor()))

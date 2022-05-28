@@ -40,9 +40,9 @@ impl Pipeline {
         self.modifiers.len() > 0
     }
 
-    pub(crate) async fn _process(&self, mut stage: Stage, object: Object) -> Stage {
+    pub(crate) async fn _process(&self, mut stage: Stage, object: &Object) -> Stage {
         for modifier in &self.modifiers {
-            stage = modifier.call(stage.clone(), object.clone()).await;
+            stage = modifier.call(stage.clone(), object).await;
             match stage {
                 Stage::Invalid(s) => {
                     return Stage::Invalid(s)

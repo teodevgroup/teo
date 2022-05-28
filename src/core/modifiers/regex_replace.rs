@@ -28,7 +28,7 @@ impl Modifier for RegexReplaceModifier {
         "regex_replace"
     }
 
-    async fn call(&self, stage: Stage, _object: Object) -> Stage {
+    async fn call(&self, stage: Stage, _object: &Object) -> Stage {
         return if let Some(value) = stage.value() {
             return if let Value::String(s) = value {
                 Stage::Value(Value::String(self.regex.replace(&s, self.substitute).to_string()))

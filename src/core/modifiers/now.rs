@@ -22,7 +22,7 @@ impl Modifier for NowModifier {
         "now"
     }
 
-    async fn call(&self, _stage: Stage, _object: Object) -> Stage {
+    async fn call(&self, _stage: Stage, _object: &Object) -> Stage {
         Stage::Value(Value::DateTime(Utc::now()))
     }
 }

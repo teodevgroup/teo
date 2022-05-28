@@ -26,10 +26,10 @@ impl Modifier for ElsePModifier {
         "else_p"
     }
 
-    async fn call(&self, stage: Stage, _object: Object) -> Stage {
+    async fn call(&self, stage: Stage, object: &Object) -> Stage {
         return match stage {
             ConditionFalse(value) => {
-                self.pipeline._process(StageValue(value), _object).await
+                self.pipeline._process(StageValue(value), object).await
             }
             _ => {
                 stage

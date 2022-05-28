@@ -21,7 +21,7 @@ impl Modifier for AbsModifier {
         "abs"
     }
 
-    async fn call(&self, stage: Stage, _object: Object) -> Stage {
+    async fn call(&self, stage: Stage, _object: &Object) -> Stage {
         return if let Some(value) = stage.value() {
             if let Value::I8(i) = value {
                 Stage::Value(Value::I8(i.abs()))

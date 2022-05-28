@@ -22,7 +22,7 @@ impl Modifier for ObjectValueModifier {
         "object_value"
     }
 
-    async fn call(&self, _stage: Stage, object: Object) -> Stage {
+    async fn call(&self, _stage: Stage, object: &Object) -> Stage {
         let value = object.inner.value_map.borrow().get(self.key).unwrap().clone();
         return Stage::Value(value);
     }
