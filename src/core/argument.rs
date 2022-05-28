@@ -19,6 +19,8 @@ pub enum Argument {
     PipelineArgument(Pipeline),
     FunctionArgument(Arc<dyn FnArgument>),
 }
+
+
 //
 // impl Debug for Argument {
 //     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

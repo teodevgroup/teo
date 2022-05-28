@@ -28,6 +28,8 @@ pub(crate) struct Model {
     get_value_keys: Vec<&'static str>,
     query_keys: Vec<&'static str>,
     unique_query_keys: Vec<&'static str>,
+    auth_identity_keys: Vec<&'static str>,
+    auth_by_keys: Vec<&'static str>,
 }
 
 impl Model {
@@ -39,6 +41,8 @@ impl Model {
         let get_value_keys = Self::get_get_value_keys(builder);
         let query_keys = Self::get_query_keys(builder);
         let unique_query_keys = Self::get_unique_query_keys(builder);
+        let auth_identity_keys = Self::get_auth_identity_keys(builder);
+        let auth_by_keys = Self::get_auth_by_keys(builder);
         let fields_vec: Vec<Field> = builder.fields.iter().map(|fb| { Field::new(fb) }).collect();
         let mut fields_map: HashMap<&'static str, * const Field> = HashMap::new();
         let mut primary_field: * const Field = null();
@@ -70,7 +74,9 @@ impl Model {
             output_keys,
             get_value_keys,
             query_keys,
-            unique_query_keys
+            unique_query_keys,
+            auth_identity_keys,
+            auth_by_keys
         }
     }
 
@@ -188,6 +194,20 @@ impl Model {
     pub(crate) fn get_unique_query_keys(builder: &ModelBuilder) -> Vec<&'static str> {
         builder.fields.iter()
             .filter(|&f| { f.query_ability == QueryAbility::Queryable && (f.index == FieldIndex::Unique || f.primary == true) })
+            .map(|f| { f.name })
+            .collect()
+    }
+
+    pub(crate) fn get_auth_identity_keys(builder: &ModelBuilder) -> Vec<&'static str> {
+        builder.fields.iter()
+            .filter(|&f| { f.auth_identity == true })
+            .map(|f| { f.name })
+            .collect()
+    }
+
+    pub(crate) fn get_auth_by_keys(builder: &ModelBuilder) -> Vec<&'static str> {
+        builder.fields.iter()
+            .filter(|&f| { f.auth_by == true })
             .map(|f| { f.name })
             .collect()
     }

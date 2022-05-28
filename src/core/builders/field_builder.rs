@@ -25,6 +25,8 @@ pub struct FieldBuilder {
     pub(crate) assigned_by_database: bool,
     pub(crate) auto_increment: bool,
     pub(crate) auth_identity: bool,
+    pub(crate) auth_by: bool,
+    pub(crate) auth_by_arg: Option<Argument>,
     pub(crate) default: Option<Argument>,
     pub(crate) on_set_pipeline: Pipeline,
     pub(crate) on_save_pipeline: Pipeline,
@@ -49,6 +51,8 @@ impl FieldBuilder {
             assigned_by_database: false,
             auto_increment: false,
             auth_identity: false,
+            auth_by: false,
+            auth_by_arg: None,
             default: None,
             on_set_pipeline: Pipeline::new(),
             on_save_pipeline: Pipeline::new(),
@@ -270,6 +274,12 @@ impl FieldBuilder {
 
     pub fn auth_identity(&mut self) -> &mut Self {
         self.auth_identity = true;
+        self
+    }
+
+    pub fn auth_by(&mut self, argument: impl Into<Argument>) -> &mut Self {
+        self.auth_by = true;
+        self.auth_by_arg = Some(argument.into());
         self
     }
 

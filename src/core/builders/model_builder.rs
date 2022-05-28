@@ -55,6 +55,7 @@ impl ModelBuilder {
 
     pub fn identity(&mut self) {
         self.identity = true;
+        self.actions.insert(ActionType::SignIn);
     }
 
     pub fn field<F: Fn(&mut FieldBuilder)>(&mut self, name: &'static str, build: F) {
@@ -72,11 +73,17 @@ impl ModelBuilder {
         let mut action_builder = ActionBuilder::new();
         build(&mut action_builder);
         self.actions = action_builder.actions.clone();
+        if self.identity {
+            self.actions.insert(ActionType::SignIn);
+        }
     }
 
     pub fn disable<F: Fn(&mut ActionBuilder)>(&mut self, build: F) {
         let mut action_builder = ActionBuilder::new();
         build(&mut action_builder);
         self.actions = HashSet::from_iter(self.actions.difference(&action_builder.actions).map(|x| *x));
+        if self.identity {
+            self.actions.insert(ActionType::SignIn);
+        }
     }
 }
