@@ -317,16 +317,4 @@ impl FieldBuilder {
         self.default = Some(value.into());
         return self;
     }
-
-    pub fn default_by_pipeline<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {
-        let mut pipeline = Pipeline::new();
-        build(&mut pipeline);
-        self.default = Some(PipelineArgument(pipeline));
-        return self;
-    }
-
-    pub fn default_by_fn(&mut self, function: Arc<dyn FnArgument>) -> &mut Self {
-        self.default = Some(Argument::FunctionArgument(function));
-        return self;
-    }
 }

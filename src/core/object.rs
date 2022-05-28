@@ -249,10 +249,6 @@ impl Object {
                                 let stage = pipeline._process(Stage::Value(Value::Null), &self).await;
                                 self.inner.value_map.borrow_mut().insert(key.to_string(), stage.value().unwrap());
                             }
-                            Argument::FunctionArgument(farg) => {
-                                let stage = farg.call(Value::Null, self.clone()).await;
-                                self.inner.value_map.borrow_mut().insert(key.to_string(), stage.value().unwrap());
-                            }
                         }
                     }
                 }

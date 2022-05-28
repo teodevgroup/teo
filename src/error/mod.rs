@@ -31,6 +31,11 @@ pub enum ActionErrorType {
     FieldIsNotUnique,
     UnmatchedDataTypeInDatabase,
     UndefinedEnumValue,
+    MissingCredentials,
+    MultipleAuthIdentityProvided,
+    MultipleAuthCheckerProvided,
+    MissingAuthIdentity,
+    MissingAuthChecker,
 }
 
 impl ActionErrorType {
@@ -63,6 +68,11 @@ impl ActionErrorType {
             ActionErrorType::MissingInputSection => { 400 }
             ActionErrorType::ObjectNotFound => { 404 }
             ActionErrorType::FieldIsNotUnique => { 400 }
+            ActionErrorType::MultipleAuthCheckerProvided => { 400 }
+            ActionErrorType::MultipleAuthIdentityProvided => { 400 }
+            ActionErrorType::MissingAuthIdentity => { 400 }
+            ActionErrorType::MissingAuthChecker => { 400 }
+            ActionErrorType::MissingCredentials => { 400 }
         }
     }
 }
@@ -294,4 +304,45 @@ impl ActionError {
             errors: None
         }
     }
+
+    pub fn missing_credentials() -> Self {
+        ActionError {
+            r#type: ActionErrorType::MissingCredentials,
+            message: "Credentials are missing.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn multiple_auth_identity_provided() -> Self {
+        ActionError {
+            r#type: ActionErrorType::MultipleAuthIdentityProvided,
+            message: "Multiple auth identity provided.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn multiple_auth_checker_provided() -> Self {
+        ActionError {
+            r#type: ActionErrorType::MultipleAuthCheckerProvided,
+            message: "Multiple auth checker provided.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn missing_auth_identity() -> Self {
+        ActionError {
+            r#type: ActionErrorType::MissingAuthIdentity,
+            message: "Missing auth identity.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn missing_auth_checker() -> Self {
+        ActionError {
+            r#type: ActionErrorType::MissingAuthChecker,
+            message: "Missing auth checker.".to_string(),
+            errors: None
+        }
+    }
+
 }

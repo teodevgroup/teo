@@ -10,16 +10,15 @@ use crate::core::object::Object;
 
 
 #[async_trait]
-pub trait FnArgument: Debug + Send + Sync {
-    fn name(&self) -> String;
-    async fn call(&self, value: Value, object: Object) -> Stage;
+pub trait FnArgument {
+    async fn call(&self, value: Value, object: &Object) -> Stage;
 }
 
 #[derive(Debug, Clone)]
 pub enum Argument {
     ValueArgument(Value),
     PipelineArgument(Pipeline),
-    FunctionArgument(Arc<dyn FnArgument>),
+    //FunctionArgument(Arc<dyn FnArgument>),
 }
 
 impl From<&str> for Argument {
@@ -140,10 +139,8 @@ impl<F> From<F> for Argument where F: Fn(&mut Pipeline) +  Clone + 'static {
     }
 }
 //
-// impl<F> From<F> for Argument where F: Fn(&mut Pipeline) +  Clone + 'static {
-//     fn from(v: F) -> Self {
-//         let mut p = Pipeline::new();
-//         v(&mut p);
-//         PipelineArgument(p)
+// impl<FN> From<FN> for Argument {
+//     fn from(v: FN) -> Self {
+//         FunctionArgument(Arc::new(v))
 //     }
 // }

@@ -14,7 +14,7 @@ pub(crate) trait Connector: Debug + Send + Sync {
 
     async fn delete_object(&self, object: &Object) -> Result<(), ActionError>;
 
-    async fn find_unique(&self, graph: &'static Graph, model: &'static Model, finder: &JsonValue) -> Result<Object, ActionError>;
+    async fn find_unique(&self, graph: &'static Graph, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError>;
 
     async fn find_first(&self, graph: &'static Graph, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError>;
 

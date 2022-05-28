@@ -1125,11 +1125,16 @@ impl Connector for MongoDBConnector {
 
     }
 
-    async fn find_unique(&self, graph: &'static Graph, model: &'static Model, finder: &JsonValue) -> Result<Object, ActionError> {
-        if !finder.is_object() {
+    async fn find_unique(&self, graph: &'static Graph, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
+        let r#where = finder.get("where");
+        if r#where == None {
+            return Err(ActionError::missing_input_section());
+        }
+        let r#where = r#where.unwrap();
+        if !r#where.is_object() {
             return Err(ActionError::wrong_json_format());
         }
-        let values = finder.as_object().unwrap();
+        let values = r#where.as_object().unwrap();
         // only allow single key for now
         if values.len() != 1 {
             return Err(ActionError::wrong_json_format());

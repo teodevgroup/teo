@@ -73,7 +73,7 @@ impl Graph {
         &self.enums
     }
 
-    pub(crate) async fn find_unique(&'static self, model: &'static Model, finder: &JsonValue) -> Result<Object, ActionError> {
+    pub(crate) async fn find_unique(&'static self, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
         self.connector().find_unique(self, model, finder).await
     }
 
@@ -228,22 +228,14 @@ impl Graph {
     }
 
     async fn handle_find_unique(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
-        let r#where = input.get("where");
-        return match r#where {
-            Some(where_input) => {
-                let result = self.find_unique(model, where_input).await;
-                match result {
-                    Ok(obj) => {
-                        let json_data = obj.to_json();
-                        HttpResponse::Ok().json(json!({"data": json_data}))
-                    }
-                    Err(err) => {
-                        HttpResponse::NotFound().json(json!({"error": err}))
-                    }
-                }
+        let result = self.find_unique(model, input).await;
+        match result {
+            Ok(obj) => {
+                let json_data = obj.to_json();
+                HttpResponse::Ok().json(json!({"data": json_data}))
             }
-            None => {
-                HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}))
+            Err(err) => {
+                HttpResponse::NotFound().json(json!({"error": err}))
             }
         }
     }
@@ -310,129 +302,23 @@ impl Graph {
     }
 
     async fn handle_update(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
-        let r#where = input.get("where");
-        match r#where {
-            Some(where_input) => {
-                let result = self.find_unique(model, where_input).await;
-                match result {
-                    Ok(obj) => {
-                        // find the object here
-                        let update = input.get("update");
-                        let set_json_result = match update {
-                            Some(update) => {
-                                obj.set_json(update).await
-                            }
-                            None => {
-                                let empty = JsonValue::Object(Map::new());
-                                obj.set_json(&empty).await
-                            }
-                        };
-                        match set_json_result {
-                            Ok(_) => {
-                                match obj.save().await {
-                                    Ok(_) => {
-                                        HttpResponse::Ok().json(json!({"data": obj.to_json()}))
-                                    }
-                                    Err(err) => {
-                                        HttpResponse::BadRequest().json(json!({"error": err}))
-                                    }
-                                }
-                            }
-                            Err(err) => {
-                                return HttpResponse::BadRequest().json(json!({"error": err}));
-                            }
-                        }
+        let result = self.find_unique(model, input).await;
+        match result {
+            Ok(obj) => {
+                // find the object here
+                let update = input.get("update");
+                let set_json_result = match update {
+                    Some(update) => {
+                        obj.set_json(update).await
                     }
-                    Err(err) => {
-                        return HttpResponse::NotFound().json(json!({"error": err}));
+                    None => {
+                        let empty = JsonValue::Object(Map::new());
+                        obj.set_json(&empty).await
                     }
-                }
-            }
-            None => {
-                return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}));
-            }
-        }
-    }
-
-    async fn handle_upsert(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
-        let r#where = input.get("where");
-        match r#where {
-            Some(where_input) => {
-                let result = self.find_unique(model, where_input).await;
-                match result {
-                    Ok(obj) => {
-                        // find the object here
-                        let update = input.get("update");
-                        let set_json_result = match update {
-                            Some(update) => {
-                                obj.set_json(update).await
-                            }
-                            None => {
-                                let empty = JsonValue::Object(Map::new());
-                                obj.set_json(&empty).await
-                            }
-                        };
-                        match set_json_result {
-                            Ok(_) => {
-                                match obj.save().await {
-                                    Ok(_) => {
-                                        return HttpResponse::Ok().json(json!({"data": obj.to_json()}));
-                                    }
-                                    Err(err) => {
-                                        return HttpResponse::BadRequest().json(json!({"error": err}));
-                                    }
-                                }
-                            }
-                            Err(err) => {
-                                return HttpResponse::BadRequest().json(json!({"error": err}));
-                            }
-                        }
-                    }
-                    Err(err) => {
-                        let create = input.get("create");
-                        let obj = self.new_object(model.name());
-                        let set_json_result = match create {
-                            Some(create) => {
-                                obj.set_json(create).await
-                            }
-                            None => {
-                                let empty = JsonValue::Object(Map::new());
-                                obj.set_json(&empty).await
-                            }
-                        };
-                        return match set_json_result {
-                            Ok(_) => {
-                                match obj.save().await {
-                                    Ok(_) => {
-                                        HttpResponse::Ok().json(json!({"data": obj.to_json()}))
-                                    }
-                                    Err(err) => {
-                                        HttpResponse::BadRequest().json(json!({"error": err}))
-                                    }
-                                }
-                            }
-                            Err(err) => {
-                                HttpResponse::BadRequest().json(json!({"error": err}))
-                            }
-                        }
-                    }
-                }
-            }
-            None => {
-                return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}));
-            }
-        }
-    }
-
-    async fn handle_delete(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
-        let r#where = input.get("where");
-        match r#where {
-            Some(where_input) => {
-                let result = self.find_unique(model, where_input).await;
-                match result {
-                    Ok(obj) => {
-                        // find the object here
-                        return match obj.delete().await {
+                };
+                match set_json_result {
+                    Ok(_) => {
+                        match obj.save().await {
                             Ok(_) => {
                                 HttpResponse::Ok().json(json!({"data": obj.to_json()}))
                             }
@@ -442,12 +328,94 @@ impl Graph {
                         }
                     }
                     Err(err) => {
-                        return HttpResponse::NotFound().json(json!({"error": err}));
+                        return HttpResponse::BadRequest().json(json!({"error": err}));
                     }
                 }
             }
-            None => {
-                return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_input_section()}));
+            Err(err) => {
+                return HttpResponse::NotFound().json(json!({"error": err}));
+            }
+        }
+    }
+
+    async fn handle_upsert(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
+        let result = self.find_unique(model, input).await;
+        match result {
+            Ok(obj) => {
+                // find the object here
+                let update = input.get("update");
+                let set_json_result = match update {
+                    Some(update) => {
+                        obj.set_json(update).await
+                    }
+                    None => {
+                        let empty = JsonValue::Object(Map::new());
+                        obj.set_json(&empty).await
+                    }
+                };
+                match set_json_result {
+                    Ok(_) => {
+                        match obj.save().await {
+                            Ok(_) => {
+                                return HttpResponse::Ok().json(json!({"data": obj.to_json()}));
+                            }
+                            Err(err) => {
+                                return HttpResponse::BadRequest().json(json!({"error": err}));
+                            }
+                        }
+                    }
+                    Err(err) => {
+                        return HttpResponse::BadRequest().json(json!({"error": err}));
+                    }
+                }
+            }
+            Err(err) => {
+                let create = input.get("create");
+                let obj = self.new_object(model.name());
+                let set_json_result = match create {
+                    Some(create) => {
+                        obj.set_json(create).await
+                    }
+                    None => {
+                        let empty = JsonValue::Object(Map::new());
+                        obj.set_json(&empty).await
+                    }
+                };
+                return match set_json_result {
+                    Ok(_) => {
+                        match obj.save().await {
+                            Ok(_) => {
+                                HttpResponse::Ok().json(json!({"data": obj.to_json()}))
+                            }
+                            Err(err) => {
+                                HttpResponse::BadRequest().json(json!({"error": err}))
+                            }
+                        }
+                    }
+                    Err(err) => {
+                        HttpResponse::BadRequest().json(json!({"error": err}))
+                    }
+                }
+            }
+        }
+    }
+
+    async fn handle_delete(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
+        let result = self.find_unique(model, input).await;
+        match result {
+            Ok(obj) => {
+                // find the object here
+                return match obj.delete().await {
+                    Ok(_) => {
+                        HttpResponse::Ok().json(json!({"data": obj.to_json()}))
+                    }
+                    Err(err) => {
+                        HttpResponse::BadRequest().json(json!({"error": err}))
+                    }
+                }
+            }
+            Err(err) => {
+                return HttpResponse::NotFound().json(json!({"error": err}));
             }
         }
     }
@@ -477,6 +445,48 @@ impl Graph {
     }
 
     async fn handle_sign_in(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+        let credentials = input.get("credentials");
+        if let None = credentials {
+            return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_credentials()}));
+        }
+        let credentials = credentials.unwrap();
+        if !credentials.is_object() {
+            return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
+        }
+        let credentials = credentials.as_object().unwrap();
+        let mut identity_key: Option<&String> = None;
+        let mut identity_value: Option<&JsonValue> = None;
+        let mut by_key: Option<&String> = None;
+        let mut by_value: Option<&JsonValue> = None;
+        for (k, v) in credentials {
+            if model.auth_identity_keys().contains(&&**k) {
+                if identity_key == None {
+                    identity_key = Some(k);
+                    identity_value = Some(v);
+                } else {
+                    return HttpResponse::BadRequest().json(json!({"error": ActionError::multiple_auth_identity_provided()}));
+                }
+            } else if model.auth_by_keys().contains(&&**k) {
+                if by_key == None {
+                    by_key = Some(k);
+                    by_value = Some(v);
+                } else {
+                    return HttpResponse::BadRequest().json(json!({"error": ActionError::multiple_auth_checker_provided()}));
+                }
+            } else {
+                return HttpResponse::BadRequest().json(json!({"error": ActionError::keys_unallowed()}));
+            }
+        }
+        if identity_key == None && by_key == None {
+            return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_credentials()}));
+        } else if identity_key == None {
+            return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_auth_identity()}));
+        } else if by_key == None {
+            return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_auth_checker()}));
+        }
+        let identity_field = model.field(identity_key.unwrap());
+        let by_field = model.field(by_key.unwrap());
+        //let col = self.find_unique(model, json!{})
         HttpResponse::Ok().json(json!({"Hello": "World!"}))
     }
 }

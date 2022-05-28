@@ -157,6 +157,10 @@ impl Model {
         &self.unique_query_keys
     }
 
+    pub(crate) fn auth_identity_keys(&self) -> &Vec<&'static str> { &self.auth_identity_keys }
+
+    pub(crate) fn auth_by_keys(&self) -> &Vec<&'static str> { &self.auth_by_keys }
+
     fn allowed_input_keys(builder: &ModelBuilder) -> Vec<&'static str> {
         builder.fields.iter()
             .filter(|&f| { f.write_rule != NoWrite })

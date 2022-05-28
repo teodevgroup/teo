@@ -39,7 +39,7 @@ impl Connector for PostgresConnector {
         todo!()
     }
 
-    async fn find_unique(&self, graph: &'static Graph, model: &'static Model, finder: &JsonValue) -> Result<Object, ActionError> {
+    async fn find_unique(&self, graph: &'static Graph, model: &'static Model, finder:  &Map<String, JsonValue>) -> Result<Object, ActionError> {
         todo!()
     }
 
