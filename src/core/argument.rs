@@ -2,7 +2,7 @@ use std::fmt::{Debug};
 use std::sync::Arc;
 use async_trait::async_trait;
 use chrono::{Date, DateTime, Utc};
-use crate::core::argument::Argument::ValueArgument;
+use crate::core::argument::Argument::{PipelineArgument, ValueArgument};
 use crate::core::pipeline::Pipeline;
 use crate::core::stage::Stage;
 use crate::core::value::Value;
@@ -129,5 +129,21 @@ impl From<DateTime<Utc>> for Argument {
 //         ValueArgument(Value::Vec(v.iter().map(|i| {
 //             let value: Argument
 //         }).collect()))
+//     }
+// }
+
+impl<F> From<F> for Argument where F: Fn(&mut Pipeline) +  Clone + 'static {
+    fn from(v: F) -> Self {
+        let mut p = Pipeline::new();
+        v(&mut p);
+        PipelineArgument(p)
+    }
+}
+//
+// impl<F> From<F> for Argument where F: Fn(&mut Pipeline) +  Clone + 'static {
+//     fn from(v: F) -> Self {
+//         let mut p = Pipeline::new();
+//         v(&mut p);
+//         PipelineArgument(p)
 //     }
 // }
