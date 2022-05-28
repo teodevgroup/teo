@@ -16,7 +16,10 @@ async fn make_graph() -> &'static Graph {
                 f.required().primary().readonly().object_id().assigned_by_database();
             });
             m.field("name", |f| {
-                f.required().string();
+                f.required().string().default("Bson");
+            });
+            m.field("age", |f| {
+                f.required().u8().default(18u8);
             });
         });
     }).await));

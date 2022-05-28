@@ -313,8 +313,8 @@ impl FieldBuilder {
         return self;
     }
 
-    pub fn default(&mut self, value: Value) -> &mut Self {
-        self.default = Some(ValueArgument(value));
+    pub fn default(&mut self, value: impl Into<Argument>) -> &mut Self {
+        self.default = Some(value.into());
         return self;
     }
 

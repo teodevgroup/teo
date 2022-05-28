@@ -99,32 +99,104 @@ impl Value {
     }
 }
 
-impl From<bool> for Value {
-    fn from(value: bool) -> Self {
-        Value::Bool(value)
-    }
-}
-
-impl From<i64> for Value {
-    fn from(value: i64) -> Self {
-        Value::I64(value)
-    }
-}
-
-impl From<f64> for Value {
-    fn from(value: f64) -> Self {
-        Value::F64(value)
-    }
-}
-
 impl From<&str> for Value {
-    fn from(value: &str) -> Self {
-        Value::String(value.to_string())
+    fn from(v: &str) -> Self {
+        Value::String(v.to_string())
     }
 }
 
 impl From<String> for Value {
-    fn from(value: String) -> Self {
-        Value::String(value)
+    fn from(v: String) -> Self {
+        Value::String(v)
+    }
+}
+
+impl From<bool> for Value {
+    fn from(v: bool) -> Self {
+        Value::Bool(v)
+    }
+}
+
+impl From<i8> for Value {
+    fn from(v: i8) -> Self {
+        Value::I8(v)
+    }
+}
+
+impl From<i16> for Value {
+    fn from(v: i16) -> Self {
+        Value::I16(v)
+    }
+}
+
+impl From<i32> for Value {
+    fn from(v: i32) -> Self {
+        Value::I32(v)
+    }
+}
+
+impl From<i64> for Value {
+    fn from(v: i64) -> Self {
+        Value::I64(v)
+    }
+}
+
+impl From<i128> for Value {
+    fn from(v: i128) -> Self {
+        Value::I128(v)
+    }
+}
+
+impl From<u8> for Value {
+    fn from(v: u8) -> Self {
+        Value::U8(v)
+    }
+}
+
+impl From<u16> for Value {
+    fn from(v: u16) -> Self {
+        Value::U16(v)
+    }
+}
+
+impl From<u32> for Value {
+    fn from(v: u32) -> Self {
+        Value::U32(v)
+    }
+}
+
+impl From<u64> for Value {
+    fn from(v: u64) -> Self {
+        Value::U64(v)
+    }
+}
+
+impl From<u128> for Value {
+    fn from(v: u128) -> Self {
+        Value::U128(v)
+    }
+}
+
+impl From<f32> for Value {
+    fn from(v: f32) -> Self {
+        Value::F32(v)
+    }
+}
+
+impl From<f64> for Value {
+    fn from(v: f64) -> Self {
+        Value::F64(v)
+    }
+}
+
+impl From<Date<Utc>> for Value {
+    fn from(v: Date<Utc>) -> Self {
+        Value::Date(v)
+    }
+}
+
+impl From<DateTime<Utc>> for Value {
+    fn from(v: DateTime<Utc>) -> Self {
+        Value::DateTime(v)
     }
 }
