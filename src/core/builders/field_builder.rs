@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::action::action::ActionType;
 use crate::core::argument::{Argument, FnArgument};
 use crate::core::argument::Argument::{PipelineArgument, ValueArgument};
+use crate::core::builders::permission_builder::PermissionBuilder;
 use crate::core::connector::{ConnectorBuilder};
 use crate::core::field::*;
 use crate::core::pipeline::Pipeline;
@@ -31,6 +32,7 @@ pub struct FieldBuilder {
     pub(crate) on_set_pipeline: Pipeline,
     pub(crate) on_save_pipeline: Pipeline,
     pub(crate) on_output_pipeline: Pipeline,
+    pub(crate) permission: Option<PermissionBuilder>,
 }
 
 impl FieldBuilder {
@@ -57,6 +59,7 @@ impl FieldBuilder {
             on_set_pipeline: Pipeline::new(),
             on_save_pipeline: Pipeline::new(),
             on_output_pipeline: Pipeline::new(),
+            permission: None
         }
     }
 
@@ -316,5 +319,11 @@ impl FieldBuilder {
     pub fn default(&mut self, value: impl Into<Argument>) -> &mut Self {
         self.default = Some(value.into());
         return self;
+    }
+
+    pub fn permissions<F: Fn(&mut PermissionBuilder)>(&mut self, build: F) {
+        let mut permission_builder = PermissionBuilder::new();
+        build(&mut permission_builder);
+        self.permission = Some(permission_builder);
     }
 }

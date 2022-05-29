@@ -10,3 +10,4 @@ pub mod modifiers;
 pub mod builders;
 pub mod object;
 pub mod connector;
+pub mod permission;

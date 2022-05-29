@@ -9,6 +9,7 @@ use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
 use crate::core::builders::field_builder::FieldBuilder;
 use crate::core::builders::action_builder::ActionBuilder;
+use crate::core::builders::permission_builder::PermissionBuilder;
 
 
 pub struct ModelBuilder {
@@ -19,7 +20,8 @@ pub struct ModelBuilder {
     pub description: &'static str,
     pub identity: bool,
     pub fields: Vec<FieldBuilder>,
-    pub actions: HashSet<ActionType>
+    pub actions: HashSet<ActionType>,
+    pub permission: Option<PermissionBuilder>
 }
 
 impl ModelBuilder {
@@ -34,6 +36,7 @@ impl ModelBuilder {
             identity: false,
             fields: Vec::new(),
             actions: ActionType::default(),
+            permission: None
         }
     }
 
@@ -85,5 +88,11 @@ impl ModelBuilder {
         if self.identity {
             self.actions.insert(ActionType::SignIn);
         }
+    }
+
+    pub fn permissions<F: Fn(&mut PermissionBuilder)>(&mut self, build: F) {
+        let mut permission_builder = PermissionBuilder::new();
+        build(&mut permission_builder);
+        self.permission = Some(permission_builder);
     }
 }

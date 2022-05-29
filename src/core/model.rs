@@ -7,6 +7,7 @@ use crate::core::field::{Field, FieldIndex, QueryAbility};
 use crate::core::field::ReadRule::NoRead;
 use crate::core::field::Store::{Calculated, Temp};
 use crate::core::field::WriteRule::NoWrite;
+use crate::core::permission::Permission;
 
 
 #[derive(Debug)]
@@ -18,6 +19,7 @@ pub(crate) struct Model {
     description: &'static str,
     identity: bool,
     actions: HashSet<ActionType>,
+    permission: Option<Permission>,
     fields_vec: Vec<Field>,
     fields_map: HashMap<&'static str, * const Field>,
     primary_field: * const Field,
@@ -65,6 +67,7 @@ impl Model {
             description: builder.description,
             identity: builder.identity,
             actions: builder.actions.clone(),
+            permission: if let Some(builder) = &builder.permission { Some(builder.build()) } else { None },
             fields_vec,
             fields_map,
             primary_field,

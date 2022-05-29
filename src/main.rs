@@ -22,6 +22,14 @@ async fn make_graph() -> &'static Graph {
             m.field("age", |f| {
                 f.required().u8().default(18u8);
             });
+            m.permissions(|p| {
+                p.can_read(|p| {
+                    p.any(vec![
+                        |p| { p.is_this_object(); },
+                        |p| { p.is_instance_of("Admin"); }
+                    ]);
+                });
+            });
         });
 
         g.model("AuthCode", |m| {

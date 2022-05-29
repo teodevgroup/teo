@@ -3,6 +3,7 @@ use serde_json::{Value as JsonValue};
 use crate::core::argument::Argument;
 use crate::core::builders::field_builder::FieldBuilder;
 use crate::core::graph::{Graph};
+use crate::core::permission::Permission;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
 use crate::error::ActionError;
@@ -352,6 +353,7 @@ pub(crate) struct Field {
     pub(crate) on_set_pipeline: Pipeline,
     pub(crate) on_save_pipeline: Pipeline,
     pub(crate) on_output_pipeline: Pipeline,
+    pub(crate) permission: Option<Permission>,
 }
 
 impl Field {
@@ -376,6 +378,7 @@ impl Field {
             on_set_pipeline: builder.on_set_pipeline.clone(),
             on_save_pipeline: builder.on_save_pipeline.clone(),
             on_output_pipeline: builder.on_output_pipeline.clone(),
+            permission: if let Some(builder) = &builder.permission { Some(builder.build()) } else { None },
         }
     }
 }
@@ -402,6 +405,7 @@ impl Clone for Field {
             on_set_pipeline: self.on_set_pipeline.clone(),
             on_save_pipeline: self.on_save_pipeline.clone(),
             on_output_pipeline: self.on_output_pipeline.clone(),
+            permission: self.permission.clone(),
         }
     }
 }
