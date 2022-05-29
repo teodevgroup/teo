@@ -111,18 +111,12 @@ impl Object {
                     Stage::Invalid(s) => {
                         return Err(ActionError::invalid_input(key, s));
                     }
-                    Stage::Value(v) => {
+                    Stage::Value(v) | Stage::ConditionTrue(v) | Stage::ConditionFalse(v) => {
                         self.inner.value_map.borrow_mut().insert(key.to_string(), v);
                         if !self.inner.is_new.load(Ordering::SeqCst) {
                             self.inner.is_modified.store(true, Ordering::SeqCst);
                             self.inner.modified_fields.borrow_mut().insert(key.to_string());
                         }
-                    }
-                    Stage::ConditionTrue(_) => {
-                        return Err(ActionError::internal_server_error("Pipeline modifiers are invalid.".to_string()))
-                    }
-                    Stage::ConditionFalse(_) => {
-                        return Err(ActionError::internal_server_error("Pipeline modifiers are invalid.".to_string()))
                     }
                 }
             }
@@ -219,11 +213,11 @@ impl Object {
                         Stage::Value(v) => {
                             value = v
                         }
-                        Stage::ConditionTrue(_) => {
-                            return Err(ActionError::internal_server_error("Pipeline modifiers are invalid.".to_string()))
+                        Stage::ConditionTrue(v) => {
+                            value = v
                         }
-                        Stage::ConditionFalse(_) => {
-                            return Err(ActionError::internal_server_error("Pipeline modifiers are invalid.".to_string()))
+                        Stage::ConditionFalse(v) => {
+                            value = v
                         }
                     }
                 }
