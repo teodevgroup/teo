@@ -1343,6 +1343,9 @@ impl ToBsonValue for Value {
                 }
                 Bson::Document(doc)
             }
+            Value::Object(obj) => {
+                panic!()
+            }
         }
     }
 }

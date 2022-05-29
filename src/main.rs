@@ -25,8 +25,8 @@ async fn make_graph() -> &'static Graph {
             m.permissions(|p| {
                 p.can_read(|p| {
                     p.any(vec![
-                        |p| { p.is_this_object(); },
-                        |p| { p.is_instance_of("Admin"); }
+                        |p: &mut Pipeline| { p.is_this_object(); },
+                        |p: &mut Pipeline| { p.is_instance_of("Admin"); }
                     ]);
                 });
             });

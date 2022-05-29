@@ -18,6 +18,13 @@ impl Stage {
             _ => { None }
         }
     }
+
+    pub fn invalid(&self) -> Option<String> {
+        return match self {
+            Stage::Invalid(s) => { Some(s.clone()) }
+            _ => { None }
+        }
+    }
 }
 
 unsafe impl Send for Stage {}

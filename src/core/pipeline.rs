@@ -4,8 +4,10 @@ use crate::core::modifier::Modifier;
 use crate::core::modifiers::abs::AbsModifier;
 use crate::core::modifiers::addi::AddIModifier;
 use crate::core::modifiers::addf::AddFModifier;
+use crate::core::modifiers::all::AllModifier;
 use crate::core::modifiers::alnum::AlnumModifier;
 use crate::core::modifiers::alpha::AlphaModifier;
+use crate::core::modifiers::any::AnyModifier;
 use crate::core::modifiers::bcrypt_salt::BcryptSaltModifier;
 use crate::core::modifiers::bcrypt_verify::BcryptVerifyModifier;
 use crate::core::modifiers::ceil::CeilModifier;
@@ -190,6 +192,16 @@ impl Pipeline {
 
     pub fn length_between(&mut self, min: impl Into<Argument>, max: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(LengthBetweenModifier::new(min, max)));
+        self
+    }
+
+    pub fn all<F: Fn(&mut Pipeline)>(&mut self, builders: Vec<F>) -> &mut Self {
+        self.modifiers.push(Arc::new(AllModifier::new(builders)));
+        self
+    }
+
+    pub fn any<F: Fn(&mut Pipeline)>(&mut self, builders: Vec<F>) -> &mut Self {
+        self.modifiers.push(Arc::new(AnyModifier::new(builders)));
         self
     }
 }

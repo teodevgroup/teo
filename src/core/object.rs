@@ -289,3 +289,9 @@ impl Debug for Object {
 
 unsafe impl Send for ObjectInner {}
 unsafe impl Sync for ObjectInner {}
+
+impl PartialEq for Object {
+    fn eq(&self, _other: &Self) -> bool {
+        false
+    }
+}

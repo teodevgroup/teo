@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use chrono::prelude::{Date, DateTime, Utc};
 use chrono::SecondsFormat;
 use serde_json::{Map, Number, Value as JsonValue};
+use crate::core::object::Object;
 
 
 #[derive(Debug, Clone, PartialEq)]
@@ -25,7 +26,8 @@ pub enum Value {
     Date(Date<Utc>),
     DateTime(DateTime<Utc>),
     Vec(Vec<Value>),
-    Map(HashMap<String, Value>)
+    Map(HashMap<String, Value>),
+    Object(Object)
 }
 
 impl Value {
@@ -94,6 +96,9 @@ impl Value {
                     map.insert(k.to_string(), v.to_json_value());
                 }
                 JsonValue::Object(map)
+            }
+            Value::Object(obj) => {
+                obj.to_json()
             }
         }
     }
