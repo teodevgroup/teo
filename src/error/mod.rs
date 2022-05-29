@@ -37,6 +37,9 @@ pub enum ActionErrorType {
     MissingAuthIdentity,
     MissingAuthChecker,
     AuthenticationFailed,
+    InvalidAuthorizationFormat,
+    InvalidJWTToken,
+    IdentityIsNotFound,
 }
 
 impl ActionErrorType {
@@ -75,6 +78,9 @@ impl ActionErrorType {
             ActionErrorType::MissingAuthChecker => { 400 }
             ActionErrorType::MissingCredentials => { 400 }
             ActionErrorType::AuthenticationFailed => { 401 }
+            ActionErrorType::InvalidAuthorizationFormat => { 401 }
+            ActionErrorType::InvalidJWTToken => { 401 }
+            ActionErrorType::IdentityIsNotFound => { 401 }
         }
     }
 }
@@ -351,6 +357,30 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::AuthenticationFailed,
             message: "Authentication failed.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn invalid_authorization_format() -> Self {
+        ActionError {
+            r#type: ActionErrorType::InvalidAuthorizationFormat,
+            message: "Invalid authorization header format.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn invalid_jwt_token() -> Self {
+        ActionError {
+            r#type: ActionErrorType::InvalidJWTToken,
+            message: "This token is malformed.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn identity_is_not_found() -> Self {
+        ActionError {
+            r#type: ActionErrorType::IdentityIsNotFound,
+            message: "Identity is not found.".to_string(),
             errors: None
         }
     }
