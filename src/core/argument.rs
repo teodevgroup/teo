@@ -18,7 +18,30 @@ pub trait FnArgument {
 pub enum Argument {
     ValueArgument(Value),
     PipelineArgument(Pipeline),
-    //FunctionArgument(Arc<dyn FnArgument>),
+}
+
+impl Argument {
+
+    pub(crate) fn as_value(&self) -> Option<&Value> {
+        match self {
+            ValueArgument(v) => Some(v),
+            PipelineArgument(_) => None
+        }
+    }
+
+    pub(crate) fn as_pipeline(&self) -> Option<&Pipeline> {
+        match self {
+            ValueArgument(_) => None,
+            PipelineArgument(p) => Some(p)
+        }
+    }
+
+    pub(crate) async fn resolve(&self, stage: Stage, object: &Object) -> Value {
+        match self {
+            ValueArgument(v) => v.clone(),
+            PipelineArgument(p) => p._process(stage, object).await.value().unwrap()
+        }
+    }
 }
 
 impl From<&str> for Argument {
@@ -123,14 +146,6 @@ impl From<DateTime<Utc>> for Argument {
     }
 }
 
-// impl<T: Into<Argument>> From<Vec<T>> for Argument {
-//     fn from(v: Vec<T>) -> Self {
-//         ValueArgument(Value::Vec(v.iter().map(|i| {
-//             let value: Argument
-//         }).collect()))
-//     }
-// }
-
 impl<F> From<F> for Argument where F: Fn(&mut Pipeline) +  Clone + 'static {
     fn from(v: F) -> Self {
         let mut p = Pipeline::new();
@@ -138,9 +153,3 @@ impl<F> From<F> for Argument where F: Fn(&mut Pipeline) +  Clone + 'static {
         PipelineArgument(p)
     }
 }
-//
-// impl<FN> From<FN> for Argument {
-//     fn from(v: FN) -> Self {
-//         FunctionArgument(Arc::new(v))
-//     }
-// }

@@ -1,21 +1,27 @@
 use std::sync::{Arc};
+use crate::core::argument::Argument;
 use crate::core::modifier::Modifier;
 use crate::core::modifiers::abs::AbsModifier;
 use crate::core::modifiers::addi::AddIModifier;
 use crate::core::modifiers::addf::AddFModifier;
 use crate::core::modifiers::alnum::AlnumModifier;
 use crate::core::modifiers::alpha::AlphaModifier;
+use crate::core::modifiers::bcrypt_salt::BcryptSaltModifier;
+use crate::core::modifiers::bcrypt_verify::BcryptVerifyModifier;
 use crate::core::modifiers::ceil::CeilModifier;
 use crate::core::modifiers::else_p::ElsePModifier;
 use crate::core::modifiers::email::EmailModifier;
 use crate::core::modifiers::floor::FloorModifier;
 use crate::core::modifiers::if_p::IfPModifier;
 use crate::core::modifiers::is_null::IsNullModifier;
+use crate::core::modifiers::length::LengthModifier;
+use crate::core::modifiers::length_between::LengthBetweenModifier;
 use crate::core::modifiers::now::NowModifier;
 use crate::core::modifiers::object_value::ObjectValueModifier;
 use crate::core::modifiers::regex_match::RegexMatchModifier;
 use crate::core::modifiers::random_digits::RandomDigitsModifier;
 use crate::core::modifiers::regex_replace::RegexReplaceModifier;
+use crate::core::modifiers::secure_password::SecurePasswordModifier;
 use crate::core::modifiers::str_append::StrAppendModifier;
 use crate::core::modifiers::str_prepend::StrPrependModifier;
 use crate::core::modifiers::then_p::ThenPModifier;
@@ -161,11 +167,36 @@ impl Pipeline {
         self.modifiers.push(Arc::new(ObjectValueModifier::new(key)));
         self
     }
+
+    pub fn bcrypt_salt(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(BcryptSaltModifier::new()));
+        self
+    }
+
+    pub fn bcrypt_verify(&mut self, argument: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(BcryptVerifyModifier::new(argument)));
+        self
+    }
+
+    pub fn secure_password(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(SecurePasswordModifier::new()));
+        self
+    }
+
+    pub fn length(&mut self, len: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(LengthModifier::new(len)));
+        self
+    }
+
+    pub fn length_between(&mut self, min: impl Into<Argument>, max: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(LengthBetweenModifier::new(min, max)));
+        self
+    }
 }
 
 impl Clone for Pipeline {
     fn clone(&self) -> Self {
-        return Pipeline { modifiers: self.modifiers.clone() }
+        Pipeline { modifiers: self.modifiers.clone() }
     }
 }
 

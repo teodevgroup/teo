@@ -5,6 +5,7 @@ use std::ops::Deref;
 use std::sync::{Arc};
 use std::sync::atomic::{AtomicBool, Ordering};
 use serde_json::{Map, Value as JsonValue};
+use crate::connectors::mongodb::ToBsonValue;
 use crate::core::argument::Argument;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
@@ -257,6 +258,14 @@ impl Object {
         // set flag
         self.inner.is_initialized.store(true, Ordering::SeqCst);
         Ok(())
+    }
+
+    pub(crate) fn identifier(&self) -> Value {
+        if let Some(primary_field) = self.inner.model.primary_field() {
+            self.get_value(primary_field.name).unwrap().unwrap()
+        } else {
+            panic!("Identity model must have primary field defined explicitly.");
+        }
     }
 }
 

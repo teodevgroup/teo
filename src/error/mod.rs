@@ -36,6 +36,7 @@ pub enum ActionErrorType {
     MultipleAuthCheckerProvided,
     MissingAuthIdentity,
     MissingAuthChecker,
+    AuthenticationFailed,
 }
 
 impl ActionErrorType {
@@ -73,6 +74,7 @@ impl ActionErrorType {
             ActionErrorType::MissingAuthIdentity => { 400 }
             ActionErrorType::MissingAuthChecker => { 400 }
             ActionErrorType::MissingCredentials => { 400 }
+            ActionErrorType::AuthenticationFailed => { 401 }
         }
     }
 }
@@ -345,4 +347,11 @@ impl ActionError {
         }
     }
 
+    pub fn authentication_failed() -> Self {
+        ActionError {
+            r#type: ActionErrorType::AuthenticationFailed,
+            message: "Authentication failed.".to_string(),
+            errors: None
+        }
+    }
 }

@@ -12,8 +12,6 @@ async fn make_graph() -> &'static Graph {
     let graph = Box::leak(Box::new(Graph::new(|g| {
         g.mongodb(options.clone());
 
-        g.reset_database();
-
         g.model("MyUser", |m| {
             m.field("id", |f| {
                 f.required().primary().readonly().object_id().assigned_by_database();
@@ -148,9 +146,18 @@ async fn make_graph() -> &'static Graph {
                 f.primary().required().readonly().object_id().assigned_by_database();
             });
             m.field("email", |f| {
-                f.unique().required().string().on_save(|p| {
+                f.unique().required().string().auth_identity().on_save(|p| {
                     p.email();
                 });
+            });
+            m.field("password", |f| {
+               f.writeonly().required().string().auth_by(|p: &mut Pipeline| {
+                   p.bcrypt_verify(|p: &mut Pipeline| {
+                       p.object_value("password");
+                   });
+               }).on_set(|p| {
+                   p.length_between(8, 16).secure_password().bcrypt_salt();
+               });
             });
             m.field("name", |f| {
                 f.required().string();
@@ -168,7 +175,11 @@ async fn make_graph() -> &'static Graph {
                     p.now();
                 });
             });
+            m.identity();
         });
+
+        g.jwt_secret("my secret");
+
     }).await));
 
     graph

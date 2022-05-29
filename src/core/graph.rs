@@ -3,15 +3,19 @@ use std::ptr::addr_of;
 use actix_http::{Method};
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web};
 use actix_utils::future::ok;
+use chrono::{Duration, Utc};
 use futures_util::StreamExt;
 use serde_json::{json, Map, Value as JsonValue};
 use crate::action::action::ActionType;
+use crate::connectors::mongodb::ToBsonValue;
 use crate::core::builders::graph_builder::GraphBuilder;
 use crate::core::connector::Connector;
 use crate::core::model::Model;
 use crate::core::object::Object;
+use crate::core::stage::Stage;
 use crate::core::value::Value;
 use crate::error::ActionError;
+use crate::server::jwt::{Claims, encode_token};
 
 
 #[derive(Debug)]
@@ -21,6 +25,7 @@ pub struct Graph {
     models_map: HashMap<&'static str, * const Model>,
     url_segment_name_map: HashMap<String, &'static str>,
     connector: Option<Box<dyn Connector>>,
+    jwt_secret: &'static str,
 }
 
 impl Graph {
@@ -33,7 +38,8 @@ impl Graph {
             models_vec: Vec::new(),
             models_map: HashMap::new(),
             url_segment_name_map: HashMap::new(),
-            connector: None
+            connector: None,
+            jwt_secret: builder.jwt_secret
         };
         graph.models_vec = builder.models.iter().map(move |mb| Model::new(mb)).collect();
         let mut models_map: HashMap<&'static str, * const Model> = HashMap::new();
@@ -444,7 +450,7 @@ impl Graph {
         HttpResponse::Ok().json(json!({"Hello": "World!"}))
     }
 
-    async fn handle_sign_in(&self, input: &Map<String, JsonValue>, model: &Model) -> HttpResponse {
+    async fn handle_sign_in(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
         let credentials = input.get("credentials");
         if let None = credentials {
             return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_credentials()}));
@@ -484,10 +490,47 @@ impl Graph {
         } else if by_key == None {
             return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_auth_checker()}));
         }
-        let identity_field = model.field(identity_key.unwrap());
         let by_field = model.field(by_key.unwrap());
-        //let col = self.find_unique(model, json!{})
-        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+        let obj_result = self.find_unique(model, json!({
+            "where": {
+                identity_key.unwrap(): identity_value.unwrap()
+            }
+        }).as_object().unwrap()).await;
+        if let Err(err) = obj_result {
+            return HttpResponse::BadRequest().json(json!({"error": err}));
+        }
+        let obj = obj_result.unwrap();
+        let auth_by_arg = by_field.auth_by_arg.as_ref().unwrap();
+        let pipeline = auth_by_arg.as_pipeline().unwrap();
+        let action_by_value = by_field.r#type.decode_value(by_value.unwrap(), self);
+        if let Err(err) = action_by_value {
+            return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_input_type()}));
+        }
+        let stage = Stage::Value(action_by_value.unwrap());
+        let final_stage = pipeline._process(stage, &obj).await;
+        let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
+        let claims = Claims {
+            id: obj.identifier().to_bson_value().as_object_id().unwrap().to_hex(), // change here later
+            model: obj.inner.model.name().to_string(),
+            exp
+        };
+        let token = encode_token(claims, self.jwt_secret());
+        return if let Stage::Value(_) = final_stage {
+            HttpResponse::Ok().json(json!({
+                "meta": token,
+                "data": obj.to_json()
+            }))
+        } else {
+            HttpResponse::BadRequest().json(json!({"error": ActionError::authentication_failed()}))
+        }
+    }
+
+    pub(crate) fn jwt_secret(&self) -> &'static str {
+        return if self.jwt_secret == "" {
+            panic!("A graph with identity must have a custom JWT secret.")
+        } else {
+            self.jwt_secret
+        }
     }
 }
 

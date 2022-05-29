@@ -97,6 +97,36 @@ impl Value {
             }
         }
     }
+
+    pub(crate) fn as_string(&self) -> Option<&String> {
+        match self {
+            Value::String(v) => Some(v),
+            _ => None
+        }
+    }
+
+    pub(crate) fn as_bool(&self) -> Option<bool> {
+        match self {
+            Value::Bool(b) => Some(*b),
+            _ => None
+        }
+    }
+
+    pub(crate) fn as_usize(&self) -> Option<usize> {
+        match self {
+            Value::I8(n) => Some(*n as usize),
+            Value::I16(n) => Some(*n as usize),
+            Value::I32(n) => Some(*n as usize),
+            Value::I64(n) => Some(*n as usize),
+            Value::I128(n) => Some(*n as usize),
+            Value::U8(n) => Some(*n as usize),
+            Value::U16(n) => Some(*n as usize),
+            Value::U32(n) => Some(*n as usize),
+            Value::U64(n) => Some(*n as usize),
+            Value::U128(n) => Some(*n as usize),
+            _ => None
+        }
+    }
 }
 
 impl From<&str> for Value {

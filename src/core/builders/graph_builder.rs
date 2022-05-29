@@ -15,6 +15,7 @@ pub struct GraphBuilder {
     pub(crate) models: Vec<ModelBuilder>,
     pub(crate) connector_builder: Option<Box<dyn ConnectorBuilder>>,
     pub(crate) reset_database: bool,
+    pub(crate) jwt_secret: &'static str
 }
 
 impl GraphBuilder {
@@ -24,7 +25,8 @@ impl GraphBuilder {
             enums: HashMap::new(),
             models: Vec::new(),
             connector_builder: None,
-            reset_database: false
+            reset_database: false,
+            jwt_secret: ""
         }
     }
 
@@ -47,5 +49,9 @@ impl GraphBuilder {
 
     pub fn reset_database(&mut self) {
         self.reset_database = true;
+    }
+
+    pub fn jwt_secret(&mut self, secret: &'static str) {
+        self.jwt_secret = secret;
     }
 }

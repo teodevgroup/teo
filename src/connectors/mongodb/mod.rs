@@ -1122,7 +1122,6 @@ impl Connector for MongoDBConnector {
                 Err(ActionError::unknown_database_delete_error())
             }
         }
-
     }
 
     async fn find_unique(&self, graph: &'static Graph, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
