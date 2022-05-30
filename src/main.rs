@@ -1,5 +1,6 @@
 use mongodb::options::ClientOptions;
 use tokio::test;
+use teo::client::typescript::generate_typescript_package;
 use teo::connectors::mongodb::MongoDBConnectorHelpers;
 use teo::core::graph::Graph;
 use teo::core::pipeline::Pipeline;
@@ -195,11 +196,11 @@ async fn make_graph() -> &'static Graph {
 
         g.jwt_secret("my secret");
 
-        g.typescript_client();
-
-        g.swift_client();
-
-        g.kotlin_client();
+        // g.typescript_client();
+        //
+        // g.swift_client();
+        //
+        // g.kotlin_client();
 
     }).await));
 
@@ -209,5 +210,6 @@ async fn make_graph() -> &'static Graph {
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     let graph = make_graph().await;
-    graph.start_server(5000).await
+    generate_typescript_package(graph).await
+    //graph.start_server(5000).await
 }

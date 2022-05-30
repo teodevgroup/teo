@@ -222,6 +222,10 @@ impl Model {
     pub(crate) fn has_action(&self, action: ActionType) -> bool {
         self.actions.contains(&action)
     }
+
+    pub(crate) fn actions(&self) -> &HashSet<ActionType> {
+        &self.actions
+    }
 }
 
 unsafe impl Send for Model {}
