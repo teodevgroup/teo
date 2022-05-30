@@ -27,3 +27,6 @@ pub mod length;
 pub mod length_between;
 pub mod is_self;
 pub mod is_instance_of;
+pub mod r#do;
+pub mod or;
+pub mod and;

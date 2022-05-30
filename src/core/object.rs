@@ -261,6 +261,10 @@ impl Object {
             panic!("Identity model must have primary field defined explicitly.");
         }
     }
+
+    pub(crate) fn is_instance_of(&self, model_name: &'static str) -> bool {
+        self.inner.model.name() == model_name
+    }
 }
 
 pub(crate) struct ObjectInner {

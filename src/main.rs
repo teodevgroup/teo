@@ -26,6 +26,15 @@ async fn make_graph() -> &'static Graph {
                 p.can_read(|p| {
                     p.any(|p| { p.is_self().is_instance_of("Admin"); });
                 });
+                p.can_create(|p| {
+                    p.is_self().or(|p| { p.is_instance_of("Admin"); });
+                });
+                p.can_update(|p| {
+                    p.r#do(|p| { p.is_instance_of("Admin"); });
+                });
+                p.can_delete(|p| {
+                    p.is_self().or(|p| { p.is_instance_of("Admin"); });
+                });
             });
         });
 

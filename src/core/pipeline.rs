@@ -7,6 +7,7 @@ use crate::core::modifiers::addf::AddFModifier;
 use crate::core::modifiers::all::AllModifier;
 use crate::core::modifiers::alnum::AlnumModifier;
 use crate::core::modifiers::alpha::AlphaModifier;
+use crate::core::modifiers::and::AndModifier;
 use crate::core::modifiers::any::AnyModifier;
 use crate::core::modifiers::bcrypt_salt::BcryptSaltModifier;
 use crate::core::modifiers::bcrypt_verify::BcryptVerifyModifier;
@@ -22,6 +23,8 @@ use crate::core::modifiers::length::LengthModifier;
 use crate::core::modifiers::length_between::LengthBetweenModifier;
 use crate::core::modifiers::now::NowModifier;
 use crate::core::modifiers::object_value::ObjectValueModifier;
+use crate::core::modifiers::or::OrModifier;
+use crate::core::modifiers::r#do::DoModifier;
 use crate::core::modifiers::regex_match::RegexMatchModifier;
 use crate::core::modifiers::random_digits::RandomDigitsModifier;
 use crate::core::modifiers::regex_replace::RegexReplaceModifier;
@@ -204,6 +207,21 @@ impl Pipeline {
 
     pub fn any<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {
         self.modifiers.push(Arc::new(AnyModifier::new(build)));
+        self
+    }
+
+    pub fn r#do<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {
+        self.modifiers.push(Arc::new(DoModifier::new(build)));
+        self
+    }
+
+    pub fn or<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {
+        self.modifiers.push(Arc::new(OrModifier::new(build)));
+        self
+    }
+
+    pub fn and<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {
+        self.modifiers.push(Arc::new(AndModifier::new(build)));
         self
     }
 
