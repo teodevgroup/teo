@@ -10,6 +10,7 @@ async fn make_graph() -> &'static Graph {
     let options = ClientOptions::parse("mongodb://localhost:27017/teotestserver").await.unwrap();
 
     let graph = Box::leak(Box::new(Graph::new(|g| {
+
         g.mongodb(options.clone());
 
         g.model("MyUser", |m| {
@@ -193,6 +194,12 @@ async fn make_graph() -> &'static Graph {
         });
 
         g.jwt_secret("my secret");
+
+        g.typescript_client();
+
+        g.swift_client();
+
+        g.kotlin_client();
 
     }).await));
 
