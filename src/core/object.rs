@@ -291,7 +291,7 @@ unsafe impl Send for ObjectInner {}
 unsafe impl Sync for ObjectInner {}
 
 impl PartialEq for Object {
-    fn eq(&self, _other: &Self) -> bool {
-        false
+    fn eq(&self, other: &Self) -> bool {
+        self.inner.model == other.inner.model && self.identifier() == other.identifier()
     }
 }

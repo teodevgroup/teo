@@ -12,11 +12,13 @@ pub struct AnyModifier {
 }
 
 impl AnyModifier {
-    pub fn new<F: Fn(&mut Pipeline)>(builders: Vec<F>) -> Self {
-        let pipelines = builders.iter().map(|b| {
-            let mut pipeline = Pipeline::new();
-            b(&mut pipeline);
-            pipeline
+    pub fn new<F: Fn(&mut Pipeline)>(build: F) -> Self {
+        let mut pipeline = Pipeline::new();
+        build(&mut pipeline);
+        let pipelines: Vec<Pipeline> = pipeline.modifiers.iter().map(|modifier| {
+            let mut p = Pipeline::new();
+            p.modifiers.push(modifier.clone());
+            p
         }).collect();
         return AnyModifier { pipelines };
     }

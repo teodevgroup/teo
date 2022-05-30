@@ -25,3 +25,5 @@ pub mod floor;
 pub mod secure_password;
 pub mod length;
 pub mod length_between;
+pub mod is_self;
+pub mod is_instance_of;

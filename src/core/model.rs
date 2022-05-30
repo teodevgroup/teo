@@ -226,3 +226,9 @@ impl Model {
 
 unsafe impl Send for Model {}
 unsafe impl Sync for Model {}
+
+impl PartialEq for Model {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}

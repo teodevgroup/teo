@@ -117,6 +117,13 @@ impl Value {
         }
     }
 
+    pub(crate) fn as_object(&self) -> Option<&Object> {
+        match self {
+            Value::Object(obj) => Some(obj),
+            _ => None
+        }
+    }
+
     pub(crate) fn as_usize(&self) -> Option<usize> {
         match self {
             Value::I8(n) => Some(*n as usize),

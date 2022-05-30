@@ -15,7 +15,9 @@ use crate::core::modifiers::else_p::ElsePModifier;
 use crate::core::modifiers::email::EmailModifier;
 use crate::core::modifiers::floor::FloorModifier;
 use crate::core::modifiers::if_p::IfPModifier;
+use crate::core::modifiers::is_instance_of::IsInstanceOfModifier;
 use crate::core::modifiers::is_null::IsNullModifier;
+use crate::core::modifiers::is_self::IsSelfModifier;
 use crate::core::modifiers::length::LengthModifier;
 use crate::core::modifiers::length_between::LengthBetweenModifier;
 use crate::core::modifiers::now::NowModifier;
@@ -195,13 +197,23 @@ impl Pipeline {
         self
     }
 
-    pub fn all<F: Fn(&mut Pipeline)>(&mut self, builders: Vec<F>) -> &mut Self {
-        self.modifiers.push(Arc::new(AllModifier::new(builders)));
+    pub fn all<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {
+        self.modifiers.push(Arc::new(AllModifier::new(build)));
         self
     }
 
-    pub fn any<F: Fn(&mut Pipeline)>(&mut self, builders: Vec<F>) -> &mut Self {
-        self.modifiers.push(Arc::new(AnyModifier::new(builders)));
+    pub fn any<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {
+        self.modifiers.push(Arc::new(AnyModifier::new(build)));
+        self
+    }
+
+    pub fn is_self(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(IsSelfModifier::new()));
+        self
+    }
+
+    pub fn is_instance_of(&mut self, model_name: &'static str) -> &mut Self {
+        self.modifiers.push(Arc::new(IsInstanceOfModifier::new(model_name)));
         self
     }
 }
