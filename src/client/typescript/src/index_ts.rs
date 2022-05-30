@@ -1,13 +1,15 @@
 use inflector::Inflector;
-use crate::action::action::ActionType;
+use crate::action::action::{ActionResultData, ActionResultMeta, ActionType};
 use crate::client::shared::code::Code;
 use crate::client::typescript::r#type::ToTypeScriptType;
 use crate::core::field::Availability;
 use crate::core::graph::Graph;
 
 
-pub async fn generate_index_ts(graph: &'static Graph) -> String {
+pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
     Code::new(0, 4, |c| {
+        c.line(r#"import { request, Response, PagingInfo } from "./runtime""#);
+        c.empty_line();
         // enum definitions
         graph.enums().iter().for_each(|e| {
             let name = e.0;
@@ -30,78 +32,37 @@ pub async fn generate_index_ts(graph: &'static Graph) -> String {
                 c.empty_line();
             }
         });
+        // model input arguments
+        // TODO: here add model input args
+
         // delegates
         graph.models().iter().for_each(|m| {
             if m.actions().len() > 0 {
                 let model_name = m.name();
                 let model_var_name = model_name.to_camel_case();
+                let model_url_segment_name = m.url_segment_name();
                 c.block(format!("const {model_var_name}Delegate = {{"), |b| {
-                    if m.actions().contains(&ActionType::FindUnique) {
-                        b.empty_line();
-                        b.block(format!("findUnique(args: {model_name}FindUniqueArgs): Promise<{model_name}> {{"), |b| {
+                    ActionType::iter().for_each(|a| {
+                        if m.actions().contains(a) {
+                            let action_name = a.as_str();
+                            let action_var_name = a.as_str().to_camel_case();
+                            let result_meta = match a.result_meta() {
+                                ActionResultMeta::PagingInfo => "PagingInfo",
+                                ActionResultMeta::TokenInfo => "TokenInfo",
+                                ActionResultMeta::NoMeta => "undefined",
+                                ActionResultMeta::Other => "undefined",
+                            };
+                            let result_data = match a.result_data() {
+                                ActionResultData::Single => model_name.to_string(),
+                                ActionResultData::Vec => model_name.to_string() + "[]",
+                                ActionResultData::Other => "never".to_string(),
+                            };
                             b.empty_line();
-                        }, "},");
-                    }
-                    if m.actions().contains(&ActionType::FindMany) {
-                        b.empty_line();
-                        b.block(format!("findMany(args: {model_name}FindManyArgs): Promise<{model_name}[]> {{"), |b| {
-                            b.empty_line();
-                        }, "},");
-                    }
-                    if m.actions().contains(&ActionType::FindFirst) {
-                        b.empty_line();
-                        b.block(format!("findFirst(args: {model_name}FindFirstArgs): Promise<{model_name}> {{"), |b| {
-                            b.empty_line();
-                        }, "},");
-                    }
-                    if m.actions().contains(&ActionType::Create) {
-                        b.empty_line();
-                        b.block(format!("create(args: {model_name}CreateArgs): Promise<{model_name}> {{"), |b| {
-                            b.empty_line();
-                        }, "},");
-                    }
-                    if m.actions().contains(&ActionType::Update) {
-                        b.empty_line();
-                        b.block(format!("update(args: {model_name}UpdateArgs): Promise<{model_name}> {{"), |b| {
-                            b.empty_line();
-                        }, "},");
-                    }
-                    if m.actions().contains(&ActionType::Upsert) {
-                        b.empty_line();
-                        b.block(format!("upsert(args: {model_name}UpsertArgs): Promise<{model_name}> {{"), |b| {
-                            b.empty_line();
-                        }, "},");
-                    }
-                    if m.actions().contains(&ActionType::Delete) {
-                        b.empty_line();
-                        b.block(format!("delete(args: {model_name}DeleteArgs): Promise<{model_name}> {{"), |b| {
-                            b.empty_line();
-                        }, "},");
-                    }
-                    if m.actions().contains(&ActionType::CreateMany) {
-                        b.empty_line();
-                        b.block(format!("createMany(args: {model_name}CreateManyArgs): Promise<{model_name}[]> {{"), |b| {
-                            b.empty_line();
-                        }, "},");
-                    }
-                    if m.actions().contains(&ActionType::UpdateMany) {
-                        b.empty_line();
-                        b.block(format!("updateMany(args: {model_name}UpdateManyArgs): Promise<{model_name}[]> {{"), |b| {
-                            b.empty_line();
-                        }, "},");
-                    }
-                    if m.actions().contains(&ActionType::DeleteMany) {
-                        b.empty_line();
-                        b.block(format!("deleteMany(args: {model_name}DeleteManyArgs): Promise<{model_name}[]> {{"), |b| {
-                            b.empty_line();
-                        }, "},");
-                    }
-                    if m.actions().contains(&ActionType::SignIn) {
-                        b.empty_line();
-                        b.block(format!("signIn(args: {model_name}SignInArgs): Promise<{model_name}> {{"), |b| {
-                            b.empty_line();
-                        }, "},");
-                    }
+                            b.block(format!("async {action_var_name}(args: {model_name}{action_name}Args): Promise<Response<{result_meta}, {result_data}>> {{"), |b| {
+                                b.line(format!(r#"return await request("{model_url_segment_name}", "{action_name}", args)"#));
+                            }, "},")
+                        }
+                    });
                 }, "}");
                 c.empty_line();
             }
