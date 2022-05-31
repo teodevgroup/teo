@@ -1,11 +1,4 @@
-use bson::{doc, Document};
-use futures_util::StreamExt;
-use sqlx::mysql::{MySqlPoolOptions, MySqlPool};
-use serde_json::{json};
-use sqlx::{MySql, Pool};
-use sqlx::pool::PoolOptions;
 use tokio::test;
-use teo::connectors::mongodb::MongoDBConnectorHelpers;
 use teo::connectors::mysql::MySQLConnectorHelpers;
 use teo::core::graph::Graph;
 use teo::core::value::Value;
@@ -51,10 +44,10 @@ async fn make_mysql_graph() -> &'static Graph {
 async fn unique_value_cannot_have_duplications_on_create() {
     let graph = make_mysql_graph().await;
     let object1 = graph.new_object("UniqueIndex");
-    object1.set_value("unique", Value::String("123".to_string()));
-    object1.save().await;
+    let _ = object1.set_value("unique", Value::String("123".to_string()));
+    let _ = object1.save().await;
     let object2 = graph.new_object("UniqueIndex");
-    object2.set_value("unique", Value::String("123".to_string()));
+    let _ = object2.set_value("unique", Value::String("123".to_string()));
     let result = object2.save().await;
     assert_eq!(result.err().unwrap(), ActionError::unique_value_duplicated("unique"));
 }
@@ -63,12 +56,12 @@ async fn unique_value_cannot_have_duplications_on_create() {
 async fn unique_value_cannot_have_duplications_on_update() {
     let graph = make_mysql_graph().await;
     let object1 = graph.new_object("UniqueIndex");
-    object1.set_value("unique", Value::String("123".to_string()));
-    object1.save().await;
+    let _ = object1.set_value("unique", Value::String("123".to_string()));
+    let _ = object1.save().await;
     let object2 = graph.new_object("UniqueIndex");
-    object2.set_value("unique", Value::String("222".to_string()));
-    object2.save().await;
-    object2.set_value("unique", Value::String("123".to_string()));
+    let _ = object2.set_value("unique", Value::String("222".to_string()));
+    let _ = object2.save().await;
+    let _ = object2.set_value("unique", Value::String("123".to_string()));
     let result = object2.save().await;
     assert_eq!(result.err().unwrap(), ActionError::unique_value_duplicated("unique"));
 }
@@ -77,7 +70,7 @@ async fn unique_value_cannot_have_duplications_on_update() {
 async fn unique_value_can_have_duplicated_nulls() {
     let graph = make_mysql_graph().await;
     let object1 = graph.new_object("UniqueIndex");
-    object1.save().await;
+    let _ = object1.save().await;
     let object2 = graph.new_object("UniqueIndex");
     let result = object2.save().await;
     assert_eq!(result.ok(), None);
@@ -85,5 +78,5 @@ async fn unique_value_can_have_duplicated_nulls() {
 
 #[test]
 async fn index_field_is_indexed() {
-    let graph = make_mysql_graph().await;
+    //let graph = make_mysql_graph().await;
 }

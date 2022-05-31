@@ -1,10 +1,8 @@
 use mongodb::options::ClientOptions;
-use tokio::test;
 use teo::client::typescript::generate_typescript_package;
 use teo::connectors::mongodb::MongoDBConnectorHelpers;
 use teo::core::builders::pipeline_builder::PipelineBuilder;
 use teo::core::graph::Graph;
-use teo::core::pipeline::Pipeline;
 
 
 async fn make_graph() -> &'static Graph {

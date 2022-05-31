@@ -22,7 +22,7 @@ impl PostgresConnector {
     pub async fn new(pool: PgPool, database_name: String, models: &Vec<Model>) -> PostgresConnector {
         for model in models {
             let stmt_string = table_create_statement(model).to_string(PostgresQueryBuilder);
-            sqlx::query(&stmt_string).execute(&pool).await;
+            let _ = sqlx::query(&stmt_string).execute(&pool).await;
         }
         PostgresConnector { pool, database_name }
     }
@@ -81,10 +81,10 @@ impl ConnectorBuilder for PostgresConnectorBuilder {
                 let string_url = url.to_string();
                 let pool = PgPool::connect(&string_url).await.unwrap();
                 if reset_database {
-                    sqlx::query(&format!("DROP DATABASE IF EXISTS {database_name}")).execute(&pool).await;
+                    let _ = sqlx::query(&format!("DROP DATABASE IF EXISTS {database_name}")).execute(&pool).await;
                 }
-                sqlx::query(&format!("CREATE DATABASE IF NOT EXISTS {database_name}")).execute(&pool).await;
-                sqlx::query(&format!("USE DATABASE {database_name}")).execute(&pool).await;
+                let _ = sqlx::query(&format!("CREATE DATABASE IF NOT EXISTS {database_name}")).execute(&pool).await;
+                let _ = sqlx::query(&format!("USE DATABASE {database_name}")).execute(&pool).await;
                 Box::new(PostgresConnector::new(pool, database_name, models).await)
             }
             Err(err) => {
