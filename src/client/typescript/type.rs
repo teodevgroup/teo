@@ -36,9 +36,9 @@ impl ToTypeScriptType for Type {
             Type::Bool => "boolean | Boolean".to_string(),
             Type::I8 | Type::I16 | Type::I32 | Type::I64 | Type::I128 | Type::U8 | Type::U16 | Type::U32 | Type::U64 | Type::U128 | Type::F32 | Type::F64 => "number | Number".to_string(),
             Type::Enum(name) => format!(r#"{name} | EnumFilter<{name}>"#),
-            Type::Vec(internal) => "undefined | Unimplemented",
+            Type::Vec(internal) => "undefined | Unimplemented".to_string(),
             Type::Map(_) => panic!(),
-            Type::Object(name) => "undefined | Unimplemented",
+            Type::Object(name) => "undefined | Unimplemented".to_string(),
         };
         if optional {
             base + "NullableFilter | null"
