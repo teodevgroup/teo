@@ -2,7 +2,7 @@ use inflector::Inflector;
 use crate::action::action::ActionType;
 use crate::client::shared::code::Code;
 use crate::client::typescript::r#type::ToTypeScriptType;
-use crate::core::field::Availability;
+use crate::core::field::Optionality;
 use crate::core::graph::Graph;
 
 

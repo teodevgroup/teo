@@ -16,7 +16,7 @@ pub struct FieldBuilder {
     pub(crate) localized_name: &'static str,
     pub(crate) description: &'static str,
     pub(crate) r#type: Type,
-    pub(crate) availability: Availability,
+    pub(crate) optionality: Optionality,
     pub(crate) store: Store,
     pub(crate) primary: bool,
     pub(crate) read_rule: ReadRule,
@@ -43,7 +43,7 @@ impl FieldBuilder {
             localized_name: "",
             description: "",
             r#type: Type::Undefined,
-            availability: Availability::Required,
+            optionality: Optionality::Required,
             store: Store::Embedded,
             primary: false,
             read_rule: ReadRule::Read,
@@ -241,12 +241,12 @@ impl FieldBuilder {
     }
 
     pub fn optional(&mut self) -> &mut Self {
-        self.availability = Availability::Optional;
+        self.optionality = Optionality::Optional;
         return self;
     }
 
     pub fn required(&mut self) -> &mut Self {
-        self.availability = Availability::Required;
+        self.optionality = Optionality::Required;
         self
     }
 

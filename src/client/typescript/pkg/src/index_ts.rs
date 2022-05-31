@@ -2,7 +2,7 @@ use inflector::Inflector;
 use crate::action::action::{ActionResultData, ActionResultMeta, ActionType};
 use crate::client::shared::code::Code;
 use crate::client::typescript::r#type::ToTypeScriptType;
-use crate::core::field::Availability;
+use crate::core::field::Optionality;
 use crate::core::graph::Graph;
 
 
@@ -25,7 +25,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                     m.output_keys().iter().for_each(|k| {
                         let field = m.field(k);
                         let field_name = field.name;
-                        let field_type = field.r#type.to_typescript_type(field.availability == Availability::Optional);
+                        let field_type = field.r#type.to_typescript_type(field.optionality == Optionality::Optional);
                         b.line(format!("{field_name}: {field_type}"));
                     });
                 }, "}");
@@ -51,7 +51,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                 m.query_keys().iter().for_each(|k| {
                     let field = m.field(k);
                     let field_name = field.name;
-                    let field_filter = field.r#type.to_typescript_filter_type(field.availability == Availability::Optional);
+                    let field_filter = field.r#type.to_typescript_filter_type(field.optionality == Optionality::Optional);
                     b.line("{field_name}?: {field_filter}");
                 })
             }, "}");
@@ -59,7 +59,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                 m.unique_query_keys().iter().for_each(|k| {
                     let field = m.field(k);
                     let field_name = field.name;
-                    let field_ts_type = field.r#type.to_typescript_type(field.availability == Availability::Optional);
+                    let field_ts_type = field.r#type.to_typescript_type(field.optionality == Optionality::Optional);
                     b.line("{field_name}?: {field_ts_type}");
                 })
             }, "}");
@@ -74,7 +74,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                 m.input_keys().iter().for_each(|k| {
                     let field = m.field(k);
                     let field_name = field.name;
-                    let field_ts_type = field.r#type.to_typescript_input_type(field.availability == Availability::Optional);
+                    let field_ts_type = field.r#type.to_typescript_input_type(field.optionality == Optionality::Optional);
                     b.line("{field_name}?: {field_ts_type}");
                 });
             }, "}");
@@ -82,7 +82,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                 m.input_keys().iter().for_each(|k| {
                     let field = m.field(k);
                     let field_name = field.name;
-                    let field_ts_type = field.r#type.to_typescript_input_type(field.availability == Availability::Optional);
+                    let field_ts_type = field.r#type.to_typescript_input_type(field.optionality == Optionality::Optional);
                     b.line("{field_name}?: {field_ts_type}");
                 });
             }, "}");

@@ -274,7 +274,7 @@ impl Clone for Type {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Availability {
+pub enum Optionality {
     Optional,
     Required
 }
@@ -332,11 +332,11 @@ pub enum FieldIndex {
     CompoundUnique(&'static str),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Field {
     pub(crate) name: &'static str,
     pub(crate) r#type: Type,
-    pub(crate) availability: Availability,
+    pub(crate) optionality: Optionality,
     pub(crate) store: Store,
     pub(crate) primary: bool,
     pub(crate) read_rule: ReadRule,
@@ -361,7 +361,7 @@ impl Field {
         return Field {
             name: builder.name,
             r#type: builder.r#type.clone(),
-            availability: builder.availability,
+            optionality: builder.optionality,
             store: builder.store,
             primary: builder.primary,
             read_rule: builder.read_rule,
@@ -379,33 +379,6 @@ impl Field {
             on_save_pipeline: builder.on_save_pipeline.build(),
             on_output_pipeline: builder.on_output_pipeline.build(),
             permission: if let Some(builder) = &builder.permission { Some(builder.build()) } else { None },
-        }
-    }
-}
-
-impl Clone for Field {
-    fn clone(&self) -> Self {
-        return Field {
-            name: self.name,
-            r#type: self.r#type.clone(),
-            availability: self.availability,
-            store: self.store,
-            primary: self.primary,
-            read_rule: self.read_rule,
-            write_rule: self.write_rule,
-            index: self.index,
-            query_ability: self.query_ability,
-            object_assignment: self.object_assignment,
-            assigned_by_database: self.assigned_by_database,
-            auto_increment: self.auto_increment,
-            auth_identity: self.auth_identity,
-            auth_by: self.auth_by,
-            auth_by_arg: self.auth_by_arg.clone(),
-            default: self.default.clone(),
-            on_set_pipeline: self.on_set_pipeline.clone(),
-            on_save_pipeline: self.on_save_pipeline.clone(),
-            on_output_pipeline: self.on_output_pipeline.clone(),
-            permission: self.permission.clone(),
         }
     }
 }

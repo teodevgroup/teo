@@ -8,7 +8,7 @@ use url::Url;
 use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::object::Object;
 use crate::core::builders::graph_builder::GraphBuilder;
-use crate::core::field::{Availability, Type};
+use crate::core::field::{Optionality, Type};
 use crate::core::model::Model;
 use crate::error::ActionError;
 
@@ -21,11 +21,11 @@ pub(crate) fn table_create_statement(model: &Model) -> TableCreateStatement {
     for field in model.fields() {
         let mut def = ColumnDef::new(SeaIden::new(field.name.to_string()));
         field.r#type.install_column_type(&mut def);
-        match field.availability {
-            Availability::Required => {
+        match field.optionality {
+            Optionality::Required => {
                 def.not_null();
             }
-            Availability::Optional => {
+            Optionality::Optional => {
 
             }
         }

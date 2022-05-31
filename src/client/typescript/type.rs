@@ -1,4 +1,4 @@
-use crate::core::field::{Availability, Type};
+use crate::core::field::{Optionality, Type};
 
 
 pub(crate) trait ToTypeScriptType {
@@ -15,7 +15,7 @@ impl ToTypeScriptType for Type {
             Type::Bool => "boolean".to_string(),
             Type::I8 | Type::I16 | Type::I32 | Type::I64 | Type::I128 | Type::U8 | Type::U16 | Type::U32 | Type::U64 | Type::U128 | Type::F32 | Type::F64 => "number".to_string(),
             Type::Enum(name) => name.to_string(),
-            Type::Vec(internal) => internal.r#type.to_typescript_type(internal.availability == Availability::Optional) + "[]",
+            Type::Vec(internal) => internal.r#type.to_typescript_type(internal.optionality == Optionality::Optional) + "[]",
             Type::Map(_) => panic!(),
             Type::Object(name) => name.to_string(),
         };
@@ -54,7 +54,7 @@ impl ToTypeScriptType for Type {
             Type::Bool => "boolean".to_string(),
             Type::I8 | Type::I16 | Type::I32 | Type::I64 | Type::I128 | Type::U8 | Type::U16 | Type::U32 | Type::U64 | Type::U128 | Type::F32 | Type::F64 => "number".to_string(),
             Type::Enum(name) => name.to_string(),
-            Type::Vec(internal) => internal.r#type.to_typescript_type(internal.availability == Availability::Optional) + "[]",
+            Type::Vec(internal) => internal.r#type.to_typescript_type(internal.optionality == Optionality::Optional) + "[]",
             Type::Map(_) => panic!(),
             Type::Object(name) => name.to_string(),
         };

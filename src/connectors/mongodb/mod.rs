@@ -13,7 +13,7 @@ use regex::Regex;
 use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::object::Object;
 use crate::core::builders::graph_builder::GraphBuilder;
-use crate::core::field::{Availability, FieldIndex, Type};
+use crate::core::field::{Optionality, FieldIndex, Type};
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::value::Value;
@@ -42,7 +42,7 @@ impl MongoDBConnector {
                 let index_options = IndexOptions::builder()
                     .name(field.name.to_string())
                     .unique(field.index == FieldIndex::Unique)
-                    .sparse(field.availability == Availability::Optional).build();
+                    .sparse(field.optionality == Optionality::Optional).build();
                 let index_model = IndexModel::builder().keys(doc! {field.name.to_string(): 1}).options(index_options).build();
                 let create_index_options = CreateIndexOptions::builder().build();
                 collection.create_index(index_model, create_index_options).await;
