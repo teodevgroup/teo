@@ -1,21 +1,17 @@
-use mongodb::options::ClientOptions;
 use teo::client::typescript::generate_typescript_package;
-use teo::connectors::mongodb::MongoDBConnectorHelpers;
 use teo::core::builders::pipeline_builder::PipelineBuilder;
 use teo::core::graph::Graph;
 
 
 async fn make_graph() -> &'static Graph {
 
-    let options = ClientOptions::parse("mongodb://localhost:27017/teotestserver").await.unwrap();
-
     let graph = Box::leak(Box::new(Graph::new(|g| {
 
-        g.mongodb(options.clone());
+        g.data_source().mongodb("mongodb://localhost:27017/teotestserver");
 
         g.model("MyUser", |m| {
             m.field("id", |f| {
-                f.required().primary().readonly().object_id().assigned_by_database();
+                f.required().primary().readonly().object_id().column_name("_id").assigned_by_database();
             });
             m.field("name", |f| {
                 f.required().string().default("Bson");
@@ -43,7 +39,7 @@ async fn make_graph() -> &'static Graph {
             m.localized_name("短信验证码");
             m.description("用于用户登录或者修改手机号码的短信验证码。");
             m.field("id", |f| {
-                f.primary().required().readonly().object_id().assigned_by_database();
+                f.required().primary().readonly().object_id().column_name("_id").assigned_by_database();
             });
             m.field("phoneNo", |f| {
                 f.localized_name("电话号码");
@@ -78,7 +74,7 @@ async fn make_graph() -> &'static Graph {
             m.description("在前端平台登录的用户。");
             m.identity();
             m.field("id", |f| {
-                f.primary().required().readonly().object_id().assigned_by_database();
+                f.required().primary().readonly().object_id().column_name("_id").assigned_by_database();
             });
             m.field("authCode", |f| {
                 f.localized_name("短信验证码");
@@ -132,7 +128,7 @@ async fn make_graph() -> &'static Graph {
             m.localized_name("文章");
             m.description("用户所写的文章。");
             m.field("id", |f| {
-                f.primary().required().readonly().object_id().assigned_by_database();
+                f.required().primary().readonly().object_id().column_name("_id").assigned_by_database();
             });
             m.field("title", |f| {
                 f.localized_name("文章标题");
@@ -158,7 +154,7 @@ async fn make_graph() -> &'static Graph {
             m.localized_name("管理员");
             m.description("在管理平台登录的公司内部的管理员。");
             m.field("id", |f| {
-                f.primary().required().readonly().object_id().assigned_by_database();
+                f.required().primary().readonly().object_id().column_name("_id").assigned_by_database();
             });
             m.field("email", |f| {
                 f.unique().required().string().auth_identity().on_save(|p| {

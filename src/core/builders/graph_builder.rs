@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::action::action::ActionType;
 use crate::core::argument::{Argument, FnArgument};
 use crate::core::argument::Argument::{PipelineArgument, ValueArgument};
+use crate::core::builders::data_source_builder::DataSourceBuilder;
 use crate::core::connector::{ConnectorBuilder};
 use crate::core::field::*;
 use crate::core::pipeline::Pipeline;
@@ -53,5 +54,9 @@ impl GraphBuilder {
 
     pub fn jwt_secret(&mut self, secret: &'static str) {
         self.jwt_secret = secret;
+    }
+
+    pub fn data_source(&mut self) -> DataSourceBuilder {
+        DataSourceBuilder { graph_builder: self }
     }
 }

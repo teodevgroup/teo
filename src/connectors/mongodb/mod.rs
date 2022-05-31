@@ -28,7 +28,8 @@ pub struct MongoDBConnector {
 }
 
 impl MongoDBConnector {
-    pub(crate) async fn new(options: ClientOptions, models: &Vec<Model>, reset_database: bool) -> MongoDBConnector {
+    pub(crate) async fn new(url: &'static str, models: &Vec<Model>, reset_database: bool) -> MongoDBConnector {
+        let options = ClientOptions::parse(url).await.unwrap();
         let client = Client::with_options(options.clone()).unwrap();
         let database = client.database(&options.default_database.clone().unwrap());
         if reset_database {
@@ -1238,34 +1239,19 @@ impl Connector for MongoDBConnector {
 
 #[derive(Debug)]
 pub(crate) struct MongoDBConnectorBuilder {
-    options: ClientOptions
+    url: &'static str
 }
 
 impl MongoDBConnectorBuilder {
-    pub(crate) fn new(options: ClientOptions) -> MongoDBConnectorBuilder {
-        MongoDBConnectorBuilder { options }
+    pub(crate) fn new(url: &'static str) -> MongoDBConnectorBuilder {
+        MongoDBConnectorBuilder { url }
     }
 }
 
 #[async_trait]
 impl ConnectorBuilder for MongoDBConnectorBuilder {
     async fn build_connector(&self, models: &Vec<Model>, reset_database: bool) -> Box<dyn Connector> {
-        // for model in graph.models() {
-        //     let col: Collection<Document> = self.database.collection(model.table_name());
-        //     self.collections.insert(model.name(), col);
-        // }
-        Box::new(MongoDBConnector::new(self.options.clone(), models, reset_database).await)
-    }
-}
-
-pub trait MongoDBConnectorHelpers {
-    fn mongodb(&mut self, options: ClientOptions);
-}
-
-impl MongoDBConnectorHelpers for GraphBuilder {
-
-    fn mongodb(&mut self, options: ClientOptions) {
-        self.connector_builder = Some(Box::new(MongoDBConnectorBuilder::new(options)))
+        Box::new(MongoDBConnector::new(self.url, models, reset_database).await)
     }
 }
 

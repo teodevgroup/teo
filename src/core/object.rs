@@ -5,7 +5,6 @@ use std::ops::Deref;
 use std::sync::{Arc};
 use std::sync::atomic::{AtomicBool, Ordering};
 use serde_json::{Map, Value as JsonValue};
-use crate::connectors::mongodb::ToBsonValue;
 use crate::core::argument::Argument;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
@@ -28,8 +27,8 @@ impl Object {
             is_initialized: AtomicBool::new(false),
             is_new: AtomicBool::new(true),
             is_modified: AtomicBool::new(false),
-            is_partial: false,
-            is_deleted: false,
+            is_partial: AtomicBool::new(false),
+            is_deleted: AtomicBool::new(false),
             selected_fields: RefCell::new(HashSet::new()),
             modified_fields: RefCell::new(HashSet::new()),
             previous_values: RefCell::new(HashMap::new()),
@@ -273,8 +272,8 @@ pub(crate) struct ObjectInner {
     pub(crate) is_initialized: AtomicBool,
     pub(crate) is_new: AtomicBool,
     pub(crate) is_modified: AtomicBool,
-    pub(crate) is_partial: bool,
-    pub(crate) is_deleted: bool,
+    pub(crate) is_partial: AtomicBool,
+    pub(crate) is_deleted: AtomicBool,
     pub(crate) selected_fields: RefCell<HashSet<String>>,
     pub(crate) modified_fields: RefCell<HashSet<String>>,
     pub(crate) previous_values: RefCell<HashMap<String, Value>>,

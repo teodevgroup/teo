@@ -3,7 +3,6 @@ use futures_util::StreamExt;
 use mongodb::{Client, Collection};
 use mongodb::options::ClientOptions;
 use tokio::test;
-use teo::connectors::mongodb::MongoDBConnectorHelpers;
 use teo::core::graph::Graph;
 use teo::core::value::Value;
 use teo::error::ActionError;
@@ -15,11 +14,9 @@ async fn make_client_options() -> ClientOptions {
 
 async fn make_mongodb_graph() -> &'static Graph {
 
-    let options = make_client_options().await;
-
     let graph = Box::leak(Box::new(Graph::new(|g| {
 
-        g.mongodb(options.clone());
+        g.data_source().mongodb("mongodb://localhost:27017/teotestindex");
 
         g.reset_database();
 

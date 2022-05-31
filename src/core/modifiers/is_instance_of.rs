@@ -26,7 +26,7 @@ impl Modifier for IsInstanceOfModifier {
     async fn call(&self, stage: Stage, _object: &Object) -> Stage {
         return if let Some(value) = stage.value() {
             if let Some(obj) = value.as_object() {
-                if obj.inner.model.name() == self.model_name {
+                if obj.is_instance_of(self.model_name) {
                     return stage.clone()
                 } else {
                     let model_name = self.model_name;

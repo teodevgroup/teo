@@ -34,6 +34,7 @@ pub struct FieldBuilder {
     pub(crate) on_save_pipeline: PipelineBuilder,
     pub(crate) on_output_pipeline: PipelineBuilder,
     pub(crate) permission: Option<PermissionBuilder>,
+    pub(crate) column_name: Option<&'static str>,
 }
 
 impl FieldBuilder {
@@ -60,7 +61,8 @@ impl FieldBuilder {
             on_set_pipeline: PipelineBuilder::new(),
             on_save_pipeline: PipelineBuilder::new(),
             on_output_pipeline: PipelineBuilder::new(),
-            permission: None
+            permission: None,
+            column_name: None,
         }
     }
 
@@ -322,9 +324,15 @@ impl FieldBuilder {
         return self;
     }
 
-    pub fn permissions<F: Fn(&mut PermissionBuilder)>(&mut self, build: F) {
+    pub fn permissions<F: Fn(&mut PermissionBuilder)>(&mut self, build: F) -> &mut Self {
         let mut permission_builder = PermissionBuilder::new();
         build(&mut permission_builder);
         self.permission = Some(permission_builder);
+        self
+    }
+
+    pub fn column_name(&mut self, name: &'static str) -> &mut Self {
+        self.column_name = Some(name);
+        self
     }
 }

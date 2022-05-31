@@ -354,6 +354,7 @@ pub(crate) struct Field {
     pub(crate) on_save_pipeline: Pipeline,
     pub(crate) on_output_pipeline: Pipeline,
     pub(crate) permission: Option<Permission>,
+    pub(crate) column_name: Option<&'static str>,
 }
 
 impl Field {
@@ -379,6 +380,7 @@ impl Field {
             on_save_pipeline: builder.on_save_pipeline.build(),
             on_output_pipeline: builder.on_output_pipeline.build(),
             permission: if let Some(builder) = &builder.permission { Some(builder.build()) } else { None },
+            column_name: builder.column_name
         }
     }
 }

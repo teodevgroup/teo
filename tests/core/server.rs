@@ -1,15 +1,12 @@
 use mongodb::options::ClientOptions;
 use tokio::test;
-use teo::connectors::mongodb::MongoDBConnectorHelpers;
 use teo::core::graph::Graph;
 
 
 async fn make_graph() -> &'static Graph {
 
-    let options = ClientOptions::parse("mongodb://localhost:27017/teotestserver").await.unwrap();
-
     let graph = Box::leak(Box::new(Graph::new(|g| {
-        g.mongodb(options.clone());
+        g.data_source().mongodb("mongodb://localhost:27017/teotestserver");
 
         g.reset_database();
 
