@@ -140,4 +140,80 @@ impl ActionType {
             SignIn => ActionResultData::Single,
         }
     }
+
+    pub(crate) fn requires_where(&self) -> bool {
+        match self {
+            FindUnique => false,
+            FindFirst => true,
+            FindMany => true,
+            Create => false,
+            Update => false,
+            Upsert => false,
+            Delete => false,
+            CreateMany => false,
+            UpdateMany => true,
+            DeleteMany => true,
+            Count => false,
+            Aggregate => false,
+            GroupBy => false,
+            SignIn => false,
+        }
+    }
+
+    pub(crate) fn requires_where_unique(&self) -> bool {
+        match self {
+            FindUnique => true,
+            FindFirst => false,
+            FindMany => false,
+            Create => false,
+            Update => true,
+            Upsert => true,
+            Delete => true,
+            CreateMany => false,
+            UpdateMany => false,
+            DeleteMany => false,
+            Count => false,
+            Aggregate => false,
+            GroupBy => false,
+            SignIn => false,
+        }
+    }
+
+    pub(crate) fn requires_create(&self) -> bool {
+        match self {
+            FindUnique => false,
+            FindFirst => false,
+            FindMany => false,
+            Create => true,
+            Update => false,
+            Upsert => true,
+            Delete => false,
+            CreateMany => true,
+            UpdateMany => false,
+            DeleteMany => false,
+            Count => false,
+            Aggregate => false,
+            GroupBy => false,
+            SignIn => false,
+        }
+    }
+
+    pub(crate) fn requires_update(&self) -> bool {
+        match self {
+            FindUnique => false,
+            FindFirst => false,
+            FindMany => false,
+            Create => false,
+            Update => true,
+            Upsert => true,
+            Delete => false,
+            CreateMany => false,
+            UpdateMany => true,
+            DeleteMany => false,
+            Count => false,
+            Aggregate => false,
+            GroupBy => false,
+            SignIn => false,
+        }
+    }
 }
