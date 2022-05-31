@@ -3,6 +3,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use chrono::{Date, DateTime, Utc};
 use crate::core::argument::Argument::{PipelineArgument, ValueArgument};
+use crate::core::builders::pipeline_builder::PipelineBuilder;
 use crate::core::pipeline::Pipeline;
 use crate::core::stage::Stage;
 use crate::core::value::Value;
@@ -39,7 +40,7 @@ impl Argument {
     pub(crate) async fn resolve(&self, stage: Stage, object: &Object) -> Value {
         match self {
             ValueArgument(v) => v.clone(),
-            PipelineArgument(p) => p._process(stage, object).await.value().unwrap()
+            PipelineArgument(p) => p.process(stage, object).await.value().unwrap()
         }
     }
 }
@@ -146,10 +147,10 @@ impl From<DateTime<Utc>> for Argument {
     }
 }
 
-impl<F> From<F> for Argument where F: Fn(&mut Pipeline) +  Clone + 'static {
+impl<F> From<F> for Argument where F: Fn(&mut PipelineBuilder) +  Clone + 'static {
     fn from(v: F) -> Self {
-        let mut p = Pipeline::new();
+        let mut p = PipelineBuilder::new();
         v(&mut p);
-        PipelineArgument(p)
+        PipelineArgument(p.build())
     }
 }

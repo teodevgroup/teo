@@ -2,6 +2,7 @@ use mongodb::options::ClientOptions;
 use tokio::test;
 use teo::client::typescript::generate_typescript_package;
 use teo::connectors::mongodb::MongoDBConnectorHelpers;
+use teo::core::builders::pipeline_builder::PipelineBuilder;
 use teo::core::graph::Graph;
 use teo::core::pipeline::Pipeline;
 
@@ -101,7 +102,7 @@ async fn make_graph() -> &'static Graph {
             m.field("name", |f| {
                 f.localized_name("用户的显示的名字");
                 f.description("新用户如果没有传自己的名字，则会默认成为“用户159****8899”这样的格式。");
-                f.required().string().default(|p: &mut Pipeline| {
+                f.required().string().default(|p: &mut PipelineBuilder| {
                     p.object_value("phoneNo").regex_replace(r"(.).{3}$", "****").str_prepend("用户");
                 });
             });
@@ -167,8 +168,8 @@ async fn make_graph() -> &'static Graph {
                 });
             });
             m.field("password", |f| {
-               f.writeonly().required().string().auth_by(|p: &mut Pipeline| {
-                   p.bcrypt_verify(|p: &mut Pipeline| {
+               f.writeonly().required().string().auth_by(|p: &mut PipelineBuilder| {
+                   p.bcrypt_verify(|p: &mut PipelineBuilder| {
                        p.object_value("password");
                    });
                }).on_set(|p| {

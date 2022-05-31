@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use crate::core::builders::pipeline_builder::PipelineBuilder;
 use crate::core::modifier::Modifier;
 use crate::core::object::Object;
 use crate::core::pipeline::Pipeline;
@@ -12,10 +13,10 @@ pub struct DoModifier {
 }
 
 impl DoModifier {
-    pub fn new<F: Fn(&mut Pipeline)>(build: F) -> Self {
-        let mut pipeline = Pipeline::new();
+    pub fn new<F: Fn(&mut PipelineBuilder)>(build: F) -> Self {
+        let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
-        return DoModifier { pipeline };
+        return DoModifier { pipeline: pipeline.build() };
     }
 }
 
@@ -27,6 +28,6 @@ impl Modifier for DoModifier {
     }
 
     async fn call(&self, stage: Stage, object: &Object) -> Stage {
-        self.pipeline._process(stage.clone(), object).await
+        self.pipeline.process(stage.clone(), object).await
     }
 }

@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use crate::core::builders::pipeline_builder::PipelineBuilder;
 use crate::core::modifier::Modifier;
 use crate::core::object::Object;
 use crate::core::pipeline::Pipeline;
@@ -12,10 +13,10 @@ pub struct OrModifier {
 }
 
 impl OrModifier {
-    pub fn new<F: Fn(&mut Pipeline)>(build: F) -> Self {
-        let mut pipeline = Pipeline::new();
+    pub fn new<F: Fn(&mut PipelineBuilder)>(build: F) -> Self {
+        let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
-        return OrModifier { pipeline };
+        return OrModifier { pipeline: pipeline.build() };
     }
 }
 
@@ -30,6 +31,6 @@ impl Modifier for OrModifier {
         if let Some(_) = &stage.value() {
             return stage
         }
-        return self.pipeline._process(stage.clone(), object).await
+        return self.pipeline.process(stage.clone(), object).await
     }
 }

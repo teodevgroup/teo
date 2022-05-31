@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use crate::core::builders::pipeline_builder::PipelineBuilder;
 use crate::core::modifier::Modifier;
 use crate::core::object::Object;
 use crate::core::pipeline::Pipeline;
@@ -12,13 +13,13 @@ pub struct AnyModifier {
 }
 
 impl AnyModifier {
-    pub fn new<F: Fn(&mut Pipeline)>(build: F) -> Self {
-        let mut pipeline = Pipeline::new();
+    pub fn new<F: Fn(&mut PipelineBuilder)>(build: F) -> Self {
+        let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
         let pipelines: Vec<Pipeline> = pipeline.modifiers.iter().map(|modifier| {
-            let mut p = Pipeline::new();
+            let mut p = PipelineBuilder::new();
             p.modifiers.push(modifier.clone());
-            p
+            p.build()
         }).collect();
         return AnyModifier { pipelines };
     }
@@ -34,7 +35,7 @@ impl Modifier for AnyModifier {
 
     async fn call(&self, stage: Stage, object: &Object) -> Stage {
         for pipeline in &self.pipelines {
-            let result = pipeline._process(stage.clone(), object).await;
+            let result = pipeline.process(stage.clone(), object).await;
             if let Some(_) = result.value() {
                 return stage.clone()
             }

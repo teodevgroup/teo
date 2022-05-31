@@ -1,3 +1,4 @@
+use crate::core::builders::pipeline_builder::PipelineBuilder;
 use crate::core::permission::Permission;
 use crate::core::pipeline::Pipeline;
 
@@ -16,31 +17,31 @@ impl PermissionBuilder {
         PermissionBuilder { can_read: None, can_update: None, can_create: None, can_delete: None }
     }
 
-    pub fn can_read<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {
-        let mut pipeline = Pipeline::new();
+    pub fn can_read<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
-        self.can_read = Some(pipeline);
+        self.can_read = Some(pipeline.build());
         self
     }
 
-    pub fn can_update<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {
-        let mut pipeline = Pipeline::new();
+    pub fn can_update<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
-        self.can_update = Some(pipeline);
+        self.can_update = Some(pipeline.build());
         self
     }
 
-    pub fn can_create<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {
-        let mut pipeline = Pipeline::new();
+    pub fn can_create<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
-        self.can_create = Some(pipeline);
+        self.can_create = Some(pipeline.build());
         self
     }
 
-    pub fn can_delete<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {
-        let mut pipeline = Pipeline::new();
+    pub fn can_delete<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
-        self.can_delete = Some(pipeline);
+        self.can_delete = Some(pipeline.build());
         self
     }
 

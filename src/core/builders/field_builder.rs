@@ -4,6 +4,7 @@ use crate::action::action::ActionType;
 use crate::core::argument::{Argument, FnArgument};
 use crate::core::argument::Argument::{PipelineArgument, ValueArgument};
 use crate::core::builders::permission_builder::PermissionBuilder;
+use crate::core::builders::pipeline_builder::PipelineBuilder;
 use crate::core::connector::{ConnectorBuilder};
 use crate::core::field::*;
 use crate::core::pipeline::Pipeline;
@@ -29,9 +30,9 @@ pub struct FieldBuilder {
     pub(crate) auth_by: bool,
     pub(crate) auth_by_arg: Option<Argument>,
     pub(crate) default: Option<Argument>,
-    pub(crate) on_set_pipeline: Pipeline,
-    pub(crate) on_save_pipeline: Pipeline,
-    pub(crate) on_output_pipeline: Pipeline,
+    pub(crate) on_set_pipeline: PipelineBuilder,
+    pub(crate) on_save_pipeline: PipelineBuilder,
+    pub(crate) on_output_pipeline: PipelineBuilder,
     pub(crate) permission: Option<PermissionBuilder>,
 }
 
@@ -56,9 +57,9 @@ impl FieldBuilder {
             auth_by: false,
             auth_by_arg: None,
             default: None,
-            on_set_pipeline: Pipeline::new(),
-            on_save_pipeline: Pipeline::new(),
-            on_output_pipeline: Pipeline::new(),
+            on_set_pipeline: PipelineBuilder::new(),
+            on_save_pipeline: PipelineBuilder::new(),
+            on_output_pipeline: PipelineBuilder::new(),
             permission: None
         }
     }
@@ -297,17 +298,17 @@ impl FieldBuilder {
         self
     }
 
-    pub fn on_set<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {
+    pub fn on_set<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         build(&mut self.on_set_pipeline);
         self
     }
 
-    pub fn on_save<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {
+    pub fn on_save<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         build(&mut self.on_save_pipeline);
         return self;
     }
 
-    pub fn on_output<F: Fn(&mut Pipeline)>(&mut self, build: F) -> &mut Self {
+    pub fn on_output<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         build(&mut self.on_output_pipeline);
         return self;
     }

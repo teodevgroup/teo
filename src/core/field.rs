@@ -375,9 +375,9 @@ impl Field {
             auth_by: builder.auth_by,
             auth_by_arg: builder.auth_by_arg.clone(),
             default: builder.default.clone(),
-            on_set_pipeline: builder.on_set_pipeline.clone(),
-            on_save_pipeline: builder.on_save_pipeline.clone(),
-            on_output_pipeline: builder.on_output_pipeline.clone(),
+            on_set_pipeline: builder.on_set_pipeline.build(),
+            on_save_pipeline: builder.on_save_pipeline.build(),
+            on_output_pipeline: builder.on_output_pipeline.build(),
             permission: if let Some(builder) = &builder.permission { Some(builder.build()) } else { None },
         }
     }

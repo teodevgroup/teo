@@ -27,7 +27,7 @@ impl Modifier for IfPModifier {
     }
 
     async fn call(&self, stage: Stage, object: &Object) -> Stage {
-        let result = self.pipeline._process(stage.clone(), object).await;
+        let result = self.pipeline.process(stage.clone(), object).await;
         match result {
             StageValue(value) => {
                 return ConditionTrue(value);

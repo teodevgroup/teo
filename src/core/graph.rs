@@ -576,7 +576,7 @@ impl Graph {
             return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_input_type()}));
         }
         let stage = Stage::Value(action_by_value.unwrap());
-        let final_stage = pipeline._process(stage, &obj).await;
+        let final_stage = pipeline.process(stage, &obj).await;
         let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
         let claims = Claims {
             id: obj.identifier().to_bson_value().as_object_id().unwrap().to_hex(), // change here later
