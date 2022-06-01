@@ -32,7 +32,7 @@ async fn make_mysql_graph() -> &'static Graph {
             });
             m.field("index", |f| {
                 f.index().optional().string();
-            })
+            });
         });
 
     }).await));

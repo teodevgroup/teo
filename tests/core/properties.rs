@@ -29,19 +29,19 @@ async fn make_graph() -> &'static Graph {
         g.model("Readonly", |m| {
             m.field("readonly", |f| {
                 f.readonly().optional().string();
-            })
+            });
         });
 
         g.model("Writeonly", |m| {
             m.field("writeonly", |f| {
                 f.writeonly().optional().string();
-            })
+            });
         });
 
         g.model("Internal", |m| {
             m.field("internal", |f| {
                 f.internal().optional().string();
-            })
+            });
         });
     }).await));
 

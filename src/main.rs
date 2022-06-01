@@ -9,6 +9,7 @@ async fn make_graph() -> &'static Graph {
         g.data_source().mongodb("mongodb://localhost:27017/teotestserver");
 
         g.model("MyUser", |m| {
+            m.table_name("myusers");
             m.field("id", |f| {
                 f.required().primary().readonly().object_id().column_name("_id").assigned_by_database();
             });
@@ -18,6 +19,7 @@ async fn make_graph() -> &'static Graph {
             m.field("age", |f| {
                 f.required().u8().default(18u8);
             });
+            m.primary(vec!["a", "b"]);
             m.permissions(|p| {
                 p.can_read(|p| {
                     p.any(|p| { p.is_self().is_instance_of("Admin"); });

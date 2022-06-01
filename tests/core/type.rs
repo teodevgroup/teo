@@ -70,7 +70,7 @@ async fn make_graph() -> &'static Graph {
             });
             m.field("sex", |f| {
                 f.optional().r#enum("Sex");
-            })
+            });
         })
     }).await))
 }

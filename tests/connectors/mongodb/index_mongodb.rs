@@ -35,13 +35,13 @@ async fn make_mongodb_graph() -> &'static Graph {
         g.model("Index", |m| {
             m.field("index", |f| {
                 f.index().required().string();
-            })
+            });
         });
 
         g.model("SparseIndex", |m| {
             m.field("indexSparse", |f| {
                 f.index().optional().string();
-            })
+            });
         });
     }).await));
 
