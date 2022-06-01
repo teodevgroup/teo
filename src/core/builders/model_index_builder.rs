@@ -28,7 +28,6 @@ impl ModelIndexBuilder {
             sort: Sort::Asc,
             len: None
         });
-        self.current_index += 1;
         self
     }
 
@@ -50,7 +49,7 @@ impl ModelIndexBuilder {
     pub(crate) fn build(&mut self) -> CompoundIndex {
         CompoundIndex {
             index_type: self.index_type,
-            name: self.name.clone(),
+            name: self.name.clone().unwrap(),
             items: self.items.clone()
         }
     }

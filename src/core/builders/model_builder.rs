@@ -15,17 +15,17 @@ use crate::core::model::{CompoundIndex, CompoundIndexItem, ModelIndexType};
 
 
 pub struct ModelBuilder {
-    pub name: &'static str,
-    pub table_name: &'static str,
-    pub url_segment_name: &'static str,
-    pub localized_name: &'static str,
-    pub description: &'static str,
-    pub identity: bool,
-    pub fields: Vec<FieldBuilder>,
-    pub actions: HashSet<ActionType>,
-    pub permission: Option<PermissionBuilder>,
-    pub primary: Option<CompoundIndex>,
-    pub compound_indices: Vec<CompoundIndex>,
+    pub(crate) name: &'static str,
+    pub(crate) table_name: &'static str,
+    pub(crate) url_segment_name: &'static str,
+    pub(crate) localized_name: &'static str,
+    pub(crate) description: &'static str,
+    pub(crate) identity: bool,
+    pub(crate) fields: Vec<FieldBuilder>,
+    pub(crate) actions: HashSet<ActionType>,
+    pub(crate) permission: Option<PermissionBuilder>,
+    pub(crate) primary: Option<CompoundIndex>,
+    pub(crate) compound_indices: Vec<CompoundIndex>,
 }
 
 impl ModelBuilder {

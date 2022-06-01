@@ -9,7 +9,7 @@ use crate::core::value::Value;
 use crate::error::ActionError;
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) enum Type {
     Undefined,
     ObjectId,
@@ -200,79 +200,6 @@ impl Type {
     }
 }
 
-impl Clone for Type {
-    fn clone(&self) -> Self {
-        match self {
-            Type::Undefined => {
-                return Type::Undefined
-            }
-            Type::ObjectId => {
-                return Type::ObjectId
-            }
-            Type::Bool => {
-                return Type::Bool
-            }
-            Type::I8 => {
-                return Type::I8
-            }
-            Type::I16 => {
-                return Type::I16
-            }
-            Type::I32 => {
-                return Type::I32
-            }
-            Type::I64 => {
-                return Type::I64
-            }
-            Type::I128 => {
-                return Type::I128
-            }
-            Type::U8 => {
-                return Type::U8
-            }
-            Type::U16 => {
-                return Type::U16
-            }
-            Type::U32 => {
-                return Type::U32
-            }
-            Type::U64 => {
-                return Type::U64
-            }
-            Type::U128 => {
-                return Type::U128
-            }
-            Type::F32 => {
-                return Type::F32
-            }
-            Type::F64 => {
-                return Type::F64
-            }
-            Type::String => {
-                return Type::String
-            }
-            Type::Date => {
-                return Type::Date
-            }
-            Type::DateTime => {
-                return Type::DateTime
-            }
-            Type::Enum(e) => {
-                return Type::Enum(e)
-            }
-            Type::Object(model) => {
-                return Type::Object(model)
-            }
-            Type::Vec(field) => {
-                return Type::Vec(field.clone())
-            }
-            Type::Map(field) => {
-                return Type::Map(field.clone())
-            }
-        }
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Optionality {
     Optional,
@@ -323,13 +250,13 @@ pub enum ObjectAssignment {
     Copy,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Sort {
     Asc,
     Desc
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IndexSettings {
     pub(crate) name: Option<String>,
     pub(crate) sort: Sort,
@@ -388,7 +315,7 @@ impl Field {
             primary: builder.primary,
             read_rule: builder.read_rule,
             write_rule: builder.write_rule,
-            index: builder.index,
+            index: builder.index.clone(),
             query_ability: builder.query_ability,
             object_assignment: builder.object_assignment,
             auto: builder.auto,

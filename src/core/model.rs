@@ -11,12 +11,14 @@ use crate::core::field::WriteRule::NoWrite;
 use crate::core::permission::Permission;
 
 
+#[derive(Copy, Clone)]
 pub enum ModelIndexType {
     Primary,
     Index,
     Unique,
 }
 
+#[derive(Clone)]
 pub(crate) struct CompoundIndexItem {
     pub(crate) field_name: String,
     pub(crate) sort: Sort,
@@ -219,7 +221,7 @@ impl Model {
 
     pub(crate) fn get_unique_query_keys(builder: &ModelBuilder) -> Vec<&'static str> {
         builder.fields.iter()
-            .filter(|&f| { f.query_ability == QueryAbility::Queryable && (f.index == FieldIndex::Unique || f.primary == true) })
+            //.filter(|&f| { f.query_ability == QueryAbility::Queryable && (f.index == FieldIndex::Unique || f.primary == true) })
             .map(|f| { f.name })
             .collect()
     }
