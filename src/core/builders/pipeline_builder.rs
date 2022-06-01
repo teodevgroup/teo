@@ -12,6 +12,7 @@ use crate::core::modifiers::any::AnyModifier;
 use crate::core::modifiers::bcrypt_salt::BcryptSaltModifier;
 use crate::core::modifiers::bcrypt_verify::BcryptVerifyModifier;
 use crate::core::modifiers::ceil::CeilModifier;
+use crate::core::modifiers::cuid::CUIDModifier;
 use crate::core::modifiers::else_p::ElsePModifier;
 use crate::core::modifiers::email::EmailModifier;
 use crate::core::modifiers::floor::FloorModifier;
@@ -29,9 +30,11 @@ use crate::core::modifiers::regex_match::RegexMatchModifier;
 use crate::core::modifiers::random_digits::RandomDigitsModifier;
 use crate::core::modifiers::regex_replace::RegexReplaceModifier;
 use crate::core::modifiers::secure_password::SecurePasswordModifier;
+use crate::core::modifiers::slug::SlugModifier;
 use crate::core::modifiers::str_append::StrAppendModifier;
 use crate::core::modifiers::str_prepend::StrPrependModifier;
 use crate::core::modifiers::then_p::ThenPModifier;
+use crate::core::modifiers::uuid::UUIDModifier;
 use crate::core::stage::Stage;
 use crate::core::object::Object;
 use crate::core::pipeline::Pipeline;
@@ -233,6 +236,21 @@ impl PipelineBuilder {
 
     pub fn is_instance_of(&mut self, model_name: &'static str) -> &mut Self {
         self.modifiers.push(Arc::new(IsInstanceOfModifier::new(model_name)));
+        self
+    }
+
+    pub fn uuid(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(UUIDModifier::new()));
+        self
+    }
+
+    pub fn cuid(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(CUIDModifier::new()));
+        self
+    }
+
+    pub fn slug(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(SlugModifier::new()));
         self
     }
 

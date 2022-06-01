@@ -1,3 +1,4 @@
+use uuid::Uuid;
 use teo::core::builders::pipeline_builder::PipelineBuilder;
 use teo::core::graph::Graph;
 
@@ -207,7 +208,9 @@ async fn make_graph() -> &'static Graph {
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    let graph = make_graph().await;
-    graph.generate_packages().await
+    println!("{}", Uuid::new_v4().to_string());
+    Ok(())
+    //let graph = make_graph().await;
+    //graph.generate_packages().await
     //graph.start_server(5000).await
 }

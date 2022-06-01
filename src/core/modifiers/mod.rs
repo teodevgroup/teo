@@ -30,3 +30,6 @@ pub mod is_instance_of;
 pub mod r#do;
 pub mod or;
 pub mod and;
+pub mod uuid;
+pub mod cuid;
+pub mod slug;
