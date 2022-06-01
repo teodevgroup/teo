@@ -1,14 +1,33 @@
 use std::collections::{HashMap, HashSet};
 use std::ptr::{addr_of, null};
 use inflector::Inflector;
+use sea_query::IndexType;
 use crate::action::action::ActionType;
 use crate::core::builders::model_builder::ModelBuilder;
-use crate::core::field::{Field, FieldIndex, QueryAbility};
+use crate::core::field::{Field, FieldIndex, QueryAbility, Sort};
 use crate::core::field::ReadRule::NoRead;
 use crate::core::field::Store::{Calculated, Temp};
 use crate::core::field::WriteRule::NoWrite;
 use crate::core::permission::Permission;
 
+
+pub enum ModelIndexType {
+    Primary,
+    Index,
+    Unique,
+}
+
+pub(crate) struct CompoundIndexItem {
+    pub(crate) field_name: String,
+    pub(crate) sort: Sort,
+    pub(crate) len: Option<usize>,
+}
+
+pub(crate) struct CompoundIndex {
+    pub(crate) index_type: ModelIndexType,
+    pub(crate) name: String,
+    pub(crate) items: Vec<CompoundIndexItem>
+}
 
 #[derive(Debug)]
 pub(crate) struct Model {

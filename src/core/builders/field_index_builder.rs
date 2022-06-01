@@ -1,15 +1,15 @@
 use crate::core::field::{IndexSettings, Sort};
 
 
-pub struct IndexBuilder {
+pub struct FieldIndexBuilder {
     name: Option<String>,
     sort: Sort,
     len: Option<usize>,
 }
 
-impl IndexBuilder {
+impl FieldIndexBuilder {
     pub(crate) fn new() -> Self {
-        IndexBuilder {
+        FieldIndexBuilder {
             name: None,
             sort: Sort::Asc,
             len: None

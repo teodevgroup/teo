@@ -9,7 +9,9 @@ use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
 use crate::core::builders::field_builder::FieldBuilder;
 use crate::core::builders::action_builder::ActionBuilder;
+use crate::core::builders::model_index_builder::{ModelIndexBuilder};
 use crate::core::builders::permission_builder::PermissionBuilder;
+use crate::core::model::{CompoundIndex, CompoundIndexItem, ModelIndexType};
 
 
 pub struct ModelBuilder {
@@ -22,7 +24,8 @@ pub struct ModelBuilder {
     pub fields: Vec<FieldBuilder>,
     pub actions: HashSet<ActionType>,
     pub permission: Option<PermissionBuilder>,
-    pub primary: Option<Vec<String>>,
+    pub primary: Option<CompoundIndex>,
+    pub compound_indices: Vec<CompoundIndex>,
 }
 
 impl ModelBuilder {
@@ -38,7 +41,8 @@ impl ModelBuilder {
             fields: Vec::new(),
             actions: ActionType::default(),
             permission: None,
-            primary: None
+            primary: None,
+            compound_indices: Vec::new(),
         }
     }
 
@@ -108,8 +112,70 @@ impl ModelBuilder {
         self
     }
 
-    pub fn primary<I, T>(&mut self, keys: I) -> &mut Self where I: IntoIterator<Item = T>, T: Into<String>, {
-        self.primary = Some(keys.into_iter().map(Into::into).collect());
+    pub fn primary<I, T>(&mut self, keys: I) -> &mut Self where I: IntoIterator<Item = T>, T: Into<String> {
+        let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
+        let name = string_keys.join("_");
+        let items = string_keys.iter().map(|k| {
+            CompoundIndexItem { field_name: k.to_string(), sort: Sort::Asc, len: None }
+        }).collect();
+        let index = CompoundIndex {
+            index_type: ModelIndexType::Primary,
+            name,
+            items
+        };
+        self.primary = Some(index);
         self
     }
+
+    pub fn primary_settings<F: Fn(&mut ModelIndexBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut builder = ModelIndexBuilder::new(ModelIndexType::Primary);
+        build(&mut builder);
+        self.primary = Some(builder.build());
+        self
+    }
+
+    pub fn index<I, T>(&mut self, keys: I) -> &mut Self where I: IntoIterator<Item = T>, T: Into<String> {
+        let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
+        let name = string_keys.join("_");
+        let items = string_keys.iter().map(|k| {
+            CompoundIndexItem { field_name: k.to_string(), sort: Sort::Asc, len: None }
+        }).collect();
+        let index = CompoundIndex {
+            index_type: ModelIndexType::Index,
+            name,
+            items
+        };
+        self.compound_indices.push(index);
+        self
+    }
+
+    pub fn index_settings<F: Fn(&mut ModelIndexBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut builder = ModelIndexBuilder::new(ModelIndexType::Index);
+        build(&mut builder);
+        self.compound_indices.push(builder.build());
+        self
+    }
+
+    pub fn unique<I, T>(&mut self, keys: I) -> &mut Self where I: IntoIterator<Item = T>, T: Into<String> {
+        let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
+        let name = string_keys.join("_");
+        let items = string_keys.iter().map(|k| {
+            CompoundIndexItem { field_name: k.to_string(), sort: Sort::Asc, len: None }
+        }).collect();
+        let index = CompoundIndex {
+            index_type: ModelIndexType::Unique,
+            name,
+            items
+        };
+        self.compound_indices.push(index);
+        self
+    }
+
+    pub fn unique_settings<F: Fn(&mut ModelIndexBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut builder = ModelIndexBuilder::new(ModelIndexType::Unique);
+        build(&mut builder);
+        self.compound_indices.push(builder.build());
+        self
+    }
+
 }
