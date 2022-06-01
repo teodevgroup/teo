@@ -42,7 +42,7 @@ impl MongoDBConnector {
             for field in model.index_fields() {
                 let index_options = IndexOptions::builder()
                     .name(field.name.to_string())
-                    .unique(field.index == FieldIndex::Unique)
+                    .unique(field.index == FieldIndex::Unique(_))
                     .sparse(field.optionality == Optionality::Optional).build();
                 let index_model = IndexModel::builder().keys(doc! {field.name.to_string(): 1}).options(index_options).build();
                 let create_index_options = CreateIndexOptions::builder().build();

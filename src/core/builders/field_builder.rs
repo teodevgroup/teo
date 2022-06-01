@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::action::action::ActionType;
 use crate::core::argument::{Argument, FnArgument};
 use crate::core::argument::Argument::{PipelineArgument, ValueArgument};
+use crate::core::builders::index_builder::IndexBuilder;
 use crate::core::builders::permission_builder::PermissionBuilder;
 use crate::core::builders::pipeline_builder::PipelineBuilder;
 use crate::core::connector::{ConnectorBuilder};
@@ -223,23 +224,27 @@ impl FieldBuilder {
     }
 
     pub fn unique(&mut self) -> &mut Self {
-        self.index = FieldIndex::Unique;
+        self.index = FieldIndex::Unique(IndexSettings::default());
         return self;
     }
 
-    pub fn compound_unique(&mut self, key: &'static str) -> &mut Self {
-        self.index = FieldIndex::CompoundUnique(key);
-        return self;
+    pub fn unique_settings<F: Fn(&mut IndexBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut index_builder = IndexBuilder::new();
+        build(&mut index_builder);
+        self.index = FieldIndex::Unique(index_builder.build());
+        self
     }
 
     pub fn index(&mut self) -> &mut Self {
-        self.index = FieldIndex::Index;
+        self.index = FieldIndex::Index(IndexSettings::default());
         return self;
     }
 
-    pub fn compound_index(&mut self, key: &'static str) -> &mut Self {
-        self.index = FieldIndex::CompoundIndex(key);
-        return self;
+    pub fn index_settings<F: Fn(&mut IndexBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut index_builder = IndexBuilder::new();
+        build(&mut index_builder);
+        self.index = FieldIndex::Index(index_builder.build());
+        self
     }
 
     pub fn optional(&mut self) -> &mut Self {

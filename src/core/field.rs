@@ -323,13 +323,34 @@ pub enum ObjectAssignment {
     Copy,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy)]
+pub enum Sort {
+    Asc,
+    Desc
+}
+
+#[derive(Debug, Clone)]
+pub struct IndexSettings {
+    pub(crate) name: Option<String>,
+    pub(crate) sort: Sort,
+    pub(crate) length: Option<usize>,
+}
+
+impl Default for IndexSettings {
+    fn default() -> Self {
+        IndexSettings {
+            name: None,
+            sort: Sort::Asc,
+            length: None
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum FieldIndex {
     NoIndex,
-    Index,
-    CompoundIndex(&'static str),
-    Unique,
-    CompoundUnique(&'static str),
+    Index(IndexSettings),
+    Unique(IndexSettings),
 }
 
 #[derive(Debug, Clone)]
