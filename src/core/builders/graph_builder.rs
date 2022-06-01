@@ -3,12 +3,14 @@ use std::sync::Arc;
 use crate::action::action::ActionType;
 use crate::core::argument::{Argument, FnArgument};
 use crate::core::argument::Argument::{PipelineArgument, ValueArgument};
+use crate::core::builders::client_builder::ClientBuilder;
 use crate::core::builders::data_source_builder::DataSourceBuilder;
 use crate::core::connector::{ConnectorBuilder};
 use crate::core::field::*;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
 use crate::core::builders::model_builder::ModelBuilder;
+use crate::core::client::Client;
 
 
 pub struct GraphBuilder {
@@ -16,7 +18,9 @@ pub struct GraphBuilder {
     pub(crate) models: Vec<ModelBuilder>,
     pub(crate) connector_builder: Option<Box<dyn ConnectorBuilder>>,
     pub(crate) reset_database: bool,
-    pub(crate) jwt_secret: &'static str
+    pub(crate) jwt_secret: &'static str,
+    pub(crate) clients: Vec<Arc<dyn Client>>,
+    pub(crate) host_url: Option<&'static str>,
 }
 
 impl GraphBuilder {
@@ -27,7 +31,9 @@ impl GraphBuilder {
             models: Vec::new(),
             connector_builder: None,
             reset_database: false,
-            jwt_secret: ""
+            jwt_secret: "",
+            clients: Vec::new(),
+            host_url: None
         }
     }
 
@@ -58,5 +64,14 @@ impl GraphBuilder {
 
     pub fn data_source(&mut self) -> DataSourceBuilder {
         DataSourceBuilder { graph_builder: self }
+    }
+
+    pub fn client(&mut self) -> ClientBuilder {
+        ClientBuilder { graph_builder: self }
+    }
+
+    pub fn host_url(&mut self, url: &'static str) -> &mut Self {
+        self.host_url = Some(url);
+        self
     }
 }

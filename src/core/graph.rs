@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::ptr::addr_of;
+use std::sync::Arc;
 use actix_http::{Method};
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web};
 use actix_utils::future::ok;
@@ -9,6 +10,7 @@ use serde_json::{json, Map, Value as JsonValue};
 use crate::action::action::ActionType;
 use crate::connectors::mongodb::ToBsonValue;
 use crate::core::builders::graph_builder::GraphBuilder;
+use crate::core::client::Client;
 use crate::core::connector::Connector;
 use crate::core::model::Model;
 use crate::core::object::Object;
@@ -26,6 +28,8 @@ pub struct Graph {
     url_segment_name_map: HashMap<String, &'static str>,
     connector: Option<Box<dyn Connector>>,
     jwt_secret: &'static str,
+    host_url: &'static str,
+    clients: Vec<Arc<dyn Client>>,
 }
 
 impl Graph {
@@ -39,7 +43,9 @@ impl Graph {
             models_map: HashMap::new(),
             url_segment_name_map: HashMap::new(),
             connector: None,
-            jwt_secret: builder.jwt_secret
+            jwt_secret: builder.jwt_secret,
+            host_url: builder.host_url.unwrap(),
+            clients: builder.clients.clone(),
         };
         graph.models_vec = builder.models.iter().map(move |mb| Model::new(mb)).collect();
         let mut models_map: HashMap<&'static str, * const Model> = HashMap::new();
@@ -600,6 +606,13 @@ impl Graph {
         } else {
             self.jwt_secret
         }
+    }
+
+    pub async fn generate_packages(&'static self) -> std::io::Result<()> {
+        for client in &self.clients {
+            client.generate(self).await?
+        }
+        Ok(())
     }
 }
 

@@ -11,3 +11,4 @@ pub mod builders;
 pub mod object;
 pub mod permission;
 pub mod connector;
+pub mod client;

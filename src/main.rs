@@ -1,4 +1,3 @@
-use teo::client::typescript::generate_typescript_package;
 use teo::core::builders::pipeline_builder::PipelineBuilder;
 use teo::core::graph::Graph;
 
@@ -191,11 +190,13 @@ async fn make_graph() -> &'static Graph {
 
         g.jwt_secret("my secret");
 
-        // g.typescript_client();
-        //
-        // g.swift_client();
-        //
-        // g.kotlin_client();
+        g.host_url("https://api.chaping.com");
+
+        g.client().typescript().at("./client/typescript").react_hooks();
+
+        g.client().swift().at("./client/swift").combine_observable_objects();
+
+        g.client().kotlin().at("./client/kotlin").jetpack_compose_states();
 
     }).await));
 
@@ -205,6 +206,6 @@ async fn make_graph() -> &'static Graph {
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     let graph = make_graph().await;
-    generate_typescript_package(graph).await
+    graph.generate_packages().await
     //graph.start_server(5000).await
 }
