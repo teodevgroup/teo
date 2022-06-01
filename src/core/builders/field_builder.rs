@@ -24,7 +24,7 @@ pub struct FieldBuilder {
     pub(crate) index: FieldIndex,
     pub(crate) query_ability: QueryAbility,
     pub(crate) object_assignment: ObjectAssignment,
-    pub(crate) assigned_by_database: bool,
+    pub(crate) auto: bool,
     pub(crate) auto_increment: bool,
     pub(crate) auth_identity: bool,
     pub(crate) auth_by: bool,
@@ -52,7 +52,7 @@ impl FieldBuilder {
             index: FieldIndex::NoIndex,
             query_ability: QueryAbility::Queryable,
             object_assignment: ObjectAssignment::Reference,
-            assigned_by_database: false,
+            auto: false,
             auto_increment: false,
             auth_identity: false,
             auth_by: false,
@@ -289,13 +289,13 @@ impl FieldBuilder {
         self
     }
 
-    pub fn assigned_by_database(&mut self) -> &mut Self {
-        self.assigned_by_database = true;
+    pub fn auto(&mut self) -> &mut Self {
+        self.auto = true;
         self
     }
 
     pub fn auto_increment(&mut self) -> &mut Self {
-        self.assigned_by_database = true;
+        self.auto = true;
         self.auto_increment = true;
         self
     }
