@@ -1,4 +1,5 @@
-use crate::core::field::{Optionality, Type};
+use crate::core::field::{Optionality};
+use crate::core::field_type::FieldType;
 
 
 pub(crate) trait ToTypeScriptType {
@@ -7,17 +8,17 @@ pub(crate) trait ToTypeScriptType {
     fn to_typescript_input_type(&self, optional: bool) -> String;
 }
 
-impl ToTypeScriptType for Type {
+impl ToTypeScriptType for FieldType {
     fn to_typescript_type(&self, optional: bool) -> String {
         let mut base: String = match self {
-            Type::Undefined => panic!(),
-            Type::ObjectId | Type::String | Type::Date | Type::DateTime => "string".to_string(),
-            Type::Bool => "boolean".to_string(),
-            Type::I8 | Type::I16 | Type::I32 | Type::I64 | Type::I128 | Type::U8 | Type::U16 | Type::U32 | Type::U64 | Type::U128 | Type::F32 | Type::F64 => "number".to_string(),
-            Type::Enum(name) => name.to_string(),
-            Type::Vec(internal) => internal.r#type.to_typescript_type(internal.optionality == Optionality::Optional) + "[]",
-            Type::Map(_) => panic!(),
-            Type::Object(name) => name.to_string(),
+            FieldType::Undefined => panic!(),
+            FieldType::ObjectId | FieldType::String | FieldType::Date | FieldType::DateTime => "string".to_string(),
+            FieldType::Bool => "boolean".to_string(),
+            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number".to_string(),
+            FieldType::Enum(name) => name.to_string(),
+            FieldType::Vec(internal) => internal.r#type.to_typescript_type(internal.optionality == Optionality::Optional) + "[]",
+            FieldType::Map(_) => panic!(),
+            FieldType::Object(name) => name.to_string(),
         };
         if optional {
             base + " | undefined"
@@ -28,17 +29,17 @@ impl ToTypeScriptType for Type {
 
     fn to_typescript_filter_type(&self, optional: bool) -> String {
         let mut base: String = match self {
-            Type::Undefined => panic!(),
-            Type::ObjectId => "string | ObjectId".to_string(),
-            Type::String => "string | String".to_string(),
-            Type::Date => "string | Date".to_string(),
-            Type::DateTime => "string | Date | Date".to_string(),
-            Type::Bool => "boolean | Boolean".to_string(),
-            Type::I8 | Type::I16 | Type::I32 | Type::I64 | Type::I128 | Type::U8 | Type::U16 | Type::U32 | Type::U64 | Type::U128 | Type::F32 | Type::F64 => "number | Number".to_string(),
-            Type::Enum(name) => format!(r#"{name} | EnumFilter<{name}>"#),
-            Type::Vec(internal) => "undefined | Unimplemented".to_string(),
-            Type::Map(_) => panic!(),
-            Type::Object(name) => "undefined | Unimplemented".to_string(),
+            FieldType::Undefined => panic!(),
+            FieldType::ObjectId => "string | ObjectId".to_string(),
+            FieldType::String => "string | String".to_string(),
+            FieldType::Date => "string | Date".to_string(),
+            FieldType::DateTime => "string | Date | Date".to_string(),
+            FieldType::Bool => "boolean | Boolean".to_string(),
+            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number | Number".to_string(),
+            FieldType::Enum(name) => format!(r#"{name} | EnumFilter<{name}>"#),
+            FieldType::Vec(internal) => "undefined | Unimplemented".to_string(),
+            FieldType::Map(_) => panic!(),
+            FieldType::Object(name) => "undefined | Unimplemented".to_string(),
         };
         if optional {
             base + "NullableFilter | null"
@@ -49,14 +50,14 @@ impl ToTypeScriptType for Type {
 
     fn to_typescript_input_type(&self, optional: bool) -> String {
         let mut base: String = match self {
-            Type::Undefined => panic!(),
-            Type::ObjectId | Type::String | Type::Date | Type::DateTime => "string".to_string(),
-            Type::Bool => "boolean".to_string(),
-            Type::I8 | Type::I16 | Type::I32 | Type::I64 | Type::I128 | Type::U8 | Type::U16 | Type::U32 | Type::U64 | Type::U128 | Type::F32 | Type::F64 => "number".to_string(),
-            Type::Enum(name) => name.to_string(),
-            Type::Vec(internal) => internal.r#type.to_typescript_type(internal.optionality == Optionality::Optional) + "[]",
-            Type::Map(_) => panic!(),
-            Type::Object(name) => name.to_string(),
+            FieldType::Undefined => panic!(),
+            FieldType::ObjectId | FieldType::String | FieldType::Date | FieldType::DateTime => "string".to_string(),
+            FieldType::Bool => "boolean".to_string(),
+            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number".to_string(),
+            FieldType::Enum(name) => name.to_string(),
+            FieldType::Vec(internal) => internal.r#type.to_typescript_type(internal.optionality == Optionality::Optional) + "[]",
+            FieldType::Map(_) => panic!(),
+            FieldType::Object(name) => name.to_string(),
         };
         if optional {
             base + " | null"

@@ -8,7 +8,8 @@ use url::Url;
 use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::object::Object;
 use crate::core::builders::graph_builder::GraphBuilder;
-use crate::core::field::{Optionality, Type};
+use crate::core::field::{Optionality};
+use crate::core::field_type::FieldType;
 use crate::core::model::Model;
 use crate::error::ActionError;
 
@@ -44,73 +45,73 @@ pub(crate) trait ColumnType {
     fn install_column_type<'a>(&self, def: &'a mut ColumnDef) -> &'a mut ColumnDef;
 }
 
-impl ColumnType for Type {
+impl ColumnType for FieldType {
     fn install_column_type<'a>(&self, def: &'a mut ColumnDef) -> &'a mut ColumnDef {
         match self {
-            Type::Undefined => {
+            FieldType::Undefined => {
                 panic!("Column type is undefined.")
             }
-            Type::ObjectId => {
+            FieldType::ObjectId => {
                 def.string()
             }
-            Type::Bool => {
+            FieldType::Bool => {
                 def.boolean()
             }
-            Type::I8 => {
+            FieldType::I8 => {
                 def.tiny_integer()
             }
-            Type::I16 => {
+            FieldType::I16 => {
                 def.small_integer()
             }
-            Type::I32 => {
+            FieldType::I32 => {
                 def.integer()
             }
-            Type::I64 => {
+            FieldType::I64 => {
                 def.big_integer()
             }
-            Type::I128 => {
+            FieldType::I128 => {
                 def.big_integer()
             }
-            Type::U8 => {
+            FieldType::U8 => {
                 def.tiny_unsigned()
             }
-            Type::U16 => {
+            FieldType::U16 => {
                 def.small_unsigned()
             }
-            Type::U32 => {
+            FieldType::U32 => {
                 def.unsigned()
             }
-            Type::U64 => {
+            FieldType::U64 => {
                 def.big_unsigned()
             }
-            Type::U128 => {
+            FieldType::U128 => {
                 def.big_unsigned()
             }
-            Type::F32 => {
+            FieldType::F32 => {
                 def.float()
             }
-            Type::F64 => {
+            FieldType::F64 => {
                 def.double()
             }
-            Type::String => {
+            FieldType::String => {
                 def.string()
             }
-            Type::Date => {
+            FieldType::Date => {
                 def.date()
             }
-            Type::DateTime => {
+            FieldType::DateTime => {
                 def.date_time()
             }
-            Type::Enum(enum_name) => {
+            FieldType::Enum(enum_name) => {
                 def.string()
             }
-            Type::Vec(_) => {
+            FieldType::Vec(_) => {
                 def.string()
             }
-            Type::Map(_) => {
+            FieldType::Map(_) => {
                 def.string()
             }
-            Type::Object(_) => {
+            FieldType::Object(_) => {
                 def.string()
             }
         }

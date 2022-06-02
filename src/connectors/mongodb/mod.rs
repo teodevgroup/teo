@@ -13,7 +13,8 @@ use regex::Regex;
 use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::object::Object;
 use crate::core::builders::graph_builder::GraphBuilder;
-use crate::core::field::{Optionality, FieldIndex, Type};
+use crate::core::field::{Optionality, FieldIndex};
+use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::value::Value;
@@ -65,7 +66,7 @@ impl MongoDBConnector {
         };
         for key in document.keys() {
             let object_key = if key == "_id" { primary_name } else { key };
-            let field_type = if key == "_id" { &Type::ObjectId } else { &object.inner.model.field(key).r#type };
+            let field_type = if key == "_id" { &FieldType::ObjectId } else { &object.inner.model.field(key).r#type };
             let bson_value = document.get(key).unwrap();
             let value_result = self.bson_value_to_type(object_key, bson_value, field_type);
             match value_result {
@@ -82,12 +83,12 @@ impl MongoDBConnector {
         Ok(())
     }
 
-    fn bson_value_to_type(&self, field_name: &str, bson_value: &Bson, field_type: &Type) -> Result<Value, ActionError> {
+    fn bson_value_to_type(&self, field_name: &str, bson_value: &Bson, field_type: &FieldType) -> Result<Value, ActionError> {
         return match field_type {
-            Type::Undefined => {
+            FieldType::Undefined => {
                 panic!()
             }
-            Type::ObjectId => {
+            FieldType::ObjectId => {
                 match bson_value.as_object_id() {
                     Some(object_id) => {
                         Ok(Value::ObjectId(object_id.to_hex()))
@@ -98,7 +99,7 @@ impl MongoDBConnector {
                 }
 
             }
-            Type::Bool => {
+            FieldType::Bool => {
                 match bson_value.as_bool() {
                     Some(bool) => {
                         Ok(Value::Bool(bool))
@@ -108,7 +109,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::I8 => {
+            FieldType::I8 => {
                 match bson_value.as_i32() {
                     Some(val) => {
                         Ok(Value::I8(val as i8))
@@ -118,7 +119,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::I16 => {
+            FieldType::I16 => {
                 match bson_value.as_i32() {
                     Some(val) => {
                         Ok(Value::I16(val as i16))
@@ -128,7 +129,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::I32 => {
+            FieldType::I32 => {
                 match bson_value.as_i32() {
                     Some(val) => {
                         Ok(Value::I32(val as i32))
@@ -138,7 +139,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::I64 => {
+            FieldType::I64 => {
                 match bson_value.as_i64() {
                     Some(val) => {
                         Ok(Value::I64(val))
@@ -148,7 +149,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::I128 => {
+            FieldType::I128 => {
                 match bson_value.as_i64() {
                     Some(val) => {
                         Ok(Value::I128(val as i128))
@@ -158,7 +159,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::U8 => {
+            FieldType::U8 => {
                 match bson_value.as_i32() {
                     Some(val) => {
                         Ok(Value::U8(val as u8))
@@ -168,7 +169,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::U16 => {
+            FieldType::U16 => {
                 match bson_value.as_i32() {
                     Some(val) => {
                         Ok(Value::U16(val as u16))
@@ -178,7 +179,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::U32 => {
+            FieldType::U32 => {
                 match bson_value.as_i64() {
                     Some(val) => {
                         Ok(Value::U32(val as u32))
@@ -188,7 +189,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::U64 => {
+            FieldType::U64 => {
                 match bson_value.as_i64() {
                     Some(val) => {
                         Ok(Value::U64(val as u64))
@@ -198,7 +199,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::U128 => {
+            FieldType::U128 => {
                 match bson_value.as_i64() {
                     Some(val) => {
                         Ok(Value::U128(val as u128))
@@ -208,7 +209,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::F32 => {
+            FieldType::F32 => {
                 match bson_value.as_f64() {
                     Some(val) => {
                         Ok(Value::F32(val as f32))
@@ -218,7 +219,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::F64 => {
+            FieldType::F64 => {
                 match bson_value.as_f64() {
                     Some(val) => {
                         Ok(Value::F64(val))
@@ -228,7 +229,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::String => {
+            FieldType::String => {
                 match bson_value.as_str() {
                     Some(val) => {
                         Ok(Value::String(val.to_string()))
@@ -238,7 +239,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::Date => {
+            FieldType::Date => {
                 match bson_value.as_datetime() {
                     Some(val) => {
                         Ok(Value::Date(val.to_chrono().date()))
@@ -248,7 +249,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::DateTime => {
+            FieldType::DateTime => {
                 match bson_value.as_datetime() {
                     Some(val) => {
                         Ok(Value::DateTime(val.to_chrono()))
@@ -258,7 +259,7 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::Enum(_) => {
+            FieldType::Enum(_) => {
                 match bson_value.as_str() {
                     Some(val) => {
                         Ok(Value::String(val.to_string()))
@@ -268,13 +269,13 @@ impl MongoDBConnector {
                     }
                 }
             }
-            Type::Vec(_) => {
+            FieldType::Vec(_) => {
                 panic!()
             }
-            Type::Map(_) => {
+            FieldType::Map(_) => {
                 panic!()
             }
-            Type::Object(_) => {
+            FieldType::Object(_) => {
                 panic!()
             }
         };
@@ -332,12 +333,12 @@ impl MongoDBConnector {
         Ok(doc)
     }
 
-    fn parse_bson_where_entry(&self, field_type: &Type, value: &JsonValue, graph: &Graph) -> Result<Bson, ActionError> {
+    fn parse_bson_where_entry(&self, field_type: &FieldType, value: &JsonValue, graph: &Graph) -> Result<Bson, ActionError> {
         return match field_type {
-            Type::Undefined => {
+            FieldType::Undefined => {
                 panic!()
             }
-            Type::ObjectId => {
+            FieldType::ObjectId => {
                 if value.is_string() {
                     self.parse_object_id(value)
                 } else if value.is_object() {
@@ -407,7 +408,7 @@ impl MongoDBConnector {
                     Err(ActionError::wrong_input_type())
                 }
             }
-            Type::Bool => {
+            FieldType::Bool => {
                 if value.is_boolean() {
                     Ok(Bson::Boolean(value.as_bool().unwrap()))
                 } else if value.is_object() {
@@ -433,7 +434,7 @@ impl MongoDBConnector {
                     Err(ActionError::wrong_input_type())
                 }
             }
-            Type::I8 | Type::I16 | Type::I32 | Type::I64 | Type::I128 | Type::U8 | Type::U16 | Type::U32 | Type::U64 | Type::U128 => {
+            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 => {
                 if value.is_i64() {
                     Ok(Bson::Int64(value.as_i64().unwrap()))
                 } else if value.is_u64() {
@@ -507,7 +508,7 @@ impl MongoDBConnector {
                     Err(ActionError::wrong_input_type())
                 }
             }
-            Type::F32 | Type::F64 => {
+            FieldType::F32 | FieldType::F64 => {
                 if value.is_i64() {
                     Ok(Bson::Double(value.as_i64().unwrap() as f64))
                 } else if value.is_u64() {
@@ -581,7 +582,7 @@ impl MongoDBConnector {
                     Err(ActionError::wrong_input_type())
                 }
             }
-            Type::String => {
+            FieldType::String => {
                 if value.is_string() {
                     Ok(Bson::String(value.as_str().unwrap().to_string()))
                 } else if value.is_object() {
@@ -684,7 +685,7 @@ impl MongoDBConnector {
                     Err(ActionError::wrong_input_type())
                 }
             }
-            Type::Date => {
+            FieldType::Date => {
                 if value.is_string() {
                     self.parse_date(value)
                 } else if value.is_object() {
@@ -754,7 +755,7 @@ impl MongoDBConnector {
                     Err(ActionError::wrong_input_type())
                 }
             }
-            Type::DateTime => {
+            FieldType::DateTime => {
                 if value.is_string() {
                     self.parse_datetime(value)
                 } else if value.is_object() {
@@ -824,7 +825,7 @@ impl MongoDBConnector {
                     Err(ActionError::wrong_input_type())
                 }
             }
-            Type::Enum(enum_name) => {
+            FieldType::Enum(enum_name) => {
                 if value.is_string() {
                     self.parse_enum(value, enum_name, graph)
                 } else if value.is_object() {
@@ -878,13 +879,13 @@ impl MongoDBConnector {
                     Err(ActionError::wrong_input_type())
                 }
             }
-            Type::Vec(_) => {
+            FieldType::Vec(_) => {
                 panic!()
             }
-            Type::Map(_) => {
+            FieldType::Map(_) => {
                 panic!()
             }
-            Type::Object(_) => {
+            FieldType::Object(_) => {
                 panic!()
             }
         }

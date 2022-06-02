@@ -2,203 +2,13 @@ use chrono::{Date, DateTime, NaiveDate, Utc};
 use serde_json::{Value as JsonValue};
 use crate::core::argument::Argument;
 use crate::core::builders::field_builder::FieldBuilder;
+use crate::core::field_type::FieldType;
 use crate::core::graph::{Graph};
 use crate::core::permission::Permission;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
 use crate::error::ActionError;
 
-
-#[derive(Debug, Clone)]
-pub(crate) enum Type {
-    Undefined,
-    ObjectId,
-    Bool,
-    I8,
-    I16,
-    I32,
-    I64,
-    I128,
-    U8,
-    U16,
-    U32,
-    U64,
-    U128,
-    F32,
-    F64,
-    String,
-    Date,
-    DateTime,
-    Enum(&'static str),
-    Vec(Box<Field>),
-    Map(Box<Field>),
-    Object(&'static str)
-}
-
-impl Type {
-
-    pub(crate) fn decode_value(&self, json_value: &JsonValue, graph: &'static Graph) -> Result<Value, ActionError> {
-        if *json_value == JsonValue::Null {
-            Ok(Value::Null)
-        } else {
-            match self {
-                Type::Undefined => { Ok(Value::Null) }
-                Type::ObjectId => {
-                    if json_value.is_string() {
-                        Ok(Value::ObjectId(json_value.as_str().unwrap().to_string()))
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::Bool => {
-                    if json_value.is_boolean() {
-                        Ok(Value::Bool(json_value.as_bool().unwrap()))
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::I8 => {
-                    if json_value.is_number() {
-                        Ok(Value::I8(json_value.as_i64().unwrap() as i8))
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::I16 => {
-                    if json_value.is_number() {
-                        Ok(Value::I16(json_value.as_i64().unwrap() as i16))
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::I32 => {
-                    if json_value.is_number() {
-                        Ok(Value::I32(json_value.as_i64().unwrap() as i32))
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::I64 => {
-                    if json_value.is_number() {
-                        Ok(Value::I64(json_value.as_i64().unwrap()))
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::I128 => {
-                    if json_value.is_number() {
-                        Ok(Value::I128(json_value.as_i64().unwrap() as i128))
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::U8 => {
-                    if json_value.is_number() {
-                        Ok(Value::U8(json_value.as_i64().unwrap() as u8))
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::U16 => {
-                    if json_value.is_number() {
-                        Ok(Value::U16(json_value.as_i64().unwrap() as u16))
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::U32 => {
-                    if json_value.is_number() {
-                        Ok(Value::U32(json_value.as_i64().unwrap() as u32))
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::U64 => {
-                    if json_value.is_number() {
-                        Ok(Value::U64(json_value.as_i64().unwrap() as u64))
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::U128 => {
-                    if json_value.is_number() {
-                        Ok(Value::U128(json_value.as_i64().unwrap() as u128))
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::F32 => {
-                    if json_value.is_number() {
-                        Ok(Value::F32(json_value.as_f64().unwrap() as f32))
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::F64 => {
-                    if json_value.is_number() {
-                        Ok(Value::F64(json_value.as_f64().unwrap() as f64))
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::String => {
-                    if json_value.is_string() {
-                        Ok(Value::String(String::from(json_value.as_str().unwrap())))
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::Date => {
-                    if json_value.is_string() {
-                        match NaiveDate::parse_from_str(&json_value.as_str().unwrap(), "%Y-%m-%d") {
-                            Ok(naive_date) => {
-                                let date: Date<Utc> = Date::from_utc(naive_date, Utc);
-                                Ok(Value::Date(date))
-                            }
-                            Err(_) => {
-                                Err(ActionError::wrong_date_format())
-                            }
-                        }
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::DateTime => {
-                    if json_value.is_string() {
-                        match DateTime::parse_from_rfc3339(&json_value.as_str().unwrap()) {
-                            Ok(fixed_offset_datetime) => {
-                                let datetime: DateTime<Utc> = fixed_offset_datetime.with_timezone(&Utc);
-                                Ok(Value::DateTime(datetime))
-                            }
-                            Err(_) => {
-                                Err(ActionError::wrong_datetime_format())
-                            }
-                        }
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                Type::Enum(enum_name) => {
-                    if json_value.is_string() {
-                        let string = String::from(json_value.as_str().unwrap());
-                        let enums = graph.enums();
-                        let vals = enums.get(enum_name).unwrap();
-                        if vals.contains(&&*string) {
-                            Ok(Value::String(string))
-                        } else {
-                            Err(ActionError::wrong_enum_choice())
-                        }
-                    } else {
-                        Err(ActionError::wrong_input_type())
-                    }
-                }
-                _ => {
-                    panic!()
-                }
-            }
-        }
-    }
-}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Optionality {
@@ -283,7 +93,7 @@ pub enum FieldIndex {
 #[derive(Debug, Clone)]
 pub(crate) struct Field {
     pub(crate) name: &'static str,
-    pub(crate) r#type: Type,
+    pub(crate) r#type: FieldType,
     pub(crate) optionality: Optionality,
     pub(crate) store: Store,
     pub(crate) primary: bool,
@@ -309,7 +119,7 @@ impl Field {
     pub(crate) fn new(builder: &FieldBuilder) -> Field {
         return Field {
             name: builder.name,
-            r#type: builder.r#type.clone(),
+            r#type: builder.field_type.clone(),
             optionality: builder.optionality,
             store: builder.store,
             primary: builder.primary,

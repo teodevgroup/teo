@@ -8,6 +8,7 @@ use crate::core::builders::permission_builder::PermissionBuilder;
 use crate::core::builders::pipeline_builder::PipelineBuilder;
 use crate::core::connector::{ConnectorBuilder};
 use crate::core::field::*;
+use crate::core::field_type::FieldType;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
 
@@ -16,7 +17,7 @@ pub struct FieldBuilder {
     pub(crate) name: &'static str,
     pub(crate) localized_name: &'static str,
     pub(crate) description: &'static str,
-    pub(crate) r#type: Type,
+    pub(crate) field_type: FieldType,
     pub(crate) optionality: Optionality,
     pub(crate) store: Store,
     pub(crate) primary: bool,
@@ -44,7 +45,7 @@ impl FieldBuilder {
             name,
             localized_name: "",
             description: "",
-            r#type: Type::Undefined,
+            field_type: FieldType::Undefined,
             optionality: Optionality::Required,
             store: Store::Embedded,
             primary: false,
@@ -76,92 +77,92 @@ impl FieldBuilder {
     }
 
     pub fn object_id(&mut self) -> &mut Self {
-        self.r#type = Type::ObjectId;
+        self.field_type = FieldType::ObjectId;
         return self;
     }
 
     pub fn bool(&mut self) -> &mut Self {
-        self.r#type = Type::Bool;
+        self.field_type = FieldType::Bool;
         return self;
     }
 
     pub fn i8(&mut self) -> &mut Self {
-        self.r#type = Type::I8;
+        self.field_type = FieldType::I8;
         return self;
     }
 
     pub fn i16(&mut self) -> &mut Self {
-        self.r#type = Type::I16;
+        self.field_type = FieldType::I16;
         return self;
     }
 
     pub fn i32(&mut self) -> &mut Self {
-        self.r#type = Type::I32;
+        self.field_type = FieldType::I32;
         return self;
     }
 
     pub fn i64(&mut self) -> &mut Self {
-        self.r#type = Type::I64;
+        self.field_type = FieldType::I64;
         return self;
     }
 
     pub fn i128(&mut self) -> &mut Self {
-        self.r#type = Type::I128;
+        self.field_type = FieldType::I128;
         return self;
     }
 
     pub fn u8(&mut self) -> &mut Self {
-        self.r#type = Type::U8;
+        self.field_type = FieldType::U8;
         return self;
     }
 
     pub fn u16(&mut self) -> &mut Self {
-        self.r#type = Type::U16;
+        self.field_type = FieldType::U16;
         return self;
     }
 
     pub fn u32(&mut self) -> &mut Self {
-        self.r#type = Type::U32;
+        self.field_type = FieldType::U32;
         return self;
     }
 
     pub fn u64(&mut self) -> &mut Self {
-        self.r#type = Type::U64;
+        self.field_type = FieldType::U64;
         return self;
     }
 
     pub fn u128(&mut self) -> &mut Self {
-        self.r#type = Type::U128;
+        self.field_type = FieldType::U128;
         return self;
     }
 
     pub fn f32(&mut self) -> &mut Self {
-        self.r#type = Type::F32;
+        self.field_type = FieldType::F32;
         return self;
     }
 
     pub fn f64(&mut self) -> &mut Self {
-        self.r#type = Type::F64;
+        self.field_type = FieldType::F64;
         return self;
     }
 
     pub fn string(&mut self) -> &mut Self {
-        self.r#type = Type::String;
+        self.field_type = FieldType::String;
         return self;
     }
 
     pub fn date(&mut self) -> &mut Self {
-        self.r#type = Type::Date;
+        self.field_type = FieldType::Date;
         return self;
     }
 
     pub fn datetime(&mut self) -> &mut Self {
-        self.r#type = Type::DateTime;
+        self.field_type = FieldType::DateTime;
         return self;
     }
 
     pub fn r#enum(&mut self, name: &'static str) -> &mut Self {
-        self.r#type = Type::Enum(name);
+        self.field_type = FieldType::Enum(name);
         self
     }
 
@@ -169,7 +170,7 @@ impl FieldBuilder {
         let mut builder = FieldBuilder::new("");
         build(&mut builder);
         let field = Field::new(&builder);
-        self.r#type = Type::Vec(Box::new(field));
+        self.field_type = FieldType::Vec(Box::new(field));
         return self;
     }
 
@@ -177,12 +178,12 @@ impl FieldBuilder {
         let mut builder = FieldBuilder::new("");
         build(&mut builder);
         let field = Field::new(&builder);
-        self.r#type = Type::Map(Box::new(field));
+        self.field_type = FieldType::Map(Box::new(field));
         return self;
     }
 
     pub fn object(&mut self, model: &'static str) -> &mut Self {
-        self.r#type = Type::Object(model);
+        self.field_type = FieldType::Object(model);
         return self;
     }
 
