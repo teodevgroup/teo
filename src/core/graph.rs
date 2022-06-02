@@ -577,7 +577,7 @@ impl Graph {
         let obj = obj_result.unwrap();
         let auth_by_arg = by_field.auth_by_arg.as_ref().unwrap();
         let pipeline = auth_by_arg.as_pipeline().unwrap();
-        let action_by_value = by_field.r#type.decode_value(by_value.unwrap(), self);
+        let action_by_value = by_field.field_type.decode_value(by_value.unwrap(), self);
         if let Err(err) = action_by_value {
             return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_input_type()}));
         }

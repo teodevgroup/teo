@@ -1,5 +1,5 @@
 #[path = "type.rs"]
-mod r#type;
+mod field_type;
 #[path = "properties.rs"]
 mod properties;
 #[path = "object.rs"]

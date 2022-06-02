@@ -195,7 +195,7 @@ impl Object {
             };
             if json_has_value {
                 let json_value = &json_object[&key.to_string()];
-                let value_result = field.r#type.decode_value(json_value, self.inner.graph);
+                let value_result = field.field_type.decode_value(json_value, self.inner.graph);
                 let mut value;
                 match value_result {
                     Ok(v) => { value = v }

@@ -66,7 +66,7 @@ impl MongoDBConnector {
         };
         for key in document.keys() {
             let object_key = if key == "_id" { primary_name } else { key };
-            let field_type = if key == "_id" { &FieldType::ObjectId } else { &object.inner.model.field(key).r#type };
+            let field_type = if key == "_id" { &FieldType::ObjectId } else { &object.inner.model.field(key).field_type };
             let bson_value = document.get(key).unwrap();
             let value_result = self.bson_value_to_type(object_key, bson_value, field_type);
             match value_result {
@@ -320,7 +320,7 @@ impl MongoDBConnector {
             }
             let field = model.field(key);
             let db_key = if field.primary { "_id" } else { field.name };
-            let bson_result = self.parse_bson_where_entry(&field.r#type, value, graph);
+            let bson_result = self.parse_bson_where_entry(&field.field_type, value, graph);
             match bson_result {
                 Ok(bson) => {
                     doc.insert(db_key, bson);
@@ -1149,7 +1149,7 @@ impl Connector for MongoDBConnector {
         let value = values.values().next().unwrap();
         let field = model.field(key);
         let query_key = if field.primary { "_id" } else { key };
-        let decode_result = field.r#type.decode_value(value, graph);
+        let decode_result = field.field_type.decode_value(value, graph);
         match decode_result {
             Ok(value) => {
                 let col = &self.collections[model.name()];

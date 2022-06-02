@@ -21,7 +21,7 @@ pub(crate) fn table_create_statement(model: &Model) -> TableCreateStatement {
         .if_not_exists();
     for field in model.fields() {
         let mut def = ColumnDef::new(SeaIden::new(field.name.to_string()));
-        field.r#type.install_column_type(&mut def);
+        field.field_type.install_column_type(&mut def);
         match field.optionality {
             Optionality::Required => {
                 def.not_null();

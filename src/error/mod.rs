@@ -87,7 +87,7 @@ impl ActionErrorType {
 
 #[derive(Debug, PartialEq, Serialize)]
 pub struct ActionError {
-    pub r#type: ActionErrorType,
+    pub field_type: ActionErrorType,
     pub message: String,
     pub errors: Option<HashMap<String, String>>
 }
@@ -95,7 +95,7 @@ pub struct ActionError {
 impl ActionError {
     pub fn keys_unallowed() -> Self {
         ActionError {
-            r#type: ActionErrorType::KeysUnallowed,
+            field_type: ActionErrorType::KeysUnallowed,
             message: "Unallowed keys detected.".to_string(),
             errors: None
         }
@@ -103,7 +103,7 @@ impl ActionError {
 
     pub fn action_unrecognized() -> Self {
         ActionError {
-            r#type: ActionErrorType::ActionUnrecognized,
+            field_type: ActionErrorType::ActionUnrecognized,
             message: "This action is unrecognized.".to_string(),
             errors: None
         }
@@ -113,7 +113,7 @@ impl ActionError {
         let mut fields = HashMap::with_capacity(1);
         fields.insert(key.to_string(), reason);
         ActionError {
-            r#type: ActionErrorType::InvalidInput,
+            field_type: ActionErrorType::InvalidInput,
             message: "Invalid value found in input values.".to_string(),
             errors: Some(fields)
         }
@@ -121,7 +121,7 @@ impl ActionError {
 
     pub fn wrong_input_type() -> Self {
         ActionError {
-            r#type: ActionErrorType::WrongInputType,
+            field_type: ActionErrorType::WrongInputType,
             message: "Input type is unexpected.".to_string(),
             errors: None
         }
@@ -129,7 +129,7 @@ impl ActionError {
 
     pub fn wrong_where_type() -> Self {
         ActionError {
-            r#type: ActionErrorType::WrongWhereType,
+            field_type: ActionErrorType::WrongWhereType,
             message: "Where type is unexpected.".to_string(),
             errors: None
         }
@@ -137,7 +137,7 @@ impl ActionError {
 
     pub fn wrong_date_format() -> Self {
         ActionError {
-            r#type: ActionErrorType::WrongDateFormat,
+            field_type: ActionErrorType::WrongDateFormat,
             message: "Date format is unexpected.".to_string(),
             errors: None
         }
@@ -145,7 +145,7 @@ impl ActionError {
 
     pub fn wrong_datetime_format() -> Self {
         ActionError {
-            r#type: ActionErrorType::WrongDateTimeFormat,
+            field_type: ActionErrorType::WrongDateTimeFormat,
             message: "Datetime format is unexpected.".to_string(),
             errors: None
         }
@@ -153,7 +153,7 @@ impl ActionError {
 
     pub fn wrong_enum_choice() -> Self {
         ActionError {
-            r#type: ActionErrorType::WrongEnumChoice,
+            field_type: ActionErrorType::WrongEnumChoice,
             message: "Enum value is unexpected.".to_string(),
             errors: None
         }
@@ -161,7 +161,7 @@ impl ActionError {
 
     pub fn value_required() -> Self {
         ActionError {
-            r#type: ActionErrorType::ValueRequired,
+            field_type: ActionErrorType::ValueRequired,
             message: "Value is required.".to_string(),
             errors: None
         }
@@ -171,7 +171,7 @@ impl ActionError {
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
         errors.insert(field.to_string(), "Unique value duplicated.".to_string());
         ActionError {
-            r#type: ActionErrorType::ValidationError,
+            field_type: ActionErrorType::ValidationError,
             message: "Input is not valid.".to_string(),
             errors: Some(errors)
         }
@@ -179,7 +179,7 @@ impl ActionError {
 
     pub fn internal_server_error(reason: String) -> Self {
         ActionError {
-            r#type: ActionErrorType::InternalServerError,
+            field_type: ActionErrorType::InternalServerError,
             message: reason,
             errors: None
         }
@@ -187,7 +187,7 @@ impl ActionError {
 
     pub fn unknown_database_write_error() -> Self {
         ActionError {
-            r#type: ActionErrorType::UnknownDatabaseWriteError,
+            field_type: ActionErrorType::UnknownDatabaseWriteError,
             message: "An unknown database write error occurred.".to_string(),
             errors: None
         }
@@ -195,7 +195,7 @@ impl ActionError {
 
     pub fn unknown_database_delete_error() -> Self {
         ActionError {
-            r#type: ActionErrorType::UnknownDatabaseDeleteError,
+            field_type: ActionErrorType::UnknownDatabaseDeleteError,
             message: "An unknown database delete error occurred.".to_string(),
             errors: None
         }
@@ -203,7 +203,7 @@ impl ActionError {
 
     pub fn not_found() -> Self {
         ActionError {
-            r#type: ActionErrorType::NotFound,
+            field_type: ActionErrorType::NotFound,
             message: "Not found.".to_string(),
             errors: None
         }
@@ -211,7 +211,7 @@ impl ActionError {
 
     pub fn wrong_json_format() -> Self {
         ActionError {
-            r#type: ActionErrorType::WrongJSONFormat,
+            field_type: ActionErrorType::WrongJSONFormat,
             message: "Wrong JSON format.".to_string(),
             errors: None
         }
@@ -219,7 +219,7 @@ impl ActionError {
 
     pub fn missing_action_name() -> Self {
         ActionError {
-            r#type: ActionErrorType::MissingActionName,
+            field_type: ActionErrorType::MissingActionName,
             message: "Missing action name.".to_string(),
             errors: None
         }
@@ -227,7 +227,7 @@ impl ActionError {
 
     pub fn undefined_action() -> Self {
         ActionError {
-            r#type: ActionErrorType::UndefinedAction,
+            field_type: ActionErrorType::UndefinedAction,
             message: "Undefined action.".to_string(),
             errors: None
         }
@@ -235,7 +235,7 @@ impl ActionError {
 
     pub fn unallowed_action() -> Self {
         ActionError {
-            r#type: ActionErrorType::UnallowedAction,
+            field_type: ActionErrorType::UnallowedAction,
             message: "Unallowed action.".to_string(),
             errors: None
         }
@@ -243,7 +243,7 @@ impl ActionError {
 
     pub fn missing_input_section() -> Self {
         ActionError {
-            r#type: ActionErrorType::MissingInputSection,
+            field_type: ActionErrorType::MissingInputSection,
             message: "Input incomplete.".to_string(),
             errors: None
         }
@@ -251,7 +251,7 @@ impl ActionError {
 
     pub fn object_not_found() -> Self {
         ActionError {
-            r#type: ActionErrorType::ObjectNotFound,
+            field_type: ActionErrorType::ObjectNotFound,
             message: "The requested object is not exist.".to_string(),
             errors: None
         }
@@ -259,7 +259,7 @@ impl ActionError {
 
     pub fn object_is_not_saved() -> Self {
         ActionError {
-            r#type: ActionErrorType::ObjectIsNotSaved,
+            field_type: ActionErrorType::ObjectIsNotSaved,
             message: "This object is not saved thus can't be deleted.".to_string(),
             errors: None
         }
@@ -267,7 +267,7 @@ impl ActionError {
 
     pub fn field_is_not_unique(key: &str) -> Self {
         ActionError {
-            r#type: ActionErrorType::FieldIsNotUnique,
+            field_type: ActionErrorType::FieldIsNotUnique,
             message: format!("Field '{key}' is not unique."),
             errors: None
         }
@@ -275,7 +275,7 @@ impl ActionError {
 
     pub fn unknown_database_find_error() -> Self {
         ActionError {
-            r#type: ActionErrorType::UnknownDatabaseFindError,
+            field_type: ActionErrorType::UnknownDatabaseFindError,
             message: "An unknown query error occurred.".to_string(),
             errors: None
         }
@@ -283,7 +283,7 @@ impl ActionError {
 
     pub fn unknown_database_find_unique_error() -> Self {
         ActionError {
-            r#type: ActionErrorType::UnknownDatabaseFindUniqueError,
+            field_type: ActionErrorType::UnknownDatabaseFindUniqueError,
             message: "An unknown query unique error occurred.".to_string(),
             errors: None
         }
@@ -291,7 +291,7 @@ impl ActionError {
 
     pub fn unknown_database_count_error() -> Self {
         ActionError {
-            r#type: ActionErrorType::UnknownDatabaseCountError,
+            field_type: ActionErrorType::UnknownDatabaseCountError,
             message: "An unknown count error occurred.".to_string(),
             errors: None
         }
@@ -299,7 +299,7 @@ impl ActionError {
 
     pub fn unmatched_data_type_in_database(field_name: &str) -> Self {
         ActionError {
-            r#type: ActionErrorType::UnmatchedDataTypeInDatabase,
+            field_type: ActionErrorType::UnmatchedDataTypeInDatabase,
             message: format!("Unmatched data type for field '{field_name}' in database."),
             errors: None
         }
@@ -307,7 +307,7 @@ impl ActionError {
 
     pub fn undefined_enum_value() -> Self {
         ActionError {
-            r#type: ActionErrorType::UndefinedEnumValue,
+            field_type: ActionErrorType::UndefinedEnumValue,
             message: "Undefined enum value is not acceptable.".to_string(),
             errors: None
         }
@@ -315,7 +315,7 @@ impl ActionError {
 
     pub fn missing_credentials() -> Self {
         ActionError {
-            r#type: ActionErrorType::MissingCredentials,
+            field_type: ActionErrorType::MissingCredentials,
             message: "Credentials are missing.".to_string(),
             errors: None
         }
@@ -323,7 +323,7 @@ impl ActionError {
 
     pub fn multiple_auth_identity_provided() -> Self {
         ActionError {
-            r#type: ActionErrorType::MultipleAuthIdentityProvided,
+            field_type: ActionErrorType::MultipleAuthIdentityProvided,
             message: "Multiple auth identity provided.".to_string(),
             errors: None
         }
@@ -331,7 +331,7 @@ impl ActionError {
 
     pub fn multiple_auth_checker_provided() -> Self {
         ActionError {
-            r#type: ActionErrorType::MultipleAuthCheckerProvided,
+            field_type: ActionErrorType::MultipleAuthCheckerProvided,
             message: "Multiple auth checker provided.".to_string(),
             errors: None
         }
@@ -339,7 +339,7 @@ impl ActionError {
 
     pub fn missing_auth_identity() -> Self {
         ActionError {
-            r#type: ActionErrorType::MissingAuthIdentity,
+            field_type: ActionErrorType::MissingAuthIdentity,
             message: "Missing auth identity.".to_string(),
             errors: None
         }
@@ -347,7 +347,7 @@ impl ActionError {
 
     pub fn missing_auth_checker() -> Self {
         ActionError {
-            r#type: ActionErrorType::MissingAuthChecker,
+            field_type: ActionErrorType::MissingAuthChecker,
             message: "Missing auth checker.".to_string(),
             errors: None
         }
@@ -355,7 +355,7 @@ impl ActionError {
 
     pub fn authentication_failed() -> Self {
         ActionError {
-            r#type: ActionErrorType::AuthenticationFailed,
+            field_type: ActionErrorType::AuthenticationFailed,
             message: "Authentication failed.".to_string(),
             errors: None
         }
@@ -363,7 +363,7 @@ impl ActionError {
 
     pub fn invalid_authorization_format() -> Self {
         ActionError {
-            r#type: ActionErrorType::InvalidAuthorizationFormat,
+            field_type: ActionErrorType::InvalidAuthorizationFormat,
             message: "Invalid authorization header format.".to_string(),
             errors: None
         }
@@ -371,7 +371,7 @@ impl ActionError {
 
     pub fn invalid_jwt_token() -> Self {
         ActionError {
-            r#type: ActionErrorType::InvalidJWTToken,
+            field_type: ActionErrorType::InvalidJWTToken,
             message: "This token is malformed.".to_string(),
             errors: None
         }
@@ -379,7 +379,7 @@ impl ActionError {
 
     pub fn identity_is_not_found() -> Self {
         ActionError {
-            r#type: ActionErrorType::IdentityIsNotFound,
+            field_type: ActionErrorType::IdentityIsNotFound,
             message: "Identity is not found.".to_string(),
             errors: None
         }

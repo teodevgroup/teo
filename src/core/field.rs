@@ -93,7 +93,7 @@ pub enum FieldIndex {
 #[derive(Debug, Clone)]
 pub(crate) struct Field {
     pub(crate) name: &'static str,
-    pub(crate) r#type: FieldType,
+    pub(crate) field_type: FieldType,
     pub(crate) optionality: Optionality,
     pub(crate) store: Store,
     pub(crate) primary: bool,
@@ -119,7 +119,7 @@ impl Field {
     pub(crate) fn new(builder: &FieldBuilder) -> Field {
         return Field {
             name: builder.name,
-            r#type: builder.field_type.clone(),
+            field_type: builder.field_type.clone(),
             optionality: builder.optionality,
             store: builder.store,
             primary: builder.primary,
