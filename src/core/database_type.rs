@@ -2,6 +2,9 @@
 #[derive(Debug, Clone)]
 pub(crate) enum DatabaseType {
 
+    // This value will be finally altered.
+    Undefined,
+
     // In MySQL, it's alias for TINYINT(1).
     #[cfg(all(feature = "mysql", feature = "postgres"))]
     Bool,

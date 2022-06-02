@@ -7,6 +7,7 @@ use crate::core::builders::field_index_builder::FieldIndexBuilder;
 use crate::core::builders::permission_builder::PermissionBuilder;
 use crate::core::builders::pipeline_builder::PipelineBuilder;
 use crate::core::connector::{ConnectorBuilder};
+use crate::core::database_type::DatabaseType;
 use crate::core::field::*;
 use crate::core::field_type::FieldType;
 use crate::core::pipeline::Pipeline;
@@ -18,6 +19,7 @@ pub struct FieldBuilder {
     pub(crate) localized_name: &'static str,
     pub(crate) description: &'static str,
     pub(crate) field_type: FieldType,
+    pub(crate) database_type: DatabaseType,
     pub(crate) optionality: Optionality,
     pub(crate) store: Store,
     pub(crate) primary: bool,
@@ -339,6 +341,17 @@ impl FieldBuilder {
 
     pub fn column_name(&mut self, name: &'static str) -> &mut Self {
         self.column_name = Some(name);
+        self
+    }
+
+    pub fn db<F: Fn(&mut DatabaseTypeBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut builder = DatabaseTypeBuilder::new();
+        build(&mut builder);
+        let (field_type, database_type) = builder.get_types();
+        if self.field_type == FieldType::Undefined {
+            self.field_type = field_type;
+        }
+        self.database_type = database_type;
         self
     }
 }

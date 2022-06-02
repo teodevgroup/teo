@@ -2,6 +2,7 @@ use chrono::{Date, DateTime, NaiveDate, Utc};
 use serde_json::{Value as JsonValue};
 use crate::core::argument::Argument;
 use crate::core::builders::field_builder::FieldBuilder;
+use crate::core::database_type::DatabaseType;
 use crate::core::field_type::FieldType;
 use crate::core::graph::{Graph};
 use crate::core::permission::Permission;
@@ -94,6 +95,7 @@ pub enum FieldIndex {
 pub(crate) struct Field {
     pub(crate) name: &'static str,
     pub(crate) field_type: FieldType,
+    pub(crate) database_type: DatabaseType,
     pub(crate) optionality: Optionality,
     pub(crate) store: Store,
     pub(crate) primary: bool,
@@ -120,6 +122,7 @@ impl Field {
         return Field {
             name: builder.name,
             field_type: builder.field_type.clone(),
+            database_type: DatabaseType::Undefined,
             optionality: builder.optionality,
             store: builder.store,
             primary: builder.primary,
