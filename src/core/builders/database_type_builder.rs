@@ -1,4 +1,3 @@
-use bson::DateTime;
 use crate::core::database_type::DatabaseType;
 
 pub struct DatabaseTypeTerminationBuilder {

@@ -73,7 +73,7 @@ impl ToSQLString for SQLCreateDatabaseStatement {
     fn to_string(&self, _dialect: SQLDialect) -> String {
         let database = &self.database;
         let if_not_exists = if self.if_not_exists { " IF NOT EXISTS" } else { "" };
-        format!("CREATE DATABASE `{database}`{if_not_exists};")
+        format!("CREATE DATABASE{if_not_exists} `{database}`;")
     }
 }
 
@@ -93,7 +93,7 @@ impl ToSQLString for SQLDropDatabaseStatement {
     fn to_string(&self, _dialect: SQLDialect) -> String {
         let database = &self.database;
         let if_exists = if self.if_exists { " IF EXISTS" } else { "" };
-        format!("DROP DATABASE `{database}`{if_exists};")
+        format!("DROP DATABASE{if_exists} `{database}`;")
     }
 }
 
@@ -154,7 +154,7 @@ impl ToSQLString for SQLDropTableStatement {
     fn to_string(&self, _dialect: SQLDialect) -> String {
         let table = &self.table;
         let if_exists = if self.if_exists { " IF EXISTS" } else { "" };
-        format!("DROP TABLE `{table}`{if_exists};")
+        format!("DROP TABLE{if_exists} `{table}`;")
     }
 }
 
@@ -191,7 +191,7 @@ pub struct SQLUseDatabaseStatement {
 impl ToSQLString for SQLUseDatabaseStatement {
     fn to_string(&self, _dialect: SQLDialect) -> String {
         let database = &self.database;
-        format!("USE DATABASE `{database}`;")
+        format!("USE `{database}`")
     }
 }
 

@@ -4,9 +4,6 @@ use std::sync::atomic::Ordering;
 use crate::client::kotlin::KotlinClient;
 use crate::client::swift::SwiftClient;
 use crate::client::typescript::TypeScriptClient;
-use crate::connectors::mongodb::MongoDBConnectorBuilder;
-use crate::connectors::mysql::MySQLConnectorBuilder;
-use crate::connectors::postgres::PostgresConnectorBuilder;
 use crate::core::builders::graph_builder::GraphBuilder;
 use crate::core::client::Client;
 

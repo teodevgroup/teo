@@ -1,7 +1,5 @@
 use std::env::current_dir;
-use std::fmt::Error;
-use std::path::Path;
-use std::fs::{File, remove_dir};
+use std::fs::{File};
 use std::io::Write;
 use std::fs::create_dir_all;
 use std::fs::remove_dir_all;

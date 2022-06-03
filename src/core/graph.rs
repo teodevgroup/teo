@@ -7,14 +7,12 @@ use chrono::{Duration, Utc};
 use futures_util::StreamExt;
 use serde_json::{json, Map, Value as JsonValue};
 use crate::action::action::ActionType;
-use crate::connectors::mongodb::ToBsonValue;
 use crate::core::builders::graph_builder::GraphBuilder;
 use crate::core::client::Client;
 use crate::core::connector::Connector;
 use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::stage::Stage;
-use crate::core::value::Value;
 use crate::error::ActionError;
 use crate::server::jwt::{Claims, decode_token, encode_token};
 
@@ -289,7 +287,7 @@ impl Graph {
         }
         let token_str = &auth_str[7..];
         let claims_result = decode_token(&token_str.to_string(), self.jwt_secret());
-        if let Err(err) = claims_result {
+        if let Err(_) = claims_result {
             return Err(ActionError::invalid_jwt_token());
         }
         let claims = claims_result.unwrap();
@@ -301,7 +299,7 @@ impl Graph {
                 "where": { primary_field_name: claims.id }
             }).as_object().unwrap()
         ).await;
-        if let Err(err) = identity {
+        if let Err(_) = identity {
             return Err(ActionError::identity_is_not_found());
         }
         return Ok(Some(identity.unwrap()));
@@ -449,7 +447,7 @@ impl Graph {
                     }
                 }
             }
-            Err(err) => {
+            Err(_) => {
                 let create = input.get("create");
                 let obj = self.new_object(model.name());
                 let set_json_result = match create {
@@ -584,7 +582,8 @@ impl Graph {
         let final_stage = pipeline.process(stage, &obj).await;
         let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
         let claims = Claims {
-            id: obj.identifier().to_bson_value().as_object_id().unwrap().to_hex(), // change here later
+            id: "not work anymore".to_string(),
+            //id: obj.identifier().to_bson_value().as_object_id().unwrap().to_hex(), // change here later
             model: obj.inner.model.name().to_string(),
             exp
         };

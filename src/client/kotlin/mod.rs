@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use std::cell::RefCell;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use crate::core::client::Client;

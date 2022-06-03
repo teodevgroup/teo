@@ -18,7 +18,7 @@ futures = "0.3"
 futures-util = "0.3"
 actix-http = "3"
 regex = "1.5.5"
-tokio = "1.18"
+tokio = { version = "1.18", features = ["macros"] }
 async-trait = "0.1.53"
 Inflector = "*"
 url = "2.2.2"
