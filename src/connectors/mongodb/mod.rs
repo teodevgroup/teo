@@ -30,7 +30,7 @@ pub struct MongoDBConnector {
 }
 
 impl MongoDBConnector {
-    pub(crate) async fn new(url: &'static str, models: &Vec<Model>, reset_database: bool) -> MongoDBConnector {
+    pub(crate) async fn new(url: String, models: &Vec<Model>, reset_database: bool) -> MongoDBConnector {
         let options = ClientOptions::parse(url).await.unwrap();
         let client = Client::with_options(options.clone()).unwrap();
         let database = client.database(&options.default_database.clone().unwrap());
@@ -61,12 +61,12 @@ impl MongoDBConnector {
 
     fn document_to_object(&self, document: &Document, object: &Object) -> Result<(), ActionError> {
         let primary_name = if let Some(primary_field) = object.inner.model.primary_field() {
-            primary_field.name
+            primary_field.name.clone()
         } else {
-            "__id"
+            "__id".to_string()
         };
         for key in document.keys() {
-            let object_key = if key == "_id" { primary_name } else { key };
+            let object_key = if key == "_id" { &primary_name } else { key };
             let field_type = if key == "_id" { &FieldType::ObjectId } else { &object.inner.model.field(key).field_type };
             let bson_value = document.get(key).unwrap();
             let value_result = self.bson_value_to_type(object_key, bson_value, field_type);
@@ -316,11 +316,11 @@ impl MongoDBConnector {
         let r#where = r#where.as_object().unwrap();
         let mut doc = doc!{};
         for (key, value) in r#where.iter() {
-            if !model.query_keys().contains(&key.as_str()) {
+            if !model.query_keys().contains(key) {
                 return Err(ActionError::keys_unallowed());
             }
             let field = model.field(key);
-            let db_key = if field.primary { "_id" } else { field.name };
+            let db_key = if field.primary { "_id" } else { &field.name };
             let bson_result = self.parse_bson_where_entry(&field.field_type, value, graph);
             match bson_result {
                 Ok(bson) => {
@@ -1033,14 +1033,14 @@ impl Connector for MongoDBConnector {
         } else {
             object.inner.model.save_keys().iter().filter(|k| {
                 object.inner.modified_fields.borrow().contains(&k.to_string())
-            }).map(|k| { *k }).collect()
+            }).map(|k| { k.clone() }).collect()
         };
         let col = &self.collections[object.inner.model.name()];
         if is_new {
             let mut doc = doc!{};
             for key in keys {
-                let val = object.get_value(key).unwrap();
-                if Some(key) == primary_name {
+                let val = object.get_value(&key).unwrap();
+                if Some(&key) == primary_name.as_ref() {
                     if val == None {
                         continue;
                     }
@@ -1049,14 +1049,14 @@ impl Connector for MongoDBConnector {
                     None => Bson::Null,
                     Some(v) => v.to_bson_value()
                 };
-                doc.insert(key, json_val);
+                doc.insert(&key, json_val);
             }
             let result = col.insert_one(doc, None).await;
             match result {
                 Ok(insert_one_result) => {
                     let id = insert_one_result.inserted_id.as_object_id().unwrap().to_hex();
                     if let Some(primary_field) = object.inner.model.primary_field() {
-                        object.set_value(primary_field.name, Value::ObjectId(id));
+                        object.set_value(&primary_field.name, Value::ObjectId(id));
                     } else {
                         object.inner.value_map.borrow_mut().insert("__id".to_string(), Value::ObjectId(id));
                     }
@@ -1067,18 +1067,18 @@ impl Connector for MongoDBConnector {
             }
         } else {
             let object_id = if let Some(primary_field) = object.inner.model.primary_field() {
-                object.get_value(primary_field.name).unwrap().unwrap().to_bson_value()
+                object.get_value(&primary_field.name).unwrap().unwrap().to_bson_value()
             } else {
                 object.inner.value_map.borrow().get("__id").unwrap().to_bson_value()
             };
             let mut set = doc!{};
-            for key in keys {
+            for key in &keys {
                 let val = object.get_value(key).unwrap();
                 let json_val = match val {
                     None => Bson::Null,
                     Some(v) => v.to_bson_value()
                 };
-                match primary_name {
+                match &primary_name {
                     Some(name) => {
                         if key == name {
                             if json_val != Bson::Null {
@@ -1111,7 +1111,7 @@ impl Connector for MongoDBConnector {
             return Err(ActionError::object_is_not_saved());
         }
         let object_id = if let Some(primary_field) = object.inner.model.primary_field() {
-            object.get_value(primary_field.name).unwrap().unwrap().to_bson_value()
+            object.get_value(primary_field.name.clone()).unwrap().unwrap().to_bson_value()
         } else {
             object.inner.value_map.borrow().get("__id").unwrap().to_bson_value()
         };
@@ -1142,7 +1142,7 @@ impl Connector for MongoDBConnector {
             return Err(ActionError::wrong_json_format());
         }
         // see if key is valid
-        let key = values.keys().next().unwrap().as_str();
+        let key = values.keys().next().unwrap();
         if !model.unique_query_keys().contains(&key) {
             return Err(ActionError::field_is_not_unique(key))
         }
@@ -1241,11 +1241,11 @@ impl Connector for MongoDBConnector {
 
 #[derive(Debug)]
 pub(crate) struct MongoDBConnectorBuilder {
-    url: &'static str
+    url: String
 }
 
 impl MongoDBConnectorBuilder {
-    pub(crate) fn new(url: &'static str) -> MongoDBConnectorBuilder {
+    pub(crate) fn new(url: String) -> MongoDBConnectorBuilder {
         MongoDBConnectorBuilder { url }
     }
 }
@@ -1280,7 +1280,7 @@ impl ConnectorBuilder for MongoDBConnectorBuilder {
     }
 
     async fn build_connector(&self, models: &Vec<Model>, reset_database: bool) -> Box<dyn Connector> {
-        Box::new(MongoDBConnector::new(self.url, models, reset_database).await)
+        Box::new(MongoDBConnector::new(self.url.clone(), models, reset_database).await)
     }
 }
 

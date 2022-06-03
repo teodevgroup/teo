@@ -1,7 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::ptr::{addr_of, null};
 use inflector::Inflector;
-use sea_query::IndexType;
 use crate::action::action::ActionType;
 use crate::core::builders::model_builder::ModelBuilder;
 use crate::core::field::{Field, FieldIndex, QueryAbility, Sort};
@@ -42,17 +41,17 @@ pub(crate) struct Model {
     pub(crate) actions: HashSet<ActionType>,
     pub(crate) permission: Option<Permission>,
     pub(crate) fields_vec: Vec<Field>,
-    pub(crate) fields_map: HashMap<&'static str, * const Field>,
+    pub(crate) fields_map: HashMap<String, * const Field>,
     pub(crate) primary_field: * const Field,
     pub(crate) index_fields: Vec<* const Field>,
-    pub(crate) input_keys: Vec<&'static str>,
-    pub(crate) save_keys: Vec<&'static str>,
-    pub(crate) output_keys: Vec<&'static str>,
-    pub(crate) get_value_keys: Vec<&'static str>,
-    pub(crate) query_keys: Vec<&'static str>,
-    pub(crate) unique_query_keys: Vec<&'static str>,
-    pub(crate) auth_identity_keys: Vec<&'static str>,
-    pub(crate) auth_by_keys: Vec<&'static str>,
+    pub(crate) input_keys: Vec<String>,
+    pub(crate) save_keys: Vec<String>,
+    pub(crate) output_keys: Vec<String>,
+    pub(crate) get_value_keys: Vec<String>,
+    pub(crate) query_keys: Vec<String>,
+    pub(crate) unique_query_keys: Vec<String>,
+    pub(crate) auth_identity_keys: Vec<String>,
+    pub(crate) auth_by_keys: Vec<String>,
 }
 
 impl Model {
@@ -99,9 +98,9 @@ impl Model {
         }
     }
 
-    pub(crate) fn primary_field_name(&self) -> Option<&'static str> {
+    pub(crate) fn primary_field_name(&self) -> Option<String> {
         match self.primary_field() {
-            Some(field) => Some(field.name),
+            Some(field) => Some(field.name.clone()),
             None => None
         }
     }
@@ -110,33 +109,33 @@ impl Model {
         self.index_fields.iter().map(|f| { unsafe { &**f } }).collect()
     }
 
-    pub(crate) fn input_keys(&self) -> &Vec<&'static str> {
+    pub(crate) fn input_keys(&self) -> &Vec<String> {
         &self.input_keys
     }
 
-    pub(crate) fn save_keys(&self) -> &Vec<&'static str> {
+    pub(crate) fn save_keys(&self) -> &Vec<String> {
         &self.save_keys
     }
 
-    pub(crate) fn output_keys(&self) -> &Vec<&'static str> {
+    pub(crate) fn output_keys(&self) -> &Vec<String> {
         &self.output_keys
     }
 
-    pub(crate) fn get_value_keys(&self) -> &Vec<&'static str> {
+    pub(crate) fn get_value_keys(&self) -> &Vec<String> {
         &self.get_value_keys
     }
 
-    pub(crate) fn query_keys(&self) -> &Vec<&'static str> {
+    pub(crate) fn query_keys(&self) -> &Vec<String> {
         &self.query_keys
     }
 
-    pub(crate) fn unique_query_keys(&self) -> &Vec<&'static str> {
+    pub(crate) fn unique_query_keys(&self) -> &Vec<String> {
         &self.unique_query_keys
     }
 
-    pub(crate) fn auth_identity_keys(&self) -> &Vec<&'static str> { &self.auth_identity_keys }
+    pub(crate) fn auth_identity_keys(&self) -> &Vec<String> { &self.auth_identity_keys }
 
-    pub(crate) fn auth_by_keys(&self) -> &Vec<&'static str> { &self.auth_by_keys }
+    pub(crate) fn auth_by_keys(&self) -> &Vec<String> { &self.auth_by_keys }
 
     pub(crate) fn has_action(&self, action: ActionType) -> bool {
         self.actions.contains(&action)

@@ -1,8 +1,8 @@
 use url::Url;
-use sea_query::PostgresQueryBuilder;
 use serde_json::{Map, Value as JsonValue};
-use sqlx::PgPool;
 use async_trait::async_trait;
+use tokio_postgres::{Client, NoTls};
+use crate::connectors::sql_shared::sql::{SQL, SQLDialect, ToSQLString};
 use crate::connectors::sql_shared::table_create_statement;
 use crate::core::builders::graph_builder::GraphBuilder;
 use crate::core::connector::{Connector, ConnectorBuilder};
@@ -16,17 +16,17 @@ use crate::error::ActionError;
 
 #[derive(Debug)]
 pub(crate) struct PostgresConnector {
-    pool: PgPool,
+    client: Client,
     database_name: String,
 }
 
 impl PostgresConnector {
-    pub async fn new(pool: PgPool, database_name: String, models: &Vec<Model>) -> PostgresConnector {
+    pub async fn new(client: Client, database_name: String, models: &Vec<Model>) -> PostgresConnector {
         for model in models {
-            let stmt_string = table_create_statement(model).to_string(PostgresQueryBuilder);
-            let _ = sqlx::query(&stmt_string).execute(&pool).await;
+            let stmt_string = table_create_statement(model).to_string(SQLDialect::PostgreSQL);
+            client.execute(&stmt_string, &[]).await.unwrap();
         }
-        PostgresConnector { pool, database_name }
+        PostgresConnector { client, database_name }
     }
 }
 
@@ -63,11 +63,11 @@ unsafe impl Sync for PostgresConnector {}
 
 #[derive(Debug)]
 pub(crate) struct PostgresConnectorBuilder {
-    url: &'static str
+    url: String
 }
 
 impl PostgresConnectorBuilder {
-    pub(crate) fn new(url: &'static str) -> PostgresConnectorBuilder {
+    pub(crate) fn new(url: String) -> PostgresConnectorBuilder {
         PostgresConnectorBuilder { url }
     }
 }
@@ -79,34 +79,26 @@ impl ConnectorBuilder for PostgresConnectorBuilder {
     }
 
     async fn build_connector(&self, models: &Vec<Model>, reset_database: bool) -> Box<dyn Connector> {
-        let url = Url::parse(self.url);
-        match url {
-            Ok(mut url) => {
-                let database_name = url.path()[1..].to_string();
-                url.set_path("/");
-                let string_url = url.to_string();
-                let pool = PgPool::connect(&string_url).await.unwrap();
-                if reset_database {
-                    let _ = sqlx::query(&format!("DROP DATABASE IF EXISTS {database_name}")).execute(&pool).await;
-                }
-                let _ = sqlx::query(&format!("CREATE DATABASE IF NOT EXISTS {database_name}")).execute(&pool).await;
-                let _ = sqlx::query(&format!("USE DATABASE {database_name}")).execute(&pool).await;
-                Box::new(PostgresConnector::new(pool, database_name, models).await)
+        let mut url = Url::parse(&self.url).unwrap();
+        let database_name = url.path()[1..].to_string();
+        url.set_path("/");
+        let (client, connection) = 
+            tokio_postgres::connect(url.as_str(), NoTls).await.unwrap();
+        // The connection object performs the actual communication with the database,
+        // so spawn it off to run on its own.
+        tokio::spawn(async move {
+            if let Err(e) = connection.await {
+                eprintln!("connection error: {}", e);
             }
-            Err(err) => {
-                panic!("Database URL is invalid.")
-            }
+        });
+        if reset_database {
+            let stmt = SQL::drop().database(&database_name).if_exists().to_string(SQLDialect::PostgreSQL);
+            let _ = client.execute(stmt.as_str(), &[]).await.unwrap();
         }
-    }
-}
-
-
-pub trait PostgresConnectorHelpers {
-    fn postgres(&mut self, url: &'static str);
-}
-
-impl PostgresConnectorHelpers for GraphBuilder {
-    fn postgres(&mut self, url: &'static str) {
-        self.connector_builder = Some(Box::new(PostgresConnectorBuilder::new(url)))
+        let stmt = SQL::create().database(&database_name).if_not_exists().to_string(SQLDialect::PostgreSQL);
+        let _ = client.execute(stmt.as_str(), &[]).await.unwrap();
+        let stmt = SQL::r#use().database(&database_name).to_string(SQLDialect::PostgreSQL);
+        let _ = client.execute(stmt.as_str(), &[]).await.unwrap();
+        Box::new(PostgresConnector::new(client, database_name.clone(), models).await)
     }
 }

@@ -7,11 +7,8 @@ license = "MIT"
 
 [dependencies]
 actix-web = "4"
-actix-utils = "3"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-mongodb = { version = "2.2", optional = true }
-bson = { version = "2.2", features = ["chrono-0_4", "serde_with"] }
 chrono = { version = "0.4", features = ["serde"] }
 env_logger = "0.9"
 log = "0.4"
@@ -23,35 +20,38 @@ actix-http = "3"
 regex = "1.5.5"
 tokio = "1.18"
 async-trait = "0.1.53"
-sqlx = { version = "0.5", features = ["mysql", "postgres", "runtime-tokio-rustls"], optional = true }
-sea-query = { version = "^0", features = ["backend-mysql", "backend-postgres", "sqlx-mysql", "sqlx-postgres"], optional = true }
 Inflector = "*"
 url = "2.2.2"
 bcrypt = "0.13"
 uuid = { version = "1.1.1", features = ["v4", "fast-rng"] }
 cuid = "1.2.0"
+mysql_async = { version = "0.30.0", optional = true }
+tokio-postgres = { version = "0.7.6", optional = true }
+mongodb = { version = "2.2", optional = true }
+bson = { version = "2.2", features = ["chrono-0_4", "serde_with"], optional = true }
+
 
 [features]
-mongo = ["mongodb"]
-mysql = ["sqlx", "sea-query"]
-postgres = ["sqlx", "sea-query"]
+data-source-mongodb = ["mongodb", "bson"]
+data-source-mysql = ["mysql_async"]
+data-source-postgres = ["tokio-postgres"]
 
 [[test]]
 name = "test-core"
 path = "tests/core/tests.rs"
-required-features = ["mongo", "mysql", "postgres"]
+required-features = ["data-source-mongo", "data-source-mysql", "data-source-postgres"]
 
 [[test]]
 name = "test-mongodb-connector"
 path = "tests/connectors/mongodb/tests.rs"
-required-features = ["mongo"]
+required-features = ["data-source-mongodb"]
 
 [[test]]
 name = "test-mysql-connector"
 path = "tests/connectors/mysql/tests.rs"
-required-features = ["mysql"]
+required-features = ["data-source-mysql"]
 
 [[test]]
 name = "test-postgres-connector"
 path = "tests/connectors/postgres/tests.rs"
-required-features = ["postgres"]
+required-features = ["data-source-postgres"]

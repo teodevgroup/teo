@@ -201,12 +201,12 @@ impl ModelBuilder {
         let auth_identity_keys = Self::get_auth_identity_keys(self);
         let auth_by_keys = Self::get_auth_by_keys(self);
         let fields_vec: Vec<Field> = self.fields.iter().map(|fb| { fb.build(connector_builder) }).collect();
-        let mut fields_map: HashMap<&'static str, * const Field> = HashMap::new();
+        let mut fields_map: HashMap<String, * const Field> = HashMap::new();
         let mut primary_field: * const Field = null();
         let mut index_fields: Vec<* const Field> = Vec::new();
         for field in fields_vec.iter() {
             let addr = addr_of!(*field);
-            fields_map.insert(field.name, addr);
+            fields_map.insert(field.name.clone(), addr);
             if field.primary {
                 primary_field = addr_of!(*field);
             }
@@ -238,58 +238,58 @@ impl ModelBuilder {
         }
     }
 
-    fn allowed_input_keys(&self) -> Vec<&'static str> {
+    fn allowed_input_keys(&self) -> Vec<String> {
         self.fields.iter()
             .filter(|&f| { f.write_rule != NoWrite })
-            .map(|f| { f.name })
+            .map(|f| { f.name.clone() })
             .collect()
     }
 
-    fn allowed_save_keys(&self) -> Vec<&'static str> {
+    fn allowed_save_keys(&self) -> Vec<String> {
         self.fields.iter()
             .filter(|&f| { f.store != Calculated && f.store != Temp })
-            .map(|f| { f.name })
+            .map(|f| { f.name.clone() })
             .collect()
     }
 
-    fn allowed_output_keys(&self) -> Vec<&'static str> {
+    fn allowed_output_keys(&self) -> Vec<String> {
         self.fields.iter()
             .filter(|&f| { f.read_rule != NoRead })
-            .map(|f| { f.name })
+            .map(|f| { f.name.clone() })
             .collect()
     }
 
-    pub(crate) fn get_get_value_keys(&self) -> Vec<&'static str> {
+    pub(crate) fn get_get_value_keys(&self) -> Vec<String> {
         self.fields.iter()
-            .map(|f| { f.name })
+            .map(|f| { f.name.clone() })
             .collect()
     }
 
-    pub(crate) fn get_query_keys(&self) -> Vec<&'static str> {
+    pub(crate) fn get_query_keys(&self) -> Vec<String> {
         self.fields.iter()
             .filter(|&f| { f.query_ability == QueryAbility::Queryable })
-            .map(|f| { f.name })
+            .map(|f| { f.name.clone() })
             .collect()
     }
 
-    pub(crate) fn get_unique_query_keys(&self) -> Vec<&'static str> {
+    pub(crate) fn get_unique_query_keys(&self) -> Vec<String> {
         self.fields.iter()
             //.filter(|&f| { f.query_ability == QueryAbility::Queryable && (f.index == FieldIndex::Unique || f.primary == true) })
-            .map(|f| { f.name })
+            .map(|f| { f.name.clone() })
             .collect()
     }
 
-    pub(crate) fn get_auth_identity_keys(&self) -> Vec<&'static str> {
+    pub(crate) fn get_auth_identity_keys(&self) -> Vec<String> {
         self.fields.iter()
             .filter(|&f| { f.auth_identity == true })
-            .map(|f| { f.name })
+            .map(|f| { f.name.clone() })
             .collect()
     }
 
-    pub(crate) fn get_auth_by_keys(&self) -> Vec<&'static str> {
+    pub(crate) fn get_auth_by_keys(&self) -> Vec<String> {
         self.fields.iter()
             .filter(|&f| { f.auth_by == true })
-            .map(|f| { f.name })
+            .map(|f| { f.name.clone() })
             .collect()
     }
 }

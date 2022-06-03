@@ -16,7 +16,7 @@ use crate::core::value::Value;
 
 
 pub struct FieldBuilder {
-    pub(crate) name: &'static str,
+    pub(crate) name: String,
     pub(crate) localized_name: &'static str,
     pub(crate) description: &'static str,
     pub(crate) field_type: FieldType,
@@ -39,14 +39,14 @@ pub struct FieldBuilder {
     pub(crate) on_save_pipeline: PipelineBuilder,
     pub(crate) on_output_pipeline: PipelineBuilder,
     pub(crate) permission: Option<PermissionBuilder>,
-    pub(crate) column_name: Option<&'static str>,
+    pub(crate) column_name: Option<String>,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
 impl FieldBuilder {
-    pub(crate) fn new(name: &'static str, connector_builder: &Box<dyn ConnectorBuilder>) -> Self {
+    pub(crate) fn new(name: impl Into<String>, connector_builder: &Box<dyn ConnectorBuilder>) -> Self {
         return FieldBuilder {
-            name,
+            name: name.into(),
             localized_name: "",
             description: "",
             field_type: FieldType::Undefined,
@@ -349,8 +349,8 @@ impl FieldBuilder {
         self
     }
 
-    pub fn column_name(&mut self, name: &'static str) -> &mut Self {
-        self.column_name = Some(name);
+    pub fn column_name(&mut self, name: impl Into<String>) -> &mut Self {
+        self.column_name = Some(name.into());
         self
     }
 
@@ -370,7 +370,7 @@ impl FieldBuilder {
 
     pub(crate) fn build(&self, connector_builder: &Box<dyn ConnectorBuilder>) -> Field {
         return Field {
-            name: self.name,
+            name: self.name.clone(),
             field_type: self.field_type.clone(),
             database_type: if self.database_type.is_undefined() { connector_builder.inferred_database_type(&self.field_type) } else { self.database_type.clone() },
             optionality: self.optionality,
@@ -391,7 +391,7 @@ impl FieldBuilder {
             on_save_pipeline: self.on_save_pipeline.build(),
             on_output_pipeline: self.on_output_pipeline.build(),
             permission: if let Some(builder) = &self.permission { Some(builder.build()) } else { None },
-            column_name: self.column_name
+            column_name: self.column_name.clone()
         }
     }
 }

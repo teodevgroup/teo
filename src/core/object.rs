@@ -44,13 +44,14 @@ impl Object {
         self.set_or_update_json(json_value, false).await
     }
 
-    pub fn set_value(&self, key: &'static str, value: Value) -> Result<(), ActionError> {
+    pub fn set_value(&self, key: impl Into<String>, value: Value) -> Result<(), ActionError> {
+        let key = key.into();
         let model_keys = self.inner.model.save_keys();
         if !model_keys.contains(&key) {
             return Err(ActionError::keys_unallowed());
         }
         if value == Value::Null {
-            self.inner.value_map.borrow_mut().remove(key);
+            self.inner.value_map.borrow_mut().remove(&key);
         } else {
             self.inner.value_map.borrow_mut().insert(key.to_string(), value);
         }
@@ -61,12 +62,13 @@ impl Object {
         Ok(())
     }
 
-    pub fn get_value(&self, key: &'static str) -> Result<Option<Value>, ActionError> {
+    pub fn get_value(&self, key: impl Into<String>) -> Result<Option<Value>, ActionError> {
+        let key = key.into();
         let model_keys = &self.inner.model.get_value_keys(); // TODO: should be all keys
         if !model_keys.contains(&key) {
             return Err(ActionError::keys_unallowed());
         }
-        match self.inner.value_map.borrow().get(key) {
+        match self.inner.value_map.borrow().get(&key) {
             Some(value) => {
                 Ok(Some(value.clone()))
             }
@@ -175,13 +177,13 @@ impl Object {
     async fn set_or_update_json(&self, json_value: &JsonValue, process: bool) -> Result<(), ActionError> {
         let json_object = json_value.as_object().unwrap().clone();
         // check keys first
-        let json_keys: Vec<&str> = json_object.keys().map(|k| { k.as_str() }).collect();
+        let json_keys: Vec<String> = json_object.keys().map(|k| { k.clone() }).collect();
         let model_keys = if process {
             self.inner.model.input_keys()
         } else {
             self.inner.model.save_keys()
         };
-        let keys_valid = json_keys.iter().all(|&item| model_keys.contains(&item));
+        let keys_valid = json_keys.iter().all(|item| model_keys.contains(&item.to_string() ));
         if !keys_valid {
             return Err(ActionError::keys_unallowed());
         }
@@ -207,7 +209,7 @@ impl Object {
                     stage = field.on_set_pipeline.process(stage.clone(), &self).await;
                     match stage {
                         Stage::Invalid(s) => {
-                            return Err(ActionError::invalid_input(field.name, s));
+                            return Err(ActionError::invalid_input(&field.name, s));
                         }
                         Stage::Value(v) => {
                             value = v
@@ -222,7 +224,7 @@ impl Object {
                 }
                 if value == Value::Null {
                     if self.inner.is_new.load(Ordering::SeqCst) == false {
-                        self.inner.value_map.borrow_mut().remove(*key);
+                        self.inner.value_map.borrow_mut().remove(key);
                     }
                 } else {
                     self.inner.value_map.borrow_mut().insert(key.to_string(), value);
@@ -255,7 +257,7 @@ impl Object {
 
     pub(crate) fn identifier(&self) -> Value {
         if let Some(primary_field) = self.inner.model.primary_field() {
-            self.get_value(primary_field.name).unwrap().unwrap()
+            self.get_value(primary_field.name.clone()).unwrap().unwrap()
         } else {
             panic!("Identity model must have primary field defined explicitly.");
         }

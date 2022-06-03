@@ -10,15 +10,15 @@ pub struct DataSourceBuilder<'a> {
 
 impl<'a> DataSourceBuilder<'a> {
 
-    pub fn mongodb(&mut self, url: &'static str) {
-        self.graph_builder.connector_builder = Some(Box::new(MongoDBConnectorBuilder::new(url)));
+    pub fn mongodb(&mut self, url: impl Into<String>) {
+        self.graph_builder.connector_builder = Some(Box::new(MongoDBConnectorBuilder::new(url.into())));
     }
 
-    pub fn mysql(&mut self, url: &'static str) {
-        self.graph_builder.connector_builder = Some(Box::new(MySQLConnectorBuilder::new(url)));
+    pub fn mysql(&mut self, url: impl Into<String>) {
+        self.graph_builder.connector_builder = Some(Box::new(MySQLConnectorBuilder::new(url.into())));
     }
 
-    pub fn postgres(&mut self, url: &'static str) {
-        self.graph_builder.connector_builder = Some(Box::new(PostgresConnectorBuilder::new(url)));
+    pub fn postgres(&mut self, url: impl Into<String>) {
+        self.graph_builder.connector_builder = Some(Box::new(PostgresConnectorBuilder::new(url.into())));
     }
 }

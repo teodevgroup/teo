@@ -1,21 +1,13 @@
 use tokio::test;
-use teo::connectors::mysql::MySQLConnectorHelpers;
 use teo::core::graph::Graph;
 use teo::core::value::Value;
 use teo::error::ActionError;
 
 
-// async fn make_mysql_pool() -> Pool<MySql> {
-//     let pool = MySqlPoolOptions::new().max_connections(5).connect("mysql://root:@localhost").await.unwrap();
-//     sqlx::query("create database teotestindex").execute(&pool).await;
-//     pool
-// }
-
 async fn make_mysql_graph() -> &'static Graph {
 
     let graph = Box::leak(Box::new(Graph::new(|g| {
 
-        g.mysql("mysql://root:@localhost/teotestindex");
 
         g.model("UniqueIndex", |m| {
             m.field("id", |f| {

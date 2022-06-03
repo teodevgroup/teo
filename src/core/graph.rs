@@ -3,7 +3,6 @@ use std::ptr::addr_of;
 use std::sync::Arc;
 use actix_http::{Method};
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web};
-use actix_utils::future::ok;
 use chrono::{Duration, Utc};
 use futures_util::StreamExt;
 use serde_json::{json, Map, Value as JsonValue};
@@ -540,14 +539,14 @@ impl Graph {
         let mut by_key: Option<&String> = None;
         let mut by_value: Option<&JsonValue> = None;
         for (k, v) in credentials {
-            if model.auth_identity_keys().contains(&&**k) {
+            if model.auth_identity_keys().contains(k) {
                 if identity_key == None {
                     identity_key = Some(k);
                     identity_value = Some(v);
                 } else {
                     return HttpResponse::BadRequest().json(json!({"error": ActionError::multiple_auth_identity_provided()}));
                 }
-            } else if model.auth_by_keys().contains(&&**k) {
+            } else if model.auth_by_keys().contains(k) {
                 if by_key == None {
                     by_key = Some(k);
                     by_value = Some(v);

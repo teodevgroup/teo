@@ -93,7 +93,7 @@ pub enum FieldIndex {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Field {
-    pub(crate) name: &'static str,
+    pub(crate) name: String,
     pub(crate) field_type: FieldType,
     pub(crate) database_type: DatabaseType,
     pub(crate) optionality: Optionality,
@@ -114,5 +114,14 @@ pub(crate) struct Field {
     pub(crate) on_save_pipeline: Pipeline,
     pub(crate) on_output_pipeline: Pipeline,
     pub(crate) permission: Option<Permission>,
-    pub(crate) column_name: Option<&'static str>,
+    pub(crate) column_name: Option<String>,
+}
+
+impl Field {
+    pub(crate) fn column_name(&self) -> String {
+        match &self.column_name {
+            Some(column_name) => column_name.clone(),
+            None => self.name.clone()
+        }
+    }
 }
