@@ -6,6 +6,8 @@ use async_trait::async_trait;
 use crate::connectors::sql_shared::table_create_statement;
 use crate::core::builders::graph_builder::GraphBuilder;
 use crate::core::connector::{Connector, ConnectorBuilder};
+use crate::core::database_type::DatabaseType;
+use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::object::Object;
@@ -73,6 +75,33 @@ impl MySQLConnectorBuilder {
 
 #[async_trait]
 impl ConnectorBuilder for MySQLConnectorBuilder {
+    fn inferred_database_type(&self, field_type: &FieldType) -> DatabaseType {
+        match field_type {
+            FieldType::Undefined => DatabaseType::Undefined,
+            FieldType::ObjectId => DatabaseType::Undefined,
+            FieldType::Bool => DatabaseType::Bool,
+            FieldType::I8 => DatabaseType::TinyInt(false),
+            FieldType::I16 => DatabaseType::SmallInt(false),
+            FieldType::I32 => DatabaseType::Int(false),
+            FieldType::I64 => DatabaseType::BigInt(false),
+            FieldType::I128 => DatabaseType::BigInt(false),
+            FieldType::U8 => DatabaseType::TinyInt(true),
+            FieldType::U16 => DatabaseType::SmallInt(true),
+            FieldType::U32 => DatabaseType::Int(true),
+            FieldType::U64 => DatabaseType::BigInt(true),
+            FieldType::U128 => DatabaseType::BigInt(true),
+            FieldType::F32 => DatabaseType::Real,
+            FieldType::F64 => DatabaseType::Double,
+            FieldType::String => DatabaseType::VarChar(191, None, None),
+            FieldType::Date => DatabaseType::Date,
+            FieldType::DateTime => DatabaseType::DateTime(3),
+            FieldType::Enum(_) => DatabaseType::Undefined,
+            FieldType::Vec(_) => DatabaseType::Undefined,
+            FieldType::Map(_) => DatabaseType::Undefined,
+            FieldType::Object(_) => DatabaseType::Undefined,
+        }
+    }
+
     async fn build_connector(&self, models: &Vec<Model>, reset_database: bool) -> Box<dyn Connector> {
         let url = Url::parse(self.url);
         match url {

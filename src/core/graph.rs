@@ -47,7 +47,7 @@ impl Graph {
             host_url: builder.host_url.unwrap(),
             clients: builder.clients.clone(),
         };
-        graph.models_vec = builder.models.iter().map(move |mb| Model::new(mb)).collect();
+        graph.models_vec = builder.models.iter().map(|mb| mb.build(&builder.connector_builder())).collect();
         let mut models_map: HashMap<&'static str, * const Model> = HashMap::new();
         let mut url_segment_name_map: HashMap<String, &'static str> = HashMap::new();
         for model in graph.models_vec.iter() {

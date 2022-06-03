@@ -116,32 +116,3 @@ pub(crate) struct Field {
     pub(crate) permission: Option<Permission>,
     pub(crate) column_name: Option<&'static str>,
 }
-
-impl Field {
-    pub(crate) fn new(builder: &FieldBuilder) -> Field {
-        return Field {
-            name: builder.name,
-            field_type: builder.field_type.clone(),
-            database_type: DatabaseType::Undefined,
-            optionality: builder.optionality,
-            store: builder.store,
-            primary: builder.primary,
-            read_rule: builder.read_rule,
-            write_rule: builder.write_rule,
-            index: builder.index.clone(),
-            query_ability: builder.query_ability,
-            object_assignment: builder.object_assignment,
-            auto: builder.auto,
-            auto_increment: builder.auto_increment,
-            auth_identity: builder.auth_identity,
-            auth_by: builder.auth_by,
-            auth_by_arg: builder.auth_by_arg.clone(),
-            default: builder.default.clone(),
-            on_set_pipeline: builder.on_set_pipeline.build(),
-            on_save_pipeline: builder.on_save_pipeline.build(),
-            on_output_pipeline: builder.on_output_pipeline.build(),
-            permission: if let Some(builder) = &builder.permission { Some(builder.build()) } else { None },
-            column_name: builder.column_name
-        }
-    }
-}

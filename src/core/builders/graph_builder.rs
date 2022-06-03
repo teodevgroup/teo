@@ -49,7 +49,7 @@ impl GraphBuilder {
     }
 
     pub fn model<F: Fn(&mut ModelBuilder)>(&mut self, name: &'static str, build: F) {
-        let mut model: ModelBuilder = ModelBuilder::new(name);
+        let mut model: ModelBuilder = ModelBuilder::new(name, self.connector_builder());
         build(&mut model);
         self.models.push(model);
     }

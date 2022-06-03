@@ -1,6 +1,8 @@
 use std::fmt::Debug;
 use async_trait::async_trait;
 use serde_json::{Map, Value as JsonValue};
+use crate::core::database_type::DatabaseType;
+use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::object::Object;
@@ -26,6 +28,8 @@ pub(crate) trait Connector: Debug + Send + Sync {
 
 #[async_trait]
 pub(crate) trait ConnectorBuilder: Debug + Send + Sync {
+
+    fn inferred_database_type(&self, field_type: &FieldType) -> DatabaseType;
 
     async fn build_connector(&self, models: &Vec<Model>, reset_database: bool) -> Box<dyn Connector>;
 }

@@ -33,76 +33,29 @@ pub(crate) struct CompoundIndex {
 
 #[derive(Debug)]
 pub(crate) struct Model {
-    name: &'static str,
-    table_name: String,
-    url_segment_name: String,
-    localized_name: &'static str,
-    description: &'static str,
-    identity: bool,
-    actions: HashSet<ActionType>,
-    permission: Option<Permission>,
-    fields_vec: Vec<Field>,
-    fields_map: HashMap<&'static str, * const Field>,
-    primary_field: * const Field,
-    index_fields: Vec<* const Field>,
-    input_keys: Vec<&'static str>,
-    save_keys: Vec<&'static str>,
-    output_keys: Vec<&'static str>,
-    get_value_keys: Vec<&'static str>,
-    query_keys: Vec<&'static str>,
-    unique_query_keys: Vec<&'static str>,
-    auth_identity_keys: Vec<&'static str>,
-    auth_by_keys: Vec<&'static str>,
+    pub(crate) name: &'static str,
+    pub(crate) table_name: String,
+    pub(crate) url_segment_name: String,
+    pub(crate) localized_name: &'static str,
+    pub(crate) description: &'static str,
+    pub(crate) identity: bool,
+    pub(crate) actions: HashSet<ActionType>,
+    pub(crate) permission: Option<Permission>,
+    pub(crate) fields_vec: Vec<Field>,
+    pub(crate) fields_map: HashMap<&'static str, * const Field>,
+    pub(crate) primary_field: * const Field,
+    pub(crate) index_fields: Vec<* const Field>,
+    pub(crate) input_keys: Vec<&'static str>,
+    pub(crate) save_keys: Vec<&'static str>,
+    pub(crate) output_keys: Vec<&'static str>,
+    pub(crate) get_value_keys: Vec<&'static str>,
+    pub(crate) query_keys: Vec<&'static str>,
+    pub(crate) unique_query_keys: Vec<&'static str>,
+    pub(crate) auth_identity_keys: Vec<&'static str>,
+    pub(crate) auth_by_keys: Vec<&'static str>,
 }
 
 impl Model {
-
-    pub(crate) fn new(builder: &ModelBuilder) -> Self {
-        let input_keys = Self::allowed_input_keys(builder);
-        let save_keys = Self::allowed_save_keys(builder);
-        let output_keys = Self::allowed_output_keys(builder);
-        let get_value_keys = Self::get_get_value_keys(builder);
-        let query_keys = Self::get_query_keys(builder);
-        let unique_query_keys = Self::get_unique_query_keys(builder);
-        let auth_identity_keys = Self::get_auth_identity_keys(builder);
-        let auth_by_keys = Self::get_auth_by_keys(builder);
-        let fields_vec: Vec<Field> = builder.fields.iter().map(|fb| { Field::new(fb) }).collect();
-        let mut fields_map: HashMap<&'static str, * const Field> = HashMap::new();
-        let mut primary_field: * const Field = null();
-        let mut index_fields: Vec<* const Field> = Vec::new();
-        for field in fields_vec.iter() {
-            let addr = addr_of!(*field);
-            fields_map.insert(field.name, addr);
-            if field.primary {
-                primary_field = addr_of!(*field);
-            }
-            if field.index != FieldIndex::NoIndex {
-                index_fields.push(addr);
-            }
-        }
-        Model {
-            name: builder.name,
-            table_name: if builder.table_name == "" { builder.name.to_lowercase().to_plural() } else { builder.table_name.to_string() },
-            url_segment_name: if builder.url_segment_name == "" { builder.name.to_kebab_case().to_plural() } else { builder.url_segment_name.to_string() },
-            localized_name: builder.localized_name,
-            description: builder.description,
-            identity: builder.identity,
-            actions: builder.actions.clone(),
-            permission: if let Some(builder) = &builder.permission { Some(builder.build()) } else { None },
-            fields_vec,
-            fields_map,
-            primary_field,
-            index_fields,
-            input_keys,
-            save_keys,
-            output_keys,
-            get_value_keys,
-            query_keys,
-            unique_query_keys,
-            auth_identity_keys,
-            auth_by_keys
-        }
-    }
 
     pub(crate) fn name(&self) -> &'static str {
         self.name
@@ -184,61 +137,6 @@ impl Model {
     pub(crate) fn auth_identity_keys(&self) -> &Vec<&'static str> { &self.auth_identity_keys }
 
     pub(crate) fn auth_by_keys(&self) -> &Vec<&'static str> { &self.auth_by_keys }
-
-    fn allowed_input_keys(builder: &ModelBuilder) -> Vec<&'static str> {
-        builder.fields.iter()
-            .filter(|&f| { f.write_rule != NoWrite })
-            .map(|f| { f.name })
-            .collect()
-    }
-
-    fn allowed_save_keys(builder: &ModelBuilder) -> Vec<&'static str> {
-        builder.fields.iter()
-            .filter(|&f| { f.store != Calculated && f.store != Temp })
-            .map(|f| { f.name })
-            .collect()
-    }
-
-    fn allowed_output_keys(builder: &ModelBuilder) -> Vec<&'static str> {
-        builder.fields.iter()
-            .filter(|&f| { f.read_rule != NoRead })
-            .map(|f| { f.name })
-            .collect()
-    }
-
-    pub(crate) fn get_get_value_keys(builder: &ModelBuilder) -> Vec<&'static str> {
-        builder.fields.iter()
-            .map(|f| { f.name })
-            .collect()
-    }
-
-    pub(crate) fn get_query_keys(builder: &ModelBuilder) -> Vec<&'static str> {
-        builder.fields.iter()
-            .filter(|&f| { f.query_ability == QueryAbility::Queryable })
-            .map(|f| { f.name })
-            .collect()
-    }
-
-    pub(crate) fn get_unique_query_keys(builder: &ModelBuilder) -> Vec<&'static str> {
-        builder.fields.iter()
-            //.filter(|&f| { f.query_ability == QueryAbility::Queryable && (f.index == FieldIndex::Unique || f.primary == true) })
-            .map(|f| { f.name })
-            .collect()
-    }
-
-    pub(crate) fn get_auth_identity_keys(builder: &ModelBuilder) -> Vec<&'static str> {
-        builder.fields.iter()
-            .filter(|&f| { f.auth_identity == true })
-            .map(|f| { f.name })
-            .collect()
-    }
-
-    pub(crate) fn get_auth_by_keys(builder: &ModelBuilder) -> Vec<&'static str> {
-        builder.fields.iter()
-            .filter(|&f| { f.auth_by == true })
-            .map(|f| { f.name })
-            .collect()
-    }
 
     pub(crate) fn has_action(&self, action: ActionType) -> bool {
         self.actions.contains(&action)

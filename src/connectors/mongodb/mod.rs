@@ -13,6 +13,7 @@ use regex::Regex;
 use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::object::Object;
 use crate::core::builders::graph_builder::GraphBuilder;
+use crate::core::database_type::DatabaseType;
 use crate::core::field::{Optionality, FieldIndex};
 use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
@@ -1251,6 +1252,33 @@ impl MongoDBConnectorBuilder {
 
 #[async_trait]
 impl ConnectorBuilder for MongoDBConnectorBuilder {
+    fn inferred_database_type(&self, field_type: &FieldType) -> DatabaseType {
+        match field_type {
+            FieldType::Undefined => DatabaseType::Undefined,
+            FieldType::ObjectId => DatabaseType::ObjectId,
+            FieldType::Bool => DatabaseType::Bool,
+            FieldType::I8 => DatabaseType::Int(false),
+            FieldType::I16 => DatabaseType::Int(false),
+            FieldType::I32 => DatabaseType::Int(false),
+            FieldType::I64 => DatabaseType::Int(false),
+            FieldType::I128 => DatabaseType::Int(false),
+            FieldType::U8 => DatabaseType::Int(false),
+            FieldType::U16 => DatabaseType::Int(false),
+            FieldType::U32 => DatabaseType::Int(false),
+            FieldType::U64 => DatabaseType::Int(false),
+            FieldType::U128 => DatabaseType::Int(false),
+            FieldType::F32 => DatabaseType::Double,
+            FieldType::F64 => DatabaseType::Double,
+            FieldType::String => DatabaseType::Undefined,
+            FieldType::Date => DatabaseType::Date,
+            FieldType::DateTime => DatabaseType::DateTime(3),
+            FieldType::Enum(_) => DatabaseType::Undefined,
+            FieldType::Vec(_) => DatabaseType::Undefined,
+            FieldType::Map(_) => DatabaseType::Undefined,
+            FieldType::Object(_) => DatabaseType::Undefined,
+        }
+    }
+
     async fn build_connector(&self, models: &Vec<Model>, reset_database: bool) -> Box<dyn Connector> {
         Box::new(MongoDBConnector::new(self.url, models, reset_database).await)
     }

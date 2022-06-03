@@ -40,10 +40,11 @@ pub struct FieldBuilder {
     pub(crate) on_output_pipeline: PipelineBuilder,
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) column_name: Option<&'static str>,
+    connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
 impl FieldBuilder {
-    pub fn new(name: &'static str) -> Self {
+    pub(crate) fn new(name: &'static str, connector_builder: &Box<dyn ConnectorBuilder>) -> Self {
         return FieldBuilder {
             name,
             localized_name: "",
@@ -69,6 +70,13 @@ impl FieldBuilder {
             on_output_pipeline: PipelineBuilder::new(),
             permission: None,
             column_name: None,
+            connector_builder,
+        }
+    }
+
+    fn connector_builder(&self) -> &Box<dyn ConnectorBuilder> {
+        unsafe {
+            &*self.connector_builder
         }
     }
 
@@ -171,17 +179,17 @@ impl FieldBuilder {
     }
 
     pub fn vec<F: Fn(&mut FieldBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut builder = FieldBuilder::new("");
+        let mut builder = FieldBuilder::new("", self.connector_builder());
         build(&mut builder);
-        let field = Field::new(&builder);
+        let field = builder.build(self.connector_builder());
         self.field_type = FieldType::Vec(Box::new(field));
         return self;
     }
 
     pub fn map<F: Fn(&mut FieldBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut builder = FieldBuilder::new("");
+        let mut builder = FieldBuilder::new("", self.connector_builder());
         build(&mut builder);
-        let field = Field::new(&builder);
+        let field = builder.build(self.connector_builder());
         self.field_type = FieldType::Map(Box::new(field));
         return self;
     }
@@ -358,5 +366,32 @@ impl FieldBuilder {
             _ => {}
         }
         self
+    }
+
+    pub(crate) fn build(&self, connector_builder: &Box<dyn ConnectorBuilder>) -> Field {
+        return Field {
+            name: self.name,
+            field_type: self.field_type.clone(),
+            database_type: if self.database_type.is_undefined() { connector_builder.inferred_database_type(&self.field_type) } else { self.database_type.clone() },
+            optionality: self.optionality,
+            store: self.store,
+            primary: self.primary,
+            read_rule: self.read_rule,
+            write_rule: self.write_rule,
+            index: self.index.clone(),
+            query_ability: self.query_ability,
+            object_assignment: self.object_assignment,
+            auto: self.auto,
+            auto_increment: self.auto_increment,
+            auth_identity: self.auth_identity,
+            auth_by: self.auth_by,
+            auth_by_arg: self.auth_by_arg.clone(),
+            default: self.default.clone(),
+            on_set_pipeline: self.on_set_pipeline.build(),
+            on_save_pipeline: self.on_save_pipeline.build(),
+            on_output_pipeline: self.on_output_pipeline.build(),
+            permission: if let Some(builder) = &self.permission { Some(builder.build()) } else { None },
+            column_name: self.column_name
+        }
     }
 }

@@ -7,8 +7,11 @@ pub enum DatabaseType {
     // This value will be finally altered.
     Undefined,
 
+    #[cfg(feature = "mongo")]
+    ObjectId,
+
     // In MySQL, it's alias for TINYINT(1).
-    #[cfg(all(feature = "mysql", feature = "postgres"))]
+    #[cfg(all(feature = "mysql", feature = "postgres", feature = "mongo"))]
     Bool,
 
     // Bit(M), M is from 1 - 64. If M is omitted, M is 1 by default. To assign,
@@ -157,6 +160,7 @@ impl Into<FieldType> for &DatabaseType {
     fn into(self) -> FieldType {
         match self {
             DatabaseType::Undefined => FieldType::Undefined,
+            DatabaseType::ObjectId => FieldType::ObjectId,
             DatabaseType::Bool => FieldType::Bool,
             DatabaseType::Bit(_) => todo!(),
             DatabaseType::BitVarying => todo!(),
@@ -187,6 +191,15 @@ impl Into<FieldType> for &DatabaseType {
             DatabaseType::LongBlob => FieldType::String,
             DatabaseType::Blob(_) => FieldType::String,
             DatabaseType::Bytea => FieldType::String,
+        }
+    }
+}
+
+impl DatabaseType {
+    pub(crate) fn is_undefined(&self) -> bool {
+        match self {
+            DatabaseType::Undefined => true,
+            _ => false
         }
     }
 }

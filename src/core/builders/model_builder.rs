@@ -1,5 +1,7 @@
 use std::collections::{HashMap, HashSet};
+use std::ptr::{addr_of, null};
 use std::sync::Arc;
+use inflector::Inflector;
 use crate::action::action::ActionType;
 use crate::core::argument::{Argument, FnArgument};
 use crate::core::argument::Argument::{PipelineArgument, ValueArgument};
@@ -11,7 +13,10 @@ use crate::core::builders::field_builder::FieldBuilder;
 use crate::core::builders::action_builder::ActionBuilder;
 use crate::core::builders::model_index_builder::{ModelIndexBuilder};
 use crate::core::builders::permission_builder::PermissionBuilder;
-use crate::core::model::{CompoundIndex, CompoundIndexItem, ModelIndexType};
+use crate::core::field::ReadRule::NoRead;
+use crate::core::field::Store::{Calculated, Temp};
+use crate::core::field::WriteRule::NoWrite;
+use crate::core::model::{CompoundIndex, CompoundIndexItem, Model, ModelIndexType};
 
 
 pub struct ModelBuilder {
@@ -26,11 +31,12 @@ pub struct ModelBuilder {
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) primary: Option<CompoundIndex>,
     pub(crate) compound_indices: Vec<CompoundIndex>,
+    connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
 impl ModelBuilder {
 
-    pub fn new(name: &'static str) -> Self {
+    pub(crate) fn new(name: &'static str, connector_builder: &Box<dyn ConnectorBuilder>) -> Self {
         Self {
             name,
             table_name: "",
@@ -43,6 +49,13 @@ impl ModelBuilder {
             permission: None,
             primary: None,
             compound_indices: Vec::new(),
+            connector_builder
+        }
+    }
+
+    fn connector_builder(&self) -> &Box<dyn ConnectorBuilder> {
+        unsafe {
+            &*self.connector_builder
         }
     }
 
@@ -73,7 +86,7 @@ impl ModelBuilder {
     }
 
     pub fn field<F: Fn(&mut FieldBuilder)>(&mut self, name: &'static str, build: F) -> &mut Self {
-        let mut f = FieldBuilder::new(name);
+        let mut f = FieldBuilder::new(name, self.connector_builder());
         build(&mut f);
         self.fields.push(f);
         self
@@ -178,4 +191,105 @@ impl ModelBuilder {
         self
     }
 
+    pub(crate) fn build(&self, connector_builder: &Box<dyn ConnectorBuilder>) -> Model {
+        let input_keys = Self::allowed_input_keys(self);
+        let save_keys = Self::allowed_save_keys(self);
+        let output_keys = Self::allowed_output_keys(self);
+        let get_value_keys = Self::get_get_value_keys(self);
+        let query_keys = Self::get_query_keys(self);
+        let unique_query_keys = Self::get_unique_query_keys(self);
+        let auth_identity_keys = Self::get_auth_identity_keys(self);
+        let auth_by_keys = Self::get_auth_by_keys(self);
+        let fields_vec: Vec<Field> = self.fields.iter().map(|fb| { fb.build(connector_builder) }).collect();
+        let mut fields_map: HashMap<&'static str, * const Field> = HashMap::new();
+        let mut primary_field: * const Field = null();
+        let mut index_fields: Vec<* const Field> = Vec::new();
+        for field in fields_vec.iter() {
+            let addr = addr_of!(*field);
+            fields_map.insert(field.name, addr);
+            if field.primary {
+                primary_field = addr_of!(*field);
+            }
+            if field.index != FieldIndex::NoIndex {
+                index_fields.push(addr);
+            }
+        }
+        Model {
+            name: self.name,
+            table_name: if self.table_name == "" { self.name.to_lowercase().to_plural() } else { self.table_name.to_string() },
+            url_segment_name: if self.url_segment_name == "" { self.name.to_kebab_case().to_plural() } else { self.url_segment_name.to_string() },
+            localized_name: self.localized_name,
+            description: self.description,
+            identity: self.identity,
+            actions: self.actions.clone(),
+            permission: if let Some(builder) = &self.permission { Some(builder.build()) } else { None },
+            fields_vec,
+            fields_map,
+            primary_field,
+            index_fields,
+            input_keys,
+            save_keys,
+            output_keys,
+            get_value_keys,
+            query_keys,
+            unique_query_keys,
+            auth_identity_keys,
+            auth_by_keys
+        }
+    }
+
+    fn allowed_input_keys(&self) -> Vec<&'static str> {
+        self.fields.iter()
+            .filter(|&f| { f.write_rule != NoWrite })
+            .map(|f| { f.name })
+            .collect()
+    }
+
+    fn allowed_save_keys(&self) -> Vec<&'static str> {
+        self.fields.iter()
+            .filter(|&f| { f.store != Calculated && f.store != Temp })
+            .map(|f| { f.name })
+            .collect()
+    }
+
+    fn allowed_output_keys(&self) -> Vec<&'static str> {
+        self.fields.iter()
+            .filter(|&f| { f.read_rule != NoRead })
+            .map(|f| { f.name })
+            .collect()
+    }
+
+    pub(crate) fn get_get_value_keys(&self) -> Vec<&'static str> {
+        self.fields.iter()
+            .map(|f| { f.name })
+            .collect()
+    }
+
+    pub(crate) fn get_query_keys(&self) -> Vec<&'static str> {
+        self.fields.iter()
+            .filter(|&f| { f.query_ability == QueryAbility::Queryable })
+            .map(|f| { f.name })
+            .collect()
+    }
+
+    pub(crate) fn get_unique_query_keys(&self) -> Vec<&'static str> {
+        self.fields.iter()
+            //.filter(|&f| { f.query_ability == QueryAbility::Queryable && (f.index == FieldIndex::Unique || f.primary == true) })
+            .map(|f| { f.name })
+            .collect()
+    }
+
+    pub(crate) fn get_auth_identity_keys(&self) -> Vec<&'static str> {
+        self.fields.iter()
+            .filter(|&f| { f.auth_identity == true })
+            .map(|f| { f.name })
+            .collect()
+    }
+
+    pub(crate) fn get_auth_by_keys(&self) -> Vec<&'static str> {
+        self.fields.iter()
+            .filter(|&f| { f.auth_by == true })
+            .map(|f| { f.name })
+            .collect()
+    }
 }

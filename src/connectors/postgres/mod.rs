@@ -6,6 +6,8 @@ use async_trait::async_trait;
 use crate::connectors::sql_shared::table_create_statement;
 use crate::core::builders::graph_builder::GraphBuilder;
 use crate::core::connector::{Connector, ConnectorBuilder};
+use crate::core::database_type::DatabaseType;
+use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::object::Object;
@@ -72,6 +74,10 @@ impl PostgresConnectorBuilder {
 
 #[async_trait]
 impl ConnectorBuilder for PostgresConnectorBuilder {
+    fn inferred_database_type(&self, field_type: &FieldType) -> DatabaseType {
+        todo!()
+    }
+
     async fn build_connector(&self, models: &Vec<Model>, reset_database: bool) -> Box<dyn Connector> {
         let url = Url::parse(self.url);
         match url {
