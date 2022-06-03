@@ -15,7 +15,7 @@ async fn make_graph() -> &'static Graph {
                 f.required().primary().readonly().object_id().column_name("_id").auto();
             });
             m.field("name", |f| {
-                f.required().string().default("Bson");
+                f.required().string().default("Bson").db(|d| d.var_char(20).collation("d"));
             });
             m.field("age", |f| {
                 f.required().u8().default(18u8);

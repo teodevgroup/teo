@@ -1,6 +1,8 @@
+use crate::core::field_type::FieldType;
+
 // The database internal types.
 #[derive(Debug, Clone)]
-pub(crate) enum DatabaseType {
+pub enum DatabaseType {
 
     // This value will be finally altered.
     Undefined,
@@ -63,7 +65,7 @@ pub(crate) enum DatabaseType {
     // 24, the data type becomes FLOAT with no M or D values. If p is from 25 to 53, the data type
     // becomes DOUBLE with no M or D values.
     #[cfg(all(feature = "mysql", feature = "postgres"))]
-    Float(Option<u8>),
+    Float(u8),
 
     // Double
     // A double precision. This name is remapped to DOUBLE PRECISION for PostgreSQL.
@@ -149,4 +151,42 @@ pub(crate) enum DatabaseType {
     // Bytea type
     #[cfg(feature = "postgres")]
     Bytea,
+}
+
+impl Into<FieldType> for &DatabaseType {
+    fn into(self) -> FieldType {
+        match self {
+            DatabaseType::Undefined => FieldType::Undefined,
+            DatabaseType::Bool => FieldType::Bool,
+            DatabaseType::Bit(_) => todo!(),
+            DatabaseType::BitVarying => todo!(),
+            DatabaseType::TinyInt(unsigned) => if *unsigned { FieldType::U8 } else { FieldType::I8 },
+            DatabaseType::SmallInt(unsigned) => if *unsigned { FieldType::U16 } else { FieldType::I16 },
+            DatabaseType::MediumInt(unsigned) => if *unsigned { FieldType::U32 } else { FieldType::I32 },
+            DatabaseType::Int(unsigned) => if *unsigned { FieldType::U32 } else { FieldType::I32 },
+            DatabaseType::BigInt(unsigned) => if *unsigned { FieldType::U64 } else { FieldType::I64 },
+            DatabaseType::Decimal(_, _) => todo!(),
+            DatabaseType::Float(precision) => if *precision >= 25 { FieldType::F64 } else { FieldType::F32 },
+            DatabaseType::Double => FieldType::F64,
+            DatabaseType::Real => FieldType::F32,
+            DatabaseType::Date => FieldType::Date,
+            DatabaseType::DateTime(_) => FieldType::DateTime,
+            DatabaseType::Timestamp(_, _) => FieldType::DateTime,
+            DatabaseType::Time(_, _) => todo!(),
+            DatabaseType::Year => FieldType::String,
+            DatabaseType::Char(_, _, _) => FieldType::String,
+            DatabaseType::VarChar(_, _, _) => FieldType::String,
+            DatabaseType::TinyText(_, _) => FieldType::String,
+            DatabaseType::MediumText(_, _) => FieldType::String,
+            DatabaseType::LongText(_, _) => FieldType::String,
+            DatabaseType::Text(_, _, _) => FieldType::String,
+            DatabaseType::Binary(_) => FieldType::String,
+            DatabaseType::VarBinary(_) => FieldType::String,
+            DatabaseType::TinyBlob => FieldType::String,
+            DatabaseType::MediumBlob => FieldType::String,
+            DatabaseType::LongBlob => FieldType::String,
+            DatabaseType::Blob(_) => FieldType::String,
+            DatabaseType::Bytea => FieldType::String,
+        }
+    }
 }

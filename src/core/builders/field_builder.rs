@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::action::action::ActionType;
 use crate::core::argument::{Argument, FnArgument};
 use crate::core::argument::Argument::{PipelineArgument, ValueArgument};
+use crate::core::builders::database_type_builder::DatabaseTypeBuilder;
 use crate::core::builders::field_index_builder::FieldIndexBuilder;
 use crate::core::builders::permission_builder::PermissionBuilder;
 use crate::core::builders::pipeline_builder::PipelineBuilder;
@@ -48,6 +49,7 @@ impl FieldBuilder {
             localized_name: "",
             description: "",
             field_type: FieldType::Undefined,
+            database_type: DatabaseType::Undefined,
             optionality: Optionality::Required,
             store: Store::Embedded,
             primary: false,
@@ -344,14 +346,17 @@ impl FieldBuilder {
         self
     }
 
-    pub fn db<F: Fn(&mut DatabaseTypeBuilder)>(&mut self, build: F) -> &mut Self {
+    pub fn db<F, A>(&mut self, build: F) -> &mut Self where F: Fn(&mut DatabaseTypeBuilder) -> A, A: Into<DatabaseType> {
         let mut builder = DatabaseTypeBuilder::new();
-        build(&mut builder);
-        let (field_type, database_type) = builder.get_types();
-        if self.field_type == FieldType::Undefined {
-            self.field_type = field_type;
+        let result = build(&mut builder);
+        let db_type = result.into();
+        self.database_type = db_type;
+        match self.field_type {
+            FieldType::Undefined => {
+                self.field_type = (&self.database_type).into();
+            }
+            _ => {}
         }
-        self.database_type = database_type;
         self
     }
 }
