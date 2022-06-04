@@ -71,8 +71,8 @@ impl ConnectorBuilder for MySQLConnectorBuilder {
         // use database
         let stmt = SQL::create().database(&database_name).if_not_exists().to_string(SQLDialect::MySQL);
         stmt.ignore(&mut conn).await.unwrap();
-        let stmt = SQL::r#use().database(&database_name).to_string(SQLDialect::MySQL);
+        let stmt = SQL::r#use(&database_name).to_string(SQLDialect::MySQL);
         stmt.ignore(&mut conn).await.unwrap();
-        Box::new(MySQLConnector::new(pool, database_name.clone(), models).await)
+        Box::new(MySQLConnector::new(pool, conn, database_name.clone(), models).await)
     }
 }

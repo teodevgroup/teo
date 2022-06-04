@@ -142,79 +142,79 @@ impl Graph {
                                                                                 match action_type {
                                                                                     ActionType::FindUnique => {
                                                                                         return match self.get_identity(&r).await {
-                                                                                            Ok(identity) => this.handle_find_unique(map, model_def).await,
+                                                                                            Ok(_identity) => this.handle_find_unique(map, model_def).await,
                                                                                             Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
                                                                                         };
                                                                                     }
                                                                                     ActionType::FindFirst => {
                                                                                         return match self.get_identity(&r).await {
-                                                                                            Ok(identity) => this.handle_find_first(map, model_def).await,
+                                                                                            Ok(_identity) => this.handle_find_first(map, model_def).await,
                                                                                             Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
                                                                                         };
                                                                                     }
                                                                                     ActionType::FindMany => {
                                                                                         return match self.get_identity(&r).await {
-                                                                                            Ok(identity) => this.handle_find_many(map, model_def).await,
+                                                                                            Ok(_identity) => this.handle_find_many(map, model_def).await,
                                                                                             Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
                                                                                         };
                                                                                     }
                                                                                     ActionType::Create => {
                                                                                         return match self.get_identity(&r).await {
-                                                                                            Ok(identity) => this.handle_create(map, model_def).await,
+                                                                                            Ok(_identity) => this.handle_create(map, model_def).await,
                                                                                             Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
                                                                                         };
                                                                                     }
                                                                                     ActionType::Update => {
                                                                                         return match self.get_identity(&r).await {
-                                                                                            Ok(identity) => this.handle_update(map, model_def).await,
+                                                                                            Ok(_identity) => this.handle_update(map, model_def).await,
                                                                                             Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
                                                                                         };
                                                                                     }
                                                                                     ActionType::Upsert => {
                                                                                         return match self.get_identity(&r).await {
-                                                                                            Ok(identity) => this.handle_upsert(map, model_def).await,
+                                                                                            Ok(_identity) => this.handle_upsert(map, model_def).await,
                                                                                             Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
                                                                                         };
                                                                                     }
                                                                                     ActionType::Delete => {
                                                                                         return match self.get_identity(&r).await {
-                                                                                            Ok(identity) => this.handle_delete(map, model_def).await,
+                                                                                            Ok(_identity) => this.handle_delete(map, model_def).await,
                                                                                             Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
                                                                                         };
                                                                                     }
                                                                                     ActionType::CreateMany => {
                                                                                         return match self.get_identity(&r).await {
-                                                                                            Ok(identity) => this.handle_create_many(map, model_def).await,
+                                                                                            Ok(_identity) => this.handle_create_many(map, model_def).await,
                                                                                             Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
                                                                                         };
                                                                                     }
                                                                                     ActionType::UpdateMany => {
                                                                                         return match self.get_identity(&r).await {
-                                                                                            Ok(identity) => this.handle_update_many(map, model_def).await,
+                                                                                            Ok(_identity) => this.handle_update_many(map, model_def).await,
                                                                                             Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
                                                                                         };
                                                                                     }
                                                                                     ActionType::DeleteMany => {
                                                                                         return match self.get_identity(&r).await {
-                                                                                            Ok(identity) => this.handle_delete_many(map, model_def).await,
+                                                                                            Ok(_identity) => this.handle_delete_many(map, model_def).await,
                                                                                             Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
                                                                                         };
                                                                                     }
                                                                                     ActionType::Count => {
                                                                                         return match self.get_identity(&r).await {
-                                                                                            Ok(identity) => this.handle_count(map, model_def).await,
+                                                                                            Ok(_identity) => this.handle_count(map, model_def).await,
                                                                                             Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
                                                                                         };
                                                                                     }
                                                                                     ActionType::Aggregate => {
                                                                                         return match self.get_identity(&r).await {
-                                                                                            Ok(identity) => this.handle_aggregate(map, model_def).await,
+                                                                                            Ok(_identity) => this.handle_aggregate(map, model_def).await,
                                                                                             Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
                                                                                         };
                                                                                     }
                                                                                     ActionType::GroupBy => {
                                                                                         return match self.get_identity(&r).await {
-                                                                                            Ok(identity) => this.handle_group_by(map, model_def).await,
+                                                                                            Ok(_identity) => this.handle_group_by(map, model_def).await,
                                                                                             Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
                                                                                         };
                                                                                     }

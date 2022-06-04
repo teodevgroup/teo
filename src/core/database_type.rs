@@ -2,7 +2,7 @@ use crate::connectors::sql_shared::sql::SQLDialect;
 use crate::core::field_type::FieldType;
 
 // The database internal types.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DatabaseType {
 
     // This value will be finally altered.

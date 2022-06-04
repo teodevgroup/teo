@@ -69,7 +69,7 @@ async fn make_mysql_graph() -> &'static Graph {
 //     assert_eq!(result.ok(), None);
 // }
 
-#[tokio::test]
+#[test]
 async fn index_field_is_indexed() {
-    let graph = make_mysql_graph().await;
+    let _graph = make_mysql_graph().await;
 }

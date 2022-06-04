@@ -1,9 +1,10 @@
 use url::Url;
 use serde_json::{Map, Value as JsonValue};
 use async_trait::async_trait;
-use mysql_async::Pool;
+use mysql_async::{Conn, Pool, Row, Value};
 use mysql_async::prelude::{Query, Queryable};
-use crate::connectors::sql_shared::sql::{SQL, SQLDialect, ToSQLString};
+use crate::connectors::mysql::mysql_column::MySQLColumn;
+use crate::connectors::sql_shared::sql::{SQL, SQLColumnDef, SQLDialect, ToSQLString};
 use crate::connectors::sql_shared::table_create_statement;
 use crate::core::builders::graph_builder::GraphBuilder;
 use crate::core::connector::{Connector, ConnectorBuilder};
@@ -17,17 +18,52 @@ use crate::error::ActionError;
 #[derive(Debug)]
 pub(crate) struct MySQLConnector {
     pool: Pool,
+    conn: Conn,
     database_name: String,
 }
 
 impl MySQLConnector {
-    pub async fn new(pool: Pool, database_name: String, models: &Vec<Model>) -> MySQLConnector {
+    pub async fn new(pool: Pool, mut conn: Conn, database_name: String, models: &Vec<Model>) -> MySQLConnector {
         for model in models {
-            let stmt_string = table_create_statement(model).to_string(SQLDialect::MySQL);
-            println!("{}", stmt_string);
-            //sqlx::query(&stmt_string).execute(&pool).await;
+            let name = model.table_name();
+            let show_table = SQL::show().tables().like(name).to_string(SQLDialect::MySQL);
+            let result: Option<String> = show_table.first(&mut conn).await.unwrap();
+            let table_exists = result.is_some();
+            if table_exists {
+                // migrate
+                Self::table_migrate(&mut conn, model).await;
+            } else {
+                // create table
+                let stmt_string = table_create_statement(model).to_string(SQLDialect::MySQL);
+                println!("EXECUTE SQL: {}", stmt_string);
+                stmt_string.ignore(&mut conn).await.unwrap();
+            }
         }
-        MySQLConnector { pool, database_name }
+        MySQLConnector { pool, conn, database_name }
+    }
+
+    pub async fn table_migrate(conn: &mut Conn, model: &Model) {
+        let table_name = model.table_name();
+        let desc = SQL::describe(table_name).to_string(SQLDialect::MySQL);
+        let mut reviewed_columns: Vec<String> = Vec::new();
+        let columns: Vec<Row> = desc.fetch(conn).await.unwrap();
+        for column in &columns {
+            let db_column: MySQLColumn = column.into();
+            let schema_field = model.field(&db_column.field);
+            if schema_field.is_none() {
+                // remove this column
+                let stmt = SQL::alter_table(table_name).drop_column(db_column.field).to_string(SQLDialect::MySQL);
+                let _ = stmt.ignore(conn).await;
+            }
+            let sql_column_def: SQLColumnDef = schema_field.unwrap().into();
+            let schema_column: MySQLColumn = sql_column_def.into();
+            if schema_column != db_column {
+                // this column is different, alter it
+
+            }
+            reviewed_columns.push(db_column.field.clone());
+        }
+        println!("{:?}", columns);
     }
 }
 

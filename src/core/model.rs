@@ -79,9 +79,10 @@ impl Model {
         return &self.fields_vec
     }
 
-    pub fn field(&self, name: &str) -> &Field {
-        unsafe {
-            &(**self.fields_map.get(name).unwrap())
+    pub fn field(&self, name: &str) -> Option<&Field> {
+        match self.fields_map.get(name) {
+            Some(f) => Some(unsafe { &**f }),
+            None => None
         }
     }
 
