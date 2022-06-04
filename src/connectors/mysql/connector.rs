@@ -46,24 +46,38 @@ impl MySQLConnector {
         let table_name = model.table_name();
         let desc = SQL::describe(table_name).to_string(SQLDialect::MySQL);
         let mut reviewed_columns: Vec<String> = Vec::new();
-        let columns: Vec<Row> = desc.fetch(conn).await.unwrap();
+        let columns: Vec<Row> = desc.fetch(&mut *conn).await.unwrap();
         for column in &columns {
             let db_column: MySQLColumn = column.into();
             let schema_field = model.field(&db_column.field);
             if schema_field.is_none() {
                 // remove this column
-                let stmt = SQL::alter_table(table_name).drop_column(db_column.field).to_string(SQLDialect::MySQL);
-                let _ = stmt.ignore(conn).await;
+                let stmt = SQL::alter_table(table_name).drop_column(db_column.field.clone()).to_string(SQLDialect::MySQL);
+                let _ = stmt.ignore(&mut *conn).await;
             }
             let sql_column_def: SQLColumnDef = schema_field.unwrap().into();
-            let schema_column: MySQLColumn = sql_column_def.into();
+            let schema_column: MySQLColumn = (&sql_column_def).into();
             if schema_column != db_column {
                 // this column is different, alter it
-
+                let alter = SQL::alter_table(table_name).modify(sql_column_def).to_string(SQLDialect::MySQL);
+                let _ = alter.ignore(&mut *conn).await;
             }
             reviewed_columns.push(db_column.field.clone());
         }
-        println!("{:?}", columns);
+        for field in &model.fields_vec {
+            if !reviewed_columns.contains(&field.column_name()) {
+                let sql_column_def: SQLColumnDef = field.into();
+                let add = SQL::alter_table(table_name).add(sql_column_def).to_string(SQLDialect::MySQL);
+                let _ = add.ignore(&mut *conn).await;
+            }
+        }
+        // then indices / unique / primary
+        let show_index = SQL::show().index_from(table_name).to_string(SQLDialect::MySQL);
+        let indices: Vec<Row> = show_index.fetch(&mut *conn).await.unwrap();
+        for _index in &indices {
+
+        }
+
     }
 }
 

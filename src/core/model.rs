@@ -5,24 +5,25 @@ use crate::core::field::{Field, Sort};
 use crate::core::permission::Permission;
 
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum ModelIndexType {
     Primary,
     Index,
     Unique,
 }
 
-#[derive(Clone)]
-pub(crate) struct CompoundIndexItem {
+#[derive(Clone, Debug)]
+pub(crate) struct ModelIndexItem {
     pub(crate) field_name: String,
     pub(crate) sort: Sort,
     pub(crate) len: Option<usize>,
 }
 
-pub(crate) struct CompoundIndex {
+#[derive(Clone, Debug)]
+pub(crate) struct ModelIndex {
     pub(crate) index_type: ModelIndexType,
     pub(crate) name: String,
-    pub(crate) items: Vec<CompoundIndexItem>
+    pub(crate) items: Vec<ModelIndexItem>
 }
 
 #[derive(Debug)]
@@ -37,6 +38,8 @@ pub(crate) struct Model {
     pub(crate) permission: Option<Permission>,
     pub(crate) fields_vec: Vec<Field>,
     pub(crate) fields_map: HashMap<String, * const Field>,
+    pub(crate) indices: Vec<ModelIndex>,
+    pub(crate) primary: ModelIndex,
     pub(crate) primary_field: * const Field,
     pub(crate) index_fields: Vec<* const Field>,
     pub(crate) input_keys: Vec<String>,

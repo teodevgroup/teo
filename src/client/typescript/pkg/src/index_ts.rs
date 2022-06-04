@@ -23,7 +23,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                 let model_name = m.name();
                 c.block(format!("export type {model_name} = {{"), |b| {
                     m.output_keys().iter().for_each(|k| {
-                        let field = m.field(k);
+                        let field = m.field(k).unwrap();
                         let field_name = &field.name;
                         let field_type = field.field_type.to_typescript_type(field.optionality == Optionality::Optional);
                         b.line(format!("{field_name}: {field_type}"));
@@ -39,7 +39,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
             let model_var_name = model_name.to_camel_case();
             c.block(format!("export type {model_name}Select = {{"), |b| {
                 m.output_keys().iter().for_each(|k| {
-                    let field = m.field(k);
+                    let field = m.field(k).unwrap();
                     let field_name = &field.name;
                     b.line("{field_name}?: boolean");
                 })
@@ -49,7 +49,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
             }, "}");
             c.block(format!("export type {model_name}WhereInput = {{"), |b| {
                 m.query_keys().iter().for_each(|k| {
-                    let field = m.field(k);
+                    let field = m.field(k).unwrap();
                     let field_name = &field.name;
                     let field_filter = field.field_type.to_typescript_filter_type(field.optionality == Optionality::Optional);
                     b.line("{field_name}?: {field_filter}");
@@ -57,7 +57,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
             }, "}");
             c.block(format!("export type {model_name}WhereUniqueInput = {{"), |b| {
                 m.unique_query_keys().iter().for_each(|k| {
-                    let field = m.field(k);
+                    let field = m.field(k).unwrap();
                     let field_name = &field.name;
                     let field_ts_type = field.field_type.to_typescript_type(field.optionality == Optionality::Optional);
                     b.line("{field_name}?: {field_ts_type}");
@@ -65,14 +65,14 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
             }, "}");
             c.block(format!("export type {model_name}OrderByInput = {{"), |b| {
                 m.query_keys().iter().for_each(|k| {
-                    let field = m.field(k);
+                    let field = m.field(k).unwrap();
                     let field_name = &field.name;
                     b.line("{field_name}?: Order");
                 })
             }, "}");
             c.block(format!("export type {model_name}CreateInput = {{"), |b| {
                 m.input_keys().iter().for_each(|k| {
-                    let field = m.field(k);
+                    let field = m.field(k).unwrap();
                     let field_name = &field.name;
                     let field_ts_type = field.field_type.to_typescript_input_type(field.optionality == Optionality::Optional);
                     b.line("{field_name}?: {field_ts_type}");
@@ -80,7 +80,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
             }, "}");
             c.block(format!("export type {model_name}UpdateInput = {{"), |b| {
                 m.input_keys().iter().for_each(|k| {
-                    let field = m.field(k);
+                    let field = m.field(k).unwrap();
                     let field_name = &field.name;
                     let field_ts_type = field.field_type.to_typescript_input_type(field.optionality == Optionality::Optional);
                     b.line("{field_name}?: {field_ts_type}");

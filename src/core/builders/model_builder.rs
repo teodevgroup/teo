@@ -11,7 +11,7 @@ use crate::core::builders::permission_builder::PermissionBuilder;
 use crate::core::field::ReadRule::NoRead;
 use crate::core::field::Store::{Calculated, Temp};
 use crate::core::field::WriteRule::NoWrite;
-use crate::core::model::{CompoundIndex, CompoundIndexItem, Model, ModelIndexType};
+use crate::core::model::{ModelIndex, ModelIndexItem, Model, ModelIndexType};
 
 
 pub struct ModelBuilder {
@@ -21,11 +21,11 @@ pub struct ModelBuilder {
     pub(crate) localized_name: &'static str,
     pub(crate) description: &'static str,
     pub(crate) identity: bool,
-    pub(crate) fields: Vec<FieldBuilder>,
+    pub(crate) field_builders: Vec<FieldBuilder>,
     pub(crate) actions: HashSet<ActionType>,
     pub(crate) permission: Option<PermissionBuilder>,
-    pub(crate) primary: Option<CompoundIndex>,
-    pub(crate) compound_indices: Vec<CompoundIndex>,
+    pub(crate) primary: Option<ModelIndex>,
+    pub(crate) indices: Vec<ModelIndex>,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -39,11 +39,11 @@ impl ModelBuilder {
             localized_name: "",
             description: "",
             identity: false,
-            fields: Vec::new(),
+            field_builders: Vec::new(),
             actions: ActionType::default(),
             permission: None,
             primary: None,
-            compound_indices: Vec::new(),
+            indices: Vec::new(),
             connector_builder
         }
     }
@@ -83,7 +83,7 @@ impl ModelBuilder {
     pub fn field<F: Fn(&mut FieldBuilder)>(&mut self, name: &'static str, build: F) -> &mut Self {
         let mut f = FieldBuilder::new(name, self.connector_builder());
         build(&mut f);
-        self.fields.push(f);
+        self.field_builders.push(f);
         self
     }
 
@@ -124,9 +124,9 @@ impl ModelBuilder {
         let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
         let name = string_keys.join("_");
         let items = string_keys.iter().map(|k| {
-            CompoundIndexItem { field_name: k.to_string(), sort: Sort::Asc, len: None }
+            ModelIndexItem { field_name: k.to_string(), sort: Sort::Asc, len: None }
         }).collect();
-        let index = CompoundIndex {
+        let index = ModelIndex {
             index_type: ModelIndexType::Primary,
             name,
             items
@@ -146,21 +146,21 @@ impl ModelBuilder {
         let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
         let name = string_keys.join("_");
         let items = string_keys.iter().map(|k| {
-            CompoundIndexItem { field_name: k.to_string(), sort: Sort::Asc, len: None }
+            ModelIndexItem { field_name: k.to_string(), sort: Sort::Asc, len: None }
         }).collect();
-        let index = CompoundIndex {
+        let index = ModelIndex {
             index_type: ModelIndexType::Index,
             name,
             items
         };
-        self.compound_indices.push(index);
+        self.indices.push(index);
         self
     }
 
     pub fn index_settings<F: Fn(&mut ModelIndexBuilder)>(&mut self, build: F) -> &mut Self {
         let mut builder = ModelIndexBuilder::new(ModelIndexType::Index);
         build(&mut builder);
-        self.compound_indices.push(builder.build());
+        self.indices.push(builder.build());
         self
     }
 
@@ -168,21 +168,21 @@ impl ModelBuilder {
         let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
         let name = string_keys.join("_");
         let items = string_keys.iter().map(|k| {
-            CompoundIndexItem { field_name: k.to_string(), sort: Sort::Asc, len: None }
+            ModelIndexItem { field_name: k.to_string(), sort: Sort::Asc, len: None }
         }).collect();
-        let index = CompoundIndex {
+        let index = ModelIndex {
             index_type: ModelIndexType::Unique,
             name,
             items
         };
-        self.compound_indices.push(index);
+        self.indices.push(index);
         self
     }
 
     pub fn unique_settings<F: Fn(&mut ModelIndexBuilder)>(&mut self, build: F) -> &mut Self {
         let mut builder = ModelIndexBuilder::new(ModelIndexType::Unique);
         build(&mut builder);
-        self.compound_indices.push(builder.build());
+        self.indices.push(builder.build());
         self
     }
 
@@ -195,20 +195,63 @@ impl ModelBuilder {
         let unique_query_keys = Self::get_unique_query_keys(self);
         let auth_identity_keys = Self::get_auth_identity_keys(self);
         let auth_by_keys = Self::get_auth_by_keys(self);
-        let fields_vec: Vec<Field> = self.fields.iter().map(|fb| { fb.build(connector_builder) }).collect();
+        let fields_vec: Vec<Field> = self.field_builders.iter().map(|fb| { fb.build(connector_builder) }).collect();
         let mut fields_map: HashMap<String, * const Field> = HashMap::new();
         let mut primary_field: * const Field = null();
         let mut index_fields: Vec<* const Field> = Vec::new();
+        let mut primary = self.primary.clone();
+        let mut indices = self.indices.clone();
         for field in fields_vec.iter() {
             let addr = addr_of!(*field);
             fields_map.insert(field.name.clone(), addr);
             if field.primary {
                 primary_field = addr_of!(*field);
+                primary = Some(ModelIndex {
+                    index_type: ModelIndexType::Primary,
+                    name: "".to_string(),
+                    items: vec![
+                        ModelIndexItem {
+                            field_name: field.column_name().clone(),
+                            sort: Sort::Asc,
+                            len: None
+                        }
+                    ]
+                });
             }
             if field.index != FieldIndex::NoIndex {
                 index_fields.push(addr);
+                match &field.index {
+                    FieldIndex::Index(settings) => {
+                        indices.push(ModelIndex {
+                            index_type: ModelIndexType::Index,
+                            name: if settings.name.is_some() { settings.name.as_ref().unwrap().clone() } else { field.column_name().clone() },
+                            items: vec![
+                                ModelIndexItem {
+                                    field_name: field.column_name().clone(),
+                                    sort: settings.sort,
+                                    len: settings.length
+                                }
+                            ]
+                        })
+                    }
+                    FieldIndex::Unique(settings) => {
+                        indices.push(ModelIndex {
+                            index_type: ModelIndexType::Unique,
+                            name: if settings.name.is_some() { settings.name.as_ref().unwrap().clone() } else { field.column_name().clone() },
+                            items: vec![
+                                ModelIndexItem {
+                                    field_name: field.column_name().clone(),
+                                    sort: settings.sort,
+                                    len: settings.length
+                                }
+                            ]
+                        })
+                    }
+                    _ => { }
+                }
             }
         }
+
         Model {
             name: self.name,
             table_name: if self.table_name == "" { self.name.to_lowercase().to_plural() } else { self.table_name.to_string() },
@@ -220,6 +263,8 @@ impl ModelBuilder {
             permission: if let Some(builder) = &self.permission { Some(builder.build()) } else { None },
             fields_vec,
             fields_map,
+            primary: self.primary.as_ref().unwrap().clone(),
+            indices: self.indices.clone(),
             primary_field,
             index_fields,
             input_keys,
@@ -234,55 +279,55 @@ impl ModelBuilder {
     }
 
     fn allowed_input_keys(&self) -> Vec<String> {
-        self.fields.iter()
+        self.field_builders.iter()
             .filter(|&f| { f.write_rule != NoWrite })
             .map(|f| { f.name.clone() })
             .collect()
     }
 
     fn allowed_save_keys(&self) -> Vec<String> {
-        self.fields.iter()
+        self.field_builders.iter()
             .filter(|&f| { f.store != Calculated && f.store != Temp })
             .map(|f| { f.name.clone() })
             .collect()
     }
 
     fn allowed_output_keys(&self) -> Vec<String> {
-        self.fields.iter()
+        self.field_builders.iter()
             .filter(|&f| { f.read_rule != NoRead })
             .map(|f| { f.name.clone() })
             .collect()
     }
 
     pub(crate) fn get_get_value_keys(&self) -> Vec<String> {
-        self.fields.iter()
+        self.field_builders.iter()
             .map(|f| { f.name.clone() })
             .collect()
     }
 
     pub(crate) fn get_query_keys(&self) -> Vec<String> {
-        self.fields.iter()
+        self.field_builders.iter()
             .filter(|&f| { f.query_ability == QueryAbility::Queryable })
             .map(|f| { f.name.clone() })
             .collect()
     }
 
     pub(crate) fn get_unique_query_keys(&self) -> Vec<String> {
-        self.fields.iter()
+        self.field_builders.iter()
             //.filter(|&f| { f.query_ability == QueryAbility::Queryable && (f.index == FieldIndex::Unique || f.primary == true) })
             .map(|f| { f.name.clone() })
             .collect()
     }
 
     pub(crate) fn get_auth_identity_keys(&self) -> Vec<String> {
-        self.fields.iter()
+        self.field_builders.iter()
             .filter(|&f| { f.auth_identity == true })
             .map(|f| { f.name.clone() })
             .collect()
     }
 
     pub(crate) fn get_auth_by_keys(&self) -> Vec<String> {
-        self.fields.iter()
+        self.field_builders.iter()
             .filter(|&f| { f.auth_by == true })
             .map(|f| { f.name.clone() })
             .collect()

@@ -98,7 +98,7 @@ impl Object {
         let model_keys = self.inner.model.save_keys();
         for key in model_keys {
             let field = self.inner.model.field(&key);
-            if field.on_save_pipeline.has_any_modifier() {
+            if field.unwrap().on_save_pipeline.has_any_modifier() {
                 let mut stage = match self.inner.value_map.borrow().deref().get(&key.to_string()) {
                     Some(value) => {
                         Stage::Value(value.clone())
@@ -107,7 +107,7 @@ impl Object {
                         Stage::Value(Value::Null)
                     }
                 };
-                stage = field.on_save_pipeline.process(stage.clone(), &self).await;
+                stage = field.unwrap().on_save_pipeline.process(stage.clone(), &self).await;
                 match stage {
                     Stage::Invalid(s) => {
                         return Err(ActionError::invalid_input(key, s));
@@ -197,7 +197,7 @@ impl Object {
             };
             if json_has_value {
                 let json_value = &json_object[&key.to_string()];
-                let value_result = field.field_type.decode_value(json_value, self.inner.graph);
+                let value_result = field.unwrap().field_type.decode_value(json_value, self.inner.graph);
                 let mut value;
                 match value_result {
                     Ok(v) => { value = v }
@@ -206,10 +206,10 @@ impl Object {
                 if process {
                     // pipeline
                     let mut stage = Stage::Value(value);
-                    stage = field.on_set_pipeline.process(stage.clone(), &self).await;
+                    stage = field.unwrap().on_set_pipeline.process(stage.clone(), &self).await;
                     match stage {
                         Stage::Invalid(s) => {
-                            return Err(ActionError::invalid_input(&field.name, s));
+                            return Err(ActionError::invalid_input(&field.unwrap().name, s));
                         }
                         Stage::Value(v) => {
                             value = v
@@ -236,7 +236,7 @@ impl Object {
             } else {
                 // apply default values
                 if !initialized {
-                    if let Some(argument) = &field.default {
+                    if let Some(argument) = &field.unwrap().default {
                         match argument {
                             Argument::ValueArgument(value) => {
                                 self.inner.value_map.borrow_mut().insert(key.to_string(), value.clone());

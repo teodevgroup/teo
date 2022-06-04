@@ -1,11 +1,11 @@
 use crate::core::field::{IndexSettings, Sort};
-use crate::core::model::{CompoundIndex, CompoundIndexItem, ModelIndexType};
+use crate::core::model::{ModelIndex, ModelIndexItem, ModelIndexType};
 
 
 pub struct ModelIndexBuilder {
     index_type: ModelIndexType,
     name: Option<String>,
-    items: Vec<CompoundIndexItem>,
+    items: Vec<ModelIndexItem>,
 }
 
 impl ModelIndexBuilder {
@@ -23,7 +23,7 @@ impl ModelIndexBuilder {
     }
 
     pub fn field(&mut self, name: impl Into<String>) -> &mut Self {
-        self.items.push(CompoundIndexItem {
+        self.items.push(ModelIndexItem {
             field_name: name.into(),
             sort: Sort::Asc,
             len: None
@@ -46,8 +46,8 @@ impl ModelIndexBuilder {
         self
     }
 
-    pub(crate) fn build(&mut self) -> CompoundIndex {
-        CompoundIndex {
+    pub(crate) fn build(&mut self) -> ModelIndex {
+        ModelIndex {
             index_type: self.index_type,
             name: self.name.clone().unwrap(),
             items: self.items.clone()

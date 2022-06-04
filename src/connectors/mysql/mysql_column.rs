@@ -19,14 +19,14 @@ trait ValueHelpers {
 impl ValueHelpers for Value {
     fn to_string(&self) -> String {
         match self {
-            Value::Bytes(val) => String::from(val),
+            Value::Bytes(val) => String::from_utf8(val.clone()).unwrap(),
             _ => panic!()
         }
     }
 }
 
-impl From<Row> for MySQLColumn {
-    fn from(row: Row) -> Self {
+impl From<&Row> for MySQLColumn {
+    fn from(row: &Row) -> Self {
         let field = (&row["Field"]).to_string();
         let field_type = (&row["Type"]).to_string();
         let null = (&row["Null"]).to_string();
@@ -37,8 +37,8 @@ impl From<Row> for MySQLColumn {
     }
 }
 
-impl From<SQLColumnDef> for MySQLColumn {
-    fn from(def: SQLColumnDef) -> Self {
+impl From<&SQLColumnDef> for MySQLColumn {
+    fn from(def: &SQLColumnDef) -> Self {
         let field = def.name.clone();
         let field_type = def.column_type.to_string(SQLDialect::MySQL).to_lowercase();
         let null = if def.not_null { "NO" } else { "YES" }.to_string();

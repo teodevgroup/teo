@@ -117,10 +117,10 @@ pub(crate) struct Field {
 }
 
 impl Field {
-    pub(crate) fn column_name(&self) -> String {
+    pub(crate) fn column_name(&self) -> &String {
         match &self.column_name {
-            Some(column_name) => column_name.clone(),
-            None => self.name.clone()
+            Some(column_name) => column_name,
+            None => &self.name
         }
     }
 }

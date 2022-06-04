@@ -2,7 +2,7 @@ use crate::core::database_type::DatabaseType;
 use crate::core::field::{Field, Optionality};
 
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct SQLColumnDef {
     pub(crate) name: String,
     pub(crate) column_type: DatabaseType,
@@ -56,6 +56,18 @@ impl SQLColumnDef {
     pub fn unique_key(&mut self) -> &mut Self {
         self.unique_key = true;
         self
+    }
+}
+
+impl ToSQLString for SQLColumnDef {
+    fn to_string(&self, dialect: SQLDialect) -> String {
+        let name = &self.name;
+        let t = self.column_type.to_string(dialect.clone());
+        let not_null = if self.not_null { " NOT NULL" } else { " NULL" };
+        let primary = if self.primary_key { " PRIMARY KEY" } else { "" };
+        let auto_inc = if self.auto_increment { " AUTO_INCREMENT" } else { "" };
+        let unique = if self.unique_key { " UNIQUE KEY" } else { "" };
+        format!("`{name}` {t}{not_null}{primary}{unique}{auto_inc}")
     }
 }
 
@@ -147,13 +159,7 @@ impl ToSQLString for SQLCreateTableStatement {
         let if_not_exists = if self.if_not_exists { " IF NOT EXISTS" } else { "" };
         let table_name = &self.table;
         let mut columns = self.columns.iter().map(|c| {
-            let name = &c.name;
-            let t = c.column_type.to_string(dialect.clone());
-            let not_null = if c.not_null { " NOT NULL" } else { " NULL" };
-            let primary = if c.primary_key { " PRIMARY KEY" } else { "" };
-            let auto_inc = if c.auto_increment { " AUTO_INCREMENT" } else { "" };
-            let unique = if c.unique_key { " UNIQUE KEY" } else { "" };
-            format!("`{name}` {t}{not_null}{primary}{unique}{auto_inc}")
+            c.to_string(dialect)
         }).collect::<Vec<String>>().join(", ");
         format!("CREATE TABLE{if_not_exists} `{table_name}`( {columns} );")
     }
@@ -237,11 +243,26 @@ impl ToSQLString for SQLShowTablesStatement {
     }
 }
 
+pub struct SQLShowIndexFromStatement {
+    table: String
+}
+
+impl ToSQLString for SQLShowIndexFromStatement {
+    fn to_string(&self, _dialect: SQLDialect) -> String {
+        let table = &self.table;
+        format!("SHOW INDEX FROM {table}")
+    }
+}
+
 pub struct SQLShowStatement { }
 
 impl SQLShowStatement {
     pub fn tables(&self) -> SQLShowTablesStatement {
         SQLShowTablesStatement { like: None }
+    }
+
+    pub fn index_from(&self, table: impl Into<String>) -> SQLShowIndexFromStatement {
+        SQLShowIndexFromStatement { table: table.into() }
     }
 }
 
@@ -263,6 +284,40 @@ pub struct SQLAlterTableStatement {
 impl SQLAlterTableStatement {
     pub fn drop_column(&self, column: impl Into<String>) -> SQLAlterTableDropColumnStatement {
         SQLAlterTableDropColumnStatement { table: self.table.clone(), column: column.into() }
+    }
+
+    pub fn modify(&self, column_def: SQLColumnDef) -> SQLAlterTableModifyStatement {
+        SQLAlterTableModifyStatement { table: self.table.clone(), column_def }
+    }
+
+    pub fn add(&self, column_def: SQLColumnDef) -> SQLAlterTableAddStatement {
+        SQLAlterTableAddStatement { table: self.table.clone(), column_def }
+    }
+}
+
+pub struct SQLAlterTableAddStatement {
+    table: String,
+    column_def: SQLColumnDef,
+}
+
+impl ToSQLString for SQLAlterTableAddStatement {
+    fn to_string(&self, dialect: SQLDialect) -> String {
+        let table = &self.table;
+        let def = self.column_def.to_string(dialect);
+        format!("ALTER TABLE `{table}` ADD {def}")
+    }
+}
+
+pub struct SQLAlterTableModifyStatement {
+    table: String,
+    column_def: SQLColumnDef,
+}
+
+impl ToSQLString for SQLAlterTableModifyStatement {
+    fn to_string(&self, dialect: SQLDialect) -> String {
+        let table = &self.table;
+        let def = self.column_def.to_string(dialect);
+        format!("ALTER TABLE `{table}` MODIFY {def}")
     }
 }
 
