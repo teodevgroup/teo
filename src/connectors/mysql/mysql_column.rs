@@ -12,14 +12,30 @@ pub struct MySQLColumn {
     pub(crate) extra: String
 }
 
-trait ValueHelpers {
+pub trait ValueHelpers {
     fn to_string(&self) -> String;
+    fn to_i64(&self) -> i64;
+    fn to_u64(&self) -> u64;
 }
 
 impl ValueHelpers for Value {
     fn to_string(&self) -> String {
         match self {
             Value::Bytes(val) => String::from_utf8(val.clone()).unwrap(),
+            _ => panic!()
+        }
+    }
+
+    fn to_i64(&self) -> i64 {
+        match self {
+            Value::Int(val) => *val,
+            _ => panic!()
+        }
+    }
+
+    fn to_u64(&self) -> u64 {
+        match self {
+            Value::UInt(val) => *val,
             _ => panic!()
         }
     }

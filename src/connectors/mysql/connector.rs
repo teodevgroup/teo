@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use mysql_async::{Conn, Pool, Row, Value};
 use mysql_async::prelude::{Query, Queryable};
 use crate::connectors::mysql::mysql_column::MySQLColumn;
+use crate::connectors::mysql::mysql_index::{mysql_indices_from_rows, MySQLIndex};
 use crate::connectors::sql_shared::sql::{SQL, SQLColumnDef, SQLDialect, ToSQLString};
 use crate::connectors::sql_shared::table_create_statement;
 use crate::core::builders::graph_builder::GraphBuilder;
@@ -73,11 +74,24 @@ impl MySQLConnector {
         }
         // then indices / unique / primary
         let show_index = SQL::show().index_from(table_name).to_string(SQLDialect::MySQL);
-        let indices: Vec<Row> = show_index.fetch(&mut *conn).await.unwrap();
-        for _index in &indices {
+        let rows: Vec<Row> = show_index.fetch(&mut *conn).await.unwrap();
+        let indices = mysql_indices_from_rows(&rows);
+        let mut reviewedIndices: Vec<String> = Vec::new();
+        for index in &indices {
+            if &index.key_name == "PRIMARY" {
+                continue;
+            }
+            let model_index = model.indices.iter().find(|i| i.name == index.key_name);
+            if model_index.is_none() {
+                // model doesn't have this index, while database has. Delete it.
+                let drop = SQL::drop().index(&index.key_name).on(table_name).to_string(SQLDialect::MySQL);
+                let _ = drop.ignore(&mut *conn).await;
+            } else {
+                let model_index = model_index.unwrap();
+                let sql_model_index: MySQLIndex = model_index.into();
 
+            }
         }
-
     }
 }
 

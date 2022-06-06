@@ -5,7 +5,7 @@ use crate::core::field::{Field, Sort};
 use crate::core::permission::Permission;
 
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum ModelIndexType {
     Primary,
     Index,

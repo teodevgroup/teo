@@ -198,6 +198,29 @@ impl SQLCreateStatement {
     }
 }
 
+pub struct SQLDropIndexOnStatement {
+    index: String,
+    table: String,
+}
+
+impl ToSQLString for SQLDropIndexOnStatement {
+    fn to_string(&self, _dialect: SQLDialect) -> String {
+        let index = &self.index;
+        let table = &self.table;
+        format!("DROP INDEX `{index}` on `{table}`")
+    }
+}
+
+pub struct SQLDropIndexStatement {
+    index: String
+}
+
+impl SQLDropIndexStatement {
+    pub fn on(&self, table: impl Into<String>) -> SQLDropIndexOnStatement {
+        SQLDropIndexOnStatement { index: self.index.clone(), table: table.into() }
+    }
+}
+
 pub struct SQLDropStatement { }
 
 impl SQLDropStatement {
@@ -208,6 +231,10 @@ impl SQLDropStatement {
 
     pub fn table(&self, table: impl Into<String>) -> SQLDropTableStatement {
         SQLDropTableStatement { table: table.into(), if_exists: false }
+    }
+
+    pub fn index(&self, index: impl Into<String>) -> SQLDropIndexStatement {
+        SQLDropIndexStatement { index: index.into() }
     }
 }
 
