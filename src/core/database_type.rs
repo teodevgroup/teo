@@ -1,3 +1,4 @@
+#[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres"))]
 use crate::connectors::sql_shared::sql::SQLDialect;
 use crate::core::field_type::FieldType;
 
@@ -48,8 +49,16 @@ pub enum DatabaseType {
     // BigInt(M), from -9223372036854775808 to 9223372036854775807. Unsigned version is from 0 to
     // 18446744073709551615.
     // Available for MySQL and PostgreSQL. The signed option is ignored in PostgreSQL.
-    #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres", feature = "data-source-mongodb"))]
+    #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres"))]
     BigInt(bool),
+
+    // MongoDB's int type
+    #[cfg(feature = "data-source-mongodb")]
+    Int32,
+
+    // MongoDB's number long type
+    #[cfg(feature = "data-source-mongodb")]
+    Int64,
 
     // MySQL: Decimal(M, D) PostgreSQL: Decimal(precision, scale)
     // A packed “exact” fixed-point number. M is the total number of digits (the precision) and D
@@ -73,7 +82,7 @@ pub enum DatabaseType {
 
     // Double
     // A double precision. This name is remapped to DOUBLE PRECISION for PostgreSQL.
-    #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres"))]
+    #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres", feature = "data-source-mongodb"))]
     Double,
 
     // Real
@@ -89,7 +98,7 @@ pub enum DatabaseType {
     // datetime. fsp is from 0 - 6. The supported range is '1000-01-01 00:00:00.000000' to
     // '9999-12-31 23:59:59.999999'
     // This is MySQL only.
-    #[cfg(feature = "data-source-mysql")]
+    #[cfg(any(feature = "data-source-mysql", feature = "data-source-mongodb"))]
     DateTime(u8),
 
     // Timestamp(p, with timezone)
@@ -134,7 +143,11 @@ pub enum DatabaseType {
     #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres"))]
     Text(Option<u16>, Option<String>, Option<String>),
 
-    #[cfg(feature = "data-source-mysql")]
+    // String
+    #[cfg(feature = "data-source-mongodb")]
+    String,
+
+    #[cfg(any(feature = "data-source-mysql", feature = "data-source-mongodb"))]
     Binary(u8),
 
     #[cfg(feature = "data-source-mysql")]
@@ -178,17 +191,22 @@ impl Into<FieldType> for &DatabaseType {
             DatabaseType::Int(unsigned) => if *unsigned { FieldType::U32 } else { FieldType::I32 },
             #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres"))]
             DatabaseType::BigInt(unsigned) => if *unsigned { FieldType::U64 } else { FieldType::I64 },
-            DatabaseType::Decimal(_, _) => todo!(),
+            #[cfg(feature = "data-source-mongodb")]
+            DatabaseType::Int32 => FieldType::I32,
+            #[cfg(feature = "data-source-mongodb")]
+            DatabaseType::Int64 => FieldType::I64,
+            DatabaseType::Decimal(_, _) => FieldType::Decimal,
             #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres"))]
             DatabaseType::Float(precision) => if *precision >= 25 { FieldType::F64 } else { FieldType::F32 },
-            #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres"))]
+            #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres", feature = "data-source-mongodb"))]
             DatabaseType::Double => FieldType::F64,
             #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres"))]
             DatabaseType::Real => FieldType::F32,
             DatabaseType::Date => FieldType::Date,
-            #[cfg(feature = "data-source-mysql")]
+            #[cfg(any(feature = "data-source-mysql", feature = "data-source-mongodb"))]
             DatabaseType::DateTime(_) => FieldType::DateTime,
             DatabaseType::Timestamp(_, _) => FieldType::DateTime,
+            #[cfg(feature = "data-source-mysql")]
             DatabaseType::Time(_, _) => todo!(),
             #[cfg(feature = "data-source-mysql")]
             DatabaseType::Year => FieldType::String,
@@ -204,7 +222,9 @@ impl Into<FieldType> for &DatabaseType {
             DatabaseType::LongText(_, _) => FieldType::String,
             #[cfg(feature = "data-source-mysql")]
             DatabaseType::Text(_, _, _) => FieldType::String,
-            #[cfg(feature = "data-source-mysql")]
+            #[cfg(feature = "data-source-mongodb")]
+            DatabaseType::String => FieldType::String,
+            #[cfg(any(feature = "data-source-mysql", feature = "data-source-mongodb"))]
             DatabaseType::Binary(_) => FieldType::String,
             #[cfg(feature = "data-source-mysql")]
             DatabaseType::VarBinary(_) => FieldType::String,
@@ -230,6 +250,7 @@ impl DatabaseType {
         }
     }
 
+    #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres"))]
     pub(crate) fn to_string(&self, dialect: SQLDialect) -> String {
         match self {
             DatabaseType::Undefined => "Unimplemented".to_string(),

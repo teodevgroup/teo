@@ -1,5 +1,7 @@
+use std::str::FromStr;
 use serde_json::{Value as JsonValue};
 use chrono::prelude::{Date, NaiveDate, Utc, DateTime};
+use rust_decimal::Decimal;
 use crate::core::field::Field;
 use crate::core::graph::Graph;
 use crate::core::value::Value;
@@ -22,6 +24,7 @@ pub(crate) enum FieldType {
     U128,
     F32,
     F64,
+    Decimal,
     String,
     Date,
     DateTime,
@@ -133,6 +136,13 @@ impl FieldType {
                 FieldType::F64 => {
                     if json_value.is_number() {
                         Ok(Value::F64(json_value.as_f64().unwrap() as f64))
+                    } else {
+                        Err(ActionError::wrong_input_type())
+                    }
+                }
+                FieldType::Decimal => {
+                    if json_value.is_string() {
+                        Ok(Value::Decimal(Decimal::from_str(json_value.as_str().unwrap()).unwrap()))
                     } else {
                         Err(ActionError::wrong_input_type())
                     }

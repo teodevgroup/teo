@@ -25,6 +25,7 @@ impl StringTypeBuilder {
         Self { value }
     }
 
+    #[cfg(any(feature = "data-source-mysql"))]
     pub fn charset(&self, charset: impl Into<String>) -> Self {
         let value = match &self.value {
             DatabaseType::Char(len, _, collation) => DatabaseType::Char(*len, Some(charset.into()), collation.clone()),
@@ -38,6 +39,7 @@ impl StringTypeBuilder {
         Self { value }
     }
 
+    #[cfg(any(feature = "data-source-mysql"))]
     pub fn collation(&self, collation: impl Into<String>) -> DatabaseTypeTerminationBuilder {
         let value = match &self.value {
             DatabaseType::Char(len, charset, _) => DatabaseType::Char(*len, charset.clone(), Some(collation.into())),
@@ -58,10 +60,12 @@ impl Into<DatabaseType> for StringTypeBuilder {
     }
 }
 
+#[cfg(feature = "data-source-mysql")]
 pub struct SignedIntegerTypeBuilder {
     value: DatabaseType
 }
 
+#[cfg(feature = "data-source-mysql")]
 impl SignedIntegerTypeBuilder {
     pub(crate) fn new(value: DatabaseType) -> Self {
         Self { value }
@@ -80,6 +84,7 @@ impl SignedIntegerTypeBuilder {
     }
 }
 
+#[cfg(feature = "data-source-mysql")]
 impl Into<DatabaseType> for SignedIntegerTypeBuilder {
     fn into(self) -> DatabaseType {
         self.value
@@ -95,6 +100,7 @@ impl DateTimeTypeBuilder {
         Self { value }
     }
 
+    #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres"))]
     pub fn with_timezone(&self) -> DatabaseTypeTerminationBuilder {
         let value = match &self.value {
             DatabaseType::Timestamp(fsp, _tz) => DatabaseType::Timestamp(*fsp, true),
@@ -121,26 +127,32 @@ impl DatabaseTypeBuilder {
         Self { value: DatabaseType::Undefined }
     }
 
+    #[cfg(feature = "data-source-mysql")]
     pub fn tiny_int(&mut self) -> SignedIntegerTypeBuilder {
         SignedIntegerTypeBuilder { value: DatabaseType::TinyInt(false) }
     }
 
+    #[cfg(feature = "data-source-mysql")]
     pub fn small_int(&mut self) -> SignedIntegerTypeBuilder {
         SignedIntegerTypeBuilder { value: DatabaseType::SmallInt(false) }
     }
 
+    #[cfg(feature = "data-source-mysql")]
     pub fn medium_int(&mut self) -> SignedIntegerTypeBuilder {
         SignedIntegerTypeBuilder { value: DatabaseType::MediumInt(false) }
     }
 
+    #[cfg(feature = "data-source-mysql")]
     pub fn int(&mut self) -> SignedIntegerTypeBuilder {
         SignedIntegerTypeBuilder { value: DatabaseType::Int(false) }
     }
 
+    #[cfg(feature = "data-source-mysql")]
     pub fn big_int(&mut self) -> SignedIntegerTypeBuilder {
         SignedIntegerTypeBuilder { value: DatabaseType::BigInt(false) }
     }
 
+    #[cfg(feature = "data-source-mysql")]
     pub fn real(&mut self) -> DatabaseTypeTerminationBuilder {
         DatabaseTypeTerminationBuilder { value: DatabaseType::Real }
     }
@@ -149,10 +161,12 @@ impl DatabaseTypeBuilder {
         DatabaseTypeTerminationBuilder { value: DatabaseType::Double }
     }
 
+    #[cfg(feature = "data-source-mysql")]
     pub fn float(&mut self, precision: u8) -> DatabaseTypeTerminationBuilder {
         DatabaseTypeTerminationBuilder { value: DatabaseType::Float(precision) }
     }
 
+    #[cfg(feature = "data-source-mysql")]
     pub fn date(&mut self) -> DatabaseTypeTerminationBuilder {
         DatabaseTypeTerminationBuilder { value: DatabaseType::Date }
     }
@@ -161,26 +175,32 @@ impl DatabaseTypeBuilder {
         DateTimeTypeBuilder { value: DatabaseType::Timestamp(fsp, false) }
     }
 
+    #[cfg(feature = "data-source-mysql")]
     pub fn char(&mut self, len: u8) -> StringTypeBuilder {
         StringTypeBuilder { value: DatabaseType::Char(len, None, None) }
     }
 
+    #[cfg(feature = "data-source-mysql")]
     pub fn var_char(&mut self, len: u16) -> StringTypeBuilder {
         StringTypeBuilder { value: DatabaseType::VarChar(len, None, None) }
     }
 
+    #[cfg(feature = "data-source-mysql")]
     pub fn tiny_text(&mut self) -> StringTypeBuilder {
         StringTypeBuilder { value: DatabaseType::TinyText(None, None) }
     }
 
+    #[cfg(feature = "data-source-mysql")]
     pub fn medium_text(&mut self) -> StringTypeBuilder {
         StringTypeBuilder { value: DatabaseType::MediumText(None, None) }
     }
 
+    #[cfg(feature = "data-source-mysql")]
     pub fn long_text(&mut self) -> StringTypeBuilder {
         StringTypeBuilder { value: DatabaseType::LongText(None, None) }
     }
 
+    #[cfg(feature = "data-source-mysql")]
     pub fn text(&mut self) -> StringTypeBuilder {
         StringTypeBuilder { value: DatabaseType::Text(None, None, None) }
     }

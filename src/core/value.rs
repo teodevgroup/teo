@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use chrono::prelude::{Date, DateTime, Utc};
 use chrono::SecondsFormat;
+use rust_decimal::Decimal;
 use serde_json::{Map, Number, Value as JsonValue};
 use crate::core::object::Object;
 
@@ -22,6 +23,7 @@ pub enum Value {
     U128(u128),
     F32(f32),
     F64(f64),
+    Decimal(Decimal),
     String(String),
     Date(Date<Utc>),
     DateTime(DateTime<Utc>),
@@ -77,6 +79,9 @@ impl Value {
             }
             Value::F64(val) => {
                 JsonValue::Number(Number::from_f64(*val).unwrap())
+            }
+            Value::Decimal(val) => {
+                JsonValue::String(val.to_string())
             }
             Value::String(val) => {
                 JsonValue::String(val.clone())
@@ -229,6 +234,10 @@ impl From<f64> for Value {
     fn from(v: f64) -> Self {
         Value::F64(v)
     }
+}
+
+impl From<Decimal> for Value {
+    fn from(v: Decimal) -> Self { Value::Decimal(v) }
 }
 
 impl From<Date<Utc>> for Value {

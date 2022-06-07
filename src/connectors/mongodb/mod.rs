@@ -1,15 +1,17 @@
 use std::collections::HashMap;
 use std::fmt::{Debug};
+use rust_decimal::prelude::FromStr;
 use std::sync::atomic::{Ordering};
 use serde_json::{Map, Value as JsonValue};
 use async_trait::async_trait;
-use bson::{Bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
+use bson::{Bson, DateTime as BsonDateTime, Decimal128, doc, Document, oid::ObjectId, Regex as BsonRegex};
 use chrono::{Date, NaiveDate, Utc, DateTime};
 use futures_util::{StreamExt, TryStreamExt};
 use mongodb::{options::ClientOptions, Client, Database, Collection, IndexModel};
 use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
 use mongodb::options::{CreateIndexOptions, DropDatabaseOptions, IndexOptions};
 use regex::Regex;
+use rust_decimal::Decimal;
 use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::object::Object;
 use crate::core::builders::graph_builder::GraphBuilder;
@@ -67,9 +69,9 @@ impl MongoDBConnector {
         };
         for key in document.keys() {
             let object_key = if key == "_id" { &primary_name } else { key };
-            let field_type = if key == "_id" { &FieldType::ObjectId } else { &object.inner.model.field(key).field_type };
+            let field_type = if key == "_id" { &FieldType::ObjectId } else { &object.inner.model.field(key).unwrap().field_type };
             let bson_value = document.get(key).unwrap();
-            let value_result = self.bson_value_to_type(object_key, bson_value, field_type);
+            let value_result = self.bson_value_to_field_value(object_key, bson_value, field_type);
             match value_result {
                 Ok(value) => {
                     object.inner.value_map.borrow_mut().insert(object_key.to_string(), value);
@@ -84,7 +86,7 @@ impl MongoDBConnector {
         Ok(())
     }
 
-    fn bson_value_to_type(&self, field_name: &str, bson_value: &Bson, field_type: &FieldType) -> Result<Value, ActionError> {
+    fn bson_value_to_field_value(&self, field_name: &str, bson_value: &Bson, field_type: &FieldType) -> Result<Value, ActionError> {
         return match field_type {
             FieldType::Undefined => {
                 panic!()
@@ -230,6 +232,16 @@ impl MongoDBConnector {
                     }
                 }
             }
+            FieldType::Decimal => {
+                match bson_value {
+                    Bson::Decimal128(d128) => {
+                        Ok(Value::Decimal(Decimal::from_str(&d128.to_string()).unwrap()))
+                    }
+                    _ => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
+            }
             FieldType::String => {
                 match bson_value.as_str() {
                     Some(val) => {
@@ -319,7 +331,7 @@ impl MongoDBConnector {
             if !model.query_keys().contains(key) {
                 return Err(ActionError::keys_unallowed());
             }
-            let field = model.field(key);
+            let field = model.field(key).unwrap();
             let db_key = if field.primary { "_id" } else { &field.name };
             let bson_result = self.parse_bson_where_entry(&field.field_type, value, graph);
             match bson_result {
@@ -582,6 +594,9 @@ impl MongoDBConnector {
                 } else {
                     Err(ActionError::wrong_input_type())
                 }
+            }
+            FieldType::Decimal => {
+                todo!()
             }
             FieldType::String => {
                 if value.is_string() {
@@ -1148,7 +1163,7 @@ impl Connector for MongoDBConnector {
         }
         // cast value
         let value = values.values().next().unwrap();
-        let field = model.field(key);
+        let field = model.field(key).unwrap();
         let query_key = if field.primary { "_id" } else { key };
         let decode_result = field.field_type.decode_value(value, graph);
         match decode_result {
@@ -1257,20 +1272,21 @@ impl ConnectorBuilder for MongoDBConnectorBuilder {
             FieldType::Undefined => DatabaseType::Undefined,
             FieldType::ObjectId => DatabaseType::ObjectId,
             FieldType::Bool => DatabaseType::Bool,
-            FieldType::I8 => DatabaseType::Int(false),
-            FieldType::I16 => DatabaseType::Int(false),
-            FieldType::I32 => DatabaseType::Int(false),
-            FieldType::I64 => DatabaseType::Int(false),
-            FieldType::I128 => DatabaseType::Int(false),
-            FieldType::U8 => DatabaseType::Int(false),
-            FieldType::U16 => DatabaseType::Int(false),
-            FieldType::U32 => DatabaseType::Int(false),
-            FieldType::U64 => DatabaseType::Int(false),
-            FieldType::U128 => DatabaseType::Int(false),
+            FieldType::I8 => DatabaseType::Int32,
+            FieldType::I16 => DatabaseType::Int32,
+            FieldType::I32 => DatabaseType::Int32,
+            FieldType::I64 => DatabaseType::Int64,
+            FieldType::I128 => DatabaseType::Int64,
+            FieldType::U8 => DatabaseType::Int32,
+            FieldType::U16 => DatabaseType::Int32,
+            FieldType::U32 => DatabaseType::Int64,
+            FieldType::U64 => DatabaseType::Int64,
+            FieldType::U128 => DatabaseType::Int64,
             FieldType::F32 => DatabaseType::Double,
             FieldType::F64 => DatabaseType::Double,
-            FieldType::String => DatabaseType::Undefined,
-            FieldType::Date => DatabaseType::Date,
+            FieldType::Decimal => DatabaseType::Decimal(None, None),
+            FieldType::String => DatabaseType::String,
+            FieldType::Date => DatabaseType::DateTime(3),
             FieldType::DateTime => DatabaseType::DateTime(3),
             FieldType::Enum(_) => DatabaseType::Undefined,
             FieldType::Vec(_) => DatabaseType::Undefined,
@@ -1341,6 +1357,9 @@ impl ToBsonValue for Value {
             }
             Value::String(val) => {
                 Bson::String(val.clone())
+            }
+            Value::Decimal(val) => {
+                todo!()
             }
             Value::Date(val) => {
                 Bson::DateTime(BsonDateTime::parse_rfc3339_str(val.format("%Y-%m-%d").to_string()).unwrap())

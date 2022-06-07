@@ -15,6 +15,7 @@ impl ToTypeScriptType for FieldType {
             FieldType::ObjectId | FieldType::String | FieldType::Date | FieldType::DateTime => "string".to_string(),
             FieldType::Bool => "boolean".to_string(),
             FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number".to_string(),
+            FieldType::Decimal => "string".to_string(),
             FieldType::Enum(name) => name.to_string(),
             FieldType::Vec(internal) => internal.field_type.to_typescript_type(internal.optionality == Optionality::Optional) + "[]",
             FieldType::Map(_) => panic!(),
@@ -36,6 +37,7 @@ impl ToTypeScriptType for FieldType {
             FieldType::DateTime => "string | Date | Date".to_string(),
             FieldType::Bool => "boolean | Boolean".to_string(),
             FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number | Number".to_string(),
+            FieldType::Decimal => "string | DecimalFilter".to_string(),
             FieldType::Enum(name) => format!(r#"{name} | EnumFilter<{name}>"#),
             FieldType::Vec(internal) => "undefined | Unimplemented".to_string(),
             FieldType::Map(_) => panic!(),
@@ -51,7 +53,7 @@ impl ToTypeScriptType for FieldType {
     fn to_typescript_input_type(&self, optional: bool) -> String {
         let mut base: String = match self {
             FieldType::Undefined => panic!(),
-            FieldType::ObjectId | FieldType::String | FieldType::Date | FieldType::DateTime => "string".to_string(),
+            FieldType::ObjectId | FieldType::String | FieldType::Date | FieldType::DateTime | FieldType::Decimal => "string".to_string(),
             FieldType::Bool => "boolean".to_string(),
             FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number".to_string(),
             FieldType::Enum(name) => name.to_string(),
