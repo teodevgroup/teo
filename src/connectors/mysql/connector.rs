@@ -5,11 +5,12 @@ use mysql_async::{Conn, Pool, Row, Value};
 use mysql_async::prelude::{Query, Queryable};
 use crate::connectors::mysql::mysql_column::MySQLColumn;
 use crate::connectors::mysql::mysql_index::{mysql_indices_from_rows, MySQLIndex};
-use crate::connectors::sql_shared::sql::{SQL, SQLColumnDef, SQLDialect, ToSQLString};
+use crate::connectors::sql_shared::sql::{SQL, SQLColumnDef, SQLDialect, SQLIndexColumn, SQLIndexDef, ToSQLString};
 use crate::connectors::sql_shared::table_create_statement;
 use crate::core::builders::graph_builder::GraphBuilder;
 use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::database_type::DatabaseType;
+use crate::core::field::Sort;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::object::Object;
@@ -76,7 +77,7 @@ impl MySQLConnector {
         let show_index = SQL::show().index_from(table_name).to_string(SQLDialect::MySQL);
         let rows: Vec<Row> = show_index.fetch(&mut *conn).await.unwrap();
         let indices = mysql_indices_from_rows(&rows);
-        let mut reviewedIndices: Vec<String> = Vec::new();
+        let mut reviewed_indices: Vec<String> = Vec::new();
         for index in &indices {
             if &index.key_name == "PRIMARY" {
                 continue;
@@ -89,7 +90,35 @@ impl MySQLConnector {
             } else {
                 let model_index = model_index.unwrap();
                 let sql_model_index: MySQLIndex = model_index.into();
-
+                if index != &sql_model_index {
+                    // alter this index, drop and create
+                    let drop = SQL::drop().index(&index.key_name).on(table_name).to_string(SQLDialect::MySQL);
+                    let _ = drop.ignore(&mut *conn).await;
+                    let create = SQL::create().index(&index.key_name).on(table_name)
+                        .columns(model_index.items.iter().map(|item| {
+                            let mut index = SQLIndexColumn::new(&item.field_name);
+                            if item.sort == Sort::Desc {
+                                index.desc();
+                            }
+                            index
+                        }).collect()).to_string(SQLDialect::MySQL);
+                    let _ = create.ignore(&mut *conn).await;
+                }
+            }
+            reviewed_indices.push(index.key_name.clone());
+        }
+        for model_index in &model.indices {
+            if !reviewed_indices.contains(&model_index.name) {
+                // create this index
+                let create = SQL::create().index(&model_index.name).on(table_name)
+                    .columns(model_index.items.iter().map(|item| {
+                        let mut index = SQLIndexColumn::new(&item.field_name);
+                        if item.sort == Sort::Desc {
+                            index.desc();
+                        }
+                        index
+                    }).collect()).to_string(SQLDialect::MySQL);
+                let _ = create.ignore(&mut *conn).await;
             }
         }
     }

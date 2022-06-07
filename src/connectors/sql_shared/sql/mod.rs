@@ -2,6 +2,60 @@ use crate::core::database_type::DatabaseType;
 use crate::core::field::{Field, Optionality};
 
 
+#[derive(PartialEq, Debug, Copy, Clone)]
+pub enum SQLIndexType {
+    Primary,
+    Index,
+    Unique
+}
+
+#[derive(PartialEq, Debug, Copy, Clone)]
+pub enum SQLIndexOrdering {
+    Asc,
+    Desc
+}
+
+#[derive(PartialEq, Debug, Clone)]
+pub struct SQLIndexColumn {
+    pub(crate) name: String,
+    pub(crate) ordering: SQLIndexOrdering,
+    pub(crate) length: Option<u16>,
+}
+
+impl SQLIndexColumn {
+    pub fn new(name: impl Into<String>) -> Self {
+        Self { name: name.into(), ordering: SQLIndexOrdering::Asc, length: None }
+    }
+
+    pub fn asc(&mut self) -> &mut Self {
+        self.ordering = SQLIndexOrdering::Asc;
+        self
+    }
+
+    pub fn desc(&mut self) -> &mut Self {
+        self.ordering = SQLIndexOrdering::Desc;
+        self
+    }
+}
+
+impl ToSQLString for SQLIndexColumn {
+    fn to_string(&self, _dialect: SQLDialect) -> String {
+        let name = &self.name;
+        let ordering = match self.ordering {
+            SQLIndexOrdering::Asc => " ASC",
+            SQLIndexOrdering::Desc => " DESC",
+        };
+        format!("{name}{ordering}")
+    }
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub struct SQLIndexDef {
+    pub(crate) name: String,
+    pub(crate) index_type: SQLIndexType,
+    pub(crate) columns: Vec<SQLIndexColumn>
+}
+
 #[derive(PartialEq, Clone)]
 pub struct SQLColumnDef {
     pub(crate) name: String,
@@ -165,6 +219,46 @@ impl ToSQLString for SQLCreateTableStatement {
     }
 }
 
+pub struct SQLCreateIndexOnStatement {
+    unique: bool,
+    index: String,
+    table: String,
+    columns: Vec<SQLIndexColumn>
+}
+
+impl SQLCreateIndexOnStatement {
+    pub fn column(&mut self, column: SQLIndexColumn) -> &mut Self {
+        self.columns.push(column);
+        self
+    }
+
+    pub fn columns(&mut self, columns: Vec<SQLIndexColumn>) -> &mut Self {
+        self.columns.extend(columns);
+        self
+    }
+}
+
+impl ToSQLString for SQLCreateIndexOnStatement {
+    fn to_string(&self, dialect: SQLDialect) -> String {
+        let unique = if self.unique { " UNIQUE" } else { "" };
+        let index = &self.index;
+        let table = &self.table;
+        let def = self.columns.iter().map(|c| c.to_string(dialect)).collect::<Vec<String>>().join(", ");
+        format!("CREATE{unique} INDEX `{index}` ON `{table}`({def})")
+    }
+}
+
+pub struct SQLCreateIndexStatement {
+    unique: bool,
+    index: String,
+}
+
+impl SQLCreateIndexStatement {
+    pub fn on(&self, table: impl Into<String>) -> SQLCreateIndexOnStatement {
+        SQLCreateIndexOnStatement { unique: self.unique, index: self.index.clone(), table: table.into(), columns: vec![] }
+    }
+}
+
 pub struct SQLDropTableStatement {
     table: String,
     if_exists: bool,
@@ -195,6 +289,14 @@ impl SQLCreateStatement {
 
     pub fn table(&self, table: impl Into<String>) -> SQLCreateTableStatement {
         SQLCreateTableStatement { table: table.into(), if_not_exists: false, columns: vec![] }
+    }
+
+    pub fn index(&self, index: impl Into<String>) -> SQLCreateIndexStatement {
+        SQLCreateIndexStatement { unique: false, index: index.into() }
+    }
+
+    pub fn unique_index(&self, index: impl Into<String>) -> SQLCreateIndexStatement {
+        SQLCreateIndexStatement { unique: true, index: index.into() }
     }
 }
 

@@ -19,6 +19,12 @@ pub(crate) struct MySQLIndexItem {
     pub(crate) collation: MySQLIndexItemCollation,
 }
 
+impl MySQLIndexItem {
+    pub fn new(column_name: impl Into<String>) -> Self {
+        MySQLIndexItem { column_name: column_name.into(), collation: MySQLIndexItemCollation::A }
+    }
+}
+
 #[derive(PartialEq)]
 pub struct MySQLIndex {
     pub(crate) non_unique: bool,
