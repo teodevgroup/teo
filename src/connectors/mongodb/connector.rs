@@ -4,19 +4,17 @@ use rust_decimal::prelude::FromStr;
 use std::sync::atomic::{Ordering};
 use serde_json::{Map, Value as JsonValue};
 use async_trait::async_trait;
-use bson::{Bson, DateTime as BsonDateTime, Decimal128, doc, Document, oid::ObjectId, Regex as BsonRegex};
+use bson::{Bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
 use chrono::{Date, NaiveDate, Utc, DateTime};
-use futures_util::{StreamExt, TryStreamExt};
+use futures_util::StreamExt;
 use mongodb::{options::ClientOptions, Client, Database, Collection, IndexModel};
 use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
-use mongodb::options::{CreateIndexOptions, DropDatabaseOptions, IndexOptions};
+use mongodb::options::{IndexOptions};
 use regex::Regex;
 use rust_decimal::Decimal;
-use crate::core::connector::{Connector, ConnectorBuilder};
+use crate::core::connector::Connector;
 use crate::core::object::Object;
-use crate::core::builders::graph_builder::GraphBuilder;
-use crate::core::database_type::DatabaseType;
-use crate::core::field::{Optionality, FieldIndex, Sort};
+use crate::core::field::Sort;
 use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::{Model, ModelIndex, ModelIndexType};
@@ -43,46 +41,52 @@ impl MongoDBConnector {
         for model in models {
             let name = model.name();
             let collection: Collection<Document> = database.collection(model.table_name());
-            let mut cursor = collection.list_indexes(None).await.unwrap();
             let mut reviewed_names: Vec<String> = Vec::new();
-            while let Some(Ok(index)) = cursor.next().await {
-                if index.keys == doc!{"_id": 1} {
-                    continue
-                }
-                let name = (&index).options.as_ref().unwrap().name.as_ref().unwrap();
-                let result = model.indices.iter().find(|i| &i.name == name);
-                if result.is_none() {
-                    // not in our model definition, but in the database
-                    // drop this index
-                    let _ = collection.drop_index(name, None).await.unwrap();
-                } else {
-                    let result = result.unwrap();
-                    let our_format_index: ModelIndex = (&index).into();
-                    if result != &our_format_index {
-                        // alter this index
-                        // drop first
-                        let _ = collection.drop_index(name, None).await.unwrap();
-                        // create index
-                        let index_options = IndexOptions::builder()
-                            .name(name.clone())
-                            .unique(result.index_type == ModelIndexType::Unique)
-                            .sparse(true)
-                            .build();
-                        let mut keys = doc!{};
-                        for item in &result.items {
-                            keys.insert(item.field_name.clone(), if item.sort == Sort::Asc { 1 } else { -1 });
-                        }
-                        let index_model = IndexModel::builder().keys(keys).options(index_options).build();
-                        let _ = collection.create_index(index_model, None).await;
+            let cursor_result = collection.list_indexes(None).await;
+            if cursor_result.is_ok() {
+                let mut cursor = cursor_result.unwrap();
+                while let Some(Ok(index)) = cursor.next().await {
+                    if index.keys == doc!{"_id": 1} {
+                        continue
                     }
+                    let name = (&index).options.as_ref().unwrap().name.as_ref().unwrap();
+                    println!("See index name in db: {}", name);
+                    println!("See index keys in db: {}", index.keys);
+                    let result = model.indices.iter().find(|i| &i.name == name);
+                    if result.is_none() {
+                        // not in our model definition, but in the database
+                        // drop this index
+                        let _ = collection.drop_index(name, None).await.unwrap();
+                    } else {
+                        let result = result.unwrap();
+                        let our_format_index: ModelIndex = (&index).into();
+                        if result != &our_format_index {
+                            // alter this index
+                            // drop first
+                            let _ = collection.drop_index(name, None).await.unwrap();
+                            // create index
+                            let index_options = IndexOptions::builder()
+                                .name(result.name.clone())
+                                .unique(result.index_type == ModelIndexType::Unique)
+                                .sparse(true)
+                                .build();
+                            let mut keys = doc!{};
+                            for item in &result.items {
+                                keys.insert(item.field_name.clone(), if item.sort == Sort::Asc { 1 } else { -1 });
+                            }
+                            let index_model = IndexModel::builder().keys(keys).options(index_options).build();
+                            let result = collection.create_index(index_model, None).await;
+                            println!("See result: {:?}", result)
+                        }
+                    }
+                    reviewed_names.push(name.clone());
                 }
-                reviewed_names.push(name.clone());
             }
             for index in &model.indices {
                 if !reviewed_names.contains(&index.name) {
                     // create this index
                     let index_options = IndexOptions::builder()
-                        .name(name.to_string())
+                        .name(index.name.clone())
                         .unique(index.index_type == ModelIndexType::Unique)
                         .sparse(true)
                         .build();
@@ -91,7 +95,8 @@ impl MongoDBConnector {
                         keys.insert(item.field_name.clone(), if item.sort == Sort::Asc { 1 } else { -1 });
                     }
                     let index_model = IndexModel::builder().keys(keys).options(index_options).build();
-                    let _ = collection.create_index(index_model, None).await;
+                    let result = collection.create_index(index_model, None).await;
+                    println!("See result: {:?}", result)
                 }
             }
             collections.insert(name, collection);
@@ -343,7 +348,7 @@ impl MongoDBConnector {
                     WriteFailure::WriteError(write_error) => {
                         match write_error.code {
                             11000 => {
-                                let regex = Regex::new(r"dup key: \{ (.+):").unwrap();
+                                let regex = Regex::new(r"dup key: \{ (.+?):").unwrap();
                                 let match_result = regex.captures(write_error.message.as_str()).unwrap().get(1);
                                 return ActionError::unique_value_duplicated(match_result.unwrap().as_str())
                             }
@@ -952,7 +957,7 @@ impl MongoDBConnector {
     fn has_i_mode(&self, map: &Map<String, JsonValue>) -> bool {
         match map.get("mode") {
             Some(val) => {
-                if (val.is_string()) {
+                if val.is_string() {
                     return val.as_str().unwrap() == "caseInsensitive"
                 } else {
                     false

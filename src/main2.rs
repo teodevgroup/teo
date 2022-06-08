@@ -13,7 +13,7 @@
 //         g.model("MyUser", |m| {
 //             m.table_name("myusers");
 //             m.field("id", |f| {
-//                 f.required().primary().readonly().object_id().column_name("_id").auto();
+//                 f.primary().required().readonly().object_id().column_name("_id").auto();
 //             });
 //             m.field("name", |f| {
 //                 f.required().string().default("Bson").db(|d| d.var_char(20).collation("d"));
@@ -42,7 +42,7 @@
 //             m.localized_name("短信验证码");
 //             m.description("用于用户登录或者修改手机号码的短信验证码。");
 //             m.field("id", |f| {
-//                 f.required().primary().readonly().object_id().column_name("_id").auto();
+//                 f.primary().required().readonly().object_id().column_name("_id").auto();
 //             });
 //             m.field("phoneNo", |f| {
 //                 f.localized_name("电话号码");
@@ -77,7 +77,7 @@
 //             m.description("在前端平台登录的用户。");
 //             m.identity();
 //             m.field("id", |f| {
-//                 f.required().primary().readonly().object_id().column_name("_id").auto();
+//                 f.primary().required().readonly().object_id().column_name("_id").auto();
 //             });
 //             m.field("authCode", |f| {
 //                 f.localized_name("短信验证码");
@@ -131,7 +131,7 @@
 //             m.localized_name("文章");
 //             m.description("用户所写的文章。");
 //             m.field("id", |f| {
-//                 f.required().primary().readonly().object_id().column_name("_id").auto();
+//                 f.primary().required().readonly().object_id().column_name("_id").auto();
 //             });
 //             m.field("title", |f| {
 //                 f.localized_name("文章标题");
@@ -157,7 +157,7 @@
 //             m.localized_name("管理员");
 //             m.description("在管理平台登录的公司内部的管理员。");
 //             m.field("id", |f| {
-//                 f.required().primary().readonly().object_id().column_name("_id").auto();
+//                 f.primary().required().readonly().object_id().column_name("_id").auto();
 //             });
 //             m.field("email", |f| {
 //                 f.unique().required().string().auth_identity().on_save(|p| {

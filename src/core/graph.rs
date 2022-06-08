@@ -34,6 +34,9 @@ impl Graph {
     pub async fn new<'a, F: Fn(&mut GraphBuilder)>(build: F) -> Graph {
         let mut builder = GraphBuilder::new();
         build(&mut builder);
+        if builder.host_url.is_none() {
+            panic!("Graph must have a host url.");
+        }
         let mut graph = Graph {
             enums: builder.enums.clone(),
             models_vec: Vec::new(),

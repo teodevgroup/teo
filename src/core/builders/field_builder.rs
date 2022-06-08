@@ -1,8 +1,4 @@
-use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
-use crate::action::action::ActionType;
-use crate::core::argument::{Argument, FnArgument};
-use crate::core::argument::Argument::{PipelineArgument, ValueArgument};
+use crate::core::argument::Argument;
 use crate::core::builders::database_type_builder::DatabaseTypeBuilder;
 use crate::core::builders::field_index_builder::FieldIndexBuilder;
 use crate::core::builders::permission_builder::PermissionBuilder;
@@ -11,8 +7,6 @@ use crate::core::connector::{ConnectorBuilder};
 use crate::core::database_type::DatabaseType;
 use crate::core::field::*;
 use crate::core::field_type::FieldType;
-use crate::core::pipeline::Pipeline;
-use crate::core::value::Value;
 
 
 pub struct FieldBuilder {

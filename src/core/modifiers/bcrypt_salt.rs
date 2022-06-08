@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use bcrypt::{DEFAULT_COST, hash, verify};
+use bcrypt::{DEFAULT_COST, hash};
 use crate::core::modifier::Modifier;
 use crate::core::value::Value;
 use crate::core::object::Object;

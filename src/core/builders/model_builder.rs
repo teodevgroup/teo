@@ -252,6 +252,10 @@ impl ModelBuilder {
             }
         }
 
+        if primary.is_none() {
+            panic!("Model '{}' must has a primary field.", self.name);
+        }
+
         Model {
             name: self.name,
             table_name: if self.table_name == "" { self.name.to_lowercase().to_plural() } else { self.table_name.to_string() },
@@ -263,8 +267,8 @@ impl ModelBuilder {
             permission: if let Some(builder) = &self.permission { Some(builder.build()) } else { None },
             fields_vec,
             fields_map,
-            primary: self.primary.as_ref().unwrap().clone(),
-            indices: self.indices.clone(),
+            primary: primary.unwrap(),
+            indices: indices.clone(),
             primary_field,
             index_fields,
             input_keys,

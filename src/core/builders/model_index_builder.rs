@@ -1,4 +1,4 @@
-use crate::core::field::{IndexSettings, Sort};
+use crate::core::field::Sort;
 use crate::core::model::{ModelIndex, ModelIndexItem, ModelIndexType};
 
 
