@@ -1,5 +1,5 @@
 #[cfg(feature = "data-source-mongodb")]
-use crate::connectors::mongodb::MongoDBConnectorBuilder;
+use crate::connectors::mongodb::connector_builder::MongoDBConnectorBuilder;
 #[cfg(feature = "data-source-mysql")]
 use crate::connectors::mysql::connector_builder::MySQLConnectorBuilder;
 #[cfg(feature = "data-source-postgres")]

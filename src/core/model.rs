@@ -12,14 +12,14 @@ pub enum ModelIndexType {
     Unique,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ModelIndexItem {
     pub(crate) field_name: String,
     pub(crate) sort: Sort,
     pub(crate) len: Option<usize>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ModelIndex {
     pub(crate) index_type: ModelIndexType,
     pub(crate) name: String,
