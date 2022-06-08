@@ -50,8 +50,6 @@ impl MongoDBConnector {
                         continue
                     }
                     let name = (&index).options.as_ref().unwrap().name.as_ref().unwrap();
-                    println!("See index name in db: {}", name);
-                    println!("See index keys in db: {}", index.keys);
                     let result = model.indices.iter().find(|i| &i.name == name);
                     if result.is_none() {
                         // not in our model definition, but in the database
@@ -76,7 +74,6 @@ impl MongoDBConnector {
                             }
                             let index_model = IndexModel::builder().keys(keys).options(index_options).build();
                             let result = collection.create_index(index_model, None).await;
-                            println!("See result: {:?}", result)
                         }
                     }
                     reviewed_names.push(name.clone());
@@ -96,7 +93,6 @@ impl MongoDBConnector {
                     }
                     let index_model = IndexModel::builder().keys(keys).options(index_options).build();
                     let result = collection.create_index(index_model, None).await;
-                    println!("See result: {:?}", result)
                 }
             }
             collections.insert(name, collection);

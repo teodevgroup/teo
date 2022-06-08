@@ -32,6 +32,9 @@ bson = { version = "2.2", features = ["chrono-0_4", "serde_with"], optional = tr
 rust_decimal = "1.24"
 rust_decimal_macros = "1.24"
 
+[dev-dependencies]
+serial_test = "0.7.0"
+
 [features]
 data-source-mongodb = ["mongodb", "bson"]
 data-source-mysql = ["mysql_async"]

@@ -3,6 +3,7 @@ use futures_util::StreamExt;
 use mongodb::{Client, Collection};
 use mongodb::options::ClientOptions;
 use tokio::test;
+use serial_test::serial;
 use teo::core::graph::Graph;
 use teo::core::value::Value;
 use teo::error::ActionError;
@@ -75,9 +76,8 @@ async fn make_mongodb_graph() -> &'static Graph {
     graph
 }
 
-
-
 #[test]
+#[serial]
 async fn unique_value_cannot_have_duplications_on_create() {
     let graph = make_mongodb_graph().await;
     let object1 = graph.new_object("UniqueIndex");
@@ -90,6 +90,7 @@ async fn unique_value_cannot_have_duplications_on_create() {
 }
 
 #[test]
+#[serial]
 async fn unique_sparse_value_cannot_have_duplications_on_create() {
     let graph = make_mongodb_graph().await;
     let object1 = graph.new_object("UniqueSparseIndex");
@@ -102,6 +103,7 @@ async fn unique_sparse_value_cannot_have_duplications_on_create() {
 }
 
 #[test]
+#[serial]
 async fn unique_value_cannot_have_duplications_on_update() {
     let graph = make_mongodb_graph().await;
     let object1 = graph.new_object("UniqueIndex");
@@ -116,6 +118,7 @@ async fn unique_value_cannot_have_duplications_on_update() {
 }
 
 #[test]
+#[serial]
 async fn unique_sparse_value_cannot_have_duplications_on_update() {
     let graph = make_mongodb_graph().await;
     let object1 = graph.new_object("UniqueSparseIndex");
@@ -130,18 +133,20 @@ async fn unique_sparse_value_cannot_have_duplications_on_update() {
 }
 
 #[test]
+#[serial]
 async fn unique_sparse_value_can_have_duplicated_nulls() {
     let graph = make_mongodb_graph().await;
     let object1 = graph.new_object("UniqueSparseIndex");
     let _ = object1.save().await;
     let object2 = graph.new_object("UniqueSparseIndex");
     let result = object2.save().await;
+    println!("see here result: {:?}", result);
     assert_eq!(result.ok(), Some(()));
 }
 
 #[test]
+#[serial]
 async fn index_field_is_indexed() {
-    let _graph = make_mongodb_graph().await;
     let options = make_client_options().await;
     let client = Client::with_options(options).unwrap();
     let database = client.default_database().unwrap();
@@ -159,8 +164,8 @@ async fn index_field_is_indexed() {
 }
 
 #[test]
+#[serial]
 async fn sparse_index_field_is_sparse_indexed() {
-    let _graph = make_mongodb_graph().await;
     let options = make_client_options().await;
     let client = Client::with_options(options).unwrap();
     let database = client.default_database().unwrap();
@@ -178,6 +183,7 @@ async fn sparse_index_field_is_sparse_indexed() {
 }
 
 #[test]
+#[serial]
 async fn multiple_unique_index_should_allow_non_unique_value_on_1_field() {
     let graph = make_mongodb_graph().await;
     let object1 = graph.new_object("CompoundUnique");
@@ -192,6 +198,7 @@ async fn multiple_unique_index_should_allow_non_unique_value_on_1_field() {
 }
 
 #[test]
+#[serial]
 async fn multiple_unique_index_should_not_allow_non_unique_value_on_all_fields() {
     let graph = make_mongodb_graph().await;
     let object1 = graph.new_object("CompoundUnique");
