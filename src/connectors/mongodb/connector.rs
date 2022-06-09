@@ -1107,7 +1107,9 @@ impl Connector for MongoDBConnector {
                     None => Bson::Null,
                     Some(v) => v.to_bson_value()
                 };
-                doc.insert(&key, json_val);
+                if json_val != Bson::Null {
+                    doc.insert(&key, json_val);
+                }
             }
             let result = col.insert_one(doc, None).await;
             match result {
@@ -1130,6 +1132,7 @@ impl Connector for MongoDBConnector {
                 object.inner.value_map.borrow().get("__id").unwrap().to_bson_value()
             };
             let mut set = doc!{};
+            let mut unset = doc!{};
             for key in &keys {
                 let val = object.get_value(key).unwrap();
                 let json_val = match val {
@@ -1143,15 +1146,23 @@ impl Connector for MongoDBConnector {
                                 set.insert("_id", json_val);
                             }
                         } else {
-                            set.insert(key, json_val);
+                            if json_val == Bson::Null {
+                                unset.insert(key, json_val);
+                            } else {
+                                set.insert(key, json_val);
+                            }
                         }
                     }
                     None => {
-                        set.insert(key, json_val);
+                        if json_val == Bson::Null {
+                            unset.insert(key, json_val);
+                        } else {
+                            set.insert(key, json_val);
+                        }
                     }
                 }
             }
-            let result = col.update_one(doc!{"_id": object_id}, doc!{"$set": set}, None).await;
+            let result = col.update_one(doc!{"_id": object_id}, doc!{"$set": set, "$unset": unset}, None).await;
             return match result {
                 Ok(update_result) => {
                     Ok(())

@@ -184,6 +184,17 @@ async fn sparse_index_field_is_sparse_indexed() {
 
 #[test]
 #[serial]
+async fn multiple_unique_index_should_allow_null_on_all_fields() {
+    let graph = make_mongodb_graph().await;
+    let object1 = graph.new_object("CompoundUnique");
+    let _ = object1.save().await;
+    let object2 = graph.new_object("CompoundUnique");
+    let result = object2.save().await;
+    assert_eq!(result.ok(), Some(()));
+}
+
+#[test]
+#[serial]
 async fn multiple_unique_index_should_allow_non_unique_value_on_1_field() {
     let graph = make_mongodb_graph().await;
     let object1 = graph.new_object("CompoundUnique");
