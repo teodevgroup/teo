@@ -12,7 +12,9 @@ use actix_web::{test, web, App, error::Error};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use regex::Regex;
 use serde_json::{json, Value as JsonValue};
+use serde_json::ser::Compound::Map;
 use teo::server::server::Server;
+use crate::helpers::is_object_id;
 
 
 async fn make_mongodb_graph() -> &'static Graph {
@@ -52,7 +54,7 @@ async fn make_app() -> App<impl ServiceFactory<
 
 #[test]
 #[serial]
-async fn create_works() {
+async fn create_with_valid_data_creates_entry() {
     let app = test::init_service(make_app().await).await;
     let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
@@ -66,11 +68,35 @@ async fn create_works() {
     let body_json: JsonValue = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("errors"), None);
     let body_data = body_obj.get("data").unwrap().as_object().unwrap();
     assert_eq!(body_data.get("uniqueString").unwrap(), &JsonValue::String("1".to_string()));
     assert_eq!(body_data.get("requiredString").unwrap(), &JsonValue::String("1".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
-    assert_eq!(id_str.len(), 24);
-    let id_regex = Regex::new("[\\da-f]{24}").unwrap();
-    assert!(id_regex.is_match(id_str))
+    assert!(is_object_id(id_str))
+}
+
+#[test]
+#[serial]
+async fn create_with_required_field_omitted_cannot_create() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "uniqueString": "1",
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_client_error());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("data"), None);
+    let body_error = body_obj.get("error").unwrap().as_object().unwrap();
+    assert_eq!(body_error.get("type").unwrap().as_str().unwrap(), "ValidationError");
+    assert_eq!(body_error.get("message").unwrap().as_str().unwrap(), "Value is required.");
+    let body_error_errors = body_error.get("errors").unwrap();
+    assert_eq!(body_error_errors, &json!({
+        "requiredString": "Value is required."
+    }));
 }
