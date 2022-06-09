@@ -48,7 +48,7 @@ pub(crate) struct Model {
     pub(crate) output_keys: Vec<String>,
     pub(crate) get_value_keys: Vec<String>,
     pub(crate) query_keys: Vec<String>,
-    pub(crate) unique_query_keys: Vec<String>,
+    pub(crate) unique_query_keys: Vec<HashSet<String>>,
     pub(crate) auth_identity_keys: Vec<String>,
     pub(crate) auth_by_keys: Vec<String>,
 }
@@ -131,7 +131,7 @@ impl Model {
         &self.query_keys
     }
 
-    pub(crate) fn unique_query_keys(&self) -> &Vec<String> {
+    pub(crate) fn unique_query_keys(&self) -> &Vec<HashSet<String>> {
         &self.unique_query_keys
     }
 

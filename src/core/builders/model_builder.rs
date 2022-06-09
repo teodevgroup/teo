@@ -193,7 +193,6 @@ impl ModelBuilder {
         let output_keys = Self::allowed_output_keys(self);
         let get_value_keys = Self::get_get_value_keys(self);
         let query_keys = Self::get_query_keys(self);
-        let unique_query_keys = Self::get_unique_query_keys(self);
         let auth_identity_keys = Self::get_auth_identity_keys(self);
         let auth_by_keys = Self::get_auth_by_keys(self);
         let fields_vec: Vec<Field> = self.field_builders.iter().map(|fb| { fb.build(connector_builder) }).collect();
@@ -212,7 +211,7 @@ impl ModelBuilder {
                     name: "".to_string(),
                     items: vec![
                         ModelIndexItem {
-                            field_name: field.column_name().clone(),
+                            field_name: field.name.clone(),
                             sort: Sort::Asc,
                             len: None
                         }
@@ -225,10 +224,10 @@ impl ModelBuilder {
                     FieldIndex::Index(settings) => {
                         indices.push(ModelIndex {
                             index_type: ModelIndexType::Index,
-                            name: if settings.name.is_some() { settings.name.as_ref().unwrap().clone() } else { field.column_name().clone() },
+                            name: if settings.name.is_some() { settings.name.as_ref().unwrap().clone() } else { field.name.clone() },
                             items: vec![
                                 ModelIndexItem {
-                                    field_name: field.column_name().clone(),
+                                    field_name: field.name.clone(),
                                     sort: settings.sort,
                                     len: settings.length
                                 }
@@ -238,10 +237,10 @@ impl ModelBuilder {
                     FieldIndex::Unique(settings) => {
                         indices.push(ModelIndex {
                             index_type: ModelIndexType::Unique,
-                            name: if settings.name.is_some() { settings.name.as_ref().unwrap().clone() } else { field.column_name().clone() },
+                            name: if settings.name.is_some() { settings.name.as_ref().unwrap().clone() } else { field.name.clone() },
                             items: vec![
                                 ModelIndexItem {
-                                    field_name: field.column_name().clone(),
+                                    field_name: field.name.clone(),
                                     sort: settings.sort,
                                     len: settings.length
                                 }
@@ -256,6 +255,8 @@ impl ModelBuilder {
         if primary.is_none() {
             panic!("Model '{}' must has a primary field.", self.name);
         }
+
+        let unique_query_keys = Self::get_unique_query_keys(self, &indices, primary.as_ref().unwrap());
 
         Model {
             name: self.name,
@@ -322,11 +323,16 @@ impl ModelBuilder {
             .collect()
     }
 
-    pub(crate) fn get_unique_query_keys(&self) -> Vec<String> {
-        self.field_builders.iter()
-            //.filter(|&f| { f.query_ability == QueryAbility::Queryable && (f.index == FieldIndex::Unique || f.primary == true) })
-            .map(|f| { f.name.clone() })
-            .collect()
+    pub(crate) fn get_unique_query_keys(&self, indices: &Vec<ModelIndex>, primary: &ModelIndex) -> Vec<HashSet<String>> {
+        let mut result: Vec<HashSet<String>> = Vec::new();
+        for index in indices {
+            let set = HashSet::from_iter(index.items.iter().map(|i| {
+                i.field_name.clone()
+            }));
+            result.push(set);
+        }
+        result.push(HashSet::from_iter(primary.items.iter().map(|i| i.field_name.clone())));
+        result
     }
 
     pub(crate) fn get_auth_identity_keys(&self) -> Vec<String> {

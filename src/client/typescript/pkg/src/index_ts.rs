@@ -56,12 +56,12 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                 })
             }, "}");
             c.block(format!("export type {model_name}WhereUniqueInput = {{"), |b| {
-                m.unique_query_keys().iter().for_each(|k| {
-                    let field = m.field(k).unwrap();
-                    let field_name = &field.name;
-                    let field_ts_type = field.field_type.to_typescript_type(field.optionality == Optionality::Optional);
-                    b.line("{field_name}?: {field_ts_type}");
-                })
+                // m.unique_query_keys().iter().for_each(|k| {
+                //     let field = m.field(k).unwrap();
+                //     let field_name = &field.name;
+                //     let field_ts_type = field.field_type.to_typescript_type(field.optionality == Optionality::Optional);
+                //     b.line("{field_name}?: {field_ts_type}");
+                // })
             }, "}");
             c.block(format!("export type {model_name}OrderByInput = {{"), |b| {
                 m.query_keys().iter().for_each(|k| {

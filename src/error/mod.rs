@@ -277,10 +277,10 @@ impl ActionError {
         }
     }
 
-    pub fn field_is_not_unique(key: &str) -> Self {
+    pub fn field_is_not_unique() -> Self {
         ActionError {
             r#type: ActionErrorType::FieldIsNotUnique,
-            message: format!("Field '{key}' is not unique."),
+            message: format!("Unique where input is not unique."),
             errors: None
         }
     }

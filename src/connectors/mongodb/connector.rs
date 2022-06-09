@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug};
 use rust_decimal::prelude::FromStr;
 use std::sync::atomic::{Ordering};
@@ -19,7 +19,7 @@ use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::{Model, ModelIndex, ModelIndexType};
 use crate::core::value::Value;
-use crate::error::{ActionError, ActionErrorType};
+use crate::error::ActionError;
 
 
 #[derive(Debug)]
@@ -70,7 +70,9 @@ impl MongoDBConnector {
                                 .build();
                             let mut keys = doc!{};
                             for item in &result.items {
-                                keys.insert(item.field_name.clone(), if item.sort == Sort::Asc { 1 } else { -1 });
+                                let field = model.field(&item.field_name).unwrap();
+                                let column_name = field.column_name.as_ref().unwrap();
+                                keys.insert(column_name, if item.sort == Sort::Asc { 1 } else { -1 });
                             }
                             let index_model = IndexModel::builder().keys(keys).options(index_options).build();
                             let result = collection.create_index(index_model, None).await;
@@ -89,7 +91,9 @@ impl MongoDBConnector {
                         .build();
                     let mut keys = doc!{};
                     for item in &index.items {
-                        keys.insert(item.field_name.clone(), if item.sort == Sort::Asc { 1 } else { -1 });
+                        let field = model.field(&item.field_name).unwrap();
+                        let column_name = field.column_name();
+                        keys.insert(column_name, if item.sort == Sort::Asc { 1 } else { -1 });
                     }
                     let index_model = IndexModel::builder().keys(keys).options(index_options).build();
                     let result = collection.create_index(index_model, None).await;
@@ -1206,49 +1210,44 @@ impl Connector for MongoDBConnector {
             return Err(ActionError::wrong_json_format());
         }
         let values = r#where.as_object().unwrap();
-        // only allow single key for now
-        if values.len() != 1 {
-            return Err(ActionError::wrong_json_format());
-        }
         // see if key is valid
-        let key = values.keys().next().unwrap();
-        if !model.unique_query_keys().contains(&key) {
-            return Err(ActionError::field_is_not_unique(key))
+        let set_vec: Vec<String> = values.keys().map(|k| k.clone()).collect();
+        let set = HashSet::from_iter(set_vec.iter().map(|k| k.clone()));
+        if !model.unique_query_keys().contains(&set) {
+            return Err(ActionError::field_is_not_unique())
         }
         // cast value
-        let value = values.values().next().unwrap();
-        let field = model.field(key).unwrap();
-        let query_key = if field.primary { "_id" } else { key };
-        let decode_result = field.field_type.decode_value(value, graph);
-        match decode_result {
-            Ok(value) => {
-                let col = &self.collections[model.name()];
-                let find_result = col.find_one(doc!{query_key: value.to_bson_value()}, None).await;
-                match find_result {
-                    Ok(document_option) => {
-                        match document_option {
-                            Some(document) => {
-                                let mut object = graph.new_object(model.name());
-                                self.document_to_object(&document, &mut object);
-                                return Ok(object);
-                            }
-                            None => {
-                                return Err(ActionError::object_not_found())
-                            }
-                        }
+        let mut query_doc = doc!{};
+        for (key, value) in values {
+            let field = model.field(key).unwrap();
+            let query_key = field.column_name();
+            let decode_result = field.field_type.decode_value(value, graph);
+            match decode_result {
+                Ok(value) => {
+                    query_doc.insert(query_key, value.to_bson_value());
+                }
+                Err(err) => {
+                    return Err(err);
+                }
+            }
+        }
+        let col = &self.collections[model.name()];
+        let find_result = col.find_one(query_doc, None).await;
+        match find_result {
+            Ok(document_option) => {
+                match document_option {
+                    Some(document) => {
+                        let mut object = graph.new_object(model.name());
+                        self.document_to_object(&document, &mut object);
+                        return Ok(object);
                     }
-                    Err(err) => {
-                        return Err(ActionError::unknown_database_find_unique_error());
+                    None => {
+                        return Err(ActionError::object_not_found())
                     }
                 }
             }
             Err(err) => {
-                match err.r#type {
-                    ActionErrorType::WrongEnumChoice => {
-                        Err(ActionError::unexpected_enum_value(key))
-                    },
-                    _ => Err(err)
-                }
+                return Err(ActionError::unknown_database_find_unique_error());
             }
         }
     }
