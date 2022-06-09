@@ -2,6 +2,7 @@ use uuid::Uuid;
 use teo::core::builders::pipeline_builder::PipelineBuilder;
 use teo::core::graph::Graph;
 use tokio::main;
+use teo::server::server::Server;
 
 
 async fn make_graph() -> &'static Graph {
@@ -209,6 +210,6 @@ async fn make_graph() -> &'static Graph {
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     let graph = make_graph().await;
-    // graph.generate_packages().await
-    graph.start_server(5000).await
+    let server = Box::leak(Box::new(Server::new(graph)));
+    server.start(5000).await
 }
