@@ -187,6 +187,7 @@ impl ModelBuilder {
     }
 
     pub(crate) fn build(&self, connector_builder: &Box<dyn ConnectorBuilder>) -> Model {
+        let all_keys = Self::all_keys(self);
         let input_keys = Self::allowed_input_keys(self);
         let save_keys = Self::allowed_save_keys(self);
         let output_keys = Self::allowed_output_keys(self);
@@ -271,6 +272,7 @@ impl ModelBuilder {
             indices: indices.clone(),
             primary_field,
             index_fields,
+            all_keys,
             input_keys,
             save_keys,
             output_keys,
@@ -280,6 +282,10 @@ impl ModelBuilder {
             auth_identity_keys,
             auth_by_keys
         }
+    }
+
+    fn all_keys(&self) -> Vec<String> {
+        self.field_builders.iter().map(|f| f.name.clone()).collect()
     }
 
     fn allowed_input_keys(&self) -> Vec<String> {

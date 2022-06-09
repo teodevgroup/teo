@@ -11,7 +11,7 @@ use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::stage::Stage;
 use crate::core::value::Value;
-use crate::error::ActionError;
+use crate::error::{ActionError, ActionErrorType};
 
 
 #[derive(Clone)]
@@ -187,21 +187,22 @@ impl Object {
     }
 
     async fn set_or_update_json(&self, json_value: &JsonValue, process: bool) -> Result<(), ActionError> {
-        let json_object = json_value.as_object().unwrap().clone();
+        let json_object = json_value.as_object().unwrap();
         // check keys first
-        let json_keys: Vec<String> = json_object.keys().map(|k| { k.clone() }).collect();
-        let model_keys = if process {
-            self.inner.model.input_keys()
+        let json_keys: Vec<&String> = json_object.keys().map(|k| { k }).collect();
+        let allowed_keys = if process {
+            self.inner.model.input_keys().iter().map(|k| k).collect::<Vec<&String>>()
         } else {
-            self.inner.model.save_keys()
+            self.inner.model.save_keys().iter().map(|k| k).collect::<Vec<&String>>()
         };
-        let keys_valid = json_keys.iter().all(|item| model_keys.contains(&item.to_string() ));
+        let keys_valid = json_keys.iter().all(|item| allowed_keys.contains(item ));
         if !keys_valid {
             return Err(ActionError::keys_unallowed());
         }
+        let all_model_keys = self.inner.model.all_keys().iter().map(|k| k).collect::<Vec<&String>>();
         // assign values
         let initialized = self.inner.is_initialized.load(Ordering::SeqCst);
-        let keys_to_iterate = if initialized { &json_keys } else { model_keys };
+        let keys_to_iterate = if initialized { &json_keys } else { &all_model_keys };
         for key in keys_to_iterate {
             let field = self.inner.model.field(&key);
             let json_has_value = if initialized { true } else {
@@ -213,7 +214,14 @@ impl Object {
                 let mut value;
                 match value_result {
                     Ok(v) => { value = v }
-                    Err(e) => { return Err(e) }
+                    Err(e) => {
+                        match e.r#type {
+                            ActionErrorType::WrongEnumChoice => {
+                                return Err(ActionError::unexpected_enum_value(*key))
+                            }
+                            _ => return Err(e)
+                        }
+                    }
                 }
                 if process {
                     // pipeline
@@ -236,7 +244,7 @@ impl Object {
                 }
                 if value == Value::Null {
                     if self.inner.is_new.load(Ordering::SeqCst) == false {
-                        self.inner.value_map.borrow_mut().remove(key);
+                        self.inner.value_map.borrow_mut().remove(*key);
                     }
                 } else {
                     self.inner.value_map.borrow_mut().insert(key.to_string(), value);

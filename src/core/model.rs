@@ -42,6 +42,7 @@ pub(crate) struct Model {
     pub(crate) primary: ModelIndex,
     pub(crate) primary_field: * const Field,
     pub(crate) index_fields: Vec<* const Field>,
+    pub(crate) all_keys: Vec<String>,
     pub(crate) input_keys: Vec<String>,
     pub(crate) save_keys: Vec<String>,
     pub(crate) output_keys: Vec<String>,
@@ -107,6 +108,8 @@ impl Model {
     pub(crate) fn index_fields(&self) -> Vec<&Field> {
         self.index_fields.iter().map(|f| { unsafe { &**f } }).collect()
     }
+
+    pub(crate) fn all_keys(&self) -> &Vec<String> { &self.all_keys }
 
     pub(crate) fn input_keys(&self) -> &Vec<String> {
         &self.input_keys

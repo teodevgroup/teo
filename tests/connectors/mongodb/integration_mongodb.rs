@@ -11,7 +11,7 @@ use teo::error::ActionError;
 use actix_web::{test, web, App, error::Error};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use regex::Regex;
-use serde_json::{json, Value as JsonValue};
+use serde_json::{json, Number, Value as JsonValue};
 use serde_json::ser::Compound::Map;
 use teo::server::server::Server;
 use crate::helpers::is_object_id;
@@ -21,6 +21,7 @@ async fn make_mongodb_graph() -> &'static Graph {
     let graph = Box::leak(Box::new(Graph::new(|g| {
         g.data_source().mongodb("mongodb://localhost:27017/teotestintegration");
         g.reset_database();
+        g.r#enum("Sex", vec!["MALE", "FEMALE"]);
         g.model("Simple", |m| {
             m.field("id", |f| {
                 f.primary().required().readonly().object_id().column_name("_id").auto();
@@ -33,6 +34,18 @@ async fn make_mongodb_graph() -> &'static Graph {
             });
             m.field("optionalString", |f| {
                 f.optional().string();
+            });
+            m.field("optionalEnum", |f| {
+                f.optional().r#enum("Sex");
+            });
+            m.field("requiredWithDefault", |f| {
+                f.required().i8().default(2);
+            });
+            m.field("readonly", |f| {
+                f.readonly().required().bool().default(true);
+            });
+            m.field("writeonly", |f| {
+                f.writeonly().required().bool().default(false);
             });
         });
         g.host_url("http://www.example.com");
@@ -99,4 +112,209 @@ async fn create_with_required_field_omitted_cannot_create() {
     assert_eq!(body_error_errors, &json!({
         "requiredString": "Value is required."
     }));
+}
+
+#[test]
+#[serial]
+async fn create_with_duplicated_unique_value_cannot_create() {
+    let app = test::init_service(make_app().await).await;
+    let req1 = test::TestRequest::post().uri("/simples/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "uniqueString": "1",
+            "requiredString": "1"
+        }
+    })).to_request();
+    let req2 = test::TestRequest::post().uri("/simples/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "uniqueString": "1",
+            "requiredString": "1"
+        }
+    })).to_request();
+    let _: ServiceResponse = test::call_service(&app, req1).await;
+    let resp: ServiceResponse = test::call_service(&app, req2).await;
+    assert!(resp.status().is_client_error());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("data"), None);
+    let body_error = body_obj.get("error").unwrap().as_object().unwrap();
+    assert_eq!(body_error.get("type").unwrap().as_str().unwrap(), "ValidationError");
+    assert_eq!(body_error.get("message").unwrap().as_str().unwrap(), "Input is not valid.");
+    let body_error_errors = body_error.get("errors").unwrap();
+    assert_eq!(body_error_errors, &json!({
+        "uniqueString": "Unique value duplicated."
+    }));
+}
+
+#[test]
+#[serial]
+async fn create_with_optional_data_creates_entry() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "uniqueString": "1",
+            "requiredString": "1",
+            "optionalString": "1"
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("errors"), None);
+    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    assert_eq!(body_data.get("uniqueString").unwrap(), &JsonValue::String("1".to_string()));
+    assert_eq!(body_data.get("requiredString").unwrap(), &JsonValue::String("1".to_string()));
+    assert_eq!(body_data.get("optionalString").unwrap(), &JsonValue::String("1".to_string()));
+    let id_str = body_data.get("id").unwrap().as_str().unwrap();
+    assert!(is_object_id(id_str))
+}
+
+#[test]
+#[serial]
+async fn create_with_correct_enum_value_creates_entry() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "uniqueString": "1",
+            "requiredString": "1",
+            "optionalEnum": "MALE"
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("errors"), None);
+    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    assert_eq!(body_data.get("uniqueString").unwrap(), &JsonValue::String("1".to_string()));
+    assert_eq!(body_data.get("requiredString").unwrap(), &JsonValue::String("1".to_string()));
+    assert_eq!(body_data.get("optionalEnum").unwrap(), &JsonValue::String("MALE".to_string()));
+    let id_str = body_data.get("id").unwrap().as_str().unwrap();
+    assert!(is_object_id(id_str))
+}
+
+#[test]
+#[serial]
+async fn create_with_invalid_enum_choice_value_cannot_create() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "uniqueString": "1",
+            "requiredString": "1",
+            "optionalEnum": "PUCK"
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_client_error());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("data"), None);
+    let body_error = body_obj.get("error").unwrap().as_object().unwrap();
+    assert_eq!(body_error.get("type").unwrap().as_str().unwrap(), "ValidationError");
+    assert_eq!(body_error.get("message").unwrap().as_str().unwrap(), "Enum value is unexpected.");
+    let body_error_errors = body_error.get("errors").unwrap();
+    assert_eq!(body_error_errors, &json!({
+        "optionalEnum": "Enum value is unexpected."
+    }));
+}
+
+#[test]
+#[serial]
+async fn create_with_required_omitted_but_default_can_create() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "uniqueString": "1",
+            "requiredString": "1"
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("errors"), None);
+    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    assert_eq!(body_data.get("requiredWithDefault").unwrap(), &JsonValue::Number(Number::from(2)));
+    let id_str = body_data.get("id").unwrap().as_str().unwrap();
+    assert!(is_object_id(id_str))
+}
+
+#[test]
+#[serial]
+async fn create_default_field_use_provided_value_if_exists() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "uniqueString": "1",
+            "requiredString": "1",
+            "requiredWithDefault": 8
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("errors"), None);
+    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    assert_eq!(body_data.get("requiredWithDefault").unwrap(), &JsonValue::Number(Number::from(8)));
+    let id_str = body_data.get("id").unwrap().as_str().unwrap();
+    assert!(is_object_id(id_str))
+}
+
+#[test]
+#[serial]
+async fn create_cannot_accept_readonly_value() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "uniqueString": "1",
+            "requiredString": "1",
+            "readonly": false,
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_client_error());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("data"), None);
+    let body_error = body_obj.get("error").unwrap().as_object().unwrap();
+    assert_eq!(body_error.get("type").unwrap().as_str().unwrap(), "KeysUnallowed");
+    assert_eq!(body_error.get("message").unwrap().as_str().unwrap(), "Unallowed keys detected.");
+}
+
+#[test]
+#[serial]
+async fn wont_output_writeonly_value() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "uniqueString": "2",
+            "requiredString": "2",
+            "writeonly": true,
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("error"), None);
+    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    assert_eq!(body_data.get("writeonly"), None);
 }

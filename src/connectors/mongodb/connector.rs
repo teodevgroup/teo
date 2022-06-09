@@ -19,7 +19,7 @@ use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::{Model, ModelIndex, ModelIndexType};
 use crate::core::value::Value;
-use crate::error::ActionError;
+use crate::error::{ActionError, ActionErrorType};
 
 
 #[derive(Debug)]
@@ -1243,7 +1243,12 @@ impl Connector for MongoDBConnector {
                 }
             }
             Err(err) => {
-                return Err(err);
+                match err.r#type {
+                    ActionErrorType::WrongEnumChoice => {
+                        Err(ActionError::unexpected_enum_value(key))
+                    },
+                    _ => Err(err)
+                }
             }
         }
     }

@@ -154,8 +154,18 @@ impl ActionError {
     pub fn wrong_enum_choice() -> Self {
         ActionError {
             r#type: ActionErrorType::WrongEnumChoice,
-            message: "Enum value is unexpected.".to_string(),
+            message: "Wrong enum choice".to_string(),
             errors: None
+        }
+    }
+
+    pub fn unexpected_enum_value(field: impl Into<String>) -> Self {
+        let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
+        errors.insert(field.into(), "Enum value is unexpected.".to_string());
+        ActionError {
+            r#type: ActionErrorType::ValidationError,
+            message: "Enum value is unexpected.".to_string(),
+            errors: Some(errors)
         }
     }
 
