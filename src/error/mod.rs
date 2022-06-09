@@ -159,17 +159,19 @@ impl ActionError {
         }
     }
 
-    pub fn value_required() -> Self {
+    pub fn value_required(field: impl Into<String>) -> Self {
+        let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
+        errors.insert(field.into(), "Value is required.".to_string());
         ActionError {
-            field_type: ActionErrorType::ValueRequired,
+            field_type: ActionErrorType::ValidationError,
             message: "Value is required.".to_string(),
-            errors: None
+            errors: Some(errors)
         }
     }
 
-    pub fn unique_value_duplicated(field: &str) -> Self {
+    pub fn unique_value_duplicated(field: impl Into<String>) -> Self {
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
-        errors.insert(field.to_string(), "Unique value duplicated.".to_string());
+        errors.insert(field.into(), "Unique value duplicated.".to_string());
         ActionError {
             field_type: ActionErrorType::ValidationError,
             message: "Input is not valid.".to_string(),

@@ -6,6 +6,7 @@ use std::sync::{Arc};
 use std::sync::atomic::{AtomicBool, Ordering};
 use serde_json::{Map, Value as JsonValue};
 use crate::core::argument::Argument;
+use crate::core::field::{Optionality, Store};
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::stage::Stage;
@@ -122,6 +123,25 @@ impl Object {
                 }
             }
         }
+        // validate required fields
+        for key in model_keys {
+            let field = self.inner.model.field(key).unwrap();
+            if field.auto || field.auto_increment {
+                continue
+            }
+            match field.store {
+                Store::ForeignKey(_) => continue,
+                Store::LocalKey => continue,
+                _ => ()
+            }
+            if field.optionality == Optionality::Required {
+                let value = self.get_value(key).unwrap();
+                if value.is_none() {
+                    return Err(ActionError::value_required(key))
+                }
+            }
+        }
+
         // send to database to save
         let connector = self.inner.graph.connector();
         let save_result = connector.save_object(self).await;

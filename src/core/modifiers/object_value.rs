@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use crate::core::modifier::Modifier;
 use crate::core::object::Object;
 use crate::core::stage::Stage;
+use crate::core::value::Value;
 
 
 #[derive(Debug, Copy, Clone)]
@@ -23,7 +24,12 @@ impl Modifier for ObjectValueModifier {
     }
 
     async fn call(&self, _stage: Stage, object: &Object) -> Stage {
-        let value = object.inner.value_map.borrow().get(self.key).unwrap().clone();
-        return Stage::Value(value);
+        let map = object.inner.value_map.borrow();
+        let value = map.get(self.key);
+        if value.is_none() {
+            Stage::Value(Value::Null)
+        } else {
+            Stage::Value(value.unwrap().clone())
+        }
     }
 }
