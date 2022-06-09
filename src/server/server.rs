@@ -1,4 +1,4 @@
-use actix_http::body::MessageBody;
+use actix_http::body::{BoxBody, MessageBody};
 use actix_http::Response;
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web, error::Error};
 use actix_web::dev::{HttpServiceFactory, ServiceFactory, ServiceRequest, ServiceResponse};
@@ -34,9 +34,9 @@ impl Server {
             .await
     }
 
-    fn make_app(&'static self) -> App<impl ServiceFactory<
+    pub fn make_app(&'static self) -> App<impl ServiceFactory<
         ServiceRequest,
-        Response = ServiceResponse<impl MessageBody>,
+        Response = ServiceResponse<BoxBody>,
         Config = (),
         InitError = (),
         Error = Error,

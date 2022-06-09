@@ -70,6 +70,19 @@ async fn make_mongodb_graph() -> &'static Graph {
             m.unique(vec!["one", "two"]);
         });
 
+        g.model("CompoundSparseUnique", |m| {
+            m.field("id", |f| {
+                f.primary().required().readonly().object_id().column_name("_id").auto();
+            });
+            m.field("one", |f| {
+                f.optional().string();
+            });
+            m.field("two", |f| {
+                f.optional().string();
+            });
+            m.unique(vec!["one", "two"]);
+        });
+
         g.host_url("http://www.example.com");
     }).await));
 
@@ -186,9 +199,9 @@ async fn sparse_index_field_is_sparse_indexed() {
 #[serial]
 async fn multiple_unique_index_should_allow_null_on_all_fields() {
     let graph = make_mongodb_graph().await;
-    let object1 = graph.new_object("CompoundUnique");
+    let object1 = graph.new_object("CompoundSparseUnique");
     let _ = object1.save().await;
-    let object2 = graph.new_object("CompoundUnique");
+    let object2 = graph.new_object("CompoundSparseUnique");
     let result = object2.save().await;
     assert_eq!(result.ok(), Some(()));
 }
