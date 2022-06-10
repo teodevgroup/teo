@@ -6,8 +6,9 @@ use crate::core::connector::{ConnectorBuilder};
 use crate::core::field::*;
 use crate::core::builders::field_builder::FieldBuilder;
 use crate::core::builders::action_builder::ActionBuilder;
-use crate::core::builders::model_index_builder::{ModelIndexBuilder};
+use crate::core::builders::model_index_builder::ModelIndexBuilder;
 use crate::core::builders::permission_builder::PermissionBuilder;
+use crate::core::builders::relation_builder::RelationBuilder;
 use crate::core::field::ReadRule::NoRead;
 use crate::core::field::Store::{Calculated, Temp};
 use crate::core::field::WriteRule::NoWrite;
@@ -22,6 +23,7 @@ pub struct ModelBuilder {
     pub(crate) description: &'static str,
     pub(crate) identity: bool,
     pub(crate) field_builders: Vec<FieldBuilder>,
+    pub(crate) relation_builders: Vec<RelationBuilder>,
     pub(crate) actions: HashSet<ActionType>,
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) primary: Option<ModelIndex>,
@@ -40,6 +42,7 @@ impl ModelBuilder {
             description: "",
             identity: false,
             field_builders: Vec::new(),
+            relation_builders: Vec::new(),
             actions: ActionType::default(),
             permission: None,
             primary: None,
@@ -84,6 +87,13 @@ impl ModelBuilder {
         let mut f = FieldBuilder::new(name, self.connector_builder());
         build(&mut f);
         self.field_builders.push(f);
+        self
+    }
+
+    pub fn relation<F: Fn(&mut RelationBuilder)>(&mut self, name: &'static str, build: F) -> &mut Self {
+        let mut f = RelationBuilder::new(name, self.connector_builder());
+        build(&mut f);
+        self.relation_builders.push(f);
         self
     }
 
