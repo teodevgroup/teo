@@ -3,6 +3,7 @@ pub mod model;
 pub mod field_type;
 pub mod database_type;
 pub mod field;
+pub mod relation;
 pub mod pipeline;
 pub mod argument;
 pub mod value;

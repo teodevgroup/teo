@@ -1,4 +1,5 @@
 use crate::core::connector::ConnectorBuilder;
+use crate::core::relation::Relation;
 
 
 pub struct RelationBuilder {
@@ -50,5 +51,15 @@ impl RelationBuilder {
         let references_vec: Vec<String> = fields.into_iter().map(Into::into).collect();
         self.references = references_vec;
         self
+    }
+
+    pub(crate) fn build(&self, _connector_builder: &Box<dyn ConnectorBuilder>) -> Relation {
+        return Relation {
+            name: self.name.clone(),
+            model: self.model.clone(),
+            is_vec: self.is_vec,
+            fields: self.fields.clone(),
+            references: self.references.clone(),
+        }
     }
 }

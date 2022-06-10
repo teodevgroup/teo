@@ -13,6 +13,7 @@ use crate::core::field::ReadRule::NoRead;
 use crate::core::field::Store::{Calculated, Temp};
 use crate::core::field::WriteRule::NoWrite;
 use crate::core::model::{ModelIndex, ModelIndexItem, Model, ModelIndexType};
+use crate::core::relation::Relation;
 
 
 pub struct ModelBuilder {
@@ -206,11 +207,17 @@ impl ModelBuilder {
         let auth_identity_keys = Self::get_auth_identity_keys(self);
         let auth_by_keys = Self::get_auth_by_keys(self);
         let fields_vec: Vec<Field> = self.field_builders.iter().map(|fb| { fb.build(connector_builder) }).collect();
+        let relations_vec: Vec<Relation> = self.relation_builders.iter().map(|rb| { rb.build(connector_builder) }).collect();
         let mut fields_map: HashMap<String, * const Field> = HashMap::new();
+        let mut relations_map: HashMap<String, * const Relation> = HashMap::new();
         let mut primary_field: * const Field = null();
         let mut index_fields: Vec<* const Field> = Vec::new();
         let mut primary = self.primary.clone();
         let mut indices = self.indices.clone();
+        for relation in relations_vec.iter() {
+            let addr = addr_of!(*relation);
+            relations_map.insert(relation.name.clone(), addr);
+        }
         for field in fields_vec.iter() {
             let addr = addr_of!(*field);
             fields_map.insert(field.name.clone(), addr);
@@ -279,6 +286,8 @@ impl ModelBuilder {
             permission: if let Some(builder) = &self.permission { Some(builder.build()) } else { None },
             fields_vec,
             fields_map,
+            relations_map,
+            relations_vec,
             primary: primary.unwrap(),
             indices: indices.clone(),
             primary_field,

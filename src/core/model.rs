@@ -3,6 +3,7 @@ use std::ptr::null;
 use crate::action::action::ActionType;
 use crate::core::field::{Field, Sort};
 use crate::core::permission::Permission;
+use crate::core::relation::Relation;
 
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -38,6 +39,8 @@ pub(crate) struct Model {
     pub(crate) permission: Option<Permission>,
     pub(crate) fields_vec: Vec<Field>,
     pub(crate) fields_map: HashMap<String, * const Field>,
+    pub(crate) relations_vec: Vec<Relation>,
+    pub(crate) relations_map: HashMap<String, * const Relation>,
     pub(crate) indices: Vec<ModelIndex>,
     pub(crate) primary: ModelIndex,
     pub(crate) primary_field: * const Field,
