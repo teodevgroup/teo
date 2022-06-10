@@ -46,6 +46,35 @@ async fn make_mongodb_graph() -> &'static Graph {
             m.relation("author", |r| {
                 r.object("Author").fields(vec!["authorId"]).references(vec!["id"]);
             });
+            m.relation("categories", |r| {
+                r.vec("CategoriesOnArticles").fields(vec!["id"]).references(vec!["articleId"]);
+            });
+        });
+        g.model("Category", |m| {
+            m.field("id", |f| {
+                f.primary().required().readonly().object_id().column_name("_id").auto();
+            });
+            m.field("name", |f| {
+                f.unique().required().string();
+            });
+            m.relation("articles", |r| {
+                r.vec("CategoriesOnArticles").fields(vec!["id"]).references(vec!["categoryId"]);
+            });
+        });
+        g.model("CategoriesOnArticles", |m| {
+            m.field("articleId", |f| {
+                f.required().write_on_create().object_id();
+            });
+            m.relation("article", |r| {
+                r.object("Article").fields(vec!["articleId"]).references(vec!["id"]);
+            });
+            m.field("categoryId", |f| {
+                f.required().write_on_create().object_id();
+            });
+            m.relation("category", |r| {
+                r.object("Category").fields(vec!["categoryId"]).references(vec!["id"]);
+            });
+            m.primary(vec!["articleId", "categoryId"]);
         });
         g.host_url("http://www.example.com");
     }).await));

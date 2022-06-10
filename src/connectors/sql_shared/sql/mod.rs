@@ -340,14 +340,22 @@ impl SQLDropStatement {
     }
 }
 
-pub struct SQLUseStatement {
+pub struct SQLUseStatement { }
+
+pub struct SQLUseDatabaseStatement {
     database: String
 }
 
-impl ToSQLString for SQLUseStatement {
+impl ToSQLString for SQLUseDatabaseStatement {
     fn to_string(&self, _dialect: SQLDialect) -> String {
         let database = &self.database;
         format!("USE `{database}`")
+    }
+}
+
+impl SQLUseStatement {
+    pub fn database(&self, database: impl Into<String>) -> SQLUseDatabaseStatement {
+        SQLUseDatabaseStatement { database: database.into() }
     }
 }
 
@@ -482,8 +490,8 @@ impl SQL {
         SQLDropStatement { }
     }
 
-    pub fn r#use(database: impl Into<String>) -> SQLUseStatement {
-        SQLUseStatement { database: database.into() }
+    pub fn r#use() -> SQLUseStatement {
+        SQLUseStatement { }
     }
 
     pub fn show() -> SQLShowStatement { SQLShowStatement { } }
