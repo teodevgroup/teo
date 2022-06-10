@@ -5,6 +5,7 @@ use crate::core::relation::Relation;
 pub struct RelationBuilder {
     pub(crate) name: String,
     pub(crate) model: String,
+    pub(crate) through: Option<String>,
     pub(crate) is_vec: bool,
     pub(crate) fields: Vec<String>,
     pub(crate) references: Vec<String>,
@@ -16,6 +17,7 @@ impl RelationBuilder {
         return RelationBuilder {
             name: name.into(),
             model: "".into(),
+            through: None,
             is_vec: false,
             fields: Vec::new(),
             references: Vec::new(),
@@ -53,10 +55,16 @@ impl RelationBuilder {
         self
     }
 
+    pub fn through(&mut self, model: impl Into<String>) -> &mut Self {
+        self.through = Some(model.into());
+        self
+    }
+
     pub(crate) fn build(&self, _connector_builder: &Box<dyn ConnectorBuilder>) -> Relation {
         return Relation {
             name: self.name.clone(),
             model: self.model.clone(),
+            through: self.through.clone(),
             is_vec: self.is_vec,
             fields: self.fields.clone(),
             references: self.references.clone(),

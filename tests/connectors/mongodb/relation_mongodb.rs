@@ -57,8 +57,11 @@ async fn make_mongodb_graph() -> &'static Graph {
             m.field("name", |f| {
                 f.unique().required().string();
             });
-            m.relation("articles", |r| {
+            m.relation("categoriesOnArticles", |r| {
                 r.vec("CategoriesOnArticles").fields(vec!["id"]).references(vec!["categoryId"]);
+            });
+            m.relation("articles", |r| {
+                r.vec("Articles").through("CategoriesOnArticles").fields(vec!["categoryId"]).references(vec!["articleId"]);
             });
         });
         g.model("CategoriesOnArticles", |m| {
