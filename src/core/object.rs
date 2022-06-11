@@ -7,6 +7,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use serde_json::{Map, Value as JsonValue};
 use crate::core::argument::Argument;
 use crate::core::field::{Optionality, Store};
+use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::stage::Stage;
@@ -98,8 +99,8 @@ impl Object {
         // apply on save pipeline first
         let model_keys = self.inner.model.save_keys();
         for key in model_keys {
-            let field = self.inner.model.field(&key);
-            if field.unwrap().on_save_pipeline.has_any_modifier() {
+            let field = self.inner.model.field(&key).unwrap();
+            if field.needs_on_save_callback() {
                 let mut stage = match self.inner.value_map.borrow().deref().get(&key.to_string()) {
                     Some(value) => {
                         Stage::Value(value.clone())
@@ -108,8 +109,8 @@ impl Object {
                         Stage::Value(Value::Null)
                     }
                 };
-                stage = field.unwrap().on_save_pipeline.process(stage.clone(), &self).await;
-                match stage {
+                let new_stage = field.perform_on_save_callback(stage.clone(), self).await;
+                match new_stage {
                     Stage::Invalid(s) => {
                         return Err(ActionError::invalid_input(key, s));
                     }

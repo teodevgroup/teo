@@ -1,8 +1,11 @@
 use crate::core::argument::Argument;
 use crate::core::database_type::DatabaseType;
 use crate::core::field_type::FieldType;
+use crate::core::object::Object;
 use crate::core::permission::Permission;
 use crate::core::pipeline::Pipeline;
+use crate::core::stage::Stage;
+use crate::core::value::Value;
 
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -117,5 +120,37 @@ impl Field {
             Some(column_name) => column_name,
             None => &self.name
         }
+    }
+
+    pub(crate) fn needs_on_save_callback(&self) -> bool {
+        if self.on_save_pipeline.has_any_modifier() {
+            return true;
+        }
+        return match &self.field_type {
+            FieldType::Vec(inner) => inner.needs_on_save_callback(),
+            _ => false
+        }
+    }
+
+    pub(crate) async fn perform_on_save_callback(&self, stage: Stage, object: &Object) -> Stage {
+        let mut new_stage = stage;
+        match &self.field_type {
+            FieldType::Vec(inner) => {
+                let val = new_stage.value().unwrap();
+                let arr = val.as_vec();
+                if !arr.is_none() {
+                    let arr = arr.unwrap();
+                    let mut new_arr: Vec<Value> = Vec::new();
+                    for v in arr {
+                        let inner_stage = Stage::Value(v.clone());
+                        new_arr.push(inner.on_save_pipeline.process(inner_stage, object).await.value().unwrap());
+                    }
+                    new_stage = Stage::Value(Value::Vec(new_arr));
+                }
+
+            }
+            _ => {}
+        }
+        self.on_save_pipeline.process(new_stage, object).await
     }
 }

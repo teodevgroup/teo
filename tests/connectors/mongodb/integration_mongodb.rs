@@ -63,6 +63,18 @@ async fn make_mongodb_graph() -> &'static Graph {
             });
             m.unique(vec!["one", "two"]);
         });
+        g.model("List", |m| {
+            m.field("id", |f| {
+                f.primary().required().readonly().object_id().column_name("_id").auto();
+            });
+            m.field("listOne", |f| {
+                f.required().vec(|f| {
+                    f.string().on_save(|p| {
+                        p.str_append("-suffix");
+                    });
+                });
+            });
+        });
         g.host_url("http://www.example.com");
     }).await));
     graph
@@ -641,4 +653,28 @@ async fn delete_can_delete_record() {
     let body_json: JsonValue = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta").unwrap(), &json!({"count": 0}));
+}
+
+#[test]
+#[serial]
+async fn create_vec_works_with_inner_pipeline() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/lists/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "listOne": ["1", "2"],
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("errors"), None);
+    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    assert_eq!(body_data.get("listOne").unwrap(), &json!([
+        "1-suffix", "2-suffix"
+    ]));
+    let id_str = body_data.get("id").unwrap().as_str().unwrap();
+    assert!(is_object_id(id_str))
 }
