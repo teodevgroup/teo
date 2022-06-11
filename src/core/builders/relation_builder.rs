@@ -9,6 +9,7 @@ pub struct RelationBuilder {
     pub(crate) is_vec: bool,
     pub(crate) fields: Vec<String>,
     pub(crate) references: Vec<String>,
+    pub(crate) auto: bool,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -21,6 +22,7 @@ impl RelationBuilder {
             is_vec: false,
             fields: Vec::new(),
             references: Vec::new(),
+            auto: false,
             connector_builder,
         }
     }
@@ -57,6 +59,21 @@ impl RelationBuilder {
 
     pub fn through(&mut self, model: impl Into<String>) -> &mut Self {
         self.through = Some(model.into());
+        self
+    }
+
+    pub fn local(&mut self, relation: impl Into<String>) -> &mut Self {
+        self.fields = vec![relation.into()];
+        self
+    }
+
+    pub fn foreign(&mut self, relation: impl Into<String>) -> &mut Self {
+        self.references = vec![relation.into()];
+        self
+    }
+
+    pub fn auto(&mut self) -> &mut Self {
+        self.auto = true;
         self
     }
 

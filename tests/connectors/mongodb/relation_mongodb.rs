@@ -46,8 +46,11 @@ async fn make_mongodb_graph() -> &'static Graph {
             m.relation("author", |r| {
                 r.object("Author").fields(vec!["authorId"]).references(vec!["id"]);
             });
-            m.relation("categories", |r| {
+            m.relation("categoriesOnArticles", |r| {
                 r.vec("CategoriesOnArticles").fields(vec!["id"]).references(vec!["articleId"]);
+            });
+            m.relation("categories", |r| {
+                r.vec("Category").through("CategoriesOnArticles").local(vec!["category"]).foreign(vec!["article"]);
             });
         });
         g.model("Category", |m| {
@@ -61,7 +64,7 @@ async fn make_mongodb_graph() -> &'static Graph {
                 r.vec("CategoriesOnArticles").fields(vec!["id"]).references(vec!["categoryId"]);
             });
             m.relation("articles", |r| {
-                r.vec("Articles").through("CategoriesOnArticles").fields(vec!["categoryId"]).references(vec!["articleId"]);
+                r.vec("Article").through("CategoriesOnArticles").local(vec!["category"]).foreign(vec!["article"]);
             });
         });
         g.model("CategoriesOnArticles", |m| {
