@@ -45,15 +45,15 @@ pub(crate) struct Model {
     pub(crate) primary: ModelIndex,
     pub(crate) primary_field: * const Field,
     pub(crate) index_fields: Vec<* const Field>,
-    pub(crate) all_keys: Vec<String>,
-    pub(crate) input_keys: Vec<String>,
-    pub(crate) save_keys: Vec<String>,
-    pub(crate) output_keys: Vec<String>,
-    pub(crate) get_value_keys: Vec<String>,
-    pub(crate) query_keys: Vec<String>,
+    pub(crate) all_keys: Vec<* const String>,
+    pub(crate) input_keys: Vec<* const String>,
+    pub(crate) save_keys: Vec<* const String>,
+    pub(crate) output_keys: Vec<* const String>,
+    pub(crate) get_value_keys: Vec<* const String>,
+    pub(crate) query_keys: Vec<* const String>,
     pub(crate) unique_query_keys: Vec<HashSet<String>>,
-    pub(crate) auth_identity_keys: Vec<String>,
-    pub(crate) auth_by_keys: Vec<String>,
+    pub(crate) auth_identity_keys: Vec<* const String>,
+    pub(crate) auth_by_keys: Vec<* const String>,
 }
 
 impl Model {

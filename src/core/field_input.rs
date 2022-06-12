@@ -9,7 +9,27 @@ pub(crate) enum AtomicUpdateType {
     Push(Value),
 }
 
+pub enum RelationInput {
+
+    // both create and update
+
+    Create(Value),
+    Set(Value),
+    Connect(Value),
+    // where, create
+    ConnectOrCreate(Value, Value),
+
+    // update only
+
+    Disconnect(Value),
+    Update(Value),
+    // create, update
+    Upsert(Value, Value),
+    Delete(Value),
+}
+
 pub(crate) enum FieldInput {
     SetValue(Value),
-    AtomicUpdate(AtomicUpdateType)
+    AtomicUpdate(AtomicUpdateType),
+    RelationInput(RelationInput),
 }

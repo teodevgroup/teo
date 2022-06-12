@@ -17,11 +17,11 @@ use crate::core::relation::Relation;
 
 
 pub struct ModelBuilder {
-    pub(crate) name: &'static str,
-    pub(crate) table_name: &'static str,
-    pub(crate) url_segment_name: &'static str,
-    pub(crate) localized_name: &'static str,
-    pub(crate) description: &'static str,
+    pub(crate) name: String,
+    pub(crate) table_name: String,
+    pub(crate) url_segment_name: String,
+    pub(crate) localized_name: String,
+    pub(crate) description: String,
     pub(crate) identity: bool,
     pub(crate) field_builders: Vec<FieldBuilder>,
     pub(crate) relation_builders: Vec<RelationBuilder>,
@@ -34,13 +34,13 @@ pub struct ModelBuilder {
 
 impl ModelBuilder {
 
-    pub(crate) fn new(name: &'static str, connector_builder: &Box<dyn ConnectorBuilder>) -> Self {
+    pub(crate) fn new(name: impl Into<String>, connector_builder: &Box<dyn ConnectorBuilder>) -> Self {
         Self {
-            name,
-            table_name: "",
-            url_segment_name: "",
-            localized_name: "",
-            description: "",
+            name: name.into(),
+            table_name: "".to_string(),
+            url_segment_name: "".to_string(),
+            localized_name: "".to_string(),
+            description: "".to_string(),
             identity: false,
             field_builders: Vec::new(),
             relation_builders: Vec::new(),
@@ -58,22 +58,22 @@ impl ModelBuilder {
         }
     }
 
-    pub fn table_name(&mut self, table_name: &'static str) -> &mut Self {
+    pub fn table_name(&mut self, table_name: impl Into<String>) -> &mut Self {
         self.table_name = table_name;
         self
     }
 
-    pub fn url_segment_name(&mut self, url_segment_name: &'static str) -> &mut Self {
+    pub fn url_segment_name(&mut self, url_segment_name: impl Into<String>) -> &mut Self {
         self.url_segment_name = url_segment_name;
         self
     }
 
-    pub fn localized_name(&mut self, localized_name: &'static str) -> &mut Self {
+    pub fn localized_name(&mut self, localized_name: impl Into<String>) -> &mut Self {
         self.localized_name = localized_name;
         self
     }
 
-    pub fn description(&mut self, description: &'static str) -> &mut Self {
+    pub fn description(&mut self, description: impl Into<String>) -> &mut Self {
         self.description = description;
         self
     }
@@ -304,67 +304,67 @@ impl ModelBuilder {
         }
     }
 
-    fn all_keys(&self) -> Vec<String> {
-        self.field_builders.iter().map(|f| f.name.clone()).collect()
+    fn all_keys(&self) -> Vec<* const String> {
+        self.field_builders.iter().map(|f| &f.name).collect()
     }
 
-    fn allowed_input_keys(&self) -> Vec<String> {
+    fn allowed_input_keys(&self) -> Vec<* const String> {
         self.field_builders.iter()
             .filter(|&f| { f.write_rule != NoWrite })
-            .map(|f| { f.name.clone() })
+            .map(|f| { &f.name })
             .collect()
     }
 
-    fn allowed_save_keys(&self) -> Vec<String> {
+    fn allowed_save_keys(&self) -> Vec<* const String> {
         self.field_builders.iter()
             .filter(|&f| { f.store != Calculated && f.store != Temp })
-            .map(|f| { f.name.clone() })
+            .map(|f| { &f.name })
             .collect()
     }
 
-    fn allowed_output_keys(&self) -> Vec<String> {
+    fn allowed_output_keys(&self) -> Vec<* const String> {
         self.field_builders.iter()
             .filter(|&f| { f.read_rule != NoRead })
-            .map(|f| { f.name.clone() })
+            .map(|f| { &f.name })
             .collect()
     }
 
-    pub(crate) fn get_get_value_keys(&self) -> Vec<String> {
+    pub(crate) fn get_get_value_keys(&self) -> Vec<* const String> {
         self.field_builders.iter()
-            .map(|f| { f.name.clone() })
+            .map(|f| { &f.name })
             .collect()
     }
 
-    pub(crate) fn get_query_keys(&self) -> Vec<String> {
+    pub(crate) fn get_query_keys(&self) -> Vec<* const String> {
         self.field_builders.iter()
             .filter(|&f| { f.query_ability == QueryAbility::Queryable })
-            .map(|f| { f.name.clone() })
+            .map(|f| { &f.name })
             .collect()
     }
 
-    pub(crate) fn get_unique_query_keys(&self, indices: &Vec<ModelIndex>, primary: &ModelIndex) -> Vec<HashSet<String>> {
-        let mut result: Vec<HashSet<String>> = Vec::new();
+    pub(crate) fn get_unique_query_keys(&self, indices: &Vec<ModelIndex>, primary: &ModelIndex) -> Vec<HashSet<* const String>> {
+        let mut result: Vec<HashSet<* const String>> = Vec::new();
         for index in indices {
             let set = HashSet::from_iter(index.items.iter().map(|i| {
-                i.field_name.clone()
+                &i.field_name
             }));
             result.push(set);
         }
-        result.push(HashSet::from_iter(primary.items.iter().map(|i| i.field_name.clone())));
+        result.push(HashSet::from_iter(primary.items.iter().map(|i| &i.field_name)));
         result
     }
 
-    pub(crate) fn get_auth_identity_keys(&self) -> Vec<String> {
+    pub(crate) fn get_auth_identity_keys(&self) -> Vec<* const String> {
         self.field_builders.iter()
             .filter(|&f| { f.auth_identity == true })
-            .map(|f| { f.name.clone() })
+            .map(|f| { &f.name })
             .collect()
     }
 
-    pub(crate) fn get_auth_by_keys(&self) -> Vec<String> {
+    pub(crate) fn get_auth_by_keys(&self) -> Vec<* const String> {
         self.field_builders.iter()
             .filter(|&f| { f.auth_by == true })
-            .map(|f| { f.name.clone() })
+            .map(|f| { &f.name })
             .collect()
     }
 }

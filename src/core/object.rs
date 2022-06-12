@@ -17,7 +17,6 @@ use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::stage::Stage;
-use crate::core::stage::Stage::Value;
 use crate::core::value::Value;
 use crate::error::{ActionError, ActionErrorType};
 
@@ -234,18 +233,19 @@ impl Object {
                 }
             }
         } else {
-            let i = value.as_i64();
-            match f {
-                None => Err(ActionError::expected("integer number", field_name)),
-                Some(n) => match target {
-                    FieldType::I8 => Value::I8(n.into()),
-                    FieldType::I16 => Value::I16(n.into()),
-                    FieldType::I32 => Value::I32(n.into()),
-                    FieldType::I64 => Value::I64(n.into()),
-                    FieldType::I128 => Value::I128(n.into()),
-                    _ => panic!()
-                }
-            }
+            panic!()
+            // let i = value.as_i64();
+            // match f {
+            //     None => Err(ActionError::expected("integer number", field_name)),
+            //     Some(n) => match target {
+            //         FieldType::I8 => Value::I8(n.into()),
+            //         FieldType::I16 => Value::I16(n.into()),
+            //         FieldType::I32 => Value::I32(n.into()),
+            //         FieldType::I64 => Value::I64(n.into()),
+            //         FieldType::I128 => Value::I128(n.into()),
+            //         _ => panic!()
+            //     }
+            // }
         }
     }
 
@@ -270,18 +270,19 @@ impl Object {
         } else if json_value.is_object() && !is_new {
             let json_obj = json_value.as_object().unwrap();
             if json_obj.keys().len() != 1 {
-                Err(ActionError::wrong_input_updator(&field.name))
+                Err(ActionError::wrong_input_updator(field_name))
             } else {
                 for (key, value) in json_obj {
                     return match key.as_str() {
                         "set" => {
                             match value {
                                 JsonValue::Null => {
-                                    if field.optionality == Optionality::Optional {
-                                        Ok(SetValue(Value::Null))
-                                    } else {
-                                        Err(ActionError::unexpected_null(&field.name))
-                                    }
+                                    Err(ActionError::unexpected_null(&field_name))
+                                    // if field.optionality == Optionality::Optional {
+                                    //     Ok(SetValue(Value::Null))
+                                    // } else {
+                                    //     Err(ActionError::unexpected_null(&field.name))
+                                    // }
                                 }
                                 JsonValue::Number(num) => {
                                     match self.number_value_from_target_type(field_name, target, value, is_float, is_u) {
@@ -323,7 +324,7 @@ impl Object {
                                     }
                                 }
                                 _ => {
-                                    Err(ActionError::wrong_input_updator(&field.name))
+                                    Err(ActionError::wrong_input_updator(field_name))
                                 }
                             }
                         }
@@ -346,7 +347,7 @@ impl Object {
                                     }
                                 }
                                 _ => {
-                                    Err(ActionError::wrong_input_updator(&field.name))
+                                    Err(ActionError::wrong_input_updator(field_name))
                                 }
                             }
                         }
@@ -369,7 +370,7 @@ impl Object {
                                     }
                                 }
                                 _ => {
-                                    Err(ActionError::wrong_input_updator(&field.name))
+                                    Err(ActionError::wrong_input_updator(field_name))
                                 }
                             }
                         }
@@ -392,12 +393,12 @@ impl Object {
                                     }
                                 }
                                 _ => {
-                                    Err(ActionError::wrong_input_updator(&field.name))
+                                    Err(ActionError::wrong_input_updator(field_name))
                                 }
                             }
                         }
                         _ => {
-                            Err(ActionError::wrong_input_updator(&field.name))
+                            Err(ActionError::wrong_input_updator(field_name))
                         }
                     }
                 }
@@ -434,7 +435,7 @@ impl Object {
                 let enums = graph.enums();
                 let vals = enums.get(&enum_name.to_string()).unwrap();
                 if vals.contains(&enum_choice.to_string()) {
-                    Ok(Value::String(string))
+                    Ok(Value::String(enum_choice.into()))
                 } else {
                     Err(ActionError::wrong_enum_choice())
                 }
@@ -454,18 +455,19 @@ impl Object {
         } else if json_value.is_object() && !is_new {
             let json_obj = json_value.as_object().unwrap();
             if json_obj.keys().len() != 1 {
-                Err(ActionError::wrong_input_updator(&field.name))
+                Err(ActionError::wrong_input_updator(field_name))
             } else {
                 for (key, value) in json_obj {
                     return match key.as_str() {
                         "set" => {
                             match value {
                                 JsonValue::Null => {
-                                    if field.optionality == Optionality::Optional {
-                                        Ok(SetValue(Value::Null))
-                                    } else {
-                                        Err(ActionError::unexpected_null(field_name))
-                                    }
+                                    Err(ActionError::unexpected_null(field_name))
+                                    // if field.optionality == Optionality::Optional {
+                                    //     Ok(SetValue(Value::Null))
+                                    // } else {
+                                    //     Err(ActionError::unexpected_null(field_name))
+                                    // }
                                 }
                                 JsonValue::String(string_value) => {
                                     match self.decode_user_string_inout_into_type(field_name, target, json_value) {
@@ -479,7 +481,7 @@ impl Object {
                             }
                         }
                         _ => {
-                            Err(ActionError::wrong_input_updator(&field.name))
+                            Err(ActionError::wrong_input_updator(field_name))
                         }
                     }
                 }
@@ -566,7 +568,7 @@ impl Object {
                     let arr = json_value.as_array().unwrap();
                     Ok(SetValue(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
                         let new_path_name = path_name.to_string() + "." + &String::from(&i);
-                        match self.decode_user_field_input(v, field, &new_path_name) {
+                        match self.decode_user_field_input(v, field, &new_path_name, "") {
                             SetValue(v) => v,
                             _ => panic!()
                         }
@@ -644,7 +646,7 @@ impl Object {
             };
             if json_has_value {
                 let json_value = &json_object[&key.to_string()];
-                let input_result = self.decode_user_field_input(json_value, field);
+                let input_result = self.decode_user_field_input(json_value, field, "");
                 let value_result = field.field_type.decode_value(json_value, self.graph());
                 let mut value;
                 match value_result {

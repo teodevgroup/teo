@@ -16,4 +16,4 @@ pub mod object;
 pub mod permission;
 pub mod connector;
 pub mod client;
-pub mod relation_input;
+pub mod input_decoder;
