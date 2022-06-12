@@ -40,6 +40,9 @@ pub enum ActionErrorType {
     InvalidAuthorizationFormat,
     InvalidJWTToken,
     IdentityIsNotFound,
+    UnexpectedNull,
+    WrongInputUpdator,
+    UnexpectedFieldType
 }
 
 impl ActionErrorType {
@@ -81,6 +84,9 @@ impl ActionErrorType {
             ActionErrorType::InvalidAuthorizationFormat => { 401 }
             ActionErrorType::InvalidJWTToken => { 401 }
             ActionErrorType::IdentityIsNotFound => { 401 }
+            ActionErrorType::UnexpectedNull => { 400 }
+            ActionErrorType::WrongInputUpdator => { 400 }
+            ActionErrorType::UnexpectedFieldType => { 400 }
         }
     }
 }
@@ -394,6 +400,36 @@ impl ActionError {
             r#type: ActionErrorType::IdentityIsNotFound,
             message: "Identity is not found.".to_string(),
             errors: None
+        }
+    }
+
+    pub fn unexpected_null(field: impl Into<String>) -> Self {
+        let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
+        errors.insert(field.into(), "Unexpected null.".to_string());
+        ActionError {
+            r#type: ActionErrorType::UnexpectedNull,
+            message: "Unexpected null.".to_string(),
+            errors: Some(errors)
+        }
+    }
+
+    pub fn wrong_input_updator(field: impl Into<String>) -> Self {
+        let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
+        errors.insert(field.into(), "Wrong input updator.".to_string());
+        ActionError {
+            r#type: ActionErrorType::WrongInputUpdator,
+            message: "Wrong input updator.".to_string(),
+            errors: Some(errors)
+        }
+    }
+
+    pub fn expected(expected_json_type: impl Into<String>, field: impl Into<String>) -> Self {
+        let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
+        errors.insert(field.into(), "Unexpected field type.".to_string());
+        ActionError {
+            r#type: ActionErrorType::UnexpectedFieldType,
+            message: format!("Expected '{expected_json_type}'."),
+            errors: Some(errors)
         }
     }
 }

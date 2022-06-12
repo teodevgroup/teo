@@ -1200,7 +1200,7 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn find_unique(&self, graph: &'static Graph, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
         let r#where = finder.get("where");
         if r#where == None {
             return Err(ActionError::missing_input_section());
@@ -1252,11 +1252,11 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn find_first(&self, graph: &'static Graph, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
+    async fn find_first(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
         todo!()
     }
 
-    async fn find_many(&self, graph: &'static Graph, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Vec<Object>, ActionError> {
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<Vec<Object>, ActionError> {
         let r#where = finder.get("where");
         let order_by = finder.get("orderBy");
         let take = finder.get("take");
@@ -1292,7 +1292,7 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn count(&self, graph: &'static Graph, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<usize, ActionError> {
+    async fn count(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<usize, ActionError> {
         let r#where = finder.get("where");
         let col = &self.collections[model.name()];
         let where_input = self.build_where_input(model, r#where, graph);

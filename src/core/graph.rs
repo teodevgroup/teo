@@ -74,19 +74,19 @@ impl Graph {
 
     pub(crate) fn enums(&self) -> &HashMap<String, Vec<String>> { &self.enums }
 
-    pub(crate) async fn find_unique(&'static self, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
+    pub(crate) async fn find_unique(&self, model: &Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
         self.connector().find_unique(self, model, finder).await
     }
 
-    pub(crate) async fn find_first(&'static self, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
+    pub(crate) async fn find_first(&self, model: &Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
         self.connector().find_first(self, model, finder).await
     }
 
-    pub(crate) async fn find_many(&'static self, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Vec<Object>, ActionError> {
+    pub(crate) async fn find_many(&self, model: &Model, finder: &Map<String, JsonValue>) -> Result<Vec<Object>, ActionError> {
         self.connector().find_many(self, model, finder).await
     }
 
-    pub(crate) async fn count(&'static self, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<usize, ActionError> {
+    pub(crate) async fn count(&self, model: &Model, finder: &Map<String, JsonValue>) -> Result<usize, ActionError> {
         self.connector().count(self, model, finder).await
     }
 
