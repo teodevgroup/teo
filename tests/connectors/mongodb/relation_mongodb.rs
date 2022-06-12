@@ -98,3 +98,256 @@ async fn make_app() -> App<impl ServiceFactory<
     let server = Box::leak(Box::new(Server::new(graph)));
     server.make_app()
 }
+
+#[test]
+#[serial]
+async fn create_with_relation_create() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "name": "John Peterson",
+            "articles": {
+                "create": {
+                    "title": "A Great Developer"
+                }
+            }
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("errors"), None);
+    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    assert_eq!(body_data.get("name").unwrap(), &JsonValue::String("John Peterson".to_string()));
+    let id_str = body_data.get("id").unwrap().as_str().unwrap();
+    assert!(is_object_id(id_str))
+}
+
+#[test]
+#[serial]
+async fn create_with_relation_create_many_implicitly() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "name": "John Peterson",
+            "articles": {
+                "create": [{
+                    "title": "A Great Developer"
+                }, {
+                    "title": "I Found It"
+                }]
+            }
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("errors"), None);
+    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    assert_eq!(body_data.get("name").unwrap(), &JsonValue::String("John Peterson".to_string()));
+    let id_str = body_data.get("id").unwrap().as_str().unwrap();
+    assert!(is_object_id(id_str))
+}
+
+#[test]
+#[serial]
+async fn create_with_relation_create_many() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "name": "John Peterson",
+            "articles": {
+                "createMany": [{
+                    "title": "A Great Developer"
+                }, {
+                    "title": "I Found It"
+                }]
+            }
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("errors"), None);
+    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    assert_eq!(body_data.get("name").unwrap(), &JsonValue::String("John Peterson".to_string()));
+    let id_str = body_data.get("id").unwrap().as_str().unwrap();
+    assert!(is_object_id(id_str))
+}
+
+#[test]
+#[serial]
+async fn create_with_relation_set() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "name": "John Peterson",
+            "articles": {
+                "set": {
+                    "id": "xxx"
+                }
+            }
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("errors"), None);
+    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    assert_eq!(body_data.get("name").unwrap(), &JsonValue::String("John Peterson".to_string()));
+    let id_str = body_data.get("id").unwrap().as_str().unwrap();
+    assert!(is_object_id(id_str))
+}
+
+#[test]
+#[serial]
+async fn create_with_relation_set_many_implicitly() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "name": "John Peterson",
+            "articles": {
+                "set": [{
+                    "id": "xxx"
+                }, {
+                    "id": "xxx"
+                }]
+            }
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("errors"), None);
+    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    assert_eq!(body_data.get("name").unwrap(), &JsonValue::String("John Peterson".to_string()));
+    let id_str = body_data.get("id").unwrap().as_str().unwrap();
+    assert!(is_object_id(id_str))
+}
+
+#[test]
+#[serial]
+async fn create_with_relation_connect() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "name": "John Peterson",
+            "articles": {
+                "connect": {
+                    "id": "xxx"
+                }
+            }
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("errors"), None);
+    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    assert_eq!(body_data.get("name").unwrap(), &JsonValue::String("John Peterson".to_string()));
+    let id_str = body_data.get("id").unwrap().as_str().unwrap();
+    assert!(is_object_id(id_str))
+}
+
+#[test]
+#[serial]
+async fn create_with_relation_connect_many_implicitly() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "name": "John Peterson",
+            "articles": {
+                "connect": [{
+                    "id": "xxx"
+                }, {
+                    "id": "xxx"
+                }]
+            }
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("errors"), None);
+    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    assert_eq!(body_data.get("name").unwrap(), &JsonValue::String("John Peterson".to_string()));
+    let id_str = body_data.get("id").unwrap().as_str().unwrap();
+    assert!(is_object_id(id_str))
+}
+
+#[test]
+#[serial]
+async fn create_with_relation_connect_or_create() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "name": "John Peterson",
+            "articles": {
+                "connect": {
+                    "id": "xxx"
+                }
+            }
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("errors"), None);
+    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    assert_eq!(body_data.get("name").unwrap(), &JsonValue::String("John Peterson".to_string()));
+    let id_str = body_data.get("id").unwrap().as_str().unwrap();
+    assert!(is_object_id(id_str))
+}
+
+#[test]
+#[serial]
+async fn create_with_relation_connect_or_create_many_implicitly() {
+    let app = test::init_service(make_app().await).await;
+    let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
+        "action": "Create",
+        "create": {
+            "name": "John Peterson",
+            "articles": {
+                "connect": [{
+                    "id": "xxx"
+                }, {
+                    "id": "xxx"
+                }]
+            }
+        }
+    })).to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_obj = body_json.as_object().unwrap();
+    assert_eq!(body_obj.get("meta"), None);
+    assert_eq!(body_obj.get("errors"), None);
+    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    assert_eq!(body_data.get("name").unwrap(), &JsonValue::String("John Peterson".to_string()));
+    let id_str = body_data.get("id").unwrap().as_str().unwrap();
+    assert!(is_object_id(id_str))
+}
