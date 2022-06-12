@@ -12,13 +12,13 @@ use crate::error::ActionError;
 
 #[derive(Debug)]
 pub struct Graph {
-    enums: HashMap<&'static str, Vec<&'static str>>,
+    enums: HashMap<String, Vec<String>>,
     models_vec: Vec<Model>,
     models_map: HashMap<&'static str, * const Model>,
     url_segment_name_map: HashMap<String, &'static str>,
     connector: Option<Box<dyn Connector>>,
-    jwt_secret: &'static str,
-    host_url: &'static str,
+    jwt_secret: String,
+    host_url: String,
     clients: Vec<Arc<dyn Client>>,
 }
 
@@ -36,8 +36,8 @@ impl Graph {
             models_map: HashMap::new(),
             url_segment_name_map: HashMap::new(),
             connector: None,
-            jwt_secret: builder.jwt_secret,
-            host_url: builder.host_url.unwrap(),
+            jwt_secret: builder.jwt_secret.clone(),
+            host_url: builder.host_url.as_ref().unwrap().clone(),
             clients: builder.clients.clone(),
         };
         graph.models_vec = builder.models.iter().map(|mb| mb.build(&builder.connector_builder())).collect();
@@ -66,35 +66,31 @@ impl Graph {
         }
     }
 
-    pub(crate) fn r#enum(&self, name: &str) -> &Vec<&'static str> {
-        &self.enums.get(name).unwrap()
+    pub(crate) fn r#enum(&self, name: impl Into<String>) -> &Vec<String> {
+        &self.enums.get(&name.into()).unwrap()
     }
 
-    pub(crate) fn models(&'static self) -> &'static Vec<Model> {
-        &self.models_vec
-    }
+    pub(crate) fn models(&self) -> &Vec<Model> { &self.models_vec }
 
-    pub(crate) fn enums(&'static self) -> &'static HashMap<&'static str, Vec<&'static str>> {
-        &self.enums
-    }
+    pub(crate) fn enums(&self) -> &HashMap<String, Vec<String>> { &self.enums }
 
-    pub(crate) async fn find_unique(&'static self, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
+    pub(crate) async fn find_unique(&self, model: &Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
         self.connector().find_unique(self, model, finder).await
     }
 
-    pub(crate) async fn find_first(&'static self, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
+    pub(crate) async fn find_first(&self, model: &Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
         self.connector().find_first(self, model, finder).await
     }
 
-    pub(crate) async fn find_many(&'static self, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Vec<Object>, ActionError> {
+    pub(crate) async fn find_many(&self, model: &Model, finder: &Map<String, JsonValue>) -> Result<Vec<Object>, ActionError> {
         self.connector().find_many(self, model, finder).await
     }
 
-    pub(crate) async fn count(&'static self, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<usize, ActionError> {
+    pub(crate) async fn count(&self, model: &Model, finder: &Map<String, JsonValue>) -> Result<usize, ActionError> {
         self.connector().count(self, model, finder).await
     }
 
-    pub fn new_object(&'static self, model: &'static str) -> Object {
+    pub fn new_object(&self, model: &str) -> Object {
         Object::new(self, self.model(model))
     }
 
@@ -105,11 +101,11 @@ impl Graph {
         }
     }
 
-    pub(crate) fn jwt_secret(&self) -> &'static str {
+    pub(crate) fn jwt_secret(&self) -> &str {
         return if self.jwt_secret == "" {
             panic!("A graph with identity must have a custom JWT secret.")
         } else {
-            self.jwt_secret
+            &self.jwt_secret
         }
     }
 

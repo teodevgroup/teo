@@ -4,6 +4,7 @@ pub mod field_type;
 pub mod database_type;
 pub mod field;
 pub mod relation;
+pub(crate) mod field_input;
 pub mod pipeline;
 pub mod argument;
 pub mod value;

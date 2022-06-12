@@ -510,7 +510,7 @@ impl Server {
         let claims = Claims {
             id: "not work anymore".to_string(),
             //id: obj.identifier().to_bson_value().as_object_id().unwrap().to_hex(), // change here later
-            model: obj.inner.model.name().to_string(),
+            model: obj.model().name().to_string(),
             exp
         };
         let token = encode_token(claims, self.graph.jwt_secret());

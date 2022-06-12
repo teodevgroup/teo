@@ -129,6 +129,13 @@ impl Value {
         }
     }
 
+    pub(crate) fn as_vec(&self) -> Option<&Vec<Value>> {
+        match self {
+            Value::Vec(val) => Some(val),
+            _ => None
+        }
+    }
+
     pub(crate) fn as_usize(&self) -> Option<usize> {
         match self {
             Value::I8(n) => Some(*n as usize),
