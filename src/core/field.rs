@@ -95,6 +95,7 @@ pub(crate) struct Field {
     pub(crate) database_type: DatabaseType,
     pub(crate) optionality: Optionality,
     pub(crate) store: Store,
+    pub(crate) atomic: bool,
     pub(crate) primary: bool,
     pub(crate) read_rule: ReadRule,
     pub(crate) write_rule: WriteRule,

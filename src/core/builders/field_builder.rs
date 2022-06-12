@@ -17,6 +17,7 @@ pub struct FieldBuilder {
     pub(crate) database_type: DatabaseType,
     pub(crate) optionality: Optionality,
     pub(crate) store: Store,
+    pub(crate) atomic: bool,
     pub(crate) primary: bool,
     pub(crate) read_rule: ReadRule,
     pub(crate) write_rule: WriteRule,
@@ -47,6 +48,7 @@ impl FieldBuilder {
             database_type: DatabaseType::Undefined,
             optionality: Optionality::Required,
             store: Store::Embedded,
+            atomic: false,
             primary: false,
             read_rule: ReadRule::Read,
             write_rule: WriteRule::Write,
@@ -190,7 +192,17 @@ impl FieldBuilder {
 
     pub fn object(&mut self, model: &'static str) -> &mut Self {
         self.field_type = FieldType::Object(model);
-        return self;
+        self
+    }
+
+    pub fn atomic(&mut self) -> &mut Self {
+        self.atomic = true;
+        self
+    }
+
+    pub fn nonatomic(&mut self) -> &mut Self {
+        self.atomic = false;
+        self
     }
 
     pub fn primary(&mut self) -> &mut Self {
@@ -369,6 +381,7 @@ impl FieldBuilder {
             database_type: if self.database_type.is_undefined() { connector_builder.inferred_database_type(&self.field_type) } else { self.database_type.clone() },
             optionality: self.optionality,
             store: self.store,
+            atomic: self.atomic,
             primary: self.primary,
             read_rule: self.read_rule,
             write_rule: self.write_rule,
