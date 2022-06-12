@@ -1,14 +1,13 @@
-use serde_json::{Map, Value as JsonValue};
+use serde_json::{json, Map, Value as JsonValue};
 use chrono::{Date, DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromStr;
 use crate::core::field::{Field, Optionality};
 use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
-use crate::core::input::AtomicUpdateType::{Decrement, Divide, Increment, Multiply};
-use crate::core::input::Input;
-use crate::core::input::Input::{AtomicUpdate, SetValue};
-use crate::core::input::RelationInput::Set;
+use crate::core::input::AtomicUpdateType::{Decrement, Divide, Increment, Multiply, Push};
+use crate::core::input::{Input, RelationInput};
+use crate::core::input::Input::{AtomicUpdate, RelationInput, SetValue};
 use crate::core::object::Object;
 use crate::core::relation::Relation;
 use crate::core::value::Value;
@@ -189,6 +188,54 @@ impl InputDecoder {
         }
     }
 
+    fn decode_vec_input(&self, object: &Object, json_value: &JsonValue, field: &Field, path: &str, inner_field: &Box<Field>) -> Result<Input, ActionError> {
+        if json_value.is_array() {
+            let arr = json_value.as_array().unwrap();
+            Ok(SetValue(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
+                let new_path_name = path_name.to_string() + "." + &String::from(&i);
+                match self.decode_field_input(object, v, inner_field, &new_path_name) {
+                    SetValue(v) => v,
+                    _ => panic!()
+                }
+            }).collect())))
+        } else if json_value.is_object() {
+            let (key, value) = self.one_length_json_obj(json_value, path)?;
+            match key {
+                "set" => {
+                    match value {
+                        JsonValue::Null => {
+                            self.decode_null(field, path)
+                        }
+                        JsonValue::Array(arr) => {
+                            Ok(SetValue(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
+                                let new_path_name = path_name.to_string() + "." + &String::from(&i);
+                                match self.decode_user_field_input(v, field, &new_path_name) {
+                                    SetValue(v) => v,
+                                    _ => panic!()
+                                }
+                            }).collect())))
+                        }
+                        _ => {
+                            Err(ActionError::wrong_input_type())
+                        }
+                    }
+                }
+                "push" => {
+                    let inner_val = match self.decode_field_input(object, value, inner_field, path)? {
+                        SetValue(val) => val,
+                        _ => Err(ActionError::wrong_input_type())
+                    };
+                    Ok(AtomicUpdate(Push(inner_val)))
+                }
+                _ => {
+                    Err(ActionError::wrong_input_type())
+                }
+            }
+        } else {
+            Err(ActionError::wrong_input_type())
+        }
+    }
+
     fn decode_number_input(&self, object: &Object, json_value: &JsonValue, field: &Field, path: &str) -> Result<Input, ActionError> {
         let is_new = object.is_new();
         let number_type = match &field.field_type {
@@ -276,10 +323,32 @@ impl InputDecoder {
             FieldType::F32 | FieldType::F64 | FieldType::Decimal => {
                 self.decode_number_input(object, json_value, field, path)
             }
+            FieldType::Vec(inner_field) => {
+                self.decode_vec_input(object, json_value, field, path, inner_field)
+            }
+            _ => panic!()
         }
     }
 
-    fn decode_relation_input(&self, object: Object, json_value: &JsonValue, relation: &Relation, path_name: &str) -> Result<Input, ActionError> {
-        Ok(SetValue(Value::Null))
+    fn decode_relation_input(&self, object: Object, json_value: &JsonValue, relation: &Relation, path: &str) -> Result<Input, ActionError> {
+        if !json_value.is_object() {
+            Err(ActionError::wrong_input_type())
+        }
+        let (key, value) = self.one_length_json_obj(json_value, path)?;
+        let input = match key {
+            "create" => RelationInput::Create(value.clone()),
+            "createMany" => RelationInput::Create(value.clone()),
+            "set" => RelationInput::Set(value.clone()),
+            "connect" => RelationInput::Connect(value.clone()),
+            "connectOrCreate" => RelationInput::ConnectOrCreate(value.clone(), value.clone()),
+            "disconnect" => RelationInput::Disconnect(value.clone()),
+            "update" => RelationInput::Update(value.clone()),
+            "updateMany" => RelationInput::Update(value.clone()),
+            "upsert" => RelationInput::Upsert(value.clone(), value.clone()),
+            "delete" => RelationInput::Delete(value.clone()),
+            "deleteMany" => RelationInput::Delete(value.clone()),
+            _ => panic!()
+        };
+        Ok(RelationInput(input))
     }
 }
