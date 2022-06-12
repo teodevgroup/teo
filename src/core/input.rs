@@ -28,7 +28,7 @@ pub enum RelationInput {
     Delete(Value),
 }
 
-pub(crate) enum FieldInput {
+pub(crate) enum Input {
     SetValue(Value),
     AtomicUpdate(AtomicUpdateType),
     RelationInput(RelationInput),

@@ -10,9 +10,9 @@ use rust_decimal::prelude::FromStr;
 use serde_json::{Map, Value as JsonValue};
 use crate::core::argument::Argument;
 use crate::core::field::{Field, Optionality, Store};
-use crate::core::field_input::AtomicUpdateType::{Decrement, Divide, Increment, Multiply};
-use crate::core::field_input::FieldInput;
-use crate::core::field_input::FieldInput::{AtomicUpdate, SetValue};
+use crate::core::input::AtomicUpdateType::{Decrement, Divide, Increment, Multiply};
+use crate::core::input::FieldInput;
+use crate::core::input::FieldInput::{AtomicUpdate, SetValue};
 use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
@@ -491,6 +491,10 @@ impl Object {
         }
     }
 
+    pub(crate) fn is_new(&self) -> bool {
+        self.inner.is_new.load(Ordering::SeqCst)
+    }
+
     fn decode_user_field_input(&self, json_value: &JsonValue, field: &Field, path_name: &str) -> Result<FieldInput, ActionError> {
         if json_value == &JsonValue::Null {
             return if field.optionality == Optionality::Optional {
@@ -623,90 +627,90 @@ impl Object {
     }
 
     async fn set_or_update_json(&self, json_value: &JsonValue, process: bool) -> Result<(), ActionError> {
-        let json_object = json_value.as_object().unwrap();
-        // check keys first
-        let json_keys: Vec<&String> = json_object.keys().map(|k| { k }).collect();
-        let allowed_keys = if process {
-            self.model().input_keys().iter().map(|k| k).collect::<Vec<&String>>()
-        } else {
-            self.model().save_keys().iter().map(|k| k).collect::<Vec<&String>>()
-        };
-        let keys_valid = json_keys.iter().all(|item| allowed_keys.contains(item ));
-        if !keys_valid {
-            return Err(ActionError::keys_unallowed());
-        }
-        let all_model_keys = self.model().all_keys().iter().map(|k| k).collect::<Vec<&String>>();
-        // assign values
-        let initialized = self.inner.is_initialized.load(Ordering::SeqCst);
-        let keys_to_iterate = if initialized { &json_keys } else { &all_model_keys };
-        for key in keys_to_iterate {
-            let field = self.model().field(&key).unwrap();
-            let json_has_value = if initialized { true } else {
-                json_keys.contains(key)
-            };
-            if json_has_value {
-                let json_value = &json_object[&key.to_string()];
-                let input_result = self.decode_user_field_input(json_value, field, "");
-                let value_result = field.field_type.decode_value(json_value, self.graph());
-                let mut value;
-                match value_result {
-                    Ok(v) => { value = v }
-                    Err(e) => {
-                        match e.r#type {
-                            ActionErrorType::WrongEnumChoice => {
-                                return Err(ActionError::unexpected_enum_value(*key))
-                            }
-                            _ => return Err(e)
-                        }
-                    }
-                }
-                if process {
-                    // pipeline
-                    let mut stage = Stage::Value(value);
-                    stage = field.on_set_pipeline.process(stage.clone(), &self).await;
-                    match stage {
-                        Stage::Invalid(s) => {
-                            return Err(ActionError::invalid_input(&field.name, s));
-                        }
-                        Stage::Value(v) => {
-                            value = v
-                        }
-                        Stage::ConditionTrue(v) => {
-                            value = v
-                        }
-                        Stage::ConditionFalse(v) => {
-                            value = v
-                        }
-                    }
-                }
-                if value == Value::Null {
-                    if self.inner.is_new.load(Ordering::SeqCst) == false {
-                        self.inner.value_map.borrow_mut().remove(*key);
-                    }
-                } else {
-                    self.inner.value_map.borrow_mut().insert(key.to_string(), value);
-                }
-                if !self.inner.is_new.load(Ordering::SeqCst) {
-                    self.inner.is_modified.store(true, Ordering::SeqCst);
-                    self.inner.modified_fields.borrow_mut().insert(key.to_string());
-                }
-            } else {
-                // apply default values
-                if !initialized {
-                    if let Some(argument) = &field.default {
-                        match argument {
-                            Argument::ValueArgument(value) => {
-                                self.inner.value_map.borrow_mut().insert(key.to_string(), value.clone());
-                            }
-                            Argument::PipelineArgument(pipeline) => {
-                                let stage = pipeline.process(Stage::Value(Value::Null), &self).await;
-                                self.inner.value_map.borrow_mut().insert(key.to_string(), stage.value().unwrap());
-                            }
-                        }
-                    }
-                }
-            }
-        };
+        // let json_object = json_value.as_object().unwrap();
+        // // check keys first
+        // let json_keys: Vec<&String> = json_object.keys().map(|k| { k }).collect();
+        // let allowed_keys = if process {
+        //     self.model().input_keys().iter().map(|k| k).collect::<Vec<&String>>()
+        // } else {
+        //     self.model().save_keys().iter().map(|k| k).collect::<Vec<&String>>()
+        // };
+        // let keys_valid = json_keys.iter().all(|item| allowed_keys.contains(item ));
+        // if !keys_valid {
+        //     return Err(ActionError::keys_unallowed());
+        // }
+        // let all_model_keys = self.model().all_keys().iter().map(|k| k).collect::<Vec<&String>>();
+        // // assign values
+        // let initialized = self.inner.is_initialized.load(Ordering::SeqCst);
+        // let keys_to_iterate = if initialized { &json_keys } else { &all_model_keys };
+        // for key in keys_to_iterate {
+        //     let field = self.model().field(&key).unwrap();
+        //     let json_has_value = if initialized { true } else {
+        //         json_keys.contains(key)
+        //     };
+        //     if json_has_value {
+        //         let json_value = &json_object[&key.to_string()];
+        //         let input_result = self.decode_user_field_input(json_value, field, "");
+        //         let value_result = field.field_type.decode_value(json_value, self.graph());
+        //         let mut value;
+        //         match value_result {
+        //             Ok(v) => { value = v }
+        //             Err(e) => {
+        //                 match e.r#type {
+        //                     ActionErrorType::WrongEnumChoice => {
+        //                         return Err(ActionError::unexpected_enum_value(*key))
+        //                     }
+        //                     _ => return Err(e)
+        //                 }
+        //             }
+        //         }
+        //         if process {
+        //             // pipeline
+        //             let mut stage = Stage::Value(value);
+        //             stage = field.on_set_pipeline.process(stage.clone(), &self).await;
+        //             match stage {
+        //                 Stage::Invalid(s) => {
+        //                     return Err(ActionError::invalid_input(&field.name, s));
+        //                 }
+        //                 Stage::Value(v) => {
+        //                     value = v
+        //                 }
+        //                 Stage::ConditionTrue(v) => {
+        //                     value = v
+        //                 }
+        //                 Stage::ConditionFalse(v) => {
+        //                     value = v
+        //                 }
+        //             }
+        //         }
+        //         if value == Value::Null {
+        //             if self.inner.is_new.load(Ordering::SeqCst) == false {
+        //                 self.inner.value_map.borrow_mut().remove(*key);
+        //             }
+        //         } else {
+        //             self.inner.value_map.borrow_mut().insert(key.to_string(), value);
+        //         }
+        //         if !self.inner.is_new.load(Ordering::SeqCst) {
+        //             self.inner.is_modified.store(true, Ordering::SeqCst);
+        //             self.inner.modified_fields.borrow_mut().insert(key.to_string());
+        //         }
+        //     } else {
+        //         // apply default values
+        //         if !initialized {
+        //             if let Some(argument) = &field.default {
+        //                 match argument {
+        //                     Argument::ValueArgument(value) => {
+        //                         self.inner.value_map.borrow_mut().insert(key.to_string(), value.clone());
+        //                     }
+        //                     Argument::PipelineArgument(pipeline) => {
+        //                         let stage = pipeline.process(Stage::Value(Value::Null), &self).await;
+        //                         self.inner.value_map.borrow_mut().insert(key.to_string(), stage.value().unwrap());
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // };
         // set flag
         self.inner.is_initialized.store(true, Ordering::SeqCst);
         Ok(())
