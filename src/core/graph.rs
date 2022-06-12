@@ -17,8 +17,8 @@ pub struct Graph {
     models_map: HashMap<&'static str, * const Model>,
     url_segment_name_map: HashMap<String, &'static str>,
     connector: Option<Box<dyn Connector>>,
-    jwt_secret: &'static str,
-    host_url: &'static str,
+    jwt_secret: String,
+    host_url: String,
     clients: Vec<Arc<dyn Client>>,
 }
 
@@ -36,8 +36,8 @@ impl Graph {
             models_map: HashMap::new(),
             url_segment_name_map: HashMap::new(),
             connector: None,
-            jwt_secret: builder.jwt_secret,
-            host_url: builder.host_url.unwrap(),
+            jwt_secret: builder.jwt_secret.clone(),
+            host_url: builder.host_url.as_ref().unwrap().clone(),
             clients: builder.clients.clone(),
         };
         graph.models_vec = builder.models.iter().map(|mb| mb.build(&builder.connector_builder())).collect();
@@ -90,7 +90,7 @@ impl Graph {
         self.connector().count(self, model, finder).await
     }
 
-    pub fn new_object(&'static self, model: &'static str) -> Object {
+    pub fn new_object(&self, model: &str) -> Object {
         Object::new(self, self.model(model))
     }
 
@@ -101,11 +101,11 @@ impl Graph {
         }
     }
 
-    pub(crate) fn jwt_secret(&self) -> &'static str {
+    pub(crate) fn jwt_secret(&self) -> &str {
         return if self.jwt_secret == "" {
             panic!("A graph with identity must have a custom JWT secret.")
         } else {
-            self.jwt_secret
+            &self.jwt_secret
         }
     }
 
