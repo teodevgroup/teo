@@ -109,14 +109,14 @@ impl MongoDBConnector {
     }
 
     fn document_to_object(&self, document: &Document, object: &Object) -> Result<(), ActionError> {
-        let primary_name = if let Some(primary_field) = object.inner.model.primary_field() {
+        let primary_name = if let Some(primary_field) = object.model().primary_field() {
             primary_field.name.clone()
         } else {
             "__id".to_string()
         };
         for key in document.keys() {
             let object_key = if key == "_id" { &primary_name } else { key };
-            let field_type = if key == "_id" { &FieldType::ObjectId } else { &object.inner.model.field(key).unwrap().field_type };
+            let field_type = if key == "_id" { &FieldType::ObjectId } else { &object.model().field(key).unwrap().field_type };
             let bson_value = document.get(key).unwrap();
             let value_result = self.bson_value_to_field_value(object_key, bson_value, field_type);
             match value_result {
@@ -1071,7 +1071,7 @@ impl MongoDBConnector {
         if value.is_string() {
             let str = value.as_str().unwrap();
             let r#enum = graph.r#enum(enum_name);
-            if r#enum.contains(&str) {
+            if r#enum.contains(&str.to_string()) {
                 Ok(Bson::String(str.to_string()))
             } else {
                 Err(ActionError::undefined_enum_value())
@@ -1089,15 +1089,15 @@ impl Connector for MongoDBConnector {
 
     async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
         let is_new = object.inner.is_new.load(Ordering::SeqCst);
-        let primary_name = object.inner.model.primary_field_name();
+        let primary_name = object.model().primary_field_name();
         let keys = if is_new {
-            object.inner.model.save_keys().clone()
+            object.model().save_keys().clone()
         } else {
-            object.inner.model.save_keys().iter().filter(|k| {
+            object.model().save_keys().iter().filter(|k| {
                 object.inner.modified_fields.borrow().contains(&k.to_string())
             }).map(|k| { k.clone() }).collect()
         };
-        let col = &self.collections[object.inner.model.name()];
+        let col = &self.collections[object.model().name()];
         if is_new {
             let mut doc = doc!{};
             for key in keys {
@@ -1119,7 +1119,7 @@ impl Connector for MongoDBConnector {
             match result {
                 Ok(insert_one_result) => {
                     let id = insert_one_result.inserted_id.as_object_id().unwrap().to_hex();
-                    if let Some(primary_field) = object.inner.model.primary_field() {
+                    if let Some(primary_field) = object.model().primary_field() {
                         object.set_value(&primary_field.name, Value::ObjectId(id));
                     } else {
                         object.inner.value_map.borrow_mut().insert("__id".to_string(), Value::ObjectId(id));
@@ -1130,7 +1130,7 @@ impl Connector for MongoDBConnector {
                 }
             }
         } else {
-            let object_id = if let Some(primary_field) = object.inner.model.primary_field() {
+            let object_id = if let Some(primary_field) = object.model().primary_field() {
                 object.get_value(&primary_field.name).unwrap().unwrap().to_bson_value()
             } else {
                 object.inner.value_map.borrow().get("__id").unwrap().to_bson_value()
@@ -1183,12 +1183,12 @@ impl Connector for MongoDBConnector {
         if object.inner.is_new.load(Ordering::SeqCst) {
             return Err(ActionError::object_is_not_saved());
         }
-        let object_id = if let Some(primary_field) = object.inner.model.primary_field() {
+        let object_id = if let Some(primary_field) = object.model().primary_field() {
             object.get_value(primary_field.name.clone()).unwrap().unwrap().to_bson_value()
         } else {
             object.inner.value_map.borrow().get("__id").unwrap().to_bson_value()
         };
-        let col = &self.collections[object.inner.model.name()];
+        let col = &self.collections[object.model().name()];
         let result = col.delete_one(doc!{"_id": object_id}, None).await;
         return match result {
             Ok(_result) => {

@@ -22,7 +22,7 @@ pub struct Object {
 
 impl Object {
 
-    pub(crate) fn new<'g>(graph: &'static Graph, model: &'static Model) -> Object {
+    pub(crate) fn new<'g>(graph: &Graph, model: &Model) -> Object {
         Object { inner: Arc::new(ObjectInner {
             model,
             graph,
@@ -48,7 +48,7 @@ impl Object {
 
     pub fn set_value(&self, key: impl Into<String>, value: Value) -> Result<(), ActionError> {
         let key = key.into();
-        let model_keys = self.inner.model.save_keys();
+        let model_keys = self.model().save_keys();
         if !model_keys.contains(&key) {
             return Err(ActionError::keys_unallowed());
         }
@@ -66,7 +66,7 @@ impl Object {
 
     pub fn get_value(&self, key: impl Into<String>) -> Result<Option<Value>, ActionError> {
         let key = key.into();
-        let model_keys = &self.inner.model.get_value_keys(); // TODO: should be all keys
+        let model_keys = &self.model().get_value_keys(); // TODO: should be all keys
         if !model_keys.contains(&key) {
             return Err(ActionError::keys_unallowed());
         }
@@ -87,7 +87,7 @@ impl Object {
 
     pub fn deselect(&self, keys: HashSet<String>) -> Result<(), ActionError> {
         if self.inner.selected_fields.borrow().len() == 0 {
-            self.inner.selected_fields.borrow_mut().extend(self.inner.model.output_keys().iter().map(|s| { s.to_string()}));
+            self.inner.selected_fields.borrow_mut().extend(self.model().output_keys().iter().map(|s| { s.to_string()}));
         }
         for key in keys {
             self.inner.selected_fields.borrow_mut().remove(&key);
@@ -97,9 +97,9 @@ impl Object {
 
     pub async fn save(&self) -> Result<(), ActionError> {
         // apply on save pipeline first
-        let model_keys = self.inner.model.save_keys();
+        let model_keys = self.model().save_keys();
         for key in model_keys {
-            let field = self.inner.model.field(&key).unwrap();
+            let field = self.model().field(&key).unwrap();
             if field.needs_on_save_callback() {
                 let mut stage = match self.inner.value_map.borrow().deref().get(&key.to_string()) {
                     Some(value) => {
@@ -126,7 +126,7 @@ impl Object {
         }
         // validate required fields
         for key in model_keys {
-            let field = self.inner.model.field(key).unwrap();
+            let field = self.model().field(key).unwrap();
             if field.auto || field.auto_increment {
                 continue
             }
@@ -144,7 +144,7 @@ impl Object {
         }
 
         // send to database to save
-        let connector = self.inner.graph.connector();
+        let connector = self.graph().connector();
         let save_result = connector.save_object(self).await;
         match save_result {
             Ok(()) => {
@@ -162,13 +162,13 @@ impl Object {
     }
 
     pub async fn delete(&self) -> Result<(), ActionError> {
-        let connector = self.inner.graph.connector();
+        let connector = self.graph().connector();
         connector.delete_object(self).await
     }
 
     pub fn to_json(&self) -> JsonValue {
         let mut map: Map<String, JsonValue> = Map::new();
-        let keys = self.inner.model.output_keys();
+        let keys = self.model().output_keys();
         for key in keys {
             let value = self.get_value(key).unwrap();
             match value {
@@ -192,26 +192,26 @@ impl Object {
         // check keys first
         let json_keys: Vec<&String> = json_object.keys().map(|k| { k }).collect();
         let allowed_keys = if process {
-            self.inner.model.input_keys().iter().map(|k| k).collect::<Vec<&String>>()
+            self.model().input_keys().iter().map(|k| k).collect::<Vec<&String>>()
         } else {
-            self.inner.model.save_keys().iter().map(|k| k).collect::<Vec<&String>>()
+            self.model().save_keys().iter().map(|k| k).collect::<Vec<&String>>()
         };
         let keys_valid = json_keys.iter().all(|item| allowed_keys.contains(item ));
         if !keys_valid {
             return Err(ActionError::keys_unallowed());
         }
-        let all_model_keys = self.inner.model.all_keys().iter().map(|k| k).collect::<Vec<&String>>();
+        let all_model_keys = self.model().all_keys().iter().map(|k| k).collect::<Vec<&String>>();
         // assign values
         let initialized = self.inner.is_initialized.load(Ordering::SeqCst);
         let keys_to_iterate = if initialized { &json_keys } else { &all_model_keys };
         for key in keys_to_iterate {
-            let field = self.inner.model.field(&key);
+            let field = self.model().field(&key).unwrap();
             let json_has_value = if initialized { true } else {
                 json_keys.contains(key)
             };
             if json_has_value {
                 let json_value = &json_object[&key.to_string()];
-                let value_result = field.unwrap().field_type.decode_value(json_value, self.inner.graph);
+                let value_result = field.field_type.decode_value(json_value, self.graph());
                 let mut value;
                 match value_result {
                     Ok(v) => { value = v }
@@ -227,10 +227,10 @@ impl Object {
                 if process {
                     // pipeline
                     let mut stage = Stage::Value(value);
-                    stage = field.unwrap().on_set_pipeline.process(stage.clone(), &self).await;
+                    stage = field.on_set_pipeline.process(stage.clone(), &self).await;
                     match stage {
                         Stage::Invalid(s) => {
-                            return Err(ActionError::invalid_input(&field.unwrap().name, s));
+                            return Err(ActionError::invalid_input(&field.name, s));
                         }
                         Stage::Value(v) => {
                             value = v
@@ -257,7 +257,7 @@ impl Object {
             } else {
                 // apply default values
                 if !initialized {
-                    if let Some(argument) = &field.unwrap().default {
+                    if let Some(argument) = &field.default {
                         match argument {
                             Argument::ValueArgument(value) => {
                                 self.inner.value_map.borrow_mut().insert(key.to_string(), value.clone());
@@ -277,7 +277,7 @@ impl Object {
     }
 
     pub(crate) fn identifier(&self) -> Value {
-        if let Some(primary_field) = self.inner.model.primary_field() {
+        if let Some(primary_field) = self.model().primary_field() {
             self.get_value(primary_field.name.clone()).unwrap().unwrap()
         } else {
             panic!("Identity model must have primary field defined explicitly.");
@@ -285,13 +285,21 @@ impl Object {
     }
 
     pub(crate) fn is_instance_of(&self, model_name: &'static str) -> bool {
-        self.inner.model.name() == model_name
+        self.model().name() == model_name
+    }
+
+    pub(crate) fn model(&self) -> &Model {
+        unsafe { &*self.model() }
+    }
+
+    pub(crate) fn graph(&self) -> &Graph {
+        unsafe { &*self.graph() }
     }
 }
 
 pub(crate) struct ObjectInner {
-    pub(crate) model: &'static Model,
-    pub(crate) graph: &'static Graph,
+    pub(crate) model: * const Model,
+    pub(crate) graph: * const Graph,
     pub(crate) is_initialized: AtomicBool,
     pub(crate) is_new: AtomicBool,
     pub(crate) is_modified: AtomicBool,
@@ -305,7 +313,7 @@ pub(crate) struct ObjectInner {
 
 impl Debug for Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut result = f.debug_struct(self.inner.model.name());
+        let mut result = f.debug_struct(self.model().name());
         for (key, value) in self.inner.value_map.borrow().iter() {
             result.field(key, value);
         }
@@ -318,6 +326,6 @@ unsafe impl Sync for ObjectInner {}
 
 impl PartialEq for Object {
     fn eq(&self, other: &Self) -> bool {
-        self.inner.model == other.inner.model && self.identifier() == other.identifier()
+        self.model() == other.model() && self.identifier() == other.identifier()
     }
 }

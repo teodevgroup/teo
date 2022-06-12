@@ -36,7 +36,7 @@ pub(crate) enum FieldType {
 
 impl FieldType {
 
-    pub(crate) fn decode_value(&self, json_value: &JsonValue, graph: &'static Graph) -> Result<Value, ActionError> {
+    pub(crate) fn decode_value(&self, json_value: &JsonValue, graph: &Graph) -> Result<Value, ActionError> {
         if *json_value == JsonValue::Null {
             return Ok(Value::Null);
         }
@@ -188,8 +188,8 @@ impl FieldType {
                 if json_value.is_string() {
                     let string = String::from(json_value.as_str().unwrap());
                     let enums = graph.enums();
-                    let vals = enums.get(enum_name).unwrap();
-                    if vals.contains(&&*string) {
+                    let vals = enums.get(&enum_name.to_string()).unwrap();
+                    if vals.contains(&string) {
                         Ok(Value::String(string))
                     } else {
                         Err(ActionError::wrong_enum_choice())

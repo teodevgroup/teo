@@ -8,7 +8,7 @@ use crate::core::client::Client;
 
 
 pub struct GraphBuilder {
-    pub(crate) enums: HashMap<&'static str, Vec<&'static str>>,
+    pub(crate) enums: HashMap<String, Vec<String>>,
     pub(crate) models: Vec<ModelBuilder>,
     pub(crate) connector_builder: Option<Box<dyn ConnectorBuilder>>,
     pub(crate) reset_database: bool,
@@ -38,8 +38,8 @@ impl GraphBuilder {
         }
     }
 
-    pub fn r#enum(&mut self, name: &'static str, values: Vec<&'static str>) {
-        self.enums.insert(name, values);
+    pub fn r#enum<I, S, N>(&mut self, name: N, values: I) where I: IntoIterator<Item = S>, S: Into<String>, N: Into<String> {
+        self.enums.insert(name.into(), values.into_iter().map(Into::into).collect());
     }
 
     pub fn model<F: Fn(&mut ModelBuilder)>(&mut self, name: &'static str, build: F) {

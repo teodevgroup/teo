@@ -12,7 +12,7 @@ use crate::error::ActionError;
 
 #[derive(Debug)]
 pub struct Graph {
-    enums: HashMap<&'static str, Vec<&'static str>>,
+    enums: HashMap<String, Vec<String>>,
     models_vec: Vec<Model>,
     models_map: HashMap<&'static str, * const Model>,
     url_segment_name_map: HashMap<String, &'static str>,
@@ -66,17 +66,13 @@ impl Graph {
         }
     }
 
-    pub(crate) fn r#enum(&self, name: &str) -> &Vec<&'static str> {
-        &self.enums.get(name).unwrap()
+    pub(crate) fn r#enum(&self, name: impl Into<String>) -> &Vec<String> {
+        &self.enums.get(&name.into()).unwrap()
     }
 
-    pub(crate) fn models(&'static self) -> &'static Vec<Model> {
-        &self.models_vec
-    }
+    pub(crate) fn models(&self) -> &Vec<Model> { &self.models_vec }
 
-    pub(crate) fn enums(&'static self) -> &'static HashMap<&'static str, Vec<&'static str>> {
-        &self.enums
-    }
+    pub(crate) fn enums(&self) -> &HashMap<String, Vec<String>> { &self.enums }
 
     pub(crate) async fn find_unique(&'static self, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
         self.connector().find_unique(self, model, finder).await

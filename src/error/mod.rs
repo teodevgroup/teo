@@ -109,9 +109,9 @@ impl ActionError {
         }
     }
 
-    pub fn invalid_input(key: &'static str, reason: String) -> Self {
+    pub fn invalid_input(key: impl Into<String>, reason: String) -> Self {
         let mut fields = HashMap::with_capacity(1);
-        fields.insert(key.to_string(), reason);
+        fields.insert(key.into(), reason);
         ActionError {
             r#type: ActionErrorType::InvalidInput,
             message: "Invalid value found in input values.".to_string(),
