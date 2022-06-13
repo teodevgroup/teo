@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::ops::Neg;
 use chrono::prelude::{Date, DateTime, Utc};
 use chrono::SecondsFormat;
 use rust_decimal::Decimal;
@@ -149,6 +150,60 @@ impl Value {
             Value::U64(n) => Some(*n as usize),
             Value::U128(n) => Some(*n as usize),
             _ => None
+        }
+    }
+
+    pub(crate) fn recip(&self) -> f64 {
+        match self {
+            Value::I8(n) => (*n as f64).recip(),
+            Value::I16(n) => (*n as f64).recip(),
+            Value::I32(n) => (*n as f64).recip(),
+            Value::I64(n) => (*n as f64).recip(),
+            Value::I128(n) => (*n as f64).recip(),
+            Value::U8(n) => (*n as f64).recip(),
+            Value::U16(n) => (*n as f64).recip(),
+            Value::U32(n) => (*n as f64).recip(),
+            Value::U64(n) => (*n as f64).recip(),
+            Value::U128(n) => (*n as f64).recip(),
+            Value::F32(n) => (*n as f64).recip(),
+            Value::F64(n) => (*n as f64).recip(),
+            Value::Decimal(n) => panic!("decimal div todo"),
+            _ => panic!()
+        }
+    }
+
+    pub(crate) fn neg(&self) -> Value {
+        match self {
+            Value::Bool(val) => {
+                Value::Bool(if *val { false } else { true })
+            }
+            Value::I8(val) => {
+                Value::I8(-val)
+            }
+            Value::I16(val) => {
+                Value::I16(-val)
+            }
+            Value::I32(val) => {
+                Value::I32(-val)
+            }
+            Value::I64(val) => {
+                Value::I64(-val)
+            }
+            Value::I128(val) => {
+                Value::I128(-val)
+            }
+            Value::F32(val) => {
+                Value::F32(-val)
+            }
+            Value::F64(val) => {
+                Value::F64(-val)
+            }
+            Value::Decimal(val) => {
+                Value::Decimal(-val)
+            }
+            _ => {
+                panic!("Cannot neg.")
+            }
         }
     }
 }

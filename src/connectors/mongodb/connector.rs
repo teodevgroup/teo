@@ -4,12 +4,12 @@ use rust_decimal::prelude::FromStr;
 use std::sync::atomic::{Ordering};
 use serde_json::{Map, Value as JsonValue};
 use async_trait::async_trait;
-use bson::{Bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
+use bson::{Bson, bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
 use chrono::{Date, NaiveDate, Utc, DateTime};
 use futures_util::StreamExt;
 use mongodb::{options::ClientOptions, Client, Database, Collection, IndexModel};
 use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
-use mongodb::options::{IndexOptions};
+use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use regex::Regex;
 use rust_decimal::Decimal;
 use crate::core::connector::Connector;
@@ -17,6 +17,7 @@ use crate::core::object::Object;
 use crate::core::field::Sort;
 use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
+use crate::core::input::AtomicUpdateType;
 use crate::core::input_decoder::decode_field_value;
 use crate::core::model::{Model, ModelIndex, ModelIndexType};
 use crate::core::value::Value;
@@ -1095,7 +1096,8 @@ impl Connector for MongoDBConnector {
             object.model().save_keys().clone()
         } else {
             object.model().save_keys().iter().filter(|k| {
-                object.inner.modified_fields.borrow().contains(&k.to_string())
+                object.inner.modified_fields.borrow().contains(&k.to_string()) ||
+                    object.inner.atomic_updator_map.borrow().contains_key(&k.to_string())
             }).map(|k| { k.clone() }).collect()
         };
         let col = &self.collections[object.model().name()];
@@ -1138,19 +1140,50 @@ impl Connector for MongoDBConnector {
             };
             let mut set = doc!{};
             let mut unset = doc!{};
+            let mut inc = doc!{};
+            let mut mul = doc!{};
+            let mut push = doc!{};
             for key in &keys {
-                let val = object.get_value(key).unwrap();
-                let json_val = match val {
-                    None => Bson::Null,
-                    Some(v) => v.to_bson_value()
-                };
-                match &primary_name {
-                    Some(name) => {
-                        if key == name {
-                            if json_val != Bson::Null {
-                                set.insert("_id", json_val);
+                if object.inner.atomic_updator_map.borrow().contains_key(key) {
+                    let updator = object.inner.atomic_updator_map.borrow().get(key).unwrap();
+                    match updator {
+                        AtomicUpdateType::Increment(val) => {
+                            inc.insert(key, val.to_bson_value());
+                        }
+                        AtomicUpdateType::Decrement(val) => {
+                            inc.insert(key, (val.neg()).to_bson_value());
+                        }
+                        AtomicUpdateType::Multiply(val) => {
+                            mul.insert(key, val.to_bson_value());
+                        }
+                        AtomicUpdateType::Divide(val) => {
+                            mul.insert(key, Bson::Double(val.recip()));
+                        }
+                        AtomicUpdateType::Push(val) => {
+                            push.insert(key, val.to_bson_value());
+                        }
+                    };
+                } else {
+                    let val = object.get_value(key).unwrap();
+                    let json_val = match val {
+                        None => Bson::Null,
+                        Some(v) => v.to_bson_value()
+                    };
+                    match &primary_name {
+                        Some(name) => {
+                            if key == name {
+                                if json_val != Bson::Null {
+                                    set.insert("_id", json_val);
+                                }
+                            } else {
+                                if json_val == Bson::Null {
+                                    unset.insert(key, json_val);
+                                } else {
+                                    set.insert(key, json_val);
+                                }
                             }
-                        } else {
+                        }
+                        None => {
                             if json_val == Bson::Null {
                                 unset.insert(key, json_val);
                             } else {
@@ -1158,22 +1191,61 @@ impl Connector for MongoDBConnector {
                             }
                         }
                     }
-                    None => {
-                        if json_val == Bson::Null {
-                            unset.insert(key, json_val);
-                        } else {
-                            set.insert(key, json_val);
-                        }
-                    }
                 }
             }
-            let result = col.update_one(doc!{"_id": object_id}, doc!{"$set": set, "$unset": unset}, None).await;
-            return match result {
-                Ok(update_result) => {
-                    Ok(())
+            let mut update_doc = doc!{};
+            let mut return_new = false;
+            if !set.is_empty() {
+                update_doc.insert("$set", set);
+            }
+            if !unset.is_empty() {
+                update_doc.insert("$unset", unset);
+            }
+            if !inc.is_empty() {
+                update_doc.insert("$inc", inc);
+                return_new = true;
+            }
+            if !mul.is_empty() {
+                update_doc.insert("$mul", mul);
+                return_new = true;
+            }
+            if !push.is_empty() {
+                update_doc.insert("$push", push);
+                return_new = true;
+            }
+            if !return_new {
+                let result = col.update_one(doc!{"_id": object_id}, update_doc, None).await;
+                // sync result back
+                return match result {
+                    Ok(update_result) => {
+                        Ok(())
+                    }
+                    Err(error) => {
+                        Err(self._handle_write_error(*error.kind))
+                    }
                 }
-                Err(error) => {
-                    Err(self._handle_write_error(*error.kind))
+            } else {
+                let options = FindOneAndUpdateOptions::builder().return_document(ReturnDocument::After).build();
+                let result = col.find_one_and_update(doc!{"_id": object_id}, update_doc, options).await;
+                match result {
+                    Ok(updated_document) => {
+                        for key in object.inner.atomic_updator_map.borrow().keys() {
+                            let bson_new_val = updated_document.unwrap().get(key).unwrap();
+                            let field = object.model().field(key).unwrap();
+                            let field_value = self.bson_value_to_field_value(key, bson_new_val, &field.field_type);
+                            match field_value {
+                                Ok(field_value) => {
+                                    object.inner.value_map.borrow_mut().insert(key.to_string(), field_value);
+                                }
+                                Err(err) => {
+                                    panic!("here cannot error");
+                                }
+                            }
+                        }
+                    }
+                    Err(error) => {
+                        return Err(self._handle_write_error(*error.kind));
+                    }
                 }
             }
         }
