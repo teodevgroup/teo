@@ -343,7 +343,7 @@ impl MongoDBConnector {
         };
     }
 
-    fn _handle_write_error(&self, error_kind: ErrorKind) -> ActionError {
+    fn _handle_write_error(&self, error_kind: &ErrorKind) -> ActionError {
         match error_kind {
             ErrorKind::Write(write) => {
                 match write {
@@ -1129,7 +1129,7 @@ impl Connector for MongoDBConnector {
                     }
                 }
                 Err(error) => {
-                    return Err(self._handle_write_error(*error.kind));
+                    return Err(self._handle_write_error(&error.kind));
                 }
             }
         } else {
@@ -1145,7 +1145,8 @@ impl Connector for MongoDBConnector {
             let mut push = doc!{};
             for key in &keys {
                 if object.inner.atomic_updator_map.borrow().contains_key(key) {
-                    let updator = object.inner.atomic_updator_map.borrow().get(key).unwrap();
+                    let aumap = object.inner.atomic_updator_map.borrow();
+                    let updator = aumap.get(key).unwrap();
                     match updator {
                         AtomicUpdateType::Increment(val) => {
                             inc.insert(key, val.to_bson_value());
@@ -1221,16 +1222,16 @@ impl Connector for MongoDBConnector {
                         Ok(())
                     }
                     Err(error) => {
-                        Err(self._handle_write_error(*error.kind))
+                        Err(self._handle_write_error(&error.kind))
                     }
                 }
             } else {
                 let options = FindOneAndUpdateOptions::builder().return_document(ReturnDocument::After).build();
                 let result = col.find_one_and_update(doc!{"_id": object_id}, update_doc, options).await;
-                match result {
+                match &result {
                     Ok(updated_document) => {
                         for key in object.inner.atomic_updator_map.borrow().keys() {
-                            let bson_new_val = updated_document.unwrap().get(key).unwrap();
+                            let bson_new_val = updated_document.as_ref().unwrap().get(key).unwrap();
                             let field = object.model().field(key).unwrap();
                             let field_value = self.bson_value_to_field_value(key, bson_new_val, &field.field_type);
                             match field_value {
@@ -1244,7 +1245,7 @@ impl Connector for MongoDBConnector {
                         }
                     }
                     Err(error) => {
-                        return Err(self._handle_write_error(*error.kind));
+                        return Err(self._handle_write_error(&error.kind));
                     }
                 }
             }
