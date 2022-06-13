@@ -7,6 +7,8 @@ use futures_util::StreamExt;
 use serde_json::{json, Map, Value as JsonValue};
 use crate::action::action::ActionType;
 use crate::core::graph::Graph;
+use crate::core::input::Input;
+use crate::core::input_decoder::decode_field_input;
 use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::stage::Stage;
@@ -488,7 +490,7 @@ impl Server {
         } else if by_key == None {
             return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_auth_checker()}));
         }
-        let by_field = model.field(by_key.unwrap());
+        let by_field = model.field(by_key.unwrap()).unwrap();
         let obj_result = self.graph.find_unique(model, json!({
             "where": {
                 identity_key.unwrap(): identity_value.unwrap()
@@ -498,13 +500,23 @@ impl Server {
             return HttpResponse::BadRequest().json(json!({"error": err}));
         }
         let obj = obj_result.unwrap();
-        let auth_by_arg = by_field.unwrap().auth_by_arg.as_ref().unwrap();
+        let auth_by_arg = by_field.auth_by_arg.as_ref().unwrap();
         let pipeline = auth_by_arg.as_pipeline().unwrap();
-        let action_by_value = by_field.unwrap().field_type.decode_value(by_value.unwrap(), self.graph);
-        if let Err(err) = action_by_value {
-            return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_input_type()}));
-        }
-        let stage = Stage::Value(action_by_value.unwrap());
+        let action_by_input = decode_field_input(&obj, by_value.unwrap(), by_field, &by_field.name);
+        let action_by_value = match action_by_input {
+            Err(err) => {
+                return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_input_type()}));
+            }
+            Ok(val) => {
+                match val {
+                    Input::SetValue(value) => {
+                        value
+                    }
+                    _ => panic!()
+                }
+            }
+        };
+        let stage = Stage::Value(action_by_value);
         let final_stage = pipeline.process(stage, &obj).await;
         let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
         let claims = Claims {

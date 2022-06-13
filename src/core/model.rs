@@ -112,25 +112,25 @@ impl Model {
         self.index_fields.iter().map(|f| { unsafe { &**f } }).collect()
     }
 
-    pub(crate) fn all_keys(&self) -> &Vec<String> { &self.all_keys }
+    pub(crate) fn all_keys(&self) -> &Vec<&String> { &self.all_keys }
 
-    pub(crate) fn input_keys(&self) -> &Vec<String> {
+    pub(crate) fn input_keys(&self) -> &Vec<&String> {
         &self.input_keys
     }
 
-    pub(crate) fn save_keys(&self) -> &Vec<String> {
+    pub(crate) fn save_keys(&self) -> &Vec<&String> {
         &self.save_keys
     }
 
-    pub(crate) fn output_keys(&self) -> &Vec<String> {
+    pub(crate) fn output_keys(&self) -> &Vec<&String> {
         &self.output_keys
     }
 
-    pub(crate) fn get_value_keys(&self) -> &Vec<String> {
+    pub(crate) fn get_value_keys(&self) -> &Vec<&String> {
         &self.get_value_keys
     }
 
-    pub(crate) fn query_keys(&self) -> &Vec<String> {
+    pub(crate) fn query_keys(&self) -> &Vec<&String> {
         &self.query_keys
     }
 
@@ -138,9 +138,9 @@ impl Model {
         &self.unique_query_keys
     }
 
-    pub(crate) fn auth_identity_keys(&self) -> &Vec<String> { &self.auth_identity_keys }
+    pub(crate) fn auth_identity_keys(&self) -> &Vec<&String> { &self.auth_identity_keys }
 
-    pub(crate) fn auth_by_keys(&self) -> &Vec<String> { &self.auth_by_keys }
+    pub(crate) fn auth_by_keys(&self) -> &Vec<&String> { &self.auth_by_keys }
 
     pub(crate) fn has_action(&self, action: ActionType) -> bool {
         self.actions.contains(&action)
