@@ -502,7 +502,7 @@ impl Server {
         let obj = obj_result.unwrap();
         let auth_by_arg = by_field.auth_by_arg.as_ref().unwrap();
         let pipeline = auth_by_arg.as_pipeline().unwrap();
-        let action_by_input = decode_field_input(&obj, by_value.unwrap(), by_field, &by_field.name);
+        let action_by_input = decode_field_input(obj.graph(), by_value.unwrap(), by_field, &by_field.name);
         let action_by_value = match action_by_input {
             Err(err) => {
                 return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_input_type()}));

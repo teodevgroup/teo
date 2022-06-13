@@ -17,6 +17,7 @@ use crate::core::object::Object;
 use crate::core::field::Sort;
 use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
+use crate::core::input_decoder::decode_field_value;
 use crate::core::model::{Model, ModelIndex, ModelIndexType};
 use crate::core::value::Value;
 use crate::error::ActionError;
@@ -1221,7 +1222,7 @@ impl Connector for MongoDBConnector {
         for (key, value) in values {
             let field = model.field(key).unwrap();
             let query_key = field.column_name();
-            let decode_result = field.field_type.decode_value(value, graph);
+            let decode_result = decode_field_value(graph, value, field, &field.name);
             match decode_result {
                 Ok(value) => {
                     query_doc.insert(query_key, value.to_bson_value());
