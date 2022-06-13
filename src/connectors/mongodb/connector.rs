@@ -26,7 +26,7 @@ use crate::error::ActionError;
 pub struct MongoDBConnector {
     client: Client,
     database: Database,
-    collections: HashMap<&'static str, Collection<Document>>
+    collections: HashMap<String, Collection<Document>>
 }
 
 impl MongoDBConnector {
@@ -37,7 +37,7 @@ impl MongoDBConnector {
         if reset_database {
             let _ = database.drop(None).await;
         }
-        let mut collections: HashMap<&'static str, Collection<Document>> = HashMap::new();
+        let mut collections: HashMap<String, Collection<Document>> = HashMap::new();
         for model in models {
             let name = model.name();
             let collection: Collection<Document> = database.collection(model.table_name());
@@ -99,7 +99,7 @@ impl MongoDBConnector {
                     let result = collection.create_index(index_model, None).await;
                 }
             }
-            collections.insert(name, collection);
+            collections.insert(name.clone(), collection);
         }
         MongoDBConnector {
             client,

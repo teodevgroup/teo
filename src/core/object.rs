@@ -106,7 +106,7 @@ impl Object {
         // apply on save pipeline first
         let model_keys = self.model().save_keys();
         for key in model_keys {
-            let field = self.model().field(&key).unwrap();
+            let field = self.model().field(key).unwrap();
             if field.needs_on_save_callback() {
                 let mut stage = match self.inner.value_map.borrow().deref().get(&key.to_string()) {
                     Some(value) => {

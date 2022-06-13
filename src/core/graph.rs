@@ -14,8 +14,8 @@ use crate::error::ActionError;
 pub struct Graph {
     enums: HashMap<String, Vec<String>>,
     models_vec: Vec<Model>,
-    models_map: HashMap<&'static str, * const Model>,
-    url_segment_name_map: HashMap<String, &'static str>,
+    models_map: HashMap<String, * const Model>,
+    url_segment_name_map: HashMap<String, String>,
     connector: Option<Box<dyn Connector>>,
     jwt_secret: String,
     host_url: String,
@@ -41,11 +41,11 @@ impl Graph {
             clients: builder.clients.clone(),
         };
         graph.models_vec = builder.models.iter().map(|mb| mb.build(&builder.connector_builder())).collect();
-        let mut models_map: HashMap<&'static str, * const Model> = HashMap::new();
-        let mut url_segment_name_map: HashMap<String, &'static str> = HashMap::new();
+        let mut models_map: HashMap<String, * const Model> = HashMap::new();
+        let mut url_segment_name_map: HashMap<String, String> = HashMap::new();
         for model in graph.models_vec.iter() {
-            models_map.insert(model.name(), addr_of!(*model));
-            url_segment_name_map.insert(model.url_segment_name().clone(), model.name());
+            models_map.insert(model.name().clone(), addr_of!(*model));
+            url_segment_name_map.insert(model.url_segment_name().clone(), model.name().clone());
         }
         graph.models_map = models_map;
         graph.url_segment_name_map = url_segment_name_map;
@@ -94,9 +94,9 @@ impl Graph {
         Object::new(self, self.model(model))
     }
 
-    pub(crate) fn model_name_for_url_segment_name(&self, segment_name: &str) -> Option<&str> {
+    pub(crate) fn model_name_for_url_segment_name(&self, segment_name: &String) -> Option<&String> {
         match self.url_segment_name_map.get(segment_name) {
-            Some(val) => Some(*val),
+            Some(val) => Some(val),
             None => None
         }
     }

@@ -424,6 +424,7 @@ impl ActionError {
     }
 
     pub fn expected(expected_json_type: impl Into<String>, field: impl Into<String>) -> Self {
+        let expected_json_type = expected_json_type.into();
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
         errors.insert(field.into(), "Unexpected field type.".to_string());
         ActionError {

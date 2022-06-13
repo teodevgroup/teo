@@ -47,7 +47,7 @@ impl Server {
             .default_service(web::route().to(move |r: HttpRequest, mut payload: web::Payload| async move {
                 let path = r.path();
                 if path.len() > 7 && path.ends_with("/action") {
-                    let model_url_segment_name = &path[1..path.len() - 7];
+                    let model_url_segment_name = &path[1..path.len() - 7].to_string();
                     match this.model_name_for_url_segment_name(model_url_segment_name) {
                         Some(model_name) => {
                             if r.method() == Method::POST {

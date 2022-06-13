@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::ptr::null;
+use std::rc::Rc;
 use crate::action::action::ActionType;
 use crate::core::field::{Field, Sort};
 use crate::core::permission::Permission;
@@ -29,11 +30,11 @@ pub(crate) struct ModelIndex {
 
 #[derive(Debug)]
 pub(crate) struct Model {
-    pub(crate) name: &'static str,
+    pub(crate) name: String,
     pub(crate) table_name: String,
     pub(crate) url_segment_name: String,
-    pub(crate) localized_name: &'static str,
-    pub(crate) description: &'static str,
+    pub(crate) localized_name: String,
+    pub(crate) description: String,
     pub(crate) identity: bool,
     pub(crate) actions: HashSet<ActionType>,
     pub(crate) permission: Option<Permission>,
@@ -45,21 +46,21 @@ pub(crate) struct Model {
     pub(crate) primary: ModelIndex,
     pub(crate) primary_field: * const Field,
     pub(crate) index_fields: Vec<* const Field>,
-    pub(crate) all_keys: Vec<* const String>,
-    pub(crate) input_keys: Vec<* const String>,
-    pub(crate) save_keys: Vec<* const String>,
-    pub(crate) output_keys: Vec<* const String>,
-    pub(crate) get_value_keys: Vec<* const String>,
-    pub(crate) query_keys: Vec<* const String>,
+    pub(crate) all_keys: Vec<String>,
+    pub(crate) input_keys: Vec<String>,
+    pub(crate) save_keys: Vec<String>,
+    pub(crate) output_keys: Vec<String>,
+    pub(crate) get_value_keys: Vec<String>,
+    pub(crate) query_keys: Vec<String>,
     pub(crate) unique_query_keys: Vec<HashSet<String>>,
-    pub(crate) auth_identity_keys: Vec<* const String>,
-    pub(crate) auth_by_keys: Vec<* const String>,
+    pub(crate) auth_identity_keys: Vec<String>,
+    pub(crate) auth_by_keys: Vec<String>,
 }
 
 impl Model {
 
-    pub(crate) fn name(&self) -> &'static str {
-        self.name
+    pub(crate) fn name(&self) -> &String {
+        &self.name
     }
 
     pub(crate) fn table_name(&self) -> &String {
@@ -70,12 +71,12 @@ impl Model {
         &self.url_segment_name
     }
 
-    pub(crate) fn localized_name(&self) -> &'static str {
-        self.localized_name
+    pub(crate) fn localized_name(&self) -> &String {
+        &self.localized_name
     }
 
-    pub(crate) fn description(&self) -> &'static str {
-        self.description
+    pub(crate) fn description(&self) -> &String {
+        &self.description
     }
 
     pub(crate) fn identity(&self) -> bool {
@@ -112,25 +113,25 @@ impl Model {
         self.index_fields.iter().map(|f| { unsafe { &**f } }).collect()
     }
 
-    pub(crate) fn all_keys(&self) -> &Vec<&String> { &self.all_keys }
+    pub(crate) fn all_keys(&self) -> &Vec<String> { &self.all_keys }
 
-    pub(crate) fn input_keys(&self) -> &Vec<&String> {
+    pub(crate) fn input_keys(&self) -> &Vec<String> {
         &self.input_keys
     }
 
-    pub(crate) fn save_keys(&self) -> &Vec<&String> {
+    pub(crate) fn save_keys(&self) -> &Vec<String> {
         &self.save_keys
     }
 
-    pub(crate) fn output_keys(&self) -> &Vec<&String> {
+    pub(crate) fn output_keys(&self) -> &Vec<String> {
         &self.output_keys
     }
 
-    pub(crate) fn get_value_keys(&self) -> &Vec<&String> {
+    pub(crate) fn get_value_keys(&self) -> &Vec<String> {
         &self.get_value_keys
     }
 
-    pub(crate) fn query_keys(&self) -> &Vec<&String> {
+    pub(crate) fn query_keys(&self) -> &Vec<String> {
         &self.query_keys
     }
 
@@ -138,9 +139,9 @@ impl Model {
         &self.unique_query_keys
     }
 
-    pub(crate) fn auth_identity_keys(&self) -> &Vec<&String> { &self.auth_identity_keys }
+    pub(crate) fn auth_identity_keys(&self) -> &Vec<String> { &self.auth_identity_keys }
 
-    pub(crate) fn auth_by_keys(&self) -> &Vec<&String> { &self.auth_by_keys }
+    pub(crate) fn auth_by_keys(&self) -> &Vec<String> { &self.auth_by_keys }
 
     pub(crate) fn has_action(&self, action: ActionType) -> bool {
         self.actions.contains(&action)

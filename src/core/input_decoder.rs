@@ -27,8 +27,9 @@ fn one_length_json_obj<'a>(json_value: &'a JsonValue, path: &str) -> Result<(&'a
         Err(ActionError::wrong_input_updator(path))
     } else {
         for (key, value) in json_obj {
-            Ok((key.as_str(), value))
+            return Ok((key.as_str(), value));
         }
+        Err(ActionError::wrong_input_updator(path))
     }
 }
 
@@ -46,11 +47,11 @@ fn number_to_target_type(json_value: &JsonValue, target: &FieldType, number_type
             match json_value.as_i64() {
                 None => Err(ActionError::wrong_input_type()),
                 Some(n) => match target {
-                    FieldType::I8 => Value::I8(n.into()),
-                    FieldType::I16 => Value::I16(n.into()),
-                    FieldType::I32 => Value::I32(n.into()),
-                    FieldType::I64 => Value::I64(n.into()),
-                    FieldType::I128 => Value::I128(n.into()),
+                    FieldType::I8 => Ok(Value::I8(n as i8)),
+                    FieldType::I16 => Ok(Value::I16(n as i16)),
+                    FieldType::I32 => Ok(Value::I32(n as i32)),
+                    FieldType::I64 => Ok(Value::I64(n as i64)),
+                    FieldType::I128 => Ok(Value::I128(n as i128)),
                     _ => panic!()
                 }
             }
@@ -59,11 +60,11 @@ fn number_to_target_type(json_value: &JsonValue, target: &FieldType, number_type
             match json_value.as_u64() {
                 None => Err(ActionError::wrong_input_type()),
                 Some(n) => match target {
-                    FieldType::U8 => Value::U8(n.into()),
-                    FieldType::U16 => Value::U16(n.into()),
-                    FieldType::U32 => Value::U32(n.into()),
-                    FieldType::U64 => Value::U64(n.into()),
-                    FieldType::U128 => Value::U128(n.into()),
+                    FieldType::U8 => Ok(Value::U8(n as u8)),
+                    FieldType::U16 => Ok(Value::U16(n as u16)),
+                    FieldType::U32 => Ok(Value::U32(n as u32)),
+                    FieldType::U64 => Ok(Value::U64(n as u64)),
+                    FieldType::U128 => Ok(Value::U128(n as u128)),
                     _ => panic!()
                 }
             }
@@ -72,19 +73,19 @@ fn number_to_target_type(json_value: &JsonValue, target: &FieldType, number_type
             match json_value.as_f64() {
                 None => Err(ActionError::wrong_input_type()),
                 Some(n) => match target {
-                    FieldType::F32 => Value::F32(n.into()),
-                    FieldType::F64 => Value::F64(n.into()),
+                    FieldType::F32 => Ok(Value::F32(n as f32)),
+                    FieldType::F64 => Ok(Value::F64(n as f64)),
                     _ => panic!()
                 }
             }
         }
         NumberInputType::Decimal => {
             match json_value.as_str() {
-                None => ActionError::wrong_input_type(),
+                None => Err(ActionError::wrong_input_type()),
                 Some(str) => {
                     match Decimal::from_str(str) {
-                        Some(decimal) => Ok(Value::Decimal(decimal)),
-                        None => Err(ActionError::wrong_input_type()),
+                        Ok(decimal) => Ok(Value::Decimal(decimal)),
+                        Err(err) => Err(ActionError::wrong_input_type())
                     }
                 }
             }
@@ -188,10 +189,17 @@ fn decode_vec_input(object: &Object, json_value: &JsonValue, field: &Field, path
     if json_value.is_array() {
         let arr = json_value.as_array().unwrap();
         Ok(SetValue(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
-            let new_path_name = path.to_string() + "." + &String::from(&i);
+            let new_path_name = path.to_string() + "." + &format!("{}", i);
             match decode_field_input(object, v, inner_field, &new_path_name) {
-                SetValue(v) => v,
-                _ => panic!()
+                Ok(v) => {
+                    match v {
+                        SetValue(v) => v,
+                        _ => panic!()
+                    }
+                }
+                Err(e) => {
+                    Value::Null
+                }
             }
         }).collect())))
     } else if json_value.is_object() {
@@ -204,10 +212,17 @@ fn decode_vec_input(object: &Object, json_value: &JsonValue, field: &Field, path
                     }
                     JsonValue::Array(arr) => {
                         Ok(SetValue(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
-                            let new_path_name = path.to_string() + "." + &String::from(&i);
+                            let new_path_name = path.to_string() + "." + &format!("{}", i);
                             match decode_field_input(object, v, field, &new_path_name) {
-                                SetValue(v) => v,
-                                _ => panic!()
+                                Ok(v) => {
+                                    match v {
+                                        SetValue(v) => v,
+                                        _ => panic!()
+                                    }
+                                }
+                                Err(err) => {
+                                    Value::Null
+                                }
                             }
                         }).collect())))
                     }
@@ -219,7 +234,7 @@ fn decode_vec_input(object: &Object, json_value: &JsonValue, field: &Field, path
             "push" => {
                 let inner_val = match decode_field_input(object, value, inner_field, path)? {
                     SetValue(val) => val,
-                    _ => Err(ActionError::wrong_input_type())
+                    _ => return Err(ActionError::wrong_input_type())
                 };
                 Ok(AtomicUpdate(Push(inner_val)))
             }
@@ -328,7 +343,7 @@ pub(crate) fn decode_field_input(object: &Object, json_value: &JsonValue, field:
 
 pub(crate) fn decode_relation_input( object: &Object, json_value: &JsonValue, relation: &Relation, path: &str) -> Result<Input, ActionError> {
     if !json_value.is_object() {
-        Err(ActionError::wrong_input_type())
+        return Err(ActionError::wrong_input_type());
     }
     let (key, value) = one_length_json_obj(json_value, path)?;
     let input = match key {

@@ -59,22 +59,22 @@ impl ModelBuilder {
     }
 
     pub fn table_name(&mut self, table_name: impl Into<String>) -> &mut Self {
-        self.table_name = table_name;
+        self.table_name = table_name.into();
         self
     }
 
     pub fn url_segment_name(&mut self, url_segment_name: impl Into<String>) -> &mut Self {
-        self.url_segment_name = url_segment_name;
+        self.url_segment_name = url_segment_name.into();
         self
     }
 
     pub fn localized_name(&mut self, localized_name: impl Into<String>) -> &mut Self {
-        self.localized_name = localized_name;
+        self.localized_name = localized_name.into();
         self
     }
 
     pub fn description(&mut self, description: impl Into<String>) -> &mut Self {
-        self.description = description;
+        self.description = description.into();
         self
     }
 
@@ -276,11 +276,11 @@ impl ModelBuilder {
         let unique_query_keys = Self::get_unique_query_keys(self, &indices, primary.as_ref().unwrap());
 
         Model {
-            name: self.name,
+            name: self.name.clone(),
             table_name: if self.table_name == "" { self.name.to_lowercase().to_plural() } else { self.table_name.to_string() },
             url_segment_name: if self.url_segment_name == "" { self.name.to_kebab_case().to_plural() } else { self.url_segment_name.to_string() },
-            localized_name: self.localized_name,
-            description: self.description,
+            localized_name: self.localized_name.clone(),
+            description: self.description.clone(),
             identity: self.identity,
             actions: self.actions.clone(),
             permission: if let Some(builder) = &self.permission { Some(builder.build()) } else { None },
@@ -304,67 +304,67 @@ impl ModelBuilder {
         }
     }
 
-    fn all_keys(&self) -> Vec<* const String> {
-        self.field_builders.iter().map(|f| &f.name).collect()
+    fn all_keys(&self) -> Vec<String> {
+        self.field_builders.iter().map(|f| f.name.clone()).collect()
     }
 
-    fn allowed_input_keys(&self) -> Vec<* const String> {
+    fn allowed_input_keys(&self) -> Vec<String> {
         self.field_builders.iter()
             .filter(|&f| { f.write_rule != NoWrite })
-            .map(|f| { &f.name })
+            .map(|f| { f.name.clone() })
             .collect()
     }
 
-    fn allowed_save_keys(&self) -> Vec<* const String> {
+    fn allowed_save_keys(&self) -> Vec<String> {
         self.field_builders.iter()
             .filter(|&f| { f.store != Calculated && f.store != Temp })
-            .map(|f| { &f.name })
+            .map(|f| { f.name.clone() })
             .collect()
     }
 
-    fn allowed_output_keys(&self) -> Vec<* const String> {
+    fn allowed_output_keys(&self) -> Vec<String> {
         self.field_builders.iter()
             .filter(|&f| { f.read_rule != NoRead })
-            .map(|f| { &f.name })
+            .map(|f| { f.name.clone() })
             .collect()
     }
 
-    pub(crate) fn get_get_value_keys(&self) -> Vec<* const String> {
+    pub(crate) fn get_get_value_keys(&self) -> Vec<String> {
         self.field_builders.iter()
-            .map(|f| { &f.name })
+            .map(|f| { f.name.clone() })
             .collect()
     }
 
-    pub(crate) fn get_query_keys(&self) -> Vec<* const String> {
+    pub(crate) fn get_query_keys(&self) -> Vec<String> {
         self.field_builders.iter()
             .filter(|&f| { f.query_ability == QueryAbility::Queryable })
-            .map(|f| { &f.name })
+            .map(|f| { f.name.clone() })
             .collect()
     }
 
-    pub(crate) fn get_unique_query_keys(&self, indices: &Vec<ModelIndex>, primary: &ModelIndex) -> Vec<HashSet<* const String>> {
-        let mut result: Vec<HashSet<* const String>> = Vec::new();
+    pub(crate) fn get_unique_query_keys(&self, indices: &Vec<ModelIndex>, primary: &ModelIndex) -> Vec<HashSet<String>> {
+        let mut result: Vec<HashSet<String>> = Vec::new();
         for index in indices {
             let set = HashSet::from_iter(index.items.iter().map(|i| {
-                &i.field_name
+                i.field_name.clone()
             }));
             result.push(set);
         }
-        result.push(HashSet::from_iter(primary.items.iter().map(|i| &i.field_name)));
+        result.push(HashSet::from_iter(primary.items.iter().map(|i| i.field_name.clone())));
         result
     }
 
-    pub(crate) fn get_auth_identity_keys(&self) -> Vec<* const String> {
+    pub(crate) fn get_auth_identity_keys(&self) -> Vec<String> {
         self.field_builders.iter()
             .filter(|&f| { f.auth_identity == true })
-            .map(|f| { &f.name })
+            .map(|f| { f.name.clone() })
             .collect()
     }
 
-    pub(crate) fn get_auth_by_keys(&self) -> Vec<* const String> {
+    pub(crate) fn get_auth_by_keys(&self) -> Vec<String> {
         self.field_builders.iter()
             .filter(|&f| { f.auth_by == true })
-            .map(|f| { &f.name })
+            .map(|f| { f.name.clone() })
             .collect()
     }
 }
