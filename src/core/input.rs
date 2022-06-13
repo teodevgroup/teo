@@ -10,7 +10,7 @@ pub(crate) enum AtomicUpdateType {
     Push(Value),
 }
 
-pub enum RelationInput {
+pub enum RelationInputType {
 
     // both create and update
 
@@ -32,5 +32,5 @@ pub enum RelationInput {
 pub(crate) enum Input {
     SetValue(Value),
     AtomicUpdate(AtomicUpdateType),
-    RelationInput(RelationInput),
+    RelationInput(RelationInputType),
 }

@@ -6,7 +6,7 @@ use crate::core::field::{Field, Optionality};
 use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::input::AtomicUpdateType::{Decrement, Divide, Increment, Multiply, Push};
-use crate::core::input::{Input, RelationInput};
+use crate::core::input::{Input, RelationInputType};
 use crate::core::input::Input::{AtomicUpdate, SetValue};
 use crate::core::object::Object;
 use crate::core::relation::Relation;
@@ -362,17 +362,17 @@ pub(crate) fn decode_relation_input( object: &Object, json_value: &JsonValue, re
     }
     let (key, value) = one_length_json_obj(json_value, path)?;
     let input = match key {
-        "create" => RelationInput::Create(value.clone()),
-        "createMany" => RelationInput::Create(value.clone()),
-        "set" => RelationInput::Set(value.clone()),
-        "connect" => RelationInput::Connect(value.clone()),
-        "connectOrCreate" => RelationInput::ConnectOrCreate(value.clone(), value.clone()),
-        "disconnect" => RelationInput::Disconnect(value.clone()),
-        "update" => RelationInput::Update(value.clone()),
-        "updateMany" => RelationInput::Update(value.clone()),
-        "upsert" => RelationInput::Upsert(value.clone(), value.clone()),
-        "delete" => RelationInput::Delete(value.clone()),
-        "deleteMany" => RelationInput::Delete(value.clone()),
+        "create" => RelationInputType::Create(value.clone()),
+        "createMany" => RelationInputType::Create(value.clone()),
+        "set" => RelationInputType::Set(value.clone()),
+        "connect" => RelationInputType::Connect(value.clone()),
+        "connectOrCreate" => RelationInputType::ConnectOrCreate(value.clone(), value.clone()),
+        "disconnect" => RelationInputType::Disconnect(value.clone()),
+        "update" => RelationInputType::Update(value.clone()),
+        "updateMany" => RelationInputType::Update(value.clone()),
+        "upsert" => RelationInputType::Upsert(value.clone(), value.clone()),
+        "delete" => RelationInputType::Delete(value.clone()),
+        "deleteMany" => RelationInputType::Delete(value.clone()),
         _ => panic!()
     };
     Ok(Input::RelationInput(input))
