@@ -6,6 +6,7 @@ use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::object::Object;
+use crate::core::save_session::SaveSession;
 use crate::error::ActionError;
 
 
@@ -24,6 +25,7 @@ pub(crate) trait Connector: Debug + Send + Sync {
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<usize, ActionError>;
 
+    fn new_save_session(&self) -> Box<dyn SaveSession>;
 }
 
 #[async_trait]

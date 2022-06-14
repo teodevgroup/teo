@@ -12,6 +12,7 @@ use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
 use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use regex::Regex;
 use rust_decimal::Decimal;
+use crate::connectors::mongodb::save_session::MongoDBSaveSession;
 use crate::core::connector::Connector;
 use crate::core::object::Object;
 use crate::core::field::Sort;
@@ -20,6 +21,7 @@ use crate::core::graph::Graph;
 use crate::core::input::AtomicUpdateType;
 use crate::core::input_decoder::decode_field_value;
 use crate::core::model::{Model, ModelIndex, ModelIndexType};
+use crate::core::save_session::SaveSession;
 use crate::core::value::Value;
 use crate::error::ActionError;
 
@@ -1383,6 +1385,10 @@ impl Connector for MongoDBConnector {
                 Err(ActionError::unknown_database_count_error())
             }
         }
+    }
+
+    fn new_save_session(&self) -> Box<dyn SaveSession> {
+        Box::new(MongoDBSaveSession {})
     }
 }
 

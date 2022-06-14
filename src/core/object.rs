@@ -19,6 +19,7 @@ use crate::core::graph::Graph;
 use crate::core::input_decoder::{decode_field_input, input_to_vec, one_length_json_obj};
 use crate::core::model::Model;
 use crate::core::relation::RelationManipulation;
+use crate::core::save_session::SaveSession;
 use crate::core::stage::Stage;
 use crate::core::value::Value;
 use crate::error::{ActionError, ActionErrorType};
@@ -171,15 +172,26 @@ impl Object {
         Ok(())
     }
 
-    pub async fn save(&self) -> Result<(), ActionError> {
-        self.apply_on_save_pipeline_and_validate_required_fields().await?;
-        // send to database to save
-        let connector = self.graph().connector();
-        connector.save_object(self).await?;
-        // apply properties
+    pub(crate) fn clear_state(&self) {
         self.inner.is_new.store(false, Ordering::SeqCst);
         self.inner.is_modified.store(false, Ordering::SeqCst);
         *self.inner.modified_fields.borrow_mut() = HashSet::new();
+    }
+
+    pub(crate) async fn save_to_database(&self, session: Box<dyn SaveSession>) -> Result<(), ActionError> {
+        // send to database to save
+        let connector = self.graph().connector();
+        connector.save_object(self).await?;
+        // clear properties
+        self.clear_state();
+        Ok(())
+    }
+
+    pub async fn save(&self) -> Result<(), ActionError> {
+        self.apply_on_save_pipeline_and_validate_required_fields().await?;
+        let connector = self.graph().connector();
+        let session = connector.new_save_session();
+        self.save_to_database(session).await?;
         Ok(())
     }
 
