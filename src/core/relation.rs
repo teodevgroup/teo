@@ -16,3 +16,14 @@ pub(crate) enum RelationManipulation {
     Set(Object),
     Keep(Object),
 }
+
+impl RelationManipulation {
+    pub(crate) fn object(&self) -> &Object {
+        match self {
+            RelationManipulation::Connect(obj) => obj,
+            RelationManipulation::Disconnect(obj) => obj,
+            RelationManipulation::Set(obj) => obj,
+            RelationManipulation::Keep(obj) => obj,
+        }
+    }
+}

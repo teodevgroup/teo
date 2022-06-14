@@ -107,7 +107,8 @@ impl Object {
         return Ok(());
     }
 
-    pub async fn save(&self) -> Result<(), ActionError> {
+    #[async_recursion(?Send)]
+    pub(crate) async fn apply_on_save_pipeline_and_validate_required_fields(&self) -> Result<(), ActionError> {
         // apply on save pipeline first
         let model_keys = self.model().save_keys();
         for key in model_keys {
@@ -154,23 +155,32 @@ impl Object {
                 }
             }
         }
-
-        // send to database to save
-        let connector = self.graph().connector();
-        let save_result = connector.save_object(self).await;
-        match save_result {
-            Ok(()) => {
-                // apply properties
-                self.inner.is_new.store(false, Ordering::SeqCst);
-                self.inner.is_modified.store(false, Ordering::SeqCst);
-                *self.inner.modified_fields.borrow_mut() = HashSet::new();
-                // then do nothing haha
-                Ok(())
-            }
-            Err(error) => {
-                Err(error)
+        for relation in &self.model().relations_vec {
+            let name = &relation.name;
+            let map = self.inner.relation_map.borrow();
+            let vec = map.get(name);
+            match vec {
+                None => {},
+                Some(vec) => {
+                    for manipulation in vec {
+                        manipulation.object().apply_on_save_pipeline_and_validate_required_fields().await?;
+                    }
+                }
             }
         }
+        Ok(())
+    }
+
+    pub async fn save(&self) -> Result<(), ActionError> {
+        self.apply_on_save_pipeline_and_validate_required_fields().await?;
+        // send to database to save
+        let connector = self.graph().connector();
+        connector.save_object(self).await?;
+        // apply properties
+        self.inner.is_new.store(false, Ordering::SeqCst);
+        self.inner.is_modified.store(false, Ordering::SeqCst);
+        *self.inner.modified_fields.borrow_mut() = HashSet::new();
+        Ok(())
     }
 
     pub async fn delete(&self) -> Result<(), ActionError> {
