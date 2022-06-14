@@ -304,42 +304,58 @@ impl ModelBuilder {
         }
     }
 
+    fn all_relation_keys(&self) -> Vec<String> {
+        self.relation_builders.iter().map(|r| r.name.clone()).collect()
+    }
+
     fn all_keys(&self) -> Vec<String> {
-        self.field_builders.iter().map(|f| f.name.clone()).collect()
+        let mut fields: Vec<String> = self.field_builders.iter().map(|f| f.name.clone()).collect();
+        fields.extend(self.all_relation_keys());
+        fields
     }
 
     fn allowed_input_keys(&self) -> Vec<String> {
-        self.field_builders.iter()
+        let mut fields: Vec<String> = self.field_builders.iter()
             .filter(|&f| { f.write_rule != NoWrite })
             .map(|f| { f.name.clone() })
-            .collect()
+            .collect();
+        fields.extend(self.all_relation_keys());
+        fields
     }
 
     fn allowed_save_keys(&self) -> Vec<String> {
-        self.field_builders.iter()
+        let mut fields: Vec<String> = self.field_builders.iter()
             .filter(|&f| { f.store != Calculated && f.store != Temp })
             .map(|f| { f.name.clone() })
-            .collect()
+            .collect();
+        fields.extend(self.all_relation_keys());
+        fields
     }
 
     fn allowed_output_keys(&self) -> Vec<String> {
-        self.field_builders.iter()
+        let mut fields: Vec<String> = self.field_builders.iter()
             .filter(|&f| { f.read_rule != NoRead })
             .map(|f| { f.name.clone() })
-            .collect()
+            .collect();
+        fields.extend(self.all_relation_keys());
+        fields
     }
 
     pub(crate) fn get_get_value_keys(&self) -> Vec<String> {
-        self.field_builders.iter()
+        let mut fields: Vec<String> = self.field_builders.iter()
             .map(|f| { f.name.clone() })
-            .collect()
+            .collect();
+        fields.extend(self.all_relation_keys());
+        fields
     }
 
     pub(crate) fn get_query_keys(&self) -> Vec<String> {
-        self.field_builders.iter()
+        let mut fields: Vec<String> = self.field_builders.iter()
             .filter(|&f| { f.query_ability == QueryAbility::Queryable })
             .map(|f| { f.name.clone() })
-            .collect()
+            .collect();
+        fields.extend(self.all_relation_keys());
+        fields
     }
 
     pub(crate) fn get_unique_query_keys(&self, indices: &Vec<ModelIndex>, primary: &ModelIndex) -> Vec<HashSet<String>> {

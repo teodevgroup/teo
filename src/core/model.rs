@@ -150,6 +150,14 @@ impl Model {
     pub(crate) fn actions(&self) -> &HashSet<ActionType> {
         &self.actions
     }
+
+    pub(crate) fn has_field(&self, name: &str) -> bool {
+        self.fields_map.get(name).is_some()
+    }
+
+    pub(crate) fn has_relation(&self, name: &str) -> bool {
+        self.relations_map.get(name).is_some()
+    }
 }
 
 unsafe impl Send for Model {}
