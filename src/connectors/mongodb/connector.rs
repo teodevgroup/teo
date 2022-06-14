@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug};
+use std::sync::Arc;
 use rust_decimal::prelude::FromStr;
 use std::sync::atomic::{Ordering};
 use serde_json::{Map, Value as JsonValue};
@@ -1387,8 +1388,8 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    fn new_save_session(&self) -> Box<dyn SaveSession> {
-        Box::new(MongoDBSaveSession {})
+    fn new_save_session(&self) -> Arc<dyn SaveSession> {
+        Arc::new(MongoDBSaveSession {})
     }
 }
 

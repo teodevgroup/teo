@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::sync::Arc;
 use async_trait::async_trait;
 use serde_json::{Map, Value as JsonValue};
 use crate::core::database_type::DatabaseType;
@@ -25,7 +26,7 @@ pub(crate) trait Connector: Debug + Send + Sync {
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<usize, ActionError>;
 
-    fn new_save_session(&self) -> Box<dyn SaveSession>;
+    fn new_save_session(&self) -> Arc<dyn SaveSession>;
 }
 
 #[async_trait]

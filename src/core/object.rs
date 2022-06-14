@@ -18,7 +18,7 @@ use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::input_decoder::{decode_field_input, input_to_vec, one_length_json_obj};
 use crate::core::model::Model;
-use crate::core::relation::RelationManipulation;
+use crate::core::relation::{Relation, RelationManipulation};
 use crate::core::save_session::SaveSession;
 use crate::core::stage::Stage;
 use crate::core::value::Value;
@@ -178,7 +178,36 @@ impl Object {
         *self.inner.modified_fields.borrow_mut() = HashSet::new();
     }
 
-    pub(crate) async fn save_to_database(&self, session: Box<dyn SaveSession>) -> Result<(), ActionError> {
+    #[async_recursion(?Send)]
+    pub(crate) async fn save_to_database(&self, session: Arc<dyn SaveSession>, no_recursive: bool) -> Result<(), ActionError> {
+        // handle relations and manipulations
+        if !no_recursive {
+            for relation in &self.model().relations_vec {
+                let name = &relation.name;
+                let map = self.inner.relation_map.borrow();
+                let vec = map.get(name);
+                match vec {
+                    None => {},
+                    Some(vec) => {
+                        for manipulation in vec {
+                            manipulation.object().save_to_database(session.clone(), false).await?;
+                            match manipulation {
+                                RelationManipulation::Connect(obj) => {
+                                    self.link_connect(obj, relation, session.clone());
+                                }
+                                RelationManipulation::Disconnect(obj) => {
+                                    //self.link_disconnect(obj, relation, session.clone());
+                                }
+                                RelationManipulation::Set(obj) => {
+                                    //self.link_set(obj, relation, session.clone());
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
         // send to database to save
         let connector = self.graph().connector();
         connector.save_object(self).await?;
@@ -187,11 +216,58 @@ impl Object {
         Ok(())
     }
 
+    pub(crate) async fn link_connect(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> Result<(), ActionError> {
+        match &relation.through {
+            Some(through) => { // with join table
+                let relation_model = self.graph().model(through);
+                let relation_object = self.graph().new_object(through);
+                let local_relation_name = relation.fields.get(0).unwrap();
+                let foreign_relation_name = relation.references.get(0).unwrap();
+                let local_relation = relation_model.relation(local_relation_name).unwrap();
+                let foreign_relation = relation_model.relation(foreign_relation_name).unwrap();
+                for (index, field_name) in local_relation.fields.iter().enumerate() {
+                    let local_field_name = local_relation.references.get(index).unwrap();
+                    let val = self.get_value(local_field_name).unwrap().unwrap();
+                    relation_object.set_value(field_name, val).unwrap();
+                }
+                for (index, field_name) in foreign_relation.fields.iter().enumerate() {
+                    let foreign_field_name = foreign_relation.references.get(index).unwrap();
+                    let val = obj.get_value(foreign_field_name).unwrap().unwrap();
+                    relation_object.set_value(field_name, val).unwrap();
+                }
+                relation_object.save_to_database(session.clone(), true);
+            }
+            None => { // no join table
+                for (index, reference) in relation.references.iter().enumerate() {
+                    let field_name = relation.fields.get(index).unwrap();
+                    let local_value = self.get_value(field_name)?;
+                    let foreign_value = obj.get_value(field_name)?;
+                    if local_value.is_some() && foreign_value.is_none() {
+                        obj.set_value(reference, local_value.unwrap())?;
+                        obj.save_to_database(session.clone(), true);
+                    } else if foreign_value.is_some() && local_value.is_none() {
+                        self.set_value(field_name, foreign_value.unwrap())?;
+                        self.save_to_database(session.clone(), true);
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    // pub async fn link_disconnect(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> Result<(), ActionError> {
+    //     Ok(())
+    // }
+    //
+    // pub async fn link_set(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> Result<(), ActionError> {
+    //     Ok(())
+    // }
+
     pub async fn save(&self) -> Result<(), ActionError> {
         self.apply_on_save_pipeline_and_validate_required_fields().await?;
         let connector = self.graph().connector();
         let session = connector.new_save_session();
-        self.save_to_database(session).await?;
+        self.save_to_database(session, false).await?;
         Ok(())
     }
 
@@ -321,24 +397,6 @@ impl Object {
                         for entry in entries {
                             let new_object =  graph.new_object(&relation.model);
                             new_object.set_json(entry).await?;
-                            // link values, maybe just link after saving
-                            // match relation.through {
-                            //     Some(through) => { // with join table
-                            //
-                            //     }
-                            //     None => { // no join table
-                            //         for (index, reference) in relation.references.iter().enumerate() {
-                            //             let field_name = relation.fields.get(index).unwrap();
-                            //             let local_value = self.get_value(field_name)?;
-                            //             let foreign_value = new_object.get_value(field_name)?;
-                            //             if local_value.is_some() && foreign_value.is_none() {
-                            //
-                            //             } else if foreign_value.is_some() && local_value.is_none() {
-                            //                 self.set_value()
-                            //             }
-                            //         }
-                            //     }
-                            // }
                             if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
                                 self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
                             }
