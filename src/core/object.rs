@@ -8,6 +8,7 @@ use chrono::{Date, DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromStr;
 use serde_json::{Map, Value as JsonValue};
+use async_recursion::async_recursion;
 use crate::core::argument::Argument;
 use crate::core::field::{Field, Optionality, Store};
 use crate::core::input::AtomicUpdateType::{Decrement, Divide, Increment, Multiply};
@@ -48,6 +49,7 @@ impl Object {
         }) }
     }
 
+    #[async_recursion]
     pub async fn set_json(&self, json_value: &JsonValue) -> Result<(), ActionError> {
         self.set_or_update_json(json_value, true).await
     }
