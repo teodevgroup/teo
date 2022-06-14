@@ -15,8 +15,9 @@ use crate::core::input::{AtomicUpdateType, Input};
 use crate::core::input::Input::{AtomicUpdate, SetValue};
 use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
-use crate::core::input_decoder::decode_field_input;
+use crate::core::input_decoder::{decode_field_input, input_to_vec, one_length_json_obj};
 use crate::core::model::Model;
+use crate::core::relation::RelationManipulation;
 use crate::core::stage::Stage;
 use crate::core::value::Value;
 use crate::error::{ActionError, ActionErrorType};
@@ -218,67 +219,172 @@ impl Object {
         let initialized = self.inner.is_initialized.load(Ordering::SeqCst);
         let keys_to_iterate = if initialized { &json_keys } else { &all_model_keys };
         for key in keys_to_iterate {
-            let field = self.model().field(&key).unwrap();
-            let json_has_value = if initialized { true } else {
-                json_keys.contains(key)
-            };
-            if json_has_value {
-                let json_value = &json_object[&key.to_string()];
-                let input_result = decode_field_input(self.graph(), json_value, field, &field.name)?;
-                match input_result {
-                    SetValue(value) => {
-                        let mut value = value;
-                        if process {
-                            // pipeline
-                            let mut stage = Stage::Value(value);
-                            stage = field.on_set_pipeline.process(stage.clone(), &self).await;
-                            match stage {
-                                Stage::Invalid(s) => {
-                                    return Err(ActionError::invalid_input(&field.name, s));
-                                }
-                                Stage::Value(v) => {
-                                    value = v
-                                }
-                                Stage::ConditionTrue(v) => {
-                                    value = v
-                                }
-                                Stage::ConditionFalse(v) => {
-                                    value = v
+            if self.model().has_field(key) {
+                // this is field
+                let field = self.model().field(&key).unwrap();
+                let json_has_value = if initialized { true } else {
+                    json_keys.contains(key)
+                };
+                if json_has_value {
+                    let json_value = &json_object[&key.to_string()];
+                    let input_result = decode_field_input(self.graph(), json_value, field, &field.name)?;
+                    match input_result {
+                        SetValue(value) => {
+                            let mut value = value;
+                            if process {
+                                // pipeline
+                                let mut stage = Stage::Value(value);
+                                stage = field.on_set_pipeline.process(stage.clone(), &self).await;
+                                match stage {
+                                    Stage::Invalid(s) => {
+                                        return Err(ActionError::invalid_input(&field.name, s));
+                                    }
+                                    Stage::Value(v) => {
+                                        value = v
+                                    }
+                                    Stage::ConditionTrue(v) => {
+                                        value = v
+                                    }
+                                    Stage::ConditionFalse(v) => {
+                                        value = v
+                                    }
                                 }
                             }
-                        }
-                        if value == Value::Null {
-                            if self.inner.is_new.load(Ordering::SeqCst) == false {
-                                self.inner.value_map.borrow_mut().remove(*key);
+                            if value == Value::Null {
+                                if self.inner.is_new.load(Ordering::SeqCst) == false {
+                                    self.inner.value_map.borrow_mut().remove(*key);
+                                }
+                            } else {
+                                self.inner.value_map.borrow_mut().insert(key.to_string(), value);
                             }
-                        } else {
-                            self.inner.value_map.borrow_mut().insert(key.to_string(), value);
+                            if !self.inner.is_new.load(Ordering::SeqCst) {
+                                self.inner.is_modified.store(true, Ordering::SeqCst);
+                                self.inner.modified_fields.borrow_mut().insert(key.to_string());
+                            }
                         }
-                        if !self.inner.is_new.load(Ordering::SeqCst) {
-                            self.inner.is_modified.store(true, Ordering::SeqCst);
-                            self.inner.modified_fields.borrow_mut().insert(key.to_string());
+                        AtomicUpdate(update_type) => {
+                            self.inner.atomic_updator_map.borrow_mut().insert(key.to_string(), update_type);
                         }
-                    }
-                    AtomicUpdate(update_type) => {
-                        self.inner.atomic_updator_map.borrow_mut().insert(key.to_string(), update_type);
-                    }
-                    Input::RelationInput(input) => {
+                        Input::RelationInput(input) => {
 
+                        }
+                    }
+                } else {
+                    // apply default values
+                    if !initialized {
+                        if let Some(argument) = &field.default {
+                            match argument {
+                                Argument::ValueArgument(value) => {
+                                    self.inner.value_map.borrow_mut().insert(key.to_string(), value.clone());
+                                }
+                                Argument::PipelineArgument(pipeline) => {
+                                    let stage = pipeline.process(Stage::Value(Value::Null), &self).await;
+                                    self.inner.value_map.borrow_mut().insert(key.to_string(), stage.value().unwrap());
+                                }
+                            }
+                        }
                     }
                 }
             } else {
-                // apply default values
-                if !initialized {
-                    if let Some(argument) = &field.default {
-                        match argument {
-                            Argument::ValueArgument(value) => {
-                                self.inner.value_map.borrow_mut().insert(key.to_string(), value.clone());
+                // this is relation
+                let relation = self.model().relation(&key).unwrap();
+                let relation_object = json_object.get(&key.to_string()).unwrap();
+                let (command, command_input) = one_length_json_obj(relation_object, key)?;
+                match command {
+                    "create" | "createMany" => {
+                        let entries = input_to_vec(command_input)?;
+                        let graph = self.graph();
+                        for entry in entries {
+                            let new_object =  graph.new_object(&relation.model);
+                            new_object.set_json(entry).await?;
+                            // link values, maybe just link after saving
+                            // match relation.through {
+                            //     Some(through) => { // with join table
+                            //
+                            //     }
+                            //     None => { // no join table
+                            //         for (index, reference) in relation.references.iter().enumerate() {
+                            //             let field_name = relation.fields.get(index).unwrap();
+                            //             let local_value = self.get_value(field_name)?;
+                            //             let foreign_value = new_object.get_value(field_name)?;
+                            //             if local_value.is_some() && foreign_value.is_none() {
+                            //
+                            //             } else if foreign_value.is_some() && local_value.is_none() {
+                            //                 self.set_value()
+                            //             }
+                            //         }
+                            //     }
+                            // }
+                            if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
+                                self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
                             }
-                            Argument::PipelineArgument(pipeline) => {
-                                let stage = pipeline.process(Stage::Value(Value::Null), &self).await;
-                                self.inner.value_map.borrow_mut().insert(key.to_string(), stage.value().unwrap());
-                            }
+                            let mut relation_map = self.inner.relation_map.borrow_mut();
+                            let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            objects.push(RelationManipulation::Connect(new_object));
                         }
+                    }
+                    "set" => {
+
+                    }
+                    "connect" => {
+                        let entries = input_to_vec(command_input)?;
+                        let graph = self.graph();
+                        for entry in entries {
+                            let model = graph.model(&relation.model);
+                            let new_object = graph.find_unique(model, entry.as_object().unwrap()).await?;
+                            if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
+                                self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                            }
+                            let mut relation_map = self.inner.relation_map.borrow_mut();
+                            let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            objects.push(RelationManipulation::Connect(new_object));
+                        }
+                    }
+                    "connectOrCreate" => {
+                        let entries = input_to_vec(command_input)?;
+                        let graph = self.graph();
+                        for entry in entries {
+                            let model = graph.model(&relation.model);
+                            let r#where = entry.as_object().unwrap().get("where").unwrap();
+                            let create = entry.as_object().unwrap().get("create").unwrap();
+                            let unique_result = graph.find_unique(model, r#where.as_object().unwrap()).await;
+                            match unique_result {
+                                Ok(new_obj) => {
+                                    if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
+                                        self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                                    }
+                                    let mut relation_map = self.inner.relation_map.borrow_mut();
+                                    let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                                    objects.push(RelationManipulation::Connect(new_obj));
+                                }
+                                Err(_err) => {
+                                    let new_obj = graph.new_object(&relation.model);
+                                    new_obj.set_json(create).await?;
+                                    if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
+                                        self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                                    }
+                                    let mut relation_map = self.inner.relation_map.borrow_mut();
+                                    let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                                    objects.push(RelationManipulation::Connect(new_obj));
+                                }
+                            }
+
+                        }
+                    }
+                    "disconnect" => {
+                        // if new, err
+                    }
+                    "update" | "updateMany" => {
+
+                    }
+                    "upsert" => {
+
+                    }
+                    "delete" | "deleteMany" => {
+
+                    }
+                    _ => {
+                        return Err(ActionError::wrong_input_type());
                     }
                 }
             }
@@ -322,7 +428,7 @@ pub(crate) struct ObjectInner {
     pub(crate) previous_values: RefCell<HashMap<String, Value>>,
     pub(crate) value_map: RefCell<HashMap<String, Value>>,
     pub(crate) atomic_updator_map: RefCell<HashMap<String, AtomicUpdateType>>,
-    pub(crate) relation_map: RefCell<HashMap<String, Value>>,
+    pub(crate) relation_map: RefCell<HashMap<String, Vec<RelationManipulation>>>,
 }
 
 impl Debug for Object {

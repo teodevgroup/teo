@@ -21,7 +21,19 @@ enum NumberInputType {
     Decimal,
 }
 
-fn one_length_json_obj<'a>(json_value: &'a JsonValue, path: &str) -> Result<(&'a str, &'a JsonValue), ActionError> {
+pub(crate) fn input_to_vec(json_value: &JsonValue) -> Result<Vec<&JsonValue>, ActionError> {
+    if json_value.is_object() {
+        Ok(vec![json_value])
+    } else if json_value.is_array() {
+        let array = json_value.as_array().unwrap();
+        let mapped: Vec<&JsonValue> = array.iter().map(|i| i).collect();
+        Ok(mapped)
+    } else {
+        Err(ActionError::wrong_input_type())
+    }
+}
+
+pub(crate) fn one_length_json_obj<'a>(json_value: &'a JsonValue, path: &str) -> Result<(&'a str, &'a JsonValue), ActionError> {
     let json_obj = json_value.as_object().unwrap();
     if json_obj.keys().len() != 1 {
         Err(ActionError::wrong_input_updator(path))

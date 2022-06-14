@@ -94,6 +94,13 @@ impl Model {
         }
     }
 
+    pub fn relation(&self, name: &str) -> Option<&Relation> {
+        match self.relations_map.get(name) {
+            Some(r) => Some(unsafe { &**r }),
+            None => None
+        }
+    }
+
     pub(crate) fn primary_field(&self) -> Option<&Field> {
         if self.primary_field == null() {
             None
