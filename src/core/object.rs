@@ -43,6 +43,7 @@ impl Object {
             previous_values: RefCell::new(HashMap::new()),
             value_map: RefCell::new(HashMap::new()),
             atomic_updator_map: RefCell::new(HashMap::new()),
+            relation_map: RefCell::new(HashMap::new()),
         }) }
     }
 
@@ -321,6 +322,7 @@ pub(crate) struct ObjectInner {
     pub(crate) previous_values: RefCell<HashMap<String, Value>>,
     pub(crate) value_map: RefCell<HashMap<String, Value>>,
     pub(crate) atomic_updator_map: RefCell<HashMap<String, AtomicUpdateType>>,
+    pub(crate) relation_map: RefCell<HashMap<String, Value>>,
 }
 
 impl Debug for Object {
