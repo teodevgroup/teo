@@ -204,7 +204,7 @@ impl Object {
                                     self.link_disconnect(obj, relation, session.clone());
                                 }
                                 RelationManipulation::Set(obj) => {
-                                    //self.link_set(obj, relation, session.clone());
+                                    self.link_connect(obj, relation, session.clone());
                                 }
                                 _ => {}
                             }
@@ -303,10 +303,6 @@ impl Object {
         }
         Ok(())
     }
-
-    // pub(crate) async fn link_set(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> Result<(), ActionError> {
-    //     Ok(())
-    // }
 
     pub async fn save(&self) -> Result<(), ActionError> {
         self.apply_on_save_pipeline_and_validate_required_fields().await?;
