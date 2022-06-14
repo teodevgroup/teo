@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use chrono::{Date, DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromStr;
-use serde_json::{Map, Value as JsonValue};
+use serde_json::{json, Map, Value as JsonValue};
 use async_recursion::async_recursion;
 use crate::core::argument::Argument;
 use crate::core::field::{Field, Optionality, Store};
@@ -179,6 +179,11 @@ impl Object {
     }
 
     #[async_recursion(?Send)]
+    pub(crate) async fn delete_from_database(&self, session: Arc<dyn SaveSession>, no_recursive: bool) -> Result<(), ActionError> {
+        Ok(())
+    }
+
+    #[async_recursion(?Send)]
     pub(crate) async fn save_to_database(&self, session: Arc<dyn SaveSession>, no_recursive: bool) -> Result<(), ActionError> {
         // handle relations and manipulations
         if !no_recursive {
@@ -196,7 +201,7 @@ impl Object {
                                     self.link_connect(obj, relation, session.clone());
                                 }
                                 RelationManipulation::Disconnect(obj) => {
-                                    //self.link_disconnect(obj, relation, session.clone());
+                                    self.link_disconnect(obj, relation, session.clone());
                                 }
                                 RelationManipulation::Set(obj) => {
                                     //self.link_set(obj, relation, session.clone());
@@ -241,7 +246,7 @@ impl Object {
                 for (index, reference) in relation.references.iter().enumerate() {
                     let field_name = relation.fields.get(index).unwrap();
                     let local_value = self.get_value(field_name)?;
-                    let foreign_value = obj.get_value(field_name)?;
+                    let foreign_value = obj.get_value(reference)?;
                     if local_value.is_some() && foreign_value.is_none() {
                         obj.set_value(reference, local_value.unwrap())?;
                         obj.save_to_database(session.clone(), true);
@@ -255,11 +260,51 @@ impl Object {
         Ok(())
     }
 
-    // pub async fn link_disconnect(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> Result<(), ActionError> {
-    //     Ok(())
-    // }
-    //
-    // pub async fn link_set(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> Result<(), ActionError> {
+    pub(crate) async fn link_disconnect(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> Result<(), ActionError> {
+        match &relation.through {
+            Some(through) => { // with join table
+                let relation_model = self.graph().model(through);
+                let mut finder: Map<String, JsonValue> = Map::new();
+                let local_relation_name = relation.fields.get(0).unwrap();
+                let foreign_relation_name = relation.references.get(0).unwrap();
+                let local_relation = relation_model.relation(local_relation_name).unwrap();
+                let foreign_relation = relation_model.relation(foreign_relation_name).unwrap();
+                for (index, field_name) in local_relation.fields.iter().enumerate() {
+                    let local_field_name = local_relation.references.get(index).unwrap();
+                    let val = self.get_value(local_field_name).unwrap().unwrap();
+                    finder.insert(field_name.to_string(), val.to_json_value());
+                }
+                for (index, field_name) in foreign_relation.fields.iter().enumerate() {
+                    let foreign_field_name = foreign_relation.references.get(index).unwrap();
+                    let val = obj.get_value(foreign_field_name).unwrap().unwrap();
+                    finder.insert(field_name.to_string(), val.to_json_value());
+                }
+                let relation_object = self.graph().find_unique(relation_model, &finder).await?;
+                relation_object.delete_from_database(session.clone(), false).await?;
+            }
+            None => { // no join table
+                for (index, reference) in relation.references.iter().enumerate() {
+                    let field_name = relation.fields.get(index).unwrap();
+                    let local_value = self.get_value(field_name)?;
+                    let foreign_value = obj.get_value(reference)?;
+                    let local_field = self.model().field(field_name).unwrap();
+                    let foreign_field = obj.model().field(reference).unwrap();
+                    if local_value.is_some() && foreign_value.is_some() {
+                        if local_field.optionality == Optionality::Optional {
+                            self.set_value(field_name, Value::Null)?;
+                            self.save_to_database(session.clone(), true);
+                        } else if foreign_field.optionality == Optionality::Optional {
+                            obj.set_value(reference, Value::Null)?;
+                            obj.save_to_database(session.clone(), true);
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    // pub(crate) async fn link_set(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> Result<(), ActionError> {
     //     Ok(())
     // }
 
