@@ -1087,6 +1087,9 @@ impl MongoDBConnector {
         //Bson::DateTime()  from_chrono
     }
 
+    fn build_query_pipeline(&self) {
+        
+    }
 }
 
 #[async_trait]
@@ -1309,7 +1312,6 @@ impl Connector for MongoDBConnector {
             }
         }
         let col = &self.collections[model.name()];
-        println!("see query doc, {:?}, collection: {:?}", query_doc, col);
         let find_result = col.find_one(query_doc, None).await;
         match find_result {
             Ok(document_option) => {
@@ -1339,13 +1341,13 @@ impl Connector for MongoDBConnector {
         let order_by = finder.get("orderBy");
         let take = finder.get("take");
         let skip = finder.get("skip");
+        let include = finder.get("include");
         let col = &self.collections[model.name()];
         let where_input = self.build_where_input(model, r#where, graph);
         if let Err(err) = where_input {
             return Err(err);
         }
         let where_input = where_input.unwrap();
-        println!("where input see: {}", where_input);
         let mut cur = col.find(where_input, None).await;
         match cur {
             Ok(cur) => {
