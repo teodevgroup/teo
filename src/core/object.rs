@@ -530,11 +530,11 @@ impl Object {
     }
 
     pub(crate) fn model(&self) -> &Model {
-        &*self.model()
+        unsafe { &*self.inner.model }
     }
 
     pub(crate) fn graph(&self) -> &Graph {
-        &*self.graph()
+        unsafe { &*self.inner.graph }
     }
 }
 
