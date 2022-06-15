@@ -210,5 +210,6 @@ async fn make_graph() -> &'static Graph {
 async fn main() -> std::io::Result<()> {
     let graph = make_graph().await;
     let server = Box::leak(Box::new(Server::new(graph)));
+    print!("before start");
     server.start(5000).await
 }
