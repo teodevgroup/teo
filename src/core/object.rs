@@ -47,6 +47,7 @@ impl Object {
             value_map: RefCell::new(HashMap::new()),
             atomic_updator_map: RefCell::new(HashMap::new()),
             relation_map: RefCell::new(HashMap::new()),
+            ignore_required_fields: RefCell::new(Vec::new()),
         }) }
     }
 
@@ -149,6 +150,9 @@ impl Object {
                 continue;
             }
             let field = field.unwrap();
+            if self.inner.ignore_required_fields.borrow().contains(&field.name) {
+                continue;
+            }
             if field.auto || field.auto_increment {
                 continue
             }
@@ -454,7 +458,6 @@ impl Object {
                     }
                 }
             } else {
-                println!("relation comes");
                 // this is relation
                 let relation = self.model().relation(&key).unwrap();
                 let relation_object = json_object.get(&key.to_string());
@@ -465,19 +468,18 @@ impl Object {
                 let (command, command_input) = one_length_json_obj(relation_object, key)?;
                 match command {
                     "create" | "createMany" => {
-                        println!("create detected");
                         let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
                         for entry in entries {
                             let new_object =  graph.new_object(&relation.model);
                             new_object.set_json(entry).await?;
+                            new_object.ignore_required_for(&relation.references);
                             if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
                                 self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
                             }
                             let mut relation_map = self.inner.relation_map.borrow_mut();
                             let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Connect(new_object));
-                            println!("connect pushed!");
                         }
                     }
                     "set" => {
@@ -487,12 +489,9 @@ impl Object {
                         let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
                         for entry in entries {
-                            println!("see entry {:?}", entry);
                             let model = graph.model(&relation.model);
                             let unique_query = json!({"where": entry});
-                            println!("see our find unique input {:?}", unique_query.as_object().unwrap());
                             let new_object = graph.find_unique(model, unique_query.as_object().unwrap()).await?;
-                            println!("see new object {:?}", new_object);
                             if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
                                 self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
                             }
@@ -563,6 +562,10 @@ impl Object {
         }
     }
 
+    pub(crate) fn ignore_required_for(&self, ignores: &Vec<String>) {
+        self.inner.ignore_required_fields.borrow_mut().extend(ignores.iter().map(|v| v.to_string()).collect::<Vec<String>>());
+    }
+
     pub(crate) fn is_instance_of(&self, model_name: &'static str) -> bool {
         self.model().name() == model_name
     }
@@ -590,6 +593,7 @@ pub(crate) struct ObjectInner {
     pub(crate) value_map: RefCell<HashMap<String, Value>>,
     pub(crate) atomic_updator_map: RefCell<HashMap<String, AtomicUpdateType>>,
     pub(crate) relation_map: RefCell<HashMap<String, Vec<RelationManipulation>>>,
+    pub(crate) ignore_required_fields: RefCell<Vec<String>>,
 }
 
 impl Debug for Object {
