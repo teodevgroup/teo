@@ -20,6 +20,63 @@ fn build_where_input(
     Ok(doc!{})
 }
 
+fn build_lookup_inputs(
+    model: &Model,
+    graph: &Graph,
+    include: &JsonValue,
+) -> Result<Vec<Document>, ActionError> {
+    let include = include.as_object();
+    if include.is_none() {
+        let model_name = &model.name;
+        return Err(ActionError::invalid_query_input(format!("'include' on model '{model_name}' is not an object. Please check your input.")));
+    }
+    let include = include.unwrap();
+    let mut retval: Vec<Document> = vec![];
+    for (key, value) in include.iter() {
+        let relation = model.relation(key);
+        if relation.is_none() {
+            let model_name = &model.name;
+            return Err(ActionError::invalid_query_input(format!("Relation '{key}' on model '{model_name}' is not exist. Please check your input.")));
+        }
+        let relation = relation.unwrap();
+        let relation_model_name = &relation.model;
+        let relation_model = graph.model(relation_model_name);
+        if value.is_boolean() || value.is_object() {
+            let mut let_value = doc!{};
+            let mut eq_values: Vec<Document> = vec![];
+            for (index, field_name) in relation.fields.iter().enumerate() {
+                let reference_name = relation.references.get(index).unwrap();
+                let_value.insert(field_name, format!("${reference_name}"));
+                eq_values.push(doc!{format!("${reference_name}"): format!("$${reference_name}")});
+            }
+            let inner_pipeline = if value.is_object() {
+                build_query_pipeline_from_json(relation_model, graph, r#type, mutation_mode, value)
+            } else {
+                vec![]
+            }?;
+            let lookup = doc!{"$lookup": {
+                "from": &relation_model.table_name,
+                "as": key,
+                "let": let_value,
+                "pipeline": inner_pipeline
+            }};
+            //
+            // {
+            //     "$match": {
+            //     "$expr": {
+            //         "$and": eq_values
+            //     }
+            // }
+            // }
+            retval.push(lookup);
+        } else {
+            let model_name = &model.name;
+            return Err(ActionError::invalid_query_input(format!("Relation '{key}' on model '{model_name}' has a unrecognized value. It's either a boolean or an object. Please check your input.")));
+        }
+    }
+    Ok(retval)
+}
+
 fn build_query_pipeline(
     model: &Model,
     graph: &Graph,
@@ -56,6 +113,22 @@ fn build_query_pipeline(
     }
     // $project
     // $lookup
+    if include.is_some() {
+        let mut lookups = build_lookup_inputs(model, graph, include.unwrap())?;
+        if !lookups.is_empty() {
+            retval.append(&mut lookups);
+        }
+    }
 
     Ok(retval)
+}
+
+fn build_query_pipeline_from_json(
+    model: &Model,
+    graph: &Graph,
+    r#type: QueryPipelineType,
+    mutation_mode: bool,
+    json_value: &JsonValue
+) -> Result<Vec<Document>, ActionError> {
+    Ok(vec![doc!{}])
 }

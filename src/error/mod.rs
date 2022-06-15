@@ -42,7 +42,8 @@ pub enum ActionErrorType {
     IdentityIsNotFound,
     UnexpectedNull,
     WrongInputUpdator,
-    UnexpectedFieldType
+    UnexpectedFieldType,
+    InvalidQueryInput,
 }
 
 impl ActionErrorType {
@@ -87,6 +88,7 @@ impl ActionErrorType {
             ActionErrorType::UnexpectedNull => { 400 }
             ActionErrorType::WrongInputUpdator => { 400 }
             ActionErrorType::UnexpectedFieldType => { 400 }
+            ActionErrorType::InvalidQueryInput => { 400 }
         }
     }
 }
@@ -111,6 +113,14 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::ActionUnrecognized,
             message: "This action is unrecognized.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn invalid_query_input(reason: impl Into<String>) -> Self {
+        ActionError {
+            r#type: ActionErrorType::InvalidQueryInput,
+            message: reason.into(),
             errors: None
         }
     }
