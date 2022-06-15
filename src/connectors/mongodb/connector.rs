@@ -1309,6 +1309,7 @@ impl Connector for MongoDBConnector {
             }
         }
         let col = &self.collections[model.name()];
+        println!("see query doc, {:?}, collection: {:?}", query_doc, col);
         let find_result = col.find_one(query_doc, None).await;
         match find_result {
             Ok(document_option) => {

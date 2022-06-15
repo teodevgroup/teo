@@ -10,6 +10,7 @@ pub(crate) struct Relation {
     pub(crate) references: Vec<String>,
 }
 
+#[derive(Debug)]
 pub(crate) enum RelationManipulation {
     Connect(Object),
     Disconnect(Object),

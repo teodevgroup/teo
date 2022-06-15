@@ -113,7 +113,11 @@ impl Object {
         // apply on save pipeline first
         let model_keys = self.model().save_keys();
         for key in model_keys {
-            let field = self.model().field(key).unwrap();
+            let field = self.model().field(key);
+            if field.is_none() {
+                continue;
+            }
+            let field = field.unwrap();
             if field.needs_on_save_callback() {
                 let mut stage = match self.inner.value_map.borrow().deref().get(&key.to_string()) {
                     Some(value) => {
@@ -140,7 +144,11 @@ impl Object {
         }
         // validate required fields
         for key in model_keys {
-            let field = self.model().field(key).unwrap();
+            let field = self.model().field(key);
+            if field.is_none() {
+                continue;
+            }
+            let field = field.unwrap();
             if field.auto || field.auto_increment {
                 continue
             }
@@ -190,21 +198,40 @@ impl Object {
             for relation in &self.model().relations_vec {
                 let name = &relation.name;
                 let map = self.inner.relation_map.borrow();
-                let vec = map.get(name);
-                match vec {
+                let vec_option = map.get(name);
+                match vec_option {
                     None => {},
                     Some(vec) => {
                         for manipulation in vec {
                             manipulation.object().save_to_database(session.clone(), false).await?;
+                        }
+                    }
+                }
+            }
+        }
+        // send to database to save self
+        let connector = self.graph().connector();
+        connector.save_object(self).await?;
+        // links
+        if !no_recursive {
+            for relation in &self.model().relations_vec {
+                let name = &relation.name;
+                let map = self.inner.relation_map.borrow();
+                let vec_option = map.get(name);
+                match vec_option {
+                    None => {},
+                    Some(vec) => {
+                        for manipulation in vec {
                             match manipulation {
                                 RelationManipulation::Connect(obj) => {
-                                    self.link_connect(obj, relation, session.clone());
+                                    self.link_connect(obj, relation, session.clone()).await?;
                                 }
                                 RelationManipulation::Disconnect(obj) => {
-                                    self.link_disconnect(obj, relation, session.clone());
+
+                                    self.link_disconnect(obj, relation, session.clone()).await?;
                                 }
                                 RelationManipulation::Set(obj) => {
-                                    self.link_connect(obj, relation, session.clone());
+                                    self.link_connect(obj, relation, session.clone()).await?;
                                 }
                                 _ => {}
                             }
@@ -213,15 +240,13 @@ impl Object {
                 }
             }
         }
-        // send to database to save
-        let connector = self.graph().connector();
-        connector.save_object(self).await?;
         // clear properties
         self.clear_state();
         Ok(())
     }
 
     pub(crate) async fn link_connect(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> Result<(), ActionError> {
+        println!("link connect triggered");
         match &relation.through {
             Some(through) => { // with join table
                 let relation_model = self.graph().model(through);
@@ -243,16 +268,18 @@ impl Object {
                 relation_object.save_to_database(session.clone(), true);
             }
             None => { // no join table
+                println!("no join table into");
                 for (index, reference) in relation.references.iter().enumerate() {
                     let field_name = relation.fields.get(index).unwrap();
                     let local_value = self.get_value(field_name)?;
                     let foreign_value = obj.get_value(reference)?;
+                    println!("local val {:?}, foreign val {:?}", local_value, foreign_value);
                     if local_value.is_some() && foreign_value.is_none() {
                         obj.set_value(reference, local_value.unwrap())?;
-                        obj.save_to_database(session.clone(), true);
+                        obj.save_to_database(session.clone(), true).await?;
                     } else if foreign_value.is_some() && local_value.is_none() {
                         self.set_value(field_name, foreign_value.unwrap())?;
-                        self.save_to_database(session.clone(), true);
+                        self.save_to_database(session.clone(), true).await?;
                     }
                 }
             }
@@ -427,12 +454,18 @@ impl Object {
                     }
                 }
             } else {
+                println!("relation comes");
                 // this is relation
                 let relation = self.model().relation(&key).unwrap();
-                let relation_object = json_object.get(&key.to_string()).unwrap();
+                let relation_object = json_object.get(&key.to_string());
+                if relation_object.is_none() {
+                    continue;
+                }
+                let relation_object = relation_object.unwrap();
                 let (command, command_input) = one_length_json_obj(relation_object, key)?;
                 match command {
                     "create" | "createMany" => {
+                        println!("create detected");
                         let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
                         for entry in entries {
@@ -444,6 +477,7 @@ impl Object {
                             let mut relation_map = self.inner.relation_map.borrow_mut();
                             let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Connect(new_object));
+                            println!("connect pushed!");
                         }
                     }
                     "set" => {
@@ -453,8 +487,12 @@ impl Object {
                         let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
                         for entry in entries {
+                            println!("see entry {:?}", entry);
                             let model = graph.model(&relation.model);
-                            let new_object = graph.find_unique(model, entry.as_object().unwrap()).await?;
+                            let unique_query = json!({"where": entry});
+                            println!("see our find unique input {:?}", unique_query.as_object().unwrap());
+                            let new_object = graph.find_unique(model, unique_query.as_object().unwrap()).await?;
+                            println!("see new object {:?}", new_object);
                             if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
                                 self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
                             }

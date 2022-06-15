@@ -308,6 +308,7 @@ impl Server {
     }
 
     async fn handle_update(&'static self, input: &Map<String, JsonValue>, model: &'static Model) -> HttpResponse {
+        println!("see update find unique input {:?}", input);
         let result = self.graph.find_unique(model, input).await;
         match result {
             Ok(obj) => {
