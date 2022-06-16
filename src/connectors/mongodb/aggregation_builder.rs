@@ -1,5 +1,5 @@
 use serde_json::{Value as JsonValue};
-use bson::{doc, Document};
+use bson::{Bson, doc, Document};
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::error::ActionError;
@@ -23,6 +23,8 @@ fn build_where_input(
 fn build_lookup_inputs(
     model: &Model,
     graph: &Graph,
+    r#type: QueryPipelineType,
+    mutation_mode: bool,
     include: &JsonValue,
 ) -> Result<Vec<Document>, ActionError> {
     let include = include.as_object();
@@ -49,17 +51,11 @@ fn build_lookup_inputs(
                 let_value.insert(field_name, format!("${reference_name}"));
                 eq_values.push(doc!{format!("${reference_name}"): format!("$${reference_name}")});
             }
-            let inner_pipeline = if value.is_object() {
-                build_query_pipeline_from_json(relation_model, graph, r#type, mutation_mode, value)
+            let mut inner_pipeline = if value.is_object() {
+                build_query_pipeline_from_json(relation_model, graph, r#type, mutation_mode, value)?
             } else {
                 vec![]
-            }?;
-            let lookup = doc!{"$lookup": {
-                "from": &relation_model.table_name,
-                "as": key,
-                "let": let_value,
-                "pipeline": inner_pipeline
-            }};
+            };
             //
             // {
             //     "$match": {
@@ -68,6 +64,27 @@ fn build_lookup_inputs(
             //     }
             // }
             // }
+            let inner_match = inner_pipeline.iter().find(|v| v.get("$match").is_some());
+            let has_inner_match = inner_match.is_some();
+            let mut inner_match = if has_inner_match {
+                inner_match.unwrap().clone()
+            } else {
+                doc!{"$match": {}}
+            };
+            if inner_match.get("$expr").is_none() {
+                inner_match.insert("$expr", doc!{});
+            }
+            if inner_match.get("$expr").unwrap().as_document().unwrap().get("$and").is_none() {
+                inner_match.get_mut("$expr").unwrap().as_document_mut().unwrap().insert("$and", vec![] as Vec<Document>);
+            }
+            inner_match.get_mut("$expr").unwrap().as_document_mut().unwrap().get_mut("$and").unwrap().as_array_mut().unwrap().extend(eq_values.iter().map(|item| Bson::Document(item.clone())));
+                // push here
+            let lookup = doc!{"$lookup": {
+                "from": &relation_model.table_name,
+                "as": key,
+                "let": let_value,
+                "pipeline": inner_pipeline
+            }};
             retval.push(lookup);
         } else {
             let model_name = &model.name;
@@ -101,20 +118,20 @@ fn build_query_pipeline(
 
     // $skip and $limit
     if page_size.is_some() && page_number.is_some() {
-        retval.push(doc!{"$skip": (page_number.unwrap() - 1) * page_size.unwrap()});
-        retval.push(doc!{"limit": page_size});
+        retval.push(doc!{"$skip": ((page_number.unwrap() - 1) * page_size.unwrap()) as i64});
+        retval.push(doc!{"limit": page_size.unwrap() as i64});
     } else {
         if skip.is_some() {
-            retval.push(doc!{"$skip": skip.unwrap()});
+            retval.push(doc!{"$skip": skip.unwrap() as i64});
         }
         if take.is_some() {
-            retval.push(doc!{"$limit": skip.unwrap()});
+            retval.push(doc!{"$limit": skip.unwrap() as i64});
         }
     }
     // $project
     // $lookup
     if include.is_some() {
-        let mut lookups = build_lookup_inputs(model, graph, include.unwrap())?;
+        let mut lookups = build_lookup_inputs(model, graph, r#type, mutation_mode, include.unwrap())?;
         if !lookups.is_empty() {
             retval.append(&mut lookups);
         }
