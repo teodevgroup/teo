@@ -115,23 +115,35 @@ impl MongoDBConnector {
     }
 
     fn document_to_object(&self, document: &Document, object: &Object) -> Result<(), ActionError> {
-        let primary_name = if let Some(primary_field) = object.model().primary_field() {
-            primary_field.name.clone()
-        } else {
-            "__id".to_string()
-        };
         for key in document.keys() {
-            let object_key = if key == "_id" { &primary_name } else { key };
-            let field_type = if key == "_id" { &FieldType::ObjectId } else { &object.model().field(key).unwrap().field_type };
-            let bson_value = document.get(key).unwrap();
-            let value_result = self.bson_value_to_field_value(object_key, bson_value, field_type);
-            match value_result {
-                Ok(value) => {
-                    object.inner.value_map.borrow_mut().insert(object_key.to_string(), value);
+            let object_field = object.model().fields().iter().find(|f| f.column_name() == key);
+            if object_field.is_some() {
+                // field
+                let object_field = object_field.unwrap();
+                let object_key = &object_field.name;
+                let field_type = &object_field.field_type;
+                let bson_value = document.get(key).unwrap();
+                let value_result = self.bson_value_to_field_value(object_key, bson_value, field_type);
+                match value_result {
+                    Ok(value) => {
+                        object.inner.value_map.borrow_mut().insert(object_key.to_string(), value);
+                    }
+                    Err(err) => {
+                        return Err(err);
+                    }
                 }
-                Err(err) => {
-                    return Err(err);
+            } else {
+                // relation
+                let relation = object.model().relation(key).unwrap();
+                let model_name = &relation.model;
+                let object_bsons = document.get(key).unwrap().as_array().unwrap();
+                let mut related: Vec<Object> = vec![];
+                for related_object_bson in object_bsons {
+                    let related_object = object.graph().new_object(model_name);
+                    self.document_to_object(related_object_bson.as_document().unwrap(), &related_object)?;
+                    related.push(related_object);
                 }
+                object.inner.queried_relation_map.borrow_mut().insert(key.to_string(), related);
             }
         }
         object.inner.is_initialized.store(true, Ordering::SeqCst);
