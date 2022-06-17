@@ -492,6 +492,7 @@ impl Object {
                             let new_object =  graph.new_object(&relation.model);
                             new_object.set_json(entry).await?;
                             new_object.ignore_required_for(&relation.references);
+                            self.ignore_required_for(&relation.fields);
                             if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
                                 self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
                             }
@@ -510,6 +511,7 @@ impl Object {
                             let model = graph.model(&relation.model);
                             let unique_query = json!({"where": entry});
                             let new_object = graph.find_unique(model, &unique_query, true).await?;
+                            self.ignore_required_for(&relation.fields);
                             if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
                                 self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
                             }
