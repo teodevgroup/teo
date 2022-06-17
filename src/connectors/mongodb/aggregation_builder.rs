@@ -837,9 +837,10 @@ fn build_lookup_inputs(
             let mut let_value = doc!{};
             let mut eq_values: Vec<Document> = vec![];
             for (index, field_name) in relation.fields.iter().enumerate() {
+                let field_name = model.field(field_name).unwrap().column_name();
                 let reference_name = relation.references.get(index).unwrap();
-                let_value.insert(field_name, format!("${reference_name}"));
-                eq_values.push(doc!{format!("${reference_name}"): format!("$${reference_name}")});
+                let_value.insert(reference_name, format!("${field_name}"));
+                eq_values.push(doc!{"$eq": [format!("${field_name}"), format!("$${reference_name}")]});
             }
             let mut inner_pipeline = if value.is_object() {
                 build_query_pipeline_from_json(relation_model, graph, r#type, mutation_mode, value)?
@@ -853,13 +854,14 @@ fn build_lookup_inputs(
             } else {
                 doc!{"$match": {}}
             };
-            if inner_match.get("$expr").is_none() {
-                inner_match.insert("$expr", doc!{});
+            let mut inner_match_inner = inner_match.get_mut("$match").unwrap().as_document_mut().unwrap();
+            if inner_match_inner.get("$expr").is_none() {
+                inner_match_inner.insert("$expr", doc!{});
             }
-            if inner_match.get("$expr").unwrap().as_document().unwrap().get("$and").is_none() {
-                inner_match.get_mut("$expr").unwrap().as_document_mut().unwrap().insert("$and", vec![] as Vec<Document>);
+            if inner_match_inner.get("$expr").unwrap().as_document().unwrap().get("$and").is_none() {
+                inner_match_inner.get_mut("$expr").unwrap().as_document_mut().unwrap().insert("$and", vec![] as Vec<Document>);
             }
-            inner_match.get_mut("$expr").unwrap().as_document_mut().unwrap().get_mut("$and").unwrap().as_array_mut().unwrap().extend(eq_values.iter().map(|item| Bson::Document(item.clone())));
+            inner_match_inner.get_mut("$expr").unwrap().as_document_mut().unwrap().get_mut("$and").unwrap().as_array_mut().unwrap().extend(eq_values.iter().map(|item| Bson::Document(item.clone())));
             if has_inner_match {
                 let index = inner_pipeline.iter().position(|v| v.get("$match").is_some()).unwrap();
                 inner_pipeline.remove(index);

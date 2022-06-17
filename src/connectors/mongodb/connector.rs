@@ -115,6 +115,7 @@ impl MongoDBConnector {
     }
 
     fn document_to_object(&self, document: &Document, object: &Object) -> Result<(), ActionError> {
+        println!("see document: {:#?}", document);
         for key in document.keys() {
             let object_field = object.model().fields().iter().find(|f| f.column_name() == key);
             if object_field.is_some() {
@@ -134,7 +135,12 @@ impl MongoDBConnector {
                 }
             } else {
                 // relation
-                let relation = object.model().relation(key).unwrap();
+                println!("see relation name {:?}", key);
+                let relation = object.model().relation(key);
+                if relation.is_none() {
+                    continue;
+                }
+                let relation = relation.unwrap();
                 let model_name = &relation.model;
                 let object_bsons = document.get(key).unwrap().as_array().unwrap();
                 let mut related: Vec<Object> = vec![];
@@ -634,9 +640,11 @@ impl Connector for MongoDBConnector {
 
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder)?;
+        println!("see aggregate input, {:#?}", aggregate_input);
         let col = &self.collections[model.name()];
         let mut cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
+            println!("see cursor error: {:#?}", cur);
             return Err(ActionError::unknown_database_find_error());
         }
         let mut cur = cur.unwrap();
