@@ -310,7 +310,7 @@ impl Object {
                     let val = obj.get_value(foreign_field_name).unwrap().unwrap();
                     finder.insert(field_name.to_string(), val.to_json_value());
                 }
-                let relation_object = self.graph().find_unique(relation_model, &finder).await?;
+                let relation_object = self.graph().find_unique(relation_model, &JsonValue::Object(finder), true).await?;
                 relation_object.delete_from_database(session.clone(), false).await?;
             }
             None => { // no join table
@@ -491,7 +491,7 @@ impl Object {
                         for entry in entries {
                             let model = graph.model(&relation.model);
                             let unique_query = json!({"where": entry});
-                            let new_object = graph.find_unique(model, unique_query.as_object().unwrap()).await?;
+                            let new_object = graph.find_unique(model, &unique_query, true).await?;
                             if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
                                 self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
                             }
@@ -507,7 +507,7 @@ impl Object {
                             let model = graph.model(&relation.model);
                             let r#where = entry.as_object().unwrap().get("where").unwrap();
                             let create = entry.as_object().unwrap().get("create").unwrap();
-                            let unique_result = graph.find_unique(model, r#where.as_object().unwrap()).await;
+                            let unique_result = graph.find_unique(model, r#where, true).await;
                             match unique_result {
                                 Ok(new_obj) => {
                                     if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {

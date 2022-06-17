@@ -1,7 +1,10 @@
-use serde_json::{Value as JsonValue};
-use bson::{Bson, doc, Document};
+use serde_json::{Value as JsonValue, Map as JsonMap};
+use bson::{Bson, bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
+use chrono::{Date, NaiveDate, Utc, DateTime};
+use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
+use crate::core::value::Value;
 use crate::error::ActionError;
 
 
@@ -12,12 +15,799 @@ pub(crate) enum QueryPipelineType {
     Many
 }
 
-fn build_where_input(
-    model: &Model,
-    graph: &Graph,
-    r#where: Option<&JsonValue>,
-) -> Result<Document, ActionError> {
-    Ok(doc!{})
+pub trait ToBsonValue {
+    fn to_bson_value(&self) -> Bson;
+}
+
+impl ToBsonValue for Value {
+    fn to_bson_value(&self) -> Bson {
+        match self {
+            Value::Null => {
+                Bson::Null
+            }
+            Value::ObjectId(val) => {
+                Bson::ObjectId(ObjectId::parse_str(val.as_str()).unwrap())
+            }
+            Value::Bool(val) => {
+                Bson::Boolean(*val)
+            }
+            Value::I8(val) => {
+                Bson::Int32(*val as i32)
+            }
+            Value::I16(val) => {
+                Bson::Int32(*val as i32)
+            }
+            Value::I32(val) => {
+                Bson::Int32(*val)
+            }
+            Value::I64(val) => {
+                Bson::Int64(*val)
+            }
+            Value::I128(val) => {
+                Bson::Int64(*val as i64)
+            }
+            Value::U8(val) => {
+                Bson::Int32(*val as i32)
+            }
+            Value::U16(val) => {
+                Bson::Int32(*val as i32)
+            }
+            Value::U32(val) => {
+                Bson::Int64(*val as i64)
+            }
+            Value::U64(val) => {
+                Bson::Int64(*val as i64)
+            }
+            Value::U128(val) => {
+                Bson::Int64(*val as i64)
+            }
+            Value::F32(val) => {
+                Bson::from(val)
+            }
+            Value::F64(val) => {
+                Bson::from(val)
+            }
+            Value::String(val) => {
+                Bson::String(val.clone())
+            }
+            Value::Decimal(val) => {
+                todo!()
+            }
+            Value::Date(val) => {
+                Bson::DateTime(BsonDateTime::parse_rfc3339_str(val.format("%Y-%m-%d").to_string()).unwrap())
+            }
+            Value::DateTime(val) => {
+                Bson::DateTime(BsonDateTime::from(*val))
+            }
+            Value::Vec(val) => {
+                Bson::Array(val.iter().map(|i| { i.to_bson_value() }).collect())
+            }
+            Value::Map(val) => {
+                let mut doc = doc!{};
+                for (k, v) in val {
+                    doc.insert(k.to_string(), v.to_bson_value());
+                }
+                Bson::Document(doc)
+            }
+            Value::Object(obj) => {
+                panic!()
+            }
+        }
+    }
+}
+
+fn parse_object_id(value: &JsonValue) -> Result<Bson, ActionError> {
+    match value.as_str() {
+        Some(val) => {
+            match ObjectId::parse_str(val) {
+                Ok(oid) => {
+                    Ok(Bson::ObjectId(oid))
+                }
+                Err(_) => {
+                    Err(ActionError::wrong_input_type())
+                }
+            }
+        }
+        None => {
+            Err(ActionError::wrong_input_type())
+        }
+    }
+}
+
+
+fn has_i_mode(map: &JsonMap<String, JsonValue>) -> bool {
+    match map.get("mode") {
+        Some(val) => {
+            if val.is_string() {
+                return val.as_str().unwrap() == "caseInsensitive"
+            } else {
+                false
+            }
+        }
+        None => {
+            false
+        }
+    }
+}
+
+fn parse_string(value: &JsonValue) -> Result<Bson, ActionError> {
+    match value.as_str() {
+        Some(val) => {
+            Ok(Bson::String(val.to_string()))
+        }
+        None => {
+            Err(ActionError::wrong_input_type())
+        }
+    }
+}
+
+fn parse_bool(value: &JsonValue) -> Result<Bson, ActionError> {
+    match value.as_bool() {
+        Some(val) => {
+            Ok(Bson::Boolean(val))
+        }
+        None => {
+            Err(ActionError::wrong_input_type())
+        }
+    }
+}
+
+fn parse_i64(value: &JsonValue) -> Result<Bson, ActionError> {
+    if value.is_i64() {
+        Ok(Bson::Int64(value.as_i64().unwrap()))
+    } else if value.is_u64() {
+        Ok(Bson::Int64(value.as_u64().unwrap() as i64))
+    } else if value.is_f64() {
+        Ok(Bson::Int64(value.as_f64().unwrap() as i64))
+    } else {
+        Err(ActionError::wrong_input_type())
+    }
+}
+
+fn parse_f64(value: &JsonValue) -> Result<Bson, ActionError> {
+    if value.is_i64() {
+        Ok(Bson::Double(value.as_i64().unwrap() as f64))
+    } else if value.is_u64() {
+        Ok(Bson::Double(value.as_u64().unwrap() as f64))
+    } else if value.is_f64() {
+        Ok(Bson::Double(value.as_f64().unwrap()))
+    } else {
+        Err(ActionError::wrong_input_type())
+    }
+}
+
+fn parse_date(value: &JsonValue) -> Result<Bson, ActionError> {
+    if value.is_string() {
+        match NaiveDate::parse_from_str(&value.as_str().unwrap(), "%Y-%m-%d") {
+            Ok(naive_date) => {
+                let date: Date<Utc> = Date::from_utc(naive_date, Utc);
+                let val = Value::Date(date);
+                Ok(val.to_bson_value())
+            }
+            Err(_) => {
+                Err(ActionError::wrong_date_format())
+            }
+        }
+    } else {
+        Err(ActionError::wrong_input_type())
+    }
+}
+
+fn parse_datetime(value: &JsonValue) -> Result<Bson, ActionError> {
+    if value.is_string() {
+        match DateTime::parse_from_rfc3339(&value.as_str().unwrap()) {
+            Ok(fixed_offset_datetime) => {
+                let datetime: DateTime<Utc> = fixed_offset_datetime.with_timezone(&Utc);
+                let value = Value::DateTime(datetime);
+                Ok(value.to_bson_value())
+            }
+            Err(_) => {
+                Err(ActionError::wrong_datetime_format())
+            }
+        }
+    } else {
+        Err(ActionError::wrong_input_type())
+    }
+}
+
+fn parse_enum(value: &JsonValue, enum_name: &str, graph: &Graph) -> Result<Bson, ActionError> {
+    if value.is_string() {
+        let str = value.as_str().unwrap();
+        let r#enum = graph.r#enum(enum_name);
+        if r#enum.contains(&str.to_string()) {
+            Ok(Bson::String(str.to_string()))
+        } else {
+            Err(ActionError::undefined_enum_value())
+        }
+    } else {
+        Err(ActionError::wrong_input_type())
+    }
+}
+
+fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Graph) -> Result<Bson, ActionError> {
+    return match field_type {
+        FieldType::Undefined => {
+            panic!()
+        }
+        FieldType::ObjectId => {
+            if value.is_string() {
+                parse_object_id(value)
+            } else if value.is_object() {
+                let map = value.as_object().unwrap();
+                let mut result = doc!{};
+                for (key, value) in map {
+                    match key.as_str() {
+                        "equals" => {
+                            let oid = parse_object_id(value)?;
+                            result.insert("$eq", oid);
+                        }
+                        "not" => {
+                            let oid = parse_object_id(value)?;
+                            result.insert("$eq", oid);
+                        }
+                        "gt" => {
+                            let oid = parse_object_id(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "gte" => {
+                            let oid = parse_object_id(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "lt" => {
+                            let oid = parse_object_id(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "lte" => {
+                            let oid = parse_object_id(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "in" => {
+                            match value.as_array() {
+                                Some(arr_val) => {
+                                    let mut arr: Vec<Bson> = Vec::new();
+                                    for val in arr_val {
+                                        arr.push(parse_object_id(val)?);
+                                    }
+                                    result.insert("$in", arr);
+                                }
+                                None => {
+                                    return Err(ActionError::wrong_input_type());
+                                }
+                            }
+                        }
+                        "notIn" => {
+                            match value.as_array() {
+                                Some(arr_val) => {
+                                    let mut arr: Vec<Bson> = Vec::new();
+                                    for val in arr_val {
+                                        arr.push(parse_object_id(val)?);
+                                    }
+                                    result.insert("$nin", arr);
+                                }
+                                None => {
+                                    return Err(ActionError::wrong_input_type());
+                                }
+                            }
+                        }
+                        &_ => {
+                            return Err(ActionError::wrong_input_type());
+                        }
+                    }
+                }
+                Ok(Bson::Document(result))
+            } else {
+                Err(ActionError::wrong_input_type())
+            }
+        }
+        FieldType::Bool => {
+            if value.is_boolean() {
+                Ok(Bson::Boolean(value.as_bool().unwrap()))
+            } else if value.is_object() {
+                let map = value.as_object().unwrap();
+                let mut result = doc!{};
+                for (key, value) in map {
+                    match key.as_str() {
+                        "equals" => {
+                            let b = parse_bool(value)?;
+                            result.insert("$eq", b);
+                        }
+                        "not" => {
+                            let b = parse_bool(value)?;
+                            result.insert("$eq", b);
+                        }
+                        &_ => {
+                            return Err(ActionError::wrong_input_type());
+                        }
+                    }
+                }
+                Ok(Bson::Document(result))
+            } else {
+                Err(ActionError::wrong_input_type())
+            }
+        }
+        FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 => {
+            if value.is_i64() {
+                Ok(Bson::Int64(value.as_i64().unwrap()))
+            } else if value.is_u64() {
+                Ok(Bson::Int64(value.as_u64().unwrap() as i64))
+            } else if value.is_f64() {
+                Ok(Bson::Int64(value.as_f64().unwrap() as i64))
+            } else if value.is_object() {
+                let map = value.as_object().unwrap();
+                let mut result = doc!{};
+                for (key, value) in map {
+                    match key.as_str() {
+                        "equals" => {
+                            let b = parse_i64(value)?;
+                            result.insert("$eq", b);
+                        }
+                        "not" => {
+                            let b = parse_i64(value)?;
+                            result.insert("$eq", b);
+                        }
+                        "gt" => {
+                            let oid = parse_i64(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "gte" => {
+                            let oid = parse_i64(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "lt" => {
+                            let oid = parse_i64(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "lte" => {
+                            let oid = parse_i64(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "in" => {
+                            match value.as_array() {
+                                Some(arr_val) => {
+                                    let mut arr: Vec<Bson> = Vec::new();
+                                    for val in arr_val {
+                                        arr.push(parse_i64(val)?);
+                                    }
+                                    result.insert("$in", arr);
+                                }
+                                None => {
+                                    return Err(ActionError::wrong_input_type());
+                                }
+                            }
+                        }
+                        "notIn" => {
+                            match value.as_array() {
+                                Some(arr_val) => {
+                                    let mut arr: Vec<Bson> = Vec::new();
+                                    for val in arr_val {
+                                        arr.push(parse_i64(val)?);
+                                    }
+                                    result.insert("$nin", arr);
+                                }
+                                None => {
+                                    return Err(ActionError::wrong_input_type());
+                                }
+                            }
+                        }
+                        &_ => {
+                            return Err(ActionError::wrong_input_type());
+                        }
+                    }
+                }
+                Ok(Bson::Document(result))
+            } else {
+                Err(ActionError::wrong_input_type())
+            }
+        }
+        FieldType::F32 | FieldType::F64 => {
+            if value.is_i64() {
+                Ok(Bson::Double(value.as_i64().unwrap() as f64))
+            } else if value.is_u64() {
+                Ok(Bson::Double(value.as_u64().unwrap() as f64))
+            } else if value.is_f64() {
+                Ok(Bson::Double(value.as_f64().unwrap()))
+            } else if value.is_object() {
+                let map = value.as_object().unwrap();
+                let mut result = doc!{};
+                for (key, value) in map {
+                    match key.as_str() {
+                        "equals" => {
+                            let b = parse_f64(value)?;
+                            result.insert("$eq", b);
+                        }
+                        "not" => {
+                            let b = parse_f64(value)?;
+                            result.insert("$eq", b);
+                        }
+                        "gt" => {
+                            let oid = parse_f64(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "gte" => {
+                            let oid = parse_f64(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "lt" => {
+                            let oid = parse_f64(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "lte" => {
+                            let oid = parse_f64(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "in" => {
+                            match value.as_array() {
+                                Some(arr_val) => {
+                                    let mut arr: Vec<Bson> = Vec::new();
+                                    for val in arr_val {
+                                        arr.push(parse_f64(val)?);
+                                    }
+                                    result.insert("$in", arr);
+                                }
+                                None => {
+                                    return Err(ActionError::wrong_input_type());
+                                }
+                            }
+                        }
+                        "notIn" => {
+                            match value.as_array() {
+                                Some(arr_val) => {
+                                    let mut arr: Vec<Bson> = Vec::new();
+                                    for val in arr_val {
+                                        arr.push(parse_f64(val)?);
+                                    }
+                                    result.insert("$nin", arr);
+                                }
+                                None => {
+                                    return Err(ActionError::wrong_input_type());
+                                }
+                            }
+                        }
+                        &_ => {
+                            return Err(ActionError::wrong_input_type());
+                        }
+                    }
+                }
+                Ok(Bson::Document(result))
+            } else {
+                Err(ActionError::wrong_input_type())
+            }
+        }
+        FieldType::Decimal => {
+            todo!()
+        }
+        FieldType::String => {
+            if value.is_string() {
+                Ok(Bson::String(value.as_str().unwrap().to_string()))
+            } else if value.is_object() {
+                let map = value.as_object().unwrap();
+                let mut result = doc!{};
+                for (key, value) in map {
+                    match key.as_str() {
+                        "equals" => {
+                            let b = parse_string(value)?;
+                            result.insert("$eq", b);
+                        }
+                        "not" => {
+                            let b = parse_string(value)?;
+                            result.insert("$eq", b);
+                        }
+                        "gt" => {
+                            let oid = parse_string(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "gte" => {
+                            let oid = parse_string(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "lt" => {
+                            let oid = parse_string(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "lte" => {
+                            let oid = parse_string(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "in" => {
+                            match value.as_array() {
+                                Some(arr_val) => {
+                                    let mut arr: Vec<Bson> = Vec::new();
+                                    for val in arr_val {
+                                        arr.push(parse_string(val)?);
+                                    }
+                                    result.insert("$in", arr);
+                                }
+                                None => {
+                                    return Err(ActionError::wrong_input_type());
+                                }
+                            }
+                        }
+                        "notIn" => {
+                            match value.as_array() {
+                                Some(arr_val) => {
+                                    let mut arr: Vec<Bson> = Vec::new();
+                                    for val in arr_val {
+                                        arr.push(parse_string(val)?);
+                                    }
+                                    result.insert("$nin", arr);
+                                }
+                                None => {
+                                    return Err(ActionError::wrong_input_type());
+                                }
+                            }
+                        }
+                        "contains" => {
+                            let bson_regex = BsonRegex {
+                                pattern: regex::escape(parse_string(value)?.as_str().unwrap()),
+                                options: if has_i_mode(map) { "i".to_string() } else { "".to_string() }
+                            };
+                            let regex = Bson::RegularExpression(bson_regex);
+                            result.insert("$regex", regex);
+                        }
+                        "startsWith" => {
+                            let bson_regex = BsonRegex {
+                                pattern: "^".to_string() + &*regex::escape(parse_string(value)?.as_str().unwrap()),
+                                options: if has_i_mode(map) { "i".to_string() } else { "".to_string() }
+                            };
+                            let regex = Bson::RegularExpression(bson_regex);
+                            result.insert("$regex", regex);
+                        }
+                        "endsWith" => {
+                            let bson_regex = BsonRegex {
+                                pattern: regex::escape(parse_string(value)?.as_str().unwrap()) + "$",
+                                options: if has_i_mode(map) { "i".to_string() } else { "".to_string() }
+                            };
+                            let regex = Bson::RegularExpression(bson_regex);
+                            result.insert("$regex", regex);
+                        }
+                        "matches" => {
+                            let bson_regex = BsonRegex {
+                                pattern: parse_string(value)?.as_str().unwrap().to_string(),
+                                options: if has_i_mode(map) { "i".to_string() } else { "".to_string() }
+                            };
+                            let regex = Bson::RegularExpression(bson_regex);
+                            result.insert("$regex", regex);
+                        }
+                        "mode" => { }
+                        &_ => {
+                            return Err(ActionError::wrong_input_type());
+                        }
+                    }
+                }
+                Ok(Bson::Document(result))
+            } else {
+                Err(ActionError::wrong_input_type())
+            }
+        }
+        FieldType::Date => {
+            if value.is_string() {
+                parse_date(value)
+            } else if value.is_object() {
+                let map = value.as_object().unwrap();
+                let mut result = doc!{};
+                for (key, value) in map {
+                    match key.as_str() {
+                        "equals" => {
+                            let b = parse_date(value)?;
+                            result.insert("$eq", b);
+                        }
+                        "not" => {
+                            let b = parse_date(value)?;
+                            result.insert("$eq", b);
+                        }
+                        "gt" => {
+                            let oid = parse_date(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "gte" => {
+                            let oid = parse_date(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "lt" => {
+                            let oid = parse_date(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "lte" => {
+                            let oid = parse_date(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "in" => {
+                            match value.as_array() {
+                                Some(arr_val) => {
+                                    let mut arr: Vec<Bson> = Vec::new();
+                                    for val in arr_val {
+                                        arr.push(parse_date(val)?);
+                                    }
+                                    result.insert("$in", arr);
+                                }
+                                None => {
+                                    return Err(ActionError::wrong_input_type());
+                                }
+                            }
+                        }
+                        "notIn" => {
+                            match value.as_array() {
+                                Some(arr_val) => {
+                                    let mut arr: Vec<Bson> = Vec::new();
+                                    for val in arr_val {
+                                        arr.push(parse_date(val)?);
+                                    }
+                                    result.insert("$nin", arr);
+                                }
+                                None => {
+                                    return Err(ActionError::wrong_input_type());
+                                }
+                            }
+                        }
+                        &_ => {
+                            return Err(ActionError::wrong_input_type());
+                        }
+                    }
+                }
+                Ok(Bson::Document(result))
+            } else {
+                Err(ActionError::wrong_input_type())
+            }
+        }
+        FieldType::DateTime => {
+            if value.is_string() {
+                parse_datetime(value)
+            } else if value.is_object() {
+                let map = value.as_object().unwrap();
+                let mut result = doc!{};
+                for (key, value) in map {
+                    match key.as_str() {
+                        "equals" => {
+                            let b = parse_datetime(value)?;
+                            result.insert("$eq", b);
+                        }
+                        "not" => {
+                            let b = parse_datetime(value)?;
+                            result.insert("$eq", b);
+                        }
+                        "gt" => {
+                            let oid = parse_datetime(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "gte" => {
+                            let oid = parse_datetime(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "lt" => {
+                            let oid = parse_datetime(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "lte" => {
+                            let oid = parse_datetime(value)?;
+                            result.insert("$gt", oid);
+                        }
+                        "in" => {
+                            match value.as_array() {
+                                Some(arr_val) => {
+                                    let mut arr: Vec<Bson> = Vec::new();
+                                    for val in arr_val {
+                                        arr.push(parse_datetime(val)?);
+                                    }
+                                    result.insert("$in", arr);
+                                }
+                                None => {
+                                    return Err(ActionError::wrong_input_type());
+                                }
+                            }
+                        }
+                        "notIn" => {
+                            match value.as_array() {
+                                Some(arr_val) => {
+                                    let mut arr: Vec<Bson> = Vec::new();
+                                    for val in arr_val {
+                                        arr.push(parse_datetime(val)?);
+                                    }
+                                    result.insert("$nin", arr);
+                                }
+                                None => {
+                                    return Err(ActionError::wrong_input_type());
+                                }
+                            }
+                        }
+                        &_ => {
+                            return Err(ActionError::wrong_input_type());
+                        }
+                    }
+                }
+                Ok(Bson::Document(result))
+            } else {
+                Err(ActionError::wrong_input_type())
+            }
+        }
+        FieldType::Enum(enum_name) => {
+            if value.is_string() {
+                parse_enum(value, enum_name, graph)
+            } else if value.is_object() {
+                let map = value.as_object().unwrap();
+                let mut result = doc!{};
+                for (key, value) in map {
+                    match key.as_str() {
+                        "equals" => {
+                            let b = parse_enum(value, enum_name, graph)?;
+                            result.insert("$eq", b);
+                        }
+                        "not" => {
+                            let b = parse_enum(value, enum_name, graph)?;
+                            result.insert("$eq", b);
+                        }
+                        "in" => {
+                            match value.as_array() {
+                                Some(arr_val) => {
+                                    let mut arr: Vec<Bson> = Vec::new();
+                                    for val in arr_val {
+                                        arr.push(parse_enum(value, enum_name, graph)?);
+                                    }
+                                    result.insert("$in", arr);
+                                }
+                                None => {
+                                    return Err(ActionError::wrong_input_type());
+                                }
+                            }
+                        }
+                        "notIn" => {
+                            match value.as_array() {
+                                Some(arr_val) => {
+                                    let mut arr: Vec<Bson> = Vec::new();
+                                    for val in arr_val {
+                                        arr.push(parse_enum(value, enum_name, graph)?);
+                                    }
+                                    result.insert("$nin", arr);
+                                }
+                                None => {
+                                    return Err(ActionError::wrong_input_type());
+                                }
+                            }
+                        }
+                        &_ => {
+                            return Err(ActionError::wrong_input_type());
+                        }
+                    }
+                }
+                Ok(Bson::Document(result))
+            } else {
+                Err(ActionError::wrong_input_type())
+            }
+        }
+        FieldType::Vec(_) => {
+            panic!()
+        }
+        FieldType::Map(_) => {
+            panic!()
+        }
+        FieldType::Object(_) => {
+            panic!()
+        }
+    }
+}
+
+pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&JsonValue>) -> Result<Document, ActionError> {
+    if let None = r#where { return Ok(doc!{}); }
+    let r#where = r#where.unwrap();
+    if !r#where.is_object() { return Err(ActionError::wrong_json_format()); }
+    let r#where = r#where.as_object().unwrap();
+    let mut doc = doc!{};
+    for (key, value) in r#where.iter() {
+        if !model.query_keys().contains(key) {
+            return Err(ActionError::keys_unallowed());
+        }
+        let field = model.field(key).unwrap();
+        let db_key = field.column_name();
+        let bson_result = parse_bson_where_entry(&field.field_type, value, graph);
+        match bson_result {
+            Ok(bson) => {
+                doc.insert(db_key, bson);
+            }
+            Err(err) => {
+                return Err(err);
+            }
+        }
+    }
+    Ok(doc)
 }
 
 fn build_lookup_inputs(
@@ -144,7 +934,7 @@ fn unwrap_usize(value: Option<&JsonValue>) -> Option<usize> {
     }
 }
 
-fn build_query_pipeline_from_json(
+pub(crate) fn build_query_pipeline_from_json(
     model: &Model,
     graph: &Graph,
     r#type: QueryPipelineType,

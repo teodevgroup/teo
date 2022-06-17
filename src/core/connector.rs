@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 use async_trait::async_trait;
-use serde_json::{Map, Value as JsonValue};
+use serde_json::{Value as JsonValue};
 use crate::core::database_type::DatabaseType;
 use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
@@ -18,13 +18,13 @@ pub(crate) trait Connector: Debug + Send + Sync {
 
     async fn delete_object(&self, object: &Object) -> Result<(), ActionError>;
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError>;
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError>;
 
-    async fn find_first(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError>;
+    async fn find_first(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError>;
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<Vec<Object>, ActionError>;
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError>;
 
-    async fn count(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<usize, ActionError>;
+    async fn count(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<usize, ActionError>;
 
     fn new_save_session(&self) -> Arc<dyn SaveSession>;
 }
