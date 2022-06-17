@@ -135,7 +135,6 @@ impl MongoDBConnector {
                 }
             } else {
                 // relation
-                println!("see relation name {:?}", key);
                 let relation = object.model().relation(key);
                 if relation.is_none() {
                     continue;
