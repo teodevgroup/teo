@@ -56,14 +56,6 @@ fn build_lookup_inputs(
             } else {
                 vec![]
             };
-            //
-            // {
-            //     "$match": {
-            //     "$expr": {
-            //         "$and": eq_values
-            //     }
-            // }
-            // }
             let inner_match = inner_pipeline.iter().find(|v| v.get("$match").is_some());
             let has_inner_match = inner_match.is_some();
             let mut inner_match = if has_inner_match {
@@ -78,7 +70,13 @@ fn build_lookup_inputs(
                 inner_match.get_mut("$expr").unwrap().as_document_mut().unwrap().insert("$and", vec![] as Vec<Document>);
             }
             inner_match.get_mut("$expr").unwrap().as_document_mut().unwrap().get_mut("$and").unwrap().as_array_mut().unwrap().extend(eq_values.iter().map(|item| Bson::Document(item.clone())));
-                // push here
+            if has_inner_match {
+                let index = inner_pipeline.iter().position(|v| v.get("$match").is_some()).unwrap();
+                inner_pipeline.remove(index);
+                inner_pipeline.insert(index, inner_match);
+            } else {
+                inner_pipeline.insert(0, inner_match);
+            }
             let lookup = doc!{"$lookup": {
                 "from": &relation_model.table_name,
                 "as": key,
