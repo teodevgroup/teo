@@ -90,7 +90,24 @@ impl Object {
                 Ok(Some(value.clone()))
             }
             None => {
-                Ok(None)
+                match self.inner.queried_relation_map.borrow().get(&key) {
+                    Some(list) => {
+                        let relation = self.model().relation(&key).unwrap();
+                        if relation.is_vec {
+                            let vec = list.iter().map(|o| Value::Object(o.clone())).collect();
+                            Ok(Some(Value::Vec(vec)))
+                        } else {
+                            if list.is_empty() {
+                                Ok(Some(Value::Null))
+                            } else {
+                                Ok(Some(Value::Object(list.get(0).unwrap().clone())))
+                            }
+                        }
+                    }
+                    None => {
+                        Ok(None)
+                    }
+                }
             }
         }
     }
