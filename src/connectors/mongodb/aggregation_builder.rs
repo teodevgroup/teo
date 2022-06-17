@@ -134,8 +134,14 @@ fn build_query_pipeline(
             retval.append(&mut lookups);
         }
     }
-
     Ok(retval)
+}
+
+fn unwrap_usize(value: Option<&JsonValue>) -> Option<usize> {
+    match value {
+        Some(value) => Some(value.as_u64().unwrap() as usize),
+        None => None
+    }
 }
 
 fn build_query_pipeline_from_json(
@@ -145,5 +151,18 @@ fn build_query_pipeline_from_json(
     mutation_mode: bool,
     json_value: &JsonValue
 ) -> Result<Vec<Document>, ActionError> {
-    Ok(vec![doc!{}])
+    let json_value = json_value.as_object();
+    if json_value.is_none() {
+        return Err(ActionError::invalid_query_input("Query input should be an object."));
+    }
+    let json_value = json_value.unwrap();
+    let r#where = json_value.get("where");
+    let order_by = json_value.get("orderBy");
+    let take = unwrap_usize(json_value.get("take"));
+    let skip = unwrap_usize(json_value.get("skip"));
+    let page_number = unwrap_usize(json_value.get("pageNumber"));
+    let page_size = unwrap_usize(json_value.get("pageSize"));
+    let include = json_value.get("include");
+    let select = json_value.get("select");
+    build_query_pipeline(model, graph, r#type, mutation_mode, r#where, order_by, take, skip, page_size, page_number, include, select)
 }
