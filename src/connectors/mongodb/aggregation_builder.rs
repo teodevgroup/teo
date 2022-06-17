@@ -839,8 +839,10 @@ fn build_lookup_inputs(
             for (index, field_name) in relation.fields.iter().enumerate() {
                 let field_name = model.field(field_name).unwrap().column_name();
                 let reference_name = relation.references.get(index).unwrap();
+                let relation_model = graph.model(&relation.model);
+                let reference_name_column_name = relation_model.field(reference_name).unwrap().column_name();
                 let_value.insert(reference_name, format!("${field_name}"));
-                eq_values.push(doc!{"$eq": [format!("${field_name}"), format!("$${reference_name}")]});
+                eq_values.push(doc!{"$eq": [format!("${reference_name_column_name}"), format!("$${reference_name}")]});
             }
             let mut inner_pipeline = if value.is_object() {
                 build_query_pipeline_from_json(relation_model, graph, r#type, mutation_mode, value)?
