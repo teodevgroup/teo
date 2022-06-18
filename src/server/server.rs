@@ -336,6 +336,8 @@ impl Server {
             Ok(obj) => {
                 // find the object here
                 let update = input.get("update");
+                let include = input.get("include");
+                let select = input.get("select");
                 let set_json_result = match update {
                     Some(update) => {
                         obj.set_json(update).await
@@ -349,7 +351,18 @@ impl Server {
                     Ok(_) => {
                         match obj.save().await {
                             Ok(_) => {
-                                HttpResponse::Ok().json(json!({"data": obj.to_json()}))
+                                // fetch includes and selects
+                                let mut finder = json!({"where": input.get("where").unwrap()});
+                                if include.is_some() {
+                                    finder.as_object_mut().unwrap().insert("include".to_string(), include.unwrap().clone());
+                                }
+                                if select.is_some() {
+                                    finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
+                                }
+                                let refetched_result = self.graph.find_unique(model, &finder, false).await;
+                                println!("see refetched result {:#?}", refetched_result);
+                                let refetched = refetched_result.unwrap();
+                                HttpResponse::Ok().json(json!({"data": refetched.to_json()}))
                             }
                             Err(err) => {
                                 HttpResponse::BadRequest().json(json!({"error": err}))
