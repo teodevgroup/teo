@@ -832,53 +832,112 @@ fn build_lookup_inputs(
             return Err(ActionError::invalid_query_input(format!("Relation '{key}' on model '{model_name}' is not exist. Please check your input.")));
         }
         let relation = relation.unwrap();
+        let relation_name = &relation.name;
         let relation_model_name = &relation.model;
         let relation_model = graph.model(relation_model_name);
         if value.is_boolean() || value.is_object() {
-            let mut let_value = doc!{};
-            let mut eq_values: Vec<Document> = vec![];
-            for (index, field_name) in relation.fields.iter().enumerate() {
-                let field_name = model.field(field_name).unwrap().column_name();
-                let reference_name = relation.references.get(index).unwrap();
-                let relation_model = graph.model(&relation.model);
-                let reference_name_column_name = relation_model.field(reference_name).unwrap().column_name();
-                let_value.insert(reference_name, format!("${field_name}"));
-                eq_values.push(doc!{"$eq": [format!("${reference_name_column_name}"), format!("$${reference_name}")]});
+            if relation.through.is_none() { // without join table
+                let mut let_value = doc!{};
+                let mut eq_values: Vec<Document> = vec![];
+                for (index, field_name) in relation.fields.iter().enumerate() {
+                    let field_name = model.field(field_name).unwrap().column_name();
+                    let reference_name = relation.references.get(index).unwrap();
+                    let relation_model = graph.model(&relation.model);
+                    let reference_name_column_name = relation_model.field(reference_name).unwrap().column_name();
+                    let_value.insert(reference_name, format!("${field_name}"));
+                    eq_values.push(doc!{"$eq": [format!("${reference_name_column_name}"), format!("$${reference_name}")]});
+                }
+                let mut inner_pipeline = if value.is_object() {
+                    build_query_pipeline_from_json(relation_model, graph, r#type, mutation_mode, value)?
+                } else {
+                    vec![]
+                };
+                let inner_match = inner_pipeline.iter().find(|v| v.get("$match").is_some());
+                let has_inner_match = inner_match.is_some();
+                let mut inner_match = if has_inner_match {
+                    inner_match.unwrap().clone()
+                } else {
+                    doc!{"$match": {}}
+                };
+                let mut inner_match_inner = inner_match.get_mut("$match").unwrap().as_document_mut().unwrap();
+                if inner_match_inner.get("$expr").is_none() {
+                    inner_match_inner.insert("$expr", doc!{});
+                }
+                if inner_match_inner.get("$expr").unwrap().as_document().unwrap().get("$and").is_none() {
+                    inner_match_inner.get_mut("$expr").unwrap().as_document_mut().unwrap().insert("$and", vec![] as Vec<Document>);
+                }
+                inner_match_inner.get_mut("$expr").unwrap().as_document_mut().unwrap().get_mut("$and").unwrap().as_array_mut().unwrap().extend(eq_values.iter().map(|item| Bson::Document(item.clone())));
+                if has_inner_match {
+                    let index = inner_pipeline.iter().position(|v| v.get("$match").is_some()).unwrap();
+                    inner_pipeline.remove(index);
+                    inner_pipeline.insert(index, inner_match);
+                } else {
+                    inner_pipeline.insert(0, inner_match);
+                }
+                let lookup = doc!{"$lookup": {
+                    "from": &relation_model.table_name,
+                    "as": key,
+                    "let": let_value,
+                    "pipeline": inner_pipeline
+                }};
+                retval.push(lookup);
+            } else { // with join table
+                let join_model = graph.model(relation.through.as_ref().unwrap());
+                let local_relation_on_join_table = join_model.relation(relation.fields.get(0).unwrap()).unwrap();
+                let foreign_relation_on_join_table = join_model.relation(relation.references.get(0).unwrap()).unwrap();
+                let foreign_model_name = &foreign_relation_on_join_table.model;
+                let foreign_model = graph.model(foreign_model_name);
+                let mut outer_let_value = doc!{};
+                let mut outer_eq_values: Vec<Document> = vec![];
+                let mut inner_let_value = doc!{};
+                let mut inner_eq_values: Vec<Document> = vec![];
+                for (index, join_table_field_name) in local_relation_on_join_table.fields.iter().enumerate() {
+                    let local_unique_field_name = local_relation_on_join_table.references.get(index).unwrap();
+                    outer_let_value.insert(join_table_field_name, format!("${local_unique_field_name}"));
+                    outer_eq_values.push(doc!{"$eq": [format!("${join_table_field_name}"), format!("$${join_table_field_name}")]});
+                }
+                for (index, join_table_reference_name) in foreign_relation_on_join_table.fields.iter().enumerate() {
+                    let foreign_unique_field_name = foreign_relation_on_join_table.references.get(index).unwrap();
+                    inner_let_value.insert(join_table_reference_name, format!("${join_table_reference_name}"));
+                    inner_eq_values.push(doc!{"$eq": [format!("${foreign_unique_field_name}"), format!("$${join_table_reference_name}")]});
+                }
+                let target = doc!{
+                    "$lookup": {
+                        "from": relation_model.table_name(),
+                        "as": relation_name,
+                        "let": outer_let_value,
+                        "pipeline": [{
+                            "$match": {
+                                "$expr": {
+                                    "$and": outer_eq_values
+                                }
+                            }
+                        }, {
+                            "$lookup": {
+                                "from": foreign_model.table_name(),
+                                "as": relation_name,
+                                "let": inner_let_value,
+                                "pipeline": [{
+                                    "$match": {
+                                        "$expr": {
+                                            "$and": inner_eq_values
+                                        }
+                                    }
+                                }]
+                            }
+                        }, {
+                            "$unwind": {
+                                "path": format!("${relation_name}")
+                            }
+                        }, {
+                            "$replaceRoot": {
+                                "newRoot": format!("${relation_name}")
+                            }
+                        }]
+                    }
+                };
+                retval.push(target);
             }
-            let mut inner_pipeline = if value.is_object() {
-                build_query_pipeline_from_json(relation_model, graph, r#type, mutation_mode, value)?
-            } else {
-                vec![]
-            };
-            let inner_match = inner_pipeline.iter().find(|v| v.get("$match").is_some());
-            let has_inner_match = inner_match.is_some();
-            let mut inner_match = if has_inner_match {
-                inner_match.unwrap().clone()
-            } else {
-                doc!{"$match": {}}
-            };
-            let mut inner_match_inner = inner_match.get_mut("$match").unwrap().as_document_mut().unwrap();
-            if inner_match_inner.get("$expr").is_none() {
-                inner_match_inner.insert("$expr", doc!{});
-            }
-            if inner_match_inner.get("$expr").unwrap().as_document().unwrap().get("$and").is_none() {
-                inner_match_inner.get_mut("$expr").unwrap().as_document_mut().unwrap().insert("$and", vec![] as Vec<Document>);
-            }
-            inner_match_inner.get_mut("$expr").unwrap().as_document_mut().unwrap().get_mut("$and").unwrap().as_array_mut().unwrap().extend(eq_values.iter().map(|item| Bson::Document(item.clone())));
-            if has_inner_match {
-                let index = inner_pipeline.iter().position(|v| v.get("$match").is_some()).unwrap();
-                inner_pipeline.remove(index);
-                inner_pipeline.insert(index, inner_match);
-            } else {
-                inner_pipeline.insert(0, inner_match);
-            }
-            let lookup = doc!{"$lookup": {
-                "from": &relation_model.table_name,
-                "as": key,
-                "let": let_value,
-                "pipeline": inner_pipeline
-            }};
-            retval.push(lookup);
         } else {
             let model_name = &model.name;
             return Err(ActionError::invalid_query_input(format!("Relation '{key}' on model '{model_name}' has a unrecognized value. It's either a boolean or an object. Please check your input.")));
