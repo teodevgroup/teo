@@ -836,6 +836,7 @@ fn build_lookup_inputs(
         let relation_model_name = &relation.model;
         let relation_model = graph.model(relation_model_name);
         if value.is_boolean() || value.is_object() {
+            // handle include params here
             if relation.through.is_none() { // without join table
                 let mut let_value = doc!{};
                 let mut eq_values: Vec<Document> = vec![];
