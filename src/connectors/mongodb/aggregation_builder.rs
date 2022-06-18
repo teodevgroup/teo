@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use serde_json::{Value as JsonValue, Map as JsonMap};
 use bson::{Bson, bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
 use chrono::{Date, NaiveDate, Utc, DateTime};
@@ -904,7 +905,7 @@ fn build_query_pipeline(
     // $match
     let r#match = build_where_input(model, graph, r#where)?;
     if !r#match.is_empty() {
-        retval.push(r#match);
+        retval.push(doc!{"$match": r#match});
     }
     // $sort
 
@@ -938,6 +939,24 @@ fn unwrap_usize(value: Option<&JsonValue>) -> Option<usize> {
     }
 }
 
+pub(crate) fn validate_where_unique(model: &Model, r#where: &Option<&JsonValue>) -> Result<(), ActionError> {
+    if r#where.is_none() {
+        return Err(ActionError::missing_input_section());
+    }
+    let r#where = r#where.unwrap();
+    if !r#where.is_object() {
+        return Err(ActionError::wrong_json_format());
+    }
+    let values = r#where.as_object().unwrap();
+    // see if key is valid
+    let set_vec: Vec<String> = values.keys().map(|k| k.clone()).collect();
+    let set = HashSet::from_iter(set_vec.iter().map(|k| k.clone()));
+    if !model.unique_query_keys().contains(&set) {
+        return Err(ActionError::field_is_not_unique())
+    }
+    Ok(())
+}
+
 /// Build MongoDB aggregation pipeline for querying.
 /// # Arguments
 ///
@@ -956,6 +975,9 @@ pub(crate) fn build_query_pipeline_from_json(
     }
     let json_value = json_value.unwrap();
     let r#where = json_value.get("where");
+    if r#type == QueryPipelineType::Unique {
+        validate_where_unique(model, &r#where)?;
+    }
     let order_by = json_value.get("orderBy");
     let take = unwrap_usize(json_value.get("take"));
     let skip = unwrap_usize(json_value.get("skip"));

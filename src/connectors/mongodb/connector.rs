@@ -581,56 +581,32 @@ impl Connector for MongoDBConnector {
     }
 
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
-        let finder = finder.as_object().unwrap();
-        let r#where = finder.get("where");
-        if r#where == None {
-            return Err(ActionError::missing_input_section());
+        let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder)?;
+        println!("find unique: see aggregate input, {:#?}", aggregate_input);
+        let col = &self.collections[model.name()];
+        let mut cur = col.aggregate(aggregate_input, None).await;
+        if cur.is_err() {
+            println!("see cursor error: {:#?}", cur);
+            return Err(ActionError::unknown_database_find_unique_error());
         }
-        let r#where = r#where.unwrap();
-        if !r#where.is_object() {
-            return Err(ActionError::wrong_json_format());
+        let mut cur = cur.unwrap();
+        let mut result: Vec<Object> = vec![];
+        let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
+        if results.is_empty() {
+            return Err(ActionError::object_not_found());
         }
-        let values = r#where.as_object().unwrap();
-        // see if key is valid
-        let set_vec: Vec<String> = values.keys().map(|k| k.clone()).collect();
-        let set = HashSet::from_iter(set_vec.iter().map(|k| k.clone()));
-        if !model.unique_query_keys().contains(&set) {
-            return Err(ActionError::field_is_not_unique())
-        }
-        // cast value
-        let mut query_doc = doc!{};
-        for (key, value) in values {
-            let field = model.field(key).unwrap();
-            let query_key = field.column_name();
-            let decode_result = decode_field_value(graph, value, field, &field.name);
-            match decode_result {
-                Ok(value) => {
-                    query_doc.insert(query_key, value.to_bson_value());
+        for doc in results {
+            let obj = graph.new_object(model.name());
+            return match self.document_to_object(&doc.unwrap(), &obj) {
+                Ok(_) => {
+                    Ok(obj)
                 }
                 Err(err) => {
-                    return Err(err);
+                    Err(err)
                 }
             }
         }
-        let col = &self.collections[model.name()];
-        let find_result = col.find_one(query_doc, None).await;
-        match find_result {
-            Ok(document_option) => {
-                match document_option {
-                    Some(document) => {
-                        let mut object = graph.new_object(model.name());
-                        self.document_to_object(&document, &mut object);
-                        return Ok(object);
-                    }
-                    None => {
-                        return Err(ActionError::object_not_found())
-                    }
-                }
-            }
-            Err(err) => {
-                return Err(ActionError::unknown_database_find_unique_error());
-            }
-        }
+        Err(ActionError::object_not_found())
     }
 
     async fn find_first(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
@@ -639,7 +615,7 @@ impl Connector for MongoDBConnector {
 
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder)?;
-        println!("see aggregate input, {:#?}", aggregate_input);
+        println!("find many: see aggregate input, {:#?}", aggregate_input);
         let col = &self.collections[model.name()];
         let mut cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {

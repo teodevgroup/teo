@@ -308,6 +308,7 @@ impl Server {
                             "include": include,
                             "select": select
                         });
+                        println!("see finder {:#?}", finder);
                         let refetched = self.graph.find_unique(model, &finder, false).await.unwrap();
                         HttpResponse::Ok().json(json!({"data": refetched.to_json()}))
                     }
