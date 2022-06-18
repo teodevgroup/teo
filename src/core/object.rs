@@ -287,7 +287,7 @@ impl Object {
                     let val = obj.get_value(foreign_field_name).unwrap().unwrap();
                     relation_object.set_value(field_name, val).unwrap();
                 }
-                relation_object.save_to_database(session.clone(), true).await?;
+                relation_object.save().await?;
             }
             None => { // no join table
                 for (index, reference) in relation.references.iter().enumerate() {
