@@ -77,7 +77,7 @@ impl MongoDBConnector {
                             let mut keys = doc!{};
                             for item in &result.items {
                                 let field = model.field(&item.field_name).unwrap();
-                                let column_name = field.column_name.as_ref().unwrap();
+                                let column_name = field.column_name();
                                 keys.insert(column_name, if item.sort == Sort::Asc { 1 } else { -1 });
                             }
                             let index_model = IndexModel::builder().keys(keys).options(index_options).build();
