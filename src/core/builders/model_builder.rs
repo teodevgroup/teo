@@ -367,6 +367,9 @@ impl ModelBuilder {
             result.push(set);
         }
         result.push(HashSet::from_iter(primary.items.iter().map(|i| i.field_name.clone())));
+        if self.name == "Favorite" {
+            println!("see unique query keys result {:#?}", result);
+        }
         result
     }
 

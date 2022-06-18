@@ -563,13 +563,16 @@ impl Connector for MongoDBConnector {
         if object.inner.is_new.load(Ordering::SeqCst) {
             return Err(ActionError::object_is_not_saved());
         }
-        let object_id = if let Some(primary_field) = object.model().primary_field() {
-            object.get_value(primary_field.name.clone()).unwrap().unwrap().to_bson_value()
-        } else {
-            object.inner.value_map.borrow().get("__id").unwrap().to_bson_value()
-        };
-        let col = &self.collections[object.model().name()];
-        let result = col.delete_one(doc!{"_id": object_id}, None).await;
+        let model = object.model();
+        let mut query = doc!{};
+        for item in &model.primary.items {
+            let field_name = &item.field_name;
+            let column_name = model.field(field_name).unwrap().column_name();
+            let value = object.get_value(field_name).unwrap().unwrap().to_bson_value();
+            query.insert(column_name, value);
+        }
+        let col = &self.collections[model.name()];
+        let result = col.delete_one(query, None).await;
         return match result {
             Ok(_result) => {
                 Ok(())
