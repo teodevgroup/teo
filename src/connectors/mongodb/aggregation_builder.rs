@@ -893,17 +893,19 @@ fn build_lookup_inputs(
                 let mut inner_eq_values: Vec<Document> = vec![];
                 for (index, join_table_field_name) in local_relation_on_join_table.fields.iter().enumerate() {
                     let local_unique_field_name = local_relation_on_join_table.references.get(index).unwrap();
-                    outer_let_value.insert(join_table_field_name, format!("${local_unique_field_name}"));
+                    let local_unique_field_column_name = model.field(local_unique_field_name).unwrap().column_name();
+                    outer_let_value.insert(join_table_field_name, format!("${local_unique_field_column_name}"));
                     outer_eq_values.push(doc!{"$eq": [format!("${join_table_field_name}"), format!("$${join_table_field_name}")]});
                 }
                 for (index, join_table_reference_name) in foreign_relation_on_join_table.fields.iter().enumerate() {
                     let foreign_unique_field_name = foreign_relation_on_join_table.references.get(index).unwrap();
+                    let foreign_unique_field_column_name = foreign_model.field(foreign_unique_field_name).unwrap().column_name();
                     inner_let_value.insert(join_table_reference_name, format!("${join_table_reference_name}"));
-                    inner_eq_values.push(doc!{"$eq": [format!("${foreign_unique_field_name}"), format!("$${join_table_reference_name}")]});
+                    inner_eq_values.push(doc!{"$eq": [format!("${foreign_unique_field_column_name}"), format!("$${join_table_reference_name}")]});
                 }
                 let target = doc!{
                     "$lookup": {
-                        "from": relation_model.table_name(),
+                        "from": join_model.table_name(),
                         "as": relation_name,
                         "let": outer_let_value,
                         "pipeline": [{
@@ -936,6 +938,7 @@ fn build_lookup_inputs(
                         }]
                     }
                 };
+                println!("generated lookup for join table: {:?}", target);
                 retval.push(target);
             }
         } else {
