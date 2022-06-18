@@ -554,7 +554,27 @@ impl Object {
                         // if new, err
                     }
                     "update" | "updateMany" => {
-
+                        let entries = input_to_vec(command_input)?;
+                        let graph = self.graph();
+                        for entry in entries {
+                            let r#where = entry.get("where").unwrap();
+                            let update = entry.get("update").unwrap();
+                            let model_name = &relation.model;
+                            let model = graph.model(model_name);
+                            let the_object = graph.find_unique(model, &json!({"where": r#where}), true).await;
+                            println!("see what happends, {:#?}", the_object);
+                            if the_object.is_err() {
+                                return Err(ActionError::object_not_found());
+                            }
+                            let new_object = the_object.unwrap();
+                            new_object.set_json(update).await?;
+                            if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
+                                self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                            }
+                            let mut relation_map = self.inner.relation_map.borrow_mut();
+                            let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            objects.push(RelationManipulation::Keep(new_object));
+                        }
                     }
                     "upsert" => {
 
