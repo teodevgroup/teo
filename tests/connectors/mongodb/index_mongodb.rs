@@ -153,7 +153,6 @@ async fn unique_sparse_value_can_have_duplicated_nulls() {
     let _ = object1.save().await;
     let object2 = graph.new_object("UniqueSparseIndex");
     let result = object2.save().await;
-    println!("see here result: {:?}", result);
     assert_eq!(result.ok(), Some(()));
 }
 

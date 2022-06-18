@@ -582,11 +582,9 @@ impl Connector for MongoDBConnector {
 
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder)?;
-        println!("find unique: see aggregate input, {:#?}", aggregate_input);
         let col = &self.collections[model.name()];
         let mut cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
-            println!("see cursor error: {:#?}", cur);
             return Err(ActionError::unknown_database_find_unique_error());
         }
         let mut cur = cur.unwrap();
@@ -615,11 +613,9 @@ impl Connector for MongoDBConnector {
 
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder)?;
-        println!("find many: see aggregate input, {:#?}", aggregate_input);
         let col = &self.collections[model.name()];
         let mut cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
-            println!("see cursor error: {:#?}", cur);
             return Err(ActionError::unknown_database_find_error());
         }
         let mut cur = cur.unwrap();

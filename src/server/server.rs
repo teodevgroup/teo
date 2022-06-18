@@ -312,9 +312,7 @@ impl Server {
                         if select.is_some() {
                             finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
                         }
-                        println!("see finder {:#?}", finder);
                         let refetched_result = self.graph.find_unique(model, &finder, false).await;
-                        println!("see refetched result {:#?}", refetched_result);
                         let refetched = refetched_result.unwrap();
                         HttpResponse::Ok().json(json!({"data": refetched.to_json()}))
                     }
@@ -360,7 +358,6 @@ impl Server {
                                     finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
                                 }
                                 let refetched_result = self.graph.find_unique(model, &finder, false).await;
-                                println!("see refetched result {:#?}", refetched_result);
                                 let refetched = refetched_result.unwrap();
                                 HttpResponse::Ok().json(json!({"data": refetched.to_json()}))
                             }

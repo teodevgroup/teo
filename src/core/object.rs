@@ -289,12 +289,10 @@ impl Object {
                 relation_object.save_to_database(session.clone(), true);
             }
             None => { // no join table
-                println!("no join table into");
                 for (index, reference) in relation.references.iter().enumerate() {
                     let field_name = relation.fields.get(index).unwrap();
                     let local_value = self.get_value(field_name)?;
                     let foreign_value = obj.get_value(reference)?;
-                    println!("local val {:?}, foreign val {:?}", local_value, foreign_value);
                     if local_value.is_some() && foreign_value.is_none() {
                         obj.set_value(reference, local_value.unwrap())?;
                         obj.save_to_database(session.clone(), true).await?;
@@ -562,7 +560,6 @@ impl Object {
                             let model_name = &relation.model;
                             let model = graph.model(model_name);
                             let the_object = graph.find_unique(model, &json!({"where": r#where}), true).await;
-                            println!("see what happends, {:#?}", the_object);
                             if the_object.is_err() {
                                 return Err(ActionError::object_not_found());
                             }

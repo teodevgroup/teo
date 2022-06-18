@@ -361,7 +361,6 @@ async fn find_unique_can_find_by_primary_key() {
     //assert!(resp.status().is_success());
     let body_json: JsonValue = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
-    println!("see resp: {:?}", body_obj);
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
     let body_data = body_obj.get("data").unwrap().as_object().unwrap();
@@ -538,7 +537,6 @@ async fn update_can_update_valid_contents() {
     let create_resp: ServiceResponse = test::call_service(&app, create_req).await;
     let create_body_json: JsonValue = test::read_body_json(create_resp).await;
     let create_body_obj = create_body_json.as_object().unwrap();
-    println!("see create obj: {:?}", create_body_obj);
     let id = create_body_obj.get("data").unwrap().as_object().unwrap().get("id").unwrap().as_str().unwrap();
     let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Update",
