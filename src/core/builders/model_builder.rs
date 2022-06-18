@@ -142,7 +142,9 @@ impl ModelBuilder {
             name,
             items
         };
-        self.primary = Some(index);
+        let primary_index = index.clone();
+        self.indices.push(index);
+        self.primary = Some(primary_index);
         self
     }
 
@@ -367,9 +369,6 @@ impl ModelBuilder {
             result.push(set);
         }
         result.push(HashSet::from_iter(primary.items.iter().map(|i| i.field_name.clone())));
-        if self.name == "Favorite" {
-            println!("see unique query keys result {:#?}", result);
-        }
         result
     }
 

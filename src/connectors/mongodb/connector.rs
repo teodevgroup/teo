@@ -71,7 +71,7 @@ impl MongoDBConnector {
                             // create index
                             let index_options = IndexOptions::builder()
                                 .name(result.name.clone())
-                                .unique(result.index_type == ModelIndexType::Unique)
+                                .unique(result.index_type == ModelIndexType::Unique || result.index_type == ModelIndexType::Primary)
                                 .sparse(true)
                                 .build();
                             let mut keys = doc!{};
@@ -92,7 +92,7 @@ impl MongoDBConnector {
                     // create this index
                     let index_options = IndexOptions::builder()
                         .name(index.name.clone())
-                        .unique(index.index_type == ModelIndexType::Unique)
+                        .unique(index.index_type == ModelIndexType::Unique || index.index_type == ModelIndexType::Primary)
                         .sparse(true)
                         .build();
                     let mut keys = doc!{};

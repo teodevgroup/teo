@@ -1010,8 +1010,6 @@ pub(crate) fn validate_where_unique(model: &Model, r#where: &Option<&JsonValue>)
     // see if key is valid
     let set_vec: Vec<String> = values.keys().map(|k| k.clone()).collect();
     let set = HashSet::from_iter(set_vec.iter().map(|k| k.clone()));
-    println!("our unique query keys, {:#?}", set);
-    println!("model {} unique query keys, {:#?}", model.name, model.unique_query_keys());
     if !model.unique_query_keys().contains(&set) {
         return Err(ActionError::field_is_not_unique())
     }
