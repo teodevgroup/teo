@@ -268,7 +268,6 @@ impl Object {
     }
 
     pub(crate) async fn link_connect(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> Result<(), ActionError> {
-        println!("link connect triggered");
         match &relation.through {
             Some(through) => { // with join table
                 let relation_model = self.graph().model(through);

@@ -282,6 +282,8 @@ impl Server {
     async fn handle_create(&self, input: &JsonValue, model: &Model) -> HttpResponse {
         let input = input.as_object().unwrap();
         let create = input.get("create");
+        let include = input.get("include");
+        let select = input.get("select");
         let obj = self.graph.new_object(model.name());
         let set_json_result = match create {
             Some(create) => {
@@ -296,7 +298,18 @@ impl Server {
             Ok(_) => {
                 match obj.save().await {
                     Ok(_) => {
-                        HttpResponse::Ok().json(json!({"data": obj.to_json()}))
+                        let mut find_unique_arg = json!({});
+                        for item in &model.primary.items {
+                            let val = obj.get_value(&item.field_name).unwrap().unwrap();
+                            find_unique_arg.as_object_mut().unwrap().insert(item.field_name.clone(), val.to_json_value());
+                        }
+                        let finder = json!({
+                            "where": find_unique_arg,
+                            "include": include,
+                            "select": select
+                        });
+                        let refetched = self.graph.find_unique(model, &finder, false).await.unwrap();
+                        HttpResponse::Ok().json(json!({"data": refetched.to_json()}))
                     }
                     Err(err) => {
                         HttpResponse::BadRequest().json(json!({"error": err}))

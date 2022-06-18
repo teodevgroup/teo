@@ -938,6 +938,11 @@ fn unwrap_usize(value: Option<&JsonValue>) -> Option<usize> {
     }
 }
 
+/// Build MongoDB aggregation pipeline for querying.
+/// # Arguments
+///
+/// * `mutation_mode` - When mutation mode is true, `select` and `include` is ignored.
+///
 pub(crate) fn build_query_pipeline_from_json(
     model: &Model,
     graph: &Graph,
@@ -956,7 +961,7 @@ pub(crate) fn build_query_pipeline_from_json(
     let skip = unwrap_usize(json_value.get("skip"));
     let page_number = unwrap_usize(json_value.get("pageNumber"));
     let page_size = unwrap_usize(json_value.get("pageSize"));
-    let include = json_value.get("include");
-    let select = json_value.get("select");
+    let include = if !mutation_mode { json_value.get("include") } else { None };
+    let select = if !mutation_mode { json_value.get("select") } else { None };
     build_query_pipeline(model, graph, r#type, mutation_mode, r#where, order_by, take, skip, page_size, page_number, include, select)
 }
