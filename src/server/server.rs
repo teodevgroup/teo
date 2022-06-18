@@ -303,13 +303,19 @@ impl Server {
                             let val = obj.get_value(&item.field_name).unwrap().unwrap();
                             find_unique_arg.as_object_mut().unwrap().insert(item.field_name.clone(), val.to_json_value());
                         }
-                        let finder = json!({
+                        let mut finder = json!({
                             "where": find_unique_arg,
-                            "include": include,
-                            "select": select
                         });
+                        if include.is_some() {
+                            finder.as_object_mut().unwrap().insert("include".to_string(), include.unwrap().clone());
+                        }
+                        if select.is_some() {
+                            finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
+                        }
                         println!("see finder {:#?}", finder);
-                        let refetched = self.graph.find_unique(model, &finder, false).await.unwrap();
+                        let refetched_result = self.graph.find_unique(model, &finder, false).await;
+                        println!("see refetched result {:#?}", refetched_result);
+                        let refetched = refetched_result.unwrap();
                         HttpResponse::Ok().json(json!({"data": refetched.to_json()}))
                     }
                     Err(err) => {
