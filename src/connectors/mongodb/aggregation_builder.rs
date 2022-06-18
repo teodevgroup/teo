@@ -837,13 +837,23 @@ fn build_lookup_inputs(
         let relation_model = graph.model(relation_model_name);
         if value.is_boolean() || value.is_object() {
             // handle include params here
+            let inner_where_input = if value.is_object() {
+                let r#where = value.get("where");
+                if r#where.is_none() {
+                    None
+                } else {
+                    Some(build_where_input(relation_model, graph, Some(r#where.unwrap()))?)
+                }
+            } else {
+                None
+            };
+
             if relation.through.is_none() { // without join table
                 let mut let_value = doc!{};
                 let mut eq_values: Vec<Document> = vec![];
                 for (index, field_name) in relation.fields.iter().enumerate() {
                     let field_name = model.field(field_name).unwrap().column_name();
                     let reference_name = relation.references.get(index).unwrap();
-                    let relation_model = graph.model(&relation.model);
                     let reference_name_column_name = relation_model.field(reference_name).unwrap().column_name();
                     let_value.insert(reference_name, format!("${field_name}"));
                     eq_values.push(doc!{"$eq": [format!("${reference_name_column_name}"), format!("$${reference_name}")]});
@@ -904,6 +914,14 @@ fn build_lookup_inputs(
                     inner_let_value.insert(join_table_reference_name, format!("${join_table_reference_name}"));
                     inner_eq_values.push(doc!{"$eq": [format!("${foreign_unique_field_column_name}"), format!("$${join_table_reference_name}")]});
                 }
+                let mut inner_match = doc!{
+                    "$expr": {
+                        "$and": inner_eq_values
+                    }
+                };
+                if inner_where_input.is_some() {
+                    inner_match.extend(inner_where_input.unwrap());
+                }
                 let target = doc!{
                     "$lookup": {
                         "from": join_model.table_name(),
@@ -921,11 +939,7 @@ fn build_lookup_inputs(
                                 "as": relation_name,
                                 "let": inner_let_value,
                                 "pipeline": [{
-                                    "$match": {
-                                        "$expr": {
-                                            "$and": inner_eq_values
-                                        }
-                                    }
+                                    "$match": inner_match
                                 }]
                             }
                         }, {
