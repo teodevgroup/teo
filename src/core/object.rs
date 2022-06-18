@@ -272,6 +272,7 @@ impl Object {
             Some(through) => { // with join table
                 let relation_model = self.graph().model(through);
                 let relation_object = self.graph().new_object(through);
+                relation_object.set_json(&json!({})).await?;
                 let local_relation_name = relation.fields.get(0).unwrap();
                 let foreign_relation_name = relation.references.get(0).unwrap();
                 let local_relation = relation_model.relation(local_relation_name).unwrap();
@@ -286,7 +287,7 @@ impl Object {
                     let val = obj.get_value(foreign_field_name).unwrap().unwrap();
                     relation_object.set_value(field_name, val).unwrap();
                 }
-                relation_object.save_to_database(session.clone(), true);
+                relation_object.save_to_database(session.clone(), true).await?;
             }
             None => { // no join table
                 for (index, reference) in relation.references.iter().enumerate() {
