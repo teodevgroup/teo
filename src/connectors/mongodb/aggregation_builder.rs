@@ -838,6 +838,27 @@ pub(crate) fn build_order_by_input(model: &Model, graph: &Graph, order_by: Optio
     Ok(retval)
 }
 
+fn build_paging_objects(json_value: &JsonValue) -> Result<Vec<Document>, ActionError> {
+    // todo: code is a bit duplicating
+    let take = unwrap_usize(json_value.get("take"));
+    let skip = unwrap_usize(json_value.get("skip"));
+    let page_number = unwrap_usize(json_value.get("pageNumber"));
+    let page_size = unwrap_usize(json_value.get("pageSize"));
+    let mut retval: Vec<Document> = vec![];
+    if page_size.is_some() && page_number.is_some() {
+        retval.push(doc!{"$skip": ((page_number.unwrap() - 1) * page_size.unwrap()) as i64});
+        retval.push(doc!{"$limit": page_size.unwrap() as i64});
+    } else {
+        if skip.is_some() {
+            retval.push(doc!{"$skip": skip.unwrap() as i64});
+        }
+        if take.is_some() {
+            retval.push(doc!{"$limit": take.unwrap() as i64});
+        }
+    }
+    Ok(retval)
+}
+
 fn build_lookup_inputs(
     model: &Model,
     graph: &Graph,
@@ -881,6 +902,11 @@ fn build_lookup_inputs(
                 } else {
                     Some(build_order_by_input(relation_model, graph, Some(order_by.unwrap()))?)
                 }
+            } else {
+                None
+            };
+            let inner_paging = if value.is_object() {
+                Some(build_paging_objects(value)?)
             } else {
                 None
             };
@@ -992,6 +1018,11 @@ fn build_lookup_inputs(
                 };
                 if inner_sort.is_some() {
                     target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(doc!{"$sort": inner_sort.unwrap()}));
+                }
+                if inner_paging.is_some() {
+                    for arg in inner_paging.unwrap() {
+                        target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(arg));
+                    }
                 }
                 println!("generated lookup for join table: {:?}", target);
                 retval.push(target);
