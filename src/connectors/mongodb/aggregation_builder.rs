@@ -874,6 +874,16 @@ fn build_lookup_inputs(
             } else {
                 None
             };
+            let inner_sort = if value.is_object() {
+                let order_by = value.get("orderBy");
+                if order_by.is_none() {
+                    None
+                } else {
+                    Some(build_order_by_input(relation_model, graph, Some(order_by.unwrap()))?)
+                }
+            } else {
+                None
+            };
 
             if relation.through.is_none() { // without join table
                 let mut let_value = doc!{};
@@ -949,7 +959,7 @@ fn build_lookup_inputs(
                 if inner_where_input.is_some() {
                     inner_match.extend(inner_where_input.unwrap());
                 }
-                let target = doc!{
+                let mut target = doc!{
                     "$lookup": {
                         "from": join_model.table_name(),
                         "as": relation_name,
@@ -980,6 +990,9 @@ fn build_lookup_inputs(
                         }]
                     }
                 };
+                if inner_sort.is_some() {
+                    target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(doc!{"$sort": inner_sort.unwrap()}));
+                }
                 println!("generated lookup for join table: {:?}", target);
                 retval.push(target);
             }
