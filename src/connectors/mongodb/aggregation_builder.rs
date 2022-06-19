@@ -1,9 +1,10 @@
 use std::collections::HashSet;
 use serde_json::{Value as JsonValue, Map as JsonMap};
-use bson::{Bson, bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
+use bson::{Array, Bson, bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
 use chrono::{Date, NaiveDate, Utc, DateTime};
 use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
+use crate::core::input_decoder::{input_to_vec, one_length_json_obj};
 use crate::core::model::Model;
 use crate::core::value::Value;
 use crate::error::ActionError;
@@ -811,6 +812,32 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
     Ok(doc)
 }
 
+pub(crate) fn build_order_by_input(model: &Model, graph: &Graph, order_by: Option<&JsonValue>) -> Result<Document, ActionError> {
+    if order_by.is_none() {
+        return Ok(doc!{});
+    }
+    let order_by = order_by.unwrap();
+    if !order_by.is_object() && !order_by.is_array() {
+        return Err(ActionError::invalid_query_input("Order by inputs should be an object or an array of objects."));
+    }
+    let order_by = input_to_vec(order_by)?;
+    let mut retval = doc!{};
+    for sort in order_by {
+        let (key, value) = one_length_json_obj(sort, "")?;
+        if value.is_string() {
+            let str_val = value.as_str().unwrap();
+            if str_val == "asc" {
+                retval.insert(key, 1);
+            } else if str_val == "desc" {
+                retval.insert(key, -1);
+            }
+        } else {
+            return Err(ActionError::invalid_query_input("Order by input value should be whether string 'asc' or 'desc'."));
+        }
+    }
+    Ok(retval)
+}
+
 fn build_lookup_inputs(
     model: &Model,
     graph: &Graph,
@@ -985,7 +1012,10 @@ fn build_query_pipeline(
         retval.push(doc!{"$match": r#match});
     }
     // $sort
-
+    let sort = build_order_by_input(model, graph, order_by)?;
+    if !sort.is_empty() {
+        retval.push(doc!{"$sort": sort});
+    }
     // $skip and $limit
     if page_size.is_some() && page_number.is_some() {
         retval.push(doc!{"$skip": ((page_number.unwrap() - 1) * page_size.unwrap()) as i64});

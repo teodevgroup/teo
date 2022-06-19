@@ -619,6 +619,7 @@ impl Connector for MongoDBConnector {
         let col = &self.collections[model.name()];
         let mut cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
+            println!("{:?}", cur);
             return Err(ActionError::unknown_database_find_error());
         }
         let mut cur = cur.unwrap();
