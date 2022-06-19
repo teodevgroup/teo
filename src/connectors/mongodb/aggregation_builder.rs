@@ -1032,13 +1032,13 @@ fn build_query_pipeline(
     // $skip and $limit
     if page_size.is_some() && page_number.is_some() {
         retval.push(doc!{"$skip": ((page_number.unwrap() - 1) * page_size.unwrap()) as i64});
-        retval.push(doc!{"limit": page_size.unwrap() as i64});
+        retval.push(doc!{"$limit": page_size.unwrap() as i64});
     } else {
         if skip.is_some() {
             retval.push(doc!{"$skip": skip.unwrap() as i64});
         }
         if take.is_some() {
-            retval.push(doc!{"$limit": skip.unwrap() as i64});
+            retval.push(doc!{"$limit": take.unwrap() as i64});
         }
     }
     // $project
