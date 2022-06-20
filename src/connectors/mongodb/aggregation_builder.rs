@@ -1,11 +1,11 @@
 use std::collections::HashSet;
-use serde_json::{Value as JsonValue, Map as JsonMap};
+use serde_json::{Value as JsonValue, Map as JsonMap, json};
 use bson::{Array, Bson, bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
 use chrono::{Date, NaiveDate, Utc, DateTime};
 use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::input_decoder::{input_to_vec, one_length_json_obj};
-use crate::core::model::Model;
+use crate::core::model::{Model, ModelIndexType};
 use crate::core::value::Value;
 use crate::error::ActionError;
 
@@ -840,10 +840,10 @@ pub(crate) fn build_order_by_input(model: &Model, graph: &Graph, order_by: Optio
 
 fn build_paging_objects(json_value: &JsonValue) -> Result<Vec<Document>, ActionError> {
     // todo: code is a bit duplicating
-    let take = unwrap_usize(json_value.get("take"));
-    let skip = unwrap_usize(json_value.get("skip"));
-    let page_number = unwrap_usize(json_value.get("pageNumber"));
-    let page_size = unwrap_usize(json_value.get("pageSize"));
+    let take = unwrap_i32(json_value.get("take"));
+    let skip = unwrap_i32(json_value.get("skip"));
+    let page_number = unwrap_i32(json_value.get("pageNumber"));
+    let page_size = unwrap_i32(json_value.get("pageSize"));
     let mut retval: Vec<Document> = vec![];
     if page_size.is_some() && page_number.is_some() {
         retval.push(doc!{"$skip": ((page_number.unwrap() - 1) * page_size.unwrap()) as i64});
@@ -1042,18 +1042,86 @@ fn build_query_pipeline(
     mutation_mode: bool,
     r#where: Option<&JsonValue>,
     order_by: Option<&JsonValue>,
-    take: Option<usize>,
-    skip: Option<usize>,
-    page_size: Option<usize>,
-    page_number: Option<usize>,
+    cursor: Option<&JsonValue>,
+    take: Option<i32>,
+    skip: Option<i32>,
+    page_size: Option<i32>,
+    page_number: Option<i32>,
     include: Option<&JsonValue>,
     select: Option<&JsonValue>,
 ) -> Result<Vec<Document>, ActionError> {
+    // cursor tweaks things so that we validate cursor first
+    let cursor_additional_where = if cursor.is_some() {
+        let cursor = cursor.unwrap();
+        if !cursor.is_object() {
+            return Err(ActionError::invalid_query_input("'cursor' should be an object represents unique where input."));
+        }
+        if order_by.is_none() {
+            return Err(ActionError::invalid_query_input("'cursor' should be used together with 'orderBy'."));
+        }
+        let order_by = order_by.unwrap();
+        if !order_by.is_object() {
+            return Err(ActionError::invalid_query_input("'orderBy' should be an object."));
+        }
+        let order_by_map = order_by.as_object().unwrap();
+        if order_by_map.len() != 1 {
+            return Err(ActionError::invalid_query_input("'orderBy' used with 'cursor' should have a single key which represents a unique constraint."));
+        }
+        let cursor_map = cursor.as_object().unwrap();
+        if cursor_map.len() != 1 {
+            return Err(ActionError::invalid_query_input("'cursor' should have a single key which represents a unique constraint."));
+        }
+        let (order_by_key, order_by_value) = one_length_json_obj(order_by, "")?;
+        let (cursor_key, cursor_value) = one_length_json_obj(cursor, "")?;
+        if order_by_key != cursor_key {
+            return Err(ActionError::invalid_query_input("'cursor' and 'orderBy' should have single same key."));
+        }
+        if !order_by_value.is_string() {
+            return Err(ActionError::invalid_query_input("Field value of 'orderBy' should be one of 'asc' or 'desc'."));
+        }
+        let order_by_str = order_by_value.as_str().unwrap();
+        println!("see order by str: {:?}", order_by_str);
+        if order_by_str != "asc" && order_by_str != "desc" {
+            return Err(ActionError::invalid_query_input("Field value of 'orderBy' should be one of 'asc' or 'desc'."));
+        }
+        let mut valid = false;
+        for index in &model.indices {
+            if index.items.len() == 1 {
+                if index.index_type == ModelIndexType::Unique || index.index_type == ModelIndexType::Primary {
+                    if index.items.get(0).unwrap().field_name == cursor_key {
+                        valid = true;
+                    }
+                }
+            }
+        };
+        let mut order_asc = order_by_str == "asc";
+        if take.is_some() {
+            let take = take.unwrap();
+            if take < 0 {
+                order_asc = !order_asc;
+            }
+        }
+        let cursor_where_key = if order_asc { "gte" } else { "lte" };
+        let cursor_additional_where = build_where_input(model, graph, Some(&json!({cursor_key: {cursor_where_key: cursor_value}})))?;
+        Some(cursor_additional_where)
+    } else {
+        None
+    };
+
+    // $build the pipeline
     let mut retval: Vec<Document> = vec![];
     // $match
     let r#match = build_where_input(model, graph, r#where)?;
     if !r#match.is_empty() {
-        retval.push(doc!{"$match": r#match});
+        if cursor_additional_where.is_some() {
+            retval.push(doc!{"$match": {"$and": [r#match, cursor_additional_where.unwrap()]}});
+        } else {
+            retval.push(doc!{"$match": r#match});
+        }
+    } else {
+        if cursor_additional_where.is_some() {
+            retval.push(doc!{"$match": cursor_additional_where.unwrap()});
+        }
     }
     // $sort
     let sort = build_order_by_input(model, graph, order_by)?;
@@ -1083,9 +1151,9 @@ fn build_query_pipeline(
     Ok(retval)
 }
 
-fn unwrap_usize(value: Option<&JsonValue>) -> Option<usize> {
+fn unwrap_i32(value: Option<&JsonValue>) -> Option<i32> {
     match value {
-        Some(value) => Some(value.as_u64().unwrap() as usize),
+        Some(value) => Some(value.as_i64().unwrap() as i32),
         None => None
     }
 }
@@ -1130,11 +1198,12 @@ pub(crate) fn build_query_pipeline_from_json(
         validate_where_unique(model, &r#where)?;
     }
     let order_by = json_value.get("orderBy");
-    let take = unwrap_usize(json_value.get("take"));
-    let skip = unwrap_usize(json_value.get("skip"));
-    let page_number = unwrap_usize(json_value.get("pageNumber"));
-    let page_size = unwrap_usize(json_value.get("pageSize"));
+    let cursor = json_value.get("cursor");
+    let take = unwrap_i32(json_value.get("take"));
+    let skip = unwrap_i32(json_value.get("skip"));
+    let page_number = unwrap_i32(json_value.get("pageNumber"));
+    let page_size = unwrap_i32(json_value.get("pageSize"));
     let include = if !mutation_mode { json_value.get("include") } else { None };
     let select = if !mutation_mode { json_value.get("select") } else { None };
-    build_query_pipeline(model, graph, r#type, mutation_mode, r#where, order_by, take, skip, page_size, page_number, include, select)
+    build_query_pipeline(model, graph, r#type, mutation_mode, r#where, order_by, cursor, take, skip, page_size, page_number, include, select)
 }
