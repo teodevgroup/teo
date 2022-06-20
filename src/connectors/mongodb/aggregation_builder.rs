@@ -856,7 +856,7 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
                     doc.insert(key, doc!{"$elemMatch": inner_where});
                 }
                 "all" => {
-                    doc.insert(key, doc!{"$all": {"$elemMatch": inner_where}});
+                    doc.insert(key, doc!{"$not": {"$not": {"$elemMatch": inner_where}}});
                 }
                 _ => {
 
@@ -1165,7 +1165,7 @@ fn build_query_pipeline(
     // $lookup for matching
     let lookups_for_matching = build_match_prediction_lookup(model, graph, r#where)?;
     if !lookups_for_matching.is_empty() {
-        //retval.push(doc!{"$lookup": })
+        retval.extend(lookups_for_matching);
     }
     // $match
     let r#match = build_where_input(model, graph, r#where)?;
