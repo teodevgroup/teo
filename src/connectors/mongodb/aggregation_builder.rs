@@ -786,10 +786,29 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
     }
 }
 
+pub(crate) fn build_match_prediction_lookup(model: &Model, graph: &Graph, r#where: Option<&JsonValue>) -> Result<Vec<Document>, ActionError> {
+    if let None = r#where { return Ok(vec![]); }
+    let r#where = r#where.unwrap();
+    if !r#where.is_object() { return Err(ActionError::invalid_query_input("'where' should be an object.")); }
+    let r#where = r#where.as_object().unwrap();
+    let mut lookup_input = json!({});
+    for (key, value) in r#where.iter() {
+        let relation = model.relation(key);
+        if relation.is_some() {
+            lookup_input.as_object_mut().unwrap().insert(key.clone(), JsonValue::Bool(true));
+        }
+    }
+    Ok(if !lookup_input.as_object().unwrap().is_empty() {
+        build_lookup_inputs(model, graph, QueryPipelineType::Many, false, &lookup_input)?
+    } else {
+        vec![]
+    })
+}
+
 pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&JsonValue>) -> Result<Document, ActionError> {
     if let None = r#where { return Ok(doc!{}); }
     let r#where = r#where.unwrap();
-    if !r#where.is_object() { return Err(ActionError::wrong_json_format()); }
+    if !r#where.is_object() { return Err(ActionError::invalid_query_input("'where' should be an object.")); }
     let r#where = r#where.as_object().unwrap();
     let mut doc = doc!{};
     for (key, value) in r#where.iter() {
@@ -807,18 +826,41 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
             }
             doc.insert("$or", vals);
             continue;
-        } else if !model.query_keys().contains(key) {
+        } else if model.query_keys().contains(key) {
             return Err(ActionError::keys_unallowed());
         }
-        let field = model.field(key).unwrap();
-        let db_key = field.column_name();
-        let bson_result = parse_bson_where_entry(&field.field_type, value, graph);
-        match bson_result {
-            Ok(bson) => {
-                doc.insert(db_key, bson);
+        let field = model.field(key);
+        if field.is_some() {
+            let field = field.unwrap();
+            let db_key = field.column_name();
+            let bson_result = parse_bson_where_entry(&field.field_type, value, graph);
+            match bson_result {
+                Ok(bson) => {
+                    doc.insert(db_key, bson);
+                }
+                Err(err) => {
+                    return Err(err);
+                }
             }
-            Err(err) => {
-                return Err(err);
+        } else {
+            let relation = model.relation(key).unwrap();
+            let model_name = &relation.model;
+            let this_model = graph.model(model_name);
+            let (command, inner_where) = one_length_json_obj(value, "")?;
+            let inner_where = build_where_input(this_model, graph, Some(inner_where))?;
+            match command {
+                "none" => {
+                    doc.insert(key, doc!{"$not": {"$elemMatch": inner_where}});
+                }
+                "some" => {
+                    doc.insert(key, doc!{"$elemMatch": inner_where});
+                }
+                "all" => {
+                    doc.insert(key, doc!{"$all": {"$elemMatch": inner_where}});
+                }
+                _ => {
+
+                }
             }
         }
     }
@@ -1120,6 +1162,11 @@ fn build_query_pipeline(
 
     // $build the pipeline
     let mut retval: Vec<Document> = vec![];
+    // $lookup for matching
+    let lookups_for_matching = build_match_prediction_lookup(model, graph, r#where)?;
+    if !lookups_for_matching.is_empty() {
+        //retval.push(doc!{"$lookup": })
+    }
     // $match
     let r#match = build_where_input(model, graph, r#where)?;
     if !r#match.is_empty() {
@@ -1169,7 +1216,6 @@ fn unwrap_i32(value: Option<&JsonValue>) -> Option<i32> {
 }
 
 pub(crate) fn validate_where_unique(model: &Model, r#where: &Option<&JsonValue>) -> Result<(), ActionError> {
-    println!("see where: {:?}", r#where);
     if r#where.is_none() {
         return Err(ActionError::invalid_query_input("Unique query should have a where which represents unique key or keys."));
     }

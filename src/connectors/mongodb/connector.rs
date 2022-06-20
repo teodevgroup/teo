@@ -115,7 +115,6 @@ impl MongoDBConnector {
     }
 
     fn document_to_object(&self, document: &Document, object: &Object) -> Result<(), ActionError> {
-        //println!("see document: {:#?}", document);
         for key in document.keys() {
             let object_field = object.model().fields().iter().find(|f| f.column_name() == key);
             if object_field.is_some() {
