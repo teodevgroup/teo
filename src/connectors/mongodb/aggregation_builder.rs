@@ -793,7 +793,21 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
     let r#where = r#where.as_object().unwrap();
     let mut doc = doc!{};
     for (key, value) in r#where.iter() {
-        if !model.query_keys().contains(key) {
+        if key == "AND" {
+            let mut vals: Vec<Document> = vec![];
+            for val in value.as_array().unwrap() {
+                vals.push(build_where_input(model, graph, Some(val))?);
+            }
+            doc.insert("$and", vals);
+            continue;
+        } else if key == "OR" {
+            let mut vals: Vec<Document> = vec![];
+            for val in value.as_array().unwrap() {
+                vals.push(build_where_input(model, graph, Some(val))?);
+            }
+            doc.insert("$or", vals);
+            continue;
+        } else if !model.query_keys().contains(key) {
             return Err(ActionError::keys_unallowed());
         }
         let field = model.field(key).unwrap();
