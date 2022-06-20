@@ -253,15 +253,15 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         "gte" => {
                             let oid = parse_object_id(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$gte", oid);
                         }
                         "lt" => {
                             let oid = parse_object_id(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$lt", oid);
                         }
                         "lte" => {
                             let oid = parse_object_id(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$lte", oid);
                         }
                         "in" => {
                             match value.as_array() {
@@ -353,15 +353,15 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         "gte" => {
                             let oid = parse_i64(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$gte", oid);
                         }
                         "lt" => {
                             let oid = parse_i64(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$lt", oid);
                         }
                         "lte" => {
                             let oid = parse_i64(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$lte", oid);
                         }
                         "in" => {
                             match value.as_array() {
@@ -427,15 +427,15 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         "gte" => {
                             let oid = parse_f64(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$gte", oid);
                         }
                         "lt" => {
                             let oid = parse_f64(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$lt", oid);
                         }
                         "lte" => {
                             let oid = parse_f64(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$lte", oid);
                         }
                         "in" => {
                             match value.as_array() {
@@ -500,15 +500,15 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         "gte" => {
                             let oid = parse_string(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$gte", oid);
                         }
                         "lt" => {
                             let oid = parse_string(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$lt", oid);
                         }
                         "lte" => {
                             let oid = parse_string(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$lte", oid);
                         }
                         "in" => {
                             match value.as_array() {
@@ -603,15 +603,15 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         "gte" => {
                             let oid = parse_date(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$gte", oid);
                         }
                         "lt" => {
                             let oid = parse_date(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$lt", oid);
                         }
                         "lte" => {
                             let oid = parse_date(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$lte", oid);
                         }
                         "in" => {
                             match value.as_array() {
@@ -673,15 +673,15 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         "gte" => {
                             let oid = parse_datetime(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$gte", oid);
                         }
                         "lt" => {
                             let oid = parse_datetime(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("lt", oid);
                         }
                         "lte" => {
                             let oid = parse_datetime(value)?;
-                            result.insert("$gt", oid);
+                            result.insert("$lte", oid);
                         }
                         "in" => {
                             match value.as_array() {
@@ -847,13 +847,13 @@ fn build_paging_objects(json_value: &JsonValue) -> Result<Vec<Document>, ActionE
     let mut retval: Vec<Document> = vec![];
     if page_size.is_some() && page_number.is_some() {
         retval.push(doc!{"$skip": ((page_number.unwrap() - 1) * page_size.unwrap()) as i64});
-        retval.push(doc!{"$limit": page_size.unwrap() as i64});
+        retval.push(doc!{"$limit": page_size.unwrap().abs() as i64});
     } else {
         if skip.is_some() {
             retval.push(doc!{"$skip": skip.unwrap() as i64});
         }
         if take.is_some() {
-            retval.push(doc!{"$limit": take.unwrap() as i64});
+            retval.push(doc!{"$limit": take.unwrap().abs() as i64});
         }
     }
     Ok(retval)
@@ -1080,7 +1080,6 @@ fn build_query_pipeline(
             return Err(ActionError::invalid_query_input("Field value of 'orderBy' should be one of 'asc' or 'desc'."));
         }
         let order_by_str = order_by_value.as_str().unwrap();
-        println!("see order by str: {:?}", order_by_str);
         if order_by_str != "asc" && order_by_str != "desc" {
             return Err(ActionError::invalid_query_input("Field value of 'orderBy' should be one of 'asc' or 'desc'."));
         }
@@ -1137,7 +1136,7 @@ fn build_query_pipeline(
             retval.push(doc!{"$skip": skip.unwrap() as i64});
         }
         if take.is_some() {
-            retval.push(doc!{"$limit": take.unwrap() as i64});
+            retval.push(doc!{"$limit": take.unwrap().abs() as i64});
         }
     }
     // $project
