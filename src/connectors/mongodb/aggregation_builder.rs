@@ -846,7 +846,7 @@ fn build_paging_objects(json_value: &JsonValue) -> Result<Vec<Document>, ActionE
     let mut retval: Vec<Document> = vec![];
     if page_size.is_some() && page_number.is_some() {
         retval.push(doc!{"$skip": ((page_number.unwrap() - 1) * page_size.unwrap()) as i64});
-        retval.push(doc!{"$limit": page_size.unwrap().abs() as i64});
+        retval.push(doc!{"$limit": page_size.unwrap() as i64});
     } else {
         if skip.is_some() {
             retval.push(doc!{"$skip": skip.unwrap() as i64});
@@ -883,33 +883,6 @@ fn build_lookup_inputs(
         let relation_model_name = &relation.model;
         let relation_model = graph.model(relation_model_name);
         if value.is_boolean() || value.is_object() {
-            // handle include params here
-            let inner_where_input = if value.is_object() {
-                let r#where = value.get("where");
-                if r#where.is_none() {
-                    None
-                } else {
-                    Some(build_where_input(relation_model, graph, Some(r#where.unwrap()))?)
-                }
-            } else {
-                None
-            };
-            let inner_sort = if value.is_object() {
-                let order_by = value.get("orderBy");
-                if order_by.is_none() {
-                    None
-                } else {
-                    Some(build_order_by_input(relation_model, graph, Some(order_by.unwrap()))?)
-                }
-            } else {
-                None
-            };
-            let inner_paging = if value.is_object() {
-                Some(build_paging_objects(value)?)
-            } else {
-                None
-            };
-
             if relation.through.is_none() { // without join table
                 let mut let_value = doc!{};
                 let mut eq_values: Vec<Document> = vec![];
@@ -976,13 +949,25 @@ fn build_lookup_inputs(
                     inner_let_value.insert(join_table_reference_name, format!("${join_table_reference_name}"));
                     inner_eq_values.push(doc!{"$eq": [format!("${foreign_unique_field_column_name}"), format!("$${join_table_reference_name}")]});
                 }
+                let original_inner_pipeline = if value.is_object() {
+                    build_query_pipeline_from_json(foreign_model, graph, QueryPipelineType::Many, false, value)?
+                } else {
+                    vec![]
+                };
                 let mut inner_match = doc!{
                     "$expr": {
                         "$and": inner_eq_values
                     }
                 };
-                if inner_where_input.is_some() {
-                    inner_match.extend(inner_where_input.unwrap());
+                let original_inner_match = original_inner_pipeline.iter().find(|v| {
+                    v.get("$match").is_some()
+                });
+                if original_inner_match.is_some() {
+                    let original_inner_match = original_inner_match.unwrap();
+                    let doc = original_inner_match.get_document("$match").unwrap();
+                    for (k, v) in doc.iter() {
+                        inner_match.insert(k, v);
+                    }
                 }
                 let mut target = doc!{
                     "$lookup": {
@@ -1015,13 +1000,26 @@ fn build_lookup_inputs(
                         }]
                     }
                 };
-                if inner_sort.is_some() {
-                    target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(doc!{"$sort": inner_sort.unwrap()}));
+                let original_inner_sort = original_inner_pipeline.iter().find(|v| {
+                    v.get("$sort").is_some()
+                });
+                if original_inner_sort.is_some() {
+                    let original_inner_sort = original_inner_sort.unwrap();
+                    target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(original_inner_sort.clone()));
                 }
-                if inner_paging.is_some() {
-                    for arg in inner_paging.unwrap() {
-                        target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(arg));
-                    }
+                let original_inner_skip = original_inner_pipeline.iter().find(|v| {
+                    v.get("$skip").is_some()
+                });
+                if original_inner_skip.is_some() {
+                    let original_inner_skip = original_inner_skip.unwrap();
+                    target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(original_inner_skip.clone()));
+                }
+                let original_inner_limit = original_inner_pipeline.iter().find(|v| {
+                    v.get("$limit").is_some()
+                });
+                if original_inner_limit.is_some() {
+                    let original_inner_limit = original_inner_limit.unwrap();
+                    target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(original_inner_limit.clone()));
                 }
                 println!("generated lookup for join table: {:?}", target);
                 retval.push(target);
