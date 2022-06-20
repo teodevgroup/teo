@@ -826,7 +826,7 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
             }
             doc.insert("$or", vals);
             continue;
-        } else if model.query_keys().contains(key) {
+        } else if !model.query_keys().contains(key) {
             return Err(ActionError::keys_unallowed());
         }
         let field = model.field(key);

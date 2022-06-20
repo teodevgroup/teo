@@ -313,6 +313,7 @@ impl Server {
                             finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
                         }
                         let refetched_result = self.graph.find_unique(model, &finder, false).await;
+                        println!("see result: {:?}, {:?}", finder, &model.name);
                         let refetched = refetched_result.unwrap();
                         HttpResponse::Ok().json(json!({"data": refetched.to_json()}))
                     }
