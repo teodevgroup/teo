@@ -585,6 +585,7 @@ impl Connector for MongoDBConnector {
 
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder)?;
+        println!("see input is correct or not: {:?}", aggregate_input);
         let col = &self.collections[model.name()];
         let mut cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {

@@ -116,7 +116,6 @@ fn parse_object_id(value: &JsonValue) -> Result<Bson, ActionError> {
     }
 }
 
-
 fn has_i_mode(map: &JsonMap<String, JsonValue>) -> bool {
     match map.get("mode") {
         Some(val) => {
@@ -1142,7 +1141,7 @@ fn build_query_pipeline(
     // $project
     // $lookup
     if include.is_some() {
-        let mut lookups = build_lookup_inputs(model, graph, r#type, mutation_mode, include.unwrap())?;
+        let mut lookups = build_lookup_inputs(model, graph, QueryPipelineType::Many, mutation_mode, include.unwrap())?;
         if !lookups.is_empty() {
             retval.append(&mut lookups);
         }
@@ -1158,8 +1157,9 @@ fn unwrap_i32(value: Option<&JsonValue>) -> Option<i32> {
 }
 
 pub(crate) fn validate_where_unique(model: &Model, r#where: &Option<&JsonValue>) -> Result<(), ActionError> {
+    println!("see where: {:?}", r#where);
     if r#where.is_none() {
-        return Err(ActionError::missing_input_section());
+        return Err(ActionError::invalid_query_input("Unique query should have a where which represents unique key or keys."));
     }
     let r#where = r#where.unwrap();
     if !r#where.is_object() {
