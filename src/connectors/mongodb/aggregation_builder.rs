@@ -1068,9 +1068,13 @@ fn build_lookup_inputs(
                 }
                 let index = original_inner_pipeline.iter().position(|v| {
                     v.get("$match").is_some()
-                }).unwrap();
-                original_inner_pipeline.remove(index);
-                original_inner_pipeline.insert(index, doc!{"$match": inner_match});
+                });
+                if index.is_some() {
+                    original_inner_pipeline.remove(index.unwrap());
+                    original_inner_pipeline.insert(index.unwrap(), doc!{"$match": inner_match});
+                } else {
+                    original_inner_pipeline.insert(0, doc!{"$match": inner_match});
+                }
                 let original_inner_sort = original_inner_pipeline_immu.iter().find(|v| {
                     v.get("$sort").is_some()
                 });
