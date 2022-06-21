@@ -1070,28 +1070,34 @@ fn build_lookup_inputs(
                     v.get("$match").is_some()
                 }).unwrap();
                 original_inner_pipeline.remove(index);
-                original_inner_pipeline.insert(index, inner_match);
+                original_inner_pipeline.insert(index, doc!{"$match": inner_match});
                 let original_inner_sort = original_inner_pipeline_immu.iter().find(|v| {
                     v.get("$sort").is_some()
                 });
                 let index = original_inner_pipeline.iter().position(|v| {
                     v.get("$sort").is_some()
-                }).unwrap();
-                original_inner_pipeline.remove(index);
+                });
+                if index.is_some() {
+                    original_inner_pipeline.remove(index.unwrap());
+                }
                 let original_inner_skip = original_inner_pipeline_immu.iter().find(|v| {
                     v.get("$skip").is_some()
                 });
                 let index = original_inner_pipeline.iter().position(|v| {
                     v.get("$skip").is_some()
-                }).unwrap();
-                original_inner_pipeline.remove(index);
+                });
+                if index.is_some() {
+                    original_inner_pipeline.remove(index.unwrap());
+                }
                 let original_inner_limit = original_inner_pipeline_immu.iter().find(|v| {
                     v.get("$limit").is_some()
                 });
                 let index = original_inner_pipeline.iter().position(|v| {
                     v.get("$limit").is_some()
-                }).unwrap();
-                original_inner_pipeline.remove(index);
+                });
+                if index.is_some() {
+                    original_inner_pipeline.remove(index.unwrap());
+                }
                 let mut target = doc!{
                     "$lookup": {
                         "from": join_model.table_name(),
