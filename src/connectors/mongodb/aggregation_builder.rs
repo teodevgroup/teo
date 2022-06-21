@@ -791,15 +791,36 @@ pub(crate) fn build_match_prediction_lookup(model: &Model, graph: &Graph, r#wher
     let r#where = r#where.unwrap();
     if !r#where.is_object() { return Err(ActionError::invalid_query_input("'where' should be an object.")); }
     let r#where = r#where.as_object().unwrap();
-    let mut lookup_input = json!({});
+    let mut include_input = JsonMap::new();
     for (key, value) in r#where.iter() {
         let relation = model.relation(key);
         if relation.is_some() {
-            lookup_input.as_object_mut().unwrap().insert(key.clone(), JsonValue::Bool(true));
+            let (r_key, r_where) = one_length_json_obj(value, "")?;
+            match r_key {
+                "some" | "is" => {
+                    include_input.insert(r_key.to_string(), json!({
+                        "where": r_where,
+                        "take": 1
+                    }));
+                }
+                "none" | "isNot" => {
+                    include_input.insert(r_key.to_string(), json!({
+                        "where": r_where,
+                        "take": 1
+                    }));
+                }
+                "all" => {
+                    include_input.insert(r_key.to_string(), json!({
+                        "where": {"NOT": r_where},
+                        "take": 1
+                    }));
+                }
+                _ => {}
+            }
         }
     }
-    Ok(if !lookup_input.as_object().unwrap().is_empty() {
-        build_lookup_inputs(model, graph, QueryPipelineType::Many, false, &lookup_input)?
+    Ok(if !include_input.is_empty() {
+        build_lookup_inputs(model, graph, QueryPipelineType::Many, false, &JsonValue::Object(include_input))?
     } else {
         vec![]
     })
@@ -826,6 +847,8 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
             }
             doc.insert("$or", vals);
             continue;
+        } else if key == "NOT" {
+            doc.insert("$not", build_where_input(model, graph, Some(value))?);
         } else if !model.query_keys().contains(key) {
             return Err(ActionError::keys_unallowed());
         }
