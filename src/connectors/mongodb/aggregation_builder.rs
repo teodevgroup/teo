@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::ops::Index;
 use serde_json::{Value as JsonValue, Map as JsonMap, json};
 use bson::{Array, Bson, bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
 use chrono::{Date, NaiveDate, Utc, DateTime};
@@ -1044,11 +1045,12 @@ fn build_lookup_inputs(
                     inner_let_value.insert(join_table_reference_name, format!("${join_table_reference_name}"));
                     inner_eq_values.push(doc!{"$eq": [format!("${foreign_unique_field_column_name}"), format!("$${join_table_reference_name}")]});
                 }
-                let original_inner_pipeline = if value.is_object() {
+                let mut original_inner_pipeline = if value.is_object() {
                     build_query_pipeline_from_json(foreign_model, graph, QueryPipelineType::Many, false, value)?
                 } else {
                     vec![]
                 };
+                let original_inner_pipeline_immu = original_inner_pipeline.clone();
                 let mut inner_match = doc!{
                     "$expr": {
                         "$and": inner_eq_values
@@ -1064,6 +1066,32 @@ fn build_lookup_inputs(
                         inner_match.insert(k, v);
                     }
                 }
+                let index = original_inner_pipeline.iter().position(|v| {
+                    v.get("$match").is_some()
+                }).unwrap();
+                original_inner_pipeline.remove(index);
+                original_inner_pipeline.insert(index, inner_match);
+                let original_inner_sort = original_inner_pipeline_immu.iter().find(|v| {
+                    v.get("$sort").is_some()
+                });
+                let index = original_inner_pipeline.iter().position(|v| {
+                    v.get("$sort").is_some()
+                }).unwrap();
+                original_inner_pipeline.remove(index);
+                let original_inner_skip = original_inner_pipeline_immu.iter().find(|v| {
+                    v.get("$skip").is_some()
+                });
+                let index = original_inner_pipeline.iter().position(|v| {
+                    v.get("$skip").is_some()
+                }).unwrap();
+                original_inner_pipeline.remove(index);
+                let original_inner_limit = original_inner_pipeline_immu.iter().find(|v| {
+                    v.get("$limit").is_some()
+                });
+                let index = original_inner_pipeline.iter().position(|v| {
+                    v.get("$limit").is_some()
+                }).unwrap();
+                original_inner_pipeline.remove(index);
                 let mut target = doc!{
                     "$lookup": {
                         "from": join_model.table_name(),
@@ -1080,9 +1108,7 @@ fn build_lookup_inputs(
                                 "from": foreign_model.table_name(),
                                 "as": relation_name,
                                 "let": inner_let_value,
-                                "pipeline": [{
-                                    "$match": inner_match
-                                }]
+                                "pipeline": original_inner_pipeline
                             }
                         }, {
                             "$unwind": {
@@ -1095,23 +1121,14 @@ fn build_lookup_inputs(
                         }]
                     }
                 };
-                let original_inner_sort = original_inner_pipeline.iter().find(|v| {
-                    v.get("$sort").is_some()
-                });
                 if original_inner_sort.is_some() {
                     let original_inner_sort = original_inner_sort.unwrap();
                     target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(original_inner_sort.clone()));
                 }
-                let original_inner_skip = original_inner_pipeline.iter().find(|v| {
-                    v.get("$skip").is_some()
-                });
                 if original_inner_skip.is_some() {
                     let original_inner_skip = original_inner_skip.unwrap();
                     target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(original_inner_skip.clone()));
                 }
-                let original_inner_limit = original_inner_pipeline.iter().find(|v| {
-                    v.get("$limit").is_some()
-                });
                 if original_inner_limit.is_some() {
                     let original_inner_limit = original_inner_limit.unwrap();
                     target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(original_inner_limit.clone()));
