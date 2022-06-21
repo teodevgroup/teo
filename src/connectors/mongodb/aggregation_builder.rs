@@ -786,6 +786,21 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
     }
 }
 
+pub(crate) fn build_unsets_for_match_lookup(model: &Model, graph: &Graph, r#where: Option<&JsonValue>) -> Result<Vec<Document>, ActionError> {
+    if let None = r#where { return Ok(vec![]); }
+    let r#where = r#where.unwrap();
+    if !r#where.is_object() { return Err(ActionError::invalid_query_input("'where' should be an object.")); }
+    let r#where = r#where.as_object().unwrap();
+    let mut retval: Vec<Document> = vec![];
+    for (key, value) in r#where.iter() {
+        let relation = model.relation(key);
+        if relation.is_some() {
+            retval.push(doc!{"$unset": key})
+        }
+    }
+    Ok(retval)
+}
+
 pub(crate) fn build_match_prediction_lookup(model: &Model, graph: &Graph, r#where: Option<&JsonValue>) -> Result<Vec<Document>, ActionError> {
     if let None = r#where { return Ok(vec![]); }
     let r#where = r#where.unwrap();
@@ -873,13 +888,13 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
             let inner_where = build_where_input(this_model, graph, Some(inner_where))?;
             match command {
                 "none" => {
-                    doc.insert(key, doc!{"$not": {"$elemMatch": inner_where}});
+                    doc.insert(key, doc!{"$size": 0});
                 }
                 "some" => {
-                    doc.insert(key, doc!{"$elemMatch": inner_where});
+                    doc.insert(key, doc!{"$size": 1});
                 }
                 "all" => {
-                    doc.insert(key, doc!{"$not": {"$not": {"$elemMatch": inner_where}}});
+                    doc.insert(key, doc!{"$size": 0});
                 }
                 _ => {
 
@@ -1202,6 +1217,11 @@ fn build_query_pipeline(
         if cursor_additional_where.is_some() {
             retval.push(doc!{"$match": cursor_additional_where.unwrap()});
         }
+    }
+    // remove lookup for matching here
+    let unsets = build_unsets_for_match_lookup(model, graph, r#where)?;
+    if !unsets.is_empty() {
+        retval.extend(unsets);
     }
     // $sort
     let sort = build_order_by_input(model, graph, order_by)?;
