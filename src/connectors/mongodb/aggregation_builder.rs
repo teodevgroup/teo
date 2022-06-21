@@ -810,22 +810,22 @@ pub(crate) fn build_match_prediction_lookup(model: &Model, graph: &Graph, r#wher
     for (key, value) in r#where.iter() {
         let relation = model.relation(key);
         if relation.is_some() {
-            let (r_key, r_where) = one_length_json_obj(value, "")?;
-            match r_key {
+            let (command, r_where) = one_length_json_obj(value, "")?;
+            match command {
                 "some" | "is" => {
-                    include_input.insert(r_key.to_string(), json!({
+                    include_input.insert(key.to_string(), json!({
                         "where": r_where,
                         "take": 1
                     }));
                 }
                 "none" | "isNot" => {
-                    include_input.insert(r_key.to_string(), json!({
+                    include_input.insert(key.to_string(), json!({
                         "where": r_where,
                         "take": 1
                     }));
                 }
                 "all" => {
-                    include_input.insert(r_key.to_string(), json!({
+                    include_input.insert(key.to_string(), json!({
                         "where": {"NOT": r_where},
                         "take": 1
                     }));
@@ -863,7 +863,8 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
             doc.insert("$or", vals);
             continue;
         } else if key == "NOT" {
-            doc.insert("$not", build_where_input(model, graph, Some(value))?);
+            doc.insert("$nor", vec![build_where_input(model, graph, Some(value))?]);
+            continue;
         } else if !model.query_keys().contains(key) {
             return Err(ActionError::keys_unallowed());
         }
@@ -887,10 +888,10 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
             let (command, inner_where) = one_length_json_obj(value, "")?;
             let inner_where = build_where_input(this_model, graph, Some(inner_where))?;
             match command {
-                "none" => {
+                "none" | "isNot" => {
                     doc.insert(key, doc!{"$size": 0});
                 }
-                "some" => {
+                "some" | "is" => {
                     doc.insert(key, doc!{"$size": 1});
                 }
                 "all" => {
