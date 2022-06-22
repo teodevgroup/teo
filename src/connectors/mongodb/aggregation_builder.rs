@@ -922,9 +922,9 @@ pub(crate) fn build_order_by_input(model: &Model, graph: &Graph, order_by: Optio
         if value.is_string() {
             let str_val = value.as_str().unwrap();
             if str_val == "asc" {
-                retval.insert(key, 1);
+                retval.insert(key, if reverse { -1 } else { 1 });
             } else if str_val == "desc" {
-                retval.insert(key, -1);
+                retval.insert(key, if reverse { 1 } else { -1 });
             }
         } else {
             return Err(ActionError::invalid_query_input("Order by input value should be whether string 'asc' or 'desc'."));
@@ -973,6 +973,7 @@ fn build_lookup_inputs(
                 } else {
                     vec![]
                 };
+                let inner_is_reversed = has_negative_take(value);
                 let inner_match = inner_pipeline.iter().find(|v| v.get("$match").is_some());
                 let has_inner_match = inner_match.is_some();
                 let mut inner_match = if has_inner_match {
@@ -1002,6 +1003,9 @@ fn build_lookup_inputs(
                     "pipeline": inner_pipeline
                 }};
                 retval.push(lookup);
+                if inner_is_reversed {
+                    retval.push(doc!{"$set": {relation_name: {"$reverseArray": format!("${relation_name}")}}});
+                }
             } else { // with join table
                 let join_model = graph.model(relation.through.as_ref().unwrap());
                 let local_relation_on_join_table = join_model.relation(relation.fields.get(0).unwrap()).unwrap();
@@ -1029,6 +1033,7 @@ fn build_lookup_inputs(
                 } else {
                     vec![]
                 };
+                let inner_is_reversed = has_negative_take(value);
                 let original_inner_pipeline_immu = original_inner_pipeline.clone();
                 let mut inner_match = doc!{
                     "$expr": {
@@ -1124,6 +1129,9 @@ fn build_lookup_inputs(
                 }
                 println!("generated lookup for join table: {:?}", target);
                 retval.push(target);
+                if inner_is_reversed {
+                    retval.push(doc!{"$set": {relation_name: {"$reverseArray": format!("${relation_name}")}}});
+                }
             }
         } else {
             let model_name = &model.name;
@@ -1231,6 +1239,10 @@ fn build_query_pipeline(
         retval.extend(unsets);
     }
     // $sort
+    let reverse = match take {
+        Some(take) => take < 0,
+        None => false
+    };
     let sort = build_order_by_input(model, graph, order_by, reverse)?;
     if !sort.is_empty() {
         retval.push(doc!{"$sort": sort});
@@ -1281,6 +1293,20 @@ pub(crate) fn validate_where_unique(model: &Model, r#where: &Option<&JsonValue>)
         return Err(ActionError::field_is_not_unique())
     }
     Ok(())
+}
+
+pub(crate) fn has_negative_take(json_value: &JsonValue) -> bool {
+    if json_value.is_object() {
+        let take = json_value.as_object().unwrap().get("take");
+        if take.is_some() {
+            let take = take.unwrap();
+            if take.is_number() {
+                let take = take.as_i64().unwrap();
+                return take < 0;
+            }
+        }
+    }
+    false
 }
 
 /// Build MongoDB aggregation pipeline for querying.

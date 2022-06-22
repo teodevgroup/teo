@@ -13,7 +13,7 @@ use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
 use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use regex::Regex;
 use rust_decimal::Decimal;
-use crate::connectors::mongodb::aggregation_builder::{build_query_pipeline_from_json, build_where_input, QueryPipelineType, ToBsonValue};
+use crate::connectors::mongodb::aggregation_builder::{build_query_pipeline_from_json, build_where_input, has_negative_take, QueryPipelineType, ToBsonValue};
 use crate::connectors::mongodb::save_session::MongoDBSaveSession;
 use crate::core::connector::Connector;
 use crate::core::object::Object;
@@ -616,6 +616,7 @@ impl Connector for MongoDBConnector {
 
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder)?;
+        let reverse = has_negative_take(finder);
         println!("see aggregation inputs: {:?}", aggregate_input);
         let col = &self.collections[model.name()];
         let mut cur = col.aggregate(aggregate_input, None).await;
@@ -630,7 +631,11 @@ impl Connector for MongoDBConnector {
             let obj = graph.new_object(model.name());
             match self.document_to_object(&doc.unwrap(), &obj) {
                 Ok(_) => {
-                    result.push(obj);
+                    if reverse {
+                        result.insert(0, obj);
+                    } else {
+                        result.push(obj);
+                    }
                 }
                 Err(err) => {
                     return Err(err);
