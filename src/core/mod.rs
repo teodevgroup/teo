@@ -1,5 +1,6 @@
 pub mod graph;
 pub mod model;
+pub mod r#enum;
 pub mod field_type;
 pub mod database_type;
 pub mod field;

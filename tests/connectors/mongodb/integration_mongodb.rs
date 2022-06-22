@@ -12,7 +12,17 @@ async fn make_mongodb_graph() -> &'static Graph {
     let graph = Box::leak(Box::new(Graph::new(|g| {
         g.data_source().mongodb("mongodb://localhost:27017/teotestintegration");
         g.reset_database();
-        g.r#enum("Sex", vec!["MALE", "FEMALE"]);
+        g.r#enum("Sex", |e| {
+            e.localized_name("性别");
+            e.description("性别，多用于用户和管理员。");
+            e.choice("MALE", |c| {
+                c.localized_name("男");
+            });
+            e.choice("FEMALE", |c| {
+                c.localized_name("女");
+            });
+        });
+
         g.model("Simple", |m| {
             m.field("id", |f| {
                 f.primary().required().readonly().object_id().column_name("_id").auto();

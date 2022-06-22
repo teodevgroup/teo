@@ -69,7 +69,16 @@ async fn make_graph() -> &'static Graph {
             });
         });
 
-        g.r#enum("Sex", vec!["MALE", "FEMALE"]);
+        g.r#enum("Sex", |e| {
+            e.localized_name("性别");
+            e.description("性别，多用于用户和管理员。");
+            e.choice("MALE", |c| {
+                c.localized_name("男");
+            });
+            e.choice("FEMALE", |c| {
+                c.localized_name("女");
+            });
+        });
 
         g.model("User", |m| {
             m.localized_name("用户");

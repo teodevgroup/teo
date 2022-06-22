@@ -2,13 +2,15 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use crate::core::builders::client_builder::ClientBuilder;
 use crate::core::builders::data_source_builder::DataSourceBuilder;
+use crate::core::builders::enum_builder::EnumBuilder;
 use crate::core::connector::{ConnectorBuilder};
 use crate::core::builders::model_builder::ModelBuilder;
 use crate::core::client::Client;
+use crate::core::r#enum::Enum;
 
 
 pub struct GraphBuilder {
-    pub(crate) enums: HashMap<String, Vec<String>>,
+    pub(crate) enum_builders: HashMap<String, EnumBuilder>,
     pub(crate) models: Vec<ModelBuilder>,
     pub(crate) connector_builder: Option<Box<dyn ConnectorBuilder>>,
     pub(crate) reset_database: bool,
@@ -21,7 +23,7 @@ impl GraphBuilder {
 
     pub(crate) fn new() -> Self {
         GraphBuilder {
-            enums: HashMap::new(),
+            enum_builders: HashMap::new(),
             models: Vec::new(),
             connector_builder: None,
             reset_database: false,
@@ -31,8 +33,11 @@ impl GraphBuilder {
         }
     }
 
-    pub fn r#enum<I, S, N>(&mut self, name: N, values: I) -> &mut Self where I: IntoIterator<Item = S>, S: Into<String>, N: Into<String> {
-        self.enums.insert(name.into(), values.into_iter().map(Into::into).collect());
+    pub fn r#enum<F: Fn(&mut EnumBuilder)>(&mut self, name: impl Into<String>, build: F) -> &mut Self {
+        let name = name.into();
+        let mut enum_builder = EnumBuilder::new(name.clone());
+        build(&mut enum_builder);
+        self.enum_builders.insert(name.clone(), enum_builder);
         self
     }
 
@@ -71,5 +76,13 @@ impl GraphBuilder {
             Some(connector_builder) => connector_builder,
             None => panic!("Graph doesn't have a database connector.")
         }
+    }
+
+    pub(crate) fn build_enums(&self) -> HashMap<String, Enum> {
+        let mut retval: HashMap<String, Enum> = HashMap::new();
+        for (k, v) in &self.enum_builders {
+            retval.insert(k.clone(), v.into());
+        }
+        retval
     }
 }

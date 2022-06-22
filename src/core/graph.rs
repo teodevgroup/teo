@@ -7,12 +7,13 @@ use crate::core::client::Client;
 use crate::core::connector::Connector;
 use crate::core::model::Model;
 use crate::core::object::Object;
+use crate::core::r#enum::Enum;
 use crate::error::ActionError;
 
 
 #[derive(Debug)]
 pub struct Graph {
-    enums: HashMap<String, Vec<String>>,
+    enums: HashMap<String, Enum>,
     models_vec: Vec<Model>,
     models_map: HashMap<String, * const Model>,
     url_segment_name_map: HashMap<String, String>,
@@ -31,7 +32,7 @@ impl Graph {
             panic!("Graph must have a host url.");
         }
         let mut graph = Graph {
-            enums: builder.enums.clone(),
+            enums: builder.build_enums(),
             models_vec: Vec::new(),
             models_map: HashMap::new(),
             url_segment_name_map: HashMap::new(),
@@ -67,12 +68,12 @@ impl Graph {
     }
 
     pub(crate) fn r#enum(&self, name: impl Into<String>) -> &Vec<String> {
-        &self.enums.get(&name.into()).unwrap()
+        &self.enums.get(&name.into()).unwrap().values
     }
 
     pub(crate) fn models(&self) -> &Vec<Model> { &self.models_vec }
 
-    pub(crate) fn enums(&self) -> &HashMap<String, Vec<String>> { &self.enums }
+    pub(crate) fn enums(&self) -> &HashMap<String, Enum> { &self.enums }
 
     pub(crate) async fn find_unique(&self, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
         self.connector().find_unique(self, model, finder, mutation_mode).await

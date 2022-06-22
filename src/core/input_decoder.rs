@@ -131,7 +131,7 @@ fn str_to_target_type(json_str: &str, target: &FieldType, graph: &Graph) -> Resu
         FieldType::Enum(enum_name) => {
             let enums = graph.enums();
             let vals = enums.get(&enum_name.to_string()).unwrap();
-            if vals.contains(&json_str.to_string()) {
+            if vals.values.contains(&json_str.to_string()) {
                 Ok(Value::String(json_str.into()))
             } else {
                 Err(ActionError::wrong_enum_choice())

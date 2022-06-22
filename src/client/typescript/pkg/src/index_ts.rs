@@ -13,7 +13,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
         // enum definitions
         graph.enums().iter().for_each(|e| {
             let name = e.0;
-            let choices = e.1.iter().map(|i| {String::from("\"") + i + "\""}).collect::<Vec<String>>().join(" | ");
+            let choices = e.1.values.iter().map(|i| {String::from("\"") + i + "\""}).collect::<Vec<String>>().join(" | ");
             c.line(format!("export type {name} = {choices}"));
             c.empty_line();
         });

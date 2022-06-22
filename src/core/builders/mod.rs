@@ -10,3 +10,4 @@ pub mod client_builder;
 pub mod field_index_builder;
 pub mod model_index_builder;
 pub mod database_type_builder;
+pub mod enum_builder;
