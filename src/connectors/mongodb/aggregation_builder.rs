@@ -907,7 +907,7 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
     Ok(doc)
 }
 
-pub(crate) fn build_order_by_input(model: &Model, graph: &Graph, order_by: Option<&JsonValue>) -> Result<Document, ActionError> {
+pub(crate) fn build_order_by_input(model: &Model, graph: &Graph, order_by: Option<&JsonValue>, reverse: bool) -> Result<Document, ActionError> {
     if order_by.is_none() {
         return Ok(doc!{});
     }
@@ -928,27 +928,6 @@ pub(crate) fn build_order_by_input(model: &Model, graph: &Graph, order_by: Optio
             }
         } else {
             return Err(ActionError::invalid_query_input("Order by input value should be whether string 'asc' or 'desc'."));
-        }
-    }
-    Ok(retval)
-}
-
-fn build_paging_objects(json_value: &JsonValue) -> Result<Vec<Document>, ActionError> {
-    // todo: code is a bit duplicating
-    let take = unwrap_i32(json_value.get("take"));
-    let skip = unwrap_i32(json_value.get("skip"));
-    let page_number = unwrap_i32(json_value.get("pageNumber"));
-    let page_size = unwrap_i32(json_value.get("pageSize"));
-    let mut retval: Vec<Document> = vec![];
-    if page_size.is_some() && page_number.is_some() {
-        retval.push(doc!{"$skip": ((page_number.unwrap() - 1) * page_size.unwrap()) as i64});
-        retval.push(doc!{"$limit": page_size.unwrap() as i64});
-    } else {
-        if skip.is_some() {
-            retval.push(doc!{"$skip": skip.unwrap() as i64});
-        }
-        if take.is_some() {
-            retval.push(doc!{"$limit": take.unwrap().abs() as i64});
         }
     }
     Ok(retval)
@@ -1252,7 +1231,7 @@ fn build_query_pipeline(
         retval.extend(unsets);
     }
     // $sort
-    let sort = build_order_by_input(model, graph, order_by)?;
+    let sort = build_order_by_input(model, graph, order_by, reverse)?;
     if !sort.is_empty() {
         retval.push(doc!{"$sort": sort});
     }
