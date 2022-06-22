@@ -544,6 +544,7 @@ impl Connector for MongoDBConnector {
                                     object.inner.value_map.borrow_mut().insert(key.to_string(), field_value);
                                 }
                                 Err(err) => {
+                                    println!("{:?}", err);
                                     panic!("here cannot error");
                                 }
                             }

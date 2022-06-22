@@ -11,7 +11,6 @@ use serde_json::{json, Map, Value as JsonValue};
 use async_recursion::async_recursion;
 use crate::core::argument::Argument;
 use crate::core::field::{Field, Optionality, Store};
-use crate::core::input::AtomicUpdateType::{Decrement, Divide, Increment, Multiply};
 use crate::core::input::{AtomicUpdateType, Input};
 use crate::core::input::Input::{AtomicUpdate, SetValue};
 use crate::core::field_type::FieldType;
