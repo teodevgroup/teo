@@ -351,8 +351,19 @@ impl MongoDBConnector {
                     }
                 }
             }
-            FieldType::Vec(_) => {
-                panic!()
+            FieldType::Vec(inner) => {
+                match bson_value.as_array() {
+                    Some(arr) => {
+                        let mut vec: Vec<Value> = vec![];
+                        for val in arr {
+                            vec.push(self.bson_value_to_field_value("", val, &inner.field_type)?);
+                        }
+                        Ok(Value::Vec(vec))
+                    }
+                    None => {
+                        Err(ActionError::unmatched_data_type_in_database(field_name))
+                    }
+                }
             }
             FieldType::Map(_) => {
                 panic!()
