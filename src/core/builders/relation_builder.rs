@@ -4,6 +4,8 @@ use crate::core::relation::Relation;
 
 pub struct RelationBuilder {
     pub(crate) name: String,
+    pub(crate) localized_name: String,
+    pub(crate) description: String,
     pub(crate) model: String,
     pub(crate) through: Option<String>,
     pub(crate) is_vec: bool,
@@ -17,6 +19,8 @@ impl RelationBuilder {
     pub(crate) fn new(name: impl Into<String>, connector_builder: &Box<dyn ConnectorBuilder>) -> Self {
         return RelationBuilder {
             name: name.into(),
+            localized_name: "".into(),
+            description: "".into(),
             model: "".into(),
             through: None,
             is_vec: false,
@@ -31,6 +35,16 @@ impl RelationBuilder {
         unsafe {
             &*self.connector_builder
         }
+    }
+
+    pub fn localized_name(&mut self, name: impl Into<String>) -> &mut Self {
+        self.localized_name = name.into();
+        self
+    }
+
+    pub fn description(&mut self, description: impl Into<String>) -> &mut Self {
+        self.description = description.into();
+        self
     }
 
     pub fn vec(&mut self, model: impl Into<String>) -> &mut Self {
@@ -80,6 +94,8 @@ impl RelationBuilder {
     pub(crate) fn build(&self, _connector_builder: &Box<dyn ConnectorBuilder>) -> Relation {
         return Relation {
             name: self.name.clone(),
+            localized_name: self.localized_name.clone(),
+            description: self.description.clone(),
             model: self.model.clone(),
             through: self.through.clone(),
             is_vec: self.is_vec,

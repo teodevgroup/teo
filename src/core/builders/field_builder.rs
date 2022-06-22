@@ -11,8 +11,8 @@ use crate::core::field_type::FieldType;
 
 pub struct FieldBuilder {
     pub(crate) name: String,
-    pub(crate) localized_name: &'static str,
-    pub(crate) description: &'static str,
+    pub(crate) localized_name: String,
+    pub(crate) description: String,
     pub(crate) field_type: FieldType,
     pub(crate) database_type: DatabaseType,
     pub(crate) optionality: Optionality,
@@ -42,8 +42,8 @@ impl FieldBuilder {
     pub(crate) fn new(name: impl Into<String>, connector_builder: &Box<dyn ConnectorBuilder>) -> Self {
         return FieldBuilder {
             name: name.into(),
-            localized_name: "",
-            description: "",
+            localized_name: "".to_string(),
+            description: "".to_string(),
             field_type: FieldType::Undefined,
             database_type: DatabaseType::Undefined,
             optionality: Optionality::Required,
@@ -76,12 +76,14 @@ impl FieldBuilder {
         }
     }
 
-    pub fn localized_name(&mut self, localized_name: &'static str) {
-        self.localized_name = localized_name;
+    pub fn localized_name(&mut self, localized_name: impl Into<String>) -> &mut Self {
+        self.localized_name = localized_name.into();
+        self
     }
 
-    pub fn description(&mut self, description: &'static str) {
-        self.description = description;
+    pub fn description(&mut self, description: impl Into<String>) -> &mut Self {
+        self.description = description.into();
+        self
     }
 
     pub fn object_id(&mut self) -> &mut Self {

@@ -3,6 +3,8 @@ use crate::core::object::Object;
 #[derive(Debug, Clone)]
 pub(crate) struct Relation {
     pub(crate) name: String,
+    pub(crate) localized_name: String,
+    pub(crate) description: String,
     pub(crate) model: String,
     pub(crate) through: Option<String>,
     pub(crate) is_vec: bool,
