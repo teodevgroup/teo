@@ -201,6 +201,21 @@ impl Value {
             Value::Decimal(val) => {
                 Value::Decimal(-val)
             }
+            Value::U8(val) => {
+                Value::I8(-(*val as i8))
+            }
+            Value::U16(val) => {
+                Value::I16(-(*val as i16))
+            }
+            Value::U32(val) => {
+                Value::I32(-(*val as i32))
+            }
+            Value::U64(val) => {
+                Value::I64(-(*val as i64))
+            }
+            Value::U128(val) => {
+                Value::I128(-(*val as i128))
+            }
             _ => {
                 panic!("Cannot neg.")
             }
