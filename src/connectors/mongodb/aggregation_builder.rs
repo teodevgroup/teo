@@ -245,7 +245,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         "not" => {
                             let oid = parse_object_id(value)?;
-                            result.insert("$eq", oid);
+                            result.insert("$ne", oid);
                         }
                         "gt" => {
                             let oid = parse_object_id(value)?;
@@ -315,7 +315,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         "not" => {
                             let b = parse_bool(value)?;
-                            result.insert("$eq", b);
+                            result.insert("$ne", b);
                         }
                         &_ => {
                             return Err(ActionError::wrong_input_type());
@@ -345,7 +345,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         "not" => {
                             let b = parse_i64(value)?;
-                            result.insert("$eq", b);
+                            result.insert("$ne", b);
                         }
                         "gt" => {
                             let oid = parse_i64(value)?;
@@ -419,7 +419,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         "not" => {
                             let b = parse_f64(value)?;
-                            result.insert("$eq", b);
+                            result.insert("$ne", b);
                         }
                         "gt" => {
                             let oid = parse_f64(value)?;
@@ -492,7 +492,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         "not" => {
                             let b = parse_string(value)?;
-                            result.insert("$eq", b);
+                            result.insert("$ne", b);
                         }
                         "gt" => {
                             let oid = parse_string(value)?;
@@ -595,7 +595,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         "not" => {
                             let b = parse_date(value)?;
-                            result.insert("$eq", b);
+                            result.insert("$ne", b);
                         }
                         "gt" => {
                             let oid = parse_date(value)?;
@@ -665,7 +665,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         "not" => {
                             let b = parse_datetime(value)?;
-                            result.insert("$eq", b);
+                            result.insert("$ne", b);
                         }
                         "gt" => {
                             let oid = parse_datetime(value)?;
@@ -735,7 +735,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         "not" => {
                             let b = parse_enum(value, enum_name, graph)?;
-                            result.insert("$eq", b);
+                            result.insert("$ne", b);
                         }
                         "in" => {
                             match value.as_array() {
