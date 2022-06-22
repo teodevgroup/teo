@@ -146,6 +146,15 @@ impl From<DateTime<Utc>> for Argument {
     }
 }
 
+impl<T> From<Vec<T>> for Argument where T: Into<Value> + Clone, Value: From<T> {
+    fn from(vec: Vec<T>) -> Self {
+        let result: Vec<Value> = vec.iter().map(|v| {
+            Value::from(v.clone())
+        }).collect::<Vec<Value>>();
+        ValueArgument(Value::Vec(result))
+    }
+}
+
 impl<F> From<F> for Argument where F: Fn(&mut PipelineBuilder) +  Clone + 'static {
     fn from(v: F) -> Self {
         let mut p = PipelineBuilder::new();
