@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::future::Future;
 use std::ptr::{addr_of, null};
 use inflector::Inflector;
 use crate::action::action::ActionType;
@@ -14,6 +15,7 @@ use crate::core::field::Store::{Calculated, Temp};
 use crate::core::field::WriteRule::NoWrite;
 use crate::core::model::{ModelIndex, ModelIndexItem, Model, ModelIndexType};
 use crate::core::relation::Relation;
+use crate::core::object::Object;
 
 
 pub struct ModelBuilder {
@@ -29,6 +31,10 @@ pub struct ModelBuilder {
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) primary: Option<ModelIndex>,
     pub(crate) indices: Vec<ModelIndex>,
+    pub(crate) on_saved_fns: Vec<Box<dyn Fn(&Object) -> Box<dyn Future<Output = ()>>>>,
+    pub(crate) on_updated_fns: Vec<Box<dyn Fn(&Object) -> Box<dyn Future<Output = ()>>>>,
+    pub(crate) on_created_fns: Vec<Box<dyn Fn(&Object) -> Box<dyn Future<Output = ()>>>>,
+    pub(crate) on_deleted_fns: Vec<Box<dyn Fn(&Object) -> Box<dyn Future<Output = ()>>>>,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -48,6 +54,10 @@ impl ModelBuilder {
             permission: None,
             primary: None,
             indices: Vec::new(),
+            on_created_fns: Vec::new(),
+            on_updated_fns: Vec::new(),
+            on_saved_fns: Vec::new(),
+            on_deleted_fns: Vec::new(),
             connector_builder
         }
     }
@@ -196,6 +206,26 @@ impl ModelBuilder {
         let mut builder = ModelIndexBuilder::new(ModelIndexType::Unique);
         build(&mut builder);
         self.indices.push(builder.build());
+        self
+    }
+
+    pub fn on_saved<F, Fut>(&mut self, callback: F) -> &mut Self where F: Fn(&Object) -> Fut + 'static, Fut: Future<Output = ()> + 'static {
+//        self.on_saved_fns.push(Box::new(|x| Box::new(callback(&x.clone()))));
+        self
+    }
+
+    pub fn on_created<F, Fut>(&mut self, callback: F) -> &mut Self where F: Fn(&Object) -> Fut + 'static, Fut: Future<Output = ()> + 'static {
+//        self.on_created_fns.push(Box::new(|x| Box::new(callback(&x.clone()))));
+        self
+    }
+
+    pub fn on_updated<F, Fut>(&mut self, callback: F) -> &mut Self where F: Fn(&Object) -> Fut + 'static, Fut: Future<Output = ()> + 'static {
+//        self.on_updated_fns.push(Box::new(|x| Box::new(callback(&x.clone()))));
+        self
+    }
+
+    pub fn on_deleted<F, Fut>(&mut self, callback: F) -> &mut Self where F: Fn(&Object) -> Fut + 'static, Fut: Future<Output = ()> + 'static {
+//        self.on_deleted_fns.push(Box::new(|x| Box::new(callback(&x.clone()))));
         self
     }
 
