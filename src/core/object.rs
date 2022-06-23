@@ -356,26 +356,26 @@ impl Object {
         let connector = self.graph().connector();
         let session = connector.new_save_session();
         self.save_to_database(session, false).await?;
-        //self.trigger_write_callbacks(is_new).await?;
+        self.trigger_write_callbacks(is_new).await?;
         Ok(())
     }
 
-    // async fn trigger_write_callbacks(&self, newly_created: bool) -> Result<(), ActionError> {
-    //     let model = self.model();
-    //     for cb in model.on_saved_fns {
-    //         cb(self).await?;
-    //     }
-    //     if newly_created {
-    //         for cb in &model.on_created_fns {
-    //             cb(self).await?;
-    //         }
-    //     } else {
-    //         for cb in &model.on_updated_fns {
-    //             cb(self).await?
-    //         }
-    //     }
-    //     Ok(())
-    // }
+    async fn trigger_write_callbacks(&self, newly_created: bool) -> Result<(), ActionError> {
+        let model = self.model();
+        for cb in &model.on_saved_fns {
+            //cb(self).await?;
+        }
+        if newly_created {
+            for cb in &model.on_created_fns {
+                //cb(self).await?;
+            }
+        } else {
+            for cb in &model.on_updated_fns {
+                //cb(self).await?
+            }
+        }
+        Ok(())
+    }
 
     pub async fn delete(&self) -> Result<(), ActionError> {
         let connector = self.graph().connector();
