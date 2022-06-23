@@ -11,7 +11,6 @@ use crate::core::r#enum::Enum;
 use crate::error::ActionError;
 
 
-#[derive(Debug)]
 pub struct Graph {
     enums: HashMap<String, Enum>,
     models_vec: Vec<Model>,

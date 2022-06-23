@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::future::Future;
 use std::ptr::{addr_of, null};
+use std::sync::Arc;
 use inflector::Inflector;
 use crate::action::action::ActionType;
 use crate::core::connector::{ConnectorBuilder};
@@ -31,10 +32,10 @@ pub struct ModelBuilder {
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) primary: Option<ModelIndex>,
     pub(crate) indices: Vec<ModelIndex>,
-    pub(crate) on_saved_fns: Vec<Box<dyn Fn(&Object) -> Box<dyn Future<Output = ()>>>>,
-    pub(crate) on_updated_fns: Vec<Box<dyn Fn(&Object) -> Box<dyn Future<Output = ()>>>>,
-    pub(crate) on_created_fns: Vec<Box<dyn Fn(&Object) -> Box<dyn Future<Output = ()>>>>,
-    pub(crate) on_deleted_fns: Vec<Box<dyn Fn(&Object) -> Box<dyn Future<Output = ()>>>>,
+    pub(crate) on_saved_fns: Vec<Arc<dyn Fn(&Object) -> dyn Future<Output = ()>>>,
+    pub(crate) on_updated_fns: Vec<Arc<dyn Fn(&Object) -> dyn Future<Output = ()>>>,
+    pub(crate) on_created_fns: Vec<Arc<dyn Fn(&Object) -> dyn Future<Output = ()>>>,
+    pub(crate) on_deleted_fns: Vec<Arc<dyn Fn(&Object) -> dyn Future<Output = ()>>>,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -209,23 +210,23 @@ impl ModelBuilder {
         self
     }
 
-    pub fn on_saved<F, Fut>(&mut self, callback: F) -> &mut Self where F: Fn(&Object) -> Fut + 'static, Fut: Future<Output = ()> + 'static {
-//        self.on_saved_fns.push(Box::new(|x| Box::new(callback(&x.clone()))));
+    pub fn on_saved<F, Fut>(&mut self, callback: F) -> &mut Self where F: (Fn(&Object) -> dyn Future<Output = ()>) + 'static {
+        self.on_saved_fns.push(Arc::new(callback));
         self
     }
 
-    pub fn on_created<F, Fut>(&mut self, callback: F) -> &mut Self where F: Fn(&Object) -> Fut + 'static, Fut: Future<Output = ()> + 'static {
-//        self.on_created_fns.push(Box::new(|x| Box::new(callback(&x.clone()))));
+    pub fn on_created<F, Fut>(&mut self, callback: F) -> &mut Self where F: (Fn(&Object) -> dyn Future<Output = ()>) + 'static {
+        self.on_created_fns.push(Arc::new(callback));
         self
     }
 
-    pub fn on_updated<F, Fut>(&mut self, callback: F) -> &mut Self where F: Fn(&Object) -> Fut + 'static, Fut: Future<Output = ()> + 'static {
-//        self.on_updated_fns.push(Box::new(|x| Box::new(callback(&x.clone()))));
+    pub fn on_updated<F, Fut>(&mut self, callback: F) -> &mut Self where F: (Fn(&Object) -> dyn Future<Output = ()>) + 'static {
+        self.on_updated_fns.push(Arc::new(callback));
         self
     }
 
-    pub fn on_deleted<F, Fut>(&mut self, callback: F) -> &mut Self where F: Fn(&Object) -> Fut + 'static, Fut: Future<Output = ()> + 'static {
-//        self.on_deleted_fns.push(Box::new(|x| Box::new(callback(&x.clone()))));
+    pub fn on_deleted<F, Fut>(&mut self, callback: F) -> &mut Self where F: (Fn(&Object) -> dyn Future<Output = ()>) + 'static {
+        self.on_deleted_fns.push(Arc::new(callback));
         self
     }
 
@@ -322,6 +323,10 @@ impl ModelBuilder {
             relations_vec,
             primary: primary.unwrap(),
             indices: indices.clone(),
+            on_saved_fns: self.on_saved_fns.clone(),
+            on_created_fns: self.on_created_fns.clone(),
+            on_updated_fns: self.on_updated_fns.clone(),
+            on_deleted_fns: self.on_deleted_fns.clone(),
             primary_field,
             index_fields,
             all_keys,

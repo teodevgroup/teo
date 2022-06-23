@@ -1,8 +1,11 @@
 use std::collections::{HashMap, HashSet};
+use std::future::Future;
 use std::ptr::null;
 use std::rc::Rc;
+use std::sync::Arc;
 use crate::action::action::ActionType;
 use crate::core::field::{Field, Sort};
+use crate::core::object::Object;
 use crate::core::permission::Permission;
 use crate::core::relation::Relation;
 
@@ -28,7 +31,6 @@ pub(crate) struct ModelIndex {
     pub(crate) items: Vec<ModelIndexItem>
 }
 
-#[derive(Debug)]
 pub(crate) struct Model {
     pub(crate) name: String,
     pub(crate) table_name: String,
@@ -44,6 +46,10 @@ pub(crate) struct Model {
     pub(crate) relations_map: HashMap<String, * const Relation>,
     pub(crate) indices: Vec<ModelIndex>,
     pub(crate) primary: ModelIndex,
+    pub(crate) on_saved_fns: Vec<Arc<dyn Fn(&Object) -> dyn Future<Output = ()>>>,
+    pub(crate) on_updated_fns: Vec<Arc<dyn Fn(&Object) -> dyn Future<Output = ()>>>,
+    pub(crate) on_created_fns: Vec<Arc<dyn Fn(&Object) -> dyn Future<Output = ()>>>,
+    pub(crate) on_deleted_fns: Vec<Arc<dyn Fn(&Object) -> dyn Future<Output = ()>>>,
     pub(crate) primary_field: * const Field,
     pub(crate) index_fields: Vec<* const Field>,
     pub(crate) all_keys: Vec<String>,
