@@ -1,4 +1,5 @@
 use crate::core::connector::ConnectorBuilder;
+use crate::core::field::Optionality;
 use crate::core::relation::Relation;
 
 
@@ -6,6 +7,7 @@ pub struct RelationBuilder {
     pub(crate) name: String,
     pub(crate) localized_name: String,
     pub(crate) description: String,
+    pub(crate) optionality: Optionality,
     pub(crate) model: String,
     pub(crate) through: Option<String>,
     pub(crate) is_vec: bool,
@@ -21,6 +23,7 @@ impl RelationBuilder {
             name: name.into(),
             localized_name: "".into(),
             description: "".into(),
+            optionality: Optionality::Required,
             model: "".into(),
             through: None,
             is_vec: false,
@@ -44,6 +47,16 @@ impl RelationBuilder {
 
     pub fn description(&mut self, description: impl Into<String>) -> &mut Self {
         self.description = description.into();
+        self
+    }
+
+    pub fn optional(&mut self) -> &mut Self {
+        self.optionality = Optionality::Optional;
+        self
+    }
+
+    pub fn required(&mut self) -> &mut Self {
+        self.optionality = Optionality::Required;
         self
     }
 
@@ -96,6 +109,7 @@ impl RelationBuilder {
             name: self.name.clone(),
             localized_name: self.localized_name.clone(),
             description: self.description.clone(),
+            optionality: self.optionality.clone(),
             model: self.model.clone(),
             through: self.through.clone(),
             is_vec: self.is_vec,
