@@ -625,11 +625,11 @@ impl Object {
         self.model().name() == model_name
     }
 
-    pub(crate) fn model(&self) -> &Model {
+    pub fn model(&self) -> &Model {
         unsafe { &*self.inner.model }
     }
 
-    pub(crate) fn graph(&self) -> &Graph {
+    pub fn graph(&self) -> &Graph {
         unsafe { &*self.inner.graph }
     }
 }
