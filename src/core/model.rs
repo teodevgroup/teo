@@ -33,7 +33,7 @@ pub(crate) struct ModelIndex {
     pub(crate) items: Vec<ModelIndexItem>
 }
 
-pub(crate) struct Model {
+pub struct Model {
     pub(crate) name: String,
     pub(crate) table_name: String,
     pub(crate) url_segment_name: String,
@@ -95,14 +95,14 @@ impl Model {
         return &self.fields_vec
     }
 
-    pub fn field(&self, name: &str) -> Option<&Field> {
+    pub(crate) fn field(&self, name: &str) -> Option<&Field> {
         match self.fields_map.get(name) {
             Some(f) => Some(unsafe { &**f }),
             None => None
         }
     }
 
-    pub fn relation(&self, name: &str) -> Option<&Relation> {
+    pub(crate) fn relation(&self, name: &str) -> Option<&Relation> {
         match self.relations_map.get(name) {
             Some(r) => Some(unsafe { &**r }),
             None => None

@@ -74,19 +74,19 @@ impl Graph {
 
     pub(crate) fn enums(&self) -> &HashMap<String, Enum> { &self.enums }
 
-    pub(crate) async fn find_unique(&self, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
+    pub async fn find_unique(&self, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
         self.connector().find_unique(self, model, finder, mutation_mode).await
     }
 
-    pub(crate) async fn find_first(&self, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
+    pub async fn find_first(&self, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
         self.connector().find_first(self, model, finder, mutation_mode).await
     }
 
-    pub(crate) async fn find_many(&self, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
+    pub async fn find_many(&self, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
         self.connector().find_many(self, model, finder, mutation_mode).await
     }
 
-    pub(crate) async fn count(&self, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
+    pub async fn count(&self, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
         self.connector().count(self, model, finder).await
     }
 
