@@ -124,10 +124,10 @@ impl Value {
         }
     }
 
-    pub fn as_string(&self) -> Option<&String> {
+    pub fn as_string(&self) -> Option<String> {
         match self {
-            Value::String(v) => Some(v),
-            Value::ObjectId(v) => Some(v),
+            Value::String(v) => Some(v.clone()),
+            Value::ObjectId(v) => Some(v.clone()),
             _ => None
         }
     }

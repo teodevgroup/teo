@@ -28,7 +28,7 @@ impl Modifier for BcryptVerifyModifier {
     async fn call(&self, stage: Stage, object: &Object) -> Stage {
         return if let Some(value) = stage.value() {
             return if let Value::String(s) = value {
-                let correct = verify(s, self.argument.resolve(stage, object).await.as_string().unwrap()).unwrap();
+                let correct = verify(s, self.argument.resolve(stage, object).await.as_str().unwrap()).unwrap();
                 if correct {
                     Stage::Value(Value::Null)
                 } else {
