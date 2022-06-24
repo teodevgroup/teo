@@ -34,10 +34,10 @@ pub struct ModelBuilder {
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) primary: Option<ModelIndex>,
     pub(crate) indices: Vec<ModelIndex>,
-    pub(crate) on_saved_fns: Vec<Arc<dyn Fn(&Object) -> PinFutureObj<()>>>,
-    pub(crate) on_updated_fns: Vec<Arc<dyn Fn(&Object) -> PinFutureObj<()>>>,
-    pub(crate) on_created_fns: Vec<Arc<dyn Fn(&Object) -> PinFutureObj<()>>>,
-    pub(crate) on_deleted_fns: Vec<Arc<dyn Fn(&Object) -> PinFutureObj<()>>>,
+    pub(crate) on_saved_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
+    pub(crate) on_updated_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
+    pub(crate) on_created_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
+    pub(crate) on_deleted_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -212,22 +212,22 @@ impl ModelBuilder {
         self
     }
 
-    pub fn on_saved<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(&Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
-        self.on_saved_fns.push(Arc::new(|object| Box::pin(callback(&object.clone()))));
+    pub fn on_saved<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+        self.on_saved_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_created<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(&Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
-        self.on_created_fns.push(Arc::new(|object| Box::pin(callback(&object.clone()))));
+    pub fn on_created<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+        self.on_created_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_updated<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(&Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+    pub fn on_updated<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
         self.on_updated_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_deleted<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(&Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+    pub fn on_deleted<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
         self.on_deleted_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }

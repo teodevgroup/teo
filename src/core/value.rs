@@ -109,35 +109,215 @@ impl Value {
         }
     }
 
-    pub(crate) fn as_string(&self) -> Option<&String> {
+    pub fn is_null(&self) -> bool {
+        match self {
+            Value::Null => true,
+            _ => false
+        }
+    }
+
+    pub fn as_string(&self) -> Option<&String> {
         match self {
             Value::String(v) => Some(v),
+            Value::ObjectId(v) => Some(v),
             _ => None
         }
     }
 
-    pub(crate) fn as_bool(&self) -> Option<bool> {
+    pub fn as_i8(&self) -> Option<i8> {
+        match self {
+            Value::I8(v) => Some(*v),
+            Value::I16(v) => Some(*v as i8),
+            Value::I32(v) => Some(*v as i8),
+            Value::I64(v) => Some(*v as i8),
+            Value::I128(v) => Some(*v as i8),
+            Value::U8(v) => Some(*v as i8),
+            Value::U16(v) => Some(*v as i8),
+            Value::U32(v) => Some(*v as i8),
+            Value::U64(v) => Some(*v as i8),
+            Value::U128(v) => Some(*v as i8),
+            _ => None
+        }
+    }
+
+    pub fn as_i16(&self) -> Option<i16> {
+        match self {
+            Value::I8(v) => Some(*v as i16),
+            Value::I16(v) => Some(*v),
+            Value::I32(v) => Some(*v as i16),
+            Value::I64(v) => Some(*v as i16),
+            Value::I128(v) => Some(*v as i16),
+            Value::U8(v) => Some(*v as i16),
+            Value::U16(v) => Some(*v as i16),
+            Value::U32(v) => Some(*v as i16),
+            Value::U64(v) => Some(*v as i16),
+            Value::U128(v) => Some(*v as i16),
+            _ => None
+        }
+    }
+
+    pub fn as_i32(&self) -> Option<i32> {
+        match self {
+            Value::I8(v) => Some(*v as i32),
+            Value::I16(v) => Some(*v as i32),
+            Value::I32(v) => Some(*v),
+            Value::I64(v) => Some(*v as i32),
+            Value::I128(v) => Some(*v as i32),
+            Value::U8(v) => Some(*v as i32),
+            Value::U16(v) => Some(*v as i32),
+            Value::U32(v) => Some(*v as i32),
+            Value::U64(v) => Some(*v as i32),
+            Value::U128(v) => Some(*v as i32),
+            _ => None
+        }
+    }
+
+    pub fn as_i64(&self) -> Option<i64> {
+        match self {
+            Value::I8(v) => Some(*v as i64),
+            Value::I16(v) => Some(*v as i64),
+            Value::I32(v) => Some(*v as i64),
+            Value::I64(v) => Some(*v),
+            Value::I128(v) => Some(*v as i64),
+            Value::U8(v) => Some(*v as i64),
+            Value::U16(v) => Some(*v as i64),
+            Value::U32(v) => Some(*v as i64),
+            Value::U64(v) => Some(*v as i64),
+            Value::U128(v) => Some(*v as i64),
+            _ => None
+        }
+    }
+
+    pub fn as_i128(&self) -> Option<i128> {
+        match self {
+            Value::I8(v) => Some(*v as i128),
+            Value::I16(v) => Some(*v as i128),
+            Value::I32(v) => Some(*v as i128),
+            Value::I64(v) => Some(*v as i128),
+            Value::I128(v) => Some(*v),
+            Value::U8(v) => Some(*v as i128),
+            Value::U16(v) => Some(*v as i128),
+            Value::U32(v) => Some(*v as i128),
+            Value::U64(v) => Some(*v as i128),
+            Value::U128(v) => Some(*v as i128),
+            _ => None
+        }
+    }
+
+    //
+    pub fn as_u8(&self) -> Option<u8> {
+        match self {
+            Value::U8(v) => Some(*v as u8),
+            Value::U16(v) => Some(*v as u8),
+            Value::U32(v) => Some(*v as u8),
+            Value::U64(v) => Some(*v as u8),
+            Value::U128(v) => Some(*v as u8),
+            _ => None
+        }
+    }
+
+    pub fn as_u16(&self) -> Option<u16> {
+        match self {
+            Value::U8(v) => Some(*v as u16),
+            Value::U16(v) => Some(*v as u16),
+            Value::U32(v) => Some(*v as u16),
+            Value::U64(v) => Some(*v as u16),
+            Value::U128(v) => Some(*v as u16),
+            _ => None
+        }
+    }
+
+    pub fn as_u32(&self) -> Option<u32> {
+        match self {
+            Value::U8(v) => Some(*v as u32),
+            Value::U16(v) => Some(*v as u32),
+            Value::U32(v) => Some(*v as u32),
+            Value::U64(v) => Some(*v as u32),
+            Value::U128(v) => Some(*v as u32),
+            _ => None
+        }
+    }
+
+    pub fn as_u64(&self) -> Option<u64> {
+        match self {
+            Value::U8(v) => Some(*v as u64),
+            Value::U16(v) => Some(*v as u64),
+            Value::U32(v) => Some(*v as u64),
+            Value::U64(v) => Some(*v as u64),
+            Value::U128(v) => Some(*v as u64),
+            _ => None
+        }
+    }
+
+    pub fn as_u128(&self) -> Option<u128> {
+        match self {
+            Value::U8(v) => Some(*v as u128),
+            Value::U16(v) => Some(*v as u128),
+            Value::U32(v) => Some(*v as u128),
+            Value::U64(v) => Some(*v as u128),
+            Value::U128(v) => Some(*v as u128),
+            _ => None
+        }
+    }
+
+    pub fn as_f32(&self) -> Option<f32> {
+        match self {
+            Value::I8(v) => Some(*v as f32),
+            Value::I16(v) => Some(*v as f32),
+            Value::I32(v) => Some(*v as f32),
+            Value::I64(v) => Some(*v as f32),
+            Value::I128(v) => Some(*v as f32),
+            Value::U8(v) => Some(*v as f32),
+            Value::U16(v) => Some(*v as f32),
+            Value::U32(v) => Some(*v as f32),
+            Value::U64(v) => Some(*v as f32),
+            Value::U128(v) => Some(*v as f32),
+            Value::F32(v) => Some(*v),
+            Value::F64(v) => Some(*v as f32),
+            _ => None
+        }
+    }
+
+    pub fn as_f64(&self) -> Option<f64> {
+        match self {
+            Value::I8(v) => Some(*v as f64),
+            Value::I16(v) => Some(*v as f64),
+            Value::I32(v) => Some(*v as f64),
+            Value::I64(v) => Some(*v as f64),
+            Value::I128(v) => Some(*v as f64),
+            Value::U8(v) => Some(*v as f64),
+            Value::U16(v) => Some(*v as f64),
+            Value::U32(v) => Some(*v as f64),
+            Value::U64(v) => Some(*v as f64),
+            Value::U128(v) => Some(*v as f64),
+            Value::F32(v) => Some(*v as f64),
+            Value::F64(v) => Some(*v as f64),
+            _ => None
+        }
+    }
+
+    pub fn as_bool(&self) -> Option<bool> {
         match self {
             Value::Bool(b) => Some(*b),
             _ => None
         }
     }
 
-    pub(crate) fn as_object(&self) -> Option<&Object> {
+    pub fn as_object(&self) -> Option<&Object> {
         match self {
             Value::Object(obj) => Some(obj),
             _ => None
         }
     }
 
-    pub(crate) fn as_vec(&self) -> Option<&Vec<Value>> {
+    pub fn as_vec(&self) -> Option<&Vec<Value>> {
         match self {
             Value::Vec(val) => Some(val),
             _ => None
         }
     }
 
-    pub(crate) fn as_usize(&self) -> Option<usize> {
+    pub fn as_usize(&self) -> Option<usize> {
         match self {
             Value::I8(n) => Some(*n as usize),
             Value::I16(n) => Some(*n as usize),

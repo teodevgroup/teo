@@ -363,15 +363,15 @@ impl Object {
     async fn trigger_write_callbacks(&self, newly_created: bool) -> Result<(), ActionError> {
         let model = self.model();
         for cb in &model.on_saved_fns {
-            cb(self).await;
+            cb(self.clone()).await;
         }
         if newly_created {
             for cb in &model.on_created_fns {
-                cb(self).await;
+                cb(self.clone()).await;
             }
         } else {
             for cb in &model.on_updated_fns {
-                cb(self).await;
+                cb(self.clone()).await;
             }
         }
         Ok(())

@@ -60,7 +60,7 @@ impl Graph {
         }
     }
 
-    pub(crate) fn model(&self, name: &str) -> &Model {
+    pub fn model(&self, name: &str) -> &Model {
         unsafe {
             &(**self.models_map.get(name).unwrap())
         }
