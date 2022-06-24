@@ -670,3 +670,6 @@ impl PartialEq for Object {
         self.model() == other.model() && self.identifier() == other.identifier()
     }
 }
+
+unsafe impl Send for Object {}
+unsafe impl Sync for Object {}

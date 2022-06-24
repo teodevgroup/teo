@@ -1,3 +1,4 @@
+use std::future::Future;
 use std::sync::{Arc};
 use crate::core::argument::Argument;
 use crate::core::modifier::Modifier;
@@ -34,10 +35,12 @@ use crate::core::modifiers::slug::SlugModifier;
 use crate::core::modifiers::str_append::StrAppendModifier;
 use crate::core::modifiers::str_prepend::StrPrependModifier;
 use crate::core::modifiers::then_p::ThenPModifier;
+//use crate::core::modifiers::transform::TransformModifier;
 use crate::core::modifiers::uuid::UUIDModifier;
 use crate::core::stage::Stage;
 use crate::core::object::Object;
 use crate::core::pipeline::Pipeline;
+use crate::core::value::Value;
 
 
 #[derive(Debug)]
@@ -253,6 +256,11 @@ impl PipelineBuilder {
         self.modifiers.push(Arc::new(SlugModifier::new()));
         self
     }
+
+    // pub fn transform<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Value, Object) -> Fut) + 'static + Send + Sync, Fut: Future<Output = Result<Value, String>> + 'static {
+    //     self.modifiers.push(Arc::new(TransformModifier::new(Arc::new(|v, o| Box::pin(callback(v, o))))));
+    //     self
+    // }
 
     pub(crate) fn build(&self) -> Pipeline {
         Pipeline { modifiers: self.modifiers.clone() }

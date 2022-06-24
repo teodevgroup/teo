@@ -33,3 +33,4 @@ pub mod and;
 pub mod uuid;
 pub mod cuid;
 pub mod slug;
+pub mod transform;
