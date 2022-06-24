@@ -37,8 +37,29 @@ pub struct MongoDBConnector {
 
 impl MongoDBConnector {
     pub(crate) async fn new(url: String, models: &Vec<Model>, reset_database: bool) -> MongoDBConnector {
-        let options = ClientOptions::parse(url).await.unwrap();
-        let client = Client::with_options(options.clone()).unwrap();
+        let options = ClientOptions::parse(url).await;
+        if options.is_err() {
+            println!("mongodb option is error");
+            panic!("Wrong mongodb options");
+        }
+        let options = options.unwrap();
+        let client = Client::with_options(options.clone());
+        if client.is_err() {
+            println!("mongodb connection error");
+            panic!("Error occurred when establishing mongodb connection.");
+        }
+        let client = client.unwrap();
+        match client
+            .database("xxxxxpingpingpingxxxxx")
+            .run_command(doc! {"ping": 1}, None)
+            .await {
+            Ok(_) => {
+            },
+            Err(_) => {
+                println!("cannot connect mongodb");
+                panic!("cannot connect mongodb");
+            }
+        }
         let database = client.database(&options.default_database.clone().unwrap());
         if reset_database {
             let _ = database.drop(None).await;
