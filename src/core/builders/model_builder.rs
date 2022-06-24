@@ -15,11 +15,11 @@ use crate::core::builders::relation_builder::RelationBuilder;
 use crate::core::field::ReadRule::NoRead;
 use crate::core::field::Store::{Calculated, Temp};
 use crate::core::field::WriteRule::NoWrite;
+use crate::core::graph::Graph;
 use crate::core::model::{ModelIndex, ModelIndexItem, Model, ModelIndexType};
-use crate::core::model_callback::ModelCallback;
+use crate::core::model_callback::{ModelCallback, PinFutureObj};
 use crate::core::relation::Relation;
 use crate::core::object::Object;
-
 
 pub struct ModelBuilder {
     pub(crate) name: String,
@@ -34,10 +34,10 @@ pub struct ModelBuilder {
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) primary: Option<ModelIndex>,
     pub(crate) indices: Vec<ModelIndex>,
-    pub(crate) on_saved_fns: Vec<Arc<dyn ModelCallback>>,
-    pub(crate) on_updated_fns: Vec<Arc<dyn ModelCallback>>,
-    pub(crate) on_created_fns: Vec<Arc<dyn ModelCallback>>,
-    pub(crate) on_deleted_fns: Vec<Arc<dyn ModelCallback>>,
+    pub(crate) on_saved_fns: Vec<Arc<dyn Fn(&Object) -> PinFutureObj<()>>>,
+    pub(crate) on_updated_fns: Vec<Arc<dyn Fn(&Object) -> PinFutureObj<()>>>,
+    pub(crate) on_created_fns: Vec<Arc<dyn Fn(&Object) -> PinFutureObj<()>>>,
+    pub(crate) on_deleted_fns: Vec<Arc<dyn Fn(&Object) -> PinFutureObj<()>>>,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -212,27 +212,27 @@ impl ModelBuilder {
         self
     }
 
-    pub fn on_saved<F, Fut>(&mut self, callback: F) -> &mut Self where F: ModelCallback + 'static {
-        self.on_saved_fns.push(Arc::new(callback));
+    pub fn on_saved<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(&Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+        self.on_saved_fns.push(Arc::new(|object| Box::pin(callback(&object.clone()))));
         self
     }
 
-    pub fn on_created<F, Fut>(&mut self, callback: F) -> &mut Self where F: ModelCallback + 'static {
-        self.on_created_fns.push(Arc::new(callback));
+    pub fn on_created<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(&Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+        self.on_created_fns.push(Arc::new(|object| Box::pin(callback(&object.clone()))));
         self
     }
 
-    pub fn on_updated<F, Fut>(&mut self, callback: F) -> &mut Self where F: ModelCallback + 'static {
-        self.on_updated_fns.push(Arc::new(callback));
+    pub fn on_updated<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(&Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+        self.on_updated_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_deleted<F, Fut>(&mut self, callback: F) -> &mut Self where F: ModelCallback + 'static {
-        self.on_deleted_fns.push(Arc::new(callback));
+    pub fn on_deleted<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(&Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+        self.on_deleted_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub(crate) fn build(&self, connector_builder: &Box<dyn ConnectorBuilder>) -> Model {
+    pub(crate) unsafe fn build(&self, connector_builder: &Box<dyn ConnectorBuilder>) -> Model {
         let all_keys = Self::all_keys(self);
         let input_keys = Self::allowed_input_keys(self);
         let save_keys = Self::allowed_save_keys(self);

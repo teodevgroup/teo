@@ -6,7 +6,7 @@ use std::sync::Arc;
 use futures_util::future::BoxFuture;
 use crate::action::action::ActionType;
 use crate::core::field::{Field, Sort};
-use crate::core::model_callback::ModelCallback;
+use crate::core::model_callback::{ModelCallback, PinFutureObj};
 use crate::core::object::Object;
 use crate::core::permission::Permission;
 use crate::core::relation::Relation;
@@ -48,10 +48,10 @@ pub(crate) struct Model {
     pub(crate) relations_map: HashMap<String, * const Relation>,
     pub(crate) indices: Vec<ModelIndex>,
     pub(crate) primary: ModelIndex,
-    pub(crate) on_saved_fns: Vec<Arc<dyn ModelCallback>>,
-    pub(crate) on_updated_fns: Vec<Arc<dyn ModelCallback>>,
-    pub(crate) on_created_fns: Vec<Arc<dyn ModelCallback>>,
-    pub(crate) on_deleted_fns: Vec<Arc<dyn ModelCallback>>,
+    pub(crate) on_saved_fns: Vec<Arc<dyn Fn(&Object) -> PinFutureObj<()>>>,
+    pub(crate) on_updated_fns: Vec<Arc<dyn Fn(&Object) -> PinFutureObj<()>>>,
+    pub(crate) on_created_fns: Vec<Arc<dyn Fn(&Object) -> PinFutureObj<()>>>,
+    pub(crate) on_deleted_fns: Vec<Arc<dyn Fn(&Object) -> PinFutureObj<()>>>,
     pub(crate) primary_field: * const Field,
     pub(crate) index_fields: Vec<* const Field>,
     pub(crate) all_keys: Vec<String>,
