@@ -1127,7 +1127,6 @@ fn build_lookup_inputs(
                     let original_inner_limit = original_inner_limit.unwrap();
                     target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(original_inner_limit.clone()));
                 }
-                println!("generated lookup for join table: {:?}", target);
                 retval.push(target);
                 if inner_is_reversed {
                     retval.push(doc!{"$set": {relation_name: {"$reverseArray": format!("${relation_name}")}}});

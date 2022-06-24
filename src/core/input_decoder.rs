@@ -278,7 +278,6 @@ fn decode_number_input(json_value: &JsonValue, field: &Field, path: &str) -> Res
         Ok(SetValue(number_to_target_type(json_value, &field.field_type, number_type)?))
     } else if json_value.is_object() {
         let (key, value) = one_length_json_obj(json_value, path)?;
-        println!("see key value: {:?}, {:?}", key, value);
         let arg = match value {
             JsonValue::Null => {
                 return if key == "set" {
@@ -336,7 +335,6 @@ pub(crate) fn decode_field_value(graph: &Graph, json_value: &JsonValue, field: &
 }
 
 pub(crate) fn decode_field_input(graph: &Graph, json_value: &JsonValue, field: &Field, path: &str) -> Result<Input, ActionError> {
-    println!("see field input {:?} {:?}", field.name, json_value);
     // value is JSON null
     if json_value == &JsonValue::Null {
         return if field.optionality == Optionality::Optional {
