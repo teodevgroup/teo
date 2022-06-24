@@ -116,6 +116,14 @@ impl Value {
         }
     }
 
+    pub fn as_str(&self) -> Option<&str> {
+        match self {
+            Value::String(v) => Some(v.as_str()),
+            Value::ObjectId(v) => Some(v.as_str()),
+            _ => None
+        }
+    }
+
     pub fn as_string(&self) -> Option<&String> {
         match self {
             Value::String(v) => Some(v),
