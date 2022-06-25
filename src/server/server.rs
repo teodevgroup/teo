@@ -266,9 +266,21 @@ impl Server {
         match result {
             Ok(results) => {
                 let count = self.graph.count(model, input).await.unwrap();
+                let mut meta = json!({"count": count});
+                let pageSize = input.get("pageSize");
+                if pageSize.is_some() {
+                    let pageSize = pageSize.unwrap().as_i64().unwrap();
+                    let count = count as i64;
+                    let mut number_of_pages = count / pageSize;
+                    if count % pageSize != 0 {
+                        number_of_pages += 1;
+                    }
+                    meta.as_object_mut().unwrap().insert("numberOfPages".to_string(), JsonValue::Number(number_of_pages.into()));
+                }
                 let result_json: Vec<JsonValue> = results.iter().map(|i| { i.to_json() }).collect();
+
                 HttpResponse::Ok().json(json!({
-                    "meta": {"count": count},
+                    "meta": meta,
                     "data": result_json
                 }))
             }
@@ -561,7 +573,15 @@ impl Server {
     }
 
     async fn handle_count(&self, input: &JsonValue, model: &Model) -> HttpResponse {
-        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+        let result = self.graph.count(model, input).await;
+        match result {
+            Ok(count) => {
+                HttpResponse::Ok().json(json!({"data": count}))
+            }
+            Err(err) => {
+                HttpResponse::BadRequest().json(json!({"error": err}))
+            }
+        }
     }
 
     async fn handle_aggregate(&self, input: &JsonValue, model: &Model) -> HttpResponse {
