@@ -2,6 +2,7 @@ use actix_http::body::{BoxBody};
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web, error::Error};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::http::Method;
+use actix_web::web::Json;
 use chrono::{Duration, Utc};
 use futures_util::StreamExt;
 use serde_json::{json, Map, Value as JsonValue};
@@ -279,6 +280,27 @@ impl Server {
         }
     }
 
+    async fn refetch(&self, object: &Object, include: Option<&JsonValue>, select: Option<&JsonValue>) -> Result<Object, ActionError> {
+        let model = object.model();
+        let mut find_unique_arg = json!({});
+        for item in &model.primary.items {
+            let val = object.get_value(&item.field_name).unwrap().unwrap();
+            find_unique_arg.as_object_mut().unwrap().insert(item.field_name.clone(), val.to_json_value());
+        }
+        let mut finder = json!({
+            "where": find_unique_arg,
+        });
+        if include.is_some() {
+            finder.as_object_mut().unwrap().insert("include".to_string(), include.unwrap().clone());
+        }
+        if select.is_some() {
+            finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
+        }
+        let refetched_result = self.graph.find_unique(model, &finder, false).await;
+        let refetched = refetched_result.unwrap();
+        Ok(refetched)
+    }
+
     async fn handle_create_internal(&self, create: Option<&JsonValue>, include: Option<&JsonValue>, select: Option<&JsonValue>, model: &Model) -> Result<JsonValue, ActionError> {
         let obj = self.graph.new_object(model.name());
         let set_json_result = match create {
@@ -295,22 +317,7 @@ impl Server {
         }
         match obj.save().await {
             Ok(_) => {
-                let mut find_unique_arg = json!({});
-                for item in &model.primary.items {
-                    let val = obj.get_value(&item.field_name).unwrap().unwrap();
-                    find_unique_arg.as_object_mut().unwrap().insert(item.field_name.clone(), val.to_json_value());
-                }
-                let mut finder = json!({
-                    "where": find_unique_arg,
-                });
-                if include.is_some() {
-                    finder.as_object_mut().unwrap().insert("include".to_string(), include.unwrap().clone());
-                }
-                if select.is_some() {
-                    finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
-                }
-                let refetched_result = self.graph.find_unique(model, &finder, false).await;
-                let refetched = refetched_result.unwrap();
+                let refetched = self.refetch(&obj, include, select).await.unwrap();
                 Ok(refetched.to_json())
             }
             Err(err) => {
@@ -345,23 +352,7 @@ impl Server {
             Ok(_) => {
                 match object.save().await {
                     Ok(_) => {
-                        let mut find_unique_arg = json!({});
-                        for item in &model.primary.items {
-                            let val = object.get_value(&item.field_name).unwrap().unwrap();
-                            find_unique_arg.as_object_mut().unwrap().insert(item.field_name.clone(), val.to_json_value());
-                        }
-                        let mut finder = json!({
-                            "where": find_unique_arg,
-                        });
-                        // fetch includes and selects
-                        if include.is_some() {
-                            finder.as_object_mut().unwrap().insert("include".to_string(), include.unwrap().clone());
-                        }
-                        if select.is_some() {
-                            finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
-                        }
-                        let refetched_result = self.graph.find_unique(model, &finder, false).await;
-                        let refetched = refetched_result.unwrap();
+                        let refetched = self.refetch(&object, include, select).await.unwrap();
                         Ok(refetched.to_json())
                     }
                     Err(err) => {
@@ -398,6 +389,8 @@ impl Server {
 
     async fn handle_upsert(&'static self, input: &JsonValue, model: &'static Model) -> HttpResponse {
         let result = self.graph.find_unique(model, input, true).await;
+        let include = input.get("include");
+        let select = input.get("select");
         match result {
             Ok(obj) => {
                 // find the object here
@@ -415,7 +408,9 @@ impl Server {
                     Ok(_) => {
                         match obj.save().await {
                             Ok(_) => {
-                                return HttpResponse::Ok().json(json!({"data": obj.to_json()}));
+                                // refetch here
+                                let refetched = self.refetch(&obj, include, select).await.unwrap();
+                                return HttpResponse::Ok().json(json!({"data": refetched.to_json()}));
                             }
                             Err(err) => {
                                 return HttpResponse::BadRequest().json(json!({"error": err}));
@@ -443,7 +438,9 @@ impl Server {
                     Ok(_) => {
                         match obj.save().await {
                             Ok(_) => {
-                                HttpResponse::Ok().json(json!({"data": obj.to_json()}))
+                                // refetch here
+                                let refetched = self.refetch(&obj, include, select).await.unwrap();
+                                return HttpResponse::Ok().json(json!({"data": refetched.to_json()}));
                             }
                             Err(err) => {
                                 HttpResponse::BadRequest().json(json!({"error": err}))
