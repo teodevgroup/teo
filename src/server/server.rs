@@ -279,11 +279,7 @@ impl Server {
         }
     }
 
-    async fn handle_create(&self, input: &JsonValue, model: &Model) -> HttpResponse {
-        let input = input.as_object().unwrap();
-        let create = input.get("create");
-        let include = input.get("include");
-        let select = input.get("select");
+    async fn handle_create_internal(&self, create: Option<&JsonValue>, include: Option<&JsonValue>, select: Option<&JsonValue>, model: &Model) -> Result<JsonValue, ActionError> {
         let obj = self.graph.new_object(model.name());
         let set_json_result = match create {
             Some(create) => {
@@ -294,36 +290,44 @@ impl Server {
                 obj.set_json(&empty).await
             }
         };
-        return match set_json_result {
+        if set_json_result.is_err() {
+            return Err(set_json_result.err().unwrap());
+        }
+        match obj.save().await {
             Ok(_) => {
-                match obj.save().await {
-                    Ok(_) => {
-                        let mut find_unique_arg = json!({});
-                        for item in &model.primary.items {
-                            let val = obj.get_value(&item.field_name).unwrap().unwrap();
-                            find_unique_arg.as_object_mut().unwrap().insert(item.field_name.clone(), val.to_json_value());
-                        }
-                        let mut finder = json!({
-                            "where": find_unique_arg,
-                        });
-                        if include.is_some() {
-                            finder.as_object_mut().unwrap().insert("include".to_string(), include.unwrap().clone());
-                        }
-                        if select.is_some() {
-                            finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
-                        }
-                        let refetched_result = self.graph.find_unique(model, &finder, false).await;
-                        let refetched = refetched_result.unwrap();
-                        HttpResponse::Ok().json(json!({"data": refetched.to_json()}))
-                    }
-                    Err(err) => {
-                        HttpResponse::BadRequest().json(json!({"error": err}))
-                    }
+                let mut find_unique_arg = json!({});
+                for item in &model.primary.items {
+                    let val = obj.get_value(&item.field_name).unwrap().unwrap();
+                    find_unique_arg.as_object_mut().unwrap().insert(item.field_name.clone(), val.to_json_value());
                 }
+                let mut finder = json!({
+                    "where": find_unique_arg,
+                });
+                if include.is_some() {
+                    finder.as_object_mut().unwrap().insert("include".to_string(), include.unwrap().clone());
+                }
+                if select.is_some() {
+                    finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
+                }
+                let refetched_result = self.graph.find_unique(model, &finder, false).await;
+                let refetched = refetched_result.unwrap();
+                Ok(refetched.to_json())
             }
             Err(err) => {
-                HttpResponse::BadRequest().json(json!({"error": err}))
+                Err(err)
             }
+        }
+    }
+
+    async fn handle_create(&self, input: &JsonValue, model: &Model) -> HttpResponse {
+        let input = input.as_object().unwrap();
+        let create = input.get("create");
+        let include = input.get("include");
+        let select = input.get("select");
+        let result = self.handle_create_internal(create, include, select, model).await;
+        match result {
+            Ok(val) => HttpResponse::Ok().json(json!({"data": val})),
+            Err(err) => HttpResponse::BadRequest().json(json!({"error": err}))
         }
     }
 
@@ -460,7 +464,36 @@ impl Server {
     }
 
     async fn handle_create_many(&self, input: &JsonValue, model: &Model) -> HttpResponse {
-        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+        let input = input.as_object().unwrap();
+        let create = input.get("create");
+        let include = input.get("include");
+        let select = input.get("select");
+        if create.is_none() {
+            let err = ActionError::missing_input_section();
+            return HttpResponse::BadRequest().json(json!({"error": err}));
+        }
+        let create = create.unwrap();
+        if !create.is_array() {
+            let err = ActionError::wrong_input_type();
+            return HttpResponse::BadRequest().json(json!({"error": err}));
+        }
+        let create = create.as_array().unwrap();
+        let mut count = 0;
+        let mut ret_data: Vec<JsonValue> = vec![];
+        for val in create {
+            let result = self.handle_create_internal(Some(val), include, select, model).await;
+            match result {
+                Err(_) => (),
+                Ok(val) => {
+                    count += 1;
+                    ret_data.push(val);
+                }
+            }
+        }
+        HttpResponse::Ok().json(json!({
+            "meta": {"count": count},
+            "data": ret_data
+        }))
     }
 
     async fn handle_update_many(&self, input: &JsonValue, model: &Model) -> HttpResponse {
