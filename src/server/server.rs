@@ -5,7 +5,7 @@ use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web, error::Error};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::http::Method;
 use actix_web::web::Json;
-use chrono::{Duration, Utc};
+use chrono::{DateTime, Duration, Local, Utc};
 use futures_util::StreamExt;
 use serde_json::{json, Map, Value as JsonValue};
 use crate::action::action::ActionType;
@@ -264,6 +264,7 @@ impl Server {
 
     fn log_request(&'static self, start: SystemTime, action: &str, model: &str, code: u16) {
         let now = SystemTime::now();
+        let local: DateTime<Local> = Local::now();
         let code_string = match code {
             0..=199 => code.to_string().purple().bold(),
             200..=299 => code.to_string().green().bold(),
@@ -273,7 +274,8 @@ impl Server {
         let elapsed = now.duration_since(start).unwrap();
         let ms = elapsed.as_millis();
         let ms_str = format!("{ms}ms").normal().clear();
-        println!("{} on {} - {} {}", action.bright_yellow(), model.bright_magenta(), code_string, ms_str);
+        let local_formatted = format!("{local}").cyan();
+        println!("{} {} on {} - {} {}", local_formatted, action.bright_yellow(), model.bright_magenta(), code_string, ms_str);
     }
 
     async fn get_identity(&'static self, r: &HttpRequest) -> Result<Option<Object>, ActionError> {
