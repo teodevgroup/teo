@@ -460,20 +460,17 @@ impl Server {
 
     async fn handle_delete(&'static self, input: &JsonValue, model: &'static Model) -> HttpResponse {
         let result = self.graph.find_unique(model, input, true).await;
-        match result {
-            Ok(obj) => {
-                // find the object here
-                return match obj.delete().await {
-                    Ok(_) => {
-                        HttpResponse::Ok().json(json!({"data": obj.to_json()}))
-                    }
-                    Err(err) => {
-                        HttpResponse::BadRequest().json(json!({"error": err}))
-                    }
-                }
+        if result.is_err() {
+            return HttpResponse::NotFound().json(json!({"error": result.err()}));
+        }
+        let result = result.unwrap();
+        // find the object here
+        return match result.delete().await {
+            Ok(_) => {
+                HttpResponse::Ok().json(json!({"data": result.to_json()}))
             }
             Err(err) => {
-                return HttpResponse::NotFound().json(json!({"error": err}));
+                HttpResponse::BadRequest().json(json!({"error": err}))
             }
         }
     }
@@ -542,7 +539,28 @@ impl Server {
     }
 
     async fn handle_delete_many(&self, input: &JsonValue, model: &Model) -> HttpResponse {
-        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+        let result = self.graph.find_many(model, input, true).await;
+        if result.is_err() {
+            return HttpResponse::BadRequest().json(json!({"error": result.err()}));
+        }
+        let result = result.unwrap();
+        let mut count = 0;
+        let mut retval: Vec<JsonValue> = vec![];
+        for object in result {
+            match object.delete().await {
+                Ok(_) => {
+                    retval.push(object.to_json());
+                    count += 1;
+                }
+                Err(_) => {}
+            }
+        }
+        HttpResponse::Ok().json(json!({
+            "meta": {
+                "count": count
+            },
+            "data": retval
+        }))
     }
 
     async fn handle_count(&self, input: &JsonValue, model: &Model) -> HttpResponse {
