@@ -3,7 +3,7 @@ use std::fmt::{Debug};
 use std::sync::Arc;
 use rust_decimal::prelude::FromStr;
 use std::sync::atomic::{Ordering};
-use serde_json::{Map, Value as JsonValue};
+use serde_json::{json, Map, Number, Value as JsonValue};
 use async_trait::async_trait;
 use bson::{Bson, bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
 use chrono::{Date, NaiveDate, Utc, DateTime};
@@ -643,7 +643,19 @@ impl Connector for MongoDBConnector {
     }
 
     async fn find_first(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
-        todo!()
+        let mut finder = finder.as_object().clone().unwrap().clone();
+        finder.insert("take".to_string(), JsonValue::Number(1.into()));
+        let result = self.find_many(graph, model, &JsonValue::Object(finder), mutation_mode).await;
+        match result {
+            Err(err) => Err(err),
+            Ok(retval) => {
+                if retval.is_empty() {
+                    Err(ActionError::object_not_found())
+                } else {
+                    Ok(retval.get(0).unwrap().clone())
+                }
+            }
+        }
     }
 
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
