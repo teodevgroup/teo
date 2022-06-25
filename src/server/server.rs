@@ -370,12 +370,12 @@ impl Server {
             Ok(results) => {
                 let count = self.graph.count(model, input).await.unwrap();
                 let mut meta = json!({"count": count});
-                let pageSize = input.get("pageSize");
-                if pageSize.is_some() {
-                    let pageSize = pageSize.unwrap().as_i64().unwrap();
+                let page_size = input.get("pageSize");
+                if page_size.is_some() {
+                    let page_size = page_size.unwrap().as_i64().unwrap();
                     let count = count as i64;
-                    let mut number_of_pages = count / pageSize;
-                    if count % pageSize != 0 {
+                    let mut number_of_pages = count / page_size;
+                    if count % page_size != 0 {
                         number_of_pages += 1;
                     }
                     meta.as_object_mut().unwrap().insert("numberOfPages".to_string(), JsonValue::Number(number_of_pages.into()));

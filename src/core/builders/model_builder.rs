@@ -17,7 +17,7 @@ use crate::core::field::Store::{Calculated, Temp};
 use crate::core::field::WriteRule::NoWrite;
 use crate::core::graph::Graph;
 use crate::core::model::{ModelIndex, ModelIndexItem, Model, ModelIndexType};
-use crate::core::model_callback::{ModelCallback, PinFutureObj};
+use crate::core::model_callback::PinFutureObj;
 use crate::core::relation::Relation;
 use crate::core::object::Object;
 

@@ -3,15 +3,8 @@ use std::pin::Pin;
 use std::sync::Arc;
 use futures_util::future::BoxFuture;
 use crate::core::object::Object;
+use crate::core::value::Value;
 
 pub(crate) type PinFutureObj<Output> = Pin<Box<dyn Future<Output = Output>>>;
 
-pub trait ModelCallback {
-    fn call(&self, object: &Object) -> BoxFuture<'static, ()>;
-}
-
-impl<T, F> ModelCallback for Arc<T> where T: Fn(&Object) -> F, F: Future<Output = ()> + 'static + Send {
-    fn call(&self, obj: &Object) -> BoxFuture<'static, ()> {
-        Box::pin(self(obj))
-    }
-}
+pub(crate) type PinFutureObjSendSync<Output> = Pin<Box<dyn Future<Output = Output> + Send + Sync>>;

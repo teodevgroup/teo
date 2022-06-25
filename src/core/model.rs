@@ -6,7 +6,7 @@ use std::sync::Arc;
 use futures_util::future::BoxFuture;
 use crate::action::action::ActionType;
 use crate::core::field::{Field, Sort};
-use crate::core::model_callback::{ModelCallback, PinFutureObj};
+use crate::core::model_callback::PinFutureObj;
 use crate::core::object::Object;
 use crate::core::permission::Permission;
 use crate::core::relation::Relation;

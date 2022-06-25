@@ -516,3 +516,110 @@ impl From<DateTime<Utc>> for Value {
         Value::DateTime(v)
     }
 }
+
+// new
+
+impl From<Value> for String {
+    fn from(v: Value) -> Self {
+        v.as_string().unwrap()
+    }
+}
+
+impl From<Value> for bool {
+    fn from(v: Value) -> Self {
+        v.as_bool().unwrap()
+    }
+}
+
+impl From<Value> for i8 {
+    fn from(v: Value) -> Self {
+        v.as_i8().unwrap()
+    }
+}
+
+impl From<Value> for i16 {
+    fn from(v: Value) -> Self {
+        v.as_i16().unwrap()
+    }
+}
+
+
+impl From<Value> for i32 {
+    fn from(v: Value) -> Self {
+        v.as_i32().unwrap()
+    }
+}
+
+
+impl From<Value> for i64 {
+    fn from(v: Value) -> Self {
+        v.as_i64().unwrap()
+    }
+}
+
+impl From<Value> for i128 {
+    fn from(v: Value) -> Self {
+        v.as_i128().unwrap()
+    }
+}
+
+impl From<Value> for u8 {
+    fn from(v: Value) -> Self {
+        v.as_u8().unwrap()
+    }
+}
+
+
+impl From<Value> for u16 {
+    fn from(v: Value) -> Self {
+        v.as_u16().unwrap()
+    }
+}
+
+impl From<Value> for u32 {
+    fn from(v: Value) -> Self {
+        v.as_u32().unwrap()
+    }
+}
+
+
+impl From<Value> for u64 {
+    fn from(v: Value) -> Self {
+        v.as_u64().unwrap()
+    }
+}
+
+impl From<Value> for u128 {
+    fn from(v: Value) -> Self {
+        v.as_u128().unwrap()
+    }
+}
+
+
+impl From<Value> for f32 {
+    fn from(v: Value) -> Self {
+        v.as_f32().unwrap()
+    }
+}
+
+impl From<Value> for f64 {
+    fn from(v: Value) -> Self {
+        v.as_f64().unwrap()
+    }
+}
+//
+// impl From<Decimal> for Value {
+//     fn from(v: Decimal) -> Self { Value::Decimal(v) }
+// }
+//
+// impl From<Date<Utc>> for Value {
+//     fn from(v: Date<Utc>) -> Self {
+//         Value::Date(v)
+//     }
+// }
+//
+// impl From<DateTime<Utc>> for Value {
+//     fn from(v: DateTime<Utc>) -> Self {
+//         Value::DateTime(v)
+//     }
+// }
