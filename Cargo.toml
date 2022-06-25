@@ -32,6 +32,7 @@ bson = { version = "2.2", features = ["chrono-0_4", "serde_with"], optional = tr
 rust_decimal = "1.24"
 rust_decimal_macros = "1.24"
 async-recursion = "1.0.0"
+colored = "2.0.0"
 
 [dev-dependencies]
 serial_test = "0.7.0"
