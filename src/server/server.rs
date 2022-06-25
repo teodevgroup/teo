@@ -49,7 +49,11 @@ impl Server {
         let app = App::new()
             .default_service(web::route().to(move |r: HttpRequest, mut payload: web::Payload| async move {
                 let start = SystemTime::now();
-                let path = r.path();
+                let mut path = r.path().to_string();
+                if path.len() > 1 && path.ends_with("/") {
+                    path = path[0..path.len() - 1].to_string();
+                }
+                let path = path.as_str();
                 if path.len() > 7 && path.ends_with("/action") {
                     let model_url_segment_name = &path[1..path.len() - 7].to_string();
                     match this.model_name_for_url_segment_name(model_url_segment_name) {
@@ -219,47 +223,72 @@ impl Server {
                                                                                 }
                                                                             }
                                                                         } else {
+                                                                            self.log_unhandled(start, r.method().as_str(), path, 400);
                                                                             return HttpResponse::BadRequest().json(json!({"error": ActionError::unallowed_action()}));
                                                                         }
                                                                     }
                                                                     None => {
+                                                                        self.log_unhandled(start, r.method().as_str(), path, 400);
                                                                         return HttpResponse::BadRequest().json(json!({"error": ActionError::undefined_action()}));
                                                                     }
                                                                 }
                                                             }
                                                             None => {
+                                                                self.log_unhandled(start, r.method().as_str(), path, 400);
                                                                 return HttpResponse::BadRequest().json(json!({"error": ActionError::undefined_action()}));
                                                             }
                                                         }
                                                     }
                                                     None => {
+                                                        self.log_unhandled(start, r.method().as_str(), path, 400);
                                                         return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_action_name()}));
                                                     }
                                                 }
                                             }
                                             None => {
+                                                self.log_unhandled(start, r.method().as_str(), path, 400);
                                                 return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
                                             }
                                         }
                                     }
                                     Err(_) => {
+                                        self.log_unhandled(start, r.method().as_str(), path, 400);
                                         return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
                                     }
                                 }
                             } else {
+                                self.log_unhandled(start, r.method().as_str(), path, 404);
                                 return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
                             }
                         }
                         None => {
+                            self.log_unhandled(start, r.method().as_str(), path, 404);
                             return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
                         }
                     }
                 } else {
-                    println!("{}", "Unrecognized".cyan());
+                    self.log_unhandled(start, r.method().as_str(), path, 404);
                     return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
                 }
             }));
         app
+    }
+
+    fn log_unhandled(&'static self, start: SystemTime, method: &str, path: &str, code: u16) {
+        let now = SystemTime::now();
+        let local: DateTime<Local> = Local::now();
+        let code_string = match code {
+            0..=199 => code.to_string().purple().bold(),
+            200..=299 => code.to_string().green().bold(),
+            300..=399 => code.to_string().yellow().bold(),
+            _ => code.to_string().red().bold(),
+        };
+        let elapsed = now.duration_since(start).unwrap();
+        let ms = elapsed.as_millis();
+        let ms_str = format!("{ms}ms").normal().clear();
+        let local_formatted = format!("{local}").cyan();
+        let unhandled = "Unhandled".red();
+        println!("{} {} {} on {} - {} {}", local_formatted, unhandled, method.bright_yellow(), path.bright_magenta(), code_string, ms_str);
     }
 
     fn log_request(&'static self, start: SystemTime, action: &str, model: &str, code: u16) {
