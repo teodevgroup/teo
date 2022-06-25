@@ -345,8 +345,15 @@ impl Server {
             Ok(_) => {
                 match object.save().await {
                     Ok(_) => {
+                        let mut find_unique_arg = json!({});
+                        for item in &model.primary.items {
+                            let val = object.get_value(&item.field_name).unwrap().unwrap();
+                            find_unique_arg.as_object_mut().unwrap().insert(item.field_name.clone(), val.to_json_value());
+                        }
+                        let mut finder = json!({
+                            "where": find_unique_arg,
+                        });
                         // fetch includes and selects
-                        let mut finder = json!({"where": r#where});
                         if include.is_some() {
                             finder.as_object_mut().unwrap().insert("include".to_string(), include.unwrap().clone());
                         }
@@ -513,12 +520,11 @@ impl Server {
         let update = input.get("update");
         let include = input.get("include");
         let select = input.get("select");
-        let r#where = input.get("where");
 
         let mut count = 0;
         let mut ret_data: Vec<JsonValue> = vec![];
         for object in result {
-            let update_result = self.handle_update_internal(object.clone(), update, include, select, r#where, model).await;
+            let update_result = self.handle_update_internal(object.clone(), update, include, select, None, model).await;
             match update_result {
                 Ok(json_value) => {
                     ret_data.push(json_value);
