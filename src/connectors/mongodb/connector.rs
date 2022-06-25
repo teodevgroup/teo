@@ -648,6 +648,7 @@ impl Connector for MongoDBConnector {
 
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder)?;
+        println!("see input, {:#?}", aggregate_input);
         let reverse = has_negative_take(finder);
         let col = &self.collections[model.name()];
         let mut cur = col.aggregate(aggregate_input, None).await;

@@ -775,8 +775,67 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                 Err(ActionError::wrong_input_type())
             }
         }
-        FieldType::Vec(_) => {
-            panic!()
+        FieldType::Vec(inner_field) => {
+            if value.is_object() {
+                let mut result = doc!{};
+                let (key, matcher) = one_length_json_obj(value, "")?;
+                match key {
+                    "has" => {
+                        let inner = parse_bson_where_entry(&inner_field.field_type, matcher, graph)?;
+                        if inner.as_document().is_some() {
+                            result.insert("$elemMatch", inner);
+                        } else {
+                            return Ok(inner);
+                        }
+                    }
+                    "hasEvery" => {
+                        if !matcher.is_array() {
+                            return Err(ActionError::wrong_input_type());
+                        }
+                        let matcher = matcher.as_array().unwrap();
+                        let inner = matcher.iter().map(|v| {
+                            parse_bson_where_entry(&inner_field.field_type, v, graph).unwrap()
+                        }).collect::<Vec<Bson>>();
+                        result.insert("$all", inner);
+                    }
+                    "hasSome" => {
+                        if !matcher.is_array() {
+                            return Err(ActionError::wrong_input_type());
+                        }
+                        let matcher = matcher.as_array().unwrap();
+                        let inner = matcher.iter().map(|v| {
+                            parse_bson_where_entry(&inner_field.field_type, v, graph).unwrap()
+                        }).collect::<Vec<Bson>>();
+                        result.insert("$in", inner);
+                    }
+                    "isEmpty" => {
+                        if matcher.is_boolean() && (matcher.as_bool().unwrap() == true) {
+                            result.insert("$size", 0);
+                        }
+                    }
+                    "length" => {
+                        let ft = FieldType::U64;
+                        let num = parse_bson_where_entry(&ft, matcher, graph).unwrap();
+                        result.insert("$size", num);
+                    }
+                    "equals" => {
+                        if !matcher.is_array() {
+                            return Err(ActionError::wrong_input_type());
+                        }
+                        let matcher = matcher.as_array().unwrap();
+                        let inner = matcher.iter().map(|v| {
+                            parse_bson_where_entry(&inner_field.field_type, v, graph).unwrap()
+                        }).collect::<Vec<Bson>>();
+                        result.insert("$eq", inner);
+                    }
+                    _ => {
+                        return Err(ActionError::wrong_input_type());
+                    }
+                }
+                Ok(Bson::Document(result))
+            } else {
+                Err(ActionError::wrong_input_type())
+            }
         }
         FieldType::Map(_) => {
             panic!()
