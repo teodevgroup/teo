@@ -331,52 +331,60 @@ impl Server {
         }
     }
 
-    async fn handle_update(&'static self, input: &JsonValue, model: &'static Model) -> HttpResponse {
-        let input = input.as_object().unwrap();
-        let result = self.graph.find_unique(model, &JsonValue::Object(input.clone()), true).await;
-        match result {
-            Ok(obj) => {
-                // find the object here
-                let update = input.get("update");
-                let include = input.get("include");
-                let select = input.get("select");
-                let set_json_result = match update {
-                    Some(update) => {
-                        obj.set_json(update).await
-                    }
-                    None => {
-                        let empty = JsonValue::Object(Map::new());
-                        obj.set_json(&empty).await
-                    }
-                };
-                match set_json_result {
+    async fn handle_update_internal(&self, object: Object, update: Option<&JsonValue>, include: Option<&JsonValue>, select: Option<&JsonValue>, r#where: Option<&JsonValue>, model: &Model) -> Result<JsonValue, ActionError> {
+        let set_json_result = match update {
+            Some(update) => {
+                object.set_json(update).await
+            }
+            None => {
+                let empty = JsonValue::Object(Map::new());
+                object.set_json(&empty).await
+            }
+        };
+        match set_json_result {
+            Ok(_) => {
+                match object.save().await {
                     Ok(_) => {
-                        match obj.save().await {
-                            Ok(_) => {
-                                // fetch includes and selects
-                                let mut finder = json!({"where": input.get("where").unwrap()});
-                                if include.is_some() {
-                                    finder.as_object_mut().unwrap().insert("include".to_string(), include.unwrap().clone());
-                                }
-                                if select.is_some() {
-                                    finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
-                                }
-                                let refetched_result = self.graph.find_unique(model, &finder, false).await;
-                                let refetched = refetched_result.unwrap();
-                                HttpResponse::Ok().json(json!({"data": refetched.to_json()}))
-                            }
-                            Err(err) => {
-                                HttpResponse::BadRequest().json(json!({"error": err}))
-                            }
+                        // fetch includes and selects
+                        let mut finder = json!({"where": r#where});
+                        if include.is_some() {
+                            finder.as_object_mut().unwrap().insert("include".to_string(), include.unwrap().clone());
                         }
+                        if select.is_some() {
+                            finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
+                        }
+                        let refetched_result = self.graph.find_unique(model, &finder, false).await;
+                        let refetched = refetched_result.unwrap();
+                        Ok(refetched.to_json())
                     }
                     Err(err) => {
-                        return HttpResponse::BadRequest().json(json!({"error": err}));
+                        Err(err)
                     }
                 }
             }
             Err(err) => {
-                return HttpResponse::NotFound().json(json!({"error": err}));
+                Err(err)
+            }
+        }
+    }
+
+    async fn handle_update(&'static self, input: &JsonValue, model: &'static Model) -> HttpResponse {
+        let result = self.graph.find_unique(model, input, true).await;
+        if result.is_err() {
+            return HttpResponse::NotFound().json(json!({"error": result.err()}));
+        }
+        let result = result.unwrap();
+        let update = input.get("update");
+        let include = input.get("include");
+        let select = input.get("select");
+        let r#where = input.get("where");
+        let update_result = self.handle_update_internal(result.clone(), update, include, select, r#where, model).await;
+        match update_result {
+            Ok(value) => {
+                HttpResponse::Ok().json(json!({"data": value}))
+            }
+            Err(err) => {
+                HttpResponse::BadRequest().json(json!({"error": err}))
             }
         }
     }
@@ -497,7 +505,34 @@ impl Server {
     }
 
     async fn handle_update_many(&self, input: &JsonValue, model: &Model) -> HttpResponse {
-        HttpResponse::Ok().json(json!({"Hello": "World!"}))
+        let result = self.graph.find_many(model, input, true).await;
+        if result.is_err() {
+            return HttpResponse::BadRequest().json(json!({"error": result.err()}));
+        }
+        let result = result.unwrap();
+        let update = input.get("update");
+        let include = input.get("include");
+        let select = input.get("select");
+        let r#where = input.get("where");
+
+        let mut count = 0;
+        let mut ret_data: Vec<JsonValue> = vec![];
+        for object in result {
+            let update_result = self.handle_update_internal(object.clone(), update, include, select, r#where, model).await;
+            match update_result {
+                Ok(json_value) => {
+                    ret_data.push(json_value);
+                    count += 1;
+                }
+                Err(_err) => {}
+            }
+        }
+        HttpResponse::Ok().json(json!({
+            "meta": {
+                "count": count
+            },
+            "data": ret_data
+        }))
     }
 
     async fn handle_delete_many(&self, input: &JsonValue, model: &Model) -> HttpResponse {
