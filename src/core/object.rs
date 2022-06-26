@@ -554,10 +554,7 @@ impl Object {
                             objects.push(RelationManipulation::Connect(new_object));
                         }
                     }
-                    "set" => {
-
-                    }
-                    "connect" => {
+                    "set" | "connect" => {
                         let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
                         for entry in entries {
@@ -605,7 +602,33 @@ impl Object {
                         }
                     }
                     "disconnect" => {
-                        // if new, err
+                        if self.is_new() {
+                            return Err(ActionError::new_object_cannot_disconnect());
+                        }
+                        let entries = input_to_vec(command_input)?;
+                        let graph = self.graph();
+                        for entry in entries {
+                            let model = graph.model(&relation.model);
+                            let unique_query = json!({"where": entry});
+                            let object_to_disconnect = graph.find_unique(model, &unique_query, true).await?;
+                            if !relation.is_vec && relation.optionality == Optionality::Required {
+                                return Err(ActionError::required_relation_cannot_disconnect());
+                            }
+                            let opposite_relation = model.relations_vec.iter().find(|r| {
+                                r.fields == relation.references && r.references == relation.fields
+                            });
+                            if opposite_relation.is_some() {
+                                if !relation.is_vec && relation.optionality == Optionality::Required {
+                                    return Err(ActionError::required_relation_cannot_disconnect());
+                                }
+                            }
+                            if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
+                                self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                            }
+                            let mut relation_map = self.inner.relation_map.borrow_mut();
+                            let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            objects.push(RelationManipulation::Disconnect(object_to_disconnect));
+                        }
                     }
                     "update" | "updateMany" => {
                         let entries = input_to_vec(command_input)?;
@@ -633,7 +656,36 @@ impl Object {
 
                     }
                     "delete" | "deleteMany" => {
-
+                        let entries = input_to_vec(command_input)?;
+                        let graph = self.graph();
+                        for entry in entries {
+                            let r#where = entry.get("where").unwrap();
+                            let update = entry.get("update").unwrap();
+                            let model_name = &relation.model;
+                            let model = graph.model(model_name);
+                            if !relation.is_vec && relation.optionality == Optionality::Required {
+                                return Err(ActionError::required_relation_cannot_disconnect());
+                            }
+                            let opposite_relation = model.relations_vec.iter().find(|r| {
+                                r.fields == relation.references && r.references == relation.fields
+                            });
+                            if opposite_relation.is_some() {
+                                if !relation.is_vec && relation.optionality == Optionality::Required {
+                                    return Err(ActionError::required_relation_cannot_disconnect());
+                                }
+                            }
+                            let the_object = graph.find_unique(model, &json!({"where": r#where}), true).await;
+                            if the_object.is_err() {
+                                return Err(ActionError::object_not_found());
+                            }
+                            let new_object = the_object.unwrap();
+                            if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
+                                self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                            }
+                            let mut relation_map = self.inner.relation_map.borrow_mut();
+                            let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            objects.push(RelationManipulation::Delete(new_object));
+                        }
                     }
                     _ => {
                         return Err(ActionError::wrong_input_type());

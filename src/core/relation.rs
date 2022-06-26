@@ -20,6 +20,7 @@ pub(crate) enum RelationManipulation {
     Disconnect(Object),
     Set(Object),
     Keep(Object),
+    Delete(Object),
 }
 
 impl RelationManipulation {
@@ -29,6 +30,7 @@ impl RelationManipulation {
             RelationManipulation::Disconnect(obj) => obj,
             RelationManipulation::Set(obj) => obj,
             RelationManipulation::Keep(obj) => obj,
+            RelationManipulation::Delete(obj) => obj,
         }
     }
 }

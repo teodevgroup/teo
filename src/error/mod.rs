@@ -44,6 +44,8 @@ pub enum ActionErrorType {
     WrongInputUpdator,
     UnexpectedFieldType,
     InvalidQueryInput,
+    RequiredRelationCannotDisconnect,
+    NewObjectCannotDisconnect
 }
 
 impl ActionErrorType {
@@ -89,6 +91,8 @@ impl ActionErrorType {
             ActionErrorType::WrongInputUpdator => { 400 }
             ActionErrorType::UnexpectedFieldType => { 400 }
             ActionErrorType::InvalidQueryInput => { 400 }
+            ActionErrorType::RequiredRelationCannotDisconnect => { 400 }
+            ActionErrorType::NewObjectCannotDisconnect => { 400 }
         }
     }
 }
@@ -441,6 +445,22 @@ impl ActionError {
             r#type: ActionErrorType::UnexpectedFieldType,
             message: format!("Expected '{expected_json_type}'."),
             errors: Some(errors)
+        }
+    }
+
+    pub fn required_relation_cannot_disconnect() -> Self {
+        ActionError {
+            r#type: ActionErrorType::RequiredRelationCannotDisconnect,
+            message: "Required relation cannot disconnect.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn new_object_cannot_disconnect() -> Self {
+        ActionError {
+            r#type: ActionErrorType::NewObjectCannotDisconnect,
+            message: "New object cannot disconnect.".to_string(),
+            errors: None
         }
     }
 }
