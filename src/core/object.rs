@@ -120,12 +120,29 @@ impl Object {
         if !model_keys.contains(&key.to_string()) {
             return Err(ActionError::keys_unallowed());
         }
-        match self.inner.value_map.borrow().get(key) {
+        match self.inner.value_map.borrow().get(&key.to_string()) {
             Some(value) => {
                 Ok(Some(value.clone()))
             }
             None => {
-                Ok(None)
+                match self.inner.queried_relation_map.borrow().get(&key.to_string()) {
+                    Some(list) => {
+                        let relation = self.model().relation(&key).unwrap();
+                        if relation.is_vec {
+                            let vec = list.iter().map(|o| Value::Object(o.clone())).collect();
+                            Ok(Some(Value::Vec(vec)))
+                        } else {
+                            if list.is_empty() {
+                                Ok(Some(Value::Null))
+                            } else {
+                                Ok(Some(Value::Object(list.get(0).unwrap().clone())))
+                            }
+                        }
+                    }
+                    None => {
+                        Ok(None)
+                    }
+                }
             }
         }
     }
@@ -267,11 +284,14 @@ impl Object {
                                     self.link_connect(obj, relation, session.clone()).await?;
                                 }
                                 RelationManipulation::Disconnect(obj) => {
-
                                     self.link_disconnect(obj, relation, session.clone()).await?;
                                 }
                                 RelationManipulation::Set(obj) => {
                                     self.link_connect(obj, relation, session.clone()).await?;
+                                }
+                                RelationManipulation::Delete(obj) => {
+                                    self.link_disconnect(obj, relation, session.clone()).await?;
+                                    obj.delete().await?;
                                 }
                                 _ => {}
                             }
@@ -653,14 +673,42 @@ impl Object {
                         }
                     }
                     "upsert" => {
-
+                        let entries = input_to_vec(command_input)?;
+                        let graph = self.graph();
+                        for entry in entries {
+                            let model = graph.model(&relation.model);
+                            let r#where = entry.as_object().unwrap().get("where").unwrap();
+                            let create = entry.as_object().unwrap().get("create").unwrap();
+                            let update = entry.as_object().unwrap().get("update").unwrap();
+                            let the_object = graph.find_unique(model, &json!({"where": r#where}), true).await;
+                            match the_object {
+                                Ok(obj) => {
+                                    obj.set_json(update).await?;
+                                    if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
+                                        self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                                    }
+                                    let mut relation_map = self.inner.relation_map.borrow_mut();
+                                    let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                                    objects.push(RelationManipulation::Keep(obj));
+                                }
+                                Err(_) => {
+                                    let new_obj = graph.new_object(&relation.model);
+                                    new_obj.set_json(create).await?;
+                                    if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
+                                        self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                                    }
+                                    let mut relation_map = self.inner.relation_map.borrow_mut();
+                                    let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                                    objects.push(RelationManipulation::Connect(new_obj));
+                                }
+                            }
+                        }
                     }
                     "delete" | "deleteMany" => {
                         let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
                         for entry in entries {
-                            let r#where = entry.get("where").unwrap();
-                            let update = entry.get("update").unwrap();
+                            let r#where = entry;
                             let model_name = &relation.model;
                             let model = graph.model(model_name);
                             if !relation.is_vec && relation.optionality == Optionality::Required {
