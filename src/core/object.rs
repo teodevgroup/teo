@@ -377,10 +377,10 @@ impl Object {
                     if local_value.is_some() && foreign_value.is_some() {
                         if local_field.optionality == Optionality::Optional {
                             self.set_value(field_name, Value::Null)?;
-                            self.save_to_database(session.clone(), true);
+                            self.save_to_database(session.clone(), true).await?;
                         } else if foreign_field.optionality == Optionality::Optional {
                             obj.set_value(reference, Value::Null)?;
-                            obj.save_to_database(session.clone(), true);
+                            obj.save_to_database(session.clone(), true).await?;
                         }
                     }
                 }
@@ -629,8 +629,6 @@ impl Object {
                         let graph = self.graph();
                         for entry in entries {
                             let model = graph.model(&relation.model);
-                            let unique_query = json!({"where": entry});
-                            let object_to_disconnect = graph.find_unique(model, &unique_query, true).await?;
                             if !relation.is_vec && relation.optionality == Optionality::Required {
                                 return Err(ActionError::required_relation_cannot_disconnect());
                             }
@@ -642,11 +640,14 @@ impl Object {
                                     return Err(ActionError::required_relation_cannot_disconnect());
                                 }
                             }
+                            let unique_query = json!({"where": entry});
+                            let object_to_disconnect = graph.find_unique(model, &unique_query, true).await?;
                             if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
                                 self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
                             }
                             let mut relation_map = self.inner.relation_map.borrow_mut();
                             let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            println!("here runs");
                             objects.push(RelationManipulation::Disconnect(object_to_disconnect));
                         }
                     }
