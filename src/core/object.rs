@@ -78,35 +78,54 @@ impl Object {
         Ok(())
     }
 
-    pub fn get_value(&self, key: impl Into<String>) -> Result<Option<Value>, ActionError> {
-        let key = key.into();
-        let model_keys = &self.model().get_value_keys(); // TODO: should be all keys
-        if !model_keys.contains(&key) {
+    pub fn get_relation_object(&self, key: impl AsRef<str>) -> Result<Option<Object>, ActionError> {
+        let key = key.as_ref();
+        let model_keys = self.model().get_value_keys();
+        if !model_keys.contains(&key.to_string()) {
             return Err(ActionError::keys_unallowed());
         }
-        match self.inner.value_map.borrow().get(&key) {
+        match self.inner.queried_relation_map.borrow().get(key) {
+            Some(list) => {
+                if list.is_empty() {
+                    Ok(None)
+                } else {
+                    Ok(Some(list.get(0).unwrap().clone()))
+                }
+            }
+            None => {
+                Ok(None)
+            }
+        }
+    }
+
+    pub fn get_relation_objects(&self, key: impl AsRef<str>) -> Result<Option<Vec<Object>>, ActionError> {
+        let key = key.as_ref();
+        let model_keys = self.model().get_value_keys();
+        if !model_keys.contains(&key.to_string()) {
+            return Err(ActionError::keys_unallowed());
+        }
+        match self.inner.queried_relation_map.borrow().get(key) {
+            Some(list) => {
+                Ok(Some(list.clone()))
+            }
+            None => {
+                Ok(None)
+            }
+        }
+    }
+
+    pub fn get_value(&self, key: impl AsRef<str>) -> Result<Option<Value>, ActionError> {
+        let key = key.as_ref();
+        let model_keys = self.model().get_value_keys(); // TODO: should be all keys
+        if !model_keys.contains(&key.to_string()) {
+            return Err(ActionError::keys_unallowed());
+        }
+        match self.inner.value_map.borrow().get(key) {
             Some(value) => {
                 Ok(Some(value.clone()))
             }
             None => {
-                match self.inner.queried_relation_map.borrow().get(&key) {
-                    Some(list) => {
-                        let relation = self.model().relation(&key).unwrap();
-                        if relation.is_vec {
-                            let vec = list.iter().map(|o| Value::Object(o.clone())).collect();
-                            Ok(Some(Value::Vec(vec)))
-                        } else {
-                            if list.is_empty() {
-                                Ok(Some(Value::Null))
-                            } else {
-                                Ok(Some(Value::Object(list.get(0).unwrap().clone())))
-                            }
-                        }
-                    }
-                    None => {
-                        Ok(None)
-                    }
-                }
+                Ok(None)
             }
         }
     }
@@ -279,12 +298,12 @@ impl Object {
                 for (index, field_name) in local_relation.fields.iter().enumerate() {
                     let local_field_name = local_relation.references.get(index).unwrap();
                     let val = self.get_value(local_field_name).unwrap().unwrap();
-                    relation_object.set_value(field_name, val).unwrap();
+                    relation_object.set_value(field_name, val.clone()).unwrap();
                 }
                 for (index, field_name) in foreign_relation.fields.iter().enumerate() {
                     let foreign_field_name = foreign_relation.references.get(index).unwrap();
                     let val = obj.get_value(foreign_field_name).unwrap().unwrap();
-                    relation_object.set_value(field_name, val).unwrap();
+                    relation_object.set_value(field_name, val.clone()).unwrap();
                 }
                 relation_object.save().await?;
             }
@@ -294,10 +313,10 @@ impl Object {
                     let local_value = self.get_value(field_name)?;
                     let foreign_value = obj.get_value(reference)?;
                     if local_value.is_some() && foreign_value.is_none() {
-                        obj.set_value(reference, local_value.unwrap())?;
+                        obj.set_value(reference, local_value.unwrap().clone())?;
                         obj.save_to_database(session.clone(), true).await?;
                     } else if foreign_value.is_some() && local_value.is_none() {
-                        self.set_value(field_name, foreign_value.unwrap())?;
+                        self.set_value(field_name, foreign_value.unwrap().clone())?;
                         self.save_to_database(session.clone(), true).await?;
                     }
                 }
