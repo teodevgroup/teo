@@ -629,14 +629,15 @@ impl Object {
                         let graph = self.graph();
                         for entry in entries {
                             let model = graph.model(&relation.model);
-                            if !relation.is_vec && relation.optionality == Optionality::Required {
+                            if !relation.is_vec && (relation.optionality == Optionality::Required) {
                                 return Err(ActionError::required_relation_cannot_disconnect());
                             }
                             let opposite_relation = model.relations_vec.iter().find(|r| {
                                 r.fields == relation.references && r.references == relation.fields
                             });
                             if opposite_relation.is_some() {
-                                if !relation.is_vec && relation.optionality == Optionality::Required {
+                                let opposite_relation = opposite_relation.unwrap();
+                                if !opposite_relation.is_vec && (opposite_relation.optionality == Optionality::Required) {
                                     return Err(ActionError::required_relation_cannot_disconnect());
                                 }
                             }
@@ -647,7 +648,6 @@ impl Object {
                             }
                             let mut relation_map = self.inner.relation_map.borrow_mut();
                             let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
-                            println!("here runs");
                             objects.push(RelationManipulation::Disconnect(object_to_disconnect));
                         }
                     }
@@ -712,14 +712,15 @@ impl Object {
                             let r#where = entry;
                             let model_name = &relation.model;
                             let model = graph.model(model_name);
-                            if !relation.is_vec && relation.optionality == Optionality::Required {
+                            if !relation.is_vec && (relation.optionality == Optionality::Required) {
                                 return Err(ActionError::required_relation_cannot_disconnect());
                             }
                             let opposite_relation = model.relations_vec.iter().find(|r| {
                                 r.fields == relation.references && r.references == relation.fields
                             });
                             if opposite_relation.is_some() {
-                                if !relation.is_vec && relation.optionality == Optionality::Required {
+                                let opposite_relation = opposite_relation.unwrap();
+                                if !opposite_relation.is_vec && (opposite_relation.optionality == Optionality::Required) {
                                     return Err(ActionError::required_relation_cannot_disconnect());
                                 }
                             }
