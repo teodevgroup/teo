@@ -519,6 +519,12 @@ impl From<DateTime<Utc>> for Value {
 
 // new
 
+impl<'a> From<&'a Value> for &'a str {
+    fn from(v: &'a Value) -> Self {
+        v.as_str().unwrap()
+    }
+}
+
 impl From<Value> for String {
     fn from(v: Value) -> Self {
         v.as_string().unwrap()
