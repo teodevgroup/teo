@@ -110,14 +110,11 @@ pub async fn request_get<S, B, E>(app: &S, url: &str, action: &str, body: JsonVa
     let status = res.status().as_u16();
     assert_eq!(status, code);
     let json: JsonValue = read_body_json(res).await;
-    println!("see json, {}", &json);
     let mut retval = &json;
     let items = path.split(".");
     for item in items {
         if retval.is_object() {
             if retval.as_object().unwrap().get(item).is_none() {
-                println!("see retval: {retval}");
-                println!("see item: {item}");
             }
             retval = retval.as_object().unwrap().get(item).unwrap();
         } else if retval.is_array() {
