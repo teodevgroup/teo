@@ -36,6 +36,8 @@ colored = "2.0.0"
 
 [dev-dependencies]
 serial_test = "0.7.0"
+async_once = "0.2.6"
+lazy_static = "1.4.0"
 
 [features]
 data-source-mongodb = ["mongodb", "bson"]
@@ -49,7 +51,7 @@ required-features = ["data-source-mongodb", "data-source-mysql", "data-source-po
 
 [[test]]
 name = "test-mongodb-connector"
-path = "tests/connectors/mongodb/tests.rs"
+path = "tests/integration/connectors/mongodb/tests.rs"
 required-features = ["data-source-mongodb"]
 
 [[test]]
