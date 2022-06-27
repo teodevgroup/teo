@@ -115,6 +115,10 @@ impl Graph {
         }
         Ok(())
     }
+
+    pub(crate) fn host_url(&'static self) -> &str {
+        &self.host_url
+    }
 }
 
 unsafe impl Send for Graph {}
