@@ -51,9 +51,8 @@ export async function request(url_segment_name: string, action: Action, args: an
         method: "POST",
         headers: getBearerToken() ? {{ "Authorization": `Bearer ${{getBearerToken()}}` }} : undefined,
         body: JSON.stringify({{ action, ...args }})
-    }});
-    let result = await response.json();
-    result
+    }})
+    return await response.json()
 }}
 "#)
 }
