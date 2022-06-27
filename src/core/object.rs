@@ -604,7 +604,7 @@ impl Object {
                                     if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
                                         self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
                                     }
-                                    new_object.ignore_required_for(&relation.references);
+                                    new_obj.ignore_required_for(&relation.references);
                                     self.ignore_required_for(&relation.fields);
                                     let mut relation_map = self.inner.relation_map.borrow_mut();
                                     let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
@@ -613,7 +613,7 @@ impl Object {
                                 Err(_err) => {
                                     let new_obj = graph.new_object(&relation.model);
                                     new_obj.set_json(create).await?;
-                                    new_object.ignore_required_for(&relation.references);
+                                    new_obj.ignore_required_for(&relation.references);
                                     self.ignore_required_for(&relation.fields);
                                     if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
                                         self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
@@ -699,7 +699,7 @@ impl Object {
                                 }
                                 Err(_) => {
                                     let new_obj = graph.new_object(&relation.model);
-                                    new_object.ignore_required_for(&relation.references);
+                                    new_obj.ignore_required_for(&relation.references);
                                     self.ignore_required_for(&relation.fields);
                                     new_obj.set_json(create).await?;
                                     if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
