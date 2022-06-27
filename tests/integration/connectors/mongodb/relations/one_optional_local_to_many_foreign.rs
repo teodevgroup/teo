@@ -7,7 +7,7 @@ use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use teo::core::graph::Graph;
 use teo::server::server::Server;
 use serde_json::json;
-use crate::helpers::request;
+use crate::helpers::{request, assert_json_response};
 
 async fn app() -> App<impl ServiceFactory<
     ServiceRequest,
@@ -58,7 +58,7 @@ async fn create_with_nested_create() {
             "foreign": true
         }
     })).await;
-    assert_json_response!(res, json!({
+    assert_json_response(res, 200, json!({
         "data": {
             "matches": {
                 "id": {"is": "objectId"},

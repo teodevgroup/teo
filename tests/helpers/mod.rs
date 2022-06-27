@@ -1,6 +1,7 @@
+use actix_http::body::MessageBody;
 use actix_http::Request;
 use actix_web::dev::{Service, ServiceResponse};
-use actix_web::test::{call_service, TestRequest};
+use actix_web::test::{call_service, read_body_json, TestRequest};
 use serde_json::{json, Value as JsonValue};
 use regex::Regex;
 
@@ -21,3 +22,74 @@ pub async fn request<S, B, E>(app: &S, url: &str, action: &str, body: JsonValue)
     call_service(&app, req).await
 }
 
+fn match_json_value(object_value: &JsonValue, matcher_value: &JsonValue) {
+    for (key, value) in matcher_value.as_object().unwrap().iter() {
+        let key: &str = &key;
+        match key {
+            "is" => {
+                let value_class = value.as_str().unwrap();
+                match value_class {
+                    "objectId" => {
+                        assert!(object_value.is_string());
+                        assert!(is_object_id(object_value.as_str().unwrap()));
+                    }
+                    "date" => {
+                        assert!(object_value.is_string());
+                        // TODO: add assert
+                    }
+                    "dateTime" => {
+                        assert!(object_value.is_string());
+                        // TODO: add assert
+                    }
+                    _ => {
+                        if value_class.starts_with("$") {
+                            // TODO: variable match
+                        } else {
+                            assert!(false, "unknown matcher class type '{value_class}'")
+                        }
+                    }
+                }
+            }
+            "equals" => {
+                assert_eq!(object_value, value);
+            }
+            _ => {
+                assert!(false, "unknown matcher '{key}'")
+            }
+        }
+    }
+}
+
+fn match_json_array(object: &JsonValue, matcher: &JsonValue) {
+    let object_array = object.as_array().unwrap();
+    let matcher_array = matcher.as_array().unwrap();
+    for (index, object_value) in object_array.iter().enumerate() {
+        let matcher_value = matcher_array.get(index).unwrap();
+        match object_value {
+            JsonValue::Object(_) => match_json_object(object_value, matcher_value),
+            JsonValue::Array(_) => match_json_array(object_value, matcher_value),
+            _ => match_json_value(object_value, matcher_value),
+        }
+    }
+}
+
+fn match_json_object(object: &JsonValue, matcher: &JsonValue) {
+    let object_keys = object.as_object().unwrap().keys();
+    let matcher_keys = object.as_object().unwrap().keys();
+    assert!(object_keys.eq(matcher_keys));
+    for (key, object_value) in object.as_object().unwrap().iter() {
+        let matcher_value = matcher.as_object().unwrap().get(key).unwrap();
+        match object_value {
+            JsonValue::Object(_) => match_json_object(object_value, matcher_value),
+            JsonValue::Array(_) => match_json_array(object_value, matcher_value),
+            _ => match_json_value(object_value, matcher_value),
+        }
+    }
+}
+
+pub async fn assert_json_response<B: MessageBody>(res: ServiceResponse<B>, code: u16, matcher: JsonValue) {
+    let status = res.status().as_u16();
+    assert_eq!(status, code);
+    let json: JsonValue = read_body_json(res).await;
+    match_json_object(&json, &matcher);
+}
