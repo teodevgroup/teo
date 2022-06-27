@@ -6,6 +6,8 @@ use actix_web::{test, web, App, error::Error};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use teo::core::graph::Graph;
 use teo::server::server::Server;
+use serde_json::json;
+use crate::helpers::request;
 
 lazy_static! {
     static ref TEO_SERVER: AsyncOnce<&'static mut Server> = AsyncOnce::new(async {
@@ -51,7 +53,18 @@ async fn app() -> App<impl ServiceFactory<
 #[serial]
 async fn create_with_nested_create() {
     let app = test::init_service(app().await).await;
-    assert!(true);
+    let req = request("one-optional-locals", "Create", json!({
+        "create": {
+            "foreign": {
+                "create": {}
+            }
+        },
+        "include": {
+            "foreign": true
+        }
+    }));
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+
 }
 
 #[test]
