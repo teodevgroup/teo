@@ -466,6 +466,7 @@ impl Connector for MongoDBConnector {
                     }
                 }
                 Err(error) => {
+                    println!("see error reason, {:?}", error);
                     return Err(self._handle_write_error(&error.kind));
                 }
             }
@@ -552,38 +553,44 @@ impl Connector for MongoDBConnector {
                 return_new = true;
             }
             if !return_new {
-                let result = col.update_one(doc!{"_id": object_id}, update_doc, None).await;
-                // sync result back
-                return match result {
-                    Ok(update_result) => {
-                        Ok(())
-                    }
-                    Err(error) => {
-                        Err(self._handle_write_error(&error.kind))
+                if !update_doc.is_empty() {
+                    let result = col.update_one(doc!{"_id": object_id}, update_doc, None).await;
+                    // sync result back
+                    return match result {
+                        Ok(update_result) => {
+                            Ok(())
+                        }
+                        Err(error) => {
+                            println!("{:?}", error);
+                            Err(self._handle_write_error(&error.kind))
+                        }
                     }
                 }
             } else {
-                let options = FindOneAndUpdateOptions::builder().return_document(ReturnDocument::After).build();
-                let result = col.find_one_and_update(doc!{"_id": object_id}, update_doc, options).await;
-                match &result {
-                    Ok(updated_document) => {
-                        for key in object.inner.atomic_updator_map.borrow().keys() {
-                            let bson_new_val = updated_document.as_ref().unwrap().get(key).unwrap();
-                            let field = object.model().field(key).unwrap();
-                            let field_value = self.bson_value_to_field_value(key, bson_new_val, &field.field_type);
-                            match field_value {
-                                Ok(field_value) => {
-                                    object.inner.value_map.borrow_mut().insert(key.to_string(), field_value);
-                                }
-                                Err(err) => {
-                                    println!("{:?}", err);
-                                    panic!("here cannot error");
+                if !update_doc.is_empty() {
+                    let options = FindOneAndUpdateOptions::builder().return_document(ReturnDocument::After).build();
+                    let result = col.find_one_and_update(doc!{"_id": object_id}, update_doc, options).await;
+                    match &result {
+                        Ok(updated_document) => {
+                            for key in object.inner.atomic_updator_map.borrow().keys() {
+                                let bson_new_val = updated_document.as_ref().unwrap().get(key).unwrap();
+                                let field = object.model().field(key).unwrap();
+                                let field_value = self.bson_value_to_field_value(key, bson_new_val, &field.field_type);
+                                match field_value {
+                                    Ok(field_value) => {
+                                        object.inner.value_map.borrow_mut().insert(key.to_string(), field_value);
+                                    }
+                                    Err(err) => {
+                                        println!("{:?}", err);
+                                        panic!("here cannot error");
+                                    }
                                 }
                             }
                         }
-                    }
-                    Err(error) => {
-                        return Err(self._handle_write_error(&error.kind));
+                        Err(error) => {
+                            println!("{:?}", error);
+                            return Err(self._handle_write_error(&error.kind));
+                        }
                     }
                 }
             }

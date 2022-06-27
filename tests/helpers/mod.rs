@@ -20,6 +20,7 @@ pub async fn request<S, B, E>(app: &S, url: &str, action: &str, body: JsonValue)
     for (key, value) in body.as_object().unwrap().iter() {
         new_body.as_object_mut().unwrap().insert(key.clone(), value.clone());
     }
+    println!("see new body {}", new_body);
     let req = TestRequest::post().uri(&format!("/{url}/action")).set_json(new_body).to_request();
     call_service(&app, req).await
 }
