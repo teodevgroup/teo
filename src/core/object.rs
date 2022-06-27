@@ -597,12 +597,14 @@ impl Object {
                             let model = graph.model(&relation.model);
                             let r#where = entry.as_object().unwrap().get("where").unwrap();
                             let create = entry.as_object().unwrap().get("create").unwrap();
-                            let unique_result = graph.find_unique(model, r#where, true).await;
+                            let unique_result = graph.find_unique(model, &json!({"where": r#where}), true).await;
+                            println!("see unique result: {unique_result:?}");
                             match unique_result {
                                 Ok(new_obj) => {
                                     if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
                                         self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
                                     }
+                                    self.ignore_required_for(&relation.fields);
                                     let mut relation_map = self.inner.relation_map.borrow_mut();
                                     let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
                                     objects.push(RelationManipulation::Connect(new_obj));
@@ -610,6 +612,7 @@ impl Object {
                                 Err(_err) => {
                                     let new_obj = graph.new_object(&relation.model);
                                     new_obj.set_json(create).await?;
+                                    self.ignore_required_for(&relation.fields);
                                     if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
                                         self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
                                     }
