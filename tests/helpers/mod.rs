@@ -17,7 +17,9 @@ pub async fn request<S, B, E>(app: &S, url: &str, action: &str, body: JsonValue)
     let mut new_body = json!({
         "action": action
     });
-    //new_body.as_object().unwrap().extend(body);
+    for (key, value) in body.as_object().unwrap().iter() {
+        new_body.as_object_mut().unwrap().insert(key.clone(), value.clone());
+    }
     let req = TestRequest::post().uri(&format!("/{url}/action")).set_json(new_body).to_request();
     call_service(&app, req).await
 }
@@ -54,7 +56,7 @@ fn match_json_value(object_value: &JsonValue, matcher_value: &JsonValue) {
                 assert_eq!(object_value, value);
             }
             "and" => {
-                for matcher in matcher_value.as_array().unwrap() {
+                for matcher in value.as_array().unwrap() {
                     match_json_value(object_value, matcher);
                 }
             }
