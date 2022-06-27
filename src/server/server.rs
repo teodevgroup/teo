@@ -5,6 +5,9 @@ use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web, error::Error};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::http::Method;
 use actix_web::web::Json;
+use actix_web::dev::Service;
+use actix_web::middleware::DefaultHeaders;
+use futures_util::FutureExt;
 use chrono::{DateTime, Duration, Local, Utc};
 use futures_util::StreamExt;
 use serde_json::{json, Map, Value as JsonValue};
@@ -47,6 +50,24 @@ impl Server {
     >> {
         let this = self.graph;
         let app = App::new()
+            .wrap(DefaultHeaders::new()
+                .add(("Access-Control-Allow-Origin", "*"))
+                .add(("Access-Control-Allow-Methods", "OPTIONS, POST, GET"))
+                .add(("Access-Control-Allow-Headers", "*"))
+                .add(("Access-Control-Max-Age", "86400")))
+            // .wrap_fn(|req, srv| async {
+            //     if req.method() == "OPTIONS" {
+            //         HttpResponse::Ok()
+            //             .append_header(("Access-Control-Allow-Origin", "*"))
+            //             .append_header(("Access-Control-Allow-Methods", "OPTIONS, POST, GET"))
+            //             .append_header(("Access-Control-Allow-Headers", "*"))
+            //             .append_header(("Access-Control-Max-Age", "86400"))
+            //     } else {
+            //         srv.call(req).map(|res| {
+            //             res
+            //         })
+            //     }
+            // })
             .default_service(web::route().to(move |r: HttpRequest, mut payload: web::Payload| async move {
                 let start = SystemTime::now();
                 let mut path = r.path().to_string();
