@@ -53,6 +53,11 @@ fn match_json_value(object_value: &JsonValue, matcher_value: &JsonValue) {
             "equals" => {
                 assert_eq!(object_value, value);
             }
+            "and" => {
+                for matcher in matcher_value.as_array().unwrap() {
+                    match_json_value(object_value, matcher);
+                }
+            }
             _ => {
                 assert!(false, "unknown matcher '{key}'")
             }
@@ -92,4 +97,32 @@ pub async fn assert_json_response<B: MessageBody>(res: ServiceResponse<B>, code:
     assert_eq!(status, code);
     let json: JsonValue = read_body_json(res).await;
     match_json_object(&json, &matcher);
+}
+
+pub async fn request_get<S, B, E>(app: &S, url: &str, action: &str, body: JsonValue, code: u16, path: &str) -> JsonValue where
+    S: Service<Request, Response = ServiceResponse<B>, Error = E>,
+    E: std::fmt::Debug,
+    B: MessageBody,
+{
+    let res = request(app, url, action, body).await;
+    let status = res.status().as_u16();
+    assert_eq!(status, code);
+    let json: JsonValue = read_body_json(res).await;
+    println!("see json, {}", &json);
+    let mut retval = &json;
+    let items = path.split(".");
+    for item in items {
+        if retval.is_object() {
+            if retval.as_object().unwrap().get(item).is_none() {
+                println!("see retval: {retval}");
+                println!("see item: {item}");
+            }
+            retval = retval.as_object().unwrap().get(item).unwrap();
+        } else if retval.is_array() {
+            retval = retval.as_array().unwrap().get(item.parse::<usize>().unwrap()).unwrap();
+        } else {
+            assert!(false, "{retval} is not object or array.");
+        }
+    }
+    retval.clone().into()
 }

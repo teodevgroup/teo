@@ -7,7 +7,7 @@ use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use teo::core::graph::Graph;
 use teo::server::server::Server;
 use serde_json::json;
-use crate::helpers::{request, assert_json_response};
+use crate::helpers::{request, request_get, assert_json_response};
 
 async fn app() -> App<impl ServiceFactory<
     ServiceRequest,
@@ -60,36 +60,126 @@ async fn create_with_nested_create() {
     })).await;
     assert_json_response(res, 200, json!({
         "data": {
-            "matches": {
-                "id": {"is": "objectId"},
-                "foreignId": {"and": [{"is": "objectId"}, {"is": "$foreignId"}]},
-                "foreign": {
-                    "id": {"and": [{"is": "objectId"}, {"is": "$foreignId"}]},
-                }
+            "id": {"is": "objectId"},
+            "foreignId": {"and": [{"is": "objectId"}, {"is": "$foreignId"}]},
+            "foreign": {
+                "id": {"and": [{"is": "objectId"}, {"is": "$foreignId"}]},
             }
         }
-    }));
+    })).await;
 }
 
-#[test]
-#[serial]
-async fn create_with_nested_create_many() {
-    let app = test::init_service(app().await).await;
-    assert!(true);
-}
+// Output error for user
+// #[test]
+// #[serial]
+// async fn create_with_nested_create_many() {
+//     let app = test::init_service(app().await).await;
+//     assert!(true);
+// }
 
 #[test]
 #[serial]
 async fn create_with_nested_connect() {
     let app = test::init_service(app().await).await;
-    assert!(true);
+    let foreign_id = request_get(&app, "one-optional-locals", "Create", json!({
+        "create": {
+            "foreign": {
+                "create": {}
+            }
+        },
+        "include": {
+            "foreign": true
+        }
+    }), 200, "data.foreign.id").await;
+    let foreign_id = foreign_id.as_str().unwrap();
+    let res = request(&app, "one-optional-locals", "Create", json!({
+        "create": {
+            "foreign": {
+                "connect": {
+                    "id": foreign_id
+                }
+            }
+        },
+        "include": {
+            "foreign": true
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"is": "objectId"},
+            "foreignId": {"equals": foreign_id},
+            "foreign": {
+                "id": {"equals": foreign_id},
+            }
+        }
+    })).await;
 }
 
 #[test]
 #[serial]
-async fn create_with_nested_connect_or_create() {
+async fn create_with_nested_connect_or_create_actually_create() {
     let app = test::init_service(app().await).await;
-    assert!(true);
+    let res = request(&app, "one-optional-locals", "Create", json!({
+        "create": {
+            "foreign": {
+                "connectOrCreate": {
+                    "where": {"id": "123456789012345678901234"},
+                    "create": {}
+                }
+            }
+        },
+        "include": {
+            "foreign": true
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"is": "objectId"},
+            "foreignId": {"and": [{"is": "objectId"}, {"is": "$foreignId"}]},
+            "foreign": {
+                "id": {"and": [{"is": "objectId"}, {"is": "$foreignId"}]},
+            }
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn create_with_nested_connect_or_create_actually_connect() {
+    let app = test::init_service(app().await).await;
+    let foreign_id = request_get(&app, "one-optional-locals", "Create", json!({
+        "create": {
+            "foreign": {
+                "create": {}
+            }
+        },
+        "include": {
+            "foreign": true
+        }
+    }), 200, "data.foreign.id").await;
+    let foreign_id = foreign_id.as_str().unwrap();
+    let res = request(&app, "one-optional-locals", "Create", json!({
+        "create": {
+            "foreign": {
+                "connectOrCreate": {
+                    "where": {"id": foreign_id},
+                    "create": {}
+                }
+            }
+        },
+        "include": {
+            "foreign": true
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"is": "objectId"},
+            "foreignId": {"equals": foreign_id},
+            "foreign": {
+                "id": {"equals": foreign_id},
+            }
+        }
+    })).await;
 }
 
 #[test]
