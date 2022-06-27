@@ -5,24 +5,25 @@ use crate::core::graph::Graph;
 pub(crate) async fn generate_runtime_ts(graph: &'static Graph) -> String {
     let actions = ActionType::iter().map(|a| { String::from("\"") + a.as_str() + "\"" }).collect::<Vec<String>>().join(" | ");
     let url = "localhost:5000";
-    format!(r#"export interface Response<Meta, Data> {{
+    format!(r#"type Action = {actions}
+
+export type Enumerable<T> = T | Array<T>
+
+export type SortOrder = "asc" | "desc"
+
+export interface Response<Meta, Data> {{
     meta: Meta
     data: Data
 }}
 
 export type PagingInfo = {{
     count: number
-    pageSize?: number
     numberOfPages?: number
 }}
 
 export type Token = {{
     token: string
 }}
-
-type Action = {actions}
-
-type SortOrder = "asc" | "desc"
 
 let bearerToken: string | undefined = undefined;
 let bearerTokenLoaded: boolean = false;

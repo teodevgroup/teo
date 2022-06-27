@@ -6,10 +6,24 @@ use crate::core::field::Optionality;
 use crate::core::graph::Graph;
 use crate::core::model::ModelIndexType;
 
-
 pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
     Code::new(0, 4, |c| {
-        c.line(r#"import { request, Response, PagingInfo, Order } from "./runtime""#);
+        c.line(r#"import { request, Response, PagingInfo, SortOrder, Enumerable } from "./runtime""#);
+        c.block("import {", |b| {
+            b.line("ObjectIdFilter, ObjectIdNullableFilter, StringFilter, StringNullableFilter, NumberFilter,");
+            b.line("NumberNullableFilter, BoolFilter, BoolNullableFilter, DateFilter, DateNullableFilter,");
+            b.line("DateTimeFilter, DateTimeNullableFilter, EnumFilter, EnumNullableFilter,");
+            b.line("ArrayFilter, ArrayNullableFilter,");
+        }, "} from \"./filter\"");
+        c.block("import {", |b| {
+            b.line("ObjectIdFieldUpdateOperationsInput, NullableObjectIdFieldUpdateOperationsInput, StringFieldUpdateOperationsInput,");
+            b.line("NullableStringFieldUpdateOperationsInput, NumberFieldUpdateOperationsInput, NullableNumberFieldUpdateOperationsInput,");
+            b.line("BoolFieldUpdateOperationsInput, NullableBoolFieldUpdateOperationsInput, DateFieldUpdateOperationsInput,");
+            b.line("NullableDateFieldUpdateOperationsInput, DateTimeFieldUpdateOperationsInput, NullableDateTimeFieldUpdateOperationsInput,");
+            b.line("EnumFieldUpdateOperationsInput, NullableEnumFieldUpdateOperationsInput,");
+            b.line("ArrayFieldUpdateOperationsInput, NullableArrayFieldUpdateOperationsInput,");
+        }, "} from \"./operation\"");
+
         c.empty_line();
         // enum definitions
         graph.enums().iter().for_each(|e| {
@@ -47,7 +61,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                     if let Some(field) = m.field(k) {
                         let field = m.field(k).unwrap();
                         let field_name = &field.name;
-                        b.line("{field_name}?: boolean");
+                        b.line(format!("{field_name}?: boolean"));
                     }
                 })
             }, "}");
@@ -89,7 +103,16 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                     }
                 });
             }, "}");
-            c.block(format!("export type {model_name}OrderByWithRelationInput = {{"), |b| {
+            c.block(format!("export type {model_name}RelationFilter = {{"), |b| {
+                b.line(format!("is?: {model_name}WhereInput"));
+                b.line(format!("isNot?: {model_name}WhereInput"));
+            }, "}");
+            c.block(format!("export type {model_name}ListRelationFilter = {{"), |b| {
+                b.line(format!("every?: {model_name}WhereInput"));
+                b.line(format!("some?: {model_name}WhereInput"));
+                b.line(format!("none?: {model_name}WhereInput"));
+            }, "}");
+            c.block(format!("export type {model_name}OrderByInput = {{"), |b| {
                 m.query_keys().iter().for_each(|k| {
                     if let Some(field) = m.field(k) {
                         let field_name = &field.name;
@@ -128,7 +151,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                     if let Some(field) = m.field(k) {
                         let field_name = &field.name;
                         let field_ts_type = field.field_type.to_typescript_update_input_type(field.optionality == Optionality::Optional);
-                        b.line("{field_name}?: {field_ts_type}");
+                        b.line(format!("{field_name}?: {field_ts_type}"));
                     } else if let Some(relation) = m.relation(k) {
 
                     }
@@ -140,14 +163,14 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                 let action_name = a.as_str();
                 let action_var_name = a.as_str().to_camel_case();
                 c.block(format!(r#"export type {model_name}{action_name}Args = {{"#), |b| {
-                    b.line(format!(r#"select?: {model_name}Select"#));
-                    b.line(format!(r#"include?: {model_name}Include"#));
                     if a.requires_where() {
                         b.line(format!(r#"where?: {model_name}WhereInput"#));
                     }
                     if a.requires_where_unique() {
                         b.line(format!(r#"where?: {model_name}WhereUniqueInput"#));
                     }
+                    b.line(format!(r#"select?: {model_name}Select"#));
+                    b.line(format!(r#"include?: {model_name}Include"#));
                     if a.requires_where() {
                         b.line(format!(r#"orderBy?: Enumerable<{model_name}OrderByInput>"#));
                         b.line(format!(r#"cursor?: {model_name}WhereUniqueInput"#));
