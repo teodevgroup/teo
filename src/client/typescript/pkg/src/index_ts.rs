@@ -177,7 +177,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                                 if let Some(field) = m.field(&item.field_name) {
                                     let ts_type = field.field_type.to_typescript_type(false);
                                     let field_name = &item.field_name;
-                                    b.line(format!("{field_name}?: ts_type"));
+                                    b.line(format!("{field_name}?: {ts_type}"));
                                 }
                                 used_field_names.push(&item.field_name);
                             }
@@ -278,6 +278,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                                 ActionResultData::Single => model_name.to_string(),
                                 ActionResultData::Vec => model_name.to_string() + "[]",
                                 ActionResultData::Other => "never".to_string(),
+                                ActionResultData::Number => "number".to_string(),
                             };
                             b.empty_line();
                             b.block(format!("async {action_var_name}(args: {model_name}{action_name}Args): Promise<Response<{result_meta}, {result_data}>> {{"), |b| {

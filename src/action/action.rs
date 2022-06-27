@@ -34,6 +34,7 @@ pub enum ActionResultData {
     Single,
     Vec,
     Other,
+    Number,
 }
 
 impl ActionType {
@@ -134,7 +135,7 @@ impl ActionType {
             CreateMany => ActionResultData::Vec,
             UpdateMany => ActionResultData::Vec,
             DeleteMany => ActionResultData::Vec,
-            Count => ActionResultData::Other,
+            Count => ActionResultData::Number,
             Aggregate => ActionResultData::Other,
             GroupBy => ActionResultData::Other,
             SignIn => ActionResultData::Single,
