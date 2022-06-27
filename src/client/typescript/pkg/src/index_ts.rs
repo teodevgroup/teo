@@ -4,7 +4,89 @@ use crate::client::shared::code::Code;
 use crate::client::typescript::r#type::ToTypeScriptType;
 use crate::core::field::Optionality;
 use crate::core::graph::Graph;
-use crate::core::model::ModelIndexType;
+use crate::core::model::{Model, ModelIndexType};
+
+fn generate_model_create_nested_input(graph: &'static Graph, model: &'static Model, without: Option<&str>, many: bool) -> String {
+    let model_name = model.name();
+    let without_title = if let Some(title) = without {
+        let title = title.to_pascal_case();
+        format!("Without{title}")
+    } else {
+        "".to_owned()
+    };
+    let many_title = if many { "Many" } else { "One" };
+    Code::new(0, 4, |c| {
+        c.block(format!("export type {model_name}CreateNested{many_title}{without_title}Input = {{"), |b| {
+            if many {
+                b.line(format!("create?: Enumerable<{model_name}Create{without_title}Input>"));
+                b.line(format!("connectOrCreate?: Enumerable<{model_name}Create{without_title}Input>"));
+                b.line(format!("connect?: Enumerable<{model_name}Create{without_title}Input>"));
+            } else {
+                b.line(format!("create?: {model_name}Create{without_title}Input"));
+                b.line(format!("connectOrCreate?: {model_name}Create{without_title}Input"));
+                b.line(format!("connect?: {model_name}Create{without_title}Input"));
+            }
+        }, "}")
+    }).to_string()
+}
+
+fn generate_model_create_input(graph: &'static Graph, model: &'static Model, without: Option<&str>) -> String {
+    let model_name = model.name();
+    let without_title = if let Some(title) = without {
+        let title = title.to_pascal_case();
+        format!("Without{title}")
+    } else {
+        "".to_owned()
+    };
+    let without_relation = if let Some(title) = without {
+        Some(model.relation(title).unwrap())
+    } else {
+        None
+    };
+    Code::new(0, 4, |c| {
+        c.block(format!("export type {model_name}Create{without_title}Input = {{"), |b| {
+            model.input_keys().iter().for_each(|k| {
+                if let Some(field) = model.field(k) {
+                    let field_name = &field.name;
+                    let field_ts_type = field.field_type.to_typescript_create_input_type(field.optionality == Optionality::Optional);
+                    if let Some(without_relation) = without_relation {
+                        if !without_relation.fields.contains(k) {
+                            b.line(format!("{field_name}?: {field_ts_type}"));
+                        }
+                    } else {
+                        b.line(format!("{field_name}?: {field_ts_type}"));
+                    }
+                } else if let Some(relation) = model.relation(k) {
+                    let relation_name = &relation.name;
+                    let relation_model_name = &relation.model;
+                    let relation_model = graph.model(relation_model_name);
+                    let num = if relation.is_vec { "Many" } else { "One" };
+                    if let Some(without_relation) = without_relation {
+                        if &without_relation.name != k {
+                            if let Some(opposite_relation) = relation_model.relations_vec.iter().find(|r| {
+                                r.fields == relation.references && r.references == relation.fields
+                            }) {
+                                let opposite_relation_name = opposite_relation.name.to_pascal_case();
+                                b.line(format!("{relation_name}?: {relation_model_name}CreateNested{num}Without{opposite_relation_name}Input"))
+                            } else {
+                                b.line(format!("{relation_name}?: {relation_model_name}CreateNested{num}Input"))
+                            }
+                        }
+                    } else {
+                        if let Some(opposite_relation) = relation_model.relations_vec.iter().find(|r| {
+                            r.fields == relation.references && r.references == relation.fields
+                        }) {
+                            let opposite_relation_name = opposite_relation.name.to_pascal_case();
+                            b.line(format!("{relation_name}?: {relation_model_name}CreateNested{num}Without{opposite_relation_name}Input"))
+                        } else {
+                            b.line(format!("{relation_name}?: {relation_model_name}CreateNested{num}Input"))
+                        }
+                    }
+                }
+            });
+        }, "}");
+    }).to_string()
+}
 
 pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
     Code::new(0, 4, |c| {
@@ -124,28 +206,14 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                     }
                 })
             }, "}");
-            c.block(format!("export type {model_name}CreateInput = {{"), |b| {
-                m.input_keys().iter().for_each(|k| {
-                    if let Some(field) = m.field(k) {
-                        let field_name = &field.name;
-                        let field_ts_type = field.field_type.to_typescript_create_input_type(field.optionality == Optionality::Optional);
-                        b.line(format!("{field_name}?: {field_ts_type}"));
-                    } else if let Some(relation) = m.relation(k) {
-                        let relation_name = &relation.name;
-                        let relation_model_name = &relation.model;
-                        let relation_model = graph.model(relation_model_name);
-                        let num = if relation.is_vec { "Many" } else { "One" };
-                        if let Some(opposite_relation) = relation_model.relations_vec.iter().find(|r| {
-                            r.fields == relation.references && r.references == relation.fields
-                        }) {
-                            let opposite_relation_name = opposite_relation.name.to_pascal_case();
-                            b.line(format!("{relation_name}?: {relation_model_name}CreateNested{num}Without{opposite_relation_name}Input"))
-                        } else {
-                            b.line(format!("{relation_name}?: {relation_model_name}CreateNested{num}Input"))
-                        }
-                    }
-                });
-            }, "}");
+            c.line(generate_model_create_input(graph, m, None));
+            c.line(generate_model_create_nested_input(graph, m, None, true));
+            c.line(generate_model_create_nested_input(graph, m, None, false));
+            m.relations_vec.iter().for_each(|r| {
+                c.line(generate_model_create_input(graph, m, Some(&r.name)));
+                c.line(generate_model_create_nested_input(graph, m, Some(&r.name), true));
+                c.line(generate_model_create_nested_input(graph, m, Some(&r.name), false));
+            });
             c.block(format!("export type {model_name}UpdateInput = {{"), |b| {
                 m.input_keys().iter().for_each(|k| {
                     if let Some(field) = m.field(k) {
