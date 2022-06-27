@@ -19,13 +19,29 @@ fn generate_model_create_nested_input(graph: &'static Graph, model: &'static Mod
         c.block(format!("export type {model_name}CreateNested{many_title}{without_title}Input = {{"), |b| {
             if many {
                 b.line(format!("create?: Enumerable<{model_name}Create{without_title}Input>"));
-                b.line(format!("connectOrCreate?: Enumerable<{model_name}Create{without_title}Input>"));
-                b.line(format!("connect?: Enumerable<{model_name}Create{without_title}Input>"));
+                b.line(format!("connectOrCreate?: Enumerable<{model_name}CreateOrConnect{without_title}Input>"));
+                b.line(format!("connect?: Enumerable<{model_name}WhereUniqueInput>"));
             } else {
                 b.line(format!("create?: {model_name}Create{without_title}Input"));
-                b.line(format!("connectOrCreate?: {model_name}Create{without_title}Input"));
-                b.line(format!("connect?: {model_name}Create{without_title}Input"));
+                b.line(format!("connectOrCreate?: {model_name}CreateOrConnect{without_title}Input"));
+                b.line(format!("connect?: {model_name}WhereUniqueInput"));
             }
+        }, "}")
+    }).to_string()
+}
+
+fn generate_model_create_or_connect_input(model: &Model, without: Option<&str>) -> String {
+    let model_name = model.name();
+    let without_title = if let Some(title) = without {
+        let title = title.to_pascal_case();
+        format!("Without{title}")
+    } else {
+        "".to_owned()
+    };
+    Code::new(0, 4, |c| {
+        c.block(format!("export type {model_name}CreateOrConnect{without_title}Input = {{"), |b| {
+            b.line(format!("where: {model_name}WhereUniqueInput"));
+            b.line(format!("create: {model_name}Create{without_title}Input"));
         }, "}")
     }).to_string()
 }
@@ -85,6 +101,145 @@ fn generate_model_create_input(graph: &'static Graph, model: &'static Model, wit
                 }
             });
         }, "}");
+    }).to_string()
+}
+
+fn generate_model_upsert_with_where_unique_input(model: &'static Model, without: Option<&str>) -> String {
+    let model_name = model.name();
+    let without_title = if let Some(title) = without {
+        let title = title.to_pascal_case();
+        format!("Without{title}")
+    } else {
+        "".to_owned()
+    };
+    Code::new(0, 4, |c| {
+        c.block(format!("export type {model_name}UpsertWithWhereUnique{without_title}Input = {{"), |b| {
+            b.line(format!("where: {model_name}WhereUniqueInput"));
+            b.line(format!("update: {model_name}Update{without_title}Input"));
+            b.line(format!("create: {model_name}Create{without_title}Input"));
+        }, "}")
+    }).to_string()
+}
+
+fn generate_model_update_with_where_unique_input(model: &'static Model, without: Option<&str>) -> String {
+    let model_name = model.name();
+    let without_title = if let Some(title) = without {
+        let title = title.to_pascal_case();
+        format!("Without{title}")
+    } else {
+        "".to_owned()
+    };
+    Code::new(0, 4, |c| {
+        c.block(format!("export type {model_name}UpdateWithWhereUnique{without_title}Input = {{"), |b| {
+            b.line(format!("where: {model_name}WhereUniqueInput"));
+            b.line(format!("update: {model_name}Update{without_title}Input"));
+        }, "}")
+    }).to_string()
+}
+
+fn generate_model_update_many_with_where_input(model: &'static Model, without: Option<&str>) -> String {
+    let model_name = model.name();
+    let without_title = if let Some(title) = without {
+        let title = title.to_pascal_case();
+        format!("Without{title}")
+    } else {
+        "".to_owned()
+    };
+    Code::new(0, 4, |c| {
+        c.block(format!("export type {model_name}UpdateManyWithWhere{without_title}Input = {{"), |b| {
+            b.line(format!("where: {model_name}WhereInput"));
+            b.line(format!("update: {model_name}Update{without_title}Input"));
+        }, "}")
+    }).to_string()
+}
+
+fn generate_model_update_nested_input(graph: &'static Graph, model: &'static Model, without: Option<&str>, many: bool) -> String {
+    let model_name = model.name();
+    let without_title = if let Some(title) = without {
+        let title = title.to_pascal_case();
+        format!("Without{title}")
+    } else {
+        "".to_owned()
+    };
+    let many_title = if many { "Many" } else { "One" };
+    Code::new(0, 4, |c| {
+        c.block(format!("export type {model_name}UpdateNested{many_title}{without_title}Input = {{"), |b| {
+            if many {
+                b.line(format!("create?: Enumerable<{model_name}Create{without_title}Input>"));
+                b.line(format!("connectOrCreate?: Enumerable<{model_name}CreateOrConnect{without_title}Input>"));
+                b.line(format!("connect?: Enumerable<{model_name}WhereUniqueInput>"));
+                b.line(format!("set?: Enumerable<{model_name}WhereUniqueInput>"));
+                b.line(format!("update?: Enumerable<{model_name}UpdateWithWhereUnique{without_title}Input>"));
+                b.line(format!("upsert?: Enumerable<{model_name}UpsertWithWhereUnique{without_title}Input>"));
+                b.line(format!("disconnect?: Enumerable<{model_name}WhereUniqueInput>"));
+                b.line(format!("delete?: Enumerable<{model_name}WhereUniqueInput>"));
+                b.line(format!("updateMany?: Enumerable<{model_name}UpdateManyWithWhere{without_title}Input>"));
+                b.line(format!("deleteMany?: Enumerable<{model_name}WhereInput>"));
+            } else {
+                b.line(format!("create?: {model_name}Create{without_title}Input"));
+                b.line(format!("connectOrCreate?: {model_name}CreateOrConnect{without_title}Input"));
+                b.line(format!("connect?: {model_name}WhereUniqueInput"));
+                b.line(format!("set?: {model_name}WhereUniqueInput"));
+                b.line(format!("update?: {model_name}UpdateWithWhereUnique{without_title}Input"));
+                b.line(format!("upsert?: {model_name}UpsertWithWhereUnique{without_title}Input"));
+                b.line(format!("disconnect?: {model_name}WhereUniqueInput"));
+                b.line(format!("delete?: {model_name}WhereUniqueInput"));
+                b.line(format!("updateMany?: {model_name}UpdateManyWithWhere{without_title}Input"));
+                b.line(format!("deleteMany?: {model_name}WhereInput"));
+            }
+        }, "}")
+    }).to_string()
+}
+
+fn generate_model_update_input(graph: &'static Graph, model: &'static Model, without: Option<&str>) -> String {
+    let model_name = model.name();
+    let without_title = if let Some(title) = without {
+        let title = title.to_pascal_case();
+        format!("Without{title}")
+    } else {
+        "".to_owned()
+    };
+    let without_relation = if let Some(title) = without {
+        Some(model.relation(title).unwrap())
+    } else {
+        None
+    };
+    Code::new(0, 4, |c| {
+        c.block(format!("export type {model_name}Update{without_title}Input = {{"), |b| {
+            model.input_keys().iter().for_each(|k| {
+                if let Some(field) = model.field(k) {
+                    let field_name = &field.name;
+                    let field_ts_type = field.field_type.to_typescript_update_input_type(field.optionality == Optionality::Optional);
+                    b.line(format!("{field_name}?: {field_ts_type}"));
+                } else if let Some(relation) = model.relation(k) {
+                    let relation_name = &relation.name;
+                    let relation_model_name = &relation.model;
+                    let relation_model = graph.model(relation_model_name);
+                    let num = if relation.is_vec { "Many" } else { "One" };
+                    if let Some(without_relation) = without_relation {
+                        if &without_relation.name != k {
+                            if let Some(opposite_relation) = relation_model.relations_vec.iter().find(|r| {
+                                r.fields == relation.references && r.references == relation.fields
+                            }) {
+                                let opposite_relation_name = opposite_relation.name.to_pascal_case();
+                                b.line(format!("{relation_name}?: {relation_model_name}UpdateNested{num}Without{opposite_relation_name}Input"))
+                            } else {
+                                b.line(format!("{relation_name}?: {relation_model_name}UpdateNested{num}Input"))
+                            }
+                        }
+                    } else {
+                        if let Some(opposite_relation) = relation_model.relations_vec.iter().find(|r| {
+                            r.fields == relation.references && r.references == relation.fields
+                        }) {
+                            let opposite_relation_name = opposite_relation.name.to_pascal_case();
+                            b.line(format!("{relation_name}?: {relation_model_name}UpdateNested{num}Without{opposite_relation_name}Input"))
+                        } else {
+                            b.line(format!("{relation_name}?: {relation_model_name}UpdateNested{num}Input"))
+                        }
+                    }
+                }
+            });
+        }, "}")
     }).to_string()
 }
 
@@ -209,22 +364,27 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
             c.line(generate_model_create_input(graph, m, None));
             c.line(generate_model_create_nested_input(graph, m, None, true));
             c.line(generate_model_create_nested_input(graph, m, None, false));
+            c.line(generate_model_create_or_connect_input(m, None));
             m.relations_vec.iter().for_each(|r| {
                 c.line(generate_model_create_input(graph, m, Some(&r.name)));
                 c.line(generate_model_create_nested_input(graph, m, Some(&r.name), true));
                 c.line(generate_model_create_nested_input(graph, m, Some(&r.name), false));
+                c.line(generate_model_create_or_connect_input(m, Some(&r.name)));
             });
-            c.block(format!("export type {model_name}UpdateInput = {{"), |b| {
-                m.input_keys().iter().for_each(|k| {
-                    if let Some(field) = m.field(k) {
-                        let field_name = &field.name;
-                        let field_ts_type = field.field_type.to_typescript_update_input_type(field.optionality == Optionality::Optional);
-                        b.line(format!("{field_name}?: {field_ts_type}"));
-                    } else if let Some(relation) = m.relation(k) {
-
-                    }
-                });
-            }, "}");
+            c.line(generate_model_update_input(graph, m, None));
+            c.line(generate_model_update_nested_input(graph, m, None, true));
+            c.line(generate_model_update_nested_input(graph, m, None, false));
+            c.line(generate_model_upsert_with_where_unique_input(m, None));
+            c.line(generate_model_update_with_where_unique_input(m, None));
+            c.line(generate_model_update_many_with_where_input(m, None));
+            m.relations_vec.iter().for_each(|r| {
+                c.line(generate_model_update_input(graph, m, Some(&r.name)));
+                c.line(generate_model_update_nested_input(graph, m, Some(&r.name), true));
+                c.line(generate_model_update_nested_input(graph, m, Some(&r.name), false));
+                c.line(generate_model_upsert_with_where_unique_input(m, Some(&r.name)));
+                c.line(generate_model_update_with_where_unique_input(m, Some(&r.name)));
+                c.line(generate_model_update_many_with_where_input(m, Some(&r.name)));
+            });
             // args
             ActionType::iter().for_each(|a| {
                 if !m.actions().contains(a) { return }
