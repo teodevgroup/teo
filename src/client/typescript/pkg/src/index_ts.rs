@@ -4,6 +4,7 @@ use crate::client::shared::code::Code;
 use crate::client::typescript::r#type::ToTypeScriptType;
 use crate::core::field::Optionality;
 use crate::core::graph::Graph;
+use crate::core::model::ModelIndexType;
 
 
 pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
@@ -23,10 +24,14 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                 let model_name = m.name();
                 c.block(format!("export type {model_name} = {{"), |b| {
                     m.output_keys().iter().for_each(|k| {
-                        let field = m.field(k).unwrap();
-                        let field_name = &field.name;
-                        let field_type = field.field_type.to_typescript_type(field.optionality == Optionality::Optional);
-                        b.line(format!("{field_name}: {field_type}"));
+                        if let Some(field) = m.field(k) {
+                            let field = m.field(k).unwrap();
+                            let field_name = &field.name;
+                            let field_type = field.field_type.to_typescript_type(field.optionality == Optionality::Optional);
+                            b.line(format!("{field_name}: {field_type}"));
+                        } else if let Some(relation) = m.relation(k) {
+
+                        }
                     });
                 }, "}");
                 c.empty_line();
@@ -39,51 +44,94 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
             let model_var_name = model_name.to_camel_case();
             c.block(format!("export type {model_name}Select = {{"), |b| {
                 m.output_keys().iter().for_each(|k| {
-                    let field = m.field(k).unwrap();
-                    let field_name = &field.name;
-                    b.line("{field_name}?: boolean");
+                    if let Some(field) = m.field(k) {
+                        let field = m.field(k).unwrap();
+                        let field_name = &field.name;
+                        b.line("{field_name}?: boolean");
+                    }
                 })
             }, "}");
             c.block(format!("export type {model_name}Include = {{"), |b| {
                 b.empty_line();
             }, "}");
             c.block(format!("export type {model_name}WhereInput = {{"), |b| {
+                for op in ["AND", "OR", "NOT"] {
+                    b.line(format!("{op}?: Enumerable<{model_name}WhereInput>"));
+                }
                 m.query_keys().iter().for_each(|k| {
-                    let field = m.field(k).unwrap();
-                    let field_name = &field.name;
-                    let field_filter = field.field_type.to_typescript_filter_type(field.optionality == Optionality::Optional);
-                    b.line("{field_name}?: {field_filter}");
+                    if let Some(field) = m.field(k) {
+                        let field_name = &field.name;
+                        let field_filter = field.field_type.to_typescript_filter_type(field.optionality == Optionality::Optional);
+                        b.line(format!("{field_name}?: {field_filter}"));
+                    } else if let Some(relation) = m.relation(k) {
+                        let list = if relation.is_vec { "List" } else { "" };
+                        let relation_name = &relation.name;
+                        let relation_model = &relation.model;
+                        b.line(format!("{relation_name}?: {relation_model}{list}RelationFilter"));
+                    }
                 })
             }, "}");
             c.block(format!("export type {model_name}WhereUniqueInput = {{"), |b| {
-                // m.unique_query_keys().iter().for_each(|k| {
-                //     let field = m.field(k).unwrap();
-                //     let field_name = &field.name;
-                //     let field_ts_type = field.field_type.to_typescript_type(field.optionality == Optionality::Optional);
-                //     b.line("{field_name}?: {field_ts_type}");
-                // })
+                use ModelIndexType::*;
+                let mut used_field_names: Vec<&str> = Vec::new();
+                m.indices.iter().for_each(|index| {
+                    if index.index_type == Primary || index.index_type == Unique {
+                        index.items.iter().for_each(|item| {
+                            if !used_field_names.contains(&&***&&item.field_name) {
+                                if let Some(field) = m.field(&item.field_name) {
+                                    let ts_type = field.field_type.to_typescript_type(false);
+                                    let field_name = &item.field_name;
+                                    b.line(format!("{field_name}?: ts_type"));
+                                }
+                                used_field_names.push(&item.field_name);
+                            }
+                        });
+                    }
+                });
             }, "}");
-            c.block(format!("export type {model_name}OrderByInput = {{"), |b| {
+            c.block(format!("export type {model_name}OrderByWithRelationInput = {{"), |b| {
                 m.query_keys().iter().for_each(|k| {
-                    let field = m.field(k).unwrap();
-                    let field_name = &field.name;
-                    b.line("{field_name}?: Order");
+                    if let Some(field) = m.field(k) {
+                        let field_name = &field.name;
+                        b.line(format!("{field_name}?: SortOrder"));
+                    } else if let Some(relation) = m.relation(k) {
+                        let relation_model = &relation.model;
+                        let relation_name = &relation.name;
+                        //b.line(format!("{relation_name}?: {relation_model}OrderByRelationAggregateInput"));
+                    }
                 })
             }, "}");
             c.block(format!("export type {model_name}CreateInput = {{"), |b| {
                 m.input_keys().iter().for_each(|k| {
-                    let field = m.field(k).unwrap();
-                    let field_name = &field.name;
-                    let field_ts_type = field.field_type.to_typescript_input_type(field.optionality == Optionality::Optional);
-                    b.line("{field_name}?: {field_ts_type}");
+                    if let Some(field) = m.field(k) {
+                        let field_name = &field.name;
+                        let field_ts_type = field.field_type.to_typescript_create_input_type(field.optionality == Optionality::Optional);
+                        b.line(format!("{field_name}?: {field_ts_type}"));
+                    } else if let Some(relation) = m.relation(k) {
+                        let relation_name = &relation.name;
+                        let relation_model_name = &relation.model;
+                        let relation_model = graph.model(relation_model_name);
+                        let num = if relation.is_vec { "Many" } else { "One" };
+                        if let Some(opposite_relation) = relation_model.relations_vec.iter().find(|r| {
+                            r.fields == relation.references && r.references == relation.fields
+                        }) {
+                            let opposite_relation_name = opposite_relation.name.to_pascal_case();
+                            b.line(format!("{relation_name}?: {relation_model_name}CreateNested{num}Without{opposite_relation_name}Input"))
+                        } else {
+                            b.line(format!("{relation_name}?: {relation_model_name}CreateNested{num}Input"))
+                        }
+                    }
                 });
             }, "}");
             c.block(format!("export type {model_name}UpdateInput = {{"), |b| {
                 m.input_keys().iter().for_each(|k| {
-                    let field = m.field(k).unwrap();
-                    let field_name = &field.name;
-                    let field_ts_type = field.field_type.to_typescript_input_type(field.optionality == Optionality::Optional);
-                    b.line("{field_name}?: {field_ts_type}");
+                    if let Some(field) = m.field(k) {
+                        let field_name = &field.name;
+                        let field_ts_type = field.field_type.to_typescript_update_input_type(field.optionality == Optionality::Optional);
+                        b.line("{field_name}?: {field_ts_type}");
+                    } else if let Some(relation) = m.relation(k) {
+
+                    }
                 });
             }, "}");
             // args
@@ -101,7 +149,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                         b.line(format!(r#"where?: {model_name}WhereUniqueInput"#));
                     }
                     if a.requires_where() {
-                        b.line(format!(r#"orderBy?: {model_name}OrderByInput[]"#));
+                        b.line(format!(r#"orderBy?: Enumerable<{model_name}OrderByInput>"#));
                         b.line(format!(r#"cursor?: {model_name}WhereUniqueInput"#));
                         b.line(format!(r#"take?: number"#));
                         b.line(format!(r#"skip?: number"#));

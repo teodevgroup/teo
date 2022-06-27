@@ -5,7 +5,9 @@ use crate::core::field_type::FieldType;
 pub(crate) trait ToTypeScriptType {
     fn to_typescript_type(&self, optional: bool) -> String;
     fn to_typescript_filter_type(&self, optional: bool) -> String;
-    fn to_typescript_input_type(&self, optional: bool) -> String;
+    fn to_typescript_create_input_type(&self, optional: bool) -> String;
+    fn to_typescript_update_input_type(&self, optional: bool) -> String;
+    fn to_typescript_update_operation_input(&self, optional: bool) -> String;
 }
 
 impl ToTypeScriptType for FieldType {
@@ -50,10 +52,11 @@ impl ToTypeScriptType for FieldType {
         }
     }
 
-    fn to_typescript_input_type(&self, optional: bool) -> String {
+    fn to_typescript_create_input_type(&self, optional: bool) -> String {
         let mut base: String = match self {
             FieldType::Undefined => panic!(),
-            FieldType::ObjectId | FieldType::String | FieldType::Date | FieldType::DateTime | FieldType::Decimal => "string".to_string(),
+            FieldType::ObjectId | FieldType::String | FieldType::Decimal => "string".to_string(),
+            FieldType::Date | FieldType::DateTime => "Date | string".to_string(),
             FieldType::Bool => "boolean".to_string(),
             FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number".to_string(),
             FieldType::Enum(name) => name.to_string(),
@@ -66,5 +69,38 @@ impl ToTypeScriptType for FieldType {
         } else {
             base
         }
+    }
+
+    fn to_typescript_update_operation_input(&self, optional: bool) -> String {
+        let mut generic = "".to_owned();
+        let mut base: &str = match self {
+            FieldType::Undefined => panic!(),
+            FieldType::ObjectId => "ObjectId",
+            FieldType::String => "String",
+            FieldType::Date => "Date",
+            FieldType::DateTime => "DateTime",
+            FieldType::Decimal => "Decimal",
+            FieldType::Bool => "Bool",
+            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "Number",
+            FieldType::Enum(name) => {
+                generic = format!("<{name}>");
+                "Enum"
+            },
+            FieldType::Vec(inner) => {
+                let create_type = inner.field_type.to_typescript_create_input_type(false);
+                generic = format!("<{create_type}>");
+                "Array"
+            },
+            _ => panic!(),
+        };
+        let suffix = "FieldUpdateOperationsInput";
+        let prefix = if optional { "Nullable" } else { "" };
+        format!("{prefix}{base}{suffix}{generic}")
+    }
+
+    fn to_typescript_update_input_type(&self, optional: bool) -> String {
+        let update_operation = self.to_typescript_update_operation_input(optional);
+        let create_input = self.to_typescript_create_input_type(optional);
+        return format!("{update_operation} | {create_input}");
     }
 }

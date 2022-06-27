@@ -22,7 +22,7 @@ export type Token = {{
 
 type Action = {actions}
 
-type Order = "asc" | "desc"
+type SortOrder = "asc" | "desc"
 
 let bearerToken: string | undefined = undefined;
 let bearerTokenLoaded: boolean = false;
