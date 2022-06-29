@@ -629,3 +629,6 @@ impl From<Value> for f64 {
 //         Value::DateTime(v)
 //     }
 // }
+
+unsafe impl Send for Value {}
+unsafe impl Sync for Value {}

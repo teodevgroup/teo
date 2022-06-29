@@ -1,3 +1,5 @@
+use std::future::Future;
+use std::sync::Arc;
 use crate::core::argument::Argument;
 use crate::core::builders::database_type_builder::DatabaseTypeBuilder;
 use crate::core::builders::field_index_builder::FieldIndexBuilder;
@@ -7,6 +9,11 @@ use crate::core::connector::{ConnectorBuilder};
 use crate::core::database_type::DatabaseType;
 use crate::core::field::*;
 use crate::core::field_type::FieldType;
+use crate::core::model_callback::PinFutureObj;
+use crate::core::object::Object;
+use crate::core::previous_value::PreviousValueRule;
+use crate::core::value::Value;
+use crate::error::ActionError;
 
 
 pub struct FieldBuilder {
@@ -35,6 +42,8 @@ pub struct FieldBuilder {
     pub(crate) on_output_pipeline: PipelineBuilder,
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) column_name: Option<String>,
+    pub(crate) previous_value_rule: PreviousValueRule,
+    pub(crate) compare_on_updated: Vec<Arc<dyn Fn(Value, Value, Object) -> PinFutureObj<()> + Send + Sync>>,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -66,6 +75,8 @@ impl FieldBuilder {
             on_output_pipeline: PipelineBuilder::new(),
             permission: None,
             column_name: None,
+            compare_on_updated: vec![],
+            previous_value_rule: PreviousValueRule::DontKeep,
             connector_builder,
         }
     }
@@ -376,6 +387,17 @@ impl FieldBuilder {
         self
     }
 
+    pub fn compare_on_updated<F, I, Fut>(&mut self, f: &'static F) -> &mut Self where
+        F: Fn(I, I, Object) -> Fut + Sync + Send + 'static,
+        I: From<Value> + Send + Sync,
+        Fut: Future<Output = ()> + Send + Sync {
+        self.previous_value_rule = PreviousValueRule::KeepAfterSaved;
+        self.compare_on_updated.push(Arc::new(|old, new, object| Box::pin(async {
+            f(I::from(old), I::from(new), object).await.into()
+        })));
+        self
+    }
+
     pub(crate) fn build(&self, connector_builder: &Box<dyn ConnectorBuilder>) -> Field {
         return Field {
             name: self.name.clone(),
@@ -400,7 +422,9 @@ impl FieldBuilder {
             on_save_pipeline: self.on_save_pipeline.build(),
             on_output_pipeline: self.on_output_pipeline.build(),
             permission: if let Some(builder) = &self.permission { Some(builder.build()) } else { None },
-            column_name: self.column_name.clone()
+            column_name: self.column_name.clone(),
+            compare_on_updated: self.compare_on_updated.clone(),
+            previous_value_rule: self.previous_value_rule.clone(),
         }
     }
 }

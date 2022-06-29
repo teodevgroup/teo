@@ -1,9 +1,13 @@
+use std::fmt::{Debug, Formatter};
+use std::sync::Arc;
 use crate::core::argument::Argument;
 use crate::core::database_type::DatabaseType;
 use crate::core::field_type::FieldType;
+use crate::core::model_callback::PinFutureObj;
 use crate::core::object::Object;
 use crate::core::permission::Permission;
 use crate::core::pipeline::Pipeline;
+use crate::core::previous_value::PreviousValueRule;
 use crate::core::stage::Stage;
 use crate::core::value::Value;
 
@@ -88,7 +92,7 @@ pub enum FieldIndex {
     Unique(IndexSettings),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub(crate) struct Field {
     pub(crate) name: String,
     pub(crate) field_type: FieldType,
@@ -113,6 +117,16 @@ pub(crate) struct Field {
     pub(crate) on_output_pipeline: Pipeline,
     pub(crate) permission: Option<Permission>,
     pub(crate) column_name: Option<String>,
+    pub(crate) previous_value_rule: PreviousValueRule,
+    pub(crate) compare_on_updated: Vec<Arc<dyn Fn(Value, Value, Object) -> PinFutureObj<()> + Send + Sync>>,
+}
+
+impl Debug for Field {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut result = f.debug_struct("Field");
+        result.finish()
+    }
+
 }
 
 impl Field {

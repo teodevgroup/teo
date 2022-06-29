@@ -8,6 +8,7 @@ pub mod alpha;
 pub mod bool;
 pub mod bcrypt_salt;
 pub mod bcrypt_verify;
+pub mod compare;
 pub mod ceil;
 pub mod email;
 pub mod now;

@@ -17,6 +17,7 @@ use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::input_decoder::{decode_field_input, input_to_vec, one_length_json_obj};
 use crate::core::model::Model;
+use crate::core::previous_value::PreviousValueRule;
 use crate::core::relation::{Relation, RelationManipulation};
 use crate::core::save_session::SaveSession;
 use crate::core::stage::Stage;
@@ -66,9 +67,24 @@ impl Object {
         if !model_keys.contains(&key) {
             return Err(ActionError::keys_unallowed());
         }
+        let save_previous = if let Some(field) = self.model().field(&key) {
+            field.previous_value_rule != PreviousValueRule::DontKeep
+        } else {
+            false
+        };
         if value == Value::Null {
+            if save_previous {
+                if let Some(current) = self.inner.value_map.borrow().get(&key) {
+                    self.inner.previous_values.borrow_mut().insert(key.clone(), current.clone());
+                }
+            }
             self.inner.value_map.borrow_mut().remove(&key);
         } else {
+            if save_previous {
+                if let Some(current) = self.inner.value_map.borrow().get(&key) {
+                    self.inner.previous_values.borrow_mut().insert(key.clone(), current.clone());
+                }
+            }
             self.inner.value_map.borrow_mut().insert(key.to_string(), value);
         }
         if !self.inner.is_new.load(Ordering::SeqCst) {
@@ -459,6 +475,17 @@ impl Object {
                 cb(self.clone()).await;
             }
         } else {
+            for field in &model.fields_vec {
+                if field.previous_value_rule == PreviousValueRule::KeepAfterSaved {
+                    for cb in &field.compare_on_updated {
+                        if let Some(prev) = self.inner.previous_values.borrow().get(&field.name) {
+                            if let Some(current) = self.get_value(&field.name).unwrap() {
+                                cb(prev.clone(), current.clone(), self.clone()).await
+                            }
+                        }
+                    }
+                }
+            }
             for cb in &model.on_updated_fns {
                 cb(self.clone()).await;
             }
@@ -545,11 +572,23 @@ impl Object {
                                     }
                                 }
                             }
+                            let save_previous = field.previous_value_rule != PreviousValueRule::DontKeep;
+
                             if value == Value::Null {
                                 if self.inner.is_new.load(Ordering::SeqCst) == false {
+                                    if save_previous {
+                                        if let Some(current) = self.inner.value_map.borrow().get(key.as_str()) {
+                                            self.inner.previous_values.borrow_mut().insert(key.to_string(), current.clone());
+                                        }
+                                    }
                                     self.inner.value_map.borrow_mut().remove(*key);
                                 }
                             } else {
+                                if save_previous {
+                                    if let Some(current) = self.inner.value_map.borrow().get(key.as_str()) {
+                                        self.inner.previous_values.borrow_mut().insert(key.to_string(), current.clone());
+                                    }
+                                }
                                 self.inner.value_map.borrow_mut().insert(key.to_string(), value);
                             }
                             if !self.inner.is_new.load(Ordering::SeqCst) {

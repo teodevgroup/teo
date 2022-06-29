@@ -37,10 +37,12 @@ use crate::core::modifiers::str_prepend::StrPrependModifier;
 use crate::core::modifiers::then_p::ThenPModifier;
 use crate::core::modifiers::transform::TransformModifier;
 use crate::core::modifiers::uuid::UUIDModifier;
+use crate::core::modifiers::compare::CompareModifier;
 use crate::core::stage::Stage;
 use crate::core::object::Object;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
+use crate::error::ActionError;
 
 
 #[derive(Debug)]
@@ -257,10 +259,22 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn transform<F, I, O, Fut>(&mut self, f: &'static F) -> &mut Self where F: Fn(I) -> Fut + Sync + Send + 'static, I: From<Value> + Send + Sync, O: Into<Value>, Fut: Future<Output = O> + Send + Sync {
+    pub fn transform<F, I, O, Fut>(&mut self, f: &'static F) -> &mut Self where
+        F: Fn(I) -> Fut + Sync + Send + 'static,
+        I: From<Value> + Send + Sync,
+        O: Into<Value>,
+        Fut: Future<Output = O> + Send + Sync {
         self.modifiers.push(Arc::new(TransformModifier::new(f)));
         self
     }
+
+    // pub fn compare<F, I, Fut>(&mut self, f: &'static F) -> &mut Self where
+    //     F: Fn(I, I) -> Fut + Sync + Send + 'static,
+    //     I: From<Value> + Send + Sync,
+    //     Fut: Future<Output = Result<(), ActionError>> + Send + Sync {
+    //     self.modifiers.push(Arc::new(CompareModifier::new(f)));
+    //     self
+    // }
 
     pub(crate) fn build(&self) -> Pipeline {
         Pipeline { modifiers: self.modifiers.clone() }

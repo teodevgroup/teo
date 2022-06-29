@@ -20,3 +20,4 @@ pub mod connector;
 pub mod client;
 pub mod save_session;
 pub mod model_callback;
+pub mod previous_value;
