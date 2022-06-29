@@ -86,20 +86,20 @@ impl ActionType {
 
     pub(crate) fn from_str(str: &str) -> Option<ActionType> {
         match str {
-            "FindUnique" => Some(FindUnique),
-            "FindFirst" => Some(FindFirst),
-            "FindMany" => Some(FindMany),
-            "Create" => Some(Create),
-            "Update" => Some(Update),
-            "Upsert" => Some(Upsert),
-            "Delete" => Some(Delete),
-            "CreateMany" => Some(CreateMany),
-            "UpdateMany" => Some(UpdateMany),
-            "DeleteMany" => Some(DeleteMany),
-            "Count" => Some(Count),
-            "Aggregate" => Some(Aggregate),
-            "GroupBy" => Some(GroupBy),
-            "SignIn" => Some(SignIn),
+            "find-unique" => Some(FindUnique),
+            "find-first" => Some(FindFirst),
+            "find-many" => Some(FindMany),
+            "create" => Some(Create),
+            "update" => Some(Update),
+            "upsert" => Some(Upsert),
+            "delete" => Some(Delete),
+            "create-many" => Some(CreateMany),
+            "update-many" => Some(UpdateMany),
+            "delete-many" => Some(DeleteMany),
+            "count" => Some(Count),
+            "aggregate" => Some(Aggregate),
+            "group-by" => Some(GroupBy),
+            "sign-in" => Some(SignIn),
             _ => None
         }
     }

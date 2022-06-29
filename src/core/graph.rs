@@ -94,7 +94,7 @@ impl Graph {
         Object::new(self, self.model(model))
     }
 
-    pub(crate) fn model_name_for_url_segment_name(&self, segment_name: &String) -> Option<&String> {
+    pub(crate) fn model_name_for_url_segment_name(&self, segment_name: &str) -> Option<&String> {
         match self.url_segment_name_map.get(segment_name) {
             Some(val) => Some(val),
             None => None

@@ -2,6 +2,7 @@ use actix_http::body::MessageBody;
 use actix_http::Request;
 use actix_web::dev::{Service, ServiceResponse};
 use actix_web::test::{call_service, read_body_json, TestRequest};
+use inflector::Inflector;
 use serde_json::{json, Value as JsonValue};
 use regex::Regex;
 
@@ -14,14 +15,8 @@ pub async fn request<S, B, E>(app: &S, url: &str, action: &str, body: JsonValue)
     S: Service<Request, Response = ServiceResponse<B>, Error = E>,
     E: std::fmt::Debug,
 {
-    let mut new_body = json!({
-        "action": action
-    });
-    for (key, value) in body.as_object().unwrap().iter() {
-        new_body.as_object_mut().unwrap().insert(key.clone(), value.clone());
-    }
-    println!("see new body {}", new_body);
-    let req = TestRequest::post().uri(&format!("/{url}/action")).set_json(new_body).to_request();
+    let formatted_action = action.to_camel_case().to_kebab_case();
+    let req = TestRequest::post().uri(&format!("/{url}/action/{formatted_action}")).set_json(body).to_request();
     call_service(&app, req).await
 }
 

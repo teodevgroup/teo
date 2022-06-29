@@ -26,6 +26,20 @@ pub struct Server {
     graph: &'static Graph
 }
 
+fn path_components(path: &str) -> Vec<&str> {
+    let components = path.split("/");
+    let mut retval: Vec<&str> = Vec::new();
+    let mut ignore = true;
+    for component in components {
+        if ignore == true {
+            ignore = false;
+        } else {
+            retval.push(component);
+        }
+    }
+    retval
+}
+
 impl Server {
     pub fn new(graph: &'static Graph) -> Self {
         Self { graph }
@@ -55,241 +69,209 @@ impl Server {
                 .add(("Access-Control-Allow-Methods", "OPTIONS, POST, GET"))
                 .add(("Access-Control-Allow-Headers", "*"))
                 .add(("Access-Control-Max-Age", "86400")))
-            // .wrap_fn(|req, srv| async {
-            //     if req.method() == "OPTIONS" {
-            //         HttpResponse::Ok()
-            //             .append_header(("Access-Control-Allow-Origin", "*"))
-            //             .append_header(("Access-Control-Allow-Methods", "OPTIONS, POST, GET"))
-            //             .append_header(("Access-Control-Allow-Headers", "*"))
-            //             .append_header(("Access-Control-Max-Age", "86400"))
-            //     } else {
-            //         srv.call(req).map(|res| {
-            //             res
-            //         })
-            //     }
-            // })
             .default_service(web::route().to(move |r: HttpRequest, mut payload: web::Payload| async move {
                 let start = SystemTime::now();
                 let mut path = r.path().to_string();
-                if path.len() > 1 && path.ends_with("/") {
-                    path = path[0..path.len() - 1].to_string();
-                }
-                let path = path.as_str();
-                if path.len() > 7 && path.ends_with("/action") {
-                    let model_url_segment_name = &path[1..path.len() - 7].to_string();
-                    match this.model_name_for_url_segment_name(model_url_segment_name) {
-                        Some(model_name) => {
-                            if r.method() == Method::POST {
-                                let mut body = web::BytesMut::new();
-                                while let Some(chunk) = payload.next().await {
-                                    let chunk = chunk.unwrap();
-                                    // limit max size of in-memory payload
-                                    if (body.len() + chunk.len()) > 262_144usize {
-                                        return HttpResponse::InternalServerError()
-                                            .json(json!({"error": ActionError::internal_server_error("Memory overflow.".to_string())}));
-                                    }
-                                    body.extend_from_slice(&chunk);
-                                }
-                                let parsed_body: Result<JsonValue, serde_json::Error> = serde_json::from_slice(&body);
-                                match parsed_body {
-                                    Ok(json_body) => {
-                                        match json_body.as_object() {
-                                            Some(map) => {
-                                                let action_name = map.get("action");
-                                                match action_name {
-                                                    Some(name) => {
-                                                        match name.as_str() {
-                                                            Some(name) => {
-                                                                let action = ActionType::from_str(name);
-
-                                                                match action {
-                                                                    Some(action_type) => {
-                                                                        let model_def = this.model(model_name);
-                                                                        if model_def.has_action(action_type) {
-                                                                            match action_type {
-                                                                                ActionType::FindUnique => {
-                                                                                    return match self.get_identity(&r).await {
-                                                                                        Ok(_identity) => {
-                                                                                            let result = self.handle_find_unique(&json_body, model_def).await;
-                                                                                            self.log_request(start, "FindUnique", model_def.name(), result.status().as_u16());
-                                                                                            result
-                                                                                        },
-                                                                                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                                                                                    };
-                                                                                }
-                                                                                ActionType::FindFirst => {
-                                                                                    return match self.get_identity(&r).await {
-                                                                                        Ok(_identity) => {
-                                                                                            let result = self.handle_find_first(&json_body, model_def).await;
-                                                                                            self.log_request(start, "FindFirst", model_def.name(), result.status().as_u16());
-                                                                                            result
-                                                                                        },
-                                                                                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                                                                                    };
-                                                                                }
-                                                                                ActionType::FindMany => {
-                                                                                    return match self.get_identity(&r).await {
-                                                                                        Ok(_identity) => {
-                                                                                            let result = self.handle_find_many(&json_body, model_def).await;
-                                                                                            self.log_request(start, "FindMany", model_def.name(), result.status().as_u16());
-                                                                                            result
-                                                                                        },
-                                                                                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                                                                                    };
-                                                                                }
-                                                                                ActionType::Create => {
-                                                                                    return match self.get_identity(&r).await {
-                                                                                        Ok(_identity) => {
-                                                                                            let result = self.handle_create(&json_body, model_def).await;
-                                                                                            self.log_request(start, "Create", model_def.name(), result.status().as_u16());
-                                                                                            result
-                                                                                        },
-                                                                                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                                                                                    };
-                                                                                }
-                                                                                ActionType::Update => {
-                                                                                    return match self.get_identity(&r).await {
-                                                                                        Ok(_identity) => {
-                                                                                            let result = self.handle_update(&json_body, model_def).await;
-                                                                                            self.log_request(start, "Update", model_def.name(), result.status().as_u16());
-                                                                                            result
-                                                                                        },
-                                                                                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                                                                                    };
-                                                                                }
-                                                                                ActionType::Upsert => {
-                                                                                    return match self.get_identity(&r).await {
-                                                                                        Ok(_identity) => {
-                                                                                            let result = self.handle_upsert(&json_body, model_def).await;
-                                                                                            self.log_request(start, "Upsert", model_def.name(), result.status().as_u16());
-                                                                                            result
-                                                                                        },
-                                                                                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                                                                                    };
-                                                                                }
-                                                                                ActionType::Delete => {
-                                                                                    return match self.get_identity(&r).await {
-                                                                                        Ok(_identity) => {
-                                                                                            let result = self.handle_delete(&json_body, model_def).await;
-                                                                                            self.log_request(start, "Delete", model_def.name(), result.status().as_u16());
-                                                                                            result
-                                                                                        },
-                                                                                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                                                                                    };
-                                                                                }
-                                                                                ActionType::CreateMany => {
-                                                                                    return match self.get_identity(&r).await {
-                                                                                        Ok(_identity) => {
-                                                                                            let result = self.handle_create_many(&json_body, model_def).await;
-                                                                                            self.log_request(start, "CreateMany", model_def.name(), result.status().as_u16());
-                                                                                            result
-                                                                                        },
-                                                                                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                                                                                    };
-                                                                                }
-                                                                                ActionType::UpdateMany => {
-                                                                                    return match self.get_identity(&r).await {
-                                                                                        Ok(_identity) => {
-                                                                                            let result = self.handle_update_many(&json_body, model_def).await;
-                                                                                            self.log_request(start, "UpdateMany", model_def.name(), result.status().as_u16());
-                                                                                            result
-                                                                                        },
-                                                                                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                                                                                    };
-                                                                                }
-                                                                                ActionType::DeleteMany => {
-                                                                                    return match self.get_identity(&r).await {
-                                                                                        Ok(_identity) => {
-                                                                                            let result = self.handle_delete_many(&json_body, model_def).await;
-                                                                                            self.log_request(start, "DeleteMany", model_def.name(), result.status().as_u16());
-                                                                                            result
-                                                                                        },
-                                                                                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                                                                                    };
-                                                                                }
-                                                                                ActionType::Count => {
-                                                                                    return match self.get_identity(&r).await {
-                                                                                        Ok(_identity) => {
-                                                                                            let result = self.handle_count(&json_body, model_def).await;
-                                                                                            self.log_request(start, "Count", model_def.name(), result.status().as_u16());
-                                                                                            result
-                                                                                        },
-                                                                                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                                                                                    };
-                                                                                }
-                                                                                ActionType::Aggregate => {
-                                                                                    return match self.get_identity(&r).await {
-                                                                                        Ok(_identity) => {
-                                                                                            let result = self.handle_aggregate(&json_body, model_def).await;
-                                                                                            self.log_request(start, "Aggregate", model_def.name(), result.status().as_u16());
-                                                                                            result
-                                                                                        },
-                                                                                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                                                                                    };
-                                                                                }
-                                                                                ActionType::GroupBy => {
-                                                                                    return match self.get_identity(&r).await {
-                                                                                        Ok(_identity) => {
-                                                                                            let result = self.handle_group_by(&json_body, model_def).await;
-                                                                                            self.log_request(start, "GroupBy", model_def.name(), result.status().as_u16());
-                                                                                            result
-                                                                                        },
-                                                                                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                                                                                    };
-                                                                                }
-                                                                                ActionType::SignIn => {
-                                                                                    let result = self.handle_sign_in(&json_body, model_def).await;
-                                                                                    self.log_request(start, "SignIn", model_def.name(), result.status().as_u16());
-                                                                                    result
-                                                                                }
-                                                                            }
-                                                                        } else {
-                                                                            self.log_unhandled(start, r.method().as_str(), path, 400);
-                                                                            return HttpResponse::BadRequest().json(json!({"error": ActionError::unallowed_action()}));
-                                                                        }
-                                                                    }
-                                                                    None => {
-                                                                        self.log_unhandled(start, r.method().as_str(), path, 400);
-                                                                        return HttpResponse::BadRequest().json(json!({"error": ActionError::undefined_action()}));
-                                                                    }
-                                                                }
-                                                            }
-                                                            None => {
-                                                                self.log_unhandled(start, r.method().as_str(), path, 400);
-                                                                return HttpResponse::BadRequest().json(json!({"error": ActionError::undefined_action()}));
-                                                            }
-                                                        }
-                                                    }
-                                                    None => {
-                                                        self.log_unhandled(start, r.method().as_str(), path, 400);
-                                                        return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_action_name()}));
-                                                    }
-                                                }
-                                            }
-                                            None => {
-                                                self.log_unhandled(start, r.method().as_str(), path, 400);
-                                                return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
-                                            }
-                                        }
-                                    }
-                                    Err(_) => {
-                                        self.log_unhandled(start, r.method().as_str(), path, 400);
-                                        return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
-                                    }
-                                }
-                            } else {
-                                self.log_unhandled(start, r.method().as_str(), path, 404);
-                                return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
-                            }
-                        }
-                        None => {
-                            self.log_unhandled(start, r.method().as_str(), path, 404);
-                            return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
-                        }
-                    }
+                let path = if path.len() > 1 && path.ends_with("/") {
+                    path[0..path.len() - 1].to_string()
                 } else {
-                    self.log_unhandled(start, r.method().as_str(), path, 404);
+                    path
+                };
+                if r.method() != Method::POST {
+                    self.log_unhandled(start, r.method().as_str(), &path, 404);
                     return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
+                }
+                let path_components = path_components(&path);
+                let first_component = path_components.get(1).unwrap();
+                if !(path_components.len() == 3 && first_component == &"action") {
+                    self.log_unhandled(start, r.method().as_str(), &path, 404);
+                    return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
+                }
+                let model_url_segment_name = path_components[0];
+                let action_segment_name = path_components[2];
+                let action = ActionType::from_str(action_segment_name);
+                let action = match action {
+                    Some(a) => a,
+                    None => {
+                        self.log_unhandled(start, r.method().as_str(), &path, 404);
+                        return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
+                    }
+                };
+                let model_name = match this.model_name_for_url_segment_name(model_url_segment_name) {
+                    Some(name) => name,
+                    None => {
+                        self.log_unhandled(start, r.method().as_str(), &path, 404);
+                        return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
+                    }
+                };
+                // read body
+                let mut body = web::BytesMut::new();
+                while let Some(chunk) = payload.next().await {
+                    let chunk = chunk.unwrap();
+                    // limit max size of in-memory payload
+                    if (body.len() + chunk.len()) > 262_144usize {
+                        return HttpResponse::InternalServerError()
+                            .json(json!({"error": ActionError::internal_server_error("Memory overflow.".to_string())}));
+                    }
+                    body.extend_from_slice(&chunk);
+                }
+                let parsed_body: Result<JsonValue, serde_json::Error> = serde_json::from_slice(&body);
+                let parsed_body = match parsed_body {
+                    Ok(b) => b,
+                    Err(_) => {
+                        self.log_unhandled(start, r.method().as_str(), &path, 400);
+                        return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
+                    }
+                };
+                let map = match parsed_body.as_object() {
+                    Some(m) => m,
+                    None => {
+                        self.log_unhandled(start, r.method().as_str(), &path, 400);
+                        return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
+                    }
+                };
+                let model_def = this.model(model_name);
+                if !model_def.has_action(action) {
+                    self.log_unhandled(start, r.method().as_str(), &path, 400);
+                    return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
+                }
+
+                match action {
+                    ActionType::FindUnique => {
+                        return match self.get_identity(&r).await {
+                            Ok(_identity) => {
+                                let result = self.handle_find_unique(&parsed_body, model_def).await;
+                                self.log_request(start, "FindUnique", model_def.name(), result.status().as_u16());
+                                result
+                            },
+                            Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
+                        };
+                    }
+                    ActionType::FindFirst => {
+                        return match self.get_identity(&r).await {
+                            Ok(_identity) => {
+                                let result = self.handle_find_first(&parsed_body, model_def).await;
+                                self.log_request(start, "FindFirst", model_def.name(), result.status().as_u16());
+                                result
+                            },
+                            Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
+                        };
+                    }
+                    ActionType::FindMany => {
+                        return match self.get_identity(&r).await {
+                            Ok(_identity) => {
+                                let result = self.handle_find_many(&parsed_body, model_def).await;
+                                self.log_request(start, "FindMany", model_def.name(), result.status().as_u16());
+                                result
+                            },
+                            Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
+                        };
+                    }
+                    ActionType::Create => {
+                        return match self.get_identity(&r).await {
+                            Ok(_identity) => {
+                                let result = self.handle_create(&parsed_body, model_def).await;
+                                self.log_request(start, "Create", model_def.name(), result.status().as_u16());
+                                result
+                            },
+                            Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
+                        };
+                    }
+                    ActionType::Update => {
+                        return match self.get_identity(&r).await {
+                            Ok(_identity) => {
+                                let result = self.handle_update(&parsed_body, model_def).await;
+                                self.log_request(start, "Update", model_def.name(), result.status().as_u16());
+                                result
+                            },
+                            Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
+                        };
+                    }
+                    ActionType::Upsert => {
+                        return match self.get_identity(&r).await {
+                            Ok(_identity) => {
+                                let result = self.handle_upsert(&parsed_body, model_def).await;
+                                self.log_request(start, "Upsert", model_def.name(), result.status().as_u16());
+                                result
+                            },
+                            Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
+                        };
+                    }
+                    ActionType::Delete => {
+                        return match self.get_identity(&r).await {
+                            Ok(_identity) => {
+                                let result = self.handle_delete(&parsed_body, model_def).await;
+                                self.log_request(start, "Delete", model_def.name(), result.status().as_u16());
+                                result
+                            },
+                            Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
+                        };
+                    }
+                    ActionType::CreateMany => {
+                        return match self.get_identity(&r).await {
+                            Ok(_identity) => {
+                                let result = self.handle_create_many(&parsed_body, model_def).await;
+                                self.log_request(start, "CreateMany", model_def.name(), result.status().as_u16());
+                                result
+                            },
+                            Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
+                        };
+                    }
+                    ActionType::UpdateMany => {
+                        return match self.get_identity(&r).await {
+                            Ok(_identity) => {
+                                let result = self.handle_update_many(&parsed_body, model_def).await;
+                                self.log_request(start, "UpdateMany", model_def.name(), result.status().as_u16());
+                                result
+                            },
+                            Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
+                        };
+                    }
+                    ActionType::DeleteMany => {
+                        return match self.get_identity(&r).await {
+                            Ok(_identity) => {
+                                let result = self.handle_delete_many(&parsed_body, model_def).await;
+                                self.log_request(start, "DeleteMany", model_def.name(), result.status().as_u16());
+                                result
+                            },
+                            Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
+                        };
+                    }
+                    ActionType::Count => {
+                        return match self.get_identity(&r).await {
+                            Ok(_identity) => {
+                                let result = self.handle_count(&parsed_body, model_def).await;
+                                self.log_request(start, "Count", model_def.name(), result.status().as_u16());
+                                result
+                            },
+                            Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
+                        };
+                    }
+                    ActionType::Aggregate => {
+                        return match self.get_identity(&r).await {
+                            Ok(_identity) => {
+                                let result = self.handle_aggregate(&parsed_body, model_def).await;
+                                self.log_request(start, "Aggregate", model_def.name(), result.status().as_u16());
+                                result
+                            },
+                            Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
+                        };
+                    }
+                    ActionType::GroupBy => {
+                        return match self.get_identity(&r).await {
+                            Ok(_identity) => {
+                                let result = self.handle_group_by(&parsed_body, model_def).await;
+                                self.log_request(start, "GroupBy", model_def.name(), result.status().as_u16());
+                                result
+                            },
+                            Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
+                        };
+                    }
+                    ActionType::SignIn => {
+                        let result = self.handle_sign_in(&parsed_body, model_def).await;
+                        self.log_request(start, "SignIn", model_def.name(), result.status().as_u16());
+                        result
+                    }
                 }
             }));
         app
