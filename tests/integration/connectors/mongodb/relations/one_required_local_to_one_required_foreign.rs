@@ -274,7 +274,6 @@ async fn update_with_nested_create_many_errors() {
     })).await;
 }
 
-
 #[test]
 #[serial]
 async fn update_with_nested_connect() {
