@@ -54,6 +54,9 @@ fn match_json_value(object_value: &JsonValue, matcher_value: &JsonValue) {
                 }
             }
             "equals" => {
+                if object_value != value {
+                    println!("see equals: {} {}", object_value, value);
+                }
                 assert_eq!(object_value, value);
             }
             "and" => {
