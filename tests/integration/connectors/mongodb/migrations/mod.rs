@@ -1,1 +1,1 @@
-pub mod index_mongodb;
+pub mod index;
