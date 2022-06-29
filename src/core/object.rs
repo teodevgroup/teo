@@ -245,6 +245,8 @@ impl Object {
 
     #[async_recursion(?Send)]
     pub(crate) async fn delete_from_database(&self, session: Arc<dyn SaveSession>, no_recursive: bool) -> Result<(), ActionError> {
+        let connector = self.graph().connector();
+        connector.delete_object(self).await?;
         Ok(())
     }
 
@@ -394,7 +396,7 @@ impl Object {
                     let val = obj.get_value(foreign_field_name).unwrap().unwrap();
                     finder.insert(field_name.to_string(), val.to_json_value());
                 }
-                let relation_object = self.graph().find_unique(relation_model, &JsonValue::Object(finder), true).await?;
+                let relation_object = self.graph().find_unique(relation_model, &json!({"where": finder}), true).await?;
                 relation_object.delete_from_database(session.clone(), false).await?;
             }
             None => { // no join table
@@ -590,7 +592,6 @@ impl Object {
                 match command {
                     "create" | "createMany" => {
                         if !relation.is_vec && command == "createMany" {
-                            println!("see wrong relation {:?}", relation);
                             return Err(ActionError::invalid_input(key.as_str(), "Single relationship cannot create many."));
                         }
                         let entries = input_to_vec(command_input)?;
@@ -674,7 +675,6 @@ impl Object {
                             let opposite_relation = model.relations_vec.iter().find(|r| {
                                 r.fields == relation.references && r.references == relation.fields
                             });
-                            println!("here runs {:?} {:?}", relation, opposite_relation);
                             if opposite_relation.is_some() {
                                 let opposite_relation = opposite_relation.unwrap();
                                 if !opposite_relation.is_vec && (opposite_relation.optionality == Optionality::Required) {

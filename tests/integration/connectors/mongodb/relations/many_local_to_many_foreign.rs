@@ -130,7 +130,7 @@ async fn create_with_nested_connect() {
         "include": {
             "foreigns": true
         }
-    }), 200, "data.foreign.id").await;
+    }), 200, "data.foreigns.0.id").await;
     let foreign_id = foreign_id.as_str().unwrap();
     let res = request(&app, "many-locals", "Create", json!({
         "create": {
@@ -460,6 +460,9 @@ async fn update_with_nested_disconnect() {
             "foreigns": {
                 "create": {}
             }
+        },
+        "include": {
+            "foreigns": true
         }
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
     let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
@@ -494,6 +497,9 @@ async fn update_with_nested_update() {
             "foreigns": {
                 "create": {}
             }
+        },
+        "include": {
+            "foreigns": true
         }
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
     let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
@@ -533,6 +539,9 @@ async fn update_with_nested_update_many() {
             "foreigns": {
                 "create": {}
             }
+        },
+        "include": {
+            "foreigns": true
         }
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
     let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
@@ -593,9 +602,14 @@ async fn update_with_nested_upsert_actually_create() {
     assert_json_response(res, 200, json!({
         "data": {
             "id": {"equals": id},
-            "foreigns": {
-                "id": {"is": "$foreignId"}
-            }
+            "foreigns": [
+                {
+                    "id": {"is": "objectId"},
+                },
+                {
+                    "id": {"is": "objectId"},
+                }
+            ]
         }
     })).await;
 }
@@ -609,6 +623,9 @@ async fn update_with_nested_upsert_actually_update() {
             "foreigns": {
                 "create": {}
             }
+        },
+        "include": {
+            "foreigns": true
         }
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
     let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
@@ -631,9 +648,11 @@ async fn update_with_nested_upsert_actually_update() {
     assert_json_response(res, 200, json!({
         "data": {
             "id": {"equals": id},
-            "foreigns": {
-                "id": {"equals": foreign_id}
-            }
+            "foreigns": [
+                {
+                    "id": {"equals": foreign_id}
+                }
+            ]
         }
     })).await;
 }
@@ -647,6 +666,9 @@ async fn update_with_nested_delete() {
             "foreigns": {
                 "create": {}
             }
+        },
+        "include": {
+            "foreigns": true
         }
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
     let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
@@ -681,6 +703,9 @@ async fn update_with_nested_delete_many() {
             "foreigns": {
                 "create": {}
             }
+        },
+        "include": {
+            "foreigns": true
         }
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
     let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
@@ -715,6 +740,9 @@ async fn include() {
             "foreigns": {
                 "create": {}
             }
+        },
+        "include": {
+            "foreigns": true
         }
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
     let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();

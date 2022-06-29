@@ -73,6 +73,7 @@ fn match_json_value(object_value: &JsonValue, matcher_value: &JsonValue) {
 }
 
 fn match_json_array(object: &JsonValue, matcher: &JsonValue) {
+    println!("see what how {} {}", object, matcher);
     let object_array = object.as_array().unwrap();
     let matcher_array = matcher.as_array().unwrap();
     for (index, object_value) in object_array.iter().enumerate() {
@@ -142,6 +143,7 @@ pub async fn request_get<S, B, E, P>(app: &S, url: &str, action: &str, body: Jso
             if retval.is_object() {
                 if retval.as_object().unwrap().get(item).is_none() {
                 }
+                println!("see wrong {} {:?}", retval, item);
                 retval = retval.as_object().unwrap().get(item).unwrap();
             } else if retval.is_array() {
                 retval = retval.as_array().unwrap().get(item.parse::<usize>().unwrap()).unwrap();
