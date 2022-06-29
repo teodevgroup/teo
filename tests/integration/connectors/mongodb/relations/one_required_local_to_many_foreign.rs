@@ -27,7 +27,7 @@ async fn app() -> App<impl ServiceFactory<
                 f.required().object_id();
             });
             m.relation("foreign", |r| {
-                r.optional().object("ManyForeign").fields(vec!["foreignId"]).references(vec!["id"]);
+                r.required().object("ManyForeign").fields(vec!["foreignId"]).references(vec!["id"]);
             });
         });
         g.model("ManyForeign", |m| {
@@ -467,9 +467,13 @@ async fn update_with_nested_disconnect() {
             "foreign": true
         }
     })).await;
-    assert_json_response(res, 200, json!({
-        "data": {
-            "id": {"is": "objectId"},
+    assert_json_response(res, 400, json!({
+        "error": {
+            "type": {"equals": "InvalidInput"},
+            "message": {"equals": "Invalid value found in input values."},
+            "errors": {
+                "foreign": {"equals": "Required relation cannot disconnect."}
+            }
         }
     })).await;
 }
@@ -654,9 +658,13 @@ async fn update_with_nested_delete() {
             "foreign": true
         }
     })).await;
-    assert_json_response(res, 200, json!({
-        "data": {
-            "id": {"equals": id},
+    assert_json_response(res, 400, json!({
+        "error": {
+            "type": {"equals": "InvalidInput"},
+            "message": {"equals": "Invalid value found in input values."},
+            "errors": {
+                "foreign": {"equals": "Required relation cannot delete."}
+            }
         }
     })).await;
 }

@@ -330,14 +330,44 @@ impl Object {
             None => { // no join table
                 for (index, reference) in relation.references.iter().enumerate() {
                     let field_name = relation.fields.get(index).unwrap();
-                    let local_value = self.get_value(field_name)?;
-                    let foreign_value = obj.get_value(reference)?;
-                    if local_value.is_some() && foreign_value.is_none() {
-                        obj.set_value(reference, local_value.unwrap().clone())?;
-                        obj.save_to_database(session.clone(), true).await?;
-                    } else if foreign_value.is_some() && local_value.is_none() {
-                        self.set_value(field_name, foreign_value.unwrap().clone())?;
-                        self.save_to_database(session.clone(), true).await?;
+                    if relation.is_vec {
+                        // if relation is vec, othersize must have saved the value
+                        let local_value = self.get_value(field_name)?;
+                        if local_value.is_some() {
+                            obj.set_value(reference, local_value.unwrap().clone())?;
+                            obj.save_to_database(session.clone(), true).await?;
+                        }
+                    } else {
+                        // get foreign relation
+                        if let Some(foreign_relation) = obj.model().relations_vec.iter().find(|r| {
+                            r.fields == relation.references && r.references == relation.fields
+                        }) {
+                            if foreign_relation.is_vec {
+                                let foreign_value = obj.get_value(reference)?;
+                                if foreign_value.is_some() {
+                                    self.set_value(field_name, foreign_value.unwrap().clone())?;
+                                    self.save_to_database(session.clone(), true).await?;
+                                }
+                            } else {
+                                // both sides are singular
+                                for item in &self.model().primary.items {
+                                    if &item.field_name == field_name {
+                                        let local_value = self.get_value(field_name)?;
+                                        if local_value.is_some() {
+                                            obj.set_value(reference, local_value.unwrap().clone())?;
+                                            obj.save_to_database(session.clone(), true).await?;
+                                        }
+                                        break;
+                                    }
+                                }
+                                // write on our side since it's not primary
+                                let foreign_value = obj.get_value(reference)?;
+                                if foreign_value.is_some() {
+                                    self.set_value(field_name, foreign_value.unwrap().clone())?;
+                                    self.save_to_database(session.clone(), true).await?;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -638,15 +668,16 @@ impl Object {
                         for entry in entries {
                             let model = graph.model(&relation.model);
                             if !relation.is_vec && (relation.optionality == Optionality::Required) {
-                                return Err(ActionError::required_relation_cannot_disconnect());
+                                return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot disconnect."));
                             }
                             let opposite_relation = model.relations_vec.iter().find(|r| {
                                 r.fields == relation.references && r.references == relation.fields
                             });
+                            println!("here runs {:?} {:?}", relation, opposite_relation);
                             if opposite_relation.is_some() {
                                 let opposite_relation = opposite_relation.unwrap();
                                 if !opposite_relation.is_vec && (opposite_relation.optionality == Optionality::Required) {
-                                    return Err(ActionError::required_relation_cannot_disconnect());
+                                    return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot disconnect."));
                                 }
                             }
                             let unique_query = json!({"where": entry});
@@ -729,7 +760,7 @@ impl Object {
                             let model_name = &relation.model;
                             let model = graph.model(model_name);
                             if !relation.is_vec && (relation.optionality == Optionality::Required) {
-                                return Err(ActionError::required_relation_cannot_disconnect());
+                                return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot delete."));
                             }
                             let opposite_relation = model.relations_vec.iter().find(|r| {
                                 r.fields == relation.references && r.references == relation.fields
@@ -737,7 +768,7 @@ impl Object {
                             if opposite_relation.is_some() {
                                 let opposite_relation = opposite_relation.unwrap();
                                 if !opposite_relation.is_vec && (opposite_relation.optionality == Optionality::Required) {
-                                    return Err(ActionError::required_relation_cannot_disconnect());
+                                    return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot delete."));
                                 }
                             }
                             let the_object = graph.find_unique(model, &json!({"where": r#where}), true).await;
