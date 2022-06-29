@@ -43,7 +43,7 @@ pub struct FieldBuilder {
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) column_name: Option<String>,
     pub(crate) previous_value_rule: PreviousValueRule,
-    pub(crate) compare_on_updated: Vec<Arc<dyn Fn(Value, Value, Object) -> PinFutureObj<()> + Send + Sync>>,
+    pub(crate) compare_on_updated: Vec<Arc<dyn Fn(Value, Value, Object) -> PinFutureObj<()>>>,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -388,9 +388,9 @@ impl FieldBuilder {
     }
 
     pub fn compare_on_updated<F, I, Fut>(&mut self, f: &'static F) -> &mut Self where
-        F: Fn(I, I, Object) -> Fut + Sync + Send + 'static,
+        F: Fn(I, I, Object) -> Fut + 'static,
         I: From<Value> + Send + Sync,
-        Fut: Future<Output = ()> + Send + Sync {
+        Fut: Future<Output = ()> {
         self.previous_value_rule = PreviousValueRule::KeepAfterSaved;
         self.compare_on_updated.push(Arc::new(|old, new, object| Box::pin(async {
             f(I::from(old), I::from(new), object).await.into()

@@ -67,24 +67,9 @@ impl Object {
         if !model_keys.contains(&key) {
             return Err(ActionError::keys_unallowed());
         }
-        let save_previous = if let Some(field) = self.model().field(&key) {
-            field.previous_value_rule != PreviousValueRule::DontKeep
-        } else {
-            false
-        };
         if value == Value::Null {
-            if save_previous {
-                if let Some(current) = self.inner.value_map.borrow().get(&key) {
-                    self.inner.previous_values.borrow_mut().insert(key.clone(), current.clone());
-                }
-            }
             self.inner.value_map.borrow_mut().remove(&key);
         } else {
-            if save_previous {
-                if let Some(current) = self.inner.value_map.borrow().get(&key) {
-                    self.inner.previous_values.borrow_mut().insert(key.clone(), current.clone());
-                }
-            }
             self.inner.value_map.borrow_mut().insert(key.to_string(), value);
         }
         if !self.inner.is_new.load(Ordering::SeqCst) {

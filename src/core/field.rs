@@ -118,7 +118,7 @@ pub(crate) struct Field {
     pub(crate) permission: Option<Permission>,
     pub(crate) column_name: Option<String>,
     pub(crate) previous_value_rule: PreviousValueRule,
-    pub(crate) compare_on_updated: Vec<Arc<dyn Fn(Value, Value, Object) -> PinFutureObj<()> + Send + Sync>>,
+    pub(crate) compare_on_updated: Vec<Arc<dyn Fn(Value, Value, Object) -> PinFutureObj<()>>>,
 }
 
 impl Debug for Field {
@@ -169,3 +169,6 @@ impl Field {
         self.on_save_pipeline.process(new_stage, object).await
     }
 }
+
+unsafe impl Send for Field {}
+unsafe impl Sync for Field {}
