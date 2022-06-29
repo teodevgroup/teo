@@ -67,20 +67,20 @@ impl ActionType {
 
     pub(crate) fn as_str(&self) -> &'static str {
         match self {
-            FindUnique => "FindUnique",
-            FindFirst => "FindFirst",
-            FindMany => "FindMany",
-            Create => "Create",
-            Update => "Update",
-            Upsert => "Upsert",
-            Delete => "Delete",
-            CreateMany => "CreateMany",
-            UpdateMany => "UpdateMany",
-            DeleteMany => "DeleteMany",
-            Count => "Count",
-            Aggregate => "Aggregate",
-            GroupBy => "GroupBy",
-            SignIn => "SignIn",
+            FindUnique => "find-unique",
+            FindFirst => "find-first",
+            FindMany => "find-many",
+            Create => "create",
+            Update => "update",
+            Upsert => "upsert",
+            Delete => "delete",
+            CreateMany => "create-many",
+            UpdateMany => "update-many",
+            DeleteMany => "delete-many",
+            Count => "count",
+            Aggregate => "aggregate",
+            GroupBy => "groupBy",
+            SignIn => "sign-in",
         }
     }
 

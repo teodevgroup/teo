@@ -46,11 +46,11 @@ function getBearerToken(): string | undefined {{
 }}
 
 export async function request(url_segment_name: string, action: Action, args: any): Promise<any> {{
-    let url = "{url}/" + url_segment_name + "/action"
+    let url = "{url}/" + url_segment_name + "/action/" + action
     let response = await fetch(url, {{
         method: "POST",
         headers: getBearerToken() ? {{ "Authorization": `Bearer ${{getBearerToken()}}` }} : undefined,
-        body: JSON.stringify({{ action, ...args }})
+        body: JSON.stringify(args)
     }})
     return await response.json()
 }}
