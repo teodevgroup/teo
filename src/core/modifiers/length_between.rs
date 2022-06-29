@@ -28,7 +28,7 @@ impl Modifier for LengthBetweenModifier {
 
     async fn call(&self, stage: Stage, object: &Object) -> Stage {
         let min = self.min.resolve(stage.clone(), object).await.as_usize().unwrap();
-        let max = self.min.resolve(stage.clone(), object).await.as_usize().unwrap();
+        let max = self.max.resolve(stage.clone(), object).await.as_usize().unwrap();
         return if let Some(value) = stage.value() {
             return if let Value::String(s) = value {
                 if min <= s.len() && s.len() <= max {
