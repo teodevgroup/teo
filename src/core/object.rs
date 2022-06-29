@@ -590,6 +590,7 @@ impl Object {
                 match command {
                     "create" | "createMany" => {
                         if !relation.is_vec && command == "createMany" {
+                            println!("see wrong relation {:?}", relation);
                             return Err(ActionError::invalid_input(key.as_str(), "Single relationship cannot create many."));
                         }
                         let entries = input_to_vec(command_input)?;
