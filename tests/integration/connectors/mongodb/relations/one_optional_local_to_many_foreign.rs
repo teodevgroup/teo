@@ -69,13 +69,30 @@ async fn create_with_nested_create() {
     })).await;
 }
 
-// Output error for user
-// #[test]
-// #[serial]
-// async fn create_with_nested_create_many() {
-//     let app = test::init_service(app().await).await;
-//     assert!(true);
-// }
+#[test]
+#[serial]
+async fn create_with_nested_create_many_errors() {
+    let app = test::init_service(app().await).await;
+    let res = request(&app, "one-optional-locals", "Create", json!({
+        "create": {
+            "foreign": {
+                "createMany": [{}, {}]
+            }
+        },
+        "include": {
+            "foreign": true
+        }
+    })).await;
+    assert_json_response(res, 400, json!({
+        "error": {
+            "type": {"equals": "InvalidInput"},
+            "message": {"equals": "Invalid value found in input values."},
+            "errors": {
+                "foreign": {"equals": "Single relationship cannot create many."}
+            }
+        }
+    })).await;
+}
 
 #[test]
 #[serial]
@@ -214,12 +231,41 @@ async fn update_with_nested_create() {
     })).await;
 }
 
-// #[test]
-// #[serial]
-// async fn update_with_nested_create_many() {
-//     let app = test::init_service(app().await).await;
-//     assert!(true);
-// }
+#[test]
+#[serial]
+async fn update_with_nested_create_many_errors() {
+    let app = test::init_service(app().await).await;
+    let id = request_get(&app, "one-optional-locals", "Create", json!({
+        "create": {},
+        "include": {
+            "foreign": true
+        }
+    }), 200, "data.id").await;
+    let id = id.as_str().unwrap();
+    let res = request(&app, "one-optional-locals", "Update", json!({
+        "where": {
+            "id": id
+        },
+        "update": {
+            "foreign": {
+                "createMany": [{}, {}]
+            }
+        },
+        "include": {
+            "foreign": true
+        }
+    })).await;
+    assert_json_response(res, 400, json!({
+        "error": {
+            "type": {"equals": "InvalidInput"},
+            "message": {"equals": "Invalid value found in input values."},
+            "errors": {
+                "foreign": {"equals": "Single relationship cannot create many."}
+            }
+        }
+    })).await;
+}
+
 
 #[test]
 #[serial]
@@ -375,75 +421,313 @@ async fn update_with_nested_set() {
 #[serial]
 async fn update_with_nested_disconnect() {
     let app = test::init_service(app().await).await;
-    assert!(true);
+    let ids = request_get(&app, "one-optional-locals", "Create", json!({
+        "create": {
+            "foreign": {
+                "create": {}
+            }
+        }
+    }), 200, vec!["data.id", "data.foreignId"]).await;
+    let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
+    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let res = request(&app, "one-optional-locals", "Update", json!({
+        "where": {"id": id},
+        "update": {
+            "foreign": {
+                "disconnect": {
+                    "id": foreign_id
+                }
+            }
+        },
+        "include": {
+            "foreign": true
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"is": "objectId"},
+        }
+    })).await;
 }
 
 #[test]
 #[serial]
 async fn update_with_nested_update() {
     let app = test::init_service(app().await).await;
-    assert!(true);
+    let ids = request_get(&app, "one-optional-locals", "Create", json!({
+        "create": {
+            "foreign": {
+                "create": {}
+            }
+        }
+    }), 200, vec!["data.id", "data.foreignId"]).await;
+    let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
+    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let res = request(&app, "one-optional-locals", "Update", json!({
+        "where": {"id": id},
+        "update": {
+            "foreign": {
+                "update": {
+                    "where": {"id": foreign_id},
+                    "update": {}
+                }
+            }
+        },
+        "include": {
+            "foreign": true
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"equals": id},
+            "foreignId": {"equals": foreign_id},
+            "foreign": {
+                "id": {"equals": foreign_id}
+            }
+        }
+    })).await;
 }
 
 #[test]
 #[serial]
-async fn update_with_nested_update_many() {
+async fn update_with_nested_update_many_errors() {
     let app = test::init_service(app().await).await;
-    assert!(true);
+    let ids = request_get(&app, "one-optional-locals", "Create", json!({
+        "create": {
+            "foreign": {
+                "create": {}
+            }
+        }
+    }), 200, vec!["data.id", "data.foreignId"]).await;
+    let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
+    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let res = request(&app, "one-optional-locals", "Update", json!({
+        "where": {"id": id},
+        "update": {
+            "foreign": {
+                "updateMany": {
+                    "where": {"id": foreign_id},
+                    "update": {}
+                }
+            }
+        },
+        "include": {
+            "foreign": true
+        }
+    })).await;
+    assert_json_response(res, 400, json!({
+        "error": {
+            "type": {"equals": "InvalidInput"},
+            "message": {"equals": "Invalid value found in input values."},
+            "errors": {
+                "foreign": {"equals": "Single relationship cannot update many."}
+            }
+        }
+    })).await;
 }
 
 #[test]
 #[serial]
-async fn update_with_nested_upsert() {
+async fn update_with_nested_upsert_actually_create() {
     let app = test::init_service(app().await).await;
-    assert!(true);
+    let ids = request_get(&app, "one-optional-locals", "Create", json!({
+        "create": {
+            "foreign": {
+                "create": {}
+            }
+        }
+    }), 200, vec!["data.id", "data.foreignId"]).await;
+    let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
+    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let res = request(&app, "one-optional-locals", "Update", json!({
+        "where": {"id": id},
+        "update": {
+            "foreign": {
+                "upsert": {
+                    "where": {"id": "123456789009876543211234"},
+                    "update": {},
+                    "create": {}
+                }
+            }
+        },
+        "include": {
+            "foreign": true
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"equals": id},
+            "foreignId": {"is": "$foreignId"},
+            "foreign": {
+                "id": {"is": "$foreignId"}
+            }
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn update_with_nested_upsert_actually_update() {
+    let app = test::init_service(app().await).await;
+    let ids = request_get(&app, "one-optional-locals", "Create", json!({
+        "create": {
+            "foreign": {
+                "create": {}
+            }
+        }
+    }), 200, vec!["data.id", "data.foreignId"]).await;
+    let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
+    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let res = request(&app, "one-optional-locals", "Update", json!({
+        "where": {"id": id},
+        "update": {
+            "foreign": {
+                "upsert": {
+                    "where": {"id": foreign_id},
+                    "update": {},
+                    "create": {}
+                }
+            }
+        },
+        "include": {
+            "foreign": true
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"equals": id},
+            "foreignId": {"equals": foreign_id},
+            "foreign": {
+                "id": {"equals": foreign_id}
+            }
+        }
+    })).await;
 }
 
 #[test]
 #[serial]
 async fn update_with_nested_delete() {
     let app = test::init_service(app().await).await;
-    assert!(true);
+    let ids = request_get(&app, "one-optional-locals", "Create", json!({
+        "create": {
+            "foreign": {
+                "create": {}
+            }
+        }
+    }), 200, vec!["data.id", "data.foreignId"]).await;
+    let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
+    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let res = request(&app, "one-optional-locals", "Update", json!({
+        "where": {"id": id},
+        "update": {
+            "foreign": {
+                "delete": {
+                    "id": foreign_id
+                }
+            }
+        },
+        "include": {
+            "foreign": true
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"equals": id},
+        }
+    })).await;
 }
 
 #[test]
 #[serial]
-async fn update_with_nested_delete_many() {
+async fn update_with_nested_delete_many_errors() {
     let app = test::init_service(app().await).await;
-    assert!(true);
+    let ids = request_get(&app, "one-optional-locals", "Create", json!({
+        "create": {
+            "foreign": {
+                "create": {}
+            }
+        }
+    }), 200, vec!["data.id", "data.foreignId"]).await;
+    let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
+    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let res = request(&app, "one-optional-locals", "Update", json!({
+        "where": {"id": id},
+        "update": {
+            "foreign": {
+                "deleteMany": {
+                    "id": foreign_id
+                }
+            }
+        },
+        "include": {
+            "foreign": true
+        }
+    })).await;
+    assert_json_response(res, 400, json!({
+        "error": {
+            "type": {"equals": "InvalidInput"},
+            "message": {"equals": "Invalid value found in input values."},
+            "errors": {
+                "foreign": {"equals": "Single relationship cannot delete many."}
+            }
+        }
+    })).await;
 }
 
 #[test]
 #[serial]
 async fn include() {
     let app = test::init_service(app().await).await;
-    assert!(true);
+    let ids = request_get(&app, "one-optional-locals", "Create", json!({
+        "create": {
+            "foreign": {
+                "create": {}
+            }
+        }
+    }), 200, vec!["data.id", "data.foreignId"]).await;
+    let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
+    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let res = request(&app, "one-optional-locals", "FindUnique", json!({
+        "where": {"id": id},
+        "include": {
+            "foreign": true
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"equals": id},
+            "foreignId": {"equals": foreign_id},
+            "foreign": {
+                "id": {"equals": foreign_id}
+            }
+        }
+    })).await;
 }
 
-#[test]
-#[serial]
-async fn include_with_where() {
-    let app = test::init_service(app().await).await;
-    assert!(true);
-}
+// #[test]
+// #[serial]
+// async fn include_with_where() {
+//     let app = test::init_service(app().await).await;
+//     assert!(true);
+// }
 
-#[test]
-#[serial]
-async fn include_with_order_by() {
-    let app = test::init_service(app().await).await;
-    assert!(true);
-}
+// #[test]
+// #[serial]
+// async fn include_with_order_by() {
+//     let app = test::init_service(app().await).await;
+//     assert!(true);
+// }
 
-#[test]
-#[serial]
-async fn include_with_skip_and_limit() {
-    let app = test::init_service(app().await).await;
-    assert!(true);
-}
+// #[test]
+// #[serial]
+// async fn include_with_skip_and_limit() {
+//     let app = test::init_service(app().await).await;
+//     assert!(true);
+// }
 
-#[test]
-#[serial]
-async fn include_with_cursor() {
-    let app = test::init_service(app().await).await;
-    assert!(true);
-}
+// #[test]
+// #[serial]
+// async fn include_with_cursor() {
+//     let app = test::init_service(app().await).await;
+//     assert!(true);
+// }

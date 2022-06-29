@@ -375,16 +375,28 @@ pub(crate) fn decode_relation_input( object: &Object, json_value: &JsonValue, re
     let (key, value) = one_length_json_obj(json_value, path)?;
     let input = match key {
         "create" => RelationInputType::Create(value.clone()),
-        "createMany" => RelationInputType::Create(value.clone()),
+        "createMany" => if relation.is_vec {
+            RelationInputType::Create(value.clone())
+        } else {
+            return Err(ActionError::invalid_input(path, "Single relationship cannot create many."))
+        },
         "set" => RelationInputType::Set(value.clone()),
         "connect" => RelationInputType::Connect(value.clone()),
         "connectOrCreate" => RelationInputType::ConnectOrCreate(value.clone(), value.clone()),
         "disconnect" => RelationInputType::Disconnect(value.clone()),
         "update" => RelationInputType::Update(value.clone()),
-        "updateMany" => RelationInputType::Update(value.clone()),
+        "updateMany" => if relation.is_vec {
+            RelationInputType::Update(value.clone())
+        } else {
+            return Err(ActionError::invalid_input(path, "Single relationship cannot update many."))
+        },
         "upsert" => RelationInputType::Upsert(value.clone(), value.clone()),
         "delete" => RelationInputType::Delete(value.clone()),
-        "deleteMany" => RelationInputType::Delete(value.clone()),
+        "deleteMany" => if relation.is_vec {
+            RelationInputType::Delete(value.clone())
+        } else {
+            return Err(ActionError::invalid_input(path, "Single relationship cannot delete many."))
+        },
         _ => panic!()
     };
     Ok(Input::RelationInput(input))

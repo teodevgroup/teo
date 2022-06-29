@@ -559,6 +559,9 @@ impl Object {
                 let (command, command_input) = one_length_json_obj(relation_object, key)?;
                 match command {
                     "create" | "createMany" => {
+                        if !relation.is_vec && command == "createMany" {
+                            return Err(ActionError::invalid_input(key.as_str(), "Single relationship cannot create many."));
+                        }
                         let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
                         for entry in entries {
@@ -657,6 +660,9 @@ impl Object {
                         }
                     }
                     "update" | "updateMany" => {
+                        if !relation.is_vec && command == "updateMany" {
+                            return Err(ActionError::invalid_input(key.as_str(), "Single relationship cannot update many."));
+                        }
                         let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
                         for entry in entries {
@@ -713,6 +719,9 @@ impl Object {
                         }
                     }
                     "delete" | "deleteMany" => {
+                        if !relation.is_vec && command == "deleteMany" {
+                            return Err(ActionError::invalid_input(key.as_str(), "Single relationship cannot delete many."));
+                        }
                         let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
                         for entry in entries {

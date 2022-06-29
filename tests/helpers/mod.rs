@@ -99,30 +99,56 @@ pub async fn assert_json_response<B: MessageBody>(res: ServiceResponse<B>, code:
     let status = res.status().as_u16();
     assert_eq!(status, code);
     let json: JsonValue = read_body_json(res).await;
+    //println!("see json {}", json);
     match_json_object(&json, &matcher);
 }
 
-pub async fn request_get<S, B, E>(app: &S, url: &str, action: &str, body: JsonValue, code: u16, path: &str) -> JsonValue where
+pub trait RequestGetArgument {
+    fn paths(&self) -> Vec<&str>;
+}
+
+impl RequestGetArgument for &str {
+    fn paths(&self) -> Vec<&str> {
+        vec![self]
+    }
+}
+
+impl RequestGetArgument for Vec<&str> {
+    fn paths(&self) -> Vec<&str> {
+        self.clone()
+    }
+}
+
+pub async fn request_get<S, B, E, P>(app: &S, url: &str, action: &str, body: JsonValue, code: u16, paths: P) -> JsonValue where
     S: Service<Request, Response = ServiceResponse<B>, Error = E>,
     E: std::fmt::Debug,
     B: MessageBody,
+    P: RequestGetArgument
 {
     let res = request(app, url, action, body).await;
     let status = res.status().as_u16();
     assert_eq!(status, code);
     let json: JsonValue = read_body_json(res).await;
-    let mut retval = &json;
-    let items = path.split(".");
-    for item in items {
-        if retval.is_object() {
-            if retval.as_object().unwrap().get(item).is_none() {
+    let mut final_ret_val: Vec<JsonValue> = vec![];
+    for path in paths.paths() {
+        let mut retval = &json;
+        let items = path.split(".");
+        for item in items {
+            if retval.is_object() {
+                if retval.as_object().unwrap().get(item).is_none() {
+                }
+                retval = retval.as_object().unwrap().get(item).unwrap();
+            } else if retval.is_array() {
+                retval = retval.as_array().unwrap().get(item.parse::<usize>().unwrap()).unwrap();
+            } else {
+                assert!(false, "{retval} is not object or array.");
             }
-            retval = retval.as_object().unwrap().get(item).unwrap();
-        } else if retval.is_array() {
-            retval = retval.as_array().unwrap().get(item.parse::<usize>().unwrap()).unwrap();
-        } else {
-            assert!(false, "{retval} is not object or array.");
         }
+        final_ret_val.push(retval.clone());
     }
-    retval.clone().into()
+    if final_ret_val.len() == 1 {
+        final_ret_val.get(0).unwrap().clone()
+    } else {
+        JsonValue::Array(final_ret_val)
+    }
 }

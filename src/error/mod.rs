@@ -129,12 +129,12 @@ impl ActionError {
         }
     }
 
-    pub fn invalid_input(key: impl Into<String>, reason: String) -> Self {
+    pub fn invalid_input(key: impl Into<String>, reason: impl Into<String>) -> Self {
         let mut fields = HashMap::with_capacity(1);
-        fields.insert(key.into(), reason);
+        fields.insert(key.into(), reason.into());
         ActionError {
             r#type: ActionErrorType::InvalidInput,
-            message: "Invalid value found in input values.".to_string(),
+            message: "Invalid value found in input values.".into(),
             errors: Some(fields)
         }
     }
