@@ -704,6 +704,10 @@ async fn include() {
     })).await;
 }
 
+// include with select
+
+// include with include
+
 // #[test]
 // #[serial]
 // async fn include_with_where() {
