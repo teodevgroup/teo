@@ -236,7 +236,7 @@ impl ActionError {
     pub fn not_found() -> Self {
         ActionError {
             r#type: ActionErrorType::NotFound,
-            message: "Not found.".to_string(),
+            message: "The request destination is not found.".to_string(),
             errors: None
         }
     }
@@ -464,3 +464,6 @@ impl ActionError {
         }
     }
 }
+
+unsafe impl Sync for ActionError {}
+unsafe impl Send for ActionError {}

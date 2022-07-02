@@ -19,6 +19,7 @@ pub struct Graph {
     connector: Option<Box<dyn Connector>>,
     jwt_secret: String,
     host_url: String,
+    url_prefix: Option<String>,
     clients: Vec<Arc<dyn Client>>,
 }
 
@@ -39,6 +40,7 @@ impl Graph {
             jwt_secret: builder.jwt_secret.clone(),
             host_url: builder.host_url.as_ref().unwrap().clone(),
             clients: builder.clients.clone(),
+            url_prefix: builder.url_prefix.clone(),
         };
         graph.models_vec = builder.models.iter().map(|mb| unsafe { mb.build(&builder.connector_builder()) }).collect();
         let mut models_map: HashMap<String, * const Model> = HashMap::new();
@@ -118,6 +120,9 @@ impl Graph {
 
     pub(crate) fn host_url(&'static self) -> &str {
         &self.host_url
+    }
+    pub(crate) fn url_prefix(&'static self) -> Option<&String> {
+        self.url_prefix.as_ref()
     }
 }
 

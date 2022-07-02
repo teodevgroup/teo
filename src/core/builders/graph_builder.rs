@@ -17,6 +17,7 @@ pub struct GraphBuilder {
     pub(crate) jwt_secret: String,
     pub(crate) clients: Vec<Arc<dyn Client>>,
     pub(crate) host_url: Option<String>,
+    pub(crate) url_prefix: Option<String>,
 }
 
 impl GraphBuilder {
@@ -29,7 +30,8 @@ impl GraphBuilder {
             reset_database: false,
             jwt_secret: "".to_string(),
             clients: Vec::new(),
-            host_url: None
+            host_url: None,
+            url_prefix: None,
         }
     }
 
@@ -55,6 +57,11 @@ impl GraphBuilder {
 
     pub fn jwt_secret(&mut self, secret: impl Into<String>) -> &mut Self {
         self.jwt_secret = secret.into();
+        self
+    }
+
+    pub fn url_prefix(&mut self, prefix: impl Into<String>) -> &mut Self {
+        self.url_prefix = Some(prefix.into());
         self
     }
 

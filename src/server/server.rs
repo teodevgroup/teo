@@ -72,6 +72,13 @@ impl Server {
             .default_service(web::route().to(move |r: HttpRequest, mut payload: web::Payload| async move {
                 let start = SystemTime::now();
                 let mut path = r.path().to_string();
+                if let Some(prefix) = this.url_prefix() {
+                    if !path.starts_with(prefix) {
+                        self.log_unhandled(start, r.method().as_str(), &path, 404);
+                        return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
+                    }
+                    path = path.strip_prefix(prefix).unwrap().to_string();
+                }
                 let path = if path.len() > 1 && path.ends_with("/") {
                     path[0..path.len() - 1].to_string()
                 } else {
