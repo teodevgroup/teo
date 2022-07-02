@@ -214,6 +214,7 @@ fn generate_model_update_input(graph: &'static Graph, model: &'static Model, wit
                 } else if let Some(relation) = model.relation(k) {
                     let relation_name = &relation.name;
                     let relation_model_name = &relation.model;
+                    println!("last relation name {model_name} {without_title} {relation_model_name}");
                     let relation_model = graph.model(relation_model_name);
                     let num = if relation.is_vec { "Many" } else { "One" };
                     if let Some(without_relation) = without_relation {
@@ -428,6 +429,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                         if m.actions().contains(a) {
                             let action_name = a.as_str();
                             let action_var_name = a.as_str().to_camel_case();
+                            let action_url_name = a.as_url_segment();
                             let result_meta = match a.result_meta() {
                                 ActionResultMeta::PagingInfo => "PagingInfo",
                                 ActionResultMeta::TokenInfo => "TokenInfo",
@@ -442,7 +444,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
                             };
                             b.empty_line();
                             b.block(format!("async {action_var_name}(args: {model_name}{action_name}Args): Promise<Response<{result_meta}, {result_data}>> {{"), |b| {
-                                b.line(format!(r#"return await request("{model_url_segment_name}", "{action_name}", args)"#));
+                                b.line(format!(r#"return await request("{model_url_segment_name}", "{action_url_name}", args)"#));
                             }, "},")
                         }
                     });

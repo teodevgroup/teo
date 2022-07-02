@@ -89,7 +89,7 @@ impl Server {
                 }
                 let model_url_segment_name = path_components[0];
                 let action_segment_name = path_components[2];
-                let action = ActionType::from_str(action_segment_name);
+                let action = ActionType::from_url_segment(action_segment_name);
                 let action = match action {
                     Some(a) => a,
                     None => {

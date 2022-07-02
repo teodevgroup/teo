@@ -65,7 +65,7 @@ impl ActionType {
         ].iter().map(|x| *x))
     }
 
-    pub(crate) fn as_str(&self) -> &'static str {
+    pub(crate) fn as_url_segment(&self) -> &'static str {
         match self {
             FindUnique => "find-unique",
             FindFirst => "find-first",
@@ -84,7 +84,46 @@ impl ActionType {
         }
     }
 
+    pub(crate) fn as_str(&self) -> &'static str {
+        match self {
+            FindUnique => "FindUnique",
+            FindFirst => "FindFirst",
+            FindMany => "FindMany",
+            Create => "Create",
+            Update => "Update",
+            Upsert => "Upsert",
+            Delete => "Delete",
+            CreateMany => "CreateMany",
+            UpdateMany => "UpdateMany",
+            DeleteMany => "DeleteMany",
+            Count => "Count",
+            Aggregate => "Aggregate",
+            GroupBy => "GroupBy",
+            SignIn => "SignIn",
+        }
+    }
+
     pub(crate) fn from_str(str: &str) -> Option<ActionType> {
+        match str {
+            "FindUnique" => Some(FindUnique),
+            "FindFirst" => Some(FindFirst),
+            "FindMany" => Some(FindMany),
+            "Create" => Some(Create),
+            "Update" => Some(Update),
+            "Upsert" => Some(Upsert),
+            "Delete" => Some(Delete),
+            "CreateMany" => Some(CreateMany),
+            "UpdateMany" => Some(UpdateMany),
+            "DeleteMany" => Some(DeleteMany),
+            "Count" => Some(Count),
+            "Aggregate" => Some(Aggregate),
+            "GroupBy" => Some(GroupBy),
+            "SignIn" => Some(SignIn),
+            _ => None
+        }
+    }
+
+    pub(crate) fn from_url_segment(str: &str) -> Option<ActionType> {
         match str {
             "find-unique" => Some(FindUnique),
             "find-first" => Some(FindFirst),
