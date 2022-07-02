@@ -61,7 +61,6 @@ impl Graph {
     }
 
     pub fn model(&self, name: &str) -> &Model {
-        println!("see last model name {}", name);
         unsafe {
             &(**self.models_map.get(name).unwrap())
         }
