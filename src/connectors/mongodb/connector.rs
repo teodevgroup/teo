@@ -147,7 +147,7 @@ impl MongoDBConnector {
                 let value_result = self.bson_value_to_field_value(object_key, bson_value, field_type);
                 match value_result {
                     Ok(value) => {
-                        object.inner.value_map.borrow_mut().insert(object_key.to_string(), value);
+                        object.inner.value_map.lock().unwrap().insert(object_key.to_string(), value);
                     }
                     Err(err) => {
                         return Err(err);
@@ -168,7 +168,7 @@ impl MongoDBConnector {
                     self.document_to_object(related_object_bson.as_document().unwrap(), &related_object)?;
                     related.push(related_object);
                 }
-                object.inner.queried_relation_map.borrow_mut().insert(key.to_string(), related);
+                object.inner.queried_relation_map.lock().unwrap().insert(key.to_string(), related);
             }
         }
         object.inner.is_initialized.store(true, Ordering::SeqCst);

@@ -23,8 +23,6 @@ struct GraphInner {
     connector: Option<Box<dyn Connector>>,
     jwt_secret: String,
     host_url: String,
-    url_prefix: Option<String>,
-    clients: Vec<Arc<dyn Client>>,
 }
 
 impl Graph {
@@ -43,8 +41,6 @@ impl Graph {
             connector: None,
             jwt_secret: builder.jwt_secret.clone(),
             host_url: builder.host_url.as_ref().unwrap().clone(),
-            clients: builder.clients.clone(),
-            url_prefix: builder.url_prefix.clone(),
         };
         graph.models_vec = builder.models.iter().map(|mb| { Arc::new(mb.build(&builder.connector_builder())) }).collect();
         let mut models_map: HashMap<String, Arc<Model>> = HashMap::new();
@@ -97,7 +93,7 @@ impl Graph {
     }
 
     pub fn new_object(&self, model: &str) -> Object {
-        Object::new(self, self.model(model))
+        Object::new(self.clone(), self.model(model))
     }
 
     pub(crate) fn model_name_for_url_segment_name(&self, segment_name: &str) -> Option<&String> {
@@ -115,18 +111,8 @@ impl Graph {
         }
     }
 
-    pub async fn generate_packages(&self) -> std::io::Result<()> {
-        for client in &self.inner.clients {
-            client.generate(self).await?
-        }
-        Ok(())
-    }
-
     pub(crate) fn host_url(&self) -> &str {
         &self.inner.host_url
-    }
-    pub(crate) fn url_prefix(&self) -> Option<&String> {
-        self.inner.url_prefix.as_ref()
     }
 }
 

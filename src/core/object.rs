@@ -32,23 +32,23 @@ pub struct Object {
 
 impl Object {
 
-    pub(crate) fn new<'g>(graph: &Graph, model: &Model) -> Object {
+    pub(crate) fn new<'g>(graph: Graph, model: Model) -> Object {
         Object { inner: Arc::new(ObjectInner {
-            model,
-            graph,
+            graph: Arc::new(graph),
+            model: Arc::new(model),
             is_initialized: AtomicBool::new(false),
             is_new: AtomicBool::new(true),
             is_modified: AtomicBool::new(false),
             is_partial: AtomicBool::new(false),
             is_deleted: AtomicBool::new(false),
             selected_fields: Arc::new(Mutex::new(HashSet::new())),
-            modified_fields: RefCell::new(HashSet::new()),
-            previous_values: RefCell::new(HashMap::new()),
-            value_map: RefCell::new(HashMap::new()),
-            atomic_updator_map: RefCell::new(HashMap::new()),
-            queried_relation_map: RefCell::new(HashMap::new()),
-            relation_map: RefCell::new(HashMap::new()),
-            ignore_required_fields: RefCell::new(Vec::new()),
+            modified_fields: Arc::new(Mutex::new(HashSet::new())),
+            previous_values: Arc::new(Mutex::new(HashMap::new())),
+            value_map: Arc::new(Mutex::new(HashMap::new())),
+            atomic_updator_map: Arc::new(Mutex::new(HashMap::new())),
+            queried_relation_map: Arc::new(Mutex::new(HashMap::new())),
+            relation_map: Arc::new(Mutex::new(HashMap::new())),
+            ignore_required_fields: Arc::new(Mutex::new(Vec::new())),
         }) }
     }
 
@@ -846,8 +846,8 @@ impl Object {
 }
 
 pub(crate) struct ObjectInner {
-    pub(crate) model: * const Model,
-    pub(crate) graph: * const Graph,
+    pub(crate) model: Arc<Model>,
+    pub(crate) graph: Arc<Graph>,
     pub(crate) is_initialized: AtomicBool,
     pub(crate) is_new: AtomicBool,
     pub(crate) is_modified: AtomicBool,

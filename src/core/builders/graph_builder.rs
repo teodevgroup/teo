@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use crate::core::builders::client_builder::ClientBuilder;
 use crate::core::builders::data_source_builder::DataSourceBuilder;
 use crate::core::builders::enum_builder::EnumBuilder;
 use crate::core::connector::{ConnectorBuilder};
@@ -15,7 +14,6 @@ pub struct GraphBuilder {
     pub(crate) connector_builder: Option<Box<dyn ConnectorBuilder>>,
     pub(crate) reset_database: bool,
     pub(crate) jwt_secret: String,
-    pub(crate) clients: Vec<Arc<dyn Client>>,
     pub(crate) host_url: Option<String>,
     pub(crate) url_prefix: Option<String>,
 }
@@ -29,7 +27,6 @@ impl GraphBuilder {
             connector_builder: None,
             reset_database: false,
             jwt_secret: "".to_string(),
-            clients: Vec::new(),
             host_url: None,
             url_prefix: None,
         }
@@ -72,10 +69,6 @@ impl GraphBuilder {
 
     pub fn data_source(&mut self) -> DataSourceBuilder {
         DataSourceBuilder { graph_builder: self }
-    }
-
-    pub fn client(&mut self) -> ClientBuilder {
-        ClientBuilder { graph_builder: self }
     }
 
     pub(crate) fn connector_builder(&self) -> &Box<dyn ConnectorBuilder> {

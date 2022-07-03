@@ -1009,7 +1009,7 @@ fn build_lookup_inputs(
     for (key, value) in include.iter() {
         let relation = model.relation(key);
         if relation.is_none() {
-            let model_name = &model.name;
+            let model_name = &model.name();
             return Err(ActionError::invalid_query_input(format!("Relation '{key}' on model '{model_name}' is not exist. Please check your input.")));
         }
         let relation = relation.unwrap();
@@ -1056,7 +1056,7 @@ fn build_lookup_inputs(
                     inner_pipeline.insert(0, inner_match);
                 }
                 let lookup = doc!{"$lookup": {
-                    "from": &relation_model.table_name,
+                    "from": &relation_model.table_name(),
                     "as": key,
                     "let": let_value,
                     "pipeline": inner_pipeline
@@ -1192,7 +1192,7 @@ fn build_lookup_inputs(
                 }
             }
         } else {
-            let model_name = &model.name;
+            let model_name = model.name();
             return Err(ActionError::invalid_query_input(format!("Relation '{key}' on model '{model_name}' has a unrecognized value. It's either a boolean or an object. Please check your input.")));
         }
     }
@@ -1248,7 +1248,7 @@ fn build_query_pipeline(
             return Err(ActionError::invalid_query_input("Field value of 'orderBy' should be one of 'asc' or 'desc'."));
         }
         let mut valid = false;
-        for index in &model.indices {
+        for index in &model.inner.indices {
             if index.items.len() == 1 {
                 if index.index_type == ModelIndexType::Unique || index.index_type == ModelIndexType::Primary {
                     if index.items.get(0).unwrap().field_name == cursor_key {
