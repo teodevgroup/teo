@@ -10,11 +10,14 @@ use crate::core::object::Object;
 use crate::core::r#enum::Enum;
 use crate::error::ActionError;
 
-
 pub struct Graph {
+    inner: Arc<GraphInner>
+}
+
+struct GraphInner {
     enums: HashMap<String, Enum>,
-    models_vec: Vec<Model>,
-    models_map: HashMap<String, * const Model>,
+    models_vec: Vec<Arc<Model>>,
+    models_map: HashMap<String, Arc<Model>>,
     url_segment_name_map: HashMap<String, String>,
     connector: Option<Box<dyn Connector>>,
     jwt_secret: String,
@@ -31,7 +34,7 @@ impl Graph {
         if builder.host_url.is_none() {
             panic!("Graph must have a host url.");
         }
-        let mut graph = Graph {
+        let mut graph = GraphInner {
             enums: builder.build_enums(),
             models_vec: Vec::new(),
             models_map: HashMap::new(),
@@ -42,21 +45,21 @@ impl Graph {
             clients: builder.clients.clone(),
             url_prefix: builder.url_prefix.clone(),
         };
-        graph.models_vec = builder.models.iter().map(|mb| unsafe { mb.build(&builder.connector_builder()) }).collect();
-        let mut models_map: HashMap<String, * const Model> = HashMap::new();
+        graph.models_vec = builder.models.iter().map(|mb| { Arc::new(mb.build(&builder.connector_builder())) }).collect();
+        let mut models_map: HashMap<String, Arc<Model>> = HashMap::new();
         let mut url_segment_name_map: HashMap<String, String> = HashMap::new();
         for model in graph.models_vec.iter() {
-            models_map.insert(model.name().clone(), addr_of!(*model));
-            url_segment_name_map.insert(model.url_segment_name().clone(), model.name().clone());
+            models_map.insert(model.name().to_owned(), model.clone());
+            url_segment_name_map.insert(model.url_segment_name().to_owned(), model.name().to_owned());
         }
         graph.models_map = models_map;
         graph.url_segment_name_map = url_segment_name_map;
         graph.connector = Some(builder.connector_builder().build_connector(&graph.models_vec, builder.reset_database).await);
-        graph
+        Graph { inner: Arc::new(graph) }
     }
 
     pub(crate) fn connector(&self) -> &dyn Connector {
-        match &self.connector {
+        match &self.inner.connector {
             Some(c) => { c.as_ref() }
             None => { panic!() }
         }
@@ -64,17 +67,17 @@ impl Graph {
 
     pub fn model(&self, name: &str) -> &Model {
         unsafe {
-            &(**self.models_map.get(name).unwrap())
+            self.inner.models_map.get(name).unwrap().as_ref()
         }
     }
 
     pub(crate) fn r#enum(&self, name: impl Into<String>) -> &Vec<String> {
-        &self.enums.get(&name.into()).unwrap().values
+        &self.inner.enums.get(&name.into()).unwrap().values
     }
 
-    pub(crate) fn models(&self) -> &Vec<Model> { &self.models_vec }
+    pub(crate) fn models(&self) -> &Vec<Arc<Model>> { &self.inner.models_vec }
 
-    pub(crate) fn enums(&self) -> &HashMap<String, Enum> { &self.enums }
+    pub(crate) fn enums(&self) -> &HashMap<String, Enum> { &self.inner.enums }
 
     pub async fn find_unique(&self, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
         self.connector().find_unique(self, model, finder, mutation_mode).await
@@ -97,34 +100,31 @@ impl Graph {
     }
 
     pub(crate) fn model_name_for_url_segment_name(&self, segment_name: &str) -> Option<&String> {
-        match self.url_segment_name_map.get(segment_name) {
+        match self.inner.url_segment_name_map.get(segment_name) {
             Some(val) => Some(val),
             None => None
         }
     }
 
     pub(crate) fn jwt_secret(&self) -> &str {
-        return if self.jwt_secret == "" {
+        return if self.inner.jwt_secret == "" {
             panic!("A graph with identity must have a custom JWT secret.")
         } else {
-            &self.jwt_secret
+            &self.inner.jwt_secret
         }
     }
 
     pub async fn generate_packages(&'static self) -> std::io::Result<()> {
-        for client in &self.clients {
+        for client in &self.inner.clients {
             client.generate(self).await?
         }
         Ok(())
     }
 
     pub(crate) fn host_url(&'static self) -> &str {
-        &self.host_url
+        &self.inner.host_url
     }
     pub(crate) fn url_prefix(&'static self) -> Option<&String> {
-        self.url_prefix.as_ref()
+        self.inner.url_prefix.as_ref()
     }
 }
-
-unsafe impl Send for Graph {}
-unsafe impl Sync for Graph {}

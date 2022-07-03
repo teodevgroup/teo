@@ -16,7 +16,7 @@ use crate::core::field::ReadRule::NoRead;
 use crate::core::field::Store::{Calculated, Temp};
 use crate::core::field::WriteRule::NoWrite;
 use crate::core::graph::Graph;
-use crate::core::model::{ModelIndex, ModelIndexItem, Model, ModelIndexType};
+use crate::core::model::{ModelIndex, ModelIndexItem, Model, ModelIndexType, ModelInner};
 use crate::core::model_callback::PinFutureObj;
 use crate::core::relation::Relation;
 use crate::core::object::Object;
@@ -261,7 +261,7 @@ impl ModelBuilder {
         self
     }
 
-    pub(crate) unsafe fn build(&self, connector_builder: &Box<dyn ConnectorBuilder>) -> Model {
+    pub(crate) fn build(&self, connector_builder: &Box<dyn ConnectorBuilder>) -> Model {
         let all_keys = Self::all_keys(self);
         let input_keys = Self::allowed_input_keys(self);
         let save_keys = Self::allowed_save_keys(self);
@@ -270,23 +270,20 @@ impl ModelBuilder {
         let query_keys = Self::get_query_keys(self);
         let auth_identity_keys = Self::get_auth_identity_keys(self);
         let auth_by_keys = Self::get_auth_by_keys(self);
-        let fields_vec: Vec<Field> = self.field_builders.iter().map(|fb| { fb.build(connector_builder) }).collect();
-        let relations_vec: Vec<Relation> = self.relation_builders.iter().map(|rb| { rb.build(connector_builder) }).collect();
-        let mut fields_map: HashMap<String, * const Field> = HashMap::new();
-        let mut relations_map: HashMap<String, * const Relation> = HashMap::new();
-        let mut primary_field: * const Field = null();
-        let mut index_fields: Vec<* const Field> = Vec::new();
+        let fields_vec: Vec<Arc<Field>> = self.field_builders.iter().map(|fb| { Arc::new(fb.build(connector_builder)) }).collect();
+        let relations_vec: Vec<Arc<Relation>> = self.relation_builders.iter().map(|rb| { Arc::new(rb.build(connector_builder)) }).collect();
+        let mut fields_map: HashMap<String, Arc<Field>> = HashMap::new();
+        let mut relations_map: HashMap<String, Arc<Relation>> = HashMap::new();
+        let mut primary_field: Option<Arc<Field>> = None;
         let mut primary = self.primary.clone();
         let mut indices = self.indices.clone();
         for relation in relations_vec.iter() {
-            let addr = addr_of!(*relation);
-            relations_map.insert(relation.name.clone(), addr);
+            relations_map.insert(relation.name.clone(), relation.clone());
         }
         for field in fields_vec.iter() {
-            let addr = addr_of!(*field);
-            fields_map.insert(field.name.clone(), addr);
+            fields_map.insert(field.name.clone(), field.clone());
             if field.primary {
-                primary_field = addr_of!(*field);
+                primary_field = Some(field.clone());
                 primary = Some(ModelIndex {
                     index_type: ModelIndexType::Primary,
                     name: "".to_string(),
@@ -300,7 +297,6 @@ impl ModelBuilder {
                 });
             }
             if field.index != FieldIndex::NoIndex {
-                index_fields.push(addr);
                 match &field.index {
                     FieldIndex::Index(settings) => {
                         indices.push(ModelIndex {
@@ -339,7 +335,7 @@ impl ModelBuilder {
 
         let unique_query_keys = Self::get_unique_query_keys(self, &indices, primary.as_ref().unwrap());
 
-        Model {
+        let inner = ModelInner {
             name: self.name.clone(),
             table_name: if self.table_name == "" { self.name.to_lowercase().to_plural() } else { self.table_name.to_string() },
             url_segment_name: if self.url_segment_name == "" { self.name.to_kebab_case().to_plural() } else { self.url_segment_name.to_string() },
@@ -363,7 +359,6 @@ impl ModelBuilder {
             on_update_fns: self.on_update_fns.clone(),
             on_delete_fns: self.on_delete_fns.clone(),
             primary_field,
-            index_fields,
             all_keys,
             input_keys,
             save_keys,
@@ -373,7 +368,8 @@ impl ModelBuilder {
             unique_query_keys,
             auth_identity_keys,
             auth_by_keys
-        }
+        };
+        Model { inner: Arc::new(inner) }
     }
 
     fn all_relation_keys(&self) -> Vec<String> {

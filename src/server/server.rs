@@ -408,7 +408,7 @@ impl Server {
     async fn refetch(&self, object: &Object, include: Option<&JsonValue>, select: Option<&JsonValue>) -> Result<Object, ActionError> {
         let model = object.model();
         let mut find_unique_arg = json!({});
-        for item in &model.primary.items {
+        for item in &model.primary_index().items {
             let val = object.get_value(&item.field_name).unwrap().unwrap();
             find_unique_arg.as_object_mut().unwrap().insert(item.field_name.clone(), val.to_json_value());
         }

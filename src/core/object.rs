@@ -342,7 +342,7 @@ impl Object {
                         }
                     } else {
                         // get foreign relation
-                        if let Some(foreign_relation) = obj.model().relations_vec.iter().find(|r| {
+                        if let Some(foreign_relation) = obj.model().relations().iter().find(|r| {
                             r.fields == relation.references && r.references == relation.fields
                         }) {
                             if foreign_relation.is_vec {
@@ -353,7 +353,7 @@ impl Object {
                                 }
                             } else {
                                 // both sides are singular
-                                for item in &self.model().primary.items {
+                                for item in &self.model().primary_index().items {
                                     if &item.field_name == field_name {
                                         let local_value = self.get_value(field_name)?;
                                         if local_value.is_some() {
@@ -436,15 +436,15 @@ impl Object {
     async fn trigger_before_write_callbacks(&self, newly_created: bool) -> Result<(), ActionError> {
         let model = self.model();
         if newly_created {
-            for cb in &model.on_create_fns {
+            for cb in &model.inner.on_create_fns {
                 cb(self.clone()).await;
             }
         } else {
-            for cb in &model.on_update_fns {
+            for cb in &model.inner.on_update_fns {
                 cb(self.clone()).await;
             }
         }
-        for cb in &model.on_save_fns {
+        for cb in &model.inner.on_save_fns {
             cb(self.clone()).await;
         }
         Ok(())
@@ -452,15 +452,15 @@ impl Object {
 
     async fn trigger_write_callbacks(&self, newly_created: bool) -> Result<(), ActionError> {
         let model = self.model();
-        for cb in &model.on_saved_fns {
+        for cb in &model.inner.on_saved_fns {
             cb(self.clone()).await;
         }
         if newly_created {
-            for cb in &model.on_created_fns {
+            for cb in &model.inner.on_created_fns {
                 cb(self.clone()).await;
             }
         } else {
-            for field in &model.fields_vec {
+            for field in model.fields() {
                 if field.previous_value_rule == PreviousValueRule::KeepAfterSaved {
                     for cb in &field.compare_on_updated {
                         if let Some(prev) = self.inner.previous_values.borrow().get(&field.name) {
@@ -471,7 +471,7 @@ impl Object {
                     }
                 }
             }
-            for cb in &model.on_updated_fns {
+            for cb in &model.inner.on_updated_fns {
                 cb(self.clone()).await;
             }
         }
@@ -696,7 +696,7 @@ impl Object {
                             if !relation.is_vec && (relation.optionality == Optionality::Required) {
                                 return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot disconnect."));
                             }
-                            let opposite_relation = model.relations_vec.iter().find(|r| {
+                            let opposite_relation = model.relations().iter().find(|r| {
                                 r.fields == relation.references && r.references == relation.fields
                             });
                             if opposite_relation.is_some() {
@@ -787,7 +787,7 @@ impl Object {
                             if !relation.is_vec && (relation.optionality == Optionality::Required) {
                                 return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot delete."));
                             }
-                            let opposite_relation = model.relations_vec.iter().find(|r| {
+                            let opposite_relation = model.relations().iter().find(|r| {
                                 r.fields == relation.references && r.references == relation.fields
                             });
                             if opposite_relation.is_some() {

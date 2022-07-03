@@ -1001,7 +1001,7 @@ fn build_lookup_inputs(
 ) -> Result<Vec<Document>, ActionError> {
     let include = include.as_object();
     if include.is_none() {
-        let model_name = &model.name;
+        let model_name = model.name();
         return Err(ActionError::invalid_query_input(format!("'include' on model '{model_name}' is not an object. Please check your input.")));
     }
     let include = include.unwrap();

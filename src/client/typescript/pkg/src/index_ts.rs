@@ -79,7 +79,7 @@ fn generate_model_create_input(graph: &'static Graph, model: &'static Model, wit
                     let num = if relation.is_vec { "Many" } else { "One" };
                     if let Some(without_relation) = without_relation {
                         if &without_relation.name != k {
-                            if let Some(opposite_relation) = relation_model.relations_vec.iter().find(|r| {
+                            if let Some(opposite_relation) = relation_model.relations().iter().find(|r| {
                                 r.fields == relation.references && r.references == relation.fields
                             }) {
                                 let opposite_relation_name = opposite_relation.name.to_pascal_case();
@@ -89,7 +89,7 @@ fn generate_model_create_input(graph: &'static Graph, model: &'static Model, wit
                             }
                         }
                     } else {
-                        if let Some(opposite_relation) = relation_model.relations_vec.iter().find(|r| {
+                        if let Some(opposite_relation) = relation_model.relations().iter().find(|r| {
                             r.fields == relation.references && r.references == relation.fields
                         }) {
                             let opposite_relation_name = opposite_relation.name.to_pascal_case();
@@ -218,7 +218,7 @@ fn generate_model_update_input(graph: &'static Graph, model: &'static Model, wit
                     let num = if relation.is_vec { "Many" } else { "One" };
                     if let Some(without_relation) = without_relation {
                         if &without_relation.name != k {
-                            if let Some(opposite_relation) = relation_model.relations_vec.iter().find(|r| {
+                            if let Some(opposite_relation) = relation_model.relations().iter().find(|r| {
                                 r.fields == relation.references && r.references == relation.fields
                             }) {
                                 let opposite_relation_name = opposite_relation.name.to_pascal_case();
@@ -228,7 +228,7 @@ fn generate_model_update_input(graph: &'static Graph, model: &'static Model, wit
                             }
                         }
                     } else {
-                        if let Some(opposite_relation) = relation_model.relations_vec.iter().find(|r| {
+                        if let Some(opposite_relation) = relation_model.relations().iter().find(|r| {
                             r.fields == relation.references && r.references == relation.fields
                         }) {
                             let opposite_relation_name = opposite_relation.name.to_pascal_case();
@@ -325,7 +325,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
             c.block(format!("export type {model_name}WhereUniqueInput = {{"), |b| {
                 use ModelIndexType::*;
                 let mut used_field_names: Vec<&str> = Vec::new();
-                m.indices.iter().for_each(|index| {
+                m.inner.indices.iter().for_each(|index| {
                     if index.index_type == Primary || index.index_type == Unique {
                         index.items.iter().for_each(|item| {
                             if !used_field_names.contains(&&***&&item.field_name) {
@@ -365,7 +365,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
             c.line(generate_model_create_nested_input(graph, m, None, true));
             c.line(generate_model_create_nested_input(graph, m, None, false));
             c.line(generate_model_create_or_connect_input(m, None));
-            m.relations_vec.iter().for_each(|r| {
+            m.relations().iter().for_each(|r| {
                 c.line(generate_model_create_input(graph, m, Some(&r.name)));
                 c.line(generate_model_create_nested_input(graph, m, Some(&r.name), true));
                 c.line(generate_model_create_nested_input(graph, m, Some(&r.name), false));
@@ -377,7 +377,7 @@ pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
             c.line(generate_model_upsert_with_where_unique_input(m, None));
             c.line(generate_model_update_with_where_unique_input(m, None));
             c.line(generate_model_update_many_with_where_input(m, None));
-            m.relations_vec.iter().for_each(|r| {
+            m.relations().iter().for_each(|r| {
                 c.line(generate_model_update_input(graph, m, Some(&r.name)));
                 c.line(generate_model_update_nested_input(graph, m, Some(&r.name), true));
                 c.line(generate_model_update_nested_input(graph, m, Some(&r.name), false));

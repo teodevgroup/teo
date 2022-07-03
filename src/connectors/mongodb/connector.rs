@@ -36,7 +36,7 @@ pub struct MongoDBConnector {
 }
 
 impl MongoDBConnector {
-    pub(crate) async fn new(url: String, models: &Vec<Model>, reset_database: bool) -> MongoDBConnector {
+    pub(crate) async fn new(url: String, models: &Vec<Arc<Model>>, reset_database: bool) -> MongoDBConnector {
         let options = ClientOptions::parse(url).await;
         if options.is_err() {
             println!("mongodb option is error");
@@ -77,7 +77,7 @@ impl MongoDBConnector {
                         continue
                     }
                     let name = (&index).options.as_ref().unwrap().name.as_ref().unwrap();
-                    let result = model.indices.iter().find(|i| &i.name == name);
+                    let result = model.inner.indices.iter().find(|i| &i.name == name);
                     if result.is_none() {
                         // not in our model definition, but in the database
                         // drop this index
@@ -108,7 +108,7 @@ impl MongoDBConnector {
                     reviewed_names.push(name.clone());
                 }
             }
-            for index in &model.indices {
+            for index in &model.inner.indices {
                 if !reviewed_names.contains(&index.name) {
                     // create this index
                     let index_options = IndexOptions::builder()
@@ -126,7 +126,7 @@ impl MongoDBConnector {
                     let result = collection.create_index(index_model, None).await;
                 }
             }
-            collections.insert(name.clone(), collection);
+            collections.insert(name.to_owned(), collection);
         }
         MongoDBConnector {
             client,

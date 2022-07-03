@@ -33,7 +33,7 @@ pub(crate) struct ModelIndex {
     pub(crate) items: Vec<ModelIndexItem>
 }
 
-pub struct Model {
+pub struct ModelInner {
     pub(crate) name: String,
     pub(crate) table_name: String,
     pub(crate) url_segment_name: String,
@@ -42,10 +42,10 @@ pub struct Model {
     pub(crate) identity: bool,
     pub(crate) actions: HashSet<ActionType>,
     pub(crate) permission: Option<Permission>,
-    pub(crate) fields_vec: Vec<Field>,
-    pub(crate) fields_map: HashMap<String, * const Field>,
-    pub(crate) relations_vec: Vec<Relation>,
-    pub(crate) relations_map: HashMap<String, * const Relation>,
+    pub(crate) fields_vec: Vec<Arc<Field>>,
+    pub(crate) fields_map: HashMap<String, Arc<Field>>,
+    pub(crate) relations_vec: Vec<Arc<Relation>>,
+    pub(crate) relations_map: HashMap<String, Arc<Relation>>,
     pub(crate) indices: Vec<ModelIndex>,
     pub(crate) primary: ModelIndex,
     pub(crate) on_saved_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
@@ -56,8 +56,7 @@ pub struct Model {
     pub(crate) on_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
     pub(crate) on_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
     pub(crate) on_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
-    pub(crate) primary_field: * const Field,
-    pub(crate) index_fields: Vec<* const Field>,
+    pub(crate) primary_field: Option<Arc<Field>>,
     pub(crate) all_keys: Vec<String>,
     pub(crate) input_keys: Vec<String>,
     pub(crate) save_keys: Vec<String>,
@@ -69,121 +68,125 @@ pub struct Model {
     pub(crate) auth_by_keys: Vec<String>,
 }
 
+pub struct Model {
+    pub(crate) inner: Arc<ModelInner>
+}
+
 impl Model {
 
-    pub(crate) fn name(&self) -> &String {
-        &self.name
+    pub(crate) fn name(&self) -> &str {
+        &self.inner.name
     }
 
-    pub(crate) fn table_name(&self) -> &String {
-        &self.table_name
+    pub(crate) fn table_name(&self) -> &str {
+        &self.inner.table_name
     }
 
-    pub(crate) fn url_segment_name(&self) -> &String {
-        &self.url_segment_name
+    pub(crate) fn url_segment_name(&self) -> &str {
+        &self.inner.url_segment_name
     }
 
-    pub(crate) fn localized_name(&self) -> &String {
-        &self.localized_name
+    pub(crate) fn localized_name(&self) -> &str {
+        &self.inner.localized_name
     }
 
-    pub(crate) fn description(&self) -> &String {
-        &self.description
+    pub(crate) fn description(&self) -> &str {
+        &self.inner.description
     }
 
     pub(crate) fn identity(&self) -> bool {
-        self.identity
+        self.inner.identity
     }
 
-    pub(crate) fn fields(&self) -> &Vec<Field> {
-        return &self.fields_vec
+    pub(crate) fn fields(&self) -> &Vec<Arc<Field>> {
+        return &self.inner.fields_vec
+    }
+
+    pub(crate) fn relations(&self) -> &Vec<Arc<Relation>> {
+        return &self.inner.relations_vec
     }
 
     pub(crate) fn field(&self, name: &str) -> Option<&Field> {
-        match self.fields_map.get(name) {
-            Some(f) => Some(unsafe { &**f }),
+        match self.inner.fields_map.get(name) {
+            Some(f) => Some(f.as_ref()),
             None => None
         }
     }
 
     pub(crate) fn relation(&self, name: &str) -> Option<&Relation> {
-        match self.relations_map.get(name) {
+        match self.inner.relations_map.get(name) {
             Some(r) => Some(unsafe { &**r }),
             None => None
         }
     }
 
-    pub(crate) fn primary_field(&self) -> Option<&Field> {
-        if self.primary_field == null() {
-            None
-        } else {
-            Some(unsafe { &*self.primary_field })
-        }
+    pub(crate) fn primary_index(&self) -> &ModelIndex {
+        &self.inner.primary
     }
 
-    pub(crate) fn primary_field_name(&self) -> Option<String> {
-        match self.primary_field() {
-            Some(field) => Some(field.name.clone()),
+    pub(crate) fn primary_field(&self) -> Option<&Field> {
+        match &self.inner.primary_field {
+            Some(f) => Some(f.as_ref()),
             None => None
         }
     }
 
-    pub(crate) fn index_fields(&self) -> Vec<&Field> {
-        self.index_fields.iter().map(|f| { unsafe { &**f } }).collect()
+    pub(crate) fn primary_field_name(&self) -> Option<&str> {
+        match self.primary_field() {
+            Some(field) => Some(&field.name),
+            None => None
+        }
     }
 
-    pub(crate) fn all_keys(&self) -> &Vec<String> { &self.all_keys }
+    pub(crate) fn all_keys(&self) -> &Vec<String> { &self.inner.all_keys }
 
     pub(crate) fn input_keys(&self) -> &Vec<String> {
-        &self.input_keys
+        &self.inner.input_keys
     }
 
     pub(crate) fn save_keys(&self) -> &Vec<String> {
-        &self.save_keys
+        &self.inner.save_keys
     }
 
     pub(crate) fn output_keys(&self) -> &Vec<String> {
-        &self.output_keys
+        &self.inner.output_keys
     }
 
     pub(crate) fn get_value_keys(&self) -> &Vec<String> {
-        &self.get_value_keys
+        &self.inner.get_value_keys
     }
 
     pub(crate) fn query_keys(&self) -> &Vec<String> {
-        &self.query_keys
+        &self.inner.query_keys
     }
 
     pub(crate) fn unique_query_keys(&self) -> &Vec<HashSet<String>> {
-        &self.unique_query_keys
+        &self.inner.unique_query_keys
     }
 
-    pub(crate) fn auth_identity_keys(&self) -> &Vec<String> { &self.auth_identity_keys }
+    pub(crate) fn auth_identity_keys(&self) -> &Vec<String> { &self.inner.auth_identity_keys }
 
-    pub(crate) fn auth_by_keys(&self) -> &Vec<String> { &self.auth_by_keys }
+    pub(crate) fn auth_by_keys(&self) -> &Vec<String> { &self.inner.auth_by_keys }
 
     pub(crate) fn has_action(&self, action: ActionType) -> bool {
-        self.actions.contains(&action)
+        self.inner.actions.contains(&action)
     }
 
     pub(crate) fn actions(&self) -> &HashSet<ActionType> {
-        &self.actions
+        &self.inner.actions
     }
 
     pub(crate) fn has_field(&self, name: &str) -> bool {
-        self.fields_map.get(name).is_some()
+        self.inner.fields_map.get(name).is_some()
     }
 
     pub(crate) fn has_relation(&self, name: &str) -> bool {
-        self.relations_map.get(name).is_some()
+        self.inner.relations_map.get(name).is_some()
     }
 }
 
-unsafe impl Send for Model {}
-unsafe impl Sync for Model {}
-
 impl PartialEq for Model {
     fn eq(&self, other: &Self) -> bool {
-        self.name == other.name
+        self.inner.name == other.inner.name
     }
 }
