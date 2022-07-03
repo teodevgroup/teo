@@ -433,8 +433,8 @@ impl Connector for MongoDBConnector {
             object.model().save_keys().clone()
         } else {
             object.model().save_keys().iter().filter(|k| {
-                object.inner.modified_fields.borrow().contains(&k.to_string()) ||
-                    object.inner.atomic_updator_map.borrow().contains_key(&k.to_string())
+                object.inner.modified_fields.lock().unwrap().contains(&k.to_string()) ||
+                    object.inner.atomic_updator_map.lock().unwrap().contains_key(&k.to_string())
             }).map(|k| { k.clone() }).collect()
         };
         let col = &self.collections[object.model().name()];
@@ -442,7 +442,7 @@ impl Connector for MongoDBConnector {
             let mut doc = doc!{};
             for key in keys {
                 let val = object.get_value(&key).unwrap();
-                if Some(&key) == primary_name.as_ref() {
+                if Some(key.as_str()) == primary_name {
                     if val == None {
                         continue;
                     }
@@ -462,7 +462,7 @@ impl Connector for MongoDBConnector {
                     if let Some(primary_field) = object.model().primary_field() {
                         object.set_value(&primary_field.name, Value::ObjectId(id));
                     } else {
-                        object.inner.value_map.borrow_mut().insert("__id".to_string(), Value::ObjectId(id));
+                        object.inner.value_map.lock().unwrap().insert("__id".to_string(), Value::ObjectId(id));
                     }
                 }
                 Err(error) => {
@@ -474,7 +474,7 @@ impl Connector for MongoDBConnector {
             let object_id = if let Some(primary_field) = object.model().primary_field() {
                 object.get_value(&primary_field.name).unwrap().unwrap().to_bson_value()
             } else {
-                object.inner.value_map.borrow().get("__id").unwrap().to_bson_value()
+                object.inner.value_map.lock().unwrap().get("__id").unwrap().to_bson_value()
             };
             let mut set = doc!{};
             let mut unset = doc!{};
@@ -482,8 +482,8 @@ impl Connector for MongoDBConnector {
             let mut mul = doc!{};
             let mut push = doc!{};
             for key in &keys {
-                if object.inner.atomic_updator_map.borrow().contains_key(key) {
-                    let aumap = object.inner.atomic_updator_map.borrow();
+                if object.inner.atomic_updator_map.lock().unwrap().contains_key(key) {
+                    let aumap = object.inner.atomic_updator_map.lock().unwrap();
                     let updator = aumap.get(key).unwrap();
                     match updator {
                         AtomicUpdateType::Increment(val) => {
@@ -572,13 +572,13 @@ impl Connector for MongoDBConnector {
                     let result = col.find_one_and_update(doc!{"_id": object_id}, update_doc, options).await;
                     match &result {
                         Ok(updated_document) => {
-                            for key in object.inner.atomic_updator_map.borrow().keys() {
+                            for key in object.inner.atomic_updator_map.lock().unwrap().keys() {
                                 let bson_new_val = updated_document.as_ref().unwrap().get(key).unwrap();
                                 let field = object.model().field(key).unwrap();
                                 let field_value = self.bson_value_to_field_value(key, bson_new_val, &field.field_type);
                                 match field_value {
                                     Ok(field_value) => {
-                                        object.inner.value_map.borrow_mut().insert(key.to_string(), field_value);
+                                        object.inner.value_map.lock().unwrap().insert(key.to_string(), field_value);
                                     }
                                     Err(err) => {
                                         println!("{:?}", err);
@@ -604,7 +604,7 @@ impl Connector for MongoDBConnector {
         }
         let model = object.model();
         let mut query = doc!{};
-        for item in &model.primary.items {
+        for item in &model.inner.primary.items {
             let field_name = &item.field_name;
             let column_name = model.field(field_name).unwrap().column_name();
             let value = object.get_value(field_name).unwrap().unwrap().to_bson_value();

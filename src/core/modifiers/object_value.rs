@@ -24,7 +24,7 @@ impl Modifier for ObjectValueModifier {
     }
 
     async fn call(&self, _stage: Stage, object: &Object) -> Stage {
-        let map = object.inner.value_map.borrow();
+        let map = object.inner.value_map.lock().unwrap();
         let value = map.get(self.key);
         if value.is_none() {
             Stage::Value(Value::Null)

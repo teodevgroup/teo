@@ -1,9 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use std::future::Future;
-use std::ptr::null;
-use std::rc::Rc;
 use std::sync::Arc;
-use futures_util::future::BoxFuture;
 use crate::action::action::ActionType;
 use crate::core::field::{Field, Sort};
 use crate::core::model_callback::PinFutureObj;
@@ -115,7 +111,7 @@ impl Model {
 
     pub(crate) fn relation(&self, name: &str) -> Option<&Relation> {
         match self.inner.relations_map.get(name) {
-            Some(r) => Some(unsafe { &**r }),
+            Some(r) => Some(r.as_ref()),
             None => None
         }
     }
@@ -190,3 +186,8 @@ impl PartialEq for Model {
         self.inner.name == other.inner.name
     }
 }
+
+unsafe impl Send for Model {}
+unsafe impl Sync for Model {}
+unsafe impl Send for ModelInner {}
+unsafe impl Sync for ModelInner {}
