@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::Mutex;
+use crate::app::app::ClientConfiguration;
 use crate::client::shared::{clear_directory, ensure_directory, generate_file};
 use crate::client::swift::pkg::gitignore::generate_gitignore;
 use crate::client::swift::pkg::package_swift::generate_package_swift;
@@ -29,7 +30,7 @@ impl SwiftClient {
 
 #[async_trait]
 impl Client for SwiftClient {
-    async fn generate(&self, graph: &Graph) -> std::io::Result<()> {
+    async fn generate(&self, graph: &Graph, conf: &ClientConfiguration) -> std::io::Result<()> {
         ensure_directory("client").await?;
         clear_directory("client/swift").await?;
         generate_file("client/swift/README.md", generate_readme_md(graph).await).await?;

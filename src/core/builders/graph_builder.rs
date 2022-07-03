@@ -14,7 +14,6 @@ pub struct GraphBuilder {
     pub(crate) connector_builder: Option<Box<dyn ConnectorBuilder>>,
     pub(crate) reset_database: bool,
     pub(crate) jwt_secret: String,
-    pub(crate) host_url: Option<String>,
     pub(crate) url_prefix: Option<String>,
 }
 
@@ -27,7 +26,6 @@ impl GraphBuilder {
             connector_builder: None,
             reset_database: false,
             jwt_secret: "".to_string(),
-            host_url: None,
             url_prefix: None,
         }
     }
@@ -59,11 +57,6 @@ impl GraphBuilder {
 
     pub fn url_prefix(&mut self, prefix: impl Into<String>) -> &mut Self {
         self.url_prefix = Some(prefix.into());
-        self
-    }
-
-    pub fn host_url(&mut self, url: impl Into<String>) -> &mut Self {
-        self.host_url = Some(url.into());
         self
     }
 

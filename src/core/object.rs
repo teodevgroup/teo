@@ -27,7 +27,7 @@ pub struct Object {
 
 impl Object {
 
-    pub(crate) fn new<'g>(graph: Graph, model: Arc<Model>) -> Object {
+    pub(crate) fn new(graph: Graph, model: Arc<Model>) -> Object {
         Object { inner: Arc::new(ObjectInner {
             graph: Arc::new(graph),
             model,
@@ -233,6 +233,11 @@ impl Object {
         Ok(())
     }
 
+    pub(crate) fn clear_new_state(&self) {
+        self.inner.is_new.store(false, Ordering::SeqCst);
+        self.inner.is_modified.store(false, Ordering::SeqCst);
+    }
+
     pub(crate) fn clear_state(&self) {
         self.inner.is_new.store(false, Ordering::SeqCst);
         self.inner.is_modified.store(false, Ordering::SeqCst);
@@ -267,6 +272,7 @@ impl Object {
         // send to database to save self
         let connector = self.graph().connector();
         connector.save_object(self).await?;
+        self.clear_new_state();
         // links
         if !no_recursive {
             for relation in self.model().relations() {

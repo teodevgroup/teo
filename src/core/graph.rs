@@ -22,7 +22,6 @@ struct GraphInner {
     url_segment_name_map: HashMap<String, String>,
     connector: Option<Box<dyn Connector>>,
     jwt_secret: String,
-    host_url: String,
 }
 
 impl Graph {
@@ -30,9 +29,6 @@ impl Graph {
     pub async fn new<'a, F: Fn(&mut GraphBuilder)>(build: F) -> Graph {
         let mut builder = GraphBuilder::new();
         build(&mut builder);
-        if builder.host_url.is_none() {
-            panic!("Graph must have a host url.");
-        }
         let mut graph = GraphInner {
             enums: builder.build_enums(),
             models_vec: Vec::new(),
@@ -40,7 +36,6 @@ impl Graph {
             url_segment_name_map: HashMap::new(),
             connector: None,
             jwt_secret: builder.jwt_secret.clone(),
-            host_url: builder.host_url.as_ref().unwrap().clone(),
         };
         graph.models_vec = builder.models.iter().map(|mb| { Arc::new(mb.build(&builder.connector_builder())) }).collect();
         let mut models_map: HashMap<String, Arc<Model>> = HashMap::new();
@@ -100,10 +95,6 @@ impl Graph {
             Some(val) => Some(val),
             None => None
         }
-    }
-
-    pub(crate) fn host_url(&self) -> &str {
-        &self.inner.host_url
     }
 }
 

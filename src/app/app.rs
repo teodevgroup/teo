@@ -106,6 +106,7 @@ pub struct ClientBuilder {
     type_script: Option<TypeScriptClient>,
     swift: Option<SwiftClient>,
     kotlin: Option<KotlinClient>,
+    host_url: Option<String>,
 }
 
 impl ClientBuilder {
@@ -114,6 +115,7 @@ impl ClientBuilder {
             type_script: None,
             swift: None,
             kotlin: None,
+            host_url: None,
         }
     }
 
@@ -122,6 +124,7 @@ impl ClientBuilder {
             type_script: self.type_script.clone(),
             swift: self.swift.clone(),
             kotlin: self.kotlin.clone(),
+            host_url: self.host_url.clone(),
         }
     }
 
@@ -152,6 +155,7 @@ pub struct ClientConfiguration {
     type_script: Option<TypeScriptClient>,
     swift: Option<SwiftClient>,
     kotlin: Option<KotlinClient>,
+    pub(crate) host_url: Option<String>,
 }
 
 impl Default for ClientConfiguration {
@@ -160,6 +164,7 @@ impl Default for ClientConfiguration {
             type_script: None,
             swift: None,
             kotlin: None,
+            host_url: None,
         }
     }
 }

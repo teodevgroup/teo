@@ -5,7 +5,6 @@ use serial_test::serial;
 use actix_web::{test, web, App, error::Error};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use teo::core::graph::Graph;
-use teo::server::server::Server;
 use serde_json::json;
 use crate::helpers::{request, request_get, assert_json_response};
 

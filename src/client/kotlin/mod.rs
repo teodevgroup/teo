@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
+use crate::app::app::ClientConfiguration;
 use crate::core::client::Client;
 use crate::core::graph::Graph;
 
@@ -21,7 +22,7 @@ impl KotlinClient {
 
 #[async_trait]
 impl Client for KotlinClient {
-    async fn generate(&self, _graph: &Graph) -> std::io::Result<()> {
+    async fn generate(&self, _graph: &Graph, _conf: &ClientConfiguration) -> std::io::Result<()> {
         Ok(())
     }
 }
