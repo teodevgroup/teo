@@ -114,17 +114,20 @@ impl Graph {
         }
     }
 
-    pub async fn generate_packages(&'static self) -> std::io::Result<()> {
+    pub async fn generate_packages(&self) -> std::io::Result<()> {
         for client in &self.inner.clients {
             client.generate(self).await?
         }
         Ok(())
     }
 
-    pub(crate) fn host_url(&'static self) -> &str {
+    pub(crate) fn host_url(&self) -> &str {
         &self.inner.host_url
     }
-    pub(crate) fn url_prefix(&'static self) -> Option<&String> {
+    pub(crate) fn url_prefix(&self) -> Option<&String> {
         self.inner.url_prefix.as_ref()
     }
 }
+
+unsafe impl Send for Graph { }
+unsafe impl Sync for Graph { }

@@ -1,7 +1,7 @@
 use crate::core::graph::Graph;
 
 
-pub(crate) async fn generate_package_swift(_graph: &'static Graph) -> String {
+pub(crate) async fn generate_package_swift(_graph: &Graph) -> String {
     format!(r#"// swift-tools-version:5.5
 
 import PackageDescription

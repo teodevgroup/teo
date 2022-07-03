@@ -6,7 +6,7 @@ use crate::core::field::Optionality;
 use crate::core::graph::Graph;
 use crate::core::model::{Model, ModelIndexType};
 
-fn generate_model_create_nested_input(graph: &'static Graph, model: &'static Model, without: Option<&str>, many: bool) -> String {
+fn generate_model_create_nested_input(graph: &Graph, model: &Model, without: Option<&str>, many: bool) -> String {
     let model_name = model.name();
     let without_title = if let Some(title) = without {
         let title = title.to_pascal_case();
@@ -46,7 +46,7 @@ fn generate_model_create_or_connect_input(model: &Model, without: Option<&str>) 
     }).to_string()
 }
 
-fn generate_model_create_input(graph: &'static Graph, model: &'static Model, without: Option<&str>) -> String {
+fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&str>) -> String {
     let model_name = model.name();
     let without_title = if let Some(title) = without {
         let title = title.to_pascal_case();
@@ -104,7 +104,7 @@ fn generate_model_create_input(graph: &'static Graph, model: &'static Model, wit
     }).to_string()
 }
 
-fn generate_model_upsert_with_where_unique_input(model: &'static Model, without: Option<&str>) -> String {
+fn generate_model_upsert_with_where_unique_input(model: &Model, without: Option<&str>) -> String {
     let model_name = model.name();
     let without_title = if let Some(title) = without {
         let title = title.to_pascal_case();
@@ -121,7 +121,7 @@ fn generate_model_upsert_with_where_unique_input(model: &'static Model, without:
     }).to_string()
 }
 
-fn generate_model_update_with_where_unique_input(model: &'static Model, without: Option<&str>) -> String {
+fn generate_model_update_with_where_unique_input(model: &Model, without: Option<&str>) -> String {
     let model_name = model.name();
     let without_title = if let Some(title) = without {
         let title = title.to_pascal_case();
@@ -137,7 +137,7 @@ fn generate_model_update_with_where_unique_input(model: &'static Model, without:
     }).to_string()
 }
 
-fn generate_model_update_many_with_where_input(model: &'static Model, without: Option<&str>) -> String {
+fn generate_model_update_many_with_where_input(model: &Model, without: Option<&str>) -> String {
     let model_name = model.name();
     let without_title = if let Some(title) = without {
         let title = title.to_pascal_case();
@@ -153,7 +153,7 @@ fn generate_model_update_many_with_where_input(model: &'static Model, without: O
     }).to_string()
 }
 
-fn generate_model_update_nested_input(graph: &'static Graph, model: &'static Model, without: Option<&str>, many: bool) -> String {
+fn generate_model_update_nested_input(graph: &Graph, model: &Model, without: Option<&str>, many: bool) -> String {
     let model_name = model.name();
     let without_title = if let Some(title) = without {
         let title = title.to_pascal_case();
@@ -191,7 +191,7 @@ fn generate_model_update_nested_input(graph: &'static Graph, model: &'static Mod
     }).to_string()
 }
 
-fn generate_model_update_input(graph: &'static Graph, model: &'static Model, without: Option<&str>) -> String {
+fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&str>) -> String {
     let model_name = model.name();
     let without_title = if let Some(title) = without {
         let title = title.to_pascal_case();
@@ -243,7 +243,7 @@ fn generate_model_update_input(graph: &'static Graph, model: &'static Model, wit
     }).to_string()
 }
 
-pub(crate) async fn generate_index_ts(graph: &'static Graph) -> String {
+pub(crate) async fn generate_index_ts(graph: &Graph) -> String {
     Code::new(0, 4, |c| {
         c.line(r#"import { request, Response, PagingInfo, SortOrder, Enumerable } from "./runtime""#);
         c.block("import {", |b| {

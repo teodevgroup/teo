@@ -29,7 +29,7 @@ impl SwiftClient {
 
 #[async_trait]
 impl Client for SwiftClient {
-    async fn generate(&self, graph: &'static Graph) -> std::io::Result<()> {
+    async fn generate(&self, graph: &Graph) -> std::io::Result<()> {
         ensure_directory("client").await?;
         clear_directory("client/swift").await?;
         generate_file("client/swift/README.md", generate_readme_md(graph).await).await?;

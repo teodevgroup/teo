@@ -41,19 +41,19 @@ impl Connector for PostgresConnector {
         todo!()
     }
 
-    async fn find_unique(&self, graph: &'static Graph, model: &'static Model, finder:  &Map<String, JsonValue>) -> Result<Object, ActionError> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder:  &Map<String, JsonValue>) -> Result<Object, ActionError> {
         todo!()
     }
 
-    async fn find_first(&self, graph: &'static Graph, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
+    async fn find_first(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
         todo!()
     }
 
-    async fn find_many(&self, graph: &'static Graph, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<Vec<Object>, ActionError> {
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<Vec<Object>, ActionError> {
         todo!()
     }
 
-    async fn count(&self, graph: &'static Graph, model: &'static Model, finder: &Map<String, JsonValue>) -> Result<usize, ActionError> {
+    async fn count(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<usize, ActionError> {
         todo!()
     }
 }

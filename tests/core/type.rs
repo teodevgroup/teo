@@ -8,7 +8,7 @@ use teo::core::value::Value;
 use teo::error::ActionError;
 
 
-async fn make_graph() -> &'static Graph {
+async fn make_graph() -> &Graph {
 
     Box::leak(Box::new(Graph::new(|g| {
 

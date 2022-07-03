@@ -13,7 +13,7 @@ async fn make_client_options() -> ClientOptions {
     ClientOptions::parse("mongodb://localhost:27017/teotestindex").await.unwrap()
 }
 
-async fn make_mongodb_graph() -> &'static Graph {
+async fn make_mongodb_graph() -> &Graph {
 
     let graph = Box::leak(Box::new(Graph::new(|g| {
 

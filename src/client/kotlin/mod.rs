@@ -21,7 +21,7 @@ impl KotlinClient {
 
 #[async_trait]
 impl Client for KotlinClient {
-    async fn generate(&self, _graph: &'static Graph) -> std::io::Result<()> {
+    async fn generate(&self, _graph: &Graph) -> std::io::Result<()> {
         Ok(())
     }
 }

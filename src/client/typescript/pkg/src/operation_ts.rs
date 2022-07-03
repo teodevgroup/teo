@@ -1,7 +1,7 @@
 use crate::core::graph::Graph;
 
 
-pub(crate) async fn generate_operation_ts(_graph: &'static Graph) -> String {
+pub(crate) async fn generate_operation_ts(_graph: &Graph) -> String {
     format!(r#"export type ObjectIdFieldUpdateOperationsInput = {{
     set?: string
 }}

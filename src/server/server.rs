@@ -22,8 +22,9 @@ use crate::error::ActionError;
 use crate::server::jwt::{Claims, decode_token, encode_token};
 
 
+#[derive(Clone)]
 pub struct Server {
-    graph: &'static Graph
+    graph: Graph
 }
 
 fn path_components(path: &str) -> Vec<&str> {
@@ -41,13 +42,13 @@ fn path_components(path: &str) -> Vec<&str> {
 }
 
 impl Server {
-    pub fn new(graph: &'static Graph) -> Self {
+    pub fn new(graph: Graph) -> Self {
         Self { graph }
     }
 
-    pub async fn start(&'static self, port: u16) -> std::io::Result<()> {
+    pub async fn start(&self, port: u16) -> std::io::Result<()> {
         HttpServer::new(move || {
-            self.make_app()
+            self.clone().make_app()
         })
             .bind(("0.0.0.0", port))
             .unwrap()
@@ -55,14 +56,13 @@ impl Server {
             .await
     }
 
-    pub fn make_app(&'static self) -> App<impl ServiceFactory<
+    pub fn make_app(&self) -> App<impl ServiceFactory<
         ServiceRequest,
         Response = ServiceResponse<BoxBody>,
         Config = (),
         InitError = (),
         Error = Error,
-    >> {
-        let this = self.graph;
+    > + 'static> {
         let app = App::new()
             .wrap(DefaultHeaders::new()
                 .add(("Access-Control-Allow-Origin", "*"))
@@ -72,7 +72,7 @@ impl Server {
             .default_service(web::route().to(move |r: HttpRequest, mut payload: web::Payload| async move {
                 let start = SystemTime::now();
                 let mut path = r.path().to_string();
-                if let Some(prefix) = this.url_prefix() {
+                if let Some(prefix) = self.graph.url_prefix() {
                     if !path.starts_with(prefix) {
                         self.log_unhandled(start, r.method().as_str(), &path, 404);
                         return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
@@ -104,7 +104,7 @@ impl Server {
                         return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
                     }
                 };
-                let model_name = match this.model_name_for_url_segment_name(model_url_segment_name) {
+                let model_name = match self.graph.model_name_for_url_segment_name(model_url_segment_name) {
                     Some(name) => name,
                     None => {
                         self.log_unhandled(start, r.method().as_str(), &path, 404);
@@ -137,7 +137,7 @@ impl Server {
                         return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
                     }
                 };
-                let model_def = this.model(model_name);
+                let model_def = self.graph.model(model_name);
                 if !model_def.has_action(action) {
                     self.log_unhandled(start, r.method().as_str(), &path, 400);
                     return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
@@ -284,7 +284,7 @@ impl Server {
         app
     }
 
-    fn log_unhandled(&'static self, start: SystemTime, method: &str, path: &str, code: u16) {
+    fn log_unhandled(&self, start: SystemTime, method: &str, path: &str, code: u16) {
         let now = SystemTime::now();
         let local: DateTime<Local> = Local::now();
         let code_string = match code {
@@ -301,7 +301,7 @@ impl Server {
         println!("{} {} {} on {} - {} {}", local_formatted, unhandled, method.bright_yellow(), path.bright_magenta(), code_string, ms_str);
     }
 
-    fn log_request(&'static self, start: SystemTime, action: &str, model: &str, code: u16) {
+    fn log_request(&self, start: SystemTime, action: &str, model: &str, code: u16) {
         let now = SystemTime::now();
         let local: DateTime<Local> = Local::now();
         let code_string = match code {
@@ -317,7 +317,7 @@ impl Server {
         println!("{} {} on {} - {} {}", local_formatted, action.bright_yellow(), model.bright_magenta(), code_string, ms_str);
     }
 
-    async fn get_identity(&'static self, r: &HttpRequest) -> Result<Option<Object>, ActionError> {
+    async fn get_identity(&self, r: &HttpRequest) -> Result<Option<Object>, ActionError> {
         let header_value = r.headers().get("authorization");
         if let None = header_value {
             return Ok(None);
@@ -348,7 +348,7 @@ impl Server {
     }
 
 
-    async fn handle_find_unique(&'static self, input: &JsonValue, model: &'static Model) -> HttpResponse {
+    async fn handle_find_unique(&self, input: &JsonValue, model: &Model) -> HttpResponse {
         let result = self.graph.find_unique(model, input, false).await;
         match result {
             Ok(obj) => {
@@ -361,7 +361,7 @@ impl Server {
         }
     }
 
-    async fn handle_find_first(&'static self, input: &JsonValue, model: &'static Model) -> HttpResponse {
+    async fn handle_find_first(&self, input: &JsonValue, model: &Model) -> HttpResponse {
         let result = self.graph.find_first(model, input, false).await;
         match result {
             Ok(obj) => {
@@ -374,7 +374,7 @@ impl Server {
         }
     }
 
-    async fn handle_find_many(&'static self, input: &JsonValue, model: &'static Model) -> HttpResponse {
+    async fn handle_find_many(&self, input: &JsonValue, model: &Model) -> HttpResponse {
         let result = self.graph.find_many(model, input, false).await;
         match result {
             Ok(results) => {
@@ -491,7 +491,7 @@ impl Server {
         }
     }
 
-    async fn handle_update(&'static self, input: &JsonValue, model: &'static Model) -> HttpResponse {
+    async fn handle_update(&self, input: &JsonValue, model: &Model) -> HttpResponse {
         let result = self.graph.find_unique(model, input, true).await;
         if result.is_err() {
             return HttpResponse::NotFound().json(json!({"error": result.err()}));
@@ -512,7 +512,7 @@ impl Server {
         }
     }
 
-    async fn handle_upsert(&'static self, input: &JsonValue, model: &'static Model) -> HttpResponse {
+    async fn handle_upsert(&self, input: &JsonValue, model: &Model) -> HttpResponse {
         let result = self.graph.find_unique(model, input, true).await;
         let include = input.get("include");
         let select = input.get("select");
@@ -580,7 +580,7 @@ impl Server {
         }
     }
 
-    async fn handle_delete(&'static self, input: &JsonValue, model: &'static Model) -> HttpResponse {
+    async fn handle_delete(&self, input: &JsonValue, model: &Model) -> HttpResponse {
         let result = self.graph.find_unique(model, input, true).await;
         if result.is_err() {
             return HttpResponse::NotFound().json(json!({"error": result.err()}));
@@ -705,7 +705,7 @@ impl Server {
         HttpResponse::Ok().json(json!({"Hello": "World!"}))
     }
 
-    async fn handle_sign_in(&'static self, input: &JsonValue, model: &'static Model) -> HttpResponse {
+    async fn handle_sign_in(&self, input: &JsonValue, model: &Model) -> HttpResponse {
         let input = input.as_object().unwrap();
         let credentials = input.get("credentials");
         if let None = credentials {
@@ -791,5 +791,7 @@ impl Server {
             HttpResponse::BadRequest().json(json!({"error": ActionError::authentication_failed()}))
         }
     }
-
 }
+
+unsafe impl Send for Server { }
+unsafe impl Sync for Server { }

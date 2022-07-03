@@ -2,7 +2,7 @@ use tokio::test;
 use teo::core::graph::Graph;
 
 
-async fn make_mysql_graph() -> &'static Graph {
+async fn make_mysql_graph() -> &Graph {
 
     let graph = Box::leak(Box::new(Graph::new(|g| {
 

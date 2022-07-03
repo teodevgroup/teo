@@ -1,7 +1,7 @@
 use crate::core::graph::Graph;
 
 
-pub(crate) async fn generate_gitignore(_graph: &'static Graph) -> String {
+pub(crate) async fn generate_gitignore(_graph: &Graph) -> String {
     format!(r#".DS_Store
 /.build
 /Packages

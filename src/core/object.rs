@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
-use std::sync::{Arc};
+use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use chrono::{Date, DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
@@ -41,7 +41,7 @@ impl Object {
             is_modified: AtomicBool::new(false),
             is_partial: AtomicBool::new(false),
             is_deleted: AtomicBool::new(false),
-            selected_fields: RefCell::new(HashSet::new()),
+            selected_fields: Arc::new(Mutex::new(HashSet::new())),
             modified_fields: RefCell::new(HashSet::new()),
             previous_values: RefCell::new(HashMap::new()),
             value_map: RefCell::new(HashMap::new()),
@@ -68,13 +68,13 @@ impl Object {
             return Err(ActionError::keys_unallowed());
         }
         if value == Value::Null {
-            self.inner.value_map.borrow_mut().remove(&key);
+            self.inner.value_map.lock().unwrap().remove(&key);
         } else {
-            self.inner.value_map.borrow_mut().insert(key.to_string(), value);
+            self.inner.value_map.lock().unwrap().insert(key.to_string(), value);
         }
         if !self.inner.is_new.load(Ordering::SeqCst) {
             self.inner.is_modified.store(true, Ordering::SeqCst);
-            self.inner.modified_fields.borrow_mut().insert(key.to_string());
+            self.inner.modified_fields.lock().unwrap().insert(key.to_string());
         }
         Ok(())
     }
@@ -85,7 +85,7 @@ impl Object {
         if !model_keys.contains(&key.to_string()) {
             return Err(ActionError::keys_unallowed());
         }
-        match self.inner.queried_relation_map.borrow().get(key) {
+        match self.inner.queried_relation_map.lock().unwrap().get(key) {
             Some(list) => {
                 if list.is_empty() {
                     Ok(None)
@@ -105,7 +105,7 @@ impl Object {
         if !model_keys.contains(&key.to_string()) {
             return Err(ActionError::keys_unallowed());
         }
-        match self.inner.queried_relation_map.borrow().get(key) {
+        match self.inner.queried_relation_map.lock().unwrap().get(key) {
             Some(list) => {
                 Ok(Some(list.clone()))
             }
@@ -121,12 +121,12 @@ impl Object {
         if !model_keys.contains(&key.to_string()) {
             return Err(ActionError::keys_unallowed());
         }
-        match self.inner.value_map.borrow().get(&key.to_string()) {
+        match self.inner.value_map.lock().unwrap().get(&key.to_string()) {
             Some(value) => {
                 Ok(Some(value.clone()))
             }
             None => {
-                match self.inner.queried_relation_map.borrow().get(&key.to_string()) {
+                match self.inner.queried_relation_map.lock().unwrap().get(&key.to_string()) {
                     Some(list) => {
                         let relation = self.model().relation(&key).unwrap();
                         if relation.is_vec {
@@ -149,16 +149,16 @@ impl Object {
     }
 
     pub fn select(&self, keys: HashSet<String>) -> Result<(), ActionError> {
-        self.inner.selected_fields.borrow_mut().extend(keys);
+        self.inner.selected_fields.lock().unwrap().extend(keys);
         Ok(())
     }
 
     pub fn deselect(&self, keys: HashSet<String>) -> Result<(), ActionError> {
-        if self.inner.selected_fields.borrow().len() == 0 {
-            self.inner.selected_fields.borrow_mut().extend(self.model().output_keys().iter().map(|s| { s.to_string()}));
+        if self.inner.selected_fields.lock().unwrap().len() == 0 {
+            self.inner.selected_fields.lock().unwrap().extend(self.model().output_keys().iter().map(|s| { s.to_string()}));
         }
         for key in keys {
-            self.inner.selected_fields.borrow_mut().remove(&key);
+            self.inner.selected_fields.lock().unwrap().remove(&key);
         }
         return Ok(());
     }
@@ -174,7 +174,7 @@ impl Object {
             }
             let field = field.unwrap();
             if field.needs_on_save_callback() {
-                let mut stage = match self.inner.value_map.borrow().deref().get(&key.to_string()) {
+                let mut stage = match self.inner.value_map.lock().unwrap().deref().get(&key.to_string()) {
                     Some(value) => {
                         Stage::Value(value.clone())
                     }
@@ -188,10 +188,10 @@ impl Object {
                         return Err(ActionError::invalid_input(key, s));
                     }
                     Stage::Value(v) | Stage::ConditionTrue(v) | Stage::ConditionFalse(v) => {
-                        self.inner.value_map.borrow_mut().insert(key.to_string(), v);
+                        self.inner.value_map.lock().unwrap().insert(key.to_string(), v);
                         if !self.inner.is_new.load(Ordering::SeqCst) {
                             self.inner.is_modified.store(true, Ordering::SeqCst);
-                            self.inner.modified_fields.borrow_mut().insert(key.to_string());
+                            self.inner.modified_fields.lock().unwrap().insert(key.to_string());
                         }
                     }
                 }
@@ -204,7 +204,7 @@ impl Object {
                 continue;
             }
             let field = field.unwrap();
-            if self.inner.ignore_required_fields.borrow().contains(&field.name) {
+            if self.inner.ignore_required_fields.lock().unwrap().contains(&field.name) {
                 continue;
             }
             if field.auto || field.auto_increment {
@@ -224,7 +224,7 @@ impl Object {
         }
         for relation in &self.model().relations_vec {
             let name = &relation.name;
-            let map = self.inner.relation_map.borrow();
+            let map = self.inner.relation_map.lock().unwrap();
             let vec = map.get(name);
             match vec {
                 None => {},
@@ -241,7 +241,7 @@ impl Object {
     pub(crate) fn clear_state(&self) {
         self.inner.is_new.store(false, Ordering::SeqCst);
         self.inner.is_modified.store(false, Ordering::SeqCst);
-        *self.inner.modified_fields.borrow_mut() = HashSet::new();
+        *self.inner.modified_fields.lock().unwrap() = HashSet::new();
     }
 
     #[async_recursion(?Send)]
@@ -257,7 +257,7 @@ impl Object {
         if !no_recursive {
             for relation in &self.model().relations_vec {
                 let name = &relation.name;
-                let map = self.inner.relation_map.borrow();
+                let map = self.inner.relation_map.lock().unwrap();
                 let vec_option = map.get(name);
                 match vec_option {
                     None => {},
@@ -276,7 +276,7 @@ impl Object {
         if !no_recursive {
             for relation in &self.model().relations_vec {
                 let name = &relation.name;
-                let map = self.inner.relation_map.borrow();
+                let map = self.inner.relation_map.lock().unwrap();
                 let vec_option = map.get(name);
                 match vec_option {
                     None => {},
@@ -463,7 +463,7 @@ impl Object {
             for field in model.fields() {
                 if field.previous_value_rule == PreviousValueRule::KeepAfterSaved {
                     for cb in &field.compare_on_updated {
-                        if let Some(prev) = self.inner.previous_values.borrow().get(&field.name) {
+                        if let Some(prev) = self.inner.previous_values.lock().unwrap().get(&field.name) {
                             if let Some(current) = self.get_value(&field.name).unwrap() {
                                 cb(prev.clone(), current.clone(), self.clone()).await
                             }
@@ -562,27 +562,27 @@ impl Object {
                             if value == Value::Null {
                                 if self.inner.is_new.load(Ordering::SeqCst) == false {
                                     if save_previous {
-                                        if let Some(current) = self.inner.value_map.borrow().get(key.as_str()) {
-                                            self.inner.previous_values.borrow_mut().insert(key.to_string(), current.clone());
+                                        if let Some(current) = self.inner.value_map.lock().unwrap().get(key.as_str()) {
+                                            self.inner.previous_values.lock().unwrap().insert(key.to_string(), current.clone());
                                         }
                                     }
-                                    self.inner.value_map.borrow_mut().remove(*key);
+                                    self.inner.value_map.lock().unwrap().remove(*key);
                                 }
                             } else {
                                 if save_previous {
-                                    if let Some(current) = self.inner.value_map.borrow().get(key.as_str()) {
-                                        self.inner.previous_values.borrow_mut().insert(key.to_string(), current.clone());
+                                    if let Some(current) = self.inner.value_map.lock().unwrap().get(key.as_str()) {
+                                        self.inner.previous_values.lock().unwrap().insert(key.to_string(), current.clone());
                                     }
                                 }
-                                self.inner.value_map.borrow_mut().insert(key.to_string(), value);
+                                self.inner.value_map.lock().unwrap().insert(key.to_string(), value);
                             }
                             if !self.inner.is_new.load(Ordering::SeqCst) {
                                 self.inner.is_modified.store(true, Ordering::SeqCst);
-                                self.inner.modified_fields.borrow_mut().insert(key.to_string());
+                                self.inner.modified_fields.lock().unwrap().insert(key.to_string());
                             }
                         }
                         AtomicUpdate(update_type) => {
-                            self.inner.atomic_updator_map.borrow_mut().insert(key.to_string(), update_type);
+                            self.inner.atomic_updator_map.lock().unwrap().insert(key.to_string(), update_type);
                         }
                         Input::RelationInput(input) => {
 
@@ -594,11 +594,11 @@ impl Object {
                         if let Some(argument) = &field.default {
                             match argument {
                                 Argument::ValueArgument(value) => {
-                                    self.inner.value_map.borrow_mut().insert(key.to_string(), value.clone());
+                                    self.inner.value_map.lock().unwrap().insert(key.to_string(), value.clone());
                                 }
                                 Argument::PipelineArgument(pipeline) => {
                                     let stage = pipeline.process(Stage::Value(Value::Null), &self).await;
-                                    self.inner.value_map.borrow_mut().insert(key.to_string(), stage.value().unwrap());
+                                    self.inner.value_map.lock().unwrap().insert(key.to_string(), stage.value().unwrap());
                                 }
                             }
                         }
@@ -625,10 +625,10 @@ impl Object {
                             new_object.set_json(entry).await?;
                             new_object.ignore_required_for(&relation.references);
                             self.ignore_required_for(&relation.fields);
-                            if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
-                                self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                            if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
-                            let mut relation_map = self.inner.relation_map.borrow_mut();
+                            let mut relation_map = self.inner.relation_map.lock().unwrap();
                             let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Connect(new_object));
                         }
@@ -642,10 +642,10 @@ impl Object {
                             let new_object = graph.find_unique(model, &unique_query, true).await?;
                             new_object.ignore_required_for(&relation.references);
                             self.ignore_required_for(&relation.fields);
-                            if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
-                                self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                            if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
-                            let mut relation_map = self.inner.relation_map.borrow_mut();
+                            let mut relation_map = self.inner.relation_map.lock().unwrap();
                             let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Connect(new_object));
                         }
@@ -660,12 +660,12 @@ impl Object {
                             let unique_result = graph.find_unique(model, &json!({"where": r#where}), true).await;
                             match unique_result {
                                 Ok(new_obj) => {
-                                    if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
-                                        self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                                    if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                        self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                                     }
                                     new_obj.ignore_required_for(&relation.references);
                                     self.ignore_required_for(&relation.fields);
-                                    let mut relation_map = self.inner.relation_map.borrow_mut();
+                                    let mut relation_map = self.inner.relation_map.lock().unwrap();
                                     let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
                                     objects.push(RelationManipulation::Connect(new_obj));
                                 }
@@ -674,10 +674,10 @@ impl Object {
                                     new_obj.set_json(create).await?;
                                     new_obj.ignore_required_for(&relation.references);
                                     self.ignore_required_for(&relation.fields);
-                                    if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
-                                        self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                                    if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                        self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                                     }
-                                    let mut relation_map = self.inner.relation_map.borrow_mut();
+                                    let mut relation_map = self.inner.relation_map.lock().unwrap();
                                     let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
                                     objects.push(RelationManipulation::Connect(new_obj));
                                 }
@@ -707,10 +707,10 @@ impl Object {
                             }
                             let unique_query = json!({"where": entry});
                             let object_to_disconnect = graph.find_unique(model, &unique_query, true).await?;
-                            if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
-                                self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                            if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
-                            let mut relation_map = self.inner.relation_map.borrow_mut();
+                            let mut relation_map = self.inner.relation_map.lock().unwrap();
                             let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Disconnect(object_to_disconnect));
                         }
@@ -732,10 +732,10 @@ impl Object {
                             }
                             let new_object = the_object.unwrap();
                             new_object.set_json(update).await?;
-                            if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
-                                self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                            if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
-                            let mut relation_map = self.inner.relation_map.borrow_mut();
+                            let mut relation_map = self.inner.relation_map.lock().unwrap();
                             let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Keep(new_object));
                         }
@@ -752,10 +752,10 @@ impl Object {
                             match the_object {
                                 Ok(obj) => {
                                     obj.set_json(update).await?;
-                                    if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
-                                        self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                                    if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                        self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                                     }
-                                    let mut relation_map = self.inner.relation_map.borrow_mut();
+                                    let mut relation_map = self.inner.relation_map.lock().unwrap();
                                     let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
                                     objects.push(RelationManipulation::Keep(obj));
                                 }
@@ -764,10 +764,10 @@ impl Object {
                                     new_obj.ignore_required_for(&relation.references);
                                     self.ignore_required_for(&relation.fields);
                                     new_obj.set_json(create).await?;
-                                    if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
-                                        self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                                    if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                        self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                                     }
-                                    let mut relation_map = self.inner.relation_map.borrow_mut();
+                                    let mut relation_map = self.inner.relation_map.lock().unwrap();
                                     let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
                                     objects.push(RelationManipulation::Connect(new_obj));
                                 }
@@ -801,10 +801,10 @@ impl Object {
                                 return Err(ActionError::object_not_found());
                             }
                             let new_object = the_object.unwrap();
-                            if self.inner.relation_map.borrow().get(&key.to_string()).is_none() {
-                                self.inner.relation_map.borrow_mut().insert(key.to_string(), vec![]);
+                            if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
-                            let mut relation_map = self.inner.relation_map.borrow_mut();
+                            let mut relation_map = self.inner.relation_map.lock().unwrap();
                             let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Delete(new_object));
                         }
@@ -829,7 +829,7 @@ impl Object {
     }
 
     pub(crate) fn ignore_required_for(&self, ignores: &Vec<String>) {
-        self.inner.ignore_required_fields.borrow_mut().extend(ignores.iter().map(|v| v.to_string()).collect::<Vec<String>>());
+        self.inner.ignore_required_fields.lock().unwrap().extend(ignores.iter().map(|v| v.to_string()).collect::<Vec<String>>());
     }
 
     pub(crate) fn is_instance_of(&self, model_name: &'static str) -> bool {
@@ -853,34 +853,28 @@ pub(crate) struct ObjectInner {
     pub(crate) is_modified: AtomicBool,
     pub(crate) is_partial: AtomicBool,
     pub(crate) is_deleted: AtomicBool,
-    pub(crate) selected_fields: RefCell<HashSet<String>>,
-    pub(crate) modified_fields: RefCell<HashSet<String>>,
-    pub(crate) previous_values: RefCell<HashMap<String, Value>>,
-    pub(crate) value_map: RefCell<HashMap<String, Value>>,
-    pub(crate) atomic_updator_map: RefCell<HashMap<String, AtomicUpdateType>>,
-    pub(crate) relation_map: RefCell<HashMap<String, Vec<RelationManipulation>>>,
-    pub(crate) queried_relation_map: RefCell<HashMap<String, Vec<Object>>>,
-    pub(crate) ignore_required_fields: RefCell<Vec<String>>,
+    pub(crate) selected_fields: Arc<Mutex<HashSet<String>>>,
+    pub(crate) modified_fields: Arc<Mutex<HashSet<String>>>,
+    pub(crate) previous_values: Arc<Mutex<HashMap<String, Value>>>,
+    pub(crate) value_map: Arc<Mutex<HashMap<String, Value>>>,
+    pub(crate) atomic_updator_map: Arc<Mutex<HashMap<String, AtomicUpdateType>>>,
+    pub(crate) relation_map: Arc<Mutex<HashMap<String, Vec<RelationManipulation>>>>,
+    pub(crate) queried_relation_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
+    pub(crate) ignore_required_fields: Arc<Mutex<Vec<String>>>,
 }
 
 impl Debug for Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut result = f.debug_struct(self.model().name());
-        for (key, value) in self.inner.value_map.borrow().iter() {
+        for (key, value) in self.inner.value_map.lock().unwrap().iter() {
             result.field(key, value);
         }
         result.finish()
     }
 }
 
-unsafe impl Send for ObjectInner {}
-unsafe impl Sync for ObjectInner {}
-
 impl PartialEq for Object {
     fn eq(&self, other: &Self) -> bool {
         self.model() == other.model() && self.identifier() == other.identifier()
     }
 }
-
-unsafe impl Send for Object {}
-unsafe impl Sync for Object {}

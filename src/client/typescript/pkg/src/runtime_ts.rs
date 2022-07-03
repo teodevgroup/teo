@@ -2,7 +2,7 @@ use crate::action::action::ActionType;
 use crate::core::graph::Graph;
 
 
-pub(crate) async fn generate_runtime_ts(graph: &'static Graph) -> String {
+pub(crate) async fn generate_runtime_ts(graph: &Graph) -> String {
     let actions = ActionType::iter().map(|a| { String::from("\"") + a.as_url_segment() + "\"" }).collect::<Vec<String>>().join(" | ");
     let url = graph.host_url();
     format!(r#"type Action = {actions}

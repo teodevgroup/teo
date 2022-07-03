@@ -16,7 +16,7 @@ use teo::server::server::Server;
 use crate::helpers::is_object_id;
 
 
-async fn make_mongodb_graph() -> &'static Graph {
+async fn make_mongodb_graph() -> &Graph {
     let graph = Box::leak(Box::new(Graph::new(|g| {
         g.data_source().mongodb("mongodb://localhost:27017/teotestintegration");
         g.reset_database();

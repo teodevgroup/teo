@@ -30,7 +30,7 @@ impl TypeScriptClient {
 
 #[async_trait]
 impl Client for TypeScriptClient {
-    async fn generate(&self, graph: &'static Graph) -> std::io::Result<()> {
+    async fn generate(&self, graph: &Graph) -> std::io::Result<()> {
         ensure_directory("client").await?;
         clear_directory("client/typescript").await?;
         ensure_directory("client/typescript/src").await?;
