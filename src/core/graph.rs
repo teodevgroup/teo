@@ -63,9 +63,7 @@ impl Graph {
     }
 
     pub fn model(&self, name: &str) -> &Model {
-        unsafe {
-            self.inner.models_map.get(name).unwrap().as_ref()
-        }
+        self.inner.models_map.get(name).unwrap().as_ref()
     }
 
     pub(crate) fn r#enum(&self, name: impl Into<String>) -> &Vec<String> {
@@ -93,7 +91,8 @@ impl Graph {
     }
 
     pub fn new_object(&self, model: &str) -> Object {
-        Object::new(self.clone(), self.model(model))
+        let model = self.inner.models_map.get(model).unwrap().clone();;
+        Object::new(self.clone(), model)
     }
 
     pub(crate) fn model_name_for_url_segment_name(&self, segment_name: &str) -> Option<&String> {

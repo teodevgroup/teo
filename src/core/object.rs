@@ -32,10 +32,10 @@ pub struct Object {
 
 impl Object {
 
-    pub(crate) fn new<'g>(graph: Graph, model: Model) -> Object {
+    pub(crate) fn new<'g>(graph: Graph, model: Arc<Model>) -> Object {
         Object { inner: Arc::new(ObjectInner {
             graph: Arc::new(graph),
-            model: Arc::new(model),
+            model,
             is_initialized: AtomicBool::new(false),
             is_new: AtomicBool::new(true),
             is_modified: AtomicBool::new(false),
