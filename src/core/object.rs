@@ -1,19 +1,14 @@
-use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
-use chrono::{Date, DateTime, NaiveDate, Utc};
-use rust_decimal::Decimal;
-use rust_decimal::prelude::FromStr;
 use serde_json::{json, Map, Value as JsonValue};
 use async_recursion::async_recursion;
 use crate::core::argument::Argument;
-use crate::core::field::{Field, Optionality, Store};
+use crate::core::field::{Optionality, Store};
 use crate::core::input::{AtomicUpdateType, Input};
 use crate::core::input::Input::{AtomicUpdate, SetValue};
-use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::input_decoder::{decode_field_input, input_to_vec, one_length_json_obj};
 use crate::core::model::Model;
@@ -22,7 +17,7 @@ use crate::core::relation::{Relation, RelationManipulation};
 use crate::core::save_session::SaveSession;
 use crate::core::stage::Stage;
 use crate::core::value::Value;
-use crate::error::{ActionError, ActionErrorType};
+use crate::error::ActionError;
 
 
 #[derive(Clone)]
@@ -52,7 +47,7 @@ impl Object {
         }) }
     }
 
-    #[async_recursion]
+    #[async_recursion(?Send)]
     pub async fn set_json(&self, json_value: &JsonValue) -> Result<(), ActionError> {
         self.set_or_update_json(json_value, true).await
     }
@@ -222,7 +217,7 @@ impl Object {
                 }
             }
         }
-        for relation in &self.model().relations_vec {
+        for relation in self.model().relations() {
             let name = &relation.name;
             let map = self.inner.relation_map.lock().unwrap();
             let vec = map.get(name);
@@ -255,7 +250,7 @@ impl Object {
     pub(crate) async fn save_to_database(&self, session: Arc<dyn SaveSession>, no_recursive: bool) -> Result<(), ActionError> {
         // handle relations and manipulations
         if !no_recursive {
-            for relation in &self.model().relations_vec {
+            for relation in self.model().relations() {
                 let name = &relation.name;
                 let map = self.inner.relation_map.lock().unwrap();
                 let vec_option = map.get(name);
@@ -274,7 +269,7 @@ impl Object {
         connector.save_object(self).await?;
         // links
         if !no_recursive {
-            for relation in &self.model().relations_vec {
+            for relation in self.model().relations() {
                 let name = &relation.name;
                 let map = self.inner.relation_map.lock().unwrap();
                 let vec_option = map.get(name);
@@ -837,11 +832,11 @@ impl Object {
     }
 
     pub fn model(&self) -> &Model {
-        unsafe { &*self.inner.model }
+        self.inner.model.as_ref()
     }
 
     pub fn graph(&self) -> &Graph {
-        unsafe { &*self.inner.graph }
+        self.inner.graph.as_ref()
     }
 }
 
