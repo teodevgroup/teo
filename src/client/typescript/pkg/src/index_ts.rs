@@ -214,7 +214,6 @@ fn generate_model_update_input(graph: &'static Graph, model: &'static Model, wit
                 } else if let Some(relation) = model.relation(k) {
                     let relation_name = &relation.name;
                     let relation_model_name = &relation.model;
-                    println!("last relation name {model_name} {without_title} {relation_model_name}");
                     let relation_model = graph.model(relation_model_name);
                     let num = if relation.is_vec { "Many" } else { "One" };
                     if let Some(without_relation) = without_relation {
