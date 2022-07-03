@@ -49,7 +49,7 @@ impl Server {
         HttpServer::new(move || {
             self.make_app()
         })
-            .bind(("127.0.0.1", port))
+            .bind(("0.0.0.0", port))
             .unwrap()
             .run()
             .await
