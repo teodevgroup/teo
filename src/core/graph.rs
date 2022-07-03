@@ -10,6 +10,7 @@ use crate::core::object::Object;
 use crate::core::r#enum::Enum;
 use crate::error::ActionError;
 
+#[derive(Clone)]
 pub struct Graph {
     inner: Arc<GraphInner>
 }

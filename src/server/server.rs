@@ -47,8 +47,9 @@ impl Server {
     }
 
     pub async fn start(&self, port: u16) -> std::io::Result<()> {
+        let app = self.clone().make_app();
         HttpServer::new(move || {
-            self.clone().make_app()
+            app
         })
             .bind(("0.0.0.0", port))
             .unwrap()
