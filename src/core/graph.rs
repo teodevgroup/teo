@@ -102,14 +102,6 @@ impl Graph {
         }
     }
 
-    pub(crate) fn jwt_secret(&self) -> &str {
-        return if self.inner.jwt_secret == "" {
-            panic!("A graph with identity must have a custom JWT secret.")
-        } else {
-            &self.inner.jwt_secret
-        }
-    }
-
     pub(crate) fn host_url(&self) -> &str {
         &self.inner.host_url
     }

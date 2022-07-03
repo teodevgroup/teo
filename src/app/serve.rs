@@ -66,7 +66,7 @@ fn log_request(start: SystemTime, action: &str, model: &str, code: u16) {
     println!("{} {} on {} - {} {}", local_formatted, action.bright_yellow(), model.bright_magenta(), code_string, ms_str);
 }
 
-async fn get_identity(r: &HttpRequest, graph: &Graph) -> Result<Option<Object>, ActionError> {
+async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration) -> Result<Option<Object>, ActionError> {
     let header_value = r.headers().get("authorization");
     if let None = header_value {
         return Ok(None);
@@ -76,7 +76,7 @@ async fn get_identity(r: &HttpRequest, graph: &Graph) -> Result<Option<Object>, 
         return Err(ActionError::invalid_authorization_format());
     }
     let token_str = &auth_str[7..];
-    let claims_result = decode_token(&token_str.to_string(), graph.jwt_secret());
+    let claims_result = decode_token(&token_str.to_string(), &conf.jwt_secret.as_ref().unwrap());
     if let Err(_) = claims_result {
         return Err(ActionError::invalid_jwt_token());
     }
@@ -453,7 +453,7 @@ async fn handle_group_by(graph: &Graph, input: &JsonValue, model: &Model) -> Htt
     HttpResponse::Ok().json(json!({"Hello": "World!"}))
 }
 
-async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &ServerConfiguration) -> HttpResponse {
     let input = input.as_object().unwrap();
     let credentials = input.get("credentials");
     if let None = credentials {
@@ -529,7 +529,7 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model) -> Http
         model: obj.model().name().to_string(),
         exp
     };
-    let token = encode_token(claims, graph.jwt_secret());
+    let token = encode_token(claims, &conf.jwt_secret.as_ref().unwrap());
     return if let Stage::Value(_) = final_stage {
         HttpResponse::Ok().json(json!({
                 "meta": token,
@@ -629,7 +629,7 @@ pub fn make_app(graph: &'static Graph, conf: &'static ServerConfiguration) -> Ap
 
             match action {
                 ActionType::FindUnique => {
-                    return match get_identity(&r, &graph).await {
+                    return match get_identity(&r, &graph, &conf).await {
                         Ok(_identity) => {
                             let result = handle_find_unique(&graph, &parsed_body, model_def).await;
                             log_request(start, "FindUnique", model_def.name(), result.status().as_u16());
@@ -639,7 +639,7 @@ pub fn make_app(graph: &'static Graph, conf: &'static ServerConfiguration) -> Ap
                     };
                 }
                 ActionType::FindFirst => {
-                    return match get_identity(&r, &graph).await {
+                    return match get_identity(&r, &graph, &conf).await {
                         Ok(_identity) => {
                             let result = handle_find_first(&graph, &parsed_body, model_def).await;
                             log_request(start, "FindFirst", model_def.name(), result.status().as_u16());
@@ -649,7 +649,7 @@ pub fn make_app(graph: &'static Graph, conf: &'static ServerConfiguration) -> Ap
                     };
                 }
                 ActionType::FindMany => {
-                    return match get_identity(&r, &graph).await {
+                    return match get_identity(&r, &graph, &conf).await {
                         Ok(_identity) => {
                             let result = handle_find_many(&graph, &parsed_body, model_def).await;
                             log_request(start, "FindMany", model_def.name(), result.status().as_u16());
@@ -659,7 +659,7 @@ pub fn make_app(graph: &'static Graph, conf: &'static ServerConfiguration) -> Ap
                     };
                 }
                 ActionType::Create => {
-                    return match get_identity(&r, &graph).await {
+                    return match get_identity(&r, &graph, &conf).await {
                         Ok(_identity) => {
                             let result = handle_create(&graph, &parsed_body, model_def).await;
                             log_request(start, "Create", model_def.name(), result.status().as_u16());
@@ -669,7 +669,7 @@ pub fn make_app(graph: &'static Graph, conf: &'static ServerConfiguration) -> Ap
                     };
                 }
                 ActionType::Update => {
-                    return match get_identity(&r, &graph).await {
+                    return match get_identity(&r, &graph, &conf).await {
                         Ok(_identity) => {
                             let result = handle_update(&graph, &parsed_body, model_def).await;
                             log_request(start, "Update", model_def.name(), result.status().as_u16());
@@ -679,7 +679,7 @@ pub fn make_app(graph: &'static Graph, conf: &'static ServerConfiguration) -> Ap
                     };
                 }
                 ActionType::Upsert => {
-                    return match get_identity(&r, &graph).await {
+                    return match get_identity(&r, &graph, &conf).await {
                         Ok(_identity) => {
                             let result = handle_upsert(&graph, &parsed_body, model_def).await;
                             log_request(start, "Upsert", model_def.name(), result.status().as_u16());
@@ -689,7 +689,7 @@ pub fn make_app(graph: &'static Graph, conf: &'static ServerConfiguration) -> Ap
                     };
                 }
                 ActionType::Delete => {
-                    return match get_identity(&r, &graph).await {
+                    return match get_identity(&r, &graph, &conf).await {
                         Ok(_identity) => {
                             let result = handle_delete(&graph, &parsed_body, model_def).await;
                             log_request(start, "Delete", model_def.name(), result.status().as_u16());
@@ -699,7 +699,7 @@ pub fn make_app(graph: &'static Graph, conf: &'static ServerConfiguration) -> Ap
                     };
                 }
                 ActionType::CreateMany => {
-                    return match get_identity(&r, &graph).await {
+                    return match get_identity(&r, &graph, &conf).await {
                         Ok(_identity) => {
                             let result = handle_create_many(&graph, &parsed_body, model_def).await;
                             log_request(start, "CreateMany", model_def.name(), result.status().as_u16());
@@ -709,7 +709,7 @@ pub fn make_app(graph: &'static Graph, conf: &'static ServerConfiguration) -> Ap
                     };
                 }
                 ActionType::UpdateMany => {
-                    return match get_identity(&r, &graph).await {
+                    return match get_identity(&r, &graph, &conf).await {
                         Ok(_identity) => {
                             let result = handle_update_many(&graph, &parsed_body, model_def).await;
                             log_request(start, "UpdateMany", model_def.name(), result.status().as_u16());
@@ -719,7 +719,7 @@ pub fn make_app(graph: &'static Graph, conf: &'static ServerConfiguration) -> Ap
                     };
                 }
                 ActionType::DeleteMany => {
-                    return match get_identity(&r, &graph).await {
+                    return match get_identity(&r, &graph, &conf).await {
                         Ok(_identity) => {
                             let result = handle_delete_many(&graph, &parsed_body, model_def).await;
                             log_request(start, "DeleteMany", model_def.name(), result.status().as_u16());
@@ -729,7 +729,7 @@ pub fn make_app(graph: &'static Graph, conf: &'static ServerConfiguration) -> Ap
                     };
                 }
                 ActionType::Count => {
-                    return match get_identity(&r, &graph).await {
+                    return match get_identity(&r, &graph, &conf).await {
                         Ok(_identity) => {
                             let result = handle_count(&graph, &parsed_body, model_def).await;
                             log_request(start, "Count", model_def.name(), result.status().as_u16());
@@ -739,7 +739,7 @@ pub fn make_app(graph: &'static Graph, conf: &'static ServerConfiguration) -> Ap
                     };
                 }
                 ActionType::Aggregate => {
-                    return match get_identity(&r, &graph).await {
+                    return match get_identity(&r, &graph, &conf).await {
                         Ok(_identity) => {
                             let result = handle_aggregate(&graph, &parsed_body, model_def).await;
                             log_request(start, "Aggregate", model_def.name(), result.status().as_u16());
@@ -749,7 +749,7 @@ pub fn make_app(graph: &'static Graph, conf: &'static ServerConfiguration) -> Ap
                     };
                 }
                 ActionType::GroupBy => {
-                    return match get_identity(&r, &graph).await {
+                    return match get_identity(&r, &graph, &conf).await {
                         Ok(_identity) => {
                             let result = handle_group_by(&graph, &parsed_body, model_def).await;
                             log_request(start, "GroupBy", model_def.name(), result.status().as_u16());
@@ -759,7 +759,7 @@ pub fn make_app(graph: &'static Graph, conf: &'static ServerConfiguration) -> Ap
                     };
                 }
                 ActionType::SignIn => {
-                    let result = handle_sign_in(&graph, &parsed_body, model_def).await;
+                    let result = handle_sign_in(&graph, &parsed_body, model_def, &conf).await;
                     log_request(start, "SignIn", model_def.name(), result.status().as_u16());
                     result
                 }
@@ -778,4 +778,3 @@ pub(crate) async fn serve(graph: Graph, conf: ServerConfiguration) -> Result<(),
         .run()
         .await
 }
-
