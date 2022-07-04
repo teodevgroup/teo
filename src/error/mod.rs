@@ -49,6 +49,7 @@ pub enum ActionErrorType {
     NewObjectCannotDisconnect,
     GetValueError,
     SetValueError,
+    SaveCallingError,
 }
 
 impl ActionErrorType {
@@ -98,6 +99,7 @@ impl ActionErrorType {
             ActionErrorType::NewObjectCannotDisconnect => { 400 }
             ActionErrorType::GetValueError => { 500 }
             ActionErrorType::SetValueError => { 500 }
+            ActionErrorType::SaveCallingError => { 500 }
         }
     }
 }
@@ -481,6 +483,14 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::SetValueError,
             message: format!("Model `{model_name}' doesn't have key `{key_name:?}'."),
+            errors: None
+        }
+    }
+
+    pub fn save_calling_error(model_name: impl AsRef<str> + Display) -> Self {
+        ActionError {
+            r#type: ActionErrorType::SaveCallingError,
+            message: format!("Model `{model_name}', save method cannot be called inside before save callbacks."),
             errors: None
         }
     }

@@ -36,6 +36,8 @@ impl Object {
             is_modified: AtomicBool::new(false),
             is_partial: AtomicBool::new(false),
             is_deleted: AtomicBool::new(false),
+            inside_before_save_callback: AtomicBool::new(false),
+            inside_write_callback: AtomicBool::new(false),
             selected_fields: Arc::new(Mutex::new(HashSet::new())),
             modified_fields: Arc::new(Mutex::new(HashSet::new())),
             previous_values: Arc::new(Mutex::new(HashMap::new())),
@@ -440,6 +442,10 @@ impl Object {
     }
 
     pub async fn save(&self) -> Result<(), ActionError> {
+        let inside_before_callback = self.inner.inside_before_save_callback.load(Ordering::SeqCst);
+        if inside_before_callback {
+            return Err(ActionError::save_calling_error(self.model().name()));
+        }
         let is_new = self.is_new();
         self.apply_on_save_pipeline_and_validate_required_fields().await?;
         self.trigger_before_write_callbacks(is_new).await?;
@@ -468,8 +474,14 @@ impl Object {
     }
 
     async fn trigger_write_callbacks(&self, newly_created: bool) -> Result<(), ActionError> {
+        let inside_write_callback = self.inner.inside_write_callback.load(Ordering::SeqCst);
+        if inside_write_callback {
+            return Ok(());
+        }
+        self.inner.inside_write_callback.store(true, Ordering::SeqCst);
         let model = self.model();
         for cb in &model.inner.on_saved_fns {
+
             cb(self.clone()).await;
         }
         if newly_created {
@@ -494,6 +506,7 @@ impl Object {
                 cb(self.clone()).await;
             }
         }
+        self.inner.inside_write_callback.store(false, Ordering::SeqCst);
         Ok(())
     }
 
@@ -867,6 +880,8 @@ pub(crate) struct ObjectInner {
     pub(crate) is_modified: AtomicBool,
     pub(crate) is_partial: AtomicBool,
     pub(crate) is_deleted: AtomicBool,
+    pub(crate) inside_before_save_callback: AtomicBool,
+    pub(crate) inside_write_callback: AtomicBool,
     pub(crate) selected_fields: Arc<Mutex<HashSet<String>>>,
     pub(crate) modified_fields: Arc<Mutex<HashSet<String>>>,
     pub(crate) previous_values: Arc<Mutex<HashMap<String, Value>>>,
