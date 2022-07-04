@@ -613,6 +613,16 @@ impl From<Value> for f64 {
         v.as_f64().unwrap()
     }
 }
+
+// impl<T> From<Value> for Option<T> where T: From<Value> {
+//     fn from(value: Value) -> Self {
+//         match value {
+//             Value::Null => None,
+//             _ => value.into()
+//         }
+//     }
+// }
+
 //
 // impl From<Decimal> for Value {
 //     fn from(v: Decimal) -> Self { Value::Decimal(v) }

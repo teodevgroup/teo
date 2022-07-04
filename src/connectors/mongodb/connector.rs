@@ -36,7 +36,7 @@ pub struct MongoDBConnector {
 }
 
 impl MongoDBConnector {
-    pub(crate) async fn new(url: String, models: &Vec<Arc<Model>>, reset_database: bool) -> MongoDBConnector {
+    pub(crate) async fn new(url: String, models: &Vec<Model>, reset_database: bool) -> MongoDBConnector {
         let options = ClientOptions::parse(url).await;
         if options.is_err() {
             println!("mongodb option is error");

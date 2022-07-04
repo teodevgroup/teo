@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::ptr::addr_of;
 use std::sync::Arc;
 use serde_json::{Map, Value as JsonValue};
 use crate::core::builders::graph_builder::GraphBuilder;
@@ -17,8 +16,8 @@ pub struct Graph {
 
 struct GraphInner {
     enums: HashMap<String, Enum>,
-    models_vec: Vec<Arc<Model>>,
-    models_map: HashMap<String, Arc<Model>>,
+    models_vec: Vec<Model>,
+    models_map: HashMap<String, Model>,
     url_segment_name_map: HashMap<String, String>,
     connector: Option<Box<dyn Connector>>,
     jwt_secret: String,
@@ -37,8 +36,8 @@ impl Graph {
             connector: None,
             jwt_secret: builder.jwt_secret.clone(),
         };
-        graph.models_vec = builder.models.iter().map(|mb| { Arc::new(mb.build(&builder.connector_builder())) }).collect();
-        let mut models_map: HashMap<String, Arc<Model>> = HashMap::new();
+        graph.models_vec = builder.models.iter().map(|mb| { mb.build(&builder.connector_builder()) }).collect();
+        let mut models_map: HashMap<String, Model> = HashMap::new();
         let mut url_segment_name_map: HashMap<String, String> = HashMap::new();
         for model in graph.models_vec.iter() {
             models_map.insert(model.name().to_owned(), model.clone());
@@ -58,14 +57,14 @@ impl Graph {
     }
 
     pub fn model(&self, name: &str) -> &Model {
-        self.inner.models_map.get(name).unwrap().as_ref()
+        self.inner.models_map.get(name).unwrap()
     }
 
     pub(crate) fn r#enum(&self, name: impl Into<String>) -> &Vec<String> {
         &self.inner.enums.get(&name.into()).unwrap().values
     }
 
-    pub(crate) fn models(&self) -> &Vec<Arc<Model>> { &self.inner.models_vec }
+    pub(crate) fn models(&self) -> &Vec<Model> { &self.inner.models_vec }
 
     pub(crate) fn enums(&self) -> &HashMap<String, Enum> { &self.inner.enums }
 
@@ -86,7 +85,8 @@ impl Graph {
     }
 
     pub fn new_object(&self, model: &str) -> Object {
-        let model = self.inner.models_map.get(model).unwrap().clone();;
+        let model = self.inner.models_map.get(model).unwrap().clone();
+
         Object::new(self.clone(), model)
     }
 

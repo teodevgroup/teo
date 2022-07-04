@@ -27,9 +27,9 @@ pub struct Object {
 
 impl Object {
 
-    pub(crate) fn new(graph: Graph, model: Arc<Model>) -> Object {
+    pub(crate) fn new(graph: Graph, model: Model) -> Object {
         Object { inner: Arc::new(ObjectInner {
-            graph: Arc::new(graph),
+            graph,
             model,
             is_initialized: AtomicBool::new(false),
             is_new: AtomicBool::new(true),
@@ -106,6 +106,28 @@ impl Object {
             }
             None => {
                 Ok(None)
+            }
+        }
+    }
+
+    // pub fn get_optional<T>(&self, key: impl AsRef<str>) -> Result<Option<T>, ActionError> where T: From<Value> {
+    //     match self.get_value(key) {
+    //         Ok(optional_value) => {
+    //             Ok(optional_value.unwrap().into())
+    //         }
+    //         Err(err) => {
+    //             Err(err)
+    //         }
+    //     }
+    // }
+
+    pub fn get<T>(&self, key: impl AsRef<str>) -> Result<T, ActionError> where T: From<Value> {
+        match self.get_value(key) {
+            Ok(optional_value) => {
+                Ok(optional_value.unwrap().into())
+            }
+            Err(err) => {
+                Err(err)
             }
         }
     }
@@ -838,17 +860,17 @@ impl Object {
     }
 
     pub fn model(&self) -> &Model {
-        self.inner.model.as_ref()
+        &self.inner.model
     }
 
     pub fn graph(&self) -> &Graph {
-        self.inner.graph.as_ref()
+        &self.inner.graph
     }
 }
 
 pub(crate) struct ObjectInner {
-    pub(crate) model: Arc<Model>,
-    pub(crate) graph: Arc<Graph>,
+    pub(crate) model: Model,
+    pub(crate) graph: Graph,
     pub(crate) is_initialized: AtomicBool,
     pub(crate) is_new: AtomicBool,
     pub(crate) is_modified: AtomicBool,

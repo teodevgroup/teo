@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::Display;
 use serde::Serialize;
 
 
@@ -45,7 +46,8 @@ pub enum ActionErrorType {
     UnexpectedFieldType,
     InvalidQueryInput,
     RequiredRelationCannotDisconnect,
-    NewObjectCannotDisconnect
+    NewObjectCannotDisconnect,
+    GetValueError,
 }
 
 impl ActionErrorType {
@@ -93,6 +95,7 @@ impl ActionErrorType {
             ActionErrorType::InvalidQueryInput => { 400 }
             ActionErrorType::RequiredRelationCannotDisconnect => { 400 }
             ActionErrorType::NewObjectCannotDisconnect => { 400 }
+            ActionErrorType::GetValueError => { 500 }
         }
     }
 }
@@ -460,6 +463,14 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::NewObjectCannotDisconnect,
             message: "New object cannot disconnect.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn get_value_error(model_name: impl AsRef<str> + Display, key_name: impl AsRef<str> + Display) -> Self {
+        ActionError {
+            r#type: ActionErrorType::GetValueError,
+            message: format!("Model `{model_name}' doesn't have key `{key_name}'."),
             errors: None
         }
     }

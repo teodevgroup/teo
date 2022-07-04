@@ -64,6 +64,7 @@ pub struct ModelInner {
     pub(crate) auth_by_keys: Vec<String>,
 }
 
+#[derive(Clone)]
 pub struct Model {
     pub(crate) inner: Arc<ModelInner>
 }

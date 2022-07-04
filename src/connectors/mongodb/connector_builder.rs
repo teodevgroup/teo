@@ -48,7 +48,7 @@ impl ConnectorBuilder for MongoDBConnectorBuilder {
         }
     }
 
-    async fn build_connector(&self, models: &Vec<Arc<Model>>, reset_database: bool) -> Box<dyn Connector> {
+    async fn build_connector(&self, models: &Vec<Model>, reset_database: bool) -> Box<dyn Connector> {
         Box::new(MongoDBConnector::new(self.url.clone(), models, reset_database).await)
     }
 }
