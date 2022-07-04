@@ -525,6 +525,17 @@ impl<'a> From<&'a Value> for &'a str {
     }
 }
 
+impl<T> From<Value> for Vec<T> where T: From<Value> {
+    fn from(value: Value) -> Self {
+        let value = value.as_vec().unwrap();
+        let mut result: Vec<T> = vec![];
+        for v in value {
+            result.push(v.clone().into());
+        }
+        result
+    }
+}
+
 impl From<Value> for String {
     fn from(v: Value) -> Self {
         v.as_string().unwrap()

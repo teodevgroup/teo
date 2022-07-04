@@ -689,7 +689,7 @@ impl Object {
                                     new_obj.ignore_required_for(&relation.references);
                                     self.ignore_required_for(&relation.fields);
                                     let mut relation_map = self.inner.relation_map.lock().unwrap();
-                                    let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                                    let objects = relation_map.get_mut(&key.to_string()).unwrap();
                                     objects.push(RelationManipulation::Connect(new_obj));
                                 }
                                 Err(_err) => {
@@ -701,7 +701,7 @@ impl Object {
                                         self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                                     }
                                     let mut relation_map = self.inner.relation_map.lock().unwrap();
-                                    let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                                    let objects = relation_map.get_mut(&key.to_string()).unwrap();
                                     objects.push(RelationManipulation::Connect(new_obj));
                                 }
                             }
@@ -734,7 +734,7 @@ impl Object {
                                 self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
                             let mut relation_map = self.inner.relation_map.lock().unwrap();
-                            let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            let objects = relation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Disconnect(object_to_disconnect));
                         }
                     }
@@ -759,7 +759,7 @@ impl Object {
                                 self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
                             let mut relation_map = self.inner.relation_map.lock().unwrap();
-                            let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            let objects = relation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Keep(new_object));
                         }
                     }
@@ -779,7 +779,7 @@ impl Object {
                                         self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                                     }
                                     let mut relation_map = self.inner.relation_map.lock().unwrap();
-                                    let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                                    let objects = relation_map.get_mut(&key.to_string()).unwrap();
                                     objects.push(RelationManipulation::Keep(obj));
                                 }
                                 Err(_) => {
@@ -791,7 +791,7 @@ impl Object {
                                         self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                                     }
                                     let mut relation_map = self.inner.relation_map.lock().unwrap();
-                                    let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                                    let objects = relation_map.get_mut(&key.to_string()).unwrap();
                                     objects.push(RelationManipulation::Connect(new_obj));
                                 }
                             }
