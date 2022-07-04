@@ -6,6 +6,7 @@ use crate::core::model_callback::PinFutureObj;
 use crate::core::object::Object;
 use crate::core::permission::Permission;
 use crate::core::relation::Relation;
+use crate::error::ActionError;
 
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -44,14 +45,14 @@ pub struct ModelInner {
     pub(crate) relations_map: HashMap<String, Arc<Relation>>,
     pub(crate) indices: Vec<ModelIndex>,
     pub(crate) primary: ModelIndex,
-    pub(crate) on_saved_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
-    pub(crate) on_updated_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
-    pub(crate) on_created_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
-    pub(crate) on_deleted_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
-    pub(crate) on_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
-    pub(crate) on_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
-    pub(crate) on_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
-    pub(crate) on_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
+    pub(crate) on_saved_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) on_updated_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) on_created_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) on_deleted_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) on_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) on_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) on_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) on_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
     pub(crate) primary_field: Option<Arc<Field>>,
     pub(crate) all_keys: Vec<String>,
     pub(crate) input_keys: Vec<String>,

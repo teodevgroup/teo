@@ -19,6 +19,7 @@ use crate::core::model::{ModelIndex, ModelIndexItem, Model, ModelIndexType, Mode
 use crate::core::model_callback::PinFutureObj;
 use crate::core::relation::Relation;
 use crate::core::object::Object;
+use crate::error::ActionError;
 
 pub struct ModelBuilder {
     pub(crate) name: String,
@@ -33,14 +34,14 @@ pub struct ModelBuilder {
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) primary: Option<ModelIndex>,
     pub(crate) indices: Vec<ModelIndex>,
-    pub(crate) on_saved_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
-    pub(crate) on_updated_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
-    pub(crate) on_created_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
-    pub(crate) on_deleted_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
-    pub(crate) on_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
-    pub(crate) on_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
-    pub(crate) on_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
-    pub(crate) on_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<()>>>,
+    pub(crate) on_saved_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) on_updated_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) on_created_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) on_deleted_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) on_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) on_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) on_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) on_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
 
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
@@ -220,42 +221,42 @@ impl ModelBuilder {
         self
     }
 
-    pub fn on_saved<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+    pub fn on_saved<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
         self.on_saved_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_created<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+    pub fn on_created<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
         self.on_created_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_updated<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+    pub fn on_updated<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
         self.on_updated_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_deleted<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+    pub fn on_deleted<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
         self.on_deleted_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_save<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+    pub fn on_save<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
         self.on_saved_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_create<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+    pub fn on_create<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
         self.on_created_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_update<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+    pub fn on_update<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
         self.on_updated_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_delete<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = ()> + 'static {
+    pub fn on_delete<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
         self.on_deleted_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
