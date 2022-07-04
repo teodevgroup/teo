@@ -443,13 +443,13 @@ impl Connector for MongoDBConnector {
             for key in keys {
                 let val = object.get_value(&key).unwrap();
                 if Some(key.as_str()) == primary_name {
-                    if val == None {
+                    if val.is_null() {
                         continue;
                     }
                 }
                 let json_val = match val {
-                    None => Bson::Null,
-                    Some(v) => v.to_bson_value()
+                    Value::Null => Bson::Null,
+                    _ => val.to_bson_value()
                 };
                 if json_val != Bson::Null {
                     doc.insert(&key, json_val);
@@ -472,7 +472,7 @@ impl Connector for MongoDBConnector {
             }
         } else {
             let object_id = if let Some(primary_field) = object.model().primary_field() {
-                object.get_value(&primary_field.name).unwrap().unwrap().to_bson_value()
+                object.get_value(&primary_field.name).unwrap().to_bson_value()
             } else {
                 object.inner.value_map.lock().unwrap().get("__id").unwrap().to_bson_value()
             };
@@ -504,10 +504,7 @@ impl Connector for MongoDBConnector {
                     };
                 } else {
                     let val = object.get_value(key).unwrap();
-                    let json_val = match val {
-                        None => Bson::Null,
-                        Some(v) => v.to_bson_value()
-                    };
+                    let json_val = val.to_bson_value();
                     match &primary_name {
                         Some(name) => {
                             if key == name {
@@ -607,7 +604,7 @@ impl Connector for MongoDBConnector {
         for item in &model.inner.primary.items {
             let field_name = &item.field_name;
             let column_name = model.field(field_name).unwrap().column_name();
-            let value = object.get_value(field_name).unwrap().unwrap().to_bson_value();
+            let value = object.get_value(field_name).unwrap().to_bson_value();
             query.insert(column_name, value);
         }
         let col = &self.collections[model.name()];

@@ -124,7 +124,7 @@ impl Object {
     pub fn get<T>(&self, key: impl AsRef<str>) -> Result<T, ActionError> where T: From<Value> {
         match self.get_value(key) {
             Ok(optional_value) => {
-                Ok(optional_value.unwrap().into())
+                Ok(optional_value.into())
             }
             Err(err) => {
                 Err(err)
@@ -132,7 +132,7 @@ impl Object {
         }
     }
 
-    pub fn get_value(&self, key: impl AsRef<str>) -> Result<Option<Value>, ActionError> {
+    pub fn get_value(&self, key: impl AsRef<str>) -> Result<Value, ActionError> {
         let key = key.as_ref();
         let model_keys = self.model().get_value_keys(); // TODO: should be all keys
         if !model_keys.contains(&key.to_string()) {
@@ -140,7 +140,7 @@ impl Object {
         }
         match self.inner.value_map.lock().unwrap().get(&key.to_string()) {
             Some(value) => {
-                Ok(Some(value.clone()))
+                Ok(value.clone())
             }
             None => {
                 match self.inner.queried_relation_map.lock().unwrap().get(&key.to_string()) {
@@ -148,17 +148,17 @@ impl Object {
                         let relation = self.model().relation(&key).unwrap();
                         if relation.is_vec {
                             let vec = list.iter().map(|o| Value::Object(o.clone())).collect();
-                            Ok(Some(Value::Vec(vec)))
+                            Ok(Value::Vec(vec))
                         } else {
                             if list.is_empty() {
-                                Ok(Some(Value::Null))
+                                Ok(Value::Null)
                             } else {
-                                Ok(Some(Value::Object(list.get(0).unwrap().clone())))
+                                Ok(Value::Object(list.get(0).unwrap().clone()))
                             }
                         }
                     }
                     None => {
-                        Ok(None)
+                        Ok(Value::Null)
                     }
                 }
             }
@@ -234,7 +234,7 @@ impl Object {
             }
             if field.optionality == Optionality::Required {
                 let value = self.get_value(key).unwrap();
-                if value.is_none() {
+                if value.is_null() {
                     return Err(ActionError::value_required(key))
                 }
             }
@@ -343,12 +343,12 @@ impl Object {
                 let foreign_relation = relation_model.relation(foreign_relation_name).unwrap();
                 for (index, field_name) in local_relation.fields.iter().enumerate() {
                     let local_field_name = local_relation.references.get(index).unwrap();
-                    let val = self.get_value(local_field_name).unwrap().unwrap();
+                    let val = self.get_value(local_field_name).unwrap();
                     relation_object.set_value(field_name, val.clone()).unwrap();
                 }
                 for (index, field_name) in foreign_relation.fields.iter().enumerate() {
                     let foreign_field_name = foreign_relation.references.get(index).unwrap();
-                    let val = obj.get_value(foreign_field_name).unwrap().unwrap();
+                    let val = obj.get_value(foreign_field_name).unwrap();
                     relation_object.set_value(field_name, val.clone()).unwrap();
                 }
                 relation_object.save().await?;
@@ -359,8 +359,8 @@ impl Object {
                     if relation.is_vec {
                         // if relation is vec, othersize must have saved the value
                         let local_value = self.get_value(field_name)?;
-                        if local_value.is_some() {
-                            obj.set_value(reference, local_value.unwrap().clone())?;
+                        if !local_value.is_null() {
+                            obj.set_value(reference, local_value.clone())?;
                             obj.save_to_database(session.clone(), true).await?;
                         }
                     } else {
@@ -370,8 +370,8 @@ impl Object {
                         }) {
                             if foreign_relation.is_vec {
                                 let foreign_value = obj.get_value(reference)?;
-                                if foreign_value.is_some() {
-                                    self.set_value(field_name, foreign_value.unwrap().clone())?;
+                                if !foreign_value.is_null() {
+                                    self.set_value(field_name, foreign_value.clone())?;
                                     self.save_to_database(session.clone(), true).await?;
                                 }
                             } else {
@@ -379,8 +379,8 @@ impl Object {
                                 for item in &self.model().primary_index().items {
                                     if &item.field_name == field_name {
                                         let local_value = self.get_value(field_name)?;
-                                        if local_value.is_some() {
-                                            obj.set_value(reference, local_value.unwrap().clone())?;
+                                        if !local_value.is_null() {
+                                            obj.set_value(reference, local_value.clone())?;
                                             obj.save_to_database(session.clone(), true).await?;
                                         }
                                         break;
@@ -388,8 +388,8 @@ impl Object {
                                 }
                                 // write on our side since it's not primary
                                 let foreign_value = obj.get_value(reference)?;
-                                if foreign_value.is_some() {
-                                    self.set_value(field_name, foreign_value.unwrap().clone())?;
+                                if !foreign_value.is_null() {
+                                    self.set_value(field_name, foreign_value.clone())?;
                                     self.save_to_database(session.clone(), true).await?;
                                 }
                             }
@@ -412,12 +412,12 @@ impl Object {
                 let foreign_relation = relation_model.relation(foreign_relation_name).unwrap();
                 for (index, field_name) in local_relation.fields.iter().enumerate() {
                     let local_field_name = local_relation.references.get(index).unwrap();
-                    let val = self.get_value(local_field_name).unwrap().unwrap();
+                    let val = self.get_value(local_field_name).unwrap();
                     finder.insert(field_name.to_string(), val.to_json_value());
                 }
                 for (index, field_name) in foreign_relation.fields.iter().enumerate() {
                     let foreign_field_name = foreign_relation.references.get(index).unwrap();
-                    let val = obj.get_value(foreign_field_name).unwrap().unwrap();
+                    let val = obj.get_value(foreign_field_name).unwrap();
                     finder.insert(field_name.to_string(), val.to_json_value());
                 }
                 let relation_object = self.graph().find_unique(relation_model, &json!({"where": finder}), true).await?;
@@ -430,7 +430,7 @@ impl Object {
                     let foreign_value = obj.get_value(reference)?;
                     let local_field = self.model().field(field_name).unwrap();
                     let foreign_field = obj.model().field(reference).unwrap();
-                    if local_value.is_some() && foreign_value.is_some() {
+                    if !local_value.is_null() && !foreign_value.is_null() {
                         if local_field.optionality == Optionality::Optional {
                             self.set_value(field_name, Value::Null)?;
                             self.save_to_database(session.clone(), true).await?;
@@ -487,8 +487,10 @@ impl Object {
                 if field.previous_value_rule == PreviousValueRule::KeepAfterSaved {
                     for cb in &field.compare_on_updated {
                         if let Some(prev) = self.inner.previous_values.lock().unwrap().get(&field.name) {
-                            if let Some(current) = self.get_value(&field.name).unwrap() {
-                                cb(prev.clone(), current.clone(), self.clone()).await
+                            if let current = self.get_value(&field.name).unwrap() {
+                                if !current.is_null() {
+                                    cb(prev.clone(), current.clone(), self.clone()).await
+                                }
                             }
                         }
                     }
@@ -511,13 +513,8 @@ impl Object {
         let keys = self.model().output_keys();
         for key in keys {
             let value = self.get_value(key).unwrap();
-            match value {
-                Some(v) => {
-                    if v != Value::Null {
-                        map.insert(key.to_string(), v.to_json_value());
-                    }
-                }
-                None => {}
+            if !value.is_null() {
+                map.insert(key.to_string(), value.to_json_value());
             }
         }
         return JsonValue::Object(map)
@@ -845,7 +842,7 @@ impl Object {
 
     pub(crate) fn identifier(&self) -> Value {
         if let Some(primary_field) = self.model().primary_field() {
-            self.get_value(primary_field.name.clone()).unwrap().unwrap()
+            self.get_value(primary_field.name.clone()).unwrap()
         } else {
             panic!("Identity model must have primary field defined explicitly.");
         }

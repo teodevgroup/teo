@@ -625,14 +625,6 @@ impl From<Value> for f64 {
     }
 }
 
-// impl<T> From<Value> for Option<T> where T: From<Value> {
-//     fn from(value: Value) -> Self {
-//         match value {
-//             Value::Null => None,
-//             _ => value.into()
-//         }
-//     }
-// }
 
 //
 // impl From<Decimal> for Value {
@@ -650,6 +642,133 @@ impl From<Value> for f64 {
 //         Value::DateTime(v)
 //     }
 // }
+
+impl From<Value> for Option<bool> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
+impl From<Value> for Option<String> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
+impl From<Value> for Option<i8> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
+impl From<Value> for Option<i16> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
+impl From<Value> for Option<i32> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
+impl From<Value> for Option<i64> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
+impl From<Value> for Option<i128> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
+impl From<Value> for Option<u8> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
+impl From<Value> for Option<u16> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
+impl From<Value> for Option<u32> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
+impl From<Value> for Option<u64> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
+impl From<Value> for Option<u128> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
+impl From<Value> for Option<f32> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
+impl From<Value> for Option<f64> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
 
 unsafe impl Send for Value {}
 unsafe impl Sync for Value {}

@@ -157,7 +157,7 @@ async fn refetch(graph: &Graph, object: &Object, include: Option<&JsonValue>, se
     let model = object.model();
     let mut find_unique_arg = json!({});
     for item in &model.primary_index().items {
-        let val = object.get_value(&item.field_name).unwrap().unwrap();
+        let val = object.get_value(&item.field_name).unwrap();
         find_unique_arg.as_object_mut().unwrap().insert(item.field_name.clone(), val.to_json_value());
     }
     let mut finder = json!({
