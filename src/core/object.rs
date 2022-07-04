@@ -56,8 +56,12 @@ impl Object {
         self.set_or_update_json(json_value, false).await
     }
 
-    pub fn set_value(&self, key: impl Into<String>, value: Value) -> Result<(), ActionError> {
-        let key = key.into();
+    pub fn set(&self, key: impl AsRef<str>, value: impl Into<Value>) -> Result<(), ActionError> {
+        self.set_value(key, value.into())
+    }
+
+    pub fn set_value(&self, key: impl AsRef<str>, value: Value) -> Result<(), ActionError> {
+        let key = key.as_ref().to_string();
         let model_keys = self.model().save_keys();
         if !model_keys.contains(&key) {
             return Err(ActionError::keys_unallowed());
@@ -110,17 +114,6 @@ impl Object {
         }
     }
 
-    // pub fn get_optional<T>(&self, key: impl AsRef<str>) -> Result<Option<T>, ActionError> where T: From<Value> {
-    //     match self.get_value(key) {
-    //         Ok(optional_value) => {
-    //             Ok(optional_value.unwrap().into())
-    //         }
-    //         Err(err) => {
-    //             Err(err)
-    //         }
-    //     }
-    // }
-
     pub fn get<T>(&self, key: impl AsRef<str>) -> Result<T, ActionError> where T: From<Value> {
         match self.get_value(key) {
             Ok(optional_value) => {
@@ -136,7 +129,8 @@ impl Object {
         let key = key.as_ref();
         let model_keys = self.model().get_value_keys(); // TODO: should be all keys
         if !model_keys.contains(&key.to_string()) {
-            return Err(ActionError::keys_unallowed());
+            let model = self.model();
+            return Err(ActionError::get_value_error(model.name(), key));
         }
         match self.inner.value_map.lock().unwrap().get(&key.to_string()) {
             Some(value) => {

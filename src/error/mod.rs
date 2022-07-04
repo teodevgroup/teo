@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use serde::Serialize;
 
 
@@ -48,6 +48,7 @@ pub enum ActionErrorType {
     RequiredRelationCannotDisconnect,
     NewObjectCannotDisconnect,
     GetValueError,
+    SetValueError,
 }
 
 impl ActionErrorType {
@@ -96,6 +97,7 @@ impl ActionErrorType {
             ActionErrorType::RequiredRelationCannotDisconnect => { 400 }
             ActionErrorType::NewObjectCannotDisconnect => { 400 }
             ActionErrorType::GetValueError => { 500 }
+            ActionErrorType::SetValueError => { 500 }
         }
     }
 }
@@ -467,10 +469,18 @@ impl ActionError {
         }
     }
 
-    pub fn get_value_error(model_name: impl AsRef<str> + Display, key_name: impl AsRef<str> + Display) -> Self {
+    pub fn get_value_error(model_name: impl AsRef<str> + Display, key_name: impl AsRef<str> + Debug) -> Self {
         ActionError {
             r#type: ActionErrorType::GetValueError,
-            message: format!("Model `{model_name}' doesn't have key `{key_name}'."),
+            message: format!("Model `{model_name}' doesn't have key `{key_name:?}'."),
+            errors: None
+        }
+    }
+
+    pub fn set_value_error(model_name: impl AsRef<str> + Display, key_name: impl AsRef<str> + Debug) -> Self {
+        ActionError {
+            r#type: ActionErrorType::SetValueError,
+            message: format!("Model `{model_name}' doesn't have key `{key_name:?}'."),
             errors: None
         }
     }
