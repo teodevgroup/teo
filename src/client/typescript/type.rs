@@ -12,7 +12,7 @@ pub(crate) trait ToTypeScriptType {
 
 impl ToTypeScriptType for FieldType {
     fn to_typescript_type(&self, optional: bool) -> String {
-        let mut base: String = match self {
+        let base: String = match self {
             FieldType::Undefined => panic!(),
             FieldType::ObjectId | FieldType::String | FieldType::Date | FieldType::DateTime => "string".to_string(),
             FieldType::Bool => "boolean".to_string(),
@@ -32,7 +32,7 @@ impl ToTypeScriptType for FieldType {
 
     fn to_typescript_filter_type(&self, optional: bool) -> String {
         let mut with_generic = false;
-        let mut base: String = match self {
+        let base: String = match self {
             FieldType::Undefined => panic!(),
             FieldType::ObjectId => "string | ObjectId".to_string(),
             FieldType::String => "string | String".to_string(),
@@ -59,7 +59,7 @@ impl ToTypeScriptType for FieldType {
                 }
             },
             FieldType::Map(_) => panic!(),
-            FieldType::Object(name) => "undefined | Unimplemented".to_string(),
+            FieldType::Object(_name) => "undefined | Unimplemented".to_string(),
         };
         if !with_generic {
             if optional {
@@ -73,7 +73,7 @@ impl ToTypeScriptType for FieldType {
     }
 
     fn to_typescript_create_input_type(&self, optional: bool) -> String {
-        let mut base: String = match self {
+        let base: String = match self {
             FieldType::Undefined => panic!(),
             FieldType::ObjectId | FieldType::String | FieldType::Decimal => "string".to_string(),
             FieldType::Date | FieldType::DateTime => "Date | string".to_string(),
@@ -93,7 +93,7 @@ impl ToTypeScriptType for FieldType {
 
     fn to_typescript_update_operation_input(&self, optional: bool) -> String {
         let mut generic = "".to_owned();
-        let mut base: &str = match self {
+        let base: &str = match self {
             FieldType::Undefined => panic!(),
             FieldType::ObjectId => "ObjectId",
             FieldType::String => "String",

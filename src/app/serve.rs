@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 use actix_http::body::BoxBody;
-use actix_http::{Method, Response};
+use actix_http::{Method};
 use actix_web::{App, Error, HttpRequest, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::DefaultHeaders;
@@ -211,7 +211,7 @@ async fn handle_create(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
     }
 }
 
-async fn handle_update_internal(graph: &Graph, object: Object, update: Option<&JsonValue>, include: Option<&JsonValue>, select: Option<&JsonValue>, r#where: Option<&JsonValue>, model: &Model) -> Result<JsonValue, ActionError> {
+async fn handle_update_internal(graph: &Graph, object: Object, update: Option<&JsonValue>, include: Option<&JsonValue>, select: Option<&JsonValue>, _where: Option<&JsonValue>, _model: &Model) -> Result<JsonValue, ActionError> {
     let set_json_result = match update {
         Some(update) => {
             object.set_json(update).await
@@ -445,11 +445,11 @@ async fn handle_count(graph: &Graph, input: &JsonValue, model: &Model) -> HttpRe
     }
 }
 
-async fn handle_aggregate(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_aggregate(_graph: &Graph, _input: &JsonValue, _model: &Model) -> HttpResponse {
     HttpResponse::Ok().json(json!({"Hello": "World!"}))
 }
 
-async fn handle_group_by(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_group_by(_graph: &Graph, _input: &JsonValue, _model: &Model) -> HttpResponse {
     HttpResponse::Ok().json(json!({"Hello": "World!"}))
 }
 
@@ -508,7 +508,7 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     let pipeline = auth_by_arg.as_pipeline().unwrap();
     let action_by_input = decode_field_input(obj.graph(), by_value.unwrap(), by_field, &by_field.name);
     let action_by_value = match action_by_input {
-        Err(err) => {
+        Err(_err) => {
             return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_input_type()}));
         }
         Ok(val) => {
@@ -614,7 +614,7 @@ pub fn make_app(graph: &'static Graph, conf: &'static ServerConfiguration) -> Ap
                     return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
                 }
             };
-            let map = match parsed_body.as_object() {
+            let _map = match parsed_body.as_object() {
                 Some(m) => m,
                 None => {
                     log_unhandled(start, r.method().as_str(), &path, 400);

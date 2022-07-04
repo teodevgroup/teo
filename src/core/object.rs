@@ -185,7 +185,7 @@ impl Object {
             }
             let field = field.unwrap();
             if field.needs_on_save_callback() {
-                let mut stage = match self.inner.value_map.lock().unwrap().deref().get(&key.to_string()) {
+                let stage = match self.inner.value_map.lock().unwrap().deref().get(&key.to_string()) {
                     Some(value) => {
                         Stage::Value(value.clone())
                     }
@@ -261,7 +261,7 @@ impl Object {
     }
 
     #[async_recursion(?Send)]
-    pub(crate) async fn delete_from_database(&self, session: Arc<dyn SaveSession>, no_recursive: bool) -> Result<(), ActionError> {
+    pub(crate) async fn delete_from_database(&self, _session: Arc<dyn SaveSession>, _no_recursive: bool) -> Result<(), ActionError> {
         let connector = self.graph().connector();
         connector.delete_object(self).await?;
         Ok(())
@@ -598,7 +598,7 @@ impl Object {
                         AtomicUpdate(update_type) => {
                             self.inner.atomic_updator_map.lock().unwrap().insert(key.to_string(), update_type);
                         }
-                        Input::RelationInput(input) => {
+                        Input::RelationInput(_input) => {
 
                         }
                     }
@@ -643,7 +643,7 @@ impl Object {
                                 self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
                             let mut relation_map = self.inner.relation_map.lock().unwrap();
-                            let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            let objects = relation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Connect(new_object));
                         }
                     }
@@ -660,7 +660,7 @@ impl Object {
                                 self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
                             let mut relation_map = self.inner.relation_map.lock().unwrap();
-                            let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            let objects = relation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Connect(new_object));
                         }
                     }
@@ -819,7 +819,7 @@ impl Object {
                                 self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
                             let mut relation_map = self.inner.relation_map.lock().unwrap();
-                            let mut objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            let objects = relation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Delete(new_object));
                         }
                     }

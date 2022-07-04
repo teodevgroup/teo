@@ -1,12 +1,12 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap};
 use std::fmt::{Debug};
 use std::sync::Arc;
 use rust_decimal::prelude::FromStr;
 use std::sync::atomic::{Ordering};
-use serde_json::{json, Map, Number, Value as JsonValue};
+use serde_json::{Value as JsonValue};
 use async_trait::async_trait;
-use bson::{Bson, bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
-use chrono::{Date, NaiveDate, Utc, DateTime};
+use bson::{Bson, doc, Document};
+
 use futures_util::StreamExt;
 use mongodb::{options::ClientOptions, Client, Database, Collection, IndexModel};
 use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
@@ -21,7 +21,7 @@ use crate::core::field::Sort;
 use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::input::AtomicUpdateType;
-use crate::core::input_decoder::decode_field_value;
+
 use crate::core::model::{Model, ModelIndex, ModelIndexType};
 use crate::core::save_session::SaveSession;
 use crate::core::value::Value;
@@ -102,7 +102,7 @@ impl MongoDBConnector {
                                 keys.insert(column_name, if item.sort == Sort::Asc { 1 } else { -1 });
                             }
                             let index_model = IndexModel::builder().keys(keys).options(index_options).build();
-                            let result = collection.create_index(index_model, None).await;
+                            let _result = collection.create_index(index_model, None).await;
                         }
                     }
                     reviewed_names.push(name.clone());
@@ -123,7 +123,7 @@ impl MongoDBConnector {
                         keys.insert(column_name, if item.sort == Sort::Asc { 1 } else { -1 });
                     }
                     let index_model = IndexModel::builder().keys(keys).options(index_options).build();
-                    let result = collection.create_index(index_model, None).await;
+                    let _result = collection.create_index(index_model, None).await;
                 }
             }
             collections.insert(name.to_owned(), collection);
@@ -554,7 +554,7 @@ impl Connector for MongoDBConnector {
                     let result = col.update_one(doc!{"_id": object_id}, update_doc, None).await;
                     // sync result back
                     return match result {
-                        Ok(update_result) => {
+                        Ok(_update_result) => {
                             Ok(())
                         }
                         Err(error) => {
@@ -622,12 +622,12 @@ impl Connector for MongoDBConnector {
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder)?;
         let col = &self.collections[model.name()];
-        let mut cur = col.aggregate(aggregate_input, None).await;
+        let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
             return Err(ActionError::unknown_database_find_unique_error());
         }
-        let mut cur = cur.unwrap();
-        let mut result: Vec<Object> = vec![];
+        let cur = cur.unwrap();
+        let _result: Vec<Object> = vec![];
         let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
         if results.is_empty() {
             return Err(ActionError::object_not_found());
@@ -666,12 +666,12 @@ impl Connector for MongoDBConnector {
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder)?;
         let reverse = has_negative_take(finder);
         let col = &self.collections[model.name()];
-        let mut cur = col.aggregate(aggregate_input, None).await;
+        let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
             println!("{:?}", cur);
             return Err(ActionError::unknown_database_find_error());
         }
-        let mut cur = cur.unwrap();
+        let cur = cur.unwrap();
         let mut result: Vec<Object> = vec![];
         let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
         for doc in results {

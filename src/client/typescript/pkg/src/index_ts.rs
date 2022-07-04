@@ -6,7 +6,7 @@ use crate::core::field::Optionality;
 use crate::core::graph::Graph;
 use crate::core::model::{Model, ModelIndexType};
 
-fn generate_model_create_nested_input(graph: &Graph, model: &Model, without: Option<&str>, many: bool) -> String {
+fn generate_model_create_nested_input(_graph: &Graph, model: &Model, without: Option<&str>, many: bool) -> String {
     let model_name = model.name();
     let without_title = if let Some(title) = without {
         let title = title.to_pascal_case();
@@ -153,7 +153,7 @@ fn generate_model_update_many_with_where_input(model: &Model, without: Option<&s
     }).to_string()
 }
 
-fn generate_model_update_nested_input(graph: &Graph, model: &Model, without: Option<&str>, many: bool) -> String {
+fn generate_model_update_nested_input(_graph: &Graph, model: &Model, without: Option<&str>, many: bool) -> String {
     let model_name = model.name();
     let without_title = if let Some(title) = without {
         let title = title.to_pascal_case();
@@ -275,12 +275,12 @@ pub(crate) async fn generate_index_ts(graph: &Graph) -> String {
                 let model_name = m.name();
                 c.block(format!("export type {model_name} = {{"), |b| {
                     m.output_keys().iter().for_each(|k| {
-                        if let Some(field) = m.field(k) {
+                        if let Some(_field) = m.field(k) {
                             let field = m.field(k).unwrap();
                             let field_name = &field.name;
                             let field_type = field.field_type.to_typescript_type(field.optionality == Optionality::Optional);
                             b.line(format!("{field_name}: {field_type}"));
-                        } else if let Some(relation) = m.relation(k) {
+                        } else if let Some(_relation) = m.relation(k) {
 
                         }
                     });
@@ -292,10 +292,10 @@ pub(crate) async fn generate_index_ts(graph: &Graph) -> String {
         graph.models().iter().for_each(|m| {
             if m.actions().len() == 0 { return }
             let model_name = m.name();
-            let model_var_name = model_name.to_camel_case();
+            let _model_var_name = model_name.to_camel_case();
             c.block(format!("export type {model_name}Select = {{"), |b| {
                 m.output_keys().iter().for_each(|k| {
-                    if let Some(field) = m.field(k) {
+                    if let Some(_field) = m.field(k) {
                         let field = m.field(k).unwrap();
                         let field_name = &field.name;
                         b.line(format!("{field_name}?: boolean"));
@@ -355,8 +355,8 @@ pub(crate) async fn generate_index_ts(graph: &Graph) -> String {
                         let field_name = &field.name;
                         b.line(format!("{field_name}?: SortOrder"));
                     } else if let Some(relation) = m.relation(k) {
-                        let relation_model = &relation.model;
-                        let relation_name = &relation.name;
+                        let _relation_model = &relation.model;
+                        let _relation_name = &relation.name;
                         //b.line(format!("{relation_name}?: {relation_model}OrderByRelationAggregateInput"));
                     }
                 })
@@ -389,7 +389,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph) -> String {
             ActionType::iter().for_each(|a| {
                 if !m.actions().contains(a) { return }
                 let action_name = a.as_str();
-                let action_var_name = a.as_str().to_camel_case();
+                let _action_var_name = a.as_str().to_camel_case();
                 c.block(format!(r#"export type {model_name}{action_name}Args = {{"#), |b| {
                     if a.requires_where() {
                         b.line(format!(r#"where?: {model_name}WhereInput"#));

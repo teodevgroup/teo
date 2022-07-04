@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::ops::Neg;
+
 use chrono::prelude::{Date, DateTime, Utc};
 use chrono::SecondsFormat;
 use rust_decimal::Decimal;
@@ -355,7 +355,7 @@ impl Value {
             Value::U128(n) => (*n as f64).recip(),
             Value::F32(n) => (*n as f64).recip(),
             Value::F64(n) => (*n as f64).recip(),
-            Value::Decimal(n) => panic!("decimal div todo"),
+            Value::Decimal(_n) => panic!("decimal div todo"),
             _ => panic!()
         }
     }

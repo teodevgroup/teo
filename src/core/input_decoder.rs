@@ -1,4 +1,4 @@
-use serde_json::{json, Map, Value as JsonValue};
+use serde_json::{Value as JsonValue};
 use chrono::{Date, DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromStr;
@@ -97,7 +97,7 @@ fn number_to_target_type(json_value: &JsonValue, target: &FieldType, number_type
                 Some(str) => {
                     match Decimal::from_str(str) {
                         Ok(decimal) => Ok(Value::Decimal(decimal)),
-                        Err(err) => Err(ActionError::wrong_input_type())
+                        Err(_err) => Err(ActionError::wrong_input_type())
                     }
                 }
             }
@@ -209,7 +209,7 @@ fn decode_vec_input(graph: &Graph, json_value: &JsonValue, field: &Field, path: 
                         _ => panic!()
                     }
                 }
-                Err(e) => {
+                Err(_e) => {
                     Value::Null
                 }
             }
@@ -232,7 +232,7 @@ fn decode_vec_input(graph: &Graph, json_value: &JsonValue, field: &Field, path: 
                                         _ => panic!()
                                     }
                                 }
-                                Err(err) => {
+                                Err(_err) => {
                                     Value::Null
                                 }
                             }
@@ -286,10 +286,10 @@ fn decode_number_input(json_value: &JsonValue, field: &Field, path: &str) -> Res
                     Err(ActionError::wrong_input_type())
                 }
             }
-            JsonValue::Number(num) => {
+            JsonValue::Number(_num) => {
                 number_to_target_type(value, &field.field_type, number_type)
             }
-            JsonValue::String(str) => {
+            JsonValue::String(_str) => {
                 match number_type {
                     NumberInputType::Decimal => {
                         number_to_target_type(value, &field.field_type, number_type)
@@ -368,7 +368,7 @@ pub(crate) fn decode_field_input(graph: &Graph, json_value: &JsonValue, field: &
     }
 }
 
-pub(crate) fn decode_relation_input( object: &Object, json_value: &JsonValue, relation: &Relation, path: &str) -> Result<Input, ActionError> {
+pub(crate) fn decode_relation_input( _object: &Object, json_value: &JsonValue, relation: &Relation, path: &str) -> Result<Input, ActionError> {
     if !json_value.is_object() {
         return Err(ActionError::wrong_input_type());
     }

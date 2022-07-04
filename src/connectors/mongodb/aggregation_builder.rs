@@ -1,7 +1,7 @@
 use std::collections::HashSet;
-use std::ops::Index;
+
 use serde_json::{Value as JsonValue, Map as JsonMap, json};
-use bson::{Array, Bson, bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
+use bson::{Bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
 use chrono::{Date, NaiveDate, Utc, DateTime};
 use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
@@ -73,7 +73,7 @@ impl ToBsonValue for Value {
             Value::String(val) => {
                 Bson::String(val.clone())
             }
-            Value::Decimal(val) => {
+            Value::Decimal(_val) => {
                 todo!()
             }
             Value::Date(val) => {
@@ -92,7 +92,7 @@ impl ToBsonValue for Value {
                 }
                 Bson::Document(doc)
             }
-            Value::Object(obj) => {
+            Value::Object(_obj) => {
                 panic!()
             }
         }
@@ -741,7 +741,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                             match value.as_array() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
-                                    for val in arr_val {
+                                    for _val in arr_val {
                                         arr.push(parse_enum(value, enum_name, graph)?);
                                     }
                                     result.insert("$in", arr);
@@ -755,7 +755,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                             match value.as_array() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
-                                    for val in arr_val {
+                                    for _val in arr_val {
                                         arr.push(parse_enum(value, enum_name, graph)?);
                                     }
                                     result.insert("$nin", arr);
@@ -846,13 +846,13 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
     }
 }
 
-pub(crate) fn build_unsets_for_match_lookup(model: &Model, graph: &Graph, r#where: Option<&JsonValue>) -> Result<Vec<Document>, ActionError> {
+pub(crate) fn build_unsets_for_match_lookup(model: &Model, _graph: &Graph, r#where: Option<&JsonValue>) -> Result<Vec<Document>, ActionError> {
     if let None = r#where { return Ok(vec![]); }
     let r#where = r#where.unwrap();
     if !r#where.is_object() { return Err(ActionError::invalid_query_input("'where' should be an object.")); }
     let r#where = r#where.as_object().unwrap();
     let mut retval: Vec<Document> = vec![];
-    for (key, value) in r#where.iter() {
+    for (key, _value) in r#where.iter() {
         let relation = model.relation(key);
         if relation.is_some() {
             retval.push(doc!{"$unset": key})
@@ -946,7 +946,7 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
             let model_name = &relation.model;
             let this_model = graph.model(model_name);
             let (command, inner_where) = one_length_json_obj(value, "")?;
-            let inner_where = build_where_input(this_model, graph, Some(inner_where))?;
+            let _inner_where = build_where_input(this_model, graph, Some(inner_where))?;
             match command {
                 "none" | "isNot" => {
                     doc.insert(key, doc!{"$size": 0});
@@ -966,7 +966,7 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
     Ok(doc)
 }
 
-pub(crate) fn build_order_by_input(model: &Model, graph: &Graph, order_by: Option<&JsonValue>, reverse: bool) -> Result<Document, ActionError> {
+pub(crate) fn build_order_by_input(_model: &Model, _graph: &Graph, order_by: Option<&JsonValue>, reverse: bool) -> Result<Document, ActionError> {
     if order_by.is_none() {
         return Ok(doc!{});
     }
@@ -1040,7 +1040,7 @@ fn build_lookup_inputs(
                 } else {
                     doc!{"$match": {}}
                 };
-                let mut inner_match_inner = inner_match.get_mut("$match").unwrap().as_document_mut().unwrap();
+                let inner_match_inner = inner_match.get_mut("$match").unwrap().as_document_mut().unwrap();
                 if inner_match_inner.get("$expr").is_none() {
                     inner_match_inner.insert("$expr", doc!{});
                 }
@@ -1202,7 +1202,7 @@ fn build_lookup_inputs(
 fn build_query_pipeline(
     model: &Model,
     graph: &Graph,
-    r#type: QueryPipelineType,
+    _type: QueryPipelineType,
     mutation_mode: bool,
     r#where: Option<&JsonValue>,
     order_by: Option<&JsonValue>,
@@ -1212,7 +1212,7 @@ fn build_query_pipeline(
     page_size: Option<i32>,
     page_number: Option<i32>,
     include: Option<&JsonValue>,
-    select: Option<&JsonValue>,
+    _select: Option<&JsonValue>,
 ) -> Result<Vec<Document>, ActionError> {
     // cursor tweaks things so that we validate cursor first
     let cursor_additional_where = if cursor.is_some() {

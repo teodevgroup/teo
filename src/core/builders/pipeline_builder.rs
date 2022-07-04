@@ -37,12 +37,12 @@ use crate::core::modifiers::str_prepend::StrPrependModifier;
 use crate::core::modifiers::then_p::ThenPModifier;
 use crate::core::modifiers::transform::TransformModifier;
 use crate::core::modifiers::uuid::UUIDModifier;
-use crate::core::modifiers::compare::CompareModifier;
+
 use crate::core::stage::Stage;
 use crate::core::object::Object;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
-use crate::error::ActionError;
+
 
 
 #[derive(Debug)]
