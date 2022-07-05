@@ -50,6 +50,7 @@ pub enum ActionErrorType {
     GetValueError,
     SetValueError,
     SaveCallingError,
+    CustomError,
 }
 
 impl ActionErrorType {
@@ -100,6 +101,7 @@ impl ActionErrorType {
             ActionErrorType::GetValueError => { 500 }
             ActionErrorType::SetValueError => { 500 }
             ActionErrorType::SaveCallingError => { 500 }
+            ActionErrorType::CustomError => { 500 }
         }
     }
 }
@@ -491,6 +493,14 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::SaveCallingError,
             message: format!("Model `{model_name}', save method cannot be called inside before save callbacks."),
+            errors: None
+        }
+    }
+
+    pub fn custom_error(message: impl Into<String>) -> Self {
+        ActionError {
+            r#type: ActionErrorType::CustomError,
+            message: message.into(),
             errors: None
         }
     }
