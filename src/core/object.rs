@@ -17,7 +17,7 @@ use crate::core::relation::{Relation, RelationManipulation};
 use crate::core::save_session::SaveSession;
 use crate::core::stage::Stage;
 use crate::core::value::Value;
-use crate::error::ActionError;
+use crate::error::{ActionError, ActionErrorType};
 
 
 #[derive(Clone)]
@@ -893,6 +893,54 @@ impl Object {
             finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
         }
         graph.find_unique(model, &finder, false).await
+    }
+
+    pub async fn fetch_relation_object(&self, key: impl AsRef<str>, find_unique_arg: Option<&JsonValue>) -> Result<Option<&Object>, ActionError> {
+        let model = self.model();
+        let relation = model.relation(key.as_ref());
+        if relation.is_none() {
+            // todo() err here
+        }
+        let relation = relation.unwrap();
+        let mut finder = json!({});
+        for (index, local_field_name) in relation.fields.iter().enumerate() {
+            let foreign_field_name = relation.references.get(index).unwrap();
+            let value = self.get_value(local_field_name).unwrap();
+            if value == Value::Null {
+                return Ok(None);
+            }
+            let json_value = value.to_json_value();
+            finder.as_object_mut().unwrap().insert(foreign_field_name.to_owned(), json_value);
+        }
+        if let Some(find_unique_arg) = find_unique_arg {
+            if let Some(include) = find_unique_arg.get("include") {
+                finder.as_object_mut().unwrap().insert("include".to_owned(), include.clone());
+            }
+            if let Some(select) = find_unique_arg.get("select") {
+                finder.as_object_mut().unwrap().insert("select".to_owned(), select.clone());
+            }
+        }
+        let relation_model_name = &relation.model;
+        let graph = self.graph();
+        let relation_model = graph.model(&relation_model_name);
+        match graph.find_unique(relation_model, &finder, false).await {
+            Ok(result) => {
+                self.inner.queried_relation_map.lock().unwrap().insert(key.as_ref().to_string(), vec![related_object]);
+                Ok(Some(&related_object))
+            }
+            Err(err) => {
+                if err.r#type == ActionErrorType::ObjectNotFound {
+                    self.inner.queried_relation_map.lock().unwrap().insert(key.as_ref().to_string(), vec![]);
+                    Ok(None)
+                } else {
+                    Err(err)
+                }
+            }
+        }
+    }
+
+    pub async fn fetch_relation_objects(&self, key: impl AsRef<str>, find_many_arg: Option<&JsonValue>) {
+
     }
 }
 
