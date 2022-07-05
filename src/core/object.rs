@@ -895,14 +895,16 @@ impl Object {
         graph.find_unique(model, &finder, false).await
     }
 
-    pub async fn fetch_relation_object(&self, key: impl AsRef<str>, find_unique_arg: Option<&JsonValue>) -> Result<Option<&Object>, ActionError> {
+    pub async fn fetch_relation_object(&self, key: impl AsRef<str>, find_unique_arg: Option<&JsonValue>) -> Result<Option<Object>, ActionError> {
+        // get relation
         let model = self.model();
         let relation = model.relation(key.as_ref());
         if relation.is_none() {
             // todo() err here
         }
         let relation = relation.unwrap();
-        let mut finder = json!({});
+        // find object
+        let mut finder_where = json!({});
         for (index, local_field_name) in relation.fields.iter().enumerate() {
             let foreign_field_name = relation.references.get(index).unwrap();
             let value = self.get_value(local_field_name).unwrap();
@@ -910,8 +912,9 @@ impl Object {
                 return Ok(None);
             }
             let json_value = value.to_json_value();
-            finder.as_object_mut().unwrap().insert(foreign_field_name.to_owned(), json_value);
+            finder_where.as_object_mut().unwrap().insert(foreign_field_name.to_owned(), json_value);
         }
+        let mut finder = json!({"where": finder_where});
         if let Some(find_unique_arg) = find_unique_arg {
             if let Some(include) = find_unique_arg.get("include") {
                 finder.as_object_mut().unwrap().insert("include".to_owned(), include.clone());
@@ -925,8 +928,9 @@ impl Object {
         let relation_model = graph.model(&relation_model_name);
         match graph.find_unique(relation_model, &finder, false).await {
             Ok(result) => {
-                self.inner.queried_relation_map.lock().unwrap().insert(key.as_ref().to_string(), vec![related_object]);
-                Ok(Some(&related_object))
+                self.inner.queried_relation_map.lock().unwrap().insert(key.as_ref().to_string(), vec![result]);
+                let obj = self.inner.queried_relation_map.lock().unwrap().get(key.as_ref()).unwrap().get(0).unwrap().clone();
+                Ok(Some(obj.clone()))
             }
             Err(err) => {
                 if err.r#type == ActionErrorType::ObjectNotFound {
@@ -939,8 +943,57 @@ impl Object {
         }
     }
 
-    pub async fn fetch_relation_objects(&self, key: impl AsRef<str>, find_many_arg: Option<&JsonValue>) {
-
+    pub async fn fetch_relation_objects(&self, key: impl AsRef<str>, find_many_arg: Option<&JsonValue>) -> Result<Vec<Object>, ActionError> {
+        // get relation
+        let model = self.model();
+        let relation = model.relation(key.as_ref());
+        if relation.is_none() {
+            // todo() err here
+        }
+        let relation = relation.unwrap();
+        let empty = json!({});
+        let include_inside = if find_many_arg.is_some() {
+            find_many_arg.unwrap()
+        } else {
+            &empty
+        };
+        if let Some(join_table) = &relation.through {
+            let identifier = self.json_identifier();
+            let new_self = self.graph().find_unique(model, &json!({
+                "where": identifier,
+                "include": {
+                    key.as_ref(): include_inside
+                }
+            }), false).await?;
+            let vec = new_self.inner.queried_relation_map.lock().unwrap().get(key.as_ref()).unwrap().clone();
+            self.inner.queried_relation_map.lock().unwrap().insert(key.as_ref().to_string(), vec);
+            Ok(self.inner.queried_relation_map.lock().unwrap().get(key.as_ref()).unwrap().clone())
+        } else {
+            let mut finder = json!({});
+            if let Some(find_many_arg) = find_many_arg {
+                for (k, v) in find_many_arg.as_object().unwrap().iter() {
+                    finder.as_object_mut().unwrap().insert(k.clone(), v.clone());
+                }
+            }
+            if finder.as_object().unwrap().get("where").is_none() {
+                finder.as_object_mut().unwrap().insert("where".to_string(), json!({}));
+            }
+            for (index, local_field_name) in relation.fields.iter().enumerate() {
+                let foreign_field_name = relation.references.get(index).unwrap();
+                let value = self.get_value(local_field_name).unwrap();
+                if value == Value::Null {
+                    return Ok(vec![]);
+                }
+                let json_value = value.to_json_value();
+                finder.as_object_mut().unwrap().get_mut("where").unwrap().as_object_mut().unwrap().insert(foreign_field_name.to_owned(), json_value);
+            }
+            let relation_model_name = &relation.model;
+            let graph = self.graph();
+            let relation_model = graph.model(&relation_model_name);
+            let results = graph.find_many(relation_model, &finder, false).await?;
+            self.inner.queried_relation_map.lock().unwrap().insert(key.as_ref().to_string(), results.clone());
+            Ok(results)
+        }
     }
 }
 
