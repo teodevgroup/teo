@@ -460,15 +460,15 @@ impl Object {
         let model = self.model();
         if newly_created {
             for cb in &model.inner.on_create_fns {
-                cb(self.clone()).await;
+                cb(self.clone()).await?;
             }
         } else {
             for cb in &model.inner.on_update_fns {
-                cb(self.clone()).await;
+                cb(self.clone()).await?;
             }
         }
         for cb in &model.inner.on_save_fns {
-            cb(self.clone()).await;
+            cb(self.clone()).await?;
         }
         Ok(())
     }
@@ -481,12 +481,11 @@ impl Object {
         self.inner.inside_write_callback.store(true, Ordering::SeqCst);
         let model = self.model();
         for cb in &model.inner.on_saved_fns {
-
-            cb(self.clone()).await;
+            cb(self.clone()).await?;
         }
         if newly_created {
             for cb in &model.inner.on_created_fns {
-                cb(self.clone()).await;
+                cb(self.clone()).await?;
             }
         } else {
             for field in model.fields() {
@@ -495,7 +494,7 @@ impl Object {
                         if let Some(prev) = self.inner.previous_values.lock().unwrap().get(&field.name) {
                             if let current = self.get_value(&field.name).unwrap() {
                                 if !current.is_null() {
-                                    cb(prev.clone(), current.clone(), self.clone()).await
+                                    cb(prev.clone(), current.clone(), self.clone()).await?
                                 }
                             }
                         }
@@ -503,7 +502,7 @@ impl Object {
                 }
             }
             for cb in &model.inner.on_updated_fns {
-                cb(self.clone()).await;
+                cb(self.clone()).await?;
             }
         }
         self.inner.inside_write_callback.store(false, Ordering::SeqCst);

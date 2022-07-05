@@ -13,7 +13,7 @@ use crate::core::model_callback::PinFutureObj;
 use crate::core::object::Object;
 use crate::core::previous_value::PreviousValueRule;
 use crate::core::value::Value;
-
+use crate::error::ActionError;
 
 
 pub struct FieldBuilder {
@@ -43,7 +43,7 @@ pub struct FieldBuilder {
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) column_name: Option<String>,
     pub(crate) previous_value_rule: PreviousValueRule,
-    pub(crate) compare_on_updated: Vec<Arc<dyn Fn(Value, Value, Object) -> PinFutureObj<()>>>,
+    pub(crate) compare_on_updated: Vec<Arc<dyn Fn(Value, Value, Object) -> PinFutureObj<Result<(), ActionError>>>>,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -390,7 +390,7 @@ impl FieldBuilder {
     pub fn compare_on_updated<F, I, Fut>(&mut self, f: &'static F) -> &mut Self where
         F: Fn(I, I, Object) -> Fut + 'static,
         I: From<Value> + Send + Sync,
-        Fut: Future<Output = ()> {
+        Fut: Future<Output = Result<(), ActionError>> {
         self.previous_value_rule = PreviousValueRule::KeepAfterSaved;
         self.compare_on_updated.push(Arc::new(|old, new, object| Box::pin(async {
             f(I::from(old), I::from(new), object).await.into()

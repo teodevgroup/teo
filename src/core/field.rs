@@ -10,6 +10,7 @@ use crate::core::pipeline::Pipeline;
 use crate::core::previous_value::PreviousValueRule;
 use crate::core::stage::Stage;
 use crate::core::value::Value;
+use crate::error::ActionError;
 
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -118,7 +119,7 @@ pub(crate) struct Field {
     pub(crate) permission: Option<Permission>,
     pub(crate) column_name: Option<String>,
     pub(crate) previous_value_rule: PreviousValueRule,
-    pub(crate) compare_on_updated: Vec<Arc<dyn Fn(Value, Value, Object) -> PinFutureObj<()>>>,
+    pub(crate) compare_on_updated: Vec<Arc<dyn Fn(Value, Value, Object) -> PinFutureObj<Result<(), ActionError>>>>,
 }
 
 impl Debug for Field {
