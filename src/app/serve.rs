@@ -153,27 +153,6 @@ async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model) -> Ht
     }
 }
 
-async fn refetch(graph: &Graph, object: &Object, include: Option<&JsonValue>, select: Option<&JsonValue>) -> Result<Object, ActionError> {
-    let model = object.model();
-    let mut find_unique_arg = json!({});
-    for item in &model.primary_index().items {
-        let val = object.get_value(&item.field_name).unwrap();
-        find_unique_arg.as_object_mut().unwrap().insert(item.field_name.clone(), val.to_json_value());
-    }
-    let mut finder = json!({
-            "where": find_unique_arg,
-        });
-    if include.is_some() {
-        finder.as_object_mut().unwrap().insert("include".to_string(), include.unwrap().clone());
-    }
-    if select.is_some() {
-        finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
-    }
-    let refetched_result = graph.find_unique(model, &finder, false).await;
-    let refetched = refetched_result.unwrap();
-    Ok(refetched)
-}
-
 async fn handle_create_internal(graph: &Graph, create: Option<&JsonValue>, include: Option<&JsonValue>, select: Option<&JsonValue>, model: &Model) -> Result<JsonValue, ActionError> {
     let obj = graph.new_object(model.name());
     let set_json_result = match create {
@@ -188,15 +167,9 @@ async fn handle_create_internal(graph: &Graph, create: Option<&JsonValue>, inclu
     if set_json_result.is_err() {
         return Err(set_json_result.err().unwrap());
     }
-    match obj.save().await {
-        Ok(_) => {
-            let refetched = refetch(graph, &obj, include, select).await.unwrap();
-            Ok(refetched.to_json())
-        }
-        Err(err) => {
-            Err(err)
-        }
-    }
+    obj.save().await?;
+    let refetched = obj.refreshed(include, select).await?;
+    Ok(refetched.to_json())
 }
 
 async fn handle_create(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
@@ -212,31 +185,12 @@ async fn handle_create(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
 }
 
 async fn handle_update_internal(graph: &Graph, object: Object, update: Option<&JsonValue>, include: Option<&JsonValue>, select: Option<&JsonValue>, _where: Option<&JsonValue>, _model: &Model) -> Result<JsonValue, ActionError> {
-    let set_json_result = match update {
-        Some(update) => {
-            object.set_json(update).await
-        }
-        None => {
-            let empty = json!({});
-            object.set_json(&empty).await
-        }
-    };
-    match set_json_result {
-        Ok(_) => {
-            match object.save().await {
-                Ok(_) => {
-                    let refetched = refetch(graph, &object, include, select).await.unwrap();
-                    Ok(refetched.to_json())
-                }
-                Err(err) => {
-                    Err(err)
-                }
-            }
-        }
-        Err(err) => {
-            Err(err)
-        }
-    }
+    let empty = json!({});
+    let updator = if update.is_some() { update.unwrap() } else { &empty };
+    object.set_json(updator).await?;
+    object.save().await?;
+    let refetched = object.refreshed(include, select).await?;
+    Ok(refetched.to_json())
 }
 
 async fn handle_update(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
@@ -277,21 +231,21 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
                     obj.set_json(&empty).await
                 }
             };
-            match set_json_result {
+            return match set_json_result {
                 Ok(_) => {
                     match obj.save().await {
                         Ok(_) => {
                             // refetch here
-                            let refetched = refetch(graph, &obj, include, select).await.unwrap();
-                            return HttpResponse::Ok().json(json!({"data": refetched.to_json()}));
+                            let refetched = obj.refreshed(include, select).await.unwrap();
+                            HttpResponse::Ok().json(json!({"data": refetched.to_json()}))
                         }
                         Err(err) => {
-                            return HttpResponse::BadRequest().json(json!({"error": err}));
+                            HttpResponse::BadRequest().json(json!({"error": err}))
                         }
                     }
                 }
                 Err(err) => {
-                    return HttpResponse::BadRequest().json(json!({"error": err}));
+                    HttpResponse::BadRequest().json(json!({"error": err}))
                 }
             }
         }
@@ -312,7 +266,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
                     match obj.save().await {
                         Ok(_) => {
                             // refetch here
-                            let refetched = refetch(graph, &obj, include, select).await.unwrap();
+                            let refetched = obj.refreshed(include, select).await.unwrap();
                             return HttpResponse::Ok().json(json!({"data": refetched.to_json()}));
                         }
                         Err(err) => {

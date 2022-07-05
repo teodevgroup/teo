@@ -869,6 +869,31 @@ impl Object {
     pub fn graph(&self) -> &Graph {
         &self.inner.graph
     }
+
+    pub(crate) fn json_identifier(&self) -> JsonValue {
+        let model = self.model();
+        let mut identifier = json!({});
+        for item in &model.primary_index().items {
+            let val = self.get_value(&item.field_name).unwrap();
+            identifier.as_object_mut().unwrap().insert(item.field_name.clone(), val.to_json_value());
+        }
+        identifier
+    }
+
+    pub async fn refreshed(&self, include: Option<&JsonValue>, select: Option<&JsonValue>) -> Result<Object, ActionError> {
+        let model = self.model();
+        let graph = self.graph();
+        let mut finder = json!({
+            "where": self.json_identifier(),
+        });
+        if include.is_some() {
+            finder.as_object_mut().unwrap().insert("include".to_string(), include.unwrap().clone());
+        }
+        if select.is_some() {
+            finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
+        }
+        graph.find_unique(model, &finder, false).await
+    }
 }
 
 pub(crate) struct ObjectInner {
