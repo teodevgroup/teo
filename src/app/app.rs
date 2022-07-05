@@ -148,6 +148,11 @@ impl ClientBuilder {
         self.kotlin = Some(builder.build());
         self
     }
+
+    pub fn host_url(&mut self, url: impl Into<String>) -> &mut Self {
+        self.host_url = Some(url.into());
+        self
+    }
 }
 
 #[derive(Clone)]
