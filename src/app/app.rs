@@ -157,9 +157,9 @@ impl ClientBuilder {
 
 #[derive(Clone)]
 pub struct ClientConfiguration {
-    type_script: Option<TypeScriptClient>,
-    swift: Option<SwiftClient>,
-    kotlin: Option<KotlinClient>,
+    pub(crate) type_script: Option<TypeScriptClient>,
+    pub(crate) swift: Option<SwiftClient>,
+    pub(crate) kotlin: Option<KotlinClient>,
     pub(crate) host_url: Option<String>,
 }
 
@@ -176,13 +176,13 @@ impl Default for ClientConfiguration {
 
 #[derive(Clone)]
 pub struct TypeScriptClient {
-    react_queries: bool,
-    react_forms: bool,
+    pub(crate) react_queries: bool,
+    pub(crate) react_forms: bool,
 }
 
 pub struct TypeScriptClientBuilder {
-    react_queries: bool,
-    react_forms: bool,
+    pub(crate) react_queries: bool,
+    pub(crate) react_forms: bool,
 }
 
 impl TypeScriptClientBuilder {
@@ -213,7 +213,7 @@ impl TypeScriptClientBuilder {
 
 #[derive(Clone)]
 pub struct SwiftClient {
-    combine_observable_objects: bool,
+    pub(crate) combine_observable_objects: bool,
 }
 
 pub struct SwiftClientBuilder {
@@ -241,7 +241,7 @@ impl SwiftClientBuilder {
 
 #[derive(Clone)]
 pub struct KotlinClient {
-    jetpack_compose_states: bool,
+    pub(crate) jetpack_compose_states: bool,
 }
 
 pub struct KotlinClientBuilder {

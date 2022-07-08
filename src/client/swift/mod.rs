@@ -12,29 +12,10 @@ use crate::core::client::Client;
 
 pub(crate) mod pkg;
 
-
-#[derive(Debug)]
-pub struct SwiftClient {
-    pub(crate) at: Arc<Mutex<String>>,
-    pub(crate) combine_observable_objects: AtomicBool,
-}
-
-impl SwiftClient {
-    pub(crate) fn new() -> Self {
-        SwiftClient {
-            at: Arc::new(Mutex::new("".to_string())),
-            combine_observable_objects: AtomicBool::new(false),
-        }
-    }
-}
-
-#[async_trait]
-impl Client for SwiftClient {
-    async fn generate(&self, graph: &Graph, _conf: &ClientConfiguration) -> std::io::Result<()> {
-        ensure_directory("client").await?;
-        clear_directory("client/swift").await?;
-        generate_file("client/swift/README.md", generate_readme_md(graph).await).await?;
-        generate_file("client/swift/.gitignore", generate_gitignore(graph).await).await?;
-        generate_file("client/swift/Package.swift", generate_package_swift(graph).await).await
-    }
+pub async fn generate_swift_client(graph: &Graph, _conf: &ClientConfiguration) -> std::io::Result<()> {
+    ensure_directory("client").await?;
+    clear_directory("client/swift").await?;
+    generate_file("client/swift/README.md", generate_readme_md(graph).await).await?;
+    generate_file("client/swift/.gitignore", generate_gitignore(graph).await).await?;
+    generate_file("client/swift/Package.swift", generate_package_swift(graph).await).await
 }
