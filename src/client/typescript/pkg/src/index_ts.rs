@@ -464,6 +464,6 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
             });
         }, "}");
         c.empty_line();
-        c.line("export default teo");
+        c.line(format!("export default {object_name}"));
     }).to_string()
 }
