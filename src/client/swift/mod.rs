@@ -1,6 +1,4 @@
-use async_trait::async_trait;
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
 use std::sync::Mutex;
 use crate::app::app::ClientConfiguration;
 use crate::client::shared::{clear_directory, ensure_directory, generate_file};
@@ -8,7 +6,6 @@ use crate::client::swift::pkg::gitignore::generate_gitignore;
 use crate::client::swift::pkg::package_swift::generate_package_swift;
 use crate::client::swift::pkg::readme_md::generate_readme_md;
 use crate::core::graph::Graph;
-use crate::core::client::Client;
 
 pub(crate) mod pkg;
 

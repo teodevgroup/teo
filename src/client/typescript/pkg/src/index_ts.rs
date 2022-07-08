@@ -1,5 +1,6 @@
 use inflector::Inflector;
 use crate::action::action::{ActionResultData, ActionResultMeta, ActionType};
+use crate::app::app::ClientConfiguration;
 use crate::client::shared::code::Code;
 use crate::client::typescript::r#type::ToTypeScriptType;
 use crate::core::field::Optionality;
@@ -243,7 +244,7 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
     }).to_string()
 }
 
-pub(crate) async fn generate_index_ts(graph: &Graph) -> String {
+pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration) -> String {
     Code::new(0, 4, |c| {
         c.line(r#"import { request, Response, PagingInfo, SortOrder, Enumerable } from "./runtime""#);
         c.block("import {", |b| {
@@ -452,7 +453,8 @@ pub(crate) async fn generate_index_ts(graph: &Graph) -> String {
             }
         });
         // main interface
-        c.block("const teo = {", |b| {
+        let object_name = &conf.type_script.as_ref().unwrap().object_name;
+        c.block(format!("const {object_name} = {{"), |b| {
             graph.models().iter().for_each(|m| {
                 if m.actions().len() > 0 {
                     let model_name = m.name();

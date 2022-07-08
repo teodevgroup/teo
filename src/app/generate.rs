@@ -5,13 +5,13 @@ use crate::client::typescript::generate_typescript_client;
 use crate::core::graph::Graph;
 
 pub(crate) async fn generate_clients(graph: Graph, conf: ClientConfiguration) -> Result<(), std::io::Error> {
-    if let Some(_type_script_client_conf) = conf.type_script {
+    if let Some(ref _type_script_client_conf) = conf.type_script {
         generate_typescript_client(&graph, &conf).await?;
     }
-    if let Some(_swift_client_conf) = conf.swift {
+    if let Some(ref _swift_client_conf) = conf.swift {
         generate_swift_client(&graph, &conf).await?;
     }
-    if let Some(_kotlin_client_conf) = conf.kotlin {
+    if let Some(ref _kotlin_client_conf) = conf.kotlin {
         generate_kotlin_client(&graph, &conf).await?
     }
     Ok(())

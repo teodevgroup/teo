@@ -178,11 +178,13 @@ impl Default for ClientConfiguration {
 pub struct TypeScriptClient {
     pub(crate) react_queries: bool,
     pub(crate) react_forms: bool,
+    pub(crate) object_name: String,
 }
 
 pub struct TypeScriptClientBuilder {
-    pub(crate) react_queries: bool,
-    pub(crate) react_forms: bool,
+    react_queries: bool,
+    react_forms: bool,
+    object_name: String,
 }
 
 impl TypeScriptClientBuilder {
@@ -190,6 +192,7 @@ impl TypeScriptClientBuilder {
         TypeScriptClientBuilder {
             react_queries: false,
             react_forms: false,
+            object_name: "teo".to_string(),
         }
     }
 
@@ -197,6 +200,7 @@ impl TypeScriptClientBuilder {
         TypeScriptClient {
             react_queries: self.react_queries,
             react_forms: self.react_forms,
+            object_name: self.object_name.clone(),
         }
     }
 
@@ -207,6 +211,11 @@ impl TypeScriptClientBuilder {
 
     pub fn react_forms(&mut self) -> &mut Self {
         self.react_forms = true;
+        self
+    }
+
+    pub fn object_name(&mut self, name: impl Into<String>) -> &mut Self {
+        self.object_name = name.into();
         self
     }
 }
