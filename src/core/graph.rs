@@ -20,7 +20,6 @@ struct GraphInner {
     models_map: HashMap<String, Model>,
     url_segment_name_map: HashMap<String, String>,
     connector: Option<Box<dyn Connector>>,
-    jwt_secret: String,
 }
 
 impl Graph {
@@ -34,7 +33,6 @@ impl Graph {
             models_map: HashMap::new(),
             url_segment_name_map: HashMap::new(),
             connector: None,
-            jwt_secret: builder.jwt_secret.clone(),
         };
         graph.models_vec = builder.models.iter().map(|mb| { mb.build(&builder.connector_builder()) }).collect();
         let mut models_map: HashMap<String, Model> = HashMap::new();

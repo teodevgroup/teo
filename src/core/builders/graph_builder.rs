@@ -13,8 +13,6 @@ pub struct GraphBuilder {
     pub(crate) models: Vec<ModelBuilder>,
     pub(crate) connector_builder: Option<Box<dyn ConnectorBuilder>>,
     pub(crate) reset_database: bool,
-    pub(crate) jwt_secret: String,
-    pub(crate) url_prefix: Option<String>,
 }
 
 impl GraphBuilder {
@@ -25,8 +23,6 @@ impl GraphBuilder {
             models: Vec::new(),
             connector_builder: None,
             reset_database: false,
-            jwt_secret: "".to_string(),
-            url_prefix: None,
         }
     }
 
@@ -47,16 +43,6 @@ impl GraphBuilder {
 
     pub fn reset_database(&mut self) -> &mut Self {
         self.reset_database = true;
-        self
-    }
-
-    pub fn jwt_secret(&mut self, secret: impl Into<String>) -> &mut Self {
-        self.jwt_secret = secret.into();
-        self
-    }
-
-    pub fn url_prefix(&mut self, prefix: impl Into<String>) -> &mut Self {
-        self.url_prefix = Some(prefix.into());
         self
     }
 
