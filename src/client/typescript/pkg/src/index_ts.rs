@@ -76,7 +76,7 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
                 } else if let Some(relation) = model.relation(k) {
                     let relation_name = &relation.name;
                     let relation_model_name = &relation.model;
-                    let relation_model = graph.model(relation_model_name);
+                    let relation_model = graph.model(relation_model_name).unwrap();
                     let num = if relation.is_vec { "Many" } else { "One" };
                     if let Some(without_relation) = without_relation {
                         if &without_relation.name != k {
@@ -215,7 +215,7 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
                 } else if let Some(relation) = model.relation(k) {
                     let relation_name = &relation.name;
                     let relation_model_name = &relation.model;
-                    let relation_model = graph.model(relation_model_name);
+                    let relation_model = graph.model(relation_model_name).unwrap();
                     let num = if relation.is_vec { "Many" } else { "One" };
                     if let Some(without_relation) = without_relation {
                         if &without_relation.name != k {

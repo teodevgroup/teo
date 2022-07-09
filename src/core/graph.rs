@@ -49,6 +49,33 @@ impl Graph {
         Graph { inner: Arc::new(graph) }
     }
 
+    pub async fn find_unique(&self, model: &str, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
+        let model = self.model(model)?;
+        self.connector().find_unique(self, model, finder, mutation_mode).await
+    }
+
+    pub async fn find_first(&self, model: &str, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
+        let model = self.model(model)?;
+        self.connector().find_first(self, model, finder, mutation_mode).await
+    }
+
+    pub async fn find_many(&self, model: &str, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
+        let model = self.model(model)?;
+        self.connector().find_many(self, model, finder, mutation_mode).await
+    }
+
+    pub async fn count(&self, model: &str, finder: &JsonValue) -> Result<usize, ActionError> {
+        let model = self.model(model)?;
+        self.connector().count(self, model, finder).await
+    }
+
+    pub fn create_object(&self, model: &str) -> Result<Object, ActionError> {
+        match self.model(model) {
+            Ok(model) => Ok(Object::new(self, model)),
+            Err(err) => Err(err)
+        }
+    }
+
     pub(crate) fn connector(&self) -> &dyn Connector {
         match &self.inner.connector {
             Some(c) => { c.as_ref() }
@@ -56,8 +83,11 @@ impl Graph {
         }
     }
 
-    pub fn model(&self, name: &str) -> &Model {
-        self.inner.models_map.get(name).unwrap()
+    pub(crate) fn model(&self, name: &str) -> Result<&Model, ActionError> {
+        match self.inner.models_map.get(name) {
+            Some(model) => Ok(model),
+            None => Err(ActionError::model_not_found(name))
+        }
     }
 
     pub(crate) fn r#enum(&self, name: impl Into<String>) -> &Vec<String> {
@@ -67,28 +97,6 @@ impl Graph {
     pub(crate) fn models(&self) -> &Vec<Model> { &self.inner.models_vec }
 
     pub(crate) fn enums(&self) -> &HashMap<String, Enum> { &self.inner.enums }
-
-    pub async fn find_unique(&self, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
-        self.connector().find_unique(self, model, finder, mutation_mode).await
-    }
-
-    pub async fn find_first(&self, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
-        self.connector().find_first(self, model, finder, mutation_mode).await
-    }
-
-    pub async fn find_many(&self, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
-        self.connector().find_many(self, model, finder, mutation_mode).await
-    }
-
-    pub async fn count(&self, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
-        self.connector().count(self, model, finder).await
-    }
-
-    pub fn new_object(&self, model: &str) -> Object {
-        let model = self.inner.models_map.get(model).unwrap().clone();
-
-        Object::new(self.clone(), model)
-    }
 
     pub(crate) fn model_name_for_url_segment_name(&self, segment_name: &str) -> Option<&String> {
         match self.inner.url_segment_name_map.get(segment_name) {

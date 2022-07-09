@@ -51,7 +51,7 @@ async fn make_graph() -> &Graph {
 #[test]
 async fn optional_field_if_no_input_value_is_none() {
     let graph = make_graph().await;
-    let simple = graph.new_object("Optional");
+    let simple = graph.create_object("Optional");
     let _ = simple.set_json(&json!({})).await;
     let value = simple.get_value("string").unwrap();
     assert_eq!(value, None);
@@ -60,7 +60,7 @@ async fn optional_field_if_no_input_value_is_none() {
 #[test]
 async fn optional_field_if_input_is_null_value_is_none() {
     let graph = make_graph().await;
-    let simple = graph.new_object("Optional");
+    let simple = graph.create_object("Optional");
     let _ = simple.set_json(&json!({"string": null})).await;
     let value = simple.get_value("string").unwrap();
     assert_eq!(value, None);
@@ -69,7 +69,7 @@ async fn optional_field_if_input_is_null_value_is_none() {
 #[test]
 async fn required_field_if_no_input_value_is_none() {
     let graph = make_graph().await;
-    let simple = graph.new_object("Required");
+    let simple = graph.create_object("Required");
     let _ = simple.set_json(&json!({})).await;
     let value = simple.get_value("string").unwrap();
     assert_eq!(value, None);
@@ -78,7 +78,7 @@ async fn required_field_if_no_input_value_is_none() {
 #[test]
 async fn required_field_if_input_is_null_returns_none() {
     let graph = make_graph().await;
-    let simple = graph.new_object("Required");
+    let simple = graph.create_object("Required");
     let _ = simple.set_json(&json!({"string": null})).await;
     let value = simple.get_value("string").unwrap();
     assert_eq!(value, None);
@@ -87,7 +87,7 @@ async fn required_field_if_input_is_null_returns_none() {
 #[test]
 async fn readonly_field_cannot_accept_value_through_set_json() {
     let graph = make_graph().await;
-    let simple = graph.new_object("Readonly");
+    let simple = graph.create_object("Readonly");
     let result = simple.set_json(&json!({"readonly": "my_value"})).await;
     assert_eq!(result.err().unwrap(), ActionError::keys_unallowed());
 }
@@ -95,7 +95,7 @@ async fn readonly_field_cannot_accept_value_through_set_json() {
 #[test]
 async fn readonly_field_can_accept_value_through_update_json() {
     let graph = make_graph().await;
-    let simple = graph.new_object("Readonly");
+    let simple = graph.create_object("Readonly");
     let _ = simple.update_json(&json!({"readonly": "my_value"})).await;
     let value = simple.get_value("readonly");
     assert_eq!(value.unwrap().unwrap(), Value::String("my_value".to_string()));
@@ -104,7 +104,7 @@ async fn readonly_field_can_accept_value_through_update_json() {
 #[test]
 async fn readonly_field_can_accept_value_through_set_value() {
     let graph = make_graph().await;
-    let simple = graph.new_object("Readonly");
+    let simple = graph.create_object("Readonly");
     let _ = simple.set_value("readonly", Value::String("ok".to_string()));
     let value = simple.get_value("readonly");
     assert_eq!(value.unwrap().unwrap(), Value::String("ok".to_string()));
@@ -113,7 +113,7 @@ async fn readonly_field_can_accept_value_through_set_value() {
 #[test]
 async fn writeonly_field_cannot_output_into_to_json() {
     let graph = make_graph().await;
-    let simple = graph.new_object("Writeonly");
+    let simple = graph.create_object("Writeonly");
     let _ = simple.set_json(&json!({"writeonly": "123"})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_object().unwrap().get("writeonly"), None);
@@ -122,7 +122,7 @@ async fn writeonly_field_cannot_output_into_to_json() {
 #[test]
 async fn writeonly_field_value_can_be_get_through_get_value() {
     let graph = make_graph().await;
-    let simple = graph.new_object("Writeonly");
+    let simple = graph.create_object("Writeonly");
     let _ = simple.set_json(&json!({"writeonly": "123"})).await;
     let value = simple.get_value("writeonly").unwrap().unwrap();
     assert_eq!(value, Value::String("123".to_string()));
@@ -131,7 +131,7 @@ async fn writeonly_field_value_can_be_get_through_get_value() {
 #[test]
 async fn internal_field_cannot_accept_value_through_set_json() {
     let graph = make_graph().await;
-    let simple = graph.new_object("Internal");
+    let simple = graph.create_object("Internal");
     let result = simple.set_json(&json!({"internal": "my_value"})).await;
     assert_eq!(result.err().unwrap(), ActionError::keys_unallowed());
 }
@@ -139,7 +139,7 @@ async fn internal_field_cannot_accept_value_through_set_json() {
 #[test]
 async fn internal_field_can_accept_value_through_update_json() {
     let graph = make_graph().await;
-    let simple = graph.new_object("Internal");
+    let simple = graph.create_object("Internal");
     let _ = simple.update_json(&json!({"internal": "my_value"})).await;
     let value = simple.get_value("internal");
     assert_eq!(value.unwrap().unwrap(), Value::String("my_value".to_string()));
@@ -148,7 +148,7 @@ async fn internal_field_can_accept_value_through_update_json() {
 #[test]
 async fn internal_field_can_accept_value_through_set_value() {
     let graph = make_graph().await;
-    let simple = graph.new_object("Internal");
+    let simple = graph.create_object("Internal");
     let _ = simple.set_value("internal", Value::String("ok".to_string()));
     let value = simple.get_value("internal");
     assert_eq!(value.unwrap().unwrap(), Value::String("ok".to_string()));
@@ -157,7 +157,7 @@ async fn internal_field_can_accept_value_through_set_value() {
 #[test]
 async fn internal_field_cannot_output_into_to_json() {
     let graph = make_graph().await;
-    let simple = graph.new_object("Internal");
+    let simple = graph.create_object("Internal");
     let _ = simple.set_json(&json!({"internal": "123"})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_object().unwrap().get("internal"), None);
@@ -166,7 +166,7 @@ async fn internal_field_cannot_output_into_to_json() {
 #[test]
 async fn internal_field_value_can_be_get_through_get_value() {
     let graph = make_graph().await;
-    let simple = graph.new_object("Internal");
+    let simple = graph.create_object("Internal");
     let _ = simple.set_value("internal", Value::String("123".to_string()));
     let value = simple.get_value("internal").unwrap().unwrap();
     assert_eq!(value, Value::String("123".to_string()));

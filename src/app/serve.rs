@@ -81,10 +81,10 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
         return Err(ActionError::invalid_jwt_token());
     }
     let claims = claims_result.unwrap();
-    let model = graph.model(claims.model.as_str());
+    let model = graph.model(claims.model.as_str()).unwrap();
     let primary_field_name = model.primary_field_name().unwrap();
     let identity = graph.find_unique(
-        graph.model(claims.model.as_str()),
+        graph.model(claims.model.as_str()).unwrap().name(),
         &json!({
                 "where": { primary_field_name: claims.id }
             }),
@@ -97,7 +97,7 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
 }
 
 async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
-    let result = graph.find_unique(model, input, false).await;
+    let result = graph.find_unique(model.name(), input, false).await;
     match result {
         Ok(obj) => {
             let json_data = obj.to_json();
@@ -110,7 +110,7 @@ async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model) -> 
 }
 
 async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
-    let result = graph.find_first(model, input, false).await;
+    let result = graph.find_first(model.name(), input, false).await;
     match result {
         Ok(obj) => {
             let json_data = obj.to_json();
@@ -123,10 +123,10 @@ async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model) -> H
 }
 
 async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
-    let result = graph.find_many(model, input, false).await;
+    let result = graph.find_many(model.name(), input, false).await;
     match result {
         Ok(results) => {
-            let count = graph.count(model, input).await.unwrap();
+            let count = graph.count(model.name(), input).await.unwrap();
             let mut meta = json!({"count": count});
             let page_size = input.get("pageSize");
             if page_size.is_some() {
@@ -154,7 +154,7 @@ async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model) -> Ht
 }
 
 async fn handle_create_internal(graph: &Graph, create: Option<&JsonValue>, include: Option<&JsonValue>, select: Option<&JsonValue>, model: &Model) -> Result<JsonValue, ActionError> {
-    let obj = graph.new_object(model.name());
+    let obj = graph.create_object(model.name())?;
     let set_json_result = match create {
         Some(create) => {
             obj.set_json(create).await
@@ -194,7 +194,7 @@ async fn handle_update_internal(graph: &Graph, object: Object, update: Option<&J
 }
 
 async fn handle_update(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
-    let result = graph.find_unique(model, input, true).await;
+    let result = graph.find_unique(model.name(), input, true).await;
     if result.is_err() {
         return HttpResponse::NotFound().json(json!({"error": result.err()}));
     }
@@ -215,7 +215,7 @@ async fn handle_update(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
 }
 
 async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
-    let result = graph.find_unique(model, input, true).await;
+    let result = graph.find_unique(model.name(), input, true).await;
     let include = input.get("include");
     let select = input.get("select");
     match result {
@@ -251,7 +251,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
         }
         Err(_) => {
             let create = input.get("create");
-            let obj = graph.new_object(model.name());
+            let obj = graph.create_object(model.name()).unwrap();
             let set_json_result = match create {
                 Some(create) => {
                     obj.set_json(create).await
@@ -283,7 +283,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
 }
 
 async fn handle_delete(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
-    let result = graph.find_unique(model, input, true).await;
+    let result = graph.find_unique(model.name(), input, true).await;
     if result.is_err() {
         return HttpResponse::NotFound().json(json!({"error": result.err()}));
     }
@@ -333,7 +333,7 @@ async fn handle_create_many(graph: &Graph, input: &JsonValue, model: &Model) -> 
 }
 
 async fn handle_update_many(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
-    let result = graph.find_many(model, input, true).await;
+    let result = graph.find_many(model.name(), input, true).await;
     if result.is_err() {
         return HttpResponse::BadRequest().json(json!({"error": result.err()}));
     }
@@ -363,7 +363,7 @@ async fn handle_update_many(graph: &Graph, input: &JsonValue, model: &Model) -> 
 }
 
 async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
-    let result = graph.find_many(model, input, true).await;
+    let result = graph.find_many(model.name(), input, true).await;
     if result.is_err() {
         return HttpResponse::BadRequest().json(json!({"error": result.err()}));
     }
@@ -388,7 +388,7 @@ async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model) -> 
 }
 
 async fn handle_count(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
-    let result = graph.count(model, input).await;
+    let result = graph.count(model.name(), input).await;
     match result {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": count}))
@@ -449,7 +449,7 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
         return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_auth_checker()}));
     }
     let by_field = model.field(by_key.unwrap()).unwrap();
-    let obj_result = graph.find_unique(model, &json!({
+    let obj_result = graph.find_unique(model.name(), &json!({
             "where": {
                 identity_key.unwrap(): identity_value.unwrap()
             }
@@ -587,7 +587,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                     return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
                 }
             };
-            let model_def = graph.model(model_name);
+            let model_def = graph.model(model_name).unwrap();
             if !model_def.has_action(action) {
                 log_unhandled(start, r.method().as_str(), &path, 400);
                 return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));

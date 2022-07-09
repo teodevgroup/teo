@@ -27,10 +27,10 @@ pub struct Object {
 
 impl Object {
 
-    pub(crate) fn new(graph: Graph, model: Model) -> Object {
+    pub(crate) fn new(graph: &Graph, model: &Model) -> Object {
         Object { inner: Arc::new(ObjectInner {
-            graph,
-            model,
+            graph: graph.clone(),
+            model: model.clone(),
             is_initialized: AtomicBool::new(false),
             is_new: AtomicBool::new(true),
             is_modified: AtomicBool::new(false),
@@ -330,8 +330,8 @@ impl Object {
     pub(crate) async fn link_connect(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> Result<(), ActionError> {
         match &relation.through {
             Some(through) => { // with join table
-                let relation_model = self.graph().model(through);
-                let relation_object = self.graph().new_object(through);
+                let relation_model = self.graph().model(through)?;
+                let relation_object = self.graph().create_object(through)?;
                 relation_object.set_json(&json!({})).await?;
                 let local_relation_name = relation.fields.get(0).unwrap();
                 let foreign_relation_name = relation.references.get(0).unwrap();
@@ -400,7 +400,7 @@ impl Object {
     pub(crate) async fn link_disconnect(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> Result<(), ActionError> {
         match &relation.through {
             Some(through) => { // with join table
-                let relation_model = self.graph().model(through);
+                let relation_model = self.graph().model(through)?;
                 let mut finder: Map<String, JsonValue> = Map::new();
                 let local_relation_name = relation.fields.get(0).unwrap();
                 let foreign_relation_name = relation.references.get(0).unwrap();
@@ -416,7 +416,7 @@ impl Object {
                     let val = obj.get_value(foreign_field_name).unwrap();
                     finder.insert(field_name.to_string(), val.to_json_value());
                 }
-                let relation_object = self.graph().find_unique(relation_model, &json!({"where": finder}), true).await?;
+                let relation_object = self.graph().find_unique(through, &json!({"where": finder}), true).await?;
                 relation_object.delete_from_database(session.clone(), false).await?;
             }
             None => { // no join table
@@ -647,7 +647,7 @@ impl Object {
                         let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
                         for entry in entries {
-                            let new_object =  graph.new_object(&relation.model);
+                            let new_object =  graph.create_object(&relation.model)?;
                             new_object.set_json(entry).await?;
                             new_object.ignore_required_for(&relation.references);
                             self.ignore_required_for(&relation.fields);
@@ -663,9 +663,8 @@ impl Object {
                         let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
                         for entry in entries {
-                            let model = graph.model(&relation.model);
                             let unique_query = json!({"where": entry});
-                            let new_object = graph.find_unique(model, &unique_query, true).await?;
+                            let new_object = graph.find_unique(&relation.model, &unique_query, true).await?;
                             new_object.ignore_required_for(&relation.references);
                             self.ignore_required_for(&relation.fields);
                             if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
@@ -680,10 +679,9 @@ impl Object {
                         let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
                         for entry in entries {
-                            let model = graph.model(&relation.model);
                             let r#where = entry.as_object().unwrap().get("where").unwrap();
                             let create = entry.as_object().unwrap().get("create").unwrap();
-                            let unique_result = graph.find_unique(model, &json!({"where": r#where}), true).await;
+                            let unique_result = graph.find_unique(&relation.model, &json!({"where": r#where}), true).await;
                             match unique_result {
                                 Ok(new_obj) => {
                                     if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
@@ -696,7 +694,7 @@ impl Object {
                                     objects.push(RelationManipulation::Connect(new_obj));
                                 }
                                 Err(_err) => {
-                                    let new_obj = graph.new_object(&relation.model);
+                                    let new_obj = graph.create_object(&relation.model)?;
                                     new_obj.set_json(create).await?;
                                     new_obj.ignore_required_for(&relation.references);
                                     self.ignore_required_for(&relation.fields);
@@ -718,7 +716,7 @@ impl Object {
                         let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
                         for entry in entries {
-                            let model = graph.model(&relation.model);
+                            let model = graph.model(&relation.model)?;
                             if !relation.is_vec && (relation.optionality == Optionality::Required) {
                                 return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot disconnect."));
                             }
@@ -732,7 +730,7 @@ impl Object {
                                 }
                             }
                             let unique_query = json!({"where": entry});
-                            let object_to_disconnect = graph.find_unique(model, &unique_query, true).await?;
+                            let object_to_disconnect = graph.find_unique(&relation.model, &unique_query, true).await?;
                             if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
                                 self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
@@ -751,8 +749,7 @@ impl Object {
                             let r#where = entry.get("where").unwrap();
                             let update = entry.get("update").unwrap();
                             let model_name = &relation.model;
-                            let model = graph.model(model_name);
-                            let the_object = graph.find_unique(model, &json!({"where": r#where}), true).await;
+                            let the_object = graph.find_unique(model_name, &json!({"where": r#where}), true).await;
                             if the_object.is_err() {
                                 return Err(ActionError::object_not_found());
                             }
@@ -770,11 +767,10 @@ impl Object {
                         let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
                         for entry in entries {
-                            let model = graph.model(&relation.model);
                             let r#where = entry.as_object().unwrap().get("where").unwrap();
                             let create = entry.as_object().unwrap().get("create").unwrap();
                             let update = entry.as_object().unwrap().get("update").unwrap();
-                            let the_object = graph.find_unique(model, &json!({"where": r#where}), true).await;
+                            let the_object = graph.find_unique(&relation.model, &json!({"where": r#where}), true).await;
                             match the_object {
                                 Ok(obj) => {
                                     obj.set_json(update).await?;
@@ -786,7 +782,7 @@ impl Object {
                                     objects.push(RelationManipulation::Keep(obj));
                                 }
                                 Err(_) => {
-                                    let new_obj = graph.new_object(&relation.model);
+                                    let new_obj = graph.create_object(&relation.model)?;
                                     new_obj.ignore_required_for(&relation.references);
                                     self.ignore_required_for(&relation.fields);
                                     new_obj.set_json(create).await?;
@@ -809,7 +805,7 @@ impl Object {
                         for entry in entries {
                             let r#where = entry;
                             let model_name = &relation.model;
-                            let model = graph.model(model_name);
+                            let model = graph.model(model_name)?;
                             if !relation.is_vec && (relation.optionality == Optionality::Required) {
                                 return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot delete."));
                             }
@@ -822,7 +818,7 @@ impl Object {
                                     return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot delete."));
                                 }
                             }
-                            let the_object = graph.find_unique(model, &json!({"where": r#where}), true).await;
+                            let the_object = graph.find_unique(model_name, &json!({"where": r#where}), true).await;
                             if the_object.is_err() {
                                 return Err(ActionError::object_not_found());
                             }
@@ -881,7 +877,6 @@ impl Object {
     }
 
     pub async fn refreshed(&self, include: Option<&JsonValue>, select: Option<&JsonValue>) -> Result<Object, ActionError> {
-        let model = self.model();
         let graph = self.graph();
         let mut finder = json!({
             "where": self.json_identifier(),
@@ -892,7 +887,7 @@ impl Object {
         if select.is_some() {
             finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
         }
-        graph.find_unique(model, &finder, false).await
+        graph.find_unique(self.model().name(), &finder, false).await
     }
 
     pub async fn fetch_relation_object(&self, key: impl AsRef<str>, find_unique_arg: Option<&JsonValue>) -> Result<Option<Object>, ActionError> {
@@ -925,8 +920,7 @@ impl Object {
         }
         let relation_model_name = &relation.model;
         let graph = self.graph();
-        let relation_model = graph.model(&relation_model_name);
-        match graph.find_unique(relation_model, &finder, false).await {
+        match graph.find_unique(relation_model_name, &finder, false).await {
             Ok(result) => {
                 self.inner.queried_relation_map.lock().unwrap().insert(key.as_ref().to_string(), vec![result]);
                 let obj = self.inner.queried_relation_map.lock().unwrap().get(key.as_ref()).unwrap().get(0).unwrap().clone();
@@ -959,7 +953,7 @@ impl Object {
         };
         if let Some(join_table) = &relation.through {
             let identifier = self.json_identifier();
-            let new_self = self.graph().find_unique(model, &json!({
+            let new_self = self.graph().find_unique(model.name(), &json!({
                 "where": identifier,
                 "include": {
                     key.as_ref(): include_inside
@@ -989,8 +983,7 @@ impl Object {
             }
             let relation_model_name = &relation.model;
             let graph = self.graph();
-            let relation_model = graph.model(&relation_model_name);
-            let results = graph.find_many(relation_model, &finder, false).await?;
+            let results = graph.find_many(relation_model_name, &finder, false).await?;
             self.inner.queried_relation_map.lock().unwrap().insert(key.as_ref().to_string(), results.clone());
             Ok(results)
         }

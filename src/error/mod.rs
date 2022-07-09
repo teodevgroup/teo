@@ -51,6 +51,7 @@ pub enum ActionErrorType {
     SetValueError,
     SaveCallingError,
     CustomError,
+    ModelNotFound,
 }
 
 impl ActionErrorType {
@@ -102,6 +103,7 @@ impl ActionErrorType {
             ActionErrorType::SetValueError => { 500 }
             ActionErrorType::SaveCallingError => { 500 }
             ActionErrorType::CustomError => { 500 }
+            ActionErrorType::ModelNotFound => { 500 }
         }
     }
 }
@@ -501,6 +503,14 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::CustomError,
             message: message.into(),
+            errors: None
+        }
+    }
+
+    pub fn model_not_found(name: impl AsRef<str> + Display) -> Self {
+        ActionError {
+            r#type: ActionErrorType::ModelNotFound,
+            message: format!("Model named `{name}' is not found."),
             errors: None
         }
     }
