@@ -77,7 +77,7 @@ impl MongoDBConnector {
                         continue
                     }
                     let name = (&index).options.as_ref().unwrap().name.as_ref().unwrap();
-                    let result = model.inner.indices.iter().find(|i| &i.name == name);
+                    let result = model.indices().iter().find(|i| &i.name == name);
                     if result.is_none() {
                         // not in our model definition, but in the database
                         // drop this index
@@ -108,7 +108,7 @@ impl MongoDBConnector {
                     reviewed_names.push(name.clone());
                 }
             }
-            for index in &model.inner.indices {
+            for index in model.indices() {
                 if !reviewed_names.contains(&index.name) {
                     // create this index
                     let index_options = IndexOptions::builder()
@@ -601,7 +601,7 @@ impl Connector for MongoDBConnector {
         }
         let model = object.model();
         let mut query = doc!{};
-        for item in &model.inner.primary.items {
+        for item in &model.primary().items {
             let field_name = &item.field_name;
             let column_name = model.field(field_name).unwrap().column_name();
             let value = object.get_value(field_name).unwrap().to_bson_value();

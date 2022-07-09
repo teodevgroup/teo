@@ -67,10 +67,14 @@ pub struct ModelInner {
 
 #[derive(Clone)]
 pub struct Model {
-    pub(crate) inner: Arc<ModelInner>
+    inner: Arc<ModelInner>
 }
 
 impl Model {
+
+    pub(crate) fn new_with_inner(inner: Arc<ModelInner>) -> Model {
+        Model { inner }
+    }
 
     pub(crate) fn name(&self) -> &str {
         &self.inner.name
@@ -94,6 +98,10 @@ impl Model {
 
     pub(crate) fn identity(&self) -> bool {
         self.inner.identity
+    }
+
+    pub(crate) fn actions(&self) -> &HashSet<ActionType> {
+        &self.inner.actions
     }
 
     pub(crate) fn fields(&self) -> &Vec<Arc<Field>> {
@@ -170,10 +178,6 @@ impl Model {
         self.inner.actions.contains(&action)
     }
 
-    pub(crate) fn actions(&self) -> &HashSet<ActionType> {
-        &self.inner.actions
-    }
-
     pub(crate) fn has_field(&self, name: &str) -> bool {
         self.inner.fields_map.get(name).is_some()
     }
@@ -181,6 +185,42 @@ impl Model {
     pub(crate) fn has_relation(&self, name: &str) -> bool {
         self.inner.relations_map.get(name).is_some()
     }
+
+    pub(crate) fn on_saved_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.on_saved_fns
+    }
+
+    pub(crate) fn on_updated_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.on_updated_fns
+    }
+
+    pub(crate) fn on_created_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.on_created_fns
+    }
+    pub(crate) fn on_deleted_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.on_deleted_fns
+    }
+    pub(crate) fn on_save_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.on_save_fns
+    }
+    pub(crate) fn on_update_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.on_update_fns
+    }
+    pub(crate) fn on_create_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.on_create_fns
+    }
+    pub(crate) fn on_delete_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.on_delete_fns
+    }
+
+    pub(crate) fn indices(&self) -> &Vec<ModelIndex> {
+        &self.inner.indices
+    }
+
+    pub(crate) fn primary(&self) -> &ModelIndex {
+        &self.inner.primary
+    }
+
 }
 
 impl PartialEq for Model {

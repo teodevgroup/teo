@@ -1248,7 +1248,7 @@ fn build_query_pipeline(
             return Err(ActionError::invalid_query_input("Field value of 'orderBy' should be one of 'asc' or 'desc'."));
         }
         let mut valid = false;
-        for index in &model.inner.indices {
+        for index in model.indices() {
             if index.items.len() == 1 {
                 if index.index_type == ModelIndexType::Unique || index.index_type == ModelIndexType::Primary {
                     if index.items.get(0).unwrap().field_name == cursor_key {

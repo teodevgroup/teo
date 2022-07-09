@@ -326,7 +326,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
             c.block(format!("export type {model_name}WhereUniqueInput = {{"), |b| {
                 use ModelIndexType::*;
                 let mut used_field_names: Vec<&str> = Vec::new();
-                m.inner.indices.iter().for_each(|index| {
+                m.indices().iter().for_each(|index| {
                     if index.index_type == Primary || index.index_type == Unique {
                         index.items.iter().for_each(|item| {
                             if !used_field_names.contains(&&***&&item.field_name) {

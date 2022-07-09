@@ -459,15 +459,15 @@ impl Object {
     async fn trigger_before_write_callbacks(&self, newly_created: bool) -> Result<(), ActionError> {
         let model = self.model();
         if newly_created {
-            for cb in &model.inner.on_create_fns {
+            for cb in model.on_create_fns() {
                 cb(self.clone()).await?;
             }
         } else {
-            for cb in &model.inner.on_update_fns {
+            for cb in model.on_update_fns() {
                 cb(self.clone()).await?;
             }
         }
-        for cb in &model.inner.on_save_fns {
+        for cb in model.on_save_fns() {
             cb(self.clone()).await?;
         }
         Ok(())
@@ -480,11 +480,11 @@ impl Object {
         }
         self.inner.inside_write_callback.store(true, Ordering::SeqCst);
         let model = self.model();
-        for cb in &model.inner.on_saved_fns {
+        for cb in model.on_saved_fns() {
             cb(self.clone()).await?;
         }
         if newly_created {
-            for cb in &model.inner.on_created_fns {
+            for cb in model.on_created_fns() {
                 cb(self.clone()).await?;
             }
         } else {
@@ -501,7 +501,7 @@ impl Object {
                     }
                 }
             }
-            for cb in &model.inner.on_updated_fns {
+            for cb in model.on_updated_fns() {
                 cb(self.clone()).await?;
             }
         }

@@ -1,6 +1,5 @@
 use std::collections::{HashMap, HashSet};
 use std::future::Future;
-
 use std::sync::Arc;
 use inflector::Inflector;
 use crate::action::action::ActionType;
@@ -14,7 +13,6 @@ use crate::core::builders::relation_builder::RelationBuilder;
 use crate::core::field::ReadRule::NoRead;
 use crate::core::field::Store::{Calculated, Temp};
 use crate::core::field::WriteRule::NoWrite;
-
 use crate::core::model::{ModelIndex, ModelIndexItem, Model, ModelIndexType, ModelInner};
 use crate::core::model_callback::PinFutureObj;
 use crate::core::relation::Relation;
@@ -42,7 +40,6 @@ pub struct ModelBuilder {
     pub(crate) on_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
     pub(crate) on_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
     pub(crate) on_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -369,7 +366,7 @@ impl ModelBuilder {
             auth_identity_keys,
             auth_by_keys
         };
-        Model { inner: Arc::new(inner) }
+        Model::new_with_inner(Arc::new(inner))
     }
 
     fn all_relation_keys(&self) -> Vec<String> {
