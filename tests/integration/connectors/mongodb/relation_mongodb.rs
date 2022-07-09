@@ -14,7 +14,6 @@ use regex::Regex;
 use serde_json::{json, Number, Value as JsonValue};
 use teo::app::app::ServerConfiguration;
 use teo::app::serve::make_app;
-use teo::server::server::Server;
 use crate::helpers::is_object_id;
 
 
@@ -93,8 +92,7 @@ async fn make_mongodb_graph() -> Graph {
             });
             m.primary(vec!["articleId", "categoryId"]);
         });
-    }).await;
-    graph
+    }).await
 }
 
 async fn app() -> App<impl ServiceFactory<
