@@ -526,12 +526,12 @@ impl Object {
         return JsonValue::Object(map)
     }
 
-    pub async fn include(&self) -> &Object {
-        self
+    pub fn is_new(&self) -> bool {
+        self.inner.is_new.load(Ordering::SeqCst)
     }
 
-    pub(crate) fn is_new(&self) -> bool {
-        self.inner.is_new.load(Ordering::SeqCst)
+    pub fn is_modified(&self) -> bool {
+        self.inner.is_modified.load(Ordering::SeqCst)
     }
 
     async fn set_or_update_json(&self, json_value: &JsonValue, process: bool) -> Result<(), ActionError> {
@@ -858,7 +858,7 @@ impl Object {
         self.model().name() == model_name
     }
 
-    pub fn model(&self) -> &Model {
+    pub(crate) fn model(&self) -> &Model {
         &self.inner.model
     }
 
