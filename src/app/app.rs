@@ -275,3 +275,6 @@ impl KotlinClientBuilder {
         self
     }
 }
+
+unsafe impl Send for App {}
+unsafe impl Sync for App {}

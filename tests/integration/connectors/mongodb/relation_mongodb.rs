@@ -12,12 +12,14 @@ use teo::error::ActionError;
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use regex::Regex;
 use serde_json::{json, Number, Value as JsonValue};
+use teo::app::app::ServerConfiguration;
+use teo::app::serve::make_app;
 use teo::server::server::Server;
 use crate::helpers::is_object_id;
 
 
-async fn make_mongodb_graph() -> &Graph {
-    let graph = Box::leak(Box::new(Graph::new(|g| {
+async fn make_mongodb_graph() -> Graph {
+    Graph::new(|g| {
         g.data_source().mongodb("mongodb://localhost:27017/teotestintegration");
         g.reset_database();
         g.r#enum("Sex", |e| {
@@ -91,12 +93,11 @@ async fn make_mongodb_graph() -> &Graph {
             });
             m.primary(vec!["articleId", "categoryId"]);
         });
-        g.host_url("http://www.example.com");
-    }).await));
+    }).await;
     graph
 }
 
-async fn make_app() -> App<impl ServiceFactory<
+async fn app() -> App<impl ServiceFactory<
     ServiceRequest,
     Response = ServiceResponse<BoxBody>,
     Config = (),
@@ -104,14 +105,13 @@ async fn make_app() -> App<impl ServiceFactory<
     Error = Error,
 >> {
     let graph = make_mongodb_graph().await;
-    let server = Box::leak(Box::new(Server::new(graph)));
-    server.make_app()
+    make_app(graph, ServerConfiguration::default())
 }
 
 #[test]
 #[serial]
 async fn create_with_relation_create() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -138,7 +138,7 @@ async fn create_with_relation_create() {
 #[test]
 #[serial]
 async fn create_with_relation_create_many_implicitly() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -167,7 +167,7 @@ async fn create_with_relation_create_many_implicitly() {
 #[test]
 #[serial]
 async fn create_with_relation_create_many() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -196,7 +196,7 @@ async fn create_with_relation_create_many() {
 #[test]
 #[serial]
 async fn create_with_relation_set() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -223,7 +223,7 @@ async fn create_with_relation_set() {
 #[test]
 #[serial]
 async fn create_with_relation_set_many_implicitly() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -252,7 +252,7 @@ async fn create_with_relation_set_many_implicitly() {
 #[test]
 #[serial]
 async fn create_with_relation_connect() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -279,7 +279,7 @@ async fn create_with_relation_connect() {
 #[test]
 #[serial]
 async fn create_with_relation_connect_many_implicitly() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -308,7 +308,7 @@ async fn create_with_relation_connect_many_implicitly() {
 #[test]
 #[serial]
 async fn create_with_relation_connect_or_create() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -335,7 +335,7 @@ async fn create_with_relation_connect_or_create() {
 #[test]
 #[serial]
 async fn create_with_relation_connect_or_create_many_implicitly() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/authors/action").set_json(json!({
         "action": "Create",
         "create": {

@@ -7,6 +7,8 @@ use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use teo::core::graph::Graph;
 use teo::server::server::Server;
 use serde_json::json;
+use teo::app::app::ServerConfiguration;
+use teo::app::serve::make_app;
 use crate::helpers::{request, request_get, assert_json_response};
 
 async fn app() -> App<impl ServiceFactory<
@@ -16,7 +18,7 @@ async fn app() -> App<impl ServiceFactory<
     InitError = (),
     Error = Error,
 >> {
-    let graph = Box::leak(Box::new(Graph::new(|g| {
+    let graph = Graph::new(|g| {
         g.data_source().mongodb("mongodb://127.0.0.1:27017/teotest_1rl_mf");
         g.reset_database();
         g.model("OneRequiredLocal", |m| {
@@ -38,10 +40,8 @@ async fn app() -> App<impl ServiceFactory<
                 r.required().object("OneRequiredLocal").fields(vec!["id"]).references(vec!["foreignId"]);
             });
         });
-        g.host_url("https://www.example.com");
-    }).await));
-    let server = Box::leak(Box::new(Server::new(graph)));
-    server.make_app()
+    }).await;
+    make_app(graph, ServerConfiguration::default())
 }
 
 #[test]

@@ -13,9 +13,9 @@ async fn make_client_options() -> ClientOptions {
     ClientOptions::parse("mongodb://localhost:27017/teotestindex").await.unwrap()
 }
 
-async fn make_mongodb_graph() -> &Graph {
+async fn make_mongodb_graph() -> Graph {
 
-    let graph = Box::leak(Box::new(Graph::new(|g| {
+    Graph::new(|g| {
 
         g.data_source().mongodb("mongodb://localhost:27017/teotestindex");
 
@@ -82,11 +82,7 @@ async fn make_mongodb_graph() -> &Graph {
             });
             m.unique(vec!["one", "two"]);
         });
-
-        g.host_url("http://www.example.com");
-    }).await));
-
-    graph
+    }).await
 }
 
 #[test]

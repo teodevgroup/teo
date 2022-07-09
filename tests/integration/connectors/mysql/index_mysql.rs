@@ -25,9 +25,6 @@ async fn make_mysql_graph() -> &Graph {
                 f.index().optional().string();
             });
         });
-
-        g.host_url("http://example.com");
-
     }).await));
 
     graph

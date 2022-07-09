@@ -4,12 +4,14 @@ use teo::core::graph::Graph;
 use actix_web::{test, App, error::Error};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use serde_json::{json, Number, Value as JsonValue};
+use teo::app::app::ServerConfiguration;
+use teo::app::serve::make_app;
 use teo::server::server::Server;
 use crate::helpers::is_object_id;
 
 
-async fn make_mongodb_graph() -> &Graph {
-    let graph = Box::leak(Box::new(Graph::new(|g| {
+async fn make_mongodb_graph() -> Graph {
+    Graph::new(|g| {
         g.data_source().mongodb("mongodb://localhost:27017/teotestintegration");
         g.reset_database();
         g.r#enum("Sex", |e| {
@@ -76,12 +78,10 @@ async fn make_mongodb_graph() -> &Graph {
                 });
             });
         });
-        g.host_url("http://www.example.com");
-    }).await));
-    graph
+    }).await
 }
 
-async fn make_app() -> App<impl ServiceFactory<
+async fn app() -> App<impl ServiceFactory<
     ServiceRequest,
     Response = ServiceResponse<BoxBody>,
     Config = (),
@@ -89,14 +89,13 @@ async fn make_app() -> App<impl ServiceFactory<
     Error = Error,
 >> {
     let graph = make_mongodb_graph().await;
-    let server = Box::leak(Box::new(Server::new(graph)));
-    server.make_app()
+    make_app(graph, ServerConfiguration::default())
 }
 
 #[test]
 #[serial]
 async fn create_with_valid_data_creates_entry() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -120,7 +119,7 @@ async fn create_with_valid_data_creates_entry() {
 #[test]
 #[serial]
 async fn create_with_required_field_omitted_cannot_create() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -145,7 +144,7 @@ async fn create_with_required_field_omitted_cannot_create() {
 #[test]
 #[serial]
 async fn create_with_duplicated_unique_value_cannot_create() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req1 = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -179,7 +178,7 @@ async fn create_with_duplicated_unique_value_cannot_create() {
 #[test]
 #[serial]
 async fn create_with_optional_data_creates_entry() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -205,7 +204,7 @@ async fn create_with_optional_data_creates_entry() {
 #[test]
 #[serial]
 async fn create_with_correct_enum_value_creates_entry() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -231,7 +230,7 @@ async fn create_with_correct_enum_value_creates_entry() {
 #[test]
 #[serial]
 async fn create_with_invalid_enum_choice_value_cannot_create() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -258,7 +257,7 @@ async fn create_with_invalid_enum_choice_value_cannot_create() {
 #[test]
 #[serial]
 async fn create_with_required_omitted_but_default_can_create() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -281,7 +280,7 @@ async fn create_with_required_omitted_but_default_can_create() {
 #[test]
 #[serial]
 async fn create_default_field_use_provided_value_if_exists() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -305,7 +304,7 @@ async fn create_default_field_use_provided_value_if_exists() {
 #[test]
 #[serial]
 async fn create_cannot_accept_readonly_value() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -328,7 +327,7 @@ async fn create_cannot_accept_readonly_value() {
 #[test]
 #[serial]
 async fn wont_output_writeonly_value() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -350,7 +349,7 @@ async fn wont_output_writeonly_value() {
 #[test]
 #[serial]
 async fn find_unique_can_find_by_primary_key() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let create_req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -383,7 +382,7 @@ async fn find_unique_can_find_by_primary_key() {
 #[test]
 #[serial]
 async fn find_unique_can_find_by_single_unique_key() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let create_req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -414,7 +413,7 @@ async fn find_unique_can_find_by_single_unique_key() {
 #[test]
 #[serial]
 async fn find_unique_can_find_by_compound_unique_key() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let create_req = test::TestRequest::post().uri("/compounds/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -448,7 +447,7 @@ async fn find_unique_can_find_by_compound_unique_key() {
 #[test]
 #[serial]
 async fn find_many_can_find_all() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let create_req = test::TestRequest::post().uri("/compounds/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -492,7 +491,7 @@ async fn find_many_can_find_all() {
 #[test]
 #[serial]
 async fn find_many_can_find_all_filtered_by_where() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let create_req = test::TestRequest::post().uri("/compounds/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -536,7 +535,7 @@ async fn find_many_can_find_all_filtered_by_where() {
 #[test]
 #[serial]
 async fn update_can_update_valid_contents() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let create_req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -574,7 +573,7 @@ async fn update_can_update_valid_contents() {
 #[test]
 #[serial]
 async fn update_can_set_optional_value_back_to_null() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let create_req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -615,7 +614,7 @@ async fn update_can_set_optional_value_back_to_null() {
 #[test]
 #[serial]
 async fn delete_can_delete_record() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let create_req = test::TestRequest::post().uri("/simples/action").set_json(json!({
         "action": "Create",
         "create": {
@@ -657,7 +656,7 @@ async fn delete_can_delete_record() {
 #[test]
 #[serial]
 async fn create_vec_works_with_inner_pipeline() {
-    let app = test::init_service(make_app().await).await;
+    let app = test::init_service(app().await).await;
     let req = test::TestRequest::post().uri("/lists/action").set_json(json!({
         "action": "Create",
         "create": {
