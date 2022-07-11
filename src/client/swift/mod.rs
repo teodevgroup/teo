@@ -1,5 +1,3 @@
-use std::sync::Arc;
-use std::sync::Mutex;
 use crate::app::app::ClientConfiguration;
 use crate::client::shared::{clear_directory, ensure_directory, generate_file};
 use crate::client::swift::pkg::gitignore::generate_gitignore;
