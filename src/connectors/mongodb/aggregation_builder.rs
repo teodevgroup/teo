@@ -992,6 +992,62 @@ pub(crate) fn build_order_by_input(_model: &Model, _graph: &Graph, order_by: Opt
     Ok(retval)
 }
 
+fn build_select_input(model: &Model, graph: &Graph, select: &JsonValue) -> Result<Option<Document>, ActionError> {
+    let mut true_list: Vec<&str> = vec![];
+    let mut false_list: Vec<&str> = vec![];
+    let map = select.as_object().unwrap();
+    for (key, value) in map {
+        let bool_value = value.as_bool().unwrap();
+        if bool_value {
+            true_list.push(key.as_str());
+        } else {
+            false_list.push(key.as_str());
+        }
+    }
+    let true_empty = true_list.is_empty();
+    let false_empty = false_list.is_empty();
+    if true_empty && false_empty {
+        // just do nothing
+        return Ok(None);
+    } else if !false_empty {
+        // all - false
+        let primary_names = model.primary().items.iter().map(|i| i.field_name.clone()).collect::<Vec<String>>();
+        let mut result = doc!{};
+        model.all_keys().iter().for_each(|k| {
+            let field = model.field(k);
+            if let Some(field) = field {
+                let db_name = field.column_name();
+                if primary_names.contains(k) {
+                    result.insert(db_name, 1);
+                } else {
+                    if !false_list.contains(&&***&k) {
+                        result.insert(db_name, 1);
+                    }
+                }
+            }
+        });
+        return Ok(Some(result));
+    } else {
+        // true
+        let primary_names = model.primary().items.iter().map(|i| i.field_name.clone()).collect::<Vec<String>>();
+        let mut result = doc!{};
+        model.all_keys().iter().for_each(|k| {
+            let field = model.field(k);
+            if let Some(field) = field {
+                let db_name = field.column_name();
+                if primary_names.contains(k) {
+                    result.insert(db_name, 1);
+                } else {
+                    if true_list.contains(&&***&k) {
+                        result.insert(db_name, 1);
+                    }
+                }
+            }
+        });
+        return Ok(Some(result));
+    }
+}
+
 fn build_lookup_inputs(
     model: &Model,
     graph: &Graph,
@@ -1212,7 +1268,7 @@ fn build_query_pipeline(
     page_size: Option<i32>,
     page_number: Option<i32>,
     include: Option<&JsonValue>,
-    _select: Option<&JsonValue>,
+    select: Option<&JsonValue>,
 ) -> Result<Vec<Document>, ActionError> {
     // cursor tweaks things so that we validate cursor first
     let cursor_additional_where = if cursor.is_some() {
@@ -1318,6 +1374,12 @@ fn build_query_pipeline(
         }
     }
     // $project
+    if select.is_some() {
+        let select_input = build_select_input(model, graph, select.unwrap())?;
+        if let Some(select_input) = select_input {
+            retval.push(doc!{"$project": select_input})
+        }
+    }
     // $lookup
     if include.is_some() {
         let mut lookups = build_lookup_inputs(model, graph, QueryPipelineType::Many, mutation_mode, include.unwrap())?;
