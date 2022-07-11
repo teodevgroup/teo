@@ -40,7 +40,7 @@ async fn app() -> App<impl ServiceFactory<
 
 #[test]
 #[serial]
-async fn select_removes_scalar_non_primary_fields_on_create() {
+async fn select_keeps_selected_scalar_non_primary_fields_on_create() {
     let app = test::init_service(app().await).await;
     let res = request(&app, "singles", "create", json!({
         "create": {
@@ -57,6 +57,52 @@ async fn select_removes_scalar_non_primary_fields_on_create() {
         "data": {
             "id": {"is": "objectId"},
             "str": {"equals": "scalar"}
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn select_removes_scalar_non_primary_fields_on_create() {
+    let app = test::init_service(app().await).await;
+    let res = request(&app, "singles", "create", json!({
+        "create": {
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        },
+        "select": {
+            "num": false,
+            "bool": false,
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"is": "objectId"},
+            "str": {"equals": "scalar"}
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn select_can_remove_primary_fields_in_the_output_on_create() {
+    let app = test::init_service(app().await).await;
+    let res = request(&app, "singles", "create", json!({
+        "create": {
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        },
+        "select": {
+            "id": false,
+            "str": false,
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "num": {"equals": 2},
+            "bool": {"equals": true}
         }
     })).await;
 }
