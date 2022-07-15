@@ -190,3 +190,87 @@ async fn select_can_remove_primary_fields_in_the_output_on_update() {
         }
     })).await;
 }
+
+#[test]
+#[serial]
+async fn select_keeps_selected_scalar_non_primary_fields_on_delete() {
+    let app = test::init_service(app().await).await;
+    let id = request_get(&app, "singles", "create", json!({
+        "create": {
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        },
+    }), 200, "data.id").await;
+    let res = request(&app, "singles", "delete", json!({
+        "where": {
+            "id": id,
+        },
+        "select": {
+            "id": true,
+            "str": true,
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"equals": id.as_str().unwrap()},
+            "str": {"equals": "scalar"}
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn select_removes_scalar_non_primary_fields_on_delete() {
+    let app = test::init_service(app().await).await;
+    let id = request_get(&app, "singles", "create", json!({
+        "create": {
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        },
+    }), 200, "data.id").await;
+    let res = request(&app, "singles", "delete", json!({
+        "where": {
+            "id": id,
+        },
+        "select": {
+            "num": false,
+            "bool": false,
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"is": "objectId"},
+            "str": {"equals": "scalar"}
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn select_can_remove_primary_fields_in_the_output_on_delete() {
+    let app = test::init_service(app().await).await;
+    let id = request_get(&app, "singles", "create", json!({
+        "create": {
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        },
+    }), 200, "data.id").await;
+    let res = request(&app, "singles", "delete", json!({
+        "where": {
+            "id": id,
+        },
+        "select": {
+            "id": false,
+            "str": false,
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "num": {"equals": 2},
+            "bool": {"equals": true}
+        }
+    })).await;
+}

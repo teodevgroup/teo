@@ -293,6 +293,8 @@ async fn handle_delete(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
     // find the object here
     return match result.delete().await {
         Ok(_) => {
+            let select = input.get("select");
+            result.set_select(select).unwrap();
             HttpResponse::Ok().json(json!({"data": result.to_json()}))
         }
         Err(err) => {
@@ -372,9 +374,11 @@ async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model) -> 
     let result = result.unwrap();
     let mut count = 0;
     let mut retval: Vec<JsonValue> = vec![];
+    let select = input.get("select");
     for object in result {
         match object.delete().await {
             Ok(_) => {
+                object.set_select(select).unwrap();
                 retval.push(object.to_json());
                 count += 1;
             }
