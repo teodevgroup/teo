@@ -38,7 +38,7 @@ impl Object {
             is_deleted: AtomicBool::new(false),
             inside_before_save_callback: AtomicBool::new(false),
             inside_write_callback: AtomicBool::new(false),
-            selected_fields: Arc::new(Mutex::new(HashSet::new())),
+            selected_fields: Arc::new(Mutex::new(Vec::new())),
             modified_fields: Arc::new(Mutex::new(HashSet::new())),
             previous_values: Arc::new(Mutex::new(HashMap::new())),
             value_map: Arc::new(Mutex::new(HashMap::new())),
@@ -161,19 +161,53 @@ impl Object {
         }
     }
 
-    pub fn select(&self, keys: HashSet<String>) -> Result<(), ActionError> {
-        self.inner.selected_fields.lock().unwrap().extend(keys);
-        Ok(())
-    }
-
-    pub fn deselect(&self, keys: HashSet<String>) -> Result<(), ActionError> {
-        if self.inner.selected_fields.lock().unwrap().len() == 0 {
-            self.inner.selected_fields.lock().unwrap().extend(self.model().output_keys().iter().map(|s| { s.to_string()}));
+    pub fn set_select(&self, select: Option<&JsonValue>) -> Result<(), ActionError> {
+        if select.is_none() {
+            return Ok(());
         }
-        for key in keys {
-            self.inner.selected_fields.lock().unwrap().remove(&key);
+        let mut true_list: Vec<&str> = vec![];
+        let mut false_list: Vec<&str> = vec![];
+        let map = select.unwrap().as_object().unwrap();
+        for (key, value) in map {
+            let bool_value = value.as_bool().unwrap();
+            if bool_value {
+                true_list.push(key.as_str());
+            } else {
+                false_list.push(key.as_str());
+            }
         }
-        return Ok(());
+        let true_empty = true_list.is_empty();
+        let false_empty = false_list.is_empty();
+        if true_empty && false_empty {
+            // just do nothing
+            return Ok(());
+        } else if !false_empty {
+            // all - false
+            let mut result: Vec<String> = vec![];
+            self.model().all_keys().iter().for_each(|k| {
+                let field = self.model().field(k);
+                if let Some(field) = field {
+                    if !false_list.contains(&&***&k) {
+                        result.push(field.column_name().clone());
+                    }
+                }
+            });
+            *self.inner.selected_fields.lock().unwrap() = result;
+            return Ok(());
+        } else {
+            // true
+            let mut result: Vec<String> = vec![];
+            self.model().all_keys().iter().for_each(|k| {
+                let field = self.model().field(k);
+                if let Some(field) = field {
+                    if true_list.contains(&&***&k) {
+                        result.push(field.column_name().clone());
+                    }
+                }
+            });
+            *self.inner.selected_fields.lock().unwrap() = result;
+            return Ok(());
+        }
     }
 
     #[async_recursion(?Send)]
@@ -515,12 +549,17 @@ impl Object {
     }
 
     pub fn to_json(&self) -> JsonValue {
+        let select_list = self.inner.selected_fields.lock().unwrap();
+        println!("select list {:?}", select_list);
+        let select_filter = if select_list.is_empty() { false } else { true };
         let mut map: Map<String, JsonValue> = Map::new();
         let keys = self.model().output_keys();
         for key in keys {
             let value = self.get_value(key).unwrap();
             if !value.is_null() {
-                map.insert(key.to_string(), value.to_json_value());
+                if (!select_filter) || (select_filter && select_list.contains(key)) {
+                    map.insert(key.to_string(), value.to_json_value());
+                }
             }
         }
         return JsonValue::Object(map)
@@ -951,7 +990,7 @@ impl Object {
         } else {
             &empty
         };
-        if let Some(join_table) = &relation.through {
+        if let Some(_join_table) = &relation.through {
             let identifier = self.json_identifier();
             let new_self = self.graph().find_unique(model.name(), &json!({
                 "where": identifier,
@@ -1000,7 +1039,7 @@ pub(crate) struct ObjectInner {
     pub(crate) is_deleted: AtomicBool,
     pub(crate) inside_before_save_callback: AtomicBool,
     pub(crate) inside_write_callback: AtomicBool,
-    pub(crate) selected_fields: Arc<Mutex<HashSet<String>>>,
+    pub(crate) selected_fields: Arc<Mutex<Vec<String>>>,
     pub(crate) modified_fields: Arc<Mutex<HashSet<String>>>,
     pub(crate) previous_values: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) value_map: Arc<Mutex<HashMap<String, Value>>>,

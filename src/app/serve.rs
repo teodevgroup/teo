@@ -169,6 +169,7 @@ async fn handle_create_internal(graph: &Graph, create: Option<&JsonValue>, inclu
     }
     obj.save().await?;
     let refetched = obj.refreshed(include, select).await?;
+    refetched.set_select(select).unwrap();
     Ok(refetched.to_json())
 }
 
@@ -190,6 +191,7 @@ async fn handle_update_internal(graph: &Graph, object: Object, update: Option<&J
     object.set_json(updator).await?;
     object.save().await?;
     let refetched = object.refreshed(include, select).await?;
+    refetched.set_select(select).unwrap();
     Ok(refetched.to_json())
 }
 
