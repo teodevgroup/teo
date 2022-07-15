@@ -274,3 +274,64 @@ async fn select_can_remove_primary_fields_in_the_output_on_delete() {
         }
     })).await;
 }
+
+#[test]
+#[serial]
+async fn select_can_remove_primary_fields_in_the_output_on_upsert_actually_create() {
+    let app = test::init_service(app().await).await;
+    let res = request(&app, "singles", "delete", json!({
+        "where": {
+            "id": "12345678901234567890abcd",
+        },
+        "create": {
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        },
+        "update": {
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        },
+        "select": {
+            "id": false,
+            "str": false,
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "num": {"equals": 2},
+            "bool": {"equals": true}
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn select_can_remove_primary_fields_in_the_output_on_upsert_actually_update() {
+    let app = test::init_service(app().await).await;
+    let id = request_get(&app, "singles", "create", json!({
+        "create": {
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        },
+    }), 200, "data.id").await;
+    let res = request(&app, "singles", "upsert", json!({
+        "where": {
+            "id": id,
+        },
+        "create": {},
+        "update": {},
+        "select": {
+            "id": false,
+            "str": false,
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "num": {"equals": 2},
+            "bool": {"equals": true}
+        }
+    })).await;
+}

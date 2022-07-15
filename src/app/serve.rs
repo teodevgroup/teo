@@ -239,6 +239,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
                         Ok(_) => {
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
+                            refetched.set_select(select).unwrap();
                             HttpResponse::Ok().json(json!({"data": refetched.to_json()}))
                         }
                         Err(err) => {
@@ -269,6 +270,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
                         Ok(_) => {
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
+                            refetched.set_select(select).unwrap();
                             return HttpResponse::Ok().json(json!({"data": refetched.to_json()}));
                         }
                         Err(err) => {
