@@ -138,3 +138,75 @@ async fn distinct_removes_duplicated_records_for_one_field() {
         ]
     })).await;
 }
+
+#[test]
+#[serial]
+async fn distinct_removes_duplicated_records_for_multiple_fields() {
+    let app = test::init_service(app().await).await;
+    let _id1 = request_get(&app, "singles", "create", json!({
+        "create": {
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        },
+    }), 200, "data.id").await;
+    let _id2 = request_get(&app, "singles", "create", json!({
+        "create": {
+            "str": "scalar",
+            "num": 1,
+            "bool": true
+        },
+    }), 200, "data.id").await;
+    let _id3 = request_get(&app, "singles", "create", json!({
+        "create": {
+            "str": "fixed",
+            "num": 2,
+            "bool": true
+        },
+    }), 200, "data.id").await;
+    let _id4 = request_get(&app, "singles", "create", json!({
+        "create": {
+            "str": "fixed",
+            "num": 2,
+            "bool": true
+        },
+    }), 200, "data.id").await;
+    let res = request(&app, "singles", "findMany", json!({
+        "orderBy": [
+            {
+                "num": "asc"
+            },
+            {
+                "str": "asc"
+            }
+        ],
+        "select": {
+            "id": true,
+            "str": true,
+            "num": true,
+        },
+        "distinct": ["num", "str"]
+    })).await;
+    assert_json_response(res, 200, json!({
+        "meta": {
+            "count": {"equals": 4}
+        },
+        "data": [
+            {
+                "id": {"is": "objectId"},
+                "str": {"equals": "scalar"},
+                "num": {"equals": 1}
+            },
+            {
+                "id": {"is": "objectId"},
+                "str": {"equals": "fixed"},
+                "num": {"equals": 2}
+            },
+            {
+                "id": {"is": "objectId"},
+                "str": {"equals": "scalar"},
+                "num": {"equals": 2}
+            },
+        ]
+    })).await;
+}

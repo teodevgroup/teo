@@ -188,7 +188,7 @@ impl Object {
                 let field = self.model().field(k);
                 if let Some(field) = field {
                     if !false_list.contains(&&***&k) {
-                        result.push(field.column_name().clone());
+                        result.push(field.name.clone());
                     }
                 }
             });
@@ -201,7 +201,7 @@ impl Object {
                 let field = self.model().field(k);
                 if let Some(field) = field {
                     if true_list.contains(&&***&k) {
-                        result.push(field.column_name().clone());
+                        result.push(field.name.clone());
                     }
                 }
             });

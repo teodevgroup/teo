@@ -1049,7 +1049,6 @@ fn build_select_input(model: &Model, graph: &Graph, select: &JsonValue, distinct
         if result.get("_id").is_none() {
             result.insert("_id", 0);
         }
-        println!("see select result: {:#?}", result);
         return Ok(Some(result));
     } else {
         // true
@@ -1079,7 +1078,6 @@ fn build_select_input(model: &Model, graph: &Graph, select: &JsonValue, distinct
         if result.get("_id").is_none() {
             result.insert("_id", 0);
         }
-        println!("see select result: {:#?}", result);
         return Ok(Some(result));
     }
 }
@@ -1389,14 +1387,16 @@ fn build_query_pipeline(
     if !unsets.is_empty() {
         retval.extend(unsets);
     }
-    // $sort
-    let reverse = match take {
-        Some(take) => take < 0,
-        None => false
-    };
-    let sort = build_order_by_input(model, graph, order_by, reverse)?;
-    if !sort.is_empty() {
-        retval.push(doc!{"$sort": sort});
+    if distinct.is_none() {
+        // $sort, if distinct, sort later in distinct
+        let reverse = match take {
+            Some(take) => take < 0,
+            None => false
+        };
+        let sort = build_order_by_input(model, graph, order_by, reverse)?;
+        if !sort.is_empty() {
+            retval.push(doc!{"$sort": sort});
+        }
     }
     // $skip and $limit
     if page_size.is_some() && page_number.is_some() {
@@ -1420,7 +1420,6 @@ fn build_query_pipeline(
         }
         let empty = json!({});
         let mut group_data = build_select_input(model, graph, select.unwrap_or(&empty), Some(distinct))?.unwrap();
-        println!("see group data {:?}", group_data);
         group_data.insert("_id", group_id);
         retval.push(doc!{"$group": &group_data});
         if group_data.get("__id").is_some() {
@@ -1428,6 +1427,15 @@ fn build_query_pipeline(
             retval.push(doc!{"$unset": "__id"});
         } else {
             retval.push(doc!{"$unset": "_id"});
+        }
+        // $sort again if distinct
+        let reverse = match take {
+            Some(take) => take < 0,
+            None => false
+        };
+        let sort = build_order_by_input(model, graph, order_by, reverse)?;
+        if !sort.is_empty() {
+            retval.push(doc!{"$sort": sort});
         }
     } else {
         // $project
@@ -1517,5 +1525,7 @@ pub(crate) fn build_query_pipeline_from_json(
     let include = if !mutation_mode { json_value.get("include") } else { None };
     let distinct = if !mutation_mode { json_value.get("distinct") } else { None };
     let select = if !mutation_mode { json_value.get("select") } else { None };
-    build_query_pipeline(model, graph, r#type, mutation_mode, r#where, order_by, cursor, take, skip, page_size, page_number, include, distinct, select)
+    let result = build_query_pipeline(model, graph, r#type, mutation_mode, r#where, order_by, cursor, take, skip, page_size, page_number, include, distinct, select);
+    println!("see result: {:#?}", result);
+    result
 }
