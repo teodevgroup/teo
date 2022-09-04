@@ -26,6 +26,10 @@ pub(crate) trait Connector: Debug + Send + Sync {
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<usize, ActionError>;
 
+    async fn aggregate(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<JsonValue, ActionError>;
+
+    async fn group_by(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<JsonValue, ActionError>;
+
     fn new_save_session(&self) -> Arc<dyn SaveSession>;
 }
 

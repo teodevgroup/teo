@@ -67,6 +67,11 @@ impl Graph {
         self.connector().count(self, model, finder).await
     }
 
+    pub async fn aggregate(&self, model: &str, finder: &JsonValue) -> Result<JsonValue, ActionError> {
+        let model = self.model(model)?;
+        self.connector().aggregate(self, model, finder).await
+    }
+
     pub fn create_object(&self, model: &str) -> Result<Object, ActionError> {
         match self.model(model) {
             Ok(model) => Ok(Object::new(self, model)),

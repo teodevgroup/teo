@@ -144,6 +144,15 @@ impl Model {
         }
     }
 
+    pub(crate) fn column_name_for_field_name(&self, column_name: &str) -> Option<&str> {
+        for field in self.fields().iter() {
+            if field.column_name().as_str() == column_name {
+                return Some(&field.name);
+            }
+        }
+        None
+    }
+
     pub(crate) fn all_keys(&self) -> &Vec<String> { &self.inner.all_keys }
 
     pub(crate) fn input_keys(&self) -> &Vec<String> {

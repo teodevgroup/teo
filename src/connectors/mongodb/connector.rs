@@ -3,7 +3,7 @@ use std::fmt::{Debug};
 use std::sync::Arc;
 use rust_decimal::prelude::FromStr;
 use std::sync::atomic::{Ordering};
-use serde_json::{Value as JsonValue};
+use serde_json::{json, Number, Value as JsonValue};
 use async_trait::async_trait;
 use bson::{Bson, doc, Document};
 
@@ -731,6 +731,39 @@ impl Connector for MongoDBConnector {
             }
         }
     }
+
+    async fn aggregate(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<JsonValue, ActionError> {
+        let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, false, finder)?;
+        let col = &self.collections[model.name()];
+        let cur = col.aggregate(aggregate_input, None).await;
+        if cur.is_err() {
+            println!("{:?}", cur);
+            return Err(ActionError::unknown_database_find_error());
+        }
+        let cur = cur.unwrap();
+        let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
+        let data = results.get(0).unwrap().as_ref().unwrap();
+        let mut retval = json!({});
+        for (g, o) in data {
+            if g.as_str() == "_id" {
+                continue;
+            }
+            if g.as_str() == "_count" {
+                continue;
+            }
+            retval.as_object_mut().unwrap().insert(g.clone(), json!({}));
+            for (dbk, v) in o.as_document().unwrap() {
+                let k = model.column_name_for_field_name(dbk).unwrap();
+                retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(v.as_f64().unwrap()));
+            }
+        }
+        Ok(retval)
+    }
+
+    async fn group_by(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<JsonValue, ActionError> {
+        Ok(json!({}))
+    }
+
 
     fn new_save_session(&self) -> Arc<dyn SaveSession> {
         Arc::new(MongoDBSaveSession {})

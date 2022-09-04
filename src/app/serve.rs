@@ -401,8 +401,15 @@ async fn handle_count(graph: &Graph, input: &JsonValue, model: &Model) -> HttpRe
     }
 }
 
-async fn handle_aggregate(_graph: &Graph, _input: &JsonValue, _model: &Model) -> HttpResponse {
-    HttpResponse::Ok().json(json!({"Hello": "World!"}))
+async fn handle_aggregate(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+    match graph.aggregate(model.name(), input).await {
+        Ok(count) => {
+            HttpResponse::Ok().json(json!({"data": count}))
+        }
+        Err(err) => {
+            HttpResponse::BadRequest().json(json!({"error": err}))
+        }
+    }
 }
 
 async fn handle_group_by(_graph: &Graph, _input: &JsonValue, _model: &Model) -> HttpResponse {

@@ -1344,6 +1344,7 @@ fn build_query_pipeline(
     include: Option<&JsonValue>,
     distinct: Option<&JsonValue>,
     select: Option<&JsonValue>,
+    aggregates: Option<&JsonValue>,
 ) -> Result<Vec<Document>, ActionError> {
     // cursor tweaks things so that we validate cursor first
     let cursor_additional_where = if cursor.is_some() {
@@ -1493,6 +1494,27 @@ fn build_query_pipeline(
             retval.append(&mut lookups);
         }
     }
+    // $aggregates at last
+    if let Some(aggregates) = aggregates {
+        let mut group = doc!{"_id": Bson::Null};
+        let mut set = doc!{};
+        let mut unset: Vec<String> = vec![];
+        for (g, o) in aggregates.as_object().unwrap() {
+            for (k, t) in o.as_object().unwrap() {
+                if g.as_str() != "count" {
+                    let dbk = model.field(k).unwrap().column_name();
+                    group.insert(format!("_{g}_{dbk}"), doc!{format!("${k}"): format!("${dbk}")});
+                    set.insert(format!("_{g}.{dbk}"), format!("$_{g}_{dbk}"));
+                    unset.push(format!("_{g}_{dbk}"));
+                } else {
+
+                }
+            }
+        }
+        retval.push(doc!{"$group": group});
+        retval.push(doc!{"$set": set});
+        retval.push(doc!{"$unset": unset});
+    }
     Ok(retval)
 }
 
@@ -1565,7 +1587,24 @@ pub(crate) fn build_query_pipeline_from_json(
     let include = if !mutation_mode { json_value.get("include") } else { None };
     let distinct = if !mutation_mode { json_value.get("distinct") } else { None };
     let select = if !mutation_mode { json_value.get("select") } else { None };
-    let result = build_query_pipeline(model, graph, r#type, mutation_mode, r#where, order_by, cursor, take, skip, page_size, page_number, include, distinct, select);
+    let mut aggregates: JsonValue = json!({});
+    if let Some(avg) = json_value.get("_avg") {
+        aggregates.as_object_mut().unwrap().insert("_avg".to_string(), avg.clone());
+    }
+    if let Some(sum) = json_value.get("_sum") {
+        aggregates.as_object_mut().unwrap().insert("_sum".to_string(), sum.clone());
+    }
+    if let Some(max) = json_value.get("_max") {
+        aggregates.as_object_mut().unwrap().insert("_max".to_string(), max.clone());
+    }
+    if let Some(min) = json_value.get("_min") {
+        aggregates.as_object_mut().unwrap().insert("_min".to_string(), min.clone());
+    }
+    if let Some(count) = json_value.get("_count") {
+        aggregates.as_object_mut().unwrap().insert("_count".to_string(), count.clone());
+    }
+    let aggregates = if aggregates.as_object().unwrap().is_empty() { None } else { Some(&aggregates) };
+    let result = build_query_pipeline(model, graph, r#type, mutation_mode, r#where, order_by, cursor, take, skip, page_size, page_number, include, distinct, select, aggregates);
     println!("see result: {:#?}", result);
     result
 }
