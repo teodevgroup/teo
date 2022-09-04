@@ -1208,6 +1208,34 @@ fn build_lookup_inputs(
                 } else {
                     original_inner_pipeline.insert(0, doc!{"$match": inner_match});
                 }
+                // group addfields unset for distinct
+                let original_inner_group = original_inner_pipeline_immu.iter().find(|v| {
+                    v.get("$group").is_some()
+                });
+                let index = original_inner_pipeline.iter().position(|v| {
+                    v.get("$group").is_some()
+                });
+                if index.is_some() {
+                    original_inner_pipeline.remove(index.unwrap());
+                }
+                let original_inner_add_fields = original_inner_pipeline_immu.iter().find(|v| {
+                    v.get("$addFields").is_some()
+                });
+                let index = original_inner_pipeline.iter().position(|v| {
+                    v.get("$addFields").is_some()
+                });
+                if index.is_some() {
+                    original_inner_pipeline.remove(index.unwrap());
+                }
+                let original_inner_unset = original_inner_pipeline_immu.iter().find(|v| {
+                    v.get("$unset").is_some()
+                });
+                let index = original_inner_pipeline.iter().position(|v| {
+                    v.get("$unset").is_some()
+                });
+                if index.is_some() {
+                    original_inner_pipeline.remove(index.unwrap());
+                }
                 let original_inner_sort = original_inner_pipeline_immu.iter().find(|v| {
                     v.get("$sort").is_some()
                 });
@@ -1264,6 +1292,18 @@ fn build_lookup_inputs(
                         }]
                     }
                 };
+                if original_inner_group.is_some() {
+                    let original_inner_group = original_inner_group.unwrap();
+                    target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(original_inner_group.clone()));
+                }
+                if original_inner_add_fields.is_some() {
+                    let original_inner_add_fields = original_inner_add_fields.unwrap();
+                    target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(original_inner_add_fields.clone()));
+                }
+                if original_inner_unset.is_some() {
+                    let original_inner_unset = original_inner_unset.unwrap();
+                    target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(original_inner_unset.clone()));
+                }
                 if original_inner_sort.is_some() {
                     let original_inner_sort = original_inner_sort.unwrap();
                     target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(original_inner_sort.clone()));
