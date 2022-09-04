@@ -435,3 +435,132 @@ async fn select_can_remove_primary_fields_in_the_output_on_find_many() {
         ]
     })).await;
 }
+
+#[test]
+#[serial]
+async fn select_can_remove_primary_fields_in_the_output_on_create_many() {
+    let app = test::init_service(app().await).await;
+    let res = request(&app, "singles", "createMany", json!({
+        "create": [{
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        }, {
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        }],
+        "select": {
+            "id": false,
+            "str": false,
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "meta": {
+            "count": {"equals": 2}
+        },
+        "data": [
+            {
+                "num": {"equals": 2},
+                "bool": {"equals": true}
+            },
+            {
+                "num": {"equals": 2},
+                "bool": {"equals": true}
+            }
+        ]
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn select_can_remove_primary_fields_in_the_output_on_update_many() {
+    let app = test::init_service(app().await).await;
+    let _id1 = request_get(&app, "singles", "create", json!({
+        "create": {
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        },
+    }), 200, "data.id").await;
+    let _id2 = request_get(&app, "singles", "create", json!({
+        "create": {
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        },
+    }), 200, "data.id").await;
+    let res = request(&app, "singles", "updateMany", json!({
+        "where": {
+            "bool": true
+        },
+        "update": {
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        },
+        "select": {
+            "id": false,
+            "str": false
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "meta": {
+            "count": {"equals": 2}
+        },
+        "data": [
+            {
+                "num": {"equals": 2},
+                "bool": {"equals": true}
+            },
+            {
+                "num": {"equals": 2},
+                "bool": {"equals": true}
+            }
+        ]
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn select_can_remove_primary_fields_in_the_output_on_delete_many() {
+    let app = test::init_service(app().await).await;
+    let _id1 = request_get(&app, "singles", "create", json!({
+        "create": {
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        },
+    }), 200, "data.id").await;
+    let _id2 = request_get(&app, "singles", "create", json!({
+        "create": {
+            "str": "scalar",
+            "num": 2,
+            "bool": true
+        },
+    }), 200, "data.id").await;
+    let res = request(&app, "singles", "deleteMany", json!({
+        "where": {
+            "bool": true
+        },
+        "select": {
+            "id": false,
+            "str": false
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "meta": {
+            "count": {"equals": 2}
+        },
+        "data": [
+            {
+                "num": {"equals": 2},
+                "bool": {"equals": true}
+            },
+            {
+                "num": {"equals": 2},
+                "bool": {"equals": true}
+            }
+        ]
+    })).await;
+}
