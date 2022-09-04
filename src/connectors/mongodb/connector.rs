@@ -135,7 +135,7 @@ impl MongoDBConnector {
         }
     }
 
-    fn document_to_object(&self, document: &Document, object: &Object) -> Result<(), ActionError> {
+    fn document_to_object(&self, document: &Document, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>) -> Result<(), ActionError> {
         for key in document.keys() {
             let object_field = object.model().fields().iter().find(|f| f.column_name() == key);
             if object_field.is_some() {
@@ -159,13 +159,28 @@ impl MongoDBConnector {
                 if relation.is_none() {
                     continue;
                 }
+                let inner_finder = if let Some(include) = include {
+                    include.get(key)
+                } else {
+                    None
+                };
+                let inner_select = if let Some(inner_finder) = inner_finder {
+                    inner_finder.get("select")
+                } else {
+                    None
+                };
+                let inner_include = if let Some(inner_finder) = inner_finder {
+                    inner_finder.get("include")
+                } else {
+                    None
+                };
                 let relation = relation.unwrap();
                 let model_name = &relation.model;
                 let object_bsons = document.get(key).unwrap().as_array().unwrap();
                 let mut related: Vec<Object> = vec![];
                 for related_object_bson in object_bsons {
                     let related_object = object.graph().create_object(model_name)?;
-                    self.document_to_object(related_object_bson.as_document().unwrap(), &related_object)?;
+                    self.document_to_object(related_object_bson.as_document().unwrap(), &related_object, inner_select, inner_include)?;
                     related.push(related_object);
                 }
                 object.inner.queried_relation_map.lock().unwrap().insert(key.to_string(), related);
@@ -173,6 +188,7 @@ impl MongoDBConnector {
         }
         object.inner.is_initialized.store(true, Ordering::SeqCst);
         object.inner.is_new.store(false, Ordering::SeqCst);
+        object.set_select(select).unwrap();
         Ok(())
     }
 
@@ -620,6 +636,8 @@ impl Connector for MongoDBConnector {
     }
 
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
+        let select = finder.get("select");
+        let include = finder.get("include");
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder)?;
         let col = &self.collections[model.name()];
         let cur = col.aggregate(aggregate_input, None).await;
@@ -634,7 +652,7 @@ impl Connector for MongoDBConnector {
         }
         for doc in results {
             let obj = graph.create_object(model.name())?;
-            return match self.document_to_object(&doc.unwrap(), &obj) {
+            return match self.document_to_object(&doc.unwrap(), &obj, select, include) {
                 Ok(_) => {
                     Ok(obj)
                 }
@@ -663,6 +681,8 @@ impl Connector for MongoDBConnector {
     }
 
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
+        let select = finder.get("select");
+        let include = finder.get("include");
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder)?;
         let reverse = has_negative_take(finder);
         let col = &self.collections[model.name()];
@@ -676,7 +696,7 @@ impl Connector for MongoDBConnector {
         let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
         for doc in results {
             let obj = graph.create_object(model.name())?;
-            match self.document_to_object(&doc.unwrap(), &obj) {
+            match self.document_to_object(&doc.unwrap(), &obj, select, include) {
                 Ok(_) => {
                     if reverse {
                         result.insert(0, obj);

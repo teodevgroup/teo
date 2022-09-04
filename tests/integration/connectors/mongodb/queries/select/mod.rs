@@ -34,6 +34,31 @@ async fn app() -> App<impl ServiceFactory<
                 f.required().bool();
             });
         });
+        g.model("Nested", |m| {
+            m.field("id", |f| {
+                f.primary().required().readonly().object_id().column_name("_id").auto();
+            });
+            m.field("str", |f| {
+                f.required().string();
+            });
+            m.relation("items", |r| {
+                r.vec("Item").fields(vec!["id"]).references(vec!["nestedId"]);
+            });
+        });
+        g.model("Item", |m| {
+            m.field("id", |f| {
+                f.primary().required().readonly().object_id().column_name("_id").auto();
+            });
+            m.field("str", |f| {
+                f.required().string();
+            });
+            m.field("nestedId", |f| {
+                f.required().object_id();
+            });
+            m.relation("nested", |r| {
+                r.object("Nested").fields(vec!["nestedId"]).references(vec!["id"]);
+            });
+        });
     }).await;
     make_app(graph, ServerConfiguration::default())
 }
@@ -562,5 +587,48 @@ async fn select_can_remove_primary_fields_in_the_output_on_delete_many() {
                 "bool": {"equals": true}
             }
         ]
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn select_can_remove_primary_fields_in_the_output_of_nested_many_in_create() {
+    let app = test::init_service(app().await).await;
+    let res = request(&app, "nesteds", "create", json!({
+        "create": {
+            "str": "scalar",
+            "items": {
+                "createMany": [
+                    {
+                        "str": "scalar"
+                    },
+                    {
+                        "str": "scalar"
+                    }
+                ]
+            }
+        },
+        "include": {
+            "items": {
+                "select": {
+                    "id": false,
+                    "nestedId": false
+                }
+            }
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"is": "objectId"},
+            "str": {"equals": "scalar"},
+            "items": [
+                {
+                    "str": {"equals": "scalar"}
+                },
+                {
+                    "str": {"equals": "scalar"}
+                }
+            ]
+        }
     })).await;
 }
