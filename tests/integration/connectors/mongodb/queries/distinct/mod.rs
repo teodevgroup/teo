@@ -210,3 +210,84 @@ async fn distinct_removes_duplicated_records_for_multiple_fields() {
         ]
     })).await;
 }
+
+#[test]
+#[serial]
+async fn distinct_can_remove_duplicates_in_the_output_of_nested_many_in_create() {
+    let app = test::init_service(app().await).await;
+    let res = request(&app, "nesteds", "create", json!({
+        "create": {
+            "str": "scalar",
+            "items": {
+                "createMany": [
+                    {
+                        "str": "scalar"
+                    },
+                    {
+                        "str": "scalar"
+                    }
+                ]
+            }
+        },
+        "include": {
+            "items": {
+                "select": {
+                    "id": false,
+                    "nestedId": false
+                },
+                "distinct": ["str"]
+            }
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"is": "objectId"},
+            "str": {"equals": "scalar"},
+            "items": [
+                {
+                    "str": {"equals": "scalar"}
+                },
+            ]
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn distinct_can_remove_duplicates_in_the_output_of_nested_joined_many_in_create() {
+    let app = test::init_service(app().await).await;
+    let res = request(&app, "apples", "create", json!({
+        "create": {
+            "str": "scalar",
+            "pears": {
+                "createMany": [
+                    {
+                        "str": "scalar"
+                    },
+                    {
+                        "str": "scalar"
+                    }
+                ]
+            }
+        },
+        "include": {
+            "pears": {
+                "select": {
+                    "id": false
+                },
+                "distinct": ["str"]
+            }
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"is": "objectId"},
+            "str": {"equals": "scalar"},
+            "pears": [
+                {
+                    "str": {"equals": "scalar"}
+                },
+            ]
+        }
+    })).await;
+}
