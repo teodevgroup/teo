@@ -1458,5 +1458,6 @@ pub(crate) fn build_query_pipeline_from_json(
     let page_size = unwrap_i32(json_value.get("pageSize"));
     let include = if !mutation_mode { json_value.get("include") } else { None };
     let select = if !mutation_mode { json_value.get("select") } else { None };
-    build_query_pipeline(model, graph, r#type, mutation_mode, r#where, order_by, cursor, take, skip, page_size, page_number, include, select)
+    let result = build_query_pipeline(model, graph, r#type, mutation_mode, r#where, order_by, cursor, take, skip, page_size, page_number, include, select);
+    result
 }

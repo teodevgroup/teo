@@ -550,7 +550,6 @@ impl Object {
 
     pub fn to_json(&self) -> JsonValue {
         let select_list = self.inner.selected_fields.lock().unwrap();
-        println!("select list {:?}", select_list);
         let select_filter = if select_list.is_empty() { false } else { true };
         let mut map: Map<String, JsonValue> = Map::new();
         let keys = self.model().output_keys();
