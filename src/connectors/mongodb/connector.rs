@@ -743,6 +743,7 @@ impl Connector for MongoDBConnector {
         let cur = cur.unwrap();
         let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
         let data = results.get(0).unwrap().as_ref().unwrap();
+        println!("see data {:?}", data);
         let mut retval = json!({});
         for (g, o) in data {
             if g.as_str() == "_id" {
@@ -754,7 +755,13 @@ impl Connector for MongoDBConnector {
             retval.as_object_mut().unwrap().insert(g.clone(), json!({}));
             for (dbk, v) in o.as_document().unwrap() {
                 let k = model.column_name_for_field_name(dbk).unwrap();
-                retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(v.as_f64().unwrap()));
+                if let Some(f) = v.as_f64() {
+                    retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(f));
+                } else if let Some(i) = v.as_i64() {
+                    retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(i));
+                } else if let Some(i) = v.as_i32() {
+                    retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(i));
+                }
             }
         }
         Ok(retval)

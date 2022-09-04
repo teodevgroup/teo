@@ -1500,10 +1500,11 @@ fn build_query_pipeline(
         let mut set = doc!{};
         let mut unset: Vec<String> = vec![];
         for (g, o) in aggregates.as_object().unwrap() {
+            let g = g.strip_prefix("_").unwrap();
             for (k, t) in o.as_object().unwrap() {
-                if g.as_str() != "count" {
+                if g != "count" {
                     let dbk = model.field(k).unwrap().column_name();
-                    group.insert(format!("_{g}_{dbk}"), doc!{format!("${k}"): format!("${dbk}")});
+                    group.insert(format!("_{g}_{dbk}"), doc!{format!("${g}"): format!("${dbk}")});
                     set.insert(format!("_{g}.{dbk}"), format!("$_{g}_{dbk}"));
                     unset.push(format!("_{g}_{dbk}"));
                 } else {
