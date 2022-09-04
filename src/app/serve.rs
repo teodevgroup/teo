@@ -97,9 +97,11 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
 }
 
 async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+    let select = input.get("select");
     let result = graph.find_unique(model.name(), input, false).await;
     match result {
         Ok(obj) => {
+            obj.set_select(select).unwrap();
             let json_data = obj.to_json();
             HttpResponse::Ok().json(json!({"data": json_data}))
         }
@@ -110,9 +112,11 @@ async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model) -> 
 }
 
 async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+    let select = input.get("select");
     let result = graph.find_first(model.name(), input, false).await;
     match result {
         Ok(obj) => {
+            obj.set_select(select).unwrap();
             let json_data = obj.to_json();
             HttpResponse::Ok().json(json!({"data": json_data}))
         }
@@ -123,6 +127,7 @@ async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model) -> H
 }
 
 async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+    let select = input.get("select");
     let result = graph.find_many(model.name(), input, false).await;
     match result {
         Ok(results) => {
@@ -138,7 +143,10 @@ async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model) -> Ht
                 }
                 meta.as_object_mut().unwrap().insert("numberOfPages".to_string(), JsonValue::Number(number_of_pages.into()));
             }
-            let result_json: Vec<JsonValue> = results.iter().map(|i| { i.to_json() }).collect();
+            let result_json: Vec<JsonValue> = results.iter().map(|i| {
+                i.set_select(select).unwrap();
+                i.to_json()
+            }).collect();
 
             HttpResponse::Ok().json(json!({
                     "meta": meta,
