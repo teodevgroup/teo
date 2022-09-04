@@ -59,6 +59,44 @@ async fn app() -> App<impl ServiceFactory<
                 r.object("Nested").fields(vec!["nestedId"]).references(vec!["id"]);
             });
         });
+        g.model("Apple", |m| {
+            m.field("id", |f| {
+                f.primary().required().readonly().object_id().column_name("_id").auto();
+            });
+            m.field("str", |f| {
+                f.required().string();
+            });
+            m.relation("pears", |r| {
+                r.vec("Pear").through("Fruit").local("apple").foreign("pear");
+            });
+        });
+        g.model("Pear", |m| {
+            m.field("id", |f| {
+                f.primary().required().readonly().object_id().column_name("_id").auto();
+            });
+            m.field("str", |f| {
+                f.required().string();
+            });
+            m.relation("apples", |r| {
+                r.vec("Apple").through("Fruit").local("pear").foreign("apple");
+            });
+        });
+        g.model("Fruit", |m| {
+            m.field("appleId", |f| {
+                f.required().object_id();
+            });
+            m.field("pearId", |f| {
+                f.required().object_id();
+            });
+            m.relation("apple", |r| {
+                r.object("Apple").fields(vec!["appleId"]).references(vec!["id"]);
+            });
+            m.relation("pear", |r| {
+                r.object("Pear").fields(vec!["pearId"]).references(vec!["id"]);
+            });
+            m.primary(vec!["appleId", "pearId"]);
+        });
+
     }).await;
     make_app(graph, ServerConfiguration::default())
 }
@@ -662,6 +700,48 @@ async fn select_can_remove_primary_fields_in_the_output_of_nested_single_in_crea
             "nested": {
                 "str": {"equals": "scalar"}
             }
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn select_can_remove_primary_fields_in_the_output_of_nested_joined_many_in_create() {
+    let app = test::init_service(app().await).await;
+    let res = request(&app, "apples", "create", json!({
+        "create": {
+            "str": "scalar",
+            "pears": {
+                "createMany": [
+                    {
+                        "str": "scalar"
+                    },
+                    {
+                        "str": "scalar"
+                    }
+                ]
+            }
+        },
+        "include": {
+            "pears": {
+                "select": {
+                    "id": false
+                }
+            }
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"is": "objectId"},
+            "str": {"equals": "scalar"},
+            "pears": [
+                {
+                    "str": {"equals": "scalar"}
+                },
+                {
+                    "str": {"equals": "scalar"}
+                }
+            ]
         }
     })).await;
 }
