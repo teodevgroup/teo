@@ -632,3 +632,36 @@ async fn select_can_remove_primary_fields_in_the_output_of_nested_many_in_create
         }
     })).await;
 }
+
+#[test]
+#[serial]
+async fn select_can_remove_primary_fields_in_the_output_of_nested_single_in_create() {
+    let app = test::init_service(app().await).await;
+    let res = request(&app, "items", "create", json!({
+        "create": {
+            "str": "scalar",
+            "nested": {
+                "create": {
+                    "str": "scalar"
+                }
+            }
+        },
+        "include": {
+            "nested": {
+                "select": {
+                    "id": false
+                }
+            }
+        }
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "id": {"is": "objectId"},
+            "str": {"equals": "scalar"},
+            "nestedId": {"is": "objectId"},
+            "nested": {
+                "str": {"equals": "scalar"}
+            }
+        }
+    })).await;
+}
