@@ -97,11 +97,9 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
 }
 
 async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
-    let select = input.get("select");
     let result = graph.find_unique(model.name(), input, false).await;
     match result {
         Ok(obj) => {
-            obj.set_select(select).unwrap();
             let json_data = obj.to_json();
             HttpResponse::Ok().json(json!({"data": json_data}))
         }
@@ -112,11 +110,9 @@ async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model) -> 
 }
 
 async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
-    let select = input.get("select");
     let result = graph.find_first(model.name(), input, false).await;
     match result {
         Ok(obj) => {
-            obj.set_select(select).unwrap();
             let json_data = obj.to_json();
             HttpResponse::Ok().json(json!({"data": json_data}))
         }
@@ -127,7 +123,6 @@ async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model) -> H
 }
 
 async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
-    let select = input.get("select");
     let result = graph.find_many(model.name(), input, false).await;
     match result {
         Ok(results) => {
@@ -144,7 +139,6 @@ async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model) -> Ht
                 meta.as_object_mut().unwrap().insert("numberOfPages".to_string(), JsonValue::Number(number_of_pages.into()));
             }
             let result_json: Vec<JsonValue> = results.iter().map(|i| {
-                i.set_select(select).unwrap();
                 i.to_json()
             }).collect();
 
@@ -177,7 +171,6 @@ async fn handle_create_internal(graph: &Graph, create: Option<&JsonValue>, inclu
     }
     obj.save().await?;
     let refetched = obj.refreshed(include, select).await?;
-    refetched.set_select(select).unwrap();
     Ok(refetched.to_json())
 }
 
@@ -199,7 +192,6 @@ async fn handle_update_internal(graph: &Graph, object: Object, update: Option<&J
     object.set_json(updator).await?;
     object.save().await?;
     let refetched = object.refreshed(include, select).await?;
-    refetched.set_select(select).unwrap();
     Ok(refetched.to_json())
 }
 
@@ -247,7 +239,6 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
                         Ok(_) => {
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
-                            refetched.set_select(select).unwrap();
                             HttpResponse::Ok().json(json!({"data": refetched.to_json()}))
                         }
                         Err(err) => {
@@ -278,7 +269,6 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
                         Ok(_) => {
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
-                            refetched.set_select(select).unwrap();
                             return HttpResponse::Ok().json(json!({"data": refetched.to_json()}));
                         }
                         Err(err) => {
@@ -303,8 +293,6 @@ async fn handle_delete(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
     // find the object here
     return match result.delete().await {
         Ok(_) => {
-            let select = input.get("select");
-            result.set_select(select).unwrap();
             HttpResponse::Ok().json(json!({"data": result.to_json()}))
         }
         Err(err) => {
@@ -384,11 +372,9 @@ async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model) -> 
     let result = result.unwrap();
     let mut count = 0;
     let mut retval: Vec<JsonValue> = vec![];
-    let select = input.get("select");
     for object in result {
         match object.delete().await {
             Ok(_) => {
-                object.set_select(select).unwrap();
                 retval.push(object.to_json());
                 count += 1;
             }
