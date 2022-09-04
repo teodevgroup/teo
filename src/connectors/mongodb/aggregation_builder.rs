@@ -992,7 +992,15 @@ pub(crate) fn build_order_by_input(_model: &Model, _graph: &Graph, order_by: Opt
     Ok(retval)
 }
 
-fn build_select_input(model: &Model, graph: &Graph, select: &JsonValue) -> Result<Option<Document>, ActionError> {
+fn distinct_key(original: impl AsRef<str>) -> String {
+    if original.as_ref() == "_id" {
+        "__id".to_string()
+    } else {
+        original.as_ref().to_string()
+    }
+}
+
+fn build_select_input(model: &Model, graph: &Graph, select: &JsonValue, distinct: Option<&JsonValue>) -> Result<Option<Document>, ActionError> {
     let mut true_list: Vec<&str> = vec![];
     let mut false_list: Vec<&str> = vec![];
     let map = select.as_object().unwrap();
@@ -1007,9 +1015,13 @@ fn build_select_input(model: &Model, graph: &Graph, select: &JsonValue) -> Resul
     let true_empty = true_list.is_empty();
     let false_empty = false_list.is_empty();
     if true_empty && false_empty {
-        // just do nothing
-        return Ok(None);
-    } else if !false_empty {
+        if let Some(_distinct) = distinct {
+           // go next
+        } else {
+            return Ok(None);
+        }
+    }
+    if !false_empty || (true_empty && false_empty) {
         // all - false
         let primary_names = model.primary().items.iter().map(|i| i.field_name.clone()).collect::<Vec<String>>();
         let mut result = doc!{};
@@ -1018,14 +1030,26 @@ fn build_select_input(model: &Model, graph: &Graph, select: &JsonValue) -> Resul
             if let Some(field) = field {
                 let db_name = field.column_name();
                 if primary_names.contains(k) {
-                    result.insert(db_name, 1);
+                    if distinct.is_some() {
+                        result.insert(distinct_key(db_name), doc!{"$first": format!("${db_name}")});
+                    } else {
+                        result.insert(db_name, 1);
+                    }
                 } else {
                     if !false_list.contains(&&***&k) {
-                        result.insert(db_name, 1);
+                        if distinct.is_some() {
+                            result.insert(distinct_key(db_name), doc!{"$first": format!("${db_name}")});
+                        } else {
+                            result.insert(db_name, 1);
+                        }
                     }
                 }
             }
         });
+        if result.get("_id").is_none() {
+            result.insert("_id", 0);
+        }
+        println!("see select result: {:#?}", result);
         return Ok(Some(result));
     } else {
         // true
@@ -1036,14 +1060,26 @@ fn build_select_input(model: &Model, graph: &Graph, select: &JsonValue) -> Resul
             if let Some(field) = field {
                 let db_name = field.column_name();
                 if primary_names.contains(k) {
-                    result.insert(db_name, 1);
+                    if distinct.is_some() {
+                        result.insert(distinct_key(db_name), doc!{"$first": format!("${db_name}")});
+                    } else {
+                        result.insert(db_name, 1);
+                    }
                 } else {
                     if true_list.contains(&&***&k) {
-                        result.insert(db_name, 1);
+                        if distinct.is_some() {
+                            result.insert(distinct_key(db_name), doc!{"$first": format!("${db_name}")});
+                        } else {
+                            result.insert(db_name, 1);
+                        }
                     }
                 }
             }
         });
+        if result.get("_id").is_none() {
+            result.insert("_id", 0);
+        }
+        println!("see select result: {:#?}", result);
         return Ok(Some(result));
     }
 }
@@ -1268,6 +1304,7 @@ fn build_query_pipeline(
     page_size: Option<i32>,
     page_number: Option<i32>,
     include: Option<&JsonValue>,
+    distinct: Option<&JsonValue>,
     select: Option<&JsonValue>,
 ) -> Result<Vec<Document>, ActionError> {
     // cursor tweaks things so that we validate cursor first
@@ -1373,11 +1410,32 @@ fn build_query_pipeline(
             retval.push(doc!{"$limit": take.unwrap().abs() as i64});
         }
     }
-    // $project
-    if select.is_some() {
-        let select_input = build_select_input(model, graph, select.unwrap())?;
-        if let Some(select_input) = select_input {
-            retval.push(doc!{"$project": select_input})
+    // distinct ($group and $project)
+    if let Some(distinct) = distinct {
+        // $group
+        let mut group_id = doc!{};
+        for value in distinct.as_array().unwrap().iter() {
+            let val = value.as_str().unwrap();
+            group_id.insert(val, format!("${val}"));
+        }
+        let empty = json!({});
+        let mut group_data = build_select_input(model, graph, select.unwrap_or(&empty), Some(distinct))?.unwrap();
+        println!("see group data {:?}", group_data);
+        group_data.insert("_id", group_id);
+        retval.push(doc!{"$group": &group_data});
+        if group_data.get("__id").is_some() {
+            retval.push(doc!{"$addFields": {"_id": "$__id"}});
+            retval.push(doc!{"$unset": "__id"});
+        } else {
+            retval.push(doc!{"$unset": "_id"});
+        }
+    } else {
+        // $project
+        if select.is_some() {
+            let select_input = build_select_input(model, graph, select.unwrap(), distinct)?;
+            if let Some(select_input) = select_input {
+                retval.push(doc!{"$project": select_input})
+            }
         }
     }
     // $lookup
@@ -1457,7 +1515,7 @@ pub(crate) fn build_query_pipeline_from_json(
     let page_number = unwrap_i32(json_value.get("pageNumber"));
     let page_size = unwrap_i32(json_value.get("pageSize"));
     let include = if !mutation_mode { json_value.get("include") } else { None };
+    let distinct = if !mutation_mode { json_value.get("distinct") } else { None };
     let select = if !mutation_mode { json_value.get("select") } else { None };
-    let result = build_query_pipeline(model, graph, r#type, mutation_mode, r#where, order_by, cursor, take, skip, page_size, page_number, include, select);
-    result
+    build_query_pipeline(model, graph, r#type, mutation_mode, r#where, order_by, cursor, take, skip, page_size, page_number, include, distinct, select)
 }
