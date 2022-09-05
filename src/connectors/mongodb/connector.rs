@@ -759,6 +759,8 @@ impl Connector for MongoDBConnector {
                         retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(i));
                     } else if let Some(i) = v.as_i32() {
                         retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(i));
+                    } else if v.as_null().is_some() {
+                        retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(null));
                     }
                 }
             }

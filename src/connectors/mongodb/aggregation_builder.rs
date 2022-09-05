@@ -1515,9 +1515,32 @@ fn build_query_pipeline(
                     }
                 } else {
                     group.insert(format!("_{g}_{dbk}"), doc!{format!("${g}"): format!("${dbk}")});
+                    if g == "sum" {
+                        group.insert(format!("_{g}_count_{dbk}"), doc!{format!("$sum"): {
+                            "$cond": [
+                                {"$ifNull": [format!("${dbk}"), false]},
+                                1,
+                                0
+                            ]
+                        }});
+                    }
                 }
-                set.insert(format!("_{g}.{dbk}"), format!("$_{g}_{dbk}"));
-                unset.push(format!("_{g}_{dbk}"));
+                if g == "sum" {
+                    set.insert(format!("_{g}.{dbk}"), doc!{
+                        "$cond": {
+                            "if": {
+                                "$eq": [format!("$_{g}_count_{dbk}"), 0]
+                            },
+                            "then": null,
+                            "else": format!("$_{g}_{dbk}")
+                        }
+                    });
+                    unset.push(format!("_{g}_{dbk}"));
+                    unset.push(format!("_{g}_count_{dbk}"));
+                } else {
+                    set.insert(format!("_{g}.{dbk}"), format!("$_{g}_{dbk}"));
+                    unset.push(format!("_{g}_{dbk}"));
+                }
             }
         }
         retval.push(doc!{"$group": group});
