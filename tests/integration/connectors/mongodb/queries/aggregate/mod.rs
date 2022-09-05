@@ -31,7 +31,7 @@ async fn app() -> App<impl ServiceFactory<
                 f.required().i32();
             });
             m.field("salary", |f| {
-                f.required().f64();
+                f.optional().f64();
             });
         });
     }).await;
@@ -229,6 +229,348 @@ async fn aggregate_can_do_together_for_each_number_field() {
             "_max": {
                 "age": {"equals": 21},
                 "salary": {"equals": 5000.0}
+            },
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn aggregate_can_count_for_each_number_field() {
+    let app = test::init_service(app().await).await;
+    let _id1 = request_get(&app, "people", "create", json!({
+        "create": {
+            "name": "scalar",
+            "age": 20,
+            "salary": 5000
+        },
+    }), 200, "data.id").await;
+    let _id2 = request_get(&app, "people", "create", json!({
+        "create": {
+            "name": "jobs",
+            "age": 21,
+            "salary": null
+        },
+    }), 200, "data.id").await;
+    let res = request(&app, "people", "aggregate", json!({
+        "_count": {
+            "age": true,
+            "salary": true,
+        },
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "_count": {
+                "age": {"equals": 2},
+                "salary": {"equals": 1}
+            },
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn aggregate_can_count_all() {
+    let app = test::init_service(app().await).await;
+    let _id1 = request_get(&app, "people", "create", json!({
+        "create": {
+            "name": "scalar",
+            "age": 20,
+            "salary": 5000
+        },
+    }), 200, "data.id").await;
+    let _id2 = request_get(&app, "people", "create", json!({
+        "create": {
+            "name": "jobs",
+            "age": 21,
+            "salary": null
+        },
+    }), 200, "data.id").await;
+    let res = request(&app, "people", "aggregate", json!({
+        "_count": {
+            "age": true,
+            "salary": true,
+            "_all": true,
+        },
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "_count": {
+                "age": {"equals": 2},
+                "salary": {"equals": 1},
+                "_all": {"equals": 2}
+            },
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn aggregate_when_no_records_avg_is_null() {
+    let app = test::init_service(app().await).await;
+    let res = request(&app, "people", "aggregate", json!({
+        "_avg": {
+            "age": true,
+            "salary": true,
+        },
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "_avg": {
+                "age": {"is": "null"},
+                "salary": {"is": "null"},
+            },
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn aggregate_when_no_records_sum_is_null() {
+    let app = test::init_service(app().await).await;
+    let res = request(&app, "people", "aggregate", json!({
+        "_sum": {
+            "age": true,
+            "salary": true,
+        },
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "_sum": {
+                "age": {"is": "null"},
+                "salary": {"is": "null"},
+            },
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn aggregate_when_no_records_min_is_null() {
+    let app = test::init_service(app().await).await;
+    let res = request(&app, "people", "aggregate", json!({
+        "_min": {
+            "age": true,
+            "salary": true,
+        },
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "_min": {
+                "age": {"is": "null"},
+                "salary": {"is": "null"},
+            },
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn aggregate_when_no_records_max_is_null() {
+    let app = test::init_service(app().await).await;
+    let res = request(&app, "people", "aggregate", json!({
+        "_max": {
+            "age": true,
+            "salary": true,
+        },
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "_max": {
+                "age": {"is": "null"},
+                "salary": {"is": "null"},
+            },
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn aggregate_when_no_records_count_is_zero() {
+    let app = test::init_service(app().await).await;
+    let res = request(&app, "people", "aggregate", json!({
+        "_count": {
+            "age": true,
+            "salary": true,
+            "_all": true
+        },
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "_count": {
+                "age": {"equals": 0},
+                "salary": {"equals": 0},
+                "_all": {"equals": 0},
+            },
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn aggregate_when_no_value_avg_is_null() {
+    let app = test::init_service(app().await).await;
+    let _id1 = request_get(&app, "people", "create", json!({
+        "create": {
+            "name": "scalar",
+            "age": 20,
+            "salary": null
+        },
+    }), 200, "data.id").await;
+    let _id2 = request_get(&app, "people", "create", json!({
+        "create": {
+            "name": "jobs",
+            "age": 21,
+            "salary": null
+        },
+    }), 200, "data.id").await;
+    let res = request(&app, "people", "aggregate", json!({
+        "_avg": {
+            "age": true,
+            "salary": true,
+        },
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "_avg": {
+                "age": {"equals": 20.5},
+                "salary": {"is": "null"},
+            },
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn aggregate_when_no_value_sum_is_null() {
+    let app = test::init_service(app().await).await;
+    let _id1 = request_get(&app, "people", "create", json!({
+        "create": {
+            "name": "scalar",
+            "age": 20,
+            "salary": null
+        },
+    }), 200, "data.id").await;
+    let _id2 = request_get(&app, "people", "create", json!({
+        "create": {
+            "name": "jobs",
+            "age": 21,
+            "salary": null
+        },
+    }), 200, "data.id").await;
+    let res = request(&app, "people", "aggregate", json!({
+        "_sum": {
+            "age": true,
+            "salary": true,
+        },
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "_sum": {
+                "age": {"equals": 41},
+                "salary": {"is": "null"},
+            },
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn aggregate_when_no_value_min_is_null() {
+    let app = test::init_service(app().await).await;
+    let _id1 = request_get(&app, "people", "create", json!({
+        "create": {
+            "name": "scalar",
+            "age": 20,
+            "salary": null
+        },
+    }), 200, "data.id").await;
+    let _id2 = request_get(&app, "people", "create", json!({
+        "create": {
+            "name": "jobs",
+            "age": 21,
+            "salary": null
+        },
+    }), 200, "data.id").await;
+    let res = request(&app, "people", "aggregate", json!({
+        "_min": {
+            "age": true,
+            "salary": true,
+        },
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "_min": {
+                "age": {"equals": 20},
+                "salary": {"is": "null"},
+            },
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn aggregate_when_no_value_max_is_null() {
+    let app = test::init_service(app().await).await;
+    let _id1 = request_get(&app, "people", "create", json!({
+        "create": {
+            "name": "scalar",
+            "age": 20,
+            "salary": null
+        },
+    }), 200, "data.id").await;
+    let _id2 = request_get(&app, "people", "create", json!({
+        "create": {
+            "name": "jobs",
+            "age": 21,
+            "salary": null
+        },
+    }), 200, "data.id").await;
+    let res = request(&app, "people", "aggregate", json!({
+        "_max": {
+            "age": true,
+            "salary": true,
+        },
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "_max": {
+                "age": {"equals": 21},
+                "salary": {"is": "null"},
+            },
+        }
+    })).await;
+}
+
+#[test]
+#[serial]
+async fn aggregate_when_no_value_count_is_zero() {
+    let app = test::init_service(app().await).await;
+    let _id1 = request_get(&app, "people", "create", json!({
+        "create": {
+            "name": "scalar",
+            "age": 20,
+            "salary": null
+        },
+    }), 200, "data.id").await;
+    let _id2 = request_get(&app, "people", "create", json!({
+        "create": {
+            "name": "jobs",
+            "age": 21,
+            "salary": null
+        },
+    }), 200, "data.id").await;
+    let res = request(&app, "people", "aggregate", json!({
+        "_count": {
+            "age": true,
+            "salary": true,
+        },
+    })).await;
+    assert_json_response(res, 200, json!({
+        "data": {
+            "_count": {
+                "age": {"equals": 2},
+                "salary": {"equals": 0},
             },
         }
     })).await;
