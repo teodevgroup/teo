@@ -750,12 +750,9 @@ impl Connector for MongoDBConnector {
                 if g.as_str() == "_id" {
                     continue;
                 }
-                if g.as_str() == "_count" {
-                    continue;
-                }
                 retval.as_object_mut().unwrap().insert(g.clone(), json!({}));
                 for (dbk, v) in o.as_document().unwrap() {
-                    let k = model.column_name_for_field_name(dbk).unwrap();
+                    let k = if dbk == "_all" { "_all" } else { model.column_name_for_field_name(dbk).unwrap() };
                     if let Some(f) = v.as_f64() {
                         retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(f));
                     } else if let Some(i) = v.as_i64() {
@@ -772,7 +769,8 @@ impl Connector for MongoDBConnector {
             for (g, o) in finder.as_object().unwrap() {
                 retval.as_object_mut().unwrap().insert(g.clone(), json!({}));
                 for (k, v) in o.as_object().unwrap() {
-                    retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(null));
+                    let value = if g == "_count" { json!(0) } else { json!(null) };
+                    retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), value);
                 }
             }
             Ok(retval)

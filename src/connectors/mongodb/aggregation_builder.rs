@@ -1502,14 +1502,22 @@ fn build_query_pipeline(
         for (g, o) in aggregates.as_object().unwrap() {
             let g = g.strip_prefix("_").unwrap();
             for (k, t) in o.as_object().unwrap() {
-                if g != "count" {
-                    let dbk = model.field(k).unwrap().column_name();
-                    group.insert(format!("_{g}_{dbk}"), doc!{format!("${g}"): format!("${dbk}")});
-                    set.insert(format!("_{g}.{dbk}"), format!("$_{g}_{dbk}"));
-                    unset.push(format!("_{g}_{dbk}"));
+                let dbk = if k == "_all" { "_all" } else {model.field(k).unwrap().column_name() };
+                if g == "count" {
+                    if k == "_all" {
+                        group.insert("_count__all", doc!{"$count": {}});
+                    } else {
+                        group.insert(format!("_count_{dbk}"), doc!{
+                            "$sum": {
+                                "$cond": [{"$ifNull": [format!("${dbk}"), false]}, 1, 0]
+                            }
+                        });
+                    }
                 } else {
-
+                    group.insert(format!("_{g}_{dbk}"), doc!{format!("${g}"): format!("${dbk}")});
                 }
+                set.insert(format!("_{g}.{dbk}"), format!("$_{g}_{dbk}"));
+                unset.push(format!("_{g}_{dbk}"));
             }
         }
         retval.push(doc!{"$group": group});
