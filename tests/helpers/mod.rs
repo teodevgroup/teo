@@ -32,6 +32,9 @@ fn match_json_value(object_value: &JsonValue, matcher_value: &JsonValue) {
                         assert!(object_value.is_string());
                         assert!(is_object_id(object_value.as_str().unwrap()));
                     }
+                    "null" => {
+                        assert!(object_value.is_null());
+                    }
                     "date" => {
                         assert!(object_value.is_string());
                         // TODO: add assert

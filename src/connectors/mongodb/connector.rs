@@ -742,29 +742,41 @@ impl Connector for MongoDBConnector {
         }
         let cur = cur.unwrap();
         let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
-        let data = results.get(0).unwrap().as_ref().unwrap();
-        println!("see data {:?}", data);
-        let mut retval = json!({});
-        for (g, o) in data {
-            if g.as_str() == "_id" {
-                continue;
-            }
-            if g.as_str() == "_count" {
-                continue;
-            }
-            retval.as_object_mut().unwrap().insert(g.clone(), json!({}));
-            for (dbk, v) in o.as_document().unwrap() {
-                let k = model.column_name_for_field_name(dbk).unwrap();
-                if let Some(f) = v.as_f64() {
-                    retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(f));
-                } else if let Some(i) = v.as_i64() {
-                    retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(i));
-                } else if let Some(i) = v.as_i32() {
-                    retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(i));
+        if let Some(result) = results.get(0) {
+            // there are records
+            let data = result.as_ref().unwrap();
+            let mut retval = json!({});
+            for (g, o) in data {
+                if g.as_str() == "_id" {
+                    continue;
+                }
+                if g.as_str() == "_count" {
+                    continue;
+                }
+                retval.as_object_mut().unwrap().insert(g.clone(), json!({}));
+                for (dbk, v) in o.as_document().unwrap() {
+                    let k = model.column_name_for_field_name(dbk).unwrap();
+                    if let Some(f) = v.as_f64() {
+                        retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(f));
+                    } else if let Some(i) = v.as_i64() {
+                        retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(i));
+                    } else if let Some(i) = v.as_i32() {
+                        retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(i));
+                    }
                 }
             }
+            Ok(retval)
+        } else {
+            // there is no record
+            let mut retval = json!({});
+            for (g, o) in finder.as_object().unwrap() {
+                retval.as_object_mut().unwrap().insert(g.clone(), json!({}));
+                for (k, v) in o.as_object().unwrap() {
+                    retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(null));
+                }
+            }
+            Ok(retval)
         }
-        Ok(retval)
     }
 
     async fn group_by(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<JsonValue, ActionError> {

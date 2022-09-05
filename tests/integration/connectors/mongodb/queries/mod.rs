@@ -4,3 +4,4 @@ mod distinct;
 mod skip;
 mod take;
 mod r#where;
+mod aggregate;
