@@ -131,8 +131,8 @@ pub async fn request_get<S, B, E, P>(app: &S, url: &str, action: &str, body: Jso
 {
     let res = request(app, url, action, body).await;
     let status = res.status().as_u16();
-    assert_eq!(status, code);
     let json: JsonValue = read_body_json(res).await;
+    assert_eq!(status, code, "see wrong json response: {:?}", &json);
     let mut final_ret_val: Vec<JsonValue> = vec![];
     for path in paths.paths() {
         let mut retval = &json;

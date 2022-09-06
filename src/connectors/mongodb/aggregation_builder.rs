@@ -1580,6 +1580,15 @@ fn build_query_pipeline(
         if !unset.is_empty() {
             retval.push(doc!{"$unset": unset});
         }
+        let mut group_by_sort = doc!{};
+        if let Some(by) = by {
+            // we need to order these
+            for key in by.as_array().unwrap() {
+                let k = key.as_str().unwrap();
+                group_by_sort.insert(k, 1);
+            }
+        }
+        retval.push(doc!{"$sort": group_by_sort});
     }
     Ok(retval)
 }
