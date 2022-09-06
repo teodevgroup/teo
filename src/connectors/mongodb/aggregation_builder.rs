@@ -1345,6 +1345,8 @@ fn build_query_pipeline(
     distinct: Option<&JsonValue>,
     select: Option<&JsonValue>,
     aggregates: Option<&JsonValue>,
+    by: Option<&JsonValue>,
+    having: Option<&JsonValue>,
 ) -> Result<Vec<Document>, ActionError> {
     // cursor tweaks things so that we validate cursor first
     let cursor_additional_where = if cursor.is_some() {
@@ -1494,11 +1496,39 @@ fn build_query_pipeline(
             retval.append(&mut lookups);
         }
     }
+    // group by contains it's own aggregates
+    let empty_aggregates = json!({});
+    let the_aggregates = if by.is_some() {
+        if aggregates.is_none() {
+            Some(&empty_aggregates)
+        } else {
+            aggregates
+        }
+    } else {
+        aggregates
+    };
     // $aggregates at last
-    if let Some(aggregates) = aggregates {
-        let mut group = doc!{"_id": Bson::Null};
+    if let Some(aggregates) = the_aggregates {
+        let mut group = if let Some(by) = by {
+            let mut id_for_group_by = doc!{};
+            for key in by.as_array().unwrap() {
+                let k = key.as_str().unwrap();
+                let dbk = model.field(k).unwrap().column_name();
+                id_for_group_by.insert(dbk, format!("${dbk}"));
+            }
+            doc!{"_id": id_for_group_by}
+        } else {
+            doc!{"_id": Bson::Null}
+        };
         let mut set = doc!{};
         let mut unset: Vec<String> = vec![];
+        if let Some(by) = by {
+            for key in by.as_array().unwrap() {
+                let k = key.as_str().unwrap();
+                let dbk = model.field(k).unwrap().column_name();
+                set.insert(k, format!("$_id.{dbk}"));
+            }
+        }
         for (g, o) in aggregates.as_object().unwrap() {
             let g = g.strip_prefix("_").unwrap();
             for (k, t) in o.as_object().unwrap() {
@@ -1526,7 +1556,7 @@ fn build_query_pipeline(
                     }
                 }
                 if g == "sum" {
-                    set.insert(format!("_{g}.{dbk}"), doc!{
+                    set.insert(format!("_{g}.{k}"), doc!{
                         "$cond": {
                             "if": {
                                 "$eq": [format!("$_{g}_count_{dbk}"), 0]
@@ -1538,14 +1568,16 @@ fn build_query_pipeline(
                     unset.push(format!("_{g}_{dbk}"));
                     unset.push(format!("_{g}_count_{dbk}"));
                 } else {
-                    set.insert(format!("_{g}.{dbk}"), format!("$_{g}_{dbk}"));
+                    set.insert(format!("_{g}.{k}"), format!("$_{g}_{dbk}"));
                     unset.push(format!("_{g}_{dbk}"));
                 }
             }
         }
         retval.push(doc!{"$group": group});
         retval.push(doc!{"$set": set});
-        retval.push(doc!{"$unset": unset});
+        if !unset.is_empty() {
+            retval.push(doc!{"$unset": unset});
+        }
     }
     Ok(retval)
 }
@@ -1636,7 +1668,9 @@ pub(crate) fn build_query_pipeline_from_json(
         aggregates.as_object_mut().unwrap().insert("_count".to_string(), count.clone());
     }
     let aggregates = if aggregates.as_object().unwrap().is_empty() { None } else { Some(&aggregates) };
-    let result = build_query_pipeline(model, graph, r#type, mutation_mode, r#where, order_by, cursor, take, skip, page_size, page_number, include, distinct, select, aggregates);
+    let by = if !mutation_mode { json_value.get("by") } else { None };
+    let having = if !mutation_mode { json_value.get("having") } else { None };
+    let result = build_query_pipeline(model, graph, r#type, mutation_mode, r#where, order_by, cursor, take, skip, page_size, page_number, include, distinct, select, aggregates, by, having);
     println!("see result: {:#?}", result);
     result
 }

@@ -412,8 +412,15 @@ async fn handle_aggregate(graph: &Graph, input: &JsonValue, model: &Model) -> Ht
     }
 }
 
-async fn handle_group_by(_graph: &Graph, _input: &JsonValue, _model: &Model) -> HttpResponse {
-    HttpResponse::Ok().json(json!({"Hello": "World!"}))
+async fn handle_group_by(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+    match graph.group_by(model.name(), input).await {
+        Ok(count) => {
+            HttpResponse::Ok().json(json!({"data": count}))
+        }
+        Err(err) => {
+            HttpResponse::BadRequest().json(json!({"error": err}))
+        }
+    }
 }
 
 async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &ServerConfiguration) -> HttpResponse {
