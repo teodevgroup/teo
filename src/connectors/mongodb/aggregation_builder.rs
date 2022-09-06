@@ -1329,6 +1329,49 @@ fn build_lookup_inputs(
     Ok(retval)
 }
 
+fn insert_group_set_unset_for_aggregate(model: &Model, group: &mut Document, set: &mut Document, unset: &mut Vec<String>, k: &str, g: &str, having_mode: bool) {
+    let prefix = if having_mode { "_having" } else { "" };
+    let dbk = if k == "_all" { "_all" } else {model.field(k).unwrap().column_name() };
+    if g == "count" {
+        if k == "_all" {
+            group.insert(format!("{prefix}_count__all"), doc!{"$count": {}});
+        } else {
+            group.insert(format!("{prefix}_count_{dbk}"), doc!{
+                "$sum": {
+                    "$cond": [{"$ifNull": [format!("${dbk}"), false]}, 1, 0]
+                }
+            });
+        }
+    } else {
+        group.insert(format!("{prefix}_{g}_{dbk}"), doc!{format!("${g}"): format!("${dbk}")});
+        if g == "sum" {
+            group.insert(format!("{prefix}_{g}_count_{dbk}"), doc!{format!("$sum"): {
+                "$cond": [
+                    {"$ifNull": [format!("${dbk}"), false]},
+                    1,
+                    0
+                ]
+            }});
+        }
+    }
+    if g == "sum" {
+        set.insert(format!("{prefix}_{g}.{k}"), doc!{
+            "$cond": {
+                "if": {
+                    "$eq": [format!("${prefix}_{g}_count_{dbk}"), 0]
+                },
+                "then": null,
+                "else": format!("${prefix}_{g}_{dbk}")
+            }
+        });
+        unset.push(format!("{prefix}_{g}_{dbk}"));
+        unset.push(format!("{prefix}_{g}_count_{dbk}"));
+    } else {
+        set.insert(format!("{prefix}_{g}.{k}"), format!("${prefix}_{g}_{dbk}"));
+        unset.push(format!("{prefix}_{g}_{dbk}"));
+    }
+}
+
 fn build_query_pipeline(
     model: &Model,
     graph: &Graph,
@@ -1531,54 +1574,44 @@ fn build_query_pipeline(
                 set.insert(k, format!("$_id.{dbk}"));
             }
         }
+        if let Some(having) = having {
+            for (k, o) in having.as_object().unwrap() {
+                let dbk = model.field(k).unwrap().column_name();
+                for (g, matcher) in o.as_object().unwrap() {
+                    let g = g.strip_prefix("_").unwrap();
+                    insert_group_set_unset_for_aggregate(model, &mut group, &mut set, &mut unset, k, g, true);
+                }
+            }
+        }
         for (g, o) in aggregates.as_object().unwrap() {
             let g = g.strip_prefix("_").unwrap();
             for (k, t) in o.as_object().unwrap() {
-                let dbk = if k == "_all" { "_all" } else {model.field(k).unwrap().column_name() };
-                if g == "count" {
-                    if k == "_all" {
-                        group.insert("_count__all", doc!{"$count": {}});
-                    } else {
-                        group.insert(format!("_count_{dbk}"), doc!{
-                            "$sum": {
-                                "$cond": [{"$ifNull": [format!("${dbk}"), false]}, 1, 0]
-                            }
-                        });
-                    }
-                } else {
-                    group.insert(format!("_{g}_{dbk}"), doc!{format!("${g}"): format!("${dbk}")});
-                    if g == "sum" {
-                        group.insert(format!("_{g}_count_{dbk}"), doc!{format!("$sum"): {
-                            "$cond": [
-                                {"$ifNull": [format!("${dbk}"), false]},
-                                1,
-                                0
-                            ]
-                        }});
-                    }
-                }
-                if g == "sum" {
-                    set.insert(format!("_{g}.{k}"), doc!{
-                        "$cond": {
-                            "if": {
-                                "$eq": [format!("$_{g}_count_{dbk}"), 0]
-                            },
-                            "then": null,
-                            "else": format!("$_{g}_{dbk}")
-                        }
-                    });
-                    unset.push(format!("_{g}_{dbk}"));
-                    unset.push(format!("_{g}_count_{dbk}"));
-                } else {
-                    set.insert(format!("_{g}.{k}"), format!("$_{g}_{dbk}"));
-                    unset.push(format!("_{g}_{dbk}"));
-                }
+                insert_group_set_unset_for_aggregate(model, &mut group, &mut set, &mut unset, k, g, false);
             }
         }
         retval.push(doc!{"$group": group});
         retval.push(doc!{"$set": set});
         if !unset.is_empty() {
             retval.push(doc!{"$unset": unset});
+        }
+        // filter if there is a having
+        if let Some(having) = having {
+            let mut having_match = doc!{};
+            let mut having_unset: Vec<String> = Vec::new();
+            for (k, o) in having.as_object().unwrap() {
+                let dbk = model.field(k).unwrap().column_name();
+                for (g, matcher) in o.as_object().unwrap() {
+                    let g = g.strip_prefix("_").unwrap();
+                    let matcher_bson = parse_bson_where_entry(&FieldType::F64, matcher, graph)?;
+                    having_match.insert(format!("_having_{g}.{dbk}"), matcher_bson);
+                    let having_group = format!("_having_{g}");
+                    if !having_unset.contains(&having_group) {
+                        having_unset.push(having_group);
+                    }
+                }
+            }
+            retval.push(doc!{"$match": having_match});
+            retval.push(doc!{"$unset": having_unset});
         }
         let mut group_by_sort = doc!{};
         if let Some(by) = by {
@@ -1588,7 +1621,9 @@ fn build_query_pipeline(
                 group_by_sort.insert(k, 1);
             }
         }
-        retval.push(doc!{"$sort": group_by_sort});
+        if !group_by_sort.is_empty() {
+            retval.push(doc!{"$sort": group_by_sort});
+        }
     }
     Ok(retval)
 }
