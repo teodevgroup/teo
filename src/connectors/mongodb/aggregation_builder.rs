@@ -1514,7 +1514,10 @@ fn build_query_pipeline(
             for key in by.as_array().unwrap() {
                 let k = key.as_str().unwrap();
                 let dbk = model.field(k).unwrap().column_name();
-                id_for_group_by.insert(dbk, format!("${dbk}"));
+                //id_for_group_by.insert(dbk, format!("${dbk}"));
+                id_for_group_by.insert(dbk, doc!{
+                    "$cond": [{"$ifNull": [format!("${dbk}"), false]}, format!("${dbk}"), null]
+                });
             }
             doc!{"_id": id_for_group_by}
         } else {

@@ -475,7 +475,9 @@ impl MongoDBConnector {
                 } else {
                     // group by field
                     let field = model.field(g).unwrap();
-                    let val = self.bson_value_to_field_value(g, o, &field.field_type).unwrap();
+                    let val = if o.as_null().is_some() { Value::Null } else {
+                        self.bson_value_to_field_value(g, o, &field.field_type).unwrap()
+                    };
                     let json_val = val.to_json_value();
                     retval.as_object_mut().unwrap().insert(g.to_string(), json_val);
                 }
