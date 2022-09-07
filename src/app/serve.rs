@@ -494,8 +494,7 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     let final_stage = pipeline.process(stage, &obj).await;
     let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
     let claims = Claims {
-        id: "not work anymore".to_string(),
-        //id: obj.identifier().to_bson_value().as_object_id().unwrap().to_hex(), // change here later
+        id: obj.identifier().as_string().unwrap(),
         model: obj.model().name().to_string(),
         exp
     };
