@@ -91,6 +91,12 @@ impl ToTypeScriptType for FieldType {
         }
     }
 
+    fn to_typescript_update_input_type(&self, optional: bool) -> String {
+        let update_operation = self.to_typescript_update_operation_input(optional);
+        let create_input = self.to_typescript_create_input_type(optional);
+        return format!("{update_operation} | {create_input}");
+    }
+
     fn to_typescript_update_operation_input(&self, optional: bool) -> String {
         let mut generic = "".to_owned();
         let base: &str = match self {
@@ -116,11 +122,5 @@ impl ToTypeScriptType for FieldType {
         let suffix = "FieldUpdateOperationsInput";
         let prefix = if optional { "Nullable" } else { "" };
         format!("{prefix}{base}{suffix}{generic}")
-    }
-
-    fn to_typescript_update_input_type(&self, optional: bool) -> String {
-        let update_operation = self.to_typescript_update_operation_input(optional);
-        let create_input = self.to_typescript_create_input_type(optional);
-        return format!("{update_operation} | {create_input}");
     }
 }

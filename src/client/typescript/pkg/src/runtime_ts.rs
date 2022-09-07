@@ -29,32 +29,59 @@ export type TokenInfo = {{
     token: string
 }}
 
-let bearerToken: string | undefined = undefined;
-let bearerTokenLoaded: boolean = false;
+let bearerToken: string | undefined = undefined
+let bearerTokenLoaded: boolean = false
+
+export const setCookie = (key: string, value: string | undefined) => {{
+    if (!document) return
+    let retval = document.cookie.replace(new RegExp(`${{key}}:(.*?); ?`), '')
+    if (value) {{
+        retval = retval + " " + key + "=" + value + ";";
+    }}
+    document.cookie = retval
+}}
+
+export const getCookie = (key: string): string | undefined => {{
+    if (!document) return undefined
+    const result = document.cookie.match(new RegExp(`${{key}}=(.*?);?$`))
+    if (result === null) return undefined
+    return result[1]
+}}
 
 export function setBearerToken(token: string | undefined) {{
-    if (localStorage) {{
+    if (typeof window === 'undefined') {{
+        // local storage
         if (token === undefined) {{
             localStorage.removeItem("__teo_bearer_token")
         }} else {{
             localStorage.setItem("__teo_bearer_token", token)
         }}
-        bearerToken = token;
-        bearerTokenLoaded = true;
+        // cookie
+        setCookie("__teo_bearer_token", token)
+        bearerToken = token
+        bearerTokenLoaded = true
     }}
 }}
 
-function getBearerToken(): string | undefined {{
-    if (!bearerTokenLoaded) {{
-        if (localStorage) {{
-            let token = localStorage.getItem("__teo_bearer_token")
-            if (token != null) {{
-                bearerToken = token
-            }}
-        }}
+export function getBearerToken(): string | undefined {{
+    if (typeof window === 'undefined') {{
         bearerTokenLoaded = true
+        return undefined
+    }} else {{
+        if (!bearerTokenLoaded) {{
+            if (localStorage) {{
+                let token = localStorage.getItem("__teo_bearer_token")
+                if (token != null) {{
+                    bearerToken = token
+                }}
+            }}
+            if (document && !bearerToken) {{
+                bearerToken = getCookie("__teo_bearer_token")
+            }}
+            bearerTokenLoaded = true
+        }}
+        return bearerToken
     }}
-    return bearerToken
 }}
 
 export async function request(urlSegmentName: string, action: Action, args: any): Promise<any> {{

@@ -572,7 +572,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
             } else {
                 path
             };
-            if r.method() != Method::POST {
+            if (r.method() != Method::POST) && (r.method() != Method::OPTIONS) {
                 log_unhandled(start, r.method().as_str(), &path, 404);
                 return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
             }
@@ -599,6 +599,9 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                     return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
                 }
             };
+            if r.method() == Method::OPTIONS {
+                return HttpResponse::Ok().json(json!({}));
+            }
             // read body
             let mut body = web::BytesMut::new();
             while let Some(chunk) = payload.next().await {
