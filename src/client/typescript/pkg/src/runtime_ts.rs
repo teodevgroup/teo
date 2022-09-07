@@ -41,9 +41,16 @@ export const setCookie = (key: string, value: string | undefined) => {{
     document.cookie = retval
 }}
 
-export const getCookie = (key: string): string | undefined => {{
-    if (!document) return undefined
-    const result = document.cookie.match(new RegExp(`${{key}}=(.*?);?$`))
+
+export const getCookie = (key: string, cookie?: string): string | undefined => {{
+    let fullString
+    if (typeof window === 'undefined') {{
+        fullString = cookie
+    }} else {{
+        fullString = cookie ?? document.cookie
+    }}
+    if (!fullString) return undefined
+    const result = fullString.match(new RegExp(`${{key}}=(.*?);?$`))
     if (result === null) return undefined
     return result[1]
 }}
