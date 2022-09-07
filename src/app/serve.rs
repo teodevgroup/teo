@@ -504,11 +504,11 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
         let select = input.get("select");
         let obj = obj.refreshed(include, select).await.unwrap();
         HttpResponse::Ok().json(json!({
-                "meta": {
-                    "token": token
-                },
-                "data": obj.to_json()
-            }))
+            "meta": {
+                "token": token
+            },
+            "data": obj.to_json()
+        }))
     } else {
         HttpResponse::BadRequest().json(json!({"error": ActionError::authentication_failed()}))
     }
