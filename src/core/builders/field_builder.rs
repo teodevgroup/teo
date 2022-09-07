@@ -320,7 +320,7 @@ impl FieldBuilder {
         self
     }
 
-    pub fn auth_by(&mut self, argument: impl Into<Argument>) -> &mut Self {
+    pub fn auth_by<F>(&mut self, argument: F) -> &mut Self where F: Fn(&mut PipelineBuilder) -> () + Clone + 'static {
         self.auth_by = true;
         self.auth_by_arg = Some(argument.into());
         self

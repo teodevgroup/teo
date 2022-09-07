@@ -501,8 +501,13 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     };
     let token = encode_token(claims, &conf.jwt_secret.as_ref().unwrap());
     return if let Stage::Value(_) = final_stage {
+        let include = input.get("include");
+        let select = input.get("select");
+        let obj = obj.refreshed(include, select).await.unwrap();
         HttpResponse::Ok().json(json!({
-                "meta": token,
+                "meta": {
+                    "token": token
+                },
                 "data": obj.to_json()
             }))
     } else {
