@@ -18,7 +18,8 @@ pub enum ActionType {
     Count,
     Aggregate,
     GroupBy,
-    SignIn
+    SignIn,
+    Identity,
 }
 
 #[derive(PartialEq)]
@@ -40,9 +41,9 @@ pub enum ActionResultData {
 impl ActionType {
 
     pub fn iter() -> Iter<'static, ActionType> {
-        static ACTION_TYPES: [ActionType; 14] = [
+        static ACTION_TYPES: [ActionType; 15] = [
             FindUnique, FindFirst, FindMany, Create, Update, Upsert, Delete, CreateMany,
-            UpdateMany, DeleteMany, Count, Aggregate, GroupBy, SignIn
+            UpdateMany, DeleteMany, Count, Aggregate, GroupBy, SignIn, Identity
         ];
         ACTION_TYPES.iter()
     }
@@ -81,6 +82,7 @@ impl ActionType {
             Aggregate => "aggregate",
             GroupBy => "group-by",
             SignIn => "sign-in",
+            Identity => "identity"
         }
     }
 
@@ -100,6 +102,7 @@ impl ActionType {
             Aggregate => "Aggregate",
             GroupBy => "GroupBy",
             SignIn => "SignIn",
+            Identity => "Identity"
         }
     }
 
@@ -119,6 +122,7 @@ impl ActionType {
             "Aggregate" => Some(Aggregate),
             "GroupBy" => Some(GroupBy),
             "SignIn" => Some(SignIn),
+            "Identity" => Some(Identity),
             _ => None
         }
     }
@@ -139,6 +143,7 @@ impl ActionType {
             "aggregate" => Some(Aggregate),
             "group-by" => Some(GroupBy),
             "sign-in" => Some(SignIn),
+            "identity" => Some(Identity),
             _ => None
         }
     }
@@ -159,6 +164,7 @@ impl ActionType {
             Aggregate => ActionResultMeta::NoMeta,
             GroupBy => ActionResultMeta::NoMeta,
             SignIn => ActionResultMeta::TokenInfo,
+            Identity => ActionResultMeta::NoMeta,
         }
     }
 
@@ -178,6 +184,7 @@ impl ActionType {
             Aggregate => ActionResultData::Other,
             GroupBy => ActionResultData::Other,
             SignIn => ActionResultData::Single,
+            Identity => ActionResultData::Single,
         }
     }
 
@@ -197,6 +204,7 @@ impl ActionType {
             Aggregate => false,
             GroupBy => false,
             SignIn => false,
+            Identity => false,
         }
     }
 
@@ -216,6 +224,7 @@ impl ActionType {
             Aggregate => false,
             GroupBy => false,
             SignIn => false,
+            Identity => false,
         }
     }
 
@@ -235,6 +244,7 @@ impl ActionType {
             Aggregate => false,
             GroupBy => false,
             SignIn => false,
+            Identity => false,
         }
     }
 
@@ -254,6 +264,7 @@ impl ActionType {
             Aggregate => false,
             GroupBy => false,
             SignIn => false,
+            Identity => false,
         }
     }
 

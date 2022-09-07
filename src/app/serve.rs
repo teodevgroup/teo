@@ -96,7 +96,7 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
     return Ok(Some(identity.unwrap()));
 }
 
-async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_unique(model.name(), input, false).await;
     match result {
         Ok(obj) => {
@@ -109,7 +109,7 @@ async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model) -> 
     }
 }
 
-async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_first(model.name(), input, false).await;
     match result {
         Ok(obj) => {
@@ -122,7 +122,7 @@ async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model) -> H
     }
 }
 
-async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_many(model.name(), input, false).await;
     match result {
         Ok(results) => {
@@ -174,7 +174,7 @@ async fn handle_create_internal(graph: &Graph, create: Option<&JsonValue>, inclu
     Ok(refetched.to_json())
 }
 
-async fn handle_create(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_create(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
     let input = input.as_object().unwrap();
     let create = input.get("create");
     let include = input.get("include");
@@ -195,7 +195,7 @@ async fn handle_update_internal(graph: &Graph, object: Object, update: Option<&J
     Ok(refetched.to_json())
 }
 
-async fn handle_update(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_update(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_unique(model.name(), input, true).await;
     if result.is_err() {
         return HttpResponse::NotFound().json(json!({"error": result.err()}));
@@ -216,7 +216,7 @@ async fn handle_update(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
     }
 }
 
-async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_unique(model.name(), input, true).await;
     let include = input.get("include");
     let select = input.get("select");
@@ -284,7 +284,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
     }
 }
 
-async fn handle_delete(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_delete(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_unique(model.name(), input, true).await;
     if result.is_err() {
         return HttpResponse::NotFound().json(json!({"error": result.err()}));
@@ -301,7 +301,7 @@ async fn handle_delete(graph: &Graph, input: &JsonValue, model: &Model) -> HttpR
     }
 }
 
-async fn handle_create_many(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_create_many(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
     let input = input.as_object().unwrap();
     let create = input.get("create");
     let include = input.get("include");
@@ -334,7 +334,7 @@ async fn handle_create_many(graph: &Graph, input: &JsonValue, model: &Model) -> 
         }))
 }
 
-async fn handle_update_many(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_update_many(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_many(model.name(), input, true).await;
     if result.is_err() {
         return HttpResponse::BadRequest().json(json!({"error": result.err()}));
@@ -364,7 +364,7 @@ async fn handle_update_many(graph: &Graph, input: &JsonValue, model: &Model) -> 
         }))
 }
 
-async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_many(model.name(), input, true).await;
     if result.is_err() {
         return HttpResponse::BadRequest().json(json!({"error": result.err()}));
@@ -389,7 +389,7 @@ async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model) -> 
         }))
 }
 
-async fn handle_count(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_count(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
     let result = graph.count(model.name(), input).await;
     match result {
         Ok(count) => {
@@ -401,7 +401,7 @@ async fn handle_count(graph: &Graph, input: &JsonValue, model: &Model) -> HttpRe
     }
 }
 
-async fn handle_aggregate(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_aggregate(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
     match graph.aggregate(model.name(), input).await {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": count}))
@@ -412,7 +412,7 @@ async fn handle_aggregate(graph: &Graph, input: &JsonValue, model: &Model) -> Ht
     }
 }
 
-async fn handle_group_by(graph: &Graph, input: &JsonValue, model: &Model) -> HttpResponse {
+async fn handle_group_by(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
     match graph.group_by(model.name(), input).await {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": count}))
@@ -514,6 +514,24 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     }
 }
 
+async fn handle_identity(graph: &Graph, input: &JsonValue, model: &Model, conf: &ServerConfiguration, identity: Option<&Object>) -> HttpResponse {
+    if let Some(identity) = identity {
+        if identity.model() != model {
+            return HttpResponse::Unauthorized().json(json!({"error": ActionError::wrong_identity_model()}));
+        }
+        let select = input.get("select");
+        let include = input.get("include");
+        let refreshed = identity.refreshed(include, select).await.unwrap();
+        HttpResponse::Ok().json(json!({
+            "data": refreshed.to_json()
+        }))
+    } else {
+        HttpResponse::Ok().json(json!({
+            "data": null
+        }))
+    }
+}
+
 pub fn make_app(graph: Graph, conf: ServerConfiguration) ->  App<impl ServiceFactory<
     ServiceRequest,
     Response = ServiceResponse<BoxBody>,
@@ -612,140 +630,83 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                 log_unhandled(start, r.method().as_str(), &path, 400);
                 return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
             }
-
+            let identity = match get_identity(&r, &graph, conf).await {
+                Ok(identity) => { identity },
+                Err(err) => return HttpResponse::Unauthorized().json(json!({"error": err }))
+            };
             match action {
                 ActionType::FindUnique => {
-                    return match get_identity(&r, &graph, conf).await {
-                        Ok(_identity) => {
-                            let result = handle_find_unique(&graph, &parsed_body, model_def).await;
-                            log_request(start, "FindUnique", model_def.name(), result.status().as_u16());
-                            result
-                        },
-                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                    };
+                    let result = handle_find_unique(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    log_request(start, "FindUnique", model_def.name(), result.status().as_u16());
+                    return result;
                 }
                 ActionType::FindFirst => {
-                    return match get_identity(&r, &graph, conf).await {
-                        Ok(_identity) => {
-                            let result = handle_find_first(&graph, &parsed_body, model_def).await;
-                            log_request(start, "FindFirst", model_def.name(), result.status().as_u16());
-                            result
-                        },
-                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                    };
+                    let result = handle_find_first(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    log_request(start, "FindFirst", model_def.name(), result.status().as_u16());
+                    result
                 }
                 ActionType::FindMany => {
-                    return match get_identity(&r, &graph, conf).await {
-                        Ok(_identity) => {
-                            let result = handle_find_many(&graph, &parsed_body, model_def).await;
-                            log_request(start, "FindMany", model_def.name(), result.status().as_u16());
-                            result
-                        },
-                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                    };
+                    let result = handle_find_many(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    log_request(start, "FindMany", model_def.name(), result.status().as_u16());
+                    result
                 }
                 ActionType::Create => {
-                    return match get_identity(&r, &graph, conf).await {
-                        Ok(_identity) => {
-                            let result = handle_create(&graph, &parsed_body, model_def).await;
-                            log_request(start, "Create", model_def.name(), result.status().as_u16());
-                            result
-                        },
-                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                    };
+                    let result = handle_create(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    log_request(start, "Create", model_def.name(), result.status().as_u16());
+                    result
                 }
                 ActionType::Update => {
-                    return match get_identity(&r, &graph, conf).await {
-                        Ok(_identity) => {
-                            let result = handle_update(&graph, &parsed_body, model_def).await;
-                            log_request(start, "Update", model_def.name(), result.status().as_u16());
-                            result
-                        },
-                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                    };
+                    let result = handle_update(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    log_request(start, "Update", model_def.name(), result.status().as_u16());
+                    result
                 }
                 ActionType::Upsert => {
-                    return match get_identity(&r, &graph, conf).await {
-                        Ok(_identity) => {
-                            let result = handle_upsert(&graph, &parsed_body, model_def).await;
-                            log_request(start, "Upsert", model_def.name(), result.status().as_u16());
-                            result
-                        },
-                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                    };
+                    let result = handle_upsert(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    log_request(start, "Upsert", model_def.name(), result.status().as_u16());
+                    result
                 }
                 ActionType::Delete => {
-                    return match get_identity(&r, &graph, conf).await {
-                        Ok(_identity) => {
-                            let result = handle_delete(&graph, &parsed_body, model_def).await;
-                            log_request(start, "Delete", model_def.name(), result.status().as_u16());
-                            result
-                        },
-                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                    };
+                    let result = handle_delete(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    log_request(start, "Delete", model_def.name(), result.status().as_u16());
+                    result
                 }
                 ActionType::CreateMany => {
-                    return match get_identity(&r, &graph, conf).await {
-                        Ok(_identity) => {
-                            let result = handle_create_many(&graph, &parsed_body, model_def).await;
-                            log_request(start, "CreateMany", model_def.name(), result.status().as_u16());
-                            result
-                        },
-                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                    };
+                    let result = handle_create_many(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    log_request(start, "CreateMany", model_def.name(), result.status().as_u16());
+                    result
                 }
                 ActionType::UpdateMany => {
-                    return match get_identity(&r, &graph, conf).await {
-                        Ok(_identity) => {
-                            let result = handle_update_many(&graph, &parsed_body, model_def).await;
-                            log_request(start, "UpdateMany", model_def.name(), result.status().as_u16());
-                            result
-                        },
-                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                    };
+                    let result = handle_update_many(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    log_request(start, "UpdateMany", model_def.name(), result.status().as_u16());
+                    result
                 }
                 ActionType::DeleteMany => {
-                    return match get_identity(&r, &graph, conf).await {
-                        Ok(_identity) => {
-                            let result = handle_delete_many(&graph, &parsed_body, model_def).await;
-                            log_request(start, "DeleteMany", model_def.name(), result.status().as_u16());
-                            result
-                        },
-                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                    };
+                    let result = handle_delete_many(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    log_request(start, "DeleteMany", model_def.name(), result.status().as_u16());
+                    result
                 }
                 ActionType::Count => {
-                    return match get_identity(&r, &graph, conf).await {
-                        Ok(_identity) => {
-                            let result = handle_count(&graph, &parsed_body, model_def).await;
-                            log_request(start, "Count", model_def.name(), result.status().as_u16());
-                            result
-                        },
-                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                    };
+                    let result = handle_count(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    log_request(start, "Count", model_def.name(), result.status().as_u16());
+                    result
                 }
                 ActionType::Aggregate => {
-                    return match get_identity(&r, &graph, conf).await {
-                        Ok(_identity) => {
-                            let result = handle_aggregate(&graph, &parsed_body, model_def).await;
-                            log_request(start, "Aggregate", model_def.name(), result.status().as_u16());
-                            result
-                        },
-                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                    };
+                    let result = handle_aggregate(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    log_request(start, "Aggregate", model_def.name(), result.status().as_u16());
+                    result
                 }
                 ActionType::GroupBy => {
-                    return match get_identity(&r, &graph, conf).await {
-                        Ok(_identity) => {
-                            let result = handle_group_by(&graph, &parsed_body, model_def).await;
-                            log_request(start, "GroupBy", model_def.name(), result.status().as_u16());
-                            result
-                        },
-                        Err(err) => HttpResponse::Unauthorized().json(json!({"error": err }))
-                    };
+                    let result = handle_group_by(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    log_request(start, "GroupBy", model_def.name(), result.status().as_u16());
+                    result
                 }
                 ActionType::SignIn => {
                     let result = handle_sign_in(&graph, &parsed_body, model_def, conf).await;
+                    log_request(start, "SignIn", model_def.name(), result.status().as_u16());
+                    result
+                }
+                ActionType::Identity => {
+                    let result = handle_identity(&graph, &parsed_body, model_def, conf, identity.as_ref()).await;
                     log_request(start, "SignIn", model_def.name(), result.status().as_u16());
                     result
                 }

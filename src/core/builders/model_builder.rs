@@ -100,6 +100,7 @@ impl ModelBuilder {
     pub fn identity(&mut self) -> &mut Self {
         self.identity = true;
         self.actions.insert(ActionType::SignIn);
+        self.actions.insert(ActionType::Identity);
         self
     }
 

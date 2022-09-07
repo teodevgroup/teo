@@ -52,6 +52,7 @@ pub enum ActionErrorType {
     SaveCallingError,
     CustomError,
     ModelNotFound,
+    WrongIdentityModel,
 }
 
 impl ActionErrorType {
@@ -104,6 +105,7 @@ impl ActionErrorType {
             ActionErrorType::SaveCallingError => { 500 }
             ActionErrorType::CustomError => { 500 }
             ActionErrorType::ModelNotFound => { 500 }
+            ActionErrorType::WrongIdentityModel => { 401 }
         }
     }
 }
@@ -511,6 +513,14 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::ModelNotFound,
             message: format!("Model named `{name}' is not found."),
+            errors: None
+        }
+    }
+
+    pub fn wrong_identity_model() -> Self {
+        ActionError {
+            r#type: ActionErrorType::WrongIdentityModel,
+            message: format!("This identity is valid but is not of this model."),
             errors: None
         }
     }
