@@ -492,6 +492,11 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                     b.line(format!("{model_var_name}: {model_var_name}Delegate,"));
                 }
             });
+            b.line(r#"$token: undefined,
+    $withToken: (token: string) => {
+        Object.assign({$token: token}, {...teo})
+        return teo
+    },"#);
         }, "}");
         c.empty_line();
         c.line(format!("export default {object_name}"));

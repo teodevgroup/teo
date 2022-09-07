@@ -79,7 +79,7 @@ impl ActionType {
             DeleteMany => "delete-many",
             Count => "count",
             Aggregate => "aggregate",
-            GroupBy => "groupBy",
+            GroupBy => "group-by",
             SignIn => "sign-in",
         }
     }

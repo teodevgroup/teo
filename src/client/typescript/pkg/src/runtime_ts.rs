@@ -32,25 +32,33 @@ export type TokenInfo = {{
 let bearerToken: string | undefined = undefined;
 let bearerTokenLoaded: boolean = false;
 
-export function setBearerToken(token: string) {{
-    localStorage.setItem("__teo_bearer_token", token);
-    bearerToken = token;
-    bearerTokenLoaded = true;
+export function setBearerToken(token: string | undefined) {{
+    if (localStorage) {{
+        if (token === undefined) {{
+            localStorage.removeItem("__teo_bearer_token")
+        }} else {{
+            localStorage.setItem("__teo_bearer_token", token)
+        }}
+        bearerToken = token;
+        bearerTokenLoaded = true;
+    }}
 }}
 
 function getBearerToken(): string | undefined {{
     if (!bearerTokenLoaded) {{
-        let token = localStorage.getItem("__teo_bearer_token");
-        if (token != null) {{
-            bearerToken = token
+        if (localStorage) {{
+            let token = localStorage.getItem("__teo_bearer_token")
+            if (token != null) {{
+                bearerToken = token
+            }}
         }}
         bearerTokenLoaded = true
     }}
     return bearerToken
 }}
 
-export async function request(url_segment_name: string, action: Action, args: any): Promise<any> {{
-    let url = "{url}/" + url_segment_name + "/action/" + action
+export async function request(urlSegmentName: string, action: Action, args: any): Promise<any> {{
+    let url = "{url}/" + urlSegmentName + "/action/" + action
     let response = await fetch(url, {{
         method: "POST",
         headers: getBearerToken() ? {{ "Authorization": `Bearer ${{getBearerToken()}}` }} : undefined,
