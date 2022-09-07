@@ -256,4 +256,16 @@ impl ActionType {
             SignIn => false,
         }
     }
+
+    pub(crate) fn requires_credentials(&self) -> bool {
+        self == SignIn
+    }
+
+    pub(crate) fn requires_by_and_having(&self) -> bool {
+        self == GroupBy
+    }
+
+    pub(crate) fn requires_aggregates(&self) -> bool {
+        self == GroupBy || self == Aggregate
+    }
 }

@@ -25,7 +25,7 @@ export type PagingInfo = {{
     numberOfPages?: number
 }}
 
-export type Token = {{
+export type TokenInfo = {{
     token: string
 }}
 

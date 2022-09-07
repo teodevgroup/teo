@@ -244,9 +244,33 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
     }).to_string()
 }
 
+fn generate_model_credentials_input(model: &Model) -> String {
+    let model_name = model.name();
+    Code::new(0, 4, |c| {
+        c.block(format!(r#"export type {model_name}CredentialsInput = {{"#), |b| {
+            let auth_identity_keys = model.auth_identity_keys();
+            let auth_by_keys = model.auth_by_keys();
+            let auth_identity_optional = auth_identity_keys.len() != 1;
+            let auth_by_keys_optional = auth_by_keys.len() != 1;
+            for key in auth_identity_keys {
+                let field = model.field(key).unwrap();
+                let field_name = &field.name;
+                let field_type = field.field_type.to_typescript_type(auth_identity_optional);
+                b.line(format!("{field_name}: {field_type}"));
+            }
+            for key in auth_by_keys {
+                let field = model.field(key).unwrap();
+                let field_name = &field.name;
+                let field_type = field.field_type.to_typescript_type(auth_by_keys_optional);
+                b.line(format!("{field_name}: {field_type}"));
+            }
+        }, "}");
+    }).to_string()
+}
+
 pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration) -> String {
     Code::new(0, 4, |c| {
-        c.line(r#"import { request, Response, PagingInfo, SortOrder, Enumerable } from "./runtime""#);
+        c.line(r#"import { request, Response, PagingInfo, TokenInfo, SortOrder, Enumerable } from "./runtime""#);
         c.block("import {", |b| {
             b.line("ObjectIdFilter, ObjectIdNullableFilter, StringFilter, StringNullableFilter, NumberFilter,");
             b.line("NumberNullableFilter, BoolFilter, BoolNullableFilter, DateFilter, DateNullableFilter,");
@@ -386,6 +410,9 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                 c.line(generate_model_update_with_where_unique_input(m, Some(&r.name)));
                 c.line(generate_model_update_many_with_where_input(m, Some(&r.name)));
             });
+            if m.identity() {
+                c.line(generate_model_credentials_input(m));
+            }
             // args
             ActionType::iter().for_each(|a| {
                 if !m.actions().contains(a) { return }
@@ -410,10 +437,13 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                         //b.line(format!{r#"distinct? {model_name}ScalarFieldEnum"#})
                     }
                     if a.requires_create() {
-                        b.line(format!(r#"create?: {model_name}CreateInput"#));
+                        b.line(format!(r#"create: {model_name}CreateInput"#));
                     }
                     if a.requires_update() {
-                        b.line(format!(r#"update?: {model_name}UpdateInput"#));
+                        b.line(format!(r#"update: {model_name}UpdateInput"#));
+                    }
+                    if a.requires_credentials() {
+                        b.line(format!(r#"credentials: {model_name}CredentialsInput"#))
                     }
                 }, "}");
             })
