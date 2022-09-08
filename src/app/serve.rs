@@ -710,7 +710,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                 }
                 ActionType::Identity => {
                     let result = handle_identity(&graph, &parsed_body, model_def, conf, identity.as_ref()).await;
-                    log_request(start, "SignIn", model_def.name(), result.status().as_u16());
+                    log_request(start, "Identity", model_def.name(), result.status().as_u16());
                     result
                 }
             }
