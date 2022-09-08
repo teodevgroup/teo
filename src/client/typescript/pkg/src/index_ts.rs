@@ -453,8 +453,13 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
             if m.actions().len() > 0 {
                 let model_name = m.name();
                 let model_var_name = model_name.to_camel_case();
+                let model_class_name = model_var_name.to_pascal_case();
                 let model_url_segment_name = m.url_segment_name();
-                c.block(format!("const {model_var_name}Delegate = {{"), |b| {
+                c.block(format!("class {model_class_name}Delegate {{"), |b| {
+                    b.line("_token?: string");
+                    b.block("constructor(token?: string) {", |b| {
+                        b.line("this._token = token");
+                    }, "}");
                     ActionType::iter().for_each(|a| {
                         if m.actions().contains(a) {
                             let action_name = a.as_str();
@@ -474,8 +479,8 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                             };
                             b.empty_line();
                             b.block(format!("async {action_var_name}(args: {model_name}{action_name}Args): Promise<Response<{result_meta}, {result_data}>> {{"), |b| {
-                                b.line(format!(r#"return await request("{model_url_segment_name}", "{action_url_name}", args)"#));
-                            }, "},")
+                                b.line(format!(r#"return await request("{model_url_segment_name}", "{action_url_name}", args, this._token)"#));
+                            }, "}");
                         }
                     });
                 }, "}");
@@ -484,20 +489,34 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
         });
         // main interface
         let object_name = &conf.type_script.as_ref().unwrap().object_name;
-        c.block(format!("const {object_name} = {{"), |b| {
+        let object_class_name = object_name.to_pascal_case();
+        c.block(format!("class {object_class_name} {{"), |b| {
+            b.line("_token?: string");
             graph.models().iter().for_each(|m| {
                 if m.actions().len() > 0 {
                     let model_name = m.name();
                     let model_var_name = model_name.to_camel_case();
-                    b.line(format!("{model_var_name}: {model_var_name}Delegate,"));
+                    let model_class_name = model_var_name.to_pascal_case();
+                    b.line(format!("{model_var_name}: {model_class_name}Delegate"));
                 }
             });
-            b.line(r#"$token: undefined,
-    $withToken: (token: string) => {
-        Object.assign({$token: token}, {...teo})
-        return teo
-    },"#);
+            b.block("constructor(token?: string) {", |b| {
+                b.line("this._token = token");
+                graph.models().iter().for_each(|m| {
+                    if m.actions().len() > 0 {
+                        let model_name = m.name();
+                        let model_var_name = model_name.to_camel_case();
+                        let model_class_name = model_var_name.to_pascal_case();
+                        b.line(format!("this.{model_var_name} = new {model_class_name}Delegate(token)"));
+                    }
+                })
+            }, "}");
+            b.block("$withToken(token?: string) {", |b| {
+                b.line(format!("return new {object_class_name}(token)"));
+            }, "}")
         }, "}");
+        c.empty_line();
+        c.line(format!("const {object_name} = new {object_class_name}()"));
         c.empty_line();
         c.line(format!("export default {object_name}"));
     }).to_string()

@@ -50,7 +50,7 @@ export const getCookie = (key: string, cookie?: string): string | undefined => {
         fullString = cookie ?? document.cookie
     }}
     if (!fullString) return undefined
-    const result = fullString.match(new RegExp(`${{key}}=(.*?);?$`))
+    const result = fullString.match(new RegExp(`${{key}}=([^; ]*);?`))
     if (result === null) return undefined
     return result[1]
 }}
@@ -91,11 +91,11 @@ export function getBearerToken(): string | undefined {{
     }}
 }}
 
-export async function request(urlSegmentName: string, action: Action, args: any): Promise<any> {{
+export async function request(urlSegmentName: string, action: Action, args: any, token: string | undefined = getBearerToken()): Promise<any> {{
     let url = "{url}/" + urlSegmentName + "/action/" + action
     let response = await fetch(url, {{
         method: "POST",
-        headers: getBearerToken() ? {{ "Authorization": `Bearer ${{getBearerToken()}}` }} : undefined,
+        headers: token ? {{ "Authorization": `Bearer ${{token}}` }} : undefined,
         body: JSON.stringify(args)
     }})
     return await response.json()
