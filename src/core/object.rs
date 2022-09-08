@@ -46,6 +46,7 @@ impl Object {
             queried_relation_map: Arc::new(Mutex::new(HashMap::new())),
             relation_map: Arc::new(Mutex::new(HashMap::new())),
             ignore_required_fields: Arc::new(Mutex::new(Vec::new())),
+            identity: Arc::new(Mutex::new(None)),
         }) }
     }
 
@@ -365,7 +366,7 @@ impl Object {
         match &relation.through {
             Some(through) => { // with join table
                 let relation_model = self.graph().model(through)?;
-                let relation_object = self.graph().create_object(through)?;
+                let relation_object = self.graph().new_object(through)?;
                 relation_object.set_json(&json!({})).await?;
                 let local_relation_name = relation.fields.get(0).unwrap();
                 let foreign_relation_name = relation.references.get(0).unwrap();
@@ -685,7 +686,7 @@ impl Object {
                         let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
                         for entry in entries {
-                            let new_object =  graph.create_object(&relation.model)?;
+                            let new_object =  graph.new_object(&relation.model)?;
                             new_object.set_json(entry).await?;
                             new_object.ignore_required_for(&relation.references);
                             self.ignore_required_for(&relation.fields);
@@ -732,7 +733,7 @@ impl Object {
                                     objects.push(RelationManipulation::Connect(new_obj));
                                 }
                                 Err(_err) => {
-                                    let new_obj = graph.create_object(&relation.model)?;
+                                    let new_obj = graph.new_object(&relation.model)?;
                                     new_obj.set_json(create).await?;
                                     new_obj.ignore_required_for(&relation.references);
                                     self.ignore_required_for(&relation.fields);
@@ -820,7 +821,7 @@ impl Object {
                                     objects.push(RelationManipulation::Keep(obj));
                                 }
                                 Err(_) => {
-                                    let new_obj = graph.create_object(&relation.model)?;
+                                    let new_obj = graph.new_object(&relation.model)?;
                                     new_obj.ignore_required_for(&relation.references);
                                     self.ignore_required_for(&relation.fields);
                                     new_obj.set_json(create).await?;
@@ -926,6 +927,14 @@ impl Object {
             finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
         }
         graph.find_unique(self.model().name(), &finder, false).await
+    }
+
+    pub fn set_identity(&self, identity: Option<Object>) {
+        *self.inner.identity.lock().unwrap() = identity.clone();
+    }
+
+    pub fn get_identity(&self) -> Option<Object> {
+        self.inner.identity.lock().unwrap().clone()
     }
 
     pub async fn fetch_relation_object(&self, key: impl AsRef<str>, find_unique_arg: Option<&JsonValue>) -> Result<Option<Object>, ActionError> {
@@ -1046,6 +1055,7 @@ pub(crate) struct ObjectInner {
     pub(crate) relation_map: Arc<Mutex<HashMap<String, Vec<RelationManipulation>>>>,
     pub(crate) queried_relation_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
     pub(crate) ignore_required_fields: Arc<Mutex<Vec<String>>>,
+    pub(crate) identity: Arc<Mutex<Option<Object>>>,
 }
 
 impl Debug for Object {

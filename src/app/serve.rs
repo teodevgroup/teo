@@ -156,7 +156,7 @@ async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model, ident
 }
 
 async fn handle_create_internal(graph: &Graph, create: Option<&JsonValue>, include: Option<&JsonValue>, select: Option<&JsonValue>, model: &Model) -> Result<JsonValue, ActionError> {
-    let obj = graph.create_object(model.name())?;
+    let obj = graph.new_object(model.name())?;
     let set_json_result = match create {
         Some(create) => {
             obj.set_json(create).await
@@ -253,7 +253,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, identity
         }
         Err(_) => {
             let create = input.get("create");
-            let obj = graph.create_object(model.name()).unwrap();
+            let obj = graph.new_object(model.name()).unwrap();
             let set_json_result = match create {
                 Some(create) => {
                     obj.set_json(create).await

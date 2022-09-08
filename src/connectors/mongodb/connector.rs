@@ -179,7 +179,7 @@ impl MongoDBConnector {
                 let object_bsons = document.get(key).unwrap().as_array().unwrap();
                 let mut related: Vec<Object> = vec![];
                 for related_object_bson in object_bsons {
-                    let related_object = object.graph().create_object(model_name)?;
+                    let related_object = object.graph().new_object(model_name)?;
                     self.document_to_object(related_object_bson.as_document().unwrap(), &related_object, inner_select, inner_include)?;
                     related.push(related_object);
                 }
@@ -700,7 +700,7 @@ impl Connector for MongoDBConnector {
             return Err(ActionError::object_not_found());
         }
         for doc in results {
-            let obj = graph.create_object(model.name())?;
+            let obj = graph.new_object(model.name())?;
             return match self.document_to_object(&doc.unwrap(), &obj, select, include) {
                 Ok(_) => {
                     Ok(obj)
@@ -744,7 +744,7 @@ impl Connector for MongoDBConnector {
         let mut result: Vec<Object> = vec![];
         let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
         for doc in results {
-            let obj = graph.create_object(model.name())?;
+            let obj = graph.new_object(model.name())?;
             match self.document_to_object(&doc.unwrap(), &obj, select, include) {
                 Ok(_) => {
                     if reverse {

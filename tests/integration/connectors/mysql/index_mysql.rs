@@ -33,10 +33,10 @@ async fn make_mysql_graph() -> &Graph {
 // #[test]
 // async fn unique_value_cannot_have_duplications_on_create() {
 //     let graph = make_mysql_graph().await;
-//     let object1 = graph.create_object("UniqueIndex").unwrap();
+//     let object1 = graph.create_object("UniqueIndex", json!({})).unwrap();
 //     let _ = object1.set_value("unique", Value::String("123".to_string()));
 //     let _ = object1.save().await;
-//     let object2 = graph.create_object("UniqueIndex").unwrap();
+//     let object2 = graph.create_object("UniqueIndex", json!({})).unwrap();
 //     let _ = object2.set_value("unique", Value::String("123".to_string()));
 //     let result = object2.save().await;
 //     assert_eq!(result.err().unwrap(), ActionError::unique_value_duplicated("unique"));
@@ -45,10 +45,10 @@ async fn make_mysql_graph() -> &Graph {
 // #[test]
 // async fn unique_value_cannot_have_duplications_on_update() {
 //     let graph = make_mysql_graph().await;
-//     let object1 = graph.create_object("UniqueIndex").unwrap();
+//     let object1 = graph.create_object("UniqueIndex", json!({})).unwrap();
 //     let _ = object1.set_value("unique", Value::String("123".to_string()));
 //     let _ = object1.save().await;
-//     let object2 = graph.create_object("UniqueIndex").unwrap();
+//     let object2 = graph.create_object("UniqueIndex", json!({})).unwrap();
 //     let _ = object2.set_value("unique", Value::String("222".to_string()));
 //     let _ = object2.save().await;
 //     let _ = object2.set_value("unique", Value::String("123".to_string()));
@@ -59,9 +59,9 @@ async fn make_mysql_graph() -> &Graph {
 // #[test]
 // async fn unique_value_can_have_duplicated_nulls() {
 //     let graph = make_mysql_graph().await;
-//     let object1 = graph.create_object("UniqueIndex").unwrap();
+//     let object1 = graph.create_object("UniqueIndex", json!({})).unwrap();
 //     let _ = object1.save().await;
-//     let object2 = graph.create_object("UniqueIndex").unwrap();
+//     let object2 = graph.create_object("UniqueIndex", json!({})).unwrap();
 //     let result = object2.save().await;
 //     assert_eq!(result.ok(), None);
 // }

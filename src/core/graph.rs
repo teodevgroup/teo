@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use serde_json::{Value as JsonValue};
+use serde_json::{json, Value as JsonValue};
 use crate::core::builders::graph_builder::GraphBuilder;
 
 use crate::core::connector::Connector;
@@ -77,11 +77,17 @@ impl Graph {
         self.connector().group_by(self, model, finder).await
     }
 
-    pub fn create_object(&self, model: &str) -> Result<Object, ActionError> {
+    pub(crate) fn new_object(&self, model: &str) -> Result<Object, ActionError> {
         match self.model(model) {
             Ok(model) => Ok(Object::new(self, model)),
             Err(err) => Err(err)
         }
+    }
+
+    pub fn create_object(&self, model: &str, initial: JsonValue) -> Result<Object, ActionError> {
+        let obj = self.new_object(model)?;
+        obj.set_json(&initial);
+        Ok(obj)
     }
 
     pub(crate) fn connector(&self) -> &dyn Connector {

@@ -2,6 +2,7 @@ use bson::{doc, Document};
 use futures_util::StreamExt;
 use mongodb::{Client, Collection};
 use mongodb::options::ClientOptions;
+use serde_json::json;
 use tokio::test;
 use serial_test::serial;
 use teo::core::graph::Graph;
@@ -89,10 +90,10 @@ async fn make_mongodb_graph() -> Graph {
 #[serial]
 async fn unique_value_cannot_have_duplications_on_create() {
     let graph = make_mongodb_graph().await;
-    let object1 = graph.create_object("UniqueIndex").unwrap();
+    let object1 = graph.create_object("UniqueIndex", json!({})).unwrap();
     let _ = object1.set_value("unique", Value::String("123".to_string()));
     let _ = object1.save().await;
-    let object2 = graph.create_object("UniqueIndex").unwrap();
+    let object2 = graph.create_object("UniqueIndex", json!({})).unwrap();
     let _ = object2.set_value("unique", Value::String("123".to_string()));
     let result = object2.save().await;
     assert_eq!(result.err().unwrap(), ActionError::unique_value_duplicated("unique"));
@@ -102,10 +103,10 @@ async fn unique_value_cannot_have_duplications_on_create() {
 #[serial]
 async fn unique_sparse_value_cannot_have_duplications_on_create() {
     let graph = make_mongodb_graph().await;
-    let object1 = graph.create_object("UniqueSparseIndex").unwrap();
+    let object1 = graph.create_object("UniqueSparseIndex", json!({})).unwrap();
     let _ = object1.set_value("uniqueSparse", Value::String("123".to_string()));
     let _ = object1.save().await;
-    let object2 = graph.create_object("UniqueSparseIndex").unwrap();
+    let object2 = graph.create_object("UniqueSparseIndex", json!({})).unwrap();
     let _ = object2.set_value("uniqueSparse", Value::String("123".to_string()));
     let result = object2.save().await;
     assert_eq!(result.err().unwrap(), ActionError::unique_value_duplicated("uniqueSparse"));
@@ -115,10 +116,10 @@ async fn unique_sparse_value_cannot_have_duplications_on_create() {
 #[serial]
 async fn unique_value_cannot_have_duplications_on_update() {
     let graph = make_mongodb_graph().await;
-    let object1 = graph.create_object("UniqueIndex").unwrap();
+    let object1 = graph.create_object("UniqueIndex", json!({})).unwrap();
     let _ = object1.set_value("unique", Value::String("123".to_string()));
     let _ = object1.save().await;
-    let object2 = graph.create_object("UniqueIndex").unwrap();
+    let object2 = graph.create_object("UniqueIndex", json!({})).unwrap();
     let _ = object2.set_value("unique", Value::String("222".to_string()));
     let _ = object2.save().await;
     let _ = object2.set_value("unique", Value::String("123".to_string()));
@@ -130,10 +131,10 @@ async fn unique_value_cannot_have_duplications_on_update() {
 #[serial]
 async fn unique_sparse_value_cannot_have_duplications_on_update() {
     let graph = make_mongodb_graph().await;
-    let object1 = graph.create_object("UniqueSparseIndex").unwrap();
+    let object1 = graph.create_object("UniqueSparseIndex", json!({})).unwrap();
     let _ = object1.set_value("uniqueSparse", Value::String("123".to_string()));
     let _ = object1.save().await;
-    let object2 = graph.create_object("UniqueSparseIndex").unwrap();
+    let object2 = graph.create_object("UniqueSparseIndex", json!({})).unwrap();
     let _ = object2.set_value("uniqueSparse", Value::String("222".to_string()));
     let _ = object2.save().await;
     let _ = object2.set_value("uniqueSparse", Value::String("123".to_string()));
@@ -145,9 +146,9 @@ async fn unique_sparse_value_cannot_have_duplications_on_update() {
 #[serial]
 async fn unique_sparse_value_can_have_duplicated_nulls() {
     let graph = make_mongodb_graph().await;
-    let object1 = graph.create_object("UniqueSparseIndex").unwrap();
+    let object1 = graph.create_object("UniqueSparseIndex", json!({})).unwrap();
     let _ = object1.save().await;
-    let object2 = graph.create_object("UniqueSparseIndex").unwrap();
+    let object2 = graph.create_object("UniqueSparseIndex", json!({})).unwrap();
     let result = object2.save().await;
     assert_eq!(result.ok(), Some(()));
 }
@@ -194,9 +195,9 @@ async fn sparse_index_field_is_sparse_indexed() {
 #[serial]
 async fn multiple_unique_index_should_allow_null_on_all_fields() {
     let graph = make_mongodb_graph().await;
-    let object1 = graph.create_object("CompoundSparseUnique").unwrap();
+    let object1 = graph.create_object("CompoundSparseUnique", json!({})).unwrap();
     let _ = object1.save().await;
-    let object2 = graph.create_object("CompoundSparseUnique").unwrap();
+    let object2 = graph.create_object("CompoundSparseUnique", json!({})).unwrap();
     let result = object2.save().await;
     assert_eq!(result.ok(), Some(()));
 }
@@ -205,11 +206,11 @@ async fn multiple_unique_index_should_allow_null_on_all_fields() {
 #[serial]
 async fn multiple_unique_index_should_allow_non_unique_value_on_1_field() {
     let graph = make_mongodb_graph().await;
-    let object1 = graph.create_object("CompoundUnique").unwrap();
+    let object1 = graph.create_object("CompoundUnique", json!({})).unwrap();
     let _ = object1.set_value("one", Value::String("one".to_string()));
     let _ = object1.set_value("two", Value::String("two".to_string()));
     let _ = object1.save().await;
-    let object2 = graph.create_object("CompoundUnique").unwrap();
+    let object2 = graph.create_object("CompoundUnique", json!({})).unwrap();
     let _ = object2.set_value("one", Value::String("one".to_string()));
     let _ = object2.set_value("two", Value::String("2".to_string()));
     let result = object2.save().await;
@@ -220,11 +221,11 @@ async fn multiple_unique_index_should_allow_non_unique_value_on_1_field() {
 #[serial]
 async fn multiple_unique_index_should_not_allow_non_unique_value_on_all_fields() {
     let graph = make_mongodb_graph().await;
-    let object1 = graph.create_object("CompoundUnique").unwrap();
+    let object1 = graph.create_object("CompoundUnique", json!({})).unwrap();
     let _ = object1.set_value("one", Value::String("one".to_string()));
     let _ = object1.set_value("two", Value::String("two".to_string()));
     let _ = object1.save().await;
-    let object2 = graph.create_object("CompoundUnique").unwrap();
+    let object2 = graph.create_object("CompoundUnique", json!({})).unwrap();
     let _ = object2.set_value("one", Value::String("one".to_string()));
     let _ = object2.set_value("two", Value::String("two".to_string()));
     let result = object2.save().await;
