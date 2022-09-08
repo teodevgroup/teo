@@ -119,7 +119,7 @@ pub(crate) struct Field {
     pub(crate) permission: Option<Permission>,
     pub(crate) column_name: Option<String>,
     pub(crate) previous_value_rule: PreviousValueRule,
-    pub(crate) compare_on_updated: Vec<Arc<dyn Fn(Value, Value, Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) compare_after_update: Vec<Arc<dyn Fn(Value, Value, Object) -> PinFutureObj<Result<(), ActionError>>>>,
 }
 
 impl Debug for Field {

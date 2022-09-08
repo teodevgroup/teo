@@ -45,14 +45,14 @@ pub struct ModelInner {
     pub(crate) relations_map: HashMap<String, Arc<Relation>>,
     pub(crate) indices: Vec<ModelIndex>,
     pub(crate) primary: ModelIndex,
-    pub(crate) on_saved_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) on_updated_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) on_created_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) on_deleted_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) on_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) on_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) on_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) on_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) after_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) after_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) after_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) after_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) before_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) before_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) before_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) before_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
     pub(crate) primary_field: Option<Arc<Field>>,
     pub(crate) all_keys: Vec<String>,
     pub(crate) input_keys: Vec<String>,
@@ -195,31 +195,31 @@ impl Model {
         self.inner.relations_map.get(name).is_some()
     }
 
-    pub(crate) fn on_saved_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.on_saved_fns
+    pub(crate) fn after_save_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.after_save_fns
     }
 
-    pub(crate) fn on_updated_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.on_updated_fns
+    pub(crate) fn after_update_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.after_update_fns
     }
 
-    pub(crate) fn on_created_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.on_created_fns
+    pub(crate) fn after_create_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.after_create_fns
     }
-    pub(crate) fn on_deleted_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.on_deleted_fns
+    pub(crate) fn after_delete_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.after_delete_fns
     }
-    pub(crate) fn on_save_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.on_save_fns
+    pub(crate) fn before_save_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.before_save_fns
     }
-    pub(crate) fn on_update_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.on_update_fns
+    pub(crate) fn before_update_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.before_update_fns
     }
-    pub(crate) fn on_create_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.on_create_fns
+    pub(crate) fn before_create_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.before_create_fns
     }
-    pub(crate) fn on_delete_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.on_delete_fns
+    pub(crate) fn before_delete_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
+        &self.inner.before_delete_fns
     }
 
     pub(crate) fn indices(&self) -> &Vec<ModelIndex> {

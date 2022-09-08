@@ -493,15 +493,15 @@ impl Object {
     async fn trigger_before_write_callbacks(&self, newly_created: bool) -> Result<(), ActionError> {
         let model = self.model();
         if newly_created {
-            for cb in model.on_create_fns() {
+            for cb in model.before_create_fns() {
                 cb(self.clone()).await?;
             }
         } else {
-            for cb in model.on_update_fns() {
+            for cb in model.before_update_fns() {
                 cb(self.clone()).await?;
             }
         }
-        for cb in model.on_save_fns() {
+        for cb in model.before_save_fns() {
             cb(self.clone()).await?;
         }
         Ok(())
@@ -514,17 +514,17 @@ impl Object {
         }
         self.inner.inside_write_callback.store(true, Ordering::SeqCst);
         let model = self.model();
-        for cb in model.on_saved_fns() {
+        for cb in model.after_save_fns() {
             cb(self.clone()).await?;
         }
         if newly_created {
-            for cb in model.on_created_fns() {
+            for cb in model.after_create_fns() {
                 cb(self.clone()).await?;
             }
         } else {
             for field in model.fields() {
                 if field.previous_value_rule == PreviousValueRule::KeepAfterSaved {
-                    for cb in &field.compare_on_updated {
+                    for cb in &field.compare_after_update {
                         if let Some(prev) = self.inner.previous_values.lock().unwrap().get(&field.name) {
                             if let current = self.get_value(&field.name).unwrap() {
                                 if !current.is_null() {
@@ -535,7 +535,7 @@ impl Object {
                     }
                 }
             }
-            for cb in model.on_updated_fns() {
+            for cb in model.after_update_fns() {
                 cb(self.clone()).await?;
             }
         }

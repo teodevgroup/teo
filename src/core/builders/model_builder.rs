@@ -32,14 +32,14 @@ pub struct ModelBuilder {
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) primary: Option<ModelIndex>,
     pub(crate) indices: Vec<ModelIndex>,
-    pub(crate) on_saved_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) on_updated_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) on_created_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) on_deleted_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) on_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) on_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) on_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) on_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) after_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) after_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) after_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) after_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) before_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) before_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) before_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) before_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -59,14 +59,14 @@ impl ModelBuilder {
             permission: None,
             primary: None,
             indices: Vec::new(),
-            on_created_fns: Vec::new(),
-            on_updated_fns: Vec::new(),
-            on_saved_fns: Vec::new(),
-            on_deleted_fns: Vec::new(),
-            on_create_fns: Vec::new(),
-            on_update_fns: Vec::new(),
-            on_save_fns: Vec::new(),
-            on_delete_fns: Vec::new(),
+            after_create_fns: Vec::new(),
+            after_update_fns: Vec::new(),
+            after_save_fns: Vec::new(),
+            after_delete_fns: Vec::new(),
+            before_create_fns: Vec::new(),
+            before_update_fns: Vec::new(),
+            before_save_fns: Vec::new(),
+            before_delete_fns: Vec::new(),
             connector_builder
         }
     }
@@ -219,43 +219,43 @@ impl ModelBuilder {
         self
     }
 
-    pub fn on_saved<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.on_saved_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    pub fn after_save<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+        self.after_save_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_created<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.on_created_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    pub fn after_create<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+        self.after_create_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_updated<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.on_updated_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    pub fn after_update<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+        self.after_update_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_deleted<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.on_deleted_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    pub fn after_delete<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+        self.after_delete_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_save<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.on_saved_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    pub fn before_save<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+        self.before_save_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_create<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.on_created_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    pub fn before_create<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+        self.before_create_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_update<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.on_updated_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    pub fn before_update<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+        self.before_update_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
-    pub fn on_delete<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.on_deleted_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    pub fn before_delete<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+        self.before_delete_fns.push(Arc::new(|object| Box::pin(callback(object))));
         self
     }
 
@@ -348,14 +348,14 @@ impl ModelBuilder {
             relations_vec,
             primary: primary.unwrap(),
             indices: indices.clone(),
-            on_saved_fns: self.on_saved_fns.clone(),
-            on_created_fns: self.on_created_fns.clone(),
-            on_updated_fns: self.on_updated_fns.clone(),
-            on_deleted_fns: self.on_deleted_fns.clone(),
-            on_save_fns: self.on_save_fns.clone(),
-            on_create_fns: self.on_create_fns.clone(),
-            on_update_fns: self.on_update_fns.clone(),
-            on_delete_fns: self.on_delete_fns.clone(),
+            after_save_fns: self.after_save_fns.clone(),
+            after_create_fns: self.after_create_fns.clone(),
+            after_update_fns: self.after_update_fns.clone(),
+            after_delete_fns: self.after_delete_fns.clone(),
+            before_save_fns: self.before_save_fns.clone(),
+            before_create_fns: self.before_create_fns.clone(),
+            before_update_fns: self.before_update_fns.clone(),
+            before_delete_fns: self.before_delete_fns.clone(),
             primary_field,
             all_keys,
             input_keys,
