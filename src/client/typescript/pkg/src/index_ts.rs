@@ -1,5 +1,5 @@
 use inflector::Inflector;
-use crate::action::action::{ActionResultData, ActionResultMeta, ActionType};
+use crate::core::action::r#type::{ActionResultData, ActionResultMeta, ActionType};
 use crate::app::app::ClientConfiguration;
 use crate::client::shared::code::Code;
 use crate::client::typescript::r#type::ToTypeScriptType;

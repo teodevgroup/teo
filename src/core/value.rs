@@ -30,7 +30,8 @@ pub enum Value {
     DateTime(DateTime<Utc>),
     Vec(Vec<Value>),
     Map(HashMap<String, Value>),
-    Object(Object)
+    Object(Object),
+    Json(JsonValue),
 }
 
 impl Value {
@@ -105,6 +106,9 @@ impl Value {
             }
             Value::Object(obj) => {
                 obj.to_json()
+            }
+            Value::Json(json_value) => {
+                json_value.clone()
             }
         }
     }
@@ -341,6 +345,13 @@ impl Value {
         }
     }
 
+    pub fn as_json(&self) -> Option<JsonValue> {
+        match self {
+            Value::Json(j) => Some(j.clone()),
+            _ => None
+        }
+    }
+
     pub(crate) fn recip(&self) -> f64 {
         match self {
             Value::I8(n) => (*n as f64).recip(),
@@ -517,6 +528,10 @@ impl From<DateTime<Utc>> for Value {
     }
 }
 
+impl From<JsonValue> for Value {
+    fn from(v: JsonValue) -> Self { Value::Json(v.clone()) }
+}
+
 // new
 
 impl<'a> From<&'a Value> for &'a str {
@@ -625,6 +640,11 @@ impl From<Value> for f64 {
     }
 }
 
+impl From<Value> for JsonValue {
+    fn from(v: Value) -> Self {
+        v.as_json().unwrap()
+    }
+}
 
 //
 // impl From<Decimal> for Value {
@@ -769,6 +789,14 @@ impl From<Value> for Option<f64> {
     }
 }
 
+impl From<Value> for Option<JsonValue> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
 
 unsafe impl Send for Value {}
 unsafe impl Sync for Value {}

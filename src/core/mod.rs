@@ -1,3 +1,4 @@
+pub mod action;
 pub mod graph;
 pub mod model;
 pub mod r#enum;
@@ -20,3 +21,4 @@ pub mod connector;
 pub mod save_session;
 pub mod model_callback;
 pub mod previous_value;
+pub mod json_pipeline;

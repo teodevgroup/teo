@@ -1,4 +1,4 @@
-use crate::action::action::ActionType;
+use crate::core::action::r#type::ActionType;
 use crate::app::app::ClientConfiguration;
 use crate::core::graph::Graph;
 

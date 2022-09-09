@@ -2,7 +2,6 @@ use std::collections::HashSet;
 use std::slice::Iter;
 use self::ActionType::*;
 
-
 #[derive(Debug, Clone, Copy, Eq, Hash, PartialEq)]
 pub enum ActionType {
     FindUnique,

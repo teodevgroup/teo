@@ -95,6 +95,9 @@ impl ToBsonValue for Value {
             Value::Object(_obj) => {
                 panic!()
             }
+            Value::Json(_json_value) => {
+                panic!()
+            }
         }
     }
 }

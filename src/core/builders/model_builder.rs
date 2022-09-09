@@ -2,11 +2,10 @@ use std::collections::{HashMap, HashSet};
 use std::future::Future;
 use std::sync::Arc;
 use inflector::Inflector;
-use crate::action::action::ActionType;
+use crate::core::action::r#type::ActionType;
 use crate::core::connector::{ConnectorBuilder};
 use crate::core::field::*;
 use crate::core::builders::field_builder::FieldBuilder;
-use crate::core::builders::action_builder::ActionBuilder;
 use crate::core::builders::model_index_builder::ModelIndexBuilder;
 use crate::core::builders::permission_builder::PermissionBuilder;
 use crate::core::builders::relation_builder::RelationBuilder;
@@ -120,27 +119,6 @@ impl ModelBuilder {
 
     pub fn internal(&mut self) -> &mut Self {
         self.actions = HashSet::new();
-        self
-    }
-
-    pub fn enable<F: Fn(&mut ActionBuilder)>(&mut self, build: F) -> &mut Self {
-        self.internal();
-        let mut action_builder = ActionBuilder::new();
-        build(&mut action_builder);
-        self.actions = action_builder.actions.clone();
-        if self.identity {
-            self.actions.insert(ActionType::SignIn);
-        }
-        self
-    }
-
-    pub fn disable<F: Fn(&mut ActionBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut action_builder = ActionBuilder::new();
-        build(&mut action_builder);
-        self.actions = HashSet::from_iter(self.actions.difference(&action_builder.actions).map(|x| *x));
-        if self.identity {
-            self.actions.insert(ActionType::SignIn);
-        }
         self
     }
 

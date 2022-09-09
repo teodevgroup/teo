@@ -1,14 +1,14 @@
 use std::collections::HashSet;
-use crate::action::action::ActionType;
+use crate::core::action::r#type::ActionType;
 
-
-pub struct ActionBuilder {
+pub struct ActionListBuilder {
     pub(crate) actions: HashSet<ActionType>
 }
 
-impl ActionBuilder {
+impl ActionListBuilder {
+
     pub(crate) fn new() -> Self {
-        ActionBuilder { actions: HashSet::new() }
+        ActionListBuilder { actions: HashSet::new() }
     }
 
     pub fn find_unique(&mut self) -> &mut Self {
@@ -73,6 +73,16 @@ impl ActionBuilder {
 
     pub fn group_by(&mut self) -> &mut Self {
         self.actions.insert(ActionType::GroupBy);
+        self
+    }
+
+    pub fn sign_in(&mut self) -> &mut Self {
+        self.actions.insert(ActionType::SignIn);
+        self
+    }
+
+    pub fn identity(&mut self) -> &mut Self {
+        self.actions.insert(ActionType::Identity);
         self
     }
 }
