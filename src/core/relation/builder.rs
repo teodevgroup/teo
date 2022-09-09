@@ -2,7 +2,6 @@ use crate::core::connector::ConnectorBuilder;
 use crate::core::field::Optionality;
 use crate::core::relation::Relation;
 
-
 pub struct RelationBuilder {
     pub(crate) name: String,
     pub(crate) localized_name: String,

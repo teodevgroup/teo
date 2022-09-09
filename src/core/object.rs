@@ -15,7 +15,7 @@ use crate::core::model::Model;
 use crate::core::previous_value::PreviousValueRule;
 use crate::core::relation::{Relation, RelationManipulation};
 use crate::core::save_session::SaveSession;
-use crate::core::stage::Stage;
+use crate::core::pipeline::stage::Stage;
 use crate::core::value::Value;
 use crate::core::error::{ActionError, ActionErrorType};
 

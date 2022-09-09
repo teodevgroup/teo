@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::core::argument::Argument;
 use crate::core::db_type::builder::DatabaseTypeBuilder;
 use crate::core::field::builder::index_builder::FieldIndexBuilder;
-use crate::core::builders::permission_builder::PermissionBuilder;
+use crate::core::permission::builder::PermissionBuilder;
 use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::connector::{ConnectorBuilder};
 use crate::core::db_type::DatabaseType;

@@ -4,7 +4,7 @@ use crate::core::argument::Argument;
 use crate::core::modifier::Modifier;
 use crate::core::value::Value;
 use crate::core::object::Object;
-use crate::core::stage::Stage;
+use crate::core::pipeline::stage::Stage;
 
 
 #[derive(Debug, Clone)]

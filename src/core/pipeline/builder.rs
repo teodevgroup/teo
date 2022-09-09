@@ -38,7 +38,7 @@ use crate::core::modifiers::then_p::ThenPModifier;
 use crate::core::modifiers::transform::TransformModifier;
 use crate::core::modifiers::uuid::UUIDModifier;
 
-use crate::core::stage::Stage;
+use crate::core::pipeline::stage::Stage;
 use crate::core::object::Object;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;

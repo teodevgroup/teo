@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use crate::core::modifier::Modifier;
 use crate::core::object::Object;
-use crate::core::stage::Stage;
+use crate::core::pipeline::stage::Stage;
 use crate::core::value::Value;
 
 

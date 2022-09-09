@@ -1,6 +1,8 @@
 use crate::core::field::Optionality;
 use crate::core::object::Object;
 
+pub mod builder;
+
 #[derive(Debug, Clone)]
 pub(crate) struct Relation {
     pub(crate) name: String,
