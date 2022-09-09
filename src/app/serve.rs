@@ -125,7 +125,7 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
     return Ok(Some(identity.unwrap()));
 }
 
-async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
+async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model, _identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_unique(model.name(), input, false).await;
     match result {
         Ok(obj) => {
@@ -138,7 +138,7 @@ async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model, ide
     }
 }
 
-async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
+async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model, _identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_first(model.name(), input, false).await;
     match result {
         Ok(obj) => {
@@ -151,7 +151,7 @@ async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model, iden
     }
 }
 
-async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
+async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model, _identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_many(model.name(), input, false).await;
     match result {
         Ok(results) => {
@@ -203,7 +203,7 @@ async fn handle_create_internal(graph: &Graph, create: Option<&JsonValue>, inclu
     Ok(refetched.to_json())
 }
 
-async fn handle_create(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
+async fn handle_create(graph: &Graph, input: &JsonValue, model: &Model, _identity: Option<&Object>) -> HttpResponse {
     let input = input.as_object().unwrap();
     let create = input.get("create");
     let include = input.get("include");
@@ -215,7 +215,7 @@ async fn handle_create(graph: &Graph, input: &JsonValue, model: &Model, identity
     }
 }
 
-async fn handle_update_internal(graph: &Graph, object: Object, update: Option<&JsonValue>, include: Option<&JsonValue>, select: Option<&JsonValue>, _where: Option<&JsonValue>, _model: &Model) -> Result<JsonValue, ActionError> {
+async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&JsonValue>, include: Option<&JsonValue>, select: Option<&JsonValue>, _where: Option<&JsonValue>, _model: &Model) -> Result<JsonValue, ActionError> {
     let empty = json!({});
     let updator = if update.is_some() { update.unwrap() } else { &empty };
     object.set_json(updator).await?;
@@ -224,7 +224,7 @@ async fn handle_update_internal(graph: &Graph, object: Object, update: Option<&J
     Ok(refetched.to_json())
 }
 
-async fn handle_update(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
+async fn handle_update(graph: &Graph, input: &JsonValue, model: &Model, _identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_unique(model.name(), input, true).await;
     if result.is_err() {
         return HttpResponse::NotFound().json(json!({"error": result.err()}));
@@ -245,7 +245,7 @@ async fn handle_update(graph: &Graph, input: &JsonValue, model: &Model, identity
     }
 }
 
-async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
+async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, _identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_unique(model.name(), input, true).await;
     let include = input.get("include");
     let select = input.get("select");
@@ -313,7 +313,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, identity
     }
 }
 
-async fn handle_delete(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
+async fn handle_delete(graph: &Graph, input: &JsonValue, model: &Model, _identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_unique(model.name(), input, true).await;
     if result.is_err() {
         return HttpResponse::NotFound().json(json!({"error": result.err()}));
@@ -330,7 +330,7 @@ async fn handle_delete(graph: &Graph, input: &JsonValue, model: &Model, identity
     }
 }
 
-async fn handle_create_many(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
+async fn handle_create_many(graph: &Graph, input: &JsonValue, model: &Model, _identity: Option<&Object>) -> HttpResponse {
     let input = input.as_object().unwrap();
     let create = input.get("create");
     let include = input.get("include");
@@ -363,7 +363,7 @@ async fn handle_create_many(graph: &Graph, input: &JsonValue, model: &Model, ide
         }))
 }
 
-async fn handle_update_many(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
+async fn handle_update_many(graph: &Graph, input: &JsonValue, model: &Model, _identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_many(model.name(), input, true).await;
     if result.is_err() {
         return HttpResponse::BadRequest().json(json!({"error": result.err()}));
@@ -393,7 +393,7 @@ async fn handle_update_many(graph: &Graph, input: &JsonValue, model: &Model, ide
         }))
 }
 
-async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
+async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model, _identity: Option<&Object>) -> HttpResponse {
     let result = graph.find_many(model.name(), input, true).await;
     if result.is_err() {
         return HttpResponse::BadRequest().json(json!({"error": result.err()}));
@@ -418,7 +418,7 @@ async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model, ide
         }))
 }
 
-async fn handle_count(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
+async fn handle_count(graph: &Graph, input: &JsonValue, model: &Model, _identity: Option<&Object>) -> HttpResponse {
     let result = graph.count(model.name(), input).await;
     match result {
         Ok(count) => {
@@ -430,7 +430,7 @@ async fn handle_count(graph: &Graph, input: &JsonValue, model: &Model, identity:
     }
 }
 
-async fn handle_aggregate(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
+async fn handle_aggregate(graph: &Graph, input: &JsonValue, model: &Model, _identity: Option<&Object>) -> HttpResponse {
     match graph.aggregate(model.name(), input).await {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": count}))
@@ -441,7 +441,7 @@ async fn handle_aggregate(graph: &Graph, input: &JsonValue, model: &Model, ident
     }
 }
 
-async fn handle_group_by(graph: &Graph, input: &JsonValue, model: &Model, identity: Option<&Object>) -> HttpResponse {
+async fn handle_group_by(graph: &Graph, input: &JsonValue, model: &Model, _identity: Option<&Object>) -> HttpResponse {
     match graph.group_by(model.name(), input).await {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": count}))
@@ -543,7 +543,7 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     }
 }
 
-async fn handle_identity(graph: &Graph, input: &JsonValue, model: &Model, conf: &ServerConfiguration, identity: Option<&Object>) -> HttpResponse {
+async fn handle_identity(_graph: &Graph, input: &JsonValue, model: &Model, _conf: &ServerConfiguration, identity: Option<&Object>) -> HttpResponse {
     if let Some(identity) = identity {
         if identity.model() != model {
             return HttpResponse::Unauthorized().json(json!({"error": ActionError::wrong_identity_model()}));

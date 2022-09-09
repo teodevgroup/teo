@@ -1003,7 +1003,7 @@ fn distinct_key(original: impl AsRef<str>) -> String {
     }
 }
 
-fn build_select_input(model: &Model, graph: &Graph, select: &JsonValue, distinct: Option<&JsonValue>) -> Result<Option<Document>, ActionError> {
+fn build_select_input(model: &Model, _graph: &Graph, select: &JsonValue, distinct: Option<&JsonValue>) -> Result<Option<Document>, ActionError> {
     let mut true_list: Vec<&str> = vec![];
     let mut false_list: Vec<&str> = vec![];
     let map = select.as_object().unwrap();
@@ -1579,8 +1579,8 @@ fn build_query_pipeline(
         }
         if let Some(having) = having {
             for (k, o) in having.as_object().unwrap() {
-                let dbk = model.field(k).unwrap().column_name();
-                for (g, matcher) in o.as_object().unwrap() {
+                let _dbk = model.field(k).unwrap().column_name();
+                for (g, _matcher) in o.as_object().unwrap() {
                     let g = g.strip_prefix("_").unwrap();
                     insert_group_set_unset_for_aggregate(model, &mut group, &mut set, &mut unset, k, g, true);
                 }
@@ -1588,7 +1588,7 @@ fn build_query_pipeline(
         }
         for (g, o) in aggregates.as_object().unwrap() {
             let g = g.strip_prefix("_").unwrap();
-            for (k, t) in o.as_object().unwrap() {
+            for (k, _t) in o.as_object().unwrap() {
                 insert_group_set_unset_for_aggregate(model, &mut group, &mut set, &mut unset, k, g, false);
             }
         }

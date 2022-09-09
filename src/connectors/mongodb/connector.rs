@@ -3,7 +3,7 @@ use std::fmt::{Debug};
 use std::sync::Arc;
 use rust_decimal::prelude::FromStr;
 use std::sync::atomic::{Ordering};
-use serde_json::{json, Number, Value as JsonValue};
+use serde_json::{json, Value as JsonValue};
 use async_trait::async_trait;
 use bson::{Bson, doc, Document};
 
@@ -788,7 +788,7 @@ impl Connector for MongoDBConnector {
             let mut retval = json!({});
             for (g, o) in finder.as_object().unwrap() {
                 retval.as_object_mut().unwrap().insert(g.clone(), json!({}));
-                for (k, v) in o.as_object().unwrap() {
+                for (k, _v) in o.as_object().unwrap() {
                     let value = if g == "_count" { json!(0) } else { json!(null) };
                     retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), value);
                 }

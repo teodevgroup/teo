@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use serde_json::{json, Value as JsonValue};
+use serde_json::{Value as JsonValue};
 use crate::core::graph::builder::GraphBuilder;
 use crate::core::connector::Connector;
 use crate::core::model::Model;

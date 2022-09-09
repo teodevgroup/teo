@@ -1,8 +1,8 @@
 use actix_http::body::BoxBody;
-use async_once::AsyncOnce;
-use lazy_static::lazy_static;
+
+
 use serial_test::serial;
-use actix_web::{test, web, App, error::Error};
+use actix_web::{test, App, error::Error};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use teo::core::graph::Graph;
 use serde_json::json;
@@ -537,7 +537,7 @@ async fn update_with_nested_upsert_actually_create() {
         }
     }), 200, vec!["data.id", "data.foreignId"]).await;
     let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
-    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let _foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
     let res = request(&app, "one-optional-locals", "Update", json!({
         "where": {"id": id},
         "update": {

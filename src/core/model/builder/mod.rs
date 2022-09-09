@@ -320,7 +320,7 @@ impl ModelBuilder {
         }
 
         let unique_query_keys = Self::get_unique_query_keys(self, &indices, primary.as_ref().unwrap());
-        let a = if self.url_segment_name == "" { self.name.to_kebab_case().to_plural() } else { self.url_segment_name.to_string() };
+        let _a = if self.url_segment_name == "" { self.name.to_kebab_case().to_plural() } else { self.url_segment_name.to_string() };
         let inner = ModelInner {
             name: self.name.clone(),
             table_name: if self.table_name == "" { self.name.to_lowercase().to_plural() } else { self.table_name.to_string() },

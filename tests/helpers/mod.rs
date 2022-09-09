@@ -3,7 +3,7 @@ use actix_http::Request;
 use actix_web::dev::{Service, ServiceResponse};
 use actix_web::test::{call_service, read_body_json, TestRequest};
 use inflector::Inflector;
-use serde_json::{json, Value as JsonValue};
+use serde_json::{Value as JsonValue};
 use regex::Regex;
 
 pub fn is_object_id(value: &str) -> bool {
@@ -99,8 +99,8 @@ fn match_json_object(object: &JsonValue, matcher: &JsonValue) {
     }
 }
 
-pub async fn assert_json_response<B: MessageBody>(res: ServiceResponse<B>, code: u16, matcher: JsonValue) {
-    let status = res.status().as_u16();
+pub async fn assert_json_response<B: MessageBody>(res: ServiceResponse<B>, _code: u16, matcher: JsonValue) {
+    let _status = res.status().as_u16();
     //assert_eq!(status, code);
     let json: JsonValue = read_body_json(res).await;
     println!("see json {}", json);
