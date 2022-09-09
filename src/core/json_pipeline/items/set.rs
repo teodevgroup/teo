@@ -26,6 +26,13 @@ impl JsonPipelineItem for SetItem {
         } else {
             None
         };
-        JsonPipelineContext::construct(new_value, context.location().clone(), context.object().clone(), context.stage(), context.identity().cloned())
+        let mut new_path = context.location().clone();
+        new_path.push(self.key.clone());
+        let new_object = if let Some(new_value) = new_value.as_ref() {
+            json_set(context.object(), new_path.clone(), new_value.clone())
+        } else {
+            context.object().clone()
+        };
+        JsonPipelineContext::construct(new_value.clone(), context.location().clone(), new_object, context.stage(), context.identity().cloned())
     }
 }
