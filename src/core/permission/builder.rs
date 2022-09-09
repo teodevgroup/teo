@@ -2,7 +2,6 @@ use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::permission::Permission;
 use crate::core::pipeline::Pipeline;
 
-
 #[derive(Debug, Clone)]
 pub struct PermissionBuilder {
     pub(crate) can_read: Option<Pipeline>,

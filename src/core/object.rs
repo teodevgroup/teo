@@ -19,7 +19,6 @@ use crate::core::stage::Stage;
 use crate::core::value::Value;
 use crate::core::error::{ActionError, ActionErrorType};
 
-
 #[derive(Clone)]
 pub struct Object {
     pub(crate) inner: Arc<ObjectInner>
