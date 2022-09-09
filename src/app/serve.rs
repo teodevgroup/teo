@@ -666,79 +666,85 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                 Ok(identity) => { identity },
                 Err(err) => return HttpResponse::Unauthorized().json(json!({"error": err }))
             };
+            let action_def = model_def.get_action_def(action);
+            let transformed_body = if let Some(action_def) = action_def {
+                action_def.transform(&parsed_body, identity.clone()).await
+            } else {
+                parsed_body
+            };
             match action {
                 ActionType::FindUnique => {
-                    let result = handle_find_unique(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    let result = handle_find_unique(&graph, &transformed_body, model_def, identity.as_ref()).await;
                     log_request(start, "FindUnique", model_def.name(), result.status().as_u16());
                     return result;
                 }
                 ActionType::FindFirst => {
-                    let result = handle_find_first(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    let result = handle_find_first(&graph, &transformed_body, model_def, identity.as_ref()).await;
                     log_request(start, "FindFirst", model_def.name(), result.status().as_u16());
                     result
                 }
                 ActionType::FindMany => {
-                    let result = handle_find_many(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    let result = handle_find_many(&graph, &transformed_body, model_def, identity.as_ref()).await;
                     log_request(start, "FindMany", model_def.name(), result.status().as_u16());
                     result
                 }
                 ActionType::Create => {
-                    let result = handle_create(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    let result = handle_create(&graph, &transformed_body, model_def, identity.as_ref()).await;
                     log_request(start, "Create", model_def.name(), result.status().as_u16());
                     result
                 }
                 ActionType::Update => {
-                    let result = handle_update(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    let result = handle_update(&graph, &transformed_body, model_def, identity.as_ref()).await;
                     log_request(start, "Update", model_def.name(), result.status().as_u16());
                     result
                 }
                 ActionType::Upsert => {
-                    let result = handle_upsert(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    let result = handle_upsert(&graph, &transformed_body, model_def, identity.as_ref()).await;
                     log_request(start, "Upsert", model_def.name(), result.status().as_u16());
                     result
                 }
                 ActionType::Delete => {
-                    let result = handle_delete(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    let result = handle_delete(&graph, &transformed_body, model_def, identity.as_ref()).await;
                     log_request(start, "Delete", model_def.name(), result.status().as_u16());
                     result
                 }
                 ActionType::CreateMany => {
-                    let result = handle_create_many(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    let result = handle_create_many(&graph, &transformed_body, model_def, identity.as_ref()).await;
                     log_request(start, "CreateMany", model_def.name(), result.status().as_u16());
                     result
                 }
                 ActionType::UpdateMany => {
-                    let result = handle_update_many(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    let result = handle_update_many(&graph, &transformed_body, model_def, identity.as_ref()).await;
                     log_request(start, "UpdateMany", model_def.name(), result.status().as_u16());
                     result
                 }
                 ActionType::DeleteMany => {
-                    let result = handle_delete_many(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    let result = handle_delete_many(&graph, &transformed_body, model_def, identity.as_ref()).await;
                     log_request(start, "DeleteMany", model_def.name(), result.status().as_u16());
                     result
                 }
                 ActionType::Count => {
-                    let result = handle_count(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    let result = handle_count(&graph, &transformed_body, model_def, identity.as_ref()).await;
                     log_request(start, "Count", model_def.name(), result.status().as_u16());
                     result
                 }
                 ActionType::Aggregate => {
-                    let result = handle_aggregate(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    let result = handle_aggregate(&graph, &transformed_body, model_def, identity.as_ref()).await;
                     log_request(start, "Aggregate", model_def.name(), result.status().as_u16());
                     result
                 }
                 ActionType::GroupBy => {
-                    let result = handle_group_by(&graph, &parsed_body, model_def, identity.as_ref()).await;
+                    let result = handle_group_by(&graph, &transformed_body, model_def, identity.as_ref()).await;
                     log_request(start, "GroupBy", model_def.name(), result.status().as_u16());
                     result
                 }
                 ActionType::SignIn => {
-                    let result = handle_sign_in(&graph, &parsed_body, model_def, conf).await;
+                    let result = handle_sign_in(&graph, &transformed_body, model_def, conf).await;
                     log_request(start, "SignIn", model_def.name(), result.status().as_u16());
                     result
                 }
                 ActionType::Identity => {
-                    let result = handle_identity(&graph, &parsed_body, model_def, conf, identity.as_ref()).await;
+                    let result = handle_identity(&graph, &transformed_body, model_def, conf, identity.as_ref()).await;
                     log_request(start, "Identity", model_def.name(), result.status().as_u16());
                     result
                 }
