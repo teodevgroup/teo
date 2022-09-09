@@ -9,7 +9,7 @@ use crate::connectors::sql_shared::sql::{SQL, SQLColumnDef, SQLDialect, SQLIndex
 use crate::connectors::sql_shared::table_create_statement;
 use crate::core::builders::graph_builder::GraphBuilder;
 use crate::core::connector::{Connector, ConnectorBuilder};
-use crate::core::database_type::DatabaseType;
+use crate::core::db_type::DatabaseType;
 use crate::core::field::Sort;
 use crate::core::graph::Graph;
 use crate::core::model::Model;

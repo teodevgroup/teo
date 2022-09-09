@@ -2,6 +2,8 @@
 use crate::connectors::sql_shared::sql::SQLDialect;
 use crate::core::field_type::FieldType;
 
+pub(crate) mod builder;
+
 // The database internal types.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatabaseType {

@@ -1,4 +1,4 @@
-use crate::core::database_type::DatabaseType;
+use crate::core::db_type::DatabaseType;
 use crate::core::field::{Field, Optionality};
 
 

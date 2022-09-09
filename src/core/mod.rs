@@ -4,7 +4,7 @@ pub mod graph;
 pub mod model;
 pub mod r#enum;
 pub mod field_type;
-pub mod database_type;
+pub mod db_type;
 pub mod field;
 pub mod relation;
 pub(crate) mod input;

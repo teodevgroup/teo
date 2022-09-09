@@ -1,12 +1,12 @@
 use std::future::Future;
 use std::sync::Arc;
 use crate::core::argument::Argument;
-use crate::core::builders::database_type_builder::DatabaseTypeBuilder;
+use crate::core::db_type::builder::DatabaseTypeBuilder;
 use crate::core::builders::field_index_builder::FieldIndexBuilder;
 use crate::core::builders::permission_builder::PermissionBuilder;
 use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::connector::{ConnectorBuilder};
-use crate::core::database_type::DatabaseType;
+use crate::core::db_type::DatabaseType;
 use crate::core::field::*;
 use crate::core::field_type::FieldType;
 use crate::core::model_callback::PinFutureObj;

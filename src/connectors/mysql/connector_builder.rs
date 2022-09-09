@@ -5,7 +5,7 @@ use mysql_async::prelude::{Query};
 use crate::connectors::mysql::connector::MySQLConnector;
 use crate::connectors::sql_shared::sql::{SQL, SQLDialect, ToSQLString};
 use crate::core::connector::{Connector, ConnectorBuilder};
-use crate::core::database_type::DatabaseType;
+use crate::core::db_type::DatabaseType;
 use crate::core::field_type::FieldType;
 use crate::core::model::Model;
 

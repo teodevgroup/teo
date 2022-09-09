@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::sync::Arc;
 use async_trait::async_trait;
 use serde_json::{Value as JsonValue};
-use crate::core::database_type::DatabaseType;
+use crate::core::db_type::DatabaseType;
 use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::Model;

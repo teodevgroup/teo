@@ -8,12 +8,6 @@ use crate::core::stage::Stage;
 use crate::core::value::Value;
 use crate::core::object::Object;
 
-
-#[async_trait]
-pub trait FnArgument {
-    async fn call(&self, value: Value, object: &Object) -> Stage;
-}
-
 #[derive(Debug, Clone)]
 pub enum Argument {
     ValueArgument(Value),
