@@ -12,11 +12,13 @@ pub(crate) struct Action {
 }
 
 impl Action {
+
     pub(crate) fn new() -> Self {
         Action { transformers: vec![] }
     }
 
     pub(crate) async fn transform(&self, value: &JsonValue, identity: Option<Object>) -> JsonValue {
+        println!("transform is called, {:?}", self.transformers);
         let mut value = value.clone();
         for transformer in self.transformers.iter() {
             value = transformer.call(&value, identity.clone()).await;

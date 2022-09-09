@@ -25,6 +25,8 @@ impl JsonPipelineItem for IntoItem {
         } else {
             None
         }.cloned();
-        JsonPipelineContext::construct(new_value, new_location.clone(), context.object().clone(), context.stage(), context.identity().cloned())
+        let result = JsonPipelineContext::construct(new_value, new_location.clone(), context.object().clone(), context.stage(), context.identity().cloned());
+        println!("see into result {:?}", result);
+        result
     }
 }

@@ -1,13 +1,14 @@
 use serde_json::{Value as JsonValue};
 use crate::core::object::Object;
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub(crate) enum JsonPipelineContextStage {
     Value,
     ConditionTrue,
     ConditionFalse,
 }
 
+#[derive(Debug)]
 pub(crate) struct JsonPipelineContext {
     value: Option<JsonValue>,
     location: Vec<String>,

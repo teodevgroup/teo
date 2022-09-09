@@ -10,7 +10,10 @@ impl ActionBuilder {
         ActionBuilder { action }
     }
 
-    pub fn transform<F: Fn(&mut JsonPipelineBuilder)>(&mut self, _build: F) -> &mut Self {
+    pub fn transform<F: Fn(&mut JsonPipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut builder = JsonPipelineBuilder::new();
+        build(&mut builder);
+        self.action.transformers.push(builder.build());
         self
     }
 }

@@ -672,6 +672,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
             } else {
                 parsed_body
             };
+            println!("see transformed body {}", transformed_body);
             match action {
                 ActionType::FindUnique => {
                     let result = handle_find_unique(&graph, &transformed_body, model_def, identity.as_ref()).await;
