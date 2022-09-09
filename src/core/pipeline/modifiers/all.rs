@@ -5,7 +5,6 @@ use crate::core::object::Object;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::stage::Stage;
 
-
 #[derive(Debug, Clone)]
 pub struct AllModifier {
     pipelines: Vec<Pipeline>
