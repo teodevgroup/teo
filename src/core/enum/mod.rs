@@ -1,3 +1,5 @@
+pub(crate) mod builder;
+
 #[derive(Debug, Clone)]
 pub struct EnumChoice {
     pub(crate) name: String,
