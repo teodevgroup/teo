@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::future::Future;
 use std::sync::Arc;
 use inflector::Inflector;
+use crate::core::action::Action;
 use crate::core::action::builder::ActionsBuilder;
 use crate::core::action::r#type::ActionType;
 use crate::core::connector::{ConnectorBuilder};
@@ -28,9 +29,9 @@ pub struct ModelBuilder {
     pub(crate) localized_name: String,
     pub(crate) description: String,
     pub(crate) identity: bool,
+    pub(crate) internal: bool,
     pub(crate) field_builders: Vec<FieldBuilder>,
     pub(crate) relation_builders: Vec<RelationBuilder>,
-    pub(crate) actions: HashSet<ActionType>,
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) primary: Option<ModelIndex>,
     pub(crate) indices: Vec<ModelIndex>,
@@ -56,9 +57,9 @@ impl ModelBuilder {
             localized_name: "".to_string(),
             description: "".to_string(),
             identity: false,
+            internal: false,
             field_builders: Vec::new(),
             relation_builders: Vec::new(),
-            actions: ActionType::default(),
             permission: None,
             primary: None,
             indices: Vec::new(),
@@ -103,8 +104,6 @@ impl ModelBuilder {
 
     pub fn identity(&mut self) -> &mut Self {
         self.identity = true;
-        self.actions.insert(ActionType::SignIn);
-        self.actions.insert(ActionType::Identity);
         self
     }
 
@@ -123,7 +122,7 @@ impl ModelBuilder {
     }
 
     pub fn internal(&mut self) -> &mut Self {
-        self.actions = HashSet::new();
+        self.internal = true;
         self
     }
 
@@ -328,7 +327,8 @@ impl ModelBuilder {
             localized_name: self.localized_name.clone(),
             description: self.description.clone(),
             identity: self.identity,
-            actions: self.actions.clone(),
+            actions: self.figure_out_actions(),
+            action_defs: self.figure_out_action_defs(),
             permission: if let Some(builder) = &self.permission { Some(builder.build()) } else { None },
             fields_vec,
             fields_map,
@@ -436,5 +436,23 @@ impl ModelBuilder {
             .filter(|&f| { f.auth_by == true })
             .map(|f| { f.name.clone() })
             .collect()
+    }
+
+    pub(crate) fn figure_out_actions(&self) -> HashSet<ActionType> {
+        let mut default = if self.internal {
+            HashSet::new()
+        } else {
+            ActionType::default()
+        };
+        if self.identity {
+            default.insert(ActionType::SignIn);
+            default.insert(ActionType::Identity);
+        }
+        let disabled = self.actions_builder.get_disabled_list();
+        HashSet::from_iter(default.difference(disabled).map(|x| *x))
+    }
+
+    pub(crate) fn figure_out_action_defs(&self) -> HashMap<ActionType, Action> {
+        self.actions_builder.get_action_defs().clone()
     }
 }

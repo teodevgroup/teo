@@ -204,4 +204,12 @@ impl ActionsBuilder {
         self.actions.insert(ActionType::Identity, action_builder.action.clone());
         self
     }
+
+    pub(crate) fn get_disabled_list(&self) -> &HashSet<ActionType> {
+        &self.disabled
+    }
+
+    pub(crate) fn get_action_defs(&self) -> &HashMap<ActionType, Action> {
+        &self.actions
+    }
 }

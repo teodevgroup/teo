@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
+use crate::core::action::Action;
 use crate::core::action::r#type::ActionType;
 use crate::core::field::{Field, Sort};
 use crate::core::model_callback::PinFutureObj;
@@ -39,6 +40,7 @@ pub struct ModelInner {
     pub(crate) description: String,
     pub(crate) identity: bool,
     pub(crate) actions: HashSet<ActionType>,
+    pub(crate) action_defs: HashMap<ActionType, Action>,
     pub(crate) permission: Option<Permission>,
     pub(crate) fields_vec: Vec<Arc<Field>>,
     pub(crate) fields_map: HashMap<String, Arc<Field>>,
@@ -186,6 +188,10 @@ impl Model {
 
     pub(crate) fn has_action(&self, action: ActionType) -> bool {
         self.inner.actions.contains(&action)
+    }
+
+    pub(crate) fn get_action_def(&self, action: ActionType) -> Option<&Action> {
+        self.inner.action_defs.get(&action)
     }
 
     pub(crate) fn has_field(&self, name: &str) -> bool {
