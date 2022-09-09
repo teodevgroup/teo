@@ -2,7 +2,7 @@ use std::fmt::{Debug};
 use async_trait::async_trait;
 use chrono::{Date, DateTime, Utc};
 use crate::core::argument::Argument::{PipelineArgument, ValueArgument};
-use crate::core::builders::pipeline_builder::PipelineBuilder;
+use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::pipeline::Pipeline;
 use crate::core::stage::Stage;
 use crate::core::value::Value;

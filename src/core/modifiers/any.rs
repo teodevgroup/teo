@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use crate::core::builders::pipeline_builder::PipelineBuilder;
+use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::modifier::Modifier;
 use crate::core::object::Object;
 use crate::core::pipeline::Pipeline;

@@ -1,4 +1,4 @@
-use crate::core::builders::pipeline_builder::PipelineBuilder;
+use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::permission::Permission;
 use crate::core::pipeline::Pipeline;
 

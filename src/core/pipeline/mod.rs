@@ -3,6 +3,7 @@ use crate::core::modifier::Modifier;
 use crate::core::stage::Stage;
 use crate::core::object::Object;
 
+pub mod builder;
 
 #[derive(Debug)]
 pub struct Pipeline {
