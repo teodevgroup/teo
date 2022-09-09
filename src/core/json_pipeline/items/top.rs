@@ -7,7 +7,7 @@ use crate::core::pipeline::stage::Stage;
 pub(crate) struct TopItem { }
 
 impl TopItem {
-    pub(crate) fn new(key: impl Into<String>) -> Self {
+    pub(crate) fn new() -> Self {
         Self { }
     }
 }

@@ -8,7 +8,7 @@ use crate::core::pipeline::stage::Stage;
 pub(crate) struct OutItem { }
 
 impl OutItem {
-    pub(crate) fn new(key: impl Into<String>) -> Self {
+    pub(crate) fn new() -> Self {
         Self { }
     }
 }
@@ -22,7 +22,7 @@ impl JsonPipelineItem for OutItem {
             let root = context.object();
             let mut new_location = context.location().clone();
             new_location.pop();
-            let new_value = json_get(root, new_location).cloned();
+            let new_value = json_get(root, new_location.clone()).cloned();
             JsonPipelineContext::construct(new_value, new_location.clone(), root.clone(), context.stage(), context.identity().cloned())
         }
     }

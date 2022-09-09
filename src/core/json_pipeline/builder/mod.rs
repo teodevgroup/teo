@@ -35,12 +35,12 @@ impl JsonPipelineBuilder {
     }
 
     pub fn out(&mut self) -> &mut Self {
-        self.items.push(Arc::new(OutItem::new(key)));
+        self.items.push(Arc::new(OutItem::new()));
         self
     }
 
     pub fn top(&mut self) -> &mut Self {
-        self.items.push(Arc::new(TopItem::new(key)));
+        self.items.push(Arc::new(TopItem::new()));
         self
     }
 
