@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use serde_json::{Value as JsonValue};
+use crate::core::json_pipeline::context::JsonPipelineContext;
 use crate::core::json_pipeline::JsonPipelineItem;
 use crate::core::pipeline::stage::Stage;
 
@@ -17,7 +18,7 @@ impl SetItem {
 
 #[async_trait]
 impl JsonPipelineItem for SetItem {
-    async fn call(&self, stage: Stage) -> Stage {
+    async fn call(&self, context: JsonPipelineContext) -> JsonPipelineContext {
         todo!()
     }
 }
