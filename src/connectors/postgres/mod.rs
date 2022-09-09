@@ -11,7 +11,7 @@ use crate::core::field_type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::object::Object;
-use crate::error::ActionError;
+use crate::core::error::ActionError;
 
 
 #[derive(Debug)]

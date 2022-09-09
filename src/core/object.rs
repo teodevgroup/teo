@@ -17,7 +17,7 @@ use crate::core::relation::{Relation, RelationManipulation};
 use crate::core::save_session::SaveSession;
 use crate::core::stage::Stage;
 use crate::core::value::Value;
-use crate::error::{ActionError, ActionErrorType};
+use crate::core::error::{ActionError, ActionErrorType};
 
 
 #[derive(Clone)]

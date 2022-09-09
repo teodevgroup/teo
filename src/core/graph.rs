@@ -7,7 +7,7 @@ use crate::core::connector::Connector;
 use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::r#enum::Enum;
-use crate::error::ActionError;
+use crate::core::error::ActionError;
 
 #[derive(Clone)]
 pub struct Graph {

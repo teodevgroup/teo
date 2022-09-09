@@ -7,7 +7,7 @@ use tokio::test;
 use serial_test::serial;
 use teo::core::graph::Graph;
 use teo::core::value::Value;
-use teo::error::ActionError;
+use teo::core::error::ActionError;
 
 
 async fn make_client_options() -> ClientOptions {

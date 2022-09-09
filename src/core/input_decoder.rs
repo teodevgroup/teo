@@ -11,7 +11,7 @@ use crate::core::input::Input::{AtomicUpdate, SetValue};
 use crate::core::object::Object;
 use crate::core::relation::Relation;
 use crate::core::value::Value;
-use crate::error::ActionError;
+use crate::core::error::ActionError;
 
 
 enum NumberInputType {

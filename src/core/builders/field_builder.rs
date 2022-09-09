@@ -13,7 +13,7 @@ use crate::core::model_callback::PinFutureObj;
 use crate::core::object::Object;
 use crate::core::previous_value::PreviousValueRule;
 use crate::core::value::Value;
-use crate::error::ActionError;
+use crate::core::error::ActionError;
 
 
 pub struct FieldBuilder {

@@ -10,7 +10,7 @@ use crate::core::pipeline::Pipeline;
 use crate::core::previous_value::PreviousValueRule;
 use crate::core::stage::Stage;
 use crate::core::value::Value;
-use crate::error::ActionError;
+use crate::core::error::ActionError;
 
 
 #[derive(Debug, Clone, Copy, PartialEq)]

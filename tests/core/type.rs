@@ -5,7 +5,7 @@ use chrono::prelude::{Date, DateTime};
 use tokio::test;
 use teo::core::graph::Graph;
 use teo::core::value::Value;
-use teo::error::ActionError;
+use teo::core::error::ActionError;
 
 
 async fn make_graph() -> &Graph {

@@ -8,7 +8,7 @@ use crate::core::graph::Graph;
 use crate::core::input_decoder::{input_to_vec, one_length_json_obj};
 use crate::core::model::{Model, ModelIndexType};
 use crate::core::value::Value;
-use crate::error::ActionError;
+use crate::core::error::ActionError;
 
 
 #[derive(PartialEq, Debug, Copy, Clone)]

@@ -12,7 +12,7 @@ use crate::core::builders::graph_builder::GraphBuilder;
 use crate::core::field::{Optionality};
 use crate::core::field_type::FieldType;
 use crate::core::model::Model;
-use crate::error::ActionError;
+use crate::core::error::ActionError;
 
 pub(crate) fn table_create_statement(model: &Model) -> SQLCreateTableStatement {
     let mut stmt = SQL::create().table(model.table_name());

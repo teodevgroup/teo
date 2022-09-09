@@ -9,7 +9,7 @@ use crate::core::object::Object;
 use crate::core::stage::Stage;
 
 use crate::core::value::Value;
-use crate::error::ActionError;
+use crate::core::error::ActionError;
 
 #[derive(Clone)]
 pub struct CompareModifier {

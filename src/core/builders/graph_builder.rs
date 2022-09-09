@@ -7,7 +7,6 @@ use crate::core::model::builder::ModelBuilder;
 
 use crate::core::r#enum::Enum;
 
-
 pub struct GraphBuilder {
     pub(crate) enum_builders: HashMap<String, EnumBuilder>,
     pub(crate) models: Vec<ModelBuilder>,

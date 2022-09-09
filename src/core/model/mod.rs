@@ -6,7 +6,7 @@ use crate::core::model_callback::PinFutureObj;
 use crate::core::object::Object;
 use crate::core::permission::Permission;
 use crate::core::relation::Relation;
-use crate::error::ActionError;
+use crate::core::error::ActionError;
 
 pub(crate) mod builder;
 

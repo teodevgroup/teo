@@ -18,7 +18,7 @@ use crate::core::input_decoder::decode_field_input;
 use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::stage::Stage;
-use crate::error::ActionError;
+use crate::core::error::ActionError;
 
 #[derive(Debug, Clone)]
 pub struct TokenDecodeError;
