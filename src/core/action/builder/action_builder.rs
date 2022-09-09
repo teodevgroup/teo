@@ -1,7 +1,7 @@
 use crate::core::action::Action;
 use crate::core::json_pipeline::builder::JsonPipelineBuilder;
 
-pub(crate) struct ActionBuilder {
+pub struct ActionBuilder {
     pub(crate) action: Action
 }
 

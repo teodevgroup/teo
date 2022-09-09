@@ -7,7 +7,7 @@ use crate::core::action::r#type::ActionType;
 pub mod list_builder;
 pub mod action_builder;
 
-pub(crate) struct ActionsBuilder {
+pub struct ActionsBuilder {
     disabled: HashSet<ActionType>,
     actions: HashMap<ActionType, Action>,
 }

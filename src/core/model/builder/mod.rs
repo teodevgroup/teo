@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::future::Future;
 use std::sync::Arc;
 use inflector::Inflector;
+use crate::core::action::builder::ActionsBuilder;
 use crate::core::action::r#type::ActionType;
 use crate::core::connector::{ConnectorBuilder};
 use crate::core::field::*;
@@ -41,6 +42,7 @@ pub struct ModelBuilder {
     pub(crate) before_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
     pub(crate) before_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
     pub(crate) before_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) actions_builder: ActionsBuilder,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -68,6 +70,7 @@ impl ModelBuilder {
             before_update_fns: Vec::new(),
             before_save_fns: Vec::new(),
             before_delete_fns: Vec::new(),
+            actions_builder: ActionsBuilder::new(),
             connector_builder
         }
     }
@@ -236,6 +239,11 @@ impl ModelBuilder {
 
     pub fn before_delete<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
         self.before_delete_fns.push(Arc::new(|object| Box::pin(callback(object))));
+        self
+    }
+
+    pub fn actions<F: Fn(&mut ActionsBuilder)>(&mut self, build: F) -> &mut Self {
+        build(&mut self.actions_builder);
         self
     }
 
