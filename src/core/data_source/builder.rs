@@ -4,7 +4,7 @@ use crate::connectors::mongodb::connector_builder::MongoDBConnectorBuilder;
 use crate::connectors::mysql::connector_builder::MySQLConnectorBuilder;
 #[cfg(feature = "data-source-postgres")]
 use crate::connectors::postgres::PostgresConnectorBuilder;
-use crate::core::builders::graph_builder::GraphBuilder;
+use crate::core::graph::builder::GraphBuilder;
 
 pub struct DataSourceBuilder<'a> {
     pub(crate) graph_builder: &'a mut GraphBuilder,

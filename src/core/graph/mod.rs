@@ -1,13 +1,14 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use serde_json::{json, Value as JsonValue};
-use crate::core::builders::graph_builder::GraphBuilder;
-
+use crate::core::graph::builder::GraphBuilder;
 use crate::core::connector::Connector;
 use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::r#enum::Enum;
 use crate::core::error::ActionError;
+
+pub mod builder;
 
 #[derive(Clone)]
 pub struct Graph {
