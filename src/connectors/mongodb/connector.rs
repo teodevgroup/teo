@@ -18,7 +18,7 @@ use crate::connectors::mongodb::save_session::MongoDBSaveSession;
 use crate::core::connector::Connector;
 use crate::core::object::Object;
 use crate::core::field::Sort;
-use crate::core::field_type::FieldType;
+use crate::core::field::r#type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::input::AtomicUpdateType;
 

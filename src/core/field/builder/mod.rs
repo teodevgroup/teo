@@ -2,19 +2,20 @@ use std::future::Future;
 use std::sync::Arc;
 use crate::core::argument::Argument;
 use crate::core::db_type::builder::DatabaseTypeBuilder;
-use crate::core::builders::field_index_builder::FieldIndexBuilder;
+use crate::core::field::builder::index_builder::FieldIndexBuilder;
 use crate::core::builders::permission_builder::PermissionBuilder;
 use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::connector::{ConnectorBuilder};
 use crate::core::db_type::DatabaseType;
 use crate::core::field::*;
-use crate::core::field_type::FieldType;
+use crate::core::field::r#type::FieldType;
 use crate::core::model_callback::PinFutureObj;
 use crate::core::object::Object;
 use crate::core::previous_value::PreviousValueRule;
 use crate::core::value::Value;
 use crate::core::error::ActionError;
 
+pub(crate) mod index_builder;
 
 pub struct FieldBuilder {
     pub(crate) name: String,

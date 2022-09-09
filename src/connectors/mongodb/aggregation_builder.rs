@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use serde_json::{Value as JsonValue, Map as JsonMap, json};
 use bson::{Bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
 use chrono::{Date, NaiveDate, Utc, DateTime};
-use crate::core::field_type::FieldType;
+use crate::core::field::r#type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::input_decoder::{input_to_vec, one_length_json_obj};
 use crate::core::model::{Model, ModelIndexType};

@@ -6,7 +6,7 @@ use crate::connectors::mysql::connector::MySQLConnector;
 use crate::connectors::sql_shared::sql::{SQL, SQLDialect, ToSQLString};
 use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::db_type::DatabaseType;
-use crate::core::field_type::FieldType;
+use crate::core::field::r#type::FieldType;
 use crate::core::model::Model;
 
 

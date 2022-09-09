@@ -1,6 +1,6 @@
 #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres"))]
 use crate::connectors::sql_shared::sql::SQLDialect;
-use crate::core::field_type::FieldType;
+use crate::core::field::r#type::FieldType;
 
 pub(crate) mod builder;
 

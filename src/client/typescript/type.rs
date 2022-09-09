@@ -1,5 +1,5 @@
 use crate::core::field::{Optionality};
-use crate::core::field_type::FieldType;
+use crate::core::field::r#type::FieldType;
 
 
 pub(crate) trait ToTypeScriptType {

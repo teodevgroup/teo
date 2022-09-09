@@ -1,6 +1,5 @@
 use crate::core::field::{IndexSettings, Sort};
 
-
 pub struct FieldIndexBuilder {
     name: Option<String>,
     sort: Sort,

@@ -3,7 +3,7 @@ use chrono::{Date, DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromStr;
 use crate::core::field::{Field, Optionality};
-use crate::core::field_type::FieldType;
+use crate::core::field::r#type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::input::AtomicUpdateType::{Decrement, Divide, Increment, Multiply, Push};
 use crate::core::input::{Input, RelationInputType};

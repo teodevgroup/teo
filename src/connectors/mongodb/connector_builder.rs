@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use crate::connectors::mongodb::connector::MongoDBConnector;
 use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::db_type::DatabaseType;
-use crate::core::field_type::FieldType;
+use crate::core::field::r#type::FieldType;
 use crate::core::model::Model;
 
 

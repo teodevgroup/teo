@@ -2,7 +2,7 @@ use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use crate::core::argument::Argument;
 use crate::core::db_type::DatabaseType;
-use crate::core::field_type::FieldType;
+use crate::core::field::r#type::FieldType;
 use crate::core::model_callback::PinFutureObj;
 use crate::core::object::Object;
 use crate::core::permission::Permission;
@@ -12,6 +12,8 @@ use crate::core::stage::Stage;
 use crate::core::value::Value;
 use crate::core::error::ActionError;
 
+pub(crate) mod r#type;
+pub(crate) mod builder;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Optionality {

@@ -10,7 +10,7 @@ use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::object::Object;
 use crate::core::builders::graph_builder::GraphBuilder;
 use crate::core::field::{Optionality};
-use crate::core::field_type::FieldType;
+use crate::core::field::r#type::FieldType;
 use crate::core::model::Model;
 use crate::core::error::ActionError;
 

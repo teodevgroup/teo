@@ -5,7 +5,7 @@ use inflector::Inflector;
 use crate::core::action::r#type::ActionType;
 use crate::core::connector::{ConnectorBuilder};
 use crate::core::field::*;
-use crate::core::builders::field_builder::FieldBuilder;
+use crate::core::field::builder::FieldBuilder;
 use crate::core::builders::permission_builder::PermissionBuilder;
 use crate::core::builders::relation_builder::RelationBuilder;
 use crate::core::field::ReadRule::NoRead;
