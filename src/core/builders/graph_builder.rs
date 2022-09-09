@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::core::builders::data_source_builder::DataSourceBuilder;
 use crate::core::builders::enum_builder::EnumBuilder;
 use crate::core::connector::{ConnectorBuilder};
-use crate::core::builders::model_builder::ModelBuilder;
+use crate::core::model::builder::ModelBuilder;
 
 use crate::core::r#enum::Enum;
 

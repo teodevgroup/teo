@@ -6,17 +6,19 @@ use crate::core::action::r#type::ActionType;
 use crate::core::connector::{ConnectorBuilder};
 use crate::core::field::*;
 use crate::core::builders::field_builder::FieldBuilder;
-use crate::core::builders::model_index_builder::ModelIndexBuilder;
 use crate::core::builders::permission_builder::PermissionBuilder;
 use crate::core::builders::relation_builder::RelationBuilder;
 use crate::core::field::ReadRule::NoRead;
 use crate::core::field::Store::{Calculated, Temp};
 use crate::core::field::WriteRule::NoWrite;
 use crate::core::model::{ModelIndex, ModelIndexItem, Model, ModelIndexType, ModelInner};
+use crate::core::model::builder::index_builder::ModelIndexBuilder;
 use crate::core::model_callback::PinFutureObj;
 use crate::core::relation::Relation;
 use crate::core::object::Object;
 use crate::error::ActionError;
+
+pub(crate) mod index_builder;
 
 pub struct ModelBuilder {
     pub(crate) name: String,

@@ -8,6 +8,7 @@ use crate::core::permission::Permission;
 use crate::core::relation::Relation;
 use crate::error::ActionError;
 
+pub(crate) mod builder;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum ModelIndexType {
