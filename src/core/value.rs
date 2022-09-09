@@ -6,7 +6,6 @@ use rust_decimal::Decimal;
 use serde_json::{Map, Number, Value as JsonValue};
 use crate::core::object::Object;
 
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Null,

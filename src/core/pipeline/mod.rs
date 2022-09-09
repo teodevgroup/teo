@@ -1,10 +1,12 @@
 use std::sync::{Arc};
-use crate::core::modifier::Modifier;
+use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::stage::Stage;
 use crate::core::object::Object;
 
 pub mod builder;
 pub mod stage;
+pub mod modifier;
+pub mod modifiers;
 
 #[derive(Debug)]
 pub struct Pipeline {

@@ -12,8 +12,6 @@ pub(crate) mod input_decoder;
 pub mod pipeline;
 pub mod argument;
 pub mod value;
-pub mod modifier;
-pub mod modifiers;
 pub mod object;
 pub mod permission;
 pub mod connector;
