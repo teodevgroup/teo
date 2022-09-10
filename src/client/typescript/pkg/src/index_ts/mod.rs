@@ -520,8 +520,8 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                                 _ => ""
                             };
                             b.empty_line();
-                            b.block(format!("async {action_var_name}<T extends {model_name}{action_name}Args>(args: T): Promise<Response<{result_meta}, CheckSelectInclude<T, {result_data}, {model_name}GetPayload<T>{payload_array}>>> {{"), |b| {
-                                b.line(format!(r#"return await request("{model_url_segment_name}", "{action_url_name}", args, this._token)"#));
+                            b.block(format!("async {action_var_name}<T extends {model_name}{action_name}Args>(args?: T): Promise<Response<{result_meta}, CheckSelectInclude<T, {result_data}, {model_name}GetPayload<T>{payload_array}>>> {{"), |b| {
+                                b.line(format!(r#"return await request("{model_url_segment_name}", "{action_url_name}", args ?? {{}}, this._token)"#));
                             }, "}");
                         }
                     });
