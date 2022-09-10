@@ -5,7 +5,7 @@ use std::fs::create_dir_all;
 use std::fs::remove_dir_all;
 
 pub mod code;
-
+pub mod helpers;
 
 pub async fn ensure_directory<D: Into<String>>(dir_name: D) -> std::io::Result<()> {
     let dirname = current_dir().unwrap().join(dir_name.into());

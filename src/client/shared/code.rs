@@ -35,6 +35,17 @@ impl Code {
         }
     }
 
+    pub(crate) fn doc<D: Into<String>>(&mut self, doc: D) {
+        let doc = doc.into();
+        doc.lines().for_each(|l| {
+            if !l.is_empty() {
+                self.content += &" ".repeat((self.indent_level * self.indent_space) as usize);
+                self.content += l;
+                self.content += "\n"
+            }
+        });
+    }
+
     pub(crate) fn to_str(&self) -> &str {
         &self.content
     }

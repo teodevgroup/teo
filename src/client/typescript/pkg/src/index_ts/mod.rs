@@ -2,10 +2,13 @@ use inflector::Inflector;
 use crate::core::action::r#type::{ActionResultData, ActionResultMeta, ActionType};
 use crate::app::app::ClientConfiguration;
 use crate::client::shared::code::Code;
+use crate::client::typescript::pkg::src::index_ts::docs::{action_group_doc, main_object_doc};
 use crate::client::typescript::r#type::ToTypeScriptType;
 use crate::core::field::Optionality;
 use crate::core::graph::Graph;
 use crate::core::model::{Model, ModelIndexType};
+
+mod docs;
 
 fn generate_model_create_nested_input(_graph: &Graph, model: &Model, without: Option<&str>, many: bool) -> String {
     let model_name = model.name();
@@ -536,6 +539,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                     let model_name = m.name();
                     let model_var_name = model_name.to_camel_case();
                     let model_class_name = model_var_name.to_pascal_case();
+                    b.doc(action_group_doc(object_name, m));
                     b.line(format!("{model_var_name}: {model_class_name}Delegate"));
                 }
             });
@@ -555,6 +559,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
             }, "}")
         }, "}");
         c.empty_line();
+        c.line(main_object_doc(object_name, graph));
         c.line(format!("const {object_name} = new {object_class_name}()"));
         c.empty_line();
         c.line(format!("export default {object_name}"));
