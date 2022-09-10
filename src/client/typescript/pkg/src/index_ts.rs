@@ -270,7 +270,7 @@ fn generate_model_credentials_input(model: &Model) -> String {
 
 pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration) -> String {
     Code::new(0, 4, |c| {
-        c.line(r#"import { request, Response, PagingInfo, TokenInfo, SortOrder, Enumerable } from "./runtime""#);
+        c.line(r#"import { request, Response, PagingInfo, TokenInfo, SortOrder, Enumerable, CheckSelectInclude, SelectSubset, ExistKeys } from "./runtime""#);
         c.block("import {", |b| {
             b.line("ObjectIdFilter, ObjectIdNullableFilter, StringFilter, StringNullableFilter, NumberFilter,");
             b.line("NumberNullableFilter, BoolFilter, BoolNullableFilter, DateFilter, DateNullableFilter,");
@@ -328,7 +328,13 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                 })
             }, "}");
             c.block(format!("export type {model_name}Include = {{"), |b| {
-                b.empty_line();
+                for relation in m.relations() {
+                    let name = &relation.name;
+                    let is_vec = relation.is_vec;
+                    let find_many = if is_vec { "FindMany" } else { "" };
+                    let r_model = &relation.model;
+                    b.line(format!("{name}?: boolean | null | {r_model}{find_many}Args"));
+                }
             }, "}");
             c.block(format!("export type {model_name}WhereInput = {{"), |b| {
                 for op in ["AND", "OR", "NOT"] {
@@ -414,6 +420,10 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                 c.line(generate_model_credentials_input(m));
             }
             // args
+            c.block(format!(r#"export type {model_name}Args = {{"#), |b| {
+                b.line(format!(r#"select?: {model_name}Select"#));
+                b.line(format!(r#"include?: {model_name}Include"#));
+            }, "}");
             ActionType::iter().for_each(|a| {
                 if !m.actions().contains(a) { return }
                 let action_name = a.as_str();
@@ -446,7 +456,32 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                         b.line(format!(r#"credentials: {model_name}CredentialsInput"#))
                     }
                 }, "}");
-            })
+            });
+            c.block(format!("export type {model_name}GetPayload<S extends boolean | null | undefined | {model_name}Args, U = keyof S> = S extends true"), |b| {
+                b.line(format!("? {model_name}"));
+                b.block(": S extends undefined", |b| {
+                    b.line("? never");
+                    b.block(format!(": S extends {model_name}Args | {model_name}FindManyArgs"), |b| {
+                        b.block("? 'include' extends U", |b| {
+                            b.block(format!("? SelectSubset<{model_name}, S> & {{"), |b| {
+                                b.block(format!("[P in ExistKeys<S['include']>]:"), |b| {
+                                    for relation in m.relations() {
+                                        let name = &relation.name;
+                                        let is_array = relation.is_vec;
+                                        let required = relation.optionality == Optionality::Required;
+                                        let required_mark = if required { "" } else { "?" };
+                                        let r_model = &relation.model;
+                                        let array_prefix = if is_array { "Array<" } else { "" };
+                                        let array_suffix = if is_array { ">" } else { "" };
+                                        b.line(format!("P extends '{name}' ? {array_prefix}{r_model}GetPayload<S['include'][P]>{array_suffix}{required_mark} :"));
+                                    }
+                                }, "never");
+                            }, "}");
+                            b.line(format!(": SelectSubset<{model_name}, S>"));
+                        }, format!(": {model_name}"));
+                    }, "");
+                }, "");
+            }, "")
         });
         // delegates
         graph.models().iter().for_each(|m| {
@@ -477,8 +512,12 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                                 ActionResultData::Other => "never".to_string(),
                                 ActionResultData::Number => "number".to_string(),
                             };
+                            let payload_array = match a.result_data() {
+                                ActionResultData::Vec => "[]",
+                                _ => ""
+                            };
                             b.empty_line();
-                            b.block(format!("async {action_var_name}(args: {model_name}{action_name}Args): Promise<Response<{result_meta}, {result_data}>> {{"), |b| {
+                            b.block(format!("async {action_var_name}<T extends {model_name}{action_name}Args>(args: T): Promise<Response<{result_meta}, CheckSelectInclude<T, {result_data}, {model_name}GetPayload<T>{payload_array}>>> {{"), |b| {
                                 b.line(format!(r#"return await request("{model_url_segment_name}", "{action_url_name}", args, this._token)"#));
                             }, "}");
                         }

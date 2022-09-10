@@ -27,9 +27,12 @@ impl Code {
         self.content += &start.into();
         self.content += "\n";
         self.content += code.to_str();
-        self.content += &" ".repeat((self.indent_level * self.indent_space) as usize);
-        self.content += &end.into();
-        self.content += "\n";
+        let end = end.into();
+        if !end.is_empty() {
+            self.content += &" ".repeat((self.indent_level * self.indent_space) as usize);
+            self.content += &end;
+            self.content += "\n";
+        }
     }
 
     pub(crate) fn to_str(&self) -> &str {
