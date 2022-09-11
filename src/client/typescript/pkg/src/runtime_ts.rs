@@ -122,23 +122,18 @@ export function getBearerToken(): string | undefined {{
 
 export class TeoError extends Error {{
 
-    responseError: ResponseError
+    type: string
+    errors: {{[key: string]: string}} | null
 
     constructor(responseError: ResponseError) {{
-        super()
-        this.responseError = responseError
+        super(responseError.message)
+        this.type = responseError.type
+        this.errors = responseError.errors
+        Object.setPrototypeOf(this, TeoError.prototype)
     }}
 
-    get type() {{
-        return this.responseError.type
-    }}
-
-    get message() {{
-        return this.responseError.message
-    }}
-
-    get errors() {{
-        return this.responseError.errors
+    get name() {{
+        return "TeoError"
     }}
 }}
 
