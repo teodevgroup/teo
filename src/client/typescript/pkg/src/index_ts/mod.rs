@@ -2,7 +2,7 @@ use inflector::Inflector;
 use crate::core::action::r#type::{ActionResultData, ActionResultMeta, ActionType};
 use crate::app::app::ClientConfiguration;
 use crate::client::shared::code::Code;
-use crate::client::typescript::pkg::src::index_ts::docs::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, include_doc, main_object_doc, order_by_doc, page_number_doc, page_size_doc, select_doc, skip_doc, take_doc, unique_where_doc, where_doc, where_doc_first};
+use crate::client::typescript::pkg::src::index_ts::docs::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, main_object_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_where_doc, where_doc, where_doc_first};
 use crate::client::typescript::r#type::ToTypeScriptType;
 use crate::core::field::Optionality;
 use crate::core::graph::Graph;
@@ -71,9 +71,11 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
                     let field_ts_type = field.field_type.to_typescript_create_input_type(field.optionality == Optionality::Optional);
                     if let Some(without_relation) = without_relation {
                         if !without_relation.fields.contains(k) {
+                            b.doc(field_doc(field));
                             b.line(format!("{field_name}?: {field_ts_type}"));
                         }
                     } else {
+                        b.doc(field_doc(field));
                         b.line(format!("{field_name}?: {field_ts_type}"));
                     }
                 } else if let Some(relation) = model.relation(k) {
@@ -87,8 +89,10 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
                                 r.fields == relation.references && r.references == relation.fields
                             }) {
                                 let opposite_relation_name = opposite_relation.name.to_pascal_case();
+                                b.doc(relation_doc(relation));
                                 b.line(format!("{relation_name}?: {relation_model_name}CreateNested{num}Without{opposite_relation_name}Input"))
                             } else {
+                                b.doc(relation_doc(relation));
                                 b.line(format!("{relation_name}?: {relation_model_name}CreateNested{num}Input"))
                             }
                         }
@@ -97,8 +101,10 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
                             r.fields == relation.references && r.references == relation.fields
                         }) {
                             let opposite_relation_name = opposite_relation.name.to_pascal_case();
+                            b.doc(relation_doc(relation));
                             b.line(format!("{relation_name}?: {relation_model_name}CreateNested{num}Without{opposite_relation_name}Input"))
                         } else {
+                            b.doc(relation_doc(relation));
                             b.line(format!("{relation_name}?: {relation_model_name}CreateNested{num}Input"))
                         }
                     }
@@ -214,6 +220,7 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
                 if let Some(field) = model.field(k) {
                     let field_name = &field.name;
                     let field_ts_type = field.field_type.to_typescript_update_input_type(field.optionality == Optionality::Optional);
+                    b.doc(field_doc(field));
                     b.line(format!("{field_name}?: {field_ts_type}"));
                 } else if let Some(relation) = model.relation(k) {
                     let relation_name = &relation.name;
@@ -226,8 +233,10 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
                                 r.fields == relation.references && r.references == relation.fields
                             }) {
                                 let opposite_relation_name = opposite_relation.name.to_pascal_case();
+                                b.doc(relation_doc(relation));
                                 b.line(format!("{relation_name}?: {relation_model_name}UpdateNested{num}Without{opposite_relation_name}Input"))
                             } else {
+                                b.doc(relation_doc(relation));
                                 b.line(format!("{relation_name}?: {relation_model_name}UpdateNested{num}Input"))
                             }
                         }
@@ -236,8 +245,10 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
                             r.fields == relation.references && r.references == relation.fields
                         }) {
                             let opposite_relation_name = opposite_relation.name.to_pascal_case();
+                            b.doc(relation_doc(relation));
                             b.line(format!("{relation_name}?: {relation_model_name}UpdateNested{num}Without{opposite_relation_name}Input"))
                         } else {
+                            b.doc(relation_doc(relation));
                             b.line(format!("{relation_name}?: {relation_model_name}UpdateNested{num}Input"))
                         }
                     }

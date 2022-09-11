@@ -98,6 +98,8 @@ pub enum FieldIndex {
 #[derive(Clone)]
 pub(crate) struct Field {
     pub(crate) name: String,
+    pub(crate) localized_name: String,
+    pub(crate) description: String,
     pub(crate) field_type: FieldType,
     pub(crate) database_type: DatabaseType,
     pub(crate) optionality: Optionality,
@@ -133,9 +135,22 @@ impl Debug for Field {
 }
 
 impl Field {
-    pub(crate) fn column_name(&self) -> &String {
+
+    pub(crate) fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub(crate) fn localized_name(&self) -> &str {
+        &self.localized_name
+    }
+
+    pub(crate) fn description(&self) -> &str {
+        &self.description
+    }
+
+    pub(crate) fn column_name(&self) -> &str {
         match &self.column_name {
-            Some(column_name) => column_name,
+            Some(column_name) => column_name.as_str(),
             None => &self.name
         }
     }

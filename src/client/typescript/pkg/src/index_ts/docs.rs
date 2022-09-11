@@ -1,8 +1,10 @@
 use inflector::Inflector;
-use crate::client::shared::helpers::{model_api_object_description, model_localized_name, model_localized_name_word_case};
+use crate::client::shared::helpers::{field_description, field_localized_name, model_api_object_description, model_localized_name, model_localized_name_word_case, relation_description, relation_localized_name};
 use crate::core::action::r#type::{ActionResultData, ActionType};
+use crate::core::field::Field;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
+use crate::core::relation::Relation;
 
 pub(crate) fn simple_model_example(name: &str, model: &Model) -> String {
     if model.actions().contains(&ActionType::FindMany) {
@@ -180,5 +182,23 @@ pub(crate) fn page_number_doc(model: &Model) -> String {
     let object = model_localized_name_word_case(model).to_plural();
     format!(r#"/**
  * Sets the page number of {object} data.
+ */"#)
+}
+
+pub(crate) fn field_doc(field: &Field) -> String {
+    let name = field_localized_name(field);
+    let desc = field_description(field);
+    format!(r#"/**
+ * **{name}**
+ * {desc}
+ */"#)
+}
+
+pub(crate) fn relation_doc(relation: &Relation) -> String {
+    let name = relation_localized_name(relation);
+    let desc = relation_description(relation);
+    format!(r#"/**
+ * **{name}**
+ * {desc}
  */"#)
 }

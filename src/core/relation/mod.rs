@@ -16,6 +16,20 @@ pub(crate) struct Relation {
     pub(crate) references: Vec<String>,
 }
 
+impl Relation {
+    pub(crate) fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub(crate) fn localized_name(&self) -> &str {
+        &self.localized_name
+    }
+
+    pub(crate) fn description(&self) -> &str {
+        &self.description
+    }
+}
+
 #[derive(Debug)]
 pub(crate) enum RelationManipulation {
     Connect(Object),

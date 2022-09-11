@@ -149,7 +149,7 @@ impl Model {
 
     pub(crate) fn column_name_for_field_name(&self, column_name: &str) -> Option<&str> {
         for field in self.fields().iter() {
-            if field.column_name().as_str() == column_name {
+            if field.column_name() == column_name {
                 return Some(&field.name);
             }
         }

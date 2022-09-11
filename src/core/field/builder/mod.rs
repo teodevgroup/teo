@@ -402,6 +402,8 @@ impl FieldBuilder {
     pub(crate) fn build(&self, connector_builder: &Box<dyn ConnectorBuilder>) -> Field {
         return Field {
             name: self.name.clone(),
+            localized_name: self.localized_name.clone(),
+            description: self.description.clone(),
             field_type: self.field_type.clone(),
             database_type: if self.database_type.is_undefined() { connector_builder.inferred_database_type(&self.field_type) } else { self.database_type.clone() },
             optionality: self.optionality,
