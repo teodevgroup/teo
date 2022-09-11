@@ -2,7 +2,7 @@ use inflector::Inflector;
 use crate::core::action::r#type::{ActionResultData, ActionResultMeta, ActionType};
 use crate::app::app::ClientConfiguration;
 use crate::client::shared::code::Code;
-use crate::client::typescript::pkg::src::index_ts::docs::{action_doc, action_group_doc, main_object_doc};
+use crate::client::typescript::pkg::src::index_ts::docs::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, include_doc, main_object_doc, order_by_doc, page_number_doc, page_size_doc, select_doc, skip_doc, take_doc, unique_where_doc, where_doc, where_doc_first};
 use crate::client::typescript::r#type::ToTypeScriptType;
 use crate::core::field::Optionality;
 use crate::core::graph::Graph;
@@ -424,7 +424,9 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
             }
             // args
             c.block(format!(r#"export type {model_name}Args = {{"#), |b| {
+                b.doc(select_doc(m));
                 b.line(format!(r#"select?: {model_name}Select"#));
+                b.doc(include_doc(m));
                 b.line(format!(r#"include?: {model_name}Include"#));
             }, "}");
             ActionType::iter().for_each(|a| {
@@ -433,29 +435,46 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                 let _action_var_name = a.as_str().to_camel_case();
                 c.block(format!(r#"export type {model_name}{action_name}Args = {{"#), |b| {
                     if a.requires_where() {
+                        if a == ActionType::FindFirst {
+                            b.doc(where_doc_first(m));
+                        } else {
+                            b.doc(where_doc(m));
+                        }
                         b.line(format!(r#"where?: {model_name}WhereInput"#));
                     }
                     if a.requires_where_unique() {
+                        b.doc(unique_where_doc(m));
                         b.line(format!(r#"where?: {model_name}WhereUniqueInput"#));
                     }
+                    b.doc(select_doc(m));
                     b.line(format!(r#"select?: {model_name}Select"#));
+                    b.doc(include_doc(m));
                     b.line(format!(r#"include?: {model_name}Include"#));
                     if a.requires_where() {
+                        b.doc(order_by_doc(m));
                         b.line(format!(r#"orderBy?: Enumerable<{model_name}OrderByInput>"#));
+                        b.doc(cursor_doc(m));
                         b.line(format!(r#"cursor?: {model_name}WhereUniqueInput"#));
+                        b.doc(take_doc(m));
                         b.line(format!(r#"take?: number"#));
+                        b.doc(skip_doc(m));
                         b.line(format!(r#"skip?: number"#));
+                        b.doc(page_size_doc(m));
                         b.line(format!(r#"pageSize?: number"#));
+                        b.doc(page_number_doc(m));
                         b.line(format!(r#"pageNumber?: number"#));
                         //b.line(format!{r#"distinct? {model_name}ScalarFieldEnum"#})
                     }
                     if a.requires_create() {
+                        b.doc(create_or_update_doc(m, if a == ActionType::Upsert { ActionType::Create } else { a.clone() }));
                         b.line(format!(r#"create: {model_name}CreateInput"#));
                     }
                     if a.requires_update() {
+                        b.doc(create_or_update_doc(m, if a == ActionType::Upsert { ActionType::Update } else { a.clone() }));
                         b.line(format!(r#"update: {model_name}UpdateInput"#));
                     }
                     if a.requires_credentials() {
+                        b.doc(credentials_doc(m, a));
                         b.line(format!(r#"credentials: {model_name}CredentialsInput"#))
                     }
                 }, "}");

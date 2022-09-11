@@ -51,28 +51,15 @@ pub(crate) fn action_group_doc(name: &str, model: &Model) -> String {
 "#)
 }
 
-/**
- * Create a User.
- * @param {UserCreateArgs} args - Arguments to create a User.
- * @example
- * // Create one User
- * const User = await prisma.user.create({
- *   data: {
- *     // ... data to create a User
- *   }
- * })
- *
-**/
-pub(crate) fn action_doc(name: &str, r#type: ActionType, model: &Model) -> String {
+pub(crate) fn action_and_model(r#type: ActionType, model: &Model) -> String {
     let model_name = model.name();
-    let model_name_camel_case = model_name.to_camel_case();
     let action_name = r#type.as_str();
-    let action_name_camel_case = action_name.to_camel_case();
     let localized_name = model_localized_name_word_case(model);
     let verb = match r#type {
-        ActionType::FindFirst | ActionType::FindUnique => "Find".to_owned(),
-        ActionType::Aggregate => "Aggregate on".to_owned(),
-        _ => r#type.as_str().to_sentence_case(),
+        ActionType::FindFirst | ActionType::FindUnique => "find".to_owned(),
+        ActionType::Upsert => "create or update".to_owned(),
+        ActionType::Aggregate => "aggregate on".to_owned(),
+        _ => r#type.as_str().to_word_case(),
     };
     let object = match r#type.result_data() {
         ActionResultData::Vec | ActionResultData::Number | ActionResultData::Other => localized_name.to_plural(),
@@ -83,8 +70,15 @@ pub(crate) fn action_doc(name: &str, r#type: ActionType, model: &Model) -> Strin
             }
         },
     };
-    let main_doc = format!("{verb} {object}");
-    let lower_case_main_doc = main_doc.to_word_case();
+    format!("{verb} {object}")
+}
+
+pub(crate) fn action_doc(name: &str, r#type: ActionType, model: &Model) -> String {
+    let model_name = model.name();
+    let action_name = r#type.as_str();
+    let action_name_camel_case = action_name.to_camel_case();
+    let lower_case_main_doc = action_and_model(r#type, model);
+    let main_doc = lower_case_main_doc.to_sentence_case();
     format!(r#"/**
  * {main_doc}.
  * @param {{{model_name}{action_name}Args}} args - Arguments to {lower_case_main_doc}.
@@ -95,4 +89,95 @@ pub(crate) fn action_doc(name: &str, r#type: ActionType, model: &Model) -> Strin
  * }})
  */
 "#)
+}
+
+pub(crate) fn select_doc(model: &Model) -> String {
+    let model_word = model.name().to_word_case();
+    format!(r#"/**
+ * Select scalar fields to fetch from the {model_word} model.
+ */"#)
+}
+
+pub(crate) fn include_doc(model: &Model) -> String {
+    let model_word = model.name().to_word_case();
+    format!(r#"/**
+ * Include relations to fetch from the {model_word} model.
+ */"#)
+}
+
+pub(crate) fn create_or_update_doc(model: &Model, action: ActionType) -> String {
+    let verb_and_object = action_and_model(action, model);
+    format!(r#"/**
+ * Data needed to {verb_and_object}.
+ */"#)
+}
+
+pub(crate) fn credentials_doc(model: &Model, action: ActionType) -> String {
+    let verb_and_object = action_and_model(action, model);
+    format!(r#"/**
+ * Credential data needed to {verb_and_object}.
+ */"#)
+}
+
+pub(crate) fn unique_where_doc(model: &Model) -> String {
+    let object = model_localized_name_word_case(model);
+    format!(r#"/**
+ * The unique filter to find the {object}.
+ */"#)
+}
+
+pub(crate) fn where_doc(model: &Model) -> String {
+    let object = model_localized_name_word_case(model).to_plural();
+    format!(r#"/**
+ * The filter to find {object}.
+ */"#)
+}
+
+pub(crate) fn where_doc_first(model: &Model) -> String {
+    let object = model_localized_name_word_case(model).articlize();
+    format!(r#"/**
+ * The filter to find {object}.
+ */"#)
+}
+
+pub(crate) fn order_by_doc(model: &Model) -> String {
+    let object = model_localized_name_word_case(model).articlize();
+    format!(r#"/**
+ * Determine the order of {object} to fetch.
+ */"#)
+}
+
+pub(crate) fn take_doc(model: &Model) -> String {
+    let object = model_localized_name_word_case(model).to_plural();
+    format!(r#"/**
+ * How many {object} to take. If cursor is set and this value is negative, take from the other direction.
+ */"#)
+}
+
+pub(crate) fn skip_doc(model: &Model) -> String {
+    let object = model_localized_name_word_case(model).to_plural();
+    format!(r#"/**
+ * Skip the first `n` {object}.
+ */"#)
+}
+
+pub(crate) fn cursor_doc(model: &Model) -> String {
+    let object = model_localized_name_word_case(model).to_plural();
+    format!(r#"/**
+ * Sets the position for searching for {object}.
+ */"#)
+}
+
+pub(crate) fn page_size_doc(model: &Model) -> String {
+    let object = model_localized_name_word_case(model).to_plural();
+    format!(r#"/**
+ * Sets the page size for the returned {object} data.
+ */"#)
+}
+
+pub(crate) fn page_number_doc(model: &Model) -> String {
+    let object = model_localized_name_word_case(model).to_plural();
+    format!(r#"/**
+ * Sets the page number of {object} data.
+ */"#)
 }
