@@ -2,7 +2,7 @@ use inflector::Inflector;
 use crate::core::action::r#type::{ActionResultData, ActionResultMeta, ActionType};
 use crate::app::app::ClientConfiguration;
 use crate::client::shared::code::Code;
-use crate::client::typescript::pkg::src::index_ts::docs::{action_group_doc, main_object_doc};
+use crate::client::typescript::pkg::src::index_ts::docs::{action_doc, action_group_doc, main_object_doc};
 use crate::client::typescript::r#type::ToTypeScriptType;
 use crate::core::field::Optionality;
 use crate::core::graph::Graph;
@@ -487,6 +487,8 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
             }, "")
         });
         // delegates
+        let object_name = &conf.type_script.as_ref().unwrap().object_name;
+        let object_class_name = object_name.to_pascal_case();
         graph.models().iter().for_each(|m| {
             if m.actions().len() > 0 {
                 let model_name = m.name();
@@ -520,6 +522,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                                 _ => ""
                             };
                             b.empty_line();
+                            b.doc(action_doc(object_name, a.clone(), m));
                             b.block(format!("async {action_var_name}<T extends {model_name}{action_name}Args>(args?: T): Promise<Response<{result_meta}, CheckSelectInclude<T, {result_data}, {model_name}GetPayload<T>{payload_array}>>> {{"), |b| {
                                 b.line(format!(r#"return await request("{model_url_segment_name}", "{action_url_name}", args ?? {{}}, this._token)"#));
                             }, "}");
@@ -530,8 +533,6 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
             }
         });
         // main interface
-        let object_name = &conf.type_script.as_ref().unwrap().object_name;
-        let object_class_name = object_name.to_pascal_case();
         c.block(format!("class {object_class_name} {{"), |b| {
             b.line("_token?: string");
             graph.models().iter().for_each(|m| {

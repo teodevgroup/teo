@@ -9,6 +9,14 @@ pub(crate) fn model_localized_name(model: &Model) -> String {
     }
 }
 
+pub(crate) fn model_localized_name_word_case(model: &Model) -> String {
+    if model.localized_name().is_empty() {
+        model.name().to_word_case()
+    } else {
+        model.localized_name().to_owned().to_word_case()
+    }
+}
+
 pub(crate) fn model_api_object_description(model: &Model) -> String {
     if model.description().is_empty() {
         let m_name = model_localized_name(model).to_word_case();

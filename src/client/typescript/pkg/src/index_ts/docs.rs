@@ -1,6 +1,6 @@
 use inflector::Inflector;
-use crate::client::shared::helpers::{model_api_object_description, model_localized_name};
-use crate::core::action::r#type::ActionType;
+use crate::client::shared::helpers::{model_api_object_description, model_localized_name, model_localized_name_word_case};
+use crate::core::action::r#type::{ActionResultData, ActionType};
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 
@@ -47,6 +47,43 @@ pub(crate) fn action_group_doc(name: &str, model: &Model) -> String {
  * {description}
  *
 {example}
+ */
+"#)
+}
+
+/**
+ * Create a User.
+ * @param {UserCreateArgs} args - Arguments to create a User.
+ * @example
+ * // Create one User
+ * const User = await prisma.user.create({
+ *   data: {
+ *     // ... data to create a User
+ *   }
+ * })
+ *
+**/
+pub(crate) fn action_doc(name: &str, r#type: ActionType, model: &Model) -> String {
+    let model_name = model.name();
+    let model_name_camel_case = model_name.to_camel_case();
+    let action_name = r#type.as_str();
+    let action_name_camel_case = action_name.to_camel_case();
+    let localized_name = model_localized_name_word_case(model);
+    let verb = r#type.as_str().to_sentence_case();
+    let object = match r#type.result_data() {
+        ActionResultData::Vec | ActionResultData::Number => localized_name.to_plural(),
+        ActionResultData::Single | ActionResultData::Other => localized_name.articlize(),
+    };
+    let main_doc = format!("{verb} {object}");
+    let lower_case_main_doc = main_doc.to_word_case();
+    format!(r#"/**
+ * {main_doc}.
+ * @param {{{model_name}{action_name}Args}} args - Arguments to {lower_case_main_doc}.
+ * @example
+ * // {main_doc}.
+ * const result = await {name}.{model_name_camel_case}.{action_name_camel_case}({{
+ *     // data to {lower_case_main_doc}
+ * }})
  */
 "#)
 }
