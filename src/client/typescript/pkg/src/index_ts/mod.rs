@@ -227,10 +227,6 @@ fn generate_model_update_nested_input(_graph: &Graph, model: &Model, without: Op
                 b.line(format!("disconnect?: {model_name}WhereUniqueInput"));
                 b.doc(nested_delete_doc(model, many));
                 b.line(format!("delete?: {model_name}WhereUniqueInput"));
-                b.doc(nested_update_doc(model, true));
-                b.line(format!("updateMany?: {model_name}UpdateManyWithWhere{without_title}Input"));
-                b.doc(nested_delete_doc(model, true));
-                b.line(format!("deleteMany?: {model_name}WhereInput"));
             }
         }, "}")
     }).to_string()
