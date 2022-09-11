@@ -44,6 +44,12 @@ export interface Response<Meta, Data> {{
     data: Data
 }}
 
+export interface ResponseError {{
+    type: string
+    message: string
+    errors: {{[key: string]: string}} | null
+}}
+
 export type PagingInfo = {{
     count: number
     numberOfPages?: number
@@ -114,6 +120,28 @@ export function getBearerToken(): string | undefined {{
     }}
 }}
 
+export class TeoError extends Error {{
+
+    responseError: ResponseError
+
+    constructor(responseError: ResponseError) {{
+        super()
+        this.responseError = responseError
+    }}
+
+    get type() {{
+        return this.responseError.type
+    }}
+
+    get message() {{
+        return this.responseError.message
+    }}
+
+    get errors() {{
+        return this.responseError.errors
+    }}
+}}
+
 export async function request(urlSegmentName: string, action: Action, args: any, token: string | undefined = getBearerToken()): Promise<any> {{
     let url = "{url}/" + urlSegmentName + "/action/" + action
     let response = await fetch(url, {{
@@ -121,7 +149,11 @@ export async function request(urlSegmentName: string, action: Action, args: any,
         headers: token ? {{ "Authorization": `Bearer ${{token}}` }} : undefined,
         body: JSON.stringify(args)
     }})
-    return await response.json()
+    let response_json = await response.json()
+    if (400 <= response.status) {{
+        throw new TeoError(response_json.error)
+    }}
+    return response_json
 }}
 "#)
 }
