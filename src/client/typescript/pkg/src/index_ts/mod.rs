@@ -538,7 +538,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                                         let name = &relation.name;
                                         let is_array = relation.is_vec;
                                         let required = relation.optionality == Optionality::Required;
-                                        let required_mark = if required { "" } else { "?" };
+                                        let required_mark = if required { "" } else { " | undefined" };
                                         let r_model = &relation.model;
                                         let array_prefix = if is_array { "Array<" } else { "" };
                                         let array_suffix = if is_array { ">" } else { "" };
