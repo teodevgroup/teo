@@ -435,7 +435,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                 let _action_var_name = a.as_str().to_camel_case();
                 c.block(format!(r#"export type {model_name}{action_name}Args = {{"#), |b| {
                     if a.requires_where() {
-                        if a == ActionType::FindFirst {
+                        if a == &ActionType::FindFirst {
                             b.doc(where_doc_first(m));
                         } else {
                             b.doc(where_doc(m));
@@ -466,15 +466,15 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                         //b.line(format!{r#"distinct? {model_name}ScalarFieldEnum"#})
                     }
                     if a.requires_create() {
-                        b.doc(create_or_update_doc(m, if a == ActionType::Upsert { ActionType::Create } else { a.clone() }));
+                        b.doc(create_or_update_doc(m, if a == &ActionType::Upsert { ActionType::Create } else { a.clone() }));
                         b.line(format!(r#"create: {model_name}CreateInput"#));
                     }
                     if a.requires_update() {
-                        b.doc(create_or_update_doc(m, if a == ActionType::Upsert { ActionType::Update } else { a.clone() }));
+                        b.doc(create_or_update_doc(m, if a == &ActionType::Upsert { ActionType::Update } else { a.clone() }));
                         b.line(format!(r#"update: {model_name}UpdateInput"#));
                     }
                     if a.requires_credentials() {
-                        b.doc(credentials_doc(m, a));
+                        b.doc(credentials_doc(m, *a));
                         b.line(format!(r#"credentials: {model_name}CredentialsInput"#))
                     }
                 }, "}");

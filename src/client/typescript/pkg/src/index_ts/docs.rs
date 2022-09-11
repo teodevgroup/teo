@@ -75,6 +75,7 @@ pub(crate) fn action_and_model(r#type: ActionType, model: &Model) -> String {
 
 pub(crate) fn action_doc(name: &str, r#type: ActionType, model: &Model) -> String {
     let model_name = model.name();
+    let model_name_camel_case = model_name.to_camel_case();
     let action_name = r#type.as_str();
     let action_name_camel_case = action_name.to_camel_case();
     let lower_case_main_doc = action_and_model(r#type, model);
