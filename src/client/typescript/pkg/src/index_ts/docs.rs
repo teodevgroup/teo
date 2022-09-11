@@ -69,10 +69,19 @@ pub(crate) fn action_doc(name: &str, r#type: ActionType, model: &Model) -> Strin
     let action_name = r#type.as_str();
     let action_name_camel_case = action_name.to_camel_case();
     let localized_name = model_localized_name_word_case(model);
-    let verb = r#type.as_str().to_sentence_case();
+    let verb = match r#type {
+        ActionType::FindFirst | ActionType::FindUnique => "Find".to_owned(),
+        ActionType::Aggregate => "Aggregate on".to_owned(),
+        _ => r#type.as_str().to_sentence_case(),
+    };
     let object = match r#type.result_data() {
-        ActionResultData::Vec | ActionResultData::Number => localized_name.to_plural(),
-        ActionResultData::Single | ActionResultData::Other => localized_name.articlize(),
+        ActionResultData::Vec | ActionResultData::Number | ActionResultData::Other => localized_name.to_plural(),
+        ActionResultData::Single => {
+            match r#type {
+                ActionType::FindUnique => format!("a unique {localized_name}"),
+                _ => localized_name.articlize()
+            }
+        },
     };
     let main_doc = format!("{verb} {object}");
     let lower_case_main_doc = main_doc.to_word_case();
