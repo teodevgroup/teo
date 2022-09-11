@@ -324,3 +324,10 @@ pub(crate) fn nested_delete_doc(model: &Model, many: bool) -> String {
  * Delete {article}existing connected {object}.
  */"#)
 }
+
+pub(crate) fn with_token_doc() -> String {
+    format!(r#"/**
+ * Get a new client altered with `token`. This is useful if you use this on a backend server.
+ * @param {{string?}} token - The new identity token.
+ */"#)
+}
