@@ -2,7 +2,7 @@ use inflector::Inflector;
 use crate::core::action::r#type::{ActionResultData, ActionResultMeta, ActionType};
 use crate::app::app::ClientConfiguration;
 use crate::client::shared::code::Code;
-use crate::client::typescript::pkg::src::index_ts::docs::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, main_object_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_where_doc, where_doc, where_doc_first};
+use crate::client::typescript::pkg::src::index_ts::docs::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, main_object_doc, nested_connect_doc, nested_create_doc, nested_create_or_connect_doc, nested_delete_doc, nested_disconnect_doc, nested_set_doc, nested_update_doc, nested_upsert_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_connect_create_doc, unique_connect_doc, unique_where_doc, where_doc, where_doc_first};
 use crate::client::typescript::r#type::ToTypeScriptType;
 use crate::core::field::Optionality;
 use crate::core::graph::Graph;
@@ -22,12 +22,18 @@ fn generate_model_create_nested_input(_graph: &Graph, model: &Model, without: Op
     Code::new(0, 4, |c| {
         c.block(format!("export type {model_name}CreateNested{many_title}{without_title}Input = {{"), |b| {
             if many {
+                b.doc(nested_create_doc(model, many));
                 b.line(format!("create?: Enumerable<{model_name}Create{without_title}Input>"));
+                b.doc(nested_create_or_connect_doc(model, many));
                 b.line(format!("connectOrCreate?: Enumerable<{model_name}CreateOrConnect{without_title}Input>"));
+                b.doc(nested_connect_doc(model, many));
                 b.line(format!("connect?: Enumerable<{model_name}WhereUniqueInput>"));
             } else {
+                b.doc(nested_create_doc(model, many));
                 b.line(format!("create?: {model_name}Create{without_title}Input"));
+                b.doc(nested_create_or_connect_doc(model, many));
                 b.line(format!("connectOrCreate?: {model_name}CreateOrConnect{without_title}Input"));
+                b.doc(nested_connect_doc(model, many));
                 b.line(format!("connect?: {model_name}WhereUniqueInput"));
             }
         }, "}")
@@ -44,7 +50,9 @@ fn generate_model_create_or_connect_input(model: &Model, without: Option<&str>) 
     };
     Code::new(0, 4, |c| {
         c.block(format!("export type {model_name}CreateOrConnect{without_title}Input = {{"), |b| {
+            b.doc(unique_connect_doc(model));
             b.line(format!("where: {model_name}WhereUniqueInput"));
+            b.doc(unique_connect_create_doc(model));
             b.line(format!("create: {model_name}Create{without_title}Input"));
         }, "}")
     }).to_string()
@@ -124,8 +132,11 @@ fn generate_model_upsert_with_where_unique_input(model: &Model, without: Option<
     };
     Code::new(0, 4, |c| {
         c.block(format!("export type {model_name}UpsertWithWhereUnique{without_title}Input = {{"), |b| {
+            b.doc(unique_where_doc(model));
             b.line(format!("where: {model_name}WhereUniqueInput"));
+            b.doc(create_or_update_doc(model, ActionType::Update));
             b.line(format!("update: {model_name}Update{without_title}Input"));
+            b.doc(create_or_update_doc(model, ActionType::Create));
             b.line(format!("create: {model_name}Create{without_title}Input"));
         }, "}")
     }).to_string()
@@ -141,7 +152,9 @@ fn generate_model_update_with_where_unique_input(model: &Model, without: Option<
     };
     Code::new(0, 4, |c| {
         c.block(format!("export type {model_name}UpdateWithWhereUnique{without_title}Input = {{"), |b| {
+            b.doc(unique_where_doc(model));
             b.line(format!("where: {model_name}WhereUniqueInput"));
+            b.doc(create_or_update_doc(model, ActionType::Update));
             b.line(format!("update: {model_name}Update{without_title}Input"));
         }, "}")
     }).to_string()
@@ -157,7 +170,9 @@ fn generate_model_update_many_with_where_input(model: &Model, without: Option<&s
     };
     Code::new(0, 4, |c| {
         c.block(format!("export type {model_name}UpdateManyWithWhere{without_title}Input = {{"), |b| {
+            b.doc(where_doc(model));
             b.line(format!("where: {model_name}WhereInput"));
+            b.doc(create_or_update_doc(model, ActionType::UpdateMany));
             b.line(format!("update: {model_name}Update{without_title}Input"));
         }, "}")
     }).to_string()
@@ -175,26 +190,46 @@ fn generate_model_update_nested_input(_graph: &Graph, model: &Model, without: Op
     Code::new(0, 4, |c| {
         c.block(format!("export type {model_name}UpdateNested{many_title}{without_title}Input = {{"), |b| {
             if many {
+                b.doc(nested_create_doc(model, many));
                 b.line(format!("create?: Enumerable<{model_name}Create{without_title}Input>"));
+                b.doc(nested_create_or_connect_doc(model, many));
                 b.line(format!("connectOrCreate?: Enumerable<{model_name}CreateOrConnect{without_title}Input>"));
+                b.doc(nested_connect_doc(model, many));
                 b.line(format!("connect?: Enumerable<{model_name}WhereUniqueInput>"));
+                b.doc(nested_set_doc(model, many));
                 b.line(format!("set?: Enumerable<{model_name}WhereUniqueInput>"));
+                b.doc(nested_update_doc(model, many));
                 b.line(format!("update?: Enumerable<{model_name}UpdateWithWhereUnique{without_title}Input>"));
+                b.doc(nested_upsert_doc(model, many));
                 b.line(format!("upsert?: Enumerable<{model_name}UpsertWithWhereUnique{without_title}Input>"));
+                b.doc(nested_disconnect_doc(model, many));
                 b.line(format!("disconnect?: Enumerable<{model_name}WhereUniqueInput>"));
+                b.doc(nested_delete_doc(model, many));
                 b.line(format!("delete?: Enumerable<{model_name}WhereUniqueInput>"));
+                b.doc(nested_update_doc(model, true));
                 b.line(format!("updateMany?: Enumerable<{model_name}UpdateManyWithWhere{without_title}Input>"));
+                b.doc(nested_delete_doc(model, true));
                 b.line(format!("deleteMany?: Enumerable<{model_name}WhereInput>"));
             } else {
+                b.doc(nested_create_doc(model, many));
                 b.line(format!("create?: {model_name}Create{without_title}Input"));
+                b.doc(nested_create_or_connect_doc(model, many));
                 b.line(format!("connectOrCreate?: {model_name}CreateOrConnect{without_title}Input"));
+                b.doc(nested_connect_doc(model, many));
                 b.line(format!("connect?: {model_name}WhereUniqueInput"));
+                b.doc(nested_set_doc(model, many));
                 b.line(format!("set?: {model_name}WhereUniqueInput"));
+                b.doc(nested_update_doc(model, many));
                 b.line(format!("update?: {model_name}UpdateWithWhereUnique{without_title}Input"));
+                b.doc(nested_upsert_doc(model, many));
                 b.line(format!("upsert?: {model_name}UpsertWithWhereUnique{without_title}Input"));
+                b.doc(nested_disconnect_doc(model, many));
                 b.line(format!("disconnect?: {model_name}WhereUniqueInput"));
+                b.doc(nested_delete_doc(model, many));
                 b.line(format!("delete?: {model_name}WhereUniqueInput"));
+                b.doc(nested_update_doc(model, true));
                 b.line(format!("updateMany?: {model_name}UpdateManyWithWhere{without_title}Input"));
+                b.doc(nested_delete_doc(model, true));
                 b.line(format!("deleteMany?: {model_name}WhereInput"));
             }
         }, "}")
@@ -270,12 +305,14 @@ fn generate_model_credentials_input(model: &Model) -> String {
                 let field = model.field(key).unwrap();
                 let field_name = &field.name;
                 let field_type = field.field_type.to_typescript_type(auth_identity_optional);
+                b.doc(field_doc(field));
                 b.line(format!("{field_name}: {field_type}"));
             }
             for key in auth_by_keys {
                 let field = model.field(key).unwrap();
                 let field_name = &field.name;
                 let field_type = field.field_type.to_typescript_type(auth_by_keys_optional);
+                b.doc(field_doc(field));
                 b.line(format!("{field_name}: {field_type}"));
             }
         }, "}");
@@ -358,11 +395,13 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                     if let Some(field) = m.field(k) {
                         let field_name = &field.name;
                         let field_filter = field.field_type.to_typescript_filter_type(field.optionality == Optionality::Optional);
+                        b.doc(field_doc(field));
                         b.line(format!("{field_name}?: {field_filter}"));
                     } else if let Some(relation) = m.relation(k) {
                         let list = if relation.is_vec { "List" } else { "" };
                         let relation_name = &relation.name;
                         let relation_model = &relation.model;
+                        b.doc(relation_doc(relation));
                         b.line(format!("{relation_name}?: {relation_model}{list}RelationFilter"));
                     }
                 })
@@ -377,6 +416,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                                 if let Some(field) = m.field(&item.field_name) {
                                     let ts_type = field.field_type.to_typescript_type(false);
                                     let field_name = &item.field_name;
+                                    b.doc(field_doc(field));
                                     b.line(format!("{field_name}?: {ts_type}"));
                                 }
                                 used_field_names.push(&item.field_name);

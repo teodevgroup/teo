@@ -122,6 +122,20 @@ pub(crate) fn credentials_doc(model: &Model, action: ActionType) -> String {
  */"#)
 }
 
+pub(crate) fn unique_connect_doc(model: &Model) -> String {
+    let object = model_localized_name_word_case(model);
+    format!(r#"/**
+ * Find which {object} to connect.
+ */"#)
+}
+
+pub(crate) fn unique_connect_create_doc(model: &Model) -> String {
+    let object = model_localized_name_word_case(model);
+    format!(r#"/**
+ * If it's not found, what data to pass to create the connected {object}.
+ */"#)
+}
+
 pub(crate) fn unique_where_doc(model: &Model) -> String {
     let object = model_localized_name_word_case(model);
     format!(r#"/**
@@ -190,6 +204,7 @@ pub(crate) fn field_doc(field: &Field) -> String {
     let desc = field_description(field);
     format!(r#"/**
  * **{name}**
+ *
  * {desc}
  */"#)
 }
@@ -199,6 +214,113 @@ pub(crate) fn relation_doc(relation: &Relation) -> String {
     let desc = relation_description(relation);
     format!(r#"/**
  * **{name}**
+ *
  * {desc}
+ */"#)
+}
+
+pub(crate) fn nested_create_doc(model: &Model, many: bool) -> String {
+    let mut object = model_localized_name_word_case(model);
+    if many {
+        object = object.to_plural();
+    } else {
+        object = object;
+    }
+    let article = if many { "" } else { "a " };
+    format!(r#"/**
+ * Create {article}connected {object}.
+ */"#)
+}
+
+pub(crate) fn nested_connect_doc(model: &Model, many: bool) -> String {
+    let mut object = model_localized_name_word_case(model);
+    if many {
+        object = object.to_plural();
+    } else {
+        object = object;
+    }
+    let article = if many { "" } else { "an " };
+    format!(r#"/**
+ * Connect to {article}existing {object}.
+ */"#)
+}
+
+pub(crate) fn nested_create_or_connect_doc(model: &Model, many: bool) -> String {
+    let mut object = model_localized_name_word_case(model);
+    if many {
+        object = object.to_plural();
+    } else {
+        object = object;
+    }
+    let article = if many { "" } else { "an " };
+    let article2 = if many { "zero or more " } else { "an " };
+    format!(r#"/**
+ * Connect to {article}existing {object} if it's exist, otherwise create {article}{object}.
+ */"#)
+}
+
+pub(crate) fn nested_set_doc(model: &Model, many: bool) -> String {
+    let mut object = model_localized_name_word_case(model);
+    if many {
+        object = object.to_plural();
+    } else {
+        object = object;
+    }
+    let article = if many { "" } else { "an " };
+    format!(r#"/**
+ * Set to {article}existing {object}. This unsets the previous relation.
+ */"#)
+}
+
+pub(crate) fn nested_update_doc(model: &Model, many: bool) -> String {
+    let mut object = model_localized_name_word_case(model);
+    if many {
+        object = object.to_plural();
+    } else {
+        object = object;
+    }
+    let article = if many { "" } else { "an " };
+    format!(r#"/**
+ * Update {article}existing connected {object}.
+ */"#)
+}
+
+pub(crate) fn nested_upsert_doc(model: &Model, many: bool) -> String {
+    let mut object = model_localized_name_word_case(model);
+    if many {
+        object = object.to_plural();
+    } else {
+        object = object;
+    }
+    let article = if many { "" } else { "an " };
+    let article2 = if many { "zero or more " } else { "an " };
+    format!(r#"/**
+ * Update {article}existing {object} if it's exist, otherwise create {article}{object}.
+ */"#)
+}
+
+pub(crate) fn nested_disconnect_doc(model: &Model, many: bool) -> String {
+    let mut object = model_localized_name_word_case(model);
+    if many {
+        object = object.to_plural();
+    } else {
+        object = object;
+    }
+    let article = if many { "" } else { "an " };
+    format!(r#"/**
+ * Disconnect from {article}existing {object}.
+ */"#)
+}
+
+pub(crate) fn nested_delete_doc(model: &Model, many: bool) -> String {
+    let mut object = model_localized_name_word_case(model);
+    if many {
+        object = object.to_plural();
+    } else {
+        object = object;
+    }
+    let article = if many { "" } else { "an " };
+    format!(r#"/**
+ * Delete {article}existing connected {object}.
  */"#)
 }
