@@ -62,30 +62,31 @@ export type TokenInfo = {{
 let bearerToken: string | undefined = undefined
 let bearerTokenLoaded: boolean = false
 
-export const setCookie = (key: string, value: string | undefined) => {{
-    if (!document) return
-    let retval = document.cookie.replace(new RegExp(`${{key}}:(.*?); ?`), '')
-    if (value) {{
-        retval = retval + " " + key + "=" + value + ";";
-    }}
-    document.cookie = retval
+export function setCookie(name: string, value: string | undefined, daysToLive: number = 365) {{
+    let cookie = name + "=" + (value ? encodeURIComponent(value!) : '')
+    cookie += "; max-age=" + (value ? (daysToLive * 24 * 60 * 60) : 0)
+    document.cookie = cookie
 }}
 
-export const getCookie = (key: string, cookie?: string): string | undefined => {{
+export function getCookie(name: string, cookie?: string) : string | undefined {{
     let fullString
     if (typeof window === 'undefined') {{
         fullString = cookie
     }} else {{
         fullString = cookie ?? document.cookie
     }}
-    if (!fullString) return undefined
-    const result = fullString.match(new RegExp(`${{key}}=([^; ]*);?`))
-    if (result === null) return undefined
-    return result[1]
+    var cookieArr = fullString!.split(";")
+    for(var i = 0; i < cookieArr.length; i++) {{
+        var cookiePair = cookieArr[i].split("=")
+        if(name == cookiePair[0].trim()) {{
+            return decodeURIComponent(cookiePair[1])
+        }}
+    }}
+    return undefined
 }}
 
 export function setBearerToken(token: string | undefined) {{
-    if (typeof window === 'undefined') {{
+    if (typeof window !== 'undefined') {{
         // local storage
         if (token === undefined) {{
             localStorage.removeItem("__teo_bearer_token")
