@@ -262,9 +262,6 @@ impl ModelBuilder {
         let mut primary_field: Option<Arc<Field>> = None;
         let mut primary = self.primary.clone();
         let mut indices = self.indices.clone();
-        if let Some(primary) = primary {
-            indices.push(primary.clone())
-        }
         for relation in relations_vec.iter() {
             relations_map.insert(relation.name.clone(), relation.clone());
         }
@@ -283,6 +280,7 @@ impl ModelBuilder {
                         }
                     ]
                 });
+                indices.push(primary.as_ref().unwrap().clone());
             }
             if field.index != FieldIndex::NoIndex {
                 match &field.index {
