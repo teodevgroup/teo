@@ -1,15 +1,37 @@
 use crate::core::graph::Graph;
 
-pub(crate) async fn generate_filter_ts(_graph: &Graph) -> String {
-    format!(r#"export type ObjectIdFilter = {{
-    equals?: string
-    in?: string[]
-    notIn?: string[]
-    lt?: string
-    lte?: string
-    gt?: string
-    gte?: string
-    not?: ObjectIdFilter | string
+pub(crate) async fn generate_filters_cs(_graph: &Graph) -> String {
+    format!(r#"namespace Teo {{
+    public class ObjectIdFilter {{
+        public new string? Equals {{ get; set; }}
+        public string[]? In {{ get; set; }}
+        public string[]? NotIn {{ get; set; }}
+        public string? Lt {{ get; set; }}
+        public string? Lte {{ get; set; }}
+        public string? Gt {{ get; set; }}
+        public string? Gte {{ get; set; }}
+        public OneOf<string, ObjectIdFilter>? Not {{ get; set; }}
+
+        public ObjectIdFilter(
+            string? equals = null,
+            string[]? @in = null,
+            string[]? notIn = null,
+            string? lt = null,
+            string? lte = null,
+            string? gt = null,
+            string? gte = null,
+            OneOf<string, ObjectIdFilter>? not = null
+        ) {{
+            Equals = equals;
+            In = @in;
+            NotIn = notIn;
+            Lt = lt;
+            Lte = lte;
+            Gt = gt;
+            Gte = gte;
+            Not = not;
+        }}
+    }}
 }}
 
 export type ObjectIdNullableFilter = {{
