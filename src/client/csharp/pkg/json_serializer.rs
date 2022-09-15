@@ -8,6 +8,16 @@ using System.Text.Json.Serialization;
 #nullable enable
 namespace Teo {{
 
+    public class DateTimeConverter : JsonConverter<DateTime> {{
+        public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {{
+            return DateTime.Parse(reader.GetString() ?? string.Empty);
+        }}
+
+        public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options) {{
+            writer.WriteStringValue(value.ToString("yyyy-MM-ddTHH:mm:ss.fffK"));
+        }}
+    }}
+
     public class DateTimeOffsetConverter : JsonConverter<DateTimeOffset> {{
         public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {{
             return DateTimeOffset.Parse(reader.GetString() ?? string.Empty);
@@ -37,6 +47,7 @@ namespace Teo {{
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             }};
+            options.Converters.Add(new DateTimeConverter());
             options.Converters.Add(new DateTimeOffsetConverter());
             options.Converters.Add(new OptionalJsonConverter<string>());
             options.Converters.Add(new OptionalJsonConverter<int>());
