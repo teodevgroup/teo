@@ -1,7 +1,6 @@
 use crate::core::field::{Optionality};
 use crate::core::field::r#type::FieldType;
 
-
 pub(crate) trait ToTypeScriptType {
     fn to_typescript_type(&self, optional: bool) -> String;
     fn to_typescript_filter_type(&self, optional: bool) -> String;

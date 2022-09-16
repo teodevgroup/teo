@@ -76,12 +76,12 @@ namespace Teo {{
         public NullableBoolFieldUpdateOperationsInput(Optional<bool>? set) {{ Set = set; }}
     }}
 
-    public class DateFieldUpdateOperationsInput {{
+    public class DateOnlyFieldUpdateOperationsInput {{
         public DateOnly? Set {{ get; set; }}
         public DateFieldUpdateOperationsInput(DateOnly? set) {{ Set = set; }}
     }}
 
-    public class NullableDateFieldUpdateOperationsInput {{
+    public class NullableDateOnlyFieldUpdateOperationsInput {{
         public Optional<DateOnly>? Set {{ get; set; }}
         public NullableDateFieldUpdateOperationsInput(Optional<DateOnly>? set) {{ Set = set; }}
     }}
