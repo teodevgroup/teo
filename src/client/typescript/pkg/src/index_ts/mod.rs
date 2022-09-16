@@ -343,46 +343,43 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
         });
         // model definitions
         graph.models().iter().for_each(|m| {
-            if m.actions().len() > 0 {
-                let model_name = m.name();
-                c.block(format!("export type {model_name} = {{"), |b| {
-                    m.output_keys().iter().for_each(|k| {
-                        if let Some(_field) = m.field(k) {
-                            let field = m.field(k).unwrap();
-                            let field_name = &field.name;
-                            let field_type = field.field_type.to_typescript_type(field.optionality == Optionality::Optional);
-                            b.line(format!("{field_name}: {field_type}"));
-                        } else if let Some(_relation) = m.relation(k) {
-
-                        }
-                    });
-                }, "}");
-                c.empty_line();
-            }
+            let model_name = m.name();
+            c.block(format!("export type {model_name} = {{"), |b| {
+                m.output_keys().iter().for_each(|k| {
+                    if let Some(field) = m.field(k) {
+                        let field_name = &field.name;
+                        let field_type = field.field_type.to_typescript_type(field.optionality == Optionality::Optional);
+                        b.line(format!("{field_name}: {field_type}"));
+                    }
+                });
+            }, "}");
+            c.empty_line();
         });
         // model input arguments
         graph.models().iter().for_each(|m| {
-            if m.actions().len() == 0 { return }
             let model_name = m.name();
-            let _model_var_name = model_name.to_camel_case();
+            // select
             c.block(format!("export type {model_name}Select = {{"), |b| {
                 m.output_keys().iter().for_each(|k| {
-                    if let Some(_field) = m.field(k) {
-                        let field = m.field(k).unwrap();
+                    if let Some(field) = m.field(k) {
                         let field_name = &field.name;
+                        b.doc(field_doc(field));
                         b.line(format!("{field_name}?: boolean"));
                     }
                 })
             }, "}");
+            // include
             c.block(format!("export type {model_name}Include = {{"), |b| {
                 for relation in m.relations() {
                     let name = &relation.name;
                     let is_vec = relation.is_vec;
                     let find_many = if is_vec { "FindMany" } else { "" };
                     let r_model = &relation.model;
-                    b.line(format!("{name}?: boolean | null | {r_model}{find_many}Args"));
+                    b.doc(relation_doc(relation));
+                    b.line(format!("{name}?: boolean | {r_model}{find_many}Args"));
                 }
             }, "}");
+            // where
             c.block(format!("export type {model_name}WhereInput = {{"), |b| {
                 for op in ["AND", "OR", "NOT"] {
                     b.line(format!("{op}?: Enumerable<{model_name}WhereInput>"));
@@ -402,6 +399,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                     }
                 })
             }, "}");
+            // where unique
             c.block(format!("export type {model_name}WhereUniqueInput = {{"), |b| {
                 use ModelIndexType::*;
                 let mut used_field_names: Vec<&str> = Vec::new();

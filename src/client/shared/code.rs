@@ -23,9 +23,11 @@ impl Code {
 
     pub(crate) fn block<S: Into<String>, F: Fn(&mut Code), E: Into<String>>(&mut self, start: S, build: F, end: E) {
         let code = Code::new(self.indent_level + 1, self.indent_space, build);
-        self.content += &" ".repeat((self.indent_level * self.indent_space) as usize);
-        self.content += &start.into();
-        self.content += "\n";
+        if !start.is_empty() {
+            self.content += &" ".repeat((self.indent_level * self.indent_space) as usize);
+            self.content += &start.into();
+            self.content += "\n";
+        }
         self.content += code.to_str();
         let end = end.into();
         if !end.is_empty() {
@@ -33,6 +35,10 @@ impl Code {
             self.content += &end;
             self.content += "\n";
         }
+    }
+
+    pub(crate) fn indented(&mut self, doc: impl Into<String>) {
+        self.doc(doc)
     }
 
     pub(crate) fn doc<D: Into<String>>(&mut self, doc: D) {
