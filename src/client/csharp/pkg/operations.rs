@@ -1,7 +1,9 @@
 use crate::core::graph::Graph;
 
 pub(crate) async fn generate_operations_cs(_graph: &Graph) -> String {
-    format!(r#"namespace Teo {{
+    format!(r#"using System;
+
+namespace Teo {{
     public class ObjectIdFieldUpdateOperationsInput {{
         public string? Set {{ get; set; }}
         public ObjectIdFieldUpdateOperationsInput(string? set) {{ Set = set; }}

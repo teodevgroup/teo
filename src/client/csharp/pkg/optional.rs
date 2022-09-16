@@ -1,12 +1,7 @@
 use crate::core::graph::Graph;
 
 pub(crate) async fn generate_optional_cs(_graph: &Graph) -> String {
-    format!(r#"using System;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using OneOf;
-
-namespace Teo {{
+    format!(r#"namespace Teo {{
 
     public class Null {{
         public Null() {{ }}

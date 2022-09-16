@@ -106,6 +106,7 @@ pub struct ClientBuilder {
     type_script: Option<TypeScriptClient>,
     swift: Option<SwiftClient>,
     kotlin: Option<KotlinClient>,
+    csharp: Option<CSharpClient>,
     host_url: Option<String>,
 }
 
@@ -115,6 +116,7 @@ impl ClientBuilder {
             type_script: None,
             swift: None,
             kotlin: None,
+            csharp: None,
             host_url: None,
         }
     }
@@ -124,6 +126,7 @@ impl ClientBuilder {
             type_script: self.type_script.clone(),
             swift: self.swift.clone(),
             kotlin: self.kotlin.clone(),
+            csharp: self.csharp.clone(),
             host_url: self.host_url.clone(),
         }
     }
@@ -149,6 +152,13 @@ impl ClientBuilder {
         self
     }
 
+    pub fn csharp<F: Fn(&mut CSharpClientBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut builder = CSharpClientBuilder::new();
+        build(&mut builder);
+        self.csharp = Some(builder.build());
+        self
+    }
+
     pub fn host_url(&mut self, url: impl Into<String>) -> &mut Self {
         self.host_url = Some(url.into());
         self
@@ -160,6 +170,7 @@ pub struct ClientConfiguration {
     pub(crate) type_script: Option<TypeScriptClient>,
     pub(crate) swift: Option<SwiftClient>,
     pub(crate) kotlin: Option<KotlinClient>,
+    pub(crate) csharp: Option<CSharpClient>,
     pub(crate) host_url: Option<String>,
 }
 
@@ -169,6 +180,7 @@ impl Default for ClientConfiguration {
             type_script: None,
             swift: None,
             kotlin: None,
+            csharp: None,
             host_url: None,
         }
     }
@@ -273,6 +285,25 @@ impl KotlinClientBuilder {
     pub fn jetpack_compose_states(&mut self) -> &mut Self {
         self.jetpack_compose_states = true;
         self
+    }
+}
+
+#[derive(Clone)]
+pub struct CSharpClient {
+}
+
+pub struct CSharpClientBuilder {
+}
+
+impl CSharpClientBuilder {
+    pub(crate) fn new() -> CSharpClientBuilder {
+        CSharpClientBuilder {
+        }
+    }
+
+    pub(crate) fn build(&self) -> CSharpClient {
+        CSharpClient {
+        }
     }
 }
 

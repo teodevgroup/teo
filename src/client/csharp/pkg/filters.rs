@@ -1,9 +1,9 @@
-use crate::client::csharp::pkg::filters::numbers::generate_number_filters;
 use crate::core::graph::Graph;
 
 pub(crate) async fn generate_filters_cs(_graph: &Graph) -> String {
-    let number_filters = generate_number_filters().await;
-    format!(r#"namespace Teo {{
+    format!(r#"using System;
+
+namespace Teo {{
     public class ObjectIdFilter {{
         public new string? Equals {{ get; set; }}
         public string[]? In {{ get; set; }}

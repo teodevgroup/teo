@@ -2,6 +2,7 @@ use crate::core::graph::Graph;
 
 pub(crate) async fn generate_json_serializer_cs(_graph: &Graph) -> String {
     format!(r#"using System;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 

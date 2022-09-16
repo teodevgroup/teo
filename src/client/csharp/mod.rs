@@ -4,7 +4,6 @@ use crate::client::csharp::pkg::json_serializer::generate_json_serializer_cs;
 use crate::client::csharp::pkg::one_of::generate_one_of_cs;
 use crate::client::csharp::pkg::operations::generate_operations_cs;
 use crate::client::csharp::pkg::optional::generate_optional_cs;
-use crate::client::csharp::pkg::shared::generate_shared_cs;
 use crate::client::shared::{clear_directory, ensure_directory, generate_file};
 use crate::core::graph::Graph;
 
