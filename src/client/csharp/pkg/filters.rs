@@ -1,8 +1,6 @@
 use crate::client::csharp::pkg::filters::numbers::generate_number_filters;
 use crate::core::graph::Graph;
 
-pub(crate) mod numbers;
-
 pub(crate) async fn generate_filters_cs(_graph: &Graph) -> String {
     let number_filters = generate_number_filters().await;
     format!(r#"namespace Teo {{
@@ -45,8 +43,6 @@ pub(crate) async fn generate_filters_cs(_graph: &Graph) -> String {
         public string? Lte {{ get; set; }}
         public string? Gt {{ get; set; }}
         public string? Gte {{ get; set; }}
-
-        [JsonConverter(typeof(OneOfJsonConverter<Optional<string>, ObjectIdNullableFilter>))]
         public OneOf<Optional<string>, ObjectIdNullableFilter>? Not {{ get; set; }}
 
         public ObjectIdNullableFilter(
@@ -72,7 +68,6 @@ pub(crate) async fn generate_filters_cs(_graph: &Graph) -> String {
 
     public class BoolFilter {{
         public new bool? Equals {{ get; set; }}
-        [JsonConverter(typeof(OneOfJsonConverter<bool, ObjectIdFilter>))]
         public OneOf<bool, BoolFilter>? Not {{ get; set; }}
 
         public BoolFilter(
@@ -86,7 +81,6 @@ pub(crate) async fn generate_filters_cs(_graph: &Graph) -> String {
 
     public class BoolNullableFilter {{
         public new Optional<bool>? Equals {{ get; set; }}
-        [JsonConverter(typeof(OneOfJsonConverter<Optional<bool>, BoolNullableFilter>))]
         public OneOf<Optional<bool>, BoolNullableFilter>? Not {{ get; set; }}
 
         public BoolNullableFilter(
@@ -98,7 +92,67 @@ pub(crate) async fn generate_filters_cs(_graph: &Graph) -> String {
         }}
     }}
 
-{number_filters}
+    public class NumberFilter<T> where T: struct {{
+        public new T? Equals {{ get; set; }}
+        public T[]? In {{ get; set; }}
+        public T[]? NotIn {{ get; set; }}
+        public T? Lt {{ get; set; }}
+        public T? Lte {{ get; set; }}
+        public T? Gt {{ get; set; }}
+        public T? Gte {{ get; set; }}
+        public OneOf<T, NumberFilter<T>>? Not {{ get; set; }}
+
+        public NumberFilter(
+            T? equals = null,
+            T[]? @in = null,
+            T[]? notIn = null,
+            T? lt = null,
+            T? lte = null,
+            T? gt = null,
+            T? gte = null,
+            OneOf<T, NumberFilter<T>>? not = null
+        ) {{
+            Equals = equals;
+            In = @in;
+            NotIn = notIn;
+            Lt = lt;
+            Lte = lte;
+            Gt = gt;
+            Gte = gte;
+            Not = not;
+        }}
+    }}
+
+    public class NumberNullableFilter<T> where T: struct {{
+        public new Optional<T>? Equals {{ get; set; }}
+        public Optional<T>[]? In {{ get; set; }}
+        public Optional<T>[]? NotIn {{ get; set; }}
+        public T? Lt {{ get; set; }}
+        public T? Lte {{ get; set; }}
+        public T? Gt {{ get; set; }}
+        public T? Gte {{ get; set; }}
+        public OneOf<Optional<T>, NumberNullableFilter<T>>? Not {{ get; set; }}
+
+        public NumberNullableFilter(
+            Optional<T>? equals = null,
+            Optional<T>[]? @in = null,
+            Optional<T>[]? notIn = null,
+            T? lt = null,
+            T? lte = null,
+            T? gt = null,
+            T? gte = null,
+            OneOf<Optional<T>, NumberNullableFilter<T>>? not = null
+        ) {{
+            Equals = equals;
+            In = @in;
+            NotIn = notIn;
+            Lt = lt;
+            Lte = lte;
+            Gt = gt;
+            Gte = gte;
+            Not = not;
+        }}
+    }}
 
     public class StringFilter {{
         public new string? Equals {{ get; set; }}
@@ -112,7 +166,6 @@ pub(crate) async fn generate_filters_cs(_graph: &Graph) -> String {
         public string? StartsWith {{ get; set; }}
         public string? EndsWith {{ get; set; }}
         public string? Matches {{ get; set; }}
-        [JsonConverter(typeof(OneOfJsonConverter<string, StringFilter>))]
         public OneOf<string, StringFilter>? Not {{ get; set; }}
 
         public StringFilter(
@@ -156,7 +209,6 @@ pub(crate) async fn generate_filters_cs(_graph: &Graph) -> String {
         public string? StartsWith {{ get; set; }}
         public string? EndsWith {{ get; set; }}
         public string? Matches {{ get; set; }}
-        [JsonConverter(typeof(OneOfJsonConverter<string, StringNullableFilter>))]
         public OneOf<Optional<string>, StringNullableFilter>? Not {{ get; set; }}
 
         public StringNullableFilter(
@@ -196,7 +248,6 @@ pub(crate) async fn generate_filters_cs(_graph: &Graph) -> String {
         public DateTime? Lte {{ get; set; }}
         public DateTime? Gt {{ get; set; }}
         public DateTime? Gte {{ get; set; }}
-        [JsonConverter(typeof(OneOfJsonConverter<DateTime, DateTimeFilter>))]
         public OneOf<DateTime, DateTimeFilter>? Not {{ get; set; }}
 
         public DateTimeFilter(
@@ -228,7 +279,6 @@ pub(crate) async fn generate_filters_cs(_graph: &Graph) -> String {
         public DateTime? Lte {{ get; set; }}
         public DateTime? Gt {{ get; set; }}
         public DateTime? Gte {{ get; set; }}
-        [JsonConverter(typeof(OneOfJsonConverter<Optional<DateTime>, DateTimeNullableFilter>))]
         public OneOf<Optional<DateTime>, DateTimeNullableFilter>? Not {{ get; set; }}
 
         public DateTimeNullableFilter(
@@ -260,7 +310,6 @@ pub(crate) async fn generate_filters_cs(_graph: &Graph) -> String {
         public DateOnly? Lte {{ get; set; }}
         public DateOnly? Gt {{ get; set; }}
         public DateOnly? Gte {{ get; set; }}
-        [JsonConverter(typeof(OneOfJsonConverter<DateOnly, DateOnlyFilter>))]
         public OneOf<DateOnly, DateOnlyFilter>? Not {{ get; set; }}
 
         public DateOnlyFilter(
@@ -292,7 +341,6 @@ pub(crate) async fn generate_filters_cs(_graph: &Graph) -> String {
         public DateOnly? Lte {{ get; set; }}
         public DateOnly? Gt {{ get; set; }}
         public DateOnly? Gte {{ get; set; }}
-        [JsonConverter(typeof(OneOfJsonConverter<Optional<DateOnly>, DateOnlyNullableFilter>))]
         public OneOf<Optional<DateOnly>, DateOnlyNullableFilter>? Not {{ get; set; }}
 
         public DateOnlyNullableFilter(
@@ -312,6 +360,44 @@ pub(crate) async fn generate_filters_cs(_graph: &Graph) -> String {
             Lte = lte;
             Gt = gt;
             Gte = gte;
+            Not = not;
+        }}
+    }}
+
+    public class EnumFilter<T> where T: struct {{
+        public new T? Equals {{ get; set; }}
+        public T[]? In {{ get; set; }}
+        public T[]? NotIn {{ get; set; }}
+        public OneOf<T, EnumFilter<T>>? Not {{ get; set; }}
+
+        public EnumFilter(
+            T? equals,
+            T[]? @in,
+            T[]? notIn,
+            OneOf<T, EnumFilter<T>>? not
+        ) {{
+            Equals = equals;
+            In = @in;
+            NotIn = notIn;
+            Not = not;
+        }}
+    }}
+
+    public class EnumNullableFilter<T> where T : struct {{
+        public new Optional<T>? Equals {{ get; set; }}
+        public Optional<T>[]? In {{ get; set; }}
+        public Optional<T>[]? NotIn {{ get; set; }}
+        public OneOf<Optional<T>, EnumNullableFilter<T>>? Not {{ get; set; }}
+
+        public EnumNullableFilter(
+            Optional<T>? equals,
+            Optional<T>[]? @in,
+            Optional<T>[]? notIn,
+            OneOf<Optional<T>, EnumNullableFilter<T>>? not
+        ) {{
+            Equals = equals;
+            In = @in;
+            NotIn = notIn;
             Not = not;
         }}
     }}
