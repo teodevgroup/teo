@@ -315,38 +315,106 @@ pub(crate) async fn generate_filters_cs(_graph: &Graph) -> String {
             Not = not;
         }}
     }}
-}}
 
-export type EnumFilter<T> = {{
-    equals: T
-    in?: T[]
-    notIn?: T[]
-    not?: EnumFilter<T>
-}}
+    public class ValueArrayFilter<T> where T: struct {{
+        public new T? Equals {{ set; get; }}
+        public T? Has {{ set; get; }}
+        public T[]? HasSome {{ set; get; }}
+        public T[]? HasEvery {{ set; get; }}
+        public bool? IsEmpty {{ get; set; }}
+        public int? Length {{ get; set; }}
 
-export type EnumNullableFilter<T> = {{
-    equals: T | null
-    in?: (T | null)[]
-    notIn?: (T | null)[]
-    not?: EnumNullableFilter<T> | T | null
-}}
+        public ValueArrayFilter(
+            T? equals = null,
+            T? has = null,
+            T[]? hasSome = null,
+            T[]? hasEvery = null,
+            bool? isEmpty = null,
+            int? length = null
+        ) {{
+            Equals = equals;
+            Has = has;
+            HasSome = hasSome;
+            HasEvery = hasEvery;
+            IsEmpty = isEmpty;
+            Length = length;
+        }}
+    }}
 
-export type ArrayFilter<T> = {{
-    equals: T[]
-    has?: T
-    hasSome?: T[]
-    hasEvery?: T[]
-    isEmpty?: boolean
-    length?: number
-}}
+    public class ValueArrayNullableFilter<T> where T: struct {{
+        public new Optional<T>? Equals {{ set; get; }}
+        public T? Has {{ set; get; }}
+        public T[]? HasSome {{ set; get; }}
+        public T[]? HasEvery {{ set; get; }}
+        public bool? IsEmpty {{ get; set; }}
+        public int? Length {{ get; set; }}
 
-export type ArrayNullableFilter<T> = {{
-    equals: T[] | null
-    has?: T
-    hasSome?: T[]
-    hasEvery?: T[]
-    isEmpty?: boolean
-    length?: number
+        public ValueArrayNullableFilter(
+            Optional<T>? equals = null,
+            T? has = null,
+            T[]? hasSome = null,
+            T[]? hasEvery = null,
+            bool? isEmpty = null,
+            int? length = null
+        ) {{
+            Equals = equals;
+            Has = has;
+            HasSome = hasSome;
+            HasEvery = hasEvery;
+            IsEmpty = isEmpty;
+            Length = length;
+        }}
+    }}
+
+    public class RefArrayFilter<T> where T: class {{
+        public new T? Equals {{ set; get; }}
+        public T? Has {{ set; get; }}
+        public T[]? HasSome {{ set; get; }}
+        public T[]? HasEvery {{ set; get; }}
+        public bool? IsEmpty {{ get; set; }}
+        public int? Length {{ get; set; }}
+
+        public RefArrayFilter(
+            T? equals = null,
+            T? has = null,
+            T[]? hasSome = null,
+            T[]? hasEvery = null,
+            bool? isEmpty = null,
+            int? length = null
+        ) {{
+            Equals = equals;
+            Has = has;
+            HasSome = hasSome;
+            HasEvery = hasEvery;
+            IsEmpty = isEmpty;
+            Length = length;
+        }}
+    }}
+
+    public class RefArrayNullableFilter<T> where T: class {{
+        public new Optional<T>? Equals {{ set; get; }}
+        public T? Has {{ set; get; }}
+        public T[]? HasSome {{ set; get; }}
+        public T[]? HasEvery {{ set; get; }}
+        public bool? IsEmpty {{ get; set; }}
+        public int? Length {{ get; set; }}
+
+        public RefArrayNullableFilter(
+            Optional<T>? equals = null,
+            T? has = null,
+            T[]? hasSome = null,
+            T[]? hasEvery = null,
+            bool? isEmpty = null,
+            int? length = null
+        ) {{
+            Equals = equals;
+            Has = has;
+            HasSome = hasSome;
+            HasEvery = hasEvery;
+            IsEmpty = isEmpty;
+            Length = length;
+        }}
+    }}
 }}
 "#)
 }
