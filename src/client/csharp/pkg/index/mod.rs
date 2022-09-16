@@ -53,6 +53,8 @@ impl CSharpClassBuilder {
                     }
                     b.line(format!("public {field_type}{question_mark} {field_name} {get_set}"))
                 }
+                b.empty_line();
+                b.empty_line();
                 b.block(format!("public {class_name}("), |b| {
                     for f in &required_fields {
                         let camelized = f.n.to_camel_case();
@@ -115,7 +117,7 @@ fn generate_model_create_nested_input(_graph: &Graph, model: &Model, without: Op
         name: format!("{model_name}CreateNested{many_title}{without_title}Input"),
         fields: class_fields,
         indent_spaces: 4,
-        indent_level: 1
+        indent_level: 0
     };
     builder.build()
 }
@@ -147,7 +149,7 @@ fn generate_model_create_or_connect_input(model: &Model, without: Option<&str>) 
         name: format!("{model_name}CreateOrConnect{without_title}Input"),
         fields: class_fields,
         indent_spaces: 4,
-        indent_level: 1
+        indent_level: 0
     };
     builder.build()
 }
@@ -217,7 +219,7 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
         name: format!("{model_name}Create{without_title}Input"),
         fields: class_fields,
         indent_spaces: 4,
-        indent_level: 1
+        indent_level: 0
     };
     builder.build()
 }
@@ -256,7 +258,7 @@ fn generate_model_upsert_with_where_unique_input(model: &Model, without: Option<
         name: format!("{model_name}UpsertWithWhereUnique{without_title}Input"),
         fields: class_fields,
         indent_spaces: 4,
-        indent_level: 1
+        indent_level: 0
     };
     builder.build()
 }
@@ -288,7 +290,7 @@ fn generate_model_update_with_where_unique_input(model: &Model, without: Option<
         name: format!("{model_name}UpdateWithWhereUnique{without_title}Input"),
         fields: class_fields,
         indent_spaces: 4,
-        indent_level: 1
+        indent_level: 0
     };
     builder.build()
 }
@@ -320,7 +322,7 @@ fn generate_model_update_many_with_where_input(model: &Model, without: Option<&s
             }
         ],
         indent_spaces: 4,
-        indent_level: 1
+        indent_level: 0
     };
     builder.build()
 }
@@ -413,7 +415,7 @@ fn generate_model_update_nested_input(_graph: &Graph, model: &Model, without: Op
         name: format!("{model_name}UpdateNested{many_title}{without_title}Input"),
         fields: class_fields,
         indent_spaces: 4,
-        indent_level: 1
+        indent_level: 0
     };
     builder.build()
 }
@@ -435,7 +437,7 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
     model.input_keys().iter().for_each(|k| {
         if let Some(field) = model.field(k) {
             let field_name = &field.name;
-            let field_cs_type = field.field_type.to_csharp_update_input_type(field.optionality == Optionality::Optional);
+            let field_cs_type = field.field_type.to_csharp_update_input_type(field.optionality == Optionality::Optional, true);
             let ignore_this_field = if let Some(without_relation) = without_relation {
                 without_relation.fields.contains(k)
             } else {
@@ -483,7 +485,7 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
         name: format!("{model_name}Update{without_title}Input"),
         fields: class_fields,
         indent_spaces: 4,
-        indent_level: 1
+        indent_level: 0
     };
     builder.build()
 }
@@ -524,7 +526,7 @@ fn generate_model_credentials_input(model: &Model) -> String {
         name: format!("{model_name}CredentialsInput"),
         fields: class_fields,
         indent_spaces: 4,
-        indent_level: 1
+        indent_level: 0
     };
     builder.build()
 }
@@ -535,6 +537,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, conf: &ClientConfiguration)
         c.empty_line();
         c.line("#nullable enable");
         c.block("namespace Teo {", |c| {
+            c.empty_line();
             // enum definitions
             graph.enums().iter().for_each(|e| {
                 let name = e.0;
@@ -579,7 +582,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, conf: &ClientConfiguration)
                     name: m.name().to_owned(),
                     fields: model_fields,
                     indent_spaces: 4,
-                    indent_level: 1
+                    indent_level: 0
                 };
                 c.indented(builder.build());
                 c.empty_line();
@@ -605,7 +608,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, conf: &ClientConfiguration)
                     name: format!("{model_name}Select"),
                     fields: select_fields,
                     indent_spaces: 4,
-                    indent_level: 1
+                    indent_level: 0
                 };
                 c.indented(builder.build());
                 // include
@@ -627,7 +630,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, conf: &ClientConfiguration)
                     name: format!("{model_name}Include"),
                     fields: include_fields,
                     indent_spaces: 4,
-                    indent_level: 1
+                    indent_level: 0
                 };
                 c.indented(builder.build());
                 // where
@@ -682,7 +685,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, conf: &ClientConfiguration)
                     name: format!("{model_name}WhereInput"),
                     fields: where_fields,
                     indent_spaces: 4,
-                    indent_level: 1
+                    indent_level: 0
                 };
                 c.indented(builder.build());
                 // where unique
@@ -694,7 +697,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, conf: &ClientConfiguration)
                         index.items.iter().for_each(|item| {
                             if !used_where_unique_field_names.contains(&&***&&item.field_name) {
                                 if let Some(field) = m.field(&item.field_name) {
-                                    let cs_type = field.field_type.to_csharp_type(field.optionality == Optionality::Optional);
+                                    let cs_type = field.field_type.to_csharp_type(false);
                                     let field_name = &item.field_name;
                                     where_unique_fields.push(CSharpClassField {
                                         n: field_name.to_pascal_case(),
@@ -713,7 +716,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, conf: &ClientConfiguration)
                     name: format!("{model_name}WhereUniqueInput"),
                     fields: where_unique_fields,
                     indent_spaces: 4,
-                    indent_level: 1
+                    indent_level: 0
                 };
                 c.indented(builder.build());
                 // relation filter
@@ -737,7 +740,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, conf: &ClientConfiguration)
                     name: format!("{model_name}RelationFilter"),
                     fields: relation_filter_fields,
                     indent_spaces: 4,
-                    indent_level: 1
+                    indent_level: 0
                 };
                 c.indented(builder.build());
                 // list relation filter
@@ -768,7 +771,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, conf: &ClientConfiguration)
                     name: format!("{model_name}ListRelationFilter"),
                     fields: list_relation_filter_fields,
                     indent_spaces: 4,
-                    indent_level: 1
+                    indent_level: 0
                 };
                 c.indented(builder.build());
                 // order by
@@ -789,36 +792,36 @@ pub(crate) async fn generate_index_cs(graph: &Graph, conf: &ClientConfiguration)
                     name: format!("{model_name}OrderByInput"),
                     fields: order_by_fields,
                     indent_spaces: 4,
-                    indent_level: 1
+                    indent_level: 0
                 };
                 c.indented(builder.build());
                 // create and update inputs without anything
-                c.line(generate_model_create_input(graph, m, None));
-                c.line(generate_model_create_nested_input(graph, m, None, true));
-                c.line(generate_model_create_nested_input(graph, m, None, false));
-                c.line(generate_model_create_or_connect_input(m, None));
+                c.indented(generate_model_create_input(graph, m, None));
+                c.indented(generate_model_create_nested_input(graph, m, None, true));
+                c.indented(generate_model_create_nested_input(graph, m, None, false));
+                c.indented(generate_model_create_or_connect_input(m, None));
                 m.relations().iter().for_each(|r| {
-                    c.line(generate_model_create_input(graph, m, Some(&r.name)));
-                    c.line(generate_model_create_nested_input(graph, m, Some(&r.name), true));
-                    c.line(generate_model_create_nested_input(graph, m, Some(&r.name), false));
-                    c.line(generate_model_create_or_connect_input(m, Some(&r.name)));
+                    c.indented(generate_model_create_input(graph, m, Some(&r.name)));
+                    c.indented(generate_model_create_nested_input(graph, m, Some(&r.name), true));
+                    c.indented(generate_model_create_nested_input(graph, m, Some(&r.name), false));
+                    c.indented(generate_model_create_or_connect_input(m, Some(&r.name)));
                 });
-                c.line(generate_model_update_input(graph, m, None));
-                c.line(generate_model_update_nested_input(graph, m, None, true));
-                c.line(generate_model_update_nested_input(graph, m, None, false));
-                c.line(generate_model_upsert_with_where_unique_input(m, None));
-                c.line(generate_model_update_with_where_unique_input(m, None));
-                c.line(generate_model_update_many_with_where_input(m, None));
+                c.indented(generate_model_update_input(graph, m, None));
+                c.indented(generate_model_update_nested_input(graph, m, None, true));
+                c.indented(generate_model_update_nested_input(graph, m, None, false));
+                c.indented(generate_model_upsert_with_where_unique_input(m, None));
+                c.indented(generate_model_update_with_where_unique_input(m, None));
+                c.indented(generate_model_update_many_with_where_input(m, None));
                 m.relations().iter().for_each(|r| {
-                    c.line(generate_model_update_input(graph, m, Some(&r.name)));
-                    c.line(generate_model_update_nested_input(graph, m, Some(&r.name), true));
-                    c.line(generate_model_update_nested_input(graph, m, Some(&r.name), false));
-                    c.line(generate_model_upsert_with_where_unique_input(m, Some(&r.name)));
-                    c.line(generate_model_update_with_where_unique_input(m, Some(&r.name)));
-                    c.line(generate_model_update_many_with_where_input(m, Some(&r.name)));
+                    c.indented(generate_model_update_input(graph, m, Some(&r.name)));
+                    c.indented(generate_model_update_nested_input(graph, m, Some(&r.name), true));
+                    c.indented(generate_model_update_nested_input(graph, m, Some(&r.name), false));
+                    c.indented(generate_model_upsert_with_where_unique_input(m, Some(&r.name)));
+                    c.indented(generate_model_update_with_where_unique_input(m, Some(&r.name)));
+                    c.indented(generate_model_update_many_with_where_input(m, Some(&r.name)));
                 });
                 if m.identity() {
-                    c.line(generate_model_credentials_input(m));
+                    c.indented(generate_model_credentials_input(m));
                 }
                 // action args
                 let builder = CSharpClassBuilder {
@@ -840,7 +843,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, conf: &ClientConfiguration)
                         }
                     ],
                     indent_spaces: 4,
-                    indent_level: 1
+                    indent_level: 0
                 };
                 c.indented(builder.build());
                 ActionType::iter().for_each(|a| {

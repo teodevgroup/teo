@@ -5,7 +5,7 @@ pub(crate) trait ToCSharpType {
     fn to_csharp_type(&self, optional: bool) -> String;
     fn to_csharp_filter_type(&self, optional: bool) -> String;
     fn to_csharp_create_input_type(&self, optional: bool, no_question_mark: bool) -> String;
-    fn to_csharp_update_input_type(&self, optional: bool) -> String;
+    fn to_csharp_update_input_type(&self, optional: bool, no_question_mark: bool) -> String;
     fn to_csharp_update_operation_input(&self, optional: bool) -> String;
 }
 
@@ -113,10 +113,10 @@ impl ToCSharpType for FieldType {
         retval
     }
 
-    fn to_csharp_update_input_type(&self, optional: bool) -> String {
+    fn to_csharp_update_input_type(&self, optional: bool, no_question_mark: bool) -> String {
         let create_input = self.to_csharp_create_input_type(optional, true);
         let operation_input = self.to_csharp_update_operation_input(optional);
-        one_of(create_input, operation_input) + "?"
+        one_of(create_input, operation_input) + if no_question_mark { "" } else { "?" }
     }
 
     fn to_csharp_update_operation_input(&self, optional: bool) -> String {
