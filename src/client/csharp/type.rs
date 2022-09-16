@@ -46,7 +46,7 @@ impl ToCSharpType for FieldType {
         let base: String = match self {
             FieldType::Undefined => panic!(),
             FieldType::ObjectId | FieldType::String => "string".to_string(),
-            FieldType::Bool => "boolean".to_string(),
+            FieldType::Bool => "bool".to_string(),
             FieldType::I8 => "sbyte".to_string(),
             FieldType::U8 => "byte".to_string(),
             FieldType::I16 => "short".to_string(),
