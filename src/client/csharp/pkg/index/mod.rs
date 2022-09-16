@@ -14,6 +14,17 @@ fn get_set() -> &'static str {
     "{ get; set; }"
 }
 
+static ESCAPE_LIST: [&str; 2] = ["is", "where"];
+
+fn escape(before: impl AsRef<str>) -> String {
+    let before = before.as_ref();
+    if ESCAPE_LIST.contains(&before) {
+        format!("@{before}")
+    } else {
+        before.to_string()
+    }
+}
+
 struct CSharpClassField {
     n: String,
     t: String,
@@ -31,6 +42,7 @@ struct CSharpClassBuilder {
 
 impl CSharpClassBuilder {
     fn build(&self) -> String {
+        let total = self.fields.len();
         let required_fields = self.fields.iter().filter(|f| {
             f.o == false
         }).collect::<Vec<&CSharpClassField>>();
@@ -56,21 +68,28 @@ impl CSharpClassBuilder {
                 b.empty_line();
                 b.empty_line();
                 b.block(format!("public {class_name}("), |b| {
+                    let mut used = 0;
                     for f in &required_fields {
-                        let camelized = f.n.to_camel_case();
+                        let camelized = escape(f.n.to_camel_case());
                         let field_type = &f.t;
-                        b.line(format!("{field_type} {camelized},"));
+                        let has_comma = used != total - 1;
+                        let comma = if has_comma { "," } else { "" };
+                        b.line(format!("{field_type} {camelized}{comma}"));
+                        used += 1;
                     }
                     for f in &optional_fields {
-                        let camelized = f.n.to_camel_case();
+                        let camelized = escape(f.n.to_camel_case());
                         let field_type = &f.t;
-                        b.line(format!("{field_type}? {camelized} = null,"));
+                        let has_comma = used != total - 1;
+                        let comma = if has_comma { "," } else { "" };
+                        b.line(format!("{field_type}? {camelized} = null{comma}"));
+                        used += 1;
                     }
                 }, ") {");
                 b.block("", |b| {
                     for f in &self.fields {
                         let name = &f.n;
-                        let camelized = name.to_camel_case();
+                        let camelized = escape(name.to_camel_case());
                         b.line(format!("{name} = {camelized};"));
                     }
                 }, "}");
@@ -542,7 +561,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, conf: &ClientConfiguration)
             graph.enums().iter().for_each(|e| {
                 let name = e.0;
                 let choices = &e.1.values;
-                c.block(format!("public enum {name}"), |b| {
+                c.block(format!("public enum {name} {{"), |b| {
                     for (index, choice) in choices.iter().enumerate() {
                         let pascalized = choice.to_pascal_case();
                         let val = index + 1;
