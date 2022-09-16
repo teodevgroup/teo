@@ -408,7 +408,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                         index.items.iter().for_each(|item| {
                             if !used_field_names.contains(&&***&&item.field_name) {
                                 if let Some(field) = m.field(&item.field_name) {
-                                    let ts_type = field.field_type.to_typescript_type(false);
+                                    let ts_type = field.field_type.to_typescript_type(field.optionality == Optionality::Optional);
                                     let field_name = &item.field_name;
                                     b.doc(field_doc(field));
                                     b.line(format!("{field_name}?: {ts_type}"));
@@ -419,19 +419,23 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                     }
                 });
             }, "}");
+            // relation filter
             c.block(format!("export type {model_name}RelationFilter = {{"), |b| {
                 b.line(format!("is?: {model_name}WhereInput"));
                 b.line(format!("isNot?: {model_name}WhereInput"));
             }, "}");
+            // list relation filter
             c.block(format!("export type {model_name}ListRelationFilter = {{"), |b| {
                 b.line(format!("every?: {model_name}WhereInput"));
                 b.line(format!("some?: {model_name}WhereInput"));
                 b.line(format!("none?: {model_name}WhereInput"));
             }, "}");
+            // order by
             c.block(format!("export type {model_name}OrderByInput = {{"), |b| {
                 m.query_keys().iter().for_each(|k| {
                     if let Some(field) = m.field(k) {
                         let field_name = &field.name;
+                        b.doc(field_doc(field));
                         b.line(format!("{field_name}?: SortOrder"));
                     } else if let Some(relation) = m.relation(k) {
                         let _relation_model = &relation.model;
@@ -440,6 +444,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                     }
                 })
             }, "}");
+            // create and update inputs without anything
             c.line(generate_model_create_input(graph, m, None));
             c.line(generate_model_create_nested_input(graph, m, None, true));
             c.line(generate_model_create_nested_input(graph, m, None, false));
@@ -467,7 +472,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
             if m.identity() {
                 c.line(generate_model_credentials_input(m));
             }
-            // args
+            // action args
             c.block(format!(r#"export type {model_name}Args = {{"#), |b| {
                 b.doc(select_doc(m));
                 b.line(format!(r#"select?: {model_name}Select"#));
@@ -477,7 +482,6 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
             ActionType::iter().for_each(|a| {
                 if !m.actions().contains(a) { return }
                 let action_name = a.as_str();
-                let _action_var_name = a.as_str().to_camel_case();
                 c.block(format!(r#"export type {model_name}{action_name}Args = {{"#), |b| {
                     if a.requires_where() {
                         if a == &ActionType::FindFirst {
@@ -524,6 +528,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                     }
                 }, "}");
             });
+            // get payload is for typescript only
             c.block(format!("export type {model_name}GetPayload<S extends boolean | null | undefined | {model_name}Args, U = keyof S> = S extends true"), |b| {
                 b.line(format!("? {model_name}"));
                 b.block(": S extends undefined", |b| {

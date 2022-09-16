@@ -1,7 +1,7 @@
 use inflector::Inflector;
 use crate::core::action::r#type::{ActionResultData, ActionResultMeta, ActionType};
 use crate::app::app::ClientConfiguration;
-use crate::client::csharp::pkg::index::doc::{create_or_update_doc, field_doc, nested_connect_doc, nested_create_doc, nested_create_or_connect_doc, nested_delete_doc, nested_disconnect_doc, nested_set_doc, nested_update_doc, nested_upsert_doc, relation_doc, unique_connect_create_doc, unique_connect_doc, unique_where_doc, where_doc};
+use crate::client::csharp::pkg::index::doc::{create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, nested_connect_doc, nested_create_doc, nested_create_or_connect_doc, nested_delete_doc, nested_disconnect_doc, nested_set_doc, nested_update_doc, nested_upsert_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_connect_create_doc, unique_connect_doc, unique_where_doc, where_doc, where_doc_first};
 use crate::client::csharp::r#type::ToCSharpType;
 use crate::client::shared::code::Code;
 use crate::core::field::Optionality;
@@ -10,7 +10,7 @@ use crate::core::model::{Model, ModelIndexType};
 
 mod doc;
 
-fn get_set() -> &str {
+fn get_set() -> &'static str {
     "{ get; set; }"
 }
 
@@ -44,6 +44,7 @@ impl CSharpClassBuilder {
                     if let Some(doc) = &f.d {
                         b.doc(doc);
                     }
+                    let get_set = get_set();
                     let field_name = &f.n;
                     let question_mark = if f.o { "?" } else { "" };
                     let field_type = &f.t;
@@ -53,12 +54,12 @@ impl CSharpClassBuilder {
                     b.line(format!("public {field_type}{question_mark} {field_name} {get_set}"))
                 }
                 b.block(format!("public {class_name}("), |b| {
-                    for f in required_fields {
+                    for f in &required_fields {
                         let camelized = f.n.to_camel_case();
                         let field_type = &f.t;
                         b.line(format!("{field_type} {camelized},"));
                     }
-                    for f in optional_fields {
+                    for f in &optional_fields {
                         let camelized = f.n.to_camel_case();
                         let field_type = &f.t;
                         b.line(format!("{field_type}? {camelized} = null,"));
@@ -684,7 +685,279 @@ pub(crate) async fn generate_index_cs(graph: &Graph, conf: &ClientConfiguration)
                     indent_level: 1
                 };
                 c.indented(builder.build());
-
+                // where unique
+                let mut where_unique_fields = Vec::<CSharpClassField>::new();
+                let mut used_where_unique_field_names: Vec<&str> = Vec::new();
+                m.indices().iter().for_each(|index| {
+                    use ModelIndexType::*;
+                    if index.index_type == Primary || index.index_type == Unique {
+                        index.items.iter().for_each(|item| {
+                            if !used_where_unique_field_names.contains(&&***&&item.field_name) {
+                                if let Some(field) = m.field(&item.field_name) {
+                                    let cs_type = field.field_type.to_csharp_type(field.optionality == Optionality::Optional);
+                                    let field_name = &item.field_name;
+                                    where_unique_fields.push(CSharpClassField {
+                                        n: field_name.to_pascal_case(),
+                                        t: cs_type,
+                                        o: true,
+                                        d: Some(field_doc(field)),
+                                        j: None
+                                    });
+                                }
+                                used_where_unique_field_names.push(&item.field_name);
+                            }
+                        });
+                    }
+                });
+                let builder = CSharpClassBuilder {
+                    name: format!("{model_name}WhereUniqueInput"),
+                    fields: where_unique_fields,
+                    indent_spaces: 4,
+                    indent_level: 1
+                };
+                c.indented(builder.build());
+                // relation filter
+                let relation_filter_fields = vec![
+                    CSharpClassField {
+                        n: "Is".to_string(),
+                        t: format!("{model_name}WhereInput"),
+                        o: true,
+                        d: None,
+                        j: None
+                    },
+                    CSharpClassField {
+                        n: "IsNot".to_string(),
+                        t: format!("{model_name}WhereInput"),
+                        o: true,
+                        d: None,
+                        j: None
+                    }
+                ];
+                let builder = CSharpClassBuilder {
+                    name: format!("{model_name}RelationFilter"),
+                    fields: relation_filter_fields,
+                    indent_spaces: 4,
+                    indent_level: 1
+                };
+                c.indented(builder.build());
+                // list relation filter
+                let list_relation_filter_fields = vec![
+                    CSharpClassField {
+                        n: "Every".to_string(),
+                        t: format!("{model_name}WhereInput"),
+                        o: true,
+                        d: None,
+                        j: None
+                    },
+                    CSharpClassField {
+                        n: "Some".to_string(),
+                        t: format!("{model_name}WhereInput"),
+                        o: true,
+                        d: None,
+                        j: None
+                    },
+                    CSharpClassField {
+                        n: "None".to_string(),
+                        t: format!("{model_name}WhereInput"),
+                        o: true,
+                        d: None,
+                        j: None
+                    },
+                ];
+                let builder = CSharpClassBuilder {
+                    name: format!("{model_name}ListRelationFilter"),
+                    fields: list_relation_filter_fields,
+                    indent_spaces: 4,
+                    indent_level: 1
+                };
+                c.indented(builder.build());
+                // order by
+                let mut order_by_fields = Vec::<CSharpClassField>::new();
+                m.query_keys().iter().for_each(|k| {
+                    if let Some(field) = m.field(k) {
+                        let field_name = &field.name;
+                        order_by_fields.push(CSharpClassField {
+                            n: field_name.to_pascal_case(),
+                            t: "SortOrder".to_owned(),
+                            o: true,
+                            d: Some(field_doc(field)),
+                            j: None
+                        });
+                    }
+                });
+                let builder = CSharpClassBuilder {
+                    name: format!("{model_name}OrderByInput"),
+                    fields: order_by_fields,
+                    indent_spaces: 4,
+                    indent_level: 1
+                };
+                c.indented(builder.build());
+                // create and update inputs without anything
+                c.line(generate_model_create_input(graph, m, None));
+                c.line(generate_model_create_nested_input(graph, m, None, true));
+                c.line(generate_model_create_nested_input(graph, m, None, false));
+                c.line(generate_model_create_or_connect_input(m, None));
+                m.relations().iter().for_each(|r| {
+                    c.line(generate_model_create_input(graph, m, Some(&r.name)));
+                    c.line(generate_model_create_nested_input(graph, m, Some(&r.name), true));
+                    c.line(generate_model_create_nested_input(graph, m, Some(&r.name), false));
+                    c.line(generate_model_create_or_connect_input(m, Some(&r.name)));
+                });
+                c.line(generate_model_update_input(graph, m, None));
+                c.line(generate_model_update_nested_input(graph, m, None, true));
+                c.line(generate_model_update_nested_input(graph, m, None, false));
+                c.line(generate_model_upsert_with_where_unique_input(m, None));
+                c.line(generate_model_update_with_where_unique_input(m, None));
+                c.line(generate_model_update_many_with_where_input(m, None));
+                m.relations().iter().for_each(|r| {
+                    c.line(generate_model_update_input(graph, m, Some(&r.name)));
+                    c.line(generate_model_update_nested_input(graph, m, Some(&r.name), true));
+                    c.line(generate_model_update_nested_input(graph, m, Some(&r.name), false));
+                    c.line(generate_model_upsert_with_where_unique_input(m, Some(&r.name)));
+                    c.line(generate_model_update_with_where_unique_input(m, Some(&r.name)));
+                    c.line(generate_model_update_many_with_where_input(m, Some(&r.name)));
+                });
+                if m.identity() {
+                    c.line(generate_model_credentials_input(m));
+                }
+                // action args
+                let builder = CSharpClassBuilder {
+                    name: format!("{model_name}Args"),
+                    fields: vec![
+                        CSharpClassField {
+                            n: "Select".to_owned(),
+                            t: format!("{model_name}Select"),
+                            o: true,
+                            d: Some(select_doc(m)),
+                            j: None
+                        },
+                        CSharpClassField {
+                            n: "Include".to_owned(),
+                            t: format!("{model_name}Include"),
+                            o: true,
+                            d: Some(include_doc(m)),
+                            j: None
+                        }
+                    ],
+                    indent_spaces: 4,
+                    indent_level: 1
+                };
+                c.indented(builder.build());
+                ActionType::iter().for_each(|a| {
+                    if !m.actions().contains(a) { return }
+                    let action_name = a.as_str();
+                    let mut fields = Vec::<CSharpClassField>::new();
+                    if a.requires_where() {
+                        fields.push(CSharpClassField {
+                            n: "Where".to_owned(),
+                            t: format!("{model_name}WhereInput"),
+                            o: true,
+                            d: Some(if a == &ActionType::FindFirst { where_doc_first(m) } else { where_doc(m) }),
+                            j: None,
+                        });
+                    }
+                    if a.requires_where_unique() {
+                        fields.push(CSharpClassField {
+                            n: "Where".to_owned(),
+                            t: format!("{model_name}WhereUniqueInput"),
+                            o: true,
+                            d: Some(unique_where_doc(m)),
+                            j: None,
+                        });
+                    }
+                    fields.push(CSharpClassField {
+                        n: "Select".to_owned(),
+                        t: format!("{model_name}Select"),
+                        o: true,
+                        d: Some(select_doc(m)),
+                        j: None,
+                    });
+                    fields.push(CSharpClassField {
+                        n: "Include".to_owned(),
+                        t: format!("{model_name}Include"),
+                        o: true,
+                        d: Some(include_doc(m)),
+                        j: None,
+                    });
+                    if a.requires_where() {
+                        fields.push(CSharpClassField {
+                            n: "OrderBy".to_owned(),
+                            t: format!("Enumerable<{model_name}OrderByInput>"),
+                            o: true,
+                            d: Some(order_by_doc(m)),
+                            j: None,
+                        });
+                        fields.push(CSharpClassField {
+                            n: "Cursor".to_owned(),
+                            t: format!("{model_name}WhereUniqueInput"),
+                            o: true,
+                            d: Some(cursor_doc(m)),
+                            j: None,
+                        });
+                        fields.push(CSharpClassField {
+                            n: "Take".to_owned(),
+                            t: "uint".to_owned(),
+                            o: true,
+                            d: Some(take_doc(m)),
+                            j: None,
+                        });
+                        fields.push(CSharpClassField {
+                            n: "Skip".to_owned(),
+                            t: "uint".to_owned(),
+                            o: true,
+                            d: Some(skip_doc(m)),
+                            j: None,
+                        });
+                        fields.push(CSharpClassField {
+                            n: "PageSize".to_owned(),
+                            t: "uint".to_owned(),
+                            o: true,
+                            d: Some(page_size_doc(m)),
+                            j: None,
+                        });
+                        fields.push(CSharpClassField {
+                            n: "PageNumber".to_owned(),
+                            t: "uint".to_owned(),
+                            o: true,
+                            d: Some(page_number_doc(m)),
+                            j: None,
+                        });
+                    }
+                    if a.requires_create() {
+                        fields.push(CSharpClassField {
+                            n: "Create".to_owned(),
+                            t: format!("{model_name}CreateInput"),
+                            o: true,
+                            d: Some(create_or_update_doc(m, if a == &ActionType::Upsert { ActionType::Create } else { a.clone() })),
+                            j: None,
+                        });
+                    }
+                    if a.requires_update() {
+                        fields.push(CSharpClassField {
+                            n: "Update".to_owned(),
+                            t: format!("{model_name}UpdateInput"),
+                            o: true,
+                            d: Some(create_or_update_doc(m, if a == &ActionType::Upsert { ActionType::Update } else { a.clone() })),
+                            j: None,
+                        });
+                    }
+                    if a.requires_credentials() {
+                        fields.push(CSharpClassField {
+                            n: "Credentials".to_owned(),
+                            t: format!("{model_name}CredentialsInput"),
+                            o: true,
+                            d: Some(credentials_doc(m, *a)),
+                            j: None,
+                        });
+                    }
+                    let builder = CSharpClassBuilder {
+                        name: format!("{model_name}{action_name}Args"),
+                        fields,
+                        indent_spaces: 4,
+                        indent_level: 0
+                    };
+                    c.indented(builder.build());
+                });
             });
         }, "}");
     }).to_string()
