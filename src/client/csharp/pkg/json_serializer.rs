@@ -173,7 +173,7 @@ namespace Teo {{
             Type t0 = typeToConvert.GetGenericArguments()[0];
 
             JsonConverter converter = (JsonConverter)Activator.CreateInstance(
-                typeof(Optional<>).MakeGenericType(new Type[] {{ t0 }}),
+                typeof(OptionalJsonConverter<>).MakeGenericType(new Type[] {{ t0 }}),
                 BindingFlags.Instance | BindingFlags.Public,
                 binder: null,
                 args: null,
@@ -212,7 +212,7 @@ namespace Teo {{
             Type t0 = typeToConvert.GetGenericArguments()[0];
 
             JsonConverter converter = (JsonConverter)Activator.CreateInstance(
-                typeof(Enumerable<>).MakeGenericType(new Type[] {{ t0 }}),
+                typeof(EnumerableJsonConverter<>).MakeGenericType(new Type[] {{ t0 }}),
                 BindingFlags.Instance | BindingFlags.Public,
                 binder: null,
                 args: null,
@@ -263,6 +263,7 @@ namespace Teo {{
             options.Converters.Add(new DateOnlyConverter());
             options.Converters.Add(new DateTimeConverter());
             options.Converters.Add(new DateTimeOffsetConverter());
+            options.Converters.Add(new SortOrderJsonConverter());
             options.Converters.Add(new OneOfJsonConverterFactory());
             options.Converters.Add(new OptionalJsonConverterFactory());
             options.Converters.Add(new EnumerableJsonConverterFactory());
