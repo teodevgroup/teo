@@ -59,13 +59,13 @@ namespace Teo {{
             // not handle our own errors yet
             var uri = new Uri(HOST + "/" + urlSegmentName + "/action/" + action);
             var client = new HttpClient();
-            if (token != null) {
+            if (token != null) {{
                 client.DefaultRequestHeaders.Add("Authorization", $"Bearer {{token}}");
             }}
             var content = JSJsonSerializer.Serialize(args)!;
             var response = await client.PostAsync(uri, new HttpStringContent(content));
             var httpResponseBody = await response.Content.ReadAsStringAsync();
-            if (((int)response.StatusCode) >= 400) {
+            if (((int)response.StatusCode) >= 400) {{
                 throw new TeoException(JSJsonSerializer.Deserialize<ResponseError>(httpResponseBody)!);
             }}
             return JSJsonSerializer.Deserialize<T>(httpResponseBody)!;

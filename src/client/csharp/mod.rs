@@ -7,6 +7,7 @@ use crate::client::csharp::pkg::one_of::generate_one_of_cs;
 use crate::client::csharp::pkg::operations::generate_operations_cs;
 use crate::client::csharp::pkg::optional::generate_optional_cs;
 use crate::client::csharp::pkg::runtime::generate_runtime_cs;
+use crate::client::csharp::pkg::sort_order::generate_sort_order_cs;
 use crate::client::shared::{clear_directory, ensure_directory, generate_file};
 use crate::core::graph::Graph;
 
@@ -23,6 +24,7 @@ pub async fn generate_csharp_client(graph: &Graph, conf: &ClientConfiguration) -
     generate_file("client/csharp/JsonSerializers.cs", generate_json_serializer_cs(graph).await).await?;
     generate_file("client/csharp/Filters.cs", generate_filters_cs(graph).await).await?;
     generate_file("client/csharp/Operations.cs", generate_operations_cs(graph).await).await?;
+    generate_file("client/csharp/SortOrder.cs", generate_sort_order_cs(graph).await).await?;
     generate_file("client/csharp/Runtime.cs", generate_runtime_cs(graph, conf).await).await?;
     generate_file("client/csharp/Index.cs", generate_index_cs(graph, conf).await).await
 }
