@@ -238,6 +238,25 @@ namespace Teo {{
         }}
     }}
 
+    public class SortOrderJsonConverter: JsonConverter<SortOrder> {{
+        public override SortOrder Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {{
+            throw new NotImplementedException();
+        }}
+
+        public override void Write(Utf8JsonWriter writer, SortOrder value, JsonSerializerOptions options) {{
+            switch (value) {{
+                case SortOrder.Asc: {{
+                    writer.WriteStringValue("asc");
+                    return;
+                }}
+                case SortOrder.Desc: {{
+                    writer.WriteStringValue("desc");
+                    return;
+                }}
+            }}
+        }}
+    }}
+
 {enums}    static public class JSJsonSerializer {{
         static private JsonSerializerOptions options() {{
             var options = new JsonSerializerOptions {{
