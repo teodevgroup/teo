@@ -66,7 +66,6 @@ impl CSharpClassBuilder {
                     b.line(format!("public {field_type}{question_mark} {field_name} {get_set}"))
                 }
                 b.empty_line();
-                b.empty_line();
                 b.block(format!("public {class_name}("), |b| {
                     let mut used = 0;
                     for f in &required_fields {
@@ -553,6 +552,7 @@ fn generate_model_credentials_input(model: &Model) -> String {
 pub(crate) async fn generate_index_cs(graph: &Graph, conf: &ClientConfiguration) -> String {
     Code::new(0, 4, |c| {
         c.line("using System;");
+        c.line("using System.Text.Json.Serialization;");
         c.empty_line();
         c.line("#nullable enable");
         c.block("namespace Teo {", |c| {

@@ -119,6 +119,46 @@ namespace Teo {{
         }}
     }}
 
+    public class EnumerableJsonConverterFactory : JsonConverterFactory {{
+
+        public override bool CanConvert(Type typeToConvert) {{
+            if (!typeToConvert.IsGenericType) {{
+                return false;
+            }}
+            if (typeToConvert.GetGenericTypeDefinition() != typeof(Enumerable<>)) {{
+                return false;
+            }}
+            return true;
+        }}
+
+        public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options) {{
+            Type t0 = typeToConvert.GetGenericArguments()[0];
+
+            JsonConverter converter = (JsonConverter)Activator.CreateInstance(
+                typeof(Enumerable<>).MakeGenericType(
+                    new Type[] {{ t0 }}),
+                BindingFlags.Instance | BindingFlags.Public,
+                binder: null,
+                args: new object[] {{ options }},
+                culture: null)!;
+
+            return converter;
+        }}
+    }}
+
+    public class EnumerableJsonConverter<T> : JsonConverter<Enumerable<T>> {{
+
+        public override Enumerable<T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {{
+            throw new NotImplementedException();
+        }}
+
+        public override void Write(Utf8JsonWriter writer, Enumerable<T> value, JsonSerializerOptions options) {{
+            value.Value.Switch(
+                t0 => writer.WriteRawValue(JSJsonSerializer.Serialize(value.Value.AsT0)),
+                t1 => writer.WriteRawValue(JSJsonSerializer.Serialize(value.Value.AsT1)));
+        }}
+    }}
+
     static public class JSJsonSerializer {{
         static private JsonSerializerOptions options() {{
             var options = new JsonSerializerOptions {{
@@ -130,6 +170,7 @@ namespace Teo {{
             options.Converters.Add(new DateTimeConverter());
             options.Converters.Add(new DateTimeOffsetConverter());
             options.Converters.Add(new OptionalJsonConverterFactory());
+            options.Converters.Add(new EnumerableJsonConverterFactory());
             return options;
         }}
         static public string Serialize<T>(T value) {{

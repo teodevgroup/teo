@@ -38,8 +38,17 @@ impl Code {
         }
     }
 
-    pub(crate) fn indented(&mut self, doc: impl Into<String>) {
-        self.doc(doc)
+    pub(crate) fn indented(&mut self, block: impl Into<String>) {
+        let block = block.into();
+        block.lines().for_each(|l| {
+            if l.is_empty() {
+                self.content += "\n";
+            } else {
+                self.content += &" ".repeat((self.indent_level * self.indent_space) as usize);
+                self.content += l;
+                self.content += "\n";
+            }
+        });
     }
 
     pub(crate) fn doc<D: Into<String>>(&mut self, doc: D) {
@@ -48,7 +57,7 @@ impl Code {
             if !l.is_empty() {
                 self.content += &" ".repeat((self.indent_level * self.indent_space) as usize);
                 self.content += l;
-                self.content += "\n"
+                self.content += "\n";
             }
         });
     }
