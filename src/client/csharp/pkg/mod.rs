@@ -5,4 +5,5 @@ pub(crate) mod json_serializer;
 pub(crate) mod filters;
 pub(crate) mod operations;
 pub(crate) mod sort_order;
+pub(crate) mod runtime;
 pub(crate) mod index;

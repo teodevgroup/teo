@@ -2,7 +2,6 @@ use crate::core::action::r#type::ActionType;
 use crate::app::app::ClientConfiguration;
 use crate::core::graph::Graph;
 
-
 pub(crate) async fn generate_runtime_ts(_graph: &Graph, conf: &ClientConfiguration) -> String {
     let actions = ActionType::iter().map(|a| { String::from("\"") + a.as_url_segment() + "\"" }).collect::<Vec<String>>().join(" | ");
     let url = match &conf.host_url {
