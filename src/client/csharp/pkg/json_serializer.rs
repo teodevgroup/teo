@@ -134,11 +134,10 @@ namespace Teo {{
             Type t1 = typeToConvert.GetGenericArguments()[1];
 
             JsonConverter converter = (JsonConverter)Activator.CreateInstance(
-                typeof(OneOfJsonConverter<,>).MakeGenericType(
-                    new Type[] {{ t0, t1 }}),
+                typeof(OneOfJsonConverter<,>).MakeGenericType(new Type[] {{ t0, t1 }}),
                 BindingFlags.Instance | BindingFlags.Public,
                 binder: null,
-                args: new object[] {{ options }},
+                args: null,
                 culture: null)!;
 
             return converter;
@@ -174,11 +173,10 @@ namespace Teo {{
             Type t0 = typeToConvert.GetGenericArguments()[0];
 
             JsonConverter converter = (JsonConverter)Activator.CreateInstance(
-                typeof(Optional<>).MakeGenericType(
-                    new Type[] {{ t0 }}),
+                typeof(Optional<>).MakeGenericType(new Type[] {{ t0 }}),
                 BindingFlags.Instance | BindingFlags.Public,
                 binder: null,
-                args: new object[] {{ options }},
+                args: null,
                 culture: null)!;
 
             return converter;
@@ -214,11 +212,10 @@ namespace Teo {{
             Type t0 = typeToConvert.GetGenericArguments()[0];
 
             JsonConverter converter = (JsonConverter)Activator.CreateInstance(
-                typeof(Enumerable<>).MakeGenericType(
-                    new Type[] {{ t0 }}),
+                typeof(Enumerable<>).MakeGenericType(new Type[] {{ t0 }}),
                 BindingFlags.Instance | BindingFlags.Public,
                 binder: null,
-                args: new object[] {{ options }},
+                args: null,
                 culture: null)!;
 
             return converter;
