@@ -7,6 +7,7 @@ pub mod builder;
 pub mod context;
 pub mod modifier;
 pub mod modifiers;
+pub mod argument;
 
 #[derive(Debug, Clone)]
 pub struct Pipeline {

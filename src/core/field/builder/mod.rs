@@ -1,6 +1,6 @@
 use std::future::Future;
 use std::sync::Arc;
-use crate::core::argument::Argument;
+use crate::core::pipeline::argument::Argument;
 use crate::core::db_type::builder::DatabaseTypeBuilder;
 use crate::core::field::builder::index_builder::FieldIndexBuilder;
 use crate::core::permission::builder::PermissionBuilder;

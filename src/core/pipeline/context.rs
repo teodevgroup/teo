@@ -113,6 +113,10 @@ impl Context {
         }
     }
 
+    pub(crate) fn invalid(&self, reason: impl Into<String>) -> Self {
+        self.alter_validity(Invalid(reason.into()))
+    }
+
     pub(crate) fn alter_stage(&self, stage: Stage) -> Self {
         Self {
             value: self.value.clone(),
@@ -126,6 +130,10 @@ impl Context {
 
     pub(crate) fn is_valid(&self) -> bool {
         self.validity.is_valid()
+    }
+
+    pub(crate) fn invalid_reason(&self) -> Option<&str> {
+        self.validity.reason()
     }
 
     pub(crate) fn is_condition_true(&self) -> bool {

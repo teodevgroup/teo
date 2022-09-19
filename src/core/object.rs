@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use serde_json::{json, Map, Value as JsonValue};
 use async_recursion::async_recursion;
-use crate::core::argument::Argument;
+use crate::core::pipeline::argument::Argument;
 use crate::core::field::Optionality;
 use crate::core::input::{AtomicUpdateType, Input};
 use crate::core::input::Input::{AtomicUpdate, SetValue};

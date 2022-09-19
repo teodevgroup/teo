@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
-use crate::core::argument::Argument;
+use crate::core::pipeline::argument::Argument;
 use crate::core::db_type::DatabaseType;
 use crate::core::field::r#type::FieldType;
 use crate::core::model_callback::PinFutureObj;
