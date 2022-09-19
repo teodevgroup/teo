@@ -5,6 +5,7 @@ use crate::core::object::Object;
 
 pub mod builder;
 pub mod stage;
+pub mod context;
 pub mod modifier;
 pub mod modifiers;
 

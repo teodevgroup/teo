@@ -31,6 +31,7 @@ pub struct ModelBuilder {
     pub(crate) description: String,
     pub(crate) identity: bool,
     pub(crate) internal: bool,
+    pub(crate) r#virtual: bool,
     pub(crate) field_builders: Vec<FieldBuilder>,
     pub(crate) relation_builders: Vec<RelationBuilder>,
     pub(crate) permission: Option<PermissionBuilder>,
@@ -63,6 +64,7 @@ impl ModelBuilder {
             description: "".to_string(),
             identity: false,
             internal: false,
+            r#virtual: false,
             field_builders: Vec::new(),
             relation_builders: Vec::new(),
             permission: None,
@@ -124,6 +126,11 @@ impl ModelBuilder {
 
     pub fn internal(&mut self) -> &mut Self {
         self.internal = true;
+        self
+    }
+
+    pub fn r#virtual(&mut self) -> &mut Self {
+        self.r#virtual = true;
         self
     }
 
@@ -459,6 +466,8 @@ impl ModelBuilder {
     pub(crate) fn figure_out_actions(&self) -> HashSet<ActionType> {
         let mut default = if self.internal {
             HashSet::new()
+        } else if self.r#virtual {
+            HashSet::from([ActionType::Create, ActionType::CreateMany])
         } else {
             ActionType::default()
         };
