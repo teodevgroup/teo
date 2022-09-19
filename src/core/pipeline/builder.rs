@@ -14,7 +14,7 @@ use crate::core::pipeline::modifiers::bcrypt_salt::BcryptSaltModifier;
 use crate::core::pipeline::modifiers::bcrypt_verify::BcryptVerifyModifier;
 use crate::core::pipeline::modifiers::ceil::CeilModifier;
 use crate::core::pipeline::modifiers::cuid::CUIDModifier;
-use crate::core::pipeline::modifiers::else_p::ElsePModifier;
+use crate::core::pipeline::modifiers::r#else::ElsePModifier;
 use crate::core::pipeline::modifiers::is_email::IsEmailModifier;
 use crate::core::pipeline::modifiers::floor::FloorModifier;
 use crate::core::pipeline::modifiers::r#if::IfPModifier;
@@ -34,7 +34,7 @@ use crate::core::pipeline::modifiers::secure_password::SecurePasswordModifier;
 use crate::core::pipeline::modifiers::slug::SlugModifier;
 use crate::core::pipeline::modifiers::str_append::StrAppendModifier;
 use crate::core::pipeline::modifiers::str_prepend::StrPrependModifier;
-use crate::core::pipeline::modifiers::then_p::ThenPModifier;
+use crate::core::pipeline::modifiers::then::ThenPModifier;
 use crate::core::pipeline::modifiers::transform::TransformModifier;
 use crate::core::pipeline::modifiers::uuid::UUIDModifier;
 

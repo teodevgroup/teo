@@ -30,10 +30,10 @@ impl Argument {
         }
     }
 
-    pub(crate) async fn resolve(&self, stage: Stage, object: &Object) -> Value {
+    pub(crate) async fn resolve(&self, context: Context) -> Value {
         match self {
             ValueArgument(v) => v.clone(),
-            PipelineArgument(p) => p.process(stage, object).await.value().unwrap()
+            PipelineArgument(p) => p.process(context).await.value
         }
     }
 }

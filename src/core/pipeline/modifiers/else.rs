@@ -5,35 +5,31 @@ use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::Context;
 use crate::core::pipeline::stage::Stage::{Value as StageValue, ConditionFalse};
 
-
 #[derive(Debug, Clone)]
-pub struct ElsePModifier {
+pub struct ElseModifier {
     pipeline: Pipeline
 }
 
-impl ElsePModifier {
+impl ElseModifier {
     pub fn new(pipeline: Pipeline) -> Self {
-        return ElsePModifier {
+        return ElseModifier {
             pipeline
         };
     }
 }
 
 #[async_trait]
-impl Modifier for ElsePModifier {
+impl Modifier for ElseModifier {
 
     fn name(&self) -> &'static str {
-        "else_p"
+        "else"
     }
 
-    async fn call(&self, stage: Stage, object: &Object) -> Stage {
-        return match stage {
-            ConditionFalse(value) => {
-                self.pipeline.process(StageValue(value), object).await
-            }
-            _ => {
-                stage
-            }
+    async fn call(&self, context: Context) -> Context {
+        if context.is_condition_false() {
+            self.pipeline.process(context)
+        } else {
+            context
         }
     }
 }

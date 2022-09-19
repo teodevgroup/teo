@@ -4,13 +4,12 @@ use crate::core::value::Value;
 use crate::core::object::Object;
 use crate::core::pipeline::context::Context;
 
-
 #[derive(Debug, Copy, Clone)]
 pub struct AbsModifier {}
 
 impl AbsModifier {
     pub fn new() -> Self {
-        return AbsModifier {};
+        Self {}
     }
 }
 
@@ -21,27 +20,16 @@ impl Modifier for AbsModifier {
         "abs"
     }
 
-    async fn call(&self, stage: Stage, _object: &Object) -> Stage {
-        return if let Some(value) = stage.value() {
-            if let Value::I8(i) = value {
-                Stage::Value(Value::I8(i.abs()))
-            } else if let Value::I16(i) = value {
-                Stage::Value(Value::I16(i.abs()))
-            } else if let Value::I32(i) = value {
-                Stage::Value(Value::I32(i.abs()))
-            } else if let Value::I64(i) = value {
-                Stage::Value(Value::I64(i.abs()))
-            } else if let Value::I128(i) = value {
-                Stage::Value(Value::I128(i.abs()))
-            } else if let Value::F32(f) = value {
-                Stage::Value(Value::F32(f.abs()))
-            } else if let Value::F64(f) = value {
-                Stage::Value(Value::F64(f.abs()))
-            } else {
-                Stage::Value(value)
-            }
-        } else {
-            stage
+    async fn call(&self, context: Context) -> Context {
+        match context.value {
+            Value::I8(v) => context.alter_value(Value::I8(v.abs())),
+            Value::I16(v) => context.alter_value(Value::I16(v.abs())),
+            Value::I32(v) => context.alter_value(Value::I32(v.abs())),
+            Value::I64(v) => context.alter_value(Value::I64(v.abs())),
+            Value::I128(v) => context.alter_value(Value::I128(v.abs())),
+            Value::F32(v) => context.alter_value(Value::F32(v.abs())),
+            Value::F64(v) => context.alter_value(Value::F64(v.abs())),
+            _ => context
         }
     }
 }
