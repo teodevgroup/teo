@@ -1,3 +1,3 @@
 TEO
 ===
-Backend Framework, Redefined
+The next generation HTTP server.

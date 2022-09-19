@@ -2,7 +2,7 @@
 name = "teo"
 version = "0.0.20"
 edition = "2021"
-description = "Backend Framework, Redefined"
+description = "The next generation HTTP server."
 license = "MIT"
 
 [dependencies]

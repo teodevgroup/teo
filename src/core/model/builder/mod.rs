@@ -19,6 +19,7 @@ use crate::core::model_callback::PinFutureObj;
 use crate::core::relation::Relation;
 use crate::core::object::Object;
 use crate::core::error::ActionError;
+use crate::core::pipeline::builder::PipelineBuilder;
 
 pub(crate) mod index_builder;
 
@@ -35,14 +36,18 @@ pub struct ModelBuilder {
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) primary: Option<ModelIndex>,
     pub(crate) indices: Vec<ModelIndex>,
-    pub(crate) after_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) after_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) after_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) after_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) before_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) before_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) before_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) before_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) before_save_pipeline: PipelineBuilder,
+    pub(crate) after_save_pipeline: PipelineBuilder,
+    pub(crate) before_delete_pipeline: PipelineBuilder,
+    pub(crate) after_delete_pipeline: PipelineBuilder,
+    // pub(crate) after_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    // pub(crate) after_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    // pub(crate) after_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    // pub(crate) after_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    // pub(crate) before_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    // pub(crate) before_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    // pub(crate) before_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    // pub(crate) before_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
     pub(crate) actions_builder: ActionsBuilder,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
@@ -63,14 +68,10 @@ impl ModelBuilder {
             permission: None,
             primary: None,
             indices: Vec::new(),
-            after_create_fns: Vec::new(),
-            after_update_fns: Vec::new(),
-            after_save_fns: Vec::new(),
-            after_delete_fns: Vec::new(),
-            before_create_fns: Vec::new(),
-            before_update_fns: Vec::new(),
-            before_save_fns: Vec::new(),
-            before_delete_fns: Vec::new(),
+            before_save_pipeline: PipelineBuilder::new(),
+            after_save_pipeline: PipelineBuilder::new(),
+            before_delete_pipeline: PipelineBuilder::new(),
+            after_delete_pipeline: PipelineBuilder::new(),
             actions_builder: ActionsBuilder::new(),
             connector_builder
         }
@@ -201,45 +202,65 @@ impl ModelBuilder {
         self
     }
 
-    pub fn after_save<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.after_save_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    pub fn before_save<F: Fn(&mut PipelineBuilder)>(&mut self, callback: F) -> &mut Self {
+        callback(&mut self.before_save_pipeline);
         self
     }
 
-    pub fn after_create<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.after_create_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    pub fn after_save<F: Fn(&mut PipelineBuilder)>(&mut self, callback: F) -> &mut Self {
+        callback(&mut self.after_save_pipeline);
         self
     }
 
-    pub fn after_update<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.after_update_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    pub fn before_delete<F: Fn(&mut PipelineBuilder)>(&mut self, callback: F) -> &mut Self {
+        callback(&mut self.before_delete_pipeline);
         self
     }
 
-    pub fn after_delete<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.after_delete_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    pub fn after_delete<F: Fn(&mut PipelineBuilder)>(&mut self, callback: F) -> &mut Self {
+        callback(&mut self.after_delete_pipeline);
         self
     }
 
-    pub fn before_save<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.before_save_fns.push(Arc::new(|object| Box::pin(callback(object))));
-        self
-    }
-
-    pub fn before_create<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.before_create_fns.push(Arc::new(|object| Box::pin(callback(object))));
-        self
-    }
-
-    pub fn before_update<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.before_update_fns.push(Arc::new(|object| Box::pin(callback(object))));
-        self
-    }
-
-    pub fn before_delete<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-        self.before_delete_fns.push(Arc::new(|object| Box::pin(callback(object))));
-        self
-    }
+    // pub fn after_save<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+    //     self.after_save_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    //     self
+    // }
+    //
+    // pub fn after_create<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+    //     self.after_create_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    //     self
+    // }
+    //
+    // pub fn after_update<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+    //     self.after_update_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    //     self
+    // }
+    //
+    // pub fn after_delete<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+    //     self.after_delete_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    //     self
+    // }
+    //
+    // pub fn before_save<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+    //     self.before_save_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    //     self
+    // }
+    //
+    // pub fn before_create<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+    //     self.before_create_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    //     self
+    // }
+    //
+    // pub fn before_update<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+    //     self.before_update_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    //     self
+    // }
+    //
+    // pub fn before_delete<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
+    //     self.before_delete_fns.push(Arc::new(|object| Box::pin(callback(object))));
+    //     self
+    // }
 
     pub fn actions<F: Fn(&mut ActionsBuilder)>(&mut self, build: F) -> &mut Self {
         build(&mut self.actions_builder);
@@ -337,14 +358,10 @@ impl ModelBuilder {
             relations_vec,
             primary: primary.unwrap(),
             indices: indices.clone(),
-            after_save_fns: self.after_save_fns.clone(),
-            after_create_fns: self.after_create_fns.clone(),
-            after_update_fns: self.after_update_fns.clone(),
-            after_delete_fns: self.after_delete_fns.clone(),
-            before_save_fns: self.before_save_fns.clone(),
-            before_create_fns: self.before_create_fns.clone(),
-            before_update_fns: self.before_update_fns.clone(),
-            before_delete_fns: self.before_delete_fns.clone(),
+            before_save_pipeline: self.before_save_pipeline.clone(),
+            after_save_pipeline: self.after_save_pipeline.clone(),
+            before_delete_pipeline: self.before_delete_pipeline.clone(),
+            after_delete_pipeline: self.after_delete_pipeline.clone(),
             primary_field,
             all_keys,
             input_keys,

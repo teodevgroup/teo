@@ -8,6 +8,7 @@ use crate::core::object::Object;
 use crate::core::permission::Permission;
 use crate::core::relation::Relation;
 use crate::core::error::ActionError;
+use crate::core::pipeline::builder::PipelineBuilder;
 
 pub(crate) mod builder;
 
@@ -48,14 +49,18 @@ pub struct ModelInner {
     pub(crate) relations_map: HashMap<String, Arc<Relation>>,
     pub(crate) indices: Vec<ModelIndex>,
     pub(crate) primary: ModelIndex,
-    pub(crate) after_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) after_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) after_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) after_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) before_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) before_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) before_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    pub(crate) before_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) before_save_pipeline: PipelineBuilder,
+    pub(crate) after_save_pipeline: PipelineBuilder,
+    pub(crate) before_delete_pipeline: PipelineBuilder,
+    pub(crate) after_delete_pipeline: PipelineBuilder,
+    // pub(crate) after_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    // pub(crate) after_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    // pub(crate) after_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    // pub(crate) after_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    // pub(crate) before_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    // pub(crate) before_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    // pub(crate) before_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    // pub(crate) before_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
     pub(crate) primary_field: Option<Arc<Field>>,
     pub(crate) all_keys: Vec<String>,
     pub(crate) input_keys: Vec<String>,
@@ -200,33 +205,6 @@ impl Model {
 
     pub(crate) fn has_relation(&self, name: &str) -> bool {
         self.inner.relations_map.get(name).is_some()
-    }
-
-    pub(crate) fn after_save_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.after_save_fns
-    }
-
-    pub(crate) fn after_update_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.after_update_fns
-    }
-
-    pub(crate) fn after_create_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.after_create_fns
-    }
-    pub(crate) fn after_delete_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.after_delete_fns
-    }
-    pub(crate) fn before_save_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.before_save_fns
-    }
-    pub(crate) fn before_update_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.before_update_fns
-    }
-    pub(crate) fn before_create_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.before_create_fns
-    }
-    pub(crate) fn before_delete_fns(&self) -> &Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>> {
-        &self.inner.before_delete_fns
     }
 
     pub(crate) fn indices(&self) -> &Vec<ModelIndex> {
