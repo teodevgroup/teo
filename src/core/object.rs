@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use serde_json::{json, Map, Value as JsonValue};
 use async_recursion::async_recursion;
 use crate::core::argument::Argument;
-use crate::core::field::{Optionality, Store};
+use crate::core::field::Optionality;
 use crate::core::input::{AtomicUpdateType, Input};
 use crate::core::input::Input::{AtomicUpdate, SetValue};
 use crate::core::graph::Graph;
@@ -257,10 +257,8 @@ impl Object {
             if field.auto || field.auto_increment {
                 continue
             }
-            match field.store {
-                Store::ForeignKey(_) => continue,
-                Store::LocalKey => continue,
-                _ => ()
+            if field.r#virtual {
+                continue
             }
             if field.optionality == Optionality::Required {
                 let value = self.get_value(key).unwrap();

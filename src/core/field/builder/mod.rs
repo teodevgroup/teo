@@ -24,7 +24,7 @@ pub struct FieldBuilder {
     pub(crate) field_type: FieldType,
     pub(crate) database_type: DatabaseType,
     pub(crate) optionality: Optionality,
-    pub(crate) store: Store,
+    pub(crate) r#virtual: bool,
     pub(crate) atomic: bool,
     pub(crate) primary: bool,
     pub(crate) read_rule: ReadRule,
@@ -57,7 +57,7 @@ impl FieldBuilder {
             field_type: FieldType::Undefined,
             database_type: DatabaseType::Undefined,
             optionality: Optionality::Required,
-            store: Store::Embedded,
+            r#virtual: false,
             atomic: false,
             primary: false,
             read_rule: ReadRule::Read,
@@ -290,24 +290,8 @@ impl FieldBuilder {
         self
     }
 
-    pub fn linked_by(&mut self, field: &'static str) -> &mut Self {
-        self.store = Store::ForeignKey(field);
-        self
-    }
-
-    pub fn link_to(&mut self) -> &mut Self {
-        self.store = Store::LocalKey;
-        self
-    }
-
-    pub fn temp(&mut self) -> &mut Self {
-        self.store = Store::Temp;
-        self
-    }
-
-    pub fn calculated(&mut self) -> &mut Self {
-        self.store = Store::Calculated;
-        self.write_rule = WriteRule::NoWrite;
+    pub fn r#virtual(&mut self) -> &mut Self {
+        self.r#virtual = true;
         self
     }
 
@@ -407,7 +391,7 @@ impl FieldBuilder {
             field_type: self.field_type.clone(),
             database_type: if self.database_type.is_undefined() { connector_builder.inferred_database_type(&self.field_type) } else { self.database_type.clone() },
             optionality: self.optionality,
-            store: self.store,
+            r#virtual: self.r#virtual,
             atomic: self.atomic,
             primary: self.primary,
             read_rule: self.read_rule,

@@ -40,6 +40,7 @@ pub struct ModelInner {
     pub(crate) localized_name: String,
     pub(crate) description: String,
     pub(crate) identity: bool,
+    pub(crate) r#virtual: bool,
     pub(crate) actions: HashSet<ActionType>,
     pub(crate) action_defs: HashMap<ActionType, Action>,
     pub(crate) permission: Option<Permission>,

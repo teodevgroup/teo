@@ -11,7 +11,6 @@ use crate::core::field::builder::FieldBuilder;
 use crate::core::permission::builder::PermissionBuilder;
 use crate::core::relation::builder::RelationBuilder;
 use crate::core::field::ReadRule::NoRead;
-use crate::core::field::Store::{Calculated, Temp};
 use crate::core::field::WriteRule::NoWrite;
 use crate::core::model::{ModelIndex, ModelIndexItem, Model, ModelIndexType, ModelInner};
 use crate::core::model::builder::index_builder::ModelIndexBuilder;
@@ -356,6 +355,7 @@ impl ModelBuilder {
             localized_name: self.localized_name.clone(),
             description: self.description.clone(),
             identity: self.identity,
+            r#virtual: self.r#virtual,
             actions: self.figure_out_actions(),
             action_defs: self.figure_out_action_defs(),
             permission: if let Some(builder) = &self.permission { Some(builder.build()) } else { None },
@@ -404,7 +404,6 @@ impl ModelBuilder {
 
     fn allowed_save_keys(&self) -> Vec<String> {
         let mut fields: Vec<String> = self.field_builders.iter()
-            .filter(|&f| { f.store != Calculated && f.store != Temp })
             .map(|f| { f.name.clone() })
             .collect();
         fields.extend(self.all_relation_keys());

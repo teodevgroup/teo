@@ -22,16 +22,6 @@ pub enum Optionality {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Store {
-    Embedded,
-    LocalKey,
-    ForeignKey(&'static str),
-    JoinTableKey(&'static str, &'static str),
-    Calculated,
-    Temp
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ReadRule {
     Read,
     NoRead
@@ -103,7 +93,7 @@ pub(crate) struct Field {
     pub(crate) field_type: FieldType,
     pub(crate) database_type: DatabaseType,
     pub(crate) optionality: Optionality,
-    pub(crate) store: Store,
+    pub(crate) r#virtual: bool,
     pub(crate) atomic: bool,
     pub(crate) primary: bool,
     pub(crate) read_rule: ReadRule,
