@@ -5,7 +5,6 @@ use crate::core::value::Value;
 use crate::core::object::Object;
 use crate::core::pipeline::context::Context;
 
-
 #[derive(Debug, Copy, Clone)]
 pub struct NowModifier {}
 
@@ -22,7 +21,7 @@ impl Modifier for NowModifier {
         "now"
     }
 
-    async fn call(&self, _stage: Stage, _object: &Object) -> Stage {
-        Stage::Value(Value::DateTime(Utc::now()))
+    async fn call(&self, context: Context) -> Context {
+        context.alter_value(Value::DateTime(Utc::now()))
     }
 }

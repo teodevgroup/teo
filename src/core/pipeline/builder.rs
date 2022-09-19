@@ -23,7 +23,7 @@ use crate::core::pipeline::modifiers::is_null::IsNullModifier;
 use crate::core::pipeline::modifiers::is_self::IsSelfModifier;
 use crate::core::pipeline::modifiers::length::LengthModifier;
 use crate::core::pipeline::modifiers::length_between::LengthBetweenModifier;
-use crate::core::pipeline::modifiers::now::NowModifier;
+use crate::core::pipeline::modifiers::datetime::now::NowModifier;
 use crate::core::pipeline::modifiers::object_value::ObjectValueModifier;
 use crate::core::pipeline::modifiers::or::OrModifier;
 use crate::core::pipeline::modifiers::r#do::DoModifier;
