@@ -3,7 +3,7 @@ use cuid::cuid;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::value::Value;
 use crate::core::object::Object;
-use crate::core::pipeline::stage::Stage;
+use crate::core::pipeline::context::Context;
 
 
 #[derive(Debug, Copy, Clone)]

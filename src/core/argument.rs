@@ -4,7 +4,7 @@ use chrono::{Date, DateTime, Utc};
 use crate::core::argument::Argument::{PipelineArgument, ValueArgument};
 use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::pipeline::Pipeline;
-use crate::core::pipeline::stage::Stage;
+use crate::core::pipeline::context::Context;
 use crate::core::value::Value;
 use crate::core::object::Object;
 

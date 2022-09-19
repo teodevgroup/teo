@@ -16,7 +16,7 @@ pub mod random_digits;
 pub mod str_append;
 pub mod str_prepend;
 pub mod regex_match;
-pub mod if_p;
+pub mod r#if;
 pub mod then_p;
 pub mod else_p;
 pub mod is_null;

@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use serde_json::{Value as JsonValue};
 use crate::core::json_pipeline::{JsonPipeline, JsonPipelineItem};
 use crate::core::json_pipeline::context::JsonPipelineContext;
-use crate::core::pipeline::stage::Stage;
+use crate::core::pipeline::context::Context;
 
 #[derive(Debug)]
 pub(crate) struct MapItem {

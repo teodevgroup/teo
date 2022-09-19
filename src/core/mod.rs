@@ -19,3 +19,4 @@ pub mod save_session;
 pub mod model_callback;
 pub mod previous_value;
 pub mod json_pipeline;
+pub mod key_path;

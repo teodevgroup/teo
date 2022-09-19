@@ -17,7 +17,7 @@ use crate::core::pipeline::modifiers::cuid::CUIDModifier;
 use crate::core::pipeline::modifiers::else_p::ElsePModifier;
 use crate::core::pipeline::modifiers::is_email::IsEmailModifier;
 use crate::core::pipeline::modifiers::floor::FloorModifier;
-use crate::core::pipeline::modifiers::if_p::IfPModifier;
+use crate::core::pipeline::modifiers::r#if::IfPModifier;
 use crate::core::pipeline::modifiers::is_instance_of::IsInstanceOfModifier;
 use crate::core::pipeline::modifiers::is_null::IsNullModifier;
 use crate::core::pipeline::modifiers::is_self::IsSelfModifier;
@@ -38,7 +38,7 @@ use crate::core::pipeline::modifiers::then_p::ThenPModifier;
 use crate::core::pipeline::modifiers::transform::TransformModifier;
 use crate::core::pipeline::modifiers::uuid::UUIDModifier;
 
-use crate::core::pipeline::stage::Stage;
+use crate::core::pipeline::context::Context;
 use crate::core::object::Object;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
