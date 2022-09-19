@@ -10,7 +10,7 @@ pub mod bcrypt_salt;
 pub mod bcrypt_verify;
 pub mod compare;
 pub mod ceil;
-pub mod email;
+pub mod is_email;
 pub mod now;
 pub mod random_digits;
 pub mod str_append;

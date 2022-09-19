@@ -7,23 +7,23 @@ use crate::core::pipeline::stage::Stage;
 
 
 #[derive(Debug, Clone)]
-pub struct EmailModifier {
+pub struct IsEmailModifier {
     regex: Regex
 }
 
-impl EmailModifier {
+impl IsEmailModifier {
     pub fn new() -> Self {
-        return EmailModifier {
+        return IsEmailModifier {
             regex: Regex::new(r"^\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b$").unwrap()
         };
     }
 }
 
 #[async_trait]
-impl Modifier for EmailModifier {
+impl Modifier for IsEmailModifier {
 
     fn name(&self) -> &'static str {
-        "email"
+        "isEmail"
     }
 
     async fn call(&self, stage: Stage, _object: &Object) -> Stage {

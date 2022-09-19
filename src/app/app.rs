@@ -30,8 +30,8 @@ impl ServerConfigurationBuilder {
         }
     }
 
-    pub fn bind(&mut self, bind: (impl Into<String>, impl Into<u16>)) -> &mut Self {
-        self.bind = (bind.0.into(), bind.1.into());
+    pub fn bind(&mut self, bind: (impl Into<String>, i32)) -> &mut Self {
+        self.bind = (bind.0.into(), (bind.1 as u16).into());
         self
     }
 

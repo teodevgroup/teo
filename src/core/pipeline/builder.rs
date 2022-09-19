@@ -15,7 +15,7 @@ use crate::core::pipeline::modifiers::bcrypt_verify::BcryptVerifyModifier;
 use crate::core::pipeline::modifiers::ceil::CeilModifier;
 use crate::core::pipeline::modifiers::cuid::CUIDModifier;
 use crate::core::pipeline::modifiers::else_p::ElsePModifier;
-use crate::core::pipeline::modifiers::email::EmailModifier;
+use crate::core::pipeline::modifiers::is_email::IsEmailModifier;
 use crate::core::pipeline::modifiers::floor::FloorModifier;
 use crate::core::pipeline::modifiers::if_p::IfPModifier;
 use crate::core::pipeline::modifiers::is_instance_of::IsInstanceOfModifier;
@@ -118,8 +118,8 @@ impl PipelineBuilder {
         return self;
     }
 
-    pub fn email(&mut self) -> &mut Self {
-        self.modifiers.push(Arc::new(EmailModifier::new()));
+    pub fn is_email(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(IsEmailModifier::new()));
         return self;
     }
 
