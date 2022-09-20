@@ -25,7 +25,7 @@ use crate::core::pipeline::modifiers::array::append::AppendModifier;
 use crate::core::pipeline::modifiers::array::has_length::{HasLengthModifier, LengthArgument};
 use crate::core::pipeline::modifiers::array::prepend::PrependModifier;
 use crate::core::pipeline::modifiers::function::callback::{CallbackArgument, CallbackModifier};
-use crate::core::pipeline::modifiers::function::transform::TransformModifier;
+use crate::core::pipeline::modifiers::function::transform::{TransformArgument, TransformModifier};
 use crate::core::pipeline::modifiers::logical::any::AnyModifier;
 use crate::core::pipeline::modifiers::logical::when_create::WhenCreateModifier;
 use crate::core::pipeline::modifiers::logical::when_update::WhenUpdateModifier;
@@ -252,11 +252,9 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn transform<F, I, O, Fut>(&mut self, f: &'static F) -> &mut Self where
-        F: Fn(I) -> Fut + Sync + Send + 'static,
-        I: From<Value> + Send + Sync,
-        O: Into<Value>,
-        Fut: Future<Output = O> + Send + Sync {
+    pub fn transform<T, F>(&mut self, f: F) -> &mut Self where
+        T: From<Value> + Into<Value> + Send + Sync + 'static,
+        F: TransformArgument<T> + 'static {
         self.modifiers.push(Arc::new(TransformModifier::new(f)));
         self
     }
