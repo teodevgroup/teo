@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
+use futures::lock::{Mutex as AsyncMutex};
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use serde_json::{json, Map, Value as JsonValue};
@@ -40,7 +41,7 @@ impl Object {
             inside_write_callback: AtomicBool::new(false),
             selected_fields: Arc::new(Mutex::new(Vec::new())),
             modified_fields: Arc::new(Mutex::new(HashSet::new())),
-            previous_value_map: Arc::new(Mutex::new(HashMap::new())),
+            previous_value_map: Arc::new(AsyncMutex::new(HashMap::new())),
             value_map: Arc::new(Mutex::new(HashMap::new())),
             atomic_updator_map: Arc::new(Mutex::new(HashMap::new())),
             relation_query_map: Arc::new(Mutex::new(HashMap::new())),
@@ -604,7 +605,7 @@ impl Object {
                                 if self.inner.is_new.load(Ordering::SeqCst) == false {
                                     if save_previous {
                                         if let Some(current) = self.inner.value_map.lock().unwrap().get(key.as_str()) {
-                                            self.inner.previous_value_map.lock().unwrap().insert(key.to_string(), current.clone());
+                                            self.inner.previous_value_map.lock().await.insert(key.to_string(), current.clone());
                                         }
                                     }
                                     self.inner.value_map.lock().unwrap().remove(*key);
@@ -612,7 +613,7 @@ impl Object {
                             } else {
                                 if save_previous {
                                     if let Some(current) = self.inner.value_map.lock().unwrap().get(key.as_str()) {
-                                        self.inner.previous_value_map.lock().unwrap().insert(key.to_string(), current.clone());
+                                        self.inner.previous_value_map.lock().await.insert(key.to_string(), current.clone());
                                     }
                                 }
                                 self.inner.value_map.lock().unwrap().insert(key.to_string(), value);
@@ -1026,7 +1027,7 @@ pub(crate) struct ObjectInner {
     pub(crate) inside_write_callback: AtomicBool,
     pub(crate) selected_fields: Arc<Mutex<Vec<String>>>,
     pub(crate) modified_fields: Arc<Mutex<HashSet<String>>>,
-    pub(crate) previous_value_map: Arc<Mutex<HashMap<String, Value>>>,
+    pub(crate) previous_value_map: Arc<AsyncMutex<HashMap<String, Value>>>,
     pub(crate) value_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) atomic_updator_map: Arc<Mutex<HashMap<String, AtomicUpdateType>>>,
     pub(crate) relation_mutation_map: Arc<Mutex<HashMap<String, Vec<RelationManipulation>>>>,
