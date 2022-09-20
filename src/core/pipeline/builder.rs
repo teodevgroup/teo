@@ -48,8 +48,12 @@ use crate::core::pipeline::modifiers::string::validation::is_alphanumeric::IsAlp
 use crate::core::pipeline::modifiers::string::validation::is_email::IsEmailModifier;
 use crate::core::pipeline::modifiers::string::validation::is_secure_password::IsSecurePasswordModifier;
 use crate::core::pipeline::modifiers::string::validation::regex_match::RegexMatchModifier;
+use crate::core::pipeline::modifiers::value::eq::EqModifier;
 use crate::core::pipeline::modifiers::value::is_exist::IsExistModifier;
+use crate::core::pipeline::modifiers::value::is_false::IsFalseModifier;
 use crate::core::pipeline::modifiers::value::is_null::IsNullModifier;
+use crate::core::pipeline::modifiers::value::is_true::IsTrueModifier;
+use crate::core::pipeline::modifiers::value::neq::NeqModifier;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
 
@@ -192,6 +196,26 @@ impl PipelineBuilder {
 
     pub fn is_exist(&mut self) -> &mut Self {
         self.modifiers.push(Arc::new(IsExistModifier::new()));
+        self
+    }
+
+    pub fn is_true(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(IsTrueModifier::new()));
+        self
+    }
+
+    pub fn is_false(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(IsFalseModifier::new()));
+        self
+    }
+
+    pub fn eq(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(EqModifier::new()));
+        self
+    }
+
+    pub fn neq(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(NeqModifier::new()));
         self
     }
 
