@@ -41,6 +41,8 @@ use crate::core::pipeline::modifiers::math::modular::ModularModifier;
 use crate::core::pipeline::modifiers::math::multiply::MultiplyModifier;
 use crate::core::pipeline::modifiers::math::subtract::SubtractModifier;
 use crate::core::pipeline::modifiers::object::is_instance_of::IsObjectOfModifier;
+use crate::core::pipeline::modifiers::object::object_previous_value::ObjectPreviousValueModifier;
+use crate::core::pipeline::modifiers::object::object_set_value::ObjectSetValueModifier;
 use crate::core::pipeline::modifiers::string::generation::random_digits::RandomDigitsModifier;
 use crate::core::pipeline::modifiers::string::validation::is_alphanumeric::IsAlphanumericModifier;
 use crate::core::pipeline::modifiers::string::validation::is_email::IsEmailModifier;
@@ -198,8 +200,13 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn object_previous_value(&mut self, key: &'static str) -> &mut Self {
+    pub fn object_previous_value(&mut self, key: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(ObjectPreviousValueModifier::new(key)));
+        self
+    }
+
+    pub fn object_set_value(&mut self, key: impl Into<Argument>, value: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(ObjectSetValueModifier::new(key, value)));
         self
     }
 
@@ -208,7 +215,7 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn bcrypt_verify<F: Fn(&mut PipelineBuilder)>(&mut self, argument: F) -> &mut Self {
+    pub fn bcrypt_verify<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
         self.modifiers.push(Arc::new(BcryptVerifyModifier::new(pipeline.build())));
