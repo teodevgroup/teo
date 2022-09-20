@@ -15,9 +15,10 @@ use crate::core::model::Model;
 use crate::core::previous_value::PreviousValueRule;
 use crate::core::relation::{Relation, RelationManipulation};
 use crate::core::save_session::SaveSession;
-use crate::core::pipeline::context::Context;
+use crate::core::pipeline::context::{Context, Purpose};
 use crate::core::value::Value;
 use crate::core::error::{ActionError, ActionErrorType};
+use crate::core::key_path::KeyPathItem;
 
 #[derive(Clone)]
 pub struct Object {
@@ -221,21 +222,29 @@ impl Object {
             }
             let field = field.unwrap();
             if field.needs_on_save_callback() {
-                let stage = match self.inner.value_map.lock().unwrap().deref().get(&key.to_string()) {
+                let initial_value = match self.inner.value_map.lock().unwrap().deref().get(&key.to_string()) {
                     Some(value) => {
-                        Stage::Value(value.clone())
+                        value.clone()
                     }
                     None => {
-                        Stage::Value(Value::Null)
+                        Value::Null
                     }
                 };
-                let new_stage = field.perform_on_save_callback(stage.clone(), self).await;
-                match new_stage {
-                    Stage::Invalid(s) => {
-                        return Err(ActionError::invalid_input(key, s));
+                let purpose = if self.is_new() {
+                    Purpose::Create
+                } else {
+                    Purpose::Update
+                };
+                let context = Context::initial_state(self.clone(), purpose)
+                    .alter_value(initial_value)
+                    .alter_key_path(vec![KeyPathItem::String((&field).name.to_string())]);
+                let result_ctx = field.perform_on_save_callback(context).await;
+                match result_ctx.invalid_reason() {
+                    Some(reason) => {
+                        return Err(ActionError::invalid_input(key, reason));
                     }
-                    Stage::Value(v) | Stage::ConditionTrue(v) | Stage::ConditionFalse(v) => {
-                        self.inner.value_map.lock().unwrap().insert(key.to_string(), v);
+                    None => {
+                        self.inner.value_map.lock().unwrap().insert(key.to_string(), result_ctx.value);
                         if !self.inner.is_new.load(Ordering::SeqCst) {
                             self.inner.is_modified.store(true, Ordering::SeqCst);
                             self.inner.modified_fields.lock().unwrap().insert(key.to_string());
@@ -602,20 +611,21 @@ impl Object {
                             let mut value = value;
                             if process {
                                 // pipeline
-                                let mut stage = Stage::Value(value);
-                                stage = field.on_set_pipeline.process(stage.clone(), &self).await;
-                                match stage {
-                                    Stage::Invalid(s) => {
-                                        return Err(ActionError::invalid_input(&field.name, s));
+                                let purpose = if self.is_new() {
+                                    Purpose::Create
+                                } else {
+                                    Purpose::Update
+                                };
+                                let context = Context::initial_state(self.clone(), purpose)
+                                    .alter_key_path(vec![KeyPathItem::String(key.to_string())])
+                                    .alter_value(value);
+                                let result_context = field.on_set_pipeline.process(context).await;
+                                match result_context.invalid_reason() {
+                                    Some(reason) => {
+                                        return Err(ActionError::invalid_input(&field.name, reason));
                                     }
-                                    Stage::Value(v) => {
-                                        value = v
-                                    }
-                                    Stage::ConditionTrue(v) => {
-                                        value = v
-                                    }
-                                    Stage::ConditionFalse(v) => {
-                                        value = v
+                                    None => {
+                                        value = result_context.value
                                     }
                                 }
                             }
@@ -659,8 +669,9 @@ impl Object {
                                     self.inner.value_map.lock().unwrap().insert(key.to_string(), value.clone());
                                 }
                                 Argument::PipelineArgument(pipeline) => {
-                                    let stage = pipeline.process(Stage::Value(Value::Null), &self).await;
-                                    self.inner.value_map.lock().unwrap().insert(key.to_string(), stage.value().unwrap());
+                                    let ctx = Context::initial_state(self.clone(), Purpose::Create);
+                                    let value = pipeline.process(ctx).await.value;
+                                    self.inner.value_map.lock().unwrap().insert(key.to_string(), value);
                                 }
                             }
                         }

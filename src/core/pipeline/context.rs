@@ -62,6 +62,7 @@ pub(crate) enum Purpose {
     Create,
     Update,
     Delete,
+    Authentication,
 }
 
 #[derive(Clone)]

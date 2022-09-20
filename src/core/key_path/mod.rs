@@ -1,7 +1,7 @@
 #[derive(Clone)]
 pub enum KeyPathItem {
     String(String),
-    Number(i32),
+    Number(usize),
 }
 
 impl KeyPathItem {
@@ -30,7 +30,7 @@ impl KeyPathItem {
         }
     }
 
-    pub fn as_number(&self) -> Option<i32> {
+    pub fn as_number(&self) -> Option<usize> {
         use KeyPathItem::*;
         match self {
             String(_) => None,

@@ -24,12 +24,12 @@ impl<T> Into<LengthArgument> for Range<T> where T: Into<Value> {
     }
 }
 
-impl<T> Into<LengthArgument> for T where T: Into<Value> {
+impl<T> Into<LengthArgument> for T where T: Into<Argument> {
     fn into(self) -> LengthArgument {
-        let value: Value = self.into();
+        let value: Argument = self.into();
         LengthArgument {
-            lower: Argument::ValueArgument(value.clone()),
-            upper: Argument::ValueArgument(value.clone()),
+            lower: value,
+            upper: value.clone(),
             closed: true,
         }
     }

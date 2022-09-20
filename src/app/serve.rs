@@ -17,7 +17,7 @@ use crate::core::input::Input;
 use crate::core::input_decoder::decode_field_input;
 use crate::core::model::Model;
 use crate::core::object::Object;
-use crate::core::pipeline::context::Context;
+use crate::core::pipeline::context::{Context, Purpose};
 use crate::core::error::ActionError;
 
 #[derive(Debug, Clone)]
@@ -519,8 +519,8 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
             }
         }
     };
-    let stage = Stage::Value(action_by_value);
-    let final_stage = pipeline.process(stage, &obj).await;
+    let ctx = Context::initial_state(obj.clone(), Purpose::Authentication);
+    let final_ctx = pipeline.process(ctx).await;
     let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
     let claims = Claims {
         id: obj.identifier().as_string().unwrap(),
@@ -528,18 +528,21 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
         exp
     };
     let token = encode_token(claims, &conf.jwt_secret.as_ref().unwrap());
-    return if let Stage::Value(_) = final_stage {
-        let include = input.get("include");
-        let select = input.get("select");
-        let obj = obj.refreshed(include, select).await.unwrap();
-        HttpResponse::Ok().json(json!({
+    return match final_ctx.invalid_reason() {
+        Some(reason) => {
+            HttpResponse::BadRequest().json(json!({"error": ActionError::authentication_failed()}))
+        }
+        None => {
+            let include = input.get("include");
+            let select = input.get("select");
+            let obj = obj.refreshed(include, select).await.unwrap();
+            HttpResponse::Ok().json(json!({
             "meta": {
                 "token": token
             },
             "data": obj.to_json()
         }))
-    } else {
-        HttpResponse::BadRequest().json(json!({"error": ActionError::authentication_failed()}))
+        }
     }
 }
 

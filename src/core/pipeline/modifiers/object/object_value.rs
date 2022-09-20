@@ -5,7 +5,7 @@ use crate::core::pipeline::argument::Argument;
 use crate::core::pipeline::context::Context;
 use crate::core::value::Value;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct ObjectValueModifier {
     key: Argument
 }

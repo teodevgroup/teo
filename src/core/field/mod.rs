@@ -11,6 +11,7 @@ use crate::core::previous_value::PreviousValueRule;
 use crate::core::pipeline::context::Context;
 use crate::core::value::Value;
 use crate::core::error::ActionError;
+use crate::core::key_path::KeyPathItem;
 
 pub(crate) mod r#type;
 pub(crate) mod builder;
@@ -155,26 +156,27 @@ impl Field {
         }
     }
 
-    pub(crate) async fn perform_on_save_callback(&self, stage: Stage, object: &Object) -> Stage {
-        let mut new_stage = stage;
+    pub(crate) async fn perform_on_save_callback(&self, ctx: Context) -> Context {
+        let mut new_ctx = ctx.clone();
         match &self.field_type {
             FieldType::Vec(inner) => {
-                let val = new_stage.value().unwrap();
+                let val = &new_ctx.value;
                 let arr = val.as_vec();
                 if !arr.is_none() {
                     let arr = arr.unwrap();
                     let mut new_arr: Vec<Value> = Vec::new();
-                    for v in arr {
-                        let inner_stage = Stage::Value(v.clone());
-                        new_arr.push(inner.on_save_pipeline.process(inner_stage, object).await.value().unwrap());
+                    for (i, v) in arr.iter().enumerate() {
+                        let mut key_path = ctx.key_path.clone();
+                        key_path.push(KeyPathItem::Number(i));
+                        let arr_item_ctx = ctx.alter_key_path(key_path);
+                        new_arr.push(inner.on_save_pipeline.process(arr_item_ctx).await.value);
                     }
-                    new_stage = Stage::Value(Value::Vec(new_arr));
+                    new_ctx = new_ctx.alter_value(Value::Vec(new_arr));
                 }
-
             }
             _ => {}
         }
-        self.on_save_pipeline.process(new_stage, object).await
+        self.on_save_pipeline.process(new_ctx.clone()).await
     }
 }
 

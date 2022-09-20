@@ -6,7 +6,7 @@ use crate::core::object::Object;
 use crate::core::pipeline::argument::Argument;
 use crate::core::pipeline::context::Context;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct RandomDigitsModifier {
     len: Argument
 }
