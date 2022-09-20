@@ -8,7 +8,7 @@ use crate::core::field::{Field, Sort};
 use crate::core::permission::Permission;
 use crate::core::relation::Relation;
 
-use crate::core::pipeline::builder::PipelineBuilder;
+
 use crate::core::pipeline::Pipeline;
 
 pub(crate) mod builder;
