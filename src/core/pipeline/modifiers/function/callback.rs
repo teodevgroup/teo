@@ -3,13 +3,27 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 use async_trait::async_trait;
+use futures_util::future::BoxFuture;
+use crate::core::object::Object;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 use crate::core::value::Value;
 
+pub trait CallbackArgument: Send + Sync {
+    fn call(&self, args: Object) -> BoxFuture<'static, ()>;
+}
+
+impl<F, Fut> CallbackArgument for F where
+F: Fn(Object) -> Fut + Sync + Send,
+Fut: Future<Output = ()> + Send + Sync + 'static {
+    fn call(&self, args: Object) -> BoxFuture<'static, ()> {
+        Box::pin(self(args))
+    }
+}
+
 #[derive(Clone)]
 pub struct CallbackModifier {
-    callback: Arc<dyn Fn(Value) -> Pin<Box<dyn Future<Output = ()> + Send + Sync>> + Send + Sync>
+    callback: Arc<dyn CallbackArgument>
 }
 
 impl Debug for CallbackModifier {
@@ -20,14 +34,10 @@ impl Debug for CallbackModifier {
 }
 
 impl CallbackModifier {
-    pub fn new<F, I, Fut>(f: &'static F) -> CallbackModifier where
-        F: Fn(I) -> Fut + Sync + Send + 'static,
-        I: From<Value> + Send + Sync,
-        Fut: Future<Output = ()> + Send + Sync {
+    pub fn new<F>(f: F) -> CallbackModifier where
+        F: CallbackArgument + 'static {
         return CallbackModifier {
-            callback: Arc::new(|value| Box::pin(async {
-                f(I::from(value)).await
-            }))
+            callback: Arc::new(f)
         }
     }
 }
@@ -41,7 +51,7 @@ impl Modifier for CallbackModifier {
 
     async fn call(&self, ctx: Context) -> Context {
         let cb = self.callback.clone();
-        cb((&ctx).value.clone()).await;
+        cb.call((&ctx).value.clone().as_object().unwrap().clone()).await;
         ctx
     }
 }

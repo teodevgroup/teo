@@ -24,7 +24,7 @@ use crate::core::pipeline::modifiers::string::generation::uuid::UUIDModifier;
 use crate::core::pipeline::modifiers::array::append::AppendModifier;
 use crate::core::pipeline::modifiers::array::has_length::{HasLengthModifier, LengthArgument};
 use crate::core::pipeline::modifiers::array::prepend::PrependModifier;
-use crate::core::pipeline::modifiers::function::callback::CallbackModifier;
+use crate::core::pipeline::modifiers::function::callback::{CallbackArgument, CallbackModifier};
 use crate::core::pipeline::modifiers::function::transform::TransformModifier;
 use crate::core::pipeline::modifiers::logical::any::AnyModifier;
 use crate::core::pipeline::modifiers::logical::when_create::WhenCreateModifier;
@@ -261,10 +261,8 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn callback<F, I, Fut>(&mut self, f: &'static F) -> &mut Self where
-        F: Fn(I) -> Fut + Sync + Send + 'static,
-        I: From<Value> + Send + Sync,
-        Fut: Future<Output = ()> + Send + Sync {
+    pub fn callback<F>(&mut self, f: F) -> &mut Self where
+        F: CallbackArgument + 'static {
         self.modifiers.push(Arc::new(CallbackModifier::new(f)));
         self
     }

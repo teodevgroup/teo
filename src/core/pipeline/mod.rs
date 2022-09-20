@@ -2,7 +2,6 @@ use std::sync::Arc;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 
-
 pub mod builder;
 pub mod context;
 pub mod modifier;
@@ -27,12 +26,6 @@ impl Pipeline {
         return context;
     }
 }
-
-// impl Clone for Pipeline {
-//     fn clone(&self) -> Self {
-//         Pipeline { modifiers: self.modifiers.clone() }
-//     }
-// }
 
 unsafe impl Send for Pipeline {}
 unsafe impl Sync for Pipeline {}
