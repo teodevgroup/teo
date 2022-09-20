@@ -3,7 +3,6 @@ use std::sync::Arc;
 use crate::core::pipeline::argument::Argument;
 use crate::core::db_type::DatabaseType;
 use crate::core::field::r#type::FieldType;
-use crate::core::model_callback::PinFutureObj;
 use crate::core::object::Object;
 use crate::core::permission::Permission;
 use crate::core::pipeline::Pipeline;
@@ -114,7 +113,6 @@ pub(crate) struct Field {
     pub(crate) permission: Option<Permission>,
     pub(crate) column_name: Option<String>,
     pub(crate) previous_value_rule: PreviousValueRule,
-    pub(crate) compare_after_update: Vec<Arc<dyn Fn(Value, Value, Object) -> PinFutureObj<Result<(), ActionError>>>>,
 }
 
 impl Debug for Field {

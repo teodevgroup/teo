@@ -26,6 +26,7 @@ use crate::core::pipeline::modifiers::array::append::AppendModifier;
 use crate::core::pipeline::modifiers::array::has_length::{HasLengthModifier, LengthArgument};
 use crate::core::pipeline::modifiers::array::prepend::PrependModifier;
 use crate::core::pipeline::modifiers::function::callback::{CallbackArgument, CallbackModifier};
+use crate::core::pipeline::modifiers::function::compare::{CompareArgument, CompareModifier};
 use crate::core::pipeline::modifiers::function::transform::{TransformArgument, TransformModifier};
 use crate::core::pipeline::modifiers::function::validate::{ValidateArgument, ValidateModifier};
 use crate::core::pipeline::modifiers::logical::any::AnyModifier;
@@ -276,13 +277,13 @@ impl PipelineBuilder {
         self
     }
 
-    // pub fn compare<F, I, Fut>(&mut self, f: &'static F) -> &mut Self where
-    //     F: Fn(I, I) -> Fut + Sync + Send + 'static,
-    //     I: From<Value> + Send + Sync,
-    //     Fut: Future<Output = Result<(), ActionError>> + Send + Sync {
-    //     self.modifiers.push(Arc::new(CompareModifier::new(f)));
-    //     self
-    // }
+    pub fn compare<T, O, F>(&mut self, f: F) -> &mut Self where
+        T: From<Value> + Send + Sync + 'static,
+        O: Into<Validity> + Send + Sync + 'static,
+        F: CompareArgument<T, O> + 'static {
+        self.modifiers.push(Arc::new(CompareModifier::new(f)));
+        self
+    }
 
     pub(crate) fn build(&self) -> Pipeline {
         Pipeline { modifiers: self.modifiers.clone() }
