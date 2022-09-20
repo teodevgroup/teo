@@ -15,6 +15,5 @@ pub mod object;
 pub mod permission;
 pub mod connector;
 pub mod save_session;
-pub mod previous_value;
 pub mod json_pipeline;
 pub mod key_path;

@@ -1,15 +1,11 @@
 use std::fmt::{Debug, Formatter};
-
 use crate::core::pipeline::argument::Argument;
 use crate::core::db_type::DatabaseType;
 use crate::core::field::r#type::FieldType;
-
 use crate::core::permission::Permission;
 use crate::core::pipeline::Pipeline;
-use crate::core::previous_value::PreviousValueRule;
 use crate::core::pipeline::context::Context;
 use crate::core::value::Value;
-
 use crate::core::key_path::KeyPathItem;
 
 pub(crate) mod r#type;
@@ -41,6 +37,12 @@ pub enum DeleteRule {
     Nullify,
     Cascade,
     Deny,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum PreviousValueRule {
+    DontKeep,
+    Keep,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -98,6 +100,7 @@ pub(crate) struct Field {
     pub(crate) primary: bool,
     pub(crate) read_rule: ReadRule,
     pub(crate) write_rule: WriteRule,
+    pub(crate) previous_value_rule: PreviousValueRule,
     pub(crate) index: FieldIndex,
     pub(crate) query_ability: QueryAbility,
     pub(crate) object_assignment: ObjectAssignment,
@@ -112,7 +115,6 @@ pub(crate) struct Field {
     pub(crate) on_output_pipeline: Pipeline,
     pub(crate) permission: Option<Permission>,
     pub(crate) column_name: Option<String>,
-    pub(crate) previous_value_rule: PreviousValueRule,
 }
 
 impl Debug for Field {

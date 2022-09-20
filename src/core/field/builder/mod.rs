@@ -10,10 +10,6 @@ use crate::core::db_type::DatabaseType;
 use crate::core::field::*;
 use crate::core::field::r#type::FieldType;
 
-use crate::core::previous_value::PreviousValueRule;
-
-
-
 pub(crate) mod index_builder;
 
 pub struct FieldBuilder {
@@ -28,6 +24,7 @@ pub struct FieldBuilder {
     pub(crate) primary: bool,
     pub(crate) read_rule: ReadRule,
     pub(crate) write_rule: WriteRule,
+    pub(crate) previous_value_rule: PreviousValueRule,
     pub(crate) index: FieldIndex,
     pub(crate) query_ability: QueryAbility,
     pub(crate) object_assignment: ObjectAssignment,
@@ -42,7 +39,6 @@ pub struct FieldBuilder {
     pub(crate) on_output_pipeline: PipelineBuilder,
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) column_name: Option<String>,
-    pub(crate) previous_value_rule: PreviousValueRule,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -250,6 +246,11 @@ impl FieldBuilder {
 
     pub fn write_nonnull(&mut self) -> &mut Self {
         self.write_rule = WriteRule::WriteNonNull;
+        self
+    }
+
+    pub fn record_previous(&mut self) -> &mut Self {
+        self.previous_value_rule = PreviousValueRule::Keep;
         self
     }
 
