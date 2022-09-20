@@ -140,6 +140,12 @@ impl From<DateTime<Utc>> for Argument {
     }
 }
 
+impl From<Value> for Argument {
+    fn from(v: Value) -> Self {
+        ValueArgument(v)
+    }
+}
+
 impl<T> From<Vec<T>> for Argument where T: Into<Value> + Clone, Value: From<T> {
     fn from(vec: Vec<T>) -> Self {
         let result: Vec<Value> = vec.iter().map(|v| {
