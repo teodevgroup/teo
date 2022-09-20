@@ -280,9 +280,6 @@ impl Object {
             if field.auto || field.auto_increment {
                 continue
             }
-            if field.r#virtual {
-                continue
-            }
             if field.optionality == Optionality::Required {
                 let value = self.get_value(key).unwrap();
                 if value.is_null() {
@@ -578,13 +575,15 @@ impl Object {
         let all_model_keys = self.model().all_keys().iter().map(|k| k).collect::<Vec<&String>>();
         // assign values
         let initialized = self.inner.is_initialized.load(Ordering::SeqCst);
-        let keys_to_iterate = if initialized { &json_keys } else { &all_model_keys };
+        let keys_to_iterate = if initialized {
+            all_model_keys.iter().filter(|k| { json_keys.contains(k)}).map(|k| *k).collect()
+        } else { all_model_keys };
         for key in keys_to_iterate {
             if self.model().has_field(key) {
                 // this is field
                 let field = self.model().field(&key).unwrap();
                 let json_has_value = if initialized { true } else {
-                    json_keys.contains(key)
+                    json_keys.contains(&key)
                 };
                 if json_has_value {
                     let json_value = &json_object[&key.to_string()];
@@ -626,7 +625,7 @@ impl Object {
                                             self.inner.previous_value_map.lock().await.insert(key.to_string(), current.clone());
                                         }
                                     }
-                                    self.inner.value_map.lock().unwrap().remove(*key);
+                                    self.inner.value_map.lock().unwrap().remove(key);
                                 }
                             } else {
                                 if save_previous {

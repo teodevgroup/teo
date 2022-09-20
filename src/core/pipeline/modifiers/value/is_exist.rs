@@ -19,6 +19,7 @@ impl Modifier for IsExistModifier {
     }
 
     async fn call(&self, ctx: Context) -> Context {
+        println!("see here runs or not {:?} {:?}", ctx.key_path, ctx.value);
         if ctx.value.is_null() {
             ctx.invalid("Value is not exist.")
         } else {

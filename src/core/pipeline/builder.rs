@@ -209,13 +209,13 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn eq(&mut self) -> &mut Self {
-        self.modifiers.push(Arc::new(EqModifier::new()));
+    pub fn eq(&mut self, rhs: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(EqModifier::new(rhs)));
         self
     }
 
-    pub fn neq(&mut self) -> &mut Self {
-        self.modifiers.push(Arc::new(NeqModifier::new()));
+    pub fn neq(&mut self, rhs: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(NeqModifier::new(rhs)));
         self
     }
 

@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum KeyPathItem {
     String(String),
     Number(usize),

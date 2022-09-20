@@ -3,7 +3,7 @@ use crate::core::pipeline::argument::Argument;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct NeqModifier {
     argument: Argument
 }
