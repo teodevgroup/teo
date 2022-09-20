@@ -9,33 +9,35 @@ use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 use crate::core::value::Value;
 
-pub trait CallbackArgument: Send + Sync {
-    fn call(&self, args: Object) -> BoxFuture<'static, ()>;
+pub trait CallbackArgument<T: From<Value> + Send + Sync>: Send + Sync {
+    fn call(&self, args: T) -> BoxFuture<'static, ()>;
 }
 
-impl<F, Fut> CallbackArgument for F where
-F: Fn(Object) -> Fut + Sync + Send,
+impl<T, F, Fut> CallbackArgument<T> for F where
+T: From<Value> + Send + Sync,
+F: Fn(T) -> Fut + Sync + Send,
 Fut: Future<Output = ()> + Send + Sync + 'static {
-    fn call(&self, args: Object) -> BoxFuture<'static, ()> {
+    fn call(&self, args: T) -> BoxFuture<'static, ()> {
         Box::pin(self(args))
     }
 }
 
 #[derive(Clone)]
-pub struct CallbackModifier {
-    callback: Arc<dyn CallbackArgument>
+pub struct CallbackModifier<T> {
+    callback: Arc<dyn CallbackArgument<T>>
 }
 
-impl Debug for CallbackModifier {
+impl<T> Debug for CallbackModifier<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut result = f.debug_struct("CallbackModifier");
         result.finish()
     }
 }
 
-impl CallbackModifier {
-    pub fn new<F>(f: F) -> CallbackModifier where
-        F: CallbackArgument + 'static {
+impl<T> CallbackModifier<T> {
+    pub fn new<F>(f: F) -> CallbackModifier<T> where
+        T: From<Value> + Send + Sync,
+        F: CallbackArgument<T> + 'static {
         return CallbackModifier {
             callback: Arc::new(f)
         }
@@ -43,7 +45,7 @@ impl CallbackModifier {
 }
 
 #[async_trait]
-impl Modifier for CallbackModifier {
+impl<T: From<Value> + Send + Sync> Modifier for CallbackModifier<T> {
 
     fn name(&self) -> &'static str {
         "callback"
@@ -51,10 +53,10 @@ impl Modifier for CallbackModifier {
 
     async fn call(&self, ctx: Context) -> Context {
         let cb = self.callback.clone();
-        cb.call((&ctx).value.clone().as_object().unwrap().clone()).await;
+        cb.call((&ctx).value.clone().into()).await;
         ctx
     }
 }
 
-unsafe impl Send for CallbackModifier {}
-unsafe impl Sync for CallbackModifier {}
+unsafe impl<T> Send for CallbackModifier<T> {}
+unsafe impl<T> Sync for CallbackModifier<T> {}

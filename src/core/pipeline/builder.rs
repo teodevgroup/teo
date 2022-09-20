@@ -261,8 +261,9 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn callback<F>(&mut self, f: F) -> &mut Self where
-        F: CallbackArgument + 'static {
+    pub fn callback<T, F>(&mut self, f: F) -> &mut Self where
+        T: From<Value> + Send + Sync + 'static,
+        F: CallbackArgument<T> + 'static {
         self.modifiers.push(Arc::new(CallbackModifier::new(f)));
         self
     }
