@@ -57,7 +57,7 @@ impl Stage {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub(crate) enum Purpose {
     Create,
     Update,

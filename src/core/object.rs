@@ -497,55 +497,24 @@ impl Object {
         Ok(())
     }
 
-    async fn trigger_before_write_callbacks(&self, _newly_created: bool) -> Result<(), ActionError> {
-        // let model = self.model();
-        // if newly_created {
-        //     for cb in model.before_create_fns() {
-        //         cb(self.clone()).await?;
-        //     }
-        // } else {
-        //     for cb in model.before_update_fns() {
-        //         cb(self.clone()).await?;
-        //     }
-        // }
-        // for cb in model.before_save_fns() {
-        //     cb(self.clone()).await?;
-        // }
+    async fn trigger_before_write_callbacks(&self, newly_created: bool) -> Result<(), ActionError> {
+        let model = self.model();
+        let pipeline = model.before_save_pipeline();
+        let context = Context::initial_state(self.clone(), if newly_created { Purpose::Create } else { Purpose::Update });
+        let _result = pipeline.process(context).await;
         Ok(())
     }
 
-    async fn trigger_write_callbacks(&self, _newly_created: bool) -> Result<(), ActionError> {
+    async fn trigger_write_callbacks(&self, newly_created: bool) -> Result<(), ActionError> {
         let inside_write_callback = self.inner.inside_write_callback.load(Ordering::SeqCst);
         if inside_write_callback {
             return Ok(());
         }
         self.inner.inside_write_callback.store(true, Ordering::SeqCst);
-        // let model = self.model();
-        // for cb in model.after_save_fns() {
-        //     cb(self.clone()).await?;
-        // }
-        // if newly_created {
-        //     for cb in model.after_create_fns() {
-        //         cb(self.clone()).await?;
-        //     }
-        // } else {
-        //     for field in model.fields() {
-        //         if field.previous_value_rule == PreviousValueRule::KeepAfterSaved {
-        //             for cb in &field.compare_after_update {
-        //                 if let Some(prev) = self.inner.previous_value_map.lock().unwrap().get(&field.name) {
-        //                     if let current = self.get_value(&field.name).unwrap() {
-        //                         if !current.is_null() {
-        //                             cb(prev.clone(), current.clone(), self.clone()).await?
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     for cb in model.after_update_fns() {
-        //         cb(self.clone()).await?;
-        //     }
-        // }
+        let model = self.model();
+        let pipeline = model.after_save_pipeline();
+        let context = Context::initial_state(self.clone(), if newly_created { Purpose::Create } else { Purpose::Update });
+        let _result = pipeline.process(context).await;
         self.inner.inside_write_callback.store(false, Ordering::SeqCst);
         Ok(())
     }

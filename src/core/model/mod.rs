@@ -9,6 +9,7 @@ use crate::core::permission::Permission;
 use crate::core::relation::Relation;
 
 use crate::core::pipeline::builder::PipelineBuilder;
+use crate::core::pipeline::Pipeline;
 
 pub(crate) mod builder;
 
@@ -50,18 +51,10 @@ pub struct ModelInner {
     pub(crate) relations_map: HashMap<String, Arc<Relation>>,
     pub(crate) indices: Vec<ModelIndex>,
     pub(crate) primary: ModelIndex,
-    pub(crate) before_save_pipeline: PipelineBuilder,
-    pub(crate) after_save_pipeline: PipelineBuilder,
-    pub(crate) before_delete_pipeline: PipelineBuilder,
-    pub(crate) after_delete_pipeline: PipelineBuilder,
-    // pub(crate) after_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    // pub(crate) after_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    // pub(crate) after_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    // pub(crate) after_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    // pub(crate) before_save_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    // pub(crate) before_update_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    // pub(crate) before_create_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
-    // pub(crate) before_delete_fns: Vec<Arc<dyn Fn(Object) -> PinFutureObj<Result<(), ActionError>>>>,
+    pub(crate) before_save_pipeline: Pipeline,
+    pub(crate) after_save_pipeline: Pipeline,
+    pub(crate) before_delete_pipeline: Pipeline,
+    pub(crate) after_delete_pipeline: Pipeline,
     pub(crate) primary_field: Option<Arc<Field>>,
     pub(crate) all_keys: Vec<String>,
     pub(crate) input_keys: Vec<String>,
@@ -216,6 +209,21 @@ impl Model {
         &self.inner.primary
     }
 
+    pub(crate) fn before_save_pipeline(&self) -> &Pipeline {
+        &self.inner.before_save_pipeline
+    }
+
+    pub(crate) fn after_save_pipeline(&self) -> &Pipeline {
+        &self.inner.after_save_pipeline
+    }
+
+    pub(crate) fn before_delete_pipeline(&self) -> &Pipeline {
+        &self.inner.before_delete_pipeline
+    }
+
+    pub(crate) fn after_delete_pipeline(&self) -> &Pipeline {
+        &self.inner.after_delete_pipeline
+    }
 }
 
 impl PartialEq for Model {

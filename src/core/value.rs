@@ -798,6 +798,24 @@ impl From<Value> for Option<JsonValue> {
     }
 }
 
+impl From<Value> for Object {
+    fn from(v: Value) -> Self {
+        match v {
+            Value::Object(o) => o.clone(),
+            _ => panic!("not object value")
+        }
+    }
+}
+
+impl From<Value> for Option<Object> {
+    fn from(v: Value) -> Self {
+        match v {
+            Value::Object(o) => Some(o.clone()),
+            _ => None,
+        }
+    }
+}
+
 impl Add for Value {
     type Output = Value;
     fn add(self, rhs: Self) -> Self::Output {

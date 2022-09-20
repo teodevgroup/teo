@@ -24,8 +24,11 @@ use crate::core::pipeline::modifiers::string::generation::uuid::UUIDModifier;
 use crate::core::pipeline::modifiers::array::append::AppendModifier;
 use crate::core::pipeline::modifiers::array::has_length::{HasLengthModifier, LengthArgument};
 use crate::core::pipeline::modifiers::array::prepend::PrependModifier;
+use crate::core::pipeline::modifiers::function::callback::CallbackModifier;
 use crate::core::pipeline::modifiers::function::transform::TransformModifier;
 use crate::core::pipeline::modifiers::logical::any::AnyModifier;
+use crate::core::pipeline::modifiers::logical::when_create::WhenCreateModifier;
+use crate::core::pipeline::modifiers::logical::when_update::WhenUpdateModifier;
 use crate::core::pipeline::modifiers::math::abs::AbsModifier;
 use crate::core::pipeline::modifiers::math::add::AddModifier;
 use crate::core::pipeline::modifiers::math::divide::DivideModifier;
@@ -160,6 +163,20 @@ impl PipelineBuilder {
         return self;
     }
 
+    pub fn when_create<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut pipeline = PipelineBuilder::new();
+        build(&mut pipeline);
+        self.modifiers.push(Arc::new(WhenCreateModifier::new(pipeline.build())));
+        return self;
+    }
+
+    pub fn when_update<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut pipeline = PipelineBuilder::new();
+        build(&mut pipeline);
+        self.modifiers.push(Arc::new(WhenUpdateModifier::new(pipeline.build())));
+        return self;
+    }
+
     pub fn is_null(&mut self) -> &mut Self {
         self.modifiers.push(Arc::new(IsNullModifier::new()));
         self
@@ -241,6 +258,14 @@ impl PipelineBuilder {
         O: Into<Value>,
         Fut: Future<Output = O> + Send + Sync {
         self.modifiers.push(Arc::new(TransformModifier::new(f)));
+        self
+    }
+
+    pub fn callback<F, I, Fut>(&mut self, f: &'static F) -> &mut Self where
+        F: Fn(I) -> Fut + Sync + Send + 'static,
+        I: From<Value> + Send + Sync,
+        Fut: Future<Output = ()> + Send + Sync {
+        self.modifiers.push(Arc::new(CallbackModifier::new(f)));
         self
     }
 
