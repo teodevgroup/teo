@@ -6,15 +6,16 @@ use crate::core::value::Value;
 
 use crate::core::pipeline::context::Context;
 use crate::core::pipeline::context::Validity::Invalid;
+use crate::core::pipeline::Pipeline;
 
 #[derive(Debug, Clone)]
 pub struct BcryptVerifyModifier {
-    argument: Argument
+    argument: Pipeline
 }
 
 impl BcryptVerifyModifier {
-    pub fn new(argument: impl Into<Argument>) -> Self {
-        Self { argument: argument.into() }
+    pub fn new(argument: Pipeline) -> Self {
+        Self { argument }
     }
 }
 
@@ -31,7 +32,11 @@ impl Modifier for BcryptVerifyModifier {
                 context.alter_validity(Invalid("Value is not string.".to_owned()))
             }
             Some(s) => {
-                let hash = self.argument.resolve(context.clone()).await;
+                let result = self.argument.process(context.clone()).await;
+                if result.invalid_reason().is_some() {
+                    return context.invalid(result.invalid_reason().unwrap());
+                }
+                let hash = result.value;
                 match hash.as_str() {
                     None => context.alter_validity(Invalid("Hash argument is not string.".to_owned())),
                     Some(h) => {

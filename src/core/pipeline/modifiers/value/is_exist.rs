@@ -3,26 +3,26 @@ use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 
 #[derive(Debug, Copy, Clone)]
-pub struct IsNullModifier {}
+pub struct IsExistModifier {}
 
-impl IsNullModifier {
+impl IsExistModifier {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Modifier for IsNullModifier {
+impl Modifier for IsExistModifier {
 
     fn name(&self) -> &'static str {
-        "isNull"
+        "isExist"
     }
 
     async fn call(&self, ctx: Context) -> Context {
         if ctx.value.is_null() {
-            ctx
+            ctx.invalid("Value is not exist.")
         } else {
-            ctx.invalid("Value is not null.")
+            ctx
         }
     }
 }

@@ -30,6 +30,8 @@ use crate::core::pipeline::modifiers::function::compare::{CompareArgument, Compa
 use crate::core::pipeline::modifiers::function::transform::{TransformArgument, TransformModifier};
 use crate::core::pipeline::modifiers::function::validate::{ValidateArgument, ValidateModifier};
 use crate::core::pipeline::modifiers::logical::any::AnyModifier;
+use crate::core::pipeline::modifiers::logical::transform_with::TransformWithModifier;
+use crate::core::pipeline::modifiers::logical::validate_with::ValidateWithModifier;
 use crate::core::pipeline::modifiers::logical::when_create::WhenCreateModifier;
 use crate::core::pipeline::modifiers::logical::when_update::WhenUpdateModifier;
 use crate::core::pipeline::modifiers::math::abs::AbsModifier;
@@ -44,6 +46,7 @@ use crate::core::pipeline::modifiers::string::validation::is_alphanumeric::IsAlp
 use crate::core::pipeline::modifiers::string::validation::is_email::IsEmailModifier;
 use crate::core::pipeline::modifiers::string::validation::is_secure_password::IsSecurePasswordModifier;
 use crate::core::pipeline::modifiers::string::validation::regex_match::RegexMatchModifier;
+use crate::core::pipeline::modifiers::value::is_exist::IsExistModifier;
 use crate::core::pipeline::modifiers::value::is_null::IsNullModifier;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
@@ -185,8 +188,18 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn object_value(&mut self, key: &'static str) -> &mut Self {
+    pub fn is_exist(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(IsExistModifier::new()));
+        self
+    }
+
+    pub fn object_value(&mut self, key: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(ObjectValueModifier::new(key)));
+        self
+    }
+
+    pub fn object_previous_value(&mut self, key: &'static str) -> &mut Self {
+        self.modifiers.push(Arc::new(ObjectPreviousValueModifier::new(key)));
         self
     }
 
@@ -195,9 +208,11 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn bcrypt_verify(&mut self, argument: impl Into<Argument>) -> &mut Self {
-        self.modifiers.push(Arc::new(BcryptVerifyModifier::new(argument)));
-        self
+    pub fn bcrypt_verify<F: Fn(&mut PipelineBuilder)>(&mut self, argument: F) -> &mut Self {
+        let mut pipeline = PipelineBuilder::new();
+        build(&mut pipeline);
+        self.modifiers.push(Arc::new(BcryptVerifyModifier::new(pipeline.build())));
+        return self;
     }
 
     pub fn is_secure_password(&mut self) -> &mut Self {
@@ -283,6 +298,20 @@ impl PipelineBuilder {
         F: CompareArgument<T, O> + 'static {
         self.modifiers.push(Arc::new(CompareModifier::new(f)));
         self
+    }
+
+    pub fn validate_with<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut pipeline = PipelineBuilder::new();
+        build(&mut pipeline);
+        self.modifiers.push(Arc::new(ValidateWithModifier::new(pipeline.build())));
+        return self;
+    }
+
+    pub fn transform_with<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut pipeline = PipelineBuilder::new();
+        build(&mut pipeline);
+        self.modifiers.push(Arc::new(TransformWithModifier::new(pipeline.build())));
+        return self;
     }
 
     pub(crate) fn build(&self) -> Pipeline {

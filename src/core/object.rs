@@ -128,6 +128,20 @@ impl Object {
         }
     }
 
+    pub(crate) async fn get_previous_value(&self, key: impl AsRef<str>) -> Result<Value, ActionError> {
+        let key = key.as_ref();
+        let model_keys = self.model().get_value_keys(); // TODO: should be all keys
+        if !model_keys.contains(&key.to_string()) {
+            let model = self.model();
+            return Err(ActionError::get_value_error(model.name(), key));
+        }
+        let map = self.inner.previous_value_map.lock().await;
+        match map.get(key) {
+            Some(value) => Ok(value.clone()),
+            None => Ok(Value::Null),
+        }
+    }
+
     pub fn get_value(&self, key: impl AsRef<str>) -> Result<Value, ActionError> {
         let key = key.as_ref();
         let model_keys = self.model().get_value_keys(); // TODO: should be all keys

@@ -5,28 +5,27 @@ use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::argument::Argument;
 use crate::core::pipeline::context::Context;
 
-
 #[derive(Debug, Clone)]
-pub struct ObjectValueModifier {
+pub struct ObjectPreviousValueModifier {
     key: Argument
 }
 
-impl ObjectValueModifier {
+impl ObjectPreviousValueModifier {
     pub fn new(key: impl Into<Argument>) -> Self {
         Self { key: key.into() }
     }
 }
 
 #[async_trait]
-impl Modifier for ObjectValueModifier {
+impl Modifier for ObjectPreviousValueModifier {
 
     fn name(&self) -> &'static str {
-        "objectValue"
+        "objectPreviousValue"
     }
 
     async fn call(&self, ctx: Context) -> Context {
         let key = self.key.resolve(ctx.clone()).await;
-        let value = ctx.object.get_value(key.as_str().unwrap()).unwrap();
+        let value = ctx.object.get_previous_value(key.as_str().unwrap()).await.unwrap();
         ctx.alter_value(value).alter_key_path(vec![KeyPathItem::String(key.as_string().unwrap())])
     }
 }
