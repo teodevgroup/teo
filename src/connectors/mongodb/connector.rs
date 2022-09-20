@@ -183,7 +183,7 @@ impl MongoDBConnector {
                     self.document_to_object(related_object_bson.as_document().unwrap(), &related_object, inner_select, inner_include)?;
                     related.push(related_object);
                 }
-                object.inner.queried_relation_map.lock().unwrap().insert(key.to_string(), related);
+                object.inner.relation_query_map.lock().unwrap().insert(key.to_string(), related);
             }
         }
         object.inner.is_initialized.store(true, Ordering::SeqCst);

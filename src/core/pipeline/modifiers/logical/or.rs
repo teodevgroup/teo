@@ -26,10 +26,11 @@ impl Modifier for OrModifier {
         "or"
     }
 
-    async fn call(&self, stage: Stage, object: &Object) -> Stage {
-        if let Some(_) = &stage.value() {
-            return stage
+    async fn call(&self, ctx: Context) -> Context {
+        if ctx.value.is_null() {
+            self.pipeline.process(ctx).await
+        } else {
+            ctx
         }
-        return self.pipeline.process(stage.clone(), object).await
     }
 }

@@ -4,7 +4,6 @@ use crate::core::object::Object;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::Context;
 use crate::core::pipeline::context::Stage::{ConditionFalse, ConditionTrue};
-use crate::core::pipeline::stage::Stage::{Value as StageValue, ConditionTrue, ConditionFalse, Invalid};
 
 #[derive(Debug, Clone)]
 pub struct IfModifier {

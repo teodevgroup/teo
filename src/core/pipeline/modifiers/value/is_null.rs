@@ -4,13 +4,12 @@ use crate::core::value::Value;
 use crate::core::object::Object;
 use crate::core::pipeline::context::Context;
 
-
 #[derive(Debug, Copy, Clone)]
 pub struct IsNullModifier {}
 
 impl IsNullModifier {
     pub fn new() -> Self {
-        return IsNullModifier {};
+        Self {}
     }
 }
 
@@ -21,16 +20,11 @@ impl Modifier for IsNullModifier {
         "is_null"
     }
 
-    async fn call(&self, stage: Stage, _object: &Object) -> Stage {
-        return if let Some(value) = stage.value() {
-            return if let Value::Null = value {
-                Stage::Value(Value::Null)
-            } else {
-                Stage::Invalid(String::from("Value should be null."))
-            }
+    async fn call(&self, ctx: Context) -> Context {
+        if ctx.value.is_null() {
+            ctx
         } else {
-            stage
+            ctx.invalid("Value is not null.")
         }
-
     }
 }

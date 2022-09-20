@@ -5,11 +5,8 @@ use async_trait::async_trait;
 use crate::core::model_callback::{PinFutureObjSendSync};
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::object::Object;
-
 use crate::core::pipeline::context::Context;
-
 use crate::core::value::Value;
-
 
 #[derive(Clone)]
 pub struct TransformModifier {
@@ -40,11 +37,10 @@ impl Modifier for TransformModifier {
         "transform"
     }
 
-    async fn call(&self, stage: Stage, _object: &Object) -> Stage {
-        let value = stage.value().unwrap();
+    async fn call(&self, ctx: Context) -> Context {
         let cb = self.callback.clone();
-        let result = cb(value.clone()).await;
-        Stage::Value(result)
+        let result = cb(ctx.value.clone()).await;
+        ctx.alter_value(result)
     }
 }
 

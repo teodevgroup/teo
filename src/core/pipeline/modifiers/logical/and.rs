@@ -26,11 +26,11 @@ impl Modifier for AndModifier {
         "and"
     }
 
-    async fn call(&self, stage: Stage, object: &Object) -> Stage {
-        if let Some(_) = &stage.value() {
-            return self.pipeline.process(stage.clone(), object).await;
+    async fn call(&self, ctx: Context) -> Context {
+        if !ctx.value.is_null() {
+            ctx
         } else {
-            return stage;
+            self.pipeline.process(ctx).await
         }
     }
 }

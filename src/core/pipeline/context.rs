@@ -57,6 +57,13 @@ impl Stage {
     }
 }
 
+#[derive(Copy, Clone)]
+pub(crate) enum Purpose {
+    Create,
+    Update,
+    Delete,
+}
+
 #[derive(Clone)]
 pub(crate) struct Context {
     pub(crate) value: Value,
@@ -65,11 +72,12 @@ pub(crate) struct Context {
     pub(crate) identity: Option<Object>,
     pub(crate) validity: Validity,
     pub(crate) stage: Stage,
+    pub(crate) purpose: Purpose,
 }
 
 impl Context {
 
-    pub(crate) fn initial_state(object: Object) -> Self {
+    pub(crate) fn initial_state(object: Object, purpose: Purpose) -> Self {
         Context {
             value: Value::Object(object.clone()),
             object: object.clone(),
@@ -77,6 +85,7 @@ impl Context {
             identity: object.get_identity(),
             validity: Valid,
             stage: Default,
+            purpose,
         }
     }
 
@@ -88,6 +97,7 @@ impl Context {
             identity: self.identity.clone(),
             validity: self.validity.clone(),
             stage: self.stage.clone(),
+            purpose: self.purpose.clone(),
         }
     }
 
@@ -99,6 +109,7 @@ impl Context {
             identity: self.identity.clone(),
             validity: self.validity.clone(),
             stage: self.stage.clone(),
+            purpose: self.purpose.clone(),
         }
     }
 
@@ -110,6 +121,7 @@ impl Context {
             identity: self.identity.clone(),
             validity,
             stage: self.stage.clone(),
+            purpose: self.purpose.clone(),
         }
     }
 
@@ -125,6 +137,7 @@ impl Context {
             identity: self.identity.clone(),
             validity: self.validity.clone(),
             stage: self.stage.clone(),
+            purpose: self.purpose.clone(),
         }
     }
 

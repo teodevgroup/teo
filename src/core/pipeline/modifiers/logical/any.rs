@@ -32,13 +32,13 @@ impl Modifier for AnyModifier {
         "any"
     }
 
-    async fn call(&self, stage: Stage, object: &Object) -> Stage {
+    async fn call(&self, ctx: Context) -> Context {
         for pipeline in &self.pipelines {
-            let result = pipeline.process(stage.clone(), object).await;
-            if let Some(_) = result.value() {
-                return stage.clone()
+            let result = pipeline.process(ctx.clone()).await;
+            if result.is_valid() {
+                return result;
             }
         }
-        Stage::Invalid("Invalid in any call.".to_string())
+        ctx.invalid("None of validators are valid.")
     }
 }

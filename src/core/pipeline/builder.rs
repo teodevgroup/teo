@@ -2,48 +2,45 @@ use std::future::Future;
 use std::sync::{Arc};
 use crate::core::pipeline::argument::Argument;
 use crate::core::pipeline::modifier::Modifier;
-use crate::core::pipeline::modifiers::abs::AbsModifier;
-use crate::core::pipeline::modifiers::addi::AddIModifier;
-use crate::core::pipeline::modifiers::addf::AddFModifier;
 use crate::core::pipeline::modifiers::logical::all::AllModifier;
-use crate::core::pipeline::modifiers::is_alphanumeric::AlnumModifier;
-use crate::core::pipeline::modifiers::is_alphabetic::AlphaModifier;
-use crate::core::pipeline::modifiers::and::AndModifier;
-use crate::core::pipeline::modifiers::any::AnyModifier;
+use crate::core::pipeline::modifiers::logical::and::AndModifier;
 use crate::core::pipeline::modifiers::bcrypt::bcrypt_salt::BcryptSaltModifier;
 use crate::core::pipeline::modifiers::bcrypt::bcrypt_verify::BcryptVerifyModifier;
 use crate::core::pipeline::modifiers::math::ceil::CeilModifier;
 use crate::core::pipeline::modifiers::string::generation::cuid::CUIDModifier;
 use crate::core::pipeline::modifiers::logical::r#else::ElseModifier;
-use crate::core::pipeline::modifiers::is_email::IsEmailModifier;
 use crate::core::pipeline::modifiers::math::floor::FloorModifier;
 use crate::core::pipeline::modifiers::logical::r#if::IfModifier;
-use crate::core::pipeline::modifiers::is_instance_of::IsInstanceOfModifier;
-use crate::core::pipeline::modifiers::is_null::IsNullModifier;
-use crate::core::pipeline::modifiers::is_self::IsSelfModifier;
-use crate::core::pipeline::modifiers::length::LengthModifier;
-use crate::core::pipeline::modifiers::length_between::LengthBetweenModifier;
 use crate::core::pipeline::modifiers::datetime::now::NowModifier;
 use crate::core::pipeline::modifiers::object::object_value::ObjectValueModifier;
-use crate::core::pipeline::modifiers::or::OrModifier;
+use crate::core::pipeline::modifiers::logical::or::OrModifier;
 use crate::core::pipeline::modifiers::logical::r#do::DoModifier;
-use crate::core::pipeline::modifiers::regex_match::RegexMatchModifier;
-use crate::core::pipeline::modifiers::random_digits::RandomDigitsModifier;
 use crate::core::pipeline::modifiers::string::transform::regex_replace::RegexReplaceModifier;
-use crate::core::pipeline::modifiers::secure_password::SecurePasswordModifier;
 use crate::core::pipeline::modifiers::string::generation::slug::SlugModifier;
-use crate::core::pipeline::modifiers::str_append::StrAppendModifier;
-use crate::core::pipeline::modifiers::str_prepend::StrPrependModifier;
-use crate::core::pipeline::modifiers::logical::then::ThenPModifier;
-use crate::core::pipeline::modifiers::transform::TransformModifier;
+use crate::core::pipeline::modifiers::logical::then::ThenModifier;
 use crate::core::pipeline::modifiers::string::generation::uuid::UUIDModifier;
-
 use crate::core::pipeline::context::Context;
 use crate::core::object::Object;
+use crate::core::pipeline::modifiers::array::append::AppendModifier;
+use crate::core::pipeline::modifiers::array::has_length::{HasLengthModifier, LengthArgument};
+use crate::core::pipeline::modifiers::array::prepend::PrependModifier;
+use crate::core::pipeline::modifiers::function::transform::TransformModifier;
+use crate::core::pipeline::modifiers::logical::any::AnyModifier;
+use crate::core::pipeline::modifiers::math::abs::AbsModifier;
+use crate::core::pipeline::modifiers::math::add::AddModifier;
+use crate::core::pipeline::modifiers::math::divide::DivideModifier;
+use crate::core::pipeline::modifiers::math::modular::ModularModifier;
+use crate::core::pipeline::modifiers::math::multiply::MultiplyModifier;
+use crate::core::pipeline::modifiers::math::subtract::SubtractModifier;
+use crate::core::pipeline::modifiers::object::is_instance_of::IsObjectOfModifier;
+use crate::core::pipeline::modifiers::string::generation::random_digits::RandomDigitsModifier;
+use crate::core::pipeline::modifiers::string::validation::is_alphanumeric::IsAlphanumericModifier;
+use crate::core::pipeline::modifiers::string::validation::is_email::IsEmailModifier;
+use crate::core::pipeline::modifiers::string::validation::is_secure_password::IsSecurePasswordModifier;
+use crate::core::pipeline::modifiers::string::validation::regex_match::RegexMatchModifier;
+use crate::core::pipeline::modifiers::value::is_null::IsNullModifier;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
-
-
 
 #[derive(Debug)]
 pub struct PipelineBuilder {
@@ -62,50 +59,34 @@ impl PipelineBuilder {
         self.modifiers.len() > 0
     }
 
-    pub(crate) async fn process(&self, mut stage: Stage, object: &Object) -> Stage {
-        for modifier in &self.modifiers {
-            stage = modifier.call(stage.clone(), object).await;
-            match stage {
-                Stage::Invalid(s) => {
-                    return Stage::Invalid(s)
-                }
-                Stage::Value(v) => {
-                    stage = Stage::Value(v);
-                }
-                Stage::ConditionTrue(v) => {
-                    stage = Stage::ConditionTrue(v);
-                }
-                Stage::ConditionFalse(v) => {
-                    stage = Stage::ConditionFalse(v);
-                }
-            }
-        }
-        return stage;
-    }
-
     pub fn abs(&mut self) -> &mut Self {
         self.modifiers.push(Arc::new(AbsModifier::new()));
         return self;
     }
 
-    pub fn addi(&mut self, addend: i128) -> &mut Self {
-        self.modifiers.push(Arc::new(AddIModifier::new(addend)));
-        return self;
+    pub fn add(&mut self, argument: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(AddModifier::new(argument)));
+        self
     }
 
-    pub fn addf(&mut self, addend: f64) -> &mut Self {
-        self.modifiers.push(Arc::new(AddFModifier::new(addend)));
-        return self;
+    pub fn subtract(&mut self, argument: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(SubtractModifier::new(argument)));
+        self
     }
 
-    pub fn alnum(&mut self) -> &mut Self {
-        self.modifiers.push(Arc::new(AlnumModifier::new()));
-        return self;
+    pub fn multiply(&mut self, argument: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(MultiplyModifier::new(argument)));
+        self
     }
 
-    pub fn alpha(&mut self) -> &mut Self {
-        self.modifiers.push(Arc::new(AlphaModifier::new()));
-        return self;
+    pub fn divide(&mut self, argument: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(DivideModifier::new(argument)));
+        self
+    }
+
+    pub fn modular(&mut self, argument: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(ModularModifier::new(argument)));
+        self
     }
 
     pub fn ceil(&mut self) -> &mut Self {
@@ -118,8 +99,28 @@ impl PipelineBuilder {
         return self;
     }
 
+    pub fn is_alphanumeric(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(IsAlphanumericModifier::new()));
+        return self;
+    }
+
     pub fn is_email(&mut self) -> &mut Self {
         self.modifiers.push(Arc::new(IsEmailModifier::new()));
+        return self;
+    }
+
+    pub fn regex_match(&mut self, regex: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(RegexMatchModifier::new(regex)));
+        return self;
+    }
+
+    pub fn regex_replace(&mut self, regex: impl Into<Argument>, substitute: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(RegexReplaceModifier::new(regex, substitute)));
+        self
+    }
+
+    pub fn random_digits(&mut self, argument: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(RandomDigitsModifier::new(argument)));
         return self;
     }
 
@@ -128,49 +129,34 @@ impl PipelineBuilder {
         return self;
     }
 
-    pub fn random_digits(&mut self, len: usize) -> &mut Self {
-        self.modifiers.push(Arc::new(RandomDigitsModifier::new(len)));
-        return self;
-    }
-
-    pub fn str_append(&mut self, suffix: &'static str) -> &mut Self {
-        self.modifiers.push(Arc::new(StrAppendModifier::new(suffix)));
-        return self;
-    }
-
-    pub fn str_prepend(&mut self, prefix: &'static str) -> &mut Self {
-        self.modifiers.push(Arc::new(StrPrependModifier::new(prefix)));
-        return self;
-    }
-
-    pub fn regex_match(&mut self, regex: &'static str) -> &mut Self {
-        self.modifiers.push(Arc::new(RegexMatchModifier::new(regex)));
-        return self;
-    }
-
-    pub fn regex_replace(&mut self, regex: &'static str, substitute: &'static str) -> &mut Self {
-        self.modifiers.push(Arc::new(RegexReplaceModifier::new(regex, substitute)));
+    pub fn append(&mut self, argument: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(AppendModifier::new(argument)));
         self
     }
 
-    pub fn if_p<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+    pub fn prepend(&mut self, argument: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(PrependModifier::new(argument)));
+        self
+    }
+
+    pub fn r#if<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
-        self.modifiers.push(Arc::new(IfPModifier::new(pipeline.build())));
+        self.modifiers.push(Arc::new(IfModifier::new(pipeline.build())));
         return self;
     }
 
-    pub fn else_p<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+    pub fn r#else<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
-        self.modifiers.push(Arc::new(ElsePModifier::new(pipeline.build())));
+        self.modifiers.push(Arc::new(ElseModifier::new(pipeline.build())));
         return self;
     }
 
-    pub fn then_p<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+    pub fn then<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
-        self.modifiers.push(Arc::new(ThenPModifier::new(pipeline.build())));
+        self.modifiers.push(Arc::new(ThenModifier::new(pipeline.build())));
         return self;
     }
 
@@ -194,18 +180,13 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn secure_password(&mut self) -> &mut Self {
-        self.modifiers.push(Arc::new(SecurePasswordModifier::new()));
+    pub fn is_secure_password(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(IsSecurePasswordModifier::new()));
         self
     }
 
-    pub fn length(&mut self, len: impl Into<Argument>) -> &mut Self {
-        self.modifiers.push(Arc::new(LengthModifier::new(len)));
-        self
-    }
-
-    pub fn length_between(&mut self, min: impl Into<Argument>, max: impl Into<Argument>) -> &mut Self {
-        self.modifiers.push(Arc::new(LengthBetweenModifier::new(min, max)));
+    pub fn has_length(&mut self, len: impl Into<LengthArgument>) -> &mut Self {
+        self.modifiers.push(Arc::new(HasLengthModifier::new(len)));
         self
     }
 
@@ -234,13 +215,8 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn is_self(&mut self) -> &mut Self {
-        self.modifiers.push(Arc::new(IsSelfModifier::new()));
-        self
-    }
-
-    pub fn is_instance_of(&mut self, model_name: &'static str) -> &mut Self {
-        self.modifiers.push(Arc::new(IsInstanceOfModifier::new(model_name)));
+    pub fn is_object_of(&mut self, model: &'static str) -> &mut Self {
+        self.modifiers.push(Arc::new(IsObjectOfModifier::new(model)));
         self
     }
 

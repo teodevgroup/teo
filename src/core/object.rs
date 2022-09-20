@@ -39,11 +39,11 @@ impl Object {
             inside_write_callback: AtomicBool::new(false),
             selected_fields: Arc::new(Mutex::new(Vec::new())),
             modified_fields: Arc::new(Mutex::new(HashSet::new())),
-            previous_values: Arc::new(Mutex::new(HashMap::new())),
+            previous_value_map: Arc::new(Mutex::new(HashMap::new())),
             value_map: Arc::new(Mutex::new(HashMap::new())),
             atomic_updator_map: Arc::new(Mutex::new(HashMap::new())),
-            queried_relation_map: Arc::new(Mutex::new(HashMap::new())),
-            relation_map: Arc::new(Mutex::new(HashMap::new())),
+            relation_query_map: Arc::new(Mutex::new(HashMap::new())),
+            relation_mutation_map: Arc::new(Mutex::new(HashMap::new())),
             ignore_required_fields: Arc::new(Mutex::new(Vec::new())),
             identity: Arc::new(Mutex::new(None)),
         }) }
@@ -86,7 +86,7 @@ impl Object {
         if !model_keys.contains(&key.to_string()) {
             return Err(ActionError::keys_unallowed());
         }
-        match self.inner.queried_relation_map.lock().unwrap().get(key) {
+        match self.inner.relation_query_map.lock().unwrap().get(key) {
             Some(list) => {
                 if list.is_empty() {
                     Ok(None)
@@ -106,7 +106,7 @@ impl Object {
         if !model_keys.contains(&key.to_string()) {
             return Err(ActionError::keys_unallowed());
         }
-        match self.inner.queried_relation_map.lock().unwrap().get(key) {
+        match self.inner.relation_query_map.lock().unwrap().get(key) {
             Some(list) => {
                 Ok(Some(list.clone()))
             }
@@ -139,7 +139,7 @@ impl Object {
                 Ok(value.clone())
             }
             None => {
-                match self.inner.queried_relation_map.lock().unwrap().get(&key.to_string()) {
+                match self.inner.relation_query_map.lock().unwrap().get(&key.to_string()) {
                     Some(list) => {
                         let relation = self.model().relation(&key).unwrap();
                         if relation.is_vec {
@@ -269,7 +269,7 @@ impl Object {
         }
         for relation in self.model().relations() {
             let name = &relation.name;
-            let map = self.inner.relation_map.lock().unwrap();
+            let map = self.inner.relation_mutation_map.lock().unwrap();
             let vec = map.get(name);
             match vec {
                 None => {},
@@ -307,7 +307,7 @@ impl Object {
         if !no_recursive {
             for relation in self.model().relations() {
                 let name = &relation.name;
-                let map = self.inner.relation_map.lock().unwrap();
+                let map = self.inner.relation_mutation_map.lock().unwrap();
                 let vec_option = map.get(name);
                 match vec_option {
                     None => {},
@@ -327,7 +327,7 @@ impl Object {
         if !no_recursive {
             for relation in self.model().relations() {
                 let name = &relation.name;
-                let map = self.inner.relation_map.lock().unwrap();
+                let map = self.inner.relation_mutation_map.lock().unwrap();
                 let vec_option = map.get(name);
                 match vec_option {
                     None => {},
@@ -523,7 +523,7 @@ impl Object {
         //     for field in model.fields() {
         //         if field.previous_value_rule == PreviousValueRule::KeepAfterSaved {
         //             for cb in &field.compare_after_update {
-        //                 if let Some(prev) = self.inner.previous_values.lock().unwrap().get(&field.name) {
+        //                 if let Some(prev) = self.inner.previous_value_map.lock().unwrap().get(&field.name) {
         //                     if let current = self.get_value(&field.name).unwrap() {
         //                         if !current.is_null() {
         //                             cb(prev.clone(), current.clone(), self.clone()).await?
@@ -625,7 +625,7 @@ impl Object {
                                 if self.inner.is_new.load(Ordering::SeqCst) == false {
                                     if save_previous {
                                         if let Some(current) = self.inner.value_map.lock().unwrap().get(key.as_str()) {
-                                            self.inner.previous_values.lock().unwrap().insert(key.to_string(), current.clone());
+                                            self.inner.previous_value_map.lock().unwrap().insert(key.to_string(), current.clone());
                                         }
                                     }
                                     self.inner.value_map.lock().unwrap().remove(*key);
@@ -633,7 +633,7 @@ impl Object {
                             } else {
                                 if save_previous {
                                     if let Some(current) = self.inner.value_map.lock().unwrap().get(key.as_str()) {
-                                        self.inner.previous_values.lock().unwrap().insert(key.to_string(), current.clone());
+                                        self.inner.previous_value_map.lock().unwrap().insert(key.to_string(), current.clone());
                                     }
                                 }
                                 self.inner.value_map.lock().unwrap().insert(key.to_string(), value);
@@ -687,11 +687,11 @@ impl Object {
                             new_object.set_json(entry).await?;
                             new_object.ignore_required_for(&relation.references);
                             self.ignore_required_for(&relation.fields);
-                            if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
+                            if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
-                            let mut relation_map = self.inner.relation_map.lock().unwrap();
-                            let objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
+                            let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Connect(new_object));
                         }
                     }
@@ -703,11 +703,11 @@ impl Object {
                             let new_object = graph.find_unique(&relation.model, &unique_query, true).await?;
                             new_object.ignore_required_for(&relation.references);
                             self.ignore_required_for(&relation.fields);
-                            if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
+                            if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
-                            let mut relation_map = self.inner.relation_map.lock().unwrap();
-                            let objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
+                            let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Connect(new_object));
                         }
                     }
@@ -720,13 +720,13 @@ impl Object {
                             let unique_result = graph.find_unique(&relation.model, &json!({"where": r#where}), true).await;
                             match unique_result {
                                 Ok(new_obj) => {
-                                    if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                        self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
+                                    if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                        self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
                                     }
                                     new_obj.ignore_required_for(&relation.references);
                                     self.ignore_required_for(&relation.fields);
-                                    let mut relation_map = self.inner.relation_map.lock().unwrap();
-                                    let objects = relation_map.get_mut(&key.to_string()).unwrap();
+                                    let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
+                                    let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
                                     objects.push(RelationManipulation::Connect(new_obj));
                                 }
                                 Err(_err) => {
@@ -734,11 +734,11 @@ impl Object {
                                     new_obj.set_json(create).await?;
                                     new_obj.ignore_required_for(&relation.references);
                                     self.ignore_required_for(&relation.fields);
-                                    if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                        self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
+                                    if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                        self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
                                     }
-                                    let mut relation_map = self.inner.relation_map.lock().unwrap();
-                                    let objects = relation_map.get_mut(&key.to_string()).unwrap();
+                                    let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
+                                    let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
                                     objects.push(RelationManipulation::Connect(new_obj));
                                 }
                             }
@@ -767,11 +767,11 @@ impl Object {
                             }
                             let unique_query = json!({"where": entry});
                             let object_to_disconnect = graph.find_unique(&relation.model, &unique_query, true).await?;
-                            if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
+                            if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
-                            let mut relation_map = self.inner.relation_map.lock().unwrap();
-                            let objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
+                            let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Disconnect(object_to_disconnect));
                         }
                     }
@@ -791,11 +791,11 @@ impl Object {
                             }
                             let new_object = the_object.unwrap();
                             new_object.set_json(update).await?;
-                            if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
+                            if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
-                            let mut relation_map = self.inner.relation_map.lock().unwrap();
-                            let objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
+                            let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Keep(new_object));
                         }
                     }
@@ -810,11 +810,11 @@ impl Object {
                             match the_object {
                                 Ok(obj) => {
                                     obj.set_json(update).await?;
-                                    if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                        self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
+                                    if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                        self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
                                     }
-                                    let mut relation_map = self.inner.relation_map.lock().unwrap();
-                                    let objects = relation_map.get_mut(&key.to_string()).unwrap();
+                                    let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
+                                    let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
                                     objects.push(RelationManipulation::Keep(obj));
                                 }
                                 Err(_) => {
@@ -822,11 +822,11 @@ impl Object {
                                     new_obj.ignore_required_for(&relation.references);
                                     self.ignore_required_for(&relation.fields);
                                     new_obj.set_json(create).await?;
-                                    if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                        self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
+                                    if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                        self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
                                     }
-                                    let mut relation_map = self.inner.relation_map.lock().unwrap();
-                                    let objects = relation_map.get_mut(&key.to_string()).unwrap();
+                                    let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
+                                    let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
                                     objects.push(RelationManipulation::Connect(new_obj));
                                 }
                             }
@@ -859,11 +859,11 @@ impl Object {
                                 return Err(ActionError::object_not_found());
                             }
                             let new_object = the_object.unwrap();
-                            if self.inner.relation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                self.inner.relation_map.lock().unwrap().insert(key.to_string(), vec![]);
+                            if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
+                                self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
                             }
-                            let mut relation_map = self.inner.relation_map.lock().unwrap();
-                            let objects = relation_map.get_mut(&key.to_string()).unwrap();
+                            let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
+                            let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
                             objects.push(RelationManipulation::Delete(new_object));
                         }
                     }
@@ -966,13 +966,13 @@ impl Object {
         let graph = self.graph();
         match graph.find_unique(relation_model_name, &finder, false).await {
             Ok(result) => {
-                self.inner.queried_relation_map.lock().unwrap().insert(key.as_ref().to_string(), vec![result]);
-                let obj = self.inner.queried_relation_map.lock().unwrap().get(key.as_ref()).unwrap().get(0).unwrap().clone();
+                self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec![result]);
+                let obj = self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().get(0).unwrap().clone();
                 Ok(Some(obj.clone()))
             }
             Err(err) => {
                 if err.r#type == ActionErrorType::ObjectNotFound {
-                    self.inner.queried_relation_map.lock().unwrap().insert(key.as_ref().to_string(), vec![]);
+                    self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec![]);
                     Ok(None)
                 } else {
                     Err(err)
@@ -1003,9 +1003,9 @@ impl Object {
                     key.as_ref(): include_inside
                 }
             }), false).await?;
-            let vec = new_self.inner.queried_relation_map.lock().unwrap().get(key.as_ref()).unwrap().clone();
-            self.inner.queried_relation_map.lock().unwrap().insert(key.as_ref().to_string(), vec);
-            Ok(self.inner.queried_relation_map.lock().unwrap().get(key.as_ref()).unwrap().clone())
+            let vec = new_self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().clone();
+            self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec);
+            Ok(self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().clone())
         } else {
             let mut finder = json!({});
             if let Some(find_many_arg) = find_many_arg {
@@ -1028,7 +1028,7 @@ impl Object {
             let relation_model_name = &relation.model;
             let graph = self.graph();
             let results = graph.find_many(relation_model_name, &finder, false).await?;
-            self.inner.queried_relation_map.lock().unwrap().insert(key.as_ref().to_string(), results.clone());
+            self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), results.clone());
             Ok(results)
         }
     }
@@ -1046,11 +1046,11 @@ pub(crate) struct ObjectInner {
     pub(crate) inside_write_callback: AtomicBool,
     pub(crate) selected_fields: Arc<Mutex<Vec<String>>>,
     pub(crate) modified_fields: Arc<Mutex<HashSet<String>>>,
-    pub(crate) previous_values: Arc<Mutex<HashMap<String, Value>>>,
+    pub(crate) previous_value_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) value_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) atomic_updator_map: Arc<Mutex<HashMap<String, AtomicUpdateType>>>,
-    pub(crate) relation_map: Arc<Mutex<HashMap<String, Vec<RelationManipulation>>>>,
-    pub(crate) queried_relation_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
+    pub(crate) relation_mutation_map: Arc<Mutex<HashMap<String, Vec<RelationManipulation>>>>,
+    pub(crate) relation_query_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
     pub(crate) ignore_required_fields: Arc<Mutex<Vec<String>>>,
     pub(crate) identity: Arc<Mutex<Option<Object>>>,
 }

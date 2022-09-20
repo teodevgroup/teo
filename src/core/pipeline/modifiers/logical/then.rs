@@ -3,7 +3,6 @@ use crate::core::pipeline::modifier::Modifier;
 use crate::core::object::Object;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::Context;
-use crate::core::pipeline::stage::Stage::{Value as StageValue, ConditionTrue};
 
 #[derive(Debug, Clone)]
 pub struct ThenModifier {
