@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 use async_trait::async_trait;
-use crate::core::object::Object;
+
 use crate::core::pipeline::context::Context;
 
 #[async_trait]

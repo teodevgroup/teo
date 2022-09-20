@@ -54,8 +54,8 @@ pub(crate) fn action_group_doc(name: &str, model: &Model) -> String {
 }
 
 pub(crate) fn action_and_model(r#type: ActionType, model: &Model) -> String {
-    let model_name = model.name();
-    let action_name = r#type.as_str();
+    let _model_name = model.name();
+    let _action_name = r#type.as_str();
     let localized_name = model_localized_name_word_case(model);
     let verb = match r#type {
         ActionType::FindFirst | ActionType::FindUnique => "find".to_owned(),
@@ -253,7 +253,7 @@ pub(crate) fn nested_create_or_connect_doc(model: &Model, many: bool) -> String 
         object = object;
     }
     let article = if many { "" } else { "an " };
-    let article2 = if many { "zero or more " } else { "an " };
+    let _article2 = if many { "zero or more " } else { "an " };
     format!(r#"/**
  * Connect to {article}existing {object} if it's exist, otherwise create {article}{object}.
  */"#)
@@ -293,7 +293,7 @@ pub(crate) fn nested_upsert_doc(model: &Model, many: bool) -> String {
         object = object;
     }
     let article = if many { "" } else { "an " };
-    let article2 = if many { "zero or more " } else { "an " };
+    let _article2 = if many { "zero or more " } else { "an " };
     format!(r#"/**
  * Update {article}existing {object} if it's exist, otherwise create {article}{object}.
  */"#)

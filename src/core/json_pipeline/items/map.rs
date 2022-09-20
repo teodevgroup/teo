@@ -1,8 +1,8 @@
 use async_trait::async_trait;
-use serde_json::{Value as JsonValue};
+
 use crate::core::json_pipeline::{JsonPipeline, JsonPipelineItem};
 use crate::core::json_pipeline::context::JsonPipelineContext;
-use crate::core::pipeline::context::Context;
+
 
 #[derive(Debug)]
 pub(crate) struct MapItem {
@@ -17,7 +17,7 @@ impl MapItem {
 
 #[async_trait]
 impl JsonPipelineItem for MapItem {
-    async fn call(&self, context: JsonPipelineContext) -> JsonPipelineContext {
+    async fn call(&self, _context: JsonPipelineContext) -> JsonPipelineContext {
         todo!()
     }
 }

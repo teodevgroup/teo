@@ -51,7 +51,7 @@ impl JsonPipelineBuilder {
         self
     }
 
-    pub fn custom<F: Fn(&mut JsonPipelineBuilder)>(&mut self, build: F) -> &mut Self {
+    pub fn custom<F: Fn(&mut JsonPipelineBuilder)>(&mut self, _build: F) -> &mut Self {
         self
     }
 

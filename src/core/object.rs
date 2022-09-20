@@ -497,7 +497,7 @@ impl Object {
         Ok(())
     }
 
-    async fn trigger_before_write_callbacks(&self, newly_created: bool) -> Result<(), ActionError> {
+    async fn trigger_before_write_callbacks(&self, _newly_created: bool) -> Result<(), ActionError> {
         // let model = self.model();
         // if newly_created {
         //     for cb in model.before_create_fns() {
@@ -514,7 +514,7 @@ impl Object {
         Ok(())
     }
 
-    async fn trigger_write_callbacks(&self, newly_created: bool) -> Result<(), ActionError> {
+    async fn trigger_write_callbacks(&self, _newly_created: bool) -> Result<(), ActionError> {
         let inside_write_callback = self.inner.inside_write_callback.load(Ordering::SeqCst);
         if inside_write_callback {
             return Ok(());

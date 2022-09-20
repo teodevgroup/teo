@@ -88,7 +88,7 @@ impl ToCSharpType for FieldType {
                 let number_type = self.to_csharp_type(false);
                 one_of(base_type, format!("Number{nullable}Filter<{number_type}>"))
             },
-            FieldType::Enum(name) => {
+            FieldType::Enum(_name) => {
                 let enum_type = self.to_csharp_type(false);
                 one_of(base_type, format!("Enum{nullable}Filter<{enum_type}>"))
             },
@@ -132,7 +132,7 @@ impl ToCSharpType for FieldType {
                 let number_type = self.to_csharp_type(false);
                 format!("{prefix}NumberFieldUpdateOperationsInput<{number_type}>")
             },
-            FieldType::Enum(name) => {
+            FieldType::Enum(_name) => {
                 let enum_type = self.to_csharp_type(false);
                 format!("{prefix}EnumFieldUpdateOperationsInput<{enum_type}>")
             },

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use crate::core::model_callback::{PinFutureObjSendSync};
 use crate::core::pipeline::modifier::Modifier;
-use crate::core::object::Object;
+
 use crate::core::pipeline::context::Context;
 use crate::core::value::Value;
 

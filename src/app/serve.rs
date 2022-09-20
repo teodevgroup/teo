@@ -506,7 +506,7 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     let auth_by_arg = by_field.auth_by_arg.as_ref().unwrap();
     let pipeline = auth_by_arg.as_pipeline().unwrap();
     let action_by_input = decode_field_input(obj.graph(), by_value.unwrap(), by_field, &by_field.name);
-    let action_by_value = match action_by_input {
+    let _action_by_value = match action_by_input {
         Err(_err) => {
             return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_input_type()}));
         }
@@ -529,7 +529,7 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     };
     let token = encode_token(claims, &conf.jwt_secret.as_ref().unwrap());
     return match final_ctx.invalid_reason() {
-        Some(reason) => {
+        Some(_reason) => {
             HttpResponse::BadRequest().json(json!({"error": ActionError::authentication_failed()}))
         }
         None => {

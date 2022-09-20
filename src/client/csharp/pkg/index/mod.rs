@@ -98,7 +98,7 @@ impl CSharpClassBuilder {
 }
 
 fn generate_model_create_nested_input(_graph: &Graph, model: &Model, without: Option<&str>, many: bool) -> String {
-    let get_set = get_set();
+    let _get_set = get_set();
     let model_name = model.name();
     let without_title = if let Some(title) = without {
         let title = title.to_pascal_case();
@@ -510,7 +510,7 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
 
 fn generate_model_credentials_input(model: &Model) -> String {
     let model_name = model.name();
-    let class_name = format!("{model_name}CredentialsInput");
+    let _class_name = format!("{model_name}CredentialsInput");
     let mut class_fields = Vec::<CSharpClassField>::new();
     let auth_identity_keys = model.auth_identity_keys();
     let auth_by_keys = model.auth_by_keys();
@@ -549,7 +549,7 @@ fn generate_model_credentials_input(model: &Model) -> String {
     builder.build()
 }
 
-pub(crate) async fn generate_index_cs(graph: &Graph, conf: &ClientConfiguration) -> String {
+pub(crate) async fn generate_index_cs(graph: &Graph, _conf: &ClientConfiguration) -> String {
     Code::new(0, 4, |c| {
         c.line("using System;");
         c.line("using System.Text.Json.Serialization;");

@@ -165,7 +165,7 @@ impl Field {
                 if !arr.is_none() {
                     let arr = arr.unwrap();
                     let mut new_arr: Vec<Value> = Vec::new();
-                    for (i, v) in arr.iter().enumerate() {
+                    for (i, _v) in arr.iter().enumerate() {
                         let mut key_path = ctx.key_path.clone();
                         key_path.push(KeyPathItem::Number(i));
                         let arr_item_ctx = ctx.alter_key_path(key_path);
