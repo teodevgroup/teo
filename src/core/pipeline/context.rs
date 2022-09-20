@@ -137,7 +137,7 @@ impl Context {
             key_path: self.key_path.clone(),
             identity: self.identity.clone(),
             validity: self.validity.clone(),
-            stage: self.stage.clone(),
+            stage,
             purpose: self.purpose.clone(),
         }
     }
