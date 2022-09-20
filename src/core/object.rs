@@ -588,6 +588,11 @@ impl Object {
                                 let context = Context::initial_state(self.clone(), purpose)
                                     .alter_key_path(vec![KeyPathItem::String(key.to_string())])
                                     .alter_value(value);
+                                if !self.is_new() && field.previous_value_rule == PreviousValueRule::Keep {
+                                    if self.inner.previous_value_map.lock().await.get(field.name()).is_none() {
+                                        self.inner.previous_value_map.lock().await.insert(field.name().to_string(), self.get_value(field.name()).unwrap());
+                                    }
+                                }
                                 let result_context = field.on_set_pipeline.process(context).await;
                                 match result_context.invalid_reason() {
                                     Some(reason) => {

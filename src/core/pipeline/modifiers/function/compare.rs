@@ -1,10 +1,8 @@
 use std::fmt::{Debug, Formatter};
 use std::future::Future;
-
 use std::sync::Arc;
 use async_trait::async_trait;
 use futures_util::future::BoxFuture;
-
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::{Context, Validity};
 use crate::core::value::Value;
@@ -64,8 +62,12 @@ impl<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync> Modifier for
         let pvmap = ctx.object.inner.previous_value_map.lock().await;
         let previous_value = pvmap.get(key).cloned();
         if let Some(previous_value) = previous_value {
+            let current_value = (&ctx).value.clone();
+            if previous_value == current_value {
+                return ctx.clone();
+            }
             let cb = self.callback.clone();
-            let value = cb.call(previous_value.clone().into(), (&ctx).value.clone().into()).await;
+            let value = cb.call(previous_value.into(), current_value.into()).await;
             let validity = value.into();
             if validity.is_valid() {
                 ctx.clone()
