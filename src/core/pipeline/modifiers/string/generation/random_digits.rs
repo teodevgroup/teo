@@ -27,7 +27,7 @@ impl Modifier for RandomDigitsModifier {
     }
 
     async fn call(&self, ctx: Context) -> Context {
-        let len = self.len.resolve(ctx).await;
+        let len = self.len.resolve(ctx.clone()).await;
         ctx.alter_value(Value::String(generate(len.as_usize().unwrap(), "1234567890")))
     }
 }

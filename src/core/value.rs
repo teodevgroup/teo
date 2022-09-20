@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::ops::{Add, Div, Mul, Sub, Rem};
 
 use chrono::prelude::{Date, DateTime, Utc};
 use chrono::SecondsFormat;
@@ -793,6 +794,111 @@ impl From<Value> for Option<JsonValue> {
         match value {
             Value::Null => None,
             _ => Some(value.into())
+        }
+    }
+}
+
+impl Add for Value {
+    type Output = Value;
+    fn add(self, rhs: Self) -> Self::Output {
+        match self {
+            Value::I8(v) => Value::I8(v + rhs.as_i8().unwrap()),
+            Value::I16(v) => Value::I16(v + rhs.as_i16().unwrap()),
+            Value::I32(v) => Value::I32(v + rhs.as_i32().unwrap()),
+            Value::I64(v) => Value::I64(v + rhs.as_i64().unwrap()),
+            Value::I128(v) => Value::I128(v + rhs.as_i128().unwrap()),
+            Value::U8(v) => Value::U8(v + rhs.as_u8().unwrap()),
+            Value::U16(v) => Value::U16(v + rhs.as_u16().unwrap()),
+            Value::U32(v) => Value::U32(v + rhs.as_u32().unwrap()),
+            Value::U64(v) => Value::U64(v + rhs.as_u64().unwrap()),
+            Value::U128(v) => Value::U128(v + rhs.as_u128().unwrap()),
+            Value::F32(v) => Value::F32(v + rhs.as_f32().unwrap()),
+            Value::F64(v) => Value::F64(v + rhs.as_f64().unwrap()),
+            _ => Value::Null,
+        }
+    }
+}
+
+impl Sub for Value {
+    type Output = Value;
+    fn sub(self, rhs: Self) -> Self::Output {
+        match self {
+            Value::I8(v) => Value::I8(v - rhs.as_i8().unwrap()),
+            Value::I16(v) => Value::I16(v - rhs.as_i16().unwrap()),
+            Value::I32(v) => Value::I32(v - rhs.as_i32().unwrap()),
+            Value::I64(v) => Value::I64(v - rhs.as_i64().unwrap()),
+            Value::I128(v) => Value::I128(v - rhs.as_i128().unwrap()),
+            Value::U8(v) => Value::U8(v - rhs.as_u8().unwrap()),
+            Value::U16(v) => Value::U16(v - rhs.as_u16().unwrap()),
+            Value::U32(v) => Value::U32(v - rhs.as_u32().unwrap()),
+            Value::U64(v) => Value::U64(v - rhs.as_u64().unwrap()),
+            Value::U128(v) => Value::U128(v - rhs.as_u128().unwrap()),
+            Value::F32(v) => Value::F32(v - rhs.as_f32().unwrap()),
+            Value::F64(v) => Value::F64(v - rhs.as_f64().unwrap()),
+            _ => Value::Null,
+        }
+    }
+}
+
+impl Mul for Value {
+    type Output = Value;
+    fn mul(self, rhs: Self) -> Self::Output {
+        match self {
+            Value::I8(v) => Value::I8(v * rhs.as_i8().unwrap()),
+            Value::I16(v) => Value::I16(v * rhs.as_i16().unwrap()),
+            Value::I32(v) => Value::I32(v * rhs.as_i32().unwrap()),
+            Value::I64(v) => Value::I64(v * rhs.as_i64().unwrap()),
+            Value::I128(v) => Value::I128(v * rhs.as_i128().unwrap()),
+            Value::U8(v) => Value::U8(v * rhs.as_u8().unwrap()),
+            Value::U16(v) => Value::U16(v * rhs.as_u16().unwrap()),
+            Value::U32(v) => Value::U32(v * rhs.as_u32().unwrap()),
+            Value::U64(v) => Value::U64(v * rhs.as_u64().unwrap()),
+            Value::U128(v) => Value::U128(v * rhs.as_u128().unwrap()),
+            Value::F32(v) => Value::F32(v * rhs.as_f32().unwrap()),
+            Value::F64(v) => Value::F64(v * rhs.as_f64().unwrap()),
+            _ => Value::Null,
+        }
+    }
+}
+
+impl Div for Value {
+    type Output = Value;
+    fn div(self, rhs: Self) -> Self::Output {
+        match self {
+            Value::I8(v) => Value::I8(v / rhs.as_i8().unwrap()),
+            Value::I16(v) => Value::I16(v / rhs.as_i16().unwrap()),
+            Value::I32(v) => Value::I32(v / rhs.as_i32().unwrap()),
+            Value::I64(v) => Value::I64(v / rhs.as_i64().unwrap()),
+            Value::I128(v) => Value::I128(v / rhs.as_i128().unwrap()),
+            Value::U8(v) => Value::U8(v / rhs.as_u8().unwrap()),
+            Value::U16(v) => Value::U16(v / rhs.as_u16().unwrap()),
+            Value::U32(v) => Value::U32(v / rhs.as_u32().unwrap()),
+            Value::U64(v) => Value::U64(v / rhs.as_u64().unwrap()),
+            Value::U128(v) => Value::U128(v / rhs.as_u128().unwrap()),
+            Value::F32(v) => Value::F32(v / rhs.as_f32().unwrap()),
+            Value::F64(v) => Value::F64(v / rhs.as_f64().unwrap()),
+            _ => Value::Null,
+        }
+    }
+}
+
+impl Rem for Value {
+    type Output = Value;
+    fn rem(self, rhs: Self) -> Self::Output {
+        match self {
+            Value::I8(v) => Value::I8(v % rhs.as_i8().unwrap()),
+            Value::I16(v) => Value::I16(v % rhs.as_i16().unwrap()),
+            Value::I32(v) => Value::I32(v % rhs.as_i32().unwrap()),
+            Value::I64(v) => Value::I64(v % rhs.as_i64().unwrap()),
+            Value::I128(v) => Value::I128(v % rhs.as_i128().unwrap()),
+            Value::U8(v) => Value::U8(v % rhs.as_u8().unwrap()),
+            Value::U16(v) => Value::U16(v % rhs.as_u16().unwrap()),
+            Value::U32(v) => Value::U32(v % rhs.as_u32().unwrap()),
+            Value::U64(v) => Value::U64(v % rhs.as_u64().unwrap()),
+            Value::U128(v) => Value::U128(v % rhs.as_u128().unwrap()),
+            Value::F32(v) => Value::F32(v % rhs.as_f32().unwrap()),
+            Value::F64(v) => Value::F64(v % rhs.as_f64().unwrap()),
+            _ => Value::Null,
         }
     }
 }

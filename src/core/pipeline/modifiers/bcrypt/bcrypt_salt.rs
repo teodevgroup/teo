@@ -25,7 +25,7 @@ impl Modifier for BcryptSaltModifier {
     async fn call(&self, context: Context) -> Context {
         match context.value.as_str() {
             Some(s) => {
-                context.alter_value(Value::String(hash(s.as_str(), DEFAULT_COST).unwrap()))
+                context.alter_value(Value::String(hash(s, DEFAULT_COST).unwrap()))
             }
             None => {
                 context.alter_validity(Invalid("Value is not string.".to_owned()))

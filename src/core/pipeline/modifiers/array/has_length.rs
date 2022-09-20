@@ -6,7 +6,8 @@ use crate::core::pipeline::context::Context;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::value::Value;
 
-pub(crate) struct LengthArgument {
+#[derive(Debug, Clone)]
+pub struct LengthArgument {
     lower: Argument,
     upper: Argument,
     closed: bool,
@@ -24,25 +25,13 @@ impl<T> Into<LengthArgument> for Range<T> where T: Into<Value> {
     }
 }
 
-impl<T> Into<LengthArgument> for T where T: Into<Argument> {
-    fn into(self) -> LengthArgument {
-        let value: Argument = self.into();
+impl<T> From<T> for LengthArgument where T: Into<Argument> {
+    fn from(arg: T) -> Self {
+        let value: Argument = arg.into();
         LengthArgument {
-            lower: value,
+            lower: value.clone(),
             upper: value.clone(),
             closed: true,
-        }
-    }
-}
-
-impl<F> From<F> for LengthArgument where F: Fn(&mut PipelineBuilder) +  Clone + 'static {
-    fn from(v: F) -> Self {
-        let mut p = PipelineBuilder::new();
-        v(&mut p);
-        LengthArgument {
-            lower: Argument::PipelineArgument(p.build()),
-            upper: Argument::ValueArgument(Value::Null),
-            closed: true
         }
     }
 }
@@ -71,7 +60,7 @@ impl Modifier for HasLengthModifier {
                 (l.as_usize().unwrap(), self.argument.upper.as_value().unwrap().as_usize().unwrap())
             }
             Argument::PipelineArgument(p) => {
-                match p.process(context).await.value.as_vec() {
+                match p.process(context.clone()).await.value.as_vec() {
                     Some(v) => {
                         if v.len() == 2 {
                             (v[0].as_usize().unwrap(), v[1].as_usize().unwrap())
@@ -93,7 +82,7 @@ impl Modifier for HasLengthModifier {
             }
         };
         if len < lower {
-            context.invalid(format!("Value length is less than {lower}."))
+            return context.invalid(format!("Value length is less than {lower}."));
         }
         if self.argument.closed {
             if len > upper {

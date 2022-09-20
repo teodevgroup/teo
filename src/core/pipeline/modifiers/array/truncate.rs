@@ -29,7 +29,7 @@ impl Modifier for TruncateModifier {
         let argument = self.argument.resolve(ctx.clone()).await.as_usize().unwrap();
         match &ctx.value {
             Value::String(s) => ctx.alter_value(Value::String(s.chars().take(argument).collect())),
-            Value::Vec(v) => ctx.alter_value(Value::Vec(v.iter().take(argument).collect())),
+            Value::Vec(v) => ctx.alter_value(Value::Vec(v.iter().take(argument).map(|v| v.clone()).collect())),
             _ => ctx.invalid("Value is not string or vector.")
         }
     }

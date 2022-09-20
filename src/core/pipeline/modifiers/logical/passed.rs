@@ -26,7 +26,7 @@ impl Modifier for PassedModifier {
     }
 
     async fn call(&self, context: Context) -> Context {
-        if self.pipeline.process(context).await.is_valid() {
+        if self.pipeline.process(context.clone()).await.is_valid() {
             context.alter_value(Value::Bool(true))
         } else {
             context.alter_value(Value::Bool(false))

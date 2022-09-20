@@ -24,7 +24,7 @@ impl Modifier for MultiplyModifier {
     }
 
     async fn call(&self, context: Context) -> Context {
-        let argument = self.argument.resolve(context).await;
+        let argument = self.argument.resolve(context.clone()).await;
         context.alter_value(context.value.clone() * argument)
     }
 }

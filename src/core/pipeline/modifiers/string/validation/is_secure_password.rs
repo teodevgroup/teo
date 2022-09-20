@@ -35,7 +35,7 @@ impl Modifier for IsSecurePasswordModifier {
             Some(s) => {
                 for regex in &self.patterns {
                     if !regex.is_match(&s) {
-                        context.invalid("Value is not secure password.")
+                        return context.invalid("Value is not secure password.");
                     }
                 }
                 context

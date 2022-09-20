@@ -26,7 +26,7 @@ impl Modifier for IfModifier {
     }
 
     async fn call(&self, ctx: Context) -> Context {
-        if self.pipeline.process(ctx).await.is_valid() {
+        if self.pipeline.process(ctx.clone()).await.is_valid() {
             ctx.alter_stage(ConditionTrue)
         } else {
             ctx.alter_stage(ConditionFalse)

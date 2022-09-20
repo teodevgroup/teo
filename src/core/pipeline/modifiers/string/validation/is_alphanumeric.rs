@@ -25,7 +25,7 @@ impl Modifier for IsAlphanumericModifier {
             Some(s) => {
                 for c in s.chars() {
                     if !c.is_alphanumeric() {
-                        context.invalid("Value is not alphanumeric.")
+                        return context.invalid("Value is not alphanumeric.");
                     }
                 }
                 context

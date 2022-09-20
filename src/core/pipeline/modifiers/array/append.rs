@@ -24,11 +24,11 @@ impl Modifier for AppendModifier {
     }
 
     async fn call(&self, ctx: Context) -> Context {
-        let argument = self.argument.resolve(ctx).await;
+        let argument = self.argument.resolve(ctx.clone()).await;
         match &ctx.value {
             Value::String(s) => {
                 match argument.as_str() {
-                    Some(a) => ctx.alter_value(Value::String(s + a)),
+                    Some(a) => ctx.alter_value(Value::String(s.to_owned() + a)),
                     None => ctx.invalid("Argument does not resolve to string.")
                 }
             }

@@ -12,7 +12,7 @@ pub struct ObjectValueModifier {
 
 impl ObjectValueModifier {
     pub fn new(key: impl Into<Argument>) -> Self {
-        Self { key }
+        Self { key: key.into() }
     }
 }
 
@@ -24,7 +24,7 @@ impl Modifier for ObjectValueModifier {
     }
 
     async fn call(&self, ctx: Context) -> Context {
-        let key = self.key.resolve(ctx).await;
+        let key = self.key.resolve(ctx.clone()).await;
         let value = ctx.object.get_value(key.as_str().unwrap()).unwrap();
         ctx.alter_value(value)
     }

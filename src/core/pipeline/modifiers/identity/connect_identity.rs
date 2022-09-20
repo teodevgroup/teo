@@ -30,15 +30,17 @@ impl Modifier for ConnectIdentityModifier {
         let relation_name = ctx.key_path[0].as_string().unwrap();
         let relation = model.relation(relation_name).unwrap();
         let relation_model_name = relation.model.as_str();
-        let identity_model_name = ctx.identity.unwrap().model().name();
-        if !relation_model_name == identity_model_name {
+        let identity = ctx.identity.as_ref().unwrap().clone();
+        let identity_model_name = identity.model().name();
+        if relation_model_name != identity_model_name {
             return ctx;
         }
-        let mutations = ctx.object.inner.relation_mutation_map.lock().unwrap().get(relation_name);
+        let mut map = ctx.object.inner.relation_mutation_map.lock().unwrap();
+        let mutations = map.get(relation_name);
         if mutations.is_none() {
-            ctx.object.inner.relation_mutation_map.lock().unwrap().insert(relation_name.to_string(), Vec::new());
-            ctx.object.inner.relation_mutation_map.lock().unwrap().get_mut(relation_name).unwrap().push(RelationManipulation::Connect(ctx.identity.unwrap()));
+            map.insert(relation_name.to_string(), Vec::new());
+            map.get_mut(relation_name).unwrap().push(RelationManipulation::Connect(identity.clone()));
         }
-        ctx
+        ctx.clone()
     }
 }

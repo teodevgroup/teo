@@ -33,7 +33,7 @@ impl Modifier for AllModifier {
     async fn call(&self, context: Context) -> Context {
         for pipeline in &self.pipelines {
             if let Some(reason) = pipeline.process(context.clone()).await.invalid_reason() {
-                context.invalid(reason)
+                return context.invalid(reason);
             }
         }
         context

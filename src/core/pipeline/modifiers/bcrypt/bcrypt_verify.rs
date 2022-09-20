@@ -31,7 +31,7 @@ impl Modifier for BcryptVerifyModifier {
                 context.alter_validity(Invalid("Value is not string.".to_owned()))
             }
             Some(s) => {
-                let hash = self.argument.resolve(context).await;
+                let hash = self.argument.resolve(context.clone()).await;
                 match hash.as_str() {
                     None => context.alter_validity(Invalid("Hash argument is not string.".to_owned())),
                     Some(h) => {

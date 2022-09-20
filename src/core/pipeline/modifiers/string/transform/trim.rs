@@ -23,7 +23,7 @@ impl Modifier for TrimModifier {
 
     async fn call(&self, ctx: Context) -> Context {
         match ctx.value {
-            Value::String(s) => ctx.alter_value(Value::String(s.trim().to_owned())),
+            Value::String(ref s) => ctx.alter_value(Value::String(s.trim().to_owned())),
             _ => ctx.invalid("Value is not string.")
         }
     }

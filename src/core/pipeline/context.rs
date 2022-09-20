@@ -66,7 +66,7 @@ pub(crate) enum Purpose {
 }
 
 #[derive(Clone)]
-pub(crate) struct Context {
+pub struct Context {
     pub(crate) value: Value,
     pub(crate) object: Object,
     pub(crate) key_path: Vec<KeyPathItem>,

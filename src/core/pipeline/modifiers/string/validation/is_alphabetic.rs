@@ -26,7 +26,7 @@ impl Modifier for IsAlphabeticModifier {
             Some(s) => {
                 for c in s.chars() {
                     if !c.is_alphabetic() {
-                        context.invalid("Value is not alphabetic.")
+                        return context.invalid("Value is not alphabetic.");
                     }
                 }
                 context
