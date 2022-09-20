@@ -5,7 +5,7 @@ use crate::core::pipeline::context::Validity::{Invalid, Valid};
 use crate::core::value::Value;
 
 #[derive(Clone)]
-pub(crate) enum Validity {
+pub enum Validity {
     Valid,
     Invalid(String)
 }
@@ -23,6 +23,33 @@ impl Validity {
             Invalid(reason) => Some(&reason),
             _ => None,
         }
+    }
+}
+
+impl From<&str> for Validity {
+    fn from(reason: &str) -> Self {
+        Invalid(reason.to_string())
+    }
+}
+
+impl From<String> for Validity {
+    fn from(reason: String) -> Self {
+        Invalid(reason)
+    }
+}
+
+impl From<bool> for Validity {
+    fn from(valid: bool) -> Self {
+        match valid {
+            true => Valid,
+            false => Invalid("Value is invalid.".to_owned())
+        }
+    }
+}
+
+impl From<()> for Validity {
+    fn from(_: ()) -> Self {
+        Valid
     }
 }
 

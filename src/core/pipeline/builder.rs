@@ -1,6 +1,7 @@
 use std::future::Future;
 use std::sync::{Arc};
 use crate::core::pipeline::argument::Argument;
+use crate::core::pipeline::context::Validity;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::modifiers::logical::all::AllModifier;
 use crate::core::pipeline::modifiers::logical::and::AndModifier;
@@ -26,6 +27,7 @@ use crate::core::pipeline::modifiers::array::has_length::{HasLengthModifier, Len
 use crate::core::pipeline::modifiers::array::prepend::PrependModifier;
 use crate::core::pipeline::modifiers::function::callback::{CallbackArgument, CallbackModifier};
 use crate::core::pipeline::modifiers::function::transform::{TransformArgument, TransformModifier};
+use crate::core::pipeline::modifiers::function::validate::{ValidateArgument, ValidateModifier};
 use crate::core::pipeline::modifiers::logical::any::AnyModifier;
 use crate::core::pipeline::modifiers::logical::when_create::WhenCreateModifier;
 use crate::core::pipeline::modifiers::logical::when_update::WhenUpdateModifier;
@@ -263,6 +265,14 @@ impl PipelineBuilder {
         T: From<Value> + Send + Sync + 'static,
         F: CallbackArgument<T> + 'static {
         self.modifiers.push(Arc::new(CallbackModifier::new(f)));
+        self
+    }
+
+    pub fn validate<T, O, F>(&mut self, f: F) -> &mut Self where
+        T: From<Value> + Send + Sync + 'static,
+        O: Into<Validity> + Send + Sync + 'static,
+        F: ValidateArgument<T, O> + 'static {
+        self.modifiers.push(Arc::new(ValidateModifier::new(f)));
         self
     }
 
