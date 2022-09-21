@@ -25,7 +25,6 @@ impl Modifier for ObjectValueModifier {
     }
 
     async fn call(&self, ctx: Context) -> Context {
-        println!("see value map, {:?}", ctx.object.inner.value_map.lock().unwrap());
         let key = self.key.resolve(ctx.clone()).await;
         let value = ctx.object.get_value(key.as_str().unwrap()).unwrap();
         ctx.alter_value(value).alter_key_path(vec![KeyPathItem::String(key.as_string().unwrap())])

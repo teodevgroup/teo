@@ -396,6 +396,7 @@ impl ModelBuilder {
 
     fn allowed_save_keys(&self) -> Vec<String> {
         let mut fields: Vec<String> = self.field_builders.iter()
+            .filter(|f| { !f.r#virtual })
             .map(|f| { f.name.clone() })
             .collect();
         fields.extend(self.all_relation_keys());
