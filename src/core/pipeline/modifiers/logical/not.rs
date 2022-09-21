@@ -5,30 +5,30 @@ use crate::core::pipeline::context::Context;
 use crate::core::pipeline::context::Stage::{ConditionFalse, ConditionTrue};
 
 #[derive(Debug, Clone)]
-pub struct IfModifier {
+pub struct NotModifier {
     pipeline: Pipeline
 }
 
-impl IfModifier {
+impl NotModifier {
     pub fn new(pipeline: Pipeline) -> Self {
-        return IfModifier {
+        return NotModifier {
             pipeline
         };
     }
 }
 
 #[async_trait]
-impl Modifier for IfModifier {
+impl Modifier for NotModifier {
 
     fn name(&self) -> &'static str {
-        "if"
+        "not"
     }
 
     async fn call(&self, ctx: Context) -> Context {
         if self.pipeline.process(ctx.clone()).await.is_valid() {
-            ctx.alter_stage(ConditionTrue)
+            ctx.invalid("Condition is valid.")
         } else {
-            ctx.alter_stage(ConditionFalse)
+            ctx
         }
     }
 }
