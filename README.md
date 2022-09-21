@@ -1,6 +1,6 @@
 TEO
 ===
-The next generation HTTP server.
+The new generation server software.
 
 ## Roadmap
 
