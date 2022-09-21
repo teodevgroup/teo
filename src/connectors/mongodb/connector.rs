@@ -694,7 +694,6 @@ impl Connector for MongoDBConnector {
             return Err(ActionError::unknown_database_find_unique_error());
         }
         let cur = cur.unwrap();
-        let _result: Vec<Object> = vec![];
         let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
         if results.is_empty() {
             return Err(ActionError::object_not_found());
