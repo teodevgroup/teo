@@ -20,11 +20,11 @@ impl Modifier for FloorModifier {
         "floor"
     }
 
-    async fn call(&self, context: Context) -> Context {
-        match context.value {
-            Value::F32(v) => context.alter_value(Value::F32(v.floor())),
-            Value::F64(v) => context.alter_value(Value::F64(v.floor())),
-            _ => context
+    async fn call(&self, ctx: Context) -> Context {
+        match ctx.value {
+            Value::F32(v) => ctx.alter_value(Value::F32(v.floor())),
+            Value::F64(v) => ctx.alter_value(Value::F64(v.floor())),
+            _ => ctx.invalid("Value is not number."),
         }
     }
 }

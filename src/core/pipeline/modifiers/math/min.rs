@@ -38,7 +38,7 @@ impl Modifier for MinModifier {
             Value::U128(v) => ctx.alter_value(Value::U128(max(v, argument.as_u128().unwrap()))),
             Value::F32(v) => ctx.alter_value(Value::F32(if v >= argument.as_f32().unwrap() { v } else { argument.as_f32().unwrap() })),
             Value::F64(v) => ctx.alter_value(Value::F64(if v >= argument.as_f64().unwrap() { v } else { argument.as_f64().unwrap() })),
-            _ => ctx
+            _ => ctx.invalid("Value is not number."),
         }
     }
 }

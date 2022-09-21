@@ -8,3 +8,4 @@ pub mod ceil;
 pub mod floor;
 pub mod min;
 pub mod max;
+pub mod pow;
