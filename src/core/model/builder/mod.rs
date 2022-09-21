@@ -334,11 +334,11 @@ impl ModelBuilder {
             }
         }
 
-        if primary.is_none() {
+        if primary.is_none() && !self.r#virtual {
             panic!("Model '{}' must has a primary field.", self.name);
         }
 
-        let unique_query_keys = Self::get_unique_query_keys(self, &indices, primary.as_ref().unwrap());
+        let unique_query_keys = Self::get_unique_query_keys(self, &indices, primary.as_ref());
         let _a = if self.url_segment_name == "" { self.name.to_kebab_case().to_plural() } else { self.url_segment_name.to_string() };
         let inner = ModelInner {
             name: self.name.clone(),
@@ -355,7 +355,7 @@ impl ModelBuilder {
             fields_map,
             relations_map,
             relations_vec,
-            primary: primary.unwrap(),
+            primary: primary,
             indices: indices.clone(),
             before_save_pipeline: self.before_save_pipeline.build(),
             after_save_pipeline: self.after_save_pipeline.build(),
@@ -429,7 +429,7 @@ impl ModelBuilder {
         fields
     }
 
-    pub(crate) fn get_unique_query_keys(&self, indices: &Vec<ModelIndex>, primary: &ModelIndex) -> Vec<HashSet<String>> {
+    pub(crate) fn get_unique_query_keys(&self, indices: &Vec<ModelIndex>, primary: Option<&ModelIndex>) -> Vec<HashSet<String>> {
         let mut result: Vec<HashSet<String>> = Vec::new();
         for index in indices {
             let set = HashSet::from_iter(index.items.iter().map(|i| {
@@ -437,7 +437,9 @@ impl ModelBuilder {
             }));
             result.push(set);
         }
-        result.push(HashSet::from_iter(primary.items.iter().map(|i| i.field_name.clone())));
+        if let Some(primary) = primary {
+            result.push(HashSet::from_iter(primary.items.iter().map(|i| i.field_name.clone())));
+        }
         result
     }
 

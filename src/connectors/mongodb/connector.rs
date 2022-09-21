@@ -666,7 +666,7 @@ impl Connector for MongoDBConnector {
         }
         let model = object.model();
         let mut query = doc!{};
-        for item in &model.primary().items {
+        for item in &model.primary().unwrap().items {
             let field_name = &item.field_name;
             let column_name = model.field(field_name).unwrap().column_name();
             let value = object.get_value(field_name).unwrap().to_bson_value();

@@ -1026,7 +1026,7 @@ fn build_select_input(model: &Model, _graph: &Graph, select: &JsonValue, distinc
     }
     if !false_empty || (true_empty && false_empty) {
         // all - false
-        let primary_names = model.primary().items.iter().map(|i| i.field_name.clone()).collect::<Vec<String>>();
+        let primary_names = model.primary().unwrap().items.iter().map(|i| i.field_name.clone()).collect::<Vec<String>>();
         let mut result = doc!{};
         model.all_keys().iter().for_each(|k| {
             let field = model.field(k);
@@ -1055,7 +1055,7 @@ fn build_select_input(model: &Model, _graph: &Graph, select: &JsonValue, distinc
         return Ok(Some(result));
     } else {
         // true
-        let primary_names = model.primary().items.iter().map(|i| i.field_name.clone()).collect::<Vec<String>>();
+        let primary_names = model.primary().unwrap().items.iter().map(|i| i.field_name.clone()).collect::<Vec<String>>();
         let mut result = doc!{};
         model.all_keys().iter().for_each(|k| {
             let field = model.field(k);

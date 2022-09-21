@@ -424,7 +424,7 @@ impl Object {
                                 }
                             } else {
                                 // both sides are singular
-                                for item in &self.model().primary_index().items {
+                                for item in &self.model().primary_index().unwrap().items {
                                     if &item.field_name == field_name {
                                         let local_value = self.get_value(field_name)?;
                                         if !local_value.is_null() {
@@ -905,7 +905,7 @@ impl Object {
     pub(crate) fn json_identifier(&self) -> JsonValue {
         let model = self.model();
         let mut identifier = json!({});
-        for item in &model.primary_index().items {
+        for item in &model.primary_index().unwrap().items {
             let val = self.get_value(&item.field_name).unwrap();
             identifier.as_object_mut().unwrap().insert(item.field_name.clone(), val.to_json_value());
         }
@@ -913,6 +913,10 @@ impl Object {
     }
 
     pub async fn refreshed(&self, include: Option<&JsonValue>, select: Option<&JsonValue>) -> Result<Object, ActionError> {
+        if self.model().r#virtual() {
+            self.set_select(select).unwrap();
+            return Ok(self.clone())
+        }
         let graph = self.graph();
         let mut finder = json!({
             "where": self.json_identifier(),

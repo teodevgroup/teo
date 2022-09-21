@@ -50,7 +50,7 @@ pub struct ModelInner {
     pub(crate) relations_vec: Vec<Arc<Relation>>,
     pub(crate) relations_map: HashMap<String, Arc<Relation>>,
     pub(crate) indices: Vec<ModelIndex>,
-    pub(crate) primary: ModelIndex,
+    pub(crate) primary: Option<ModelIndex>,
     pub(crate) before_save_pipeline: Pipeline,
     pub(crate) after_save_pipeline: Pipeline,
     pub(crate) before_delete_pipeline: Pipeline,
@@ -132,8 +132,8 @@ impl Model {
         }
     }
 
-    pub(crate) fn primary_index(&self) -> &ModelIndex {
-        &self.inner.primary
+    pub(crate) fn primary_index(&self) -> Option<&ModelIndex> {
+        self.inner.primary.as_ref()
     }
 
     pub(crate) fn primary_field(&self) -> Option<&Field> {
@@ -209,8 +209,8 @@ impl Model {
         &self.inner.indices
     }
 
-    pub(crate) fn primary(&self) -> &ModelIndex {
-        &self.inner.primary
+    pub(crate) fn primary(&self) -> Option<&ModelIndex> {
+        self.inner.primary.as_ref()
     }
 
     pub(crate) fn before_save_pipeline(&self) -> &Pipeline {
