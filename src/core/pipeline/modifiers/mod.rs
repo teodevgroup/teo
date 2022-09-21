@@ -9,3 +9,4 @@ pub mod object;
 pub mod number;
 pub mod value;
 pub mod identity;
+pub mod vector;

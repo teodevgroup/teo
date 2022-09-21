@@ -7,3 +7,4 @@ pub mod has_prefix;
 pub mod has_suffix;
 pub mod is_prefix_of;
 pub mod is_suffix_of;
+pub mod is_hex_color;

@@ -20,8 +20,10 @@ use crate::core::pipeline::modifiers::string::generation::slug::SlugModifier;
 use crate::core::pipeline::modifiers::logical::then::ThenModifier;
 use crate::core::pipeline::modifiers::string::generation::uuid::UUIDModifier;
 use crate::core::pipeline::modifiers::array::append::AppendModifier;
+use crate::core::pipeline::modifiers::array::get_length::GetLengthModifier;
 use crate::core::pipeline::modifiers::array::has_length::{HasLengthModifier, LengthArgument};
 use crate::core::pipeline::modifiers::array::prepend::PrependModifier;
+use crate::core::pipeline::modifiers::array::reverse::ReverseModifier;
 use crate::core::pipeline::modifiers::function::callback::{CallbackArgument, CallbackModifier};
 use crate::core::pipeline::modifiers::function::compare::{CompareArgument, CompareModifier};
 use crate::core::pipeline::modifiers::function::transform::{TransformArgument, TransformModifier};
@@ -41,10 +43,12 @@ use crate::core::pipeline::modifiers::object::is_instance_of::IsObjectOfModifier
 use crate::core::pipeline::modifiers::object::object_previous_value::ObjectPreviousValueModifier;
 use crate::core::pipeline::modifiers::object::object_set_value::ObjectSetValueModifier;
 use crate::core::pipeline::modifiers::string::generation::random_digits::RandomDigitsModifier;
+use crate::core::pipeline::modifiers::string::transform::split::SplitModifier;
 use crate::core::pipeline::modifiers::string::validation::has_prefix::HasPrefixModifier;
 use crate::core::pipeline::modifiers::string::validation::has_suffix::HasSuffixModifier;
 use crate::core::pipeline::modifiers::string::validation::is_alphanumeric::IsAlphanumericModifier;
 use crate::core::pipeline::modifiers::string::validation::is_email::IsEmailModifier;
+use crate::core::pipeline::modifiers::string::validation::is_hex_color::IsHexColorModifier;
 use crate::core::pipeline::modifiers::string::validation::is_prefix_of::IsPrefixOfModifier;
 use crate::core::pipeline::modifiers::string::validation::is_secure_password::IsSecurePasswordModifier;
 use crate::core::pipeline::modifiers::string::validation::is_suffix_of::IsSuffixOfModifier;
@@ -59,6 +63,7 @@ use crate::core::pipeline::modifiers::value::gt::GtModifier;
 use crate::core::pipeline::modifiers::value::gte::GteModifier;
 use crate::core::pipeline::modifiers::value::lt::LtModifier;
 use crate::core::pipeline::modifiers::value::lte::LteModifier;
+use crate::core::pipeline::modifiers::vector::join::JoinModifier;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
 
@@ -281,6 +286,26 @@ impl PipelineBuilder {
         self
     }
 
+    pub fn get_length(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(GetLengthModifier::new()));
+        self
+    }
+
+    pub fn reverse(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(ReverseModifier::new()));
+        self
+    }
+
+    pub fn split(&mut self, separator: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(SplitModifier::new(separator)));
+        self
+    }
+
+    pub fn join(&mut self, separator: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(JoinModifier::new(separator)));
+        self
+    }
+
     pub fn has_prefix(&mut self, prefix: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(HasPrefixModifier::new(prefix)));
         self
@@ -298,6 +323,11 @@ impl PipelineBuilder {
 
     pub fn is_suffix_of(&mut self, prefix: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(IsSuffixOfModifier::new(prefix)));
+        self
+    }
+
+    pub fn is_hex_color(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(IsHexColorModifier::new()));
         self
     }
 
