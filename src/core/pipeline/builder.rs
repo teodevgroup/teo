@@ -51,6 +51,8 @@ use crate::core::pipeline::modifiers::object::is_instance_of::IsObjectOfModifier
 use crate::core::pipeline::modifiers::object::object_previous_value::ObjectPreviousValueModifier;
 use crate::core::pipeline::modifiers::object::object_set_value::ObjectSetValueModifier;
 use crate::core::pipeline::modifiers::string::generation::random_digits::RandomDigitsModifier;
+use crate::core::pipeline::modifiers::string::transform::pad_end::PadEndModifier;
+use crate::core::pipeline::modifiers::string::transform::pad_start::PadStartModifier;
 use crate::core::pipeline::modifiers::string::transform::split::SplitModifier;
 use crate::core::pipeline::modifiers::string::validation::has_prefix::HasPrefixModifier;
 use crate::core::pipeline::modifiers::string::validation::has_suffix::HasSuffixModifier;
@@ -197,6 +199,16 @@ impl PipelineBuilder {
 
     pub fn regex_replace(&mut self, regex: impl Into<Argument>, substitute: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(RegexReplaceModifier::new(regex, substitute)));
+        self
+    }
+
+    pub fn pad_start(&mut self, char: char, width: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(PadStartModifier::new(char, width)));
+        self
+    }
+
+    pub fn pad_end(&mut self, char: char, width: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(PadEndModifier::new(char, width)));
         self
     }
 

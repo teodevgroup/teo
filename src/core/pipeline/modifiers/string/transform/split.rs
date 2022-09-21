@@ -24,7 +24,7 @@ impl Modifier for SplitModifier {
 
     async fn call(&self, ctx: Context) -> Context {
         match ctx.value.as_str() {
-            None => ctx.invalid("Value is not vector."),
+            None => ctx.invalid("Value is not string."),
             Some(s) => {
                 let arg = self.separator.resolve(ctx.clone()).await;
                 let separator = arg.as_str().unwrap();
