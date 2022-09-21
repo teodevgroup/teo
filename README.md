@@ -102,6 +102,9 @@ The next generation HTTP server.
 #### 0.6.0
 - Make language things robust
 
+#### 0.7.0
+- Plugins
+
 #### 1.0.0
 - First release
 
