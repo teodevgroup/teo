@@ -24,7 +24,7 @@ impl Modifier for CeilModifier {
         match ctx.value {
             Value::F32(v) => ctx.alter_value(Value::F32(v.ceil())),
             Value::F64(v) => ctx.alter_value(Value::F64(v.ceil())),
-            _ => ctx.invalid("Value is not number."),
+            _ => ctx.invalid("Value is not floating point number."),
         }
     }
 }

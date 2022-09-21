@@ -6,6 +6,7 @@ pub mod multiply;
 pub mod modular;
 pub mod ceil;
 pub mod floor;
+pub mod round;
 pub mod min;
 pub mod max;
 pub mod pow;

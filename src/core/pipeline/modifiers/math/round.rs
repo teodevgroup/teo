@@ -5,25 +5,25 @@ use crate::core::value::Value;
 use crate::core::pipeline::context::Context;
 
 #[derive(Debug, Copy, Clone)]
-pub struct FloorModifier {}
+pub struct RoundModifier {}
 
-impl FloorModifier {
+impl RoundModifier {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Modifier for FloorModifier {
+impl Modifier for RoundModifier {
 
     fn name(&self) -> &'static str {
-        "floor"
+        "round"
     }
 
     async fn call(&self, ctx: Context) -> Context {
         match ctx.value {
-            Value::F32(v) => ctx.alter_value(Value::F32(v.floor())),
-            Value::F64(v) => ctx.alter_value(Value::F64(v.floor())),
+            Value::F32(v) => ctx.alter_value(Value::F32(v.round())),
+            Value::F64(v) => ctx.alter_value(Value::F64(v.round())),
             _ => ctx.invalid("Value is not floating point number."),
         }
     }

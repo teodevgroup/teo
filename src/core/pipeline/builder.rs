@@ -44,6 +44,7 @@ use crate::core::pipeline::modifiers::math::modular::ModularModifier;
 use crate::core::pipeline::modifiers::math::multiply::MultiplyModifier;
 use crate::core::pipeline::modifiers::math::pow::PowModifier;
 use crate::core::pipeline::modifiers::math::root::RootModifier;
+use crate::core::pipeline::modifiers::math::round::RoundModifier;
 use crate::core::pipeline::modifiers::math::sqrt::SqrtModifier;
 use crate::core::pipeline::modifiers::math::subtract::SubtractModifier;
 use crate::core::pipeline::modifiers::object::is_instance_of::IsObjectOfModifier;
@@ -96,7 +97,7 @@ impl PipelineBuilder {
 
     pub fn abs(&mut self) -> &mut Self {
         self.modifiers.push(Arc::new(AbsModifier::new()));
-        return self;
+        self
     }
 
     pub fn add(&mut self, argument: impl Into<Argument>) -> &mut Self {
@@ -126,32 +127,37 @@ impl PipelineBuilder {
 
     pub fn ceil(&mut self) -> &mut Self {
         self.modifiers.push(Arc::new(CeilModifier::new()));
-        return self;
+        self
     }
 
     pub fn floor(&mut self) -> &mut Self {
         self.modifiers.push(Arc::new(FloorModifier::new()));
-        return self;
+        self
+    }
+    
+    pub fn round(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(RoundModifier::new()));
+        self
     }
 
     pub fn pow(&mut self, argument: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(PowModifier::new(argument)));
-        return self;
+        self
     }
 
     pub fn root(&mut self, argument: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(RootModifier::new(argument)));
-        return self;
+        self
     }
 
     pub fn sqrt(&mut self) -> &mut Self {
         self.modifiers.push(Arc::new(SqrtModifier::new()));
-        return self;
+        self
     }
 
     pub fn cbrt(&mut self) -> &mut Self {
         self.modifiers.push(Arc::new(CbrtModifier::new()));
-        return self;
+        self
     }
 
     pub fn min(&mut self, argument: impl Into<Argument>) -> &mut Self {
@@ -176,17 +182,17 @@ impl PipelineBuilder {
 
     pub fn is_alphanumeric(&mut self) -> &mut Self {
         self.modifiers.push(Arc::new(IsAlphanumericModifier::new()));
-        return self;
+        self
     }
 
     pub fn is_email(&mut self) -> &mut Self {
         self.modifiers.push(Arc::new(IsEmailModifier::new()));
-        return self;
+        self
     }
 
     pub fn regex_match(&mut self, regex: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(RegexMatchModifier::new(regex)));
-        return self;
+        self
     }
 
     pub fn regex_replace(&mut self, regex: impl Into<Argument>, substitute: impl Into<Argument>) -> &mut Self {
@@ -196,12 +202,12 @@ impl PipelineBuilder {
 
     pub fn random_digits(&mut self, argument: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(RandomDigitsModifier::new(argument)));
-        return self;
+        self
     }
 
     pub fn now(&mut self) -> &mut Self {
         self.modifiers.push(Arc::new(NowModifier::new()));
-        return self;
+        self
     }
 
     pub fn append(&mut self, argument: impl Into<Argument>) -> &mut Self {
@@ -218,42 +224,42 @@ impl PipelineBuilder {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
         self.modifiers.push(Arc::new(NotModifier::new(pipeline.build())));
-        return self;
+        self
     }
 
     pub fn r#if<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
         self.modifiers.push(Arc::new(IfModifier::new(pipeline.build())));
-        return self;
+        self
     }
 
     pub fn r#else<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
         self.modifiers.push(Arc::new(ElseModifier::new(pipeline.build())));
-        return self;
+        self
     }
 
     pub fn then<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
         self.modifiers.push(Arc::new(ThenModifier::new(pipeline.build())));
-        return self;
+        self
     }
 
     pub fn when_create<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
         self.modifiers.push(Arc::new(WhenCreateModifier::new(pipeline.build())));
-        return self;
+        self
     }
 
     pub fn when_update<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
         self.modifiers.push(Arc::new(WhenUpdateModifier::new(pipeline.build())));
-        return self;
+        self
     }
 
     pub fn is_null(&mut self) -> &mut Self {
@@ -335,7 +341,7 @@ impl PipelineBuilder {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
         self.modifiers.push(Arc::new(BcryptVerifyModifier::new(pipeline.build())));
-        return self;
+        self
     }
 
     pub fn is_secure_password(&mut self) -> &mut Self {
@@ -472,14 +478,14 @@ impl PipelineBuilder {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
         self.modifiers.push(Arc::new(ValidateWithModifier::new(pipeline.build())));
-        return self;
+        self
     }
 
     pub fn transform_with<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
         self.modifiers.push(Arc::new(TransformWithModifier::new(pipeline.build())));
-        return self;
+        self
     }
 
     pub(crate) fn build(&self) -> Pipeline {
