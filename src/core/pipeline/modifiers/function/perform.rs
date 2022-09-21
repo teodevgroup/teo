@@ -1,19 +1,17 @@
 use std::fmt::{Debug, Formatter};
 use std::future::Future;
-
 use std::sync::Arc;
 use async_trait::async_trait;
 use futures_util::future::BoxFuture;
-
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 use crate::core::value::Value;
 
-pub trait CallbackArgument<T: From<Value> + Send + Sync>: Send + Sync {
+pub trait PerformArgument<T: From<Value> + Send + Sync>: Send + Sync {
     fn call(&self, args: T) -> BoxFuture<'static, ()>;
 }
 
-impl<T, F, Fut> CallbackArgument<T> for F where
+impl<T, F, Fut> PerformArgument<T> for F where
 T: From<Value> + Send + Sync,
 F: Fn(T) -> Fut + Sync + Send,
 Fut: Future<Output = ()> + Send + Sync + 'static {
@@ -23,32 +21,32 @@ Fut: Future<Output = ()> + Send + Sync + 'static {
 }
 
 #[derive(Clone)]
-pub struct CallbackModifier<T> {
-    callback: Arc<dyn CallbackArgument<T>>
+pub struct PerformModifier<T> {
+    callback: Arc<dyn PerformArgument<T>>
 }
 
-impl<T> Debug for CallbackModifier<T> {
+impl<T> Debug for PerformModifier<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut result = f.debug_struct("CallbackModifier");
+        let mut result = f.debug_struct("PerformModifier");
         result.finish()
     }
 }
 
-impl<T> CallbackModifier<T> {
-    pub fn new<F>(f: F) -> CallbackModifier<T> where
+impl<T> PerformModifier<T> {
+    pub fn new<F>(f: F) -> PerformModifier<T> where
         T: From<Value> + Send + Sync,
-        F: CallbackArgument<T> + 'static {
-        return CallbackModifier {
+        F: PerformArgument<T> + 'static {
+        return PerformModifier {
             callback: Arc::new(f)
         }
     }
 }
 
 #[async_trait]
-impl<T: From<Value> + Send + Sync> Modifier for CallbackModifier<T> {
+impl<T: From<Value> + Send + Sync> Modifier for PerformModifier<T> {
 
     fn name(&self) -> &'static str {
-        "callback"
+        "perform"
     }
 
     async fn call(&self, ctx: Context) -> Context {
@@ -58,5 +56,5 @@ impl<T: From<Value> + Send + Sync> Modifier for CallbackModifier<T> {
     }
 }
 
-unsafe impl<T> Send for CallbackModifier<T> {}
-unsafe impl<T> Sync for CallbackModifier<T> {}
+unsafe impl<T> Send for PerformModifier<T> {}
+unsafe impl<T> Sync for PerformModifier<T> {}

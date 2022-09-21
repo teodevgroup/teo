@@ -24,7 +24,7 @@ use crate::core::pipeline::modifiers::array::get_length::GetLengthModifier;
 use crate::core::pipeline::modifiers::array::has_length::{HasLengthModifier, LengthArgument};
 use crate::core::pipeline::modifiers::array::prepend::PrependModifier;
 use crate::core::pipeline::modifiers::array::reverse::ReverseModifier;
-use crate::core::pipeline::modifiers::function::callback::{CallbackArgument, CallbackModifier};
+use crate::core::pipeline::modifiers::function::perform::{PerformArgument, PerformModifier};
 use crate::core::pipeline::modifiers::function::compare::{CompareArgument, CompareModifier};
 use crate::core::pipeline::modifiers::function::transform::{TransformArgument, TransformModifier};
 use crate::core::pipeline::modifiers::function::validate::{ValidateArgument, ValidateModifier};
@@ -383,10 +383,10 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn callback<T, F>(&mut self, f: F) -> &mut Self where
+    pub fn perform<T, F>(&mut self, f: F) -> &mut Self where
         T: From<Value> + Send + Sync + 'static,
-        F: CallbackArgument<T> + 'static {
-        self.modifiers.push(Arc::new(CallbackModifier::new(f)));
+        F: PerformArgument<T> + 'static {
+        self.modifiers.push(Arc::new(PerformModifier::new(f)));
         self
     }
 
