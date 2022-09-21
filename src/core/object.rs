@@ -503,7 +503,9 @@ impl Object {
         self.trigger_before_write_callbacks(is_new).await?;
         let connector = self.graph().connector();
         let session = connector.new_save_session();
-        self.save_to_database(session, false).await?;
+        if !self.model().r#virtual() {
+            self.save_to_database(session, false).await?;
+        }
         self.trigger_write_callbacks(is_new).await?;
         Ok(())
     }

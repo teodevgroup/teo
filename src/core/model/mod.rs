@@ -102,6 +102,10 @@ impl Model {
         self.inner.identity
     }
 
+    pub(crate) fn r#virtual(&self) -> bool {
+        self.inner.r#virtual
+    }
+
     pub(crate) fn actions(&self) -> &HashSet<ActionType> {
         &self.inner.actions
     }
