@@ -33,6 +33,7 @@ rust_decimal = "1.24"
 rust_decimal_macros = "1.24"
 async-recursion = "1.0.0"
 colored = "2.0.0"
+num-integer = "0.1.45"
 
 [dev-dependencies]
 serial_test = "0.7.0"

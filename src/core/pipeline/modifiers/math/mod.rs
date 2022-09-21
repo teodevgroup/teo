@@ -9,3 +9,6 @@ pub mod floor;
 pub mod min;
 pub mod max;
 pub mod pow;
+pub mod root;
+pub mod sqrt;
+pub mod cbrt;

@@ -36,11 +36,15 @@ use crate::core::pipeline::modifiers::logical::when_create::WhenCreateModifier;
 use crate::core::pipeline::modifiers::logical::when_update::WhenUpdateModifier;
 use crate::core::pipeline::modifiers::math::abs::AbsModifier;
 use crate::core::pipeline::modifiers::math::add::AddModifier;
+use crate::core::pipeline::modifiers::math::cbrt::CbrtModifier;
 use crate::core::pipeline::modifiers::math::divide::DivideModifier;
 use crate::core::pipeline::modifiers::math::max::MaxModifier;
 use crate::core::pipeline::modifiers::math::min::MinModifier;
 use crate::core::pipeline::modifiers::math::modular::ModularModifier;
 use crate::core::pipeline::modifiers::math::multiply::MultiplyModifier;
+use crate::core::pipeline::modifiers::math::pow::PowModifier;
+use crate::core::pipeline::modifiers::math::root::RootModifier;
+use crate::core::pipeline::modifiers::math::sqrt::SqrtModifier;
 use crate::core::pipeline::modifiers::math::subtract::SubtractModifier;
 use crate::core::pipeline::modifiers::object::is_instance_of::IsObjectOfModifier;
 use crate::core::pipeline::modifiers::object::object_previous_value::ObjectPreviousValueModifier;
@@ -127,6 +131,26 @@ impl PipelineBuilder {
 
     pub fn floor(&mut self) -> &mut Self {
         self.modifiers.push(Arc::new(FloorModifier::new()));
+        return self;
+    }
+
+    pub fn pow(&mut self, argument: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(PowModifier::new(argument)));
+        return self;
+    }
+
+    pub fn root(&mut self, argument: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(RootModifier::new(argument)));
+        return self;
+    }
+
+    pub fn sqrt(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(SqrtModifier::new()));
+        return self;
+    }
+
+    pub fn cbrt(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(CbrtModifier::new()));
         return self;
     }
 
