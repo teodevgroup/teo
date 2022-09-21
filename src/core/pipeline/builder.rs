@@ -68,6 +68,7 @@ use crate::core::pipeline::modifiers::value::gt::GtModifier;
 use crate::core::pipeline::modifiers::value::gte::GteModifier;
 use crate::core::pipeline::modifiers::value::lt::LtModifier;
 use crate::core::pipeline::modifiers::value::lte::LteModifier;
+use crate::core::pipeline::modifiers::value::one_of::OneOfModifier;
 use crate::core::pipeline::modifiers::vector::join::JoinModifier;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
@@ -278,6 +279,11 @@ impl PipelineBuilder {
 
     pub fn lte(&mut self, rhs: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(LteModifier::new(rhs)));
+        self
+    }
+
+    pub fn one_of(&mut self, choices: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(OneOfModifier::new(choices)));
         self
     }
 

@@ -1,12 +1,10 @@
 use std::fmt::{Debug};
-
 use chrono::{Date, DateTime, Utc};
 use crate::core::pipeline::argument::Argument::{PipelineArgument, ValueArgument};
 use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::Context;
 use crate::core::value::Value;
-
 
 #[derive(Debug, Clone)]
 pub enum Argument {
