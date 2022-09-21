@@ -37,8 +37,8 @@ impl Modifier for RootModifier {
             Value::U32(v) => ctx.alter_value(Value::U32(v.nth_root(exp))),
             Value::U64(v) => ctx.alter_value(Value::U64(v.nth_root(exp))),
             Value::U128(v) => ctx.alter_value(Value::U128(v.nth_root(exp))),
-            Value::F32(v) => ctx.invalid("F32 value doesn't support nth root yet."),
-            Value::F64(v) => ctx.invalid("F64 value doesn't support nth root yet."),
+            Value::F32(_v) => ctx.invalid("F32 value doesn't support nth root yet."),
+            Value::F64(_v) => ctx.invalid("F64 value doesn't support nth root yet."),
             _ => ctx.invalid("Value is not number."),
         }
     }

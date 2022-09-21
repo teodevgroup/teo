@@ -447,9 +447,9 @@ impl PartialOrd for Value {
             (Date(s), Date(o)) => s.partial_cmp(o),
             (DateTime(s), DateTime(o)) => s.partial_cmp(o),
             (Vec(s), Vec(o)) => s.partial_cmp(o),
-            (Map(s), Map(o)) => None,
-            (Object(s), Object(o)) => None,
-            (Json(s), Json(o)) => None,
+            (Map(_s), Map(_o)) => None,
+            (Object(_s), Object(_o)) => None,
+            (Json(_s), Json(_o)) => None,
             _ => None,
         }
     }
