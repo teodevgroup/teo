@@ -3,3 +3,7 @@ pub mod is_alphanumeric;
 pub mod is_secure_password;
 pub mod is_alphabetic;
 pub mod regex_match;
+pub mod has_prefix;
+pub mod has_suffix;
+pub mod is_prefix_of;
+pub mod is_suffix_of;

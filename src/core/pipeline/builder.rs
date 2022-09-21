@@ -41,9 +41,13 @@ use crate::core::pipeline::modifiers::object::is_instance_of::IsObjectOfModifier
 use crate::core::pipeline::modifiers::object::object_previous_value::ObjectPreviousValueModifier;
 use crate::core::pipeline::modifiers::object::object_set_value::ObjectSetValueModifier;
 use crate::core::pipeline::modifiers::string::generation::random_digits::RandomDigitsModifier;
+use crate::core::pipeline::modifiers::string::validation::has_prefix::HasPrefixModifier;
+use crate::core::pipeline::modifiers::string::validation::has_suffix::HasSuffixModifier;
 use crate::core::pipeline::modifiers::string::validation::is_alphanumeric::IsAlphanumericModifier;
 use crate::core::pipeline::modifiers::string::validation::is_email::IsEmailModifier;
+use crate::core::pipeline::modifiers::string::validation::is_prefix_of::IsPrefixOfModifier;
 use crate::core::pipeline::modifiers::string::validation::is_secure_password::IsSecurePasswordModifier;
+use crate::core::pipeline::modifiers::string::validation::is_suffix_of::IsSuffixOfModifier;
 use crate::core::pipeline::modifiers::string::validation::regex_match::RegexMatchModifier;
 use crate::core::pipeline::modifiers::value::eq::EqModifier;
 use crate::core::pipeline::modifiers::value::is_exist::IsExistModifier;
@@ -274,6 +278,26 @@ impl PipelineBuilder {
 
     pub fn has_length(&mut self, len: impl Into<LengthArgument>) -> &mut Self {
         self.modifiers.push(Arc::new(HasLengthModifier::new(len)));
+        self
+    }
+
+    pub fn has_prefix(&mut self, prefix: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(HasPrefixModifier::new(prefix)));
+        self
+    }
+
+    pub fn has_suffix(&mut self, prefix: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(HasSuffixModifier::new(prefix)));
+        self
+    }
+
+    pub fn is_prefix_of(&mut self, prefix: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(IsPrefixOfModifier::new(prefix)));
+        self
+    }
+
+    pub fn is_suffix_of(&mut self, prefix: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(IsSuffixOfModifier::new(prefix)));
         self
     }
 
