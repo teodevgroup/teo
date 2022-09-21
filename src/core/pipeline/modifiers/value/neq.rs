@@ -26,7 +26,7 @@ impl Modifier for NeqModifier {
         if rhs != ctx.value {
             ctx
         } else {
-            ctx.invalid("Value equals.")
+            ctx.invalid("Value is equal to rhs.")
         }
     }
 }

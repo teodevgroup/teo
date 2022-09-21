@@ -1,4 +1,3 @@
-
 use std::sync::{Arc};
 use crate::core::pipeline::argument::Argument;
 use crate::core::pipeline::context::Validity;
@@ -20,8 +19,6 @@ use crate::core::pipeline::modifiers::string::transform::regex_replace::RegexRep
 use crate::core::pipeline::modifiers::string::generation::slug::SlugModifier;
 use crate::core::pipeline::modifiers::logical::then::ThenModifier;
 use crate::core::pipeline::modifiers::string::generation::uuid::UUIDModifier;
-
-
 use crate::core::pipeline::modifiers::array::append::AppendModifier;
 use crate::core::pipeline::modifiers::array::has_length::{HasLengthModifier, LengthArgument};
 use crate::core::pipeline::modifiers::array::prepend::PrependModifier;
@@ -54,6 +51,10 @@ use crate::core::pipeline::modifiers::value::is_false::IsFalseModifier;
 use crate::core::pipeline::modifiers::value::is_null::IsNullModifier;
 use crate::core::pipeline::modifiers::value::is_true::IsTrueModifier;
 use crate::core::pipeline::modifiers::value::neq::NeqModifier;
+use crate::core::pipeline::modifiers::value::gt::GtModifier;
+use crate::core::pipeline::modifiers::value::gte::GteModifier;
+use crate::core::pipeline::modifiers::value::lt::LtModifier;
+use crate::core::pipeline::modifiers::value::lte::LteModifier;
 use crate::core::pipeline::Pipeline;
 use crate::core::value::Value;
 
@@ -216,6 +217,26 @@ impl PipelineBuilder {
 
     pub fn neq(&mut self, rhs: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(NeqModifier::new(rhs)));
+        self
+    }
+
+    pub fn gt(&mut self, rhs: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(GtModifier::new(rhs)));
+        self
+    }
+
+    pub fn gte(&mut self, rhs: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(GteModifier::new(rhs)));
+        self
+    }
+
+    pub fn lt(&mut self, rhs: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(LtModifier::new(rhs)));
+        self
+    }
+
+    pub fn lte(&mut self, rhs: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(LteModifier::new(rhs)));
         self
     }
 

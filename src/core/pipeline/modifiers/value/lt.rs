@@ -4,29 +4,29 @@ use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 
 #[derive(Debug, Clone)]
-pub struct EqModifier {
+pub struct LtModifier {
     argument: Argument
 }
 
-impl EqModifier {
+impl LtModifier {
     pub fn new(argument: impl Into<Argument>) -> Self {
         Self { argument: argument.into() }
     }
 }
 
 #[async_trait]
-impl Modifier for EqModifier {
+impl Modifier for LtModifier {
 
     fn name(&self) -> &'static str {
-        "eq"
+        "lt"
     }
 
     async fn call(&self, ctx: Context) -> Context {
         let rhs = self.argument.resolve(ctx.clone()).await;
-        if rhs == ctx.value {
+        if ctx.value < rhs {
             ctx
         } else {
-            ctx.invalid("Value is not equal to rhs.")
+            ctx.invalid("Value is not less than rhs.")
         }
     }
 }

@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::ops::{Add, Div, Mul, Sub, Rem};
 
@@ -418,6 +419,38 @@ impl Value {
             _ => {
                 panic!("Cannot neg.")
             }
+        }
+    }
+}
+
+impl PartialOrd for Value {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        use Value::*;
+        match (self, other) {
+            (Null, Null) => Some(Ordering::Equal),
+            (ObjectId(s), ObjectId(o)) => s.partial_cmp(o),
+            (Bool(s), Bool(o)) => s.partial_cmp(o),
+            (I8(s), I8(o)) => s.partial_cmp(o),
+            (I16(s), I16(o)) => s.partial_cmp(o),
+            (I32(s), I32(o)) => s.partial_cmp(o),
+            (I64(s), I64(o)) => s.partial_cmp(o),
+            (I128(s), I128(o)) => s.partial_cmp(o),
+            (U8(s), U8(o)) => s.partial_cmp(o),
+            (U16(s), U16(o)) => s.partial_cmp(o),
+            (U32(s), U32(o)) => s.partial_cmp(o),
+            (U64(s), U64(o)) => s.partial_cmp(o),
+            (U128(s), U128(o)) => s.partial_cmp(o),
+            (F32(s), F32(o)) => s.partial_cmp(o),
+            (F64(s), F64(o)) => s.partial_cmp(o),
+            (Decimal(s), Decimal(o)) => s.partial_cmp(o),
+            (String(s), String(o)) => s.partial_cmp(o),
+            (Date(s), Date(o)) => s.partial_cmp(o),
+            (DateTime(s), DateTime(o)) => s.partial_cmp(o),
+            (Vec(s), Vec(o)) => s.partial_cmp(o),
+            (Map(s), Map(o)) => None,
+            (Object(s), Object(o)) => None,
+            (Json(s), Json(o)) => None,
+            _ => None,
         }
     }
 }
