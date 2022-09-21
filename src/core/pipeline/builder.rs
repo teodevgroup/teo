@@ -37,6 +37,8 @@ use crate::core::pipeline::modifiers::logical::when_update::WhenUpdateModifier;
 use crate::core::pipeline::modifiers::math::abs::AbsModifier;
 use crate::core::pipeline::modifiers::math::add::AddModifier;
 use crate::core::pipeline::modifiers::math::divide::DivideModifier;
+use crate::core::pipeline::modifiers::math::max::MaxModifier;
+use crate::core::pipeline::modifiers::math::min::MinModifier;
 use crate::core::pipeline::modifiers::math::modular::ModularModifier;
 use crate::core::pipeline::modifiers::math::multiply::MultiplyModifier;
 use crate::core::pipeline::modifiers::math::subtract::SubtractModifier;
@@ -123,6 +125,16 @@ impl PipelineBuilder {
     pub fn floor(&mut self) -> &mut Self {
         self.modifiers.push(Arc::new(FloorModifier::new()));
         return self;
+    }
+
+    pub fn min(&mut self, argument: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(MinModifier::new(argument)));
+        self
+    }
+
+    pub fn max(&mut self, argument: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(MaxModifier::new(argument)));
+        self
     }
 
     pub fn is_alphanumeric(&mut self) -> &mut Self {
