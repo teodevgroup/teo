@@ -49,9 +49,11 @@ use crate::core::pipeline::modifiers::string::generation::random_digits::RandomD
 use crate::core::pipeline::modifiers::string::transform::split::SplitModifier;
 use crate::core::pipeline::modifiers::string::validation::has_prefix::HasPrefixModifier;
 use crate::core::pipeline::modifiers::string::validation::has_suffix::HasSuffixModifier;
+use crate::core::pipeline::modifiers::string::validation::is_alphabetic::IsAlphabeticModifier;
 use crate::core::pipeline::modifiers::string::validation::is_alphanumeric::IsAlphanumericModifier;
 use crate::core::pipeline::modifiers::string::validation::is_email::IsEmailModifier;
 use crate::core::pipeline::modifiers::string::validation::is_hex_color::IsHexColorModifier;
+use crate::core::pipeline::modifiers::string::validation::is_numeric::IsNumericModifier;
 use crate::core::pipeline::modifiers::string::validation::is_prefix_of::IsPrefixOfModifier;
 use crate::core::pipeline::modifiers::string::validation::is_secure_password::IsSecurePasswordModifier;
 use crate::core::pipeline::modifiers::string::validation::is_suffix_of::IsSuffixOfModifier;
@@ -134,6 +136,16 @@ impl PipelineBuilder {
 
     pub fn max(&mut self, argument: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(MaxModifier::new(argument)));
+        self
+    }
+
+    pub fn is_alphabetic(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(IsAlphabeticModifier::new()));
+        self
+    }
+
+    pub fn is_numeric(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(IsNumericModifier::new()));
         self
     }
 

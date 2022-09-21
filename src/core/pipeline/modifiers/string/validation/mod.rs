@@ -1,7 +1,8 @@
 pub mod is_email;
+pub mod is_alphabetic;
+pub mod is_numeric;
 pub mod is_alphanumeric;
 pub mod is_secure_password;
-pub mod is_alphabetic;
 pub mod regex_match;
 pub mod has_prefix;
 pub mod has_suffix;
