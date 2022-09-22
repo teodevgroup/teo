@@ -12,6 +12,8 @@ The new generation server software.
 - Rename `Purpose` to `Intent` **[DONE]**
 - `when_create` and `when_update` supports upsert and outputs **[DONE]**
 - Input omissible and output omissible **[DONE]**
+- Remove cache error when nesting create or connect same object
+- Remove cache error when nesting upsert same object
 - callbacks for nested created or updated objects
 
 #### 0.0.22
@@ -28,10 +30,6 @@ The new generation server software.
 
 #### 0.0.26
 - Delete callbacks: `when_delete`, `before_delete` and `after_delete`
-
-#### 0.0.27
-- Remove cache error when nesting create or connect same object
-- Remove cache error when nesting upsert same object
 
 #### 0.0.28
 - Frontend lib for aggregate, count and groupBy
