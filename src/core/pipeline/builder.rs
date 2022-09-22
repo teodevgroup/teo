@@ -50,6 +50,8 @@ use crate::core::pipeline::modifiers::object::object_previous_value::ObjectPrevi
 use crate::core::pipeline::modifiers::object::object_set_value::ObjectSetValueModifier;
 use crate::core::pipeline::modifiers::intent::when_create::WhenCreateModifier;
 use crate::core::pipeline::modifiers::intent::when_many_results::WhenManyResultsModifier;
+use crate::core::pipeline::modifiers::intent::when_nested_many_results::WhenNestedManyResultsModifier;
+use crate::core::pipeline::modifiers::intent::when_nested_single_result::WhenNestedSingleResultModifier;
 use crate::core::pipeline::modifiers::intent::when_single_result::WhenSingleResultModifier;
 use crate::core::pipeline::modifiers::intent::when_update::WhenUpdateModifier;
 use crate::core::pipeline::modifiers::string::generation::random_digits::RandomDigitsModifier;
@@ -287,6 +289,20 @@ impl PipelineBuilder {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
         self.modifiers.push(Arc::new(WhenSingleResultModifier::new(pipeline.build())));
+        self
+    }
+
+    pub fn when_nested_many_results<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut pipeline = PipelineBuilder::new();
+        build(&mut pipeline);
+        self.modifiers.push(Arc::new(WhenNestedManyResultsModifier::new(pipeline.build())));
+        self
+    }
+
+    pub fn when_nested_single_result<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut pipeline = PipelineBuilder::new();
+        build(&mut pipeline);
+        self.modifiers.push(Arc::new(WhenNestedSingleResultModifier::new(pipeline.build())));
         self
     }
 

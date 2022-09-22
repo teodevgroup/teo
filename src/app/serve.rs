@@ -7,7 +7,6 @@ use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::DefaultHeaders;
 use chrono::{DateTime, Duration, Local, Utc};
 use colored::Colorize;
-use futures_util::future::join_all;
 use serde_json::{json, Value as JsonValue};
 use futures_util::StreamExt;
 use serde::{Serialize, Deserialize};

@@ -3,7 +3,7 @@ use crate::core::action::r#type::ActionType;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::Context;
-use crate::core::pipeline::context::Intent::{ManyResult, SingleResult, Update};
+use crate::core::pipeline::context::Intent::{ManyResult, NestedManyResult, NestedSingleResult, SingleResult, Update};
 
 #[derive(Debug, Clone)]
 pub struct WhenUpdateModifier {
@@ -33,7 +33,17 @@ impl Modifier for WhenUpdateModifier {
             } else {
                 ctx
             }
-            ManyResult(a) => if a == ActionType::UpdateMany {
+            ManyResult(a) => if (a == ActionType::Update) || (a == ActionType::UpdateMany) {
+                self.pipeline.process(ctx.clone()).await
+            } else {
+                ctx
+            }
+            NestedSingleResult(a) => if a == ActionType::Update {
+                self.pipeline.process(ctx.clone()).await
+            } else {
+                ctx
+            }
+            NestedManyResult(a) => if (a == ActionType::Update) || (a == ActionType::UpdateMany) {
                 self.pipeline.process(ctx.clone()).await
             } else {
                 ctx
