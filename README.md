@@ -5,7 +5,7 @@ The new generation server software.
 ## Roadmap
 
 #### 0.0.20
-- `on_output` pipeline is called in save function
+- `on_output` pipeline is called in save function **[DONE]**
 
 #### 0.0.21
 - `when_many_results` modifier
