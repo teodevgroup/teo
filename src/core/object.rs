@@ -406,36 +406,6 @@ impl Object {
         let connector = self.graph().connector();
         connector.save_object(self).await?;
         self.clear_new_state();
-        // links
-        if !no_recursive {
-            for relation in self.model().relations() {
-                let name = &relation.name;
-                let map = self.inner.relation_connection_map.lock().unwrap();
-                let vec_option = map.get(name);
-                match vec_option {
-                    None => {},
-                    Some(vec) => {
-                        for connection in vec {
-                            match connection {
-                                RelationConnection::Link(obj) => {
-                                    self.link_connect(obj, relation, session.clone()).await?;
-                                }
-                                RelationConnection::Unlink(obj) => {
-                                    self.link_disconnect(obj, relation, session.clone()).await?;
-                                }
-                                RelationConnection::UnlinkAndDelete(obj) => {
-                                    self.link_disconnect(obj, relation, session.clone()).await?;
-                                    obj.delete().await?;
-
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        // clear properties
-        self.clear_state();
         Ok(())
     }
 
@@ -576,13 +546,48 @@ impl Object {
                 }
             }
         }
-        // apply pipeline
-        self.apply_on_save_pipeline_and_validate_required_fields().await?;
-        self.trigger_before_write_callbacks(is_new).await?;
-        if !self.model().r#virtual() {
-            self.save_to_database(session, no_recursive).await?;
+        let is_modified = self.is_modified();
+        if is_modified || is_new {
+            // apply pipeline
+            self.apply_on_save_pipeline_and_validate_required_fields().await?;
+            self.trigger_before_write_callbacks(is_new).await?;
+            if !self.model().r#virtual() {
+                self.save_to_database(session.clone(), no_recursive).await?;
+            }
         }
-        self.trigger_write_callbacks(is_new).await?;
+        // links
+        if !no_recursive {
+            for relation in self.model().relations() {
+                let name = &relation.name;
+                let map = self.inner.relation_connection_map.lock().unwrap();
+                let vec_option = map.get(name);
+                match vec_option {
+                    None => {},
+                    Some(vec) => {
+                        for connection in vec {
+                            match connection {
+                                RelationConnection::Link(obj) => {
+                                    self.link_connect(obj, relation, session.clone()).await?;
+                                }
+                                RelationConnection::Unlink(obj) => {
+                                    self.link_disconnect(obj, relation, session.clone()).await?;
+                                }
+                                RelationConnection::UnlinkAndDelete(obj) => {
+                                    self.link_disconnect(obj, relation, session.clone()).await?;
+                                    obj.delete().await?;
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // clear properties
+        self.clear_state();
+        if is_modified || is_new {
+            self.trigger_write_callbacks(is_new).await?;
+        }
         Ok(())
     }
 

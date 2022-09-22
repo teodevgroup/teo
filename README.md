@@ -16,7 +16,7 @@ The new generation server software.
 - Remove cache error when nesting upsert same object **[DONE]**
 - callbacks for nested created or updated objects **[DONE]**
 - Fix validation pipeline is before relation manipulation bug **[DONE]**
-- Do not trigger connected object's `on_save` pipeline if it's not actually updated
+- Do not trigger connected object's `on_save` pipeline if it's not actually updated **[DONE]**
 
 #### 0.0.22
 - Ellipsis modifier (especially useful on output)
