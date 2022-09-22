@@ -12,12 +12,15 @@ The new generation server software.
 - Rename `Purpose` to `Intent` **[DONE]**
 - `when_create` and `when_update` supports upsert and outputs **[DONE]**
 - Input omissible and output omissible **[DONE]**
-- Remove cache error when nesting create or connect same object
-- Remove cache error when nesting upsert same object
-- callbacks for nested created or updated objects
+- Remove cache error when nesting create or connect same object **[DONE]**
+- Remove cache error when nesting upsert same object **[DONE]**
+- callbacks for nested created or updated objects **[DONE]**
+- Fix validation pipeline is before relation manipulation bug **[DONE]**
+- Do not trigger connected object's `on_save` pipeline if it's not actually updated
 
 #### 0.0.22
 - Ellipsis modifier (especially useful on output)
+- MongoDB transaction session, make sure if errors, rollback writes
 
 #### 0.0.23
 - Properties

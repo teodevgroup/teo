@@ -402,22 +402,6 @@ impl Object {
 
     #[async_recursion(?Send)]
     pub(crate) async fn save_to_database(&self, session: Arc<dyn SaveSession>, no_recursive: bool) -> Result<(), ActionError> {
-        // handle relations and manipulations
-        if !no_recursive {
-            for relation in self.model().relations() {
-                let name = &relation.name;
-                let map = self.inner.relation_mutation_map.lock().unwrap();
-                let vec_option = map.get(name);
-                match vec_option {
-                    None => {},
-                    Some(vec) => {
-                        for manipulation in vec {
-                            self.handle_manipulation(relation, manipulation, session.clone()).await?;
-                        }
-                    }
-                }
-            }
-        }
         // send to database to save self
         let connector = self.graph().connector();
         connector.save_object(self).await?;
@@ -569,12 +553,30 @@ impl Object {
         Ok(())
     }
 
+    #[async_recursion(?Send)]
     pub(crate) async fn _save(&self, session: Arc<dyn SaveSession>, no_recursive: bool) -> Result<(), ActionError> {
         let inside_before_callback = self.inner.inside_before_save_callback.load(Ordering::SeqCst);
         if inside_before_callback {
             return Err(ActionError::save_calling_error(self.model().name()));
         }
         let is_new = self.is_new();
+        // handle relations and manipulations
+        if !no_recursive {
+            for relation in self.model().relations() {
+                let name = &relation.name;
+                let map = self.inner.relation_mutation_map.lock().unwrap();
+                let vec_option = map.get(name);
+                match vec_option {
+                    None => {},
+                    Some(vec) => {
+                        for manipulation in vec {
+                            self.handle_manipulation(relation, manipulation, session.clone()).await?;
+                        }
+                    }
+                }
+            }
+        }
+        // apply pipeline
         self.apply_on_save_pipeline_and_validate_required_fields().await?;
         self.trigger_before_write_callbacks(is_new).await?;
         if !self.model().r#virtual() {
