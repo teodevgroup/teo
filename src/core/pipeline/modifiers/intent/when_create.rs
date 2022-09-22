@@ -1,8 +1,9 @@
 use async_trait::async_trait;
+use crate::core::action::r#type::ActionType;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::Context;
-use crate::core::pipeline::context::Intent::Create;
+use crate::core::pipeline::context::Intent::{Create, SingleResult, ManyResult};
 
 #[derive(Debug, Clone)]
 pub struct WhenCreateModifier {
@@ -25,10 +26,19 @@ impl Modifier for WhenCreateModifier {
     }
 
     async fn call(&self, ctx: Context) -> Context {
-        if ctx.intent == Create {
-            self.pipeline.process(ctx.clone()).await
-        } else {
-            ctx
+        match ctx.intent {
+            Create => self.pipeline.process(ctx.clone()).await,
+            SingleResult(a) => if a == ActionType::Create {
+                self.pipeline.process(ctx.clone()).await
+            } else {
+                ctx
+            }
+            ManyResult(a) => if a == ActionType::CreateMany {
+                self.pipeline.process(ctx.clone()).await
+            } else {
+                ctx
+            }
+            _ => ctx
         }
     }
 }

@@ -271,7 +271,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, _identit
                         Ok(_) => {
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
-                            HttpResponse::Ok().json(json!({"data": refetched.to_json(Intent::SingleResult(ActionType::Upsert)).await}))
+                            HttpResponse::Ok().json(json!({"data": refetched.to_json(Intent::SingleResult(ActionType::Update)).await}))
                         }
                         Err(err) => {
                             HttpResponse::BadRequest().json(json!({"error": err}))
@@ -301,7 +301,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, _identit
                         Ok(_) => {
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
-                            let json_data = refetched.to_json(Intent::SingleResult(ActionType::Upsert)).await;
+                            let json_data = refetched.to_json(Intent::SingleResult(ActionType::Create)).await;
                             return HttpResponse::Ok().json(json!({"data": json_data}));
                         }
                         Err(err) => {
