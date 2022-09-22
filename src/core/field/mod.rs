@@ -188,6 +188,29 @@ impl Field {
         }
         self.on_save_pipeline.process(new_ctx.clone()).await
     }
+
+    pub(crate) async fn perform_on_output_callback(&self, ctx: Context) -> Context {
+        let mut new_ctx = ctx.clone();
+        match &self.field_type {
+            FieldType::Vec(inner) => {
+                let val = &new_ctx.value;
+                let arr = val.as_vec();
+                if !arr.is_none() {
+                    let arr = arr.unwrap();
+                    let mut new_arr: Vec<Value> = Vec::new();
+                    for (i, _v) in arr.iter().enumerate() {
+                        let mut key_path = ctx.key_path.clone();
+                        key_path.push(KeyPathItem::Number(i));
+                        let arr_item_ctx = ctx.alter_key_path(key_path);
+                        new_arr.push(inner.on_output_pipeline.process(arr_item_ctx).await.value);
+                    }
+                    new_ctx = new_ctx.alter_value(Value::Vec(new_arr));
+                }
+            }
+            _ => {}
+        }
+        self.on_output_pipeline.process(new_ctx.clone()).await
+    }
 }
 
 unsafe impl Send for Field {}
