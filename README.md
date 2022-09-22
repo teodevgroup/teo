@@ -12,15 +12,15 @@ The new generation server software.
 - Rename `Purpose` to `Intent` **[DONE]**
 - `when_create` and `when_update` supports upsert and outputs **[DONE]**
 - Input omissible and output omissible **[DONE]**
-
-#### 0.0.22
 - callbacks are called for nested created or updated objects
 
-#### 0.0.23
+#### 0.0.22
 - Ellipsis modifier (especially useful on output)
 
-#### 0.0.24
+#### 0.0.23
 - Properties
+
+#### 0.0.24
 - Input omissible and output omissible for generated clients
 
 #### 0.0.25
