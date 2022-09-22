@@ -1,3 +1,5 @@
+use crate::core::action::Action;
+use crate::core::action::r#type::ActionType;
 use crate::core::key_path::KeyPathItem;
 use crate::core::object::Object;
 use crate::core::pipeline::context::Stage::{ConditionTrue, ConditionFalse, Default};
@@ -85,11 +87,15 @@ impl Stage {
 }
 
 #[derive(Copy, Clone, PartialEq)]
-pub(crate) enum Purpose {
+pub enum Purpose {
     Create,
     Update,
     Delete,
     Authentication,
+    ManyResult(ActionType),
+    SingleResult(ActionType),
+    NestedManyResult(ActionType),
+    NestedSingleResult(ActionType),
 }
 
 #[derive(Clone)]

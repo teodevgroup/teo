@@ -537,13 +537,20 @@ impl Object {
         connector.delete_object(self).await
     }
 
-    pub fn to_json(&self) -> JsonValue {
+    pub async fn to_json(&self, purpose: Purpose) -> JsonValue {
         let select_list = self.inner.selected_fields.lock().unwrap();
         let select_filter = if select_list.is_empty() { false } else { true };
         let mut map: Map<String, JsonValue> = Map::new();
         let keys = self.model().output_keys();
         for key in keys {
-            let value = self.get_value(key).unwrap();
+            let mut value = self.get_value(key).unwrap();
+            if let Some(field) = self.model().field(key) {
+                let context = Context::initial_state(self.clone(), purpose)
+                    .alter_value(value)
+                    .alter_key_path(vec![KeyPathItem::String(key.clone())]);
+                let result_ctx = field.perform_on_save_callback(context).await;
+                value = result_ctx.value
+            }
             if !value.is_null() {
                 if (!select_filter) || (select_filter && select_list.contains(key)) {
                     map.insert(key.to_string(), value.to_json_value());

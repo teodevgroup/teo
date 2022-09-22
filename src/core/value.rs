@@ -7,6 +7,7 @@ use chrono::SecondsFormat;
 use rust_decimal::Decimal;
 use serde_json::{Map, Number, Value as JsonValue};
 use crate::core::object::Object;
+use crate::core::pipeline::context::Purpose;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -36,6 +37,16 @@ pub enum Value {
 }
 
 impl Value {
+
+    pub(crate) async fn to_object_json_value(&self, purpose: Purpose) -> Option<JsonValue> {
+        match self {
+            Value::Object(o) => {
+                Some(o.to_json(purpose).await)
+            }
+            _ => None
+        }
+    }
+
     pub(crate) fn to_json_value(&self) -> JsonValue {
         match self {
             Value::Null => {
@@ -106,7 +117,7 @@ impl Value {
                 JsonValue::Object(map)
             }
             Value::Object(obj) => {
-                obj.to_json()
+                panic!("use object specific method")
             }
             Value::Json(json_value) => {
                 json_value.clone()

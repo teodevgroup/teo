@@ -156,6 +156,16 @@ impl Field {
         }
     }
 
+    pub(crate) fn needs_on_output_callback(&self) -> bool {
+        if self.on_output_pipeline.has_any_modifier() {
+            return true;
+        }
+        return match &self.field_type {
+            FieldType::Vec(inner) => inner.needs_on_output_callback(),
+            _ => false
+        }
+    }
+
     pub(crate) async fn perform_on_save_callback(&self, ctx: Context) -> Context {
         let mut new_ctx = ctx.clone();
         match &self.field_type {
