@@ -1,3 +1,4 @@
+use serde_json::{Value as JsonValue};
 use crate::core::field::Optionality;
 use crate::core::object::Object;
 
@@ -32,21 +33,19 @@ impl Relation {
 
 #[derive(Debug)]
 pub(crate) enum RelationManipulation {
-    Connect(Object),
-    Disconnect(Object),
-    Set(Object),
-    Keep(Object),
-    Delete(Object),
+    Create(JsonValue),
+    CreateOrConnect(JsonValue),
+    Connect(JsonValue),
+    Set(JsonValue),
+    Update(JsonValue),
+    Upsert(JsonValue),
+    Disconnect(JsonValue),
+    Delete(JsonValue),
 }
 
-impl RelationManipulation {
-    pub(crate) fn object(&self) -> &Object {
-        match self {
-            RelationManipulation::Connect(obj) => obj,
-            RelationManipulation::Disconnect(obj) => obj,
-            RelationManipulation::Set(obj) => obj,
-            RelationManipulation::Keep(obj) => obj,
-            RelationManipulation::Delete(obj) => obj,
-        }
-    }
+#[derive(Debug)]
+pub(crate) enum RelationConnection {
+    Link(Object),
+    Unlink(Object),
+    UnlinkAndDelete(Object),
 }

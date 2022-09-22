@@ -13,7 +13,7 @@ use crate::core::input::Input::{AtomicUpdate, SetValue};
 use crate::core::graph::Graph;
 use crate::core::input_decoder::{decode_field_input, input_to_vec, one_length_json_obj};
 use crate::core::model::Model;
-use crate::core::relation::{Relation, RelationManipulation};
+use crate::core::relation::{Relation, RelationConnection, RelationManipulation};
 use crate::core::save_session::SaveSession;
 use crate::core::pipeline::context::{Context, Intent};
 use crate::core::value::Value;
@@ -45,6 +45,7 @@ impl Object {
             atomic_updator_map: Arc::new(Mutex::new(HashMap::new())),
             relation_query_map: Arc::new(Mutex::new(HashMap::new())),
             relation_mutation_map: Arc::new(Mutex::new(HashMap::new())),
+            relation_connection_map: Arc::new(Mutex::new(HashMap::new())),
             ignore_required_fields: Arc::new(Mutex::new(Vec::new())),
             identity: Arc::new(Mutex::new(None)),
         }) }
@@ -287,19 +288,6 @@ impl Object {
                 }
             }
         }
-        for relation in self.model().relations() {
-            let name = &relation.name;
-            let map = self.inner.relation_mutation_map.lock().unwrap();
-            let vec = map.get(name);
-            match vec {
-                None => {},
-                Some(vec) => {
-                    for manipulation in vec {
-                        manipulation.object().apply_on_save_pipeline_and_validate_required_fields().await?;
-                    }
-                }
-            }
-        }
         Ok(())
     }
 
@@ -321,6 +309,97 @@ impl Object {
         Ok(())
     }
 
+    async fn handle_manipulation(&self, relation: &Relation, manipulation: &RelationManipulation, session: Arc<dyn SaveSession>) -> Result<(), ActionError> {
+        use RelationManipulation::*;
+        let graph = self.graph();
+        match manipulation {
+            Create(entry) => {
+                let new_object = graph.new_object(&relation.model)?;
+                new_object.set_json(entry).await?;
+                new_object.ignore_required_for(&relation.references);
+                self.ignore_required_for(&relation.fields);
+                new_object._save(session, false).await?;
+                self.insert_relation_connection(relation.name(), RelationConnection::Link(new_object));
+            }
+            CreateOrConnect(entry) => {
+                let r#where = entry.as_object().unwrap().get("where").unwrap();
+                let create = entry.as_object().unwrap().get("create").unwrap();
+                let unique_result = graph.find_unique(&relation.model, &json!({"where": r#where}), true).await;
+                match unique_result {
+                    Ok(exist_object) => {
+                        exist_object.ignore_required_for(&relation.references);
+                        self.ignore_required_for(&relation.fields);
+                        exist_object._save(session, false).await?;
+                        self.insert_relation_connection(relation.name(), RelationConnection::Link(exist_object));
+                    }
+                    Err(_err) => {
+                        let new_obj = graph.new_object(&relation.model)?;
+                        new_obj.set_json(create).await?;
+                        new_obj.ignore_required_for(&relation.references);
+                        self.ignore_required_for(&relation.fields);
+                        new_obj._save(session, false).await?;
+                        self.insert_relation_connection(relation.name(), RelationConnection::Link(new_obj));
+                    }
+                }
+            }
+            Connect(entry) | Set(entry) => {
+                let unique_query = json!({"where": entry});
+                let exist_object = graph.find_unique(&relation.model, &unique_query, true).await?;
+                exist_object.ignore_required_for(&relation.references);
+                self.ignore_required_for(&relation.fields);
+                exist_object._save(session, false).await?;
+                self.insert_relation_connection(relation.name(), RelationConnection::Link(exist_object));
+            }
+            Update(entry) => {
+                let r#where = entry.get("where").unwrap();
+                let update = entry.get("update").unwrap();
+                let model_name = &relation.model;
+                let the_object = graph.find_unique(model_name, &json!({"where": r#where}), true).await;
+                if the_object.is_err() {
+                    return Err(ActionError::object_not_found());
+                }
+                let the_object = the_object.unwrap();
+                the_object.set_json(update).await?;
+                the_object._save(session, false).await?;
+            }
+            Upsert(entry) => {
+                let r#where = entry.as_object().unwrap().get("where").unwrap();
+                let create = entry.as_object().unwrap().get("create").unwrap();
+                let update = entry.as_object().unwrap().get("update").unwrap();
+                let the_object = graph.find_unique(&relation.model, &json!({"where": r#where}), true).await;
+                match the_object {
+                    Ok(obj) => {
+                        obj.set_json(update).await?;
+                        obj._save(session, false).await?;
+                    }
+                    Err(_) => {
+                        let new_obj = graph.new_object(&relation.model)?;
+                        new_obj.ignore_required_for(&relation.references);
+                        self.ignore_required_for(&relation.fields);
+                        new_obj.set_json(create).await?;
+                        new_obj._save(session, false).await?;
+                        self.insert_relation_connection(relation.name(), RelationConnection::Link(new_obj));
+                    }
+                }
+            }
+            Disconnect(entry) => {
+                let unique_query = json!({"where": entry});
+                let object_to_disconnect = graph.find_unique(&relation.model, &unique_query, true).await?;
+                self.insert_relation_connection(relation.name(), RelationConnection::Unlink(object_to_disconnect));
+            }
+            Delete(entry) => {
+                let r#where = entry;
+                let the_object = graph.find_unique(&relation.model, &json!({"where": r#where}), true).await;
+                if the_object.is_err() {
+                    return Err(ActionError::object_not_found());
+                }
+                let the_object = the_object.unwrap();
+                self.insert_relation_connection(relation.name(), RelationConnection::UnlinkAndDelete(the_object));
+            }
+        }
+        Ok(())
+    }
+
     #[async_recursion(?Send)]
     pub(crate) async fn save_to_database(&self, session: Arc<dyn SaveSession>, no_recursive: bool) -> Result<(), ActionError> {
         // handle relations and manipulations
@@ -333,7 +412,7 @@ impl Object {
                     None => {},
                     Some(vec) => {
                         for manipulation in vec {
-                            manipulation.object().save_to_database(session.clone(), false).await?;
+                            self.handle_manipulation(relation, manipulation, session.clone()).await?;
                         }
                     }
                 }
@@ -347,27 +426,24 @@ impl Object {
         if !no_recursive {
             for relation in self.model().relations() {
                 let name = &relation.name;
-                let map = self.inner.relation_mutation_map.lock().unwrap();
+                let map = self.inner.relation_connection_map.lock().unwrap();
                 let vec_option = map.get(name);
                 match vec_option {
                     None => {},
                     Some(vec) => {
-                        for manipulation in vec {
-                            match manipulation {
-                                RelationManipulation::Connect(obj) => {
+                        for connection in vec {
+                            match connection {
+                                RelationConnection::Link(obj) => {
                                     self.link_connect(obj, relation, session.clone()).await?;
                                 }
-                                RelationManipulation::Disconnect(obj) => {
+                                RelationConnection::Unlink(obj) => {
                                     self.link_disconnect(obj, relation, session.clone()).await?;
                                 }
-                                RelationManipulation::Set(obj) => {
-                                    self.link_connect(obj, relation, session.clone()).await?;
-                                }
-                                RelationManipulation::Delete(obj) => {
+                                RelationConnection::UnlinkAndDelete(obj) => {
                                     self.link_disconnect(obj, relation, session.clone()).await?;
                                     obj.delete().await?;
+
                                 }
-                                _ => {}
                             }
                         }
                     }
@@ -484,7 +560,7 @@ impl Object {
                             self.save_to_database(session.clone(), true).await?;
                         } else if foreign_field.optionality == Optionality::Optional {
                             obj.set_value(reference, Value::Null)?;
-                            obj.save_to_database(session.clone(), true).await?;
+                            obj._save(session.clone(), true).await?;
                         }
                     }
                 }
@@ -493,7 +569,7 @@ impl Object {
         Ok(())
     }
 
-    pub async fn save(&self) -> Result<(), ActionError> {
+    pub(crate) async fn _save(&self, session: Arc<dyn SaveSession>, no_recursive: bool) -> Result<(), ActionError> {
         let inside_before_callback = self.inner.inside_before_save_callback.load(Ordering::SeqCst);
         if inside_before_callback {
             return Err(ActionError::save_calling_error(self.model().name()));
@@ -501,13 +577,16 @@ impl Object {
         let is_new = self.is_new();
         self.apply_on_save_pipeline_and_validate_required_fields().await?;
         self.trigger_before_write_callbacks(is_new).await?;
-        let connector = self.graph().connector();
-        let session = connector.new_save_session();
         if !self.model().r#virtual() {
-            self.save_to_database(session, false).await?;
+            self.save_to_database(session, no_recursive).await?;
         }
         self.trigger_write_callbacks(is_new).await?;
         Ok(())
+    }
+
+    pub async fn save(&self) -> Result<(), ActionError> {
+        let session = self.graph().connector().new_save_session();
+        self._save(session, false).await
     }
 
     async fn trigger_before_write_callbacks(&self, newly_created: bool) -> Result<(), ActionError> {
@@ -568,6 +647,24 @@ impl Object {
         self.inner.is_modified.load(Ordering::SeqCst)
     }
 
+    fn insert_relation_manipulation(&self, key: &str, manipulation: RelationManipulation) {
+        if self.inner.relation_mutation_map.lock().unwrap().get(key).is_none() {
+            self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
+        }
+        let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
+        let objects = relation_mutation_map.get_mut(key).unwrap();
+        objects.push(manipulation);
+    }
+
+    fn insert_relation_connection(&self, key: &str, connection: RelationConnection) {
+        if self.inner.relation_connection_map.lock().unwrap().get(key).is_none() {
+            self.inner.relation_connection_map.lock().unwrap().insert(key.to_string(), vec![]);
+        }
+        let mut relation_connection_map = self.inner.relation_connection_map.lock().unwrap();
+        let objects = relation_connection_map.get_mut(key).unwrap();
+        objects.push(connection);
+    }
+
     async fn set_or_update_json(&self, json_value: &JsonValue, process: bool) -> Result<(), ActionError> {
         let json_object = json_value.as_object().unwrap();
         // check keys first
@@ -588,9 +685,7 @@ impl Object {
             all_model_keys.iter().filter(|k| { json_keys.contains(k)}).map(|k| *k).collect()
         } else { all_model_keys };
         for key in keys_to_iterate {
-            if self.model().has_field(key) {
-                // this is field
-                let field = self.model().field(&key).unwrap();
+            if let Some(field) = self.model().field(key) {
                 let json_has_value = if initialized { true } else {
                     json_keys.contains(&key)
                 };
@@ -673,9 +768,7 @@ impl Object {
                         }
                     }
                 }
-            } else {
-                // this is relation
-                let relation = self.model().relation(&key).unwrap();
+            } else if let Some(relation) = self.model().relation(key) {
                 let relation_object = json_object.get(&key.to_string());
                 if relation_object.is_none() {
                     continue;
@@ -688,76 +781,34 @@ impl Object {
                             return Err(ActionError::invalid_input(key.as_str(), "Single relationship cannot create many."));
                         }
                         let entries = input_to_vec(command_input)?;
-                        let graph = self.graph();
                         for entry in entries {
-                            let new_object =  graph.new_object(&relation.model)?;
-                            new_object.set_json(entry).await?;
-                            new_object.ignore_required_for(&relation.references);
-                            self.ignore_required_for(&relation.fields);
-                            if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
-                            }
-                            let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
-                            let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
-                            objects.push(RelationManipulation::Connect(new_object));
+                            self.insert_relation_manipulation(key, RelationManipulation::Create(entry.clone()));
                         }
                     }
-                    "set" | "connect" => {
+                    "connect" => {
                         let entries = input_to_vec(command_input)?;
-                        let graph = self.graph();
                         for entry in entries {
-                            let unique_query = json!({"where": entry});
-                            let new_object = graph.find_unique(&relation.model, &unique_query, true).await?;
-                            new_object.ignore_required_for(&relation.references);
-                            self.ignore_required_for(&relation.fields);
-                            if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
-                            }
-                            let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
-                            let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
-                            objects.push(RelationManipulation::Connect(new_object));
+                            self.insert_relation_manipulation(key, RelationManipulation::Connect(entry.clone()));
+                        }
+                    }
+                    "set" => {
+                        let entries = input_to_vec(command_input)?;
+                        for entry in entries {
+                            self.insert_relation_manipulation(key, RelationManipulation::Set(entry.clone()));
                         }
                     }
                     "connectOrCreate" => {
                         let entries = input_to_vec(command_input)?;
-                        let graph = self.graph();
                         for entry in entries {
-                            let r#where = entry.as_object().unwrap().get("where").unwrap();
-                            let create = entry.as_object().unwrap().get("create").unwrap();
-                            let unique_result = graph.find_unique(&relation.model, &json!({"where": r#where}), true).await;
-                            match unique_result {
-                                Ok(new_obj) => {
-                                    if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                        self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
-                                    }
-                                    new_obj.ignore_required_for(&relation.references);
-                                    self.ignore_required_for(&relation.fields);
-                                    let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
-                                    let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
-                                    objects.push(RelationManipulation::Connect(new_obj));
-                                }
-                                Err(_err) => {
-                                    let new_obj = graph.new_object(&relation.model)?;
-                                    new_obj.set_json(create).await?;
-                                    new_obj.ignore_required_for(&relation.references);
-                                    self.ignore_required_for(&relation.fields);
-                                    if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                        self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
-                                    }
-                                    let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
-                                    let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
-                                    objects.push(RelationManipulation::Connect(new_obj));
-                                }
-                            }
-
+                            self.insert_relation_manipulation(key, RelationManipulation::CreateOrConnect(entry.clone()));
                         }
                     }
                     "disconnect" => {
                         if self.is_new() {
                             return Err(ActionError::new_object_cannot_disconnect());
                         }
-                        let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
+                        let entries = input_to_vec(command_input)?;
                         for entry in entries {
                             let model = graph.model(&relation.model)?;
                             if !relation.is_vec && (relation.optionality == Optionality::Required) {
@@ -772,14 +823,7 @@ impl Object {
                                     return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot disconnect."));
                                 }
                             }
-                            let unique_query = json!({"where": entry});
-                            let object_to_disconnect = graph.find_unique(&relation.model, &unique_query, true).await?;
-                            if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
-                            }
-                            let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
-                            let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
-                            objects.push(RelationManipulation::Disconnect(object_to_disconnect));
+                            self.insert_relation_manipulation(key, RelationManipulation::Disconnect(entry.clone()));
                         }
                     }
                     "update" | "updateMany" => {
@@ -787,91 +831,41 @@ impl Object {
                             return Err(ActionError::invalid_input(key.as_str(), "Single relationship cannot update many."));
                         }
                         let entries = input_to_vec(command_input)?;
-                        let graph = self.graph();
                         for entry in entries {
-                            let r#where = entry.get("where").unwrap();
-                            let update = entry.get("update").unwrap();
-                            let model_name = &relation.model;
-                            let the_object = graph.find_unique(model_name, &json!({"where": r#where}), true).await;
-                            if the_object.is_err() {
-                                return Err(ActionError::object_not_found());
-                            }
-                            let new_object = the_object.unwrap();
-                            new_object.set_json(update).await?;
-                            if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
-                            }
-                            let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
-                            let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
-                            objects.push(RelationManipulation::Keep(new_object));
+                            self.insert_relation_manipulation(key, RelationManipulation::Update(entry.clone()));
                         }
                     }
                     "upsert" => {
                         let entries = input_to_vec(command_input)?;
-                        let graph = self.graph();
                         for entry in entries {
-                            let r#where = entry.as_object().unwrap().get("where").unwrap();
-                            let create = entry.as_object().unwrap().get("create").unwrap();
-                            let update = entry.as_object().unwrap().get("update").unwrap();
-                            let the_object = graph.find_unique(&relation.model, &json!({"where": r#where}), true).await;
-                            match the_object {
-                                Ok(obj) => {
-                                    obj.set_json(update).await?;
-                                    if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                        self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
-                                    }
-                                    let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
-                                    let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
-                                    objects.push(RelationManipulation::Keep(obj));
-                                }
-                                Err(_) => {
-                                    let new_obj = graph.new_object(&relation.model)?;
-                                    new_obj.ignore_required_for(&relation.references);
-                                    self.ignore_required_for(&relation.fields);
-                                    new_obj.set_json(create).await?;
-                                    if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                        self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
-                                    }
-                                    let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
-                                    let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
-                                    objects.push(RelationManipulation::Connect(new_obj));
-                                }
-                            }
+                            self.insert_relation_manipulation(key, RelationManipulation::Upsert(entry.clone()));
                         }
                     }
                     "delete" | "deleteMany" => {
+                        if self.is_new() {
+                            return Err(ActionError::new_object_cannot_disconnect());
+                        }
                         if !relation.is_vec && command == "deleteMany" {
                             return Err(ActionError::invalid_input(key.as_str(), "Single relationship cannot delete many."));
                         }
-                        let entries = input_to_vec(command_input)?;
                         let graph = self.graph();
-                        for entry in entries {
-                            let r#where = entry;
-                            let model_name = &relation.model;
-                            let model = graph.model(model_name)?;
-                            if !relation.is_vec && (relation.optionality == Optionality::Required) {
+                        let model_name = &relation.model;
+                        let model = graph.model(model_name)?;
+                        if !relation.is_vec && (relation.optionality == Optionality::Required) {
+                            return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot delete."));
+                        }
+                        let opposite_relation = model.relations().iter().find(|r| {
+                            r.fields == relation.references && r.references == relation.fields
+                        });
+                        if opposite_relation.is_some() {
+                            let opposite_relation = opposite_relation.unwrap();
+                            if !opposite_relation.is_vec && (opposite_relation.optionality == Optionality::Required) {
                                 return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot delete."));
                             }
-                            let opposite_relation = model.relations().iter().find(|r| {
-                                r.fields == relation.references && r.references == relation.fields
-                            });
-                            if opposite_relation.is_some() {
-                                let opposite_relation = opposite_relation.unwrap();
-                                if !opposite_relation.is_vec && (opposite_relation.optionality == Optionality::Required) {
-                                    return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot delete."));
-                                }
-                            }
-                            let the_object = graph.find_unique(model_name, &json!({"where": r#where}), true).await;
-                            if the_object.is_err() {
-                                return Err(ActionError::object_not_found());
-                            }
-                            let new_object = the_object.unwrap();
-                            if self.inner.relation_mutation_map.lock().unwrap().get(&key.to_string()).is_none() {
-                                self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
-                            }
-                            let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
-                            let objects = relation_mutation_map.get_mut(&key.to_string()).unwrap();
-                            objects.push(RelationManipulation::Delete(new_object));
+                        }
+                        let entries = input_to_vec(command_input)?;
+                        for entry in entries {
+                            self.insert_relation_manipulation(key, RelationManipulation::Delete(entry.clone()));
                         }
                     }
                     _ => {
@@ -1062,6 +1056,7 @@ pub(crate) struct ObjectInner {
     pub(crate) atomic_updator_map: Arc<Mutex<HashMap<String, AtomicUpdateType>>>,
     pub(crate) relation_mutation_map: Arc<Mutex<HashMap<String, Vec<RelationManipulation>>>>,
     pub(crate) relation_query_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
+    pub(crate) relation_connection_map: Arc<Mutex<HashMap<String, Vec<RelationConnection>>>>,
     pub(crate) ignore_required_fields: Arc<Mutex<Vec<String>>>,
     pub(crate) identity: Arc<Mutex<Option<Object>>>,
 }

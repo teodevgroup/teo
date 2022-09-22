@@ -1,4 +1,3 @@
-use std::future::Future;
 use std::time::SystemTime;
 use actix_http::body::BoxBody;
 use actix_http::{Method};

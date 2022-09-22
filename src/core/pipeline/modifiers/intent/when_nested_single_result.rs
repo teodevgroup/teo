@@ -2,7 +2,6 @@ use async_trait::async_trait;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::{Context, Intent};
-use crate::core::pipeline::context::Intent::Create;
 
 #[derive(Debug, Clone)]
 pub struct WhenNestedSingleResultModifier {
