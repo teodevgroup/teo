@@ -27,7 +27,7 @@ The new generation server software.
 - Delete rules
 
 #### 0.0.26
-- Delete callbacks
+- Delete callbacks: `when_delete`, `before_delete` and `after_delete`
 
 #### 0.0.27
 - Remove cache error when nesting create or connect same object
