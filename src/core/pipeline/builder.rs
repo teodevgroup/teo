@@ -32,8 +32,6 @@ use crate::core::pipeline::modifiers::logical::any::AnyModifier;
 use crate::core::pipeline::modifiers::logical::not::NotModifier;
 use crate::core::pipeline::modifiers::logical::transform_with::TransformWithModifier;
 use crate::core::pipeline::modifiers::logical::validate_with::ValidateWithModifier;
-use crate::core::pipeline::modifiers::logical::when_create::WhenCreateModifier;
-use crate::core::pipeline::modifiers::logical::when_update::WhenUpdateModifier;
 use crate::core::pipeline::modifiers::math::abs::AbsModifier;
 use crate::core::pipeline::modifiers::math::add::AddModifier;
 use crate::core::pipeline::modifiers::math::cbrt::CbrtModifier;
@@ -50,6 +48,10 @@ use crate::core::pipeline::modifiers::math::subtract::SubtractModifier;
 use crate::core::pipeline::modifiers::object::is_instance_of::IsObjectOfModifier;
 use crate::core::pipeline::modifiers::object::object_previous_value::ObjectPreviousValueModifier;
 use crate::core::pipeline::modifiers::object::object_set_value::ObjectSetValueModifier;
+use crate::core::pipeline::modifiers::purpose::when_create::WhenCreateModifier;
+use crate::core::pipeline::modifiers::purpose::when_many_results::WhenManyResultsModifier;
+use crate::core::pipeline::modifiers::purpose::when_single_result::WhenSingleResultModifier;
+use crate::core::pipeline::modifiers::purpose::when_update::WhenUpdateModifier;
 use crate::core::pipeline::modifiers::string::generation::random_digits::RandomDigitsModifier;
 use crate::core::pipeline::modifiers::string::transform::pad_end::PadEndModifier;
 use crate::core::pipeline::modifiers::string::transform::pad_start::PadStartModifier;
@@ -271,6 +273,20 @@ impl PipelineBuilder {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
         self.modifiers.push(Arc::new(WhenUpdateModifier::new(pipeline.build())));
+        self
+    }
+
+    pub fn when_many_results<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut pipeline = PipelineBuilder::new();
+        build(&mut pipeline);
+        self.modifiers.push(Arc::new(WhenManyResultsModifier::new(pipeline.build())));
+        self
+    }
+
+    pub fn when_single_result<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut pipeline = PipelineBuilder::new();
+        build(&mut pipeline);
+        self.modifiers.push(Arc::new(WhenSingleResultModifier::new(pipeline.build())));
         self
     }
 

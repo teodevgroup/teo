@@ -8,7 +8,7 @@ The new generation server software.
 - `on_output` pipeline is called in save function **[DONE]**
 
 #### 0.0.21
-- `when_many_results` modifier
+- `when_many_results` modifier **[DONE]**
 
 #### 0.0.22
 - callbacks are called for nested created or updated objects
