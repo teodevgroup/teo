@@ -87,7 +87,7 @@ impl Stage {
 }
 
 #[derive(Copy, Clone, PartialEq)]
-pub enum Purpose {
+pub enum Intent {
     Create,
     Update,
     Delete,
@@ -106,12 +106,12 @@ pub struct Context {
     pub(crate) identity: Option<Object>,
     pub(crate) validity: Validity,
     pub(crate) stage: Stage,
-    pub(crate) purpose: Purpose,
+    pub(crate) intent: Intent,
 }
 
 impl Context {
 
-    pub(crate) fn initial_state(object: Object, purpose: Purpose) -> Self {
+    pub(crate) fn initial_state(object: Object, intent: Intent) -> Self {
         Context {
             value: Value::Object(object.clone()),
             object: object.clone(),
@@ -119,7 +119,7 @@ impl Context {
             identity: object.get_identity(),
             validity: Valid,
             stage: Default,
-            purpose,
+            intent,
         }
     }
 
@@ -131,7 +131,7 @@ impl Context {
             identity: self.identity.clone(),
             validity: self.validity.clone(),
             stage: self.stage.clone(),
-            purpose: self.purpose.clone(),
+            intent: self.intent.clone(),
         }
     }
 
@@ -143,7 +143,7 @@ impl Context {
             identity: self.identity.clone(),
             validity: self.validity.clone(),
             stage: self.stage.clone(),
-            purpose: self.purpose.clone(),
+            intent: self.intent.clone(),
         }
     }
 
@@ -155,7 +155,7 @@ impl Context {
             identity: self.identity.clone(),
             validity,
             stage: self.stage.clone(),
-            purpose: self.purpose.clone(),
+            intent: self.intent.clone(),
         }
     }
 
@@ -171,7 +171,7 @@ impl Context {
             identity: self.identity.clone(),
             validity: self.validity.clone(),
             stage,
-            purpose: self.purpose.clone(),
+            intent: self.intent.clone(),
         }
     }
 

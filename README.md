@@ -9,6 +9,7 @@ The new generation server software.
 
 #### 0.0.21
 - `when_many_results` modifier **[DONE]**
+- Rename `Purpose` to `Intent` **[DONE]**
 
 #### 0.0.22
 - callbacks are called for nested created or updated objects

@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::Context;
-use crate::core::pipeline::context::Purpose::Update;
+use crate::core::pipeline::context::Intent::Update;
 
 #[derive(Debug, Clone)]
 pub struct WhenUpdateModifier {
@@ -25,7 +25,7 @@ impl Modifier for WhenUpdateModifier {
     }
 
     async fn call(&self, ctx: Context) -> Context {
-        if ctx.purpose == Update {
+        if ctx.intent == Update {
             self.pipeline.process(ctx.clone()).await
         } else {
             ctx

@@ -15,7 +15,7 @@ use crate::core::input_decoder::{decode_field_input, input_to_vec, one_length_js
 use crate::core::model::Model;
 use crate::core::relation::{Relation, RelationManipulation};
 use crate::core::save_session::SaveSession;
-use crate::core::pipeline::context::{Context, Purpose};
+use crate::core::pipeline::context::{Context, Intent};
 use crate::core::value::Value;
 use crate::core::error::{ActionError, ActionErrorType};
 use crate::core::key_path::KeyPathItem;
@@ -245,9 +245,9 @@ impl Object {
                     }
                 };
                 let purpose = if self.is_new() {
-                    Purpose::Create
+                    Intent::Create
                 } else {
-                    Purpose::Update
+                    Intent::Update
                 };
                 let context = Context::initial_state(self.clone(), purpose)
                     .alter_value(initial_value)
@@ -513,7 +513,7 @@ impl Object {
     async fn trigger_before_write_callbacks(&self, newly_created: bool) -> Result<(), ActionError> {
         let model = self.model();
         let pipeline = model.before_save_pipeline();
-        let context = Context::initial_state(self.clone(), if newly_created { Purpose::Create } else { Purpose::Update });
+        let context = Context::initial_state(self.clone(), if newly_created { Intent::Create } else { Intent::Update });
         let _result = pipeline.process(context).await;
         Ok(())
     }
@@ -526,7 +526,7 @@ impl Object {
         self.inner.inside_write_callback.store(true, Ordering::SeqCst);
         let model = self.model();
         let pipeline = model.after_save_pipeline();
-        let context = Context::initial_state(self.clone(), if newly_created { Purpose::Create } else { Purpose::Update });
+        let context = Context::initial_state(self.clone(), if newly_created { Intent::Create } else { Intent::Update });
         let _result = pipeline.process(context).await;
         self.inner.inside_write_callback.store(false, Ordering::SeqCst);
         Ok(())
@@ -537,7 +537,7 @@ impl Object {
         connector.delete_object(self).await
     }
 
-    pub async fn to_json(&self, purpose: Purpose) -> JsonValue {
+    pub async fn to_json(&self, purpose: Intent) -> JsonValue {
         let select_list = self.inner.selected_fields.lock().unwrap();
         let select_filter = if select_list.is_empty() { false } else { true };
         let mut map: Map<String, JsonValue> = Map::new();
@@ -603,9 +603,9 @@ impl Object {
                             if process {
                                 // pipeline
                                 let purpose = if self.is_new() {
-                                    Purpose::Create
+                                    Intent::Create
                                 } else {
-                                    Purpose::Update
+                                    Intent::Update
                                 };
                                 let context = Context::initial_state(self.clone(), purpose)
                                     .alter_key_path(vec![KeyPathItem::String(key.to_string())])
@@ -665,7 +665,7 @@ impl Object {
                                     self.inner.value_map.lock().unwrap().insert(key.to_string(), value.clone());
                                 }
                                 Argument::PipelineArgument(pipeline) => {
-                                    let ctx = Context::initial_state(self.clone(), Purpose::Create);
+                                    let ctx = Context::initial_state(self.clone(), Intent::Create);
                                     let value = pipeline.process(ctx).await.value;
                                     self.inner.value_map.lock().unwrap().insert(key.to_string(), value);
                                 }

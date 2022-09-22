@@ -10,4 +10,4 @@ pub mod number;
 pub mod value;
 pub mod identity;
 pub mod vector;
-pub mod purpose;
+pub mod intent;
