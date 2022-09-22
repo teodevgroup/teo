@@ -25,6 +25,8 @@ pub struct FieldBuilder {
     pub(crate) read_rule: ReadRule,
     pub(crate) write_rule: WriteRule,
     pub(crate) previous_value_rule: PreviousValueRule,
+    pub(crate) input_omissible: bool,
+    pub(crate) output_omissible: bool,
     pub(crate) index: FieldIndex,
     pub(crate) query_ability: QueryAbility,
     pub(crate) object_assignment: ObjectAssignment,
@@ -71,6 +73,8 @@ impl FieldBuilder {
             permission: None,
             column_name: None,
             previous_value_rule: PreviousValueRule::DontKeep,
+            input_omissible: false,
+            output_omissible: false,
             connector_builder,
         }
     }
@@ -93,87 +97,87 @@ impl FieldBuilder {
 
     pub fn object_id(&mut self) -> &mut Self {
         self.field_type = FieldType::ObjectId;
-        return self;
+        self
     }
 
     pub fn bool(&mut self) -> &mut Self {
         self.field_type = FieldType::Bool;
-        return self;
+        self
     }
 
     pub fn i8(&mut self) -> &mut Self {
         self.field_type = FieldType::I8;
-        return self;
+        self
     }
 
     pub fn i16(&mut self) -> &mut Self {
         self.field_type = FieldType::I16;
-        return self;
+        self
     }
 
     pub fn i32(&mut self) -> &mut Self {
         self.field_type = FieldType::I32;
-        return self;
+        self
     }
 
     pub fn i64(&mut self) -> &mut Self {
         self.field_type = FieldType::I64;
-        return self;
+        self
     }
 
     pub fn i128(&mut self) -> &mut Self {
         self.field_type = FieldType::I128;
-        return self;
+        self
     }
 
     pub fn u8(&mut self) -> &mut Self {
         self.field_type = FieldType::U8;
-        return self;
+        self
     }
 
     pub fn u16(&mut self) -> &mut Self {
         self.field_type = FieldType::U16;
-        return self;
+        self
     }
 
     pub fn u32(&mut self) -> &mut Self {
         self.field_type = FieldType::U32;
-        return self;
+        self
     }
 
     pub fn u64(&mut self) -> &mut Self {
         self.field_type = FieldType::U64;
-        return self;
+        self
     }
 
     pub fn u128(&mut self) -> &mut Self {
         self.field_type = FieldType::U128;
-        return self;
+        self
     }
 
     pub fn f32(&mut self) -> &mut Self {
         self.field_type = FieldType::F32;
-        return self;
+        self
     }
 
     pub fn f64(&mut self) -> &mut Self {
         self.field_type = FieldType::F64;
-        return self;
+        self
     }
 
     pub fn string(&mut self) -> &mut Self {
         self.field_type = FieldType::String;
-        return self;
+        self
     }
 
     pub fn date(&mut self) -> &mut Self {
         self.field_type = FieldType::Date;
-        return self;
+        self
     }
 
     pub fn datetime(&mut self) -> &mut Self {
         self.field_type = FieldType::DateTime;
-        return self;
+        self
     }
 
     pub fn r#enum(&mut self, name: &'static str) -> &mut Self {
@@ -186,7 +190,7 @@ impl FieldBuilder {
         build(&mut builder);
         let field = builder.build(self.connector_builder());
         self.field_type = FieldType::Vec(Box::new(field));
-        return self;
+        self
     }
 
     pub fn map<F: Fn(&mut FieldBuilder)>(&mut self, build: F) -> &mut Self {
@@ -194,7 +198,7 @@ impl FieldBuilder {
         build(&mut builder);
         let field = builder.build(self.connector_builder());
         self.field_type = FieldType::Map(Box::new(field));
-        return self;
+        self
     }
 
     pub fn object(&mut self, model: &'static str) -> &mut Self {
@@ -214,13 +218,13 @@ impl FieldBuilder {
 
     pub fn primary(&mut self) -> &mut Self {
         self.primary = true;
-        return self;
+        self
     }
 
     pub fn internal(&mut self) -> &mut Self {
         self.write_rule = WriteRule::NoWrite;
         self.read_rule = ReadRule::NoRead;
-        return self;
+        self
     }
 
     pub fn readonly(&mut self) -> &mut Self {
@@ -254,9 +258,19 @@ impl FieldBuilder {
         self
     }
 
+    pub fn input_omissible(&mut self) -> &mut Self {
+        self.input_omissible = true;
+        self
+    }
+
+    pub fn output_omissible(&mut self) -> &mut Self {
+        self.output_omissible = true;
+        self
+    }
+
     pub fn unique(&mut self) -> &mut Self {
         self.index = FieldIndex::Unique(IndexSettings::default());
-        return self;
+        self
     }
 
     pub fn unique_settings<F: Fn(&mut FieldIndexBuilder)>(&mut self, build: F) -> &mut Self {
@@ -268,7 +282,7 @@ impl FieldBuilder {
 
     pub fn index(&mut self) -> &mut Self {
         self.index = FieldIndex::Index(IndexSettings::default());
-        return self;
+        self
     }
 
     pub fn index_settings<F: Fn(&mut FieldIndexBuilder)>(&mut self, build: F) -> &mut Self {
@@ -280,7 +294,9 @@ impl FieldBuilder {
 
     pub fn optional(&mut self) -> &mut Self {
         self.optionality = Optionality::Optional;
-        return self;
+        self.input_omissible = true;
+        self.output_omissible = true;
+        self
     }
 
     pub fn required(&mut self) -> &mut Self {
@@ -327,21 +343,22 @@ impl FieldBuilder {
 
     pub fn on_save<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         build(&mut self.on_save_pipeline);
-        return self;
+        self
     }
 
     pub fn on_output<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         build(&mut self.on_output_pipeline);
-        return self;
+        self
     }
 
     pub fn assign_identity(&mut self) -> &mut Self {
-        return self;
+        self
     }
 
     pub fn default(&mut self, value: impl Into<Argument>) -> &mut Self {
         self.default = Some(value.into());
-        return self;
+        self.input_omissible = true;
+        self
     }
 
     pub fn permissions<F: Fn(&mut PermissionBuilder)>(&mut self, build: F) -> &mut Self {
@@ -398,6 +415,8 @@ impl FieldBuilder {
             permission: if let Some(builder) = &self.permission { Some(builder.build()) } else { None },
             column_name: self.column_name.clone(),
             previous_value_rule: self.previous_value_rule.clone(),
+            input_omissible: self.input_omissible,
+            output_omissible: self.output_omissible,
         }
     }
 }

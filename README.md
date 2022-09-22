@@ -10,6 +10,8 @@ The new generation server software.
 #### 0.0.21
 - `when_many_results` modifier **[DONE]**
 - Rename `Purpose` to `Intent` **[DONE]**
+- `when_create` and `when_update` supports upsert and outputs **[DONE]**
+- Input omissible and output omissible **[DONE]**
 
 #### 0.0.22
 - callbacks are called for nested created or updated objects
@@ -19,6 +21,7 @@ The new generation server software.
 
 #### 0.0.24
 - Properties
+- Input omissible and output omissible for generated clients
 
 #### 0.0.25
 - Delete rules

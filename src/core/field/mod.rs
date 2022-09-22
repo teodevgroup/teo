@@ -101,6 +101,8 @@ pub(crate) struct Field {
     pub(crate) read_rule: ReadRule,
     pub(crate) write_rule: WriteRule,
     pub(crate) previous_value_rule: PreviousValueRule,
+    pub(crate) input_omissible: bool,
+    pub(crate) output_omissible: bool,
     pub(crate) index: FieldIndex,
     pub(crate) query_ability: QueryAbility,
     pub(crate) object_assignment: ObjectAssignment,
