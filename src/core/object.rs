@@ -119,16 +119,16 @@ impl Object {
     }
 
     pub async fn get_property<T>(&self, key: impl AsRef<str>) -> Result<T, ActionError> where T: From<Value> {
-        let property = self.model().property(key).unwrap();
-        let getter = property.getter.unwrap();
+        let property = self.model().property(key.as_ref()).unwrap();
+        let getter = property.getter.as_ref().unwrap();
         let ctx = Context::initial_state(self.clone(), Intent::UserCodeGetProperty);
         let value = getter.process(ctx).await.value;
-        value.into()
+        Ok(value.into())
     }
 
     pub async fn set_property(&self, key: impl AsRef<str>, value: impl Into<Value>) -> Result<(), ActionError> {
-        let property = self.model().property(key).unwrap();
-        let setter = property.setter.unwrap();
+        let property = self.model().property(key.as_ref()).unwrap();
+        let setter = property.setter.as_ref().unwrap();
         let ctx = Context::initial_state(self.clone(), Intent::UserCodeSetProperty)
             .alter_value(value.into());
         let _ = setter.process(ctx).await;
