@@ -10,7 +10,6 @@ use crate::core::object::Object;
 use crate::core::save_session::SaveSession;
 use crate::core::error::ActionError;
 
-
 #[async_trait]
 pub(crate) trait Connector: Debug + Send + Sync {
 

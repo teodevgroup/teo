@@ -6,7 +6,6 @@ use std::sync::atomic::{Ordering};
 use serde_json::{json, Value as JsonValue};
 use async_trait::async_trait;
 use bson::{Bson, doc, Document};
-
 use futures_util::StreamExt;
 use mongodb::{options::ClientOptions, Client, Database, Collection, IndexModel};
 use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
@@ -21,12 +20,10 @@ use crate::core::field::Sort;
 use crate::core::field::r#type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::input::AtomicUpdateType;
-
 use crate::core::model::{Model, ModelIndex, ModelIndexType};
 use crate::core::save_session::SaveSession;
 use crate::core::value::Value;
 use crate::core::error::ActionError;
-
 
 #[derive(Debug)]
 pub struct MongoDBConnector {

@@ -25,8 +25,7 @@ url = "2.2.2"
 bcrypt = "0.13"
 uuid = { version = "1.1.1", features = ["v4", "fast-rng"] }
 cuid = "1.2.0"
-mysql_async = { version = "0.30.0", optional = true }
-tokio-postgres = { version = "0.7.6", optional = true }
+sqlx = { version = "0.6.2", features = ["runtime-tokio-native-tls"], optional = true }
 mongodb = { version = "2.2", optional = true }
 bson = { version = "2.2", features = ["chrono-0_4", "serde_with"], optional = true }
 rust_decimal = "1.24"
@@ -43,8 +42,10 @@ lazy_static = "1.4.0"
 
 [features]
 data-source-mongodb = ["mongodb", "bson"]
-data-source-mysql = ["mysql_async"]
-data-source-postgres = ["tokio-postgres"]
+data-source-mysql = ["sqlx/mysql"]
+data-source-postgres = ["sqlx/postgres"]
+data-source-mssql = ["sqlx/mssql"]
+data-source-sqlite = ["sqlx/sqlite"]
 
 [[test]]
 name = "test-core"

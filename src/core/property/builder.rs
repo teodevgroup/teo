@@ -32,6 +32,7 @@ impl PropertyBuilder {
             setter: None,
             getter: None,
             connector_builder,
+            input_omissible: false,
         }
     }
 
