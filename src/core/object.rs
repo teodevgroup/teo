@@ -638,6 +638,12 @@ impl Object {
                     let result_ctx = field.perform_on_output_callback(context).await;
                     value = result_ctx.value
                 }
+                if let Some(property) = self.model().property(key) {
+                    if let Some(getter) = &property.getter {
+                        let ctx = Context::initial_state(self.clone(), purpose);
+                        value = getter.process(ctx).await.value
+                    }
+                }
                 if !value.is_null() {
                     map.insert(key.to_string(), value.to_json_value());
                 }
@@ -754,9 +760,7 @@ impl Object {
                         AtomicUpdate(update_type) => {
                             self.inner.atomic_updator_map.lock().unwrap().insert(key.to_string(), update_type);
                         }
-                        Input::RelationInput(_input) => {
-
-                        }
+                        _ => { }
                     }
                 } else {
                     // apply default values
@@ -878,6 +882,17 @@ impl Object {
                     _ => {
                         return Err(ActionError::wrong_input_type());
                     }
+                }
+            } else if let Some(property) = self.model().property(key) {
+                let setter = property.setter.as_ref().unwrap();
+                let purpose = if self.is_new() {
+                    Intent::Create
+                } else {
+                    Intent::Update
+                };
+                let ctx = Context::initial_state(self.clone(), purpose);
+                if let Some(reason) = setter.process(ctx).await.invalid_reason() {
+                    return Err(ActionError::property_setter_error(reason));
                 }
             }
         };

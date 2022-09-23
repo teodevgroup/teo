@@ -130,6 +130,13 @@ impl Model {
         }
     }
 
+    pub(crate) fn property(&self, name: &str) -> Option<&Property> {
+        match self.inner.properties_map.get(name) {
+            Some(p) => Some(p.as_ref()),
+            None => None
+        }
+    }
+
     pub(crate) fn primary_index(&self) -> Option<&ModelIndex> {
         self.inner.primary.as_ref()
     }

@@ -53,6 +53,7 @@ pub enum ActionErrorType {
     CustomError,
     ModelNotFound,
     WrongIdentityModel,
+    PropertySetterError,
 }
 
 impl ActionErrorType {
@@ -106,6 +107,7 @@ impl ActionErrorType {
             ActionErrorType::CustomError => { 500 }
             ActionErrorType::ModelNotFound => { 500 }
             ActionErrorType::WrongIdentityModel => { 401 }
+            ActionErrorType::PropertySetterError => { 400 }
         }
     }
 }
@@ -521,6 +523,14 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::WrongIdentityModel,
             message: format!("This identity is valid but is not of this model."),
+            errors: None
+        }
+    }
+
+    pub fn property_setter_error(reason: impl Into<String>) -> Self {
+        ActionError {
+            r#type: ActionErrorType::PropertySetterError,
+            message: reason.into(),
             errors: None
         }
     }
