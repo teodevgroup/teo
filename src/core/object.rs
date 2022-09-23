@@ -84,7 +84,7 @@ impl Object {
 
     pub fn get_relation_object(&self, key: impl AsRef<str>) -> Result<Option<Object>, ActionError> {
         let key = key.as_ref();
-        let model_keys = self.model().get_value_keys();
+        let model_keys = self.model().all_keys();
         if !model_keys.contains(&key.to_string()) {
             return Err(ActionError::keys_unallowed());
         }
@@ -104,7 +104,7 @@ impl Object {
 
     pub fn get_relation_objects(&self, key: impl AsRef<str>) -> Result<Option<Vec<Object>>, ActionError> {
         let key = key.as_ref();
-        let model_keys = self.model().get_value_keys();
+        let model_keys = self.model().all_keys();
         if !model_keys.contains(&key.to_string()) {
             return Err(ActionError::keys_unallowed());
         }
@@ -131,7 +131,7 @@ impl Object {
 
     pub(crate) async fn get_previous_value(&self, key: impl AsRef<str>) -> Result<Value, ActionError> {
         let key = key.as_ref();
-        let model_keys = self.model().get_value_keys(); // TODO: should be all keys
+        let model_keys = self.model().all_keys();
         if !model_keys.contains(&key.to_string()) {
             let model = self.model();
             return Err(ActionError::get_value_error(model.name(), key));
@@ -145,7 +145,7 @@ impl Object {
 
     pub fn get_value(&self, key: impl AsRef<str>) -> Result<Value, ActionError> {
         let key = key.as_ref();
-        let model_keys = self.model().get_value_keys(); // TODO: should be all keys
+        let model_keys = self.model().all_keys();
         if !model_keys.contains(&key.to_string()) {
             let model = self.model();
             return Err(ActionError::get_value_error(model.name(), key));

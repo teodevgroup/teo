@@ -21,6 +21,7 @@ The new generation server software.
 #### 0.0.22
 - Ellipsis modifier (especially useful on output) **[DONE]**
 - Properties
+- `get_object` modifier to reach the object itself
 
 #### 0.0.23
 - MongoDB transaction session, make sure if errors, rollback writes
@@ -63,6 +64,7 @@ The new generation server software.
 
 #### 0.0.51
 - Fix decimal problems
+- Relation with read write rules
 
 #### 0.0.52
 - Fix date problems

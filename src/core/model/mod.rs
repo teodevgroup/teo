@@ -59,7 +59,6 @@ pub struct ModelInner {
     pub(crate) input_keys: Vec<String>,
     pub(crate) save_keys: Vec<String>,
     pub(crate) output_keys: Vec<String>,
-    pub(crate) get_value_keys: Vec<String>,
     pub(crate) query_keys: Vec<String>,
     pub(crate) unique_query_keys: Vec<HashSet<String>>,
     pub(crate) auth_identity_keys: Vec<String>,
@@ -170,10 +169,6 @@ impl Model {
 
     pub(crate) fn output_keys(&self) -> &Vec<String> {
         &self.inner.output_keys
-    }
-
-    pub(crate) fn get_value_keys(&self) -> &Vec<String> {
-        &self.inner.get_value_keys
     }
 
     pub(crate) fn query_keys(&self) -> &Vec<String> {

@@ -233,14 +233,6 @@ impl ModelBuilder {
     }
 
     pub(crate) fn build(&self, connector_builder: &Box<dyn ConnectorBuilder>) -> Model {
-        let all_keys = Self::all_keys(self);
-        let input_keys = Self::allowed_input_keys(self);
-        let save_keys = Self::allowed_save_keys(self);
-        let output_keys = Self::allowed_output_keys(self);
-        let get_value_keys = Self::get_get_value_keys(self);
-        let query_keys = Self::get_query_keys(self);
-        let auth_identity_keys = Self::get_auth_identity_keys(self);
-        let auth_by_keys = Self::get_auth_by_keys(self);
         let fields_vec: Vec<Arc<Field>> = self.field_builders.iter().map(|fb| { Arc::new(fb.build(connector_builder)) }).collect();
         let relations_vec: Vec<Arc<Relation>> = self.relation_builders.iter().map(|rb| { Arc::new(rb.build(connector_builder)) }).collect();
         let properties_vec: Vec<Arc<Property>> = self.property_builders.iter().map(|pb| { Arc::new(pb.build()) }).collect();
@@ -310,7 +302,7 @@ impl ModelBuilder {
             panic!("Model '{}' must has a primary field.", self.name);
         }
 
-        let unique_query_keys = Self::get_unique_query_keys(self, &indices, primary.as_ref());
+        let unique_query_keys = Self::unique_query_keys(self, &indices, primary.as_ref());
         let _a = if self.url_segment_name == "" { self.name.to_kebab_case().to_plural() } else { self.url_segment_name.to_string() };
         let inner = ModelInner {
             name: self.name.clone(),
@@ -329,72 +321,108 @@ impl ModelBuilder {
             relations_vec,
             properties_vec,
             properties_map,
-            primary: primary,
+            primary,
             indices: indices.clone(),
             before_save_pipeline: self.before_save_pipeline.build(),
             after_save_pipeline: self.after_save_pipeline.build(),
             before_delete_pipeline: self.before_delete_pipeline.build(),
             after_delete_pipeline: self.after_delete_pipeline.build(),
             primary_field,
-            all_keys,
-            input_keys,
-            save_keys,
-            output_keys,
-            get_value_keys,
-            query_keys,
+            all_keys: self.all_keys(),
+            input_keys: self.input_keys(),
+            save_keys: self.save_keys(),
+            output_keys: self.output_keys(),
+            query_keys: self.query_keys(),
             unique_query_keys,
-            auth_identity_keys,
-            auth_by_keys
+            auth_identity_keys: self.get_auth_by_keys(),
+            auth_by_keys: self.get_auth_by_keys(),
         };
         Model::new_with_inner(Arc::new(inner))
+    }
+
+    fn all_field_keys(&self) -> Vec<String> {
+        self.field_builders.iter().map(|f| f.name.clone()).collect()
     }
 
     fn all_relation_keys(&self) -> Vec<String> {
         self.relation_builders.iter().map(|r| r.name.clone()).collect()
     }
 
+    fn all_property_keys(&self) -> Vec<String> {
+        self.property_builders.iter().map(|p| p.name.clone()).collect()
+    }
+
     fn all_keys(&self) -> Vec<String> {
-        let mut fields: Vec<String> = self.field_builders.iter().map(|f| f.name.clone()).collect();
+        let mut fields: Vec<String> = vec![];
+        fields.extend(self.all_field_keys());
         fields.extend(self.all_relation_keys());
+        fields.extend(self.all_property_keys());
         fields
     }
 
-    fn allowed_input_keys(&self) -> Vec<String> {
-        let mut fields: Vec<String> = self.field_builders.iter()
-            .filter(|&f| { f.write_rule != NoWrite })
-            .map(|f| { f.name.clone() })
-            .collect();
-        fields.extend(self.all_relation_keys());
+    fn input_field_keys(&self) -> Vec<String> {
+        self.field_builders.iter().filter(|&f| f.write_rule != NoWrite).map(|f| f.name.clone()).collect()
+    }
+
+    fn input_relation_keys(&self) -> Vec<String> {
+        // todo: relation can also use readwrite rule
+        self.relation_builders.iter().map(|r| r.name.clone()).collect()
+    }
+
+    fn input_property_keys(&self) -> Vec<String> {
+        self.property_builders.iter().filter(|p| p.setter.is_some()).map(|p| p.name.clone()).collect()
+    }
+
+    fn input_keys(&self) -> Vec<String> {
+        let mut fields: Vec<String> = vec![];
+        fields.extend(self.input_field_keys());
+        fields.extend(self.input_relation_keys());
+        fields.extend(self.input_property_keys());
         fields
     }
 
-    fn allowed_save_keys(&self) -> Vec<String> {
-        let mut fields: Vec<String> = self.field_builders.iter()
+    fn field_save_keys(&self) -> Vec<String> {
+        self.field_builders.iter()
             .filter(|f| { !f.r#virtual })
             .map(|f| { f.name.clone() })
-            .collect();
-        fields.extend(self.all_relation_keys());
+            .collect()
+    }
+
+    fn relation_save_keys(&self) -> Vec<String> {
+        self.all_relation_keys()
+    }
+
+    fn save_keys(&self) -> Vec<String> {
+        let mut fields: Vec<String> = vec![];
+        fields.extend(self.field_save_keys());
+        fields.extend(self.relation_save_keys());
         fields
     }
 
-    fn allowed_output_keys(&self) -> Vec<String> {
-        let mut fields: Vec<String> = self.field_builders.iter()
+    fn output_field_keys(&self) -> Vec<String> {
+        self.field_builders.iter()
             .filter(|&f| { f.read_rule != NoRead })
             .map(|f| { f.name.clone() })
-            .collect();
-        fields.extend(self.all_relation_keys());
+            .collect()
+    }
+
+    fn output_relation_keys(&self) -> Vec<String> {
+        self.all_relation_keys()
+    }
+
+    fn output_property_keys(&self) -> Vec<String> {
+        self.property_builders.iter().filter(|p| p.getter.is_some()).map(|p| p.name.clone()).collect()
+    }
+
+    fn output_keys(&self) -> Vec<String> {
+        let mut fields: Vec<String> = vec![];
+        fields.extend(self.output_field_keys());
+        fields.extend(self.output_relation_keys());
+        fields.extend(self.output_property_keys());
         fields
     }
 
-    pub(crate) fn get_get_value_keys(&self) -> Vec<String> {
-        let mut fields: Vec<String> = self.field_builders.iter()
-            .map(|f| { f.name.clone() })
-            .collect();
-        fields.extend(self.all_relation_keys());
-        fields
-    }
-
-    pub(crate) fn get_query_keys(&self) -> Vec<String> {
+    pub(crate) fn query_keys(&self) -> Vec<String> {
         let mut fields: Vec<String> = self.field_builders.iter()
             .filter(|&f| { f.query_ability == QueryAbility::Queryable })
             .map(|f| { f.name.clone() })
@@ -403,7 +431,7 @@ impl ModelBuilder {
         fields
     }
 
-    pub(crate) fn get_unique_query_keys(&self, indices: &Vec<ModelIndex>, primary: Option<&ModelIndex>) -> Vec<HashSet<String>> {
+    pub(crate) fn unique_query_keys(&self, indices: &Vec<ModelIndex>, primary: Option<&ModelIndex>) -> Vec<HashSet<String>> {
         let mut result: Vec<HashSet<String>> = Vec::new();
         for index in indices {
             let set = HashSet::from_iter(index.items.iter().map(|i| {
