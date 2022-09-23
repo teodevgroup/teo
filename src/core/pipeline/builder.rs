@@ -54,6 +54,7 @@ use crate::core::pipeline::modifiers::intent::when_nested_many_results::WhenNest
 use crate::core::pipeline::modifiers::intent::when_nested_single_result::WhenNestedSingleResultModifier;
 use crate::core::pipeline::modifiers::intent::when_single_result::WhenSingleResultModifier;
 use crate::core::pipeline::modifiers::intent::when_update::WhenUpdateModifier;
+use crate::core::pipeline::modifiers::object::get_object::GetObjectModifier;
 use crate::core::pipeline::modifiers::string::generation::random_digits::RandomDigitsModifier;
 use crate::core::pipeline::modifiers::string::transform::ellipsis::EllipsisModifier;
 use crate::core::pipeline::modifiers::string::transform::pad_end::PadEndModifier;
@@ -365,6 +366,11 @@ impl PipelineBuilder {
 
     pub fn one_of(&mut self, choices: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(OneOfModifier::new(choices)));
+        self
+    }
+
+    pub fn get_object(&mut self) -> &mut Self {
+        self.modifiers.push(Arc::new(GetObjectModifier::new()));
         self
     }
 
