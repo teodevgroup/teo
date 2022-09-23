@@ -442,13 +442,14 @@ impl ActionError {
         }
     }
 
-    pub fn wrong_input_updator(field: impl Into<String>) -> Self {
-        let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
-        errors.insert(field.into(), "Wrong input updator.".to_string());
+    pub fn wrong_input_updator() -> Self {
+        // let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
+        // errors.insert(field.into(), "Wrong input updator.".to_string());
         ActionError {
             r#type: ActionErrorType::WrongInputUpdator,
             message: "Wrong input updator.".to_string(),
-            errors: Some(errors)
+            errors: None
+            // errors: Some(errors)
         }
     }
 

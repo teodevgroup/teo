@@ -35,17 +35,17 @@ pub(crate) fn input_to_vec(json_value: &JsonValue) -> Result<Vec<&JsonValue>, Ac
 pub(crate) fn one_length_json_obj<'a>(json_value: &'a JsonValue, path: &str) -> Result<(&'a str, &'a JsonValue), ActionError> {
     let json_obj = json_value.as_object().unwrap();
     if json_obj.keys().len() != 1 {
-        Err(ActionError::wrong_input_updator(path))
+        Err(ActionError::wrong_input_updator())
     } else {
         for (key, value) in json_obj {
             return Ok((key.as_str(), value));
         }
-        Err(ActionError::wrong_input_updator(path))
+        Err(ActionError::wrong_input_updator())
     }
 }
 
-fn decode_null(field: &Field, path: &str) -> Result<Input, ActionError> {
-    if field.optionality == Optionality::Optional {
+fn decode_null(field_type: &FieldType, optionality: Optionality, path: &str) -> Result<Input, ActionError> {
+    if optionality == Optionality::Optional {
         Ok(SetValue(Value::Null))
     } else {
         Err(ActionError::unexpected_null(path))
@@ -140,19 +140,19 @@ fn str_to_target_type(json_str: &str, target: &FieldType, graph: &Graph) -> Resu
     }
 }
 
-fn decode_string_input(graph: &Graph, json_value: &JsonValue, field: &Field, path: &str) -> Result<Input, ActionError> {
+fn decode_string_input(graph: &Graph, json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &str) -> Result<Input, ActionError> {
     if json_value.is_string() {
-        Ok(SetValue(str_to_target_type(json_value.as_str().unwrap(), &field.field_type, graph)?))
+        Ok(SetValue(str_to_target_type(json_value.as_str().unwrap(), field_type, graph)?))
     } else if json_value.is_object() {
         let (key, value) = one_length_json_obj(json_value, path)?;
         match key {
             "set" => {
                 match value {
                     JsonValue::Null => {
-                        decode_null(field, path)
+                        decode_null(field_type, optionality, path)
                     }
                     JsonValue::String(string_value) => {
-                        Ok(SetValue(str_to_target_type(string_value.as_str(), &field.field_type, graph)?))
+                        Ok(SetValue(str_to_target_type(string_value.as_str(), field_type, graph)?))
                     }
                     _ => {
                         Err(ActionError::wrong_input_type())
@@ -160,7 +160,7 @@ fn decode_string_input(graph: &Graph, json_value: &JsonValue, field: &Field, pat
                 }
             }
             _ => {
-                Err(ActionError::wrong_input_updator(path))
+                Err(ActionError::wrong_input_updator())
             }
         }
     } else {
@@ -168,7 +168,7 @@ fn decode_string_input(graph: &Graph, json_value: &JsonValue, field: &Field, pat
     }
 }
 
-fn decode_bool_input(json_value: &JsonValue, field: &Field, path: &str) -> Result<Input, ActionError> {
+fn decode_bool_input(json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &str) -> Result<Input, ActionError> {
     if json_value.is_boolean() {
         Ok(SetValue(Value::Bool(json_value.as_bool().unwrap())))
     } else if json_value.is_object() {
@@ -177,7 +177,7 @@ fn decode_bool_input(json_value: &JsonValue, field: &Field, path: &str) -> Resul
             "set" => {
                 match value {
                     JsonValue::Null => {
-                        decode_null(field, path)
+                        decode_null(field_type, optionality, path)
                     }
                     JsonValue::Bool(bool_value) => {
                         Ok(SetValue(Value::Bool(*bool_value)))
@@ -188,7 +188,7 @@ fn decode_bool_input(json_value: &JsonValue, field: &Field, path: &str) -> Resul
                 }
             }
             _ => {
-                Err(ActionError::wrong_input_updator(path))
+                Err(ActionError::wrong_input_updator())
             }
         }
     } else {
@@ -196,12 +196,12 @@ fn decode_bool_input(json_value: &JsonValue, field: &Field, path: &str) -> Resul
     }
 }
 
-fn decode_vec_input(graph: &Graph, json_value: &JsonValue, field: &Field, path: &str, inner_field: &Box<Field>) -> Result<Input, ActionError> {
+fn decode_vec_input(graph: &Graph, json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &str, inner_field: &Box<Field>) -> Result<Input, ActionError> {
     if json_value.is_array() {
         let arr = json_value.as_array().unwrap();
         Ok(SetValue(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
             let new_path_name = path.to_string() + "." + &format!("{}", i);
-            match decode_field_input(graph, v, inner_field, &new_path_name) {
+            match decode_field_input(graph, v, &inner_field.field_type, inner_field.optionality, &new_path_name) {
                 Ok(v) => {
                     match v {
                         SetValue(v) => v,
@@ -219,12 +219,12 @@ fn decode_vec_input(graph: &Graph, json_value: &JsonValue, field: &Field, path: 
             "set" => {
                 match value {
                     JsonValue::Null => {
-                        decode_null(field, path)
+                        decode_null(&field_type, optionality, path)
                     }
                     JsonValue::Array(arr) => {
                         Ok(SetValue(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
                             let new_path_name = path.to_string() + "." + &format!("{}", i);
-                            match decode_field_input(graph, v, field, &new_path_name) {
+                            match decode_field_input(graph, v, field_type, optionality, &new_path_name) {
                                 Ok(v) => {
                                     match v {
                                         SetValue(v) => v,
@@ -243,7 +243,7 @@ fn decode_vec_input(graph: &Graph, json_value: &JsonValue, field: &Field, path: 
                 }
             }
             "push" => {
-                let inner_val = match decode_field_input(graph, value, inner_field, path)? {
+                let inner_val = match decode_field_input(graph, value, &inner_field.field_type, inner_field.optionality, path)? {
                     SetValue(val) => val,
                     _ => return Err(ActionError::wrong_input_type())
                 };
@@ -258,8 +258,8 @@ fn decode_vec_input(graph: &Graph, json_value: &JsonValue, field: &Field, path: 
     }
 }
 
-fn decode_number_input(json_value: &JsonValue, field: &Field, path: &str) -> Result<Input, ActionError> {
-    let number_type = match &field.field_type {
+fn decode_number_input(json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &str) -> Result<Input, ActionError> {
+    let number_type = match field_type {
         FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 => NumberInputType::Int,
         FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 => NumberInputType::UInt,
         FieldType::F32 | FieldType::F64 => NumberInputType::Float,
@@ -269,29 +269,29 @@ fn decode_number_input(json_value: &JsonValue, field: &Field, path: &str) -> Res
     if json_value.is_string() {
         match number_type {
             NumberInputType::Decimal => {
-                Ok(SetValue(number_to_target_type(json_value, &field.field_type, number_type)?))
+                Ok(SetValue(number_to_target_type(json_value, field_type, number_type)?))
             }
             _ => Err(ActionError::wrong_input_type())
         }
     } else if json_value.is_number() {
-        Ok(SetValue(number_to_target_type(json_value, &field.field_type, number_type)?))
+        Ok(SetValue(number_to_target_type(json_value, field_type, number_type)?))
     } else if json_value.is_object() {
         let (key, value) = one_length_json_obj(json_value, path)?;
         let arg = match value {
             JsonValue::Null => {
                 return if key == "set" {
-                    decode_null(field, path)
+                    decode_null(field_type, optionality, path)
                 } else {
                     Err(ActionError::wrong_input_type())
                 }
             }
             JsonValue::Number(_num) => {
-                number_to_target_type(value, &field.field_type, number_type)
+                number_to_target_type(value, field_type, number_type)
             }
             JsonValue::String(_str) => {
                 match number_type {
                     NumberInputType::Decimal => {
-                        number_to_target_type(value, &field.field_type, number_type)
+                        number_to_target_type(value, field_type, number_type)
                     }
                     _ => Err(ActionError::wrong_input_type())
                 }
@@ -307,7 +307,7 @@ fn decode_number_input(json_value: &JsonValue, field: &Field, path: &str) -> Res
             "multiply" => Ok(AtomicUpdate(Multiply(arg))),
             "divide" => Ok(AtomicUpdate(Divide(arg))),
             _ => {
-                Err(ActionError::wrong_input_updator(&field.name))
+                Err(ActionError::wrong_input_updator())
             }
         }
     } else {
@@ -316,7 +316,7 @@ fn decode_number_input(json_value: &JsonValue, field: &Field, path: &str) -> Res
 }
 
 pub(crate) fn decode_field_value(graph: &Graph, json_value: &JsonValue, field: &Field, path: &str) -> Result<Value, ActionError> {
-    match decode_field_input(graph, json_value, field, path) {
+    match decode_field_input(graph, json_value, &field.field_type, field.optionality, path) {
         Ok(input) => {
             match input {
                 Input::SetValue(value) => {
@@ -333,35 +333,35 @@ pub(crate) fn decode_field_value(graph: &Graph, json_value: &JsonValue, field: &
     }
 }
 
-pub(crate) fn decode_field_input(graph: &Graph, json_value: &JsonValue, field: &Field, path: &str) -> Result<Input, ActionError> {
+pub(crate) fn decode_field_input(graph: &Graph, json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &str) -> Result<Input, ActionError> {
     // value is JSON null
     if json_value == &JsonValue::Null {
-        return if field.optionality == Optionality::Optional {
+        return if optionality == Optionality::Optional {
             Ok(SetValue(Value::Null))
         } else {
             Err(ActionError::unexpected_null(path))
         }
     }
     // value is present
-    match &field.field_type {
+    match field_type {
         FieldType::Undefined => { panic!("Field type should not be undefined!") }
         #[cfg(feature = "data-source-mongodb")]
         FieldType::ObjectId => {
-            decode_string_input(graph, json_value, field, path)
+            decode_string_input(graph, json_value, field_type, optionality, path)
         }
         FieldType::String | FieldType::Date | FieldType::DateTime | FieldType::Enum(_) => {
-            decode_string_input(graph, json_value, field, path)
+            decode_string_input(graph, json_value, field_type, optionality, path)
         }
         FieldType::Bool => {
-            decode_bool_input(json_value, field, path)
+            decode_bool_input(json_value, field_type, optionality, path)
         }
         FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 |
         FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 |
         FieldType::F32 | FieldType::F64 | FieldType::Decimal => {
-            decode_number_input(json_value, field, path)
+            decode_number_input(json_value, field_type, optionality, path)
         }
         FieldType::Vec(inner_field) => {
-            decode_vec_input(graph, json_value, field, path, inner_field)
+            decode_vec_input(graph, json_value, field_type, optionality, path, inner_field)
         }
         _ => panic!()
     }

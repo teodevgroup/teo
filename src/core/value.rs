@@ -231,6 +231,11 @@ impl Value {
     //
     pub fn as_u8(&self) -> Option<u8> {
         match self {
+            Value::I8(v) => Some(*v as u8),
+            Value::I16(v) => Some(*v as u8),
+            Value::I32(v) => Some(*v as u8),
+            Value::I64(v) => Some(*v as u8),
+            Value::I128(v) => Some(*v as u8),
             Value::U8(v) => Some(*v as u8),
             Value::U16(v) => Some(*v as u8),
             Value::U32(v) => Some(*v as u8),
@@ -242,6 +247,11 @@ impl Value {
 
     pub fn as_u16(&self) -> Option<u16> {
         match self {
+            Value::I8(v) => Some(*v as u16),
+            Value::I16(v) => Some(*v as u16),
+            Value::I32(v) => Some(*v as u16),
+            Value::I64(v) => Some(*v as u16),
+            Value::I128(v) => Some(*v as u16),
             Value::U8(v) => Some(*v as u16),
             Value::U16(v) => Some(*v as u16),
             Value::U32(v) => Some(*v as u16),
@@ -253,6 +263,11 @@ impl Value {
 
     pub fn as_u32(&self) -> Option<u32> {
         match self {
+            Value::I8(v) => Some(*v as u32),
+            Value::I16(v) => Some(*v as u32),
+            Value::I32(v) => Some(*v as u32),
+            Value::I64(v) => Some(*v as u32),
+            Value::I128(v) => Some(*v as u32),
             Value::U8(v) => Some(*v as u32),
             Value::U16(v) => Some(*v as u32),
             Value::U32(v) => Some(*v as u32),
@@ -264,6 +279,11 @@ impl Value {
 
     pub fn as_u64(&self) -> Option<u64> {
         match self {
+            Value::I8(v) => Some(*v as u64),
+            Value::I16(v) => Some(*v as u64),
+            Value::I32(v) => Some(*v as u64),
+            Value::I64(v) => Some(*v as u64),
+            Value::I128(v) => Some(*v as u64),
             Value::U8(v) => Some(*v as u64),
             Value::U16(v) => Some(*v as u64),
             Value::U32(v) => Some(*v as u64),
@@ -275,6 +295,11 @@ impl Value {
 
     pub fn as_u128(&self) -> Option<u128> {
         match self {
+            Value::I8(v) => Some(*v as u128),
+            Value::I16(v) => Some(*v as u128),
+            Value::I32(v) => Some(*v as u128),
+            Value::I64(v) => Some(*v as u128),
+            Value::I128(v) => Some(*v as u128),
             Value::U8(v) => Some(*v as u128),
             Value::U16(v) => Some(*v as u128),
             Value::U32(v) => Some(*v as u128),

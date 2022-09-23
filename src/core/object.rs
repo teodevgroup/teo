@@ -697,6 +697,7 @@ impl Object {
         let keys_to_iterate = if initialized {
             all_model_keys.iter().filter(|k| { json_keys.contains(k)}).map(|k| *k).collect()
         } else { all_model_keys };
+        println!("keys to use {:?}", keys_to_iterate);
         for key in keys_to_iterate {
             if let Some(field) = self.model().field(key) {
                 let json_has_value = if initialized { true } else {
@@ -704,7 +705,7 @@ impl Object {
                 };
                 if json_has_value {
                     let json_value = &json_object[&key.to_string()];
-                    let input_result = decode_field_input(self.graph(), json_value, field, &field.name)?;
+                    let input_result = decode_field_input(self.graph(), json_value, &field.field_type, field.optionality, &field.name)?;
                     match input_result {
                         SetValue(value) => {
                             let mut value = value;
@@ -891,7 +892,14 @@ impl Object {
                         } else {
                             Intent::Update
                         };
-                        let ctx = Context::initial_state(self.clone(), purpose);
+                        let json_value = &json_object[&key.to_string()];
+                        let input_result = decode_field_input(self.graph(), json_value, &property.field_type, Optionality::Required, "")?;
+                        let value = match input_result {
+                            Input::SetValue(v) => v,
+                            _ => return Err(ActionError::wrong_input_updator()),
+                        };
+                        let ctx = Context::initial_state(self.clone(), purpose)
+                            .alter_value(value);
                         if let Some(reason) = setter.process(ctx).await.invalid_reason() {
                             return Err(ActionError::property_setter_error(reason));
                         }
