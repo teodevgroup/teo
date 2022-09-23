@@ -884,15 +884,18 @@ impl Object {
                     }
                 }
             } else if let Some(property) = self.model().property(key) {
-                let setter = property.setter.as_ref().unwrap();
-                let purpose = if self.is_new() {
-                    Intent::Create
-                } else {
-                    Intent::Update
-                };
-                let ctx = Context::initial_state(self.clone(), purpose);
-                if let Some(reason) = setter.process(ctx).await.invalid_reason() {
-                    return Err(ActionError::property_setter_error(reason));
+                if json_keys.contains(&key) {
+                    if let Some(setter) = property.setter.as_ref() {
+                        let purpose = if self.is_new() {
+                            Intent::Create
+                        } else {
+                            Intent::Update
+                        };
+                        let ctx = Context::initial_state(self.clone(), purpose);
+                        if let Some(reason) = setter.process(ctx).await.invalid_reason() {
+                            return Err(ActionError::property_setter_error(reason));
+                        }
+                    }
                 }
             }
         };
