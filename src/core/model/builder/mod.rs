@@ -1,5 +1,4 @@
 use std::collections::{HashMap, HashSet};
-
 use std::sync::Arc;
 use inflector::Inflector;
 use crate::core::action::Action;
@@ -14,11 +13,9 @@ use crate::core::field::ReadRule::NoRead;
 use crate::core::field::WriteRule::NoWrite;
 use crate::core::model::{ModelIndex, ModelIndexItem, Model, ModelIndexType, ModelInner};
 use crate::core::model::builder::index_builder::ModelIndexBuilder;
-
 use crate::core::relation::Relation;
-
-
 use crate::core::pipeline::builder::PipelineBuilder;
+use crate::core::property::builder::PropertyBuilder;
 
 pub(crate) mod index_builder;
 
@@ -33,6 +30,7 @@ pub struct ModelBuilder {
     pub(crate) r#virtual: bool,
     pub(crate) field_builders: Vec<FieldBuilder>,
     pub(crate) relation_builders: Vec<RelationBuilder>,
+    pub(crate) property_builders: Vec<PropertyBuilder>,
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) primary: Option<ModelIndex>,
     pub(crate) indices: Vec<ModelIndex>,
@@ -56,8 +54,9 @@ impl ModelBuilder {
             identity: false,
             internal: false,
             r#virtual: false,
-            field_builders: Vec::new(),
-            relation_builders: Vec::new(),
+            field_builders: vec![],
+            relation_builders: vec![],
+            property_builders: vec![],
             permission: None,
             primary: None,
             indices: Vec::new(),
@@ -101,17 +100,24 @@ impl ModelBuilder {
         self
     }
 
-    pub fn field<F: Fn(&mut FieldBuilder)>(&mut self, name: &'static str, build: F) -> &mut Self {
+    pub fn field<F: Fn(&mut FieldBuilder)>(&mut self, name: impl Into<String>, build: F) -> &mut Self {
         let mut f = FieldBuilder::new(name, self.connector_builder());
         build(&mut f);
         self.field_builders.push(f);
         self
     }
 
-    pub fn relation<F: Fn(&mut RelationBuilder)>(&mut self, name: &'static str, build: F) -> &mut Self {
+    pub fn relation<F: Fn(&mut RelationBuilder)>(&mut self, name: impl Into<String>, build: F) -> &mut Self {
         let mut f = RelationBuilder::new(name, self.connector_builder());
         build(&mut f);
         self.relation_builders.push(f);
+        self
+    }
+
+    pub fn property<F: Fn(&mut PropertyBuilder)>(&mut self, name: impl Into<String>, build: F) -> &mut Self {
+        let mut p = PropertyBuilder::new(name.into(), self.connector_builder());
+        build(&mut p);
+        self.property_builders.push(p);
         self
     }
 
@@ -219,46 +225,6 @@ impl ModelBuilder {
         callback(&mut self.after_delete_pipeline);
         self
     }
-
-    // pub fn after_save<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-    //     self.after_save_fns.push(Arc::new(|object| Box::pin(callback(object))));
-    //     self
-    // }
-    //
-    // pub fn after_create<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-    //     self.after_create_fns.push(Arc::new(|object| Box::pin(callback(object))));
-    //     self
-    // }
-    //
-    // pub fn after_update<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-    //     self.after_update_fns.push(Arc::new(|object| Box::pin(callback(object))));
-    //     self
-    // }
-    //
-    // pub fn after_delete<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-    //     self.after_delete_fns.push(Arc::new(|object| Box::pin(callback(object))));
-    //     self
-    // }
-    //
-    // pub fn before_save<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-    //     self.before_save_fns.push(Arc::new(|object| Box::pin(callback(object))));
-    //     self
-    // }
-    //
-    // pub fn before_create<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-    //     self.before_create_fns.push(Arc::new(|object| Box::pin(callback(object))));
-    //     self
-    // }
-    //
-    // pub fn before_update<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-    //     self.before_update_fns.push(Arc::new(|object| Box::pin(callback(object))));
-    //     self
-    // }
-    //
-    // pub fn before_delete<F, Fut>(&mut self, callback: &'static F) -> &mut Self where F: (Fn(Object) -> Fut) + 'static, Fut: Future<Output = Result<(), ActionError>> + 'static {
-    //     self.before_delete_fns.push(Arc::new(|object| Box::pin(callback(object))));
-    //     self
-    // }
 
     pub fn actions<F: Fn(&mut ActionsBuilder)>(&mut self, build: F) -> &mut Self {
         build(&mut self.actions_builder);

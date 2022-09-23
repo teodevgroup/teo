@@ -3,14 +3,14 @@ use crate::core::pipeline::modifier::Modifier;
 
 use crate::core::pipeline::context::Context;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct IsObjectOfModifier {
-    model: &'static str
+    model: String
 }
 
 impl IsObjectOfModifier {
-    pub fn new(model: &'static str) -> Self {
-        IsObjectOfModifier { model }
+    pub fn new(model: impl Into<String>) -> Self {
+        IsObjectOfModifier { model: model.into() }
     }
 }
 
@@ -27,7 +27,7 @@ impl Modifier for IsObjectOfModifier {
                 if o.model().name() == self.model {
                     ctx
                 } else {
-                    let model = self.model;
+                    let model = &self.model;
                     ctx.invalid(format!("Value is not object of '{model}'."))
                 }
             }

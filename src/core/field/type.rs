@@ -21,8 +21,8 @@ pub(crate) enum FieldType {
     String,
     Date,
     DateTime,
-    Enum(&'static str),
+    Enum(String),
     Vec(Box<Field>),
     Map(Box<Field>),
-    Object(&'static str)
+    Object(String),
 }

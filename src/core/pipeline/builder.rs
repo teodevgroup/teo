@@ -474,7 +474,7 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn is_object_of(&mut self, model: &'static str) -> &mut Self {
+    pub fn is_object_of(&mut self, model: impl Into<String>) -> &mut Self {
         self.modifiers.push(Arc::new(IsObjectOfModifier::new(model)));
         self
     }

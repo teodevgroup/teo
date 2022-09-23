@@ -45,7 +45,7 @@ pub struct FieldBuilder {
 }
 
 impl FieldBuilder {
-    pub(crate) fn new(name: impl Into<String>, connector_builder: &Box<dyn ConnectorBuilder>) -> Self {
+    pub(crate) fn new(name: impl Into<String>, connector_builder: *const Box<dyn ConnectorBuilder>) -> Self {
         return FieldBuilder {
             name: name.into(),
             localized_name: "".to_string(),
@@ -165,6 +165,11 @@ impl FieldBuilder {
         self
     }
 
+    pub fn decimal(&mut self) -> &mut Self {
+        self.field_type = FieldType::Decimal;
+        self
+    }
+
     pub fn string(&mut self) -> &mut Self {
         self.field_type = FieldType::String;
         self
@@ -180,8 +185,8 @@ impl FieldBuilder {
         self
     }
 
-    pub fn r#enum(&mut self, name: &'static str) -> &mut Self {
-        self.field_type = FieldType::Enum(name);
+    pub fn r#enum(&mut self, name: impl Into<String>) -> &mut Self {
+        self.field_type = FieldType::Enum(name.into());
         self
     }
 
@@ -201,8 +206,8 @@ impl FieldBuilder {
         self
     }
 
-    pub fn object(&mut self, model: &'static str) -> &mut Self {
-        self.field_type = FieldType::Object(model);
+    pub fn object(&mut self, model: impl Into<String>) -> &mut Self {
+        self.field_type = FieldType::Object(model.into());
         self
     }
 

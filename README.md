@@ -19,11 +19,11 @@ The new generation server software.
 - Do not trigger connected object's `on_save` pipeline if it's not actually updated **[DONE]**
 
 #### 0.0.22
-- Ellipsis modifier (especially useful on output)
-- MongoDB transaction session, make sure if errors, rollback writes
+- Ellipsis modifier (especially useful on output) **[DONE]**
+- Properties
 
 #### 0.0.23
-- Properties
+- MongoDB transaction session, make sure if errors, rollback writes
 
 #### 0.0.24
 - Input omissible and output omissible for generated clients
