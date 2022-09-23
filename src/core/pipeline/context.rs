@@ -96,6 +96,8 @@ pub enum Intent {
     SingleResult(ActionType),
     NestedManyResult(ActionType),
     NestedSingleResult(ActionType),
+    UserCodeGetProperty,
+    UserCodeSetProperty,
 }
 
 #[derive(Clone)]

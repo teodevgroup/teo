@@ -20,11 +20,11 @@ The new generation server software.
 
 #### 0.0.22
 - Ellipsis modifier (especially useful on output) **[DONE]**
+- `get_object` modifier to reach the object itself **[DONE]** 
 - Properties
   - get property
   - set property
-  - prevent selection 
-- `get_object` modifier to reach the object itself
+  - prevent selection
 
 #### 0.0.23
 - MongoDB transaction session, make sure if errors, rollback writes
