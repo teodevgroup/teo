@@ -218,10 +218,13 @@ impl Object {
             // all - false
             let mut result: Vec<String> = vec![];
             self.model().all_keys().iter().for_each(|k| {
-                let field = self.model().field(k);
-                if let Some(field) = field {
+                if let Some(field) = self.model().field(k) {
                     if !false_list.contains(&&***&k) {
                         result.push(field.name.clone());
+                    }
+                } else if let Some(property) = self.model().property(k) {
+                    if !false_list.contains(&&***&k) {
+                        result.push(property.name.clone());
                     }
                 }
             });
@@ -231,10 +234,13 @@ impl Object {
             // true
             let mut result: Vec<String> = vec![];
             self.model().all_keys().iter().for_each(|k| {
-                let field = self.model().field(k);
-                if let Some(field) = field {
+                if let Some(field) = self.model().field(k) {
                     if true_list.contains(&&***&k) {
                         result.push(field.name.clone());
+                    }
+                } else if let Some(property) = self.model().property(k) {
+                    if true_list.contains(&&***&k) {
+                        result.push(property.name.clone());
                     }
                 }
             });
@@ -654,8 +660,7 @@ impl Object {
                         .alter_key_path(vec![KeyPathItem::String(key.clone())]);
                     let result_ctx = field.perform_on_output_callback(context).await;
                     value = result_ctx.value
-                }
-                if let Some(property) = self.model().property(key) {
+                } else if let Some(property) = self.model().property(key) {
                     if let Some(getter) = &property.getter {
                         let ctx = Context::initial_state(self.clone(), purpose);
                         value = getter.process(ctx).await.value
@@ -714,7 +719,6 @@ impl Object {
         let keys_to_iterate = if initialized {
             all_model_keys.iter().filter(|k| { json_keys.contains(k)}).map(|k| *k).collect()
         } else { all_model_keys };
-        println!("keys to use {:?}", keys_to_iterate);
         for key in keys_to_iterate {
             if let Some(field) = self.model().field(key) {
                 let json_has_value = if initialized { true } else {

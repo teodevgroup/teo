@@ -1027,28 +1027,34 @@ fn build_select_input(model: &Model, _graph: &Graph, select: &JsonValue, distinc
     if !false_empty || (true_empty && false_empty) {
         // all - false
         let primary_names = model.primary().unwrap().items.iter().map(|i| i.field_name.clone()).collect::<Vec<String>>();
-        let mut result = doc!{};
+        let mut keys: HashSet<String> = HashSet::new();
         model.all_keys().iter().for_each(|k| {
-            let field = model.field(k);
-            if let Some(field) = field {
+            if let Some(field) = model.field(k) {
                 let db_name = field.column_name();
                 if primary_names.contains(k) {
-                    if distinct.is_some() {
-                        result.insert(distinct_key(db_name), doc!{"$first": format!("${db_name}")});
-                    } else {
-                        result.insert(db_name, 1);
-                    }
+                    keys.insert(db_name.to_string());
                 } else {
                     if !false_list.contains(&&***&k) {
-                        if distinct.is_some() {
-                            result.insert(distinct_key(db_name), doc!{"$first": format!("${db_name}")});
-                        } else {
-                            result.insert(db_name, 1);
-                        }
+                        keys.insert(db_name.to_string());
+                    }
+                }
+            } else if let Some(property) = model.property(k) {
+                if !false_list.contains(&&***&k) {
+                    for d in &property.dependencies {
+                        let db_name = model.field(d).unwrap().name();
+                        keys.insert(db_name.to_string());
                     }
                 }
             }
         });
+        let mut result = doc!{};
+        for key in keys.iter() {
+            if distinct.is_some() {
+                result.insert(distinct_key(key), doc!{"$first": format!("${key}")});
+            } else {
+                result.insert(key, 1);
+            }
+        }
         if result.get("_id").is_none() {
             result.insert("_id", 0);
         }
@@ -1056,28 +1062,34 @@ fn build_select_input(model: &Model, _graph: &Graph, select: &JsonValue, distinc
     } else {
         // true
         let primary_names = model.primary().unwrap().items.iter().map(|i| i.field_name.clone()).collect::<Vec<String>>();
-        let mut result = doc!{};
+        let mut keys: HashSet<String> = HashSet::new();
         model.all_keys().iter().for_each(|k| {
-            let field = model.field(k);
-            if let Some(field) = field {
+            if let Some(field) = model.field(k) {
                 let db_name = field.column_name();
                 if primary_names.contains(k) {
-                    if distinct.is_some() {
-                        result.insert(distinct_key(db_name), doc!{"$first": format!("${db_name}")});
-                    } else {
-                        result.insert(db_name, 1);
-                    }
+                    keys.insert(db_name.to_string());
                 } else {
                     if true_list.contains(&&***&k) {
-                        if distinct.is_some() {
-                            result.insert(distinct_key(db_name), doc!{"$first": format!("${db_name}")});
-                        } else {
-                            result.insert(db_name, 1);
-                        }
+                        keys.insert(db_name.to_string());
+                    }
+                }
+            } else if let Some(property) = model.property(k) {
+                if true_list.contains(&&***&k) {
+                    for d in &property.dependencies {
+                        let db_name = model.field(d).unwrap().name();
+                        keys.insert(db_name.to_string());
                     }
                 }
             }
         });
+        let mut result = doc!{};
+        for key in keys.iter() {
+            if distinct.is_some() {
+                result.insert(distinct_key(key), doc!{"$first": format!("${key}")});
+            } else {
+                result.insert(key, 1);
+            }
+        }
         if result.get("_id").is_none() {
             result.insert("_id", 0);
         }

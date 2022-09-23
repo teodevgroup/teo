@@ -22,8 +22,6 @@ The new generation server software.
 - Ellipsis modifier (especially useful on output) **[DONE]**
 - `get_object` modifier to reach the object itself **[DONE]** 
 - Properties
-  - get property
-  - set property
   - prevent selection
 
 #### 0.0.23
