@@ -6,6 +6,7 @@ use crate::core::field::{Field, Sort};
 use crate::core::permission::Permission;
 use crate::core::relation::Relation;
 use crate::core::pipeline::Pipeline;
+use crate::core::property::Property;
 
 pub(crate) mod builder;
 
@@ -45,6 +46,8 @@ pub struct ModelInner {
     pub(crate) fields_map: HashMap<String, Arc<Field>>,
     pub(crate) relations_vec: Vec<Arc<Relation>>,
     pub(crate) relations_map: HashMap<String, Arc<Relation>>,
+    pub(crate) properties_vec: Vec<Arc<Property>>,
+    pub(crate) properties_map: HashMap<String, Arc<Property>>,
     pub(crate) indices: Vec<ModelIndex>,
     pub(crate) primary: Option<ModelIndex>,
     pub(crate) before_save_pipeline: Pipeline,

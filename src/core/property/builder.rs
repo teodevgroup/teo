@@ -183,7 +183,7 @@ impl PropertyBuilder {
         }
     }
 
-    fn build(&self) -> Property {
+    pub(crate) fn build(&self) -> Property {
         Property {
             name: self.name.clone(),
             localized_name: self.localized_name.clone(),

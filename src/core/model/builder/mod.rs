@@ -16,6 +16,7 @@ use crate::core::model::builder::index_builder::ModelIndexBuilder;
 use crate::core::relation::Relation;
 use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::property::builder::PropertyBuilder;
+use crate::core::property::Property;
 
 pub(crate) mod index_builder;
 
@@ -242,13 +243,18 @@ impl ModelBuilder {
         let auth_by_keys = Self::get_auth_by_keys(self);
         let fields_vec: Vec<Arc<Field>> = self.field_builders.iter().map(|fb| { Arc::new(fb.build(connector_builder)) }).collect();
         let relations_vec: Vec<Arc<Relation>> = self.relation_builders.iter().map(|rb| { Arc::new(rb.build(connector_builder)) }).collect();
+        let properties_vec: Vec<Arc<Property>> = self.property_builders.iter().map(|pb| { Arc::new(pb.build()) }).collect();
         let mut fields_map: HashMap<String, Arc<Field>> = HashMap::new();
         let mut relations_map: HashMap<String, Arc<Relation>> = HashMap::new();
+        let mut properties_map: HashMap<String, Arc<Property>> = HashMap::new();
         let mut primary_field: Option<Arc<Field>> = None;
         let mut primary = self.primary.clone();
         let mut indices = self.indices.clone();
         for relation in relations_vec.iter() {
             relations_map.insert(relation.name.clone(), relation.clone());
+        }
+        for property in properties_vec.iter() {
+            properties_map.insert(property.name.clone(), property.clone());
         }
         for field in fields_vec.iter() {
             fields_map.insert(field.name.clone(), field.clone());
@@ -321,6 +327,8 @@ impl ModelBuilder {
             fields_map,
             relations_map,
             relations_vec,
+            properties_vec,
+            properties_map,
             primary: primary,
             indices: indices.clone(),
             before_save_pipeline: self.before_save_pipeline.build(),
