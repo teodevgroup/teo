@@ -15,6 +15,7 @@ pub struct PropertyBuilder {
     pub(crate) dependencies: Vec<String>,
     pub(crate) setter: Option<Pipeline>,
     pub(crate) getter: Option<Pipeline>,
+    pub(crate) input_omissible: bool,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -177,6 +178,11 @@ impl PropertyBuilder {
         self
     }
 
+    pub fn input_omissible(&mut self) -> &mut Self {
+        self.input_omissible = true;
+        self
+    }
+
     fn connector_builder(&self) -> &Box<dyn ConnectorBuilder> {
         unsafe {
             &*self.connector_builder
@@ -193,6 +199,7 @@ impl PropertyBuilder {
             dependencies: self.dependencies.clone(),
             setter: self.setter.clone(),
             getter: self.getter.clone(),
+            input_omissible: self.input_omissible.clone(),
         }
     }
 }

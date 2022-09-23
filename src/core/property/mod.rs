@@ -13,4 +13,5 @@ pub struct Property {
     pub(crate) dependencies: Vec<String>,
     pub(crate) setter: Option<Pipeline>,
     pub(crate) getter: Option<Pipeline>,
+    pub(crate) input_omissible: bool,
 }
