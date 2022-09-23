@@ -21,72 +21,73 @@ The new generation server software.
 #### 0.0.22
 - Ellipsis modifier (especially useful on output) **[DONE]**
 - `get_object` modifier to reach the object itself **[DONE]**
+- Property **[DONE]**
 
-#### 0.0.23
-- MongoDB transaction session, make sure if errors, rollback writes
-
-#### 0.0.24
-- Input omissible and output omissible for generated clients
-
-#### 0.0.25
-- Delete rules
-
-#### 0.0.26
-- Delete callbacks: `when_delete`, `before_delete` and `after_delete`
-
-#### 0.0.28
-- Frontend lib for aggregate, count and groupBy
-
-#### 0.0.29
-- Correct count with cursor
-
-#### 0.0.30
-- Frontend lib for aggregate, count and groupBy
-
-#### 0.0.31
-- The copy action
-
-#### 0.0.32
-- Test column key remap with aggregate and groupBy
-
-#### 0.0.33
-- Auto migration
-
-#### 0.0.34
-- `auth_by_companion`
-
-#### 0.0.35 - 0.0.50
+#### 0.0.23 - 0.0.50
 - Perform simple CRUD with SQL databases
 - Perform object update with SQL databases
 - Perform join queries with SQL databases
 - Custom SQL database types
 
 #### 0.0.51
+- MongoDB transaction session, make sure if errors, rollback writes
+
+#### 0.0.52
+- Input omissible and output omissible for generated clients
+
+#### 0.0.53
+- Delete rules
+
+#### 0.0.54
+- Delete callbacks: `when_delete`, `before_delete` and `after_delete`
+
+#### 0.0.55
+- Frontend lib for aggregate, count and groupBy
+
+#### 0.0.56
+- Correct count with cursor
+
+#### 0.0.57
+- Frontend lib for aggregate, count and groupBy
+
+#### 0.0.58
+- The copy action
+
+#### 0.0.59
+- Test column key remap with aggregate and groupBy
+
+#### 0.0.60
+- Auto migration
+
+#### 0.0.61
+- `auth_by_companion`
+
+#### 0.0.62
 - Fix decimal problems
 - Relation with read write rules
 
-#### 0.0.52
+#### 0.0.63
 - Fix date problems
 
-#### 0.0.53
+#### 0.0.64
 - Fix datetime problems
 
-#### 0.0.54
+#### 0.0.65
 - random float modifier
 - random int modifier
 
-#### 0.0.55
+#### 0.0.66
 - to uppercase modifier
 - to lowercase modifier
 - to word case modifier
 - to sentence case modifier
 - to title case modifier
 
-#### 0.0.56
+#### 0.0.67
 - `present_with` on field
 - `present_without` on field
 
-#### 0.0.57 - 0.0.90
+#### 0.0.68 - 0.0.110
 - parsers and schema
 - language servers
 
