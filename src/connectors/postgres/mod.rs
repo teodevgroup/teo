@@ -13,7 +13,6 @@ use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::error::ActionError;
 
-
 #[derive(Debug)]
 pub(crate) struct PostgresConnector {
     client: Client,

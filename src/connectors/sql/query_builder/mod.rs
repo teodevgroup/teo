@@ -471,7 +471,7 @@ impl ToSQLString for SQLAlterTableDropColumnStatement {
     }
 }
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum SQLDialect {
     MySQL,
     PostgreSQL,
