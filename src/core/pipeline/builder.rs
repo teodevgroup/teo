@@ -55,6 +55,7 @@ use crate::core::pipeline::modifiers::intent::when_nested_single_result::WhenNes
 use crate::core::pipeline::modifiers::intent::when_single_result::WhenSingleResultModifier;
 use crate::core::pipeline::modifiers::intent::when_update::WhenUpdateModifier;
 use crate::core::pipeline::modifiers::string::generation::random_digits::RandomDigitsModifier;
+use crate::core::pipeline::modifiers::string::transform::ellipsis::EllipsisModifier;
 use crate::core::pipeline::modifiers::string::transform::pad_end::PadEndModifier;
 use crate::core::pipeline::modifiers::string::transform::pad_start::PadStartModifier;
 use crate::core::pipeline::modifiers::string::transform::split::SplitModifier;
@@ -203,6 +204,11 @@ impl PipelineBuilder {
 
     pub fn regex_replace(&mut self, regex: impl Into<Argument>, substitute: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(RegexReplaceModifier::new(regex, substitute)));
+        self
+    }
+
+    pub fn ellipsis(&mut self, ellipsis: impl Into<String>, length: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(EllipsisModifier::new(ellipsis, length)));
         self
     }
 
