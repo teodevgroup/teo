@@ -3,6 +3,7 @@ use crate::core::field::builder::FieldBuilder;
 use crate::core::field::Optionality;
 use crate::core::field::r#type::FieldType;
 use crate::core::pipeline::Pipeline;
+use crate::core::property::Property;
 use crate::prelude::PipelineBuilder;
 
 pub struct PropertyBuilder {
@@ -31,6 +32,16 @@ impl PropertyBuilder {
             getter: None,
             connector_builder,
         }
+    }
+
+    pub fn localized_name(&mut self, localized_name: impl Into<String>) -> &mut Self {
+        self.localized_name = localized_name.into();
+        self
+    }
+
+    pub fn description(&mut self, description: impl Into<String>) -> &mut Self {
+        self.description = description.into();
+        self
     }
 
     pub fn optional(&mut self) -> &mut Self {
@@ -169,6 +180,19 @@ impl PropertyBuilder {
     fn connector_builder(&self) -> &Box<dyn ConnectorBuilder> {
         unsafe {
             &*self.connector_builder
+        }
+    }
+
+    fn build(&self) -> Property {
+        Property {
+            name: self.name.clone(),
+            localized_name: self.localized_name.clone(),
+            description: self.description.clone(),
+            optionality: self.optionality.clone(),
+            field_type: self.field_type.clone(),
+            dependencies: self.dependencies.clone(),
+            setter: self.setter.clone(),
+            getter: self.getter.clone(),
         }
     }
 }
