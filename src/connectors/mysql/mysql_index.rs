@@ -6,7 +6,6 @@ use crate::connectors::sql_shared::sql::{SQLColumnDef, SQLDialect};
 use crate::core::field::Sort;
 use crate::core::model::{ModelIndex, ModelIndexType};
 
-
 #[derive(PartialEq, Copy, Clone)]
 pub(crate) enum MySQLIndexItemCollation {
     A,

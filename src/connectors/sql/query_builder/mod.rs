@@ -128,6 +128,26 @@ impl ToSQLString for SQLColumnDef {
     }
 }
 
+impl From<&Field> for SQLColumnDef {
+    fn from(field: &Field) -> Self {
+        let mut column = SQLColumnDef::new(field.column_name());
+        column.column_type(field.database_type.clone());
+        match field.optionality {
+            Optionality::Required => {
+                column.not_null();
+            }
+            Optionality::Optional => {}
+        }
+        if field.primary {
+            column.primary_key();
+        }
+        if field.auto_increment {
+            column.auto_increment();
+        }
+        column
+    }
+}
+
 impl From<&Arc<Field>> for SQLColumnDef {
     fn from(field: &Arc<Field>) -> Self {
         let mut column = SQLColumnDef::new(field.column_name());

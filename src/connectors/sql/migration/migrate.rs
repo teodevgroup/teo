@@ -44,8 +44,8 @@ pub async fn migrate(dialect: SQLDialect, pool: &mut AnyPool, models: &Vec<Model
                     reviewed_columns.push(db_column.field.clone());
                 }
             }
-            for field in &model.fields_vec {
-                if !reviewed_columns.contains(&field.column_name()) {
+            for field in model.fields() {
+                if !reviewed_columns.contains(&field.column_name().to_string()) {
                     let sql_column_def: SQLColumnDef = field.into();
                     // add this column
                     let add = SQL::alter_table(table_name).add(sql_column_def).to_string(SQLDialect::MySQL);
