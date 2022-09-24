@@ -491,14 +491,7 @@ impl Connector for MongoDBConnector {
     async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
         let is_new = object.inner.is_new.load(Ordering::SeqCst);
         let primary_name = object.model().primary_field_name();
-        let keys = if is_new {
-            object.model().save_keys().clone()
-        } else {
-            object.model().save_keys().iter().filter(|k| {
-                object.inner.modified_fields.lock().unwrap().contains(&k.to_string()) ||
-                    object.inner.atomic_updator_map.lock().unwrap().contains_key(&k.to_string())
-            }).map(|k| { k.clone() }).collect()
-        };
+        let keys = object.keys_for_save();
         let col = &self.collections[object.model().name()];
         if is_new {
             let mut doc = doc!{};

@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use async_trait::async_trait;
 use sqlx::{AnyPool, Database, Executor};
 use sqlx::pool::Pool;
@@ -54,12 +55,33 @@ impl SQLConnector {
     async fn setup_database(dialect: SQLDialect, pool: &mut AnyPool, models: &Vec<Model>) {
         migrate(dialect, pool, models).await
     }
+
+    fn create_object(&self, object: &Object) -> Result<(), ActionError> {
+        let model = object.model();
+        let field_names = object.keys_for_save();
+        for field_name in field_names {
+            let field = model.field(field_name).unwrap();
+            let column_name = field.column_name();
+            let val = object.get_value(field_name).unwrap();
+
+        }
+        Ok(())
+    }
+
+    fn update_object(&self, object: &Object) -> Result<(), ActionError> {
+        Ok(())
+    }
 }
 
 #[async_trait]
 impl Connector for SQLConnector {
     async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
-        todo!()
+        let is_new = object.inner.is_new.load(Ordering::SeqCst);
+        if is_new {
+            self.create_object(object)
+        } else {
+            self.update_object(object)
+        }
     }
 
     async fn delete_object(&self, object: &Object) -> Result<(), ActionError> {

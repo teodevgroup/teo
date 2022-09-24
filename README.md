@@ -23,7 +23,15 @@ The new generation server software.
 - `get_object` modifier to reach the object itself **[DONE]**
 - Property **[DONE]**
 
-#### 0.0.23 - 0.0.50
+#### 0.0.23
+- Migration: insert/delete columns for most simple cases **[DONE]**
+- Mutation: most simple inserts
+- Query: most simple queries
+
+#### 0.0.24
+- Remove primary name from MongoDB connector's `save` method
+
+#### 0.0.25 - 0.0.50
 - Migration with SQL databases
 - Perform simple CRUD with SQL databases
 - Perform object update with SQL databases

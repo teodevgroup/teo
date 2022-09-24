@@ -3,130 +3,11 @@ use crate::core::db_type::DatabaseType;
 use crate::core::field::{Field, Optionality};
 use crate::core::model::Model;
 
+pub mod dialect;
 pub mod column;
-
-#[derive(PartialEq, Debug, Copy, Clone)]
-pub enum SQLIndexType {
-    Primary,
-    Index,
-    Unique
-}
-
-#[derive(PartialEq, Debug, Copy, Clone)]
-pub enum SQLIndexOrdering {
-    Asc,
-    Desc
-}
-
-#[derive(PartialEq, Debug, Clone)]
-pub struct SQLIndexColumn {
-    pub(crate) name: String,
-    pub(crate) ordering: SQLIndexOrdering,
-    pub(crate) length: Option<u16>,
-}
-
-impl SQLIndexColumn {
-    pub fn new(name: impl Into<String>) -> Self {
-        Self { name: name.into(), ordering: SQLIndexOrdering::Asc, length: None }
-    }
-
-    pub fn asc(&mut self) -> &mut Self {
-        self.ordering = SQLIndexOrdering::Asc;
-        self
-    }
-
-    pub fn desc(&mut self) -> &mut Self {
-        self.ordering = SQLIndexOrdering::Desc;
-        self
-    }
-}
-
-impl ToSQLString for SQLIndexColumn {
-    fn to_string(&self, _dialect: SQLDialect) -> String {
-        let name = &self.name;
-        let ordering = match self.ordering {
-            SQLIndexOrdering::Asc => " ASC",
-            SQLIndexOrdering::Desc => " DESC",
-        };
-        format!("{name}{ordering}")
-    }
-}
-
-#[derive(PartialEq, Clone, Debug)]
-pub struct SQLIndexDef {
-    pub(crate) name: String,
-    pub(crate) index_type: SQLIndexType,
-    pub(crate) columns: Vec<SQLIndexColumn>
-}
-
-#[derive(PartialEq, Clone)]
-pub struct SQLColumnDef {
-    pub(crate) name: String,
-    pub(crate) column_type: DatabaseType,
-    pub(crate) not_null: bool,
-    pub(crate) auto_increment: bool,
-    pub(crate) default: Option<String>,
-    pub(crate) primary_key: bool,
-    pub(crate) unique_key: bool,
-    pub(crate) extras: Vec<String>
-}
-
-impl SQLColumnDef {
-    pub fn new(name: impl Into<String>) -> Self {
-        Self {
-            name: name.into(),
-            column_type: DatabaseType::Undefined,
-            not_null: false,
-            auto_increment: false,
-            default: None,
-            primary_key: false,
-            unique_key: false,
-            extras: Vec::new()
-        }
-    }
-
-    pub fn column_type(&mut self, column_type: DatabaseType) -> &mut Self {
-        self.column_type = column_type;
-        self
-    }
-
-    pub fn not_null(&mut self) -> &mut Self {
-        self.not_null = true;
-        self
-    }
-
-    pub fn auto_increment(&mut self) -> &mut Self {
-        self.auto_increment = true;
-        self
-    }
-
-    pub fn default(&mut self, value: impl Into<String>) -> &mut Self {
-        self.default = Some(value.into());
-        self
-    }
-
-    pub fn primary_key(&mut self) -> &mut Self {
-        self.primary_key = true;
-        self
-    }
-
-    pub fn unique_key(&mut self) -> &mut Self {
-        self.unique_key = true;
-        self
-    }
-}
-
-impl ToSQLString for SQLColumnDef {
-    fn to_string(&self, dialect: SQLDialect) -> String {
-        let name = &self.name;
-        let t = self.column_type.to_string(dialect.clone());
-        let not_null = if self.not_null { " NOT NULL" } else { " NULL" };
-        let primary = if self.primary_key { " PRIMARY KEY" } else { "" };
-        let auto_inc = if self.auto_increment { " AUTO_INCREMENT" } else { "" };
-        let unique = if self.unique_key { " UNIQUE KEY" } else { "" };
-        format!("`{name}` {t}{not_null}{primary}{unique}{auto_inc}")
-    }
-}
+pub mod stmt;
+pub mod traits;
+pub mod structs;
 
 impl From<&Field> for SQLColumnDef {
     fn from(field: &Field) -> Self {
@@ -168,25 +49,7 @@ impl From<&Arc<Field>> for SQLColumnDef {
     }
 }
 
-pub struct SQLCreateDatabaseStatement {
-    database: String,
-    if_not_exists: bool,
-}
 
-impl SQLCreateDatabaseStatement {
-    pub fn if_not_exists(&mut self) -> &mut Self {
-        self.if_not_exists = true;
-        self
-    }
-}
-
-impl ToSQLString for SQLCreateDatabaseStatement {
-    fn to_string(&self, _dialect: SQLDialect) -> String {
-        let database = &self.database;
-        let if_not_exists = if self.if_not_exists { " IF NOT EXISTS" } else { "" };
-        format!("CREATE DATABASE{if_not_exists} `{database}`;")
-    }
-}
 
 pub struct SQLDropDatabaseStatement {
     database: String,
@@ -208,80 +71,6 @@ impl ToSQLString for SQLDropDatabaseStatement {
     }
 }
 
-pub struct SQLCreateTableStatement {
-    table: String,
-    if_not_exists: bool,
-    columns: Vec<SQLColumnDef>
-}
-
-impl SQLCreateTableStatement {
-    pub fn if_not_exists(&mut self) -> &mut Self {
-        self.if_not_exists = true;
-        self
-    }
-
-    pub fn column(&mut self, def: SQLColumnDef) -> &mut Self {
-        self.columns.push(def);
-        self
-    }
-
-    pub fn columns(&mut self, defs: Vec<SQLColumnDef>) -> &mut Self {
-        self.columns.extend(defs);
-        self
-    }
-}
-
-impl ToSQLString for SQLCreateTableStatement {
-    fn to_string(&self, dialect: SQLDialect) -> String {
-        let if_not_exists = if self.if_not_exists { " IF NOT EXISTS" } else { "" };
-        let table_name = &self.table;
-        let mut columns = self.columns.iter().map(|c| {
-            c.to_string(dialect)
-        }).collect::<Vec<String>>().join(", ");
-        format!("CREATE TABLE{if_not_exists} `{table_name}`( {columns} );")
-    }
-}
-
-pub struct SQLCreateIndexOnStatement {
-    unique: bool,
-    index: String,
-    table: String,
-    columns: Vec<SQLIndexColumn>
-}
-
-impl SQLCreateIndexOnStatement {
-    pub fn column(&mut self, column: SQLIndexColumn) -> &mut Self {
-        self.columns.push(column);
-        self
-    }
-
-    pub fn columns(&mut self, columns: Vec<SQLIndexColumn>) -> &mut Self {
-        self.columns.extend(columns);
-        self
-    }
-}
-
-impl ToSQLString for SQLCreateIndexOnStatement {
-    fn to_string(&self, dialect: SQLDialect) -> String {
-        let unique = if self.unique { " UNIQUE" } else { "" };
-        let index = &self.index;
-        let table = &self.table;
-        let def = self.columns.iter().map(|c| c.to_string(dialect)).collect::<Vec<String>>().join(", ");
-        format!("CREATE{unique} INDEX `{index}` ON `{table}`({def})")
-    }
-}
-
-pub struct SQLCreateIndexStatement {
-    unique: bool,
-    index: String,
-}
-
-impl SQLCreateIndexStatement {
-    pub fn on(&self, table: impl Into<String>) -> SQLCreateIndexOnStatement {
-        SQLCreateIndexOnStatement { unique: self.unique, index: self.index.clone(), table: table.into(), columns: vec![] }
-    }
-}
-
 pub struct SQLDropTableStatement {
     table: String,
     if_exists: bool,
@@ -299,27 +88,6 @@ impl ToSQLString for SQLDropTableStatement {
         let table = &self.table;
         let if_exists = if self.if_exists { " IF EXISTS" } else { "" };
         format!("DROP TABLE{if_exists} `{table}`;")
-    }
-}
-
-pub struct SQLCreateStatement { }
-
-impl SQLCreateStatement {
-
-    pub fn database(&self, database: impl Into<String>) -> SQLCreateDatabaseStatement {
-        SQLCreateDatabaseStatement { database: database.into(), if_not_exists: false }
-    }
-
-    pub fn table(&self, table: impl Into<String>) -> SQLCreateTableStatement {
-        SQLCreateTableStatement { table: table.into(), if_not_exists: false, columns: vec![] }
-    }
-
-    pub fn index(&self, index: impl Into<String>) -> SQLCreateIndexStatement {
-        SQLCreateIndexStatement { unique: false, index: index.into() }
-    }
-
-    pub fn unique_index(&self, index: impl Into<String>) -> SQLCreateIndexStatement {
-        SQLCreateIndexStatement { unique: true, index: index.into() }
     }
 }
 
@@ -494,14 +262,6 @@ impl ToSQLString for SQLAlterTableDropColumnStatement {
     }
 }
 
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub enum SQLDialect {
-    MySQL,
-    PostgreSQL,
-    SQLite,
-    MSSQL,
-}
-
 pub struct SQL { }
 
 impl SQL {
@@ -526,10 +286,6 @@ impl SQL {
     pub fn alter_table(table: impl Into<String>) -> SQLAlterTableStatement {
         SQLAlterTableStatement { table: table.into() }
     }
-}
-
-pub trait ToSQLString {
-    fn to_string(&self, dialect: SQLDialect) -> String;
 }
 
 pub(crate) fn table_create_statement(model: &Model) -> SQLCreateTableStatement {
