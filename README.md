@@ -24,6 +24,7 @@ The new generation server software.
 - Property **[DONE]**
 
 #### 0.0.23 - 0.0.50
+- Migration with SQL databases
 - Perform simple CRUD with SQL databases
 - Perform object update with SQL databases
 - Perform join queries with SQL databases

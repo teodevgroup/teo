@@ -123,6 +123,13 @@ impl Model {
         }
     }
 
+    pub(crate) fn field_with_column_name(&self, name: &str) -> Option<&Field> {
+        match self.inner.fields_vec.iter().find(|f| { f.column_name() == name }) {
+            Some(f) => Some(f.as_ref()),
+            None => None
+        }
+    }
+
     pub(crate) fn relation(&self, name: &str) -> Option<&Relation> {
         match self.inner.relations_map.get(name) {
             Some(r) => Some(r.as_ref()),
