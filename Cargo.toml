@@ -1,6 +1,6 @@
 [package]
 name = "teo"
-version = "0.0.21"
+version = "0.0.22"
 edition = "2021"
 description = "The next generation HTTP server."
 license = "MIT"
@@ -42,10 +42,10 @@ lazy_static = "1.4.0"
 
 [features]
 data-source-mongodb = ["mongodb", "bson"]
-data-source-mysql = ["sqlx/mysql"]
-data-source-postgres = ["sqlx/postgres"]
-data-source-mssql = ["sqlx/mssql"]
-data-source-sqlite = ["sqlx/sqlite"]
+data-source-mysql = ["sqlx/mysql", "sqlx/any"]
+data-source-postgres = ["sqlx/postgres", "sqlx/any"]
+data-source-mssql = ["sqlx/mssql", "sqlx/any"]
+data-source-sqlite = ["sqlx/sqlite", "sqlx/any"]
 
 [[test]]
 name = "test-core"
@@ -57,12 +57,12 @@ name = "test-mongodb-connector"
 path = "tests/integration/connectors/mongodb/tests.rs"
 required-features = ["data-source-mongodb"]
 
-#[[test]]
-#name = "test-mysql-connector"
-#path = "tests/integration/connectors/mysql/tests.rs"
-#required-features = ["data-source-mysql"]
-#
-#[[test]]
-#name = "test-postgres-connector"
-#path = "tests/integration/connectors/postgres/tests.rs"
-#required-features = ["data-source-postgres"]
+[[test]]
+name = "test-mysql-connector"
+path = "tests/integration/connectors/mysql/tests.rs"
+required-features = ["data-source-mysql"]
+
+[[test]]
+name = "test-postgres-connector"
+path = "tests/integration/connectors/postgres/tests.rs"
+required-features = ["data-source-postgres"]

@@ -1,37 +1,48 @@
 use std::sync::Arc;
 use async_trait::async_trait;
-use sqlx::Database;
+use sqlx::{AnyPool, Database};
 use sqlx::pool::Pool;
 use serde_json::{Value as JsonValue};
 use crate::connectors::sql::query_builder::SQLDialect;
 use crate::core::model::Model;
 use sqlx::postgres::PgPoolOptions;
+use url::Url;
+use crate::connectors::sql::migration::migrate::migrate;
 use crate::core::connector::Connector;
 use crate::core::error::ActionError;
 use crate::core::save_session::SaveSession;
 use crate::prelude::{Graph, Object};
 
 #[derive(Debug)]
-pub(crate) struct SQLConnector<T: Database> {
-    pool: Pool<T>,
+pub(crate) struct SQLConnector {
+    dialect: SQLDialect,
+    pool: AnyPool,
 }
 
-impl<T: Database> SQLConnector<T> {
-    pub(crate) async fn new(url: String, models: &Vec<Model>, reset_database: bool) -> Self {
-        let pool: Pool<T> = Pool::connect(&url).await.unwrap();
-        Self::setup_database(&pool).await;
+impl SQLConnector {
+    pub(crate) async fn new(dialect: SQLDialect, url: String, models: &Vec<Model>, reset_database: bool) -> Self {
+        let url_result = Url::parse(&url);
+        if url_result.is_err() {
+            panic!("Data source URL is invalid.");
+        }
+        let mut url = url_result.unwrap();
+        let database_name = url.path()[1..].to_string();
+        url.set_path("/");
+        let mut pool: AnyPool = AnyPool::connect(url.as_str()).await.unwrap();
+        Self::setup_database(dialect, &mut pool, database_name, models, reset_database).await;
         Self {
+            dialect,
             pool,
         }
     }
 
-    async fn setup_database(pool: &Pool<T>) {
-
+    async fn setup_database(dialect: SQLDialect, pool: &mut AnyPool, db_name: String, models: &Vec<Model>, reset_database: bool) {
+        migrate(dialect, pool, db_name, models, reset_database).await
     }
 }
 
 #[async_trait]
-impl<T: Database> Connector for SQLConnector<T> {
+impl Connector for SQLConnector {
     async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
         todo!()
     }

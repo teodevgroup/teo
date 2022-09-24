@@ -12,16 +12,14 @@ use crate::core::field::r#type::FieldType;
 use crate::core::model::Model;
 
 #[derive(Debug)]
-pub(crate) struct SQLConnectorBuilder<T: Database + Send + Sync> {
-    database: T,
+pub(crate) struct SQLConnectorBuilder {
     dialect: SQLDialect,
     url: String,
 }
 
-impl<T: Database + Send + Sync> SQLConnectorBuilder<T> {
-    pub(crate) fn new(database: T, dialect: SQLDialect, url: String) -> Self {
+impl SQLConnectorBuilder {
+    pub(crate) fn new(dialect: SQLDialect, url: String) -> Self {
         Self {
-            database,
             dialect,
             url,
         }
@@ -29,7 +27,7 @@ impl<T: Database + Send + Sync> SQLConnectorBuilder<T> {
 }
 
 #[async_trait]
-impl<T: Database + Send + Sync> ConnectorBuilder for SQLConnectorBuilder<T> {
+impl ConnectorBuilder for SQLConnectorBuilder {
     fn inferred_database_type(&self, field_type: &FieldType) -> DatabaseType {
         match self.dialect {
             SQLDialect::SQLite => inferred_database_type_sqlite(field_type),
@@ -40,6 +38,6 @@ impl<T: Database + Send + Sync> ConnectorBuilder for SQLConnectorBuilder<T> {
     }
 
     async fn build_connector(&self, models: &Vec<Model>, reset_database: bool) -> Box<dyn Connector> {
-        Box::new(SQLConnector::<T>::new(self.url.clone(), models, reset_database).await)
+        Box::new(SQLConnector::new(self.dialect, self.url.clone(), models, reset_database).await)
     }
 }

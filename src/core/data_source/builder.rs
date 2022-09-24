@@ -15,25 +15,25 @@ impl<'a> DataSourceBuilder<'a> {
     #[cfg(feature = "data-source-mysql")]
     pub fn mysql(&mut self, url: impl Into<String>) {
         self.graph_builder.connector_builder = Some(Box::new(
-            SQLConnectorBuilder::new(sqlx::MySql, SQLDialect::MySQL, url.into())));
+            SQLConnectorBuilder::new(SQLDialect::MySQL, url.into())));
     }
 
     #[cfg(feature = "data-source-postgres")]
     pub fn postgres(&mut self, url: impl Into<String>) {
         self.graph_builder.connector_builder = Some(Box::new(
-            SQLConnectorBuilder::new(sqlx::Postgres, SQLDialect::PostgreSQL, url.into())));
+            SQLConnectorBuilder::new(SQLDialect::PostgreSQL, url.into())));
     }
 
     #[cfg(feature = "data-source-mssql")]
     pub fn mssql(&mut self, url: impl Into<String>) {
         self.graph_builder.connector_builder = Some(Box::new(
-            SQLConnectorBuilder::new(sqlx::Mssql, SQLDialect::MSSQL, url.into())));
+            SQLConnectorBuilder::new( SQLDialect::MSSQL, url.into())));
     }
 
     #[cfg(feature = "data-source-sqlite")]
     pub fn sqlite(&mut self, url: impl Into<String>) {
         self.graph_builder.connector_builder = Some(Box::new(
-            SQLConnectorBuilder::new(sqlx::Sqlite, SQLDialect::SQLite, url.into())));
+            SQLConnectorBuilder::new(SQLDialect::SQLite, url.into())));
     }
 
     #[cfg(feature = "data-source-mongodb")]
