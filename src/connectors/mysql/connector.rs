@@ -1,46 +1,6 @@
-use url::Url;
-use serde_json::{Map, Value as JsonValue};
-use async_trait::async_trait;
-use mysql_async::{Conn, Pool, Row, Value};
-use mysql_async::prelude::{Query, Queryable};
-use crate::connectors::mysql::mysql_column::MySQLColumn;
-use crate::connectors::mysql::mysql_index::{mysql_indices_from_rows, MySQLIndex};
-use crate::connectors::sql_shared::sql::{SQL, SQLColumnDef, SQLDialect, SQLIndexColumn, SQLIndexDef, ToSQLString};
-use crate::connectors::sql_shared::table_create_statement;
-use crate::core::builders::graph_builder::GraphBuilder;
-use crate::core::connector::{Connector, ConnectorBuilder};
-use crate::core::db_type::DatabaseType;
-use crate::core::field::Sort;
-use crate::core::graph::Graph;
-use crate::core::model::Model;
-use crate::core::object::Object;
-use crate::core::error::ActionError;
-
-
-#[derive(Debug)]
-pub(crate) struct MySQLConnector {
-    pool: Pool,
-    conn: Conn,
-    database_name: String,
-}
-
 impl MySQLConnector {
     pub async fn new(pool: Pool, mut conn: Conn, database_name: String, models: &Vec<Model>) -> MySQLConnector {
-        for model in models {
-            let name = model.table_name();
-            let show_table = SQL::show().tables().like(name).to_string(SQLDialect::MySQL);
-            let result: Option<String> = show_table.first(&mut conn).await.unwrap();
-            let table_exists = result.is_some();
-            if table_exists {
-                // migrate
-                Self::table_migrate(&mut conn, model).await;
-            } else {
-                // create table
-                let stmt_string = table_create_statement(model).to_string(SQLDialect::MySQL);
-                println!("EXECUTE SQL: {}", stmt_string);
-                stmt_string.ignore(&mut conn).await.unwrap();
-            }
-        }
+
         MySQLConnector { pool, conn, database_name }
     }
 
@@ -123,34 +83,3 @@ impl MySQLConnector {
         }
     }
 }
-
-#[async_trait]
-impl Connector for MySQLConnector {
-
-    async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
-        todo!()
-    }
-
-    async fn delete_object(&self, object: &Object) -> Result<(), ActionError> {
-        todo!()
-    }
-
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder:  &Map<String, JsonValue>) -> Result<Object, ActionError> {
-        todo!()
-    }
-
-    async fn find_first(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<Object, ActionError> {
-        todo!()
-    }
-
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<Vec<Object>, ActionError> {
-        todo!()
-    }
-
-    async fn count(&self, graph: &Graph, model: &Model, finder: &Map<String, JsonValue>) -> Result<usize, ActionError> {
-        todo!()
-    }
-}
-
-unsafe impl Send for MySQLConnector {}
-unsafe impl Sync for MySQLConnector {}

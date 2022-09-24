@@ -1,18 +1,23 @@
-use sqlx::{AnyPool, Connection, Database, Executor, MySqlPool, Pool};
+use sqlx::{AnyPool, Connection, Database, Executor, MySqlPool, Pool, Row};
 use crate::connectors::sql::query_builder::{SQL, SQLDialect, ToSQLString};
 use crate::core::model::Model;
 
-pub async fn migrate(dialect: SQLDialect, pool: &mut AnyPool, db_name: String, models: &Vec<Model>, reset_database: bool) {
-    // drop database if needed
-    if reset_database {
-        let stmt = SQL::drop().database(&db_name).
-            if_exists().to_string(dialect);
-        let result = pool.execute(&*stmt).await;
-        println!("see drop database result {:?}", result);
+pub async fn migrate(dialect: SQLDialect, pool: &mut AnyPool, models: &Vec<Model>) {
+    // compare each table and do migration
+    for model in models {
+        let name = model.table_name();
+        let show_table = SQL::show().tables().like(name).to_string(dialect);
+        let result = pool.fetch_one(&*show_table).await;
+        if result.is_err() {
+            // table not exist, create table
+            SQL::create().table(model)
+            let stmt_string = table_create_statement(model).to_string(dialect);
+            println!("EXECUTE SQL: {}", stmt_string);
+            pool.execute(stmt_string).await.unwrap();
+        } else {
+            // table exist, migrate
+            // do nothing for now
+
+        }
     }
-    // use database
-    let stmt = SQL::create().database(&db_name).if_not_exists().to_string(SQLDialect::MySQL);
-    // stmt.ignore(&mut conn).await.unwrap();
-    let stmt = SQL::r#use().database(&db_name).to_string(SQLDialect::MySQL);
-    // stmt.ignore(&mut conn).await.unwrap();
 }

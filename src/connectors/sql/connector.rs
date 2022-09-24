@@ -1,11 +1,10 @@
 use std::sync::Arc;
 use async_trait::async_trait;
-use sqlx::{AnyPool, Database};
+use sqlx::{AnyPool, Database, Executor};
 use sqlx::pool::Pool;
 use serde_json::{Value as JsonValue};
-use crate::connectors::sql::query_builder::SQLDialect;
+use crate::connectors::sql::query_builder::{SQL, SQLDialect, ToSQLString};
 use crate::core::model::Model;
-use sqlx::postgres::PgPoolOptions;
 use url::Url;
 use crate::connectors::sql::migration::migrate::migrate;
 use crate::core::connector::Connector;
@@ -25,19 +24,35 @@ impl SQLConnector {
         if url_result.is_err() {
             panic!("Data source URL is invalid.");
         }
-        let mut url = url_result.unwrap();
-        let database_name = url.path()[1..].to_string();
-        url.set_path("/");
+        let mut url_without_db = url_result.unwrap();
+        let database_name = url_without_db.path()[1..].to_string();
+        url_without_db.set_path("/");
+        let mut pool: AnyPool = AnyPool::connect(url_without_db.as_str()).await.unwrap();
+        Self::create_database_if_needed(dialect, &mut pool, &database_name, reset_database).await;
         let mut pool: AnyPool = AnyPool::connect(url.as_str()).await.unwrap();
-        Self::setup_database(dialect, &mut pool, database_name, models, reset_database).await;
+        Self::setup_database(dialect, &mut pool, models).await;
         Self {
             dialect,
             pool,
         }
     }
 
-    async fn setup_database(dialect: SQLDialect, pool: &mut AnyPool, db_name: String, models: &Vec<Model>, reset_database: bool) {
-        migrate(dialect, pool, db_name, models, reset_database).await
+    async fn create_database_if_needed(dialect: SQLDialect, pool: &mut AnyPool, db_name: &str, reset_database: bool) {
+        // drop database if needed
+        if reset_database {
+            let stmt = SQL::drop().database(db_name).
+                if_exists().to_string(dialect);
+            pool.execute(&*stmt).await.unwrap();
+        }
+        // create and use database
+        let stmt = SQL::create().database(db_name).if_not_exists().to_string(dialect);
+        pool.execute(&*stmt).await.unwrap();
+        let stmt = SQL::r#use().database(db_name).to_string(dialect);
+        pool.execute(&*stmt).await.unwrap();
+    }
+
+    async fn setup_database(dialect: SQLDialect, pool: &mut AnyPool, models: &Vec<Model>) {
+        migrate(dialect, pool, models).await
     }
 }
 
