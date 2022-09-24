@@ -1,6 +1,9 @@
+use std::sync::Arc;
 use crate::core::db_type::DatabaseType;
 use crate::core::field::{Field, Optionality};
+use crate::core::model::Model;
 
+pub mod column;
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub enum SQLIndexType {
@@ -125,8 +128,8 @@ impl ToSQLString for SQLColumnDef {
     }
 }
 
-impl From<&Field> for SQLColumnDef {
-    fn from(field: &Field) -> Self {
+impl From<&Arc<Field>> for SQLColumnDef {
+    fn from(field: &Arc<Field>) -> Self {
         let mut column = SQLColumnDef::new(field.column_name());
         column.column_type(field.database_type.clone());
         match field.optionality {
@@ -507,4 +510,13 @@ impl SQL {
 
 pub trait ToSQLString {
     fn to_string(&self, dialect: SQLDialect) -> String;
+}
+
+pub(crate) fn table_create_statement(model: &Model) -> SQLCreateTableStatement {
+    let mut stmt = SQL::create().table(model.table_name());
+    stmt.if_not_exists();
+    for field in model.fields() {
+        stmt.column(field.into());
+    }
+    stmt
 }

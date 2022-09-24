@@ -1,5 +1,5 @@
 use sqlx::{AnyPool, Connection, Database, Executor, MySqlPool, Pool, Row};
-use crate::connectors::sql::query_builder::{SQL, SQLDialect, ToSQLString};
+use crate::connectors::sql::query_builder::{SQL, SQLDialect, table_create_statement, ToSQLString};
 use crate::core::model::Model;
 
 pub async fn migrate(dialect: SQLDialect, pool: &mut AnyPool, models: &Vec<Model>) {
@@ -10,10 +10,9 @@ pub async fn migrate(dialect: SQLDialect, pool: &mut AnyPool, models: &Vec<Model
         let result = pool.fetch_one(&*show_table).await;
         if result.is_err() {
             // table not exist, create table
-            SQL::create().table(model)
             let stmt_string = table_create_statement(model).to_string(dialect);
             println!("EXECUTE SQL: {}", stmt_string);
-            pool.execute(stmt_string).await.unwrap();
+            pool.execute(&*stmt_string).await.unwrap();
         } else {
             // table exist, migrate
             // do nothing for now
