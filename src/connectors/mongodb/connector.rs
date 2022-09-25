@@ -12,8 +12,9 @@ use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
 use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use regex::Regex;
 use rust_decimal::Decimal;
-use crate::connectors::mongodb::aggregation_builder::{build_query_pipeline_from_json, build_where_input, has_negative_take, QueryPipelineType, ToBsonValue};
+use crate::connectors::mongodb::aggregation_builder::{build_query_pipeline_from_json, build_where_input, has_negative_take, ToBsonValue};
 use crate::connectors::mongodb::save_session::MongoDBSaveSession;
+use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::core::connector::Connector;
 use crate::core::object::Object;
 use crate::core::field::Sort;
@@ -497,7 +498,7 @@ impl Connector for MongoDBConnector {
             let mut doc = doc!{};
             for key in keys {
                 let val = object.get_value(&key).unwrap();
-                if Some(key.as_str()) == primary_name {
+                if Some(key) == primary_name {
                     if val.is_null() {
                         continue;
                     }
@@ -507,7 +508,7 @@ impl Connector for MongoDBConnector {
                     _ => val.to_bson_value()
                 };
                 if json_val != Bson::Null {
-                    doc.insert(&key, json_val);
+                    doc.insert(key, json_val);
                 }
             }
             let result = col.insert_one(doc, None).await;
@@ -536,7 +537,7 @@ impl Connector for MongoDBConnector {
             let mut inc = doc!{};
             let mut mul = doc!{};
             let mut push = doc!{};
-            for key in &keys {
+            for key in keys {
                 if object.inner.atomic_updator_map.lock().unwrap().contains_key(key) {
                     let aumap = object.inner.atomic_updator_map.lock().unwrap();
                     let updator = aumap.get(key).unwrap();
@@ -560,7 +561,7 @@ impl Connector for MongoDBConnector {
                 } else {
                     let val = object.get_value(key).unwrap();
                     let json_val = val.to_bson_value();
-                    match &primary_name {
+                    match primary_name {
                         Some(name) => {
                             if key == name {
                                 if json_val != Bson::Null {

@@ -1,6 +1,5 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use crate::connectors::sql::query_builder::SQLColumnDef;
 use crate::core::field::{Field, Optionality, Sort};
 use crate::core::model::{ModelIndex, ModelIndexType};
 

@@ -1,6 +1,10 @@
 use sqlx::{AnyPool, Connection, Database, Executor, MySqlPool, Pool, Row};
-use crate::connectors::sql::query_builder::{SQL, SQLColumnDef, SQLDialect, table_create_statement, ToSQLString};
-use crate::connectors::sql::query_builder::column::MySQLColumn;
+use crate::connectors::sql::query_builder::dialect::SQLDialect;
+use crate::connectors::sql::query_builder::traits::to_sql_string::ToSQLString;
+use crate::connectors::sql::query_builder::integration::column::MySQLColumn;
+use crate::connectors::sql::query_builder::stmt::create::table::SQLCreateTableStatement;
+use crate::connectors::sql::query_builder::stmt::SQL;
+use crate::connectors::sql::query_builder::structs::column::SQLColumn;
 use crate::core::model::Model;
 
 pub async fn migrate(dialect: SQLDialect, pool: &mut AnyPool, models: &Vec<Model>) {
@@ -14,7 +18,8 @@ pub async fn migrate(dialect: SQLDialect, pool: &mut AnyPool, models: &Vec<Model
         let result = pool.fetch_one(&*show_table).await;
         if result.is_err() {
             // table not exist, create table
-            let stmt_string = table_create_statement(model).to_string(dialect);
+            let stmt: SQLCreateTableStatement = model.into();
+            let stmt_string = stmt.to_string(dialect);
             println!("EXECUTE SQL for create table: {}", stmt_string);
             pool.execute(&*stmt_string).await.unwrap();
         } else {
@@ -33,7 +38,7 @@ pub async fn migrate(dialect: SQLDialect, pool: &mut AnyPool, models: &Vec<Model
                     pool.execute(&*stmt).await.unwrap();
                 } else {
                     // compare column definition
-                    let sql_column_def: SQLColumnDef = schema_field.unwrap().into();
+                    let sql_column_def: SQLColumn = schema_field.unwrap().into();
                     let schema_column: MySQLColumn = (&sql_column_def).into();
                     if schema_column != db_column {
                         // this column is different, alter it
@@ -46,7 +51,7 @@ pub async fn migrate(dialect: SQLDialect, pool: &mut AnyPool, models: &Vec<Model
             }
             for field in model.fields() {
                 if !reviewed_columns.contains(&field.column_name().to_string()) {
-                    let sql_column_def: SQLColumnDef = field.into();
+                    let sql_column_def: SQLColumn = field.into();
                     // add this column
                     let add = SQL::alter_table(table_name).add(sql_column_def).to_string(SQLDialect::MySQL);
                     println!("EXECUTE SQL for add column: {}", &add);

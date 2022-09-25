@@ -1094,12 +1094,12 @@ impl Object {
 
     pub(crate) fn keys_for_save(&self) -> Vec<&str> {
         if self.is_new() {
-            self.model().save_keys().iter().collect()
+            self.model().save_keys().iter().map(|k| k.as_str()).collect()
         } else {
             self.model().save_keys().iter().filter(|k| {
                 self.inner.modified_fields.lock().unwrap().contains(&k.to_string()) ||
                     self.inner.atomic_updator_map.lock().unwrap().contains_key(&k.to_string())
-            }).collect()
+            }).map(|k| k.as_str()).collect()
         }
     }
 }

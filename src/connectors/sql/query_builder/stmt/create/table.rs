@@ -14,12 +14,12 @@ impl SQLCreateTableStatement {
         self
     }
 
-    pub fn column(&mut self, def: SQLColumnDef) -> &mut Self {
+    pub fn column(&mut self, def: SQLColumn) -> &mut Self {
         self.columns.push(def);
         self
     }
 
-    pub fn columns(&mut self, defs: Vec<SQLColumnDef>) -> &mut Self {
+    pub fn columns(&mut self, defs: Vec<SQLColumn>) -> &mut Self {
         self.columns.extend(defs);
         self
     }

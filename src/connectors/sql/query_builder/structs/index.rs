@@ -49,7 +49,7 @@ impl ToSQLString for SQLIndexColumn {
 }
 
 #[derive(PartialEq, Clone, Debug)]
-pub struct SQLIndexDef {
+pub struct SQLIndex {
     pub(crate) name: String,
     pub(crate) index_type: SQLIndexType,
     pub(crate) columns: Vec<SQLIndexColumn>
