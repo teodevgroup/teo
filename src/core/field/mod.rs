@@ -17,6 +17,22 @@ pub enum Optionality {
     Required
 }
 
+impl Optionality {
+    pub(crate) fn is_optional(&self) -> bool {
+        match self {
+            Optionality::Required => false,
+            _ => true,
+        }
+    }
+
+    pub(crate) fn is_required(&self) -> bool {
+        match self {
+            Optionality::Required => true,
+            _ => false
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ReadRule {
     Read,
@@ -139,6 +155,18 @@ impl Field {
 
     pub(crate) fn description(&self) -> &str {
         &self.description
+    }
+
+    pub(crate) fn r#type(&self) -> &FieldType {
+        &self.field_type
+    }
+
+    pub(crate) fn is_optional(&self) -> bool {
+        self.optionality.is_optional()
+    }
+
+    pub(crate) fn is_required(&self) -> bool {
+        self.optionality.is_required()
     }
 
     pub(crate) fn column_name(&self) -> &str {

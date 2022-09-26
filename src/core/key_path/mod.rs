@@ -37,4 +37,21 @@ impl KeyPathItem {
             Number(v) => Some(*v),
         }
     }
+
+    pub fn to_string(&self) -> String {
+        match self {
+            KeyPathItem::String(s) => s.to_owned(),
+            KeyPathItem::Number(n) => n.to_string(),
+        }
+    }
+}
+
+pub trait ToDottedString {
+    fn to_dotted_string(&self) -> String;
+}
+
+impl ToDottedString for Vec<KeyPathItem> {
+    fn to_dotted_string(&self) -> String {
+        self.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(".")
+    }
 }

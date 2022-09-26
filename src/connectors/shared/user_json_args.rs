@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use serde_json::{Value as JsonValue, json};
+use crate::connectors::sql::query_builder::integration::value_encoder::JsonValueToSQLString;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::core::error::ActionError;
 use crate::core::model::Model;

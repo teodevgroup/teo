@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use serde_json::{Value as JsonValue, Map as JsonMap, json};
 use bson::{Bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
 use chrono::{Date, NaiveDate, Utc, DateTime};
+use crate::connectors::shared::map_has_i_mode::map_has_i_mode;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::connectors::shared::user_json_args::user_json_args;
 use crate::core::field::r#type::FieldType;
@@ -114,21 +115,6 @@ fn parse_object_id(value: &JsonValue) -> Result<Bson, ActionError> {
     }
 }
 
-fn has_i_mode(map: &JsonMap<String, JsonValue>) -> bool {
-    match map.get("mode") {
-        Some(val) => {
-            if val.is_string() {
-                return val.as_str().unwrap() == "caseInsensitive"
-            } else {
-                false
-            }
-        }
-        None => {
-            false
-        }
-    }
-}
-
 fn parse_string(value: &JsonValue) -> Result<Bson, ActionError> {
     match value.as_str() {
         Some(val) => {
@@ -151,7 +137,7 @@ fn parse_bool(value: &JsonValue) -> Result<Bson, ActionError> {
     }
 }
 
-fn parse_i64(value: &JsonValue) -> Result<Bson, ActionError> {
+fn parse_json_number_to_bson(value: &JsonValue) -> Result<Bson, ActionError> {
     if value.is_i64() {
         Ok(Bson::Int64(value.as_i64().unwrap()))
     } else if value.is_u64() {
@@ -337,27 +323,27 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                 for (key, value) in map {
                     match key.as_str() {
                         "equals" => {
-                            let b = parse_i64(value)?;
+                            let b = parse_json_number_to_bson(value)?;
                             result.insert("$eq", b);
                         }
                         "not" => {
-                            let b = parse_i64(value)?;
+                            let b = parse_json_number_to_bson(value)?;
                             result.insert("$ne", b);
                         }
                         "gt" => {
-                            let oid = parse_i64(value)?;
+                            let oid = parse_json_number_to_bson(value)?;
                             result.insert("$gt", oid);
                         }
                         "gte" => {
-                            let oid = parse_i64(value)?;
+                            let oid = parse_json_number_to_bson(value)?;
                             result.insert("$gte", oid);
                         }
                         "lt" => {
-                            let oid = parse_i64(value)?;
+                            let oid = parse_json_number_to_bson(value)?;
                             result.insert("$lt", oid);
                         }
                         "lte" => {
-                            let oid = parse_i64(value)?;
+                            let oid = parse_json_number_to_bson(value)?;
                             result.insert("$lte", oid);
                         }
                         "in" => {
@@ -365,7 +351,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for val in arr_val {
-                                        arr.push(parse_i64(val)?);
+                                        arr.push(parse_json_number_to_bson(val)?);
                                     }
                                     result.insert("$in", arr);
                                 }
@@ -379,7 +365,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for val in arr_val {
-                                        arr.push(parse_i64(val)?);
+                                        arr.push(parse_json_number_to_bson(val)?);
                                     }
                                     result.insert("$nin", arr);
                                 }
@@ -538,7 +524,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         "contains" => {
                             let bson_regex = BsonRegex {
                                 pattern: regex::escape(parse_string(value)?.as_str().unwrap()),
-                                options: if has_i_mode(map) { "i".to_string() } else { "".to_string() }
+                                options: if map_has_i_mode(map) { "i".to_string() } else { "".to_string() }
                             };
                             let regex = Bson::RegularExpression(bson_regex);
                             result.insert("$regex", regex);
@@ -546,7 +532,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         "startsWith" => {
                             let bson_regex = BsonRegex {
                                 pattern: "^".to_string() + &*regex::escape(parse_string(value)?.as_str().unwrap()),
-                                options: if has_i_mode(map) { "i".to_string() } else { "".to_string() }
+                                options: if map_has_i_mode(map) { "i".to_string() } else { "".to_string() }
                             };
                             let regex = Bson::RegularExpression(bson_regex);
                             result.insert("$regex", regex);
@@ -554,7 +540,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         "endsWith" => {
                             let bson_regex = BsonRegex {
                                 pattern: regex::escape(parse_string(value)?.as_str().unwrap()) + "$",
-                                options: if has_i_mode(map) { "i".to_string() } else { "".to_string() }
+                                options: if map_has_i_mode(map) { "i".to_string() } else { "".to_string() }
                             };
                             let regex = Bson::RegularExpression(bson_regex);
                             result.insert("$regex", regex);
@@ -562,7 +548,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         "matches" => {
                             let bson_regex = BsonRegex {
                                 pattern: parse_string(value)?.as_str().unwrap().to_string(),
-                                options: if has_i_mode(map) { "i".to_string() } else { "".to_string() }
+                                options: if map_has_i_mode(map) { "i".to_string() } else { "".to_string() }
                             };
                             let regex = Bson::RegularExpression(bson_regex);
                             result.insert("$regex", regex);

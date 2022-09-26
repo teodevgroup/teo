@@ -6,24 +6,24 @@ pub mod r#where;
 pub struct SQLSelectStatement<'a> {
     pub(crate) columns: Option<&'a Vec<&'a str>>,
     pub(crate) from: &'a str,
-    pub(crate) r#where: Option<&'a Vec<(&'a str, &'a str, &'a str)>>,
+    pub(crate) r#where: Option<&'a str>,
 }
 
 impl<'a> SQLSelectStatement<'a> {
 
-    pub fn r#where(&mut self, pairs: &'a Vec<(&'a str, &'a str, &'a str)>) -> &mut Self {
-        self.r#where = Some(pairs);
+    pub fn r#where(&mut self, r#where: &'a str) -> &mut Self {
+        self.r#where = Some(r#where);
         self
     }
 }
 
 impl<'a> ToSQLString for SQLSelectStatement<'a> {
     fn to_string(&self, _dialect: SQLDialect) -> String {
-        let columns = if self.columns.is_none() { "*" } else { self.columns.unwrap().join(", ") };
-        let r#where = if self.r#where.is_none() {
-            "".to_owned()
+        let columns = if self.columns.is_none() { "*".to_owned() } else { self.columns.unwrap().join(", ") };
+        let r#where = if let Some(r#where) = self.r#where {
+            " WHERE".to_owned() + r#where
         } else {
-            "WHERE ".to_owned() + &*self.r#where.unwrap().iter().map(|p| format!("{} {} {}", p.0, p.1, p.2)).collect().join(", ")
+            "".to_owned()
         };
         format!("SELECT {columns} from {}{}", self.from, r#where)
     }

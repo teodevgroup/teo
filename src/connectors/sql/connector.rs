@@ -10,7 +10,6 @@ use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::connectors::sql::migration::migrate::migrate;
 use crate::connectors::sql::query_builder::dialect::SQLDialect;
 use crate::connectors::sql::query_builder::integration::select::build_sql_query_from_json;
-use crate::connectors::sql::query_builder::integration::value_encoder::encode_value_to_sql_input;
 use crate::connectors::sql::query_builder::stmt::SQL;
 use crate::connectors::sql::query_builder::traits::to_sql_string::ToSQLString;
 use crate::connectors::sql::save_session::SQLSaveSession;
@@ -70,7 +69,7 @@ impl SQLConnector {
             let field = model.field(field_name).unwrap();
             let column_name = field.column_name();
             let val = object.get_value(field_name).unwrap();
-            values.push((column_name, encode_value_to_sql_input(val)));
+            values.push((column_name, val.to_string(self.dialect)));
         }
         let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();
         let stmt = SQL::insert_into(model.table_name()).values(value_refs).to_string(self.dialect);
@@ -104,7 +103,7 @@ impl Connector for SQLConnector {
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
-        let aggregate_input = build_sql_query_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder)?;
+        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder, self.dialect)?;
 
     }
 

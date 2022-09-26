@@ -7,6 +7,16 @@ pub enum WhereClause {
     Not(String),
 }
 
+pub trait ToWrappedSQLString {
+    fn to_wrapped_string(&self, dialect: SQLDialect) -> String;
+}
+
+impl ToWrappedSQLString for WhereClause {
+    fn to_wrapped_string(&self, dialect: SQLDialect) -> String {
+        "(".to_owned() + &self.to_string(dialect) + ")"
+    }
+}
+
 impl ToSQLString for WhereClause {
     fn to_string(&self, _dialect: SQLDialect) -> String {
         match self {

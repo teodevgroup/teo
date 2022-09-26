@@ -26,3 +26,13 @@ pub(crate) enum FieldType {
     Map(Box<Field>),
     Object(String),
 }
+
+impl FieldType {
+    pub(crate) fn element_field(&self) -> Option<&Field> {
+        match self {
+            FieldType::Vec(inner) => Some(inner.as_ref()),
+            FieldType::Map(inner) => Some(inner.as_ref()),
+            _ => None,
+        }
+    }
+}

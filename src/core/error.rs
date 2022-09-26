@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use serde::Serialize;
+use maplit::hashmap;
+use crate::core::key_path::{KeyPathItem, ToDottedString};
 
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -54,6 +56,8 @@ pub enum ActionErrorType {
     ModelNotFound,
     WrongIdentityModel,
     PropertySetterError,
+    InputTypeError,
+    UnexpectedInputKey,
 }
 
 impl ActionErrorType {
@@ -108,6 +112,8 @@ impl ActionErrorType {
             ActionErrorType::ModelNotFound => { 500 }
             ActionErrorType::WrongIdentityModel => { 401 }
             ActionErrorType::PropertySetterError => { 400 }
+            ActionErrorType::InputTypeError => { 400 }
+            ActionErrorType::UnexpectedInputKey => { 400 }
         }
     }
 }
@@ -533,6 +539,22 @@ impl ActionError {
             r#type: ActionErrorType::PropertySetterError,
             message: reason.into(),
             errors: None
+        }
+    }
+
+    pub fn input_type_error(expected: impl Into<String>, key_path: &Vec<KeyPathItem>) -> Self {
+        ActionError {
+            r#type: ActionErrorType::InputTypeError,
+            message: "Input type invalid.".to_string(),
+            errors: Some(hashmap!{key_path.to_dotted_string() => format!("Expect {}.", expected.into())}),
+        }
+    }
+
+    pub fn unexpected_input_key(unexpected: impl Into<String>, key_path: &Vec<KeyPathItem>) -> Self {
+        ActionError {
+            r#type: ActionErrorType::UnexpectedInputKey,
+            message: "Found unexpected key.".to_string(),
+            errors: Some(hashmap!{key_path.to_dotted_string() => format!("Unexpected key '{}'.", unexpected.into())}),
         }
     }
 }
