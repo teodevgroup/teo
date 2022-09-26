@@ -26,14 +26,18 @@ The new generation server software.
 #### 0.0.23
 - Migration: insert/delete columns for most simple cases **[DONE]**
 - Mutation: most simple inserts **[DONE]**
-- Query: create multiple files for where parsing
-- Query: most simple queries
+- Query: most simple queries **[DONE]**
 
 #### 0.0.24
+- Mutation: most simple updates
+- Query: find many and find one
+- Mutation: deletion
+
+#### 0.0.25
 - Remove primary name from MongoDB connector's `save` method
 - Add `PresentWith` and `PresentWithout` to `Optionality` 
 
-#### 0.0.25 - 0.0.50
+#### 0.0.26 - 0.0.50
 - Migration with SQL databases
 - Perform simple CRUD with SQL databases
 - Perform object update with SQL databases

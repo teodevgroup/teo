@@ -1,5 +1,5 @@
 use std::fmt::format;
-use sqlx::types::JsonValue;
+use serde_json::{Value as JsonValue};
 use crate::connectors::shared::map_has_i_mode::map_has_i_mode;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::connectors::shared::user_json_args::{user_json_args, UserJsonArgs};

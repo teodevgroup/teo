@@ -161,6 +161,7 @@ impl Connector for SQLConnector {
         let select = finder.get("select");
         let include = finder.get("include");
         let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder, self.dialect)?;
+        println!("See query string {}", sql_query);
         let results = self.pool.fetch_optional(&*sql_query).await;
         match results {
             Ok(row) => {

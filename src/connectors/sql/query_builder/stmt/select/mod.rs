@@ -21,7 +21,7 @@ impl<'a> ToSQLString for SQLSelectStatement<'a> {
     fn to_string(&self, _dialect: SQLDialect) -> String {
         let columns = if self.columns.is_none() { "*".to_owned() } else { self.columns.unwrap().join(", ") };
         let r#where = if let Some(r#where) = &self.r#where {
-            " WHERE".to_owned() + r#where
+            " WHERE ".to_owned() + r#where
         } else {
             "".to_owned()
         };
