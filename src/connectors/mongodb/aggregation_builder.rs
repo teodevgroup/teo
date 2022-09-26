@@ -1665,7 +1665,7 @@ pub(crate) fn build_query_pipeline_from_json(
         user_args.include,
         user_args.distinct,
         user_args.select,
-        user_args.aggregates,
+        user_args.aggregates.as_ref(),
         user_args.by,
         user_args.having);
     result

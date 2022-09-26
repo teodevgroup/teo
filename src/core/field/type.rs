@@ -28,6 +28,36 @@ pub(crate) enum FieldType {
 }
 
 impl FieldType {
+
+    pub(crate) fn is_string(&self) -> bool {
+        match self {
+            FieldType::String => true,
+            _ => false
+        }
+    }
+
+    pub(crate) fn is_int(&self) -> bool {
+        match self {
+            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 |
+            FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 => true,
+            _ => false
+        }
+    }
+
+    pub(crate) fn is_float(&self) -> bool {
+        match self {
+            FieldType::F32 | FieldType::F64 => true,
+            _ => false
+        }
+    }
+
+    pub(crate) fn is_bool(&self) -> bool {
+        match self {
+            FieldType::Bool => true,
+            _ => false
+        }
+    }
+
     pub(crate) fn element_field(&self) -> Option<&Field> {
         match self {
             FieldType::Vec(inner) => Some(inner.as_ref()),

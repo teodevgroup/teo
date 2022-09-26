@@ -691,14 +691,8 @@ impl Connector for MongoDBConnector {
         }
         for doc in results {
             let obj = graph.new_object(model.name())?;
-            return match self.document_to_object(&doc.unwrap(), &obj, select, include) {
-                Ok(_) => {
-                    Ok(obj)
-                }
-                Err(err) => {
-                    Err(err)
-                }
-            }
+            self.document_to_object(&doc.unwrap(), &obj, select, include)?;
+            return Ok(obj);
         }
         Err(ActionError::object_not_found())
     }

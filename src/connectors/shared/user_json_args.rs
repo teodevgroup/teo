@@ -42,7 +42,7 @@ pub struct UserJsonArgs<'a> {
     pub(crate) include: Option<&'a JsonValue>,
     pub(crate) distinct: Option<&'a JsonValue>,
     pub(crate) select: Option<&'a JsonValue>,
-    pub(crate) aggregates: Option<&'a JsonValue>,
+    pub(crate) aggregates: Option<JsonValue>,
     pub(crate) by: Option<&'a JsonValue>,
     pub(crate) having: Option<&'a JsonValue>,
 }
@@ -88,7 +88,7 @@ pub(crate) fn user_json_args<'a>(
     if let Some(count) = json_value.get("_count") {
         aggregates.as_object_mut().unwrap().insert("_count".to_string(), count.clone());
     }
-    let aggregates = if aggregates.as_object().unwrap().is_empty() { None } else { Some(&aggregates) };
+    let aggregates = if aggregates.as_object().unwrap().is_empty() { None } else { Some(aggregates) };
     let by = if !mutation_mode { json_value.get("by") } else { None };
     let having = if !mutation_mode { json_value.get("having") } else { None };
     Ok(UserJsonArgs {

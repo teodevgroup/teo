@@ -16,7 +16,7 @@ impl TypeOrNull for &str {
     }
 }
 
-pub trait JsonValueToSQLString {
+pub(crate) trait JsonValueToSQLString {
     fn to_sql_string(&self, r#type: &FieldType, optional: bool, path: &Vec<KeyPathItem>, graph: &Graph) -> Result<String, ActionError>;
 }
 

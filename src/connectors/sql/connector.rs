@@ -1,9 +1,10 @@
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use async_trait::async_trait;
-use sqlx::{AnyPool, Database, Executor};
+use sqlx::{AnyPool, Column, Database, Executor, Row};
 use sqlx::pool::Pool;
 use serde_json::{Value as JsonValue};
+use sqlx::any::AnyRow;
 use crate::core::model::Model;
 use url::Url;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
@@ -61,6 +62,62 @@ impl SQLConnector {
         migrate(dialect, pool, models).await
     }
 
+    fn row_to_object(&self, row: &AnyRow, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>) -> Result<(), ActionError> {
+        for column in row.columns() {
+            let column_name = column.name();
+            if let Some(field) = object.model().field_with_column_name(column_name) {
+                if field.r#type().is_bool() {
+                    let bool_value: bool = row.get(column_name);
+                    object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::Bool(bool_value));
+                } else if field.r#type().is_int() {
+                    let i64_value: i64 = row.get(column_name);
+                    object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::number_from_i64(i64_value, field.r#type()));
+                } else if field.r#type().is_float() {
+                    let f64_value: f64 = row.get(column_name);
+                    object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::number_from_f64(f64_value, field.r#type()));
+                } else if field.r#type().is_string() {
+                    let string_value: String = row.get(column_name);
+                    object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::String(string_value));
+                }
+            } else if let Some(relation) = object.model().relation(column_name) {}
+        }
+        object.inner.is_initialized.store(true, Ordering::SeqCst);
+        object.inner.is_new.store(false, Ordering::SeqCst);
+        object.set_select(select).unwrap();
+        Ok(())
+
+        // // relation
+                // let relation = object.model().relation(key);
+                // if relation.is_none() {
+                //     continue;
+                // }
+                // let inner_finder = if let Some(include) = include {
+                //     include.get(key)
+                // } else {
+                //     None
+                // };
+                // let inner_select = if let Some(inner_finder) = inner_finder {
+                //     inner_finder.get("select")
+                // } else {
+                //     None
+                // };
+                // let inner_include = if let Some(inner_finder) = inner_finder {
+                //     inner_finder.get("include")
+                // } else {
+                //     None
+                // };
+                // let relation = relation.unwrap();
+                // let model_name = &relation.model;
+                // let object_bsons = document.get(key).unwrap().as_array().unwrap();
+                // let mut related: Vec<Object> = vec![];
+                // for related_object_bson in object_bsons {
+                //     let related_object = object.graph().new_object(model_name)?;
+                //     self.document_to_object(related_object_bson.as_document().unwrap(), &related_object, inner_select, inner_include)?;
+                //     related.push(related_object);
+                // }
+                // object.inner.relation_query_map.lock().unwrap().insert(key.to_string(), related);
+    }
+
     async fn create_object(&self, object: &Object) -> Result<(), ActionError> {
         let model = object.model();
         let field_names = object.keys_for_save();
@@ -104,7 +161,25 @@ impl Connector for SQLConnector {
         let select = finder.get("select");
         let include = finder.get("include");
         let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder, self.dialect)?;
-
+        let results = self.pool.fetch_optional(&*sql_query).await;
+        match results {
+            Ok(row) => {
+                match row {
+                    Some(row) => {
+                        let obj = graph.new_object(model.name())?;
+                        self.row_to_object(&row, &obj, select, include)?;
+                        Ok(obj)
+                    }
+                    None => {
+                        Err(ActionError::object_not_found())
+                    }
+                }
+            }
+            Err(err) => {
+                println!("{:?}", err);
+                Err(ActionError::unknown_database_find_unique_error())
+            }
+        }
     }
 
     async fn find_first(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {

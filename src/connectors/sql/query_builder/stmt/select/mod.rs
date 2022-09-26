@@ -6,12 +6,12 @@ pub mod r#where;
 pub struct SQLSelectStatement<'a> {
     pub(crate) columns: Option<&'a Vec<&'a str>>,
     pub(crate) from: &'a str,
-    pub(crate) r#where: Option<&'a str>,
+    pub(crate) r#where: Option<String>,
 }
 
 impl<'a> SQLSelectStatement<'a> {
 
-    pub fn r#where(&mut self, r#where: &'a str) -> &mut Self {
+    pub fn r#where(&mut self, r#where: String) -> &mut Self {
         self.r#where = Some(r#where);
         self
     }
@@ -20,7 +20,7 @@ impl<'a> SQLSelectStatement<'a> {
 impl<'a> ToSQLString for SQLSelectStatement<'a> {
     fn to_string(&self, _dialect: SQLDialect) -> String {
         let columns = if self.columns.is_none() { "*".to_owned() } else { self.columns.unwrap().join(", ") };
-        let r#where = if let Some(r#where) = self.r#where {
+        let r#where = if let Some(r#where) = &self.r#where {
             " WHERE".to_owned() + r#where
         } else {
             "".to_owned()

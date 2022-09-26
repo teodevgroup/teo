@@ -6,6 +6,7 @@ use chrono::prelude::{Date, DateTime, Utc};
 use chrono::SecondsFormat;
 use rust_decimal::Decimal;
 use serde_json::{Map, Number, Value as JsonValue};
+use crate::core::field::r#type::FieldType;
 use crate::core::object::Object;
 use crate::core::pipeline::context::Intent;
 
@@ -37,6 +38,30 @@ pub enum Value {
 }
 
 impl Value {
+
+    pub(crate) fn number_from_f64(num: f64, r#type: &FieldType) -> Value {
+        match r#type {
+            FieldType::F32 => Value::F32(num as f32),
+            FieldType::F64 => Value::F64(num),
+            _ => panic!()
+        }
+    }
+
+    pub(crate) fn number_from_i64(num: i64, r#type: &FieldType) -> Value {
+        match r#type {
+            FieldType::I8 => Value::I8(num as i8),
+            FieldType::I16 => Value::I16(num as i16),
+            FieldType::I32 => Value::I32(num as i32),
+            FieldType::I64 => Value::I64(num as i64),
+            FieldType::I128 => Value::I128(num as i128),
+            FieldType::U8 => Value::U8(num as u8),
+            FieldType::U16 => Value::U16(num as u16),
+            FieldType::U32 => Value::U32(num as u32),
+            FieldType::U64 => Value::U64(num as u64),
+            FieldType::U128 => Value::U128(num as u128),
+            _ => panic!()
+        }
+    }
 
     pub(crate) async fn to_object_json_value(&self, purpose: Intent) -> Option<JsonValue> {
         match self {
