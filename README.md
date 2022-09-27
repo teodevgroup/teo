@@ -37,6 +37,7 @@ The new generation server software.
 - MongoDB update handle column key
 - Remove primary name from MongoDB connector's `save` method
 - Add `PresentWith` and `PresentWithout` to `Optionality` 
+- Fix token decoding and encoding after modifying `identifier`
 
 #### 0.0.26 - 0.0.50
 - Migration with SQL databases

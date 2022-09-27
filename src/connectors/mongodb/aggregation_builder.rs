@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use serde_json::{Value as JsonValue, Map as JsonMap, json};
 use bson::{Bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
 use chrono::{Date, NaiveDate, Utc, DateTime};
+use crate::connectors::shared::has_negative_take::has_negative_take;
 use crate::connectors::shared::map_has_i_mode::map_has_i_mode;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::connectors::shared::user_json_args::user_json_args;
@@ -1621,20 +1622,6 @@ fn build_query_pipeline(
         }
     }
     Ok(retval)
-}
-
-pub(crate) fn has_negative_take(json_value: &JsonValue) -> bool {
-    if json_value.is_object() {
-        let take = json_value.as_object().unwrap().get("take");
-        if take.is_some() {
-            let take = take.unwrap();
-            if take.is_number() {
-                let take = take.as_i64().unwrap();
-                return take < 0;
-            }
-        }
-    }
-    false
 }
 
 /// Build MongoDB aggregation pipeline for querying.
