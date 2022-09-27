@@ -274,7 +274,18 @@ impl Connector for SQLConnector {
     }
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
-        todo!()
+        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Count, false, finder, self.dialect)?;
+        let result = self.pool.fetch_one(&*sql_query).await;
+        match result {
+            Ok(row) => {
+                let result: i64 = row.get(0);
+                Ok(result as usize)
+            }
+            Err(err) => {
+                println!("{:?}", err);
+                Err(ActionError::unknown_database_find_error())
+            }
+        }
     }
 
     async fn aggregate(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<JsonValue, ActionError> {

@@ -256,7 +256,8 @@ pub(crate) fn build_sql_query(
     args: UserJsonArgs,
     dialect: SQLDialect,
 ) -> Result<String, ActionError> {
-    let mut stmt = SQL::select(None, model.table_name());
+    let column_for_count = vec!["COUNT(*)"];
+    let mut stmt = SQL::select(if r#type == QueryPipelineType::Count { Some(&column_for_count) } else { None }, model.table_name());
     if let Some(r#where) = args.r#where {
         if let Some(where_result) = build_where_input(model, graph, Some(r#where), dialect, &vec![KeyPathItem::String("where".to_string())])? {
             stmt.r#where(where_result);

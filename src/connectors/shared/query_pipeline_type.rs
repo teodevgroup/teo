@@ -2,5 +2,6 @@
 pub(crate) enum QueryPipelineType {
     Unique,
     First,
-    Many
+    Many,
+    Count,
 }
