@@ -19,8 +19,6 @@ pub(crate) trait Connector: Debug + Send + Sync {
 
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError>;
 
-    async fn find_first(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError>;
-
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError>;
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<usize, ActionError>;

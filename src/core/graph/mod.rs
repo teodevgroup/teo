@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use actix_web::web::Json;
 use serde_json::{Value as JsonValue};
 use crate::core::graph::builder::GraphBuilder;
 use crate::core::connector::Connector;
@@ -55,7 +56,20 @@ impl Graph {
 
     pub async fn find_first(&self, model: &str, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
         let model = self.model(model)?;
-        self.connector().find_first(self, model, finder, mutation_mode).await
+        let mut finder = finder.as_object().clone().unwrap().clone();
+        finder.insert("take".to_string(), JsonValue::Number(1.into()));
+        let finder = JsonValue::Object(finder);
+        let result = self.connector().find_many(self, model, &finder, mutation_mode).await;
+        match result {
+            Err(err) => Err(err),
+            Ok(retval) => {
+                if retval.is_empty() {
+                    Err(ActionError::object_not_found())
+                } else {
+                    Ok(retval.get(0).unwrap().clone())
+                }
+            }
+        }
     }
 
     pub async fn find_many(&self, model: &str, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {

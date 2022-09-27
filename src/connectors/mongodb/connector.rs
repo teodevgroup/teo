@@ -699,22 +699,6 @@ impl Connector for MongoDBConnector {
         Err(ActionError::object_not_found())
     }
 
-    async fn find_first(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
-        let mut finder = finder.as_object().clone().unwrap().clone();
-        finder.insert("take".to_string(), JsonValue::Number(1.into()));
-        let result = self.find_many(graph, model, &JsonValue::Object(finder), mutation_mode).await;
-        match result {
-            Err(err) => Err(err),
-            Ok(retval) => {
-                if retval.is_empty() {
-                    Err(ActionError::object_not_found())
-                } else {
-                    Ok(retval.get(0).unwrap().clone())
-                }
-            }
-        }
-    }
-
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
