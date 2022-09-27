@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use async_trait::async_trait;
+use chrono::{Date, DateTime, NaiveDate, Utc};
 use sqlx::{AnyPool, Column, Database, Error, Executor, Row, ValueRef};
 use sqlx::pool::Pool;
 use serde_json::{Value as JsonValue};
@@ -18,6 +19,7 @@ use crate::connectors::sql::save_session::SQLSaveSession;
 use crate::core::connector::Connector;
 use crate::core::error::ActionError;
 use crate::core::input::AtomicUpdateType;
+use crate::core::input_decoder::str_to_target_type;
 use crate::core::save_session::SaveSession;
 use crate::prelude::{Graph, Object, Value};
 
@@ -91,6 +93,19 @@ impl SQLConnector {
                     if !any_value.is_null() {
                         let string_value: String = row.get(column_name);
                         object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::String(string_value));
+                    }
+                } else if field.r#type().is_date() {
+                    let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
+                    if !any_value.is_null() {
+                        let naive_date: NaiveDate = row.get(column_name);
+                        let date: Date<Utc> = Date::from_utc(naive_date, Utc);
+                        object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::Date(date));
+                    }
+                } else if field.r#type().is_datetime() {
+                    let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
+                    if !any_value.is_null() {
+                        let datetime_value: DateTime<Utc> = row.get(column_name);
+                        object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::DateTime(datetime_value));
                     }
                 }
             } else if let Some(relation) = object.model().relation(column_name) {}

@@ -106,6 +106,8 @@ impl ToSQLString for Value {
             Value::F32(i) => i.to_string(),
             Value::F64(i) => i.to_string(),
             Value::Bool(b) => b.to_sql_input(),
+            Value::Date(d) => d.to_sql_input(),
+            Value::DateTime(d) => d.to_sql_input(),
             _ => panic!("unhandled"),
         }
     }
@@ -169,7 +171,7 @@ impl ToSQLInput for Date<Utc> {
 
 impl ToSQLInput for DateTime<Utc> {
     fn to_sql_input(&self) -> String {
-        self.to_rfc3339_opts(SecondsFormat::Millis, true).to_sql_input()
+        self.format("%Y-%m-%d %H:%M:%S.%f").to_string().to_sql_input()
     }
 }
 

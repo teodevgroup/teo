@@ -58,6 +58,20 @@ impl FieldType {
         }
     }
 
+    pub(crate) fn is_date(&self) -> bool {
+        match self {
+            FieldType::Date => true,
+            _ => false
+        }
+    }
+
+    pub(crate) fn is_datetime(&self) -> bool {
+        match self {
+            FieldType::DateTime => true,
+            _ => false
+        }
+    }
+
     pub(crate) fn element_field(&self) -> Option<&Field> {
         match self {
             FieldType::Vec(inner) => Some(inner.as_ref()),

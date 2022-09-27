@@ -104,7 +104,7 @@ fn number_to_target_type(json_value: &JsonValue, target: &FieldType, number_type
     }
 }
 
-fn str_to_target_type(json_str: &str, target: &FieldType, graph: &Graph) -> Result<Value, ActionError> {
+pub(crate) fn str_to_target_type(json_str: &str, target: &FieldType, graph: &Graph) -> Result<Value, ActionError> {
     match target {
         #[cfg(feature = "data-source-mongodb")]
         FieldType::ObjectId => Ok(Value::ObjectId(json_str.to_string())),
