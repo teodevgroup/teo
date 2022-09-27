@@ -1,10 +1,10 @@
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use async_trait::async_trait;
-use sqlx::{AnyPool, Column, Database, Executor, Row};
+use sqlx::{AnyPool, Column, Database, Error, Executor, Row, ValueRef};
 use sqlx::pool::Pool;
 use serde_json::{Value as JsonValue};
-use sqlx::any::AnyRow;
+use sqlx::any::{AnyRow, AnyValueRef};
 use crate::core::model::Model;
 use url::Url;
 use crate::connectors::shared::has_negative_take::has_negative_take;
@@ -69,17 +69,29 @@ impl SQLConnector {
             let column_name = column.name();
             if let Some(field) = object.model().field_with_column_name(column_name) {
                 if field.r#type().is_bool() {
-                    let bool_value: bool = row.get(column_name);
-                    object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::Bool(bool_value));
+                    let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
+                    if !any_value.is_null() {
+                        let bool_value: bool = row.get(column_name);
+                        object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::Bool(bool_value));
+                    }
                 } else if field.r#type().is_int() {
-                    let i64_value: i64 = row.get(column_name);
-                    object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::number_from_i64(i64_value, field.r#type()));
+                    let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
+                    if !any_value.is_null() {
+                        let i64_value: i64 = row.get(column_name);
+                        object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::number_from_i64(i64_value, field.r#type()));
+                    }
                 } else if field.r#type().is_float() {
-                    let f64_value: f64 = row.get(column_name);
-                    object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::number_from_f64(f64_value, field.r#type()));
+                    let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
+                    if !any_value.is_null() {
+                        let f64_value: f64 = row.get(column_name);
+                        object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::number_from_f64(f64_value, field.r#type()));
+                    }
                 } else if field.r#type().is_string() {
-                    let string_value: String = row.get(column_name);
-                    object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::String(string_value));
+                    let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
+                    if !any_value.is_null() {
+                        let string_value: String = row.get(column_name);
+                        object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::String(string_value));
+                    }
                 }
             } else if let Some(relation) = object.model().relation(column_name) {}
         }

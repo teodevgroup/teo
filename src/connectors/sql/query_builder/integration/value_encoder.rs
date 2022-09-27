@@ -1,3 +1,4 @@
+use chrono::{Date, Utc, DateTime, SecondsFormat};
 use serde_json::{Value as JsonValue};
 use crate::connectors::sql::query_builder::dialect::SQLDialect;
 use crate::connectors::sql::query_builder::traits::to_sql_string::ToSQLString;
@@ -157,6 +158,18 @@ impl ToSQLInput for &str {
 impl ToSQLInput for bool {
     fn to_sql_input(&self) -> String {
         if *self { "TRUE".to_owned() } else { "FALSE".to_owned() }
+    }
+}
+
+impl ToSQLInput for Date<Utc> {
+    fn to_sql_input(&self) -> String {
+        self.format("%Y-%m-%d").to_string().to_sql_input()
+    }
+}
+
+impl ToSQLInput for DateTime<Utc> {
+    fn to_sql_input(&self) -> String {
+        self.to_rfc3339_opts(SecondsFormat::Millis, true).to_sql_input()
     }
 }
 

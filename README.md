@@ -36,8 +36,9 @@ The new generation server software.
 
 #### 0.0.25
 - SQL: Sorting **[DONE]**
-- SQL: Paging
-- SQL: Including
+- SQL: Paging **[DONE]**
+- SQL: Handle optional values **[DONE]**
+- SQL: Including with batch query caches
 - SQL: `Date` and `DateTime`
 
 #### 0.0.26
