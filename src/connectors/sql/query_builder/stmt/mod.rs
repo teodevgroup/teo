@@ -6,6 +6,7 @@ use crate::connectors::sql::query_builder::stmt::insert_into::SQLInsertIntoState
 use crate::connectors::sql::query_builder::stmt::r#use::SQLUseStatement;
 use crate::connectors::sql::query_builder::stmt::select::SQLSelectStatement;
 use crate::connectors::sql::query_builder::stmt::show::SQLShowStatement;
+use crate::connectors::sql::query_builder::stmt::update::SQLUpdateStatement;
 
 pub mod create;
 pub mod drop;
@@ -15,6 +16,7 @@ pub mod show;
 pub mod describe;
 pub mod alter_table;
 pub mod select;
+pub mod update;
 
 pub struct SQL { }
 
@@ -43,11 +45,15 @@ impl SQL {
         SQLAlterTableStatement { table: table.into() }
     }
 
-    pub fn insert_into<'a>(table: &'a str) -> SQLInsertIntoStatement<'a> {
-        SQLInsertIntoStatement { table: table.into(), values: vec![] }
+    pub fn insert_into(table: &str) -> SQLInsertIntoStatement {
+        SQLInsertIntoStatement { table, values: vec![] }
     }
 
     pub fn select<'a>(columns: Option<&'a Vec<&'a str>>, from: &'a str) -> SQLSelectStatement<'a> {
         SQLSelectStatement { columns, from, r#where: None }
+    }
+
+    pub fn update(table: &str) -> SQLUpdateStatement {
+        SQLUpdateStatement { table, values: vec![], r#where: "" }
     }
 }

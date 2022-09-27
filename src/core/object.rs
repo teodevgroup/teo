@@ -933,14 +933,6 @@ impl Object {
         Ok(())
     }
 
-    pub(crate) fn identifier(&self) -> Value {
-        if let Some(primary_field) = self.model().primary_field() {
-            self.get_value(primary_field.name.clone()).unwrap()
-        } else {
-            panic!("Identity model must have primary field defined explicitly.");
-        }
-    }
-
     pub(crate) fn ignore_required_for(&self, ignores: &Vec<String>) {
         self.inner.ignore_required_fields.lock().unwrap().extend(ignores.iter().map(|v| v.to_string()).collect::<Vec<String>>());
     }
@@ -955,6 +947,16 @@ impl Object {
 
     pub fn graph(&self) -> &Graph {
         &self.inner.graph
+    }
+
+    pub(crate) fn identifier(&self) -> HashMap<&str, Value> {
+        let model = self.model();
+        let mut identifier: HashMap<&str, Value> = HashMap::new();
+        for item in &model.primary_index().unwrap().items {
+            let val = self.get_value(&item.field_name).unwrap();
+            identifier.insert(&item.field_name, val.clone());
+        }
+        identifier
     }
 
     pub(crate) fn json_identifier(&self) -> JsonValue {

@@ -10,12 +10,13 @@ use url::Url;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::connectors::sql::migration::migrate::migrate;
 use crate::connectors::sql::query_builder::dialect::SQLDialect;
-use crate::connectors::sql::query_builder::integration::select::build_sql_query_from_json;
+use crate::connectors::sql::query_builder::integration::select::{build_sql_query_from_json, build_where_from_identifier};
 use crate::connectors::sql::query_builder::stmt::SQL;
 use crate::connectors::sql::query_builder::traits::to_sql_string::ToSQLString;
 use crate::connectors::sql::save_session::SQLSaveSession;
 use crate::core::connector::Connector;
 use crate::core::error::ActionError;
+use crate::core::input::AtomicUpdateType;
 use crate::core::save_session::SaveSession;
 use crate::prelude::{Graph, Object, Value};
 
@@ -83,7 +84,9 @@ impl SQLConnector {
         }
         object.inner.is_initialized.store(true, Ordering::SeqCst);
         object.inner.is_new.store(false, Ordering::SeqCst);
-        object.set_select(select).unwrap();
+        if let Some(select) = select {
+            object.set_select(Some(select)).unwrap();
+        }
         Ok(())
 
         // // relation
@@ -138,7 +141,63 @@ impl SQLConnector {
     }
 
     async fn update_object(&self, object: &Object) -> Result<(), ActionError> {
-        Ok(())
+        let model = object.model();
+        let field_names = object.keys_for_save();
+        let mut values: Vec<(&str, String)> = vec![];
+        for field_name in &field_names {
+            let column_name = model.field(field_name).unwrap().column_name();
+            let updator_map = object.inner.atomic_updator_map.lock().unwrap();
+            if updator_map.contains_key(*field_name) {
+                let updator = updator_map.get(*field_name).unwrap();
+                match updator {
+                    AtomicUpdateType::Increment(val) => {
+                        values.push((column_name, format!("{} + {}", column_name, val.to_string(self.dialect))));
+                    }
+                    AtomicUpdateType::Decrement(val) => {
+                        values.push((column_name, format!("{} - {}", column_name, val.to_string(self.dialect))));
+                    }
+                    AtomicUpdateType::Multiply(val) => {
+                        values.push((column_name, format!("{} * {}", column_name, val.to_string(self.dialect))));
+                    }
+                    AtomicUpdateType::Divide(val) => {
+                        values.push((column_name, format!("{} / {}", column_name, val.to_string(self.dialect))));
+                    }
+                    AtomicUpdateType::Push(val) => {
+                        values.push((column_name, format!("ARRAY_APPEND({}, {})", column_name, val.to_string(self.dialect))));
+                    }
+                }
+            } else {
+                let val = object.get_value(field_name).unwrap();
+                values.push((column_name, val.to_string(self.dialect)));
+            }
+        }
+        let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        let r#where = build_where_from_identifier(model, object.graph(), &object.identifier(), self.dialect);
+        let stmt = SQL::update(model.table_name()).values(value_refs).r#where(&r#where).to_string(self.dialect);
+        let result = self.pool.execute(stmt.as_str()).await;
+        if result.is_err() {
+            println!("{:?}", result.err().unwrap());
+            return Err(ActionError::unknown_database_write_error());
+        }
+        let select_stmt = SQL::select(Some(&field_names), model.table_name()).r#where(r#where).to_string(self.dialect);
+        let results = self.pool.fetch_optional(&*select_stmt).await;
+        match results {
+            Ok(row) => {
+                match row {
+                    Some(row) => {
+                        self.row_to_object(&row, &object, None, None)?;
+                        Ok(())
+                    }
+                    None => {
+                        Err(ActionError::object_not_found())
+                    }
+                }
+            }
+            Err(err) => {
+                println!("{:?}", err);
+                Err(ActionError::unknown_database_find_unique_error())
+            }
+        }
     }
 }
 
@@ -161,7 +220,6 @@ impl Connector for SQLConnector {
         let select = finder.get("select");
         let include = finder.get("include");
         let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder, self.dialect)?;
-        println!("See query string {}", sql_query);
         let results = self.pool.fetch_optional(&*sql_query).await;
         match results {
             Ok(row) => {

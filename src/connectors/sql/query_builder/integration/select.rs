@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::format;
 use serde_json::{Value as JsonValue};
 use crate::connectors::shared::map_has_i_mode::map_has_i_mode;
@@ -14,7 +15,7 @@ use crate::core::error::ActionError;
 use crate::core::field::r#type::FieldType;
 use crate::core::key_path::KeyPathItem;
 use crate::core::model::Model;
-use crate::prelude::Graph;
+use crate::prelude::{Graph, Value};
 
 fn sql_where_item(col_name: &str, op: &str, val: String) -> String {
     format!("{col_name} {op} {val}")
@@ -169,6 +170,16 @@ fn parse_sql_where_entry(
             panic!()
         }
     }
+}
+
+pub(crate) fn build_where_from_identifier(model: &Model, graph: &Graph, identifier: &HashMap<&str, Value>, dialect: SQLDialect) -> String {
+    let mut retval: Vec<String> = vec![];
+    for (key, value) in identifier {
+        let field = model.field(*key).unwrap();
+        let column_name = field.column_name();
+        retval.push(format!("{} = {}", column_name, value.to_string(dialect)));
+    }
+    And(retval).to_string(dialect)
 }
 
 pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&JsonValue>, dialect: SQLDialect, key_path: &Vec<KeyPathItem>) -> Result<Option<String>, ActionError> {

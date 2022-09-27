@@ -538,24 +538,25 @@ impl Connector for MongoDBConnector {
             let mut mul = doc!{};
             let mut push = doc!{};
             for key in keys {
-                if object.inner.atomic_updator_map.lock().unwrap().contains_key(key) {
-                    let aumap = object.inner.atomic_updator_map.lock().unwrap();
+                let column_name = object.model().field(key).unwrap().column_name();
+                let aumap = object.inner.atomic_updator_map.lock().unwrap();
+                if aumap.contains_key(key) {
                     let updator = aumap.get(key).unwrap();
                     match updator {
                         AtomicUpdateType::Increment(val) => {
-                            inc.insert(key, val.to_bson_value());
+                            inc.insert(column_name, val.to_bson_value());
                         }
                         AtomicUpdateType::Decrement(val) => {
-                            inc.insert(key, (val.neg()).to_bson_value());
+                            inc.insert(column_name, (val.neg()).to_bson_value());
                         }
                         AtomicUpdateType::Multiply(val) => {
-                            mul.insert(key, val.to_bson_value());
+                            mul.insert(column_name, val.to_bson_value());
                         }
                         AtomicUpdateType::Divide(val) => {
-                            mul.insert(key, Bson::Double(val.recip()));
+                            mul.insert(column_name, Bson::Double(val.recip()));
                         }
                         AtomicUpdateType::Push(val) => {
-                            push.insert(key, val.to_bson_value());
+                            push.insert(column_name, val.to_bson_value());
                         }
                     };
                 } else {

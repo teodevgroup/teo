@@ -29,11 +29,12 @@ The new generation server software.
 - Query: most simple queries **[DONE]**
 
 #### 0.0.24
-- Mutation: most simple updates
-- Query: find many and find one
-- Mutation: deletion
+- Mutation: most simple updates **[DONE]**
+- Query: find many and find one **[DONE]**
+- Mutation: deletion **[DONE]**
 
 #### 0.0.25
+- MongoDB update handle column key
 - Remove primary name from MongoDB connector's `save` method
 - Add `PresentWith` and `PresentWithout` to `Optionality` 
 

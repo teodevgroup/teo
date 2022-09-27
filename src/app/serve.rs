@@ -25,7 +25,7 @@ pub struct TokenDecodeError;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    pub id: String,
+    pub id: JsonValue,
     pub model: String,
     pub exp: usize
 }
@@ -526,7 +526,7 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     let final_ctx = pipeline.process(ctx).await;
     let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
     let claims = Claims {
-        id: obj.identifier().as_string().unwrap(),
+        id: obj.json_identifier(),
         model: obj.model().name().to_string(),
         exp
     };

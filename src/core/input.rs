@@ -34,3 +34,6 @@ pub(crate) enum Input {
     AtomicUpdate(AtomicUpdateType),
     RelationInput(RelationInputType),
 }
+
+unsafe impl Send for AtomicUpdateType { }
+unsafe impl Sync for AtomicUpdateType { }
