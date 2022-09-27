@@ -39,7 +39,7 @@ fn parse_sql_where_entry_array(
             Ok(sql_where_item(column_name, op, arr.join(", ").to_wrapped()))
         }
         None => {
-            Err(ActionError::input_type_error("array", key_path))
+            Err(ActionError::unexpected_input_type("array", key_path))
         }
     }
 }
@@ -185,7 +185,9 @@ pub(crate) fn build_where_from_identifier(model: &Model, graph: &Graph, identifi
 pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&JsonValue>, dialect: SQLDialect, key_path: &Vec<KeyPathItem>) -> Result<Option<String>, ActionError> {
     if let None = r#where { return Ok(None); }
     let r#where = r#where.unwrap();
-    if !r#where.is_object() { return Err(ActionError::invalid_query_input("'where' should be an object.")); }
+    if !r#where.is_object() {
+        return Err(ActionError::unexpected_input_type("object", key_path));
+    }
     let r#where = r#where.as_object().unwrap();
     let mut retval: Vec<String> = vec![];
     for (key, value) in r#where.iter() {
@@ -248,7 +250,52 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
     }
 }
 
-pub(crate) fn build_sql_query(
+pub(crate) fn build_order_by_input(
+    model: &Model,
+    graph: &Graph,
+    order_by: Option<&JsonValue>,
+    dialect: SQLDialect,
+    key_path: &Vec<KeyPathItem>
+) -> Result<Option<String>, ActionError> {
+    if let None = order_by { return Ok(None); }
+    let order_by = order_by.unwrap();
+    if !order_by.is_object() {
+        return Err(ActionError::unexpected_input_type("object", key_path));
+    }
+    let order_by = order_by.as_object().unwrap();
+    let mut retval: Vec<String> = vec![];
+    for (key, value) in order_by.iter() {
+        if let Some(field) = model.field(key) {
+            let column_name = field.column_name();
+            if let Some(str) = value.as_str() {
+                match str {
+                    "asc" => retval.push(format!("{} ASC", column_name)),
+                    "desc" => retval.push(format!("{} DESC", column_name)),
+                    _ => {
+                        let mut path = key_path.clone();
+                        path.push(KeyPathItem::String(key.clone()));
+                        return Err(ActionError::unexpected_input_value("\"asc\" or \"desc\"", key_path));
+                    }
+                }
+            } else {
+                let mut path = key_path.clone();
+                path.push(KeyPathItem::String(key.clone()));
+                return Err(ActionError::unexpected_input_type("\"asc\" or \"desc\"", key_path));
+            }
+        } else {
+            let mut path = key_path.clone();
+            path.push(KeyPathItem::String(key.clone()));
+            return Err(ActionError::unexpected_input_key(key, key_path));
+        }
+    }
+    if retval.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(retval.join(",")))
+    }
+}
+
+    pub(crate) fn build_sql_query(
     model: &Model,
     graph: &Graph,
     r#type: QueryPipelineType,
@@ -261,6 +308,11 @@ pub(crate) fn build_sql_query(
     if let Some(r#where) = args.r#where {
         if let Some(where_result) = build_where_input(model, graph, Some(r#where), dialect, &vec![KeyPathItem::String("where".to_string())])? {
             stmt.r#where(where_result);
+        }
+    }
+    if let Some(order_by) = args.order_by {
+        if let Some(order_by_result) = build_order_by_input(model, graph, Some(order_by), dialect, &vec![KeyPathItem::String("where".to_string())])? {
+            stmt.order_by(order_by_result);
         }
     }
     Ok(stmt.to_string(dialect))

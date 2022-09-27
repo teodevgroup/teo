@@ -32,12 +32,12 @@ impl JsonValueToSQLString for JsonValue {
             FieldType::String => if let Some(val) = self.as_str() {
                 Ok(val.to_sql_input())
             } else {
-                Err(ActionError::input_type_error("string".or_null(optional), path))
+                Err(ActionError::unexpected_input_type("string".or_null(optional), path))
             }
             FieldType::Bool => if let Some(val) = self.as_bool() {
                 Ok(val.to_sql_input())
             } else {
-                Err(ActionError::input_type_error("bool".or_null(optional), path))
+                Err(ActionError::unexpected_input_type("bool".or_null(optional), path))
             }
             FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 |
             FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 => if let Some(val) = self.as_i64() {
@@ -45,7 +45,7 @@ impl JsonValueToSQLString for JsonValue {
             } else if let Some(val) = self.as_u64() {
                 Ok(val.to_string())
             } else {
-                Err(ActionError::input_type_error("int".or_null(optional), path))
+                Err(ActionError::unexpected_input_type("int".or_null(optional), path))
             }
             FieldType::F32 | FieldType::F64 => if let Some(val) = self.as_f64() {
                 Ok(val.to_string())
@@ -54,16 +54,16 @@ impl JsonValueToSQLString for JsonValue {
             } else if let Some(val) = self.as_u64() {
                 Ok(val.to_string())
             } else {
-                Err(ActionError::input_type_error("float".or_null(optional), path))
+                Err(ActionError::unexpected_input_type("float".or_null(optional), path))
             }
             FieldType::Enum(enum_name) => if let Some(val) = self.as_str() {
                 if graph.r#enum(enum_name).contains(&val.to_string()) {
                     Ok(val.to_sql_input())
                 } else {
-                    Err(ActionError::input_type_error(enum_name.as_str().or_null(optional), path))
+                    Err(ActionError::unexpected_input_type(enum_name.as_str().or_null(optional), path))
                 }
             } else {
-                Err(ActionError::input_type_error(enum_name.as_str().or_null(optional), path))
+                Err(ActionError::unexpected_input_type(enum_name.as_str().or_null(optional), path))
             }
             FieldType::Vec(element_field) => if let Some(val) = self.as_array() {
                 let mut result: Vec<String> = vec![];
@@ -74,7 +74,7 @@ impl JsonValueToSQLString for JsonValue {
                 }
                 Ok(result.join(", ").wrap_in_array())
             } else {
-                Err(ActionError::input_type_error("array".or_null(optional), path))
+                Err(ActionError::unexpected_input_type("array".or_null(optional), path))
             }
             _ => { panic!() }
         }

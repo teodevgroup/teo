@@ -7,12 +7,18 @@ pub struct SQLSelectStatement<'a> {
     pub(crate) columns: Option<&'a Vec<&'a str>>,
     pub(crate) from: &'a str,
     pub(crate) r#where: Option<String>,
+    pub(crate) order_by: Option<String>,
 }
 
 impl<'a> SQLSelectStatement<'a> {
 
     pub fn r#where(&mut self, r#where: String) -> &mut Self {
         self.r#where = Some(r#where);
+        self
+    }
+
+    pub fn order_by(&mut self, order_by: String) -> &mut Self {
+        self.order_by = Some(order_by);
         self
     }
 }
@@ -25,6 +31,11 @@ impl<'a> ToSQLString for SQLSelectStatement<'a> {
         } else {
             "".to_owned()
         };
-        format!("SELECT {columns} from {}{}", self.from, r#where)
+        let order_by = if let Some(order_by) = &self.order_by {
+            " ORDER BY ".to_owned() + order_by
+        } else {
+            "".to_owned()
+        };
+        format!("SELECT {columns} from {}{}{}", self.from, r#where, order_by)
     }
 }

@@ -56,8 +56,9 @@ pub enum ActionErrorType {
     ModelNotFound,
     WrongIdentityModel,
     PropertySetterError,
-    InputTypeError,
+    UnexpectedInputType,
     UnexpectedInputKey,
+    UnexpectedInputValue,
 }
 
 impl ActionErrorType {
@@ -112,8 +113,9 @@ impl ActionErrorType {
             ActionErrorType::ModelNotFound => { 500 }
             ActionErrorType::WrongIdentityModel => { 401 }
             ActionErrorType::PropertySetterError => { 400 }
-            ActionErrorType::InputTypeError => { 400 }
+            ActionErrorType::UnexpectedInputType => { 400 }
             ActionErrorType::UnexpectedInputKey => { 400 }
+            ActionErrorType::UnexpectedInputValue => { 400 }
         }
     }
 }
@@ -542,9 +544,11 @@ impl ActionError {
         }
     }
 
-    pub fn input_type_error(expected: impl Into<String>, key_path: &Vec<KeyPathItem>) -> Self {
+    // new error types which should be used across the project
+
+    pub fn unexpected_input_type(expected: impl Into<String>, key_path: &Vec<KeyPathItem>) -> Self {
         ActionError {
-            r#type: ActionErrorType::InputTypeError,
+            r#type: ActionErrorType::UnexpectedInputType,
             message: "Input type invalid.".to_string(),
             errors: Some(hashmap!{key_path.to_dotted_string() => format!("Expect {}.", expected.into())}),
         }
@@ -553,8 +557,16 @@ impl ActionError {
     pub fn unexpected_input_key(unexpected: impl Into<String>, key_path: &Vec<KeyPathItem>) -> Self {
         ActionError {
             r#type: ActionErrorType::UnexpectedInputKey,
-            message: "Found unexpected key.".to_string(),
+            message: "Unexpected key found.".to_string(),
             errors: Some(hashmap!{key_path.to_dotted_string() => format!("Unexpected key '{}'.", unexpected.into())}),
+        }
+    }
+
+    pub fn unexpected_input_value(expected: impl Into<String>, key_path: &Vec<KeyPathItem>) -> Self {
+        ActionError {
+            r#type: ActionErrorType::UnexpectedInputValue,
+            message: "Unexpected value found.".to_string(),
+            errors: Some(hashmap!{key_path.to_dotted_string() => format!("Expected `{}'.", expected.into())}),
         }
     }
 }

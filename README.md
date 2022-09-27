@@ -35,12 +35,18 @@ The new generation server software.
 - SQL: Mutation: deletion **[DONE]**
 
 #### 0.0.25
+- SQL: Sorting **[DONE]**
+- SQL: Paging
+- SQL: Including
+- SQL: `Date` and `DateTime`
+
+#### 0.0.26
 - MongoDB update handle column key
 - Remove primary name from MongoDB connector's `save` method
 - Add `PresentWith` and `PresentWithout` to `Optionality` 
 - Fix token decoding and encoding after modifying `identifier`
 
-#### 0.0.26 - 0.0.50
+#### 0.0.27 - 0.0.50
 - Migration with SQL databases
 - Perform simple CRUD with SQL databases
 - Perform object update with SQL databases
