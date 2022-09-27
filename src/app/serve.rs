@@ -155,7 +155,13 @@ async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model, _iden
     let result = graph.find_many(model.name(), input, false).await;
     match result {
         Ok(results) => {
-            let count = graph.count(model.name(), input).await.unwrap();
+            let mut count_input = input.clone();
+            let count_input_obj = count_input.as_object_mut().unwrap();
+            count_input_obj.remove("skip");
+            count_input_obj.remove("take");
+            count_input_obj.remove("pageSize");
+            count_input_obj.remove("pageNumber");
+            let count = graph.count(model.name(), &count_input).await.unwrap();
             let mut meta = json!({"count": count});
             let page_size = input.get("pageSize");
             if page_size.is_some() {

@@ -295,7 +295,7 @@ pub(crate) fn build_order_by_input(
     }
 }
 
-    pub(crate) fn build_sql_query(
+pub(crate) fn build_sql_query(
     model: &Model,
     graph: &Graph,
     r#type: QueryPipelineType,
@@ -303,8 +303,7 @@ pub(crate) fn build_order_by_input(
     args: UserJsonArgs,
     dialect: SQLDialect,
 ) -> Result<String, ActionError> {
-    let column_for_count = vec!["COUNT(*)"];
-    let mut stmt = SQL::select(if r#type == QueryPipelineType::Count { Some(&column_for_count) } else { None }, model.table_name());
+    let mut stmt = SQL::select(None, model.table_name());
     if let Some(r#where) = args.r#where {
         if let Some(where_result) = build_where_input(model, graph, Some(r#where), dialect, &vec![KeyPathItem::String("where".to_string())])? {
             stmt.r#where(where_result);
@@ -324,7 +323,12 @@ pub(crate) fn build_order_by_input(
         let limit: u64 = if args.take.is_some() { args.take.unwrap() as u64 } else { 18446744073709551615 };
         stmt.limit(limit, skip);
     }
-    Ok(stmt.to_string(dialect))
+    let result = stmt.to_string(dialect);
+    if r#type == QueryPipelineType::Count {
+        Ok(format!("SELECT COUNT(*) FROM ({}) AS _", result))
+    } else {
+        Ok(result)
+    }
 }
 
 pub(crate) fn build_sql_query_from_json(

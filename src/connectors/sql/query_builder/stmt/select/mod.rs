@@ -43,7 +43,7 @@ impl<'a> ToSQLString for SQLSelectStatement<'a> {
             "".to_owned()
         };
         let limit = if let Some(limit) = &self.limit {
-            format!(" LIMIT {},{}", limit.0, limit.1)
+            format!(" LIMIT {},{}", limit.1, limit.0)
         } else {
             "".to_owned()
         };
