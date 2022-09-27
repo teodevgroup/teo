@@ -24,14 +24,15 @@ The new generation server software.
 - Property **[DONE]**
 
 #### 0.0.23
-- Migration: insert/delete columns for most simple cases **[DONE]**
-- Mutation: most simple inserts **[DONE]**
-- Query: most simple queries **[DONE]**
+- SQL: Migration: insert/delete columns for most simple cases **[DONE]**
+- SQL: Mutation: most simple inserts **[DONE]**
+- SQL: Query: most simple queries **[DONE]**
 
 #### 0.0.24
-- Mutation: most simple updates **[DONE]**
-- Query: find many and find one **[DONE]**
-- Mutation: deletion **[DONE]**
+- SQL: Mutation: most simple updates **[DONE]**
+- SQL: Query: find many and find one **[DONE]**
+- SQL: Query: count **[DONE]**
+- SQL: Mutation: deletion **[DONE]**
 
 #### 0.0.25
 - MongoDB update handle column key

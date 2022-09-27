@@ -1,5 +1,6 @@
 use crate::connectors::sql::query_builder::stmt::alter_table::SQLAlterTableStatement;
 use crate::connectors::sql::query_builder::stmt::create::SQLCreateStatement;
+use crate::connectors::sql::query_builder::stmt::delete_from::SQLDeleteFromStatement;
 use crate::connectors::sql::query_builder::stmt::describe::SQLDescribeStatement;
 use crate::connectors::sql::query_builder::stmt::drop::SQLDropStatement;
 use crate::connectors::sql::query_builder::stmt::insert_into::SQLInsertIntoStatement;
@@ -17,6 +18,7 @@ pub mod describe;
 pub mod alter_table;
 pub mod select;
 pub mod update;
+pub mod delete_from;
 
 pub struct SQL { }
 
@@ -49,11 +51,15 @@ impl SQL {
         SQLInsertIntoStatement { table, values: vec![] }
     }
 
-    pub fn select<'a>(columns: Option<&'a Vec<&'a str>>, from: &'a str) -> SQLSelectStatement<'a> {
-        SQLSelectStatement { columns, from, r#where: None }
-    }
-
     pub fn update(table: &str) -> SQLUpdateStatement {
         SQLUpdateStatement { table, values: vec![], r#where: "" }
+    }
+
+    pub fn delete_from(from: &str) -> SQLDeleteFromStatement {
+        SQLDeleteFromStatement { from, r#where: None }
+    }
+
+    pub fn select<'a>(columns: Option<&'a Vec<&'a str>>, from: &'a str) -> SQLSelectStatement<'a> {
+        SQLSelectStatement { columns, from, r#where: None }
     }
 }

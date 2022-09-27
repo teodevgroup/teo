@@ -214,7 +214,19 @@ impl Connector for SQLConnector {
     }
 
     async fn delete_object(&self, object: &Object) -> Result<(), ActionError> {
-        todo!()
+        if object.inner.is_new.load(Ordering::SeqCst) {
+            return Err(ActionError::object_is_not_saved());
+        }
+        let model = object.model();
+        let r#where = build_where_from_identifier(model, object.graph(), &object.identifier(), self.dialect);
+        let stmt = SQL::delete_from(model.table_name()).r#where(r#where).to_string(self.dialect);
+        let result = self.pool.execute(stmt.as_str()).await;
+        if result.is_err() {
+            println!("{:?}", result.err().unwrap());
+            return Err(ActionError::unknown_database_write_error());
+        } else {
+            Ok(())
+        }
     }
 
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
