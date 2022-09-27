@@ -315,6 +315,15 @@ pub(crate) fn build_order_by_input(
             stmt.order_by(order_by_result);
         }
     }
+    if args.page_size.is_some() && args.page_number.is_some() {
+        let skip: u64 = ((args.page_number.unwrap() - 1) * args.page_size.unwrap()) as u64;
+        let limit: u64 = args.page_size.unwrap() as u64;
+        stmt.limit(limit, skip);
+    } else if args.skip.is_some() || args.take.is_some() {
+        let skip: u64 = if args.skip.is_some() { args.skip.unwrap() as u64 } else { 0 };
+        let limit: u64 = if args.take.is_some() { args.take.unwrap() as u64 } else { 18446744073709551615 };
+        stmt.limit(limit, skip);
+    }
     Ok(stmt.to_string(dialect))
 }
 
