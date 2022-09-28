@@ -235,10 +235,11 @@ impl SQLConnector {
     }
 
     #[async_recursion]
-    async fn perform_query(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, key_path: &Vec<KeyPathItem>, additional_where: Option<&str>) -> Result<Vec<Object>, ActionError> {
+    async fn perform_query(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, key_path: &Vec<KeyPathItem>, additional_where: Option<String>) -> Result<Vec<Object>, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
-        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, self.dialect, None, key_path)?;
+        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, self.dialect, additional_where, key_path)?;
+        println!("see sql query: {}", sql_query);
         let reverse = has_negative_take(finder);
         let results = self.pool.fetch_all(&*sql_query).await;
         let mut retval: Vec<Object> = vec![];
@@ -306,7 +307,7 @@ impl SQLConnector {
                                         format!("(VALUES {})", pairs)
                                     };
                                     let relation_where = format!("{} IN {}", before_in, after_in);
-                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(&relation_where)).await?;
+                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where)).await?;
                                     println!("see included: {:?}", included);
                                     for o in included {
                                         let owners = retval.iter().filter(|r| {
@@ -319,7 +320,6 @@ impl SQLConnector {
                                             true
                                         });
                                         for owner in owners {
-                                            println!("see owner: {:?}", owner);
                                             if owner.inner.relation_query_map.lock().unwrap().get_mut(relation_name).is_none() {
                                                 owner.inner.relation_query_map.lock().unwrap().insert(relation_name.to_string(), vec![]);
                                             }

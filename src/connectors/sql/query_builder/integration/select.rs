@@ -302,7 +302,7 @@ pub(crate) fn build_sql_query(
     mutation_mode: bool,
     args: UserJsonArgs,
     dialect: SQLDialect,
-    additional_where: Option<&str>,
+    additional_where: Option<String>,
     key_path: &Vec<KeyPathItem>,
 ) -> Result<String, ActionError> {
     let mut stmt = SQL::select(None, model.table_name());
@@ -315,7 +315,7 @@ pub(crate) fn build_sql_query(
     }
     if let Some(additional_where) = additional_where {
         if stmt.r#where.is_some() {
-            stmt.r#where(stmt.r#where.as_ref().unwrap().clone() + additional_where);
+            stmt.r#where(stmt.r#where.as_ref().unwrap().clone() + &additional_where);
         } else {
             stmt.r#where(additional_where.to_string());
         }
@@ -351,7 +351,7 @@ pub(crate) fn build_sql_query_from_json(
     mutation_mode: bool,
     json_value: &JsonValue,
     dialect: SQLDialect,
-    additional_where: Option<&str>,
+    additional_where: Option<String>,
     key_path: &Vec<KeyPathItem>,
 ) -> Result<String, ActionError> {
     let args = user_json_args(model, graph, r#type, mutation_mode, json_value)?;
