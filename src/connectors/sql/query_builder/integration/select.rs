@@ -302,23 +302,28 @@ pub(crate) fn build_sql_query(
     mutation_mode: bool,
     args: UserJsonArgs,
     dialect: SQLDialect,
-    additional_where: Option<String>,
+    additional_where: Option<&str>,
+    key_path: &Vec<KeyPathItem>,
 ) -> Result<String, ActionError> {
     let mut stmt = SQL::select(None, model.table_name());
     if let Some(r#where) = args.r#where {
-        if let Some(where_result) = build_where_input(model, graph, Some(r#where), dialect, &vec![KeyPathItem::String("where".to_string())])? {
+        let mut path = key_path.clone();
+        path.push(KeyPathItem::String("where".to_string()));
+        if let Some(where_result) = build_where_input(model, graph, Some(r#where), dialect, &path)? {
             stmt.r#where(where_result);
         }
     }
     if let Some(additional_where) = additional_where {
         if stmt.r#where.is_some() {
-            stmt.r#where(stmt.r#where.as_ref().unwrap().clone() + &additional_where);
+            stmt.r#where(stmt.r#where.as_ref().unwrap().clone() + additional_where);
         } else {
-            stmt.r#where(additional_where);
+            stmt.r#where(additional_where.to_string());
         }
     }
     if let Some(order_by) = args.order_by {
-        if let Some(order_by_result) = build_order_by_input(model, graph, Some(order_by), dialect, &vec![KeyPathItem::String("where".to_string())])? {
+        let mut path = key_path.clone();
+        path.push(KeyPathItem::String("orderBy".to_string()));
+        if let Some(order_by_result) = build_order_by_input(model, graph, Some(order_by), dialect, &path)? {
             stmt.order_by(order_by_result);
         }
     }
@@ -346,8 +351,9 @@ pub(crate) fn build_sql_query_from_json(
     mutation_mode: bool,
     json_value: &JsonValue,
     dialect: SQLDialect,
-    additional_where: Option<String>,
+    additional_where: Option<&str>,
+    key_path: &Vec<KeyPathItem>,
 ) -> Result<String, ActionError> {
     let args = user_json_args(model, graph, r#type, mutation_mode, json_value)?;
-    build_sql_query(model, graph, r#type, mutation_mode, args, dialect, additional_where)
+    build_sql_query(model, graph, r#type, mutation_mode, args, dialect, additional_where, key_path)
 }
