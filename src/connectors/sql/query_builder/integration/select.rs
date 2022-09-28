@@ -303,9 +303,21 @@ pub(crate) fn build_sql_query(
     args: UserJsonArgs,
     dialect: SQLDialect,
     additional_where: Option<String>,
+    additional_left_join: Option<String>,
     key_path: &Vec<KeyPathItem>,
 ) -> Result<String, ActionError> {
-    let mut stmt = SQL::select(None, model.table_name());
+    let table_name = if additional_left_join.is_some() {
+        model.table_name().to_string() + " AS t"
+    } else {
+        model.table_name().to_string()
+    };
+    let mut columns: Vec<String> = vec![];
+    if additional_left_join.is_some() {
+        columns = model.save_keys().iter().map(|k| format!("t.{} AS {}", k, k)).collect::<Vec<String>>();
+    }
+    let column_refs = columns.iter().map(|c| c.as_str()).collect::<Vec<&str>>();
+
+    let mut stmt = SQL::select(if columns.is_empty() { None } else { Some(&column_refs) }, &table_name);
     if let Some(r#where) = args.r#where {
         let mut path = key_path.clone();
         path.push(KeyPathItem::String("where".to_string()));
@@ -319,6 +331,9 @@ pub(crate) fn build_sql_query(
         } else {
             stmt.r#where(additional_where.to_string());
         }
+    }
+    if let Some(additional_left_join) = additional_left_join {
+        stmt.left_join(additional_left_join);
     }
     if let Some(order_by) = args.order_by {
         let mut path = key_path.clone();
@@ -352,8 +367,9 @@ pub(crate) fn build_sql_query_from_json(
     json_value: &JsonValue,
     dialect: SQLDialect,
     additional_where: Option<String>,
+    additional_left_join: Option<String>,
     key_path: &Vec<KeyPathItem>,
 ) -> Result<String, ActionError> {
     let args = user_json_args(model, graph, r#type, mutation_mode, json_value)?;
-    build_sql_query(model, graph, r#type, mutation_mode, args, dialect, additional_where, key_path)
+    build_sql_query(model, graph, r#type, mutation_mode, args, dialect, additional_where, additional_left_join, key_path)
 }

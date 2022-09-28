@@ -69,47 +69,53 @@ impl SQLConnector {
         migrate(dialect, pool, models).await
     }
 
-    async fn row_to_object(&self, row: &AnyRow, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>) -> Result<(), ActionError> {
+    async fn row_to_object(&self, row: &AnyRow, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>, left_join: bool) -> Result<(), ActionError> {
         for column in row.columns() {
             let column_name = column.name();
+            let result_name = if left_join {
+                // "t.".to_owned() + column_name
+                column_name.to_owned()
+            } else {
+                column_name.to_owned()
+            };
             if let Some(field) = object.model().field_with_column_name(column_name) {
                 if field.r#type().is_bool() {
-                    let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
+                    let any_value: AnyValueRef = row.try_get_raw(result_name.as_str()).unwrap();
                     if !any_value.is_null() {
-                        let bool_value: bool = row.get(column_name);
+                        let bool_value: bool = row.get(result_name.as_str());
                         object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::Bool(bool_value));
                     }
                 } else if field.r#type().is_int() {
-                    let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
+                    let any_value: AnyValueRef = row.try_get_raw(result_name.as_str()).unwrap();
                     if !any_value.is_null() {
-                        let i64_value: i64 = row.get(column_name);
+                        let i64_value: i64 = row.get(result_name.as_str());
                         object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::number_from_i64(i64_value, field.r#type()));
                     }
                 } else if field.r#type().is_float() {
-                    let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
+                    let any_value: AnyValueRef = row.try_get_raw(result_name.as_str()).unwrap();
                     if !any_value.is_null() {
-                        let f64_value: f64 = row.get(column_name);
+                        let f64_value: f64 = row.get(result_name.as_str());
                         object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::number_from_f64(f64_value, field.r#type()));
                     }
                 } else if field.r#type().is_string() {
-                    let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
+                    let any_value: AnyValueRef = row.try_get_raw(result_name.as_str()).unwrap();
                     if !any_value.is_null() {
-                        let string_value: String = row.get(column_name);
+                        let string_value: String = row.get(result_name.as_str());
                         object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::String(string_value));
                     }
                 } else if field.r#type().is_date() {
-                    let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
+                    let any_value: AnyValueRef = row.try_get_raw(result_name.as_str()).unwrap();
                     #[cfg(not(feature = "data-source-mssql"))]
                     if !any_value.is_null() {
-                        let naive_date: NaiveDate = row.get(column_name);
+                        let naive_date: NaiveDate = row.get(result_name.as_str());
                         let date: Date<Utc> = Date::from_utc(naive_date, Utc);
                         object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::Date(date));
                     }
                 } else if field.r#type().is_datetime() {
-                    let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
+                    let any_value: AnyValueRef = row.try_get_raw(result_name.as_str()).unwrap();
                     #[cfg(not(feature = "data-source-mssql"))]
                     if !any_value.is_null() {
-                        let datetime_value: DateTime<Utc> = row.get(column_name);
+                        let datetime_value: DateTime<Utc> = row.get(result_name.as_str());
                         object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::DateTime(datetime_value));
                     }
                 }
@@ -219,7 +225,7 @@ impl SQLConnector {
             Ok(row) => {
                 match row {
                     Some(row) => {
-                        self.row_to_object(&row, &object, None, None).await?;
+                        self.row_to_object(&row, &object, None, None, false).await?;
                         Ok(())
                     }
                     None => {
@@ -235,10 +241,10 @@ impl SQLConnector {
     }
 
     #[async_recursion]
-    async fn perform_query(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, key_path: &Vec<KeyPathItem>, additional_where: Option<String>) -> Result<Vec<Object>, ActionError> {
+    async fn perform_query(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, key_path: &Vec<KeyPathItem>, additional_where: Option<String>, additional_left_join: Option<String>) -> Result<Vec<Object>, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
-        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, self.dialect, additional_where, key_path)?;
+        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, self.dialect, additional_where, additional_left_join.clone(), key_path)?;
         println!("see sql query: {}", sql_query);
         let reverse = has_negative_take(finder);
         let results = self.pool.fetch_all(&*sql_query).await;
@@ -247,7 +253,7 @@ impl SQLConnector {
             Ok(rows) => {
                 for row in &rows {
                     let obj = graph.new_object(model.name())?;
-                    self.row_to_object(&row, &obj, select, include).await?;
+                    self.row_to_object(&row, &obj, select, include, additional_left_join.is_some()).await?;
                     if reverse {
                         retval.insert(0, obj);
                     } else {
@@ -307,7 +313,7 @@ impl SQLConnector {
                                         format!("(VALUES {})", pairs)
                                     };
                                     let relation_where = format!("{} IN {}", before_in, after_in);
-                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where)).await?;
+                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), None).await?;
                                     println!("see included: {:?}", included);
                                     for o in included {
                                         let owners = retval.iter().filter(|r| {
@@ -327,7 +333,65 @@ impl SQLConnector {
                                         }
                                     }
                                 } else { // with join tables
-
+                                    let relation_model = graph.model(&relation.model).unwrap();
+                                    let relation_model_table_name = relation_model.table_name();
+                                    let through_model = graph.model(&relation.through.as_ref().unwrap()).unwrap();
+                                    let through_table_name = through_model.table_name();
+                                    let through_relation = through_model.relation(relation.references.get(0).unwrap()).unwrap();
+                                    let mut join_parts: Vec<String> = vec![];
+                                    for (index, field_name) in through_relation.fields().iter().enumerate() {
+                                        let reference_name = through_relation.references().get(index).unwrap();
+                                        join_parts.push(format!("t.{} = j.{}", reference_name, field_name));
+                                    }
+                                    let joins = join_parts.join(" AND ");
+                                    let left_join = format!("{} AS j ON {}", through_table_name, joins);
+                                    let this_relation_on_join_table = through_model.relation(relation.fields.get(0).unwrap()).unwrap();
+                                    let left_fields = &this_relation_on_join_table.references;
+                                    let right_fields = &this_relation_on_join_table.fields;
+                                    let before_in: String = if right_fields.len() == 1 {
+                                        "j.".to_owned() + right_fields.get(0).unwrap()
+                                    } else {
+                                        right_fields.iter().map(|f| format!("j.{}", f)).collect::<Vec<String>>().join(",").to_wrapped()
+                                    };
+                                    let after_in: String = if right_fields.len() == 1 {
+                                        // (?,?,?,?,?)
+                                        let field_name = left_fields.get(0).unwrap();
+                                        // let column_name = relation_model.field(field_name).unwrap().column_name();
+                                        let values: Vec<String> = retval.iter().map(|o| {
+                                            let result = o.get_value(field_name).unwrap().to_string(self.dialect);
+                                            println!("see retval: {:?}", &retval);
+                                            result
+                                        }).collect();
+                                        values.join(",").to_wrapped()
+                                    } else {
+                                        // (VALUES (?,?),(?,?))
+                                        let pairs = retval.iter().map(|o| {
+                                            left_fields.iter().map(|f| o.get_value(f).unwrap().to_string(self.dialect)).collect::<Vec<String>>().join(",").to_wrapped()
+                                        }).collect::<Vec<String>>().join(",");
+                                        format!("(VALUES {})", pairs)
+                                    };
+                                    let relation_where = format!("{} IN {}", before_in, after_in);
+                                    let mut path = key_path.clone();
+                                    path.push(KeyPathItem::String(relation_name.clone()));
+                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), Some(left_join)).await?;
+                                    println!("see included {:?}", included);
+                                    for o in included {
+                                        let owners = retval.iter().filter(|r| {
+                                            for (index, left_field) in left_fields.iter().enumerate() {
+                                                let right_field = &right_fields[index];
+                                                if o.get_value(right_field) != r.get_value(left_field) {
+                                                    return false;
+                                                }
+                                            }
+                                            true
+                                        });
+                                        for owner in owners {
+                                            if owner.inner.relation_query_map.lock().unwrap().get_mut(relation_name).is_none() {
+                                                owner.inner.relation_query_map.lock().unwrap().insert(relation_name.to_string(), vec![]);
+                                            }
+                                            owner.inner.relation_query_map.lock().unwrap().get_mut(relation_name).unwrap().push(o.clone());
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -375,7 +439,7 @@ impl Connector for SQLConnector {
     }
 
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
-        let objects = self.perform_query(graph, model, finder, mutation_mode, &vec![], None).await?;
+        let objects = self.perform_query(graph, model, finder, mutation_mode, &vec![], None, None).await?;
         if objects.is_empty() {
             Err(ActionError::object_not_found())
         } else {
@@ -384,11 +448,11 @@ impl Connector for SQLConnector {
     }
 
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
-        self.perform_query(graph, model, finder, mutation_mode, &vec![], None).await
+        self.perform_query(graph, model, finder, mutation_mode, &vec![], None, None).await
     }
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
-        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Count, false, finder, self.dialect, None, &vec![])?;
+        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Count, false, finder, self.dialect, None, None, &vec![])?;
         let result = self.pool.fetch_one(&*sql_query).await;
         match result {
             Ok(row) => {

@@ -7,11 +7,17 @@ pub struct SQLSelectStatement<'a> {
     pub(crate) columns: Option<&'a Vec<&'a str>>,
     pub(crate) from: &'a str,
     pub(crate) r#where: Option<String>,
+    pub(crate) left_join: Option<String>,
     pub(crate) order_by: Option<String>,
     pub(crate) limit: Option<(u64, u64)>,
 }
 
 impl<'a> SQLSelectStatement<'a> {
+
+    pub fn left_join(&mut self, left_join: String) -> &mut Self {
+        self.left_join = Some(left_join);
+        self
+    }
 
     pub fn r#where(&mut self, r#where: String) -> &mut Self {
         self.r#where = Some(r#where);
@@ -32,6 +38,11 @@ impl<'a> SQLSelectStatement<'a> {
 impl<'a> ToSQLString for SQLSelectStatement<'a> {
     fn to_string(&self, _dialect: SQLDialect) -> String {
         let columns = if self.columns.is_none() { "*".to_owned() } else { self.columns.unwrap().join(", ") };
+        let left_join = if let Some(left_join) = &self.left_join {
+            " LEFT JOIN ".to_owned() + left_join
+        } else {
+            "".to_owned()
+        };
         let r#where = if let Some(r#where) = &self.r#where {
             " WHERE ".to_owned() + r#where
         } else {
@@ -47,6 +58,6 @@ impl<'a> ToSQLString for SQLSelectStatement<'a> {
         } else {
             "".to_owned()
         };
-        format!("SELECT {columns} from {}{}{}{}", self.from, r#where, order_by, limit)
+        format!("SELECT {columns} from {}{}{}{}{}", self.from, left_join, r#where, order_by, limit)
     }
 }
