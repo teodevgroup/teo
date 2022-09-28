@@ -20,6 +20,7 @@ use crate::core::connector::Connector;
 use crate::core::error::ActionError;
 use crate::core::input::AtomicUpdateType;
 use crate::core::input_decoder::str_to_target_type;
+use crate::core::key_path::KeyPathItem;
 use crate::core::save_session::SaveSession;
 use crate::prelude::{Graph, Object, Value};
 
@@ -229,6 +230,33 @@ impl SQLConnector {
             }
         }
     }
+
+    async fn perform_query(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, key_path: &Vec<KeyPathItem>) -> Result<Vec<Object>, ActionError> {
+        let select = finder.get("select");
+        let include = finder.get("include");
+        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, self.dialect, None)?;
+        let reverse = has_negative_take(finder);
+        let results = self.pool.fetch_all(&*sql_query).await;
+        let mut retval: Vec<Object> = vec![];
+        match results {
+            Ok(rows) => {
+                for row in &rows {
+                    let obj = graph.new_object(model.name())?;
+                    self.row_to_object(&row, &obj, select, include)?;
+                    if reverse {
+                        retval.insert(0, obj);
+                    } else {
+                        retval.push(obj);
+                    }
+                }
+            }
+            Err(err) => {
+                println!("{:?}", err);
+                return Err(ActionError::unknown_database_find_error());
+            }
+        }
+        Ok(retval)
+    }
 }
 
 #[async_trait]
@@ -259,55 +287,16 @@ impl Connector for SQLConnector {
     }
 
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
-        let select = finder.get("select");
-        let include = finder.get("include");
-        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder, self.dialect, None)?;
-        let result = self.pool.fetch_optional(&*sql_query).await;
-        match result {
-            Ok(row) => {
-                match row {
-                    Some(row) => {
-                        let obj = graph.new_object(model.name())?;
-                        self.row_to_object(&row, &obj, select, include)?;
-                        Ok(obj)
-                    }
-                    None => {
-                        Err(ActionError::object_not_found())
-                    }
-                }
-            }
-            Err(err) => {
-                println!("{:?}", err);
-                Err(ActionError::unknown_database_find_unique_error())
-            }
+        let objects = self.perform_query(graph, model, finder, mutation_mode, &vec![]).await?;
+        if objects.is_empty() {
+            Err(ActionError::object_not_found())
+        } else {
+            Ok(objects.get(0).unwrap().clone())
         }
     }
 
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
-        let select = finder.get("select");
-        let include = finder.get("include");
-        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, self.dialect, None)?;
-        let reverse = has_negative_take(finder);
-        let results = self.pool.fetch_all(&*sql_query).await;
-        let mut retval: Vec<Object> = vec![];
-        match results {
-            Ok(rows) => {
-                for row in &rows {
-                    let obj = graph.new_object(model.name())?;
-                    self.row_to_object(&row, &obj, select, include)?;
-                    if reverse {
-                        retval.insert(0, obj);
-                    } else {
-                        retval.push(obj);
-                    }
-                }
-            }
-            Err(err) => {
-                println!("{:?}", err);
-                return Err(ActionError::unknown_database_find_error());
-            }
-        }
-        Ok(retval)
+        self.perform_query(graph, model, finder, mutation_mode, &vec![]).await
     }
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
