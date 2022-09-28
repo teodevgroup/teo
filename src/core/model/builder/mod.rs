@@ -395,7 +395,7 @@ impl ModelBuilder {
     fn save_keys(&self) -> Vec<String> {
         let mut fields: Vec<String> = vec![];
         fields.extend(self.field_save_keys());
-        fields.extend(self.relation_save_keys());
+        // fields.extend(self.relation_save_keys());
         fields
     }
 

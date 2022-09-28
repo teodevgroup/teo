@@ -14,6 +14,7 @@ use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::connectors::sql::migration::migrate::migrate;
 use crate::connectors::sql::query_builder::dialect::SQLDialect;
 use crate::connectors::sql::query_builder::integration::select::{build_sql_query_from_json, build_where_from_identifier};
+use crate::connectors::sql::query_builder::integration::value_encoder::ToWrapped;
 use crate::connectors::sql::query_builder::stmt::SQL;
 use crate::connectors::sql::query_builder::traits::to_sql_string::ToSQLString;
 use crate::connectors::sql::save_session::SQLSaveSession;
@@ -158,10 +159,11 @@ impl SQLConnector {
         let field_names = object.keys_for_save();
         let mut values: Vec<(&str, String)> = vec![];
         for field_name in field_names {
-            let field = model.field(field_name).unwrap();
-            let column_name = field.column_name();
-            let val = object.get_value(field_name).unwrap();
-            values.push((column_name, val.to_string(self.dialect)));
+            if let Some(field) = model.field(field_name) {
+                let column_name = field.column_name();
+                let val = object.get_value(field_name).unwrap();
+                values.push((column_name, val.to_string(self.dialect)));
+            }
         }
         let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();
         let stmt = SQL::insert_into(model.table_name()).values(value_refs).to_string(self.dialect);
@@ -282,8 +284,45 @@ impl SQLConnector {
                                     let right_fields = &relation.references;
                                     let mut path = key_path.clone();
                                     path.push(KeyPathItem::String(relation_name.clone()));
-                                    let relation_where = Some("");
-                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, relation_where).await?;
+                                    // todo: transform to column name
+                                    let before_in: String = if right_fields.len() == 1 {
+                                        right_fields.get(0).unwrap().to_string()
+                                    } else {
+                                        right_fields.join(",").to_wrapped()
+                                    };
+                                    let after_in: String = if right_fields.len() == 1 {
+                                        // (?,?,?,?,?)
+                                        let field_name = left_fields.get(0).unwrap();
+                                        // let column_name = relation_model.field(field_name).unwrap().column_name();
+                                        let values: Vec<String> = retval.iter().map(|o| {
+                                            o.get_value(field_name).unwrap().to_string(self.dialect)
+                                        }).collect();
+                                        values.join(",").to_wrapped()
+                                    } else {
+                                        // (VALUES (?,?),(?,?))
+                                        let pairs = retval.iter().map(|o| {
+                                            left_fields.iter().map(|f| o.get_value(f).unwrap().to_string(self.dialect)).collect::<Vec<String>>().join(",").to_wrapped()
+                                        }).collect::<Vec<String>>().join(",");
+                                        format!("(VALUES {})", pairs)
+                                    };
+                                    let relation_where = format!("{} IN {}", before_in, after_in);
+                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(&relation_where)).await?;
+                                    for o in included {
+                                        let owner = retval.iter().find(|r| {
+                                            for (index, left_field) in left_fields.iter().enumerate() {
+                                                let right_field = &right_fields[index];
+                                                if o.get_value(left_field) != r.get_value(right_field) {
+                                                    return false;
+                                                }
+                                            }
+                                            true
+                                        });
+                                        if let Some(owner) = owner {
+                                            owner.inner.relation_query_map.lock().unwrap().get_mut(relation_name).unwrap().push(o);
+                                        } else {
+                                            panic!("Owner cannot be found.")
+                                        }
+                                    }
                                 } else { // with join tables
 
                                 }
