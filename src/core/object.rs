@@ -38,7 +38,7 @@ impl Object {
             is_deleted: AtomicBool::new(false),
             inside_before_save_callback: AtomicBool::new(false),
             inside_write_callback: AtomicBool::new(false),
-            selected_fields: Arc::new(Mutex::new(Vec::new())),
+            selected_fields: Arc::new(AsyncMutex::new(Vec::new())),
             modified_fields: Arc::new(Mutex::new(HashSet::new())),
             previous_value_map: Arc::new(AsyncMutex::new(HashMap::new())),
             value_map: Arc::new(Mutex::new(HashMap::new())),
@@ -192,7 +192,7 @@ impl Object {
         }
     }
 
-    pub fn set_select(&self, select: Option<&JsonValue>) -> Result<(), ActionError> {
+    pub async fn set_select(&self, select: Option<&JsonValue>) -> Result<(), ActionError> {
         if select.is_none() {
             return Ok(());
         }
@@ -226,7 +226,7 @@ impl Object {
                     }
                 }
             });
-            *self.inner.selected_fields.lock().unwrap() = result;
+            *self.inner.selected_fields.lock().await = result;
             return Ok(());
         } else {
             // true
@@ -242,7 +242,7 @@ impl Object {
                     }
                 }
             });
-            *self.inner.selected_fields.lock().unwrap() = result;
+            *self.inner.selected_fields.lock().await = result;
             return Ok(());
         }
     }
@@ -339,11 +339,13 @@ impl Object {
                 self.link_connect(&new_object, relation, session.clone()).await?;
             }
             CreateOrConnect(entry) => {
+                println!("Comes here");
                 let r#where = entry.as_object().unwrap().get("where").unwrap();
                 let create = entry.as_object().unwrap().get("create").unwrap();
                 let unique_result = graph.find_unique(&relation.model, &json!({"where": r#where}), true).await;
                 match unique_result {
                     Ok(exist_object) => {
+                        println!("Exist object {:?}", exist_object);
                         self.link_connect(&exist_object, relation, session.clone()).await?;
                         exist_object._save(session.clone(), false).await?;
                         self.link_connect(&exist_object, relation, session.clone()).await?;
@@ -352,8 +354,11 @@ impl Object {
                         let new_obj = graph.new_object(&relation.model)?;
                         new_obj.set_json(create).await?;
                         self.link_connect(&new_obj, relation, session.clone()).await?;
+                        println!("let new object save");
                         new_obj._save(session.clone(), false).await?;
+                        println!("new object saved");
                         self.link_connect(&new_obj, relation, session.clone()).await?;
+                        println!("linked to self");
                     }
                 }
             }
@@ -449,38 +454,27 @@ impl Object {
                 for (index, reference) in relation.references.iter().enumerate() {
                     let field_name = relation.fields.get(index).unwrap();
                     if relation.is_vec {
-                        // if relation is vec, othersize must have saved the value
+                        // if relation is vec, otherwise must have saved the value
                         let local_value = self.get_value(field_name)?;
                         if !local_value.is_null() {
                             obj.set_value(reference, local_value.clone())?;
                         }
                     } else {
-                        // get foreign relation
-                        if let Some(foreign_relation) = obj.model().relations().iter().find(|r| {
-                            r.fields == relation.references && r.references == relation.fields
-                        }) {
-                            if foreign_relation.is_vec {
-                                let foreign_value = obj.get_value(reference)?;
-                                if !foreign_value.is_null() {
-                                    self.set_value(field_name, foreign_value.clone())?;
+                        // array are removed here, see if bug happens
+                        // write on their side since it's primary
+                        for item in &self.model().primary_index().unwrap().items {
+                            if &item.field_name == field_name {
+                                let local_value = self.get_value(field_name)?;
+                                if !local_value.is_null() {
+                                    obj.set_value(reference, local_value.clone())?;
                                 }
-                            } else {
-                                // both sides are singular
-                                for item in &self.model().primary_index().unwrap().items {
-                                    if &item.field_name == field_name {
-                                        let local_value = self.get_value(field_name)?;
-                                        if !local_value.is_null() {
-                                            obj.set_value(reference, local_value.clone())?;
-                                        }
-                                        break;
-                                    }
-                                }
-                                // write on our side since it's not primary
-                                let foreign_value = obj.get_value(reference)?;
-                                if !foreign_value.is_null() {
-                                    self.set_value(field_name, foreign_value.clone())?;
-                                }
+                                break;
                             }
+                        }
+                        // write on our side since it's not primary
+                        let foreign_value = obj.get_value(reference)?;
+                        if !foreign_value.is_null() {
+                            self.set_value(field_name, foreign_value.clone())?;
                         }
                     }
                 }
@@ -565,6 +559,7 @@ impl Object {
         if !no_recursive {
             for relation in self.model().relations() {
                 if self.relation_that_object_save_first(relation) {
+                    println!("That object save first");
                     let name = &relation.name;
                     let map = self.inner.relation_mutation_map.lock().unwrap();
                     let vec_option = map.get(name);
@@ -572,6 +567,7 @@ impl Object {
                         None => {},
                         Some(vec) => {
                             for manipulation in vec {
+                                println!("Handle manipulation here");
                                 self.handle_manipulation(relation, manipulation, session.clone()).await?;
                             }
                         }
@@ -647,7 +643,7 @@ impl Object {
     }
 
     pub async fn to_json(&self, purpose: Intent) -> JsonValue {
-        let select_list = self.inner.selected_fields.lock().unwrap();
+        let select_list = self.inner.selected_fields.lock().await;
         let select_filter = if select_list.is_empty() { false } else { true };
         let mut map: Map<String, JsonValue> = Map::new();
         let keys = self.model().output_keys();
@@ -667,7 +663,13 @@ impl Object {
                     }
                 }
                 if !value.is_null() {
-                    map.insert(key.to_string(), value.to_json_value());
+                    if value.is_object() {
+                        map.insert(key.to_string(), value.to_object_json_value(purpose).await.unwrap());
+                    } else if value.is_object_vec() {
+                        map.insert(key.to_string(), value.to_object_vec_json_value(purpose).await.unwrap());
+                    } else {
+                        map.insert(key.to_string(), value.to_json_value());
+                    }
                 }
             }
         }
@@ -958,7 +960,7 @@ impl Object {
 
     pub async fn refreshed(&self, include: Option<&JsonValue>, select: Option<&JsonValue>) -> Result<Object, ActionError> {
         if self.model().r#virtual() {
-            self.set_select(select).unwrap();
+            self.set_select(select).await.unwrap();
             return Ok(self.clone())
         }
         let graph = self.graph();
@@ -1103,7 +1105,7 @@ pub(crate) struct ObjectInner {
     pub(crate) is_deleted: AtomicBool,
     pub(crate) inside_before_save_callback: AtomicBool,
     pub(crate) inside_write_callback: AtomicBool,
-    pub(crate) selected_fields: Arc<Mutex<Vec<String>>>,
+    pub(crate) selected_fields: Arc<AsyncMutex<Vec<String>>>,
     pub(crate) modified_fields: Arc<Mutex<HashSet<String>>>,
     pub(crate) previous_value_map: Arc<AsyncMutex<HashMap<String, Value>>>,
     pub(crate) value_map: Arc<Mutex<HashMap<String, Value>>>,

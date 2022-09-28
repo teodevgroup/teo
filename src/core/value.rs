@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::ops::{Add, Div, Mul, Sub, Rem};
+use async_recursion::async_recursion;
 
 use chrono::prelude::{Date, DateTime, Utc};
 use chrono::SecondsFormat;
@@ -63,10 +64,25 @@ impl Value {
         }
     }
 
+    #[async_recursion]
     pub(crate) async fn to_object_json_value(&self, purpose: Intent) -> Option<JsonValue> {
         match self {
             Value::Object(o) => {
                 Some(o.to_json(purpose).await)
+            }
+            _ => None
+        }
+    }
+
+    #[async_recursion]
+    pub(crate) async fn to_object_vec_json_value(&self, purpose: Intent) -> Option<JsonValue> {
+        match self {
+            Value::Vec(vec) => {
+                let mut result: Vec<JsonValue> = vec![];
+                for object in vec {
+                    result.push(object.to_object_json_value(purpose).await.unwrap());
+                }
+                Some(JsonValue::Array(result))
             }
             _ => None
         }
@@ -147,6 +163,26 @@ impl Value {
             Value::Json(json_value) => {
                 json_value.clone()
             }
+        }
+    }
+
+    pub fn is_object(&self) -> bool {
+        match self {
+            Value::Object(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_object_vec(&self) -> bool {
+        match self {
+            Value::Vec(v) => {
+                if v.is_empty() {
+                    false
+                } else {
+                    v.get(0).unwrap().is_object()
+                }
+            }
+            _ => false,
         }
     }
 

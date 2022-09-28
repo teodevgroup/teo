@@ -69,7 +69,7 @@ impl SQLConnector {
         migrate(dialect, pool, models).await
     }
 
-    fn row_to_object(&self, row: &AnyRow, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>) -> Result<(), ActionError> {
+    async fn row_to_object(&self, row: &AnyRow, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>) -> Result<(), ActionError> {
         for column in row.columns() {
             let column_name = column.name();
             if let Some(field) = object.model().field_with_column_name(column_name) {
@@ -118,7 +118,7 @@ impl SQLConnector {
         object.inner.is_initialized.store(true, Ordering::SeqCst);
         object.inner.is_new.store(false, Ordering::SeqCst);
         if let Some(select) = select {
-            object.set_select(Some(select)).unwrap();
+            object.set_select(Some(select)).await.unwrap();
         }
         Ok(())
 
@@ -219,7 +219,7 @@ impl SQLConnector {
             Ok(row) => {
                 match row {
                     Some(row) => {
-                        self.row_to_object(&row, &object, None, None)?;
+                        self.row_to_object(&row, &object, None, None).await?;
                         Ok(())
                     }
                     None => {
@@ -246,7 +246,7 @@ impl SQLConnector {
             Ok(rows) => {
                 for row in &rows {
                     let obj = graph.new_object(model.name())?;
-                    self.row_to_object(&row, &obj, select, include)?;
+                    self.row_to_object(&row, &obj, select, include).await?;
                     if reverse {
                         retval.insert(0, obj);
                     } else {
@@ -307,20 +307,23 @@ impl SQLConnector {
                                     };
                                     let relation_where = format!("{} IN {}", before_in, after_in);
                                     let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(&relation_where)).await?;
+                                    println!("see included: {:?}", included);
                                     for o in included {
-                                        let owner = retval.iter().find(|r| {
+                                        let owners = retval.iter().filter(|r| {
                                             for (index, left_field) in left_fields.iter().enumerate() {
                                                 let right_field = &right_fields[index];
-                                                if o.get_value(left_field) != r.get_value(right_field) {
+                                                if o.get_value(right_field) != r.get_value(left_field) {
                                                     return false;
                                                 }
                                             }
                                             true
                                         });
-                                        if let Some(owner) = owner {
-                                            owner.inner.relation_query_map.lock().unwrap().get_mut(relation_name).unwrap().push(o);
-                                        } else {
-                                            panic!("Owner cannot be found.")
+                                        for owner in owners {
+                                            println!("see owner: {:?}", owner);
+                                            if owner.inner.relation_query_map.lock().unwrap().get_mut(relation_name).is_none() {
+                                                owner.inner.relation_query_map.lock().unwrap().insert(relation_name.to_string(), vec![]);
+                                            }
+                                            owner.inner.relation_query_map.lock().unwrap().get_mut(relation_name).unwrap().push(o.clone());
                                         }
                                     }
                                 } else { // with join tables

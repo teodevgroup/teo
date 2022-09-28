@@ -49,6 +49,7 @@ The new generation server software.
 - Add `PresentWith` and `PresentWithout` to `Optionality` 
 - Fix token decoding and encoding after modifying `identifier`
 - Fix broken `connectIdentity` modifier
+- For relationship with join table, link them after both objects are created
 
 #### 0.0.27 - 0.0.50
 - Migration with SQL databases
