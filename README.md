@@ -57,7 +57,6 @@ The new generation server software.
 
 #### 0.0.27 - 0.0.50
 - Migration with SQL databases
-- Perform join queries with SQL databases
 - Custom SQL database types
 
 #### 0.0.51
