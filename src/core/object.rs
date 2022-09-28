@@ -334,38 +334,41 @@ impl Object {
             Create(entry) => {
                 let new_object = graph.new_object(&relation.model)?;
                 new_object.set_json(entry).await?;
-                self.link_connect(&new_object, relation, session.clone()).await?;
+                if relation.through.is_none() {
+                    self.link_connect(&new_object, relation, session.clone()).await?;
+                }
                 new_object._save(session.clone(), false).await?;
                 self.link_connect(&new_object, relation, session.clone()).await?;
             }
             CreateOrConnect(entry) => {
-                println!("Comes here");
                 let r#where = entry.as_object().unwrap().get("where").unwrap();
                 let create = entry.as_object().unwrap().get("create").unwrap();
                 let unique_result = graph.find_unique(&relation.model, &json!({"where": r#where}), true).await;
                 match unique_result {
                     Ok(exist_object) => {
-                        println!("Exist object {:?}", exist_object);
-                        self.link_connect(&exist_object, relation, session.clone()).await?;
+                        if relation.through.is_none() {
+                            self.link_connect(&exist_object, relation, session.clone()).await?;
+                        }
                         exist_object._save(session.clone(), false).await?;
                         self.link_connect(&exist_object, relation, session.clone()).await?;
                     }
                     Err(_err) => {
                         let new_obj = graph.new_object(&relation.model)?;
                         new_obj.set_json(create).await?;
-                        self.link_connect(&new_obj, relation, session.clone()).await?;
-                        println!("let new object save");
+                        if relation.through.is_none() {
+                            self.link_connect(&new_obj, relation, session.clone()).await?;
+                        }
                         new_obj._save(session.clone(), false).await?;
-                        println!("new object saved");
                         self.link_connect(&new_obj, relation, session.clone()).await?;
-                        println!("linked to self");
                     }
                 }
             }
             Connect(entry) | Set(entry) => {
                 let unique_query = json!({"where": entry});
                 let exist_object = graph.find_unique(&relation.model, &unique_query, true).await?;
-                self.link_connect(&exist_object, relation, session.clone()).await?;
+                if relation.through.is_none() {
+                    self.link_connect(&exist_object, relation, session.clone()).await?;
+                }
                 exist_object._save(session.clone(), false).await?;
                 self.link_connect(&exist_object, relation, session.clone()).await?;
             }
@@ -394,7 +397,9 @@ impl Object {
                     Err(_) => {
                         let new_obj = graph.new_object(&relation.model)?;
                         new_obj.set_json(create).await?;
-                        self.link_connect(&new_obj, relation, session.clone()).await?;
+                        if relation.through.is_none() {
+                            self.link_connect(&new_obj, relation, session.clone()).await?;
+                        }
                         new_obj._save(session.clone(), false).await?;
                         self.link_connect(&new_obj, relation, session.clone()).await?;
                     }
@@ -530,6 +535,9 @@ impl Object {
     }
 
     fn relation_that_object_save_first(&self, relation: &Relation) -> bool {
+        if relation.through.is_some() {
+            return false;
+        }
         let primary_field_names = self.model().primary_field_names().iter().map(|n| n.to_string()).collect::<Vec<String>>();
         if relation.fields() == &primary_field_names {
             return false;
@@ -559,7 +567,6 @@ impl Object {
         if !no_recursive {
             for relation in self.model().relations() {
                 if self.relation_that_object_save_first(relation) {
-                    println!("That object save first");
                     let name = &relation.name;
                     let map = self.inner.relation_mutation_map.lock().unwrap();
                     let vec_option = map.get(name);
@@ -567,7 +574,6 @@ impl Object {
                         None => {},
                         Some(vec) => {
                             for manipulation in vec {
-                                println!("Handle manipulation here");
                                 self.handle_manipulation(relation, manipulation, session.clone()).await?;
                             }
                         }
