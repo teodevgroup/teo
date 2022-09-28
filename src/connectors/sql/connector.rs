@@ -96,6 +96,7 @@ impl SQLConnector {
                     }
                 } else if field.r#type().is_date() {
                     let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
+                    #[cfg(not(feature = "data-source-mssql"))]
                     if !any_value.is_null() {
                         let naive_date: NaiveDate = row.get(column_name);
                         let date: Date<Utc> = Date::from_utc(naive_date, Utc);
@@ -103,6 +104,7 @@ impl SQLConnector {
                     }
                 } else if field.r#type().is_datetime() {
                     let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
+                    #[cfg(not(feature = "data-source-mssql"))]
                     if !any_value.is_null() {
                         let datetime_value: DateTime<Utc> = row.get(column_name);
                         object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::DateTime(datetime_value));
@@ -259,7 +261,7 @@ impl Connector for SQLConnector {
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
-        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder, self.dialect)?;
+        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder, self.dialect, None)?;
         let result = self.pool.fetch_optional(&*sql_query).await;
         match result {
             Ok(row) => {
@@ -284,7 +286,7 @@ impl Connector for SQLConnector {
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
-        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, self.dialect)?;
+        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, self.dialect, None)?;
         let reverse = has_negative_take(finder);
         let results = self.pool.fetch_all(&*sql_query).await;
         let mut retval: Vec<Object> = vec![];
@@ -309,7 +311,7 @@ impl Connector for SQLConnector {
     }
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
-        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Count, false, finder, self.dialect)?;
+        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Count, false, finder, self.dialect, None)?;
         let result = self.pool.fetch_one(&*sql_query).await;
         match result {
             Ok(row) => {

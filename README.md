@@ -38,10 +38,11 @@ The new generation server software.
 - SQL: Sorting **[DONE]**
 - SQL: Paging **[DONE]**
 - SQL: Handle optional values **[DONE]**
+- SQL: `Date` and `DateTime` **[DONE]**
 - SQL: Including with batch query caches
-- SQL: `Date` and `DateTime`
 
 #### 0.0.26
+- SQL: Enum types
 - MongoDB update handle column key
 - Remove primary name from MongoDB connector's `save` method
 - Add `PresentWith` and `PresentWithout` to `Optionality` 
@@ -49,8 +50,6 @@ The new generation server software.
 
 #### 0.0.27 - 0.0.50
 - Migration with SQL databases
-- Perform simple CRUD with SQL databases
-- Perform object update with SQL databases
 - Perform join queries with SQL databases
 - Custom SQL database types
 

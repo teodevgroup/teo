@@ -302,11 +302,19 @@ pub(crate) fn build_sql_query(
     mutation_mode: bool,
     args: UserJsonArgs,
     dialect: SQLDialect,
+    additional_where: Option<String>,
 ) -> Result<String, ActionError> {
     let mut stmt = SQL::select(None, model.table_name());
     if let Some(r#where) = args.r#where {
         if let Some(where_result) = build_where_input(model, graph, Some(r#where), dialect, &vec![KeyPathItem::String("where".to_string())])? {
             stmt.r#where(where_result);
+        }
+    }
+    if let Some(additional_where) = additional_where {
+        if stmt.r#where.is_some() {
+            stmt.r#where(stmt.r#where.as_ref().unwrap().clone() + &additional_where);
+        } else {
+            stmt.r#where(additional_where);
         }
     }
     if let Some(order_by) = args.order_by {
@@ -338,7 +346,8 @@ pub(crate) fn build_sql_query_from_json(
     mutation_mode: bool,
     json_value: &JsonValue,
     dialect: SQLDialect,
+    additional_where: Option<String>,
 ) -> Result<String, ActionError> {
     let args = user_json_args(model, graph, r#type, mutation_mode, json_value)?;
-    build_sql_query(model, graph, r#type, mutation_mode, args, dialect)
+    build_sql_query(model, graph, r#type, mutation_mode, args, dialect, additional_where)
 }
