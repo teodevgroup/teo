@@ -148,6 +148,10 @@ impl Model {
         self.inner.primary.as_ref()
     }
 
+    pub(crate) fn primary_field_names(&self) -> Vec<&str> {
+        self.inner.primary.as_ref().unwrap().items.iter().map(|i| i.field_name.as_str()).collect::<Vec<&str>>()
+    }
+
     pub(crate) fn primary_field(&self) -> Option<&Field> {
         match &self.inner.primary_field {
             Some(f) => Some(f.as_ref()),

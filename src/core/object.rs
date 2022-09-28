@@ -45,8 +45,6 @@ impl Object {
             atomic_updator_map: Arc::new(Mutex::new(HashMap::new())),
             relation_query_map: Arc::new(Mutex::new(HashMap::new())),
             relation_mutation_map: Arc::new(Mutex::new(HashMap::new())),
-            relation_connection_map: Arc::new(Mutex::new(HashMap::new())),
-            ignore_required_fields: Arc::new(Mutex::new(Vec::new())),
             identity: Arc::new(Mutex::new(None)),
         }) }
     }
@@ -298,9 +296,6 @@ impl Object {
                 continue;
             }
             let field = field.unwrap();
-            if self.inner.ignore_required_fields.lock().unwrap().contains(&field.name) {
-                continue;
-            }
             if field.auto || field.auto_increment {
                 continue
             }
@@ -339,10 +334,9 @@ impl Object {
             Create(entry) => {
                 let new_object = graph.new_object(&relation.model)?;
                 new_object.set_json(entry).await?;
-                new_object.ignore_required_for(&relation.references);
-                self.ignore_required_for(&relation.fields);
-                new_object._save(session, false).await?;
-                self.insert_relation_connection(relation.name(), RelationConnection::Link(new_object));
+                self.link_connect(&new_object, relation, session.clone()).await?;
+                new_object._save(session.clone(), false).await?;
+                self.link_connect(&new_object, relation, session.clone()).await?;
             }
             CreateOrConnect(entry) => {
                 let r#where = entry.as_object().unwrap().get("where").unwrap();
@@ -350,28 +344,25 @@ impl Object {
                 let unique_result = graph.find_unique(&relation.model, &json!({"where": r#where}), true).await;
                 match unique_result {
                     Ok(exist_object) => {
-                        exist_object.ignore_required_for(&relation.references);
-                        self.ignore_required_for(&relation.fields);
-                        exist_object._save(session, false).await?;
-                        self.insert_relation_connection(relation.name(), RelationConnection::Link(exist_object));
+                        self.link_connect(&exist_object, relation, session.clone()).await?;
+                        exist_object._save(session.clone(), false).await?;
+                        self.link_connect(&exist_object, relation, session.clone()).await?;
                     }
                     Err(_err) => {
                         let new_obj = graph.new_object(&relation.model)?;
                         new_obj.set_json(create).await?;
-                        new_obj.ignore_required_for(&relation.references);
-                        self.ignore_required_for(&relation.fields);
-                        new_obj._save(session, false).await?;
-                        self.insert_relation_connection(relation.name(), RelationConnection::Link(new_obj));
+                        self.link_connect(&new_obj, relation, session.clone()).await?;
+                        new_obj._save(session.clone(), false).await?;
+                        self.link_connect(&new_obj, relation, session.clone()).await?;
                     }
                 }
             }
             Connect(entry) | Set(entry) => {
                 let unique_query = json!({"where": entry});
                 let exist_object = graph.find_unique(&relation.model, &unique_query, true).await?;
-                exist_object.ignore_required_for(&relation.references);
-                self.ignore_required_for(&relation.fields);
-                exist_object._save(session, false).await?;
-                self.insert_relation_connection(relation.name(), RelationConnection::Link(exist_object));
+                self.link_connect(&exist_object, relation, session.clone()).await?;
+                exist_object._save(session.clone(), false).await?;
+                self.link_connect(&exist_object, relation, session.clone()).await?;
             }
             Update(entry) => {
                 let r#where = entry.get("where").unwrap();
@@ -397,18 +388,17 @@ impl Object {
                     }
                     Err(_) => {
                         let new_obj = graph.new_object(&relation.model)?;
-                        new_obj.ignore_required_for(&relation.references);
-                        self.ignore_required_for(&relation.fields);
                         new_obj.set_json(create).await?;
-                        new_obj._save(session, false).await?;
-                        self.insert_relation_connection(relation.name(), RelationConnection::Link(new_obj));
+                        self.link_connect(&new_obj, relation, session.clone()).await?;
+                        new_obj._save(session.clone(), false).await?;
+                        self.link_connect(&new_obj, relation, session.clone()).await?;
                     }
                 }
             }
             Disconnect(entry) => {
                 let unique_query = json!({"where": entry});
                 let object_to_disconnect = graph.find_unique(&relation.model, &unique_query, true).await?;
-                self.insert_relation_connection(relation.name(), RelationConnection::Unlink(object_to_disconnect));
+                self.link_disconnect(&object_to_disconnect, relation, session.clone()).await?;
             }
             Delete(entry) => {
                 let r#where = entry;
@@ -417,7 +407,8 @@ impl Object {
                     return Err(ActionError::object_not_found());
                 }
                 let the_object = the_object.unwrap();
-                self.insert_relation_connection(relation.name(), RelationConnection::UnlinkAndDelete(the_object));
+                self.link_disconnect(&the_object, relation, session.clone()).await?;
+                the_object.delete().await?;
             }
         }
         Ok(())
@@ -452,7 +443,7 @@ impl Object {
                     let val = obj.get_value(foreign_field_name).unwrap();
                     relation_object.set_value(field_name, val.clone()).unwrap();
                 }
-                relation_object.save().await?;
+                relation_object._save(session.clone(), false).await?;
             }
             None => { // no join table
                 for (index, reference) in relation.references.iter().enumerate() {
@@ -462,7 +453,6 @@ impl Object {
                         let local_value = self.get_value(field_name)?;
                         if !local_value.is_null() {
                             obj.set_value(reference, local_value.clone())?;
-                            obj.save_to_database(session.clone(), true).await?;
                         }
                     } else {
                         // get foreign relation
@@ -473,7 +463,6 @@ impl Object {
                                 let foreign_value = obj.get_value(reference)?;
                                 if !foreign_value.is_null() {
                                     self.set_value(field_name, foreign_value.clone())?;
-                                    self.save_to_database(session.clone(), true).await?;
                                 }
                             } else {
                                 // both sides are singular
@@ -482,7 +471,6 @@ impl Object {
                                         let local_value = self.get_value(field_name)?;
                                         if !local_value.is_null() {
                                             obj.set_value(reference, local_value.clone())?;
-                                            obj.save_to_database(session.clone(), true).await?;
                                         }
                                         break;
                                     }
@@ -491,7 +479,6 @@ impl Object {
                                 let foreign_value = obj.get_value(reference)?;
                                 if !foreign_value.is_null() {
                                     self.set_value(field_name, foreign_value.clone())?;
-                                    self.save_to_database(session.clone(), true).await?;
                                 }
                             }
                         }
@@ -534,16 +521,37 @@ impl Object {
                     if !local_value.is_null() && !foreign_value.is_null() {
                         if local_field.optionality == Optionality::Optional {
                             self.set_value(field_name, Value::Null)?;
-                            self.save_to_database(session.clone(), true).await?;
                         } else if foreign_field.optionality == Optionality::Optional {
                             obj.set_value(reference, Value::Null)?;
-                            obj._save(session.clone(), true).await?;
                         }
                     }
                 }
             }
         }
         Ok(())
+    }
+
+    fn relation_this_object_save_first(&self, relation: &Relation) -> bool {
+        !self.relation_that_object_save_first(relation)
+    }
+
+    fn relation_that_object_save_first(&self, relation: &Relation) -> bool {
+        let primary_field_names = self.model().primary_field_names().iter().map(|n| n.to_string()).collect::<Vec<String>>();
+        if relation.fields() == &primary_field_names {
+            return false;
+        }
+        let relation_model = self.graph().model(&relation.model).unwrap();
+        let relation_primary_field_names = relation_model.primary_field_names().iter().map(|n| n.to_string()).collect::<Vec<String>>();
+        if relation.references() == &relation_primary_field_names {
+            return true;
+        }
+        let mut save_this_first = true;
+        for field in relation.fields() {
+            if self.get_value(field).unwrap().is_null() {
+                save_this_first = false;
+            }
+        }
+        return !save_this_first;
     }
 
     #[async_recursion(?Send)]
@@ -553,17 +561,19 @@ impl Object {
             return Err(ActionError::save_calling_error(self.model().name()));
         }
         let is_new = self.is_new();
-        // handle relations and manipulations
+        // handle relations and manipulations (save that first)
         if !no_recursive {
             for relation in self.model().relations() {
-                let name = &relation.name;
-                let map = self.inner.relation_mutation_map.lock().unwrap();
-                let vec_option = map.get(name);
-                match vec_option {
-                    None => {},
-                    Some(vec) => {
-                        for manipulation in vec {
-                            self.handle_manipulation(relation, manipulation, session.clone()).await?;
+                if self.relation_that_object_save_first(relation) {
+                    let name = &relation.name;
+                    let map = self.inner.relation_mutation_map.lock().unwrap();
+                    let vec_option = map.get(name);
+                    match vec_option {
+                        None => {},
+                        Some(vec) => {
+                            for manipulation in vec {
+                                self.handle_manipulation(relation, manipulation, session.clone()).await?;
+                            }
                         }
                     }
                 }
@@ -578,28 +588,18 @@ impl Object {
                 self.save_to_database(session.clone(), no_recursive).await?;
             }
         }
-        // links
+        // handle relations and manipulations (save this first)
         if !no_recursive {
             for relation in self.model().relations() {
-                let name = &relation.name;
-                let map = self.inner.relation_connection_map.lock().unwrap();
-                let vec_option = map.get(name);
-                match vec_option {
-                    None => {},
-                    Some(vec) => {
-                        for connection in vec {
-                            match connection {
-                                RelationConnection::Link(obj) => {
-                                    self.link_connect(obj, relation, session.clone()).await?;
-                                }
-                                RelationConnection::Unlink(obj) => {
-                                    self.link_disconnect(obj, relation, session.clone()).await?;
-                                }
-                                RelationConnection::UnlinkAndDelete(obj) => {
-                                    self.link_disconnect(obj, relation, session.clone()).await?;
-                                    obj.delete().await?;
-
-                                }
+                if self.relation_this_object_save_first(relation) {
+                    let name = &relation.name;
+                    let map = self.inner.relation_mutation_map.lock().unwrap();
+                    let vec_option = map.get(name);
+                    match vec_option {
+                        None => {},
+                        Some(vec) => {
+                            for manipulation in vec {
+                                self.handle_manipulation(relation, manipulation, session.clone()).await?;
                             }
                         }
                     }
@@ -689,15 +689,6 @@ impl Object {
         let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
         let objects = relation_mutation_map.get_mut(key).unwrap();
         objects.push(manipulation);
-    }
-
-    fn insert_relation_connection(&self, key: &str, connection: RelationConnection) {
-        if self.inner.relation_connection_map.lock().unwrap().get(key).is_none() {
-            self.inner.relation_connection_map.lock().unwrap().insert(key.to_string(), vec![]);
-        }
-        let mut relation_connection_map = self.inner.relation_connection_map.lock().unwrap();
-        let objects = relation_connection_map.get_mut(key).unwrap();
-        objects.push(connection);
     }
 
     async fn set_or_update_json(&self, json_value: &JsonValue, process: bool) -> Result<(), ActionError> {
@@ -933,10 +924,6 @@ impl Object {
         Ok(())
     }
 
-    pub(crate) fn ignore_required_for(&self, ignores: &Vec<String>) {
-        self.inner.ignore_required_fields.lock().unwrap().extend(ignores.iter().map(|v| v.to_string()).collect::<Vec<String>>());
-    }
-
     pub(crate) fn is_instance_of(&self, model_name: &'static str) -> bool {
         self.model().name() == model_name
     }
@@ -1123,8 +1110,6 @@ pub(crate) struct ObjectInner {
     pub(crate) atomic_updator_map: Arc<Mutex<HashMap<String, AtomicUpdateType>>>,
     pub(crate) relation_mutation_map: Arc<Mutex<HashMap<String, Vec<RelationManipulation>>>>,
     pub(crate) relation_query_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
-    pub(crate) relation_connection_map: Arc<Mutex<HashMap<String, Vec<RelationConnection>>>>,
-    pub(crate) ignore_required_fields: Arc<Mutex<Vec<String>>>,
     pub(crate) identity: Arc<Mutex<Option<Object>>>,
 }
 

@@ -35,12 +35,13 @@ impl Modifier for ConnectIdentityModifier {
         if relation_model_name != identity_model_name {
             return ctx;
         }
-        let mut map = ctx.object.inner.relation_connection_map.lock().unwrap();
-        let connections = map.get(relation_name);
-        if connections.is_none() {
-            map.insert(relation_name.to_string(), Vec::new());
-            map.get_mut(relation_name).unwrap().push(RelationConnection::Link(identity.clone()));
-        }
+        // ctx.object.link_connect(&identity, relation, )
+        // let mut map = ctx.object.inner.relation_connection_map.lock().unwrap();
+        // let connections = map.get(relation_name);
+        // if connections.is_none() {
+        //     map.insert(relation_name.to_string(), Vec::new());
+        //     map.get_mut(relation_name).unwrap().push(RelationConnection::Link(identity.clone()));
+        // }
         ctx.clone()
     }
 }

@@ -40,6 +40,7 @@ The new generation server software.
 - SQL: Handle optional values **[DONE]**
 - SQL: `Date` and `DateTime` **[DONE]**
 - SQL: Including with batch query caches
+- SQL: Update object saving order for SQL
 
 #### 0.0.26
 - SQL: Enum types
@@ -47,6 +48,7 @@ The new generation server software.
 - Remove primary name from MongoDB connector's `save` method
 - Add `PresentWith` and `PresentWithout` to `Optionality` 
 - Fix token decoding and encoding after modifying `identifier`
+- Fix broken `connectIdentity` modifier
 
 #### 0.0.27 - 0.0.50
 - Migration with SQL databases

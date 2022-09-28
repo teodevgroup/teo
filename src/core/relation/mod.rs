@@ -29,6 +29,14 @@ impl Relation {
     pub(crate) fn description(&self) -> &str {
         &self.description
     }
+
+    pub(crate) fn fields(&self) -> &Vec<String> {
+        &self.fields
+    }
+
+    pub(crate) fn references(&self) -> &Vec<String> {
+        &self.references
+    }
 }
 
 #[derive(Debug)]
