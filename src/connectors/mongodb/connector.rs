@@ -524,7 +524,7 @@ impl Connector for MongoDBConnector {
                     }
                 }
                 Err(error) => {
-                    println!("see error reason, {:?}", error);
+                    println!("{:?}", error);
                     return Err(self._handle_write_error(&error.kind));
                 }
             }
