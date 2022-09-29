@@ -253,7 +253,7 @@ impl SQLConnector {
             Ok(rows) => {
                 for row in &rows {
                     let obj = graph.new_object(model.name())?;
-                    self.row_to_object(&row, &obj, select, include, additional_left_join.is_some())?;
+                    self.row_to_object(&row, &obj, select, include, additional_left_join.is_some())g?;
                     if reverse {
                         retval.insert(0, obj);
                     } else {

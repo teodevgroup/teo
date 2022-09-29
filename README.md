@@ -44,14 +44,14 @@ The new generation server software.
 - SQL: Update object saving order for SQL **[DONE]**
 
 #### 0.0.26
-- MongoDB: Fix errors caused by SQL features
+- MongoDB: Remove async mutex introduced by SQL features **[DONE]**
+- Fix token decoding and encoding after modifying `identifier`
 - SQL: Correct result json key order
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
 - MongoDB update handle column key
 - Remove primary name from MongoDB connector's `save` method
-- Add `PresentWith` and `PresentWithout` to `Optionality` 
-- Fix token decoding and encoding after modifying `identifier`
+- Add `PresentWith` and `PresentWithout` to `Optionality`
 - Fix broken `connectIdentity` modifier
 - For relationship with join table, link them after both objects are created
 
