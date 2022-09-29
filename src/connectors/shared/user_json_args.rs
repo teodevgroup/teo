@@ -48,7 +48,7 @@ pub struct UserJsonArgs<'a> {
 
 pub(crate) fn user_json_args<'a>(
     model: &Model,
-    graph: &Graph,
+    _graph: &Graph,
     r#type: QueryPipelineType,
     mutation_mode: bool,
     json_value: &'a JsonValue,

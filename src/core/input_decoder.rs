@@ -32,7 +32,7 @@ pub(crate) fn input_to_vec(json_value: &JsonValue) -> Result<Vec<&JsonValue>, Ac
     }
 }
 
-pub(crate) fn one_length_json_obj<'a>(json_value: &'a JsonValue, path: &str) -> Result<(&'a str, &'a JsonValue), ActionError> {
+pub(crate) fn one_length_json_obj<'a>(json_value: &'a JsonValue, _path: &str) -> Result<(&'a str, &'a JsonValue), ActionError> {
     let json_obj = json_value.as_object().unwrap();
     if json_obj.keys().len() != 1 {
         Err(ActionError::wrong_input_updator())
@@ -44,7 +44,7 @@ pub(crate) fn one_length_json_obj<'a>(json_value: &'a JsonValue, path: &str) -> 
     }
 }
 
-fn decode_null(field_type: &FieldType, optionality: Optionality, path: &str) -> Result<Input, ActionError> {
+fn decode_null(_field_type: &FieldType, optionality: Optionality, path: &str) -> Result<Input, ActionError> {
     if optionality == Optionality::Optional {
         Ok(SetValue(Value::Null))
     } else {

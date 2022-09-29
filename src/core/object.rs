@@ -12,7 +12,7 @@ use crate::core::input::Input::{AtomicUpdate, SetValue};
 use crate::core::graph::Graph;
 use crate::core::input_decoder::{decode_field_input, input_to_vec, one_length_json_obj};
 use crate::core::model::Model;
-use crate::core::relation::{Relation, RelationConnection, RelationManipulation};
+use crate::core::relation::{Relation, RelationManipulation};
 use crate::core::save_session::SaveSession;
 use crate::core::pipeline::context::{Context, Intent};
 use crate::core::value::Value;
@@ -424,7 +424,7 @@ impl Object {
     }
 
     #[async_recursion(?Send)]
-    pub(crate) async fn save_to_database(&self, session: Arc<dyn SaveSession>, no_recursive: bool) -> Result<(), ActionError> {
+    pub(crate) async fn save_to_database(&self, _session: Arc<dyn SaveSession>, _no_recursive: bool) -> Result<(), ActionError> {
         // send to database to save self
         let connector = self.graph().connector();
         connector.save_object(self).await?;

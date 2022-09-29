@@ -157,7 +157,7 @@ impl Value {
                 }
                 JsonValue::Object(map)
             }
-            Value::Object(obj) => {
+            Value::Object(_obj) => {
                 panic!("use object specific method")
             }
             Value::Json(json_value) => {
