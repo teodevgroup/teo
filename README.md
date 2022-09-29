@@ -46,6 +46,7 @@ The new generation server software.
 #### 0.0.26
 - MongoDB: Remove async mutex introduced by SQL features **[DONE]**
 - Fix token decoding and encoding after modifying `identifier`
+- Make key path APIs better
 - SQL: Correct result json key order
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
@@ -55,9 +56,11 @@ The new generation server software.
 - Fix broken `connectIdentity` modifier
 - For relationship with join table, link them after both objects are created
 
-#### 0.0.27 - 0.0.50
-- Migration with SQL databases
+#### 0.0.27
 - Custom SQL database types
+
+#### 0.0.28 - 0.0.50
+- Migration with SQL databases
 
 #### 0.0.51
 - MongoDB transaction session, make sure if errors, rollback writes
