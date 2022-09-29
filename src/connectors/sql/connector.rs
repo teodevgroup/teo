@@ -69,7 +69,7 @@ impl SQLConnector {
         migrate(dialect, pool, models).await
     }
 
-    async fn row_to_object(&self, row: &AnyRow, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>, left_join: bool) -> Result<(), ActionError> {
+    fn row_to_object(&self, row: &AnyRow, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>, left_join: bool) -> Result<(), ActionError> {
         for column in row.columns() {
             let column_name = column.name();
             let result_name = if left_join {
@@ -124,7 +124,7 @@ impl SQLConnector {
         object.inner.is_initialized.store(true, Ordering::SeqCst);
         object.inner.is_new.store(false, Ordering::SeqCst);
         if let Some(select) = select {
-            object.set_select(Some(select)).await.unwrap();
+            object.set_select(Some(select)).unwrap();
         }
         Ok(())
 
@@ -225,7 +225,7 @@ impl SQLConnector {
             Ok(row) => {
                 match row {
                     Some(row) => {
-                        self.row_to_object(&row, &object, None, None, false).await?;
+                        self.row_to_object(&row, &object, None, None, false)?;
                         Ok(())
                     }
                     None => {
@@ -253,7 +253,7 @@ impl SQLConnector {
             Ok(rows) => {
                 for row in &rows {
                     let obj = graph.new_object(model.name())?;
-                    self.row_to_object(&row, &obj, select, include, additional_left_join.is_some()).await?;
+                    self.row_to_object(&row, &obj, select, include, additional_left_join.is_some())?;
                     if reverse {
                         retval.insert(0, obj);
                     } else {

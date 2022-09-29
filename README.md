@@ -44,9 +44,9 @@ The new generation server software.
 - SQL: Update object saving order for SQL **[DONE]**
 
 #### 0.0.26
+- MongoDB: Fix errors caused by SQL features
 - SQL: Correct result json key order
 - SQL: join table relationship: cannot insert into object query map
-- MongoDB: Fix errors caused by SQL features
 - SQL: Enum types
 - MongoDB update handle column key
 - Remove primary name from MongoDB connector's `save` method

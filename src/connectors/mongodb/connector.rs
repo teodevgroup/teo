@@ -135,8 +135,7 @@ impl MongoDBConnector {
         }
     }
 
-    #[async_recursion]
-    async fn document_to_object(&self, document: &Document, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>) -> Result<(), ActionError> {
+    fn document_to_object(&self, document: &Document, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>) -> Result<(), ActionError> {
         for key in document.keys() {
             let object_field = object.model().fields().iter().find(|f| f.column_name() == key);
             if object_field.is_some() {
@@ -181,7 +180,7 @@ impl MongoDBConnector {
                 let mut related: Vec<Object> = vec![];
                 for related_object_bson in object_bsons {
                     let related_object = object.graph().new_object(model_name)?;
-                    self.document_to_object(related_object_bson.as_document().unwrap(), &related_object, inner_select, inner_include).await?;
+                    self.document_to_object(related_object_bson.as_document().unwrap(), &related_object, inner_select, inner_include)?;
                     related.push(related_object);
                 }
                 object.inner.relation_query_map.lock().unwrap().insert(key.to_string(), related);
@@ -189,7 +188,7 @@ impl MongoDBConnector {
         }
         object.inner.is_initialized.store(true, Ordering::SeqCst);
         object.inner.is_new.store(false, Ordering::SeqCst);
-        object.set_select(select).await.unwrap();
+        object.set_select(select).unwrap();
         Ok(())
     }
 
@@ -695,7 +694,7 @@ impl Connector for MongoDBConnector {
         }
         for doc in results {
             let obj = graph.new_object(model.name())?;
-            self.document_to_object(&doc.unwrap(), &obj, select, include).await?;
+            self.document_to_object(&doc.unwrap(), &obj, select, include)?;
             return Ok(obj);
         }
         Err(ActionError::object_not_found())
@@ -717,7 +716,7 @@ impl Connector for MongoDBConnector {
         let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
         for doc in results {
             let obj = graph.new_object(model.name())?;
-            match self.document_to_object(&doc.unwrap(), &obj, select, include).await {
+            match self.document_to_object(&doc.unwrap(), &obj, select, include) {
                 Ok(_) => {
                     if reverse {
                         result.insert(0, obj);

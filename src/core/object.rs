@@ -1,7 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
-use futures::lock::{Mutex as AsyncMutex};
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use serde_json::{json, Map, Value as JsonValue};
@@ -38,9 +37,9 @@ impl Object {
             is_deleted: AtomicBool::new(false),
             inside_before_save_callback: AtomicBool::new(false),
             inside_write_callback: AtomicBool::new(false),
-            selected_fields: Arc::new(AsyncMutex::new(Vec::new())),
+            selected_fields: Arc::new(Mutex::new(Vec::new())),
             modified_fields: Arc::new(Mutex::new(HashSet::new())),
-            previous_value_map: Arc::new(AsyncMutex::new(HashMap::new())),
+            previous_value_map: Arc::new(Mutex::new(HashMap::new())),
             value_map: Arc::new(Mutex::new(HashMap::new())),
             atomic_updator_map: Arc::new(Mutex::new(HashMap::new())),
             relation_query_map: Arc::new(Mutex::new(HashMap::new())),
@@ -144,14 +143,14 @@ impl Object {
         }
     }
 
-    pub(crate) async fn get_previous_value(&self, key: impl AsRef<str>) -> Result<Value, ActionError> {
+    pub(crate) fn get_previous_value(&self, key: impl AsRef<str>) -> Result<Value, ActionError> {
         let key = key.as_ref();
         let model_keys = self.model().all_keys();
         if !model_keys.contains(&key.to_string()) {
             let model = self.model();
             return Err(ActionError::get_value_error(model.name(), key));
         }
-        let map = self.inner.previous_value_map.lock().await;
+        let map = self.inner.previous_value_map.lock().unwrap();
         match map.get(key) {
             Some(value) => Ok(value.clone()),
             None => Ok(Value::Null),
@@ -192,7 +191,7 @@ impl Object {
         }
     }
 
-    pub async fn set_select(&self, select: Option<&JsonValue>) -> Result<(), ActionError> {
+    pub fn set_select(&self, select: Option<&JsonValue>) -> Result<(), ActionError> {
         if select.is_none() {
             return Ok(());
         }
@@ -226,7 +225,7 @@ impl Object {
                     }
                 }
             });
-            *self.inner.selected_fields.lock().await = result;
+            *self.inner.selected_fields.lock().unwrap() = result;
             return Ok(());
         } else {
             // true
@@ -242,7 +241,7 @@ impl Object {
                     }
                 }
             });
-            *self.inner.selected_fields.lock().await = result;
+            *self.inner.selected_fields.lock().unwrap() = result;
             return Ok(());
         }
     }
@@ -649,7 +648,7 @@ impl Object {
     }
 
     pub async fn to_json(&self, purpose: Intent) -> JsonValue {
-        let select_list = self.inner.selected_fields.lock().await;
+        let select_list = self.inner.selected_fields.lock().unwrap().clone();
         let select_filter = if select_list.is_empty() { false } else { true };
         let mut map: Map<String, JsonValue> = Map::new();
         let keys = self.model().output_keys();
@@ -740,8 +739,8 @@ impl Object {
                                     .alter_key_path(vec![KeyPathItem::String(key.to_string())])
                                     .alter_value(value);
                                 if !self.is_new() && field.previous_value_rule == PreviousValueRule::Keep {
-                                    if self.inner.previous_value_map.lock().await.get(field.name()).is_none() {
-                                        self.inner.previous_value_map.lock().await.insert(field.name().to_string(), self.get_value(field.name()).unwrap());
+                                    if self.inner.previous_value_map.lock().unwrap().get(field.name()).is_none() {
+                                        self.inner.previous_value_map.lock().unwrap().insert(field.name().to_string(), self.get_value(field.name()).unwrap());
                                     }
                                 }
                                 let result_context = field.on_set_pipeline.process(context).await;
@@ -760,7 +759,7 @@ impl Object {
                                 if self.inner.is_new.load(Ordering::SeqCst) == false {
                                     if save_previous {
                                         if let Some(current) = self.inner.value_map.lock().unwrap().get(key.as_str()) {
-                                            self.inner.previous_value_map.lock().await.insert(key.to_string(), current.clone());
+                                            self.inner.previous_value_map.lock().unwrap().insert(key.to_string(), current.clone());
                                         }
                                     }
                                     self.inner.value_map.lock().unwrap().remove(key);
@@ -768,7 +767,7 @@ impl Object {
                             } else {
                                 if save_previous {
                                     if let Some(current) = self.inner.value_map.lock().unwrap().get(key.as_str()) {
-                                        self.inner.previous_value_map.lock().await.insert(key.to_string(), current.clone());
+                                        self.inner.previous_value_map.lock().unwrap().insert(key.to_string(), current.clone());
                                     }
                                 }
                                 self.inner.value_map.lock().unwrap().insert(key.to_string(), value);
@@ -966,7 +965,7 @@ impl Object {
 
     pub async fn refreshed(&self, include: Option<&JsonValue>, select: Option<&JsonValue>) -> Result<Object, ActionError> {
         if self.model().r#virtual() {
-            self.set_select(select).await.unwrap();
+            self.set_select(select).unwrap();
             return Ok(self.clone())
         }
         let graph = self.graph();
@@ -1111,9 +1110,9 @@ pub(crate) struct ObjectInner {
     pub(crate) is_deleted: AtomicBool,
     pub(crate) inside_before_save_callback: AtomicBool,
     pub(crate) inside_write_callback: AtomicBool,
-    pub(crate) selected_fields: Arc<AsyncMutex<Vec<String>>>,
+    pub(crate) selected_fields: Arc<Mutex<Vec<String>>>,
     pub(crate) modified_fields: Arc<Mutex<HashSet<String>>>,
-    pub(crate) previous_value_map: Arc<AsyncMutex<HashMap<String, Value>>>,
+    pub(crate) previous_value_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) value_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) atomic_updator_map: Arc<Mutex<HashMap<String, AtomicUpdateType>>>,
     pub(crate) relation_mutation_map: Arc<Mutex<HashMap<String, Vec<RelationManipulation>>>>,
