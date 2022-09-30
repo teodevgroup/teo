@@ -272,7 +272,7 @@ impl Object {
                 };
                 let context = Context::initial_state(self.clone(), purpose)
                     .alter_value(initial_value)
-                    .alter_key_path(path![&field.name]);
+                    .alter_key_path(path![field.name.as_str()]);
                 let result_ctx = field.perform_on_save_callback(context).await;
                 match result_ctx.invalid_reason() {
                     Some(reason) => {

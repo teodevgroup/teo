@@ -69,7 +69,7 @@ impl JsonValueToSQLString for JsonValue {
             FieldType::Vec(element_field) => if let Some(val) = self.as_array() {
                 let mut result: Vec<String> = vec![];
                 for (i, v) in val.iter().enumerate() {
-                    let path = &path + i as usize;
+                    let path = path.as_ref() + i as usize;
                     result.push(v.to_sql_string(element_field.r#type(), element_field.is_optional(), &path, graph)?);
                 }
                 Ok(result.join(", ").wrap_in_array())

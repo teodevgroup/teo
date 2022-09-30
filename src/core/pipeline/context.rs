@@ -110,13 +110,13 @@ pub struct Context<'a> {
     pub(crate) intent: Intent,
 }
 
-impl Context<'_> {
+impl<'a> Context<'a> {
 
     pub(crate) fn initial_state(object: Object, intent: Intent) -> Self {
         Context {
             value: Value::Object(object.clone()),
             object: object.clone(),
-            key_path: KeyPath::new(),
+            key_path: KeyPath::default(),
             identity: object.get_identity(),
             validity: Valid,
             stage: Default,
@@ -124,7 +124,7 @@ impl Context<'_> {
         }
     }
 
-    pub(crate) fn alter_key_path(&self, key_path: KeyPath) -> Self {
+    pub(crate) fn alter_key_path(&self, key_path: KeyPath<'a>) -> Self {
         Self {
             value: self.value.clone(),
             object: self.object.clone(),

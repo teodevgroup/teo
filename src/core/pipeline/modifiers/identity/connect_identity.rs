@@ -27,7 +27,7 @@ impl Modifier for ConnectIdentityModifier {
             return ctx;
         }
         let model = ctx.object.model();
-        let relation_name = ctx.key_path[0].as_string().unwrap();
+        let relation_name = ctx.key_path[0].as_key().unwrap();
         let relation = model.relation(relation_name).unwrap();
         let relation_model_name = relation.model.as_str();
         let identity = ctx.identity.as_ref().unwrap().clone();

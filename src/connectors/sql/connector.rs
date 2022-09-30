@@ -3,7 +3,7 @@ use std::sync::atomic::Ordering;
 use async_recursion::async_recursion;
 use async_trait::async_trait;
 use chrono::{Date, DateTime, NaiveDate, Utc};
-use key_path::KeyPath;
+use key_path::{KeyPath, path};
 use sqlx::{AnyPool, Column, Database, Error, Executor, Row, ValueRef};
 use sqlx::pool::Pool;
 use serde_json::{json, Value as JsonValue};
@@ -241,7 +241,7 @@ impl SQLConnector {
     }
 
     #[async_recursion]
-    async fn perform_query<'a>(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, key_path: impl AsRef<KeyPath<'a>>, additional_where: Option<String>, additional_left_join: Option<String>) -> Result<Vec<Object>, ActionError> {
+    async fn perform_query<'a>(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, key_path: &KeyPath, additional_where: Option<String>, additional_left_join: Option<String>) -> Result<Vec<Object>, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
         let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, self.dialect, additional_where, additional_left_join.clone(), key_path)?;
@@ -265,8 +265,8 @@ impl SQLConnector {
                         for (relation_name, include_value) in include_map {
                             let relation = model.relation(relation_name);
                             if relation.is_none() {
-                                let path = &key_path + relation_name;
-                                return Err(ActionError::unexpected_input_key(relation_name, &path));
+                                let path = key_path.as_ref() + relation_name;
+                                return Err(ActionError::unexpected_input_key(relation_name, path));
                             }
                             let relation = relation.unwrap();
                             let empty = json!({});
@@ -279,7 +279,7 @@ impl SQLConnector {
                             } else if include_value.is_object() {
                                 Some(include_value)
                             } else {
-                                let path = &key_path + relation_name;
+                                let path = key_path.as_ref() + relation_name;
                                 return Err(ActionError::unexpected_input_value("bool or object", &path));
                             };
                             if let Some(nested_include) = nested_include {
@@ -287,7 +287,7 @@ impl SQLConnector {
                                     let relation_model = graph.model(&relation.model).unwrap();
                                     let left_fields = &relation.fields;
                                     let right_fields = &relation.references;
-                                    let path = &key_path + relation_name;
+                                    let path = key_path.as_ref() + relation_name;
                                     // todo: transform to column name
                                     let before_in: String = if right_fields.len() == 1 {
                                         right_fields.get(0).unwrap().to_string()
@@ -368,7 +368,7 @@ impl SQLConnector {
                                         format!("(VALUES {})", pairs)
                                     };
                                     let relation_where = format!("{} IN {}", before_in, after_in);
-                                    let path = &key_path + relation_name;
+                                    let path = key_path.as_ref() + relation_name;
                                     let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), Some(left_join)).await?;
                                     println!("see included {:?}", included);
                                     for o in included {
@@ -392,7 +392,7 @@ impl SQLConnector {
                             }
                         }
                     } else {
-                        let path = &key_path + "include";
+                        let path = key_path.as_ref() + "include";
                         return Err(ActionError::unexpected_input_type("object", &path));
                     }
                 }
@@ -434,7 +434,7 @@ impl Connector for SQLConnector {
     }
 
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
-        let objects = self.perform_query(graph, model, finder, mutation_mode, &vec![], None, None).await?;
+        let objects = self.perform_query(graph, model, finder, mutation_mode, &path![], None, None).await?;
         if objects.is_empty() {
             Err(ActionError::object_not_found())
         } else {
@@ -443,11 +443,11 @@ impl Connector for SQLConnector {
     }
 
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
-        self.perform_query(graph, model, finder, mutation_mode, &vec![], None, None).await
+        self.perform_query(graph, model, finder, mutation_mode, &path![], None, None).await
     }
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
-        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Count, false, finder, self.dialect, None, None, &vec![])?;
+        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Count, false, finder, self.dialect, None, None, &path![])?;
         let result = self.pool.fetch_one(&*sql_query).await;
         match result {
             Ok(row) => {

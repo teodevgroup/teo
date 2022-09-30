@@ -58,7 +58,7 @@ impl<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync> Modifier for
         if ctx.key_path.len() != 1 {
             return ctx.invalid("Compare can only be used on first level fields.");
         }
-        let key = ctx.key_path[0].as_string().unwrap();
+        let key = ctx.key_path[0].as_key().unwrap();
         let previous_value = ctx.object.get_previous_value(key);
         if let Ok(previous_value) = previous_value {
             let current_value = (&ctx).value.clone();

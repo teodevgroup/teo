@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use key_path::path;
 
 use crate::core::pipeline::modifier::Modifier;
 
@@ -22,6 +23,6 @@ impl Modifier for GetObjectModifier {
     }
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
-        ctx.alter_value(Value::Object(ctx.object.clone())).alter_key_path(vec![])
+        ctx.alter_value(Value::Object(ctx.object.clone())).alter_key_path(path![])
     }
 }

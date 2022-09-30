@@ -34,7 +34,7 @@ fn parse_sql_where_entry_array<'a>(
         Some(arr_val) => {
             let mut arr: Vec<String> = Vec::new();
             for val in arr_val {
-                arr.push(val.to_sql_string(r#type, optional, key_path, graph)?);
+                arr.push(val.to_sql_string(r#type, optional, key_path.as_ref(), graph)?);
             }
             Ok(sql_where_item(column_name, op, arr.join(", ").to_wrapped()))
         }
@@ -58,74 +58,74 @@ fn parse_sql_where_entry_item<'a>(
         let mut result: Vec<String> = vec![];
         for (key, value) in map {
             if !ops.contains(&&**key) {
-                return Err(ActionError::unexpected_input_key(key, key_path));
+                return Err(ActionError::unexpected_input_key(key, key_path.as_ref()));
             }
             match key.as_str() {
                 "equals" => {
-                    result.push(sql_where_item(column_name, "=", value.to_sql_string(r#type, optional, key_path, graph)?));
+                    result.push(sql_where_item(column_name, "=", value.to_sql_string(r#type, optional, key_path.as_ref(), graph)?));
                 }
                 "not" => {
-                    result.push(sql_where_item(column_name, "<>", value.to_sql_string(r#type, optional, key_path, graph)?));
+                    result.push(sql_where_item(column_name, "<>", value.to_sql_string(r#type, optional, key_path.as_ref(), graph)?));
                 }
                 "gt" => {
-                    result.push(sql_where_item(column_name, ">", value.to_sql_string(r#type, false, key_path, graph)?));
+                    result.push(sql_where_item(column_name, ">", value.to_sql_string(r#type, false, key_path.as_ref(), graph)?));
                 }
                 "gte" => {
-                    result.push(sql_where_item(column_name, ">=", value.to_sql_string(r#type, false, key_path, graph)?));
+                    result.push(sql_where_item(column_name, ">=", value.to_sql_string(r#type, false, key_path.as_ref(), graph)?));
                 }
                 "lt" => {
-                    result.push(sql_where_item(column_name, "<", value.to_sql_string(r#type, false, key_path, graph)?));
+                    result.push(sql_where_item(column_name, "<", value.to_sql_string(r#type, false, key_path.as_ref(), graph)?));
                 }
                 "lte" => {
-                    result.push(sql_where_item(column_name, "<=", value.to_sql_string(r#type, false, key_path, graph)?));
+                    result.push(sql_where_item(column_name, "<=", value.to_sql_string(r#type, false, key_path.as_ref(), graph)?));
                 }
                 "in" => {
-                    result.push(parse_sql_where_entry_array(column_name, r#type, optional, value, key_path, graph, "IN")?);
+                    result.push(parse_sql_where_entry_array(column_name, r#type, optional, value, key_path.as_ref(), graph, "IN")?);
                 }
                 "notIn" => {
-                    result.push(parse_sql_where_entry_array(column_name, r#type, optional, value, key_path, graph, "NOT IN")?);
+                    result.push(parse_sql_where_entry_array(column_name, r#type, optional, value, key_path.as_ref(), graph, "NOT IN")?);
                 }
                 "contains" => {
                     let i_mode = map_has_i_mode(map);
-                    result.push(sql_where_item(&column_name.to_i_mode(i_mode), "LIKE", value.to_sql_string(r#type, false, key_path, graph)?.to_like(true, true).to_i_mode(i_mode)));
+                    result.push(sql_where_item(&column_name.to_i_mode(i_mode), "LIKE", value.to_sql_string(r#type, false, key_path.as_ref(), graph)?.to_like(true, true).to_i_mode(i_mode)));
                 }
                 "startsWith" => {
                     let i_mode = map_has_i_mode(map);
-                    result.push(sql_where_item(&column_name.to_i_mode(i_mode), "LIKE", value.to_sql_string(r#type, false, key_path, graph)?.to_like(false, true).to_i_mode(i_mode)));
+                    result.push(sql_where_item(&column_name.to_i_mode(i_mode), "LIKE", value.to_sql_string(r#type, false, key_path.as_ref(), graph)?.to_like(false, true).to_i_mode(i_mode)));
                 }
                 "endsWith" => {
                     let i_mode = map_has_i_mode(map);
-                    result.push(sql_where_item(&column_name.to_i_mode(i_mode), "LIKE", value.to_sql_string(r#type, false, key_path, graph)?.to_like(true, false).to_i_mode(i_mode)));
+                    result.push(sql_where_item(&column_name.to_i_mode(i_mode), "LIKE", value.to_sql_string(r#type, false, key_path.as_ref(), graph)?.to_like(true, false).to_i_mode(i_mode)));
                 }
                 "matches" => {
                     let i_mode = map_has_i_mode(map);
-                    result.push(sql_where_item(&column_name.to_i_mode(i_mode), "REGEXP", value.to_sql_string(r#type, false, key_path, graph)?.to_i_mode(i_mode)));
+                    result.push(sql_where_item(&column_name.to_i_mode(i_mode), "REGEXP", value.to_sql_string(r#type, false, key_path.as_ref(), graph)?.to_i_mode(i_mode)));
                 }
                 "mode" => { }
                 "has" => {
                     let element_type = r#type.element_field().unwrap();
-                    result.push(sql_where_item(column_name, "@>", value.to_sql_string(element_type.r#type(), element_type.is_optional(), key_path, graph)?.wrap_in_array()));
+                    result.push(sql_where_item(column_name, "@>", value.to_sql_string(element_type.r#type(), element_type.is_optional(), key_path.as_ref(), graph)?.wrap_in_array()));
                 }
                 "hasEvery" => {
-                    result.push(sql_where_item(column_name, "@>", value.to_sql_string(r#type, false, key_path, graph)?));
+                    result.push(sql_where_item(column_name, "@>", value.to_sql_string(r#type, false, key_path.as_ref(), graph)?));
                 }
                 "hasSome" => {
-                    result.push(sql_where_item(column_name, "&&", value.to_sql_string(r#type, false, key_path, graph)?));
+                    result.push(sql_where_item(column_name, "&&", value.to_sql_string(r#type, false, key_path.as_ref(), graph)?));
                 }
                 "isEmpty" => {
                     result.push(sql_where_item(&format!("ARRAY_LENGTH({})", column_name), "=", "0".to_owned()));
                 }
                 "length" => {
-                    result.push(sql_where_item(&format!("ARRAY_LENGTH({})", column_name), "=", value.to_sql_string(&FieldType::U64, false, key_path, graph)?));
+                    result.push(sql_where_item(&format!("ARRAY_LENGTH({})", column_name), "=", value.to_sql_string(&FieldType::U64, false, key_path.as_ref(), graph)?));
                 }
                 _ => {
-                    return Err(ActionError::unexpected_input_key(key, key_path));
+                    return Err(ActionError::unexpected_input_key(key, key_path.as_ref()));
                 }
             }
         }
         Ok(And(result).to_wrapped_string(dialect))
     } else {
-        Ok(sql_where_item(column_name, "=", value.to_sql_string(r#type, optional, key_path, graph)?))
+        Ok(sql_where_item(column_name, "=", value.to_sql_string(r#type, optional, key_path.as_ref(), graph)?))
     }
 }
 
@@ -186,7 +186,7 @@ pub(crate) fn build_where_input<'a>(model: &Model, graph: &Graph, r#where: Optio
     if let None = r#where { return Ok(None); }
     let r#where = r#where.unwrap();
     if !r#where.is_object() {
-        return Err(ActionError::unexpected_input_type("object", key_path));
+        return Err(ActionError::unexpected_input_type("object", key_path.as_ref()));
     }
     let r#where = r#where.as_object().unwrap();
     let mut retval: Vec<String> = vec![];
@@ -215,7 +215,7 @@ pub(crate) fn build_where_input<'a>(model: &Model, graph: &Graph, r#where: Optio
         if let Some(field) = model.field(key) {
             let column_name = field.column_name();
             let optional = field.optionality.is_optional();
-            let where_entry = parse_sql_where_entry(column_name, &field.field_type, optional, value, graph, dialect, key_path)?;
+            let where_entry = parse_sql_where_entry(column_name, &field.field_type, optional, value, graph, dialect, key_path.as_ref())?;
             retval.push(where_entry);
         } else if let Some(relation) = model.relation(key) {
             panic!("not handle this yet")
@@ -329,7 +329,7 @@ pub(crate) fn build_sql_query<'a>(
         stmt.left_join(additional_left_join);
     }
     if let Some(order_by) = args.order_by {
-        let mut path = &key_path + "orderBy";
+        let mut path = key_path.as_ref() + "orderBy";
         if let Some(order_by_result) = build_order_by_input(model, graph, Some(order_by), dialect, &path)? {
             stmt.order_by(order_by_result);
         }
