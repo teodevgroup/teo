@@ -21,7 +21,7 @@ impl Modifier for OneOfModifier {
         "oneOf"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let arg = self.argument.resolve(ctx.clone()).await;
         let list = arg.as_vec().unwrap();
         if list.iter().find(|item| **item == arg).is_some() {

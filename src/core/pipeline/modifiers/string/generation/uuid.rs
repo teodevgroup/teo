@@ -21,7 +21,7 @@ impl Modifier for UUIDModifier {
         "uuid"
     }
 
-    async fn call(&self, context: Context) -> Context {
+    async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
         context.alter_value(Value::String(Uuid::new_v4().to_string()))
     }
 }

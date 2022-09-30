@@ -32,7 +32,7 @@ impl Modifier for AnyModifier {
         "any"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         for pipeline in &self.pipelines {
             let result = pipeline.process(ctx.clone()).await;
             if result.is_valid() {

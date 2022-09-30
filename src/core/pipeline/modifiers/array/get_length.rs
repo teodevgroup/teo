@@ -19,7 +19,7 @@ impl Modifier for GetLengthModifier {
         "getLength"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let len = match &ctx.value {
             Value::String(s) => s.len(),
             Value::Vec(v) => v.len(),

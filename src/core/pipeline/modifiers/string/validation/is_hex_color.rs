@@ -24,7 +24,7 @@ impl Modifier for IsHexColorModifier {
         "isHexColor"
     }
 
-    async fn call(&self, context: Context) -> Context {
+    async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
         match context.value.as_str() {
             Some(s) => {
                 if self.regex.is_match(s) {

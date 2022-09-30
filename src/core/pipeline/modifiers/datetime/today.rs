@@ -21,7 +21,7 @@ impl Modifier for TodayModifier {
         "today"
     }
 
-    async fn call(&self, context: Context) -> Context {
+    async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
         context.alter_value(Value::Date(Utc::today()))
     }
 }

@@ -21,7 +21,7 @@ impl Modifier for RequireIdentityModifier {
         "requireIdentity"
     }
 
-    async fn call(&self, context: Context) -> Context {
+    async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
         if context.identity.is_some() {
             context
         } else {

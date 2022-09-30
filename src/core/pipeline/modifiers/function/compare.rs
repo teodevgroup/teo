@@ -51,7 +51,7 @@ impl<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync> Modifier for
         "compare"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         if ctx.object.is_new() {
             return ctx;
         }

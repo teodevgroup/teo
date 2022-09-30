@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::format;
+use key_path::KeyPath;
 use serde_json::{Value as JsonValue};
 use crate::connectors::shared::map_has_i_mode::map_has_i_mode;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
@@ -13,7 +14,6 @@ use crate::connectors::sql::query_builder::traits::to_sql_string::ToSQLString;
 use crate::connectors::sql::query_builder::integration::value_encoder::JsonValueToSQLString;
 use crate::core::error::ActionError;
 use crate::core::field::r#type::FieldType;
-use crate::core::key_path::KeyPathItem;
 use crate::core::model::Model;
 use crate::prelude::{Graph, Value};
 
@@ -21,12 +21,12 @@ fn sql_where_item(col_name: &str, op: &str, val: String) -> String {
     format!("{col_name} {op} {val}")
 }
 
-fn parse_sql_where_entry_array(
+fn parse_sql_where_entry_array<'a>(
     column_name: &str,
     r#type: &FieldType,
     optional: bool,
     value: &JsonValue,
-    key_path: &Vec<KeyPathItem>,
+    key_path: impl AsRef<KeyPath<'a>>,
     graph: &Graph,
     op: &str
 ) -> Result<String, ActionError> {
@@ -44,14 +44,14 @@ fn parse_sql_where_entry_array(
     }
 }
 
-fn parse_sql_where_entry_item(
+fn parse_sql_where_entry_item<'a>(
     column_name: &str,
     r#type: &FieldType,
     optional: bool,
     value: &JsonValue,
     graph: &Graph,
     dialect: SQLDialect,
-    key_path: &Vec<KeyPathItem>,
+    key_path: impl AsRef<KeyPath<'a>>,
     ops: &Vec<&str>,
 ) -> Result<String, ActionError> {
     if let Some(map) = value.as_object() {
@@ -129,14 +129,14 @@ fn parse_sql_where_entry_item(
     }
 }
 
-fn parse_sql_where_entry(
+fn parse_sql_where_entry<'a>(
     column_name: &str,
     field_type: &FieldType,
     optional: bool,
     value: &JsonValue,
     graph: &Graph,
     dialect: SQLDialect,
-    key_path: &Vec<KeyPathItem>
+    key_path: impl AsRef<KeyPath<'a>>
 ) -> Result<String, ActionError> {
     return match field_type {
         FieldType::Undefined => {
@@ -182,7 +182,7 @@ pub(crate) fn build_where_from_identifier(model: &Model, graph: &Graph, identifi
     And(retval).to_string(dialect)
 }
 
-pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&JsonValue>, dialect: SQLDialect, key_path: &Vec<KeyPathItem>) -> Result<Option<String>, ActionError> {
+pub(crate) fn build_where_input<'a>(model: &Model, graph: &Graph, r#where: Option<&JsonValue>, dialect: SQLDialect, key_path: impl AsRef<KeyPath<'a>>) -> Result<Option<String>, ActionError> {
     if let None = r#where { return Ok(None); }
     let r#where = r#where.unwrap();
     if !r#where.is_object() {
@@ -192,22 +192,19 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
     let mut retval: Vec<String> = vec![];
     for (key, value) in r#where.iter() {
         if key == "AND" {
-            let mut path = key_path.clone();
-            path.push(KeyPathItem::String("AND".to_string()));
+            let path = key_path.as_ref() + "AND";
             let inner = WhereClause::And(value.as_array().unwrap().iter().map(|w| build_where_input(model, graph, Some(w), dialect, &path).unwrap().unwrap()).collect()).to_string(dialect);
             let val = "(".to_owned() + &inner + ")";
             retval.push(val);
             continue;
         } else if key == "OR" {
-            let mut path = key_path.clone();
-            path.push(KeyPathItem::String("OR".to_string()));
+            let path = key_path.as_ref() + "OR";
             let inner = WhereClause::Or(value.as_array().unwrap().iter().map(|w| build_where_input(model, graph, Some(w), dialect, &path).unwrap().unwrap()).collect()).to_string(dialect);
             let val = "(".to_owned() + &inner + ")";
             retval.push(val);
             continue;
         } else if key == "NOT" {
-            let mut path = key_path.clone();
-            path.push(KeyPathItem::String("NOT".to_string()));
+            let path = key_path.as_ref() + "NOT";
             let inner = WhereClause::Not(build_where_input(model, graph, Some(value), dialect, &path).unwrap().unwrap()).to_string(dialect);
             let val = "(".to_owned() + &inner + ")";
             retval.push(val);
@@ -250,12 +247,12 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
     }
 }
 
-pub(crate) fn build_order_by_input(
+pub(crate) fn build_order_by_input<'a>(
     model: &Model,
     graph: &Graph,
     order_by: Option<&JsonValue>,
     dialect: SQLDialect,
-    key_path: &Vec<KeyPathItem>
+    key_path: impl AsRef<KeyPath<'a>>
 ) -> Result<Option<String>, ActionError> {
     if let None = order_by { return Ok(None); }
     let order_by = order_by.unwrap();
@@ -272,20 +269,17 @@ pub(crate) fn build_order_by_input(
                     "asc" => retval.push(format!("{} ASC", column_name)),
                     "desc" => retval.push(format!("{} DESC", column_name)),
                     _ => {
-                        let mut path = key_path.clone();
-                        path.push(KeyPathItem::String(key.clone()));
-                        return Err(ActionError::unexpected_input_value("\"asc\" or \"desc\"", key_path));
+                        let path = key_path.as_ref() + key;
+                        return Err(ActionError::unexpected_input_value("\"asc\" or \"desc\"", path));
                     }
                 }
             } else {
-                let mut path = key_path.clone();
-                path.push(KeyPathItem::String(key.clone()));
-                return Err(ActionError::unexpected_input_type("\"asc\" or \"desc\"", key_path));
+                let path = key_path.as_ref() + key;
+                return Err(ActionError::unexpected_input_type("\"asc\" or \"desc\"", path));
             }
         } else {
-            let mut path = key_path.clone();
-            path.push(KeyPathItem::String(key.clone()));
-            return Err(ActionError::unexpected_input_key(key, key_path));
+            let path = key_path.as_ref() + key;
+            return Err(ActionError::unexpected_input_key(key, path));
         }
     }
     if retval.is_empty() {
@@ -295,7 +289,7 @@ pub(crate) fn build_order_by_input(
     }
 }
 
-pub(crate) fn build_sql_query(
+pub(crate) fn build_sql_query<'a>(
     model: &Model,
     graph: &Graph,
     r#type: QueryPipelineType,
@@ -304,7 +298,7 @@ pub(crate) fn build_sql_query(
     dialect: SQLDialect,
     additional_where: Option<String>,
     additional_left_join: Option<String>,
-    key_path: &Vec<KeyPathItem>,
+    key_path: impl AsRef<KeyPath<'a>>,
 ) -> Result<String, ActionError> {
     let table_name = if additional_left_join.is_some() {
         model.table_name().to_string() + " AS t"
@@ -319,8 +313,7 @@ pub(crate) fn build_sql_query(
 
     let mut stmt = SQL::select(if columns.is_empty() { None } else { Some(&column_refs) }, &table_name);
     if let Some(r#where) = args.r#where {
-        let mut path = key_path.clone();
-        path.push(KeyPathItem::String("where".to_string()));
+        let mut path = key_path.as_ref() + "where";
         if let Some(where_result) = build_where_input(model, graph, Some(r#where), dialect, &path)? {
             stmt.r#where(where_result);
         }
@@ -336,8 +329,7 @@ pub(crate) fn build_sql_query(
         stmt.left_join(additional_left_join);
     }
     if let Some(order_by) = args.order_by {
-        let mut path = key_path.clone();
-        path.push(KeyPathItem::String("orderBy".to_string()));
+        let mut path = &key_path + "orderBy";
         if let Some(order_by_result) = build_order_by_input(model, graph, Some(order_by), dialect, &path)? {
             stmt.order_by(order_by_result);
         }
@@ -359,7 +351,7 @@ pub(crate) fn build_sql_query(
     }
 }
 
-pub(crate) fn build_sql_query_from_json(
+pub(crate) fn build_sql_query_from_json<'a>(
     model: &Model,
     graph: &Graph,
     r#type: QueryPipelineType,
@@ -368,7 +360,7 @@ pub(crate) fn build_sql_query_from_json(
     dialect: SQLDialect,
     additional_where: Option<String>,
     additional_left_join: Option<String>,
-    key_path: &Vec<KeyPathItem>,
+    key_path: impl AsRef<KeyPath<'a>>,
 ) -> Result<String, ActionError> {
     let args = user_json_args(model, graph, r#type, mutation_mode, json_value)?;
     build_sql_query(model, graph, r#type, mutation_mode, args, dialect, additional_where, additional_left_join, key_path)

@@ -20,7 +20,7 @@ impl Modifier for RoundModifier {
         "round"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         match ctx.value {
             Value::F32(v) => ctx.alter_value(Value::F32(v.round())),
             Value::F64(v) => ctx.alter_value(Value::F64(v.round())),

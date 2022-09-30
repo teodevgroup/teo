@@ -1,6 +1,5 @@
-
+use key_path::KeyPath;
 use crate::core::action::r#type::ActionType;
-use crate::core::key_path::KeyPathItem;
 use crate::core::object::Object;
 use crate::core::pipeline::context::Stage::{ConditionTrue, ConditionFalse, Default};
 use crate::core::pipeline::context::Validity::{Invalid, Valid};
@@ -101,23 +100,23 @@ pub enum Intent {
 }
 
 #[derive(Clone)]
-pub struct Context {
+pub struct Context<'a> {
     pub(crate) value: Value,
     pub(crate) object: Object,
-    pub(crate) key_path: Vec<KeyPathItem>,
+    pub(crate) key_path: KeyPath<'a>,
     pub(crate) identity: Option<Object>,
     pub(crate) validity: Validity,
     pub(crate) stage: Stage,
     pub(crate) intent: Intent,
 }
 
-impl Context {
+impl Context<'_> {
 
     pub(crate) fn initial_state(object: Object, intent: Intent) -> Self {
         Context {
             value: Value::Object(object.clone()),
             object: object.clone(),
-            key_path: Vec::new(),
+            key_path: KeyPath::new(),
             identity: object.get_identity(),
             validity: Valid,
             stage: Default,
@@ -125,7 +124,7 @@ impl Context {
         }
     }
 
-    pub(crate) fn alter_key_path(&self, key_path: Vec<KeyPathItem>) -> Self {
+    pub(crate) fn alter_key_path(&self, key_path: KeyPath) -> Self {
         Self {
             value: self.value.clone(),
             object: self.object.clone(),

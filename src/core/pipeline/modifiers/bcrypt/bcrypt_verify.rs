@@ -26,7 +26,7 @@ impl Modifier for BcryptVerifyModifier {
         "bcryptVerify"
     }
 
-    async fn call(&self, context: Context) -> Context {
+    async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
         match context.value.as_str() {
             None => {
                 context.alter_validity(Invalid("Value is not string.".to_owned()))

@@ -22,7 +22,7 @@ impl Modifier for ConnectIdentityModifier {
         "connectIdentity"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         if !ctx.identity.is_some() {
             return ctx;
         }

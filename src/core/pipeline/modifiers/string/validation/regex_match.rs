@@ -25,7 +25,7 @@ impl Modifier for RegexMatchModifier {
         "regexMatch"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let arg_value = self.argument.resolve(ctx.clone()).await;
         let format = arg_value.as_str().unwrap();
         let regex = Regex::new(format).unwrap();

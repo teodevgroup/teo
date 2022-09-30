@@ -19,7 +19,7 @@ impl Pipeline {
         self.modifiers.len() > 0
     }
 
-    pub(crate) async fn process(&self, mut context: Context) -> Context {
+    pub(crate) async fn process<'a>(&self, mut context: Context<'a>) -> Context<'a> {
         for modifier in &self.modifiers {
             context = modifier.call(context.clone()).await;
         }

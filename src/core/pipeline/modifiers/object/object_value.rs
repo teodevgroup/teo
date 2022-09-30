@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use crate::core::key_path::KeyPathItem;
+use key_path::path;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::argument::Argument;
 use crate::core::pipeline::context::Context;
@@ -22,9 +22,9 @@ impl Modifier for ObjectValueModifier {
         "objectValue"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let key = self.key.resolve(ctx.clone()).await;
         let value = ctx.object.get_value(key.as_str().unwrap()).unwrap();
-        ctx.alter_value(value).alter_key_path(vec![KeyPathItem::String(key.as_string().unwrap())])
+        ctx.alter_value(value).alter_key_path(path![key.as_str().unwrap()])
     }
 }

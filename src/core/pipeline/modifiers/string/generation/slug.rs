@@ -21,7 +21,7 @@ impl Modifier for SlugModifier {
         "slug"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         ctx.alter_value(Value::String(slug().unwrap()))
     }
 }

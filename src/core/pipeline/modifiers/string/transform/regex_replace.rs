@@ -28,7 +28,7 @@ impl Modifier for RegexReplaceModifier {
         "regexReplace"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let arg = self.format.resolve(ctx.clone()).await;
         let format = arg.as_str().unwrap();
         let s_arg = self.substitute.resolve(ctx.clone()).await;

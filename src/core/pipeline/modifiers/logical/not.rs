@@ -24,7 +24,7 @@ impl Modifier for NotModifier {
         "not"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         if self.pipeline.process(ctx.clone()).await.is_valid() {
             ctx.invalid("Condition is valid.")
         } else {

@@ -24,7 +24,7 @@ impl Modifier for ThenModifier {
         "then"
     }
 
-    async fn call(&self, context: Context) -> Context {
+    async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
         if context.is_condition_true() {
             self.pipeline.process(context).await
         } else {

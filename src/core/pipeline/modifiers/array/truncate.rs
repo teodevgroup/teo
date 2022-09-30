@@ -25,7 +25,7 @@ impl Modifier for TruncateModifier {
         "truncate"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let argument = self.argument.resolve(ctx.clone()).await.as_usize().unwrap();
         match &ctx.value {
             Value::String(s) => ctx.alter_value(Value::String(s.chars().take(argument).collect())),

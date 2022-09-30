@@ -25,7 +25,7 @@ impl Modifier for DoModifier {
         "do"
     }
 
-    async fn call(&self, context: Context) -> Context {
+    async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
         self.pipeline.process(context).await
     }
 }

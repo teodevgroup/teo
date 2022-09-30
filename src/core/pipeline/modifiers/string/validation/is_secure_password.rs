@@ -28,7 +28,7 @@ impl Modifier for IsSecurePasswordModifier {
         "isSecurePassword"
     }
 
-    async fn call(&self, context: Context) -> Context {
+    async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
         match context.value.as_str() {
             Some(s) => {
                 for regex in &self.patterns {

@@ -1,10 +1,10 @@
 use chrono::{Date, Utc, DateTime, SecondsFormat};
+use key_path::KeyPath;
 use serde_json::{Value as JsonValue};
 use crate::connectors::sql::query_builder::dialect::SQLDialect;
 use crate::connectors::sql::query_builder::traits::to_sql_string::ToSQLString;
 use crate::core::error::ActionError;
 use crate::core::field::r#type::FieldType;
-use crate::core::key_path::KeyPathItem;
 use crate::prelude::{Graph, Value};
 
 pub trait TypeOrNull {
@@ -18,11 +18,11 @@ impl TypeOrNull for &str {
 }
 
 pub(crate) trait JsonValueToSQLString {
-    fn to_sql_string(&self, r#type: &FieldType, optional: bool, path: &Vec<KeyPathItem>, graph: &Graph) -> Result<String, ActionError>;
+    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, path: impl AsRef<KeyPath<'a>>, graph: &Graph) -> Result<String, ActionError>;
 }
 
 impl JsonValueToSQLString for JsonValue {
-    fn to_sql_string(&self, r#type: &FieldType, optional: bool, path: &Vec<KeyPathItem>, graph: &Graph) -> Result<String, ActionError> {
+    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, path: impl AsRef<KeyPath<'a>>, graph: &Graph) -> Result<String, ActionError> {
         if optional {
             if self.is_null() {
                 return Ok(("NULL".to_owned()));
@@ -69,8 +69,7 @@ impl JsonValueToSQLString for JsonValue {
             FieldType::Vec(element_field) => if let Some(val) = self.as_array() {
                 let mut result: Vec<String> = vec![];
                 for (i, v) in val.iter().enumerate() {
-                    let mut path = path.clone();
-                    path.push(KeyPathItem::Number(i));
+                    let path = &path + i as usize;
                     result.push(v.to_sql_string(element_field.r#type(), element_field.is_optional(), &path, graph)?);
                 }
                 Ok(result.join(", ").wrap_in_array())
@@ -83,7 +82,7 @@ impl JsonValueToSQLString for JsonValue {
 }
 
 impl JsonValueToSQLString for &JsonValue {
-    fn to_sql_string(&self, r#type: &FieldType, optional: bool, path: &Vec<KeyPathItem>, graph: &Graph) -> Result<String, ActionError> {
+    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, path: impl AsRef<KeyPath<'a>>, graph: &Graph) -> Result<String, ActionError> {
         (*self).to_sql_string(r#type, optional, path, graph)
     }
 }

@@ -6,7 +6,6 @@ use crate::core::permission::Permission;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::Context;
 use crate::core::value::Value;
-use crate::core::key_path::KeyPathItem;
 
 pub(crate) mod r#type;
 pub(crate) mod builder;
@@ -196,7 +195,7 @@ impl Field {
         }
     }
 
-    pub(crate) async fn perform_on_save_callback(&self, ctx: Context) -> Context {
+    pub(crate) async fn perform_on_save_callback<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let mut new_ctx = ctx.clone();
         match &self.field_type {
             FieldType::Vec(inner) => {
@@ -206,8 +205,7 @@ impl Field {
                     let arr = arr.unwrap();
                     let mut new_arr: Vec<Value> = Vec::new();
                     for (i, _v) in arr.iter().enumerate() {
-                        let mut key_path = ctx.key_path.clone();
-                        key_path.push(KeyPathItem::Number(i));
+                        let key_path = &ctx.key_path + i;
                         let arr_item_ctx = ctx.alter_key_path(key_path);
                         new_arr.push(inner.on_save_pipeline.process(arr_item_ctx).await.value);
                     }
@@ -219,7 +217,7 @@ impl Field {
         self.on_save_pipeline.process(new_ctx.clone()).await
     }
 
-    pub(crate) async fn perform_on_output_callback(&self, ctx: Context) -> Context {
+    pub(crate) async fn perform_on_output_callback<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let mut new_ctx = ctx.clone();
         match &self.field_type {
             FieldType::Vec(inner) => {
@@ -229,8 +227,7 @@ impl Field {
                     let arr = arr.unwrap();
                     let mut new_arr: Vec<Value> = Vec::new();
                     for (i, _v) in arr.iter().enumerate() {
-                        let mut key_path = ctx.key_path.clone();
-                        key_path.push(KeyPathItem::Number(i));
+                        let mut key_path = &ctx.key_path + i;
                         let arr_item_ctx = ctx.alter_key_path(key_path);
                         new_arr.push(inner.on_output_pipeline.process(arr_item_ctx).await.value);
                     }

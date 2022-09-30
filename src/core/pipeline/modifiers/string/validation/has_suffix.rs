@@ -21,7 +21,7 @@ impl Modifier for HasSuffixModifier {
         "hasSuffix"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         match ctx.value.as_str() {
             None => ctx.invalid("Value is not string."),
             Some(s) => {

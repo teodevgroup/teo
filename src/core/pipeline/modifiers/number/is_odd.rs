@@ -19,7 +19,7 @@ impl Modifier for IsOddModifier {
         "isOdd"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         match ctx.value {
             Value::I8(v) => if v % 2 == 1 { ctx } else { ctx.invalid("Value is not odd.") },
             Value::I16(v) => if v % 2 == 1 { ctx } else { ctx.invalid("Value is not odd.") },

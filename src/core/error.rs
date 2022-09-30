@@ -2,8 +2,7 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use serde::Serialize;
 use maplit::hashmap;
-use crate::core::key_path::{KeyPathItem, ToDottedString};
-
+use key_path::KeyPath;
 
 #[derive(Debug, PartialEq, Serialize)]
 pub enum ActionErrorType {
@@ -546,27 +545,27 @@ impl ActionError {
 
     // new error types which should be used across the project
 
-    pub fn unexpected_input_type(expected: impl Into<String>, key_path: &Vec<KeyPathItem>) -> Self {
+    pub fn unexpected_input_type<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         ActionError {
             r#type: ActionErrorType::UnexpectedInputType,
             message: "Input type invalid.".to_string(),
-            errors: Some(hashmap!{key_path.to_dotted_string() => format!("Expect {}.", expected.into())}),
+            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expect {}.", expected.into())}),
         }
     }
 
-    pub fn unexpected_input_key(unexpected: impl Into<String>, key_path: &Vec<KeyPathItem>) -> Self {
+    pub fn unexpected_input_key<'a>(unexpected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         ActionError {
             r#type: ActionErrorType::UnexpectedInputKey,
             message: "Unexpected key found.".to_string(),
-            errors: Some(hashmap!{key_path.to_dotted_string() => format!("Unexpected key '{}'.", unexpected.into())}),
+            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Unexpected key '{}'.", unexpected.into())}),
         }
     }
 
-    pub fn unexpected_input_value(expected: impl Into<String>, key_path: &Vec<KeyPathItem>) -> Self {
+    pub fn unexpected_input_value<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         ActionError {
             r#type: ActionErrorType::UnexpectedInputValue,
             message: "Unexpected value found.".to_string(),
-            errors: Some(hashmap!{key_path.to_dotted_string() => format!("Expected `{}'.", expected.into())}),
+            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expected `{}'.", expected.into())}),
         }
     }
 }

@@ -17,4 +17,3 @@ pub mod permission;
 pub mod connector;
 pub mod save_session;
 pub mod json_pipeline;
-pub mod key_path;

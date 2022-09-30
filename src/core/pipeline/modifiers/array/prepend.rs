@@ -23,7 +23,7 @@ impl Modifier for PrependModifier {
         "prepend"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let argument = self.argument.resolve(ctx.clone()).await;
         match &ctx.value {
             Value::String(s) => {

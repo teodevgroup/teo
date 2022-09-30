@@ -53,7 +53,7 @@ impl<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync> Modifier for
         "validate"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let cb = self.callback.clone();
         let value = cb.call((&ctx).value.clone().into()).await;
         let validity = value.into();

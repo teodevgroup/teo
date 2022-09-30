@@ -19,7 +19,7 @@ impl Modifier for ReverseModifier {
         "reverse"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         match &ctx.value {
             Value::String(s) => ctx.alter_value(Value::String(s.chars().rev().collect::<String>())),
             Value::Vec(v) => ctx.alter_value(Value::Vec(v.into_iter().rev().map(|v| v.clone()).collect())),

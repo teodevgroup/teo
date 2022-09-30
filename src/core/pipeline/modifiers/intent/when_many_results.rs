@@ -23,7 +23,7 @@ impl Modifier for WhenManyResultsModifier {
         "whenManyResults"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         match ctx.intent {
             Intent::ManyResult(_) => self.pipeline.process(ctx.clone()).await,
             _ => ctx

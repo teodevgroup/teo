@@ -25,7 +25,7 @@ impl Modifier for WhenUpdateModifier {
         "whenUpdate"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         match ctx.intent {
             Update => self.pipeline.process(ctx.clone()).await,
             SingleResult(a) => if a == ActionType::Create {

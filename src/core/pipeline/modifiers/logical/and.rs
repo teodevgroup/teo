@@ -26,7 +26,7 @@ impl Modifier for AndModifier {
         "and"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         if !ctx.value.is_null() {
             ctx
         } else {

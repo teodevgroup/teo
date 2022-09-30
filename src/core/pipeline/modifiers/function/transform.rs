@@ -51,7 +51,7 @@ impl<T: Into<Value> + From<Value> + Send + Sync> Modifier for TransformModifier<
         "transform"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let cb = self.callback.clone();
         let value = cb.call((&ctx).value.clone().into()).await;
         ctx.alter_value(value.into())

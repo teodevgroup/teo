@@ -3,6 +3,7 @@ use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
+use key_path::path;
 use serde_json::{json, Map, Value as JsonValue};
 use async_recursion::async_recursion;
 use crate::core::pipeline::argument::Argument;
@@ -17,7 +18,6 @@ use crate::core::save_session::SaveSession;
 use crate::core::pipeline::context::{Context, Intent};
 use crate::core::value::Value;
 use crate::core::error::{ActionError, ActionErrorType};
-use crate::core::key_path::KeyPathItem;
 
 #[derive(Clone)]
 pub struct Object {
@@ -272,7 +272,7 @@ impl Object {
                 };
                 let context = Context::initial_state(self.clone(), purpose)
                     .alter_value(initial_value)
-                    .alter_key_path(vec![KeyPathItem::String((&field).name.to_string())]);
+                    .alter_key_path(path![&field.name]);
                 let result_ctx = field.perform_on_save_callback(context).await;
                 match result_ctx.invalid_reason() {
                     Some(reason) => {
@@ -658,7 +658,7 @@ impl Object {
                 if let Some(field) = self.model().field(key) {
                     let context = Context::initial_state(self.clone(), purpose)
                         .alter_value(value)
-                        .alter_key_path(vec![KeyPathItem::String(key.clone())]);
+                        .alter_key_path(path![key.as_str()]);
                     let result_ctx = field.perform_on_output_callback(context).await;
                     value = result_ctx.value
                 } else if let Some(property) = self.model().property(key) {
@@ -736,7 +736,7 @@ impl Object {
                                     Intent::Update
                                 };
                                 let context = Context::initial_state(self.clone(), purpose)
-                                    .alter_key_path(vec![KeyPathItem::String(key.to_string())])
+                                    .alter_key_path(path![key.as_str()])
                                     .alter_value(value);
                                 if !self.is_new() && field.previous_value_rule == PreviousValueRule::Keep {
                                     if self.inner.previous_value_map.lock().unwrap().get(field.name()).is_none() {

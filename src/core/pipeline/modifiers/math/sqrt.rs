@@ -22,7 +22,7 @@ impl Modifier for SqrtModifier {
         "sqrt"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         match ctx.value {
             Value::I8(v) => ctx.alter_value(Value::I8(v.sqrt())),
             Value::I16(v) => ctx.alter_value(Value::I16(v.sqrt())),

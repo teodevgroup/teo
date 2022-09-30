@@ -23,7 +23,7 @@ impl Modifier for WhenSingleResultModifier {
         "whenSingleResult"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         match ctx.intent {
             Intent::SingleResult(_) => self.pipeline.process(ctx.clone()).await,
             _ => ctx

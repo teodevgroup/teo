@@ -24,7 +24,7 @@ impl Modifier for ElseModifier {
         "else"
     }
 
-    async fn call(&self, context: Context) -> Context {
+    async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
         if context.is_condition_false() {
             self.pipeline.process(context).await
         } else {

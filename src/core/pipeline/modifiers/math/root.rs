@@ -23,7 +23,7 @@ impl Modifier for RootModifier {
         "root"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let argument = self.argument.resolve(ctx.clone()).await;
         let exp = argument.as_u32().unwrap();
         match ctx.value {

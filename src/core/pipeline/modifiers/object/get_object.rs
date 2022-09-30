@@ -21,7 +21,7 @@ impl Modifier for GetObjectModifier {
         "getObject"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         ctx.alter_value(Value::Object(ctx.object.clone())).alter_key_path(vec![])
     }
 }

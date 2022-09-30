@@ -21,7 +21,7 @@ impl Modifier for EqModifier {
         "eq"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let rhs = self.argument.resolve(ctx.clone()).await;
         if rhs == ctx.value {
             ctx

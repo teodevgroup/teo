@@ -23,7 +23,7 @@ impl Modifier for TransformWithModifier {
         "transformWith"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let new_ctx = self.pipeline.process(ctx.clone()).await;
         ctx.alter_value(new_ctx.value)
     }

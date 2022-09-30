@@ -18,7 +18,7 @@ impl Modifier for IsTrueModifier {
         "isTrue"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let valid = match ctx.value.as_bool() {
             Some(b) => b,
             None => false

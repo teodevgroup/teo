@@ -54,7 +54,7 @@ impl Modifier for HasLengthModifier {
         "hasLength"
     }
 
-    async fn call(&self, context: Context) -> Context {
+    async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
         let (lower, upper) = match &self.argument.lower {
             Argument::ValueArgument(l) => {
                 (l.as_usize().unwrap(), self.argument.upper.as_value().unwrap().as_usize().unwrap())

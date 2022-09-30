@@ -23,7 +23,7 @@ impl Modifier for MinModifier {
         "min"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let argument = self.argument.resolve(ctx.clone()).await;
         match ctx.value {
             Value::I8(v) => ctx.alter_value(Value::I8(max(v, argument.as_i8().unwrap()))),

@@ -23,7 +23,7 @@ impl Modifier for ValidateWithModifier {
         "validateWith"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let new_ctx = self.pipeline.process(ctx.clone()).await;
         if new_ctx.is_valid() {
             ctx

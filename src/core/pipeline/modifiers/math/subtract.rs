@@ -23,7 +23,7 @@ impl Modifier for SubtractModifier {
         "subtract"
     }
 
-    async fn call(&self, context: Context) -> Context {
+    async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
         let argument = self.argument.resolve(context.clone()).await;
         context.alter_value(context.value.clone() - argument)
     }

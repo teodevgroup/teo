@@ -21,7 +21,7 @@ impl Modifier for HasIdentityModifier {
         "hasIdentity"
     }
 
-    async fn call(&self, context: Context) -> Context {
+    async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
         if context.identity.is_some() {
             context
         } else {

@@ -26,7 +26,7 @@ impl Modifier for OrModifier {
         "or"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         if ctx.value.is_null() {
             self.pipeline.process(ctx).await
         } else {

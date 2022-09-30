@@ -30,7 +30,7 @@ impl Modifier for AllModifier {
         "all"
     }
 
-    async fn call(&self, context: Context) -> Context {
+    async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
         for pipeline in &self.pipelines {
             if let Some(reason) = pipeline.process(context.clone()).await.invalid_reason() {
                 return context.invalid(reason);

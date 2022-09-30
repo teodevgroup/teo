@@ -18,7 +18,7 @@ impl Modifier for IsNullModifier {
         "isNull"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         if ctx.value.is_null() {
             ctx
         } else {

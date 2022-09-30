@@ -49,7 +49,7 @@ impl<T: From<Value> + Send + Sync> Modifier for PerformModifier<T> {
         "perform"
     }
 
-    async fn call(&self, ctx: Context) -> Context {
+    async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let cb = self.callback.clone();
         cb.call((&ctx).value.clone().into()).await;
         ctx
