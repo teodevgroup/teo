@@ -334,7 +334,7 @@ impl ModelBuilder {
             output_keys: self.output_keys(),
             query_keys: self.query_keys(),
             unique_query_keys,
-            auth_identity_keys: self.get_auth_by_keys(),
+            auth_identity_keys: self.get_auth_identity_keys(),
             auth_by_keys: self.get_auth_by_keys(),
         };
         Model::new_with_inner(Arc::new(inner))

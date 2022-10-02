@@ -24,10 +24,8 @@ pub enum ActionErrorType {
     UnknownDatabaseCountError,
     NotFound,
     InternalServerError,
-    MissingActionName,
     UndefinedAction,
     UnallowedAction,
-    MissingInputSection,
     ObjectNotFound,
     ObjectIsNotSaved,
     FieldIsNotUnique,
@@ -40,7 +38,6 @@ pub enum ActionErrorType {
     MissingAuthChecker,
     AuthenticationFailed,
     InvalidAuthorizationFormat,
-    InvalidJWTToken,
     IdentityIsNotFound,
     UnexpectedNull,
     WrongInputUpdator,
@@ -55,9 +52,13 @@ pub enum ActionErrorType {
     ModelNotFound,
     WrongIdentityModel,
     PropertySetterError,
+
+    // new errors
     UnexpectedInputType,
     UnexpectedInputKey,
     UnexpectedInputValue,
+    MissingRequiredInput,
+    InvalidJWTToken,
 }
 
 impl ActionErrorType {
@@ -74,7 +75,6 @@ impl ActionErrorType {
             ActionErrorType::ValueRequired => { 400 }
             ActionErrorType::ValidationError => { 400 }
             ActionErrorType::WrongJSONFormat => { 400 }
-            ActionErrorType::MissingActionName => { 400 }
             ActionErrorType::UndefinedAction => { 400 }
             ActionErrorType::UnallowedAction => { 400 }
             ActionErrorType::ObjectIsNotSaved => { 400 }
@@ -87,7 +87,6 @@ impl ActionErrorType {
             ActionErrorType::UnmatchedDataTypeInDatabase => { 500 }
             ActionErrorType::NotFound => { 404 }
             ActionErrorType::InternalServerError => { 500 }
-            ActionErrorType::MissingInputSection => { 400 }
             ActionErrorType::ObjectNotFound => { 404 }
             ActionErrorType::FieldIsNotUnique => { 400 }
             ActionErrorType::MultipleAuthCheckerProvided => { 400 }
@@ -115,6 +114,7 @@ impl ActionErrorType {
             ActionErrorType::UnexpectedInputType => { 400 }
             ActionErrorType::UnexpectedInputKey => { 400 }
             ActionErrorType::UnexpectedInputValue => { 400 }
+            ActionErrorType::MissingRequiredInput => { 400 }
         }
     }
 }
@@ -271,14 +271,6 @@ impl ActionError {
         }
     }
 
-    pub fn missing_action_name() -> Self {
-        ActionError {
-            r#type: ActionErrorType::MissingActionName,
-            message: "Missing action name.".to_string(),
-            errors: None
-        }
-    }
-
     pub fn undefined_action() -> Self {
         ActionError {
             r#type: ActionErrorType::UndefinedAction,
@@ -291,14 +283,6 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::UnallowedAction,
             message: "Unallowed action.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn missing_input_section() -> Self {
-        ActionError {
-            r#type: ActionErrorType::MissingInputSection,
-            message: "Input incomplete.".to_string(),
             errors: None
         }
     }
@@ -566,6 +550,14 @@ impl ActionError {
             r#type: ActionErrorType::UnexpectedInputValue,
             message: "Unexpected value found.".to_string(),
             errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expected `{}'.", expected.into())}),
+        }
+    }
+
+    pub fn missing_required_input<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
+        ActionError {
+            r#type: ActionErrorType::MissingRequiredInput,
+            message: "Missing required input.".to_string(),
+            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expected `{}'.", expected.into())})
         }
     }
 }

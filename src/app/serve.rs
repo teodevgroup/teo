@@ -10,6 +10,7 @@ use serde_json::{json, Value as JsonValue};
 use futures_util::StreamExt;
 use serde::{Serialize, Deserialize};
 use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
+use key_path::path;
 use crate::core::action::r#type::ActionType;
 use crate::app::app::ServerConfiguration;
 use crate::core::graph::Graph;
@@ -111,11 +112,10 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
     }
     let claims = claims_result.unwrap();
     let model = graph.model(claims.model.as_str()).unwrap();
-    let primary_field_name = model.primary_field_name().unwrap();
     let identity = graph.find_unique(
         graph.model(claims.model.as_str()).unwrap().name(),
         &json!({
-                "where": { primary_field_name: claims.id }
+                "where": claims.id
             }),
         true
     ).await;
@@ -345,12 +345,12 @@ async fn handle_create_many(graph: &Graph, input: &JsonValue, model: &Model, _id
     let include = input.get("include");
     let select = input.get("select");
     if create.is_none() {
-        let err = ActionError::missing_input_section();
+        let err = ActionError::missing_required_input("array", path!["create"]);
         return HttpResponse::BadRequest().json(json!({"error": err}));
     }
     let create = create.unwrap();
     if !create.is_array() {
-        let err = ActionError::wrong_input_type();
+        let err = ActionError::unexpected_input_type("array", path!["create"]);
         return HttpResponse::BadRequest().json(json!({"error": err}));
     }
     let create = create.as_array().unwrap();
@@ -465,11 +465,13 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     let input = input.as_object().unwrap();
     let credentials = input.get("credentials");
     if let None = credentials {
-        return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_credentials()}));
+        let error = ActionError::missing_required_input("object", path!["credentials"]);
+        return HttpResponse::BadRequest().json(json!({"error": error}));
     }
     let credentials = credentials.unwrap();
     if !credentials.is_object() {
-        return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
+        let error = ActionError::unexpected_input_type("object", path!["credentials"]);
+        return HttpResponse::BadRequest().json(json!({"error": error}));
     }
     let credentials = credentials.as_object().unwrap();
     let mut identity_key: Option<&String> = None;
@@ -504,10 +506,10 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     }
     let by_field = model.field(by_key.unwrap()).unwrap();
     let obj_result = graph.find_unique(model.name(), &json!({
-            "where": {
-                identity_key.unwrap(): identity_value.unwrap()
-            }
-        }), true).await;
+        "where": {
+            identity_key.unwrap(): identity_value.unwrap()
+        }
+    }), true).await;
     if let Err(err) = obj_result {
         return HttpResponse::BadRequest().json(json!({"error": err}));
     }
