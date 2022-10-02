@@ -1,5 +1,6 @@
 use serde_json::{Value as JsonValue};
 use chrono::{Date, DateTime, NaiveDate, Utc};
+use key_path::KeyPath;
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromStr;
 use crate::core::field::{Field, Optionality};
@@ -20,7 +21,7 @@ enum NumberInputType {
     Decimal,
 }
 
-pub(crate) fn input_to_vec(json_value: &JsonValue) -> Result<Vec<&JsonValue>, ActionError> {
+pub(crate) fn input_to_vec<'a, 'b>(json_value: &'b JsonValue, path: &'a KeyPath<'a>) -> Result<Vec<&'b JsonValue>, ActionError> {
     if json_value.is_object() {
         Ok(vec![json_value])
     } else if json_value.is_array() {
@@ -28,35 +29,35 @@ pub(crate) fn input_to_vec(json_value: &JsonValue) -> Result<Vec<&JsonValue>, Ac
         let mapped: Vec<&JsonValue> = array.iter().map(|i| i).collect();
         Ok(mapped)
     } else {
-        Err(ActionError::wrong_input_type())
+        Err(ActionError::unexpected_input_type("object or array", path))
     }
 }
 
-pub(crate) fn one_length_json_obj<'a>(json_value: &'a JsonValue, _path: &str) -> Result<(&'a str, &'a JsonValue), ActionError> {
+pub(crate) fn one_length_json_obj<'a>(json_value: &'a JsonValue, path: &KeyPath) -> Result<(&'a str, &'a JsonValue), ActionError> {
     let json_obj = json_value.as_object().unwrap();
     if json_obj.keys().len() != 1 {
-        Err(ActionError::wrong_input_updator())
+        Err(ActionError::unexpected_object_length(1, path))
     } else {
         for (key, value) in json_obj {
             return Ok((key.as_str(), value));
         }
-        Err(ActionError::wrong_input_updator())
+        Err(ActionError::unexpected_object_length(1, path))
     }
 }
 
-fn decode_null(_field_type: &FieldType, optionality: Optionality, path: &str) -> Result<Input, ActionError> {
+fn decode_null(_field_type: &FieldType, optionality: Optionality, path: &KeyPath) -> Result<Input, ActionError> {
     if optionality == Optionality::Optional {
         Ok(SetValue(Value::Null))
     } else {
-        Err(ActionError::unexpected_null(path))
+        Err(ActionError::unexpected_input_value("non null", path))
     }
 }
 
-fn number_to_target_type(json_value: &JsonValue, target: &FieldType, number_type: NumberInputType) -> Result<Value, ActionError> {
+fn number_to_target_type(json_value: &JsonValue, target: &FieldType, number_type: NumberInputType, path: &KeyPath) -> Result<Value, ActionError> {
     match number_type {
         NumberInputType::Int => {
             match json_value.as_i64() {
-                None => Err(ActionError::wrong_input_type()),
+                None => Err(ActionError::unexpected_input_type("number", path)),
                 Some(n) => match target {
                     FieldType::I8 => Ok(Value::I8(n as i8)),
                     FieldType::I16 => Ok(Value::I16(n as i16)),
@@ -69,7 +70,7 @@ fn number_to_target_type(json_value: &JsonValue, target: &FieldType, number_type
         }
         NumberInputType::UInt => {
             match json_value.as_u64() {
-                None => Err(ActionError::wrong_input_type()),
+                None => Err(ActionError::unexpected_input_type("number", path)),
                 Some(n) => match target {
                     FieldType::U8 => Ok(Value::U8(n as u8)),
                     FieldType::U16 => Ok(Value::U16(n as u16)),
@@ -82,7 +83,7 @@ fn number_to_target_type(json_value: &JsonValue, target: &FieldType, number_type
         }
         NumberInputType::Float => {
             match json_value.as_f64() {
-                None => Err(ActionError::wrong_input_type()),
+                None => Err(ActionError::unexpected_input_type("number", path)),
                 Some(n) => match target {
                     FieldType::F32 => Ok(Value::F32(n as f32)),
                     FieldType::F64 => Ok(Value::F64(n as f64)),
@@ -92,7 +93,7 @@ fn number_to_target_type(json_value: &JsonValue, target: &FieldType, number_type
         }
         NumberInputType::Decimal => {
             match json_value.as_str() {
-                None => Err(ActionError::wrong_input_type()),
+                None => Err(ActionError::unexpected_input_type("number", path)),
                 Some(str) => {
                     match Decimal::from_str(str) {
                         Ok(decimal) => Ok(Value::Decimal(decimal)),
@@ -104,7 +105,7 @@ fn number_to_target_type(json_value: &JsonValue, target: &FieldType, number_type
     }
 }
 
-pub(crate) fn str_to_target_type(json_str: &str, target: &FieldType, graph: &Graph) -> Result<Value, ActionError> {
+pub(crate) fn str_to_target_type(json_str: &str, target: &FieldType, graph: &Graph, path: &KeyPath) -> Result<Value, ActionError> {
     match target {
         #[cfg(feature = "data-source-mongodb")]
         FieldType::ObjectId => Ok(Value::ObjectId(json_str.to_string())),
@@ -115,7 +116,7 @@ pub(crate) fn str_to_target_type(json_str: &str, target: &FieldType, graph: &Gra
                 Ok(Value::Date(date))
             }
             Err(_) => {
-                Err(ActionError::wrong_date_format())
+                Err(ActionError::unexpected_input_value("valid date string", path))
             }
         }
         FieldType::DateTime => match DateTime::parse_from_rfc3339(json_str) {
@@ -124,7 +125,7 @@ pub(crate) fn str_to_target_type(json_str: &str, target: &FieldType, graph: &Gra
                 Ok(Value::DateTime(datetime))
             }
             Err(_) => {
-                Err(ActionError::wrong_datetime_format())
+                Err(ActionError::unexpected_input_value("valid date time string", path))
             }
         }
         FieldType::Enum(enum_name) => {
@@ -133,42 +134,42 @@ pub(crate) fn str_to_target_type(json_str: &str, target: &FieldType, graph: &Gra
             if vals.values.contains(&json_str.to_string()) {
                 Ok(Value::String(json_str.into()))
             } else {
-                Err(ActionError::wrong_enum_choice())
+                Err(ActionError::unexpected_input_value(enum_name, path))
             }
         }
         _ => panic!("Unknown json string type.")
     }
 }
 
-fn decode_string_input(graph: &Graph, json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &str) -> Result<Input, ActionError> {
+fn decode_string_input(graph: &Graph, json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &KeyPath) -> Result<Input, ActionError> {
     if json_value.is_string() {
-        Ok(SetValue(str_to_target_type(json_value.as_str().unwrap(), field_type, graph)?))
+        Ok(SetValue(str_to_target_type(json_value.as_str().unwrap(), field_type, graph, path)?))
     } else if json_value.is_object() {
         let (key, value) = one_length_json_obj(json_value, path)?;
         match key {
             "set" => {
                 match value {
                     JsonValue::Null => {
-                        decode_null(field_type, optionality, path)
+                        decode_null(field_type, optionality, &(path + "set"))
                     }
                     JsonValue::String(string_value) => {
-                        Ok(SetValue(str_to_target_type(string_value.as_str(), field_type, graph)?))
+                        Ok(SetValue(str_to_target_type(string_value.as_str(), field_type, graph, &(path + "set"))?))
                     }
                     _ => {
-                        Err(ActionError::wrong_input_type())
+                        Err(ActionError::unexpected_input_type("string", &(path + "set")))
                     }
                 }
             }
             _ => {
-                Err(ActionError::wrong_input_updator())
+                Err(ActionError::unexpected_input_key(key, &(path + key)))
             }
         }
     } else {
-        Err(ActionError::wrong_input_type())
+        Err(ActionError::unexpected_input_type("string or object", path))
     }
 }
 
-fn decode_bool_input(json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &str) -> Result<Input, ActionError> {
+fn decode_bool_input(json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &KeyPath) -> Result<Input, ActionError> {
     if json_value.is_boolean() {
         Ok(SetValue(Value::Bool(json_value.as_bool().unwrap())))
     } else if json_value.is_object() {
@@ -177,31 +178,31 @@ fn decode_bool_input(json_value: &JsonValue, field_type: &FieldType, optionality
             "set" => {
                 match value {
                     JsonValue::Null => {
-                        decode_null(field_type, optionality, path)
+                        decode_null(field_type, optionality, &(path + "set"))
                     }
                     JsonValue::Bool(bool_value) => {
                         Ok(SetValue(Value::Bool(*bool_value)))
                     }
                     _ => {
-                        Err(ActionError::wrong_input_type())
+                        Err(ActionError::unexpected_input_type("bool", &(path + "set")))
                     }
                 }
             }
             _ => {
-                Err(ActionError::wrong_input_updator())
+                Err(ActionError::unexpected_input_key(key, path))
             }
         }
     } else {
-        Err(ActionError::wrong_input_type())
+        Err(ActionError::unexpected_input_type("bool or object", path))
     }
 }
 
-fn decode_vec_input(graph: &Graph, json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &str, inner_field: &Box<Field>) -> Result<Input, ActionError> {
+fn decode_vec_input(graph: &Graph, json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &KeyPath, inner_field: &Box<Field>) -> Result<Input, ActionError> {
     if json_value.is_array() {
         let arr = json_value.as_array().unwrap();
         Ok(SetValue(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
-            let new_path_name = path.to_string() + "." + &format!("{}", i);
-            match decode_field_input(graph, v, &inner_field.field_type, inner_field.optionality, &new_path_name) {
+            let new_path = path + i;
+            match decode_field_input(graph, v, &inner_field.field_type, inner_field.optionality, &new_path) {
                 Ok(v) => {
                     match v {
                         SetValue(v) => v,
@@ -219,12 +220,12 @@ fn decode_vec_input(graph: &Graph, json_value: &JsonValue, field_type: &FieldTyp
             "set" => {
                 match value {
                     JsonValue::Null => {
-                        decode_null(&field_type, optionality, path)
+                        decode_null(&field_type, optionality, &(path + "set"))
                     }
                     JsonValue::Array(arr) => {
                         Ok(SetValue(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
-                            let new_path_name = path.to_string() + "." + &format!("{}", i);
-                            match decode_field_input(graph, v, field_type, optionality, &new_path_name) {
+                            let new_path = path + "set" + i;
+                            match decode_field_input(graph, v, field_type, optionality, &new_path) {
                                 Ok(v) => {
                                     match v {
                                         SetValue(v) => v,
@@ -238,27 +239,27 @@ fn decode_vec_input(graph: &Graph, json_value: &JsonValue, field_type: &FieldTyp
                         }).collect())))
                     }
                     _ => {
-                        Err(ActionError::wrong_input_type())
+                        Err(ActionError::unexpected_input_type("array", &(path + "set")))
                     }
                 }
             }
             "push" => {
-                let inner_val = match decode_field_input(graph, value, &inner_field.field_type, inner_field.optionality, path)? {
+                let inner_val = match decode_field_input(graph, value, &inner_field.field_type, inner_field.optionality, &(path + "push"))? {
                     SetValue(val) => val,
-                    _ => return Err(ActionError::wrong_input_type())
+                    _ => return Err(ActionError::unexpected_input_type("item type", &(path + "push")))
                 };
                 Ok(AtomicUpdate(Push(inner_val)))
             }
             _ => {
-                Err(ActionError::wrong_input_type())
+                Err(ActionError::unexpected_input_key(key, path))
             }
         }
     } else {
-        Err(ActionError::wrong_input_type())
+        Err(ActionError::unexpected_input_type("array or object", path))
     }
 }
 
-fn decode_number_input(json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &str) -> Result<Input, ActionError> {
+fn decode_number_input(json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &KeyPath) -> Result<Input, ActionError> {
     let number_type = match field_type {
         FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 => NumberInputType::Int,
         FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 => NumberInputType::UInt,
@@ -269,35 +270,35 @@ fn decode_number_input(json_value: &JsonValue, field_type: &FieldType, optionali
     if json_value.is_string() {
         match number_type {
             NumberInputType::Decimal => {
-                Ok(SetValue(number_to_target_type(json_value, field_type, number_type)?))
+                Ok(SetValue(number_to_target_type(json_value, field_type, number_type, path)?))
             }
-            _ => Err(ActionError::wrong_input_type())
+            _ => panic!("String is decimal.")
         }
     } else if json_value.is_number() {
-        Ok(SetValue(number_to_target_type(json_value, field_type, number_type)?))
+        Ok(SetValue(number_to_target_type(json_value, field_type, number_type, path)?))
     } else if json_value.is_object() {
         let (key, value) = one_length_json_obj(json_value, path)?;
         let arg = match value {
             JsonValue::Null => {
                 return if key == "set" {
-                    decode_null(field_type, optionality, path)
+                    decode_null(field_type, optionality, &(path + "set"))
                 } else {
-                    Err(ActionError::wrong_input_type())
+                    Err(ActionError::unexpected_input_value("number", &(path + key)))
                 }
             }
             JsonValue::Number(_num) => {
-                number_to_target_type(value, field_type, number_type)
+                number_to_target_type(value, field_type, number_type, &(path + key))
             }
             JsonValue::String(_str) => {
                 match number_type {
                     NumberInputType::Decimal => {
-                        number_to_target_type(value, field_type, number_type)
+                        number_to_target_type(value, field_type, number_type, &(path + key))
                     }
-                    _ => Err(ActionError::wrong_input_type())
+                    _ => panic!()
                 }
             }
             _ => {
-                Err(ActionError::wrong_input_type())
+                Err(ActionError::unexpected_input_value("number", &(path + key)))
             }
         }?;
         match key {
@@ -307,15 +308,15 @@ fn decode_number_input(json_value: &JsonValue, field_type: &FieldType, optionali
             "multiply" => Ok(AtomicUpdate(Multiply(arg))),
             "divide" => Ok(AtomicUpdate(Divide(arg))),
             _ => {
-                Err(ActionError::wrong_input_updator())
+                Err(ActionError::unexpected_input_key(key, &(path + key)))
             }
         }
     } else {
-        Err(ActionError::wrong_input_type())
+        Err(ActionError::unexpected_input_type("number or object", path))
     }
 }
 
-pub(crate) fn decode_field_value(graph: &Graph, json_value: &JsonValue, field: &Field, path: &str) -> Result<Value, ActionError> {
+pub(crate) fn decode_field_value(graph: &Graph, json_value: &JsonValue, field: &Field, path: &KeyPath) -> Result<Value, ActionError> {
     match decode_field_input(graph, json_value, &field.field_type, field.optionality, path) {
         Ok(input) => {
             match input {
@@ -323,7 +324,7 @@ pub(crate) fn decode_field_value(graph: &Graph, json_value: &JsonValue, field: &
                     Ok(value)
                 }
                 _ => {
-                    Err(ActionError::wrong_input_type())
+                    Err(ActionError::unexpected_input_type("field type", path))
                 }
             }
         }
@@ -333,13 +334,13 @@ pub(crate) fn decode_field_value(graph: &Graph, json_value: &JsonValue, field: &
     }
 }
 
-pub(crate) fn decode_field_input(graph: &Graph, json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &str) -> Result<Input, ActionError> {
+pub(crate) fn decode_field_input(graph: &Graph, json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &KeyPath) -> Result<Input, ActionError> {
     // value is JSON null
     if json_value == &JsonValue::Null {
         return if optionality == Optionality::Optional {
             Ok(SetValue(Value::Null))
         } else {
-            Err(ActionError::unexpected_null(path))
+            Err(ActionError::unexpected_input_value("field type", path))
         }
     }
     // value is present
@@ -367,9 +368,9 @@ pub(crate) fn decode_field_input(graph: &Graph, json_value: &JsonValue, field_ty
     }
 }
 
-pub(crate) fn decode_relation_input( _object: &Object, json_value: &JsonValue, relation: &Relation, path: &str) -> Result<Input, ActionError> {
+pub(crate) fn decode_relation_input( _object: &Object, json_value: &JsonValue, relation: &Relation, path: &KeyPath) -> Result<Input, ActionError> {
     if !json_value.is_object() {
-        return Err(ActionError::wrong_input_type());
+        return Err(ActionError::unexpected_input_type("object", path))
     }
     let (key, value) = one_length_json_obj(json_value, path)?;
     let input = match key {
@@ -377,7 +378,7 @@ pub(crate) fn decode_relation_input( _object: &Object, json_value: &JsonValue, r
         "createMany" => if relation.is_vec {
             RelationInputType::Create(value.clone())
         } else {
-            return Err(ActionError::invalid_input(path, "Single relationship cannot create many."))
+            return Err(ActionError::unexpected_input_key(key, &(path + key)))
         },
         "set" => RelationInputType::Set(value.clone()),
         "connect" => RelationInputType::Connect(value.clone()),
@@ -387,16 +388,16 @@ pub(crate) fn decode_relation_input( _object: &Object, json_value: &JsonValue, r
         "updateMany" => if relation.is_vec {
             RelationInputType::Update(value.clone())
         } else {
-            return Err(ActionError::invalid_input(path, "Single relationship cannot update many."))
+            return Err(ActionError::unexpected_input_key(key, &(path + key)))
         },
         "upsert" => RelationInputType::Upsert(value.clone(), value.clone()),
         "delete" => RelationInputType::Delete(value.clone()),
         "deleteMany" => if relation.is_vec {
             RelationInputType::Delete(value.clone())
         } else {
-            return Err(ActionError::invalid_input(path, "Single relationship cannot delete many."))
+            return Err(ActionError::unexpected_input_key(key, &(path + key)))
         },
-        _ => panic!()
+        _ => return Err(ActionError::unexpected_input_key(key, &(path + key)))
     };
     Ok(Input::RelationInput(input))
 }

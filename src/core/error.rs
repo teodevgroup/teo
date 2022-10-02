@@ -61,6 +61,7 @@ pub enum ActionErrorType {
     UnexpectedInputKey,
     UnexpectedInputValue,
     MissingRequiredInput,
+    UnexpectedObjectLength,
 
     // request token
     InvalidJWTToken,
@@ -121,6 +122,7 @@ impl ActionErrorType {
             ActionErrorType::UnexpectedInputKey => { 400 }
             ActionErrorType::UnexpectedInputValue => { 400 }
             ActionErrorType::MissingRequiredInput => { 400 }
+            ActionErrorType::UnexpectedObjectLength => { 400 }
         }
     }
 }
@@ -563,7 +565,7 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::UnexpectedInputValue,
             message: "Unexpected value found.".to_string(),
-            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expected `{}'.", expected.into())}),
+            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expect `{}'.", expected.into())}),
         }
     }
 
@@ -571,7 +573,15 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::MissingRequiredInput,
             message: "Missing required input.".to_string(),
-            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expected `{}'.", expected.into())})
+            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expect `{}'.", expected.into())})
+        }
+    }
+
+    pub fn unexpected_object_length<'a>(expected: usize, key_path: impl AsRef<KeyPath<'a>>) -> Self {
+        ActionError {
+            r#type: ActionErrorType::UnexpectedObjectLength,
+            message: "Unexpected object length.".to_string(),
+            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expect length {}.", expected)})
         }
     }
 }

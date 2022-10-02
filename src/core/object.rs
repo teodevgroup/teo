@@ -3,7 +3,7 @@ use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
-use key_path::path;
+use key_path::{KeyPath, path};
 use serde_json::{json, Map, Value as JsonValue};
 use async_recursion::async_recursion;
 use crate::core::pipeline::argument::Argument;
@@ -50,11 +50,20 @@ impl Object {
 
     #[async_recursion(?Send)]
     pub async fn set_json(&self, json_value: &JsonValue) -> Result<(), ActionError> {
-        self.set_or_update_json(json_value, true).await
+        self.set_or_update_json(json_value, true, &path![]).await
+    }
+
+    #[async_recursion(?Send)]
+    pub(crate) async fn _set_json(&self, json_value: &JsonValue, path: &KeyPath) -> Result<(), ActionError> {
+        self.set_or_update_json(json_value, true, path).await
     }
 
     pub async fn update_json(&self, json_value: &JsonValue) -> Result<(), ActionError> {
-        self.set_or_update_json(json_value, false).await
+        self.set_or_update_json(json_value, false, &path![]).await
+    }
+
+    pub async fn _update_json(&self, json_value: &JsonValue, path: &KeyPath<'_>) -> Result<(), ActionError> {
+        self.set_or_update_json(json_value, false, path).await
     }
 
     pub fn set(&self, key: impl AsRef<str>, value: impl Into<Value>) -> Result<(), ActionError> {
@@ -698,7 +707,7 @@ impl Object {
         objects.push(manipulation);
     }
 
-    async fn set_or_update_json(&self, json_value: &JsonValue, process: bool) -> Result<(), ActionError> {
+    async fn set_or_update_json(&self, json_value: &JsonValue, process: bool, path: &KeyPath<'_>) -> Result<(), ActionError> {
         let json_object = json_value.as_object().unwrap();
         // check keys first
         let json_keys: Vec<&String> = json_object.keys().map(|k| { k }).collect();
@@ -707,9 +716,8 @@ impl Object {
         } else {
             self.model().save_keys().iter().map(|k| k).collect::<Vec<&String>>()
         };
-        let keys_valid = json_keys.iter().all(|item| allowed_keys.contains(item ));
-        if !keys_valid {
-            return Err(ActionError::keys_unallowed());
+        if let Some(invalid_key) = json_keys.iter().find(|item| !allowed_keys.contains(item )) {
+            return Err(ActionError::unexpected_input_key(invalid_key.as_str(), path + invalid_key.as_str()));
         }
         let all_model_keys = self.model().all_keys().iter().map(|k| k).collect::<Vec<&String>>();
         // assign values
@@ -724,7 +732,7 @@ impl Object {
                 };
                 if json_has_value {
                     let json_value = &json_object[&key.to_string()];
-                    let input_result = decode_field_input(self.graph(), json_value, &field.field_type, field.optionality, &field.name)?;
+                    let input_result = decode_field_input(self.graph(), json_value, &field.field_type, field.optionality, &(path + field.name()))?;
                     match input_result {
                         SetValue(value) => {
                             let mut value = value;
@@ -805,31 +813,31 @@ impl Object {
                     continue;
                 }
                 let relation_object = relation_object.unwrap();
-                let (command, command_input) = one_length_json_obj(relation_object, key)?;
+                let (command, command_input) = one_length_json_obj(relation_object, &(path + key))?;
                 match command {
                     "create" | "createMany" => {
                         if !relation.is_vec && command == "createMany" {
                             return Err(ActionError::invalid_input(key.as_str(), "Single relationship cannot create many."));
                         }
-                        let entries = input_to_vec(command_input)?;
+                        let entries = input_to_vec(command_input, path)?;
                         for entry in entries {
                             self.insert_relation_manipulation(key, RelationManipulation::Create(entry.clone()));
                         }
                     }
                     "connect" => {
-                        let entries = input_to_vec(command_input)?;
+                        let entries = input_to_vec(command_input, path)?;
                         for entry in entries {
                             self.insert_relation_manipulation(key, RelationManipulation::Connect(entry.clone()));
                         }
                     }
                     "set" => {
-                        let entries = input_to_vec(command_input)?;
+                        let entries = input_to_vec(command_input, path)?;
                         for entry in entries {
                             self.insert_relation_manipulation(key, RelationManipulation::Set(entry.clone()));
                         }
                     }
                     "connectOrCreate" => {
-                        let entries = input_to_vec(command_input)?;
+                        let entries = input_to_vec(command_input, path)?;
                         for entry in entries {
                             self.insert_relation_manipulation(key, RelationManipulation::CreateOrConnect(entry.clone()));
                         }
@@ -839,7 +847,7 @@ impl Object {
                             return Err(ActionError::new_object_cannot_disconnect());
                         }
                         let graph = self.graph();
-                        let entries = input_to_vec(command_input)?;
+                        let entries = input_to_vec(command_input, path)?;
                         for entry in entries {
                             let model = graph.model(&relation.model)?;
                             if !relation.is_vec && (relation.optionality == Optionality::Required) {
@@ -861,13 +869,13 @@ impl Object {
                         if !relation.is_vec && command == "updateMany" {
                             return Err(ActionError::invalid_input(key.as_str(), "Single relationship cannot update many."));
                         }
-                        let entries = input_to_vec(command_input)?;
+                        let entries = input_to_vec(command_input, path)?;
                         for entry in entries {
                             self.insert_relation_manipulation(key, RelationManipulation::Update(entry.clone()));
                         }
                     }
                     "upsert" => {
-                        let entries = input_to_vec(command_input)?;
+                        let entries = input_to_vec(command_input, path)?;
                         for entry in entries {
                             self.insert_relation_manipulation(key, RelationManipulation::Upsert(entry.clone()));
                         }
@@ -894,7 +902,7 @@ impl Object {
                                 return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot delete."));
                             }
                         }
-                        let entries = input_to_vec(command_input)?;
+                        let entries = input_to_vec(command_input, path)?;
                         for entry in entries {
                             self.insert_relation_manipulation(key, RelationManipulation::Delete(entry.clone()));
                         }
@@ -912,7 +920,7 @@ impl Object {
                             Intent::Update
                         };
                         let json_value = &json_object[&key.to_string()];
-                        let input_result = decode_field_input(self.graph(), json_value, &property.field_type, Optionality::Required, "")?;
+                        let input_result = decode_field_input(self.graph(), json_value, &property.field_type, Optionality::Required, &(path + key))?;
                         let value = match input_result {
                             Input::SetValue(v) => v,
                             _ => return Err(ActionError::wrong_input_updator()),

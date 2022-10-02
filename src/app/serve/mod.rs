@@ -10,7 +10,7 @@ use serde_json::{json, Value as JsonValue};
 use futures_util::StreamExt;
 use serde::{Serialize, Deserialize};
 use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
-use key_path::path;
+use key_path::{KeyPath, path};
 use crate::core::action::r#type::ActionType;
 use crate::app::app::ServerConfiguration;
 use crate::core::graph::Graph;
@@ -194,15 +194,17 @@ async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model, _iden
     }
 }
 
-async fn handle_create_internal(graph: &Graph, create: Option<&JsonValue>, include: Option<&JsonValue>, select: Option<&JsonValue>, model: &Model, purpose: Intent) -> Result<JsonValue, ActionError> {
+async fn handle_create_internal(graph: &Graph, create: Option<&JsonValue>, include: Option<&JsonValue>, select: Option<&JsonValue>, model: &Model, purpose: Intent, path: &KeyPath<'_>) -> Result<JsonValue, ActionError> {
     let obj = graph.new_object(model.name())?;
     let set_json_result = match create {
         Some(create) => {
-            obj.set_json(create).await
+            if !create.is_object() {
+                return Err(ActionError::unexpected_input_type("object", path));
+            }
+            obj._set_json(create, path).await
         }
         None => {
-            let empty = json!({});
-            obj.set_json(&empty).await
+            obj._set_json(&json!({}), path).await
         }
     };
     if set_json_result.is_err() {
@@ -218,7 +220,7 @@ async fn handle_create(graph: &Graph, input: &JsonValue, model: &Model, _identit
     let create = input.get("create");
     let include = input.get("include");
     let select = input.get("select");
-    let result = handle_create_internal(graph, create, include, select, model, Intent::SingleResult(ActionType::Create)).await;
+    let result = handle_create_internal(graph, create, include, select, model, Intent::SingleResult(ActionType::Create), &path!["create"]).await;
     match result {
         Ok(val) => HttpResponse::Ok().json(json!({"data": val})),
         Err(err) => HttpResponse::BadRequest().json(json!({"error": err}))
@@ -359,8 +361,8 @@ async fn handle_create_many(graph: &Graph, input: &JsonValue, model: &Model, _id
     let create = create.as_array().unwrap();
     let mut count = 0;
     let mut ret_data: Vec<JsonValue> = vec![];
-    for val in create {
-        let result = handle_create_internal(graph, Some(val), include, select, model, Intent::ManyResult(ActionType::CreateMany)).await;
+    for (index, val) in create.iter().enumerate() {
+        let result = handle_create_internal(graph, Some(val), include, select, model, Intent::ManyResult(ActionType::CreateMany), &path!["create", index]).await;
         match result {
             Err(_) => (),
             Ok(val) => {
@@ -519,7 +521,7 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     let obj = obj_result.unwrap();
     let auth_by_arg = by_field.auth_by_arg.as_ref().unwrap();
     let pipeline = auth_by_arg.as_pipeline().unwrap();
-    let action_by_input = decode_field_input(obj.graph(), by_value.unwrap(), &by_field.field_type, by_field.optionality, &by_field.name);
+    let action_by_input = decode_field_input(obj.graph(), by_value.unwrap(), &by_field.field_type, by_field.optionality, &path!["credentials", by_field.name()]);
     let _action_by_value = match action_by_input {
         Err(_err) => {
             return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_input_type()}));

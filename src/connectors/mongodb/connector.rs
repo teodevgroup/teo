@@ -8,6 +8,7 @@ use serde_json::{json, Value as JsonValue};
 use async_trait::async_trait;
 use bson::{Bson, doc, Document};
 use futures_util::StreamExt;
+use key_path::path;
 use mongodb::{options::ClientOptions, Client, Database, Collection, IndexModel};
 use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
 use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
@@ -439,7 +440,7 @@ impl MongoDBConnector {
     }
 
     async fn aggregate_or_group_by(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<Vec<JsonValue>, ActionError> {
-        let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, false, finder)?;
+        let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, false, finder, &path![])?;
         let col = &self.collections[model.name()];
         let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
@@ -681,7 +682,7 @@ impl Connector for MongoDBConnector {
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
-        let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder)?;
+        let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder, &path![])?;
         let col = &self.collections[model.name()];
         let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
@@ -703,7 +704,7 @@ impl Connector for MongoDBConnector {
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
-        let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder)?;
+        let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, &path![])?;
         let reverse = has_negative_take(finder);
         let col = &self.collections[model.name()];
         let cur = col.aggregate(aggregate_input, None).await;
@@ -736,7 +737,7 @@ impl Connector for MongoDBConnector {
         let finder = finder.as_object().unwrap();
         let r#where = finder.get("where");
         let col = &self.collections[model.name()];
-        let where_input = build_where_input(model, graph, r#where);
+        let where_input = build_where_input(model, graph, r#where, &path![]);
         if let Err(err) = where_input {
             return Err(err);
         }

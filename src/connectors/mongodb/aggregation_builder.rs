@@ -1,8 +1,10 @@
 use std::collections::HashSet;
+use actix_web::http::header::Accept;
 
 use serde_json::{Value as JsonValue, Map as JsonMap, json};
 use bson::{Bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
 use chrono::{Date, NaiveDate, Utc, DateTime};
+use key_path::{KeyPath, path};
 use crate::connectors::shared::has_negative_take::has_negative_take;
 use crate::connectors::shared::map_has_i_mode::map_has_i_mode;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
@@ -210,7 +212,7 @@ fn parse_enum(value: &JsonValue, enum_name: &str, graph: &Graph) -> Result<Bson,
     }
 }
 
-fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Graph) -> Result<Bson, ActionError> {
+fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Graph, path: &KeyPath) -> Result<Bson, ActionError> {
     return match field_type {
         FieldType::Undefined => {
             panic!()
@@ -762,10 +764,10 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
         FieldType::Vec(inner_field) => {
             if value.is_object() {
                 let mut result = doc!{};
-                let (key, matcher) = one_length_json_obj(value, "")?;
+                let (key, matcher) = one_length_json_obj(value, path)?;
                 match key {
                     "has" => {
-                        let inner = parse_bson_where_entry(&inner_field.field_type, matcher, graph)?;
+                        let inner = parse_bson_where_entry(&inner_field.field_type, matcher, graph, path)?;
                         if inner.as_document().is_some() {
                             result.insert("$elemMatch", inner);
                         } else {
@@ -778,7 +780,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         let matcher = matcher.as_array().unwrap();
                         let inner = matcher.iter().map(|v| {
-                            parse_bson_where_entry(&inner_field.field_type, v, graph).unwrap()
+                            parse_bson_where_entry(&inner_field.field_type, v, graph, path).unwrap()
                         }).collect::<Vec<Bson>>();
                         result.insert("$all", inner);
                     }
@@ -788,7 +790,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         let matcher = matcher.as_array().unwrap();
                         let inner = matcher.iter().map(|v| {
-                            parse_bson_where_entry(&inner_field.field_type, v, graph).unwrap()
+                            parse_bson_where_entry(&inner_field.field_type, v, graph, path).unwrap()
                         }).collect::<Vec<Bson>>();
                         result.insert("$in", inner);
                     }
@@ -799,7 +801,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                     }
                     "length" => {
                         let ft = FieldType::U64;
-                        let num = parse_bson_where_entry(&ft, matcher, graph).unwrap();
+                        let num = parse_bson_where_entry(&ft, matcher, graph, path).unwrap();
                         result.insert("$size", num);
                     }
                     "equals" => {
@@ -808,7 +810,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                         }
                         let matcher = matcher.as_array().unwrap();
                         let inner = matcher.iter().map(|v| {
-                            parse_bson_where_entry(&inner_field.field_type, v, graph).unwrap()
+                            parse_bson_where_entry(&inner_field.field_type, v, graph, path).unwrap()
                         }).collect::<Vec<Bson>>();
                         result.insert("$eq", inner);
                     }
@@ -845,7 +847,7 @@ pub(crate) fn build_unsets_for_match_lookup(model: &Model, _graph: &Graph, r#whe
     Ok(retval)
 }
 
-pub(crate) fn build_match_prediction_lookup(model: &Model, graph: &Graph, r#where: Option<&JsonValue>) -> Result<Vec<Document>, ActionError> {
+pub(crate) fn build_match_prediction_lookup(model: &Model, graph: &Graph, r#where: Option<&JsonValue>, path: &KeyPath) -> Result<Vec<Document>, ActionError> {
     if let None = r#where { return Ok(vec![]); }
     let r#where = r#where.unwrap();
     if !r#where.is_object() { return Err(ActionError::invalid_query_input("'where' should be an object.")); }
@@ -854,7 +856,7 @@ pub(crate) fn build_match_prediction_lookup(model: &Model, graph: &Graph, r#wher
     for (key, value) in r#where.iter() {
         let relation = model.relation(key);
         if relation.is_some() {
-            let (command, r_where) = one_length_json_obj(value, "")?;
+            let (command, r_where) = one_length_json_obj(value, &(path + key))?;
             match command {
                 "some" | "is" => {
                     include_input.insert(key.to_string(), json!({
@@ -879,13 +881,13 @@ pub(crate) fn build_match_prediction_lookup(model: &Model, graph: &Graph, r#wher
         }
     }
     Ok(if !include_input.is_empty() {
-        build_lookup_inputs(model, graph, QueryPipelineType::Many, false, &JsonValue::Object(include_input))?
+        build_lookup_inputs(model, graph, QueryPipelineType::Many, false, &JsonValue::Object(include_input), path)?
     } else {
         vec![]
     })
 }
 
-pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&JsonValue>) -> Result<Document, ActionError> {
+pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&JsonValue>, path: &KeyPath) -> Result<Document, ActionError> {
     if let None = r#where { return Ok(doc!{}); }
     let r#where = r#where.unwrap();
     if !r#where.is_object() { return Err(ActionError::invalid_query_input("'where' should be an object.")); }
@@ -895,28 +897,28 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
         if key == "AND" {
             let mut vals: Vec<Document> = vec![];
             for val in value.as_array().unwrap() {
-                vals.push(build_where_input(model, graph, Some(val))?);
+                vals.push(build_where_input(model, graph, Some(val), &(path + "AND"))?);
             }
             doc.insert("$and", vals);
             continue;
         } else if key == "OR" {
             let mut vals: Vec<Document> = vec![];
             for val in value.as_array().unwrap() {
-                vals.push(build_where_input(model, graph, Some(val))?);
+                vals.push(build_where_input(model, graph, Some(val), &(path + "OR"))?);
             }
             doc.insert("$or", vals);
             continue;
         } else if key == "NOT" {
-            doc.insert("$nor", vec![build_where_input(model, graph, Some(value))?]);
+            doc.insert("$nor", vec![build_where_input(model, graph, Some(value), &(path + "NOT"))?]);
             continue;
         } else if !model.query_keys().contains(key) {
-            return Err(ActionError::keys_unallowed());
+            return Err(ActionError::unexpected_input_key(key, &(path + key)))
         }
         let field = model.field(key);
         if field.is_some() {
             let field = field.unwrap();
             let db_key = field.column_name();
-            let bson_result = parse_bson_where_entry(&field.field_type, value, graph);
+            let bson_result = parse_bson_where_entry(&field.field_type, value, graph, &(path + key));
             match bson_result {
                 Ok(bson) => {
                     doc.insert(db_key, bson);
@@ -929,8 +931,8 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
             let relation = model.relation(key).unwrap();
             let model_name = &relation.model;
             let this_model = graph.model(model_name)?;
-            let (command, inner_where) = one_length_json_obj(value, "")?;
-            let _inner_where = build_where_input(this_model, graph, Some(inner_where))?;
+            let (command, inner_where) = one_length_json_obj(value, &(path + key))?;
+            let _inner_where = build_where_input(this_model, graph, Some(inner_where), &(path + key))?;
             match command {
                 "none" | "isNot" => {
                     doc.insert(key, doc!{"$size": 0});
@@ -950,18 +952,18 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
     Ok(doc)
 }
 
-pub(crate) fn build_order_by_input(_model: &Model, _graph: &Graph, order_by: Option<&JsonValue>, reverse: bool) -> Result<Document, ActionError> {
+pub(crate) fn build_order_by_input(_model: &Model, _graph: &Graph, order_by: Option<&JsonValue>, reverse: bool, path: &KeyPath) -> Result<Document, ActionError> {
     if order_by.is_none() {
         return Ok(doc!{});
     }
     let order_by = order_by.unwrap();
     if !order_by.is_object() && !order_by.is_array() {
-        return Err(ActionError::invalid_query_input("Order by inputs should be an object or an array of objects."));
+        return Err(ActionError::unexpected_input_type("object or array", path))
     }
-    let order_by = input_to_vec(order_by)?;
+    let order_by = input_to_vec(order_by, path)?;
     let mut retval = doc!{};
-    for sort in order_by {
-        let (key, value) = one_length_json_obj(sort, "")?;
+    for (index, sort) in order_by.iter().enumerate() {
+        let (key, value) = one_length_json_obj(sort, &(path + index))?;
         if value.is_string() {
             let str_val = value.as_str().unwrap();
             if str_val == "asc" {
@@ -970,7 +972,7 @@ pub(crate) fn build_order_by_input(_model: &Model, _graph: &Graph, order_by: Opt
                 retval.insert(key, if reverse { 1 } else { -1 });
             }
         } else {
-            return Err(ActionError::invalid_query_input("Order by input value should be whether string 'asc' or 'desc'."));
+            return Err(ActionError::unexpected_input_value("'asc' or 'desc'", &(path + index)))
         }
     }
     Ok(retval)
@@ -1084,6 +1086,7 @@ fn build_lookup_inputs(
     r#type: QueryPipelineType,
     mutation_mode: bool,
     include: &JsonValue,
+    path: &KeyPath,
 ) -> Result<Vec<Document>, ActionError> {
     let include = include.as_object();
     if include.is_none() {
@@ -1114,7 +1117,7 @@ fn build_lookup_inputs(
                     eq_values.push(doc!{"$eq": [format!("${reference_name_column_name}"), format!("$${reference_name}")]});
                 }
                 let mut inner_pipeline = if value.is_object() {
-                    build_query_pipeline_from_json(relation_model, graph, r#type, mutation_mode, value)?
+                    build_query_pipeline_from_json(relation_model, graph, r#type, mutation_mode, value, &(path + "include" + key))?
                 } else {
                     vec![]
                 };
@@ -1174,7 +1177,7 @@ fn build_lookup_inputs(
                     inner_eq_values.push(doc!{"$eq": [format!("${foreign_unique_field_column_name}"), format!("$${join_table_reference_name}")]});
                 }
                 let mut original_inner_pipeline = if value.is_object() {
-                    build_query_pipeline_from_json(foreign_model, graph, QueryPipelineType::Many, false, value)?
+                    build_query_pipeline_from_json(foreign_model, graph, QueryPipelineType::Many, false, value, &(path + key))?
                 } else {
                     vec![]
                 };
@@ -1386,6 +1389,7 @@ fn build_query_pipeline(
     aggregates: Option<&JsonValue>,
     by: Option<&JsonValue>,
     having: Option<&JsonValue>,
+    path: &KeyPath,
 ) -> Result<Vec<Document>, ActionError> {
     // cursor tweaks things so that we validate cursor first
     let cursor_additional_where = if cursor.is_some() {
@@ -1408,8 +1412,8 @@ fn build_query_pipeline(
         if cursor_map.len() != 1 {
             return Err(ActionError::invalid_query_input("'cursor' should have a single key which represents a unique constraint."));
         }
-        let (order_by_key, order_by_value) = one_length_json_obj(order_by, "")?;
-        let (cursor_key, cursor_value) = one_length_json_obj(cursor, "")?;
+        let (order_by_key, order_by_value) = one_length_json_obj(order_by, &(path + "orderBy"))?;
+        let (cursor_key, cursor_value) = one_length_json_obj(cursor, &(path + "cursor"))?;
         if order_by_key != cursor_key {
             return Err(ActionError::invalid_query_input("'cursor' and 'orderBy' should have single same key."));
         }
@@ -1438,7 +1442,7 @@ fn build_query_pipeline(
             }
         }
         let cursor_where_key = if order_asc { "gte" } else { "lte" };
-        let cursor_additional_where = build_where_input(model, graph, Some(&json!({cursor_key: {cursor_where_key: cursor_value}})))?;
+        let cursor_additional_where = build_where_input(model, graph, Some(&json!({cursor_key: {cursor_where_key: cursor_value}})), &path![])?;
         Some(cursor_additional_where)
     } else {
         None
@@ -1447,12 +1451,12 @@ fn build_query_pipeline(
     // $build the pipeline
     let mut retval: Vec<Document> = vec![];
     // $lookup for matching
-    let lookups_for_matching = build_match_prediction_lookup(model, graph, r#where)?;
+    let lookups_for_matching = build_match_prediction_lookup(model, graph, r#where, path)?;
     if !lookups_for_matching.is_empty() {
         retval.extend(lookups_for_matching);
     }
     // $match
-    let r#match = build_where_input(model, graph, r#where)?;
+    let r#match = build_where_input(model, graph, r#where, &(path + "where"))?;
     if !r#match.is_empty() {
         if cursor_additional_where.is_some() {
             retval.push(doc!{"$match": {"$and": [r#match, cursor_additional_where.unwrap()]}});
@@ -1475,7 +1479,7 @@ fn build_query_pipeline(
             Some(take) => take < 0,
             None => false
         };
-        let sort = build_order_by_input(model, graph, order_by, reverse)?;
+        let sort = build_order_by_input(model, graph, order_by, reverse, &(path + "orderBy"))?;
         if !sort.is_empty() {
             retval.push(doc!{"$sort": sort});
         }
@@ -1515,7 +1519,7 @@ fn build_query_pipeline(
             Some(take) => take < 0,
             None => false
         };
-        let sort = build_order_by_input(model, graph, order_by, reverse)?;
+        let sort = build_order_by_input(model, graph, order_by, reverse, &(path + "orderBy"))?;
         if !sort.is_empty() {
             retval.push(doc!{"$sort": sort});
         }
@@ -1530,7 +1534,7 @@ fn build_query_pipeline(
     }
     // $lookup
     if include.is_some() {
-        let mut lookups = build_lookup_inputs(model, graph, QueryPipelineType::Many, mutation_mode, include.unwrap())?;
+        let mut lookups = build_lookup_inputs(model, graph, QueryPipelineType::Many, mutation_mode, include.unwrap(), path)?;
         if !lookups.is_empty() {
             retval.append(&mut lookups);
         }
@@ -1598,7 +1602,7 @@ fn build_query_pipeline(
                 let dbk = model.field(k).unwrap().column_name();
                 for (g, matcher) in o.as_object().unwrap() {
                     let g = g.strip_prefix("_").unwrap();
-                    let matcher_bson = parse_bson_where_entry(&FieldType::F64, matcher, graph)?;
+                    let matcher_bson = parse_bson_where_entry(&FieldType::F64, matcher, graph, &(path + "having" + k + format!("_{g}")))?;
                     having_match.insert(format!("_having_{g}.{dbk}"), matcher_bson);
                     let having_group = format!("_having_{g}");
                     if !having_unset.contains(&having_group) {
@@ -1634,7 +1638,8 @@ pub(crate) fn build_query_pipeline_from_json(
     graph: &Graph,
     r#type: QueryPipelineType,
     mutation_mode: bool,
-    json_value: &JsonValue
+    json_value: &JsonValue,
+    path: &KeyPath,
 ) -> Result<Vec<Document>, ActionError> {
     let user_args = user_json_args(model, graph, r#type, mutation_mode, json_value)?;
     let result = build_query_pipeline(
@@ -1654,6 +1659,7 @@ pub(crate) fn build_query_pipeline_from_json(
         user_args.select,
         user_args.aggregates.as_ref(),
         user_args.by,
-        user_args.having);
+        user_args.having,
+        path);
     result
 }
