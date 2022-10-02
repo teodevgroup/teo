@@ -51,6 +51,7 @@ The new generation server software.
 - SQL: Correct result json key order **[DONE]**
 
 #### 0.0.27
+- New style key path error messages
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
 - MongoDB update handle column key
