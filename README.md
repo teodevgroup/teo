@@ -49,6 +49,8 @@ The new generation server software.
 - Fix token decoding and encoding after modifying `identifier` **[DONE]**
 - Make key path APIs better **[DONE]**
 - SQL: Correct result json key order **[DONE]**
+
+#### 0.0.27
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
 - MongoDB update handle column key
@@ -57,10 +59,10 @@ The new generation server software.
 - Fix broken `connectIdentity` modifier
 - For relationship with join table, link them after both objects are created
 
-#### 0.0.27
+#### 0.0.28
 - Custom SQL database types
 
-#### 0.0.28 - 0.0.50
+#### 0.0.29 - 0.0.50
 - Migration with SQL databases
 
 #### 0.0.51
