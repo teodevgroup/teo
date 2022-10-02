@@ -1,5 +1,7 @@
-use std::collections::HashSet;
-use std::slice::Iter;
+use std::{collections::HashSet, sync::Mutex, slice::Iter};
+use once_cell::sync::Lazy;
+use maplit::hashset;
+
 use self::ActionType::*;
 
 #[derive(Debug, Clone, Copy, Eq, Hash, PartialEq)]
@@ -278,4 +280,70 @@ impl ActionType {
     pub(crate) fn requires_aggregates(&self) -> bool {
         self == &GroupBy || self == &Aggregate
     }
+
+    pub(crate) fn allowed_input_json_keys(&self) -> &HashSet<&str> {
+        match self {
+            FindUnique => &FIND_UNIQUE_INPUT_JSON_KEYS,
+            FindFirst => &FIND_FIRST_INPUT_JSON_KEYS,
+            FindMany => &FIND_MANY_INPUT_JSON_KEYS,
+            Create => &CREATE_INPUT_JSON_KEYS,
+            Update => &UPDATE_INPUT_JSON_KEYS,
+            Upsert => &UPSERT_INPUT_JSON_KEYS,
+            Delete => &DELETE_INPUT_JSON_KEYS,
+            CreateMany => &CREATE_MANY_INPUT_JSON_KEYS,
+            UpdateMany => &UPDATE_MANY_INPUT_JSON_KEYS,
+            DeleteMany => &DELETE_MANY_INPUT_JSON_KEYS,
+            Count => &COUNT_INPUT_JSON_KEYS,
+            Aggregate => &AGGREGATE_INPUT_JSON_KEYS,
+            GroupBy => &GROUP_BY_INPUT_JSON_KEYS,
+            SignIn => &SIGN_IN_INPUT_JSON_KEYS,
+            Identity => &IDENTITY_INPUT_JSON_KEYS,
+        }
+    }
 }
+
+static FIND_UNIQUE_INPUT_JSON_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"include", "select", "where"}
+});
+static FIND_FIRST_INPUT_JSON_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"include", "select", "where", "orderBy", "skip", "cursor", "distinct"}
+});
+static FIND_MANY_INPUT_JSON_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"include", "select", "where", "orderBy", "skip", "take", "pageSize", "pageNumber", "cursor", "distinct"}
+});
+static CREATE_INPUT_JSON_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"include", "select", "create"}
+});
+static UPDATE_INPUT_JSON_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"include", "select", "where", "update"}
+});
+static UPSERT_INPUT_JSON_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"include", "select", "where", "create", "update"}
+});
+static DELETE_INPUT_JSON_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"select", "where"}
+});
+static CREATE_MANY_INPUT_JSON_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"include", "select", "create"}
+});
+static UPDATE_MANY_INPUT_JSON_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"include", "select", "where", "update"}
+});
+static DELETE_MANY_INPUT_JSON_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"select", "where"}
+});
+static COUNT_INPUT_JSON_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"where", "orderBy", "skip", "take", "pageSize", "pageNumber", "cursor", "distinct"}
+});
+static AGGREGATE_INPUT_JSON_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"_avg", "_count", "_sum", "_min", "_max", "where", "orderBy", "skip", "take", "pageSize", "pageNumber", "cursor"}
+});
+static GROUP_BY_INPUT_JSON_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"_avg", "_count", "_sum", "_min", "_max", "by", "having", "where", "orderBy", "skip", "take", "pageSize", "pageNumber", "cursor"}
+});
+static SIGN_IN_INPUT_JSON_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"include", "select", "credentials"}
+});
+static IDENTITY_INPUT_JSON_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"include", "select"}
+});

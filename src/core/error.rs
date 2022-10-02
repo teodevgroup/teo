@@ -538,7 +538,7 @@ impl ActionError {
     pub fn unexpected_input_root_type<'a>(expected: impl AsRef<str>) -> Self {
         ActionError {
             r#type: ActionErrorType::UnexpectedInputRootType,
-            message: format!("Unexpected root input type, expected {}.", expected.as_ref()),
+            message: format!("Unexpected root input type. Expect {}.", expected.as_ref()),
             errors: None
         }
     }

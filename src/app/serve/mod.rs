@@ -20,6 +20,9 @@ use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::pipeline::context::{Context, Intent};
 use crate::core::error::ActionError;
+use crate::utils::json::check_json_keys;
+
+pub(crate) mod response;
 
 #[derive(Debug, Clone)]
 pub struct TokenDecodeError;
@@ -684,6 +687,10 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                 action_def.transform(&parsed_body, identity.clone()).await
             } else {
                 parsed_body
+            };
+            match check_json_keys(&transformed_body, action.allowed_input_json_keys(), &path![]) {
+                Ok(()) => (),
+                Err(err) => { return err.into(); }
             };
             match action {
                 ActionType::FindUnique => {
