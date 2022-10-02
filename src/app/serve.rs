@@ -644,6 +644,11 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                     return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
                 }
             };
+            let model_def = graph.model(model_name).unwrap();
+            if !model_def.has_action(action) {
+                log_unhandled(start, r.method().as_str(), &path, 400);
+                return HttpResponse::BadRequest().json(json!({"error": ActionError::not_found()}));
+            }
             if r.method() == Method::OPTIONS {
                 return HttpResponse::Ok().json(json!({}));
             }
@@ -663,20 +668,12 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                 Ok(b) => b,
                 Err(_) => {
                     log_unhandled(start, r.method().as_str(), &path, 400);
-                    return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
+                    return HttpResponse::BadRequest().json(json!({"error": ActionError::incorrect_json_format()}));
                 }
             };
-            let _map = match parsed_body.as_object() {
-                Some(m) => m,
-                None => {
-                    log_unhandled(start, r.method().as_str(), &path, 400);
-                    return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
-                }
-            };
-            let model_def = graph.model(model_name).unwrap();
-            if !model_def.has_action(action) {
+            if !parsed_body.is_object() {
                 log_unhandled(start, r.method().as_str(), &path, 400);
-                return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_json_format()}));
+                return HttpResponse::BadRequest().json(json!({"error": ActionError::unexpected_input_root_type("object")}));
             }
             let identity = match get_identity(&r, &graph, conf).await {
                 Ok(identity) => { identity },

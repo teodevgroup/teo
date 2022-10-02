@@ -120,11 +120,7 @@ The new generation server software.
 - to sentence case modifier
 - to title case modifier
 
-#### 0.0.67
-- `present_with` on field
-- `present_without` on field
-
-#### 0.0.68 - 0.0.110
+#### 0.0.67 - 0.0.110
 - parsers and schema
 - language servers
 

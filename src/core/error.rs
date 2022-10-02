@@ -14,7 +14,6 @@ pub enum ActionErrorType {
     WrongDateFormat,
     WrongDateTimeFormat,
     WrongEnumChoice,
-    WrongJSONFormat,
     ValueRequired,
     ValidationError,
     UnknownDatabaseWriteError,
@@ -54,10 +53,16 @@ pub enum ActionErrorType {
     PropertySetterError,
 
     // new errors
+
+    // request format
+    IncorrectJSONFormat,
+    UnexpectedInputRootType,
     UnexpectedInputType,
     UnexpectedInputKey,
     UnexpectedInputValue,
     MissingRequiredInput,
+
+    // request token
     InvalidJWTToken,
 }
 
@@ -74,7 +79,7 @@ impl ActionErrorType {
             ActionErrorType::WrongEnumChoice => { 400 }
             ActionErrorType::ValueRequired => { 400 }
             ActionErrorType::ValidationError => { 400 }
-            ActionErrorType::WrongJSONFormat => { 400 }
+            ActionErrorType::IncorrectJSONFormat => { 400 }
             ActionErrorType::UndefinedAction => { 400 }
             ActionErrorType::UnallowedAction => { 400 }
             ActionErrorType::ObjectIsNotSaved => { 400 }
@@ -111,6 +116,7 @@ impl ActionErrorType {
             ActionErrorType::ModelNotFound => { 500 }
             ActionErrorType::WrongIdentityModel => { 401 }
             ActionErrorType::PropertySetterError => { 400 }
+            ActionErrorType::UnexpectedInputRootType => { 400 }
             ActionErrorType::UnexpectedInputType => { 400 }
             ActionErrorType::UnexpectedInputKey => { 400 }
             ActionErrorType::UnexpectedInputValue => { 400 }
@@ -259,14 +265,6 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::NotFound,
             message: "The request destination is not found.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn wrong_json_format() -> Self {
-        ActionError {
-            r#type: ActionErrorType::WrongJSONFormat,
-            message: "Wrong JSON format.".to_string(),
             errors: None
         }
     }
@@ -529,10 +527,26 @@ impl ActionError {
 
     // new error types which should be used across the project
 
+    pub fn incorrect_json_format() -> Self {
+        ActionError {
+            r#type: ActionErrorType::IncorrectJSONFormat,
+            message: "Incorrect JSON format.".to_string(),
+            errors: None
+        }
+    }
+
+    pub fn unexpected_input_root_type<'a>(expected: impl AsRef<str>) -> Self {
+        ActionError {
+            r#type: ActionErrorType::UnexpectedInputRootType,
+            message: format!("Unexpected root input type, expected {}.", expected.as_ref()),
+            errors: None
+        }
+    }
+
     pub fn unexpected_input_type<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         ActionError {
             r#type: ActionErrorType::UnexpectedInputType,
-            message: "Input type invalid.".to_string(),
+            message: "Unexpected input type found.".to_string(),
             errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expect {}.", expected.into())}),
         }
     }

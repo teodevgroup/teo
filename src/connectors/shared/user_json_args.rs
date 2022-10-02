@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use key_path::path;
 use serde_json::{Value as JsonValue, json};
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::core::error::ActionError;
@@ -18,7 +19,7 @@ pub(crate) fn validate_where_unique(model: &Model, r#where: &Option<&JsonValue>)
     }
     let r#where = r#where.unwrap();
     if !r#where.is_object() {
-        return Err(ActionError::wrong_json_format());
+        return Err(ActionError::unexpected_input_type("object", path!["where"]));
     }
     let values = r#where.as_object().unwrap();
     // see if key is valid
