@@ -1,8 +1,10 @@
 use serde_json::{Value as JsonValue};
-use crate::core::field::Optionality;
+use crate::core::field::optionality::Optionality;
 use crate::core::object::Object;
 
 pub mod builder;
+pub mod delete_rule;
+pub mod disconnect_rule;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Relation {

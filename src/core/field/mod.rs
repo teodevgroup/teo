@@ -1,7 +1,10 @@
 use std::fmt::{Debug, Formatter};
 use crate::core::pipeline::argument::Argument;
 use crate::core::db_type::DatabaseType;
+use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::FieldType;
+use crate::core::field::read_rule::ReadRule;
+use crate::core::field::write_rule::WriteRule;
 use crate::core::permission::Permission;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::Context;
@@ -9,52 +12,9 @@ use crate::core::value::Value;
 
 pub(crate) mod r#type;
 pub(crate) mod builder;
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Optionality {
-    Optional,
-    Required,
-    PresentWith(Vec<String>),
-    PresentWithout(Vec<String>),
-}
-
-impl Optionality {
-    pub(crate) fn is_optional(&self) -> bool {
-        match self {
-            Optionality::Required => false,
-            _ => true,
-        }
-    }
-
-    pub(crate) fn is_required(&self) -> bool {
-        match self {
-            Optionality::Required => true,
-            _ => false
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum ReadRule {
-    Read,
-    NoRead
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum WriteRule {
-    Write,
-    NoWrite,
-    WriteOnce,
-    WriteOnCreate,
-    WriteNonNull
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum DeleteRule {
-    Nullify,
-    Cascade,
-    Deny,
-}
+pub mod optionality;
+pub mod read_rule;
+pub mod write_rule;
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum PreviousValueRule {

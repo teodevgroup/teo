@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use crate::core::field::{Field, Optionality, Sort};
+use crate::core::field::{Field, Sort};
 use crate::core::model::{ModelIndex, ModelIndexType};
 
 #[derive(PartialEq, Copy, Clone)]

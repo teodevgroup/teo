@@ -1,5 +1,5 @@
 use crate::core::connector::ConnectorBuilder;
-use crate::core::field::Optionality;
+use crate::core::field::optionality::Optionality;
 use crate::core::relation::Relation;
 
 pub struct RelationBuilder {

@@ -4,7 +4,7 @@ use sqlx::Row;
 use crate::connectors::sql::query_builder::dialect::SQLDialect;
 use crate::connectors::sql::query_builder::structs::column::SQLColumn;
 use crate::connectors::sql::query_builder::traits::to_sql_string::ToSQLString;
-use crate::core::field::{Field, Optionality};
+use crate::core::field::Field;
 
 #[derive(PartialEq, Debug)]
 pub struct MySQLColumn {

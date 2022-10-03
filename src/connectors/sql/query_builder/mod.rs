@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use crate::core::db_type::DatabaseType;
-use crate::core::field::{Field, Optionality};
+use crate::core::field::Field;
 use crate::core::model::Model;
 
 pub mod dialect;

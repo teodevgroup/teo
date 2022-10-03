@@ -1,4 +1,4 @@
-use crate::core::field::Optionality;
+use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::FieldType;
 use crate::core::pipeline::Pipeline;
 

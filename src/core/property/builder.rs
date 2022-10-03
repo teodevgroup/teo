@@ -1,6 +1,6 @@
 use crate::core::connector::ConnectorBuilder;
 use crate::core::field::builder::FieldBuilder;
-use crate::core::field::Optionality;
+use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::FieldType;
 use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
