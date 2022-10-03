@@ -475,7 +475,7 @@ impl Object {
                     } else {
                         // array are removed here, see if bug happens
                         // write on their side since it's primary
-                        for item in &self.model().primary_index().unwrap().items {
+                        for item in &self.model().primary_index().items {
                             if &item.field_name == field_name {
                                 let local_value = self.get_value(field_name)?;
                                 if !local_value.is_null() {
@@ -954,7 +954,7 @@ impl Object {
     pub(crate) fn identifier(&self) -> HashMap<&str, Value> {
         let model = self.model();
         let mut identifier: HashMap<&str, Value> = HashMap::new();
-        for item in &model.primary_index().unwrap().items {
+        for item in &model.primary_index().items {
             let val = self.get_value(&item.field_name).unwrap();
             identifier.insert(&item.field_name, val.clone());
         }
@@ -964,7 +964,7 @@ impl Object {
     pub(crate) fn json_identifier(&self) -> JsonValue {
         let model = self.model();
         let mut identifier = json!({});
-        for item in &model.primary_index().unwrap().items {
+        for item in &model.primary_index().items {
             let val = self.get_value(&item.field_name).unwrap();
             identifier.as_object_mut().unwrap().insert(item.field_name.clone(), val.to_json_value());
         }

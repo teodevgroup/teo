@@ -327,7 +327,6 @@ impl ModelBuilder {
             after_save_pipeline: self.after_save_pipeline.build(),
             before_delete_pipeline: self.before_delete_pipeline.build(),
             after_delete_pipeline: self.after_delete_pipeline.build(),
-            primary_field,
             all_keys: self.all_keys(),
             input_keys: self.input_keys(),
             save_keys: self.save_keys(),
@@ -336,6 +335,7 @@ impl ModelBuilder {
             unique_query_keys,
             auth_identity_keys: self.get_auth_identity_keys(),
             auth_by_keys: self.get_auth_by_keys(),
+            auto_keys: self.get_auto_keys(),
         };
         Model::new_with_inner(Arc::new(inner))
     }
@@ -388,14 +388,14 @@ impl ModelBuilder {
             .collect()
     }
 
-    fn relation_save_keys(&self) -> Vec<String> {
-        self.all_relation_keys()
+    fn property_save_keys(&self) -> Vec<String> {
+        self.property_builders.iter().filter(|p| p.cached).map(|p| p.name.clone()).collect()
     }
 
     fn save_keys(&self) -> Vec<String> {
         let mut fields: Vec<String> = vec![];
         fields.extend(self.field_save_keys());
-        // fields.extend(self.relation_save_keys());
+        fields.extend(self.property_save_keys());
         fields
     }
 
@@ -456,6 +456,14 @@ impl ModelBuilder {
         self.field_builders.iter()
             .filter(|&f| { f.auth_by == true })
             .map(|f| { f.name.clone() })
+            .collect()
+    }
+
+    pub(crate) fn get_auto_keys(&self) -> Vec<String> {
+        self.field_builders
+            .iter()
+            .filter(|&f| { f.auto || f.auto_increment })
+            .map(|f| f.name.clone())
             .collect()
     }
 

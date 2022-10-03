@@ -16,6 +16,7 @@ use regex::Regex;
 use rust_decimal::Decimal;
 use crate::connectors::mongodb::aggregation_builder::{build_query_pipeline_from_json, build_where_input, ToBsonValue};
 use crate::connectors::mongodb::save_session::MongoDBSaveSession;
+use crate::connectors::mongodb::utils::bson_identifier;
 use crate::connectors::shared::has_negative_take::has_negative_take;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::core::connector::Connector;
@@ -487,64 +488,65 @@ impl MongoDBConnector {
         }
         Ok(final_retval)
     }
-}
 
-#[async_trait]
-impl Connector for MongoDBConnector {
-
-    async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
-        let is_new = object.inner.is_new.load(Ordering::SeqCst);
-        let primary_name = object.model().primary_field_name();
+    async fn create_object(&self, object: &Object) -> Result<(), ActionError> {
+        let model = object.model();
         let keys = object.keys_for_save();
-        let col = &self.collections[object.model().name()];
-        if is_new {
-            let mut doc = doc!{};
-            for key in keys {
+        let col = &self.collections[model.name()];
+        let auto_keys = model.auto_keys();
+        // create
+        let mut doc = doc!{};
+        for key in keys {
+            if let Some(field) = model.field(key) {
+                let column_name = field.column_name();
                 let val = object.get_value(&key).unwrap();
-                if Some(key) == primary_name {
-                    if val.is_null() {
-                        continue;
-                    }
+                let bson_val = val.to_bson_value();
+                if bson_val != Bson::Null {
+                    doc.insert(column_name, bson_val);
                 }
-                let json_val = match val {
-                    Value::Null => Bson::Null,
-                    _ => val.to_bson_value()
-                };
-                if json_val != Bson::Null {
-                    doc.insert(key, json_val);
+            } else if let Some(property) = model.property(key) {
+                let val: Value = object.get_property(key).await.unwrap();
+                let bson_val = val.to_bson_value();
+                if bson_val != Bson::Null {
+                    doc.insert(key, bson_val);
                 }
             }
-            let result = col.insert_one(doc, None).await;
-            match result {
-                Ok(insert_one_result) => {
-                    let id = insert_one_result.inserted_id.as_object_id().unwrap().to_hex();
-                    if let Some(primary_field) = object.model().primary_field() {
-                        object.set_value(&primary_field.name, Value::ObjectId(id));
-                    } else {
-                        object.inner.value_map.lock().unwrap().insert("__id".to_string(), Value::ObjectId(id));
+        }
+        let result = col.insert_one(doc, None).await;
+        match result {
+            Ok(insert_one_result) => {
+                let id = insert_one_result.inserted_id.as_object_id().unwrap().to_hex();
+                for key in auto_keys {
+                    let field = model.field(key).unwrap();
+                    if field.column_name() == "_id" {
+                        object.set_value(field.name(), Value::ObjectId(id.clone()))?;
                     }
                 }
-                Err(error) => {
-                    println!("{:?}", error);
-                    return Err(self._handle_write_error(&error.kind));
-                }
             }
-        } else {
-            let object_id = if let Some(primary_field) = object.model().primary_field() {
-                object.get_value(&primary_field.name).unwrap().to_bson_value()
-            } else {
-                object.inner.value_map.lock().unwrap().get("__id").unwrap().to_bson_value()
-            };
-            let mut set = doc!{};
-            let mut unset = doc!{};
-            let mut inc = doc!{};
-            let mut mul = doc!{};
-            let mut push = doc!{};
-            for key in keys {
-                let column_name = object.model().field(key).unwrap().column_name();
-                let aumap = object.inner.atomic_updator_map.lock().unwrap();
-                if aumap.contains_key(key) {
-                    let updator = aumap.get(key).unwrap();
+            Err(error) => {
+                return Err(self._handle_write_error(&error.kind));
+            }
+        }
+        Ok(())
+    }
+
+    async fn update_object(&self, object: &Object) -> Result<(), ActionError> {
+        let model = object.model();
+        let keys = object.keys_for_save();
+        let col = &self.collections[model.name()];
+        let identifier = object.identifier();
+        let bson_identifier = bson_identifier(&identifier, model);
+        let mut set = doc!{};
+        let mut unset = doc!{};
+        let mut inc = doc!{};
+        let mut mul = doc!{};
+        let mut push = doc!{};
+        for key in keys {
+            if let Some(field) = model.field(key) {
+                let column_name = field.column_name();
+                let atomic_updator_map = object.inner.atomic_updator_map.lock().unwrap();
+                if atomic_updator_map.contains_key(key) {
+                    let updator = atomic_updator_map.get(key).unwrap();
                     match updator {
                         AtomicUpdateType::Increment(val) => {
                             inc.insert(column_name, val.to_bson_value());
@@ -561,98 +563,88 @@ impl Connector for MongoDBConnector {
                         AtomicUpdateType::Push(val) => {
                             push.insert(column_name, val.to_bson_value());
                         }
-                    };
+                    }
                 } else {
                     let val = object.get_value(key).unwrap();
-                    let json_val = val.to_bson_value();
-                    match primary_name {
-                        Some(name) => {
-                            if key == name {
-                                if json_val != Bson::Null {
-                                    set.insert("_id", json_val);
-                                }
-                            } else {
-                                if json_val == Bson::Null {
-                                    unset.insert(key, json_val);
-                                } else {
-                                    set.insert(key, json_val);
-                                }
-                            }
-                        }
-                        None => {
-                            if json_val == Bson::Null {
-                                unset.insert(key, json_val);
-                            } else {
-                                set.insert(key, json_val);
-                            }
-                        }
+                    let bson_val = val.to_bson_value();
+                    if bson_val == Bson::Null {
+                        unset.insert(key, bson_val);
+                    } else {
+                        set.insert(key, bson_val);
                     }
                 }
+            } else if let Some(property) = model.property(key) {
+                let val: Value = object.get_property(key).await.unwrap();
+                let bson_val = val.to_bson_value();
+                if bson_val != Bson::Null {
+                    set.insert(key, bson_val);
+                } else {
+                    unset.insert(key, bson_val);
+                }
             }
-            let mut update_doc = doc!{};
-            let mut return_new = false;
-            if !set.is_empty() {
-                update_doc.insert("$set", set);
+        }
+        let mut update_doc = doc!{};
+        let mut return_new = false;
+        if !set.is_empty() {
+            update_doc.insert("$set", set);
+        }
+        if !unset.is_empty() {
+            update_doc.insert("$unset", unset);
+        }
+        if !inc.is_empty() {
+            update_doc.insert("$inc", inc);
+            return_new = true;
+        }
+        if !mul.is_empty() {
+            update_doc.insert("$mul", mul);
+            return_new = true;
+        }
+        if !push.is_empty() {
+            update_doc.insert("$push", push);
+            return_new = true;
+        }
+        if update_doc.is_empty() {
+            return Ok(());
+        }
+        if !return_new {
+            let result = col.update_one(bson_identifier, update_doc, None).await;
+            return match result {
+                Ok(_) => Ok(()),
+                Err(error) => {
+                    Err(self._handle_write_error(&error.kind))
+                }
             }
-            if !unset.is_empty() {
-                update_doc.insert("$unset", unset);
-            }
-            if !inc.is_empty() {
-                update_doc.insert("$inc", inc);
-                return_new = true;
-            }
-            if !mul.is_empty() {
-                update_doc.insert("$mul", mul);
-                return_new = true;
-            }
-            if !push.is_empty() {
-                update_doc.insert("$push", push);
-                return_new = true;
-            }
-            if !return_new {
-                if !update_doc.is_empty() {
-                    let result = col.update_one(doc!{"_id": object_id}, update_doc, None).await;
-                    // sync result back
-                    return match result {
-                        Ok(_update_result) => {
-                            Ok(())
-                        }
-                        Err(error) => {
-                            println!("{:?}", error);
-                            Err(self._handle_write_error(&error.kind))
-                        }
+        } else {
+            let options = FindOneAndUpdateOptions::builder().return_document(ReturnDocument::After).build();
+            let result = col.find_one_and_update(bson_identifier, update_doc, options).await;
+            match result {
+                Ok(updated_document) => {
+                    for key in object.inner.atomic_updator_map.lock().unwrap().keys() {
+                        let bson_new_val = updated_document.as_ref().unwrap().get(key).unwrap();
+                        let field = object.model().field(key).unwrap();
+                        let field_value = self.bson_value_to_field_value(key, bson_new_val, &field.field_type)?;
+                        object.inner.value_map.lock().unwrap().insert(key.to_string(), field_value);
                     }
                 }
-            } else {
-                if !update_doc.is_empty() {
-                    let options = FindOneAndUpdateOptions::builder().return_document(ReturnDocument::After).build();
-                    let result = col.find_one_and_update(doc!{"_id": object_id}, update_doc, options).await;
-                    match &result {
-                        Ok(updated_document) => {
-                            for key in object.inner.atomic_updator_map.lock().unwrap().keys() {
-                                let bson_new_val = updated_document.as_ref().unwrap().get(key).unwrap();
-                                let field = object.model().field(key).unwrap();
-                                let field_value = self.bson_value_to_field_value(key, bson_new_val, &field.field_type);
-                                match field_value {
-                                    Ok(field_value) => {
-                                        object.inner.value_map.lock().unwrap().insert(key.to_string(), field_value);
-                                    }
-                                    Err(err) => {
-                                        println!("{:?}", err);
-                                        panic!("here cannot error");
-                                    }
-                                }
-                            }
-                        }
-                        Err(error) => {
-                            println!("{:?}", error);
-                            return Err(self._handle_write_error(&error.kind));
-                        }
-                    }
+                Err(error) => {
+                    return Err(self._handle_write_error(&error.kind));
                 }
             }
         }
         Ok(())
+    }
+
+}
+
+#[async_trait]
+impl Connector for MongoDBConnector {
+
+    async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
+        if object.inner.is_new.load(Ordering::SeqCst) {
+            self.create_object(object).await
+        } else {
+            self.update_object(object).await
+        }
     }
 
     async fn delete_object(&self, object: &Object) -> Result<(), ActionError> {
@@ -660,19 +652,11 @@ impl Connector for MongoDBConnector {
             return Err(ActionError::object_is_not_saved());
         }
         let model = object.model();
-        let mut query = doc!{};
-        for item in &model.primary().unwrap().items {
-            let field_name = &item.field_name;
-            let column_name = model.field(field_name).unwrap().column_name();
-            let value = object.get_value(field_name).unwrap().to_bson_value();
-            query.insert(column_name, value);
-        }
         let col = &self.collections[model.name()];
-        let result = col.delete_one(query, None).await;
+        let bson_identifier = bson_identifier(&object.identifier(), model);
+        let result = col.delete_one(bson_identifier, None).await;
         return match result {
-            Ok(_result) => {
-                Ok(())
-            }
+            Ok(_result) => Ok(()),
             Err(_err) => {
                 Err(ActionError::unknown_database_delete_error())
             }

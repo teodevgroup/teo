@@ -15,6 +15,7 @@ pub struct PropertyBuilder {
     pub(crate) dependencies: Vec<String>,
     pub(crate) setter: Option<Pipeline>,
     pub(crate) getter: Option<Pipeline>,
+    pub(crate) cached: bool,
     pub(crate) input_omissible: bool,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
@@ -31,6 +32,7 @@ impl PropertyBuilder {
             dependencies: vec![],
             setter: None,
             getter: None,
+            cached: false,
             connector_builder,
             input_omissible: false,
         }
@@ -173,6 +175,11 @@ impl PropertyBuilder {
         self
     }
 
+    pub fn cached(&mut self) -> &mut Self {
+        self.cached = true;
+        self
+    }
+
     pub fn dependencies<I, T>(&mut self, dependencies: I) -> &mut Self where I: IntoIterator<Item = T>, T: Into<String> {
         let dependencies_vec: Vec<String> = dependencies.into_iter().map(Into::into).collect();
         self.dependencies = dependencies_vec;
@@ -200,6 +207,7 @@ impl PropertyBuilder {
             dependencies: self.dependencies.clone(),
             setter: self.setter.clone(),
             getter: self.getter.clone(),
+            cached: self.cached,
             input_omissible: self.input_omissible.clone(),
         }
     }

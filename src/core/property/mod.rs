@@ -14,4 +14,5 @@ pub struct Property {
     pub(crate) setter: Option<Pipeline>,
     pub(crate) getter: Option<Pipeline>,
     pub(crate) input_omissible: bool,
+    pub(crate) cached: bool,
 }

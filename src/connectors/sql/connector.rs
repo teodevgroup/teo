@@ -162,20 +162,24 @@ impl SQLConnector {
 
     async fn create_object(&self, object: &Object) -> Result<(), ActionError> {
         let model = object.model();
-        let field_names = object.keys_for_save();
+        let keys = object.keys_for_save();
+        let auto_keys = model.auto_keys();
         let mut values: Vec<(&str, String)> = vec![];
-        for field_name in field_names {
-            if let Some(field) = model.field(field_name) {
+        for key in keys {
+            if let Some(field) = model.field(key) {
                 let column_name = field.column_name();
-                let val = object.get_value(field_name).unwrap();
+                let val = object.get_value(key).unwrap();
                 values.push((column_name, val.to_string(self.dialect)));
+            } else if let Some(property) = model.property(key) {
+                let val: Value = object.get_property(key).await.unwrap();
+                values.push((key, val.to_string(self.dialect)));
             }
         }
         let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();
         let stmt = SQL::insert_into(model.table_name()).values(value_refs).to_string(self.dialect);
         let result = self.pool.execute(&*stmt).await.unwrap();
-        if let Some(primary_key_name) = model.primary_field_name() {
-            object.set_value(primary_key_name, Value::I64(result.last_insert_id().unwrap())).unwrap();
+        for key in auto_keys {
+            object.set_value(key, Value::I64(result.last_insert_id().unwrap()))?;
         }
         Ok(())
     }

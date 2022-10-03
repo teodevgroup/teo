@@ -56,6 +56,8 @@ The new generation server software.
 #### 0.0.28
 - Fix pipeline valid check **[DONE]**
 - Cached property
+- Property setter error uses path
+- Permissions
 
 #### 0.0.29
 - New style key path error messages

@@ -54,7 +54,6 @@ pub struct ModelInner {
     pub(crate) after_save_pipeline: Pipeline,
     pub(crate) before_delete_pipeline: Pipeline,
     pub(crate) after_delete_pipeline: Pipeline,
-    pub(crate) primary_field: Option<Arc<Field>>,
     pub(crate) all_keys: Vec<String>,
     pub(crate) input_keys: Vec<String>,
     pub(crate) save_keys: Vec<String>,
@@ -63,6 +62,7 @@ pub struct ModelInner {
     pub(crate) unique_query_keys: Vec<HashSet<String>>,
     pub(crate) auth_identity_keys: Vec<String>,
     pub(crate) auth_by_keys: Vec<String>,
+    pub(crate) auto_keys: Vec<String>,
 }
 
 #[derive(Clone)]
@@ -144,26 +144,8 @@ impl Model {
         }
     }
 
-    pub(crate) fn primary_index(&self) -> Option<&ModelIndex> {
-        self.inner.primary.as_ref()
-    }
-
     pub(crate) fn primary_field_names(&self) -> Vec<&str> {
         self.inner.primary.as_ref().unwrap().items.iter().map(|i| i.field_name.as_str()).collect::<Vec<&str>>()
-    }
-
-    pub(crate) fn primary_field(&self) -> Option<&Field> {
-        match &self.inner.primary_field {
-            Some(f) => Some(f.as_ref()),
-            None => None
-        }
-    }
-
-    pub(crate) fn primary_field_name(&self) -> Option<&str> {
-        match self.primary_field() {
-            Some(field) => Some(&field.name),
-            None => None
-        }
     }
 
     pub(crate) fn column_name_for_field_name(&self, column_name: &str) -> Option<&str> {
@@ -201,6 +183,8 @@ impl Model {
 
     pub(crate) fn auth_by_keys(&self) -> &Vec<String> { &self.inner.auth_by_keys }
 
+    pub(crate) fn auto_keys(&self) -> &Vec<String> { &self.inner.auto_keys }
+
     pub(crate) fn has_action(&self, action: ActionType) -> bool {
         self.inner.actions.contains(&action)
     }
@@ -221,8 +205,8 @@ impl Model {
         &self.inner.indices
     }
 
-    pub(crate) fn primary(&self) -> Option<&ModelIndex> {
-        self.inner.primary.as_ref()
+    pub(crate) fn primary_index(&self) -> &ModelIndex {
+        self.inner.primary.as_ref().unwrap()
     }
 
     pub(crate) fn before_save_pipeline(&self) -> &Pipeline {
