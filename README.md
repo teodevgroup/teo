@@ -54,6 +54,10 @@ The new generation server software.
 - Updated with some new style key path error messages **[DONE]**
 
 #### 0.0.28
+- Fix pipeline valid check **[DONE]**
+- Cached property
+
+#### 0.0.29
 - New style key path error messages
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
@@ -63,10 +67,10 @@ The new generation server software.
 - Fix broken `connectIdentity` modifier
 - For relationship with join table, link them after both objects are created
 
-#### 0.0.29
+#### 0.0.30
 - Custom SQL database types
 
-#### 0.0.30 - 0.0.50
+#### 0.0.31 - 0.0.50
 - Migration with SQL databases
 
 #### 0.0.51
