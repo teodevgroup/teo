@@ -23,6 +23,7 @@ use crate::core::connector::Connector;
 use crate::core::error::ActionError;
 use crate::core::input::AtomicUpdateType;
 use crate::core::input_decoder::str_to_target_type;
+use crate::core::result::ActionResult;
 use crate::core::save_session::SaveSession;
 use crate::prelude::{Graph, Object, Value};
 
@@ -69,7 +70,7 @@ impl SQLConnector {
         migrate(dialect, pool, models).await
     }
 
-    fn row_to_object(&self, row: &AnyRow, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>, left_join: bool) -> Result<(), ActionError> {
+    fn row_to_object(&self, row: &AnyRow, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>, left_join: bool) -> ActionResult<()> {
         for column in row.columns() {
             let column_name = column.name();
             let result_name = if left_join {
@@ -160,7 +161,7 @@ impl SQLConnector {
                 // object.inner.relation_query_map.lock().unwrap().insert(key.to_string(), related);
     }
 
-    async fn create_object(&self, object: &Object) -> Result<(), ActionError> {
+    async fn create_object(&self, object: &Object) -> ActionResult<()> {
         let model = object.model();
         let keys = object.keys_for_save();
         let auto_keys = model.auto_keys();
@@ -184,7 +185,7 @@ impl SQLConnector {
         Ok(())
     }
 
-    async fn update_object(&self, object: &Object) -> Result<(), ActionError> {
+    async fn update_object(&self, object: &Object) -> ActionResult<()> {
         let model = object.model();
         let keys = object.keys_for_save();
         let mut values: Vec<(&str, String)> = vec![];
@@ -217,7 +218,7 @@ impl SQLConnector {
                 }
             } else if let Some(property) = model.property(key) {
                 let val: Value = object.get_property(key).await.unwrap();
-                values.push((column_name, val.to_string(self.dialect)));
+                values.push((key, val.to_string(self.dialect)));
             }
         }
         let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();
@@ -417,7 +418,7 @@ impl SQLConnector {
 
 #[async_trait]
 impl Connector for SQLConnector {
-    async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
+    async fn save_object(&self, object: &Object) -> ActionResult<()> {
         let is_new = object.inner.is_new.load(Ordering::SeqCst);
         if is_new {
             self.create_object(object).await
@@ -426,7 +427,7 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn delete_object(&self, object: &Object) -> Result<(), ActionError> {
+    async fn delete_object(&self, object: &Object) -> ActionResult<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
             return Err(ActionError::object_is_not_saved());
         }

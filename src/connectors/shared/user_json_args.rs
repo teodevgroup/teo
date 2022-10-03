@@ -4,6 +4,7 @@ use serde_json::{Value as JsonValue, json};
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::core::error::ActionError;
 use crate::core::model::Model;
+use crate::core::result::ActionResult;
 use crate::prelude::Graph;
 
 fn unwrap_i32(value: Option<&JsonValue>) -> Option<i32> {
@@ -13,7 +14,7 @@ fn unwrap_i32(value: Option<&JsonValue>) -> Option<i32> {
     }
 }
 
-pub(crate) fn validate_where_unique(model: &Model, r#where: &Option<&JsonValue>) -> Result<(), ActionError> {
+pub(crate) fn validate_where_unique(model: &Model, r#where: &Option<&JsonValue>) -> ActionResult<()> {
     if r#where.is_none() {
         return Err(ActionError::invalid_query_input("Unique query should have a where which represents unique key or keys."));
     }

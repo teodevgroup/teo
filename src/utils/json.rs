@@ -2,8 +2,9 @@ use std::collections::HashSet;
 use key_path::KeyPath;
 use serde_json::{Value as JsonValue};
 use crate::core::error::ActionError;
+use crate::core::result::ActionResult;
 
-pub(crate) fn check_json_keys<'a>(value: &JsonValue, allowed: &HashSet<&str>, path: &KeyPath<'a>) -> Result<(), ActionError> {
+pub(crate) fn check_json_keys<'a>(value: &JsonValue, allowed: &HashSet<&str>, path: &KeyPath<'a>) -> ActionResult<()> {
     if let Some(unallowed) = value.as_object().unwrap().keys().find(|k| !allowed.contains(k.as_str())) {
         return Err(ActionError::unexpected_input_key(unallowed, path + unallowed));
     }

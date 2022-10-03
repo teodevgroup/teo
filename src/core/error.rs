@@ -4,6 +4,7 @@ use std::fmt::{Debug, Display, Formatter};
 use serde::{Serialize, Serializer};
 use maplit::hashmap;
 use key_path::KeyPath;
+use crate::core::model::Model;
 
 #[derive(Debug, PartialEq, Serialize)]
 pub enum ActionErrorType {
@@ -45,8 +46,6 @@ pub enum ActionErrorType {
     InvalidQueryInput,
     RequiredRelationCannotDisconnect,
     NewObjectCannotDisconnect,
-    GetValueError,
-    SetValueError,
     SaveCallingError,
     CustomError,
     ModelNotFound,
@@ -66,6 +65,9 @@ pub enum ActionErrorType {
 
     // request token
     InvalidJWTToken,
+
+    // object api
+    InvalidKey,
 }
 
 impl ActionErrorType {
@@ -111,8 +113,6 @@ impl ActionErrorType {
             ActionErrorType::InvalidQueryInput => { 400 }
             ActionErrorType::RequiredRelationCannotDisconnect => { 400 }
             ActionErrorType::NewObjectCannotDisconnect => { 400 }
-            ActionErrorType::GetValueError => { 500 }
-            ActionErrorType::SetValueError => { 500 }
             ActionErrorType::SaveCallingError => { 500 }
             ActionErrorType::CustomError => { 500 }
             ActionErrorType::ModelNotFound => { 500 }
@@ -124,6 +124,7 @@ impl ActionErrorType {
             ActionErrorType::UnexpectedInputValue => { 400 }
             ActionErrorType::MissingRequiredInput => { 400 }
             ActionErrorType::UnexpectedObjectLength => { 400 }
+            ActionErrorType::InvalidKey => { 500 }
         }
     }
 }
@@ -472,22 +473,6 @@ impl ActionError {
         }
     }
 
-    pub fn get_value_error(model_name: impl AsRef<str> + Display, key_name: impl AsRef<str> + Debug) -> Self {
-        ActionError {
-            r#type: ActionErrorType::GetValueError,
-            message: format!("Model `{model_name}' doesn't have key `{key_name:?}'."),
-            errors: None
-        }
-    }
-
-    pub fn set_value_error(model_name: impl AsRef<str> + Display, key_name: impl AsRef<str> + Debug) -> Self {
-        ActionError {
-            r#type: ActionErrorType::SetValueError,
-            message: format!("Model `{model_name}' doesn't have key `{key_name:?}'."),
-            errors: None
-        }
-    }
-
     pub fn save_calling_error(model_name: impl AsRef<str> + Display) -> Self {
         ActionError {
             r#type: ActionErrorType::SaveCallingError,
@@ -583,6 +568,14 @@ impl ActionError {
             r#type: ActionErrorType::UnexpectedObjectLength,
             message: "Unexpected object length.".to_string(),
             errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expect length {}.", expected)})
+        }
+    }
+
+    pub fn invalid_key(unexpected_key: impl AsRef<str>, model: &Model) -> Self {
+        ActionError {
+            r#type: ActionErrorType::InvalidKey,
+            message: format!("Invalid key '{}' accessed on model `{}'", unexpected_key.as_ref(), model.name()),
+            errors: None
         }
     }
 }

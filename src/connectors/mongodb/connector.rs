@@ -29,6 +29,7 @@ use crate::core::model::{Model, ModelIndex, ModelIndexType};
 use crate::core::save_session::SaveSession;
 use crate::core::value::Value;
 use crate::core::error::ActionError;
+use crate::core::result::ActionResult;
 
 #[derive(Debug)]
 pub struct MongoDBConnector {
@@ -137,7 +138,7 @@ impl MongoDBConnector {
         }
     }
 
-    fn document_to_object(&self, document: &Document, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>) -> Result<(), ActionError> {
+    fn document_to_object(&self, document: &Document, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>) -> ActionResult<()> {
         for key in document.keys() {
             let object_field = object.model().fields().iter().find(|f| f.column_name() == key);
             if object_field.is_some() {
@@ -489,7 +490,7 @@ impl MongoDBConnector {
         Ok(final_retval)
     }
 
-    async fn create_object(&self, object: &Object) -> Result<(), ActionError> {
+    async fn create_object(&self, object: &Object) -> ActionResult<()> {
         let model = object.model();
         let keys = object.keys_for_save();
         let col = &self.collections[model.name()];
@@ -530,7 +531,7 @@ impl MongoDBConnector {
         Ok(())
     }
 
-    async fn update_object(&self, object: &Object) -> Result<(), ActionError> {
+    async fn update_object(&self, object: &Object) -> ActionResult<()> {
         let model = object.model();
         let keys = object.keys_for_save();
         let col = &self.collections[model.name()];
@@ -639,7 +640,7 @@ impl MongoDBConnector {
 #[async_trait]
 impl Connector for MongoDBConnector {
 
-    async fn save_object(&self, object: &Object) -> Result<(), ActionError> {
+    async fn save_object(&self, object: &Object) -> ActionResult<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
             self.create_object(object).await
         } else {
@@ -647,7 +648,7 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn delete_object(&self, object: &Object) -> Result<(), ActionError> {
+    async fn delete_object(&self, object: &Object) -> ActionResult<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
             return Err(ActionError::object_is_not_saved());
         }

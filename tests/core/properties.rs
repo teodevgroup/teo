@@ -93,15 +93,6 @@ async fn readonly_field_cannot_accept_value_through_set_json() {
 }
 
 #[test]
-async fn readonly_field_can_accept_value_through_update_json() {
-    let graph = make_graph().await;
-    let simple = graph.create_object("Readonly", json!({})).unwrap();
-    let _ = simple.update_json(&json!({"readonly": "my_value"})).await;
-    let value = simple.get_value("readonly");
-    assert_eq!(value.unwrap().unwrap(), Value::String("my_value".to_string()));
-}
-
-#[test]
 async fn readonly_field_can_accept_value_through_set_value() {
     let graph = make_graph().await;
     let simple = graph.create_object("Readonly", json!({})).unwrap();
@@ -134,15 +125,6 @@ async fn internal_field_cannot_accept_value_through_set_json() {
     let simple = graph.create_object("Internal", json!({})).unwrap();
     let result = simple.set_json(&json!({"internal": "my_value"})).await;
     assert_eq!(result.err().unwrap(), ActionError::keys_unallowed());
-}
-
-#[test]
-async fn internal_field_can_accept_value_through_update_json() {
-    let graph = make_graph().await;
-    let simple = graph.create_object("Internal", json!({})).unwrap();
-    let _ = simple.update_json(&json!({"internal": "my_value"})).await;
-    let value = simple.get_value("internal");
-    assert_eq!(value.unwrap().unwrap(), Value::String("my_value".to_string()));
 }
 
 #[test]

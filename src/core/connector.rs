@@ -9,13 +9,14 @@ use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::save_session::SaveSession;
 use crate::core::error::ActionError;
+use crate::core::result::ActionResult;
 
 #[async_trait]
 pub(crate) trait Connector: Debug + Send + Sync {
 
-    async fn save_object(&self, object: &Object) -> Result<(), ActionError>;
+    async fn save_object(&self, object: &Object) -> ActionResult<()>;
 
-    async fn delete_object(&self, object: &Object) -> Result<(), ActionError>;
+    async fn delete_object(&self, object: &Object) -> ActionResult<()>;
 
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError>;
 
