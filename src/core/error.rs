@@ -1,6 +1,7 @@
 use std::collections::HashMap;
-use std::fmt::{Debug, Display};
-use serde::Serialize;
+use std::error::Error;
+use std::fmt::{Debug, Display, Formatter};
+use serde::{Serialize, Serializer};
 use maplit::hashmap;
 use key_path::KeyPath;
 
@@ -585,6 +586,14 @@ impl ActionError {
         }
     }
 }
+
+impl Display for ActionError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        self.r#type.fmt(f)
+    }
+}
+
+impl Error for ActionError { }
 
 unsafe impl Sync for ActionError {}
 unsafe impl Send for ActionError {}
