@@ -336,6 +336,7 @@ impl ModelBuilder {
             auth_identity_keys: self.get_auth_identity_keys(),
             auth_by_keys: self.get_auth_by_keys(),
             auto_keys: self.get_auto_keys(),
+            field_property_map: self.get_field_property_map(),
         };
         Model::new_with_inner(Arc::new(inner))
     }
@@ -485,5 +486,20 @@ impl ModelBuilder {
 
     pub(crate) fn figure_out_action_defs(&self) -> HashMap<ActionType, Action> {
         self.actions_builder.get_action_defs().clone()
+    }
+
+    fn get_field_property_map(&self) -> HashMap<String, Vec<String>> {
+        let mut map: HashMap<String, Vec<String>> = HashMap::new();
+        for property in self.property_builders.iter() {
+            if property.cached {
+                for dependency in property.dependencies.iter() {
+                    if map.get(dependency).is_none() {
+                        map.insert(dependency.clone(), vec![]);
+                    }
+                    map.get_mut(dependency).unwrap().push(property.name.clone())
+                }
+            }
+        }
+        map
     }
 }

@@ -56,9 +56,9 @@ The new generation server software.
 #### 0.0.28
 - Fix pipeline valid check **[DONE]**
 - Cached property: save into database **[DONE]**
-- Cached property: mark for save on dependency update
-- Cached property: get cached value
-- Cached property: recalculate if dirty
+- Cached property: mark for save on dependency update **[DONE]**
+- Cached property: get cached value **[DONE]**
+- Cached property: recalculate if dirty **[DONE]**
 - Property setter error uses path
 - Permissions
 

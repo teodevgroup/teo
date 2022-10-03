@@ -293,6 +293,12 @@ impl Object {
         if !self.is_new() {
             self.inner.is_modified.store(true, Ordering::SeqCst);
             self.inner.modified_fields.lock().unwrap().insert(key.clone());
+            if let Some(properties) = self.model().field_property_map().get(&key) {
+                for property in properties {
+                    self.inner.modified_fields.lock().unwrap().insert(property.clone());
+                    self.inner.cached_property_map.lock().unwrap().remove(property);
+                }
+            }
         }
         Ok(())
     }
@@ -335,9 +341,17 @@ impl Object {
 
     pub async fn get_property<T>(&self, key: impl AsRef<str>) -> Result<T, ActionError> where T: From<Value> {
         let property = self.model().property(key.as_ref()).unwrap();
+        if property.cached {
+            if let Some(value) = self.inner.cached_property_map.lock().unwrap().get(key.as_ref()) {
+                return Ok(value.clone().into());
+            }
+        }
         let getter = property.getter.as_ref().unwrap();
         let ctx = Context::initial_state(self.clone(), Intent::UserCodeGetProperty);
         let value = getter.process(ctx).await.value;
+        if property.cached {
+            self.inner.cached_property_map.lock().unwrap().insert(key.as_ref().to_string(), value.clone());
+        }
         Ok(value.into())
     }
 
