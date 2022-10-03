@@ -51,6 +51,9 @@ The new generation server software.
 - SQL: Correct result json key order **[DONE]**
 
 #### 0.0.27
+- Updated with some new style key path error messages **[DONE]**
+
+#### 0.0.28
 - New style key path error messages
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
@@ -60,10 +63,10 @@ The new generation server software.
 - Fix broken `connectIdentity` modifier
 - For relationship with join table, link them after both objects are created
 
-#### 0.0.28
+#### 0.0.29
 - Custom SQL database types
 
-#### 0.0.29 - 0.0.50
+#### 0.0.30 - 0.0.50
 - Migration with SQL databases
 
 #### 0.0.51
