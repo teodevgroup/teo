@@ -399,7 +399,7 @@ impl FieldBuilder {
             description: self.description.clone(),
             field_type: self.field_type.clone(),
             database_type: if self.database_type.is_undefined() { connector_builder.inferred_database_type(&self.field_type) } else { self.database_type.clone() },
-            optionality: self.optionality,
+            optionality: self.optionality.clone(),
             r#virtual: self.r#virtual,
             atomic: self.atomic,
             primary: self.primary,

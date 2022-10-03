@@ -18,7 +18,7 @@ impl ToTypeScriptType for FieldType {
             FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number".to_string(),
             FieldType::Decimal => "string".to_string(),
             FieldType::Enum(name) => name.to_string(),
-            FieldType::Vec(internal) => internal.field_type.to_typescript_type(internal.optionality == Optionality::Optional) + "[]",
+            FieldType::Vec(internal) => internal.field_type.to_typescript_type(internal.optionality.is_optional()) + "[]",
             FieldType::Map(_) => panic!(),
             FieldType::Object(name) => name.to_string(),
         };
@@ -79,7 +79,7 @@ impl ToTypeScriptType for FieldType {
             FieldType::Bool => "boolean".to_string(),
             FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number".to_string(),
             FieldType::Enum(name) => name.to_string(),
-            FieldType::Vec(internal) => internal.field_type.to_typescript_type(internal.optionality == Optionality::Optional) + "[]",
+            FieldType::Vec(internal) => internal.field_type.to_typescript_type(internal.optionality.is_optional()) + "[]",
             FieldType::Map(_) => panic!(),
             FieldType::Object(name) => name.to_string(),
         };

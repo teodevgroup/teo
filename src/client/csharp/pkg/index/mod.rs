@@ -199,7 +199,7 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
                 class_fields.push(CSharpClassField {
                     n: field_name.to_pascal_case(),
                     t: field_cs_type,
-                    o: field.optionality == Optionality::Optional,
+                    o: field.optionality.is_optional(),
                     d: Some(field_doc(field)),
                     j: None
                 });
@@ -455,7 +455,7 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
     model.input_keys().iter().for_each(|k| {
         if let Some(field) = model.field(k) {
             let field_name = &field.name;
-            let field_cs_type = field.field_type.to_csharp_update_input_type(field.optionality == Optionality::Optional, true);
+            let field_cs_type = field.field_type.to_csharp_update_input_type(field.optionality.is_optional(), true);
             let ignore_this_field = if let Some(without_relation) = without_relation {
                 without_relation.fields.contains(k)
             } else {
@@ -680,7 +680,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _conf: &ClientConfiguration
                 m.query_keys().iter().for_each(|k| {
                     if let Some(field) = m.field(k) {
                         let field_name = &field.name;
-                        let field_filter = field.field_type.to_csharp_filter_type(field.optionality == Optionality::Optional);
+                        let field_filter = field.field_type.to_csharp_filter_type(field.optionality.is_optional());
                         where_fields.push(CSharpClassField {
                             n: field_name.to_pascal_case(),
                             t: field_filter,

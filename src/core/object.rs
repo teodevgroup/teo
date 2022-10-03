@@ -102,7 +102,7 @@ impl Object {
                     }
                 } else {
                     let json_value = json_map.get(key).unwrap();
-                    let input_result = decode_field_input(self.graph(), json_value, &field.field_type, field.optionality, &(path + field.name()))?;
+                    let input_result = decode_field_input(self.graph(), json_value, &field.field_type, field.optionality.clone(), &(path + field.name()))?;
                     match input_result {
                         SetValue(value) => {
                             let mut value = value;
@@ -180,7 +180,7 @@ impl Object {
                         let entries = input_to_vec(command_input, path)?;
                         for entry in entries {
                             let model = graph.model(&relation.model)?;
-                            if !relation.is_vec && (relation.optionality == Optionality::Required) {
+                            if !relation.is_vec && (relation.optionality.is_required()) {
                                 return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot disconnect."));
                             }
                             let opposite_relation = model.relations().iter().find(|r| {
@@ -188,7 +188,7 @@ impl Object {
                             });
                             if opposite_relation.is_some() {
                                 let opposite_relation = opposite_relation.unwrap();
-                                if !opposite_relation.is_vec && (opposite_relation.optionality == Optionality::Required) {
+                                if !opposite_relation.is_vec && (opposite_relation.optionality.is_required()) {
                                     return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot disconnect."));
                                 }
                             }
@@ -220,7 +220,7 @@ impl Object {
                         let graph = self.graph();
                         let model_name = &relation.model;
                         let model = graph.model(model_name)?;
-                        if !relation.is_vec && (relation.optionality == Optionality::Required) {
+                        if !relation.is_vec && (relation.optionality.is_required()) {
                             return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot delete."));
                         }
                         let opposite_relation = model.relations().iter().find(|r| {
@@ -228,7 +228,7 @@ impl Object {
                         });
                         if opposite_relation.is_some() {
                             let opposite_relation = opposite_relation.unwrap();
-                            if !opposite_relation.is_vec && (opposite_relation.optionality == Optionality::Required) {
+                            if !opposite_relation.is_vec && (opposite_relation.optionality.is_required()) {
                                 return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot delete."));
                             }
                         }
@@ -535,7 +535,7 @@ impl Object {
             if field.auto || field.auto_increment {
                 continue
             }
-            if field.optionality == Optionality::Required {
+            if field.optionality.is_required() {
                 let value = self.get_value(key).unwrap();
                 if value.is_null() {
                     return Err(ActionError::value_required(key))
@@ -754,9 +754,9 @@ impl Object {
                     let local_field = self.model().field(field_name).unwrap();
                     let foreign_field = obj.model().field(reference).unwrap();
                     if !local_value.is_null() && !foreign_value.is_null() {
-                        if local_field.optionality == Optionality::Optional {
+                        if local_field.optionality.is_optional() {
                             self.set_value(field_name, Value::Null)?;
-                        } else if foreign_field.optionality == Optionality::Optional {
+                        } else if foreign_field.optionality.is_optional() {
                             obj.set_value(reference, Value::Null)?;
                         }
                     }

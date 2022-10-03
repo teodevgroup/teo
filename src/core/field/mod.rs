@@ -10,10 +10,12 @@ use crate::core::value::Value;
 pub(crate) mod r#type;
 pub(crate) mod builder;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Optionality {
     Optional,
-    Required
+    Required,
+    PresentWith(Vec<String>),
+    PresentWithout(Vec<String>),
 }
 
 impl Optionality {

@@ -46,7 +46,7 @@ pub(crate) fn one_length_json_obj<'a>(json_value: &'a JsonValue, path: &KeyPath)
 }
 
 fn decode_null(_field_type: &FieldType, optionality: Optionality, path: &KeyPath) -> Result<Input, ActionError> {
-    if optionality == Optionality::Optional {
+    if optionality.is_optional() {
         Ok(SetValue(Value::Null))
     } else {
         Err(ActionError::unexpected_input_value("non null", path))
@@ -202,7 +202,7 @@ fn decode_vec_input(graph: &Graph, json_value: &JsonValue, field_type: &FieldTyp
         let arr = json_value.as_array().unwrap();
         Ok(SetValue(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
             let new_path = path + i;
-            match decode_field_input(graph, v, &inner_field.field_type, inner_field.optionality, &new_path) {
+            match decode_field_input(graph, v, &inner_field.field_type, inner_field.optionality.clone(), &new_path) {
                 Ok(v) => {
                     match v {
                         SetValue(v) => v,
@@ -225,7 +225,7 @@ fn decode_vec_input(graph: &Graph, json_value: &JsonValue, field_type: &FieldTyp
                     JsonValue::Array(arr) => {
                         Ok(SetValue(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
                             let new_path = path + "set" + i;
-                            match decode_field_input(graph, v, field_type, optionality, &new_path) {
+                            match decode_field_input(graph, v, field_type, optionality.clone(), &new_path) {
                                 Ok(v) => {
                                     match v {
                                         SetValue(v) => v,
@@ -244,7 +244,7 @@ fn decode_vec_input(graph: &Graph, json_value: &JsonValue, field_type: &FieldTyp
                 }
             }
             "push" => {
-                let inner_val = match decode_field_input(graph, value, &inner_field.field_type, inner_field.optionality, &(path + "push"))? {
+                let inner_val = match decode_field_input(graph, value, &inner_field.field_type, inner_field.optionality.clone(), &(path + "push"))? {
                     SetValue(val) => val,
                     _ => return Err(ActionError::unexpected_input_type("item type", &(path + "push")))
                 };
@@ -317,7 +317,7 @@ fn decode_number_input(json_value: &JsonValue, field_type: &FieldType, optionali
 }
 
 pub(crate) fn decode_field_value(graph: &Graph, json_value: &JsonValue, field: &Field, path: &KeyPath) -> Result<Value, ActionError> {
-    match decode_field_input(graph, json_value, &field.field_type, field.optionality, path) {
+    match decode_field_input(graph, json_value, &field.field_type, field.optionality.clone(), path) {
         Ok(input) => {
             match input {
                 Input::SetValue(value) => {
@@ -337,7 +337,7 @@ pub(crate) fn decode_field_value(graph: &Graph, json_value: &JsonValue, field: &
 pub(crate) fn decode_field_input(graph: &Graph, json_value: &JsonValue, field_type: &FieldType, optionality: Optionality, path: &KeyPath) -> Result<Input, ActionError> {
     // value is JSON null
     if json_value == &JsonValue::Null {
-        return if optionality == Optionality::Optional {
+        return if optionality.is_optional() {
             Ok(SetValue(Value::Null))
         } else {
             Err(ActionError::unexpected_input_value("field type", path))

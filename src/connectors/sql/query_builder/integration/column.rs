@@ -50,11 +50,8 @@ impl From<&Field> for SQLColumn {
     fn from(field: &Field) -> Self {
         let mut column = SQLColumn::new(field.column_name());
         column.column_type(field.database_type.clone());
-        match field.optionality {
-            Optionality::Required => {
-                column.not_null();
-            }
-            Optionality::Optional => {}
+        if field.is_required() {
+            column.not_null();
         }
         if field.primary {
             column.primary_key();
@@ -70,11 +67,8 @@ impl From<&Arc<Field>> for SQLColumn {
     fn from(field: &Arc<Field>) -> Self {
         let mut column = SQLColumn::new(field.column_name());
         column.column_type(field.database_type.clone());
-        match field.optionality {
-            Optionality::Required => {
-                column.not_null();
-            }
-            Optionality::Optional => {}
+        if field.is_required() {
+            column.not_null();
         }
         if field.primary {
             column.primary_key();

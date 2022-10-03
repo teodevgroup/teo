@@ -59,6 +59,7 @@ The new generation server software.
 - Cached property: mark for save on dependency update **[DONE]**
 - Cached property: get cached value **[DONE]**
 - Cached property: recalculate if dirty **[DONE]**
+- Cached property: create database column
 - Property setter error uses path
 - Permissions
 

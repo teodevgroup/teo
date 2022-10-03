@@ -76,7 +76,7 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
             model.input_keys().iter().for_each(|k| {
                 if let Some(field) = model.field(k) {
                     let field_name = &field.name;
-                    let field_ts_type = field.field_type.to_typescript_create_input_type(field.optionality == Optionality::Optional);
+                    let field_ts_type = field.field_type.to_typescript_create_input_type(field.optionality.is_optional());
                     if let Some(without_relation) = without_relation {
                         if !without_relation.fields.contains(k) {
                             b.doc(field_doc(field));
@@ -250,7 +250,7 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
             model.input_keys().iter().for_each(|k| {
                 if let Some(field) = model.field(k) {
                     let field_name = &field.name;
-                    let field_ts_type = field.field_type.to_typescript_update_input_type(field.optionality == Optionality::Optional);
+                    let field_ts_type = field.field_type.to_typescript_update_input_type(field.optionality.is_optional());
                     b.doc(field_doc(field));
                     b.line(format!("{field_name}?: {field_ts_type}"));
                 } else if let Some(relation) = model.relation(k) {
@@ -348,7 +348,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                 m.output_keys().iter().for_each(|k| {
                     if let Some(field) = m.field(k) {
                         let field_name = &field.name;
-                        let field_type = field.field_type.to_typescript_type(field.optionality == Optionality::Optional);
+                        let field_type = field.field_type.to_typescript_type(field.optionality.is_optional());
                         b.line(format!("{field_name}: {field_type}"));
                     }
                 });
@@ -387,7 +387,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                 m.query_keys().iter().for_each(|k| {
                     if let Some(field) = m.field(k) {
                         let field_name = &field.name;
-                        let field_filter = field.field_type.to_typescript_filter_type(field.optionality == Optionality::Optional);
+                        let field_filter = field.field_type.to_typescript_filter_type(field.optionality.is_optional());
                         b.doc(field_doc(field));
                         b.line(format!("{field_name}?: {field_filter}"));
                     } else if let Some(relation) = m.relation(k) {
@@ -408,7 +408,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                         index.items.iter().for_each(|item| {
                             if !used_field_names.contains(&&***&&item.field_name) {
                                 if let Some(field) = m.field(&item.field_name) {
-                                    let ts_type = field.field_type.to_typescript_type(field.optionality == Optionality::Optional);
+                                    let ts_type = field.field_type.to_typescript_type(field.optionality.is_optional());
                                     let field_name = &item.field_name;
                                     b.doc(field_doc(field));
                                     b.line(format!("{field_name}?: {ts_type}"));
@@ -540,7 +540,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                                     for relation in m.relations() {
                                         let name = &relation.name;
                                         let is_array = relation.is_vec;
-                                        let required = relation.optionality == Optionality::Required;
+                                        let required = relation.optionality.is_required();
                                         let required_mark = if required { "" } else { " | undefined" };
                                         let r_model = &relation.model;
                                         let array_prefix = if is_array { "Array<" } else { "" };

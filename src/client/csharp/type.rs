@@ -63,7 +63,7 @@ impl ToCSharpType for FieldType {
             FieldType::Date => "DateOnly".to_string(),
             FieldType::DateTime => "DateTime".to_string(),
             FieldType::Enum(name) => name.to_string(),
-            FieldType::Vec(internal) => internal.field_type.to_csharp_type(internal.optionality == Optionality::Optional) + "[]",
+            FieldType::Vec(internal) => internal.field_type.to_csharp_type(internal.optionality.is_optional()) + "[]",
             FieldType::Map(_) => panic!(),
             FieldType::Object(name) => name.to_string(),
         };
