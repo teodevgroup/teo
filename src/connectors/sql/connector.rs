@@ -186,32 +186,37 @@ impl SQLConnector {
 
     async fn update_object(&self, object: &Object) -> Result<(), ActionError> {
         let model = object.model();
-        let field_names = object.keys_for_save();
+        let keys = object.keys_for_save();
         let mut values: Vec<(&str, String)> = vec![];
-        for field_name in &field_names {
-            let column_name = model.field(field_name).unwrap().column_name();
-            let updator_map = object.inner.atomic_updator_map.lock().unwrap();
-            if updator_map.contains_key(*field_name) {
-                let updator = updator_map.get(*field_name).unwrap();
-                match updator {
-                    AtomicUpdateType::Increment(val) => {
-                        values.push((column_name, format!("{} + {}", column_name, val.to_string(self.dialect))));
+        for key in &keys {
+            if let Some(field) = model.field(key) {
+                let column_name = field.column_name();
+                let updator_map = object.inner.atomic_updator_map.lock().unwrap();
+                if updator_map.contains_key(*key) {
+                    let updator = updator_map.get(*key).unwrap();
+                    match updator {
+                        AtomicUpdateType::Increment(val) => {
+                            values.push((column_name, format!("{} + {}", column_name, val.to_string(self.dialect))));
+                        }
+                        AtomicUpdateType::Decrement(val) => {
+                            values.push((column_name, format!("{} - {}", column_name, val.to_string(self.dialect))));
+                        }
+                        AtomicUpdateType::Multiply(val) => {
+                            values.push((column_name, format!("{} * {}", column_name, val.to_string(self.dialect))));
+                        }
+                        AtomicUpdateType::Divide(val) => {
+                            values.push((column_name, format!("{} / {}", column_name, val.to_string(self.dialect))));
+                        }
+                        AtomicUpdateType::Push(val) => {
+                            values.push((column_name, format!("ARRAY_APPEND({}, {})", column_name, val.to_string(self.dialect))));
+                        }
                     }
-                    AtomicUpdateType::Decrement(val) => {
-                        values.push((column_name, format!("{} - {}", column_name, val.to_string(self.dialect))));
-                    }
-                    AtomicUpdateType::Multiply(val) => {
-                        values.push((column_name, format!("{} * {}", column_name, val.to_string(self.dialect))));
-                    }
-                    AtomicUpdateType::Divide(val) => {
-                        values.push((column_name, format!("{} / {}", column_name, val.to_string(self.dialect))));
-                    }
-                    AtomicUpdateType::Push(val) => {
-                        values.push((column_name, format!("ARRAY_APPEND({}, {})", column_name, val.to_string(self.dialect))));
-                    }
+                } else {
+                    let val = object.get_value(key).unwrap();
+                    values.push((column_name, val.to_string(self.dialect)));
                 }
-            } else {
-                let val = object.get_value(field_name).unwrap();
+            } else if let Some(property) = model.property(key) {
+                let val: Value = object.get_property(key).await.unwrap();
                 values.push((column_name, val.to_string(self.dialect)));
             }
         }
@@ -223,7 +228,7 @@ impl SQLConnector {
             println!("{:?}", result.err().unwrap());
             return Err(ActionError::unknown_database_write_error());
         }
-        let select_stmt = SQL::select(Some(&field_names), model.table_name()).r#where(r#where).to_string(self.dialect);
+        let select_stmt = SQL::select(Some(&keys), model.table_name()).r#where(r#where).to_string(self.dialect);
         let results = self.pool.fetch_optional(&*select_stmt).await;
         match results {
             Ok(row) => {
