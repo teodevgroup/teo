@@ -179,7 +179,10 @@ async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model, _iden
 
             let mut result_json: Vec<JsonValue> = vec![];
             for result in results {
-                result_json.push(result.to_json(Intent::ManyResult(ActionType::FindMany)).await);
+                match result.to_json(Intent::ManyResult(ActionType::FindMany)).await {
+                    Ok(result) => result_json.push(result),
+                    Err(_) => ()
+                }
             }
             HttpResponse::Ok().json(json!({
                     "meta": meta,
@@ -212,7 +215,7 @@ async fn handle_create_internal(graph: &Graph, create: Option<&JsonValue>, inclu
     }
     obj.save().await?;
     let refetched = obj.refreshed(include, select).await?;
-    Ok(refetched.to_json(purpose).await)
+    refetched.to_json(purpose).await
 }
 
 async fn handle_create(graph: &Graph, input: &JsonValue, model: &Model, _identity: Option<&Object>) -> HttpResponse {
@@ -233,7 +236,7 @@ async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&
     object.set_json(updator).await?;
     object.save().await?;
     let refetched = object.refreshed(include, select).await?;
-    Ok(refetched.to_json(purpose).await)
+    refetched.to_json(purpose).await
 }
 
 async fn handle_update(graph: &Graph, input: &JsonValue, model: &Model, _identity: Option<&Object>) -> HttpResponse {
@@ -418,8 +421,13 @@ async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model, _id
     for object in result {
         match object.delete().await {
             Ok(_) => {
-                retval.push(object.to_json(Intent::ManyResult(ActionType::DeleteMany)).await);
-                count += 1;
+                match object.to_json(Intent::ManyResult(ActionType::DeleteMany)).await {
+                    Ok(result) => {
+                        retval.push(result);
+                        count += 1;
+                    },
+                    Err(_) => ()
+                }
             }
             Err(_) => {}
         }
@@ -470,13 +478,11 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     let input = input.as_object().unwrap();
     let credentials = input.get("credentials");
     if let None = credentials {
-        let error = ActionError::missing_required_input("object", path!["credentials"]);
-        return HttpResponse::BadRequest().json(json!({"error": error}));
+        return ActionError::missing_required_input("object", path!["credentials"]).into();
     }
     let credentials = credentials.unwrap();
     if !credentials.is_object() {
-        let error = ActionError::unexpected_input_type("object", path!["credentials"]);
-        return HttpResponse::BadRequest().json(json!({"error": error}));
+        return ActionError::unexpected_input_type("object", path!["credentials"]).into();
     }
     let credentials = credentials.as_object().unwrap();
     let mut identity_key: Option<&String> = None;
@@ -489,25 +495,23 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
                 identity_key = Some(k);
                 identity_value = Some(v);
             } else {
-                return HttpResponse::BadRequest().json(json!({"error": ActionError::multiple_auth_identity_provided()}));
+                return ActionError::unexpected_input_value_validation("Multiple auth identity provided", path!["credentials", k]).into();
             }
         } else if model.auth_by_keys().contains(k) {
             if by_key == None {
                 by_key = Some(k);
                 by_value = Some(v);
             } else {
-                return HttpResponse::BadRequest().json(json!({"error": ActionError::multiple_auth_checker_provided()}));
+                return ActionError::unexpected_input_value_validation("Multiple auth checker provided", path!["credentials", k]).into();
             }
         } else {
-            return HttpResponse::BadRequest().json(json!({"error": ActionError::keys_unallowed()}));
+            return ActionError::unexpected_input_key(k, path!["credentials", k]).into();
         }
     }
-    if identity_key == None && by_key == None {
-        return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_credentials()}));
-    } else if identity_key == None {
-        return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_auth_identity()}));
+    if identity_key == None {
+        return ActionError::missing_required_input("auth identity", path!["credentials"]).into();
     } else if by_key == None {
-        return HttpResponse::BadRequest().json(json!({"error": ActionError::missing_auth_checker()}));
+        return ActionError::missing_required_input("auth checker", path!["credentials"]).into();
     }
     let by_field = model.field(by_key.unwrap()).unwrap();
     let obj_result = graph.find_unique(model.name(), &json!({
@@ -516,7 +520,7 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
         }
     }), true).await;
     if let Err(err) = obj_result {
-        return HttpResponse::BadRequest().json(json!({"error": err}));
+        return ActionError::unexpected_input_value("This identity is not found.", path!["credentials", identity_key.unwrap()]).into();
     }
     let obj = obj_result.unwrap();
     let auth_by_arg = by_field.auth_by_arg.as_ref().unwrap();
@@ -524,7 +528,7 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     let action_by_input = decode_field_input(obj.graph(), by_value.unwrap(), &by_field.field_type, by_field.optionality.clone(), &path!["credentials", by_field.name()]);
     let _action_by_value = match action_by_input {
         Err(_err) => {
-            return HttpResponse::BadRequest().json(json!({"error": ActionError::wrong_input_type()}));
+            return ActionError::unexpected_input_type("field value", path!["credentials", by_key.unwrap()]).into();
         }
         Ok(val) => {
             match val {
@@ -537,22 +541,22 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     };
     let ctx = Context::initial_state(obj.clone(), Intent::Authentication);
     let final_ctx = pipeline.process(ctx).await;
-    let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
-    let claims = Claims {
-        id: obj.json_identifier(),
-        model: obj.model().name().to_string(),
-        exp
-    };
-    let token = encode_token(claims, &conf.jwt_secret.as_ref().unwrap());
     return match final_ctx.invalid_reason() {
         Some(_reason) => {
-            HttpResponse::BadRequest().json(json!({"error": ActionError::authentication_failed()}))
+            return ActionError::unexpected_input_value_validation("Authentication failed.", path!["credentials", by_key.unwrap()]).into();
         }
         None => {
             let include = input.get("include");
             let select = input.get("select");
             let obj = obj.refreshed(include, select).await.unwrap();
             let json_data = obj.to_json(Intent::SingleResult(ActionType::SignIn)).await;
+            let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
+            let claims = Claims {
+                id: obj.json_identifier(),
+                model: obj.model().name().to_string(),
+                exp
+            };
+            let token = encode_token(claims, &conf.jwt_secret.as_ref().unwrap());
             HttpResponse::Ok().json(json!({
             "meta": {
                 "token": token

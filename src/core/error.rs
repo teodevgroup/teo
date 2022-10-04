@@ -9,15 +9,7 @@ use crate::core::model::Model;
 #[derive(Debug, PartialEq, Serialize)]
 pub enum ActionErrorType {
     KeysUnallowed,
-    ActionUnrecognized,
     InvalidInput,
-    WrongInputType,
-    WrongWhereType,
-    WrongDateFormat,
-    WrongDateTimeFormat,
-    WrongEnumChoice,
-    ValueRequired,
-    ValidationError,
     UnknownDatabaseWriteError,
     UnknownDatabaseDeleteError,
     UnknownDatabaseFindError,
@@ -32,16 +24,12 @@ pub enum ActionErrorType {
     FieldIsNotUnique,
     UnmatchedDataTypeInDatabase,
     UndefinedEnumValue,
-    MissingCredentials,
     MultipleAuthIdentityProvided,
     MultipleAuthCheckerProvided,
-    MissingAuthIdentity,
-    MissingAuthChecker,
     AuthenticationFailed,
     InvalidAuthorizationFormat,
     IdentityIsNotFound,
     UnexpectedNull,
-    WrongInputUpdator,
     UnexpectedFieldType,
     InvalidQueryInput,
     RequiredRelationCannotDisconnect,
@@ -66,6 +54,9 @@ pub enum ActionErrorType {
     // request token
     InvalidJWTToken,
 
+    // permission
+    PermissionDenied,
+
     // object api
     InvalidKey,
 }
@@ -74,15 +65,7 @@ impl ActionErrorType {
     pub fn code(&self) -> u16 {
         match self {
             ActionErrorType::KeysUnallowed => { 400 }
-            ActionErrorType::ActionUnrecognized => { 400 }
             ActionErrorType::InvalidInput => { 400 }
-            ActionErrorType::WrongInputType => { 400 }
-            ActionErrorType::WrongWhereType => { 400 }
-            ActionErrorType::WrongDateFormat => { 400 }
-            ActionErrorType::WrongDateTimeFormat => { 400 }
-            ActionErrorType::WrongEnumChoice => { 400 }
-            ActionErrorType::ValueRequired => { 400 }
-            ActionErrorType::ValidationError => { 400 }
             ActionErrorType::IncorrectJSONFormat => { 400 }
             ActionErrorType::UndefinedAction => { 400 }
             ActionErrorType::UnallowedAction => { 400 }
@@ -100,15 +83,11 @@ impl ActionErrorType {
             ActionErrorType::FieldIsNotUnique => { 400 }
             ActionErrorType::MultipleAuthCheckerProvided => { 400 }
             ActionErrorType::MultipleAuthIdentityProvided => { 400 }
-            ActionErrorType::MissingAuthIdentity => { 400 }
-            ActionErrorType::MissingAuthChecker => { 400 }
-            ActionErrorType::MissingCredentials => { 400 }
             ActionErrorType::AuthenticationFailed => { 401 }
             ActionErrorType::InvalidAuthorizationFormat => { 401 }
             ActionErrorType::InvalidJWTToken => { 401 }
             ActionErrorType::IdentityIsNotFound => { 401 }
             ActionErrorType::UnexpectedNull => { 400 }
-            ActionErrorType::WrongInputUpdator => { 400 }
             ActionErrorType::UnexpectedFieldType => { 400 }
             ActionErrorType::InvalidQueryInput => { 400 }
             ActionErrorType::RequiredRelationCannotDisconnect => { 400 }
@@ -125,6 +104,7 @@ impl ActionErrorType {
             ActionErrorType::MissingRequiredInput => { 400 }
             ActionErrorType::UnexpectedObjectLength => { 400 }
             ActionErrorType::InvalidKey => { 500 }
+            ActionErrorType::PermissionDenied => { 401 }
         }
     }
 }
@@ -141,14 +121,6 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::KeysUnallowed,
             message: "Unallowed keys detected.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn action_unrecognized() -> Self {
-        ActionError {
-            r#type: ActionErrorType::ActionUnrecognized,
-            message: "This action is unrecognized.".to_string(),
             errors: None
         }
     }
@@ -171,62 +143,12 @@ impl ActionError {
         }
     }
 
-    pub fn wrong_input_type() -> Self {
-        ActionError {
-            r#type: ActionErrorType::WrongInputType,
-            message: "Input type is unexpected.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn wrong_where_type() -> Self {
-        ActionError {
-            r#type: ActionErrorType::WrongWhereType,
-            message: "Where type is unexpected.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn wrong_date_format() -> Self {
-        ActionError {
-            r#type: ActionErrorType::WrongDateFormat,
-            message: "Date format is unexpected.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn wrong_datetime_format() -> Self {
-        ActionError {
-            r#type: ActionErrorType::WrongDateTimeFormat,
-            message: "Datetime format is unexpected.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn wrong_enum_choice() -> Self {
-        ActionError {
-            r#type: ActionErrorType::WrongEnumChoice,
-            message: "Wrong enum choice".to_string(),
-            errors: None
-        }
-    }
-
     pub fn unexpected_enum_value(field: impl Into<String>) -> Self {
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
         errors.insert(field.into(), "Enum value is unexpected.".to_string());
         ActionError {
-            r#type: ActionErrorType::ValidationError,
+            r#type: ActionErrorType::UnexpectedInputValue,
             message: "Enum value is unexpected.".to_string(),
-            errors: Some(errors)
-        }
-    }
-
-    pub fn value_required(field: impl Into<String>) -> Self {
-        let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
-        errors.insert(field.into(), "Value is required.".to_string());
-        ActionError {
-            r#type: ActionErrorType::ValidationError,
-            message: "Value is required.".to_string(),
             errors: Some(errors)
         }
     }
@@ -235,7 +157,7 @@ impl ActionError {
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
         errors.insert(field.into(), "Unique value duplicated.".to_string());
         ActionError {
-            r#type: ActionErrorType::ValidationError,
+            r#type: ActionErrorType::UnexpectedInputValue,
             message: "Input is not valid.".to_string(),
             errors: Some(errors)
         }
@@ -353,14 +275,6 @@ impl ActionError {
         }
     }
 
-    pub fn missing_credentials() -> Self {
-        ActionError {
-            r#type: ActionErrorType::MissingCredentials,
-            message: "Credentials are missing.".to_string(),
-            errors: None
-        }
-    }
-
     pub fn multiple_auth_identity_provided() -> Self {
         ActionError {
             r#type: ActionErrorType::MultipleAuthIdentityProvided,
@@ -373,22 +287,6 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::MultipleAuthCheckerProvided,
             message: "Multiple auth checker provided.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn missing_auth_identity() -> Self {
-        ActionError {
-            r#type: ActionErrorType::MissingAuthIdentity,
-            message: "Missing auth identity.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn missing_auth_checker() -> Self {
-        ActionError {
-            r#type: ActionErrorType::MissingAuthChecker,
-            message: "Missing auth checker.".to_string(),
             errors: None
         }
     }
@@ -432,17 +330,6 @@ impl ActionError {
             r#type: ActionErrorType::UnexpectedNull,
             message: "Unexpected null.".to_string(),
             errors: Some(errors)
-        }
-    }
-
-    pub fn wrong_input_updator() -> Self {
-        // let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
-        // errors.insert(field.into(), "Wrong input updator.".to_string());
-        ActionError {
-            r#type: ActionErrorType::WrongInputUpdator,
-            message: "Wrong input updator.".to_string(),
-            errors: None
-            // errors: Some(errors)
         }
     }
 
@@ -583,6 +470,14 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::InvalidKey,
             message: format!("Invalid key '{}' accessed on model `{}'", unexpected_key.as_ref(), model.name()),
+            errors: None
+        }
+    }
+
+    pub fn permission_denied(action: impl AsRef<str>) -> Self {
+        ActionError {
+            r#type: ActionErrorType::PermissionDenied,
+            message: format!("Permission denied for `{}'.", action.as_ref()),
             errors: None
         }
     }

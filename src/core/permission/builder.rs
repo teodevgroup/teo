@@ -4,10 +4,10 @@ use crate::core::pipeline::Pipeline;
 
 #[derive(Debug, Clone)]
 pub struct PermissionBuilder {
-    pub(crate) can_read: Option<Pipeline>,
-    pub(crate) can_update: Option<Pipeline>,
-    pub(crate) can_create: Option<Pipeline>,
-    pub(crate) can_delete: Option<Pipeline>,
+    can_read: Option<Pipeline>,
+    can_update: Option<Pipeline>,
+    can_create: Option<Pipeline>,
+    can_delete: Option<Pipeline>,
 }
 
 impl PermissionBuilder {
@@ -45,11 +45,6 @@ impl PermissionBuilder {
     }
 
     pub(crate) fn build(&self) -> Permission {
-        Permission {
-            can_read: self.can_read.clone(),
-            can_create: self.can_create.clone(),
-            can_update: self.can_update.clone(),
-            can_delete: self.can_delete.clone(),
-        }
+        Permission::new(self.can_read.clone(), self.can_update.clone(), self.can_create.clone(), self.can_delete.clone())
     }
 }

@@ -68,7 +68,10 @@ impl Value {
     pub(crate) async fn to_object_json_value(&self, purpose: Intent) -> Option<JsonValue> {
         match self {
             Value::Object(o) => {
-                Some(o.to_json(purpose).await)
+                match o.to_json(purpose).await {
+                    Ok(v) => Some(v),
+                    Err(_) => None,
+                }
             }
             _ => None
         }

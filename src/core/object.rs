@@ -241,7 +241,7 @@ impl Object {
                         }
                     }
                     _ => {
-                        return Err(ActionError::wrong_input_type());
+                        return Err(ActionError::unexpected_input_key(command, &(path + key + command)));
                     }
                 }
             } else if let Some(property) = self.model().property(key) {
@@ -944,7 +944,18 @@ impl Object {
         connector.delete_object(self).await
     }
 
-    pub async fn to_json(&self, purpose: Intent) -> JsonValue {
+    pub(crate) async fn to_json(&self, purpose: Intent) -> ActionResult<JsonValue> {
+        // test for model permission
+        if let Some(permission) = self.model().permission() {
+            if let Some(can_read) = permission.can_read() {
+                let ctx = Context::initial_state(self.clone(), purpose);
+                let result_ctx = can_read.process(ctx).await;
+                if !result_ctx.is_valid() {
+                    return Err(ActionError::permission_denied("read"));
+                }
+            }
+        }
+        // output
         let select_list = self.inner.selected_fields.lock().unwrap().clone();
         let select_filter = if select_list.is_empty() { false } else { true };
         let mut map: Map<String, JsonValue> = Map::new();
@@ -953,6 +964,16 @@ impl Object {
             if (!select_filter) || (select_filter && select_list.contains(key)) {
                 let mut value = self.get_value(key).unwrap();
                 if let Some(field) = self.model().field(key) {
+                    // test for field permission
+                    if let Some(permission) = field.permission() {
+                        if let Some(can_read) = permission.can_read() {
+                            let ctx = Context::initial_state(self.clone(), purpose).alter_value(value.clone());
+                            let result_ctx = can_read.process(ctx).await;
+                            if !result_ctx.is_valid() {
+                                continue;
+                            }
+                        }
+                    }
                     let context = Context::initial_state(self.clone(), purpose)
                         .alter_value(value)
                         .alter_key_path(path![key.as_str()]);
@@ -975,7 +996,7 @@ impl Object {
                 }
             }
         }
-        return JsonValue::Object(map)
+        return Ok(JsonValue::Object(map))
     }
 
     pub fn is_new(&self) -> bool {

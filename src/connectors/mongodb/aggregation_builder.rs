@@ -100,7 +100,7 @@ impl ToBsonValue for Value {
     }
 }
 
-fn parse_object_id(value: &JsonValue) -> Result<Bson, ActionError> {
+fn parse_object_id(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError> {
     match value.as_str() {
         Some(val) => {
             match ObjectId::parse_str(val) {
@@ -108,39 +108,39 @@ fn parse_object_id(value: &JsonValue) -> Result<Bson, ActionError> {
                     Ok(Bson::ObjectId(oid))
                 }
                 Err(_) => {
-                    Err(ActionError::wrong_input_type())
+                    Err(ActionError::unexpected_input_value("object id", path))
                 }
             }
         }
         None => {
-            Err(ActionError::wrong_input_type())
+            Err(ActionError::unexpected_input_type("object id", path))
         }
     }
 }
 
-fn parse_string(value: &JsonValue) -> Result<Bson, ActionError> {
+fn parse_string(value: &JsonValue, key_path: &KeyPath) -> Result<Bson, ActionError> {
     match value.as_str() {
         Some(val) => {
             Ok(Bson::String(val.to_string()))
         }
         None => {
-            Err(ActionError::wrong_input_type())
+            Err(ActionError::unexpected_input_type("string", key_path))
         }
     }
 }
 
-fn parse_bool(value: &JsonValue) -> Result<Bson, ActionError> {
+fn parse_bool(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError> {
     match value.as_bool() {
         Some(val) => {
             Ok(Bson::Boolean(val))
         }
         None => {
-            Err(ActionError::wrong_input_type())
+            Err(ActionError::unexpected_input_type("bool", path))
         }
     }
 }
 
-fn parse_json_number_to_bson(value: &JsonValue) -> Result<Bson, ActionError> {
+fn parse_json_number_to_bson(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError> {
     if value.is_i64() {
         Ok(Bson::Int64(value.as_i64().unwrap()))
     } else if value.is_u64() {
@@ -148,11 +148,11 @@ fn parse_json_number_to_bson(value: &JsonValue) -> Result<Bson, ActionError> {
     } else if value.is_f64() {
         Ok(Bson::Int64(value.as_f64().unwrap() as i64))
     } else {
-        Err(ActionError::wrong_input_type())
+        Err(ActionError::unexpected_input_type("number", path))
     }
 }
 
-fn parse_f64(value: &JsonValue) -> Result<Bson, ActionError> {
+fn parse_f64(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError> {
     if value.is_i64() {
         Ok(Bson::Double(value.as_i64().unwrap() as f64))
     } else if value.is_u64() {
@@ -160,11 +160,11 @@ fn parse_f64(value: &JsonValue) -> Result<Bson, ActionError> {
     } else if value.is_f64() {
         Ok(Bson::Double(value.as_f64().unwrap()))
     } else {
-        Err(ActionError::wrong_input_type())
+        Err(ActionError::unexpected_input_type("number", path))
     }
 }
 
-fn parse_date(value: &JsonValue) -> Result<Bson, ActionError> {
+fn parse_date(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError> {
     if value.is_string() {
         match NaiveDate::parse_from_str(&value.as_str().unwrap(), "%Y-%m-%d") {
             Ok(naive_date) => {
@@ -173,15 +173,15 @@ fn parse_date(value: &JsonValue) -> Result<Bson, ActionError> {
                 Ok(val.to_bson_value())
             }
             Err(_) => {
-                Err(ActionError::wrong_date_format())
+                Err(ActionError::unexpected_input_value("date", path))
             }
         }
     } else {
-        Err(ActionError::wrong_input_type())
+        Err(ActionError::unexpected_input_type("date string", path))
     }
 }
 
-fn parse_datetime(value: &JsonValue) -> Result<Bson, ActionError> {
+fn parse_datetime(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError> {
     if value.is_string() {
         match DateTime::parse_from_rfc3339(&value.as_str().unwrap()) {
             Ok(fixed_offset_datetime) => {
@@ -190,25 +190,25 @@ fn parse_datetime(value: &JsonValue) -> Result<Bson, ActionError> {
                 Ok(value.to_bson_value())
             }
             Err(_) => {
-                Err(ActionError::wrong_datetime_format())
+                Err(ActionError::unexpected_input_value("datetime", path))
             }
         }
     } else {
-        Err(ActionError::wrong_input_type())
+        Err(ActionError::unexpected_input_type("datetime string", path))
     }
 }
 
-fn parse_enum(value: &JsonValue, enum_name: &str, graph: &Graph) -> Result<Bson, ActionError> {
+fn parse_enum(value: &JsonValue, enum_name: &str, graph: &Graph, path: &KeyPath) -> Result<Bson, ActionError> {
     if value.is_string() {
         let str = value.as_str().unwrap();
         let r#enum = graph.r#enum(enum_name);
         if r#enum.contains(&str.to_string()) {
             Ok(Bson::String(str.to_string()))
         } else {
-            Err(ActionError::undefined_enum_value())
+            Err(ActionError::unexpected_input_value(enum_name, path))
         }
     } else {
-        Err(ActionError::wrong_input_type())
+        Err(ActionError::unexpected_input_value(enum_name, path))
     }
 }
 
@@ -219,47 +219,47 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
         }
         FieldType::ObjectId => {
             if value.is_string() {
-                parse_object_id(value)
+                parse_object_id(value, path)
             } else if value.is_object() {
                 let map = value.as_object().unwrap();
                 let mut result = doc!{};
                 for (key, value) in map {
                     match key.as_str() {
                         "equals" => {
-                            let oid = parse_object_id(value)?;
+                            let oid = parse_object_id(value, &(path + "equals"))?;
                             result.insert("$eq", oid);
                         }
                         "not" => {
-                            let oid = parse_object_id(value)?;
+                            let oid = parse_object_id(value, &(path + "not"))?;
                             result.insert("$ne", oid);
                         }
                         "gt" => {
-                            let oid = parse_object_id(value)?;
+                            let oid = parse_object_id(value, &(path + "gt"))?;
                             result.insert("$gt", oid);
                         }
                         "gte" => {
-                            let oid = parse_object_id(value)?;
+                            let oid = parse_object_id(value, &(path + "gte"))?;
                             result.insert("$gte", oid);
                         }
                         "lt" => {
-                            let oid = parse_object_id(value)?;
+                            let oid = parse_object_id(value, &(path + "lt"))?;
                             result.insert("$lt", oid);
                         }
                         "lte" => {
-                            let oid = parse_object_id(value)?;
+                            let oid = parse_object_id(value, &(path + "lte"))?;
                             result.insert("$lte", oid);
                         }
                         "in" => {
                             match value.as_array() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
-                                    for val in arr_val {
-                                        arr.push(parse_object_id(val)?);
+                                    for (index, val) in arr_val.iter().enumerate() {
+                                        arr.push(parse_object_id(val, &(path + "in" + index))?);
                                     }
                                     result.insert("$in", arr);
                                 }
                                 None => {
-                                    return Err(ActionError::wrong_input_type());
+                                    return Err(ActionError::unexpected_input_type("array", &(path + "in")));
                                 }
                             }
                         }
@@ -267,24 +267,24 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                             match value.as_array() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
-                                    for val in arr_val {
-                                        arr.push(parse_object_id(val)?);
+                                    for (index, val) in arr_val.iter().enumerate() {
+                                        arr.push(parse_object_id(val, &(path + "notIn" + index))?);
                                     }
                                     result.insert("$nin", arr);
                                 }
                                 None => {
-                                    return Err(ActionError::wrong_input_type());
+                                    return Err(ActionError::unexpected_input_type("array", &(path + "notIn")));
                                 }
                             }
                         }
                         &_ => {
-                            return Err(ActionError::wrong_input_type());
+                            return Err(ActionError::unexpected_input_key(key.as_str(), &(path + key.as_str())));
                         }
                     }
                 }
                 Ok(Bson::Document(result))
             } else {
-                Err(ActionError::wrong_input_type())
+                Err(ActionError::unexpected_input_type("object id string or object", path))
             }
         }
         FieldType::Bool => {
@@ -296,21 +296,21 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                 for (key, value) in map {
                     match key.as_str() {
                         "equals" => {
-                            let b = parse_bool(value)?;
+                            let b = parse_bool(value, &(path + "equals"))?;
                             result.insert("$eq", b);
                         }
                         "not" => {
-                            let b = parse_bool(value)?;
+                            let b = parse_bool(value, &(path + "not"))?;
                             result.insert("$ne", b);
                         }
                         &_ => {
-                            return Err(ActionError::wrong_input_type());
+                            return Err(ActionError::unexpected_input_key(key, &(path + key.as_str())));
                         }
                     }
                 }
                 Ok(Bson::Document(result))
             } else {
-                Err(ActionError::wrong_input_type())
+                Err(ActionError::unexpected_input_type("bool or object", path))
             }
         }
         FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 => {
@@ -326,40 +326,40 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                 for (key, value) in map {
                     match key.as_str() {
                         "equals" => {
-                            let b = parse_json_number_to_bson(value)?;
+                            let b = parse_json_number_to_bson(value, &(path + "equals"))?;
                             result.insert("$eq", b);
                         }
                         "not" => {
-                            let b = parse_json_number_to_bson(value)?;
+                            let b = parse_json_number_to_bson(value, &(path + "not"))?;
                             result.insert("$ne", b);
                         }
                         "gt" => {
-                            let oid = parse_json_number_to_bson(value)?;
+                            let oid = parse_json_number_to_bson(value, &(path + "gt"))?;
                             result.insert("$gt", oid);
                         }
                         "gte" => {
-                            let oid = parse_json_number_to_bson(value)?;
+                            let oid = parse_json_number_to_bson(value, &(path + "gte"))?;
                             result.insert("$gte", oid);
                         }
                         "lt" => {
-                            let oid = parse_json_number_to_bson(value)?;
+                            let oid = parse_json_number_to_bson(value, &(path + "lt"))?;
                             result.insert("$lt", oid);
                         }
                         "lte" => {
-                            let oid = parse_json_number_to_bson(value)?;
+                            let oid = parse_json_number_to_bson(value, &(path + "lte"))?;
                             result.insert("$lte", oid);
                         }
                         "in" => {
                             match value.as_array() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
-                                    for val in arr_val {
-                                        arr.push(parse_json_number_to_bson(val)?);
+                                    for (index, val) in arr_val.iter().enumerate {
+                                        arr.push(parse_json_number_to_bson(val, &(path + "in" + index))?);
                                     }
                                     result.insert("$in", arr);
                                 }
                                 None => {
-                                    return Err(ActionError::wrong_input_type());
+                                    return Err(ActionError::unexpected_input_type("array", &(path + "in")));
                                 }
                             }
                         }
@@ -367,24 +367,24 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                             match value.as_array() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
-                                    for val in arr_val {
-                                        arr.push(parse_json_number_to_bson(val)?);
+                                    for (index, val) in arr_val.iter().enumerate() {
+                                        arr.push(parse_json_number_to_bson(val, &(path + "notIn" + index))?);
                                     }
                                     result.insert("$nin", arr);
                                 }
                                 None => {
-                                    return Err(ActionError::wrong_input_type());
+                                    return Err(ActionError::unexpected_input_type("array", &(path + "notIn")));
                                 }
                             }
                         }
                         &_ => {
-                            return Err(ActionError::wrong_input_type());
+                            return Err(ActionError::unexpected_input_key(key, &(path + key)));
                         }
                     }
                 }
                 Ok(Bson::Document(result))
             } else {
-                Err(ActionError::wrong_input_type())
+                return Err(ActionError::unexpected_input_type("number or object", path));
             }
         }
         FieldType::F32 | FieldType::F64 => {
@@ -400,40 +400,40 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                 for (key, value) in map {
                     match key.as_str() {
                         "equals" => {
-                            let b = parse_f64(value)?;
+                            let b = parse_f64(value, &(path + "equals"))?;
                             result.insert("$eq", b);
                         }
                         "not" => {
-                            let b = parse_f64(value)?;
+                            let b = parse_f64(value, &(path + "not"))?;
                             result.insert("$ne", b);
                         }
                         "gt" => {
-                            let oid = parse_f64(value)?;
+                            let oid = parse_f64(value, &(path + "gt"))?;
                             result.insert("$gt", oid);
                         }
                         "gte" => {
-                            let oid = parse_f64(value)?;
+                            let oid = parse_f64(value, &(path + "gte"))?;
                             result.insert("$gte", oid);
                         }
                         "lt" => {
-                            let oid = parse_f64(value)?;
+                            let oid = parse_f64(value, &(path + "lt"))?;
                             result.insert("$lt", oid);
                         }
                         "lte" => {
-                            let oid = parse_f64(value)?;
+                            let oid = parse_f64(value, &(path + "lte"))?;
                             result.insert("$lte", oid);
                         }
                         "in" => {
                             match value.as_array() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
-                                    for val in arr_val {
-                                        arr.push(parse_f64(val)?);
+                                    for (index, val) in arr_val.iter().enumerate() {
+                                        arr.push(parse_f64(val, &(path + "in" + index))?);
                                     }
                                     result.insert("$in", arr);
                                 }
                                 None => {
-                                    return Err(ActionError::wrong_input_type());
+                                    return Err(ActionError::unexpected_input_type("array", &(path + "in")));
                                 }
                             }
                         }
@@ -441,13 +441,13 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                             match value.as_array() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
-                                    for val in arr_val {
-                                        arr.push(parse_f64(val)?);
+                                    for (index, val) in arr_val.iter().enumerate() {
+                                        arr.push(parse_f64(val, &(path + "notIn" + index))?);
                                     }
                                     result.insert("$nin", arr);
                                 }
                                 None => {
-                                    return Err(ActionError::wrong_input_type());
+                                    return Err(ActionError::unexpected_input_type("array", &(path + "notIn")));
                                 }
                             }
                         }
@@ -458,7 +458,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
                 }
                 Ok(Bson::Document(result))
             } else {
-                Err(ActionError::wrong_input_type())
+                return Err(ActionError::unexpected_input_type("number or object", path));
             }
         }
         FieldType::Decimal => {

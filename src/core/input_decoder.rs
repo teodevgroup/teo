@@ -98,7 +98,7 @@ fn number_to_target_type(json_value: &JsonValue, target: &FieldType, number_type
                 Some(str) => {
                     match Decimal::from_str(str) {
                         Ok(decimal) => Ok(Value::Decimal(decimal)),
-                        Err(_err) => Err(ActionError::wrong_input_type())
+                        Err(_err) => Err(ActionError::unexpected_input_value("decimal number", path))
                     }
                 }
             }

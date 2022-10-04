@@ -200,6 +200,10 @@ impl Field {
         }
         self.on_output_pipeline.process(new_ctx.clone()).await
     }
+
+    pub(crate) fn permission(&self) -> Option<&Permission> {
+        self.permission.as_ref()
+    }
 }
 
 unsafe impl Send for Field {}

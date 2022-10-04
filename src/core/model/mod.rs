@@ -233,6 +233,10 @@ impl Model {
     pub(crate) fn after_delete_pipeline(&self) -> &Pipeline {
         &self.inner.after_delete_pipeline
     }
+
+    pub(crate) fn permission(&self) -> Option<&Permission> {
+        self.inner.permission.as_ref()
+    }
 }
 
 impl PartialEq for Model {
