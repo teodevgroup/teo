@@ -65,15 +65,17 @@ The new generation server software.
 - Property setter error uses path **[DONE]**
 
 #### 0.0.29
-- Permissions
+- Permissions: Read **[DONE]**
+- Permissions: Create
+- Permissions: Update
 - New style key path error messages
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
 - MongoDB update handle column key
-- Remove primary name from MongoDB connector's `save` method
+- Remove primary name from MongoDB connector's `save` method **[DONE]**
 - Fix broken `connectIdentity` modifier
-- For relationship with join table, link them after both objects are created
-- Read rule: check in to_json
+- For relationship with join table, link them after both objects are created **[DONE]**
+- Read rule: check in to_json **[DONE]**
 
 #### 0.0.30
 - Custom SQL database types
