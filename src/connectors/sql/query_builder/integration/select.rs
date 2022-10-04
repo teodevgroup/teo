@@ -210,7 +210,7 @@ pub(crate) fn build_where_input<'a>(model: &Model, graph: &Graph, r#where: Optio
             retval.push(val);
             continue;
         } else if !model.query_keys().contains(key) {
-            return Err(ActionError::keys_unallowed());
+            return Err(ActionError::unexpected_input_key(key, &(key_path.as_ref() + key)));
         }
         if let Some(field) = model.field(key) {
             let column_name = field.column_name();

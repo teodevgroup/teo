@@ -150,7 +150,7 @@ impl Object {
                 match command {
                     "create" | "createMany" => {
                         if !relation.is_vec && command == "createMany" {
-                            return Err(ActionError::invalid_input(key.as_str(), "Single relationship cannot create many."));
+                            return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                         }
                         let entries = input_to_vec(command_input, path)?;
                         for entry in entries {
@@ -184,7 +184,7 @@ impl Object {
                         for entry in entries {
                             let model = graph.model(&relation.model)?;
                             if !relation.is_vec && (relation.optionality.is_required()) {
-                                return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot disconnect."));
+                                return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                             }
                             let opposite_relation = model.relations().iter().find(|r| {
                                 r.fields == relation.references && r.references == relation.fields
@@ -192,7 +192,7 @@ impl Object {
                             if opposite_relation.is_some() {
                                 let opposite_relation = opposite_relation.unwrap();
                                 if !opposite_relation.is_vec && (opposite_relation.optionality.is_required()) {
-                                    return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot disconnect."));
+                                    return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                                 }
                             }
                             self.insert_relation_manipulation(key, RelationManipulation::Disconnect(entry.clone()));
@@ -200,7 +200,7 @@ impl Object {
                     }
                     "update" | "updateMany" => {
                         if !relation.is_vec && command == "updateMany" {
-                            return Err(ActionError::invalid_input(key.as_str(), "Single relationship cannot update many."));
+                            return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                         }
                         let entries = input_to_vec(command_input, path)?;
                         for entry in entries {
@@ -218,13 +218,13 @@ impl Object {
                             return Err(ActionError::new_object_cannot_disconnect());
                         }
                         if !relation.is_vec && command == "deleteMany" {
-                            return Err(ActionError::invalid_input(key.as_str(), "Single relationship cannot delete many."));
+                            return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                         }
                         let graph = self.graph();
                         let model_name = &relation.model;
                         let model = graph.model(model_name)?;
                         if !relation.is_vec && (relation.optionality.is_required()) {
-                            return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot delete."));
+                            return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                         }
                         let opposite_relation = model.relations().iter().find(|r| {
                             r.fields == relation.references && r.references == relation.fields
@@ -232,7 +232,7 @@ impl Object {
                         if opposite_relation.is_some() {
                             let opposite_relation = opposite_relation.unwrap();
                             if !opposite_relation.is_vec && (opposite_relation.optionality.is_required()) {
-                                return Err(ActionError::invalid_input(key.as_str(), "Required relation cannot delete."));
+                                return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                             }
                         }
                         let entries = input_to_vec(command_input, path)?;
@@ -334,7 +334,7 @@ impl Object {
         let key = key.as_ref();
         let model_keys = self.model().all_keys();
         if !model_keys.contains(&key.to_string()) {
-            return Err(ActionError::keys_unallowed());
+            return Err(ActionError::invalid_key(key, self.model()));
         }
         match self.inner.relation_query_map.lock().unwrap().get(key) {
             Some(list) => {
@@ -354,7 +354,7 @@ impl Object {
         let key = key.as_ref();
         let model_keys = self.model().all_keys();
         if !model_keys.contains(&key.to_string()) {
-            return Err(ActionError::keys_unallowed());
+            return Err(ActionError::invalid_key(key, self.model()));
         }
         match self.inner.relation_query_map.lock().unwrap().get(key) {
             Some(list) => {
@@ -540,7 +540,7 @@ impl Object {
                 let result_ctx = field.perform_on_save_callback(context).await;
                 match result_ctx.invalid_reason() {
                     Some(reason) => {
-                        return Err(ActionError::invalid_input(key, reason));
+                        return Err(ActionError::unexpected_input_value_validation(reason, &(path + key)));
                     }
                     None => {
                         self.inner.value_map.lock().unwrap().insert(key.to_string(), result_ctx.value);

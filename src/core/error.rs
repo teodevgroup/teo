@@ -8,8 +8,6 @@ use crate::core::model::Model;
 
 #[derive(Debug, PartialEq, Serialize)]
 pub enum ActionErrorType {
-    KeysUnallowed,
-    InvalidInput,
     UnknownDatabaseWriteError,
     UnknownDatabaseDeleteError,
     UnknownDatabaseFindError,
@@ -23,14 +21,9 @@ pub enum ActionErrorType {
     ObjectIsNotSaved,
     FieldIsNotUnique,
     UnmatchedDataTypeInDatabase,
-    UndefinedEnumValue,
-    MultipleAuthIdentityProvided,
-    MultipleAuthCheckerProvided,
-    AuthenticationFailed,
     InvalidAuthorizationFormat,
     IdentityIsNotFound,
     UnexpectedNull,
-    UnexpectedFieldType,
     InvalidQueryInput,
     RequiredRelationCannotDisconnect,
     NewObjectCannotDisconnect,
@@ -64,13 +57,10 @@ pub enum ActionErrorType {
 impl ActionErrorType {
     pub fn code(&self) -> u16 {
         match self {
-            ActionErrorType::KeysUnallowed => { 400 }
-            ActionErrorType::InvalidInput => { 400 }
             ActionErrorType::IncorrectJSONFormat => { 400 }
             ActionErrorType::UndefinedAction => { 400 }
             ActionErrorType::UnallowedAction => { 400 }
             ActionErrorType::ObjectIsNotSaved => { 400 }
-            ActionErrorType::UndefinedEnumValue => { 400 }
             ActionErrorType::UnknownDatabaseWriteError => { 500 }
             ActionErrorType::UnknownDatabaseDeleteError => { 500 }
             ActionErrorType::UnknownDatabaseFindError => { 500 }
@@ -81,14 +71,10 @@ impl ActionErrorType {
             ActionErrorType::InternalServerError => { 500 }
             ActionErrorType::ObjectNotFound => { 404 }
             ActionErrorType::FieldIsNotUnique => { 400 }
-            ActionErrorType::MultipleAuthCheckerProvided => { 400 }
-            ActionErrorType::MultipleAuthIdentityProvided => { 400 }
-            ActionErrorType::AuthenticationFailed => { 401 }
             ActionErrorType::InvalidAuthorizationFormat => { 401 }
             ActionErrorType::InvalidJWTToken => { 401 }
             ActionErrorType::IdentityIsNotFound => { 401 }
             ActionErrorType::UnexpectedNull => { 400 }
-            ActionErrorType::UnexpectedFieldType => { 400 }
             ActionErrorType::InvalidQueryInput => { 400 }
             ActionErrorType::RequiredRelationCannotDisconnect => { 400 }
             ActionErrorType::NewObjectCannotDisconnect => { 400 }
@@ -117,29 +103,12 @@ pub struct ActionError {
 }
 
 impl ActionError {
-    pub fn keys_unallowed() -> Self {
-        ActionError {
-            r#type: ActionErrorType::KeysUnallowed,
-            message: "Unallowed keys detected.".to_string(),
-            errors: None
-        }
-    }
 
     pub fn invalid_query_input(reason: impl Into<String>) -> Self {
         ActionError {
             r#type: ActionErrorType::InvalidQueryInput,
             message: reason.into(),
             errors: None
-        }
-    }
-
-    pub fn invalid_input(key: impl Into<String>, reason: impl Into<String>) -> Self {
-        let mut fields = HashMap::with_capacity(1);
-        fields.insert(key.into(), reason.into());
-        ActionError {
-            r#type: ActionErrorType::InvalidInput,
-            message: "Invalid value found in input values.".into(),
-            errors: Some(fields)
         }
     }
 
@@ -263,38 +232,6 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::UnmatchedDataTypeInDatabase,
             message: format!("Unmatched data type for field '{field_name}' in database."),
-            errors: None
-        }
-    }
-
-    pub fn undefined_enum_value() -> Self {
-        ActionError {
-            r#type: ActionErrorType::UndefinedEnumValue,
-            message: "Undefined enum value is not acceptable.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn multiple_auth_identity_provided() -> Self {
-        ActionError {
-            r#type: ActionErrorType::MultipleAuthIdentityProvided,
-            message: "Multiple auth identity provided.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn multiple_auth_checker_provided() -> Self {
-        ActionError {
-            r#type: ActionErrorType::MultipleAuthCheckerProvided,
-            message: "Multiple auth checker provided.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn authentication_failed() -> Self {
-        ActionError {
-            r#type: ActionErrorType::AuthenticationFailed,
-            message: "Authentication failed.".to_string(),
             errors: None
         }
     }
