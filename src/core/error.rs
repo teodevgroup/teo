@@ -18,14 +18,10 @@ pub enum ActionErrorType {
     FieldIsNotUnique,
     UnmatchedDataTypeInDatabase,
     InvalidAuthorizationFormat,
-    UnexpectedNull,
     InvalidQueryInput,
     SaveCallingError,
-    ModelNotFound,
     WrongIdentityModel,
     PropertySetterError,
-
-    // new errors
 
     // request destination
     DestinationNotFound,
@@ -50,6 +46,7 @@ pub enum ActionErrorType {
 
     // object api
     InvalidKey,
+    InvalidOperation,
 
     // user defined
     CustomError,
@@ -72,11 +69,9 @@ impl ActionErrorType {
             ActionErrorType::FieldIsNotUnique => { 400 }
             ActionErrorType::InvalidAuthorizationFormat => { 401 }
             ActionErrorType::InvalidJWTToken => { 401 }
-            ActionErrorType::UnexpectedNull => { 400 }
             ActionErrorType::InvalidQueryInput => { 400 }
             ActionErrorType::SaveCallingError => { 500 }
             ActionErrorType::CustomError => { 500 }
-            ActionErrorType::ModelNotFound => { 500 }
             ActionErrorType::WrongIdentityModel => { 401 }
             ActionErrorType::PropertySetterError => { 400 }
             ActionErrorType::UnexpectedInputRootType => { 400 }
@@ -86,6 +81,7 @@ impl ActionErrorType {
             ActionErrorType::MissingRequiredInput => { 400 }
             ActionErrorType::UnexpectedObjectLength => { 400 }
             ActionErrorType::InvalidKey => { 500 }
+            ActionErrorType::InvalidOperation => { 500 }
             ActionErrorType::PermissionDenied => { 401 }
         }
     }
@@ -154,7 +150,7 @@ impl ActionError {
 
     pub fn destination_not_found() -> Self {
         ActionError {
-            r#type: ActionErrorType::NotFound,
+            r#type: ActionErrorType::DestinationNotFound,
             message: "The request destination is not found.".to_string(),
             errors: None
         }
@@ -232,27 +228,6 @@ impl ActionError {
         }
     }
 
-    pub fn unexpected_null(field: impl Into<String>) -> Self {
-        let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
-        errors.insert(field.into(), "Unexpected null.".to_string());
-        ActionError {
-            r#type: ActionErrorType::UnexpectedNull,
-            message: "Unexpected null.".to_string(),
-            errors: Some(errors)
-        }
-    }
-
-    pub fn expected(expected_json_type: impl Into<String>, field: impl Into<String>) -> Self {
-        let expected_json_type = expected_json_type.into();
-        let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
-        errors.insert(field.into(), "Unexpected field type.".to_string());
-        ActionError {
-            r#type: ActionErrorType::UnexpectedFieldType,
-            message: format!("Expected '{expected_json_type}'."),
-            errors: Some(errors)
-        }
-    }
-
     pub fn save_calling_error(model_name: impl AsRef<str> + Display) -> Self {
         ActionError {
             r#type: ActionErrorType::SaveCallingError,
@@ -265,14 +240,6 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::CustomError,
             message: message.into(),
-            errors: None
-        }
-    }
-
-    pub fn model_not_found(name: impl AsRef<str> + Display) -> Self {
-        ActionError {
-            r#type: ActionErrorType::ModelNotFound,
-            message: format!("Model named `{name}' is not found."),
             errors: None
         }
     }
@@ -363,6 +330,14 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::InvalidKey,
             message: format!("Invalid key '{}' accessed on model `{}'", unexpected_key.as_ref(), model.name()),
+            errors: None
+        }
+    }
+
+    pub fn invalid_operation(reason: impl AsRef<str>) -> Self {
+        ActionError {
+            r#type: ActionErrorType::InvalidOperation,
+            message: reason.as_ref().to_string(),
             errors: None
         }
     }

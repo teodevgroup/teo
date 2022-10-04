@@ -177,12 +177,12 @@ impl Object {
                     }
                     "disconnect" => {
                         if self.is_new() {
-                            return Err(ActionError::new_object_cannot_disconnect());
+                            return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                         }
                         let graph = self.graph();
                         let entries = input_to_vec(command_input, path)?;
                         for entry in entries {
-                            let model = graph.model(&relation.model)?;
+                            let model = graph.model(&relation.model).unwrap();
                             if !relation.is_vec && (relation.optionality.is_required()) {
                                 return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                             }
@@ -215,14 +215,14 @@ impl Object {
                     }
                     "delete" | "deleteMany" => {
                         if self.is_new() {
-                            return Err(ActionError::new_object_cannot_disconnect());
+                            return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                         }
                         if !relation.is_vec && command == "deleteMany" {
                             return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                         }
                         let graph = self.graph();
                         let model_name = &relation.model;
-                        let model = graph.model(model_name)?;
+                        let model = graph.model(model_name).unwrap();
                         if !relation.is_vec && (relation.optionality.is_required()) {
                             return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                         }
@@ -732,7 +732,7 @@ impl Object {
     pub(crate) async fn link_connect(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> ActionResult<()> {
         match &relation.through {
             Some(through) => { // with join table
-                let relation_model = self.graph().model(through)?;
+                let relation_model = self.graph().model(through).unwrap();
                 let relation_object = self.graph().new_object(through)?;
                 relation_object.set_json(&json!({})).await?;
                 let local_relation_name = relation.fields.get(0).unwrap();
@@ -787,7 +787,7 @@ impl Object {
     pub(crate) async fn link_disconnect(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> ActionResult<()> {
         match &relation.through {
             Some(through) => { // with join table
-                let relation_model = self.graph().model(through)?;
+                let relation_model = self.graph().model(through).unwrap();
                 let mut finder: Map<String, JsonValue> = Map::new();
                 let local_relation_name = relation.fields.get(0).unwrap();
                 let foreign_relation_name = relation.references.get(0).unwrap();

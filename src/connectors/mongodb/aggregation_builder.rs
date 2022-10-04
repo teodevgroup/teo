@@ -931,7 +931,7 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
         } else {
             let relation = model.relation(key).unwrap();
             let model_name = &relation.model;
-            let this_model = graph.model(model_name)?;
+            let this_model = graph.model(model_name).unwrap();
             let (command, inner_where) = one_length_json_obj(value, &(path + key))?;
             let _inner_where = build_where_input(this_model, graph, Some(inner_where), &(path + key))?;
             match command {
@@ -1105,7 +1105,7 @@ fn build_lookup_inputs(
         let relation = relation.unwrap();
         let relation_name = &relation.name;
         let relation_model_name = &relation.model;
-        let relation_model = graph.model(relation_model_name)?;
+        let relation_model = graph.model(relation_model_name).unwrap();
         if value.is_boolean() || value.is_object() {
             if relation.through.is_none() { // without join table
                 let mut let_value = doc!{};
@@ -1156,11 +1156,11 @@ fn build_lookup_inputs(
                     retval.push(doc!{"$set": {relation_name: {"$reverseArray": format!("${relation_name}")}}});
                 }
             } else { // with join table
-                let join_model = graph.model(relation.through.as_ref().unwrap())?;
+                let join_model = graph.model(relation.through.as_ref().unwrap()).unwrap();
                 let local_relation_on_join_table = join_model.relation(relation.fields.get(0).unwrap()).unwrap();
                 let foreign_relation_on_join_table = join_model.relation(relation.references.get(0).unwrap()).unwrap();
                 let foreign_model_name = &foreign_relation_on_join_table.model;
-                let foreign_model = graph.model(foreign_model_name)?;
+                let foreign_model = graph.model(foreign_model_name).unwrap();
                 let mut outer_let_value = doc!{};
                 let mut outer_eq_values: Vec<Document> = vec![];
                 let mut inner_let_value = doc!{};

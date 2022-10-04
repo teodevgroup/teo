@@ -123,7 +123,7 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
         true
     ).await;
     if let Err(_) = identity {
-        return Err(ActionError::identity_is_not_found());
+        return Err(ActionError::object_not_found())
     }
     return Ok(Some(identity.unwrap()));
 }

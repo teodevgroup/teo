@@ -50,12 +50,12 @@ impl Graph {
     }
 
     pub async fn find_unique(&self, model: &str, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
-        let model = self.model(model)?;
+        let model = self.model(model).unwrap();
         self.connector().find_unique(self, model, finder, mutation_mode).await
     }
 
     pub async fn find_first(&self, model: &str, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
-        let model = self.model(model)?;
+        let model = self.model(model).unwrap();
         let mut finder = finder.as_object().clone().unwrap().clone();
         finder.insert("take".to_string(), JsonValue::Number(1.into()));
         let finder = JsonValue::Object(finder);
@@ -73,29 +73,29 @@ impl Graph {
     }
 
     pub async fn find_many(&self, model: &str, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
-        let model = self.model(model)?;
+        let model = self.model(model).unwrap();
         self.connector().find_many(self, model, finder, mutation_mode).await
     }
 
     pub async fn count(&self, model: &str, finder: &JsonValue) -> Result<usize, ActionError> {
-        let model = self.model(model)?;
+        let model = self.model(model).unwrap();
         self.connector().count(self, model, finder).await
     }
 
     pub async fn aggregate(&self, model: &str, finder: &JsonValue) -> Result<JsonValue, ActionError> {
-        let model = self.model(model)?;
+        let model = self.model(model).unwrap();
         self.connector().aggregate(self, model, finder).await
     }
 
     pub async fn group_by(&self, model: &str, finder: &JsonValue) -> Result<JsonValue, ActionError> {
-        let model = self.model(model)?;
+        let model = self.model(model).unwrap();
         self.connector().group_by(self, model, finder).await
     }
 
     pub(crate) fn new_object(&self, model: &str) -> Result<Object, ActionError> {
         match self.model(model) {
-            Ok(model) => Ok(Object::new(self, model)),
-            Err(err) => Err(err)
+            Some(model) => Ok(Object::new(self, model)),
+            None => Err(ActionError::invalid_operation(format!("Model with name '{model}' is not defined.")))
         }
     }
 
@@ -112,11 +112,8 @@ impl Graph {
         }
     }
 
-    pub(crate) fn model(&self, name: &str) -> Result<&Model, ActionError> {
-        match self.inner.models_map.get(name) {
-            Some(model) => Ok(model),
-            None => Err(ActionError::model_not_found(name))
-        }
+    pub(crate) fn model(&self, name: &str) -> Option<&Model> {
+        self.inner.models_map.get(name)
     }
 
     pub(crate) fn r#enum(&self, name: impl Into<String>) -> &Vec<String> {
