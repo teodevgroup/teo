@@ -113,6 +113,10 @@ impl Model {
         return &self.inner.fields_vec
     }
 
+    pub(crate) fn properties(&self) -> &Vec<Arc<Property>> {
+        return &self.inner.properties_vec
+    }
+
     pub(crate) fn relations(&self) -> &Vec<Arc<Relation>> {
         return &self.inner.relations_vec
     }

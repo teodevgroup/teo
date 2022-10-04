@@ -59,7 +59,8 @@ The new generation server software.
 - Cached property: mark for save on dependency update **[DONE]**
 - Cached property: get cached value **[DONE]**
 - Cached property: recalculate if dirty **[DONE]**
-- Cached property: create database column
+- Cached property: create database column **[DONE]**
+- Add required check for present with and present without
 - Property setter error uses path
 - Permissions
 
@@ -69,7 +70,6 @@ The new generation server software.
 - SQL: Enum types
 - MongoDB update handle column key
 - Remove primary name from MongoDB connector's `save` method
-- Add `PresentWith` and `PresentWithout` to `Optionality`
 - Fix broken `connectIdentity` modifier
 - For relationship with join table, link them after both objects are created
 

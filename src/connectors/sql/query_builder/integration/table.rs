@@ -9,6 +9,11 @@ impl From<&Model> for SQLCreateTableStatement {
         for field in model.fields() {
             stmt.column(field.into());
         }
+        for property in model.properties() {
+            if property.cached {
+                stmt.column(property.into());
+            }
+        }
         stmt
     }
 }

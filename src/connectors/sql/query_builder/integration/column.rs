@@ -5,6 +5,7 @@ use crate::connectors::sql::query_builder::dialect::SQLDialect;
 use crate::connectors::sql::query_builder::structs::column::SQLColumn;
 use crate::connectors::sql::query_builder::traits::to_sql_string::ToSQLString;
 use crate::core::field::Field;
+use crate::core::property::Property;
 
 #[derive(PartialEq, Debug)]
 pub struct MySQLColumn {
@@ -65,17 +66,23 @@ impl From<&Field> for SQLColumn {
 
 impl From<&Arc<Field>> for SQLColumn {
     fn from(field: &Arc<Field>) -> Self {
-        let mut column = SQLColumn::new(field.column_name());
-        column.column_type(field.database_type.clone());
-        if field.is_required() {
+        SQLColumn::from(field.as_ref())
+    }
+}
+
+impl From<&Property> for SQLColumn {
+    fn from(property: &Property) -> Self {
+        let mut column = SQLColumn::new(&property.name);
+        column.column_type(property.database_type.clone());
+        if property.is_required() {
             column.not_null();
         }
-        if field.primary {
-            column.primary_key();
-        }
-        if field.auto_increment {
-            column.auto_increment();
-        }
         column
+    }
+}
+
+impl From<&Arc<Property>> for SQLColumn {
+    fn from(property: &Arc<Property>) -> Self {
+        SQLColumn::from(property.as_ref())
     }
 }

@@ -8,6 +8,7 @@ use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::connector::{ConnectorBuilder};
 use crate::core::db_type::DatabaseType;
 use crate::core::field::*;
+use crate::core::field::optionality::Optionality::{PresentIf, PresentWith, PresentWithout};
 use crate::core::field::r#type::FieldType;
 
 pub(crate) mod index_builder;
@@ -306,6 +307,27 @@ impl FieldBuilder {
 
     pub fn required(&mut self) -> &mut Self {
         self.optionality = Optionality::Required;
+        self
+    }
+
+    pub fn present_with<I, T>(&mut self, keys: I) -> &mut Self where I: IntoIterator<Item = T>, T: Into<String> {
+        let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
+        self.optionality = PresentWith(string_keys);
+        self.input_omissible = true;
+        self.output_omissible = true;
+        self
+    }
+
+    pub fn present_without<I, T>(&mut self, keys: I) -> &mut Self where I: IntoIterator<Item = T>, T: Into<String> {
+        let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
+        self.optionality = PresentWithout(string_keys);
+        self
+    }
+
+    pub fn present_if<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut builder = PipelineBuilder::new();
+        build(&mut builder);
+        self.optionality = PresentIf(builder.build());
         self
     }
 

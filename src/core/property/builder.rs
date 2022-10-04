@@ -1,4 +1,6 @@
 use crate::core::connector::ConnectorBuilder;
+use crate::core::db_type::builder::DatabaseTypeBuilder;
+use crate::core::db_type::DatabaseType;
 use crate::core::field::builder::FieldBuilder;
 use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::FieldType;
@@ -12,6 +14,7 @@ pub struct PropertyBuilder {
     pub(crate) description: String,
     pub(crate) optionality: Optionality,
     pub(crate) field_type: FieldType,
+    pub(crate) database_type: DatabaseType,
     pub(crate) dependencies: Vec<String>,
     pub(crate) setter: Option<Pipeline>,
     pub(crate) getter: Option<Pipeline>,
@@ -29,6 +32,7 @@ impl PropertyBuilder {
             description: "".to_owned(),
             optionality: Optionality::Optional,
             field_type: FieldType::Undefined,
+            database_type: DatabaseType::Undefined,
             dependencies: vec![],
             setter: None,
             getter: None,
@@ -191,19 +195,34 @@ impl PropertyBuilder {
         self
     }
 
+    pub fn db<F, A>(&mut self, build: F) -> &mut Self where F: Fn(&mut DatabaseTypeBuilder) -> A, A: Into<DatabaseType> {
+        let mut builder = DatabaseTypeBuilder::new();
+        let result = build(&mut builder);
+        let db_type = result.into();
+        self.database_type = db_type;
+        match self.field_type {
+            FieldType::Undefined => {
+                self.field_type = (&self.database_type).into();
+            }
+            _ => {}
+        }
+        self
+    }
+
     fn connector_builder(&self) -> &Box<dyn ConnectorBuilder> {
         unsafe {
             &*self.connector_builder
         }
     }
 
-    pub(crate) fn build(&self) -> Property {
+    pub(crate) fn build(&self, connector_builder: &Box<dyn ConnectorBuilder>) -> Property {
         Property {
             name: self.name.clone(),
             localized_name: self.localized_name.clone(),
             description: self.description.clone(),
             optionality: self.optionality.clone(),
             field_type: self.field_type.clone(),
+            database_type: if self.database_type.is_undefined() { connector_builder.inferred_database_type(&self.field_type) } else { self.database_type.clone() },
             dependencies: self.dependencies.clone(),
             setter: self.setter.clone(),
             getter: self.getter.clone(),
