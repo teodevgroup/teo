@@ -62,7 +62,7 @@ The new generation server software.
 - Cached property: create database column **[DONE]**
 - Add required check for present with and present without **[DONE]**
 - Write and read rule **[DONE]**
-- Property setter error uses path
+- Property setter error uses path **[DONE]**
 
 #### 0.0.29
 - Permissions
