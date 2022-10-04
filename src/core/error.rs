@@ -13,27 +13,22 @@ pub enum ActionErrorType {
     UnknownDatabaseFindError,
     UnknownDatabaseFindUniqueError,
     UnknownDatabaseCountError,
-    NotFound,
     InternalServerError,
-    UndefinedAction,
-    UnallowedAction,
-    ObjectNotFound,
     ObjectIsNotSaved,
     FieldIsNotUnique,
     UnmatchedDataTypeInDatabase,
     InvalidAuthorizationFormat,
-    IdentityIsNotFound,
     UnexpectedNull,
     InvalidQueryInput,
-    RequiredRelationCannotDisconnect,
-    NewObjectCannotDisconnect,
     SaveCallingError,
-    CustomError,
     ModelNotFound,
     WrongIdentityModel,
     PropertySetterError,
 
     // new errors
+
+    // request destination
+    DestinationNotFound,
 
     // request format
     IncorrectJSONFormat,
@@ -44,6 +39,9 @@ pub enum ActionErrorType {
     MissingRequiredInput,
     UnexpectedObjectLength,
 
+    // request
+    ObjectNotFound,
+
     // request token
     InvalidJWTToken,
 
@@ -52,14 +50,15 @@ pub enum ActionErrorType {
 
     // object api
     InvalidKey,
+
+    // user defined
+    CustomError,
 }
 
 impl ActionErrorType {
     pub fn code(&self) -> u16 {
         match self {
             ActionErrorType::IncorrectJSONFormat => { 400 }
-            ActionErrorType::UndefinedAction => { 400 }
-            ActionErrorType::UnallowedAction => { 400 }
             ActionErrorType::ObjectIsNotSaved => { 400 }
             ActionErrorType::UnknownDatabaseWriteError => { 500 }
             ActionErrorType::UnknownDatabaseDeleteError => { 500 }
@@ -67,17 +66,14 @@ impl ActionErrorType {
             ActionErrorType::UnknownDatabaseFindUniqueError => { 500 }
             ActionErrorType::UnknownDatabaseCountError => { 500 }
             ActionErrorType::UnmatchedDataTypeInDatabase => { 500 }
-            ActionErrorType::NotFound => { 404 }
+            ActionErrorType::DestinationNotFound => { 404 }
             ActionErrorType::InternalServerError => { 500 }
             ActionErrorType::ObjectNotFound => { 404 }
             ActionErrorType::FieldIsNotUnique => { 400 }
             ActionErrorType::InvalidAuthorizationFormat => { 401 }
             ActionErrorType::InvalidJWTToken => { 401 }
-            ActionErrorType::IdentityIsNotFound => { 401 }
             ActionErrorType::UnexpectedNull => { 400 }
             ActionErrorType::InvalidQueryInput => { 400 }
-            ActionErrorType::RequiredRelationCannotDisconnect => { 400 }
-            ActionErrorType::NewObjectCannotDisconnect => { 400 }
             ActionErrorType::SaveCallingError => { 500 }
             ActionErrorType::CustomError => { 500 }
             ActionErrorType::ModelNotFound => { 500 }
@@ -156,26 +152,10 @@ impl ActionError {
         }
     }
 
-    pub fn not_found() -> Self {
+    pub fn destination_not_found() -> Self {
         ActionError {
             r#type: ActionErrorType::NotFound,
             message: "The request destination is not found.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn undefined_action() -> Self {
-        ActionError {
-            r#type: ActionErrorType::UndefinedAction,
-            message: "Undefined action.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn unallowed_action() -> Self {
-        ActionError {
-            r#type: ActionErrorType::UnallowedAction,
-            message: "Unallowed action.".to_string(),
             errors: None
         }
     }
@@ -252,14 +232,6 @@ impl ActionError {
         }
     }
 
-    pub fn identity_is_not_found() -> Self {
-        ActionError {
-            r#type: ActionErrorType::IdentityIsNotFound,
-            message: "Identity is not found.".to_string(),
-            errors: None
-        }
-    }
-
     pub fn unexpected_null(field: impl Into<String>) -> Self {
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
         errors.insert(field.into(), "Unexpected null.".to_string());
@@ -278,22 +250,6 @@ impl ActionError {
             r#type: ActionErrorType::UnexpectedFieldType,
             message: format!("Expected '{expected_json_type}'."),
             errors: Some(errors)
-        }
-    }
-
-    pub fn required_relation_cannot_disconnect() -> Self {
-        ActionError {
-            r#type: ActionErrorType::RequiredRelationCannotDisconnect,
-            message: "Required relation cannot disconnect.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn new_object_cannot_disconnect() -> Self {
-        ActionError {
-            r#type: ActionErrorType::NewObjectCannotDisconnect,
-            message: "New object cannot disconnect.".to_string(),
-            errors: None
         }
     }
 

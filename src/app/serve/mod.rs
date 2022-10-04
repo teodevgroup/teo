@@ -617,7 +617,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
             if let Some(prefix) = &conf.path_prefix {
                 if !path.starts_with(prefix) {
                     log_unhandled(start, r.method().as_str(), &path, 404);
-                    return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
+                    return ActionError::destination_not_found().into();
                 }
                 path = path.strip_prefix(prefix).unwrap().to_string();
             }
@@ -628,13 +628,13 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
             };
             if (r.method() != Method::POST) && (r.method() != Method::OPTIONS) {
                 log_unhandled(start, r.method().as_str(), &path, 404);
-                return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
+                return ActionError::destination_not_found().into();
             }
             let path_components = path_components(&path);
             let first_component = path_components.get(1).unwrap();
             if !(path_components.len() == 3 && first_component == &"action") {
                 log_unhandled(start, r.method().as_str(), &path, 404);
-                return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
+                return ActionError::destination_not_found().into();
             }
             let model_url_segment_name = path_components[0];
             let action_segment_name = path_components[2];
@@ -643,20 +643,20 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                 Some(a) => a,
                 None => {
                     log_unhandled(start, r.method().as_str(), &path, 404);
-                    return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
+                    return ActionError::destination_not_found().into();
                 }
             };
             let model_name = match graph.model_name_for_url_segment_name(model_url_segment_name) {
                 Some(name) => name,
                 None => {
                     log_unhandled(start, r.method().as_str(), &path, 404);
-                    return HttpResponse::NotFound().json(json!({"error": ActionError::not_found()}));
+                    return ActionError::destination_not_found().into();
                 }
             };
             let model_def = graph.model(model_name).unwrap();
             if !model_def.has_action(action) {
                 log_unhandled(start, r.method().as_str(), &path, 400);
-                return HttpResponse::BadRequest().json(json!({"error": ActionError::not_found()}));
+                return ActionError::destination_not_found().into();
             }
             if r.method() == Method::OPTIONS {
                 return HttpResponse::Ok().json(json!({}));
