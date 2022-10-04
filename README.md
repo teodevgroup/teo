@@ -61,11 +61,11 @@ The new generation server software.
 - Cached property: recalculate if dirty **[DONE]**
 - Cached property: create database column **[DONE]**
 - Add required check for present with and present without **[DONE]**
-- Write and read rule
+- Write and read rule **[DONE]**
 - Property setter error uses path
-- Permissions
 
 #### 0.0.29
+- Permissions
 - New style key path error messages
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
@@ -73,6 +73,7 @@ The new generation server software.
 - Remove primary name from MongoDB connector's `save` method
 - Fix broken `connectIdentity` modifier
 - For relationship with join table, link them after both objects are created
+- Read rule: check in to_json
 
 #### 0.0.30
 - Custom SQL database types

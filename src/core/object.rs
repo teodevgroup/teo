@@ -125,7 +125,7 @@ impl Object {
                             let result_context = field.on_set_pipeline.process(context).await;
                             match result_context.invalid_reason() {
                                 Some(reason) => {
-                                    return Err(ActionError::invalid_input(&field.name, reason));
+                                    return Err(ActionError::unexpected_input_value_validation(reason, &(path + &field.name)));
                                 }
                                 None => {
                                     value = result_context.value
@@ -256,12 +256,12 @@ impl Object {
                         let input_result = decode_field_input(self.graph(), json_value, &property.field_type, Optionality::Required, &(path + key))?;
                         let value = match input_result {
                             Input::SetValue(v) => v,
-                            _ => return Err(ActionError::wrong_input_updator()),
+                            _ => return Err(ActionError::unexpected_input_type("value", &(path + key))),
                         };
                         let ctx = Context::initial_state(self.clone(), purpose)
                             .alter_value(value);
                         if let Some(reason) = setter.process(ctx).await.invalid_reason() {
-                            return Err(ActionError::property_setter_error(reason));
+                            return Err(ActionError::unexpected_input_value_validation(reason, &(path + key)));
                         }
                     }
                 }
@@ -281,14 +281,14 @@ impl Object {
     }
 
 
-    pub(crate) async fn _check_write_rule(&self, key: impl AsRef<str>, value: &Value, path: &KeyPath) -> ActionResult<()> {
+    pub(crate) async fn _check_write_rule(&self, key: impl AsRef<str>, value: &Value, path: &KeyPath<'_>) -> ActionResult<()> {
         let field = self.model().field(key.as_ref()).unwrap();
         let is_new = self.is_new();
         let valid = match &field.write_rule {
             WriteRule::NoWrite => false,
             WriteRule::Write => true,
             WriteRule::WriteOnCreate => is_new,
-            WriteRule::WriteOnce => if is_new { true } else { self.get_value(key).unwrap().is_null() },
+            WriteRule::WriteOnce => if is_new { true } else { self.get_value(key.as_ref()).unwrap().is_null() },
             WriteRule::WriteNonNull => if is_new { true } else { !value.is_null() },
             WriteRule::WriteIf(pipeline) => {
                 let context = Context::initial_state(self.clone(), if is_new { Intent::Create } else { Intent::Update})

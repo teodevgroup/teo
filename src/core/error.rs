@@ -555,6 +555,14 @@ impl ActionError {
         }
     }
 
+    pub fn unexpected_input_value_validation<'a>(reason: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
+        ActionError {
+            r#type: ActionErrorType::UnexpectedInputValue,
+            message: "Unexpected value found.".to_string(),
+            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("{}", reason.into())}),
+        }
+    }
+
     pub fn missing_required_input<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         ActionError {
             r#type: ActionErrorType::MissingRequiredInput,
