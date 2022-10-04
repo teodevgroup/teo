@@ -60,7 +60,8 @@ The new generation server software.
 - Cached property: get cached value **[DONE]**
 - Cached property: recalculate if dirty **[DONE]**
 - Cached property: create database column **[DONE]**
-- Add required check for present with and present without
+- Add required check for present with and present without **[DONE]**
+- Write and read rule
 - Property setter error uses path
 - Permissions
 

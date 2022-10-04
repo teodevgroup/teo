@@ -362,7 +362,7 @@ impl ModelBuilder {
     }
 
     fn input_field_keys(&self) -> Vec<String> {
-        self.field_builders.iter().filter(|&f| f.write_rule != NoWrite).map(|f| f.name.clone()).collect()
+        self.field_builders.iter().filter(|&f| !f.write_rule.is_no_write()).map(|f| f.name.clone()).collect()
     }
 
     fn input_relation_keys(&self) -> Vec<String> {
@@ -402,7 +402,7 @@ impl ModelBuilder {
 
     fn output_field_keys(&self) -> Vec<String> {
         self.field_builders.iter()
-            .filter(|&f| { f.read_rule != NoRead })
+            .filter(|&f| { !f.read_rule.is_no_read() })
             .map(|f| { f.name.clone() })
             .collect()
     }

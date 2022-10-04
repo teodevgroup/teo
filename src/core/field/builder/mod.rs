@@ -238,6 +238,13 @@ impl FieldBuilder {
         self
     }
 
+    pub fn read_if<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut pipeline = PipelineBuilder::new();
+        build(&mut pipeline);
+        self.read_rule = ReadRule::ReadIf(pipeline.build());
+        self
+    }
+
     pub fn writeonly(&mut self) -> &mut Self {
         self.read_rule = ReadRule::NoRead;
         self.query_ability = QueryAbility::Unqueryable;
@@ -256,6 +263,13 @@ impl FieldBuilder {
 
     pub fn write_nonnull(&mut self) -> &mut Self {
         self.write_rule = WriteRule::WriteNonNull;
+        self
+    }
+
+    pub fn write_if<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut pipeline = PipelineBuilder::new();
+        build(&mut pipeline);
+        self.write_rule = WriteRule::WriteIf(pipeline.build());
         self
     }
 
@@ -425,8 +439,8 @@ impl FieldBuilder {
             r#virtual: self.r#virtual,
             atomic: self.atomic,
             primary: self.primary,
-            read_rule: self.read_rule,
-            write_rule: self.write_rule,
+            read_rule: self.read_rule.clone(),
+            write_rule: self.write_rule.clone(),
             index: self.index.clone(),
             query_ability: self.query_ability,
             object_assignment: self.object_assignment,

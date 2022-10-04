@@ -1,8 +1,20 @@
-#[derive(Debug, Clone, Copy, PartialEq)]
+use crate::core::pipeline::Pipeline;
+
+#[derive(Debug, Clone)]
 pub enum WriteRule {
     Write,
     NoWrite,
     WriteOnce,
     WriteOnCreate,
-    WriteNonNull
+    WriteNonNull,
+    WriteIf(Pipeline),
+}
+
+impl WriteRule {
+    pub fn is_no_write(&self) -> bool {
+        match self {
+            WriteRule::NoWrite => true,
+            _ => false
+        }
+    }
 }

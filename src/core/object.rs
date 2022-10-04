@@ -19,6 +19,7 @@ use crate::core::save_session::SaveSession;
 use crate::core::pipeline::context::{Context, Intent};
 use crate::core::value::Value;
 use crate::core::error::{ActionError, ActionErrorType};
+use crate::core::field::write_rule::WriteRule;
 use crate::core::result::ActionResult;
 
 #[derive(Clone)]
@@ -130,6 +131,7 @@ impl Object {
                                     value = result_context.value
                                 }
                             }
+                            self._check_write_rule(key, &value, path).await?;
                             self._set_value(key, value, false)?;
                         }
                         AtomicUpdate(update_type) => {
@@ -276,6 +278,30 @@ impl Object {
 
     pub fn set_value(&self, key: impl AsRef<str>, value: Value) -> ActionResult<()> {
         self._set_value(key, value, true)
+    }
+
+
+    pub(crate) async fn _check_write_rule(&self, key: impl AsRef<str>, value: &Value, path: &KeyPath) -> ActionResult<()> {
+        let field = self.model().field(key.as_ref()).unwrap();
+        let is_new = self.is_new();
+        let valid = match &field.write_rule {
+            WriteRule::NoWrite => false,
+            WriteRule::Write => true,
+            WriteRule::WriteOnCreate => is_new,
+            WriteRule::WriteOnce => if is_new { true } else { self.get_value(key).unwrap().is_null() },
+            WriteRule::WriteNonNull => if is_new { true } else { !value.is_null() },
+            WriteRule::WriteIf(pipeline) => {
+                let context = Context::initial_state(self.clone(), if is_new { Intent::Create } else { Intent::Update})
+                    .alter_value(value.clone());
+                let result_context = pipeline.process(context).await;
+                result_context.is_valid()
+            }
+        };
+        if valid {
+            Err(ActionError::unexpected_input_key(key.as_ref(), &(path + key.as_ref())))
+        } else {
+            Ok(())
+        }
     }
 
     pub(crate) fn _set_value(&self, key: impl AsRef<str>, value: Value, check: bool) -> ActionResult<()> {
