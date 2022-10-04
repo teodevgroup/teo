@@ -65,6 +65,7 @@ impl Object {
     pub(crate) async fn _set_json_internal(&self, json_value: &JsonValue, path: &KeyPath<'_>, user_mode: bool) -> ActionResult<()> {
         let model = self.model();
         let is_new = self.is_new();
+        let purpose = if is_new { Intent::Create } else { Intent::Update };
         // permission
         if !user_mode {
             if let Some(permission) = model.permission() {
