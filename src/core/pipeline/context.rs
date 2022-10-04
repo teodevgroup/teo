@@ -136,6 +136,18 @@ impl<'a> Context<'a> {
         }
     }
 
+    pub(crate) fn alter_identity(&self, identity: Option<Object>) -> Self {
+        Self {
+            value: self.value.clone(),
+            object: self.object.clone(),
+            key_path: self.key_path.clone(),
+            identity,
+            validity: self.validity.clone(),
+            stage: self.stage.clone(),
+            intent: self.intent.clone(),
+        }
+    }
+
     pub(crate) fn alter_value(&self, value: Value) -> Self {
         Self {
             value,

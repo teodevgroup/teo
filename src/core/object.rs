@@ -48,7 +48,6 @@ impl Object {
             relation_query_map: Arc::new(Mutex::new(HashMap::new())),
             relation_mutation_map: Arc::new(Mutex::new(HashMap::new())),
             cached_property_map: Arc::new(Mutex::new(HashMap::new())),
-            identity: Arc::new(Mutex::new(None)),
         }) }
     }
 
@@ -1091,14 +1090,6 @@ impl Object {
         graph.find_unique(self.model().name(), &finder, false).await
     }
 
-    pub fn set_identity(&self, identity: Option<Object>) {
-        *self.inner.identity.lock().unwrap() = identity.clone();
-    }
-
-    pub fn get_identity(&self) -> Option<Object> {
-        self.inner.identity.lock().unwrap().clone()
-    }
-
     pub async fn fetch_relation_object(&self, key: impl AsRef<str>, find_unique_arg: Option<&JsonValue>) -> Result<Option<Object>, ActionError> {
         // get relation
         let model = self.model();
@@ -1228,7 +1219,6 @@ pub(crate) struct ObjectInner {
     pub(crate) relation_mutation_map: Arc<Mutex<HashMap<String, Vec<RelationManipulation>>>>,
     pub(crate) relation_query_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
     pub(crate) cached_property_map: Arc<Mutex<HashMap<String, Value>>>,
-    pub(crate) identity: Arc<Mutex<Option<Object>>>,
 }
 
 impl Debug for Object {
