@@ -62,14 +62,27 @@ impl Object {
         self._set_json_internal(json_value, path, false).await
     }
 
-    pub(crate) async fn _set_json_internal(&self, json_value: &JsonValue, path: &KeyPath<'_>, use_user_error: bool) -> ActionResult<()> {
+    pub(crate) async fn _set_json_internal(&self, json_value: &JsonValue, path: &KeyPath<'_>, user_mode: bool) -> ActionResult<()> {
         let model = self.model();
+        let is_new = self.is_new();
+        // permission
+        if !user_mode {
+            if let Some(permission) = model.permission() {
+                if let Some(can) = if is_new { permission.can_create() } else { permission.can_update() } {
+                    let ctx = Context::initial_state(self.clone(), purpose);
+                    let result_ctx = can.process(ctx).await;
+                    if !result_ctx.is_valid() {
+                        return Err(ActionError::permission_denied(if is_new { "create" } else { "update" }));
+                    }
+                }
+            }
+        }
         // check keys
         let json_map = json_value.as_object().unwrap();
         let json_keys: Vec<&String> = json_map.keys().map(|k| { k }).collect();
         let valid_keys = self.model().input_keys().iter().map(|k| k).collect::<Vec<&String>>();
         if let Some(invalid_key) = json_keys.iter().find(|k| !valid_keys.contains(k)) {
-            return if use_user_error {
+            return if user_mode {
                 Err(ActionError::invalid_key(invalid_key, model))
             } else {
                 Err(ActionError::unexpected_input_key(invalid_key.as_str(), path + invalid_key.as_str()))
@@ -103,6 +116,17 @@ impl Object {
                         }
                     }
                 } else {
+                    if !user_mode {
+                        if let Some(permission) = field.permission() {
+                            if let Some(can) = if is_new { permission.can_create() } else { permission.can_update() } {
+                                let ctx = Context::initial_state(self.clone(), purpose);
+                                let result_ctx = can.process(ctx).await;
+                                if !result_ctx.is_valid() {
+                                    return Err(ActionError::permission_denied(if is_new { "create" } else { "update" }));
+                                }
+                            }
+                        }
+                    }
                     let json_value = json_map.get(key).unwrap();
                     let input_result = decode_field_input(self.graph(), json_value, &field.field_type, field.optionality.clone(), &(path + field.name()))?;
                     match input_result {
