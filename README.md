@@ -75,21 +75,25 @@ The new generation server software.
 - Object environment **[DONE]**
 
 #### 0.0.30
+- Unlink rules
+- Delete rules
+
+#### 0.0.31
 - Handle manipulation uses single or many
 - Bug fixes
 - Remove position from env, it can be inferred from `intent`
 - Fix assign identity
 
-#### 0.0.31
+#### 0.0.32
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
 - MongoDB update handle column key
 - Fix broken `connectIdentity` modifier
 
-#### 0.0.32
+#### 0.0.33
 - Custom SQL database types
 
-#### 0.0.33 - 0.0.50
+#### 0.0.34 - 0.0.50
 - Migration with SQL databases
 
 #### 0.0.51
@@ -99,54 +103,51 @@ The new generation server software.
 - Input omissible and output omissible for generated clients
 
 #### 0.0.53
-- Delete rules
-
-#### 0.0.54
 - Delete callbacks: `when_delete`, `before_delete` and `after_delete`
 
-#### 0.0.55
+#### 0.0.54
 - Frontend lib for aggregate, count and groupBy
 
-#### 0.0.56
+#### 0.0.55
 - Correct count with cursor
 
-#### 0.0.57
+#### 0.0.56
 - Frontend lib for aggregate, count and groupBy
 
-#### 0.0.58
+#### 0.0.57
 - The copy action
 
-#### 0.0.59
+#### 0.0.58
 - Test column key remap with aggregate and groupBy
 
-#### 0.0.60
+#### 0.0.59
 - Auto migration
 
-#### 0.0.61
+#### 0.0.60
 - `auth_by_companion`
 
-#### 0.0.62
+#### 0.0.61
 - Fix decimal problems
 - Relation with read write rules
 
-#### 0.0.63
+#### 0.0.62
 - Fix date problems
 
-#### 0.0.64
+#### 0.0.63
 - Fix datetime problems
 
-#### 0.0.65
+#### 0.0.64
 - random float modifier
 - random int modifier
 
-#### 0.0.66
+#### 0.0.65
 - to uppercase modifier
 - to lowercase modifier
 - to word case modifier
 - to sentence case modifier
 - to title case modifier
 
-#### 0.0.67 - 0.0.110
+#### 0.0.66 - 0.0.110
 - parsers and schema
 - language servers
 
