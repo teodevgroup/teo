@@ -22,7 +22,6 @@ impl Modifier for AssignIdentityModifier {
     }
 
     async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
-        context.alter_identity(Some(context.object.clone()));
         context
     }
 }

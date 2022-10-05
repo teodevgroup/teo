@@ -119,7 +119,7 @@ fn generate_model_create_nested_input(_graph: &Graph, model: &Model, without: Op
     });
     class_fields.push(CSharpClassField {
         n: "ConnectOrCreate".to_owned(),
-        t: format!("{enumerable_prefix}{model_name}CreateOrConnect{without_title}Input{enumerable_suffix}"),
+        t: format!("{enumerable_prefix}{model_name}ConnectOrCreate{without_title}Input{enumerable_suffix}"),
         o: true,
         d: Some(nested_create_or_connect_doc(model, many)),
         j: None,
@@ -164,7 +164,7 @@ fn generate_model_create_or_connect_input(model: &Model, without: Option<&str>) 
         j: None,
     });
     let builder = CSharpClassBuilder {
-        name: format!("{model_name}CreateOrConnect{without_title}Input"),
+        name: format!("{model_name}ConnectOrCreate{without_title}Input"),
         fields: class_fields,
         indent_spaces: 4,
         indent_level: 0
@@ -366,7 +366,7 @@ fn generate_model_update_nested_input(_graph: &Graph, model: &Model, without: Op
     });
     class_fields.push(CSharpClassField {
         n: "ConnectOrCreate".to_string(),
-        t: format!("{enumerable_prefix}{model_name}CreateOrConnect{without_title}Input{enumerable_suffix}"),
+        t: format!("{enumerable_prefix}{model_name}ConnectOrCreate{without_title}Input{enumerable_suffix}"),
         o: true,
         d: Some(nested_create_or_connect_doc(model, many)),
         j: None

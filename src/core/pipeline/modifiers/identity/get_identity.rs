@@ -22,7 +22,7 @@ impl Modifier for GetIdentityModifier {
     }
 
     async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
-        match &context.identity {
+        match context.object.env().source().as_identity() {
             Some(o) => context.alter_value(Value::Object(o.clone())),
             None => context.alter_value(Value::Null),
         }

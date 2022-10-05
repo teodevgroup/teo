@@ -44,7 +44,7 @@ impl Relation {
 #[derive(Debug)]
 pub(crate) enum RelationManipulation {
     Create(JsonValue),
-    CreateOrConnect(JsonValue),
+    ConnectOrCreate(JsonValue),
     Connect(JsonValue),
     Set(JsonValue),
     Update(JsonValue),

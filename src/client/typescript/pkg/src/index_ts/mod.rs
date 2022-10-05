@@ -25,14 +25,14 @@ fn generate_model_create_nested_input(_graph: &Graph, model: &Model, without: Op
                 b.doc(nested_create_doc(model, many));
                 b.line(format!("create?: Enumerable<{model_name}Create{without_title}Input>"));
                 b.doc(nested_create_or_connect_doc(model, many));
-                b.line(format!("connectOrCreate?: Enumerable<{model_name}CreateOrConnect{without_title}Input>"));
+                b.line(format!("connectOrCreate?: Enumerable<{model_name}ConnectOrCreate{without_title}Input>"));
                 b.doc(nested_connect_doc(model, many));
                 b.line(format!("connect?: Enumerable<{model_name}WhereUniqueInput>"));
             } else {
                 b.doc(nested_create_doc(model, many));
                 b.line(format!("create?: {model_name}Create{without_title}Input"));
                 b.doc(nested_create_or_connect_doc(model, many));
-                b.line(format!("connectOrCreate?: {model_name}CreateOrConnect{without_title}Input"));
+                b.line(format!("connectOrCreate?: {model_name}ConnectOrCreate{without_title}Input"));
                 b.doc(nested_connect_doc(model, many));
                 b.line(format!("connect?: {model_name}WhereUniqueInput"));
             }
@@ -49,7 +49,7 @@ fn generate_model_create_or_connect_input(model: &Model, without: Option<&str>) 
         "".to_owned()
     };
     Code::new(0, 4, |c| {
-        c.block(format!("export type {model_name}CreateOrConnect{without_title}Input = {{"), |b| {
+        c.block(format!("export type {model_name}ConnectOrCreate{without_title}Input = {{"), |b| {
             b.doc(unique_connect_doc(model));
             b.line(format!("where: {model_name}WhereUniqueInput"));
             b.doc(unique_connect_create_doc(model));
@@ -193,7 +193,7 @@ fn generate_model_update_nested_input(_graph: &Graph, model: &Model, without: Op
                 b.doc(nested_create_doc(model, many));
                 b.line(format!("create?: Enumerable<{model_name}Create{without_title}Input>"));
                 b.doc(nested_create_or_connect_doc(model, many));
-                b.line(format!("connectOrCreate?: Enumerable<{model_name}CreateOrConnect{without_title}Input>"));
+                b.line(format!("connectOrCreate?: Enumerable<{model_name}ConnectOrCreate{without_title}Input>"));
                 b.doc(nested_connect_doc(model, many));
                 b.line(format!("connect?: Enumerable<{model_name}WhereUniqueInput>"));
                 b.doc(nested_set_doc(model, many));
@@ -214,7 +214,7 @@ fn generate_model_update_nested_input(_graph: &Graph, model: &Model, without: Op
                 b.doc(nested_create_doc(model, many));
                 b.line(format!("create?: {model_name}Create{without_title}Input"));
                 b.doc(nested_create_or_connect_doc(model, many));
-                b.line(format!("connectOrCreate?: {model_name}CreateOrConnect{without_title}Input"));
+                b.line(format!("connectOrCreate?: {model_name}ConnectOrCreate{without_title}Input"));
                 b.doc(nested_connect_doc(model, many));
                 b.line(format!("connect?: {model_name}WhereUniqueInput"));
                 b.doc(nested_set_doc(model, many));

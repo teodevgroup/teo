@@ -20,6 +20,7 @@ use crate::connectors::sql::query_builder::stmt::SQL;
 use crate::connectors::sql::query_builder::traits::to_sql_string::ToSQLString;
 use crate::connectors::sql::save_session::SQLSaveSession;
 use crate::core::connector::Connector;
+use crate::core::env::Env;
 use crate::core::error::ActionError;
 use crate::core::input::AtomicUpdateType;
 use crate::core::input_decoder::str_to_target_type;
@@ -443,7 +444,7 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
         let objects = self.perform_query(graph, model, finder, mutation_mode, &path![], None, None).await?;
         if objects.is_empty() {
             Err(ActionError::object_not_found())
@@ -452,7 +453,7 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
         self.perform_query(graph, model, finder, mutation_mode, &path![], None, None).await
     }
 

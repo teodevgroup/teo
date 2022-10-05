@@ -22,7 +22,7 @@ impl Modifier for HasIdentityModifier {
     }
 
     async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
-        if context.identity.is_some() {
+        if context.object.env().source().as_identity().is_some() {
             context
         } else {
             context.invalid("Identity is not present.")
