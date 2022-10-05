@@ -1,5 +1,6 @@
 use crate::core::connector::ConnectorBuilder;
 use crate::core::field::optionality::Optionality;
+use crate::core::relation::delete_rule::DeleteRule;
 use crate::core::relation::Relation;
 
 pub struct RelationBuilder {
@@ -13,6 +14,7 @@ pub struct RelationBuilder {
     pub(crate) fields: Vec<String>,
     pub(crate) references: Vec<String>,
     pub(crate) auto: bool,
+    pub(crate) delete_rule: DeleteRule,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -29,6 +31,7 @@ impl RelationBuilder {
             fields: Vec::new(),
             references: Vec::new(),
             auto: false,
+            delete_rule: DeleteRule::Nullify,
             connector_builder,
         }
     }
@@ -100,6 +103,21 @@ impl RelationBuilder {
 
     pub fn auto(&mut self) -> &mut Self {
         self.auto = true;
+        self
+    }
+
+    pub fn cascade(&mut self) -> &mut Self {
+        self.delete_rule = DeleteRule::Cascade;
+        self
+    }
+
+    pub fn nullify(&mut self) -> &mut Self {
+        self.delete_rule = DeleteRule::Nullify;
+        self
+    }
+
+    pub fn deny(&mut self) -> &mut Self {
+        self.delete_rule = DeleteRule::Deny;
         self
     }
 
