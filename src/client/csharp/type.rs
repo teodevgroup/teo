@@ -1,4 +1,4 @@
-use crate::core::field::optionality::Optionality;
+
 use crate::core::field::r#type::FieldType;
 
 pub(crate) trait ToCSharpType {

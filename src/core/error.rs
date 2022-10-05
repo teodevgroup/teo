@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
-use serde::{Serialize, Serializer};
+use serde::{Serialize};
 use maplit::hashmap;
 use key_path::KeyPath;
 use crate::core::model::Model;

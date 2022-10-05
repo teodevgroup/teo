@@ -8,12 +8,12 @@ use chrono::{DateTime, Duration, Local, Utc};
 use colored::Colorize;
 use serde_json::{json, Value as JsonValue};
 use futures_util::StreamExt;
-use serde::{Serialize, Deserialize};
+
 use key_path::{KeyPath, path};
 use crate::core::action::r#type::ActionType;
 use crate::app::app::ServerConfiguration;
 use crate::app::serve::jwt_token::{Claims, decode_token, encode_token};
-use crate::core::action::r#type::ActionType::{Create, CreateMany, Delete, DeleteMany, FindFirst, FindMany, FindUnique, Update, UpdateMany};
+
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
 use crate::core::env::source::Source;
@@ -91,7 +91,7 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
         return Err(ActionError::invalid_auth_token());
     }
     let claims = claims_result.unwrap();
-    let model = graph.model(claims.model.as_str()).unwrap();
+    let _model = graph.model(claims.model.as_str()).unwrap();
     let identity = graph.find_unique(
         graph.model(claims.model.as_str()).unwrap().name(),
         &json!({
@@ -428,7 +428,7 @@ async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model, sou
         }))
 }
 
-async fn handle_count(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
+async fn handle_count(graph: &Graph, input: &JsonValue, model: &Model, _source: Source) -> HttpResponse {
     let result = graph.count(model.name(), input).await;
     match result {
         Ok(count) => {
@@ -440,7 +440,7 @@ async fn handle_count(graph: &Graph, input: &JsonValue, model: &Model, source: S
     }
 }
 
-async fn handle_aggregate(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
+async fn handle_aggregate(graph: &Graph, input: &JsonValue, model: &Model, _source: Source) -> HttpResponse {
     match graph.aggregate(model.name(), input).await {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": count}))
@@ -451,7 +451,7 @@ async fn handle_aggregate(graph: &Graph, input: &JsonValue, model: &Model, sourc
     }
 }
 
-async fn handle_group_by(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
+async fn handle_group_by(graph: &Graph, input: &JsonValue, model: &Model, _source: Source) -> HttpResponse {
     match graph.group_by(model.name(), input).await {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": count}))
@@ -507,7 +507,7 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
             identity_key.unwrap(): identity_value.unwrap()
         }
     }), true, Env::new(Source::CustomCode, Intent::FindUnique)).await;
-    if let Err(err) = obj_result {
+    if let Err(_err) = obj_result {
         return ActionError::unexpected_input_value("This identity is not found.", path!["credentials", identity_key.unwrap()]).into();
     }
     let obj = obj_result.unwrap();

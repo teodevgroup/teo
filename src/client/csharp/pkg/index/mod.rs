@@ -4,7 +4,7 @@ use crate::app::app::ClientConfiguration;
 use crate::client::csharp::pkg::index::doc::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, nested_connect_doc, nested_create_doc, nested_create_or_connect_doc, nested_delete_doc, nested_disconnect_doc, nested_set_doc, nested_update_doc, nested_upsert_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_connect_create_doc, unique_connect_doc, unique_where_doc, where_doc, where_doc_first};
 use crate::client::csharp::r#type::ToCSharpType;
 use crate::client::shared::code::Code;
-use crate::core::field::optionality::Optionality;
+
 use crate::core::graph::Graph;
 use crate::core::model::{Model, ModelIndexType};
 

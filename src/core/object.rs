@@ -8,7 +8,7 @@ use serde_json::{json, Map, Value as JsonValue};
 use async_recursion::async_recursion;
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
-use crate::core::env::source::Source;
+
 use crate::core::pipeline::argument::Argument;
 use crate::core::field::{PreviousValueRule};
 use crate::core::field::optionality::Optionality;
@@ -637,7 +637,7 @@ impl Object {
     }
 
     async fn handle_manipulation(&self, relation: &Relation, manipulation: &RelationManipulation, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
-        let many = relation.is_vec;
+        let _many = relation.is_vec;
         use RelationManipulation::*;
         let graph = self.graph();
         match manipulation {
@@ -942,7 +942,7 @@ impl Object {
         self._save(session, false, &path![]).await
     }
 
-    async fn trigger_before_write_callbacks(&self, newly_created: bool) -> ActionResult<()> {
+    async fn trigger_before_write_callbacks(&self, _newly_created: bool) -> ActionResult<()> {
         let model = self.model();
         let pipeline = model.before_save_pipeline();
         let context = Context::initial_state(self.clone());
@@ -950,7 +950,7 @@ impl Object {
         Ok(())
     }
 
-    async fn trigger_write_callbacks(&self, newly_created: bool) -> ActionResult<()> {
+    async fn trigger_write_callbacks(&self, _newly_created: bool) -> ActionResult<()> {
         let inside_write_callback = self.inner.inside_write_callback.load(Ordering::SeqCst);
         if inside_write_callback {
             return Ok(());

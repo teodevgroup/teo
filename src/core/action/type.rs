@@ -1,4 +1,4 @@
-use std::{collections::HashSet, sync::Mutex, slice::Iter};
+use std::{collections::HashSet, slice::Iter};
 use once_cell::sync::Lazy;
 use maplit::hashset;
 

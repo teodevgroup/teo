@@ -189,7 +189,7 @@ impl Field {
                     let arr = arr.unwrap();
                     let mut new_arr: Vec<Value> = Vec::new();
                     for (i, _v) in arr.iter().enumerate() {
-                        let mut key_path = &ctx.key_path + i;
+                        let key_path = &ctx.key_path + i;
                         let arr_item_ctx = ctx.alter_key_path(key_path);
                         new_arr.push(inner.on_output_pipeline.process(arr_item_ctx).await.value);
                     }
