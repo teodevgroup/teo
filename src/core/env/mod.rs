@@ -1,12 +1,10 @@
 use crate::core::action::Action;
 use crate::core::action::r#type::ActionType;
 use crate::core::env::intent::Intent;
-use crate::core::env::position::Position;
 use crate::core::env::source::Source;
 use crate::core::env::source::Source::CustomCode;
 
 pub(crate) mod source;
-pub(crate) mod position;
 pub(crate) mod intent;
 
 #[derive(Clone)]
@@ -14,17 +12,15 @@ pub struct Env {
     source: Source,
     trigger: Source,
     intent: Option<Intent>,
-    position: Option<Position>,
 }
 
 impl Env {
 
-    pub(crate) fn new(source: Source, intent: Intent, position: Position) -> Self {
+    pub(crate) fn new(source: Source, intent: Intent) -> Self {
         Self {
             source: source.clone(),
             trigger: source,
             intent: Some(intent),
-            position: Some(position),
         }
     }
 
@@ -33,25 +29,22 @@ impl Env {
             source: CustomCode,
             trigger: CustomCode,
             intent: None,
-            position: None,
         }
     }
 
-    pub(crate) fn nested(&self, intent: Intent, position: Position) -> Self {
+    pub(crate) fn nested(&self, intent: Intent) -> Self {
         Self {
             source: self.source.clone(),
             trigger: self.trigger.clone(),
             intent: Some(intent),
-            position: Some(position),
         }
     }
 
-    pub(crate) fn alter_position(&self, position: Position) -> Self {
+    pub(crate) fn alter_position(&self) -> Self {
         Self {
             source: self.source.clone(),
             trigger: self.trigger.clone(),
             intent: self.intent,
-            position: Some(position),
         }
     }
 
@@ -60,7 +53,6 @@ impl Env {
             source: self.source.clone(),
             trigger,
             intent: self.intent,
-            position: self.position,
         }
     }
 
@@ -76,7 +68,4 @@ impl Env {
         self.intent
     }
 
-    pub(crate) fn position(&self) -> Option<Position> {
-        self.position
-    }
 }

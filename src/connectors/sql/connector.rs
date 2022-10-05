@@ -22,7 +22,6 @@ use crate::connectors::sql::save_session::SQLSaveSession;
 use crate::core::connector::Connector;
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
-use crate::core::env::position::Position;
 use crate::core::error::ActionError;
 use crate::core::input::AtomicUpdateType;
 use crate::core::input_decoder::str_to_target_type;
@@ -323,7 +322,7 @@ impl SQLConnector {
                                         format!("(VALUES {})", pairs)
                                     };
                                     let relation_where = format!("{} IN {}", before_in, after_in);
-                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), None, env.nested(Intent::NestedIncluded, Position::NestedMany)).await?;
+                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), None, env.nested(Intent::NestedIncluded)).await?;
                                     println!("see included: {:?}", included);
                                     for o in included {
                                         let owners = retval.iter().filter(|r| {
@@ -382,7 +381,7 @@ impl SQLConnector {
                                     };
                                     let relation_where = format!("{} IN {}", before_in, after_in);
                                     let path = key_path.as_ref() + relation_name;
-                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), Some(left_join), env.nested(Intent::NestedIncluded, Position::NestedMany)).await?;
+                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), Some(left_join), env.nested(Intent::NestedIncluded)).await?;
                                     println!("see included {:?}", included);
                                     for o in included {
                                         let owners = retval.iter().filter(|r| {

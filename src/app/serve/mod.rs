@@ -16,8 +16,6 @@ use crate::app::serve::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::action::r#type::ActionType::{Create, CreateMany, Delete, DeleteMany, FindFirst, FindMany, FindUnique, Update, UpdateMany};
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
-use crate::core::env::position::Position;
-use crate::core::env::position::Position::{RootMany, RootSingle};
 use crate::core::env::source::Source;
 use crate::core::graph::Graph;
 use crate::core::input::Input;
@@ -100,7 +98,7 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
                 "where": claims.id
             }),
         true,
-    Env::new(Source::CustomCode, Intent::FindUnique, Position::RootSingle)).await;
+    Env::new(Source::CustomCode, Intent::FindUnique)).await;
     if let Err(_) = identity {
         return Err(ActionError::invalid_auth_token())
     }
@@ -108,7 +106,7 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
 }
 
 async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::FindUnique, RootSingle);
+    let env = Env::new(source, Intent::FindUnique);
     let result = graph.find_unique(model.name(), input, false, env).await;
     match result {
         Ok(obj) => {
@@ -122,7 +120,7 @@ async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model, sou
 }
 
 async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::FindFirst, RootSingle);
+    let env = Env::new(source, Intent::FindFirst);
     let result = graph.find_first(model.name(), input, false, env).await;
     match result {
         Ok(obj) => {
@@ -136,7 +134,7 @@ async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model, sour
 }
 
 async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::FindMany, RootMany);
+    let env = Env::new(source, Intent::FindMany);
     let result = graph.find_many(model.name(), input, false, env).await;
     match result {
         Ok(results) => {
@@ -201,7 +199,7 @@ async fn handle_create_internal(graph: &Graph, create: Option<&JsonValue>, inclu
 }
 
 async fn handle_create(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::Create, RootSingle);
+    let env = Env::new(source, Intent::Create);
     let input = input.as_object().unwrap();
     let create = input.get("create");
     let include = input.get("include");
@@ -223,7 +221,7 @@ async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&
 }
 
 async fn handle_update(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::Update, RootSingle);
+    let env = Env::new(source, Intent::Update);
     let result = graph.find_unique(model.name(), input, true, env).await;
     if result.is_err() {
         return HttpResponse::NotFound().json(json!({"error": result.err()}));
@@ -245,7 +243,7 @@ async fn handle_update(graph: &Graph, input: &JsonValue, model: &Model, source: 
 }
 
 async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source.clone(), Intent::UpsertActuallyUpdate, RootSingle);
+    let env = Env::new(source.clone(), Intent::UpsertActuallyUpdate);
     let result = graph.find_unique(model.name(), input, true, env).await;
     let include = input.get("include");
     let select = input.get("select");
@@ -282,7 +280,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, source: 
         }
         Err(_) => {
             let create = input.get("create");
-            let env = Env::new(source.clone(), Intent::UpsertActuallyCreate, RootSingle);
+            let env = Env::new(source.clone(), Intent::UpsertActuallyCreate);
             let obj = graph.new_object(model.name(), env).unwrap();
             let set_json_result = match create {
                 Some(create) => {
@@ -316,7 +314,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, source: 
 }
 
 async fn handle_delete(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::Delete, RootSingle);
+    let env = Env::new(source, Intent::Delete);
     let result = graph.find_unique(model.name(), input, true, env).await;
     if result.is_err() {
         return HttpResponse::NotFound().json(json!({"error": result.err()}));
@@ -335,7 +333,7 @@ async fn handle_delete(graph: &Graph, input: &JsonValue, model: &Model, source: 
 }
 
 async fn handle_create_many(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::CreateMany, RootMany);
+    let env = Env::new(source, Intent::CreateMany);
     let input = input.as_object().unwrap();
     let create = input.get("create");
     let include = input.get("include");
@@ -369,7 +367,7 @@ async fn handle_create_many(graph: &Graph, input: &JsonValue, model: &Model, sou
 }
 
 async fn handle_update_many(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::UpdateMany, RootMany);
+    let env = Env::new(source, Intent::UpdateMany);
     let result = graph.find_many(model.name(), input, true, env).await;
     if result.is_err() {
         return HttpResponse::BadRequest().json(json!({"error": result.err()}));
@@ -400,7 +398,7 @@ async fn handle_update_many(graph: &Graph, input: &JsonValue, model: &Model, sou
 }
 
 async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::DeleteMany, RootMany);
+    let env = Env::new(source, Intent::DeleteMany);
     let result = graph.find_many(model.name(), input, true, env).await;
     if result.is_err() {
         return HttpResponse::BadRequest().json(json!({"error": result.err()}));
@@ -508,7 +506,7 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
         "where": {
             identity_key.unwrap(): identity_value.unwrap()
         }
-    }), true, Env::new(Source::CustomCode, Intent::FindUnique, Position::RootSingle)).await;
+    }), true, Env::new(Source::CustomCode, Intent::FindUnique)).await;
     if let Err(err) = obj_result {
         return ActionError::unexpected_input_value("This identity is not found.", path!["credentials", identity_key.unwrap()]).into();
     }
