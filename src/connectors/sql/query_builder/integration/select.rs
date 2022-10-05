@@ -220,7 +220,7 @@ pub(crate) fn build_where_input<'a>(model: &Model, graph: &Graph, r#where: Optio
         } else if let Some(relation) = model.relation(key) {
             panic!("not handle this yet")
             // let relation = model.relation(key).unwrap();
-            // let model_name = &relation.model;
+            // let model_name = relation.model();
             // let this_model = graph.model(model_name)?;
             // let (command, inner_where) = one_length_json_obj(value, "")?;
             // let _inner_where = build_where_input(this_model, graph, Some(inner_where))?;

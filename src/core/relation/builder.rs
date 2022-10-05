@@ -31,7 +31,7 @@ impl RelationBuilder {
             fields: Vec::new(),
             references: Vec::new(),
             auto: false,
-            delete_rule: DeleteRule::Nullify,
+            delete_rule: DeleteRule::Default,
             connector_builder,
         }
     }
@@ -132,6 +132,7 @@ impl RelationBuilder {
             is_vec: self.is_vec,
             fields: self.fields.clone(),
             references: self.references.clone(),
+            delete_rule: self.delete_rule,
         }
     }
 }

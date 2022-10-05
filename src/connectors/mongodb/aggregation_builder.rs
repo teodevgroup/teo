@@ -930,7 +930,7 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
             }
         } else {
             let relation = model.relation(key).unwrap();
-            let model_name = &relation.model;
+            let model_name = relation.model();
             let this_model = graph.model(model_name).unwrap();
             let (command, inner_where) = one_length_json_obj(value, &(path + key))?;
             let _inner_where = build_where_input(this_model, graph, Some(inner_where), &(path + key))?;
@@ -1103,16 +1103,16 @@ fn build_lookup_inputs(
             return Err(ActionError::invalid_query_input(format!("Relation '{key}' on model '{model_name}' is not exist. Please check your input.")));
         }
         let relation = relation.unwrap();
-        let relation_name = &relation.name;
-        let relation_model_name = &relation.model;
+        let relation_name = relation.name();
+        let relation_model_name = relation.model();
         let relation_model = graph.model(relation_model_name).unwrap();
         if value.is_boolean() || value.is_object() {
-            if relation.through.is_none() { // without join table
+            if relation.through().is_none() { // without join table
                 let mut let_value = doc!{};
                 let mut eq_values: Vec<Document> = vec![];
-                for (index, field_name) in relation.fields.iter().enumerate() {
+                for (index, field_name) in relation.fields().iter().enumerate() {
                     let field_name = model.field(field_name).unwrap().column_name();
-                    let reference_name = relation.references.get(index).unwrap();
+                    let reference_name = relation.references().get(index).unwrap();
                     let reference_name_column_name = relation_model.field(reference_name).unwrap().column_name();
                     let_value.insert(reference_name, format!("${field_name}"));
                     eq_values.push(doc!{"$eq": [format!("${reference_name_column_name}"), format!("$${reference_name}")]});
@@ -1156,23 +1156,23 @@ fn build_lookup_inputs(
                     retval.push(doc!{"$set": {relation_name: {"$reverseArray": format!("${relation_name}")}}});
                 }
             } else { // with join table
-                let join_model = graph.model(relation.through.as_ref().unwrap()).unwrap();
-                let local_relation_on_join_table = join_model.relation(relation.fields.get(0).unwrap()).unwrap();
-                let foreign_relation_on_join_table = join_model.relation(relation.references.get(0).unwrap()).unwrap();
-                let foreign_model_name = &foreign_relation_on_join_table.model;
+                let join_model = graph.model(relation.through().as_ref().unwrap()).unwrap();
+                let local_relation_on_join_table = join_model.relation(relation.fields().get(0).unwrap()).unwrap();
+                let foreign_relation_on_join_table = join_model.relation(relation.references().get(0).unwrap()).unwrap();
+                let foreign_model_name = foreign_relation_on_join_table.model();
                 let foreign_model = graph.model(foreign_model_name).unwrap();
                 let mut outer_let_value = doc!{};
                 let mut outer_eq_values: Vec<Document> = vec![];
                 let mut inner_let_value = doc!{};
                 let mut inner_eq_values: Vec<Document> = vec![];
-                for (index, join_table_field_name) in local_relation_on_join_table.fields.iter().enumerate() {
-                    let local_unique_field_name = local_relation_on_join_table.references.get(index).unwrap();
+                for (index, join_table_field_name) in local_relation_on_join_table.fields().iter().enumerate() {
+                    let local_unique_field_name = local_relation_on_join_table.references().get(index).unwrap();
                     let local_unique_field_column_name = model.field(local_unique_field_name).unwrap().column_name();
                     outer_let_value.insert(join_table_field_name, format!("${local_unique_field_column_name}"));
                     outer_eq_values.push(doc!{"$eq": [format!("${join_table_field_name}"), format!("$${join_table_field_name}")]});
                 }
-                for (index, join_table_reference_name) in foreign_relation_on_join_table.fields.iter().enumerate() {
-                    let foreign_unique_field_name = foreign_relation_on_join_table.references.get(index).unwrap();
+                for (index, join_table_reference_name) in foreign_relation_on_join_table.fields().iter().enumerate() {
+                    let foreign_unique_field_name = foreign_relation_on_join_table.references().get(index).unwrap();
                     let foreign_unique_field_column_name = foreign_model.field(foreign_unique_field_name).unwrap().column_name();
                     inner_let_value.insert(join_table_reference_name, format!("${join_table_reference_name}"));
                     inner_eq_values.push(doc!{"$eq": [format!("${foreign_unique_field_column_name}"), format!("$${join_table_reference_name}")]});

@@ -180,7 +180,7 @@ impl MongoDBConnector {
                     None
                 };
                 let relation = relation.unwrap();
-                let model_name = &relation.model;
+                let model_name = relation.model();
                 let object_bsons = document.get(key).unwrap().as_array().unwrap();
                 let mut related: Vec<Object> = vec![];
                 for related_object_bson in object_bsons {

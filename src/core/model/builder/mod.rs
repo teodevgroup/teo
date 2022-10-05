@@ -243,7 +243,7 @@ impl ModelBuilder {
         let mut primary = self.primary.clone();
         let mut indices = self.indices.clone();
         for relation in relations_vec.iter() {
-            relations_map.insert(relation.name.clone(), relation.clone());
+            relations_map.insert(relation.name().to_owned(), relation.clone());
         }
         for property in properties_vec.iter() {
             properties_map.insert(property.name.clone(), property.clone());

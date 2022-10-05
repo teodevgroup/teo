@@ -191,7 +191,7 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
             let field_name = &field.name;
             let field_cs_type = field.field_type.to_csharp_type(false);
             let ignore_this_field = if let Some(without_relation) = without_relation {
-                without_relation.fields.contains(k)
+                without_relation.fields().contains(k)
             } else {
                 false
             };
@@ -205,20 +205,20 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
                 });
             }
         } else if let Some(relation) = model.relation(k) {
-            let relation_name = &relation.name;
-            let relation_model_name = &relation.model;
+            let relation_name = relation.name();
+            let relation_model_name = relation.model();
             let relation_model = graph.model(relation_model_name).unwrap();
-            let num = if relation.is_vec { "Many" } else { "One" };
+            let num = if relation.is_vec() { "Many" } else { "One" };
             let ignore_this_field = if let Some(without_relation) = without_relation {
-                &without_relation.name == k
+                without_relation.name() == k
             } else {
                 false
             };
             if !ignore_this_field {
                 let without = if let Some(opposite_relation) = relation_model.relations().iter().find(|r| {
-                    r.fields == relation.references && r.references == relation.fields
+                    r.fields() == relation.references() && r.references() == relation.fields()
                 }) {
-                    let opposite_relation_name = opposite_relation.name.to_pascal_case();
+                    let opposite_relation_name = opposite_relation.name().to_pascal_case();
                     format!("Without{opposite_relation_name}")
                 } else {
                     "".to_owned()
@@ -457,7 +457,7 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
             let field_name = &field.name;
             let field_cs_type = field.field_type.to_csharp_update_input_type(field.optionality.is_optional(), true);
             let ignore_this_field = if let Some(without_relation) = without_relation {
-                without_relation.fields.contains(k)
+                without_relation.fields().contains(k)
             } else {
                 false
             };
@@ -471,20 +471,20 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
                 });
             }
         } else if let Some(relation) = model.relation(k) {
-            let relation_name = &relation.name;
-            let relation_model_name = &relation.model;
+            let relation_name = relation.name();
+            let relation_model_name = relation.model();
             let relation_model = graph.model(relation_model_name).unwrap();
-            let num = if relation.is_vec { "Many" } else { "One" };
+            let num = if relation.is_vec() { "Many" } else { "One" };
             let ignore_this_field = if let Some(without_relation) = without_relation {
-                &without_relation.name == k
+                &without_relation.name() == k
             } else {
                 false
             };
             if !ignore_this_field {
                 let without = if let Some(opposite_relation) = relation_model.relations().iter().find(|r| {
-                    r.fields == relation.references && r.references == relation.fields
+                    r.fields() == relation.references() && r.references() == relation.fields()
                 }) {
-                    let opposite_relation_name = opposite_relation.name.to_pascal_case();
+                    let opposite_relation_name = opposite_relation.name().to_pascal_case();
                     format!("Without{opposite_relation_name}")
                 } else {
                     "".to_owned()
@@ -586,9 +586,9 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _conf: &ClientConfiguration
                             j: None
                         });
                     } else if let Some(relation) = m.relation(k) {
-                        let relation_name = relation.name.to_pascal_case();
-                        let relation_type = &relation.model;
-                        let array = if relation.is_vec { "[]" } else { "" };
+                        let relation_name = relation.name().to_pascal_case();
+                        let relation_type = relation.model();
+                        let array = if relation.is_vec() { "[]" } else { "" };
                         model_fields.push(CSharpClassField {
                             n: relation_name,
                             t: format!("{relation_type}{array}"),
@@ -634,10 +634,10 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _conf: &ClientConfiguration
                 // include
                 let mut include_fields = Vec::<CSharpClassField>::new();
                 for relation in m.relations() {
-                    let name = &relation.name;
-                    let is_vec = relation.is_vec;
+                    let name = relation.name();
+                    let is_vec = relation.is_vec();
                     let find_many = if is_vec { "FindMany" } else { "" };
-                    let r_model = &relation.model;
+                    let r_model = relation.model();
                     include_fields.push(CSharpClassField {
                         n: name.to_pascal_case(),
                         t: format!("OneOf<bool, {r_model}{find_many}Args>"),
@@ -689,9 +689,9 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _conf: &ClientConfiguration
                             j: None,
                         });
                     } else if let Some(relation) = m.relation(k) {
-                        let list = if relation.is_vec { "List" } else { "" };
-                        let relation_name = &relation.name;
-                        let relation_model = &relation.model;
+                        let list = if relation.is_vec() { "List" } else { "" };
+                        let relation_name = relation.name();
+                        let relation_model = relation.model();
                         where_fields.push(CSharpClassField {
                             n: relation_name.to_pascal_case(),
                             t: format!("{relation_model}{list}RelationFilter"),
@@ -821,10 +821,10 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _conf: &ClientConfiguration
                 c.indented(generate_model_create_nested_input(graph, m, None, false));
                 c.indented(generate_model_create_or_connect_input(m, None));
                 m.relations().iter().for_each(|r| {
-                    c.indented(generate_model_create_input(graph, m, Some(&r.name)));
-                    c.indented(generate_model_create_nested_input(graph, m, Some(&r.name), true));
-                    c.indented(generate_model_create_nested_input(graph, m, Some(&r.name), false));
-                    c.indented(generate_model_create_or_connect_input(m, Some(&r.name)));
+                    c.indented(generate_model_create_input(graph, m, Some(r.name())));
+                    c.indented(generate_model_create_nested_input(graph, m, Some(r.name()), true));
+                    c.indented(generate_model_create_nested_input(graph, m, Some(r.name()), false));
+                    c.indented(generate_model_create_or_connect_input(m, Some(r.name())));
                 });
                 c.indented(generate_model_update_input(graph, m, None));
                 c.indented(generate_model_update_nested_input(graph, m, None, true));
@@ -833,12 +833,12 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _conf: &ClientConfiguration
                 c.indented(generate_model_update_with_where_unique_input(m, None));
                 c.indented(generate_model_update_many_with_where_input(m, None));
                 m.relations().iter().for_each(|r| {
-                    c.indented(generate_model_update_input(graph, m, Some(&r.name)));
-                    c.indented(generate_model_update_nested_input(graph, m, Some(&r.name), true));
-                    c.indented(generate_model_update_nested_input(graph, m, Some(&r.name), false));
-                    c.indented(generate_model_upsert_with_where_unique_input(m, Some(&r.name)));
-                    c.indented(generate_model_update_with_where_unique_input(m, Some(&r.name)));
-                    c.indented(generate_model_update_many_with_where_input(m, Some(&r.name)));
+                    c.indented(generate_model_update_input(graph, m, Some(r.name())));
+                    c.indented(generate_model_update_nested_input(graph, m, Some(r.name()), true));
+                    c.indented(generate_model_update_nested_input(graph, m, Some(r.name()), false));
+                    c.indented(generate_model_upsert_with_where_unique_input(m, Some(r.name())));
+                    c.indented(generate_model_update_with_where_unique_input(m, Some(r.name())));
+                    c.indented(generate_model_update_many_with_where_input(m, Some(r.name())));
                 });
                 if m.identity() {
                     c.indented(generate_model_credentials_input(m));

@@ -171,7 +171,7 @@ impl Object {
                 let (command, command_input) = one_length_json_obj(relation_object, &(path + key))?;
                 match command {
                     "create" | "createMany" => {
-                        if !relation.is_vec && command == "createMany" {
+                        if !relation.is_vec() && command == "createMany" {
                             return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                         }
                         let entries = input_to_vec(command_input, path)?;
@@ -204,16 +204,16 @@ impl Object {
                         let graph = self.graph();
                         let entries = input_to_vec(command_input, path)?;
                         for entry in entries {
-                            let model = graph.model(&relation.model).unwrap();
-                            if !relation.is_vec && (relation.optionality.is_required()) {
+                            let model = graph.model(relation.model()).unwrap();
+                            if !relation.is_vec() && (relation.is_required()) {
                                 return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                             }
                             let opposite_relation = model.relations().iter().find(|r| {
-                                r.fields == relation.references && r.references == relation.fields
+                                r.fields() == relation.references() && r.references() == relation.fields()
                             });
                             if opposite_relation.is_some() {
                                 let opposite_relation = opposite_relation.unwrap();
-                                if !opposite_relation.is_vec && (opposite_relation.optionality.is_required()) {
+                                if !opposite_relation.is_vec() && (opposite_relation.is_required()) {
                                     return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                                 }
                             }
@@ -221,7 +221,7 @@ impl Object {
                         }
                     }
                     "update" | "updateMany" => {
-                        if !relation.is_vec && command == "updateMany" {
+                        if !relation.is_vec() && command == "updateMany" {
                             return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                         }
                         let entries = input_to_vec(command_input, path)?;
@@ -239,21 +239,21 @@ impl Object {
                         if self.is_new() {
                             return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                         }
-                        if !relation.is_vec && command == "deleteMany" {
+                        if !relation.is_vec() && command == "deleteMany" {
                             return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                         }
                         let graph = self.graph();
-                        let model_name = &relation.model;
+                        let model_name = relation.model();
                         let model = graph.model(model_name).unwrap();
-                        if !relation.is_vec && (relation.optionality.is_required()) {
+                        if !relation.is_vec() && (relation.is_required()) {
                             return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                         }
                         let opposite_relation = model.relations().iter().find(|r| {
-                            r.fields == relation.references && r.references == relation.fields
+                            r.fields() == relation.references() && r.references() == relation.fields()
                         });
                         if opposite_relation.is_some() {
                             let opposite_relation = opposite_relation.unwrap();
-                            if !opposite_relation.is_vec && (opposite_relation.optionality.is_required()) {
+                            if !opposite_relation.is_vec() && (opposite_relation.is_required()) {
                                 return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
                             }
                         }
@@ -450,7 +450,7 @@ impl Object {
                 match self.inner.relation_query_map.lock().unwrap().get(&key.to_string()) {
                     Some(list) => {
                         let relation = self.model().relation(&key).unwrap();
-                        if relation.is_vec {
+                        if relation.is_vec() {
                             let vec = list.iter().map(|o| Value::Object(o.clone())).collect();
                             Ok(Value::Vec(vec))
                         } else {
@@ -637,15 +637,15 @@ impl Object {
     }
 
     async fn handle_manipulation(&self, relation: &Relation, manipulation: &RelationManipulation, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
-        let _many = relation.is_vec;
+        let _many = relation.is_vec();
         use RelationManipulation::*;
         let graph = self.graph();
         match manipulation {
             Create(entry) => {
                 let env = self.env().nested(Intent::NestedCreate);
-                let new_object = graph.new_object(&relation.model, env)?;
+                let new_object = graph.new_object(relation.model(), env)?;
                 new_object.set_json(entry).await?;
-                if relation.through.is_none() {
+                if relation.through().is_none() {
                     self.link_connect(&new_object, relation, session.clone()).await?;
                 }
                 new_object._save(session.clone(), false, &(path + relation.name())).await?;
@@ -655,10 +655,10 @@ impl Object {
                 let r#where = entry.as_object().unwrap().get("where").unwrap();
                 let create = entry.as_object().unwrap().get("create").unwrap();
                 let env = self.env().nested(Intent::NestedConnectOrCreateActuallyConnect);
-                let unique_result = graph.find_unique(&relation.model, &json!({"where": r#where}), true, env).await;
+                let unique_result = graph.find_unique(relation.model(), &json!({"where": r#where}), true, env).await;
                 match unique_result {
                     Ok(exist_object) => {
-                        if relation.through.is_none() {
+                        if relation.through().is_none() {
                             self.link_connect(&exist_object, relation, session.clone()).await?;
                         }
                         exist_object._save(session.clone(), false, &(path + relation.name())).await?;
@@ -666,9 +666,9 @@ impl Object {
                     }
                     Err(_err) => {
                         let env = self.env().nested(Intent::NestedConnectOrCreateActuallyCreate);
-                        let new_obj = graph.new_object(&relation.model, env)?;
+                        let new_obj = graph.new_object(relation.model(), env)?;
                         new_obj.set_json(create).await?;
-                        if relation.through.is_none() {
+                        if relation.through().is_none() {
                             self.link_connect(&new_obj, relation, session.clone()).await?;
                         }
                         new_obj._save(session.clone(), false, &(path + relation.name())).await?;
@@ -679,8 +679,8 @@ impl Object {
             Connect(entry) | Set(entry) => {
                 let unique_query = json!({"where": entry});
                 let env = self.env().nested(Intent::NestedConnect);
-                let exist_object = graph.find_unique(&relation.model, &unique_query, true, env).await?;
-                if relation.through.is_none() {
+                let exist_object = graph.find_unique(relation.model(), &unique_query, true, env).await?;
+                if relation.through().is_none() {
                     self.link_connect(&exist_object, relation, session.clone()).await?;
                 }
                 exist_object._save(session.clone(), false, &(path + relation.name())).await?;
@@ -690,7 +690,7 @@ impl Object {
                 let env = self.env().nested(Intent::NestedUpdate);
                 let r#where = entry.get("where").unwrap();
                 let update = entry.get("update").unwrap();
-                let model_name = &relation.model;
+                let model_name = relation.model();
                 let the_object = graph.find_unique(model_name, &json!({"where": r#where}), true, env).await;
                 if the_object.is_err() {
                     return Err(ActionError::object_not_found());
@@ -704,7 +704,7 @@ impl Object {
                 let r#where = entry.as_object().unwrap().get("where").unwrap();
                 let create = entry.as_object().unwrap().get("create").unwrap();
                 let update = entry.as_object().unwrap().get("update").unwrap();
-                let the_object = graph.find_unique(&relation.model, &json!({"where": r#where}), true, env).await;
+                let the_object = graph.find_unique(relation.model(), &json!({"where": r#where}), true, env).await;
                 match the_object {
                     Ok(obj) => {
                         obj.set_json(update).await?;
@@ -712,9 +712,9 @@ impl Object {
                     }
                     Err(_) => {
                         let env = self.env().nested(Intent::NestedUpsertActuallyCreate);
-                        let new_obj = graph.new_object(&relation.model, env)?;
+                        let new_obj = graph.new_object(relation.model(), env)?;
                         new_obj.set_json(create).await?;
-                        if relation.through.is_none() {
+                        if relation.through().is_none() {
                             self.link_connect(&new_obj, relation, session.clone()).await?;
                         }
                         new_obj._save(session.clone(), false, &(path + relation.name())).await?;
@@ -725,13 +725,13 @@ impl Object {
             Disconnect(entry) => {
                 let env = self.env().nested(Intent::NestedDisconnect);
                 let unique_query = json!({"where": entry});
-                let object_to_disconnect = graph.find_unique(&relation.model, &unique_query, true, env).await?;
+                let object_to_disconnect = graph.find_unique(relation.model(), &unique_query, true, env).await?;
                 self.link_disconnect(&object_to_disconnect, relation, session.clone()).await?;
             }
             Delete(entry) => {
                 let env = self.env().nested(Intent::NestedDelete);
                 let r#where = entry;
-                let the_object = graph.find_unique(&relation.model, &json!({"where": r#where}), true, env).await;
+                let the_object = graph.find_unique(relation.model(), &json!({"where": r#where}), true, env).await;
                 if the_object.is_err() {
                     return Err(ActionError::object_not_found());
                 }
@@ -753,32 +753,32 @@ impl Object {
     }
 
     pub(crate) async fn link_connect(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> ActionResult<()> {
-        match &relation.through {
+        match &relation.through() {
             Some(through) => { // with join table
                 let relation_model = self.graph().model(through).unwrap();
                 let env = self.env().nested(Intent::NestedJoinTableRecordCreate);
                 let relation_object = self.graph().new_object(through, env)?;
                 relation_object.set_json(&json!({})).await?;
-                let local_relation_name = relation.fields.get(0).unwrap();
-                let foreign_relation_name = relation.references.get(0).unwrap();
+                let local_relation_name = relation.fields().get(0).unwrap();
+                let foreign_relation_name = relation.references().get(0).unwrap();
                 let local_relation = relation_model.relation(local_relation_name).unwrap();
                 let foreign_relation = relation_model.relation(foreign_relation_name).unwrap();
-                for (index, field_name) in local_relation.fields.iter().enumerate() {
-                    let local_field_name = local_relation.references.get(index).unwrap();
+                for (index, field_name) in local_relation.fields().iter().enumerate() {
+                    let local_field_name = local_relation.references().get(index).unwrap();
                     let val = self.get_value(local_field_name).unwrap();
                     relation_object.set_value(field_name, val.clone()).unwrap();
                 }
-                for (index, field_name) in foreign_relation.fields.iter().enumerate() {
-                    let foreign_field_name = foreign_relation.references.get(index).unwrap();
+                for (index, field_name) in foreign_relation.fields().iter().enumerate() {
+                    let foreign_field_name = foreign_relation.references().get(index).unwrap();
                     let val = obj.get_value(foreign_field_name).unwrap();
                     relation_object.set_value(field_name, val.clone()).unwrap();
                 }
                 relation_object._save(session.clone(), false, &path![]).await?;
             }
             None => { // no join table
-                for (index, reference) in relation.references.iter().enumerate() {
-                    let field_name = relation.fields.get(index).unwrap();
-                    if relation.is_vec {
+                for (index, reference) in relation.references().iter().enumerate() {
+                    let field_name = relation.fields().get(index).unwrap();
+                    if relation.is_vec() {
                         // if relation is vec, otherwise must have saved the value
                         let local_value = self.get_value(field_name)?;
                         if !local_value.is_null() {
@@ -809,22 +809,22 @@ impl Object {
     }
 
     pub(crate) async fn link_disconnect(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> ActionResult<()> {
-        match &relation.through {
+        match relation.through() {
             Some(through) => { // with join table
                 let env = self.env().nested(Intent::NestedJoinTableRecordDelete);
                 let relation_model = self.graph().model(through).unwrap();
                 let mut finder: Map<String, JsonValue> = Map::new();
-                let local_relation_name = relation.fields.get(0).unwrap();
-                let foreign_relation_name = relation.references.get(0).unwrap();
+                let local_relation_name = relation.fields().get(0).unwrap();
+                let foreign_relation_name = relation.references().get(0).unwrap();
                 let local_relation = relation_model.relation(local_relation_name).unwrap();
                 let foreign_relation = relation_model.relation(foreign_relation_name).unwrap();
-                for (index, field_name) in local_relation.fields.iter().enumerate() {
-                    let local_field_name = local_relation.references.get(index).unwrap();
+                for (index, field_name) in local_relation.fields().iter().enumerate() {
+                    let local_field_name = local_relation.references().get(index).unwrap();
                     let val = self.get_value(local_field_name).unwrap();
                     finder.insert(field_name.to_string(), val.to_json_value());
                 }
-                for (index, field_name) in foreign_relation.fields.iter().enumerate() {
-                    let foreign_field_name = foreign_relation.references.get(index).unwrap();
+                for (index, field_name) in foreign_relation.fields().iter().enumerate() {
+                    let foreign_field_name = foreign_relation.references().get(index).unwrap();
                     let val = obj.get_value(foreign_field_name).unwrap();
                     finder.insert(field_name.to_string(), val.to_json_value());
                 }
@@ -832,8 +832,8 @@ impl Object {
                 relation_object.delete_from_database(session.clone(), false).await?;
             }
             None => { // no join table
-                for (index, reference) in relation.references.iter().enumerate() {
-                    let field_name = relation.fields.get(index).unwrap();
+                for (index, reference) in relation.references().iter().enumerate() {
+                    let field_name = relation.fields().get(index).unwrap();
                     let local_value = self.get_value(field_name)?;
                     let foreign_value = obj.get_value(reference)?;
                     let local_field = self.model().field(field_name).unwrap();
@@ -856,14 +856,14 @@ impl Object {
     }
 
     fn relation_that_object_save_first(&self, relation: &Relation) -> bool {
-        if relation.through.is_some() {
+        if relation.through().is_some() {
             return false;
         }
         let primary_field_names = self.model().primary_field_names().iter().map(|n| n.to_string()).collect::<Vec<String>>();
         if relation.fields() == &primary_field_names {
             return false;
         }
-        let relation_model = self.graph().model(&relation.model).unwrap();
+        let relation_model = self.graph().model(relation.model()).unwrap();
         let relation_primary_field_names = relation_model.primary_field_names().iter().map(|n| n.to_string()).collect::<Vec<String>>();
         if relation.references() == &relation_primary_field_names {
             return true;
@@ -888,7 +888,7 @@ impl Object {
         if !no_recursive {
             for relation in self.model().relations() {
                 if self.relation_that_object_save_first(relation) {
-                    let name = &relation.name;
+                    let name = relation.name();
                     let map = self.inner.relation_mutation_map.lock().unwrap();
                     let vec_option = map.get(name);
                     match vec_option {
@@ -915,7 +915,7 @@ impl Object {
         if !no_recursive {
             for relation in self.model().relations() {
                 if self.relation_this_object_save_first(relation) {
-                    let name = &relation.name;
+                    let name = relation.name();
                     let map = self.inner.relation_mutation_map.lock().unwrap();
                     let vec_option = map.get(name);
                     match vec_option {
@@ -966,7 +966,15 @@ impl Object {
 
     pub async fn delete(&self) -> ActionResult<()> {
         let connector = self.graph().connector();
-        connector.delete_object(self).await
+        connector.delete_object(self).await?;
+        for relation in self.model().relations() {
+            if relation.through().is_some() {
+                // define on direct relation, do not define on indirect relation
+                continue;
+            }
+            relation.delete_rule();
+        }
+        Ok(())
     }
 
     pub(crate) async fn to_json(&self) -> ActionResult<JsonValue> {
@@ -1101,8 +1109,8 @@ impl Object {
         let relation = relation.unwrap();
         // find object
         let mut finder_where = json!({});
-        for (index, local_field_name) in relation.fields.iter().enumerate() {
-            let foreign_field_name = relation.references.get(index).unwrap();
+        for (index, local_field_name) in relation.fields().iter().enumerate() {
+            let foreign_field_name = relation.references().get(index).unwrap();
             let value = self.get_value(local_field_name).unwrap();
             if value == Value::Null {
                 return Ok(None);
@@ -1119,7 +1127,7 @@ impl Object {
                 finder.as_object_mut().unwrap().insert("select".to_owned(), select.clone());
             }
         }
-        let relation_model_name = &relation.model;
+        let relation_model_name = relation.model();
         let graph = self.graph();
         let env = self.env().nested(Intent::NestedIncluded);
         match graph.find_unique(relation_model_name, &finder, false, env).await {
@@ -1154,7 +1162,7 @@ impl Object {
             &empty
         };
         let env = self.env().nested(Intent::NestedIncluded);
-        if let Some(_join_table) = &relation.through {
+        if let Some(_join_table) = relation.through() {
             let identifier = self.json_identifier();
             let new_self = self.graph().find_unique(model.name(), &json!({
                 "where": identifier,
@@ -1175,8 +1183,8 @@ impl Object {
             if finder.as_object().unwrap().get("where").is_none() {
                 finder.as_object_mut().unwrap().insert("where".to_string(), json!({}));
             }
-            for (index, local_field_name) in relation.fields.iter().enumerate() {
-                let foreign_field_name = relation.references.get(index).unwrap();
+            for (index, local_field_name) in relation.fields().iter().enumerate() {
+                let foreign_field_name = relation.references().get(index).unwrap();
                 let value = self.get_value(local_field_name).unwrap();
                 if value == Value::Null {
                     return Ok(vec![]);
@@ -1184,7 +1192,7 @@ impl Object {
                 let json_value = value.to_json_value();
                 finder.as_object_mut().unwrap().get_mut("where").unwrap().as_object_mut().unwrap().insert(foreign_field_name.to_owned(), json_value);
             }
-            let relation_model_name = &relation.model;
+            let relation_model_name = relation.model();
             let graph = self.graph();
             let results = graph.find_many(relation_model_name, &finder, false, env).await?;
             self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), results.clone());

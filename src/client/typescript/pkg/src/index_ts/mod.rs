@@ -78,7 +78,7 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
                     let field_name = &field.name;
                     let field_ts_type = field.field_type.to_typescript_create_input_type(field.optionality.is_optional());
                     if let Some(without_relation) = without_relation {
-                        if !without_relation.fields.contains(k) {
+                        if !without_relation.fields().contains(k) {
                             b.doc(field_doc(field));
                             b.line(format!("{field_name}?: {field_ts_type}"));
                         }
@@ -87,16 +87,16 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
                         b.line(format!("{field_name}?: {field_ts_type}"));
                     }
                 } else if let Some(relation) = model.relation(k) {
-                    let relation_name = &relation.name;
-                    let relation_model_name = &relation.model;
+                    let relation_name = relation.name();
+                    let relation_model_name = relation.model();
                     let relation_model = graph.model(relation_model_name).unwrap();
-                    let num = if relation.is_vec { "Many" } else { "One" };
+                    let num = if relation.is_vec() { "Many" } else { "One" };
                     if let Some(without_relation) = without_relation {
-                        if &without_relation.name != k {
+                        if without_relation.name() != k {
                             if let Some(opposite_relation) = relation_model.relations().iter().find(|r| {
-                                r.fields == relation.references && r.references == relation.fields
+                                r.fields() == relation.references() && r.references() == relation.fields()
                             }) {
-                                let opposite_relation_name = opposite_relation.name.to_pascal_case();
+                                let opposite_relation_name = opposite_relation.name().to_pascal_case();
                                 b.doc(relation_doc(relation));
                                 b.line(format!("{relation_name}?: {relation_model_name}CreateNested{num}Without{opposite_relation_name}Input"))
                             } else {
@@ -106,9 +106,9 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
                         }
                     } else {
                         if let Some(opposite_relation) = relation_model.relations().iter().find(|r| {
-                            r.fields == relation.references && r.references == relation.fields
+                            r.fields() == relation.references() && r.references() == relation.fields()
                         }) {
-                            let opposite_relation_name = opposite_relation.name.to_pascal_case();
+                            let opposite_relation_name = opposite_relation.name().to_pascal_case();
                             b.doc(relation_doc(relation));
                             b.line(format!("{relation_name}?: {relation_model_name}CreateNested{num}Without{opposite_relation_name}Input"))
                         } else {
@@ -254,16 +254,16 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
                     b.doc(field_doc(field));
                     b.line(format!("{field_name}?: {field_ts_type}"));
                 } else if let Some(relation) = model.relation(k) {
-                    let relation_name = &relation.name;
-                    let relation_model_name = &relation.model;
+                    let relation_name = relation.name();
+                    let relation_model_name = relation.model();
                     let relation_model = graph.model(relation_model_name).unwrap();
-                    let num = if relation.is_vec { "Many" } else { "One" };
+                    let num = if relation.is_vec() { "Many" } else { "One" };
                     if let Some(without_relation) = without_relation {
-                        if &without_relation.name != k {
+                        if without_relation.name() != k {
                             if let Some(opposite_relation) = relation_model.relations().iter().find(|r| {
-                                r.fields == relation.references && r.references == relation.fields
+                                r.fields() == relation.references() && r.references() == relation.fields()
                             }) {
-                                let opposite_relation_name = opposite_relation.name.to_pascal_case();
+                                let opposite_relation_name = opposite_relation.name().to_pascal_case();
                                 b.doc(relation_doc(relation));
                                 b.line(format!("{relation_name}?: {relation_model_name}UpdateNested{num}Without{opposite_relation_name}Input"))
                             } else {
@@ -273,9 +273,9 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
                         }
                     } else {
                         if let Some(opposite_relation) = relation_model.relations().iter().find(|r| {
-                            r.fields == relation.references && r.references == relation.fields
+                            r.fields() == relation.references() && r.references() == relation.fields()
                         }) {
-                            let opposite_relation_name = opposite_relation.name.to_pascal_case();
+                            let opposite_relation_name = opposite_relation.name().to_pascal_case();
                             b.doc(relation_doc(relation));
                             b.line(format!("{relation_name}?: {relation_model_name}UpdateNested{num}Without{opposite_relation_name}Input"))
                         } else {
@@ -371,10 +371,10 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
             // include
             c.block(format!("export type {model_name}Include = {{"), |b| {
                 for relation in m.relations() {
-                    let name = &relation.name;
-                    let is_vec = relation.is_vec;
+                    let name = relation.name();
+                    let is_vec = relation.is_vec();
                     let find_many = if is_vec { "FindMany" } else { "" };
-                    let r_model = &relation.model;
+                    let r_model = relation.model();
                     b.doc(relation_doc(relation));
                     b.line(format!("{name}?: boolean | {r_model}{find_many}Args"));
                 }
@@ -391,9 +391,9 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                         b.doc(field_doc(field));
                         b.line(format!("{field_name}?: {field_filter}"));
                     } else if let Some(relation) = m.relation(k) {
-                        let list = if relation.is_vec { "List" } else { "" };
-                        let relation_name = &relation.name;
-                        let relation_model = &relation.model;
+                        let list = if relation.is_vec() { "List" } else { "" };
+                        let relation_name = relation.name();
+                        let relation_model = relation.model();
                         b.doc(relation_doc(relation));
                         b.line(format!("{relation_name}?: {relation_model}{list}RelationFilter"));
                     }
@@ -438,8 +438,8 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                         b.doc(field_doc(field));
                         b.line(format!("{field_name}?: SortOrder"));
                     } else if let Some(relation) = m.relation(k) {
-                        let _relation_model = &relation.model;
-                        let _relation_name = &relation.name;
+                        let _relation_model = relation.model();
+                        let _relation_name = relation.name();
                         //b.line(format!("{relation_name}?: {relation_model}OrderByRelationAggregateInput"));
                     }
                 })
@@ -450,10 +450,10 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
             c.line(generate_model_create_nested_input(graph, m, None, false));
             c.line(generate_model_create_or_connect_input(m, None));
             m.relations().iter().for_each(|r| {
-                c.line(generate_model_create_input(graph, m, Some(&r.name)));
-                c.line(generate_model_create_nested_input(graph, m, Some(&r.name), true));
-                c.line(generate_model_create_nested_input(graph, m, Some(&r.name), false));
-                c.line(generate_model_create_or_connect_input(m, Some(&r.name)));
+                c.line(generate_model_create_input(graph, m, Some(r.name())));
+                c.line(generate_model_create_nested_input(graph, m, Some(r.name()), true));
+                c.line(generate_model_create_nested_input(graph, m, Some(r.name()), false));
+                c.line(generate_model_create_or_connect_input(m, Some(r.name())));
             });
             c.line(generate_model_update_input(graph, m, None));
             c.line(generate_model_update_nested_input(graph, m, None, true));
@@ -462,12 +462,12 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
             c.line(generate_model_update_with_where_unique_input(m, None));
             c.line(generate_model_update_many_with_where_input(m, None));
             m.relations().iter().for_each(|r| {
-                c.line(generate_model_update_input(graph, m, Some(&r.name)));
-                c.line(generate_model_update_nested_input(graph, m, Some(&r.name), true));
-                c.line(generate_model_update_nested_input(graph, m, Some(&r.name), false));
-                c.line(generate_model_upsert_with_where_unique_input(m, Some(&r.name)));
-                c.line(generate_model_update_with_where_unique_input(m, Some(&r.name)));
-                c.line(generate_model_update_many_with_where_input(m, Some(&r.name)));
+                c.line(generate_model_update_input(graph, m, Some(r.name())));
+                c.line(generate_model_update_nested_input(graph, m, Some(r.name()), true));
+                c.line(generate_model_update_nested_input(graph, m, Some(r.name()), false));
+                c.line(generate_model_upsert_with_where_unique_input(m, Some(r.name())));
+                c.line(generate_model_update_with_where_unique_input(m, Some(r.name())));
+                c.line(generate_model_update_many_with_where_input(m, Some(r.name())));
             });
             if m.identity() {
                 c.line(generate_model_credentials_input(m));
@@ -538,11 +538,11 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
                             b.block(format!("? SelectSubset<{model_name}, S> & {{"), |b| {
                                 b.block(format!("[P in ExistKeys<S['include']>]:"), |b| {
                                     for relation in m.relations() {
-                                        let name = &relation.name;
-                                        let is_array = relation.is_vec;
-                                        let required = relation.optionality.is_required();
+                                        let name = relation.name();
+                                        let is_array = relation.is_vec();
+                                        let required = relation.is_required();
                                         let required_mark = if required { "" } else { " | undefined" };
-                                        let r_model = &relation.model;
+                                        let r_model = relation.model();
                                         let array_prefix = if is_array { "Array<" } else { "" };
                                         let array_suffix = if is_array { ">" } else { "" };
                                         b.line(format!("P extends '{name}' ? {array_prefix}{r_model}GetPayload<S['include'][P]>{array_suffix}{required_mark} :"));

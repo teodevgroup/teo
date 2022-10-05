@@ -152,7 +152,7 @@ impl SQLConnector {
                 //     None
                 // };
                 // let relation = relation.unwrap();
-                // let model_name = &relation.model;
+                // let model_name = relation.model();
                 // let object_bsons = document.get(key).unwrap().as_array().unwrap();
                 // let mut related: Vec<Object> = vec![];
                 // for related_object_bson in object_bsons {
@@ -295,10 +295,10 @@ impl SQLConnector {
                                 return Err(ActionError::unexpected_input_value("bool or object", &path));
                             };
                             if let Some(nested_include) = nested_include {
-                                if relation.through.is_none() { // no join tables
-                                    let relation_model = graph.model(&relation.model).unwrap();
-                                    let left_fields = &relation.fields;
-                                    let right_fields = &relation.references;
+                                if relation.through().is_none() { // no join tables
+                                    let relation_model = graph.model(relation.model()).unwrap();
+                                    let left_fields = relation.fields();
+                                    let right_fields = relation.references();
                                     let path = key_path.as_ref() + relation_name;
                                     // todo: transform to column name
                                     let before_in: String = if right_fields.len() == 1 {
@@ -342,11 +342,11 @@ impl SQLConnector {
                                         }
                                     }
                                 } else { // with join tables
-                                    let relation_model = graph.model(&relation.model).unwrap();
+                                    let relation_model = graph.model(relation.model()).unwrap();
                                     let relation_model_table_name = relation_model.table_name();
-                                    let through_model = graph.model(&relation.through.as_ref().unwrap()).unwrap();
+                                    let through_model = graph.model(&relation.through().as_ref().unwrap()).unwrap();
                                     let through_table_name = through_model.table_name();
-                                    let through_relation = through_model.relation(relation.references.get(0).unwrap()).unwrap();
+                                    let through_relation = through_model.relation(relation.references().get(0).unwrap()).unwrap();
                                     let mut join_parts: Vec<String> = vec![];
                                     for (index, field_name) in through_relation.fields().iter().enumerate() {
                                         let reference_name = through_relation.references().get(index).unwrap();
@@ -354,9 +354,9 @@ impl SQLConnector {
                                     }
                                     let joins = join_parts.join(" AND ");
                                     let left_join = format!("{} AS j ON {}", through_table_name, joins);
-                                    let this_relation_on_join_table = through_model.relation(relation.fields.get(0).unwrap()).unwrap();
-                                    let left_fields = &this_relation_on_join_table.references;
-                                    let right_fields = &this_relation_on_join_table.fields;
+                                    let this_relation_on_join_table = through_model.relation(relation.fields().get(0).unwrap()).unwrap();
+                                    let left_fields = this_relation_on_join_table.references();
+                                    let right_fields = this_relation_on_join_table.fields();
                                     let before_in: String = if right_fields.len() == 1 {
                                         "j.".to_owned() + right_fields.get(0).unwrap()
                                     } else {
