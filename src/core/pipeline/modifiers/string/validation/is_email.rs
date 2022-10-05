@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use regex::Regex;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
-use crate::core::pipeline::context::Validity::Invalid;
+use crate::core::pipeline::context::validity::Validity::Invalid;
 
 #[derive(Debug, Clone)]
 pub struct IsEmailModifier {

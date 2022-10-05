@@ -1,12 +1,11 @@
 use std::fmt::{Debug, Formatter};
 use std::future::Future;
-
 use std::sync::Arc;
 use async_trait::async_trait;
 use futures_util::future::BoxFuture;
-
 use crate::core::pipeline::modifier::Modifier;
-use crate::core::pipeline::context::{Context, Validity};
+use crate::core::pipeline::context::Context;
+use crate::core::pipeline::context::validity::Validity;
 use crate::core::value::Value;
 
 pub trait ValidateArgument<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync>: Send + Sync {

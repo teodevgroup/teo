@@ -20,6 +20,7 @@ use crate::connectors::mongodb::utils::bson_identifier;
 use crate::connectors::shared::has_negative_take::has_negative_take;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::core::connector::Connector;
+use crate::core::env::Env;
 use crate::core::object::Object;
 use crate::core::field::Sort;
 use crate::core::field::r#type::FieldType;
@@ -664,7 +665,7 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder, &path![])?;
@@ -679,14 +680,14 @@ impl Connector for MongoDBConnector {
             return Err(ActionError::object_not_found());
         }
         for doc in results {
-            let obj = graph.new_object(model.name())?;
+            let obj = graph.new_object(model.name(), env)?;
             self.document_to_object(&doc.unwrap(), &obj, select, include)?;
             return Ok(obj);
         }
         Err(ActionError::object_not_found())
     }
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, &path![])?;
@@ -701,7 +702,7 @@ impl Connector for MongoDBConnector {
         let mut result: Vec<Object> = vec![];
         let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
         for doc in results {
-            let obj = graph.new_object(model.name())?;
+            let obj = graph.new_object(model.name(), env.clone())?;
             match self.document_to_object(&doc.unwrap(), &obj, select, include) {
                 Ok(_) => {
                     if reverse {

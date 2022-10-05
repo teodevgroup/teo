@@ -26,7 +26,7 @@ pub enum ActionErrorType {
     // request destination
     DestinationNotFound,
 
-    // request format
+    // request input
     IncorrectJSONFormat,
     UnexpectedInputRootType,
     UnexpectedInputType,
@@ -35,14 +35,17 @@ pub enum ActionErrorType {
     MissingRequiredInput,
     UnexpectedObjectLength,
 
-    // request
+    // request token
+    InvalidAuthToken,
+
+    // request permission
+    PermissionDenied,
+
+    // response destination
     ObjectNotFound,
 
-    // request token
-    InvalidJWTToken,
-
-    // permission
-    PermissionDenied,
+    // response output
+    UnexpectedOutputException,
 
     // object api
     InvalidKey,
@@ -68,7 +71,7 @@ impl ActionErrorType {
             ActionErrorType::ObjectNotFound => { 404 }
             ActionErrorType::FieldIsNotUnique => { 400 }
             ActionErrorType::InvalidAuthorizationFormat => { 401 }
-            ActionErrorType::InvalidJWTToken => { 401 }
+            ActionErrorType::InvalidAuthToken => { 401 }
             ActionErrorType::InvalidQueryInput => { 400 }
             ActionErrorType::SaveCallingError => { 500 }
             ActionErrorType::CustomError => { 500 }
@@ -83,6 +86,7 @@ impl ActionErrorType {
             ActionErrorType::InvalidKey => { 500 }
             ActionErrorType::InvalidOperation => { 500 }
             ActionErrorType::PermissionDenied => { 401 }
+            ActionErrorType::UnexpectedOutputException => { 500 }
         }
     }
 }
@@ -220,10 +224,10 @@ impl ActionError {
         }
     }
 
-    pub fn invalid_jwt_token() -> Self {
+    pub fn invalid_auth_token() -> Self {
         ActionError {
-            r#type: ActionErrorType::InvalidJWTToken,
-            message: "This token is malformed.".to_string(),
+            r#type: ActionErrorType::InvalidAuthToken,
+            message: "This auth token is invalid.".to_string(),
             errors: None
         }
     }
@@ -347,6 +351,14 @@ impl ActionError {
             r#type: ActionErrorType::PermissionDenied,
             message: format!("Permission denied for `{}'.", action.as_ref()),
             errors: None
+        }
+    }
+
+    pub fn unexpected_output_exception<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl AsRef<str>) -> Self {
+        ActionError {
+            r#type: ActionErrorType::UnexpectedOutputException,
+            message: format!("Unexpected output exception."),
+            errors: Some(hashmap!{path.as_ref().to_string() => reason.as_ref().to_string()})
         }
     }
 }

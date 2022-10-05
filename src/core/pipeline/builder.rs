@@ -1,6 +1,6 @@
 use std::sync::{Arc};
 use crate::core::pipeline::argument::Argument;
-use crate::core::pipeline::context::Validity;
+use crate::core::pipeline::context::validity::Validity;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::modifiers::logical::all::AllModifier;
 use crate::core::pipeline::modifiers::logical::and::AndModifier;

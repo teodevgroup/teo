@@ -9,7 +9,6 @@ use rust_decimal::Decimal;
 use serde_json::{Map, Number, Value as JsonValue};
 use crate::core::field::r#type::FieldType;
 use crate::core::object::Object;
-use crate::core::pipeline::context::Intent;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -65,10 +64,10 @@ impl Value {
     }
 
     #[async_recursion]
-    pub(crate) async fn to_object_json_value(&self, purpose: Intent) -> Option<JsonValue> {
+    pub(crate) async fn to_object_json_value(&self) -> Option<JsonValue> {
         match self {
             Value::Object(o) => {
-                match o.to_json(purpose).await {
+                match o.to_json().await {
                     Ok(v) => Some(v),
                     Err(_) => None,
                 }
@@ -78,12 +77,12 @@ impl Value {
     }
 
     #[async_recursion]
-    pub(crate) async fn to_object_vec_json_value(&self, purpose: Intent) -> Option<JsonValue> {
+    pub(crate) async fn to_object_vec_json_value(&self) -> Option<JsonValue> {
         match self {
             Value::Vec(vec) => {
                 let mut result: Vec<JsonValue> = vec![];
                 for object in vec {
-                    result.push(object.to_object_json_value(purpose).await.unwrap());
+                    result.push(object.to_object_json_value().await.unwrap());
                 }
                 Some(JsonValue::Array(result))
             }
@@ -936,6 +935,15 @@ impl From<Value> for Object {
         match v {
             Value::Object(o) => o.clone(),
             _ => panic!("not object value")
+        }
+    }
+}
+
+impl From<Option<Object>> for Value {
+    fn from(object: Option<Object>) -> Self {
+        match object {
+            None => Value::Null,
+            Some(object) => Value::Object(object)
         }
     }
 }

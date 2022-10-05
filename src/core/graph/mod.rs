@@ -4,6 +4,8 @@ use std::sync::Arc;
 use serde_json::{Value as JsonValue};
 use crate::core::graph::builder::GraphBuilder;
 use crate::core::connector::Connector;
+use crate::core::env::Env;
+use crate::core::env::source::Source::CustomCode;
 use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::r#enum::Enum;
@@ -49,17 +51,17 @@ impl Graph {
         Graph { inner: Arc::new(graph) }
     }
 
-    pub async fn find_unique(&self, model: &str, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
+    pub async fn find_unique(&self, model: &str, finder: &JsonValue, mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
         let model = self.model(model).unwrap();
-        self.connector().find_unique(self, model, finder, mutation_mode).await
+        self.connector().find_unique(self, model, finder, mutation_mode, env).await
     }
 
-    pub async fn find_first(&self, model: &str, finder: &JsonValue, mutation_mode: bool) -> Result<Object, ActionError> {
+    pub async fn find_first(&self, model: &str, finder: &JsonValue, mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
         let model = self.model(model).unwrap();
         let mut finder = finder.as_object().clone().unwrap().clone();
         finder.insert("take".to_string(), JsonValue::Number(1.into()));
         let finder = JsonValue::Object(finder);
-        let result = self.connector().find_many(self, model, &finder, mutation_mode).await;
+        let result = self.connector().find_many(self, model, &finder, mutation_mode, env).await;
         match result {
             Err(err) => Err(err),
             Ok(retval) => {
@@ -72,9 +74,9 @@ impl Graph {
         }
     }
 
-    pub async fn find_many(&self, model: &str, finder: &JsonValue, mutation_mode: bool) -> Result<Vec<Object>, ActionError> {
+    pub async fn find_many(&self, model: &str, finder: &JsonValue, mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
         let model = self.model(model).unwrap();
-        self.connector().find_many(self, model, finder, mutation_mode).await
+        self.connector().find_many(self, model, finder, mutation_mode, env).await
     }
 
     pub async fn count(&self, model: &str, finder: &JsonValue) -> Result<usize, ActionError> {
@@ -92,15 +94,15 @@ impl Graph {
         self.connector().group_by(self, model, finder).await
     }
 
-    pub(crate) fn new_object(&self, model: &str) -> Result<Object, ActionError> {
+    pub(crate) fn new_object(&self, model: &str, env: Env) -> Result<Object, ActionError> {
         match self.model(model) {
-            Some(model) => Ok(Object::new(self, model)),
+            Some(model) => Ok(Object::new(self, model, env)),
             None => Err(ActionError::invalid_operation(format!("Model with name '{model}' is not defined.")))
         }
     }
 
     pub fn create_object(&self, model: &str, initial: JsonValue) -> Result<Object, ActionError> {
-        let obj = self.new_object(model)?;
+        let obj = self.new_object(model, Env::custom_code())?;
         obj.set_json(&initial);
         Ok(obj)
     }

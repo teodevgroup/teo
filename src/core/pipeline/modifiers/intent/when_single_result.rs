@@ -1,7 +1,8 @@
 use async_trait::async_trait;
+use crate::core::env::position::Position;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::Pipeline;
-use crate::core::pipeline::context::{Context, Intent};
+use crate::core::pipeline::context::{Context};
 
 #[derive(Debug, Clone)]
 pub struct WhenSingleResultModifier {
@@ -24,9 +25,9 @@ impl Modifier for WhenSingleResultModifier {
     }
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
-        match ctx.intent {
-            Intent::SingleResult(_) => self.pipeline.process(ctx.clone()).await,
-            _ => ctx
+        match ctx.object.env().position() {
+            Some(Position::RootSingle) | Some(Position::NestedSingle) => self.pipeline.process(ctx.clone()).await,
+            _ => ctx,
         }
     }
 }

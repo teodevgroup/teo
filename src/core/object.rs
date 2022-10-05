@@ -6,6 +6,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use key_path::{KeyPath, path};
 use serde_json::{json, Map, Value as JsonValue};
 use async_recursion::async_recursion;
+use crate::core::env::Env;
+use crate::core::env::source::Source;
 use crate::core::pipeline::argument::Argument;
 use crate::core::field::{PreviousValueRule};
 use crate::core::field::optionality::Optionality;
@@ -16,7 +18,7 @@ use crate::core::input_decoder::{decode_field_input, input_to_vec, one_length_js
 use crate::core::model::Model;
 use crate::core::relation::{Relation, RelationManipulation};
 use crate::core::save_session::SaveSession;
-use crate::core::pipeline::context::{Context, Intent};
+use crate::core::pipeline::context::{Context};
 use crate::core::value::Value;
 use crate::core::error::{ActionError, ActionErrorType};
 use crate::core::field::write_rule::WriteRule;
@@ -29,10 +31,11 @@ pub struct Object {
 
 impl Object {
 
-    pub(crate) fn new(graph: &Graph, model: &Model) -> Object {
+    pub(crate) fn new(graph: &Graph, model: &Model, env: Env) -> Object {
         Object { inner: Arc::new(ObjectInner {
             graph: graph.clone(),
             model: model.clone(),
+            env,
             is_initialized: AtomicBool::new(false),
             is_new: AtomicBool::new(true),
             is_modified: AtomicBool::new(false),
@@ -64,12 +67,11 @@ impl Object {
     pub(crate) async fn _set_json_internal(&self, json_value: &JsonValue, path: &KeyPath<'_>, user_mode: bool) -> ActionResult<()> {
         let model = self.model();
         let is_new = self.is_new();
-        let purpose = if is_new { Intent::Create } else { Intent::Update };
         // permission
         if !user_mode {
             if let Some(permission) = model.permission() {
                 if let Some(can) = if is_new { permission.can_create() } else { permission.can_update() } {
-                    let ctx = Context::initial_state(self.clone(), purpose);
+                    let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
                     let result_ctx = can.process(ctx).await;
                     if !result_ctx.is_valid() {
                         return Err(ActionError::permission_denied(if is_new { "create" } else { "update" }));
@@ -108,7 +110,7 @@ impl Object {
                                 self.inner.value_map.lock().unwrap().insert(key.to_string(), value.clone());
                             }
                             Argument::PipelineArgument(pipeline) => {
-                                let ctx = Context::initial_state(self.clone(), Intent::Create);
+                                let ctx = Context::initial_state(self.clone());
                                 let value = pipeline.process(ctx).await.value;
                                 // todo: default value calculation error here
                                 self.inner.value_map.lock().unwrap().insert(key.to_string(), value);
@@ -119,7 +121,7 @@ impl Object {
                     if !user_mode {
                         if let Some(permission) = field.permission() {
                             if let Some(can) = if is_new { permission.can_create() } else { permission.can_update() } {
-                                let ctx = Context::initial_state(self.clone(), purpose);
+                                let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
                                 let result_ctx = can.process(ctx).await;
                                 if !result_ctx.is_valid() {
                                     return Err(ActionError::permission_denied(if is_new { "create" } else { "update" }));
@@ -133,12 +135,7 @@ impl Object {
                         SetValue(value) => {
                             let mut value = value;
                             // pipeline
-                            let purpose = if self.is_new() {
-                                Intent::Create
-                            } else {
-                                Intent::Update
-                            };
-                            let context = Context::initial_state(self.clone(), purpose)
+                            let context = Context::initial_state(self.clone())
                                 .alter_key_path(path![key.as_str()])
                                 .alter_value(value);
                             if !self.is_new() && field.previous_value_rule == PreviousValueRule::Keep {
@@ -271,18 +268,13 @@ impl Object {
             } else if let Some(property) = self.model().property(key) {
                 if json_keys.contains(&key) {
                     if let Some(setter) = property.setter.as_ref() {
-                        let purpose = if self.is_new() {
-                            Intent::Create
-                        } else {
-                            Intent::Update
-                        };
                         let json_value = &json_map[&key.to_string()];
                         let input_result = decode_field_input(self.graph(), json_value, &property.field_type, Optionality::Required, &(path + key))?;
                         let value = match input_result {
                             Input::SetValue(v) => v,
                             _ => return Err(ActionError::unexpected_input_type("value", &(path + key))),
                         };
-                        let ctx = Context::initial_state(self.clone(), purpose)
+                        let ctx = Context::initial_state(self.clone())
                             .alter_value(value);
                         if let Some(reason) = setter.process(ctx).await.invalid_reason() {
                             return Err(ActionError::unexpected_input_value_validation(reason, &(path + key)));
@@ -315,7 +307,8 @@ impl Object {
             WriteRule::WriteOnce => if is_new { true } else { self.get_value(key.as_ref()).unwrap().is_null() },
             WriteRule::WriteNonNull => if is_new { true } else { !value.is_null() },
             WriteRule::WriteIf(pipeline) => {
-                let context = Context::initial_state(self.clone(), if is_new { Intent::Create } else { Intent::Update})
+                let context = Context::initial_state(self.clone())
+                    .alter_key_path(path![key.as_ref()])
                     .alter_value(value.clone());
                 let result_context = pipeline.process(context).await;
                 result_context.is_valid()
@@ -398,7 +391,7 @@ impl Object {
             }
         }
         let getter = property.getter.as_ref().unwrap();
-        let ctx = Context::initial_state(self.clone(), Intent::UserCodeGetProperty);
+        let ctx = Context::initial_state(self.clone());
         let value = getter.process(ctx).await.value;
         if property.cached {
             self.inner.cached_property_map.lock().unwrap().insert(key.as_ref().to_string(), value.clone());
@@ -409,7 +402,7 @@ impl Object {
     pub async fn set_property(&self, key: impl AsRef<str>, value: impl Into<Value>) -> ActionResult<()> {
         let property = self.model().property(key.as_ref()).unwrap();
         let setter = property.setter.as_ref().unwrap();
-        let ctx = Context::initial_state(self.clone(), Intent::UserCodeSetProperty)
+        let ctx = Context::initial_state(self.clone())
             .alter_value(value.into());
         let _ = setter.process(ctx).await;
         Ok(())
@@ -553,12 +546,7 @@ impl Object {
                         Value::Null
                     }
                 };
-                let purpose = if self.is_new() {
-                    Intent::Create
-                } else {
-                    Intent::Update
-                };
-                let context = Context::initial_state(self.clone(), purpose)
+                let context = Context::initial_state(self.clone())
                     .alter_value(initial_value)
                     .alter_key_path(path![field.name.as_str()]);
                 let result_ctx = field.perform_on_save_callback(context).await;
@@ -616,7 +604,7 @@ impl Object {
                     Optionality::PresentIf(pipeline) => {
                         let value = self.get_value(key).unwrap();
                         if value.is_null() {
-                            let ctx = Context::initial_state(self.clone(), Intent::Create);
+                            let ctx = Context::initial_state(self.clone());
                             let invalid = pipeline.process(ctx).await.invalid_reason().is_some();
                             if invalid {
                                 return Err(ActionError::missing_required_input(key, path))
@@ -944,7 +932,7 @@ impl Object {
     async fn trigger_before_write_callbacks(&self, newly_created: bool) -> ActionResult<()> {
         let model = self.model();
         let pipeline = model.before_save_pipeline();
-        let context = Context::initial_state(self.clone(), if newly_created { Intent::Create } else { Intent::Update });
+        let context = Context::initial_state(self.clone());
         let _result = pipeline.process(context).await;
         Ok(())
     }
@@ -957,7 +945,7 @@ impl Object {
         self.inner.inside_write_callback.store(true, Ordering::SeqCst);
         let model = self.model();
         let pipeline = model.after_save_pipeline();
-        let context = Context::initial_state(self.clone(), if newly_created { Intent::Create } else { Intent::Update });
+        let context = Context::initial_state(self.clone());
         let _result = pipeline.process(context).await;
         self.inner.inside_write_callback.store(false, Ordering::SeqCst);
         Ok(())
@@ -968,11 +956,11 @@ impl Object {
         connector.delete_object(self).await
     }
 
-    pub(crate) async fn to_json(&self, purpose: Intent) -> ActionResult<JsonValue> {
+    pub(crate) async fn to_json(&self) -> ActionResult<JsonValue> {
         // test for model permission
         if let Some(permission) = self.model().permission() {
             if let Some(can_read) = permission.can_read() {
-                let ctx = Context::initial_state(self.clone(), purpose);
+                let ctx = Context::initial_state(self.clone());
                 let result_ctx = can_read.process(ctx).await;
                 if !result_ctx.is_valid() {
                     return Err(ActionError::permission_denied("read"));
@@ -991,29 +979,29 @@ impl Object {
                     // test for field permission
                     if let Some(permission) = field.permission() {
                         if let Some(can_read) = permission.can_read() {
-                            let ctx = Context::initial_state(self.clone(), purpose).alter_value(value.clone());
+                            let ctx = Context::initial_state(self.clone()).alter_value(value.clone());
                             let result_ctx = can_read.process(ctx).await;
                             if !result_ctx.is_valid() {
                                 continue;
                             }
                         }
                     }
-                    let context = Context::initial_state(self.clone(), purpose)
+                    let context = Context::initial_state(self.clone())
                         .alter_value(value)
                         .alter_key_path(path![key.as_str()]);
                     let result_ctx = field.perform_on_output_callback(context).await;
                     value = result_ctx.value
                 } else if let Some(property) = self.model().property(key) {
                     if let Some(getter) = &property.getter {
-                        let ctx = Context::initial_state(self.clone(), purpose);
+                        let ctx = Context::initial_state(self.clone());
                         value = getter.process(ctx).await.value
                     }
                 }
                 if !value.is_null() {
                     if value.is_object() {
-                        map.insert(key.to_string(), value.to_object_json_value(purpose).await.unwrap());
+                        map.insert(key.to_string(), value.to_object_json_value().await.unwrap());
                     } else if value.is_object_vec() {
-                        map.insert(key.to_string(), value.to_object_vec_json_value(purpose).await.unwrap());
+                        map.insert(key.to_string(), value.to_object_vec_json_value().await.unwrap());
                     } else {
                         map.insert(key.to_string(), value.to_json_value());
                     }
@@ -1199,11 +1187,16 @@ impl Object {
             }).map(|k| k.as_str()).collect()
         }
     }
+
+    pub(crate) fn env(&self) -> &Env {
+        &self.inner.env
+    }
 }
 
 pub(crate) struct ObjectInner {
     pub(crate) model: Model,
     pub(crate) graph: Graph,
+    pub(crate) env: Env,
     pub(crate) is_initialized: AtomicBool,
     pub(crate) is_new: AtomicBool,
     pub(crate) is_modified: AtomicBool,
