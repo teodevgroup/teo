@@ -974,7 +974,7 @@ impl Object {
         // test for model permission
         if let Some(permission) = self.model().permission() {
             if let Some(can_read) = permission.can_read() {
-                let ctx = Context::initial_state(self.clone());
+                let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
                 let result_ctx = can_read.process(ctx).await;
                 if !result_ctx.is_valid() {
                     return Err(ActionError::permission_denied("read"));
@@ -993,7 +993,7 @@ impl Object {
                     // test for field permission
                     if let Some(permission) = field.permission() {
                         if let Some(can_read) = permission.can_read() {
-                            let ctx = Context::initial_state(self.clone()).alter_value(value.clone());
+                            let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
                             let result_ctx = can_read.process(ctx).await;
                             if !result_ctx.is_valid() {
                                 continue;

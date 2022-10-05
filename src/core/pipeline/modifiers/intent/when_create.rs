@@ -25,9 +25,11 @@ impl Modifier for WhenCreateModifier {
     }
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
-        match ctx.object.env().action() {
-            Some(ActionType::Create) | Some(ActionType::CreateMany) => self.pipeline.process(ctx.clone()).await,
-            _ => ctx
+        if let Some(intent) = ctx.object.env().intent() {
+            if intent.is_create() {
+                return self.pipeline.process(ctx.clone()).await;
+            }
         }
+        ctx
     }
 }

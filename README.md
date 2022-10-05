@@ -69,10 +69,10 @@ The new generation server software.
 - For relationship with join table, link them after both objects are created **[DONE]**
 - Read rule: check in to_json **[DONE]**
 - Permissions: Read **[DONE]**
-- Permissions: Create
-- Permissions: Update
-- New style key path error messages
-- Object environment
+- Permissions: Create **[DONE]**
+- Permissions: Update **[DONE]**
+- New style key path error messages **[DONE]**
+- Object environment **[DONE]**
 
 #### 0.0.30
 - Handle manipulation uses single or many

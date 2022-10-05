@@ -40,7 +40,7 @@ impl Source {
 
     pub(crate) fn as_identity_value(&self) -> Option<Value> {
         match self {
-            Identity(_) => Some(self.as_identity().into()),
+            Identity(_) => Some(self.as_identity().cloned().into()),
             _ => None
         }
     }

@@ -21,6 +21,8 @@ use crate::connectors::shared::has_negative_take::has_negative_take;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::core::connector::Connector;
 use crate::core::env::Env;
+use crate::core::env::intent::Intent;
+use crate::core::env::position::Position;
 use crate::core::object::Object;
 use crate::core::field::Sort;
 use crate::core::field::r#type::FieldType;
@@ -183,7 +185,8 @@ impl MongoDBConnector {
                 let object_bsons = document.get(key).unwrap().as_array().unwrap();
                 let mut related: Vec<Object> = vec![];
                 for related_object_bson in object_bsons {
-                    let related_object = object.graph().new_object(model_name)?;
+                    let env = object.env().nested(Intent::NestedIncluded, Position::NestedMany);
+                    let related_object = object.graph().new_object(model_name, env)?;
                     self.document_to_object(related_object_bson.as_document().unwrap(), &related_object, inner_select, inner_include)?;
                     related.push(related_object);
                 }

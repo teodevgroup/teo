@@ -10,7 +10,7 @@ pub(crate) mod position;
 pub(crate) mod intent;
 
 #[derive(Clone)]
-pub(crate) struct Env {
+pub struct Env {
     source: Source,
     trigger: Source,
     intent: Option<Intent>,

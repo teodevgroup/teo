@@ -25,9 +25,11 @@ impl Modifier for WhenUpdateModifier {
     }
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
-        match ctx.object.env().action() {
-            Some(ActionType::Update) | Some(ActionType::UpdateMany) => self.pipeline.process(ctx.clone()).await,
-            _ => ctx
+        if let Some(intent) = ctx.object.env().intent() {
+            if intent.is_update() {
+                return self.pipeline.process(ctx.clone()).await;
+            }
         }
+        ctx
     }
 }

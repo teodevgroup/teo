@@ -21,6 +21,8 @@ use crate::connectors::sql::query_builder::traits::to_sql_string::ToSQLString;
 use crate::connectors::sql::save_session::SQLSaveSession;
 use crate::core::connector::Connector;
 use crate::core::env::Env;
+use crate::core::env::intent::Intent;
+use crate::core::env::position::Position;
 use crate::core::error::ActionError;
 use crate::core::input::AtomicUpdateType;
 use crate::core::input_decoder::str_to_target_type;
@@ -252,7 +254,7 @@ impl SQLConnector {
     }
 
     #[async_recursion]
-    async fn perform_query<'a>(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, key_path: &KeyPath, additional_where: Option<String>, additional_left_join: Option<String>) -> Result<Vec<Object>, ActionError> {
+    async fn perform_query<'a>(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, key_path: &KeyPath, additional_where: Option<String>, additional_left_join: Option<String>, env: Env) -> Result<Vec<Object>, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
         let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, self.dialect, additional_where, additional_left_join.clone(), key_path)?;
@@ -263,7 +265,7 @@ impl SQLConnector {
         match results {
             Ok(rows) => {
                 for row in &rows {
-                    let obj = graph.new_object(model.name())?;
+                    let obj = graph.new_object(model.name(), env.clone())?;
                     self.row_to_object(&row, &obj, select, include, additional_left_join.is_some())?;
                     if reverse {
                         retval.insert(0, obj);
@@ -321,7 +323,7 @@ impl SQLConnector {
                                         format!("(VALUES {})", pairs)
                                     };
                                     let relation_where = format!("{} IN {}", before_in, after_in);
-                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), None).await?;
+                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), None, env.nested(Intent::NestedIncluded, Position::NestedMany)).await?;
                                     println!("see included: {:?}", included);
                                     for o in included {
                                         let owners = retval.iter().filter(|r| {
@@ -380,7 +382,7 @@ impl SQLConnector {
                                     };
                                     let relation_where = format!("{} IN {}", before_in, after_in);
                                     let path = key_path.as_ref() + relation_name;
-                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), Some(left_join)).await?;
+                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), Some(left_join), env.nested(Intent::NestedIncluded, Position::NestedMany)).await?;
                                     println!("see included {:?}", included);
                                     for o in included {
                                         let owners = retval.iter().filter(|r| {
@@ -445,7 +447,7 @@ impl Connector for SQLConnector {
     }
 
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
-        let objects = self.perform_query(graph, model, finder, mutation_mode, &path![], None, None).await?;
+        let objects = self.perform_query(graph, model, finder, mutation_mode, &path![], None, None, env).await?;
         if objects.is_empty() {
             Err(ActionError::object_not_found())
         } else {
@@ -454,7 +456,7 @@ impl Connector for SQLConnector {
     }
 
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
-        self.perform_query(graph, model, finder, mutation_mode, &path![], None, None).await
+        self.perform_query(graph, model, finder, mutation_mode, &path![], None, None, env).await
     }
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
