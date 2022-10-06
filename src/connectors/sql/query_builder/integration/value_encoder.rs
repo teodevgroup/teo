@@ -58,7 +58,7 @@ impl JsonValueToSQLString for JsonValue {
                 Err(ActionError::unexpected_input_type("float".or_null(optional), path))
             }
             FieldType::Enum(enum_name) => if let Some(val) = self.as_str() {
-                if graph.r#enum(enum_name).contains(&val.to_string()) {
+                if graph.enum_values(enum_name).unwrap().contains(&val.to_string()) {
                     Ok(val.to_sql_input())
                 } else {
                     Err(ActionError::unexpected_input_type(enum_name.as_str().or_null(optional), path))

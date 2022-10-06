@@ -201,8 +201,8 @@ fn parse_datetime(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError
 fn parse_enum(value: &JsonValue, enum_name: &str, graph: &Graph, path: &KeyPath) -> Result<Bson, ActionError> {
     if value.is_string() {
         let str = value.as_str().unwrap();
-        let r#enum = graph.r#enum(enum_name);
-        if r#enum.contains(&str.to_string()) {
+        let enum_values = graph.enum_values(enum_name).unwrap();
+        if enum_values.contains(&str.to_string()) {
             Ok(Bson::String(str.to_string()))
         } else {
             Err(ActionError::unexpected_input_value(enum_name, path))

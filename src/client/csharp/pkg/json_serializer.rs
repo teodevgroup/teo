@@ -3,12 +3,12 @@ use crate::core::graph::Graph;
 use crate::core::r#enum::Enum;
 
 fn enum_read_cases(e: &Enum) -> String {
-    let enum_name = &e.name;
+    let enum_name = e.name();
     let mut retval = "".to_owned();
     let spaces_string = " ".repeat(16);
     let spaces = &spaces_string;
-    for c in &e.choices {
-        let c_value = &c.name;
+    for c in e.choices() {
+        let c_value = c.name();
         let pascal = c_value.to_pascal_case();
         retval += format!(r#"{spaces}case "{c_value}": {{"#).as_str();
         retval.push('\n');
@@ -19,12 +19,12 @@ fn enum_read_cases(e: &Enum) -> String {
 }
 
 fn enum_write_cases(e: &Enum) -> String {
-    let enum_name = &e.name;
+    let enum_name = e.name();
     let mut retval = "".to_owned();
     let spaces_string = " ".repeat(16);
     let spaces = &spaces_string;
-    for c in &e.choices {
-        let c_value = &c.name;
+    for c in e.choices() {
+        let c_value = c.name();
         let pascal = c_value.to_pascal_case();
         retval += format!(r#"{spaces}case {enum_name}.{pascal}: {{"#).as_str();
         retval.push('\n');
@@ -37,7 +37,7 @@ fn enum_write_cases(e: &Enum) -> String {
 }
 
 fn serializer_for_enum(e: &Enum) -> String {
-    let enum_name = &e.name;
+    let enum_name = e.name();
     let read_cases = enum_read_cases(e);
     let write_cases = enum_write_cases(e);
     format!(r#"    public class {enum_name}JsonConverter : JsonConverter<{enum_name}> {{
@@ -70,7 +70,7 @@ fn serializer_for_enums(g: &Graph) -> String {
 fn enum_converters(g: &Graph) -> String {
     let mut retval = "".to_owned();
     for (_, e) in g.enums() {
-        let enum_name = &e.name;
+        let enum_name = e.name();
         retval += format!("            options.Converters.Add(new {enum_name}JsonConverter());").as_str();
         retval.push('\n');
     }

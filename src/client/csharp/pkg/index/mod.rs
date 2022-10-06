@@ -561,7 +561,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _conf: &ClientConfiguration
             // enum definitions
             graph.enums().iter().for_each(|e| {
                 let name = e.0;
-                let choices = &e.1.values;
+                let choices = &e.1.values();
                 c.block(format!("public enum {name} {{"), |b| {
                     for (index, choice) in choices.iter().enumerate() {
                         let pascalized = choice.to_pascal_case();

@@ -1,11 +1,9 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-
 use serde_json::{Value as JsonValue};
 use crate::core::graph::builder::GraphBuilder;
 use crate::core::connector::Connector;
 use crate::core::env::Env;
-
 use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::r#enum::Enum;
@@ -27,6 +25,8 @@ struct GraphInner {
 }
 
 impl Graph {
+
+    // MARK: - Create a graph
 
     pub async fn new<'a, F: Fn(&mut GraphBuilder)>(build: F) -> Graph {
         let mut builder = GraphBuilder::new();
@@ -50,6 +50,8 @@ impl Graph {
         graph.connector = Some(builder.connector_builder().build_connector(&graph.models_vec, builder.reset_database).await);
         Graph { inner: Arc::new(graph) }
     }
+
+    // MARK: - Queries
 
     pub async fn find_unique(&self, model: &str, finder: &JsonValue, mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
         let model = self.model(model).unwrap();
@@ -94,6 +96,8 @@ impl Graph {
         self.connector().group_by(self, model, finder).await
     }
 
+    // MARK: - Create an object
+
     pub(crate) fn new_object(&self, model: &str, env: Env) -> Result<Object, ActionError> {
         match self.model(model) {
             Some(model) => Ok(Object::new(self, model, env)),
@@ -107,6 +111,8 @@ impl Graph {
         Ok(obj)
     }
 
+    // MARK: - Getting the connector
+
     pub(crate) fn connector(&self) -> &dyn Connector {
         match &self.inner.connector {
             Some(c) => { c.as_ref() }
@@ -114,12 +120,21 @@ impl Graph {
         }
     }
 
+
+
     pub(crate) fn model(&self, name: &str) -> Option<&Model> {
         self.inner.models_map.get(name)
     }
 
-    pub(crate) fn r#enum(&self, name: impl Into<String>) -> &Vec<String> {
-        &self.inner.enums.get(&name.into()).unwrap().values
+    pub(crate) fn r#enum(&self, name: &str) -> Option<&Enum> {
+        self.inner.enums.get(name)
+    }
+
+    pub(crate) fn enum_values(&self, name: &str) -> Option<&Vec<String>> {
+        match self.inner.enums.get(name) {
+            Some(e) => Some(e.values()),
+            None => None,
+        }
     }
 
     pub(crate) fn models(&self) -> &Vec<Model> { &self.inner.models_vec }
