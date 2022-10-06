@@ -635,14 +635,13 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                     return ActionError::destination_not_found().into();
                 }
             };
-            let model_name = match graph.model_name_for_url_segment_name(model_url_segment_name) {
+            let model_def = match graph.model_with_url_segment_name(model_url_segment_name) {
                 Some(name) => name,
                 None => {
                     log_unhandled(start, r.method().as_str(), &path, 404);
                     return ActionError::destination_not_found().into();
                 }
             };
-            let model_def = graph.model(model_name).unwrap();
             if !model_def.has_action(action) {
                 log_unhandled(start, r.method().as_str(), &path, 400);
                 return ActionError::destination_not_found().into();

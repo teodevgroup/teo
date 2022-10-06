@@ -8,6 +8,7 @@ use serde_json::{json, Map, Value as JsonValue};
 use async_recursion::async_recursion;
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
+use crate::core::env::source::Source;
 
 use crate::core::pipeline::argument::Argument;
 use crate::core::field::{PreviousValueRule};
@@ -24,6 +25,7 @@ use crate::core::value::Value;
 use crate::core::error::{ActionError, ActionErrorType};
 use crate::core::field::write_rule::WriteRule;
 use crate::core::relation::delete_rule::DeleteRule;
+use crate::core::relation::delete_rule::DeleteRule::Deny;
 use crate::core::result::ActionResult;
 
 #[derive(Clone)]
@@ -631,9 +633,57 @@ impl Object {
     }
 
     #[async_recursion(?Send)]
-    pub(crate) async fn delete_from_database(&self, _session: Arc<dyn SaveSession>, _no_recursive: bool) -> ActionResult<()> {
+    pub(crate) async fn delete_from_database(&self, session: Arc<dyn SaveSession>, no_recursive: bool) -> ActionResult<()> {
+        let model = self.model();
+        let graph = self.graph();
+        // check deny first
+        for relation in model.relations() {
+            if relation.through().is_some() {
+                continue
+            }
+            let (opposite_model, opposite_relation) = graph.opposite_relation(relation).unwrap();
+            if opposite_relation.delete_rule() == Deny {
+                let finder = self.finder_for_relation(relation);
+                let count = graph.count(opposite_model.name(), &finder).await.unwrap();
+                if count > 0 {
+                    return Err(ActionError::deletion_denied(relation.name()));
+                }
+            }
+        }
+        // real delete
         let connector = self.graph().connector();
         connector.delete_object(self).await?;
+        // nullify and cascade
+        for relation in model.relations() {
+            if relation.through().is_some() {
+                continue
+            }
+            let (opposite_model, opposite_relation) = graph.opposite_relation(relation).unwrap();
+            match opposite_relation.delete_rule() {
+                DeleteRule::Default => {}, // do nothing
+                DeleteRule::Deny => {}, // done before
+                DeleteRule::Nullify => {
+                    if !opposite_relation.has_foreign_key() {
+                        continue
+                    }
+                    let finder = self.finder_for_relation(relation);
+                    graph.batch(opposite_model.name(), &finder, Env::new(Source::CustomCode, Intent::Delete), |object| async move {
+                        for key in opposite_relation.fields() {
+                            object.set_value(key, Value::Null)?;
+                        }
+                        object._save(self.graph().connector().new_save_session(), no_recursive, &path![]).await?;
+                        Ok(())
+                    }).await?;
+                },
+                DeleteRule::Cascade => {
+                    let finder = self.finder_for_relation(relation);
+                    graph.batch(opposite_model.name(), &finder, Env::new(Source::CustomCode, Intent::Delete), |object| async move {
+                        object.delete_from_database(self.graph().connector().new_save_session(), no_recursive).await?;
+                        Ok(())
+                    }).await?;
+                }
+            }
+        }
         Ok(())
     }
 
@@ -966,40 +1016,7 @@ impl Object {
     }
 
     pub async fn delete(&self) -> ActionResult<()> {
-        let model = self.model();
-        let graph = self.graph();
-        // check deny first
-        for key in self.model().deny_relation_keys() {
-            let relation = model.relation(key).unwrap();
-            let finder = self.finder_for_relation(relation);
-            let relation_model_name = relation.model();
-            let count = graph.count(relation_model_name, &finder).await.unwrap();
-            if count > 0 {
-                return Err(ActionError::deletion_denied(key));
-            }
-        }
-        let connector = self.graph().connector();
-        connector.delete_object(self).await?;
-        for relation in self.model().relations() {
-            if relation.through().is_some() {
-                // define on direct relation, do not define on indirect relation
-                continue;
-            }
-            match relation.delete_rule() {
-                DeleteRule::Default => {}, // do nothing
-                DeleteRule::Deny => {}, // do nothing, done before
-                DeleteRule::Nullify => {
-                    let finder = self.finder_for_relation(relation);
-                    // graph.find_many()
-
-                }
-                DeleteRule::Cascade => {
-                    let finder = self.finder_for_relation(relation);
-
-                }
-            }
-        }
-        Ok(())
+        self.delete_from_database(self.graph().connector().new_save_session(), false).await
     }
 
     pub(crate) async fn to_json(&self) -> ActionResult<JsonValue> {

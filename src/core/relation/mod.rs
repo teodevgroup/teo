@@ -65,6 +65,14 @@ impl Relation {
         &self.references
     }
 
+    pub(crate) fn local(&self) -> &str {
+        self.fields.get(0).unwrap()
+    }
+
+    pub(crate) fn foreign(&self) -> &str {
+        self.references.get(0).unwrap()
+    }
+
     pub(crate) fn delete_rule(&self) -> DeleteRule {
         self.delete_rule
     }
