@@ -14,7 +14,6 @@ use crate::core::model::Model;
 use crate::core::result::ActionResult;
 use crate::core::graph::Graph;
 use crate::core::tson::Value;
-use crate::tson;
 
 pub(crate) struct Decoder {}
 
@@ -35,9 +34,9 @@ impl Decoder {
         let mut retval: HashMap<String, Value> = hashmap!{};
         if json_map.contains_key("where") {
             if action.requires_where() {
-                retval.insert("where".to_owned(), Self::decode_where(model, graph, json_map.get("where").unwrap(), path + "where")?)
+                retval.insert("where".to_owned(), Self::decode_where(model, graph, json_map.get("where").unwrap(), path + "where")?);
             } else if action.requires_where_unique() {
-                retval.insert("where".to_owned(), Self::decode_where_unique(model, graph, json_map.get("where").unwrap(), path + "where")?)
+                retval.insert("where".to_owned(), Self::decode_where_unique(model, graph, json_map.get("where").unwrap(), path + "where")?);
             }
         }
         Ok(Value::HashMap(retval))
@@ -65,7 +64,7 @@ impl Decoder {
                     let path = path + key;
                     match value {
                         JsonValue::Object(_) => {
-                            retval.insert(key.to_owned(), Self::decode_where(model, graph, value, path)?)
+                            retval.insert(key.to_owned(), Self::decode_where(model, graph, value, path)?);
                         }
                         JsonValue::Array(inner_array) => {
                             retval.insert(key.to_owned(), Value::Vec(inner_array.iter().enumerate().map(|(i, v)| {
@@ -81,7 +80,7 @@ impl Decoder {
                     let path = path + key;
                     match value {
                         JsonValue::Object(_) => {
-                            retval.insert(key.to_owned(), Self::decode_where(model, graph, value, path)?)
+                            retval.insert(key.to_owned(), Self::decode_where(model, graph, value, path)?);
                         }
                         _ => {
                             return Err(ActionError::unexpected_input_type("object", path));
@@ -178,7 +177,7 @@ impl Decoder {
             }
             Ok(Value::HashMap(retval))
         } else {
-            Ok(Value::HashMap(hashmap!{"equals" => Self::decode_value_for_field_type(graph, r#type, optional, json_value, path)?}))
+            Ok(Value::HashMap(hashmap!{"equals".to_owned() => Self::decode_value_for_field_type(graph, r#type, optional, json_value, path)?}))
         }
     }
 
@@ -263,16 +262,16 @@ impl Decoder {
             }
             FieldType::Decimal => match json_value.as_str() {
                 Some(s) => match Decimal::from_str(s) {
-                    Ok(d) => Value::Decimal(d),
+                    Ok(d) => Ok(Value::Decimal(d)),
                     Err(_) => Err(ActionError::unexpected_input_value("decimal string or float", path))
                 }
                 None => match json_value.as_f64() {
-                    Some(f) => Value::Decimal(Decimal::from(f)),
+                    Some(f) => Ok(Value::Decimal(Decimal::from(f))),
                     None => Err(ActionError::unexpected_input_value("decimal string or float", path))
                 }
             }
             FieldType::String => match json_value.as_str() {
-                Some(s) => Value::String(s.to_string()),
+                Some(s) => Ok(Value::String(s.to_string())),
                 None => Err(ActionError::unexpected_input_value("string", path))
             }
             FieldType::Date => match json_value.as_str() {
