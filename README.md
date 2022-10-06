@@ -76,7 +76,7 @@ The new generation server software.
 
 #### 0.0.30
 - Delete rules **[DONE]**
-- Fix SQL databases delete result
+- Fix HTTP API result format **[DONE]**
 
 #### 0.0.31
 - Handle manipulation uses single or many

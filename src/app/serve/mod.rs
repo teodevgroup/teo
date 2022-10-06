@@ -110,7 +110,7 @@ async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model, sou
     let result = graph.find_unique(model.name(), input, false, env).await;
     match result {
         Ok(obj) => {
-            let json_data = obj.to_json().await;
+            let json_data = obj.to_json().await?;
             HttpResponse::Ok().json(json!({"data": json_data}))
         }
         Err(err) => {
@@ -124,7 +124,7 @@ async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model, sour
     let result = graph.find_first(model.name(), input, false, env).await;
     match result {
         Ok(obj) => {
-            let json_data = obj.to_json().await;
+            let json_data = obj.to_json().await?;
             HttpResponse::Ok().json(json!({"data": json_data}))
         }
         Err(err) => {
@@ -266,7 +266,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, source: 
                         Ok(_) => {
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
-                            HttpResponse::Ok().json(json!({"data": refetched.to_json().await}))
+                            HttpResponse::Ok().json(json!({"data": refetched.to_json().await?}))
                         }
                         Err(err) => {
                             HttpResponse::BadRequest().json(json!({"error": err}))
@@ -297,7 +297,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, source: 
                         Ok(_) => {
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
-                            let json_data = refetched.to_json().await;
+                            let json_data = refetched.to_json().await?;
                             return HttpResponse::Ok().json(json!({"data": json_data}));
                         }
                         Err(err) => {
@@ -323,7 +323,7 @@ async fn handle_delete(graph: &Graph, input: &JsonValue, model: &Model, source: 
     // find the object here
     return match result.delete().await {
         Ok(_) => {
-            let json_data = result.to_json().await;
+            let json_data = result.to_json().await?;
             HttpResponse::Ok().json(json!({"data": json_data}))
         }
         Err(err) => {
