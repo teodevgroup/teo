@@ -1,6 +1,6 @@
 use mongodb::IndexModel;
 use crate::core::field::Sort;
-use crate::core::model::{ModelIndex, ModelIndexItem, ModelIndexType};
+use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 
 impl From<&IndexModel> for ModelIndex {
     fn from(index_model: &IndexModel) -> Self {
