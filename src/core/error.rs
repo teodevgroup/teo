@@ -298,7 +298,7 @@ impl ActionError {
         }
     }
 
-    pub fn unexpected_input_value_validation<'a>(reason: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
+    pub fn unexpected_input_value_with_reason<'a>(reason: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         ActionError {
             r#type: ActionErrorType::UnexpectedInputValue,
             message: "Unexpected value found.".to_string(),

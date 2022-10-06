@@ -484,14 +484,14 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
                 identity_key = Some(k);
                 identity_value = Some(v);
             } else {
-                return ActionError::unexpected_input_value_validation("Multiple auth identity provided", path!["credentials", k]).into();
+                return ActionError::unexpected_input_value_with_reason("Multiple auth identity provided", path!["credentials", k]).into();
             }
         } else if model.auth_by_keys().contains(k) {
             if by_key == None {
                 by_key = Some(k);
                 by_value = Some(v);
             } else {
-                return ActionError::unexpected_input_value_validation("Multiple auth checker provided", path!["credentials", k]).into();
+                return ActionError::unexpected_input_value_with_reason("Multiple auth checker provided", path!["credentials", k]).into();
             }
         } else {
             return ActionError::unexpected_input_key(k, path!["credentials", k]).into();
@@ -532,7 +532,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     let final_ctx = pipeline.process(ctx).await;
     return match final_ctx.invalid_reason() {
         Some(_reason) => {
-            return ActionError::unexpected_input_value_validation("Authentication failed.", path!["credentials", by_key.unwrap()]).into();
+            return ActionError::unexpected_input_value_with_reason("Authentication failed.", path!["credentials", by_key.unwrap()]).into();
         }
         None => {
             let include = input.get("include");
@@ -669,6 +669,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                     return HttpResponse::BadRequest().json(json!({"error": ActionError::incorrect_json_format()}));
                 }
             };
+
             if !parsed_body.is_object() {
                 log_unhandled(start, r.method().as_str(), &path, 400);
                 return HttpResponse::BadRequest().json(json!({"error": ActionError::unexpected_input_root_type("object")}));

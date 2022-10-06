@@ -149,7 +149,7 @@ impl Object {
                             let result_context = field.on_set_pipeline.process(context).await;
                             match result_context.invalid_reason() {
                                 Some(reason) => {
-                                    return Err(ActionError::unexpected_input_value_validation(reason, &(path + &field.name)));
+                                    return Err(ActionError::unexpected_input_value_with_reason(reason, &(path + &field.name)));
                                 }
                                 None => {
                                     value = result_context.value
@@ -280,7 +280,7 @@ impl Object {
                         let ctx = Context::initial_state(self.clone())
                             .alter_value(value);
                         if let Some(reason) = setter.process(ctx).await.invalid_reason() {
-                            return Err(ActionError::unexpected_input_value_validation(reason, &(path + key)));
+                            return Err(ActionError::unexpected_input_value_with_reason(reason, &(path + key)));
                         }
                     }
                 }
@@ -555,7 +555,7 @@ impl Object {
                 let result_ctx = field.perform_on_save_callback(context).await;
                 match result_ctx.invalid_reason() {
                     Some(reason) => {
-                        return Err(ActionError::unexpected_input_value_validation(reason, &(path + key)));
+                        return Err(ActionError::unexpected_input_value_with_reason(reason, &(path + key)));
                     }
                     None => {
                         self.inner.value_map.lock().unwrap().insert(key.to_string(), result_ctx.value);

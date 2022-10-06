@@ -23,7 +23,10 @@ pub(crate) enum FieldType {
     DateTime,
     Enum(String),
     Vec(Box<Field>),
-    Map(Box<Field>),
+    HashMap(Box<Field>),
+    BTreeMap(Box<Field>),
+    HashSet(Box<Field>),
+    BTreeSet(Box<Field>),
     Object(String),
 }
 
@@ -75,7 +78,10 @@ impl FieldType {
     pub(crate) fn element_field(&self) -> Option<&Field> {
         match self {
             FieldType::Vec(inner) => Some(inner.as_ref()),
-            FieldType::Map(inner) => Some(inner.as_ref()),
+            FieldType::HashMap(inner) => Some(inner.as_ref()),
+            FieldType::BTreeMap(inner) => Some(inner.as_ref()),
+            FieldType::HashSet(inner) => Some(inner.as_ref()),
+            FieldType::BTreeSet(inner) => Some(inner.as_ref()),
             _ => None,
         }
     }
