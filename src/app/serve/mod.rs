@@ -83,7 +83,7 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
     }
     let auth_str = header_value.unwrap().to_str().unwrap();
     if auth_str.len() < 7 {
-        return Err(ActionError::invalid_authorization_format());
+        return Err(ActionError::invalid_auth_token());
     }
     let token_str = &auth_str[7..];
     let claims_result = decode_token(&token_str.to_string(), &conf.jwt_secret.as_ref().unwrap());

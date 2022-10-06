@@ -23,6 +23,7 @@ use crate::core::pipeline::context::{Context};
 use crate::core::value::Value;
 use crate::core::error::{ActionError, ActionErrorType};
 use crate::core::field::write_rule::WriteRule;
+use crate::core::relation::delete_rule::DeleteRule;
 use crate::core::result::ActionResult;
 
 #[derive(Clone)]
@@ -965,6 +966,18 @@ impl Object {
     }
 
     pub async fn delete(&self) -> ActionResult<()> {
+        let model = self.model();
+        let graph = self.graph();
+        // check deny first
+        for key in self.model().deny_relation_keys() {
+            let relation = model.relation(key).unwrap();
+            let finder = self.finder_for_relation(relation);
+            let relation_model_name = relation.model();
+            let count = graph.count(relation_model_name, &finder).await.unwrap();
+            if count > 0 {
+                return Err(ActionError::deletion_denied(key));
+            }
+        }
         let connector = self.graph().connector();
         connector.delete_object(self).await?;
         for relation in self.model().relations() {
@@ -972,7 +985,19 @@ impl Object {
                 // define on direct relation, do not define on indirect relation
                 continue;
             }
-            relation.delete_rule();
+            match relation.delete_rule() {
+                DeleteRule::Default => {}, // do nothing
+                DeleteRule::Deny => {}, // do nothing, done before
+                DeleteRule::Nullify => {
+                    let finder = self.finder_for_relation(relation);
+                    // graph.find_many()
+
+                }
+                DeleteRule::Cascade => {
+                    let finder = self.finder_for_relation(relation);
+
+                }
+            }
         }
         Ok(())
     }
@@ -1099,6 +1124,17 @@ impl Object {
         graph.find_unique(self.model().name(), &finder, false, self.env().clone()).await
     }
 
+    pub(crate) fn finder_for_relation(&self, relation: &Relation) -> JsonValue {
+        let mut finder_where = json!({});
+        for (index, local_field_name) in relation.fields().iter().enumerate() {
+            let foreign_field_name = relation.references().get(index).unwrap();
+            let value = self.get_value(local_field_name).unwrap();
+            let json_value = value.to_json_value();
+            finder_where.as_object_mut().unwrap().insert(foreign_field_name.to_owned(), json_value);
+        }
+        json!({ "where": finder_where })
+    }
+
     pub async fn fetch_relation_object(&self, key: impl AsRef<str>, find_unique_arg: Option<&JsonValue>) -> Result<Option<Object>, ActionError> {
         // get relation
         let model = self.model();
@@ -1107,18 +1143,7 @@ impl Object {
             // todo() err here
         }
         let relation = relation.unwrap();
-        // find object
-        let mut finder_where = json!({});
-        for (index, local_field_name) in relation.fields().iter().enumerate() {
-            let foreign_field_name = relation.references().get(index).unwrap();
-            let value = self.get_value(local_field_name).unwrap();
-            if value == Value::Null {
-                return Ok(None);
-            }
-            let json_value = value.to_json_value();
-            finder_where.as_object_mut().unwrap().insert(foreign_field_name.to_owned(), json_value);
-        }
-        let mut finder = json!({"where": finder_where});
+        let mut finder = self.finder_for_relation(relation);
         if let Some(find_unique_arg) = find_unique_arg {
             if let Some(include) = find_unique_arg.get("include") {
                 finder.as_object_mut().unwrap().insert("include".to_owned(), include.clone());

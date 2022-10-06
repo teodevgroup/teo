@@ -19,6 +19,7 @@ pub(crate) struct Relation {
     pub(self) fields: Vec<String>,
     pub(self) references: Vec<String>,
     pub(self) delete_rule: DeleteRule,
+    pub(self) has_foreign_key: bool,
 }
 
 impl Relation {
@@ -66,6 +67,10 @@ impl Relation {
 
     pub(crate) fn delete_rule(&self) -> DeleteRule {
         self.delete_rule
+    }
+
+    pub(crate) fn has_foreign_key(&self) -> bool {
+        self.has_foreign_key
     }
 }
 

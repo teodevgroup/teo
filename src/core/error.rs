@@ -17,7 +17,6 @@ pub enum ActionErrorType {
     ObjectIsNotSaved,
     FieldIsNotUnique,
     UnmatchedDataTypeInDatabase,
-    InvalidAuthorizationFormat,
     InvalidQueryInput,
     SaveCallingError,
     WrongIdentityModel,
@@ -40,6 +39,7 @@ pub enum ActionErrorType {
 
     // request permission
     PermissionDenied,
+    DeletionDenied,
 
     // response destination
     ObjectNotFound,
@@ -70,7 +70,6 @@ impl ActionErrorType {
             ActionErrorType::InternalServerError => { 500 }
             ActionErrorType::ObjectNotFound => { 404 }
             ActionErrorType::FieldIsNotUnique => { 400 }
-            ActionErrorType::InvalidAuthorizationFormat => { 401 }
             ActionErrorType::InvalidAuthToken => { 401 }
             ActionErrorType::InvalidQueryInput => { 400 }
             ActionErrorType::SaveCallingError => { 500 }
@@ -87,6 +86,7 @@ impl ActionErrorType {
             ActionErrorType::InvalidOperation => { 500 }
             ActionErrorType::PermissionDenied => { 401 }
             ActionErrorType::UnexpectedOutputException => { 500 }
+            ActionErrorType::DeletionDenied => { 400 }
         }
     }
 }
@@ -212,14 +212,6 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::UnmatchedDataTypeInDatabase,
             message: format!("Unmatched data type for field '{field_name}' in database."),
-            errors: None
-        }
-    }
-
-    pub fn invalid_authorization_format() -> Self {
-        ActionError {
-            r#type: ActionErrorType::InvalidAuthorizationFormat,
-            message: "Invalid authorization header format.".to_string(),
             errors: None
         }
     }
@@ -359,6 +351,14 @@ impl ActionError {
             r#type: ActionErrorType::UnexpectedOutputException,
             message: format!("Unexpected output exception."),
             errors: Some(hashmap!{path.as_ref().to_string() => reason.as_ref().to_string()})
+        }
+    }
+
+    pub fn deletion_denied(relation_name: impl AsRef<str>) -> Self {
+        ActionError {
+            r#type: ActionErrorType::DeletionDenied,
+            message: format!("Deletion denied by `{}'.", relation_name.as_ref()),
+            errors: None
         }
     }
 }

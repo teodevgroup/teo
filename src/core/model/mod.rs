@@ -63,6 +63,7 @@ pub struct ModelInner {
     pub(crate) auth_identity_keys: Vec<String>,
     pub(crate) auth_by_keys: Vec<String>,
     pub(crate) auto_keys: Vec<String>,
+    pub(crate) deny_relation_keys: Vec<String>,
     pub(crate) field_property_map: HashMap<String, Vec<String>>
 }
 
@@ -119,6 +120,10 @@ impl Model {
 
     pub(crate) fn relations(&self) -> &Vec<Arc<Relation>> {
         return &self.inner.relations_vec
+    }
+
+    pub(crate) fn deny_relation_keys(&self) -> &Vec<String> {
+        return &self.inner.deny_relation_keys
     }
 
     pub(crate) fn field(&self, name: &str) -> Option<&Field> {

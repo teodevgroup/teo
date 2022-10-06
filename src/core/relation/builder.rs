@@ -1,4 +1,7 @@
+use std::collections::HashMap;
+use std::sync::Arc;
 use crate::core::connector::ConnectorBuilder;
+use crate::core::field::Field;
 use crate::core::field::optionality::Optionality;
 use crate::core::relation::delete_rule::DeleteRule;
 use crate::core::relation::Relation;
@@ -121,7 +124,7 @@ impl RelationBuilder {
         self
     }
 
-    pub(crate) fn build(&self, _connector_builder: &Box<dyn ConnectorBuilder>) -> Relation {
+    pub(crate) fn build(&self, _connector_builder: &Box<dyn ConnectorBuilder>, fields: &HashMap<String, Arc<Field>>) -> Relation {
         return Relation {
             name: self.name.clone(),
             localized_name: self.localized_name.clone(),
@@ -133,6 +136,7 @@ impl RelationBuilder {
             fields: self.fields.clone(),
             references: self.references.clone(),
             delete_rule: self.delete_rule,
+            has_foreign_key: self.fields.iter().find(|name| fields.get(name.as_str()).unwrap().foreign_key).is_some()
         }
     }
 }

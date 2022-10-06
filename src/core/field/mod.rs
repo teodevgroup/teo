@@ -94,6 +94,7 @@ pub(crate) struct Field {
     pub(crate) on_output_pipeline: Pipeline,
     pub(crate) permission: Option<Permission>,
     pub(crate) column_name: Option<String>,
+    pub(crate) foreign_key: bool,
 }
 
 impl Debug for Field {

@@ -42,6 +42,7 @@ pub struct FieldBuilder {
     pub(crate) on_output_pipeline: PipelineBuilder,
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) column_name: Option<String>,
+    pub(crate) foreign_key: bool,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
@@ -76,6 +77,7 @@ impl FieldBuilder {
             previous_value_rule: PreviousValueRule::DontKeep,
             input_omissible: false,
             output_omissible: false,
+            foreign_key: false,
             connector_builder,
         }
     }
@@ -428,6 +430,11 @@ impl FieldBuilder {
         self
     }
 
+    pub fn foreign_key(&mut self) -> &mut Self {
+        self.foreign_key = true;
+        self
+    }
+
     pub(crate) fn build(&self, connector_builder: &Box<dyn ConnectorBuilder>) -> Field {
         return Field {
             name: self.name.clone(),
@@ -458,6 +465,7 @@ impl FieldBuilder {
             previous_value_rule: self.previous_value_rule.clone(),
             input_omissible: self.input_omissible,
             output_omissible: self.output_omissible,
+            foreign_key: self.foreign_key,
         }
     }
 }

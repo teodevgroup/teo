@@ -17,6 +17,7 @@ use crate::core::relation::Relation;
 use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::property::builder::PropertyBuilder;
 use crate::core::property::Property;
+use crate::core::relation::delete_rule::DeleteRule;
 
 pub(crate) mod index_builder;
 
@@ -234,20 +235,12 @@ impl ModelBuilder {
 
     pub(crate) fn build(&self, connector_builder: &Box<dyn ConnectorBuilder>) -> Model {
         let fields_vec: Vec<Arc<Field>> = self.field_builders.iter().map(|fb| { Arc::new(fb.build(connector_builder)) }).collect();
-        let relations_vec: Vec<Arc<Relation>> = self.relation_builders.iter().map(|rb| { Arc::new(rb.build(connector_builder)) }).collect();
         let properties_vec: Vec<Arc<Property>> = self.property_builders.iter().map(|pb| { Arc::new(pb.build(connector_builder)) }).collect();
         let mut fields_map: HashMap<String, Arc<Field>> = HashMap::new();
-        let mut relations_map: HashMap<String, Arc<Relation>> = HashMap::new();
         let mut properties_map: HashMap<String, Arc<Property>> = HashMap::new();
         let mut primary_field: Option<Arc<Field>> = None;
         let mut primary = self.primary.clone();
         let mut indices = self.indices.clone();
-        for relation in relations_vec.iter() {
-            relations_map.insert(relation.name().to_owned(), relation.clone());
-        }
-        for property in properties_vec.iter() {
-            properties_map.insert(property.name.clone(), property.clone());
-        }
         for field in fields_vec.iter() {
             fields_map.insert(field.name.clone(), field.clone());
             if field.primary {
@@ -297,6 +290,14 @@ impl ModelBuilder {
                 }
             }
         }
+        let mut relations_map: HashMap<String, Arc<Relation>> = HashMap::new();
+        let relations_vec: Vec<Arc<Relation>> = self.relation_builders.iter().map(|rb| { Arc::new(rb.build(connector_builder, &fields_map )) }).collect();
+        for relation in relations_vec.iter() {
+            relations_map.insert(relation.name().to_owned(), relation.clone());
+        }
+        for property in properties_vec.iter() {
+            properties_map.insert(property.name.clone(), property.clone());
+        }
 
         if primary.is_none() && !self.r#virtual {
             panic!("Model '{}' must has a primary field.", self.name);
@@ -336,6 +337,7 @@ impl ModelBuilder {
             auth_identity_keys: self.get_auth_identity_keys(),
             auth_by_keys: self.get_auth_by_keys(),
             auto_keys: self.get_auto_keys(),
+            deny_relation_keys: self.get_deny_relation_keys(),
             field_property_map: self.get_field_property_map(),
         };
         Model::new_with_inner(Arc::new(inner))
@@ -453,18 +455,26 @@ impl ModelBuilder {
             .collect()
     }
 
-    pub(crate) fn get_auth_by_keys(&self) -> Vec<String> {
+    fn get_auth_by_keys(&self) -> Vec<String> {
         self.field_builders.iter()
             .filter(|&f| { f.auth_by == true })
             .map(|f| { f.name.clone() })
             .collect()
     }
 
-    pub(crate) fn get_auto_keys(&self) -> Vec<String> {
+    fn get_auto_keys(&self) -> Vec<String> {
         self.field_builders
             .iter()
             .filter(|&f| { f.auto || f.auto_increment })
             .map(|f| f.name.clone())
+            .collect()
+    }
+
+    fn get_deny_relation_keys(&self) -> Vec<String> {
+        self.relation_builders
+            .iter()
+            .filter(|&r| { r.delete_rule == DeleteRule::Deny })
+            .map(|r| r.name.clone())
             .collect()
     }
 
