@@ -219,7 +219,7 @@ impl Decoder {
                 None => Err(ActionError::unexpected_input_type("datetime string", path))
             }
             FieldType::Enum(enum_name) => match json_value.as_str() {
-                Some(s) => if graph.enum_values(enum_name).unwrap().contains(&s.to_string()) {
+                Some(s) => if graph.enum_values(enum_name.as_str()).unwrap().contains(&s.to_string()) {
                     Ok(Value::String(s.to_string()))
                 } else {
                     Err(ActionError::unexpected_input_type(format!("string represents enum {enum_name}"), path))
@@ -258,7 +258,7 @@ impl Decoder {
                 },
                 None => Err(ActionError::unexpected_input_type("object", path))
             }
-            FieldType::BTreeMap(_) => match json_value.as_object() {
+            FieldType::BTreeMap(inner_field) => match json_value.as_object() {
                 Some(a) => {
                     Ok(Value::BTreeMap(a.iter().map(|(i, v)| {
                         (i.to_string(), Self::decode_value_for_field_type(graph, inner_field.r#type(), inner_field.is_optional(), v, path + i)?)

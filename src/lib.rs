@@ -15,6 +15,4 @@ pub mod prelude {
     pub use crate::core::object::Object;
     pub extern crate tokio;
     pub use tokio::main;
-    pub extern crate serde_json;
-    pub use serde_json::json;
 }
