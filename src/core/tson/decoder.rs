@@ -12,7 +12,8 @@ use crate::core::error::ActionError;
 use crate::core::field::r#type::FieldType;
 use crate::core::model::Model;
 use crate::core::result::ActionResult;
-use crate::prelude::{Graph, Value};
+use crate::core::graph::Graph;
+use crate::core::tson::Value;
 use crate::tson;
 
 pub(crate) struct Decoder {}
@@ -117,11 +118,70 @@ impl Decoder {
         Ok(Value::Null)
     }
 
-    fn decode_where_for_field(graph: &Graph, r#type: &FieldType, optional: bool, json_value: &JsonValue, path: impl AsRef<KeyPath>) -> ActionResult<Value> {
-
+    fn decode_where_for_field<'a>(graph: &Graph, r#type: &FieldType, optional: bool, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if json_value.is_object() {
+            let json_map = json_value.as_object().unwrap();
+            Self::check_json_keys(json_map, r#type.filters(), path)?;
+            let mut retval: HashMap<String, Value> = hashmap!{};
+            for (key, value) in json_map {
+                let key = key.as_str();
+                let path = path + key;
+                match key {
+                    "equals" => {
+                        retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, r#type, optional, value, path)?);
+                    }
+                    "not" => {
+                        retval.insert(key.to_owned(), Self::decode_where_for_field(graph, r#type, optional, value, path)?);
+                    }
+                    "gt" | "gte" | "lt" | "lte" | "contains" | "startsWith" | "endsWith" | "matches" => {
+                        retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, r#type, false, value, path)?);
+                    }
+                    "in" | "notIn" => {
+                        retval.insert(key.to_owned(), Self::decode_value_array_for_field_type(graph, r#type, false, value, path)?);
+                    }
+                    "mode" => match value.as_str() {
+                        Some(s) => if s == "caseInsensitive" {
+                            retval.insert(key.to_owned(), Value::String("caseInsensitive".to_owned()));
+                        } else {
+                            return Err(ActionError::unexpected_input_type("'caseInsensitive'", path));
+                        },
+                        None => return Err(ActionError::unexpected_input_type("string", path)),
+                    }
+                    "has" => {
+                        let element_field = r#type.element_field().unwrap();
+                        retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, element_field.r#type(), element_field.is_optional(), value, path)?);
+                    }
+                    "hasEvery" | "hasSome" => {
+                        let element_field = r#type.element_field().unwrap();
+                        retval.insert(key.to_owned(), Self::decode_value_array_for_field_type(graph, element_field.r#type(), element_field.is_optional(), value, path)?);
+                    }
+                    "isEmpty" => {
+                        retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, &FieldType::Bool, false, value, path)?);
+                    }
+                    "length" => {
+                        retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, &FieldType::U64, false, value, path)?);
+                    }
+                    _ => return Err(ActionError::unexpected_input_key(key, path))
+                }
+            }
+            Ok(Value::HashMap(retval))
+        } else {
+            Ok(Value::HashMap(hashmap!{"equals" => Self::decode_value_for_field_type(graph, r#type, optional, json_value, path)?}))
+        }
     }
 
-    fn decode_value_for_field_type(graph: &Graph, r#type: &FieldType, optional: bool, json_value: &JsonValue, path: impl AsRef<KeyPath>) -> ActionResult<Value> {
+    fn decode_value_array_for_field_type<'a>(graph: &Graph, r#type: &FieldType, optional: bool, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        if let Some(array) = json_value.as_array() {
+            Ok(Value::Vec(array.iter().enumerate().map(|(i, v)| {
+                Self::decode_value_for_field_type(graph, r#type, optional, v, path + i)?
+            }).collect()?))
+        } else {
+            Err(ActionError::unexpected_input_type("array", path))
+        }
+    }
+
+    fn decode_value_for_field_type<'a>(graph: &Graph, r#type: &FieldType, optional: bool, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         if optional && json_value.is_null() {
             return Ok(Value::Null);
         }

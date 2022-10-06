@@ -1,8 +1,12 @@
+use std::collections::HashSet;
+use maplit::hashset;
+use once_cell::sync::Lazy;
 use crate::core::field::Field;
 
 #[derive(Debug, Clone)]
 pub(crate) enum FieldType {
     Undefined,
+    #[cfg(feature = "data-source-mongodb")]
     ObjectId,
     Bool,
     I8,
@@ -85,4 +89,44 @@ impl FieldType {
             _ => None,
         }
     }
+
+    pub(crate) fn filters(&self) -> &HashSet<&str> {
+        match self {
+            FieldType::Undefined => panic!("Field type cannot be undefined."),
+            #[cfg(feature = "data-source-mongodb")]
+            FieldType::ObjectId => &DEFAULT_FILTERS,
+            FieldType::Bool => &BOOL_FILTERS,
+            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 |
+            FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 |
+            FieldType::F32 | FieldType::F64 | FieldType::Date | FieldType::DateTime |
+            FieldType::Decimal => &DEFAULT_FILTERS,
+            FieldType::String => &STRING_FILTERS,
+            FieldType::Enum(_) => &ENUM_FILTERS,
+            FieldType::Vec(_) => &VEC_FILTERS,
+            FieldType::HashMap(_) => &MAP_FILTERS,
+            FieldType::BTreeMap(_) => &MAP_FILTERS,
+            FieldType::HashSet(_) => &VEC_FILTERS,
+            FieldType::BTreeSet(_) => &VEC_FILTERS,
+            FieldType::Object(_) => panic!("Object filter is not implemented.")
+        }
+    }
 }
+
+static BOOL_FILTERS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"equals", "not"}
+});
+static STRING_FILTERS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"equals", "not", "gt", "gte", "lt", "lte", "in", "notIn", "contains", "startsWith", "endsWith", "matches", "mode"}
+});
+static DEFAULT_FILTERS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"equals", "not", "gt", "gte", "lt", "lte", "in", "notIn"}
+});
+static ENUM_FILTERS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"equals", "not", "in", "notIn"}
+});
+static VEC_FILTERS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"equals", "has", "hasEvery", "hasSome", "isEmpty", "length"}
+});
+static MAP_FILTERS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset! {"equals", "has", "hasEvery", "hasSome", "isEmpty", "length", "hasKey"}
+});
