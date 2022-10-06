@@ -116,9 +116,17 @@ impl Decoder {
             return Err(ActionError::unexpected_input_value_with_reason("Unique where can't be empty.", path));
         }
         for index in model.indices() {
-            index.
+            if index.keys() == &json_map.keys().into_iter().map(|k| k.to_owned()).collect::<Vec<String>>() {
+                let mut retval: HashMap<String, Value> = HashMap::new();
+                for (key, value) in json_map {
+                    let field = model.field(key).unwrap();
+                    let path = path + key;
+                    retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, field.r#type(), field.is_optional(), value, path)?);
+                    return Ok(Value::HashMap(retval));
+                }
+            }
         }
-        Ok(Value::Null)
+        Err(ActionError::unexpected_input_key(json_map.keys().next().unwrap(), path))
     }
 
     fn decode_where_for_field<'a>(graph: &Graph, r#type: &FieldType, optional: bool, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {

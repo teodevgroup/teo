@@ -7,19 +7,15 @@ use crate::core::action::r#type::ActionType;
 use crate::core::connector::{ConnectorBuilder};
 use crate::core::field::*;
 use crate::core::field::builder::FieldBuilder;
-
-
 use crate::core::permission::builder::PermissionBuilder;
 use crate::core::relation::builder::RelationBuilder;
-use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
-use crate::core::model::builder::index_builder::ModelIndexBuilder;
 use crate::core::relation::Relation;
 use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::property::builder::PropertyBuilder;
 use crate::core::property::Property;
 use crate::core::relation::delete_rule::DeleteRule;
-
-pub(crate) mod index_builder;
+use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
+use crate::core::model::index::builder::{ModelIndexBuilder};
 
 pub struct ModelBuilder {
     pub(crate) name: String,
@@ -143,13 +139,15 @@ impl ModelBuilder {
     pub fn primary<I, T>(&mut self, keys: I) -> &mut Self where I: IntoIterator<Item = T>, T: Into<String> {
         let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
         let name = string_keys.join("_");
-        let items = string_keys.iter().map(|k| {
+        let items: Vec<ModelIndexItem> = string_keys.iter().map(|k| {
             ModelIndexItem { field_name: k.to_string(), sort: Sort::Asc, len: None }
         }).collect();
+        let keys: Vec<String> = items.iter().map(|i| i.field_name().to_string()).collect();
         let index = ModelIndex {
             index_type: ModelIndexType::Primary,
             name,
-            items
+            items,
+            keys,
         };
         let primary_index = index.clone();
         self.indices.push(index);
@@ -167,13 +165,15 @@ impl ModelBuilder {
     pub fn index<I, T>(&mut self, keys: I) -> &mut Self where I: IntoIterator<Item = T>, T: Into<String> {
         let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
         let name = string_keys.join("_");
-        let items = string_keys.iter().map(|k| {
+        let items: Vec<ModelIndexItem> = string_keys.iter().map(|k| {
             ModelIndexItem { field_name: k.to_string(), sort: Sort::Asc, len: None }
         }).collect();
+        let keys: Vec<String> = items.iter().map(|i| i.field_name().to_string()).collect();
         let index = ModelIndex {
             index_type: ModelIndexType::Index,
             name,
-            items
+            items,
+            keys,
         };
         self.indices.push(index);
         self
@@ -189,13 +189,15 @@ impl ModelBuilder {
     pub fn unique<I, T>(&mut self, keys: I) -> &mut Self where I: IntoIterator<Item = T>, T: Into<String> {
         let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
         let name = string_keys.join("_");
-        let items = string_keys.iter().map(|k| {
+        let items: Vec<ModelIndexItem> = string_keys.iter().map(|k| {
             ModelIndexItem { field_name: k.to_string(), sort: Sort::Asc, len: None }
         }).collect();
+        let keys: Vec<String> = items.iter().map(|i| i.field_name().to_string()).collect();
         let index = ModelIndex {
             index_type: ModelIndexType::Unique,
             name,
-            items
+            items,
+            keys,
         };
         self.indices.push(index);
         self

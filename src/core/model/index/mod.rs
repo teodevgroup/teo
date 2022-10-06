@@ -1,5 +1,7 @@
 use crate::core::field::Sort;
 
+pub mod builder;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum ModelIndexType {
     Primary,
@@ -48,7 +50,8 @@ impl ModelIndexItem {
 pub(crate) struct ModelIndex {
     pub(self) index_type: ModelIndexType,
     pub(self) name: String,
-    pub(self) items: Vec<ModelIndexItem>
+    pub(self) items: Vec<ModelIndexItem>,
+    pub(self) keys: Vec<String>,
 }
 
 impl ModelIndex {
@@ -62,5 +65,9 @@ impl ModelIndex {
 
     pub(crate) fn items(&self) -> &Vec<ModelIndexItem> {
         &self.items
+    }
+
+    pub(crate) fn keys(&self) -> &Vec<String> {
+        &self.keys
     }
 }
