@@ -24,7 +24,7 @@ impl Decoder {
         Self::decode_internal(model, graph, action, json_value, path![])
     }
 
-    fn decode_internal(model: &Model, graph: &Graph, action: ActionType, json_value: &JsonValue, path: impl AsRef<KeyPath>) -> ActionResult<Value> {
+    fn decode_internal<'a>(model: &Model, graph: &Graph, action: ActionType, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         let path = path.as_ref();
         let json_map = if let Some(json_map) = json_value.as_object() {
             json_map
@@ -50,7 +50,7 @@ impl Decoder {
         Ok(())
     }
 
-    fn decode_where(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath>) -> ActionResult<Value> {
+    fn decode_where<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         let path = path.as_ref();
         let json_map = if let Some(json_map) = json_value.as_object() {
             json_map
@@ -105,7 +105,7 @@ impl Decoder {
         Ok(Value::HashMap(retval))
     }
 
-    fn decode_where_unique(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath>) -> ActionResult<Value> {
+    fn decode_where_unique<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         let path = path.as_ref();
         let json_map = if let Some(json_map) = json_value.as_object() {
             json_map
@@ -114,6 +114,9 @@ impl Decoder {
         };
         if json_map.len() == 0 {
             return Err(ActionError::unexpected_input_value_with_reason("Unique where can't be empty.", path));
+        }
+        for index in model.indices() {
+            index.
         }
         Ok(Value::Null)
     }

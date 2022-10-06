@@ -1,5 +1,5 @@
 use crate::core::field::Sort;
-use crate::core::model::{ModelIndex, ModelIndexItem, ModelIndexType};
+use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 
 pub struct ModelIndexBuilder {
     index_type: ModelIndexType,

@@ -11,7 +11,7 @@ use crate::core::field::builder::FieldBuilder;
 
 use crate::core::permission::builder::PermissionBuilder;
 use crate::core::relation::builder::RelationBuilder;
-use crate::core::model::{ModelIndex, ModelIndexItem, Model, ModelIndexType, ModelInner};
+use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::model::builder::index_builder::ModelIndexBuilder;
 use crate::core::relation::Relation;
 use crate::core::pipeline::builder::PipelineBuilder;

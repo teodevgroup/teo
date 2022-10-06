@@ -2,34 +2,16 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use crate::core::action::Action;
 use crate::core::action::r#type::ActionType;
-use crate::core::field::{Field, Sort};
+use crate::core::field::Field;
 use crate::core::permission::Permission;
 use crate::core::relation::Relation;
 use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
 
+use self::index::ModelIndex;
+
 pub(crate) mod builder;
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum ModelIndexType {
-    Primary,
-    Index,
-    Unique,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) struct ModelIndexItem {
-    pub(crate) field_name: String,
-    pub(crate) sort: Sort,
-    pub(crate) len: Option<usize>,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) struct ModelIndex {
-    pub(crate) index_type: ModelIndexType,
-    pub(crate) name: String,
-    pub(crate) items: Vec<ModelIndexItem>
-}
+pub(crate) mod index;
 
 pub struct ModelInner {
     pub(crate) name: String,
@@ -155,7 +137,7 @@ impl Model {
     }
 
     pub(crate) fn primary_field_names(&self) -> Vec<&str> {
-        self.inner.primary.as_ref().unwrap().items.iter().map(|i| i.field_name.as_str()).collect::<Vec<&str>>()
+        self.primary_index().items().iter().map(|i| i.field_name()).collect::<Vec<&str>>()
     }
 
     pub(crate) fn column_name_for_field_name(&self, column_name: &str) -> Option<&str> {

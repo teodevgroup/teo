@@ -367,37 +367,3 @@ pub(crate) fn decode_field_input(graph: &Graph, json_value: &Value, field_type: 
         _ => panic!()
     }
 }
-
-pub(crate) fn decode_relation_input( _object: &Object, json_value: &Value, relation: &Relation, path: &KeyPath) -> Result<Input, ActionError> {
-    if !json_value.is_object() {
-        return Err(ActionError::unexpected_input_type("object", path))
-    }
-    let (key, value) = one_length_json_obj(json_value, path)?;
-    let input = match key {
-        "create" => RelationInputType::Create(value.clone()),
-        "createMany" => if relation.is_vec() {
-            RelationInputType::Create(value.clone())
-        } else {
-            return Err(ActionError::unexpected_input_key(key, &(path + key)))
-        },
-        "set" => RelationInputType::Set(value.clone()),
-        "connect" => RelationInputType::Connect(value.clone()),
-        "connectOrCreate" => RelationInputType::ConnectOrCreate(value.clone(), value.clone()),
-        "disconnect" => RelationInputType::Disconnect(value.clone()),
-        "update" => RelationInputType::Update(value.clone()),
-        "updateMany" => if relation.is_vec() {
-            RelationInputType::Update(value.clone())
-        } else {
-            return Err(ActionError::unexpected_input_key(key, &(path + key)))
-        },
-        "upsert" => RelationInputType::Upsert(value.clone(), value.clone()),
-        "delete" => RelationInputType::Delete(value.clone()),
-        "deleteMany" => if relation.is_vec() {
-            RelationInputType::Delete(value.clone())
-        } else {
-            return Err(ActionError::unexpected_input_key(key, &(path + key)))
-        },
-        _ => return Err(ActionError::unexpected_input_key(key, &(path + key)))
-    };
-    Ok(Input::RelationInput(input))
-}
