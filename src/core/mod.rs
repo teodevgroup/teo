@@ -18,4 +18,5 @@ pub mod object;
 pub mod permission;
 pub mod connector;
 pub mod save_session;
+pub mod tson;
 pub mod json_pipeline;
