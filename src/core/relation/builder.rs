@@ -136,7 +136,9 @@ impl RelationBuilder {
             fields: self.fields.clone(),
             references: self.references.clone(),
             delete_rule: self.delete_rule,
-            has_foreign_key: self.fields.iter().find(|name| fields.get(name.as_str()).unwrap().foreign_key).is_some()
+            has_foreign_key: if self.through.is_some() { false } else {
+                self.fields.iter().find(|name| fields.get(name.as_str()).unwrap().foreign_key).is_some()
+            }
         }
     }
 }

@@ -75,8 +75,8 @@ The new generation server software.
 - Object environment **[DONE]**
 
 #### 0.0.30
-- Unlink rules
-- Delete rules
+- Delete rules **[DONE]**
+- Fix SQL databases delete result
 
 #### 0.0.31
 - Handle manipulation uses single or many
