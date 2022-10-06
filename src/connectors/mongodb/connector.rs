@@ -1,11 +1,13 @@
 use std::collections::{HashMap};
 use std::fmt::{Debug};
+use std::ops::Neg;
 use std::sync::Arc;
 use rust_decimal::prelude::FromStr;
 use std::sync::atomic::{Ordering};
 use async_recursion::async_recursion;
 use async_trait::async_trait;
 use bson::{Bson, doc, Document};
+use bson::oid::ObjectId;
 use futures_util::StreamExt;
 use key_path::path;
 use mongodb::{options::ClientOptions, Client, Database, Collection, IndexModel};
@@ -181,7 +183,7 @@ impl MongoDBConnector {
                 };
                 let relation = relation.unwrap();
                 let model_name = relation.model();
-                let object_bsons = document.get(key).unwrap().as_array().unwrap();
+                let object_bsons = document.get(key).unwrap().as_vec().unwrap();
                 let mut related: Vec<Object> = vec![];
                 for related_object_bson in object_bsons {
                     let env = object.env().nested(Intent::NestedIncluded);
@@ -395,7 +397,7 @@ impl MongoDBConnector {
                 }
             }
             FieldType::Vec(inner) => {
-                match bson_value.as_array() {
+                match bson_value.as_vec() {
                     Some(arr) => {
                         let mut vec: Vec<Value> = vec![];
                         for val in arr {
@@ -465,17 +467,17 @@ impl MongoDBConnector {
                 }
                 // aggregate
                 if g.starts_with("_") {
-                    retval.as_object_mut().unwrap().insert(g.clone(), tson!({}));
+                    retval.as_hashmap_mut().unwrap().insert(g.clone(), tson!({}));
                     for (dbk, v) in o.as_document().unwrap() {
                         let k = if dbk == "_all" { "_all" } else { model.column_name_for_field_name(dbk).unwrap() };
                         if let Some(f) = v.as_f64() {
-                            retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), tson!(f));
+                            retval.as_hashmap_mut().unwrap().get_mut(g.as_str()).unwrap().as_hashmap_mut().unwrap().insert(k.to_string(), tson!(f));
                         } else if let Some(i) = v.as_i64() {
-                            retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), tson!(i));
+                            retval.as_hashmap_mut().unwrap().get_mut(g.as_str()).unwrap().as_hashmap_mut().unwrap().insert(k.to_string(), tson!(i));
                         } else if let Some(i) = v.as_i32() {
-                            retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), tson!(i));
+                            retval.as_hashmap_mut().unwrap().get_mut(g.as_str()).unwrap().as_hashmap_mut().unwrap().insert(k.to_string(), tson!(i));
                         } else if v.as_null().is_some() {
-                            retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), tson!(null));
+                            retval.as_hashmap_mut().unwrap().get_mut(g.as_str()).unwrap().as_hashmap_mut().unwrap().insert(k.to_string(), tson!(null));
                         }
                     }
                 } else {
@@ -485,7 +487,7 @@ impl MongoDBConnector {
                         self.bson_value_to_field_value(g, o, &field.field_type).unwrap()
                     };
                     let json_val = val;
-                    retval.as_object_mut().unwrap().insert(g.to_string(), json_val);
+                    retval.as_hashmap_mut().unwrap().insert(g.to_string(), json_val);
                 }
             }
             final_retval.push(retval);
@@ -523,7 +525,7 @@ impl MongoDBConnector {
                 for key in auto_keys {
                     let field = model.field(key).unwrap();
                     if field.column_name() == "_id" {
-                        object.set_value(field.name(), Value::ObjectId(id.clone()))?;
+                        object.set_value(field.name(), Value::ObjectId(ObjectId::from_str(id.as_str()).unwrap()))?;
                     }
                 }
             }
@@ -722,7 +724,7 @@ impl Connector for MongoDBConnector {
     }
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize, ActionError> {
-        let finder = finder.as_object().unwrap();
+        let finder = finder.as_hashmap().unwrap();
         let r#where = finder.get("where");
         let col = &self.collections[model.name()];
         let where_input = build_where_input(model, graph, r#where, &path![]);
@@ -746,11 +748,11 @@ impl Connector for MongoDBConnector {
         if results.is_empty() {
             // there is no record
             let mut retval = tson!({});
-            for (g, o) in finder.as_object().unwrap() {
-                retval.as_object_mut().unwrap().insert(g.clone(), tson!({}));
-                for (k, _v) in o.as_object().unwrap() {
+            for (g, o) in finder.as_hashmap().unwrap() {
+                retval.as_hashmap_mut().unwrap().insert(g.clone(), tson!({}));
+                for (k, _v) in o.as_hashmap().unwrap() {
                     let value = if g == "_count" { tson!(0) } else { tson!(null) };
-                    retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), value);
+                    retval.as_hashmap_mut().unwrap().get_mut(g.as_str()).unwrap().as_hashmap_mut().unwrap().insert(k.to_string(), value);
                 }
             }
             Ok(retval)

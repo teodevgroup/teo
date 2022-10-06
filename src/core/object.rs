@@ -481,7 +481,7 @@ impl Object {
         }
         let mut true_list: Vec<&str> = vec![];
         let mut false_list: Vec<&str> = vec![];
-        let map = select.unwrap().as_object().unwrap();
+        let map = select.unwrap().as_hashmap().unwrap();
         for (key, value) in map {
             let bool_value = value.as_bool().unwrap();
             if bool_value {
@@ -1060,7 +1060,7 @@ impl Object {
                     }
                 }
                 if !value.is_null() {
-                    if value.is_object() {
+                    if value.is_hashmap() {
                         map.insert(key.to_string(), value.to_object_json_value().await.unwrap());
                     } else if value.is_object_vec() {
                         map.insert(key.to_string(), value.to_object_vec_json_value().await.unwrap());
@@ -1070,7 +1070,7 @@ impl Object {
                 }
             }
         }
-        return Ok(Value::Object(map))
+        return Ok(Value::HashMap(map))
     }
 
     pub fn is_new(&self) -> bool {
@@ -1117,7 +1117,7 @@ impl Object {
         let mut identifier = tson!({});
         for item in &model.primary_index().items {
             let val = self.get_value(&item.field_name).unwrap();
-            identifier.as_object_mut().unwrap().insert(item.field_name.clone(), val);
+            identifier.as_hashmap_mut().unwrap().insert(item.field_name.clone(), val);
         }
         identifier
     }
@@ -1132,10 +1132,10 @@ impl Object {
             "where": self.json_identifier(),
         });
         if include.is_some() {
-            finder.as_object_mut().unwrap().insert("include".to_string(), include.unwrap().clone());
+            finder.as_hashmap_mut().unwrap().insert("include".to_string(), include.unwrap().clone());
         }
         if select.is_some() {
-            finder.as_object_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
+            finder.as_hashmap_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
         }
         graph.find_unique(self.model().name(), &finder, false, self.env().clone()).await
     }
@@ -1146,7 +1146,7 @@ impl Object {
             let foreign_field_name = relation.references().get(index).unwrap();
             let value = self.get_value(local_field_name).unwrap();
             let json_value = value;
-            finder_where.as_object_mut().unwrap().insert(foreign_field_name.to_owned(), json_value);
+            finder_where.as_hashmap_mut().unwrap().insert(foreign_field_name.to_owned(), json_value);
         }
         tson!({ "where": finder_where })
     }
@@ -1162,10 +1162,10 @@ impl Object {
         let mut finder = self.finder_for_relation(relation);
         if let Some(find_unique_arg) = find_unique_arg {
             if let Some(include) = find_unique_arg.get("include") {
-                finder.as_object_mut().unwrap().insert("include".to_owned(), include.clone());
+                finder.as_hashmap_mut().unwrap().insert("include".to_owned(), include.clone());
             }
             if let Some(select) = find_unique_arg.get("select") {
-                finder.as_object_mut().unwrap().insert("select".to_owned(), select.clone());
+                finder.as_hashmap_mut().unwrap().insert("select".to_owned(), select.clone());
             }
         }
         let relation_model_name = relation.model();
@@ -1217,12 +1217,12 @@ impl Object {
         } else {
             let mut finder = tson!({});
             if let Some(find_many_arg) = find_many_arg {
-                for (k, v) in find_many_arg.as_object().unwrap().iter() {
-                    finder.as_object_mut().unwrap().insert(k.clone(), v.clone());
+                for (k, v) in find_many_arg.as_hashmap().unwrap().iter() {
+                    finder.as_hashmap_mut().unwrap().insert(k.clone(), v.clone());
                 }
             }
-            if finder.as_object().unwrap().get("where").is_none() {
-                finder.as_object_mut().unwrap().insert("where".to_string(), tson!({}));
+            if finder.as_hashmap().unwrap().get("where").is_none() {
+                finder.as_hashmap_mut().unwrap().insert("where".to_string(), tson!({}));
             }
             for (index, local_field_name) in relation.fields().iter().enumerate() {
                 let foreign_field_name = relation.references().get(index).unwrap();
@@ -1231,7 +1231,7 @@ impl Object {
                     return Ok(vec![]);
                 }
                 let json_value = value;
-                finder.as_object_mut().unwrap().get_mut("where").unwrap().as_object_mut().unwrap().insert(foreign_field_name.to_owned(), json_value);
+                finder.as_hashmap_mut().unwrap().get_mut("where").unwrap().as_hashmap_mut().unwrap().insert(foreign_field_name.to_owned(), json_value);
             }
             let relation_model_name = relation.model();
             let graph = self.graph();

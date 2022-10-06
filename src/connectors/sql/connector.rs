@@ -153,7 +153,7 @@ impl SQLConnector {
                 // };
                 // let relation = relation.unwrap();
                 // let model_name = relation.model();
-                // let object_bsons = document.get(key).unwrap().as_array().unwrap();
+                // let object_bsons = document.get(key).unwrap().as_vec().unwrap();
                 // let mut related: Vec<Object> = vec![];
                 // for related_object_bson in object_bsons {
                 //     let related_object = object.graph().new_object(model_name)?;
@@ -273,7 +273,7 @@ impl SQLConnector {
                     }
                 }
                 if let Some(include) = include {
-                    if let Some(include_map) = include.as_object() {
+                    if let Some(include_map) = include.as_hashmap() {
                         for (relation_name, include_value) in include_map {
                             let relation = model.relation(relation_name);
                             if relation.is_none() {

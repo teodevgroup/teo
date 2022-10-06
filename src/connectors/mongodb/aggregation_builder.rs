@@ -220,7 +220,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
             if value.is_string() {
                 parse_object_id(value, path)
             } else if value.is_object() {
-                let map = value.as_object().unwrap();
+                let map = value.as_hashmap().unwrap();
                 let mut result = doc!{};
                 for (key, value) in map {
                     match key.as_str() {
@@ -249,7 +249,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                             result.insert("$lte", oid);
                         }
                         "in" => {
-                            match value.as_array() {
+                            match value.as_vec() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for (index, val) in arr_val.iter().enumerate() {
@@ -263,7 +263,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                             }
                         }
                         "notIn" => {
-                            match value.as_array() {
+                            match value.as_vec() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for (index, val) in arr_val.iter().enumerate() {
@@ -290,7 +290,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
             if value.is_boolean() {
                 Ok(Bson::Boolean(value.as_bool().unwrap()))
             } else if value.is_object() {
-                let map = value.as_object().unwrap();
+                let map = value.as_hashmap().unwrap();
                 let mut result = doc!{};
                 for (key, value) in map {
                     match key.as_str() {
@@ -320,7 +320,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
             } else if value.is_f64() {
                 Ok(Bson::Int64(value.as_f64().unwrap() as i64))
             } else if value.is_object() {
-                let map = value.as_object().unwrap();
+                let map = value.as_hashmap().unwrap();
                 let mut result = doc!{};
                 for (key, value) in map {
                     match key.as_str() {
@@ -349,7 +349,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                             result.insert("$lte", oid);
                         }
                         "in" => {
-                            match value.as_array() {
+                            match value.as_vec() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for (index, val) in arr_val.iter().enumerate() {
@@ -363,7 +363,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                             }
                         }
                         "notIn" => {
-                            match value.as_array() {
+                            match value.as_vec() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for (index, val) in arr_val.iter().enumerate() {
@@ -394,7 +394,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
             } else if value.is_f64() {
                 Ok(Bson::Double(value.as_f64().unwrap()))
             } else if value.is_object() {
-                let map = value.as_object().unwrap();
+                let map = value.as_hashmap().unwrap();
                 let mut result = doc!{};
                 for (key, value) in map {
                     match key.as_str() {
@@ -423,7 +423,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                             result.insert("$lte", oid);
                         }
                         "in" => {
-                            match value.as_array() {
+                            match value.as_vec() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for (index, val) in arr_val.iter().enumerate() {
@@ -437,7 +437,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                             }
                         }
                         "notIn" => {
-                            match value.as_array() {
+                            match value.as_vec() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for (index, val) in arr_val.iter().enumerate() {
@@ -467,7 +467,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
             if value.is_string() {
                 Ok(Bson::String(value.as_str().unwrap().to_string()))
             } else if value.is_object() {
-                let map = value.as_object().unwrap();
+                let map = value.as_hashmap().unwrap();
                 let mut result = doc!{};
                 for (key, value) in map {
                     match key.as_str() {
@@ -496,7 +496,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                             result.insert("$lte", oid);
                         }
                         "in" => {
-                            match value.as_array() {
+                            match value.as_vec() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for (index, val) in arr_val.iter().enumerate() {
@@ -510,7 +510,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                             }
                         }
                         "notIn" => {
-                            match value.as_array() {
+                            match value.as_vec() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for (index, val) in arr_val.iter().enumerate() {
@@ -570,7 +570,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
             if value.is_string() {
                 parse_date(value, &(path))
             } else if value.is_object() {
-                let map = value.as_object().unwrap();
+                let map = value.as_hashmap().unwrap();
                 let mut result = doc!{};
                 for (key, value) in map {
                     match key.as_str() {
@@ -599,7 +599,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                             result.insert("$lte", oid);
                         }
                         "in" => {
-                            match value.as_array() {
+                            match value.as_vec() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for (index, val) in arr_val.iter().enumerate() {
@@ -613,7 +613,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                             }
                         }
                         "notIn" => {
-                            match value.as_array() {
+                            match value.as_vec() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for (index, val) in arr_val.iter().enumerate() {
@@ -641,7 +641,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
             if value.is_string() {
                 parse_datetime(value, path)
             } else if value.is_object() {
-                let map = value.as_object().unwrap();
+                let map = value.as_hashmap().unwrap();
                 let mut result = doc!{};
                 for (key, value) in map {
                     match key.as_str() {
@@ -670,7 +670,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                             result.insert("$lte", oid);
                         }
                         "in" => {
-                            match value.as_array() {
+                            match value.as_vec() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for (index, val) in arr_val.iter().enumerate() {
@@ -684,7 +684,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                             }
                         }
                         "notIn" => {
-                            match value.as_array() {
+                            match value.as_vec() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for (index, val) in arr_val.iter().enumerate() {
@@ -711,7 +711,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
             if value.is_string() {
                 parse_enum(value, enum_name, graph, path)
             } else if value.is_object() {
-                let map = value.as_object().unwrap();
+                let map = value.as_hashmap().unwrap();
                 let mut result = doc!{};
                 for (key, value) in map {
                     match key.as_str() {
@@ -724,7 +724,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                             result.insert("$ne", b);
                         }
                         "in" => {
-                            match value.as_array() {
+                            match value.as_vec() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for (index, val) in arr_val.iter().enumerate() {
@@ -738,7 +738,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                             }
                         }
                         "notIn" => {
-                            match value.as_array() {
+                            match value.as_vec() {
                                 Some(arr_val) => {
                                     let mut arr: Vec<Bson> = Vec::new();
                                     for (index, val) in arr_val.iter().enumerate() {
@@ -778,7 +778,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                         if !matcher.is_array() {
                             return Err(ActionError::unexpected_input_type("array", &(path + "hasEvery")));
                         }
-                        let matcher = matcher.as_array().unwrap();
+                        let matcher = matcher.as_vec().unwrap();
                         let inner = matcher.iter().map(|v| {
                             parse_bson_where_entry(&inner_field.field_type, v, graph, path).unwrap()
                         }).collect::<Vec<Bson>>();
@@ -788,7 +788,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                         if !matcher.is_array() {
                             return Err(ActionError::unexpected_input_type("array", &(path + "hasSome")));
                         }
-                        let matcher = matcher.as_array().unwrap();
+                        let matcher = matcher.as_vec().unwrap();
                         let inner = matcher.iter().map(|v| {
                             parse_bson_where_entry(&inner_field.field_type, v, graph, path).unwrap()
                         }).collect::<Vec<Bson>>();
@@ -808,7 +808,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                         if !matcher.is_array() {
                             return Err(ActionError::unexpected_input_type("array", &(path + "equals")));
                         }
-                        let matcher = matcher.as_array().unwrap();
+                        let matcher = matcher.as_vec().unwrap();
                         let inner = matcher.iter().map(|v| {
                             parse_bson_where_entry(&inner_field.field_type, v, graph, path).unwrap()
                         }).collect::<Vec<Bson>>();
@@ -836,7 +836,7 @@ pub(crate) fn build_unsets_for_match_lookup(model: &Model, _graph: &Graph, r#whe
     if let None = r#where { return Ok(vec![]); }
     let r#where = r#where.unwrap();
     if !r#where.is_object() { return Err(ActionError::invalid_query_input("'where' should be an object.")); }
-    let r#where = r#where.as_object().unwrap();
+    let r#where = r#where.as_hashmap().unwrap();
     let mut retval: Vec<Document> = vec![];
     for (key, _value) in r#where.iter() {
         let relation = model.relation(key);
@@ -851,7 +851,7 @@ pub(crate) fn build_match_prediction_lookup(model: &Model, graph: &Graph, r#wher
     if let None = r#where { return Ok(vec![]); }
     let r#where = r#where.unwrap();
     if !r#where.is_object() { return Err(ActionError::invalid_query_input("'where' should be an object.")); }
-    let r#where = r#where.as_object().unwrap();
+    let r#where = r#where.as_hashmap().unwrap();
     let mut include_input = HashMap::new();
     for (key, value) in r#where.iter() {
         let relation = model.relation(key);
@@ -891,19 +891,19 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&V
     if let None = r#where { return Ok(doc!{}); }
     let r#where = r#where.unwrap();
     if !r#where.is_object() { return Err(ActionError::invalid_query_input("'where' should be an object.")); }
-    let r#where = r#where.as_object().unwrap();
+    let r#where = r#where.as_hashmap().unwrap();
     let mut doc = doc!{};
     for (key, value) in r#where.iter() {
         if key == "AND" {
             let mut vals: Vec<Document> = vec![];
-            for val in value.as_array().unwrap() {
+            for val in value.as_vec().unwrap() {
                 vals.push(build_where_input(model, graph, Some(val), &(path + "AND"))?);
             }
             doc.insert("$and", vals);
             continue;
         } else if key == "OR" {
             let mut vals: Vec<Document> = vec![];
-            for val in value.as_array().unwrap() {
+            for val in value.as_vec().unwrap() {
                 vals.push(build_where_input(model, graph, Some(val), &(path + "OR"))?);
             }
             doc.insert("$or", vals);
@@ -989,7 +989,7 @@ fn distinct_key(original: impl AsRef<str>) -> String {
 fn build_select_input(model: &Model, _graph: &Graph, select: &Value, distinct: Option<&Value>) -> Result<Option<Document>, ActionError> {
     let mut true_list: Vec<&str> = vec![];
     let mut false_list: Vec<&str> = vec![];
-    let map = select.as_object().unwrap();
+    let map = select.as_hashmap().unwrap();
     for (key, value) in map {
         let bool_value = value.as_bool().unwrap();
         if bool_value {
@@ -1088,7 +1088,7 @@ fn build_lookup_inputs(
     include: &Value,
     path: &KeyPath,
 ) -> Result<Vec<Document>, ActionError> {
-    let include = include.as_object();
+    let include = include.as_hashmap();
     if include.is_none() {
         let model_name = model.name();
         return Err(ActionError::invalid_query_input(format!("'include' on model '{model_name}' is not an object. Please check your input.")));
@@ -1136,7 +1136,7 @@ fn build_lookup_inputs(
                 if inner_match_inner.get("$expr").unwrap().as_document().unwrap().get("$and").is_none() {
                     inner_match_inner.get_mut("$expr").unwrap().as_document_mut().unwrap().insert("$and", vec![] as Vec<Document>);
                 }
-                inner_match_inner.get_mut("$expr").unwrap().as_document_mut().unwrap().get_mut("$and").unwrap().as_array_mut().unwrap().extend(eq_values.iter().map(|item| Bson::Document(item.clone())));
+                inner_match_inner.get_mut("$expr").unwrap().as_document_mut().unwrap().get_mut("$and").unwrap().as_vec_mut().unwrap().extend(eq_values.iter().map(|item| Bson::Document(item.clone())));
                 if has_inner_match {
                     let index = inner_pipeline.iter().position(|v| v.get("$match").is_some()).unwrap();
                     inner_pipeline.remove(index);
@@ -1404,11 +1404,11 @@ fn build_query_pipeline(
         if !order_by.is_object() {
             return Err(ActionError::invalid_query_input("'orderBy' should be an object."));
         }
-        let order_by_map = order_by.as_object().unwrap();
+        let order_by_map = order_by.as_hashmap().unwrap();
         if order_by_map.len() != 1 {
             return Err(ActionError::invalid_query_input("'orderBy' used with 'cursor' should have a single key which represents a unique constraint."));
         }
-        let cursor_map = cursor.as_object().unwrap();
+        let cursor_map = cursor.as_hashmap().unwrap();
         if cursor_map.len() != 1 {
             return Err(ActionError::invalid_query_input("'cursor' should have a single key which represents a unique constraint."));
         }
@@ -1500,7 +1500,7 @@ fn build_query_pipeline(
     if let Some(distinct) = distinct {
         // $group
         let mut group_id = doc!{};
-        for value in distinct.as_array().unwrap().iter() {
+        for value in distinct.as_vec().unwrap().iter() {
             let val = value.as_str().unwrap();
             group_id.insert(val, format!("${val}"));
         }
@@ -1554,7 +1554,7 @@ fn build_query_pipeline(
     if let Some(aggregates) = the_aggregates {
         let mut group = if let Some(by) = by {
             let mut id_for_group_by = doc!{};
-            for key in by.as_array().unwrap() {
+            for key in by.as_vec().unwrap() {
                 let k = key.as_str().unwrap();
                 let dbk = model.field(k).unwrap().column_name();
                 id_for_group_by.insert(dbk, doc!{
@@ -1568,24 +1568,24 @@ fn build_query_pipeline(
         let mut set = doc!{};
         let mut unset: Vec<String> = vec![];
         if let Some(by) = by {
-            for key in by.as_array().unwrap() {
+            for key in by.as_vec().unwrap() {
                 let k = key.as_str().unwrap();
                 let dbk = model.field(k).unwrap().column_name();
                 set.insert(k, format!("$_id.{dbk}"));
             }
         }
         if let Some(having) = having {
-            for (k, o) in having.as_object().unwrap() {
+            for (k, o) in having.as_hashmap().unwrap() {
                 let _dbk = model.field(k).unwrap().column_name();
-                for (g, _matcher) in o.as_object().unwrap() {
+                for (g, _matcher) in o.as_hashmap().unwrap() {
                     let g = g.strip_prefix("_").unwrap();
                     insert_group_set_unset_for_aggregate(model, &mut group, &mut set, &mut unset, k, g, true);
                 }
             }
         }
-        for (g, o) in aggregates.as_object().unwrap() {
+        for (g, o) in aggregates.as_hashmap().unwrap() {
             let g = g.strip_prefix("_").unwrap();
-            for (k, _t) in o.as_object().unwrap() {
+            for (k, _t) in o.as_hashmap().unwrap() {
                 insert_group_set_unset_for_aggregate(model, &mut group, &mut set, &mut unset, k, g, false);
             }
         }
@@ -1598,9 +1598,9 @@ fn build_query_pipeline(
         if let Some(having) = having {
             let mut having_match = doc!{};
             let mut having_unset: Vec<String> = Vec::new();
-            for (k, o) in having.as_object().unwrap() {
+            for (k, o) in having.as_hashmap().unwrap() {
                 let dbk = model.field(k).unwrap().column_name();
-                for (g, matcher) in o.as_object().unwrap() {
+                for (g, matcher) in o.as_hashmap().unwrap() {
                     let g = g.strip_prefix("_").unwrap();
                     let matcher_bson = parse_bson_where_entry(&FieldType::F64, matcher, graph, &(path + "having" + k + format!("_{g}")))?;
                     having_match.insert(format!("_having_{g}.{dbk}"), matcher_bson);
@@ -1616,7 +1616,7 @@ fn build_query_pipeline(
         let mut group_by_sort = doc!{};
         if let Some(by) = by {
             // we need to order these
-            for key in by.as_array().unwrap() {
+            for key in by.as_vec().unwrap() {
                 let k = key.as_str().unwrap();
                 group_by_sort.insert(k, 1);
             }

@@ -106,7 +106,7 @@ async fn writeonly_field_cannot_output_into_to_json() {
     let simple = graph.create_object("Writeonly", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"writeonly": "123"})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("writeonly"), None);
+    assert_eq!(json_output.as_hashmap().unwrap().get("writeonly"), None);
 }
 
 #[test]
@@ -141,7 +141,7 @@ async fn internal_field_cannot_output_into_to_json() {
     let simple = graph.create_object("Internal", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"internal": "123"})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("internal"), None);
+    assert_eq!(json_output.as_hashmap().unwrap().get("internal"), None);
 }
 
 #[test]

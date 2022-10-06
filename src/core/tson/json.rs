@@ -3,7 +3,7 @@ use serde_json::{Value as JsonValue, Number as JsonNumber, Map as JsonMap};
 use crate::core::tson::Value;
 
 impl Into<JsonValue> for Value {
-    fn into(self) -> Value {
+    fn into(self) -> JsonValue {
         match self {
             Value::Null => {
                 JsonValue::Null

@@ -65,7 +65,7 @@ impl ValueToSQLString for Value {
             } else {
                 Err(ActionError::unexpected_input_type(enum_name.as_str().or_null(optional), path))
             }
-            FieldType::Vec(element_field) => if let Some(val) = self.as_array() {
+            FieldType::Vec(element_field) => if let Some(val) = self.as_vec() {
                 let mut result: Vec<String> = vec![];
                 for (i, v) in val.iter().enumerate() {
                     let path = path.as_ref() + i as usize;

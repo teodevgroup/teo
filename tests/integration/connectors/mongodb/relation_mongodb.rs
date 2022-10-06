@@ -123,10 +123,10 @@ async fn create_with_relation_create() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("name").unwrap(), &Value::String("John Peterson".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
@@ -152,10 +152,10 @@ async fn create_with_relation_create_many_implicitly() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("name").unwrap(), &Value::String("John Peterson".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
@@ -181,10 +181,10 @@ async fn create_with_relation_create_many() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("name").unwrap(), &Value::String("John Peterson".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
@@ -208,10 +208,10 @@ async fn create_with_relation_set() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("name").unwrap(), &Value::String("John Peterson".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
@@ -237,10 +237,10 @@ async fn create_with_relation_set_many_implicitly() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("name").unwrap(), &Value::String("John Peterson".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
@@ -264,10 +264,10 @@ async fn create_with_relation_connect() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("name").unwrap(), &Value::String("John Peterson".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
@@ -293,10 +293,10 @@ async fn create_with_relation_connect_many_implicitly() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("name").unwrap(), &Value::String("John Peterson".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
@@ -320,10 +320,10 @@ async fn create_with_relation_connect_or_create() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("name").unwrap(), &Value::String("John Peterson".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
@@ -349,10 +349,10 @@ async fn create_with_relation_connect_or_create_many_implicitly() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("name").unwrap(), &Value::String("John Peterson".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))

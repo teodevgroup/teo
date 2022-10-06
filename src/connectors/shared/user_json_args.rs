@@ -22,7 +22,7 @@ pub(crate) fn validate_where_unique(model: &Model, r#where: &Option<&Value>) -> 
     if !r#where.is_object() {
         return Err(ActionError::unexpected_input_type("object", path!["where"]));
     }
-    let values = r#where.as_object().unwrap();
+    let values = r#where.as_hashmap().unwrap();
     // see if key is valid
     let set_vec: Vec<String> = values.keys().map(|k| k.clone()).collect();
     let set = HashSet::from_iter(set_vec.iter().map(|k| k.clone()));
@@ -55,7 +55,7 @@ pub(crate) fn user_json_args<'a>(
     mutation_mode: bool,
     json_value: &'a Value,
 ) -> Result<UserJsonArgs<'a>, ActionError> {
-    let json_value = json_value.as_object();
+    let json_value = json_value.as_hashmap();
     if json_value.is_none() {
         return Err(ActionError::invalid_query_input("Query input should be an object."));
     }
@@ -75,21 +75,21 @@ pub(crate) fn user_json_args<'a>(
     let select = if !mutation_mode { json_value.get("select") } else { None };
     let mut aggregates: Value = tson!({});
     if let Some(avg) = json_value.get("_avg") {
-        aggregates.as_object_mut().unwrap().insert("_avg".to_string(), avg.clone());
+        aggregates.as_hashmap_mut().unwrap().insert("_avg".to_string(), avg.clone());
     }
     if let Some(sum) = json_value.get("_sum") {
-        aggregates.as_object_mut().unwrap().insert("_sum".to_string(), sum.clone());
+        aggregates.as_hashmap_mut().unwrap().insert("_sum".to_string(), sum.clone());
     }
     if let Some(max) = json_value.get("_max") {
-        aggregates.as_object_mut().unwrap().insert("_max".to_string(), max.clone());
+        aggregates.as_hashmap_mut().unwrap().insert("_max".to_string(), max.clone());
     }
     if let Some(min) = json_value.get("_min") {
-        aggregates.as_object_mut().unwrap().insert("_min".to_string(), min.clone());
+        aggregates.as_hashmap_mut().unwrap().insert("_min".to_string(), min.clone());
     }
     if let Some(count) = json_value.get("_count") {
-        aggregates.as_object_mut().unwrap().insert("_count".to_string(), count.clone());
+        aggregates.as_hashmap_mut().unwrap().insert("_count".to_string(), count.clone());
     }
-    let aggregates = if aggregates.as_object().unwrap().is_empty() { None } else { Some(aggregates) };
+    let aggregates = if aggregates.as_hashmap().unwrap().is_empty() { None } else { Some(aggregates) };
     let by = if !mutation_mode { json_value.get("by") } else { None };
     let having = if !mutation_mode { json_value.get("having") } else { None };
     Ok(UserJsonArgs {

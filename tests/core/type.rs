@@ -98,7 +98,7 @@ async fn object_id_output_is_string() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"objectId": "1234567890abcd1234567890abcd"})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("objectId").unwrap().as_str().unwrap(), "1234567890abcd1234567890abcd");
+    assert_eq!(json_output.as_hashmap().unwrap().get("objectId").unwrap().as_str().unwrap(), "1234567890abcd1234567890abcd");
 }
 
 #[test]
@@ -116,7 +116,7 @@ async fn string_output_is_string() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"string": "strval"})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("string").unwrap().as_str().unwrap(), "strval");
+    assert_eq!(json_output.as_hashmap().unwrap().get("string").unwrap().as_str().unwrap(), "strval");
 }
 
 #[test]
@@ -134,7 +134,7 @@ async fn bool_output_is_bool() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"bool": true})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("bool").unwrap().as_bool().unwrap(), true);
+    assert_eq!(json_output.as_hashmap().unwrap().get("bool").unwrap().as_bool().unwrap(), true);
 }
 
 #[test]
@@ -152,7 +152,7 @@ async fn i8_output_is_number() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"i8": 3})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("i8").unwrap().as_i64().unwrap(), 3);
+    assert_eq!(json_output.as_hashmap().unwrap().get("i8").unwrap().as_i64().unwrap(), 3);
 }
 
 #[test]
@@ -170,7 +170,7 @@ async fn i16_output_is_number() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"i16": 3})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("i16").unwrap().as_i64().unwrap(), 3);
+    assert_eq!(json_output.as_hashmap().unwrap().get("i16").unwrap().as_i64().unwrap(), 3);
 }
 
 #[test]
@@ -188,7 +188,7 @@ async fn i32_output_is_number() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"i32": 3})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("i32").unwrap().as_i64().unwrap(), 3);
+    assert_eq!(json_output.as_hashmap().unwrap().get("i32").unwrap().as_i64().unwrap(), 3);
 }
 
 #[test]
@@ -206,7 +206,7 @@ async fn i64_output_is_number() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"i64": 3})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("i64").unwrap().as_i64().unwrap(), 3);
+    assert_eq!(json_output.as_hashmap().unwrap().get("i64").unwrap().as_i64().unwrap(), 3);
 }
 
 #[test]
@@ -224,7 +224,7 @@ async fn i128_output_is_number() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"i128": 3})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("i128").unwrap().as_i64().unwrap(), 3);
+    assert_eq!(json_output.as_hashmap().unwrap().get("i128").unwrap().as_i64().unwrap(), 3);
 }
 
 #[test]
@@ -242,7 +242,7 @@ async fn u8_output_is_number() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"u8": 3})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("u8").unwrap().as_u64().unwrap(), 3);
+    assert_eq!(json_output.as_hashmap().unwrap().get("u8").unwrap().as_u64().unwrap(), 3);
 }
 
 #[test]
@@ -260,7 +260,7 @@ async fn u16_output_is_number() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"u16": 3})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("u16").unwrap().as_u64().unwrap(), 3);
+    assert_eq!(json_output.as_hashmap().unwrap().get("u16").unwrap().as_u64().unwrap(), 3);
 }
 
 #[test]
@@ -278,7 +278,7 @@ async fn u32_output_is_number() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"u32": 3})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("u32").unwrap().as_u64().unwrap(), 3);
+    assert_eq!(json_output.as_hashmap().unwrap().get("u32").unwrap().as_u64().unwrap(), 3);
 }
 
 #[test]
@@ -296,7 +296,7 @@ async fn u64_output_is_number() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"u64": 3})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("u64").unwrap().as_u64().unwrap(), 3);
+    assert_eq!(json_output.as_hashmap().unwrap().get("u64").unwrap().as_u64().unwrap(), 3);
 }
 
 #[test]
@@ -314,7 +314,7 @@ async fn u128_output_is_number() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"u128": 3})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("u128").unwrap().as_u64().unwrap(), 3);
+    assert_eq!(json_output.as_hashmap().unwrap().get("u128").unwrap().as_u64().unwrap(), 3);
 }
 
 #[test]
@@ -332,7 +332,7 @@ async fn f32_output_is_number() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"f32": 2.0})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("f32").unwrap().as_f64().unwrap(), 2.0);
+    assert_eq!(json_output.as_hashmap().unwrap().get("f32").unwrap().as_f64().unwrap(), 2.0);
 }
 
 #[test]
@@ -350,7 +350,7 @@ async fn f64_output_is_number() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"f64": 2.0})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("f64").unwrap().as_f64().unwrap(), 2.0);
+    assert_eq!(json_output.as_hashmap().unwrap().get("f64").unwrap().as_f64().unwrap(), 2.0);
 }
 
 #[test]
@@ -369,7 +369,7 @@ async fn date_output_is_string() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"date": "2022-05-20"})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("date").unwrap().as_str().unwrap(), "2022-05-20");
+    assert_eq!(json_output.as_hashmap().unwrap().get("date").unwrap().as_str().unwrap(), "2022-05-20");
 }
 
 #[test]
@@ -396,7 +396,7 @@ async fn datetime_output_is_string() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"datetime": "2022-05-20T04:27:16.428Z"})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("datetime").unwrap().as_str().unwrap(), "2022-05-20T04:27:16.428Z");
+    assert_eq!(json_output.as_hashmap().unwrap().get("datetime").unwrap().as_str().unwrap(), "2022-05-20T04:27:16.428Z");
 }
 
 #[test]
@@ -422,7 +422,7 @@ async fn enum_output_is_string() {
     let simple = graph.create_object("Simple", tson!({})).unwrap();
     let _ = simple.set_json(&tson!({"sex": "FEMALE"})).await;
     let json_output = simple.to_json();
-    assert_eq!(json_output.as_object().unwrap().get("sex").unwrap().as_str().unwrap(), "FEMALE");
+    assert_eq!(json_output.as_hashmap().unwrap().get("sex").unwrap().as_str().unwrap(), "FEMALE");
 }
 
 #[test]

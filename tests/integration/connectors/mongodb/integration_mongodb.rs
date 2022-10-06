@@ -104,10 +104,10 @@ async fn create_with_valid_data_creates_entry() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("1".to_string()));
     assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("1".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
@@ -127,10 +127,10 @@ async fn create_with_required_field_omitted_cannot_create() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_client_error());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("data"), None);
-    let body_error = body_obj.get("error").unwrap().as_object().unwrap();
+    let body_error = body_obj.get("error").unwrap().as_hashmap().unwrap();
     assert_eq!(body_error.get("type").unwrap().as_str().unwrap(), "ValidationError");
     assert_eq!(body_error.get("message").unwrap().as_str().unwrap(), "Value is required.");
     let body_error_errors = body_error.get("errors").unwrap();
@@ -161,10 +161,10 @@ async fn create_with_duplicated_unique_value_cannot_create() {
     let resp: ServiceResponse = test::call_service(&app, req2).await;
     assert!(resp.status().is_client_error());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("data"), None);
-    let body_error = body_obj.get("error").unwrap().as_object().unwrap();
+    let body_error = body_obj.get("error").unwrap().as_hashmap().unwrap();
     assert_eq!(body_error.get("type").unwrap().as_str().unwrap(), "ValidationError");
     assert_eq!(body_error.get("message").unwrap().as_str().unwrap(), "Input is not valid.");
     let body_error_errors = body_error.get("errors").unwrap();
@@ -188,10 +188,10 @@ async fn create_with_optional_data_creates_entry() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("1".to_string()));
     assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("1".to_string()));
     assert_eq!(body_data.get("optionalString").unwrap(), &Value::String("1".to_string()));
@@ -214,10 +214,10 @@ async fn create_with_correct_enum_value_creates_entry() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("1".to_string()));
     assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("1".to_string()));
     assert_eq!(body_data.get("optionalEnum").unwrap(), &Value::String("MALE".to_string()));
@@ -240,10 +240,10 @@ async fn create_with_invalid_enum_choice_value_cannot_create() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_client_error());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("data"), None);
-    let body_error = body_obj.get("error").unwrap().as_object().unwrap();
+    let body_error = body_obj.get("error").unwrap().as_hashmap().unwrap();
     assert_eq!(body_error.get("type").unwrap().as_str().unwrap(), "ValidationError");
     assert_eq!(body_error.get("message").unwrap().as_str().unwrap(), "Enum value is unexpected.");
     let body_error_errors = body_error.get("errors").unwrap();
@@ -266,10 +266,10 @@ async fn create_with_required_omitted_but_default_can_create() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("requiredWithDefault").unwrap(), &Value::Number(Number::from(2)));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
@@ -290,10 +290,10 @@ async fn create_default_field_use_provided_value_if_exists() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("requiredWithDefault").unwrap(), &Value::Number(Number::from(8)));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
@@ -314,10 +314,10 @@ async fn create_cannot_accept_readonly_value() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_client_error());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("data"), None);
-    let body_error = body_obj.get("error").unwrap().as_object().unwrap();
+    let body_error = body_obj.get("error").unwrap().as_hashmap().unwrap();
     assert_eq!(body_error.get("type").unwrap().as_str().unwrap(), "KeysUnallowed");
     assert_eq!(body_error.get("message").unwrap().as_str().unwrap(), "Unallowed keys detected.");
 }
@@ -337,10 +337,10 @@ async fn wont_output_writeonly_value() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("error"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("writeonly"), None);
 }
 
@@ -357,7 +357,7 @@ async fn find_unique_can_find_by_primary_key() {
     })).to_request();
     let create_resp: ServiceResponse = test::call_service(&app, create_req).await;
     let create_body_json: Value = test::read_body_json(create_resp).await;
-    let id = create_body_json.as_object().unwrap().get("data").unwrap().as_object().unwrap().get("id").unwrap().as_str().unwrap();
+    let id = create_body_json.as_hashmap().unwrap().get("data").unwrap().as_hashmap().unwrap().get("id").unwrap().as_str().unwrap();
     let find_unique_req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "FindUnique",
         "where": {
@@ -367,10 +367,10 @@ async fn find_unique_can_find_by_primary_key() {
     let resp: ServiceResponse = test::call_service(&app, find_unique_req).await;
     //assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("1".to_string()));
     assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("1".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
@@ -398,10 +398,10 @@ async fn find_unique_can_find_by_single_unique_key() {
     let resp: ServiceResponse = test::call_service(&app, find_unique_req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("1".to_string()));
     assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("1".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
@@ -431,10 +431,10 @@ async fn find_unique_can_find_by_compound_unique_key() {
     let resp: ServiceResponse = test::call_service(&app, find_unique_req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("one").unwrap(), &Value::String("1".to_string()));
     assert_eq!(body_data.get("two").unwrap(), &Value::String("2".to_string()));
     assert_eq!(body_data.get("three").unwrap(), &Value::String("3".to_string()));
@@ -470,16 +470,16 @@ async fn find_many_can_find_all() {
     let resp: ServiceResponse = test::call_service(&app, find_many_req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta").unwrap(), &tson!({"count": 2}));
     assert_eq!(body_obj.get("errors"), None);
-    let body_array = body_obj.get("data").unwrap().as_array().unwrap();
-    let body_data_1 = body_array.get(0).unwrap().as_object().unwrap();
+    let body_array = body_obj.get("data").unwrap().as_vec().unwrap();
+    let body_data_1 = body_array.get(0).unwrap().as_hashmap().unwrap();
     assert_eq!(body_data_1.get("one").unwrap(), &Value::String("1".to_string()));
     assert_eq!(body_data_1.get("two").unwrap(), &Value::String("2".to_string()));
     assert_eq!(body_data_1.get("three").unwrap(), &Value::String("3".to_string()));
     assert!(is_object_id(body_data_1.get("id").unwrap().as_str().unwrap()));
-    let body_data_2 = body_array.get(1).unwrap().as_object().unwrap();
+    let body_data_2 = body_array.get(1).unwrap().as_hashmap().unwrap();
     assert_eq!(body_data_2.get("one").unwrap(), &Value::String("one".to_string()));
     assert_eq!(body_data_2.get("two").unwrap(), &Value::String("two".to_string()));
     assert_eq!(body_data_2.get("three").unwrap(), &Value::String("three".to_string()));
@@ -519,11 +519,11 @@ async fn find_many_can_find_all_filtered_by_where() {
     let resp: ServiceResponse = test::call_service(&app, find_many_req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta").unwrap(), &tson!({"count": 1}));
     assert_eq!(body_obj.get("errors"), None);
-    let body_array = body_obj.get("data").unwrap().as_array().unwrap();
-    let body_data_2 = body_array.get(0).unwrap().as_object().unwrap();
+    let body_array = body_obj.get("data").unwrap().as_vec().unwrap();
+    let body_data_2 = body_array.get(0).unwrap().as_hashmap().unwrap();
     assert_eq!(body_data_2.get("one").unwrap(), &Value::String("one".to_string()));
     assert_eq!(body_data_2.get("two").unwrap(), &Value::String("two".to_string()));
     assert_eq!(body_data_2.get("three").unwrap(), &Value::String("three".to_string()));
@@ -543,8 +543,8 @@ async fn update_can_update_valid_contents() {
     })).to_request();
     let create_resp: ServiceResponse = test::call_service(&app, create_req).await;
     let create_body_json: Value = test::read_body_json(create_resp).await;
-    let create_body_obj = create_body_json.as_object().unwrap();
-    let id = create_body_obj.get("data").unwrap().as_object().unwrap().get("id").unwrap().as_str().unwrap();
+    let create_body_obj = create_body_json.as_hashmap().unwrap();
+    let id = create_body_obj.get("data").unwrap().as_hashmap().unwrap().get("id").unwrap().as_str().unwrap();
     let req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Update",
         "where": {
@@ -558,10 +558,10 @@ async fn update_can_update_valid_contents() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("5".to_string()));
     assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("5".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
@@ -582,8 +582,8 @@ async fn update_can_set_optional_value_back_to_null() {
     })).to_request();
     let create_resp: ServiceResponse = test::call_service(&app, create_req).await;
     let create_body_json: Value = test::read_body_json(create_resp).await;
-    let create_body_obj = create_body_json.as_object().unwrap();
-    let id = create_body_obj.get("data").unwrap().as_object().unwrap().get("id").unwrap().as_str().unwrap();
+    let create_body_obj = create_body_json.as_hashmap().unwrap();
+    let id = create_body_obj.get("data").unwrap().as_hashmap().unwrap().get("id").unwrap().as_str().unwrap();
     let req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Update",
         "where": {
@@ -598,10 +598,10 @@ async fn update_can_set_optional_value_back_to_null() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("5".to_string()));
     assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("5".to_string()));
     assert_eq!(body_data.get("optionalString"), None);
@@ -622,8 +622,8 @@ async fn delete_can_delete_record() {
     })).to_request();
     let create_resp: ServiceResponse = test::call_service(&app, create_req).await;
     let create_body_json: Value = test::read_body_json(create_resp).await;
-    let create_body_obj = create_body_json.as_object().unwrap();
-    let id = create_body_obj.get("data").unwrap().as_object().unwrap().get("id").unwrap().as_str().unwrap();
+    let create_body_obj = create_body_json.as_hashmap().unwrap();
+    let id = create_body_obj.get("data").unwrap().as_hashmap().unwrap().get("id").unwrap().as_str().unwrap();
     let req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Delete",
         "where": {
@@ -632,10 +632,10 @@ async fn delete_can_delete_record() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, req).await;
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("1".to_string()));
     assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("1".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
@@ -647,7 +647,7 @@ async fn delete_can_delete_record() {
     let resp: ServiceResponse = test::call_service(&app, find_many_req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta").unwrap(), &tson!({"count": 0}));
 }
 
@@ -664,10 +664,10 @@ async fn create_vec_works_with_inner_pipeline() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body_json: Value = test::read_body_json(resp).await;
-    let body_obj = body_json.as_object().unwrap();
+    let body_obj = body_json.as_hashmap().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
-    let body_data = body_obj.get("data").unwrap().as_object().unwrap();
+    let body_data = body_obj.get("data").unwrap().as_hashmap().unwrap();
     assert_eq!(body_data.get("listOne").unwrap(), &tson!([
         "1-suffix", "2-suffix"
     ]));

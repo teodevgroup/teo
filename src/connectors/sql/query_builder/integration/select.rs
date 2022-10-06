@@ -29,7 +29,7 @@ fn parse_sql_where_entry_array<'a>(
     graph: &Graph,
     op: &str
 ) -> Result<String, ActionError> {
-    match value.as_array() {
+    match value.as_vec() {
         Some(arr_val) => {
             let mut arr: Vec<String> = Vec::new();
             for val in arr_val {
@@ -53,7 +53,7 @@ fn parse_sql_where_entry_item<'a>(
     key_path: impl AsRef<KeyPath<'a>>,
     ops: &Vec<&str>,
 ) -> Result<String, ActionError> {
-    if let Some(map) = value.as_object() {
+    if let Some(map) = value.as_hashmap() {
         let mut result: Vec<String> = vec![];
         for (key, value) in map {
             if !ops.contains(&&**key) {
@@ -187,18 +187,18 @@ pub(crate) fn build_where_input<'a>(model: &Model, graph: &Graph, r#where: Optio
     if !r#where.is_object() {
         return Err(ActionError::unexpected_input_type("object", key_path.as_ref()));
     }
-    let r#where = r#where.as_object().unwrap();
+    let r#where = r#where.as_hashmap().unwrap();
     let mut retval: Vec<String> = vec![];
     for (key, value) in r#where.iter() {
         if key == "AND" {
             let path = key_path.as_ref() + "AND";
-            let inner = WhereClause::And(value.as_array().unwrap().iter().map(|w| build_where_input(model, graph, Some(w), dialect, &path).unwrap().unwrap()).collect()).to_string(dialect);
+            let inner = WhereClause::And(value.as_vec().unwrap().iter().map(|w| build_where_input(model, graph, Some(w), dialect, &path).unwrap().unwrap()).collect()).to_string(dialect);
             let val = "(".to_owned() + &inner + ")";
             retval.push(val);
             continue;
         } else if key == "OR" {
             let path = key_path.as_ref() + "OR";
-            let inner = WhereClause::Or(value.as_array().unwrap().iter().map(|w| build_where_input(model, graph, Some(w), dialect, &path).unwrap().unwrap()).collect()).to_string(dialect);
+            let inner = WhereClause::Or(value.as_vec().unwrap().iter().map(|w| build_where_input(model, graph, Some(w), dialect, &path).unwrap().unwrap()).collect()).to_string(dialect);
             let val = "(".to_owned() + &inner + ")";
             retval.push(val);
             continue;
@@ -258,7 +258,7 @@ pub(crate) fn build_order_by_input<'a>(
     if !order_by.is_object() {
         return Err(ActionError::unexpected_input_type("object", key_path));
     }
-    let order_by = order_by.as_object().unwrap();
+    let order_by = order_by.as_hashmap().unwrap();
     let mut retval: Vec<String> = vec![];
     for (key, value) in order_by.iter() {
         if let Some(field) = model.field(key) {

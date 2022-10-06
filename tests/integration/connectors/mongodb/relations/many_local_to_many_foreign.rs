@@ -464,8 +464,8 @@ async fn update_with_nested_disconnect() {
             "foreigns": true
         }
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
-    let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
-    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let id = ids.as_vec().unwrap().get(0).unwrap().as_str().unwrap();
+    let foreign_id = ids.as_vec().unwrap().get(1).unwrap().as_str().unwrap();
     let res = request(&app, "many-locals", "Update", tson!({
         "where": {"id": id},
         "update": {
@@ -501,8 +501,8 @@ async fn update_with_nested_update() {
             "foreigns": true
         }
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
-    let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
-    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let id = ids.as_vec().unwrap().get(0).unwrap().as_str().unwrap();
+    let foreign_id = ids.as_vec().unwrap().get(1).unwrap().as_str().unwrap();
     let res = request(&app, "many-locals", "Update", tson!({
         "where": {"id": id},
         "update": {
@@ -543,8 +543,8 @@ async fn update_with_nested_update_many() {
             "foreigns": true
         }
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
-    let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
-    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let id = ids.as_vec().unwrap().get(0).unwrap().as_str().unwrap();
+    let foreign_id = ids.as_vec().unwrap().get(1).unwrap().as_str().unwrap();
     let res = request(&app, "many-locals", "Update", tson!({
         "where": {"id": id},
         "update": {
@@ -627,8 +627,8 @@ async fn update_with_nested_upsert_actually_update() {
             "foreigns": true
         }
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
-    let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
-    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let id = ids.as_vec().unwrap().get(0).unwrap().as_str().unwrap();
+    let foreign_id = ids.as_vec().unwrap().get(1).unwrap().as_str().unwrap();
     let res = request(&app, "many-locals", "Update", tson!({
         "where": {"id": id},
         "update": {
@@ -670,8 +670,8 @@ async fn update_with_nested_delete() {
             "foreigns": true
         }
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
-    let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
-    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let id = ids.as_vec().unwrap().get(0).unwrap().as_str().unwrap();
+    let foreign_id = ids.as_vec().unwrap().get(1).unwrap().as_str().unwrap();
     let res = request(&app, "many-locals", "Update", tson!({
         "where": {"id": id},
         "update": {
@@ -707,8 +707,8 @@ async fn update_with_nested_delete_many() {
             "foreigns": true
         }
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
-    let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
-    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let id = ids.as_vec().unwrap().get(0).unwrap().as_str().unwrap();
+    let foreign_id = ids.as_vec().unwrap().get(1).unwrap().as_str().unwrap();
     let res = request(&app, "many-locals", "Update", tson!({
         "where": {"id": id},
         "update": {
@@ -744,8 +744,8 @@ async fn include() {
             "foreigns": true
         }
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
-    let id = ids.as_array().unwrap().get(0).unwrap().as_str().unwrap();
-    let foreign_id = ids.as_array().unwrap().get(1).unwrap().as_str().unwrap();
+    let id = ids.as_vec().unwrap().get(0).unwrap().as_str().unwrap();
+    let foreign_id = ids.as_vec().unwrap().get(1).unwrap().as_str().unwrap();
     let res = request(&app, "many-locals", "FindUnique", tson!({
         "where": {"id": id},
         "include": {

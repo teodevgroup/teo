@@ -200,6 +200,74 @@ pub enum Value {
 
 impl Value {
 
+    // TODO: remove after
+
+    pub(crate) fn number_from_f64(num: f64, r#type: &FieldType) -> Value {
+        match r#type {
+            FieldType::F32 => Value::F32(num as f32),
+            FieldType::F64 => Value::F64(num),
+            _ => panic!()
+        }
+    }
+
+    pub(crate) fn number_from_i64(num: i64, r#type: &FieldType) -> Value {
+        match r#type {
+            FieldType::I8 => Value::I8(num as i8),
+            FieldType::I16 => Value::I16(num as i16),
+            FieldType::I32 => Value::I32(num as i32),
+            FieldType::I64 => Value::I64(num as i64),
+            FieldType::I128 => Value::I128(num as i128),
+            FieldType::U8 => Value::U8(num as u8),
+            FieldType::U16 => Value::U16(num as u16),
+            FieldType::U32 => Value::U32(num as u32),
+            FieldType::U64 => Value::U64(num as u64),
+            FieldType::U128 => Value::U128(num as u128),
+            _ => panic!()
+        }
+    }
+
+    #[async_recursion]
+    pub(crate) async fn to_object_json_value(&self) -> Option<Value> {
+        match self {
+            Value::Object(o) => {
+                match o.to_json().await {
+                    Ok(v) => Some(v),
+                    Err(_) => None,
+                }
+            }
+            _ => None
+        }
+    }
+
+    #[async_recursion]
+    pub(crate) async fn to_object_vec_json_value(&self) -> Option<Value> {
+        match self {
+            Value::Vec(vec) => {
+                let mut result: Vec<Value> = vec![];
+                for object in vec {
+                    result.push(object.to_object_json_value().await.unwrap());
+                }
+                Some(Value::Array(result))
+            }
+            _ => None
+        }
+    }
+
+    pub fn is_object_vec(&self) -> bool {
+        match self {
+            Value::Vec(v) => {
+                if v.is_empty() {
+                    false
+                } else {
+                    v.get(0).unwrap().is_object()
+                }
+            }
+            _ => false,
+        }
+    }
+
+    // TODO: remove before
+
     pub fn get<I: Index>(&self, index: I) -> Option<&Value> {
         index.index_into(self)
     }
@@ -866,51 +934,59 @@ impl Rem for Value {
 
 impl Neg for Value {
     type Output = Value;
-    fn neg(&self) -> Value {
+    fn neg(self) -> Value {
         match self {
             Value::Bool(val) => {
-                Value::Bool(if *val { false } else { true })
+                Value::Bool(if val { false } else { true })
             }
             Value::I8(val) => {
-                Value::I8(-*val)
+                Value::I8(-val)
             }
             Value::I16(val) => {
-                Value::I16(-*val)
+                Value::I16(-val)
             }
             Value::I32(val) => {
-                Value::I32(-*val)
+                Value::I32(-val)
             }
             Value::I64(val) => {
-                Value::I64(-*val)
+                Value::I64(-val)
             }
             Value::I128(val) => {
-                Value::I128(-*val)
+                Value::I128(-val)
             }
             Value::F32(val) => {
-                Value::F32(-*val)
+                Value::F32(-val)
             }
             Value::F64(val) => {
-                Value::F64(-*val)
+                Value::F64(-val)
             }
             Value::Decimal(val) => {
-                Value::Decimal(-*val)
+                Value::Decimal(-val)
             }
             Value::U8(val) => {
-                Value::I8(-(*val as i8))
+                Value::I8(-(val as i8))
             }
             Value::U16(val) => {
-                Value::I16(-(*val as i16))
+                Value::I16(-(val as i16))
             }
             Value::U32(val) => {
-                Value::I32(-(*val as i32))
+                Value::I32(-(val as i32))
             }
             Value::U64(val) => {
-                Value::I64(-(*val as i64))
+                Value::I64(-(val as i64))
             }
             Value::U128(val) => {
-                Value::I128(-(*val as i128))
+                Value::I128(-(val as i128))
             }
             _ => Value::Null,
         }
+    }
+}
+
+impl Neg for &Value {
+    type Output = Value;
+
+    fn neg(self) -> Self::Output {
+        (*self).neg()
     }
 }

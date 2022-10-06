@@ -79,21 +79,24 @@ The new generation server software.
 - Fix HTTP API result format **[DONE]**
 
 #### 0.0.31
+- Replace `serde_json` with our own `tson`
+
+#### 0.0.32
 - Handle manipulation uses single or many
 - Bug fixes
 - Remove position from env, it can be inferred from `intent`
 - Fix assign identity
 
-#### 0.0.32
+#### 0.0.33
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
 - MongoDB update handle column key
 - Fix broken `connectIdentity` modifier
 
-#### 0.0.33
+#### 0.0.34
 - Custom SQL database types
 
-#### 0.0.34 - 0.0.50
+#### 0.0.35 - 0.0.50
 - Migration with SQL databases
 
 #### 0.0.51

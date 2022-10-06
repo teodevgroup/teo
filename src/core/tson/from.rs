@@ -25,8 +25,8 @@ impl From<String> for Value {
     }
 }
 
-impl<'a> From<&Value> for &'a str {
-    fn from(v: Value) -> Self {
+impl<'a> From<Value> for &'a str {
+    fn from(v: Value) -> &'a str {
         v.as_str().unwrap()
     }
 }
@@ -243,6 +243,16 @@ impl From<Value> for DateTime<Utc> {
 }
 
 // MARK: - Collections
+
+impl<T> From<HashMap<String, T>> for Value where T: Into<Value> {
+    fn from(value: HashMap<String, T>) -> Self {
+        let mut retval = HashMap::new();
+        for (k, v) in value {
+            retval.insert(k.to_owned(), v.into());
+        }
+        Value::HashMap(retval)
+    }
+}
 
 impl<T> From<Value> for Vec<T> where T: From<Value> {
     fn from(value: Value) -> Self {

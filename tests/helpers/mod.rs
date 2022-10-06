@@ -21,7 +21,7 @@ pub async fn request<S, B, E>(app: &S, url: &str, action: &str, body: Value) -> 
 
 fn match_json_value(object_value: &Value, matcher_value: &Value) {
     //println!("see here object matcher {} {}", object_value, matcher_value);
-    for (key, value) in matcher_value.as_object().unwrap().iter() {
+    for (key, value) in matcher_value.as_hashmap().unwrap().iter() {
         let key: &str = &key;
         match key {
             "is" => {
@@ -58,7 +58,7 @@ fn match_json_value(object_value: &Value, matcher_value: &Value) {
                 assert_eq!(object_value, value);
             }
             "and" => {
-                for matcher in value.as_array().unwrap() {
+                for matcher in value.as_vec().unwrap() {
                     match_json_value(object_value, matcher);
                 }
             }
@@ -70,8 +70,8 @@ fn match_json_value(object_value: &Value, matcher_value: &Value) {
 }
 
 fn match_json_array(object: &Value, matcher: &Value) {
-    let object_array = object.as_array().unwrap();
-    let matcher_array = matcher.as_array().unwrap();
+    let object_array = object.as_vec().unwrap();
+    let matcher_array = matcher.as_vec().unwrap();
     assert_eq!(object_array.len(), matcher_array.len(), "array length doesn't match {} {}", object, matcher);
     for (index, object_value) in object_array.iter().enumerate() {
         let matcher_value = matcher_array.get(index).unwrap();
@@ -84,12 +84,12 @@ fn match_json_array(object: &Value, matcher: &Value) {
 }
 
 fn match_json_object(object: &Value, matcher: &Value) {
-    let object_keys = object.as_object().unwrap().keys();
-    let matcher_keys = object.as_object().unwrap().keys();
+    let object_keys = object.as_hashmap().unwrap().keys();
+    let matcher_keys = object.as_hashmap().unwrap().keys();
     println!("see object and matcher o:{} m:{}", object, matcher);
     assert!(object_keys.eq(matcher_keys));
-    for (key, object_value) in object.as_object().unwrap().iter() {
-        let matcher_value = matcher.as_object().unwrap().get(key).unwrap();
+    for (key, object_value) in object.as_hashmap().unwrap().iter() {
+        let matcher_value = matcher.as_hashmap().unwrap().get(key).unwrap();
         match object_value {
             Value::Object(_) => match_json_object(object_value, matcher_value),
             Value::Array(_) => match_json_array(object_value, matcher_value),
@@ -138,11 +138,11 @@ pub async fn request_get<S, B, E, P>(app: &S, url: &str, action: &str, body: Val
         let items = path.split(".");
         for item in items {
             if retval.is_object() {
-                if retval.as_object().unwrap().get(item).is_none() {
+                if retval.as_hashmap().unwrap().get(item).is_none() {
                 }
-                retval = retval.as_object().unwrap().get(item).unwrap();
+                retval = retval.as_hashmap().unwrap().get(item).unwrap();
             } else if retval.is_array() {
-                retval = retval.as_array().unwrap().get(item.parse::<usize>().unwrap()).unwrap();
+                retval = retval.as_vec().unwrap().get(item.parse::<usize>().unwrap()).unwrap();
             } else {
                 assert!(false, "{retval} is not object or array.");
             }

@@ -7,8 +7,8 @@ use actix_web::middleware::DefaultHeaders;
 use chrono::{DateTime, Duration, Local, Utc};
 use colored::Colorize;
 use futures_util::StreamExt;
-
 use key_path::{KeyPath, path};
+use serde_json::{json, Value as JsonValue};
 use crate::core::action::r#type::ActionType;
 use crate::app::app::ServerConfiguration;
 use crate::app::serve::jwt_token::{Claims, decode_token, encode_token};
@@ -140,7 +140,7 @@ async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: S
     match result {
         Ok(results) => {
             let mut count_input = input.clone();
-            let count_input_obj = count_input.as_object_mut().unwrap();
+            let count_input_obj = count_input.as_hashmap_mut().unwrap();
             count_input_obj.remove("skip");
             count_input_obj.remove("take");
             count_input_obj.remove("pageSize");
@@ -155,7 +155,7 @@ async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: S
                 if count % page_size != 0 {
                     number_of_pages += 1;
                 }
-                meta.as_object_mut().unwrap().insert("numberOfPages".to_string(), Value::Number(number_of_pages.into()));
+                meta.as_hashmap_mut().unwrap().insert("numberOfPages".to_string(), Value::Number(number_of_pages.into()));
             }
 
             let mut result_json: Vec<Value> = vec![];
@@ -201,7 +201,7 @@ async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: 
 
 async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
     let env = Env::new(source, Intent::Create);
-    let input = input.as_object().unwrap();
+    let input = input.as_hashmap().unwrap();
     let create = input.get("create");
     let include = input.get("include");
     let select = input.get("select");
@@ -335,7 +335,7 @@ async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: Sour
 
 async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
     let env = Env::new(source, Intent::CreateMany);
-    let input = input.as_object().unwrap();
+    let input = input.as_hashmap().unwrap();
     let create = input.get("create");
     let include = input.get("include");
     let select = input.get("select");
@@ -348,7 +348,7 @@ async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source:
         let err = ActionError::unexpected_input_type("array", path!["create"]);
         return HttpResponse::BadRequest().json(tson!({"error": err}));
     }
-    let create = create.as_array().unwrap();
+    let create = create.as_vec().unwrap();
     let mut count = 0;
     let mut ret_data: Vec<Value> = vec![];
     for (index, val) in create.iter().enumerate() {
@@ -464,7 +464,7 @@ async fn handle_group_by(graph: &Graph, input: &Value, model: &Model, _source: S
 }
 
 async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &ServerConfiguration) -> HttpResponse {
-    let input = input.as_object().unwrap();
+    let input = input.as_hashmap().unwrap();
     let credentials = input.get("credentials");
     if let None = credentials {
         return ActionError::missing_required_input("object", path!["credentials"]).into();
@@ -473,7 +473,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     if !credentials.is_object() {
         return ActionError::unexpected_input_type("object", path!["credentials"]).into();
     }
-    let credentials = credentials.as_object().unwrap();
+    let credentials = credentials.as_hashmap().unwrap();
     let mut identity_key: Option<&String> = None;
     let mut identity_value: Option<&Value> = None;
     let mut by_key: Option<&String> = None;
@@ -648,7 +648,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                 return ActionError::destination_not_found().into();
             }
             if r.method() == Method::OPTIONS {
-                return HttpResponse::Ok().json(tson!({}));
+                return HttpResponse::Ok().json(json!({}));
             }
             // read body
             let mut body = web::BytesMut::new();
@@ -657,25 +657,25 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                 // limit max size of in-memory payload
                 if (body.len() + chunk.len()) > 262_144usize {
                     return HttpResponse::InternalServerError()
-                        .json(tson!({"error": ActionError::internal_server_error("Memory overflow.".to_string())}));
+                        .json(json!({"error": ActionError::internal_server_error("Memory overflow.".to_string())}));
                 }
                 body.extend_from_slice(&chunk);
             }
-            let parsed_body: Result<Value, serde_json::Error> = serde_json::from_slice(&body);
+            let parsed_body: Result<JsonValue, serde_json::Error> = serde_json::from_slice(&body);
             let parsed_body = match parsed_body {
                 Ok(b) => b,
                 Err(_) => {
                     log_unhandled(start, r.method().as_str(), &path, 400);
-                    return HttpResponse::BadRequest().json(tson!({"error": ActionError::incorrect_json_format()}));
+                    return HttpResponse::BadRequest().json(json!({"error": ActionError::incorrect_json_format()}));
                 }
             };
             if !parsed_body.is_object() {
                 log_unhandled(start, r.method().as_str(), &path, 400);
-                return HttpResponse::BadRequest().json(tson!({"error": ActionError::unexpected_input_root_type("object")}));
+                return HttpResponse::BadRequest().json(json!({"error": ActionError::unexpected_input_root_type("object")}));
             }
             let identity = match get_identity(&r, &graph, conf).await {
                 Ok(identity) => { identity },
-                Err(err) => return HttpResponse::Unauthorized().json(tson!({"error": err }))
+                Err(err) => return HttpResponse::Unauthorized().json(json!({"error": err }))
             };
             let action_def = model_def.get_action_def(action);
             let transformed_body = if let Some(action_def) = action_def {

@@ -25,7 +25,7 @@ pub(crate) fn input_to_vec<'a, 'b>(json_value: &'b Value, path: &'a KeyPath<'a>)
     if json_value.is_object() {
         Ok(vec![json_value])
     } else if json_value.is_array() {
-        let array = json_value.as_array().unwrap();
+        let array = json_value.as_vec().unwrap();
         let mapped: Vec<&Value> = array.iter().map(|i| i).collect();
         Ok(mapped)
     } else {
@@ -34,7 +34,7 @@ pub(crate) fn input_to_vec<'a, 'b>(json_value: &'b Value, path: &'a KeyPath<'a>)
 }
 
 pub(crate) fn one_length_json_obj<'a>(json_value: &'a Value, path: &KeyPath) -> Result<(&'a str, &'a Value), ActionError> {
-    let json_obj = json_value.as_object().unwrap();
+    let json_obj = json_value.as_hashmap().unwrap();
     if json_obj.keys().len() != 1 {
         Err(ActionError::unexpected_object_length(1, path))
     } else {
@@ -199,7 +199,7 @@ fn decode_bool_input(json_value: &Value, field_type: &FieldType, optionality: Op
 
 fn decode_vec_input(graph: &Graph, json_value: &Value, field_type: &FieldType, optionality: Optionality, path: &KeyPath, inner_field: &Box<Field>) -> Result<Input, ActionError> {
     if json_value.is_array() {
-        let arr = json_value.as_array().unwrap();
+        let arr = json_value.as_vec().unwrap();
         Ok(SetValue(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
             let new_path = path + i;
             match decode_field_input(graph, v, &inner_field.field_type, inner_field.optionality.clone(), &new_path) {
