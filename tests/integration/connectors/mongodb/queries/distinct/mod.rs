@@ -105,28 +105,28 @@ async fn app() -> App<impl ServiceFactory<
 #[serial]
 async fn distinct_removes_duplicated_records_for_one_field() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "singles", "create", json!({
+    let _id1 = request_get(&app, "singles", "create", tson!({
         "create": {
             "str": "scalar",
             "num": 2,
             "bool": true
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "singles", "create", json!({
+    let _id2 = request_get(&app, "singles", "create", tson!({
         "create": {
             "str": "scalar",
             "num": 2,
             "bool": true
         },
     }), 200, "data.id").await;
-    let res = request(&app, "singles", "findMany", json!({
+    let res = request(&app, "singles", "findMany", tson!({
         "select": {
             "id": true,
             "str": true,
         },
         "distinct": ["num"]
     })).await;
-    assert_json_response(res, 200, json!({
+    assert_json_response(res, 200, tson!({
         "meta": {
             "count": {"equals": 2}
         },
@@ -143,35 +143,35 @@ async fn distinct_removes_duplicated_records_for_one_field() {
 #[serial]
 async fn distinct_removes_duplicated_records_for_multiple_fields() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "singles", "create", json!({
+    let _id1 = request_get(&app, "singles", "create", tson!({
         "create": {
             "str": "scalar",
             "num": 2,
             "bool": true
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "singles", "create", json!({
+    let _id2 = request_get(&app, "singles", "create", tson!({
         "create": {
             "str": "scalar",
             "num": 1,
             "bool": true
         },
     }), 200, "data.id").await;
-    let _id3 = request_get(&app, "singles", "create", json!({
+    let _id3 = request_get(&app, "singles", "create", tson!({
         "create": {
             "str": "fixed",
             "num": 2,
             "bool": true
         },
     }), 200, "data.id").await;
-    let _id4 = request_get(&app, "singles", "create", json!({
+    let _id4 = request_get(&app, "singles", "create", tson!({
         "create": {
             "str": "fixed",
             "num": 2,
             "bool": true
         },
     }), 200, "data.id").await;
-    let res = request(&app, "singles", "findMany", json!({
+    let res = request(&app, "singles", "findMany", tson!({
         "orderBy": [
             {
                 "num": "asc"
@@ -187,7 +187,7 @@ async fn distinct_removes_duplicated_records_for_multiple_fields() {
         },
         "distinct": ["num", "str"]
     })).await;
-    assert_json_response(res, 200, json!({
+    assert_json_response(res, 200, tson!({
         "meta": {
             "count": {"equals": 4}
         },
@@ -215,7 +215,7 @@ async fn distinct_removes_duplicated_records_for_multiple_fields() {
 #[serial]
 async fn distinct_can_remove_duplicates_in_the_output_of_nested_many_in_create() {
     let app = test::init_service(app().await).await;
-    let res = request(&app, "nesteds", "create", json!({
+    let res = request(&app, "nesteds", "create", tson!({
         "create": {
             "str": "scalar",
             "items": {
@@ -239,7 +239,7 @@ async fn distinct_can_remove_duplicates_in_the_output_of_nested_many_in_create()
             }
         }
     })).await;
-    assert_json_response(res, 200, json!({
+    assert_json_response(res, 200, tson!({
         "data": {
             "id": {"is": "objectId"},
             "str": {"equals": "scalar"},
@@ -256,7 +256,7 @@ async fn distinct_can_remove_duplicates_in_the_output_of_nested_many_in_create()
 #[serial]
 async fn distinct_can_remove_duplicates_in_the_output_of_nested_joined_many_in_create() {
     let app = test::init_service(app().await).await;
-    let res = request(&app, "apples", "create", json!({
+    let res = request(&app, "apples", "create", tson!({
         "create": {
             "str": "scalar",
             "pears": {
@@ -279,7 +279,7 @@ async fn distinct_can_remove_duplicates_in_the_output_of_nested_joined_many_in_c
             }
         }
     })).await;
-    assert_json_response(res, 200, json!({
+    assert_json_response(res, 200, tson!({
         "data": {
             "id": {"is": "objectId"},
             "str": {"equals": "scalar"},

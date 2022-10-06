@@ -1,6 +1,5 @@
 use chrono::{Date, Utc, DateTime, SecondsFormat};
 use key_path::KeyPath;
-use serde_json::{Value as JsonValue};
 use crate::connectors::sql::query_builder::dialect::SQLDialect;
 use crate::connectors::sql::query_builder::traits::to_sql_string::ToSQLString;
 use crate::core::error::ActionError;
@@ -17,11 +16,11 @@ impl TypeOrNull for &str {
     }
 }
 
-pub(crate) trait JsonValueToSQLString {
+pub(crate) trait ValueToSQLString {
     fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, path: impl AsRef<KeyPath<'a>>, graph: &Graph) -> Result<String, ActionError>;
 }
 
-impl JsonValueToSQLString for JsonValue {
+impl ValueToSQLString for Value {
     fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, path: impl AsRef<KeyPath<'a>>, graph: &Graph) -> Result<String, ActionError> {
         if optional {
             if self.is_null() {
@@ -81,7 +80,7 @@ impl JsonValueToSQLString for JsonValue {
     }
 }
 
-impl JsonValueToSQLString for &JsonValue {
+impl ValueToSQLString for &Value {
     fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, path: impl AsRef<KeyPath<'a>>, graph: &Graph) -> Result<String, ActionError> {
         (*self).to_sql_string(r#type, optional, path, graph)
     }

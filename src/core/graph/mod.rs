@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::future::Future;
 use std::sync::Arc;
-use serde_json::{Value as JsonValue};
 use crate::core::graph::builder::GraphBuilder;
 use crate::core::connector::Connector;
 use crate::core::env::Env;
@@ -11,6 +10,7 @@ use crate::core::r#enum::Enum;
 use crate::core::error::ActionError;
 use crate::core::relation::Relation;
 use crate::core::result::ActionResult;
+use crate::prelude::Value;
 
 pub mod builder;
 
@@ -56,16 +56,16 @@ impl Graph {
 
     // MARK: - Queries
 
-    pub async fn find_unique(&self, model: &str, finder: &JsonValue, mutation_mode: bool, env: Env) -> ActionResult<Object> {
+    pub async fn find_unique(&self, model: &str, finder: &Value, mutation_mode: bool, env: Env) -> ActionResult<Object> {
         let model = self.model(model).unwrap();
         self.connector().find_unique(self, model, finder, mutation_mode, env).await
     }
 
-    pub async fn find_first(&self, model: &str, finder: &JsonValue, mutation_mode: bool, env: Env) -> ActionResult<Object> {
+    pub async fn find_first(&self, model: &str, finder: &Value, mutation_mode: bool, env: Env) -> ActionResult<Object> {
         let model = self.model(model).unwrap();
-        let mut finder = finder.as_object().clone().unwrap().clone();
-        finder.insert("take".to_string(), JsonValue::Number(1.into()));
-        let finder = JsonValue::Object(finder);
+        let mut finder = finder.as_hashmap().clone().unwrap().clone();
+        finder.insert("take".to_string(), 1.into());
+        let finder = Value::HashMap(finder);
         let result = self.connector().find_many(self, model, &finder, mutation_mode, env).await;
         match result {
             Err(err) => Err(err),
@@ -79,20 +79,20 @@ impl Graph {
         }
     }
 
-    pub async fn find_many(&self, model: &str, finder: &JsonValue, mutation_mode: bool, env: Env) -> ActionResult<Vec<Object>> {
+    pub async fn find_many(&self, model: &str, finder: &Value, mutation_mode: bool, env: Env) -> ActionResult<Vec<Object>> {
         let model = self.model(model).unwrap();
         self.connector().find_many(self, model, finder, mutation_mode, env).await
     }
 
-    pub async fn batch<F, Fut>(&self, model: &str, finder: &JsonValue, env: Env, f: F) -> ActionResult<()> where
+    pub async fn batch<F, Fut>(&self, model: &str, finder: &Value, env: Env, f: F) -> ActionResult<()> where
     F: Fn(Object) -> Fut,
     Fut: Future<Output = ActionResult<()>> {
         let batch_size: usize = 200;
         let mut index: usize = 0;
         loop {
             let mut batch_finder = finder.clone();
-            batch_finder.as_object_mut().unwrap().insert("skip".to_owned(), (index * batch_size).into());
-            batch_finder.as_object_mut().unwrap().insert("take".to_owned(), batch_size.into());
+            batch_finder.as_hashmap_mut().unwrap().insert("skip".to_owned(), (index * batch_size).into());
+            batch_finder.as_hashmap_mut().unwrap().insert("take".to_owned(), batch_size.into());
             let results = self.find_many(model, &batch_finder, true, env.clone()).await?;
             for result in results.iter() {
                 f(result.clone()).await?;
@@ -104,17 +104,17 @@ impl Graph {
         }
     }
 
-    pub async fn count(&self, model: &str, finder: &JsonValue) -> Result<usize, ActionError> {
+    pub async fn count(&self, model: &str, finder: &Value) -> Result<usize, ActionError> {
         let model = self.model(model).unwrap();
         self.connector().count(self, model, finder).await
     }
 
-    pub async fn aggregate(&self, model: &str, finder: &JsonValue) -> Result<JsonValue, ActionError> {
+    pub async fn aggregate(&self, model: &str, finder: &Value) -> Result<Value, ActionError> {
         let model = self.model(model).unwrap();
         self.connector().aggregate(self, model, finder).await
     }
 
-    pub async fn group_by(&self, model: &str, finder: &JsonValue) -> Result<JsonValue, ActionError> {
+    pub async fn group_by(&self, model: &str, finder: &Value) -> Result<Value, ActionError> {
         let model = self.model(model).unwrap();
         self.connector().group_by(self, model, finder).await
     }
@@ -128,7 +128,7 @@ impl Graph {
         }
     }
 
-    pub fn create_object(&self, model: &str, initial: JsonValue) -> Result<Object, ActionError> {
+    pub fn create_object(&self, model: &str, initial: Value) -> Result<Object, ActionError> {
         let obj = self.new_object(model, Env::custom_code())?;
         obj.set_json(&initial);
         Ok(obj)

@@ -1,18 +1,18 @@
 use async_trait::async_trait;
-use serde_json::{Value as JsonValue};
 use crate::core::json_pipeline::context::JsonPipelineContext;
 use crate::core::json_pipeline::json_path::{json_has, json_set};
 use crate::core::json_pipeline::JsonPipelineItem;
+use crate::prelude::Value;
 
 
 #[derive(Debug)]
 pub(crate) struct SetDefaultItem {
     key: String,
-    value: JsonValue,
+    value: Value,
 }
 
 impl SetDefaultItem {
-    pub(crate) fn new(key: impl Into<String>, value: JsonValue) -> Self {
+    pub(crate) fn new(key: impl Into<String>, value: Value) -> Self {
         Self { key: key.into(), value }
     }
 }

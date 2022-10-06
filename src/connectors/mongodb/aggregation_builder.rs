@@ -1,7 +1,5 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use actix_web::http::header::Accept;
-
-use serde_json::{Value as JsonValue, Map as JsonMap, json};
 use bson::{Bson, DateTime as BsonDateTime, doc, Document, oid::ObjectId, Regex as BsonRegex};
 use chrono::{Date, NaiveDate, Utc, DateTime};
 use key_path::{KeyPath, path};
@@ -13,8 +11,9 @@ use crate::core::field::r#type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::input_decoder::{input_to_vec, one_length_json_obj};
 use crate::core::model::{Model, ModelIndexType};
-use crate::core::value::Value;
+use crate::core::tson::Value;
 use crate::core::error::ActionError;
+use crate::tson;
 
 pub trait ToBsonValue {
     fn to_bson_value(&self) -> Bson;
@@ -100,7 +99,7 @@ impl ToBsonValue for Value {
     }
 }
 
-fn parse_object_id(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError> {
+fn parse_object_id(value: &Value, path: &KeyPath) -> Result<Bson, ActionError> {
     match value.as_str() {
         Some(val) => {
             match ObjectId::parse_str(val) {
@@ -118,7 +117,7 @@ fn parse_object_id(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionErro
     }
 }
 
-fn parse_string(value: &JsonValue, key_path: &KeyPath) -> Result<Bson, ActionError> {
+fn parse_string(value: &Value, key_path: &KeyPath) -> Result<Bson, ActionError> {
     match value.as_str() {
         Some(val) => {
             Ok(Bson::String(val.to_string()))
@@ -129,7 +128,7 @@ fn parse_string(value: &JsonValue, key_path: &KeyPath) -> Result<Bson, ActionErr
     }
 }
 
-fn parse_bool(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError> {
+fn parse_bool(value: &Value, path: &KeyPath) -> Result<Bson, ActionError> {
     match value.as_bool() {
         Some(val) => {
             Ok(Bson::Boolean(val))
@@ -140,7 +139,7 @@ fn parse_bool(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError> {
     }
 }
 
-fn parse_json_number_to_bson(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError> {
+fn parse_json_number_to_bson(value: &Value, path: &KeyPath) -> Result<Bson, ActionError> {
     if value.is_i64() {
         Ok(Bson::Int64(value.as_i64().unwrap()))
     } else if value.is_u64() {
@@ -152,7 +151,7 @@ fn parse_json_number_to_bson(value: &JsonValue, path: &KeyPath) -> Result<Bson, 
     }
 }
 
-fn parse_f64(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError> {
+fn parse_f64(value: &Value, path: &KeyPath) -> Result<Bson, ActionError> {
     if value.is_i64() {
         Ok(Bson::Double(value.as_i64().unwrap() as f64))
     } else if value.is_u64() {
@@ -164,7 +163,7 @@ fn parse_f64(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError> {
     }
 }
 
-fn parse_date(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError> {
+fn parse_date(value: &Value, path: &KeyPath) -> Result<Bson, ActionError> {
     if value.is_string() {
         match NaiveDate::parse_from_str(&value.as_str().unwrap(), "%Y-%m-%d") {
             Ok(naive_date) => {
@@ -181,7 +180,7 @@ fn parse_date(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError> {
     }
 }
 
-fn parse_datetime(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError> {
+fn parse_datetime(value: &Value, path: &KeyPath) -> Result<Bson, ActionError> {
     if value.is_string() {
         match DateTime::parse_from_rfc3339(&value.as_str().unwrap()) {
             Ok(fixed_offset_datetime) => {
@@ -198,7 +197,7 @@ fn parse_datetime(value: &JsonValue, path: &KeyPath) -> Result<Bson, ActionError
     }
 }
 
-fn parse_enum(value: &JsonValue, enum_name: &str, graph: &Graph, path: &KeyPath) -> Result<Bson, ActionError> {
+fn parse_enum(value: &Value, enum_name: &str, graph: &Graph, path: &KeyPath) -> Result<Bson, ActionError> {
     if value.is_string() {
         let str = value.as_str().unwrap();
         let enum_values = graph.enum_values(enum_name).unwrap();
@@ -212,7 +211,7 @@ fn parse_enum(value: &JsonValue, enum_name: &str, graph: &Graph, path: &KeyPath)
     }
 }
 
-fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Graph, path: &KeyPath) -> Result<Bson, ActionError> {
+fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, path: &KeyPath) -> Result<Bson, ActionError> {
     return match field_type {
         FieldType::Undefined => {
             panic!()
@@ -833,7 +832,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &JsonValue, graph: &Gra
     }
 }
 
-pub(crate) fn build_unsets_for_match_lookup(model: &Model, _graph: &Graph, r#where: Option<&JsonValue>) -> Result<Vec<Document>, ActionError> {
+pub(crate) fn build_unsets_for_match_lookup(model: &Model, _graph: &Graph, r#where: Option<&Value>) -> Result<Vec<Document>, ActionError> {
     if let None = r#where { return Ok(vec![]); }
     let r#where = r#where.unwrap();
     if !r#where.is_object() { return Err(ActionError::invalid_query_input("'where' should be an object.")); }
@@ -848,31 +847,31 @@ pub(crate) fn build_unsets_for_match_lookup(model: &Model, _graph: &Graph, r#whe
     Ok(retval)
 }
 
-pub(crate) fn build_match_prediction_lookup(model: &Model, graph: &Graph, r#where: Option<&JsonValue>, path: &KeyPath) -> Result<Vec<Document>, ActionError> {
+pub(crate) fn build_match_prediction_lookup(model: &Model, graph: &Graph, r#where: Option<&Value>, path: &KeyPath) -> Result<Vec<Document>, ActionError> {
     if let None = r#where { return Ok(vec![]); }
     let r#where = r#where.unwrap();
     if !r#where.is_object() { return Err(ActionError::invalid_query_input("'where' should be an object.")); }
     let r#where = r#where.as_object().unwrap();
-    let mut include_input = JsonMap::new();
+    let mut include_input = HashMap::new();
     for (key, value) in r#where.iter() {
         let relation = model.relation(key);
         if relation.is_some() {
             let (command, r_where) = one_length_json_obj(value, &(path + key))?;
             match command {
                 "some" | "is" => {
-                    include_input.insert(key.to_string(), json!({
+                    include_input.insert(key.to_string(), tson!({
                         "where": r_where,
                         "take": 1
                     }));
                 }
                 "none" | "isNot" => {
-                    include_input.insert(key.to_string(), json!({
+                    include_input.insert(key.to_string(), tson!({
                         "where": r_where,
                         "take": 1
                     }));
                 }
                 "all" => {
-                    include_input.insert(key.to_string(), json!({
+                    include_input.insert(key.to_string(), tson!({
                         "where": {"NOT": r_where},
                         "take": 1
                     }));
@@ -882,13 +881,13 @@ pub(crate) fn build_match_prediction_lookup(model: &Model, graph: &Graph, r#wher
         }
     }
     Ok(if !include_input.is_empty() {
-        build_lookup_inputs(model, graph, QueryPipelineType::Many, false, &JsonValue::Object(include_input), path)?
+        build_lookup_inputs(model, graph, QueryPipelineType::Many, false, &Value::Object(include_input), path)?
     } else {
         vec![]
     })
 }
 
-pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&JsonValue>, path: &KeyPath) -> Result<Document, ActionError> {
+pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&Value>, path: &KeyPath) -> Result<Document, ActionError> {
     if let None = r#where { return Ok(doc!{}); }
     let r#where = r#where.unwrap();
     if !r#where.is_object() { return Err(ActionError::invalid_query_input("'where' should be an object.")); }
@@ -953,7 +952,7 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&J
     Ok(doc)
 }
 
-pub(crate) fn build_order_by_input(_model: &Model, _graph: &Graph, order_by: Option<&JsonValue>, reverse: bool, path: &KeyPath) -> Result<Document, ActionError> {
+pub(crate) fn build_order_by_input(_model: &Model, _graph: &Graph, order_by: Option<&Value>, reverse: bool, path: &KeyPath) -> Result<Document, ActionError> {
     if order_by.is_none() {
         return Ok(doc!{});
     }
@@ -987,7 +986,7 @@ fn distinct_key(original: impl AsRef<str>) -> String {
     }
 }
 
-fn build_select_input(model: &Model, _graph: &Graph, select: &JsonValue, distinct: Option<&JsonValue>) -> Result<Option<Document>, ActionError> {
+fn build_select_input(model: &Model, _graph: &Graph, select: &Value, distinct: Option<&Value>) -> Result<Option<Document>, ActionError> {
     let mut true_list: Vec<&str> = vec![];
     let mut false_list: Vec<&str> = vec![];
     let map = select.as_object().unwrap();
@@ -1086,7 +1085,7 @@ fn build_lookup_inputs(
     graph: &Graph,
     r#type: QueryPipelineType,
     mutation_mode: bool,
-    include: &JsonValue,
+    include: &Value,
     path: &KeyPath,
 ) -> Result<Vec<Document>, ActionError> {
     let include = include.as_object();
@@ -1377,19 +1376,19 @@ fn build_query_pipeline(
     graph: &Graph,
     _type: QueryPipelineType,
     mutation_mode: bool,
-    r#where: Option<&JsonValue>,
-    order_by: Option<&JsonValue>,
-    cursor: Option<&JsonValue>,
+    r#where: Option<&Value>,
+    order_by: Option<&Value>,
+    cursor: Option<&Value>,
     take: Option<i32>,
     skip: Option<i32>,
     page_size: Option<i32>,
     page_number: Option<i32>,
-    include: Option<&JsonValue>,
-    distinct: Option<&JsonValue>,
-    select: Option<&JsonValue>,
-    aggregates: Option<&JsonValue>,
-    by: Option<&JsonValue>,
-    having: Option<&JsonValue>,
+    include: Option<&Value>,
+    distinct: Option<&Value>,
+    select: Option<&Value>,
+    aggregates: Option<&Value>,
+    by: Option<&Value>,
+    having: Option<&Value>,
     path: &KeyPath,
 ) -> Result<Vec<Document>, ActionError> {
     // cursor tweaks things so that we validate cursor first
@@ -1443,7 +1442,7 @@ fn build_query_pipeline(
             }
         }
         let cursor_where_key = if order_asc { "gte" } else { "lte" };
-        let cursor_additional_where = build_where_input(model, graph, Some(&json!({cursor_key: {cursor_where_key: cursor_value}})), &path![])?;
+        let cursor_additional_where = build_where_input(model, graph, Some(&tson!({cursor_key: {cursor_where_key: cursor_value}})), &path![])?;
         Some(cursor_additional_where)
     } else {
         None
@@ -1505,7 +1504,7 @@ fn build_query_pipeline(
             let val = value.as_str().unwrap();
             group_id.insert(val, format!("${val}"));
         }
-        let empty = json!({});
+        let empty = tson!({});
         let mut group_data = build_select_input(model, graph, select.unwrap_or(&empty), Some(distinct))?.unwrap();
         group_data.insert("_id", group_id);
         retval.push(doc!{"$group": &group_data});
@@ -1541,7 +1540,7 @@ fn build_query_pipeline(
         }
     }
     // group by contains it's own aggregates
-    let empty_aggregates = json!({});
+    let empty_aggregates = tson!({});
     let the_aggregates = if by.is_some() {
         if aggregates.is_none() {
             Some(&empty_aggregates)
@@ -1639,7 +1638,7 @@ pub(crate) fn build_query_pipeline_from_json(
     graph: &Graph,
     r#type: QueryPipelineType,
     mutation_mode: bool,
-    json_value: &JsonValue,
+    json_value: &Value,
     path: &KeyPath,
 ) -> Result<Vec<Document>, ActionError> {
     let user_args = user_json_args(model, graph, r#type, mutation_mode, json_value)?;

@@ -1,5 +1,4 @@
-use serde_json::{Value as JsonValue};
-use crate::core::value::Value;
+use crate::core::tson::Value;
 
 
 pub(crate) enum AtomicUpdateType {
@@ -14,19 +13,19 @@ pub enum RelationInputType {
 
     // both create and update
 
-    Create(JsonValue),
-    Set(JsonValue),
-    Connect(JsonValue),
+    Create(Value),
+    Set(Value),
+    Connect(Value),
     // where, create
-    ConnectOrCreate(JsonValue, JsonValue),
+    ConnectOrCreate(Value, Value),
 
     // update only
 
-    Disconnect(JsonValue),
-    Update(JsonValue),
+    Disconnect(Value),
+    Update(Value),
     // create, update
-    Upsert(JsonValue, JsonValue),
-    Delete(JsonValue),
+    Upsert(Value, Value),
+    Delete(Value),
 }
 
 pub(crate) enum Input {

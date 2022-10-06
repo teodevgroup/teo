@@ -1,5 +1,5 @@
-use serde_json::{Value as JsonValue};
 use crate::core::object::Object;
+use crate::prelude::Value;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub(crate) enum JsonPipelineContextStage {
@@ -10,15 +10,15 @@ pub(crate) enum JsonPipelineContextStage {
 
 #[derive(Debug)]
 pub(crate) struct JsonPipelineContext {
-    value: Option<JsonValue>,
+    value: Option<Value>,
     location: Vec<String>,
-    object: JsonValue,
+    object: Value,
     stage: JsonPipelineContextStage,
     identity: Option<Object>,
 }
 
 impl JsonPipelineContext {
-    pub(crate) fn new(initial: JsonValue, identity: Option<Object>) -> Self {
+    pub(crate) fn new(initial: Value, identity: Option<Object>) -> Self {
         Self {
             value: Some(initial.clone()),
             location: vec![],
@@ -28,13 +28,13 @@ impl JsonPipelineContext {
         }
     }
 
-    pub(crate) fn construct(value: Option<JsonValue>, location: Vec<String>, object: JsonValue, stage: JsonPipelineContextStage, identity: Option<Object>) -> Self {
+    pub(crate) fn construct(value: Option<Value>, location: Vec<String>, object: Value, stage: JsonPipelineContextStage, identity: Option<Object>) -> Self {
         Self {
             value, location, object, stage, identity
         }
     }
 
-    pub(crate) fn value(&self) -> Option<&JsonValue> {
+    pub(crate) fn value(&self) -> Option<&Value> {
         self.value.as_ref()
     }
 
@@ -42,7 +42,7 @@ impl JsonPipelineContext {
         &self.location
     }
 
-    pub(crate) fn object(&self) -> &JsonValue {
+    pub(crate) fn object(&self) -> &Value {
         &self.object
     }
 

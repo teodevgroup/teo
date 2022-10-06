@@ -3,7 +3,6 @@ use actix_http::Request;
 use actix_web::dev::{Service, ServiceResponse};
 use actix_web::test::{call_service, read_body_json, TestRequest};
 use inflector::Inflector;
-use serde_json::{Value as JsonValue};
 use regex::Regex;
 
 pub fn is_object_id(value: &str) -> bool {
@@ -11,7 +10,7 @@ pub fn is_object_id(value: &str) -> bool {
     regex.is_match(value)
 }
 
-pub async fn request<S, B, E>(app: &S, url: &str, action: &str, body: JsonValue) -> S::Response where
+pub async fn request<S, B, E>(app: &S, url: &str, action: &str, body: Value) -> S::Response where
     S: Service<Request, Response = ServiceResponse<B>, Error = E>,
     E: std::fmt::Debug,
 {
@@ -20,7 +19,7 @@ pub async fn request<S, B, E>(app: &S, url: &str, action: &str, body: JsonValue)
     call_service(&app, req).await
 }
 
-fn match_json_value(object_value: &JsonValue, matcher_value: &JsonValue) {
+fn match_json_value(object_value: &Value, matcher_value: &Value) {
     //println!("see here object matcher {} {}", object_value, matcher_value);
     for (key, value) in matcher_value.as_object().unwrap().iter() {
         let key: &str = &key;
@@ -70,21 +69,21 @@ fn match_json_value(object_value: &JsonValue, matcher_value: &JsonValue) {
     }
 }
 
-fn match_json_array(object: &JsonValue, matcher: &JsonValue) {
+fn match_json_array(object: &Value, matcher: &Value) {
     let object_array = object.as_array().unwrap();
     let matcher_array = matcher.as_array().unwrap();
     assert_eq!(object_array.len(), matcher_array.len(), "array length doesn't match {} {}", object, matcher);
     for (index, object_value) in object_array.iter().enumerate() {
         let matcher_value = matcher_array.get(index).unwrap();
         match object_value {
-            JsonValue::Object(_) => match_json_object(object_value, matcher_value),
-            JsonValue::Array(_) => match_json_array(object_value, matcher_value),
+            Value::Object(_) => match_json_object(object_value, matcher_value),
+            Value::Array(_) => match_json_array(object_value, matcher_value),
             _ => match_json_value(object_value, matcher_value),
         }
     }
 }
 
-fn match_json_object(object: &JsonValue, matcher: &JsonValue) {
+fn match_json_object(object: &Value, matcher: &Value) {
     let object_keys = object.as_object().unwrap().keys();
     let matcher_keys = object.as_object().unwrap().keys();
     println!("see object and matcher o:{} m:{}", object, matcher);
@@ -92,17 +91,17 @@ fn match_json_object(object: &JsonValue, matcher: &JsonValue) {
     for (key, object_value) in object.as_object().unwrap().iter() {
         let matcher_value = matcher.as_object().unwrap().get(key).unwrap();
         match object_value {
-            JsonValue::Object(_) => match_json_object(object_value, matcher_value),
-            JsonValue::Array(_) => match_json_array(object_value, matcher_value),
+            Value::Object(_) => match_json_object(object_value, matcher_value),
+            Value::Array(_) => match_json_array(object_value, matcher_value),
             _ => match_json_value(object_value, matcher_value),
         }
     }
 }
 
-pub async fn assert_json_response<B: MessageBody>(res: ServiceResponse<B>, _code: u16, matcher: JsonValue) {
+pub async fn assert_json_response<B: MessageBody>(res: ServiceResponse<B>, _code: u16, matcher: Value) {
     let _status = res.status().as_u16();
     //assert_eq!(status, code);
-    let json: JsonValue = read_body_json(res).await;
+    let json: Value = read_body_json(res).await;
     println!("see json {}", json);
     match_json_object(&json, &matcher);
 }
@@ -123,7 +122,7 @@ impl RequestGetArgument for Vec<&str> {
     }
 }
 
-pub async fn request_get<S, B, E, P>(app: &S, url: &str, action: &str, body: JsonValue, code: u16, paths: P) -> JsonValue where
+pub async fn request_get<S, B, E, P>(app: &S, url: &str, action: &str, body: Value, code: u16, paths: P) -> Value where
     S: Service<Request, Response = ServiceResponse<B>, Error = E>,
     E: std::fmt::Debug,
     B: MessageBody,
@@ -131,9 +130,9 @@ pub async fn request_get<S, B, E, P>(app: &S, url: &str, action: &str, body: Jso
 {
     let res = request(app, url, action, body).await;
     let status = res.status().as_u16();
-    let json: JsonValue = read_body_json(res).await;
+    let json: Value = read_body_json(res).await;
     assert_eq!(status, code, "see wrong json response: {:?}", &json);
-    let mut final_ret_val: Vec<JsonValue> = vec![];
+    let mut final_ret_val: Vec<Value> = vec![];
     for path in paths.paths() {
         let mut retval = &json;
         let items = path.split(".");
@@ -153,6 +152,6 @@ pub async fn request_get<S, B, E, P>(app: &S, url: &str, action: &str, body: Jso
     if final_ret_val.len() == 1 {
         final_ret_val.get(0).unwrap().clone()
     } else {
-        JsonValue::Array(final_ret_val)
+        Value::Array(final_ret_val)
     }
 }

@@ -3,7 +3,6 @@ use serial_test::serial;
 use teo::core::graph::Graph;
 use actix_web::{test, App, error::Error};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
-use serde_json::{json, Number, Value as JsonValue};
 use teo::app::app::ServerConfiguration;
 use teo::app::serve::make_app;
 use crate::helpers::is_object_id;
@@ -95,7 +94,7 @@ async fn app() -> App<impl ServiceFactory<
 #[serial]
 async fn create_with_valid_data_creates_entry() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -104,13 +103,13 @@ async fn create_with_valid_data_creates_entry() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
     let body_data = body_obj.get("data").unwrap().as_object().unwrap();
-    assert_eq!(body_data.get("uniqueString").unwrap(), &JsonValue::String("1".to_string()));
-    assert_eq!(body_data.get("requiredString").unwrap(), &JsonValue::String("1".to_string()));
+    assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("1".to_string()));
+    assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("1".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
 }
@@ -119,7 +118,7 @@ async fn create_with_valid_data_creates_entry() {
 #[serial]
 async fn create_with_required_field_omitted_cannot_create() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -127,7 +126,7 @@ async fn create_with_required_field_omitted_cannot_create() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_client_error());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("data"), None);
@@ -135,7 +134,7 @@ async fn create_with_required_field_omitted_cannot_create() {
     assert_eq!(body_error.get("type").unwrap().as_str().unwrap(), "ValidationError");
     assert_eq!(body_error.get("message").unwrap().as_str().unwrap(), "Value is required.");
     let body_error_errors = body_error.get("errors").unwrap();
-    assert_eq!(body_error_errors, &json!({
+    assert_eq!(body_error_errors, &tson!({
         "requiredString": "Value is required."
     }));
 }
@@ -144,14 +143,14 @@ async fn create_with_required_field_omitted_cannot_create() {
 #[serial]
 async fn create_with_duplicated_unique_value_cannot_create() {
     let app = test::init_service(app().await).await;
-    let req1 = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let req1 = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
             "requiredString": "1"
         }
     })).to_request();
-    let req2 = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let req2 = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -161,7 +160,7 @@ async fn create_with_duplicated_unique_value_cannot_create() {
     let _: ServiceResponse = test::call_service(&app, req1).await;
     let resp: ServiceResponse = test::call_service(&app, req2).await;
     assert!(resp.status().is_client_error());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("data"), None);
@@ -169,7 +168,7 @@ async fn create_with_duplicated_unique_value_cannot_create() {
     assert_eq!(body_error.get("type").unwrap().as_str().unwrap(), "ValidationError");
     assert_eq!(body_error.get("message").unwrap().as_str().unwrap(), "Input is not valid.");
     let body_error_errors = body_error.get("errors").unwrap();
-    assert_eq!(body_error_errors, &json!({
+    assert_eq!(body_error_errors, &tson!({
         "uniqueString": "Unique value duplicated."
     }));
 }
@@ -178,7 +177,7 @@ async fn create_with_duplicated_unique_value_cannot_create() {
 #[serial]
 async fn create_with_optional_data_creates_entry() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -188,14 +187,14 @@ async fn create_with_optional_data_creates_entry() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
     let body_data = body_obj.get("data").unwrap().as_object().unwrap();
-    assert_eq!(body_data.get("uniqueString").unwrap(), &JsonValue::String("1".to_string()));
-    assert_eq!(body_data.get("requiredString").unwrap(), &JsonValue::String("1".to_string()));
-    assert_eq!(body_data.get("optionalString").unwrap(), &JsonValue::String("1".to_string()));
+    assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("1".to_string()));
+    assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("1".to_string()));
+    assert_eq!(body_data.get("optionalString").unwrap(), &Value::String("1".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
 }
@@ -204,7 +203,7 @@ async fn create_with_optional_data_creates_entry() {
 #[serial]
 async fn create_with_correct_enum_value_creates_entry() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -214,14 +213,14 @@ async fn create_with_correct_enum_value_creates_entry() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
     let body_data = body_obj.get("data").unwrap().as_object().unwrap();
-    assert_eq!(body_data.get("uniqueString").unwrap(), &JsonValue::String("1".to_string()));
-    assert_eq!(body_data.get("requiredString").unwrap(), &JsonValue::String("1".to_string()));
-    assert_eq!(body_data.get("optionalEnum").unwrap(), &JsonValue::String("MALE".to_string()));
+    assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("1".to_string()));
+    assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("1".to_string()));
+    assert_eq!(body_data.get("optionalEnum").unwrap(), &Value::String("MALE".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
 }
@@ -230,7 +229,7 @@ async fn create_with_correct_enum_value_creates_entry() {
 #[serial]
 async fn create_with_invalid_enum_choice_value_cannot_create() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -240,7 +239,7 @@ async fn create_with_invalid_enum_choice_value_cannot_create() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_client_error());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("data"), None);
@@ -248,7 +247,7 @@ async fn create_with_invalid_enum_choice_value_cannot_create() {
     assert_eq!(body_error.get("type").unwrap().as_str().unwrap(), "ValidationError");
     assert_eq!(body_error.get("message").unwrap().as_str().unwrap(), "Enum value is unexpected.");
     let body_error_errors = body_error.get("errors").unwrap();
-    assert_eq!(body_error_errors, &json!({
+    assert_eq!(body_error_errors, &tson!({
         "optionalEnum": "Enum value is unexpected."
     }));
 }
@@ -257,7 +256,7 @@ async fn create_with_invalid_enum_choice_value_cannot_create() {
 #[serial]
 async fn create_with_required_omitted_but_default_can_create() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -266,12 +265,12 @@ async fn create_with_required_omitted_but_default_can_create() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
     let body_data = body_obj.get("data").unwrap().as_object().unwrap();
-    assert_eq!(body_data.get("requiredWithDefault").unwrap(), &JsonValue::Number(Number::from(2)));
+    assert_eq!(body_data.get("requiredWithDefault").unwrap(), &Value::Number(Number::from(2)));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
 }
@@ -280,7 +279,7 @@ async fn create_with_required_omitted_but_default_can_create() {
 #[serial]
 async fn create_default_field_use_provided_value_if_exists() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -290,12 +289,12 @@ async fn create_default_field_use_provided_value_if_exists() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
     let body_data = body_obj.get("data").unwrap().as_object().unwrap();
-    assert_eq!(body_data.get("requiredWithDefault").unwrap(), &JsonValue::Number(Number::from(8)));
+    assert_eq!(body_data.get("requiredWithDefault").unwrap(), &Value::Number(Number::from(8)));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
 }
@@ -304,7 +303,7 @@ async fn create_default_field_use_provided_value_if_exists() {
 #[serial]
 async fn create_cannot_accept_readonly_value() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -314,7 +313,7 @@ async fn create_cannot_accept_readonly_value() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_client_error());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("data"), None);
@@ -327,7 +326,7 @@ async fn create_cannot_accept_readonly_value() {
 #[serial]
 async fn wont_output_writeonly_value() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "2",
@@ -337,7 +336,7 @@ async fn wont_output_writeonly_value() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("error"), None);
@@ -349,7 +348,7 @@ async fn wont_output_writeonly_value() {
 #[serial]
 async fn find_unique_can_find_by_primary_key() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let create_req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -357,9 +356,9 @@ async fn find_unique_can_find_by_primary_key() {
         }
     })).to_request();
     let create_resp: ServiceResponse = test::call_service(&app, create_req).await;
-    let create_body_json: JsonValue = test::read_body_json(create_resp).await;
+    let create_body_json: Value = test::read_body_json(create_resp).await;
     let id = create_body_json.as_object().unwrap().get("data").unwrap().as_object().unwrap().get("id").unwrap().as_str().unwrap();
-    let find_unique_req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let find_unique_req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "FindUnique",
         "where": {
             "id": id
@@ -367,13 +366,13 @@ async fn find_unique_can_find_by_primary_key() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, find_unique_req).await;
     //assert!(resp.status().is_success());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
     let body_data = body_obj.get("data").unwrap().as_object().unwrap();
-    assert_eq!(body_data.get("uniqueString").unwrap(), &JsonValue::String("1".to_string()));
-    assert_eq!(body_data.get("requiredString").unwrap(), &JsonValue::String("1".to_string()));
+    assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("1".to_string()));
+    assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("1".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
 }
@@ -382,7 +381,7 @@ async fn find_unique_can_find_by_primary_key() {
 #[serial]
 async fn find_unique_can_find_by_single_unique_key() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let create_req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -390,7 +389,7 @@ async fn find_unique_can_find_by_single_unique_key() {
         }
     })).to_request();
     let _: ServiceResponse = test::call_service(&app, create_req).await;
-    let find_unique_req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let find_unique_req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "FindUnique",
         "where": {
             "uniqueString": "1"
@@ -398,13 +397,13 @@ async fn find_unique_can_find_by_single_unique_key() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, find_unique_req).await;
     assert!(resp.status().is_success());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
     let body_data = body_obj.get("data").unwrap().as_object().unwrap();
-    assert_eq!(body_data.get("uniqueString").unwrap(), &JsonValue::String("1".to_string()));
-    assert_eq!(body_data.get("requiredString").unwrap(), &JsonValue::String("1".to_string()));
+    assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("1".to_string()));
+    assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("1".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
 }
@@ -413,7 +412,7 @@ async fn find_unique_can_find_by_single_unique_key() {
 #[serial]
 async fn find_unique_can_find_by_compound_unique_key() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/compounds/action").set_json(json!({
+    let create_req = test::TestRequest::post().uri("/compounds/action").set_json(tson!({
         "action": "Create",
         "create": {
             "one": "1",
@@ -422,7 +421,7 @@ async fn find_unique_can_find_by_compound_unique_key() {
         }
     })).to_request();
     let _: ServiceResponse = test::call_service(&app, create_req).await;
-    let find_unique_req = test::TestRequest::post().uri("/compounds/action").set_json(json!({
+    let find_unique_req = test::TestRequest::post().uri("/compounds/action").set_json(tson!({
         "action": "FindUnique",
         "where": {
             "one": "1",
@@ -431,14 +430,14 @@ async fn find_unique_can_find_by_compound_unique_key() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, find_unique_req).await;
     assert!(resp.status().is_success());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
     let body_data = body_obj.get("data").unwrap().as_object().unwrap();
-    assert_eq!(body_data.get("one").unwrap(), &JsonValue::String("1".to_string()));
-    assert_eq!(body_data.get("two").unwrap(), &JsonValue::String("2".to_string()));
-    assert_eq!(body_data.get("three").unwrap(), &JsonValue::String("3".to_string()));
+    assert_eq!(body_data.get("one").unwrap(), &Value::String("1".to_string()));
+    assert_eq!(body_data.get("two").unwrap(), &Value::String("2".to_string()));
+    assert_eq!(body_data.get("three").unwrap(), &Value::String("3".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str));
 }
@@ -447,7 +446,7 @@ async fn find_unique_can_find_by_compound_unique_key() {
 #[serial]
 async fn find_many_can_find_all() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/compounds/action").set_json(json!({
+    let create_req = test::TestRequest::post().uri("/compounds/action").set_json(tson!({
         "action": "Create",
         "create": {
             "one": "1",
@@ -456,7 +455,7 @@ async fn find_many_can_find_all() {
         }
     })).to_request();
     let _: ServiceResponse = test::call_service(&app, create_req).await;
-    let create_req = test::TestRequest::post().uri("/compounds/action").set_json(json!({
+    let create_req = test::TestRequest::post().uri("/compounds/action").set_json(tson!({
         "action": "Create",
         "create": {
             "one": "one",
@@ -465,25 +464,25 @@ async fn find_many_can_find_all() {
         }
     })).to_request();
     let _: ServiceResponse = test::call_service(&app, create_req).await;
-    let find_many_req = test::TestRequest::post().uri("/compounds/action").set_json(json!({
+    let find_many_req = test::TestRequest::post().uri("/compounds/action").set_json(tson!({
         "action": "FindMany"
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, find_many_req).await;
     assert!(resp.status().is_success());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
-    assert_eq!(body_obj.get("meta").unwrap(), &json!({"count": 2}));
+    assert_eq!(body_obj.get("meta").unwrap(), &tson!({"count": 2}));
     assert_eq!(body_obj.get("errors"), None);
     let body_array = body_obj.get("data").unwrap().as_array().unwrap();
     let body_data_1 = body_array.get(0).unwrap().as_object().unwrap();
-    assert_eq!(body_data_1.get("one").unwrap(), &JsonValue::String("1".to_string()));
-    assert_eq!(body_data_1.get("two").unwrap(), &JsonValue::String("2".to_string()));
-    assert_eq!(body_data_1.get("three").unwrap(), &JsonValue::String("3".to_string()));
+    assert_eq!(body_data_1.get("one").unwrap(), &Value::String("1".to_string()));
+    assert_eq!(body_data_1.get("two").unwrap(), &Value::String("2".to_string()));
+    assert_eq!(body_data_1.get("three").unwrap(), &Value::String("3".to_string()));
     assert!(is_object_id(body_data_1.get("id").unwrap().as_str().unwrap()));
     let body_data_2 = body_array.get(1).unwrap().as_object().unwrap();
-    assert_eq!(body_data_2.get("one").unwrap(), &JsonValue::String("one".to_string()));
-    assert_eq!(body_data_2.get("two").unwrap(), &JsonValue::String("two".to_string()));
-    assert_eq!(body_data_2.get("three").unwrap(), &JsonValue::String("three".to_string()));
+    assert_eq!(body_data_2.get("one").unwrap(), &Value::String("one".to_string()));
+    assert_eq!(body_data_2.get("two").unwrap(), &Value::String("two".to_string()));
+    assert_eq!(body_data_2.get("three").unwrap(), &Value::String("three".to_string()));
     assert!(is_object_id(body_data_2.get("id").unwrap().as_str().unwrap()));
 }
 
@@ -491,7 +490,7 @@ async fn find_many_can_find_all() {
 #[serial]
 async fn find_many_can_find_all_filtered_by_where() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/compounds/action").set_json(json!({
+    let create_req = test::TestRequest::post().uri("/compounds/action").set_json(tson!({
         "action": "Create",
         "create": {
             "one": "1",
@@ -500,7 +499,7 @@ async fn find_many_can_find_all_filtered_by_where() {
         }
     })).to_request();
     let _: ServiceResponse = test::call_service(&app, create_req).await;
-    let create_req = test::TestRequest::post().uri("/compounds/action").set_json(json!({
+    let create_req = test::TestRequest::post().uri("/compounds/action").set_json(tson!({
         "action": "Create",
         "create": {
             "one": "one",
@@ -509,7 +508,7 @@ async fn find_many_can_find_all_filtered_by_where() {
         }
     })).to_request();
     let _: ServiceResponse = test::call_service(&app, create_req).await;
-    let find_many_req = test::TestRequest::post().uri("/compounds/action").set_json(json!({
+    let find_many_req = test::TestRequest::post().uri("/compounds/action").set_json(tson!({
         "action": "FindMany",
         "where": {
             "one": {
@@ -519,15 +518,15 @@ async fn find_many_can_find_all_filtered_by_where() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, find_many_req).await;
     assert!(resp.status().is_success());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
-    assert_eq!(body_obj.get("meta").unwrap(), &json!({"count": 1}));
+    assert_eq!(body_obj.get("meta").unwrap(), &tson!({"count": 1}));
     assert_eq!(body_obj.get("errors"), None);
     let body_array = body_obj.get("data").unwrap().as_array().unwrap();
     let body_data_2 = body_array.get(0).unwrap().as_object().unwrap();
-    assert_eq!(body_data_2.get("one").unwrap(), &JsonValue::String("one".to_string()));
-    assert_eq!(body_data_2.get("two").unwrap(), &JsonValue::String("two".to_string()));
-    assert_eq!(body_data_2.get("three").unwrap(), &JsonValue::String("three".to_string()));
+    assert_eq!(body_data_2.get("one").unwrap(), &Value::String("one".to_string()));
+    assert_eq!(body_data_2.get("two").unwrap(), &Value::String("two".to_string()));
+    assert_eq!(body_data_2.get("three").unwrap(), &Value::String("three".to_string()));
     assert!(is_object_id(body_data_2.get("id").unwrap().as_str().unwrap()));
 }
 
@@ -535,7 +534,7 @@ async fn find_many_can_find_all_filtered_by_where() {
 #[serial]
 async fn update_can_update_valid_contents() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let create_req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -543,10 +542,10 @@ async fn update_can_update_valid_contents() {
         }
     })).to_request();
     let create_resp: ServiceResponse = test::call_service(&app, create_req).await;
-    let create_body_json: JsonValue = test::read_body_json(create_resp).await;
+    let create_body_json: Value = test::read_body_json(create_resp).await;
     let create_body_obj = create_body_json.as_object().unwrap();
     let id = create_body_obj.get("data").unwrap().as_object().unwrap().get("id").unwrap().as_str().unwrap();
-    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Update",
         "where": {
             "id": id
@@ -558,13 +557,13 @@ async fn update_can_update_valid_contents() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
     let body_data = body_obj.get("data").unwrap().as_object().unwrap();
-    assert_eq!(body_data.get("uniqueString").unwrap(), &JsonValue::String("5".to_string()));
-    assert_eq!(body_data.get("requiredString").unwrap(), &JsonValue::String("5".to_string()));
+    assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("5".to_string()));
+    assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("5".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
 }
@@ -573,7 +572,7 @@ async fn update_can_update_valid_contents() {
 #[serial]
 async fn update_can_set_optional_value_back_to_null() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let create_req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -582,10 +581,10 @@ async fn update_can_set_optional_value_back_to_null() {
         }
     })).to_request();
     let create_resp: ServiceResponse = test::call_service(&app, create_req).await;
-    let create_body_json: JsonValue = test::read_body_json(create_resp).await;
+    let create_body_json: Value = test::read_body_json(create_resp).await;
     let create_body_obj = create_body_json.as_object().unwrap();
     let id = create_body_obj.get("data").unwrap().as_object().unwrap().get("id").unwrap().as_str().unwrap();
-    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Update",
         "where": {
             "id": id
@@ -598,13 +597,13 @@ async fn update_can_set_optional_value_back_to_null() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
     let body_data = body_obj.get("data").unwrap().as_object().unwrap();
-    assert_eq!(body_data.get("uniqueString").unwrap(), &JsonValue::String("5".to_string()));
-    assert_eq!(body_data.get("requiredString").unwrap(), &JsonValue::String("5".to_string()));
+    assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("5".to_string()));
+    assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("5".to_string()));
     assert_eq!(body_data.get("optionalString"), None);
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str))
@@ -614,7 +613,7 @@ async fn update_can_set_optional_value_back_to_null() {
 #[serial]
 async fn delete_can_delete_record() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let create_req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -622,41 +621,41 @@ async fn delete_can_delete_record() {
         }
     })).to_request();
     let create_resp: ServiceResponse = test::call_service(&app, create_req).await;
-    let create_body_json: JsonValue = test::read_body_json(create_resp).await;
+    let create_body_json: Value = test::read_body_json(create_resp).await;
     let create_body_obj = create_body_json.as_object().unwrap();
     let id = create_body_obj.get("data").unwrap().as_object().unwrap().get("id").unwrap().as_str().unwrap();
-    let req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "Delete",
         "where": {
             "id": id
         }
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, req).await;
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
     let body_data = body_obj.get("data").unwrap().as_object().unwrap();
-    assert_eq!(body_data.get("uniqueString").unwrap(), &JsonValue::String("1".to_string()));
-    assert_eq!(body_data.get("requiredString").unwrap(), &JsonValue::String("1".to_string()));
+    assert_eq!(body_data.get("uniqueString").unwrap(), &Value::String("1".to_string()));
+    assert_eq!(body_data.get("requiredString").unwrap(), &Value::String("1".to_string()));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str));
     // now find many
-    let find_many_req = test::TestRequest::post().uri("/simples/action").set_json(json!({
+    let find_many_req = test::TestRequest::post().uri("/simples/action").set_json(tson!({
         "action": "FindMany"
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, find_many_req).await;
     assert!(resp.status().is_success());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
-    assert_eq!(body_obj.get("meta").unwrap(), &json!({"count": 0}));
+    assert_eq!(body_obj.get("meta").unwrap(), &tson!({"count": 0}));
 }
 
 #[test]
 #[serial]
 async fn create_vec_works_with_inner_pipeline() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/lists/action").set_json(json!({
+    let req = test::TestRequest::post().uri("/lists/action").set_json(tson!({
         "action": "Create",
         "create": {
             "listOne": ["1", "2"],
@@ -664,12 +663,12 @@ async fn create_vec_works_with_inner_pipeline() {
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    let body_json: JsonValue = test::read_body_json(resp).await;
+    let body_json: Value = test::read_body_json(resp).await;
     let body_obj = body_json.as_object().unwrap();
     assert_eq!(body_obj.get("meta"), None);
     assert_eq!(body_obj.get("errors"), None);
     let body_data = body_obj.get("data").unwrap().as_object().unwrap();
-    assert_eq!(body_data.get("listOne").unwrap(), &json!([
+    assert_eq!(body_data.get("listOne").unwrap(), &tson!([
         "1-suffix", "2-suffix"
     ]));
     let id_str = body_data.get("id").unwrap().as_str().unwrap();

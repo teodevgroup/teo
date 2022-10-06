@@ -1,6 +1,6 @@
-use serde_json::{Value as JsonValue};
+use crate::prelude::Value;
 
-pub(crate) fn json_get(value: &JsonValue, path: Vec<String>) -> Option<&JsonValue> {
+pub(crate) fn json_get(value: &Value, path: Vec<String>) -> Option<&Value> {
     let mut retval = Some(value);
     for item in path.iter() {
         if retval == None { return None; }
@@ -15,11 +15,11 @@ pub(crate) fn json_get(value: &JsonValue, path: Vec<String>) -> Option<&JsonValu
     retval
 }
 
-pub(crate) fn json_has(value: &JsonValue, path: Vec<String>) -> bool {
+pub(crate) fn json_has(value: &Value, path: Vec<String>) -> bool {
     json_get(value, path).is_some()
 }
 
-pub(crate) fn json_set(object_or_array: &JsonValue, path: Vec<String>, value: JsonValue) -> JsonValue {
+pub(crate) fn json_set(object_or_array: &Value, path: Vec<String>, value: Value) -> Value {
     let mut retval = object_or_array.clone();
     let mut cursor = Some(&mut retval);
     let key = path.last().unwrap();

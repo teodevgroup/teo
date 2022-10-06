@@ -4,7 +4,6 @@ use std::sync::Arc;
 use rust_decimal::prelude::FromStr;
 use std::sync::atomic::{Ordering};
 use async_recursion::async_recursion;
-use serde_json::{json, Value as JsonValue};
 use async_trait::async_trait;
 use bson::{Bson, doc, Document};
 use futures_util::StreamExt;
@@ -29,9 +28,10 @@ use crate::core::graph::Graph;
 use crate::core::input::AtomicUpdateType;
 use crate::core::model::{Model, ModelIndex, ModelIndexType};
 use crate::core::save_session::SaveSession;
-use crate::core::value::Value;
+use crate::core::tson::Value;
 use crate::core::error::ActionError;
 use crate::core::result::ActionResult;
+use crate::tson;
 
 #[derive(Debug)]
 pub struct MongoDBConnector {
@@ -140,7 +140,7 @@ impl MongoDBConnector {
         }
     }
 
-    fn document_to_object(&self, document: &Document, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>) -> ActionResult<()> {
+    fn document_to_object(&self, document: &Document, object: &Object, select: Option<&Value>, include: Option<&Value>) -> ActionResult<()> {
         for key in document.keys() {
             let object_field = object.model().fields().iter().find(|f| f.column_name() == key);
             if object_field.is_some() {
@@ -444,7 +444,7 @@ impl MongoDBConnector {
         }
     }
 
-    async fn aggregate_or_group_by(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<Vec<JsonValue>, ActionError> {
+    async fn aggregate_or_group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Vec<Value>, ActionError> {
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, false, finder, &path![])?;
         let col = &self.collections[model.name()];
         let cur = col.aggregate(aggregate_input, None).await;
@@ -454,28 +454,28 @@ impl MongoDBConnector {
         }
         let cur = cur.unwrap();
         let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
-        let mut final_retval: Vec<JsonValue> = vec![];
+        let mut final_retval: Vec<Value> = vec![];
         for result in results.iter() {
             // there are records
             let data = result.as_ref().unwrap();
-            let mut retval = json!({});
+            let mut retval = tson!({});
             for (g, o) in data {
                 if g.as_str() == "_id" {
                     continue;
                 }
                 // aggregate
                 if g.starts_with("_") {
-                    retval.as_object_mut().unwrap().insert(g.clone(), json!({}));
+                    retval.as_object_mut().unwrap().insert(g.clone(), tson!({}));
                     for (dbk, v) in o.as_document().unwrap() {
                         let k = if dbk == "_all" { "_all" } else { model.column_name_for_field_name(dbk).unwrap() };
                         if let Some(f) = v.as_f64() {
-                            retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(f));
+                            retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), tson!(f));
                         } else if let Some(i) = v.as_i64() {
-                            retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(i));
+                            retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), tson!(i));
                         } else if let Some(i) = v.as_i32() {
-                            retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(i));
+                            retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), tson!(i));
                         } else if v.as_null().is_some() {
-                            retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), json!(null));
+                            retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), tson!(null));
                         }
                     }
                 } else {
@@ -484,7 +484,7 @@ impl MongoDBConnector {
                     let val = if o.as_null().is_some() { Value::Null } else {
                         self.bson_value_to_field_value(g, o, &field.field_type).unwrap()
                     };
-                    let json_val = val.to_json_value();
+                    let json_val = val;
                     retval.as_object_mut().unwrap().insert(g.to_string(), json_val);
                 }
             }
@@ -667,7 +667,7 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder, &path![])?;
@@ -689,7 +689,7 @@ impl Connector for MongoDBConnector {
         Err(ActionError::object_not_found())
     }
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
         let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, &path![])?;
@@ -721,7 +721,7 @@ impl Connector for MongoDBConnector {
         Ok(result)
     }
 
-    async fn count(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
+    async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize, ActionError> {
         let finder = finder.as_object().unwrap();
         let r#where = finder.get("where");
         let col = &self.collections[model.name()];
@@ -741,15 +741,15 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn aggregate(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<JsonValue, ActionError> {
+    async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError> {
         let results = self.aggregate_or_group_by(graph, model, finder).await?;
         if results.is_empty() {
             // there is no record
-            let mut retval = json!({});
+            let mut retval = tson!({});
             for (g, o) in finder.as_object().unwrap() {
-                retval.as_object_mut().unwrap().insert(g.clone(), json!({}));
+                retval.as_object_mut().unwrap().insert(g.clone(), tson!({}));
                 for (k, _v) in o.as_object().unwrap() {
-                    let value = if g == "_count" { json!(0) } else { json!(null) };
+                    let value = if g == "_count" { tson!(0) } else { tson!(null) };
                     retval.as_object_mut().unwrap().get_mut(g.as_str()).unwrap().as_object_mut().unwrap().insert(k.to_string(), value);
                 }
             }
@@ -759,8 +759,8 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn group_by(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<JsonValue, ActionError> {
-        Ok(JsonValue::Array(self.aggregate_or_group_by(graph, model, finder).await?))
+    async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError> {
+        Ok(Value::Array(self.aggregate_or_group_by(graph, model, finder).await?))
     }
 
     fn new_save_session(&self) -> Arc<dyn SaveSession> {

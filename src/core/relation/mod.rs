@@ -1,7 +1,7 @@
-use serde_json::{Value as JsonValue};
 use crate::core::field::optionality::Optionality;
 use crate::core::object::Object;
 use crate::core::relation::delete_rule::DeleteRule;
+use crate::prelude::Value;
 
 pub mod builder;
 pub mod delete_rule;
@@ -84,14 +84,14 @@ impl Relation {
 
 #[derive(Debug)]
 pub(crate) enum RelationManipulation {
-    Create(JsonValue),
-    ConnectOrCreate(JsonValue),
-    Connect(JsonValue),
-    Set(JsonValue),
-    Update(JsonValue),
-    Upsert(JsonValue),
-    Disconnect(JsonValue),
-    Delete(JsonValue),
+    Create(Value),
+    ConnectOrCreate(Value),
+    Connect(Value),
+    Set(Value),
+    Update(Value),
+    Upsert(Value),
+    Disconnect(Value),
+    Delete(Value),
 }
 
 #[derive(Debug)]

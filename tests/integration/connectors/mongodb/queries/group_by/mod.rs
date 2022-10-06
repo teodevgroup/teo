@@ -42,10 +42,10 @@ async fn app() -> App<impl ServiceFactory<
 #[serial]
 async fn group_by_returns_empty_array_if_no_record() {
     let app = test::init_service(app().await).await;
-    let res = request(&app, "records", "group-by", json!({
+    let res = request(&app, "records", "group-by", tson!({
         "by": ["country"],
     })).await;
-    assert_json_response(res, 200, json!({
+    assert_json_response(res, 200, tson!({
         "data": []
     })).await;
 }
@@ -54,34 +54,34 @@ async fn group_by_returns_empty_array_if_no_record() {
 #[serial]
 async fn group_by_returns_grouped_value_for_single_field() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "records", "create", json!({
+    let _id1 = request_get(&app, "records", "create", tson!({
         "create": {
             "country": "US",
             "city": "Washington",
             "profileViews": 5000
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "records", "create", json!({
+    let _id2 = request_get(&app, "records", "create", tson!({
         "create": {
             "country": "US",
             "city": "Los Angeles",
             "profileViews": 5000
         },
     }), 200, "data.id").await;
-    let _id3 = request_get(&app, "records", "create", json!({
+    let _id3 = request_get(&app, "records", "create", tson!({
         "create": {
             "country": "UK",
             "city": "London",
             "profileViews": 5000
         },
     }), 200, "data.id").await;
-    let res = request(&app, "records", "group-by", json!({
+    let res = request(&app, "records", "group-by", tson!({
         "by": ["country"],
         "_sum": {
             "profileViews": true
         }
     })).await;
-    assert_json_response(res, 200, json!({
+    assert_json_response(res, 200, tson!({
         "data": [
             {
                 "country": {"equals": "UK"},
@@ -103,41 +103,41 @@ async fn group_by_returns_grouped_value_for_single_field() {
 #[serial]
 async fn group_by_returns_grouped_value_for_multiple_fields() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "records", "create", json!({
+    let _id1 = request_get(&app, "records", "create", tson!({
         "create": {
             "country": "US",
             "city": "Washington",
             "profileViews": 5000
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "records", "create", json!({
+    let _id2 = request_get(&app, "records", "create", tson!({
         "create": {
             "country": "US",
             "city": "Washington",
             "profileViews": 78
         },
     }), 200, "data.id").await;
-    let _id3 = request_get(&app, "records", "create", json!({
+    let _id3 = request_get(&app, "records", "create", tson!({
         "create": {
             "country": "US",
             "city": "Los Angeles",
             "profileViews": 5000
         },
     }), 200, "data.id").await;
-    let _id4 = request_get(&app, "records", "create", json!({
+    let _id4 = request_get(&app, "records", "create", tson!({
         "create": {
             "country": "UK",
             "city": "London",
             "profileViews": 5000
         },
     }), 200, "data.id").await;
-    let res = request(&app, "records", "group-by", json!({
+    let res = request(&app, "records", "group-by", tson!({
         "by": ["country", "city"],
         "_sum": {
             "profileViews": true
         }
     })).await;
-    assert_json_response(res, 200, json!({
+    assert_json_response(res, 200, tson!({
         "data": [
             {
                 "country": {"equals": "UK"},
@@ -168,41 +168,41 @@ async fn group_by_returns_grouped_value_for_multiple_fields() {
 #[serial]
 async fn group_by_returns_null_for_field_value_if_value_is_null_or_not_exist() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "records", "create", json!({
+    let _id1 = request_get(&app, "records", "create", tson!({
         "create": {
             "country": "US",
             "city": "Washington",
             "profileViews": 5000
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "records", "create", json!({
+    let _id2 = request_get(&app, "records", "create", tson!({
         "create": {
             "country": "US",
             "city": null,
             "profileViews": 78
         },
     }), 200, "data.id").await;
-    let _id3 = request_get(&app, "records", "create", json!({
+    let _id3 = request_get(&app, "records", "create", tson!({
         "create": {
             "country": "US",
             "city": "Los Angeles",
             "profileViews": 5000
         },
     }), 200, "data.id").await;
-    let _id4 = request_get(&app, "records", "create", json!({
+    let _id4 = request_get(&app, "records", "create", tson!({
         "create": {
             "country": "UK",
             "city": "London",
             "profileViews": 5000
         },
     }), 200, "data.id").await;
-    let res = request(&app, "records", "group-by", json!({
+    let res = request(&app, "records", "group-by", tson!({
         "by": ["country", "city"],
         "_sum": {
             "profileViews": true
         }
     })).await;
-    assert_json_response(res, 200, json!({
+    assert_json_response(res, 200, tson!({
         "data": [
             {
                 "country": {"equals": "UK"},
@@ -240,35 +240,35 @@ async fn group_by_returns_null_for_field_value_if_value_is_null_or_not_exist() {
 #[serial]
 async fn group_by_with_having_filters_results() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "records", "create", json!({
+    let _id1 = request_get(&app, "records", "create", tson!({
         "create": {
             "country": "US",
             "city": "Washington",
             "profileViews": 3
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "records", "create", json!({
+    let _id2 = request_get(&app, "records", "create", tson!({
         "create": {
             "country": "US",
             "city": null,
             "profileViews": 5
         },
     }), 200, "data.id").await;
-    let _id3 = request_get(&app, "records", "create", json!({
+    let _id3 = request_get(&app, "records", "create", tson!({
         "create": {
             "country": "US",
             "city": "Los Angeles",
             "profileViews": 8
         },
     }), 200, "data.id").await;
-    let _id4 = request_get(&app, "records", "create", json!({
+    let _id4 = request_get(&app, "records", "create", tson!({
         "create": {
             "country": "UK",
             "city": "London",
             "profileViews": 5000
         },
     }), 200, "data.id").await;
-    let res = request(&app, "records", "group-by", json!({
+    let res = request(&app, "records", "group-by", tson!({
         "by": ["country", "city"],
         "_sum": {
             "profileViews": true
@@ -279,7 +279,7 @@ async fn group_by_with_having_filters_results() {
             }
         }
     })).await;
-    assert_json_response(res, 200, json!({
+    assert_json_response(res, 200, tson!({
         "data": [
             {
                 "country": {"equals": "UK"},

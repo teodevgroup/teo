@@ -85,7 +85,7 @@ use crate::core::pipeline::modifiers::value::one_of::OneOfModifier;
 use crate::core::pipeline::modifiers::vector::item_at::ItemAtModifier;
 use crate::core::pipeline::modifiers::vector::join::JoinModifier;
 use crate::core::pipeline::Pipeline;
-use crate::core::value::Value;
+use crate::core::tson::Value;
 
 #[derive(Debug)]
 pub struct PipelineBuilder {

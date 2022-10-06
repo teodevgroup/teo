@@ -6,7 +6,6 @@ use chrono::{Date, DateTime, NaiveDate, Utc};
 use key_path::{KeyPath, path};
 use sqlx::{AnyPool, Column, Database, Error, Executor, Row, ValueRef};
 use sqlx::pool::Pool;
-use serde_json::{json, Value as JsonValue};
 use sqlx::any::{AnyRow, AnyValueRef};
 use crate::core::model::Model;
 use url::Url;
@@ -28,6 +27,7 @@ use crate::core::input_decoder::str_to_target_type;
 use crate::core::result::ActionResult;
 use crate::core::save_session::SaveSession;
 use crate::prelude::{Graph, Object, Value};
+use crate::tson;
 
 #[derive(Debug)]
 pub(crate) struct SQLConnector {
@@ -72,7 +72,7 @@ impl SQLConnector {
         migrate(dialect, pool, models).await
     }
 
-    fn row_to_object(&self, row: &AnyRow, object: &Object, select: Option<&JsonValue>, include: Option<&JsonValue>, left_join: bool) -> ActionResult<()> {
+    fn row_to_object(&self, row: &AnyRow, object: &Object, select: Option<&Value>, include: Option<&Value>, left_join: bool) -> ActionResult<()> {
         for column in row.columns() {
             let column_name = column.name();
             let result_name = if left_join {
@@ -253,7 +253,7 @@ impl SQLConnector {
     }
 
     #[async_recursion]
-    async fn perform_query<'a>(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, key_path: &KeyPath, additional_where: Option<String>, additional_left_join: Option<String>, env: Env) -> Result<Vec<Object>, ActionError> {
+    async fn perform_query<'a>(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, key_path: &KeyPath, additional_where: Option<String>, additional_left_join: Option<String>, env: Env) -> Result<Vec<Object>, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
         let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, self.dialect, additional_where, additional_left_join.clone(), key_path)?;
@@ -281,7 +281,7 @@ impl SQLConnector {
                                 return Err(ActionError::unexpected_input_key(relation_name, path));
                             }
                             let relation = relation.unwrap();
-                            let empty = json!({});
+                            let empty = tson!({});
                             let mut nested_include = if include_value.is_boolean() {
                                 if include_value.as_bool().unwrap() == true {
                                     Some(&empty)
@@ -445,7 +445,7 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
         let objects = self.perform_query(graph, model, finder, mutation_mode, &path![], None, None, env).await?;
         if objects.is_empty() {
             Err(ActionError::object_not_found())
@@ -454,11 +454,11 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &JsonValue, mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
         self.perform_query(graph, model, finder, mutation_mode, &path![], None, None, env).await
     }
 
-    async fn count(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<usize, ActionError> {
+    async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize, ActionError> {
         let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Count, false, finder, self.dialect, None, None, &path![])?;
         let result = self.pool.fetch_one(&*sql_query).await;
         match result {
@@ -473,11 +473,11 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn aggregate(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<JsonValue, ActionError> {
+    async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError> {
         todo!()
     }
 
-    async fn group_by(&self, graph: &Graph, model: &Model, finder: &JsonValue) -> Result<JsonValue, ActionError> {
+    async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError> {
         todo!()
     }
 

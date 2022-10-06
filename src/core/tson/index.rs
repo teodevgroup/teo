@@ -80,10 +80,7 @@ impl Index for String {
     }
 }
 
-impl<'a, T> Index for &'a T
-    where
-        T: ?Sized + Index,
-{
+impl<'a, T> Index for &'a T where T: ?Sized + Index, {
     fn index_into<'v>(&self, v: &'v Value) -> Option<&'v Value> {
         (**self).index_into(v)
     }

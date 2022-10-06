@@ -1,20 +1,20 @@
 use std::collections::HashSet;
 use key_path::path;
-use serde_json::{Value as JsonValue, json};
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::core::error::ActionError;
 use crate::core::model::Model;
 use crate::core::result::ActionResult;
-use crate::prelude::Graph;
+use crate::prelude::{Graph, Value};
+use crate::tson;
 
-fn unwrap_i32(value: Option<&JsonValue>) -> Option<i32> {
+fn unwrap_i32(value: Option<&Value>) -> Option<i32> {
     match value {
         Some(value) => Some(value.as_i64().unwrap() as i32),
         None => None
     }
 }
 
-pub(crate) fn validate_where_unique(model: &Model, r#where: &Option<&JsonValue>) -> ActionResult<()> {
+pub(crate) fn validate_where_unique(model: &Model, r#where: &Option<&Value>) -> ActionResult<()> {
     if r#where.is_none() {
         return Err(ActionError::invalid_query_input("Unique query should have a where which represents unique key or keys."));
     }
@@ -33,19 +33,19 @@ pub(crate) fn validate_where_unique(model: &Model, r#where: &Option<&JsonValue>)
 }
 
 pub struct UserJsonArgs<'a> {
-    pub(crate) r#where: Option<&'a JsonValue>,
-    pub(crate) order_by: Option<&'a JsonValue>,
-    pub(crate) cursor: Option<&'a JsonValue>,
+    pub(crate) r#where: Option<&'a Value>,
+    pub(crate) order_by: Option<&'a Value>,
+    pub(crate) cursor: Option<&'a Value>,
     pub(crate) take: Option<i32>,
     pub(crate) skip: Option<i32>,
     pub(crate) page_size: Option<i32>,
     pub(crate) page_number: Option<i32>,
-    pub(crate) include: Option<&'a JsonValue>,
-    pub(crate) distinct: Option<&'a JsonValue>,
-    pub(crate) select: Option<&'a JsonValue>,
-    pub(crate) aggregates: Option<JsonValue>,
-    pub(crate) by: Option<&'a JsonValue>,
-    pub(crate) having: Option<&'a JsonValue>,
+    pub(crate) include: Option<&'a Value>,
+    pub(crate) distinct: Option<&'a Value>,
+    pub(crate) select: Option<&'a Value>,
+    pub(crate) aggregates: Option<Value>,
+    pub(crate) by: Option<&'a Value>,
+    pub(crate) having: Option<&'a Value>,
 }
 
 pub(crate) fn user_json_args<'a>(
@@ -53,7 +53,7 @@ pub(crate) fn user_json_args<'a>(
     _graph: &Graph,
     r#type: QueryPipelineType,
     mutation_mode: bool,
-    json_value: &'a JsonValue,
+    json_value: &'a Value,
 ) -> Result<UserJsonArgs<'a>, ActionError> {
     let json_value = json_value.as_object();
     if json_value.is_none() {
@@ -73,7 +73,7 @@ pub(crate) fn user_json_args<'a>(
     let include = if !mutation_mode { json_value.get("include") } else { None };
     let distinct = if !mutation_mode { json_value.get("distinct") } else { None };
     let select = if !mutation_mode { json_value.get("select") } else { None };
-    let mut aggregates: JsonValue = json!({});
+    let mut aggregates: Value = tson!({});
     if let Some(avg) = json_value.get("_avg") {
         aggregates.as_object_mut().unwrap().insert("_avg".to_string(), avg.clone());
     }

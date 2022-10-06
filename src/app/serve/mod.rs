@@ -6,7 +6,6 @@ use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::DefaultHeaders;
 use chrono::{DateTime, Duration, Local, Utc};
 use colored::Colorize;
-use serde_json::{json, Value as JsonValue};
 use futures_util::StreamExt;
 
 use key_path::{KeyPath, path};
@@ -24,6 +23,8 @@ use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::pipeline::context::{Context};
 use crate::core::error::ActionError;
+use crate::prelude::Value;
+use crate::tson;
 use crate::utils::json::check_json_keys;
 
 pub(crate) mod response;
@@ -94,7 +95,7 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
     let _model = graph.model(claims.model.as_str()).unwrap();
     let identity = graph.find_unique(
         graph.model(claims.model.as_str()).unwrap().name(),
-        &json!({
+        &tson!({
                 "where": claims.id
             }),
         true,
@@ -105,13 +106,13 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
     return Ok(Some(identity.unwrap()));
 }
 
-async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
+async fn handle_find_unique(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
     let env = Env::new(source, Intent::FindUnique);
     let result = graph.find_unique(model.name(), input, false, env).await;
     match result {
         Ok(obj) => {
             let json_data = obj.to_json().await.unwrap();
-            HttpResponse::Ok().json(json!({"data": json_data}))
+            HttpResponse::Ok().json(tson!({"data": json_data}))
         }
         Err(err) => {
             err.into()
@@ -119,13 +120,13 @@ async fn handle_find_unique(graph: &Graph, input: &JsonValue, model: &Model, sou
     }
 }
 
-async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
+async fn handle_find_first(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
     let env = Env::new(source, Intent::FindFirst);
     let result = graph.find_first(model.name(), input, false, env).await;
     match result {
         Ok(obj) => {
             let json_data = obj.to_json().await.unwrap();
-            HttpResponse::Ok().json(json!({"data": json_data}))
+            HttpResponse::Ok().json(tson!({"data": json_data}))
         }
         Err(err) => {
             err.into()
@@ -133,7 +134,7 @@ async fn handle_find_first(graph: &Graph, input: &JsonValue, model: &Model, sour
     }
 }
 
-async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
+async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
     let env = Env::new(source, Intent::FindMany);
     let result = graph.find_many(model.name(), input, false, env).await;
     match result {
@@ -145,7 +146,7 @@ async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model, sourc
             count_input_obj.remove("pageSize");
             count_input_obj.remove("pageNumber");
             let count = graph.count(model.name(), &count_input).await.unwrap();
-            let mut meta = json!({"count": count});
+            let mut meta = tson!({"count": count});
             let page_size = input.get("pageSize");
             if page_size.is_some() {
                 let page_size = page_size.unwrap().as_i64().unwrap();
@@ -154,30 +155,30 @@ async fn handle_find_many(graph: &Graph, input: &JsonValue, model: &Model, sourc
                 if count % page_size != 0 {
                     number_of_pages += 1;
                 }
-                meta.as_object_mut().unwrap().insert("numberOfPages".to_string(), JsonValue::Number(number_of_pages.into()));
+                meta.as_object_mut().unwrap().insert("numberOfPages".to_string(), Value::Number(number_of_pages.into()));
             }
 
-            let mut result_json: Vec<JsonValue> = vec![];
+            let mut result_json: Vec<Value> = vec![];
             for result in results {
                 match result.to_json().await {
                     Ok(result) => result_json.push(result),
                     Err(_) => ()
                 }
             }
-            HttpResponse::Ok().json(json!({
+            HttpResponse::Ok().json(tson!({
                     "meta": meta,
                     "data": result_json
                 }))
         }
         Err(err) => {
-            HttpResponse::BadRequest().json(json!({
+            HttpResponse::BadRequest().json(tson!({
                     "error": err
                 }))
         }
     }
 }
 
-async fn handle_create_internal(graph: &Graph, create: Option<&JsonValue>, include: Option<&JsonValue>, select: Option<&JsonValue>, model: &Model, path: &KeyPath<'_>, env: Env) -> Result<JsonValue, ActionError> {
+async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: Option<&Value>, select: Option<&Value>, model: &Model, path: &KeyPath<'_>, env: Env) -> Result<Value, ActionError> {
     let obj = graph.new_object(model.name(), env)?;
     let set_json_result = match create {
         Some(create) => {
@@ -187,7 +188,7 @@ async fn handle_create_internal(graph: &Graph, create: Option<&JsonValue>, inclu
             obj._set_json(create, path).await
         }
         None => {
-            obj._set_json(&json!({}), path).await
+            obj._set_json(&tson!({}), path).await
         }
     };
     if set_json_result.is_err() {
@@ -198,7 +199,7 @@ async fn handle_create_internal(graph: &Graph, create: Option<&JsonValue>, inclu
     refetched.to_json().await
 }
 
-async fn handle_create(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
+async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
     let env = Env::new(source, Intent::Create);
     let input = input.as_object().unwrap();
     let create = input.get("create");
@@ -206,13 +207,13 @@ async fn handle_create(graph: &Graph, input: &JsonValue, model: &Model, source: 
     let select = input.get("select");
     let result = handle_create_internal(graph, create, include, select, model, &path!["create"], env).await;
     match result {
-        Ok(val) => HttpResponse::Ok().json(json!({"data": val})),
-        Err(err) => HttpResponse::BadRequest().json(json!({"error": err}))
+        Ok(val) => HttpResponse::Ok().json(tson!({"data": val})),
+        Err(err) => HttpResponse::BadRequest().json(tson!({"error": err}))
     }
 }
 
-async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&JsonValue>, include: Option<&JsonValue>, select: Option<&JsonValue>, _where: Option<&JsonValue>, _model: &Model) -> Result<JsonValue, ActionError> {
-    let empty = json!({});
+async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&Value>, include: Option<&Value>, select: Option<&Value>, _where: Option<&Value>, _model: &Model) -> Result<Value, ActionError> {
+    let empty = tson!({});
     let updator = if update.is_some() { update.unwrap() } else { &empty };
     object.set_json(updator).await?;
     object.save().await?;
@@ -220,11 +221,11 @@ async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&
     refetched.to_json().await
 }
 
-async fn handle_update(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
+async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
     let env = Env::new(source, Intent::Update);
     let result = graph.find_unique(model.name(), input, true, env).await;
     if result.is_err() {
-        return HttpResponse::NotFound().json(json!({"error": result.err()}));
+        return HttpResponse::NotFound().json(tson!({"error": result.err()}));
     }
     let result = result.unwrap();
     let update = input.get("update");
@@ -234,15 +235,15 @@ async fn handle_update(graph: &Graph, input: &JsonValue, model: &Model, source: 
     let update_result = handle_update_internal(graph, result.clone(), update, include, select, r#where, model).await;
     match update_result {
         Ok(value) => {
-            HttpResponse::Ok().json(json!({"data": value}))
+            HttpResponse::Ok().json(tson!({"data": value}))
         }
         Err(err) => {
-            HttpResponse::BadRequest().json(json!({"error": err}))
+            HttpResponse::BadRequest().json(tson!({"error": err}))
         }
     }
 }
 
-async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
+async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
     let env = Env::new(source.clone(), Intent::UpsertActuallyUpdate);
     let result = graph.find_unique(model.name(), input, true, env).await;
     let include = input.get("include");
@@ -256,7 +257,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, source: 
                     obj.set_json(update).await
                 }
                 None => {
-                    let empty = json!({});
+                    let empty = tson!({});
                     obj.set_json(&empty).await
                 }
             };
@@ -266,15 +267,15 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, source: 
                         Ok(_) => {
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
-                            HttpResponse::Ok().json(json!({"data": refetched.to_json().await.unwrap()}))
+                            HttpResponse::Ok().json(tson!({"data": refetched.to_json().await.unwrap()}))
                         }
                         Err(err) => {
-                            HttpResponse::BadRequest().json(json!({"error": err}))
+                            HttpResponse::BadRequest().json(tson!({"error": err}))
                         }
                     }
                 }
                 Err(err) => {
-                    HttpResponse::BadRequest().json(json!({"error": err}))
+                    HttpResponse::BadRequest().json(tson!({"error": err}))
                 }
             }
         }
@@ -287,7 +288,7 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, source: 
                     obj.set_json(create).await
                 }
                 None => {
-                    let empty = json!({});
+                    let empty = tson!({});
                     obj.set_json(&empty).await
                 }
             };
@@ -298,33 +299,33 @@ async fn handle_upsert(graph: &Graph, input: &JsonValue, model: &Model, source: 
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
                             let json_data = refetched.to_json().await.unwrap();
-                            return HttpResponse::Ok().json(json!({"data": json_data}));
+                            return HttpResponse::Ok().json(tson!({"data": json_data}));
                         }
                         Err(err) => {
-                            HttpResponse::BadRequest().json(json!({"error": err}))
+                            HttpResponse::BadRequest().json(tson!({"error": err}))
                         }
                     }
                 }
                 Err(err) => {
-                    HttpResponse::BadRequest().json(json!({"error": err}))
+                    HttpResponse::BadRequest().json(tson!({"error": err}))
                 }
             }
         }
     }
 }
 
-async fn handle_delete(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
+async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
     let env = Env::new(source, Intent::Delete);
     let result = graph.find_unique(model.name(), input, true, env).await;
     if result.is_err() {
-        return HttpResponse::NotFound().json(json!({"error": result.err()}));
+        return HttpResponse::NotFound().json(tson!({"error": result.err()}));
     }
     let result = result.unwrap();
     // find the object here
     return match result.delete().await {
         Ok(_) => {
             let json_data = result.to_json().await.unwrap();
-            HttpResponse::Ok().json(json!({"data": json_data}))
+            HttpResponse::Ok().json(tson!({"data": json_data}))
         }
         Err(err) => {
             err.into()
@@ -332,7 +333,7 @@ async fn handle_delete(graph: &Graph, input: &JsonValue, model: &Model, source: 
     }
 }
 
-async fn handle_create_many(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
+async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
     let env = Env::new(source, Intent::CreateMany);
     let input = input.as_object().unwrap();
     let create = input.get("create");
@@ -340,16 +341,16 @@ async fn handle_create_many(graph: &Graph, input: &JsonValue, model: &Model, sou
     let select = input.get("select");
     if create.is_none() {
         let err = ActionError::missing_required_input("array", path!["create"]);
-        return HttpResponse::BadRequest().json(json!({"error": err}));
+        return HttpResponse::BadRequest().json(tson!({"error": err}));
     }
     let create = create.unwrap();
     if !create.is_array() {
         let err = ActionError::unexpected_input_type("array", path!["create"]);
-        return HttpResponse::BadRequest().json(json!({"error": err}));
+        return HttpResponse::BadRequest().json(tson!({"error": err}));
     }
     let create = create.as_array().unwrap();
     let mut count = 0;
-    let mut ret_data: Vec<JsonValue> = vec![];
+    let mut ret_data: Vec<Value> = vec![];
     for (index, val) in create.iter().enumerate() {
         let result = handle_create_internal(graph, Some(val), include, select, model, &path!["create", index], env.clone()).await;
         match result {
@@ -360,17 +361,17 @@ async fn handle_create_many(graph: &Graph, input: &JsonValue, model: &Model, sou
             }
         }
     }
-    HttpResponse::Ok().json(json!({
+    HttpResponse::Ok().json(tson!({
             "meta": {"count": count},
             "data": ret_data
         }))
 }
 
-async fn handle_update_many(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
+async fn handle_update_many(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
     let env = Env::new(source, Intent::UpdateMany);
     let result = graph.find_many(model.name(), input, true, env).await;
     if result.is_err() {
-        return HttpResponse::BadRequest().json(json!({"error": result.err()}));
+        return HttpResponse::BadRequest().json(tson!({"error": result.err()}));
     }
     let result = result.unwrap();
     let update = input.get("update");
@@ -378,7 +379,7 @@ async fn handle_update_many(graph: &Graph, input: &JsonValue, model: &Model, sou
     let select = input.get("select");
 
     let mut count = 0;
-    let mut ret_data: Vec<JsonValue> = vec![];
+    let mut ret_data: Vec<Value> = vec![];
     for object in result {
         let update_result = handle_update_internal(graph, object.clone(), update, include, select, None, model).await;
         match update_result {
@@ -389,7 +390,7 @@ async fn handle_update_many(graph: &Graph, input: &JsonValue, model: &Model, sou
             Err(_err) => {}
         }
     }
-    HttpResponse::Ok().json(json!({
+    HttpResponse::Ok().json(tson!({
             "meta": {
                 "count": count
             },
@@ -397,15 +398,15 @@ async fn handle_update_many(graph: &Graph, input: &JsonValue, model: &Model, sou
         }))
 }
 
-async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model, source: Source) -> HttpResponse {
+async fn handle_delete_many(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
     let env = Env::new(source, Intent::DeleteMany);
     let result = graph.find_many(model.name(), input, true, env).await;
     if result.is_err() {
-        return HttpResponse::BadRequest().json(json!({"error": result.err()}));
+        return HttpResponse::BadRequest().json(tson!({"error": result.err()}));
     }
     let result = result.unwrap();
     let mut count = 0;
-    let mut retval: Vec<JsonValue> = vec![];
+    let mut retval: Vec<Value> = vec![];
     for object in result {
         match object.delete().await {
             Ok(_) => {
@@ -420,7 +421,7 @@ async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model, sou
             Err(_) => {}
         }
     }
-    HttpResponse::Ok().json(json!({
+    HttpResponse::Ok().json(tson!({
             "meta": {
                 "count": count
             },
@@ -428,41 +429,41 @@ async fn handle_delete_many(graph: &Graph, input: &JsonValue, model: &Model, sou
         }))
 }
 
-async fn handle_count(graph: &Graph, input: &JsonValue, model: &Model, _source: Source) -> HttpResponse {
+async fn handle_count(graph: &Graph, input: &Value, model: &Model, _source: Source) -> HttpResponse {
     let result = graph.count(model.name(), input).await;
     match result {
         Ok(count) => {
-            HttpResponse::Ok().json(json!({"data": count}))
+            HttpResponse::Ok().json(tson!({"data": count}))
         }
         Err(err) => {
-            HttpResponse::BadRequest().json(json!({"error": err}))
+            HttpResponse::BadRequest().json(tson!({"error": err}))
         }
     }
 }
 
-async fn handle_aggregate(graph: &Graph, input: &JsonValue, model: &Model, _source: Source) -> HttpResponse {
+async fn handle_aggregate(graph: &Graph, input: &Value, model: &Model, _source: Source) -> HttpResponse {
     match graph.aggregate(model.name(), input).await {
         Ok(count) => {
-            HttpResponse::Ok().json(json!({"data": count}))
+            HttpResponse::Ok().json(tson!({"data": count}))
         }
         Err(err) => {
-            HttpResponse::BadRequest().json(json!({"error": err}))
+            HttpResponse::BadRequest().json(tson!({"error": err}))
         }
     }
 }
 
-async fn handle_group_by(graph: &Graph, input: &JsonValue, model: &Model, _source: Source) -> HttpResponse {
+async fn handle_group_by(graph: &Graph, input: &Value, model: &Model, _source: Source) -> HttpResponse {
     match graph.group_by(model.name(), input).await {
         Ok(count) => {
-            HttpResponse::Ok().json(json!({"data": count}))
+            HttpResponse::Ok().json(tson!({"data": count}))
         }
         Err(err) => {
-            HttpResponse::BadRequest().json(json!({"error": err}))
+            HttpResponse::BadRequest().json(tson!({"error": err}))
         }
     }
 }
 
-async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &ServerConfiguration) -> HttpResponse {
+async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &ServerConfiguration) -> HttpResponse {
     let input = input.as_object().unwrap();
     let credentials = input.get("credentials");
     if let None = credentials {
@@ -474,9 +475,9 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     }
     let credentials = credentials.as_object().unwrap();
     let mut identity_key: Option<&String> = None;
-    let mut identity_value: Option<&JsonValue> = None;
+    let mut identity_value: Option<&Value> = None;
     let mut by_key: Option<&String> = None;
-    let mut by_value: Option<&JsonValue> = None;
+    let mut by_value: Option<&Value> = None;
     for (k, v) in credentials {
         if model.auth_identity_keys().contains(k) {
             if identity_key == None {
@@ -502,7 +503,7 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
         return ActionError::missing_required_input("auth checker", path!["credentials"]).into();
     }
     let by_field = model.field(by_key.unwrap()).unwrap();
-    let obj_result = graph.find_unique(model.name(), &json!({
+    let obj_result = graph.find_unique(model.name(), &tson!({
         "where": {
             identity_key.unwrap(): identity_value.unwrap()
         }
@@ -545,7 +546,7 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
                 exp
             };
             let token = encode_token(claims, &conf.jwt_secret.as_ref().unwrap());
-            HttpResponse::Ok().json(json!({
+            HttpResponse::Ok().json(tson!({
             "meta": {
                 "token": token
             },
@@ -555,21 +556,21 @@ async fn handle_sign_in(graph: &Graph, input: &JsonValue, model: &Model, conf: &
     }
 }
 
-async fn handle_identity(_graph: &Graph, input: &JsonValue, model: &Model, _conf: &ServerConfiguration, source: Source) -> HttpResponse {
+async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &ServerConfiguration, source: Source) -> HttpResponse {
     let identity = source.as_identity();
     if let Some(identity) = identity {
         if identity.model() != model {
-            return HttpResponse::Unauthorized().json(json!({"error": ActionError::wrong_identity_model()}));
+            return HttpResponse::Unauthorized().json(tson!({"error": ActionError::wrong_identity_model()}));
         }
         let select = input.get("select");
         let include = input.get("include");
         let refreshed = identity.refreshed(include, select).await.unwrap();
         let json_data = refreshed.to_json().await;
-        HttpResponse::Ok().json(json!({
+        HttpResponse::Ok().json(tson!({
             "data": json_data
         }))
     } else {
-        HttpResponse::Ok().json(json!({
+        HttpResponse::Ok().json(tson!({
             "data": null
         }))
     }
@@ -647,7 +648,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                 return ActionError::destination_not_found().into();
             }
             if r.method() == Method::OPTIONS {
-                return HttpResponse::Ok().json(json!({}));
+                return HttpResponse::Ok().json(tson!({}));
             }
             // read body
             let mut body = web::BytesMut::new();
@@ -656,25 +657,25 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                 // limit max size of in-memory payload
                 if (body.len() + chunk.len()) > 262_144usize {
                     return HttpResponse::InternalServerError()
-                        .json(json!({"error": ActionError::internal_server_error("Memory overflow.".to_string())}));
+                        .json(tson!({"error": ActionError::internal_server_error("Memory overflow.".to_string())}));
                 }
                 body.extend_from_slice(&chunk);
             }
-            let parsed_body: Result<JsonValue, serde_json::Error> = serde_json::from_slice(&body);
+            let parsed_body: Result<Value, serde_json::Error> = serde_json::from_slice(&body);
             let parsed_body = match parsed_body {
                 Ok(b) => b,
                 Err(_) => {
                     log_unhandled(start, r.method().as_str(), &path, 400);
-                    return HttpResponse::BadRequest().json(json!({"error": ActionError::incorrect_json_format()}));
+                    return HttpResponse::BadRequest().json(tson!({"error": ActionError::incorrect_json_format()}));
                 }
             };
             if !parsed_body.is_object() {
                 log_unhandled(start, r.method().as_str(), &path, 400);
-                return HttpResponse::BadRequest().json(json!({"error": ActionError::unexpected_input_root_type("object")}));
+                return HttpResponse::BadRequest().json(tson!({"error": ActionError::unexpected_input_root_type("object")}));
             }
             let identity = match get_identity(&r, &graph, conf).await {
                 Ok(identity) => { identity },
-                Err(err) => return HttpResponse::Unauthorized().json(json!({"error": err }))
+                Err(err) => return HttpResponse::Unauthorized().json(tson!({"error": err }))
             };
             let action_def = model_def.get_action_def(action);
             let transformed_body = if let Some(action_def) = action_def {

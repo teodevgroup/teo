@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::format;
 use key_path::KeyPath;
-use serde_json::{Value as JsonValue};
 use crate::connectors::shared::map_has_i_mode::map_has_i_mode;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::connectors::shared::user_json_args::{user_json_args, UserJsonArgs};
@@ -11,7 +10,7 @@ use crate::connectors::sql::query_builder::stmt::select::r#where::{ToWrappedSQLS
 use crate::connectors::sql::query_builder::stmt::select::r#where::WhereClause::And;
 use crate::connectors::sql::query_builder::stmt::SQL;
 use crate::connectors::sql::query_builder::traits::to_sql_string::ToSQLString;
-use crate::connectors::sql::query_builder::integration::value_encoder::JsonValueToSQLString;
+use crate::connectors::sql::query_builder::integration::value_encoder::ValueToSQLString;
 use crate::core::error::ActionError;
 use crate::core::field::r#type::FieldType;
 use crate::core::model::Model;
@@ -25,7 +24,7 @@ fn parse_sql_where_entry_array<'a>(
     column_name: &str,
     r#type: &FieldType,
     optional: bool,
-    value: &JsonValue,
+    value: &Value,
     key_path: impl AsRef<KeyPath<'a>>,
     graph: &Graph,
     op: &str
@@ -48,7 +47,7 @@ fn parse_sql_where_entry_item<'a>(
     column_name: &str,
     r#type: &FieldType,
     optional: bool,
-    value: &JsonValue,
+    value: &Value,
     graph: &Graph,
     dialect: SQLDialect,
     key_path: impl AsRef<KeyPath<'a>>,
@@ -133,7 +132,7 @@ fn parse_sql_where_entry<'a>(
     column_name: &str,
     field_type: &FieldType,
     optional: bool,
-    value: &JsonValue,
+    value: &Value,
     graph: &Graph,
     dialect: SQLDialect,
     key_path: impl AsRef<KeyPath<'a>>
@@ -182,7 +181,7 @@ pub(crate) fn build_where_from_identifier(model: &Model, graph: &Graph, identifi
     And(retval).to_string(dialect)
 }
 
-pub(crate) fn build_where_input<'a>(model: &Model, graph: &Graph, r#where: Option<&JsonValue>, dialect: SQLDialect, key_path: impl AsRef<KeyPath<'a>>) -> Result<Option<String>, ActionError> {
+pub(crate) fn build_where_input<'a>(model: &Model, graph: &Graph, r#where: Option<&Value>, dialect: SQLDialect, key_path: impl AsRef<KeyPath<'a>>) -> Result<Option<String>, ActionError> {
     if let None = r#where { return Ok(None); }
     let r#where = r#where.unwrap();
     if !r#where.is_object() {
@@ -250,7 +249,7 @@ pub(crate) fn build_where_input<'a>(model: &Model, graph: &Graph, r#where: Optio
 pub(crate) fn build_order_by_input<'a>(
     model: &Model,
     graph: &Graph,
-    order_by: Option<&JsonValue>,
+    order_by: Option<&Value>,
     dialect: SQLDialect,
     key_path: impl AsRef<KeyPath<'a>>
 ) -> Result<Option<String>, ActionError> {
@@ -356,7 +355,7 @@ pub(crate) fn build_sql_query_from_json<'a>(
     graph: &Graph,
     r#type: QueryPipelineType,
     mutation_mode: bool,
-    json_value: &JsonValue,
+    json_value: &Value,
     dialect: SQLDialect,
     additional_where: Option<String>,
     additional_left_join: Option<String>,

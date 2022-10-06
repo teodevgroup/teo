@@ -1,10 +1,9 @@
 use std::sync::Arc;
 use std::fmt::Debug;
 use async_trait::async_trait;
-use serde_json::{Value as JsonValue};
 use crate::core::json_pipeline::context::JsonPipelineContext;
 use crate::core::object::Object;
-
+use crate::prelude::Value;
 
 
 pub(crate) mod builder;
@@ -23,7 +22,7 @@ pub(crate) struct JsonPipeline {
 }
 
 impl JsonPipeline {
-    pub(crate) async fn call(&self, value: &JsonValue, identity: Option<Object>) -> JsonValue {
+    pub(crate) async fn call(&self, value: &Value, identity: Option<Object>) -> Value {
         let mut context = JsonPipelineContext::new(value.clone(), identity.clone());
         for item in self.items.iter() {
             context = item.call(context).await;
