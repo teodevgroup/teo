@@ -29,8 +29,6 @@ pub(crate) enum FieldType {
     Vec(Box<Field>),
     HashMap(Box<Field>),
     BTreeMap(Box<Field>),
-    HashSet(Box<Field>),
-    BTreeSet(Box<Field>),
     Object(String),
 }
 
@@ -84,8 +82,6 @@ impl FieldType {
             FieldType::Vec(inner) => Some(inner.as_ref()),
             FieldType::HashMap(inner) => Some(inner.as_ref()),
             FieldType::BTreeMap(inner) => Some(inner.as_ref()),
-            FieldType::HashSet(inner) => Some(inner.as_ref()),
-            FieldType::BTreeSet(inner) => Some(inner.as_ref()),
             _ => None,
         }
     }
@@ -105,8 +101,6 @@ impl FieldType {
             FieldType::Vec(_) => &VEC_FILTERS,
             FieldType::HashMap(_) => &MAP_FILTERS,
             FieldType::BTreeMap(_) => &MAP_FILTERS,
-            FieldType::HashSet(_) => &VEC_FILTERS,
-            FieldType::BTreeSet(_) => &VEC_FILTERS,
             FieldType::Object(_) => panic!("Object filter is not implemented.")
         }
     }

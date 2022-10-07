@@ -186,14 +186,6 @@ pub enum Value {
     ///
     BTreeMap(BTreeMap<String, Value>),
 
-    /// Represents a Tson hashset.
-    ///
-    HashSet(HashSet<Value>),
-
-    /// Represents a Tson btreeset.
-    ///
-    BTreeSet(BTreeSet<Value>),
-
     /// Represents a Tson object.
     ///
     Object(Object),
@@ -248,7 +240,7 @@ impl Value {
                 for object in vec {
                     result.push(object.to_object_json_value().await.unwrap());
                 }
-                Some(Value::Array(result))
+                Some(Value::Vec(result))
             }
             _ => None
         }
@@ -309,42 +301,6 @@ impl Value {
     pub fn as_btreemap_mut(&mut self) -> Option<&mut BTreeMap<String, Value>> {
         match self {
             Value::BTreeMap(map) => Some(map),
-            _ => None,
-        }
-    }
-
-    pub fn is_hashset(&self) -> bool {
-        self.as_hashset().is_some()
-    }
-
-    pub fn as_hashset(&self) -> Option<&HashSet<Value>> {
-        match self {
-            Value::HashSet(set) => Some(set),
-            _ => None,
-        }
-    }
-
-    pub fn as_hashset_mut(&mut self) -> Option<&mut HashSet<Value>> {
-        match self {
-            Value::HashSet(set) => Some(set),
-            _ => None,
-        }
-    }
-
-    pub fn is_btreeset(&self) -> bool {
-        self.as_btreemap().is_some()
-    }
-
-    pub fn as_btreeset(&self) -> Option<&BTreeSet<Value>> {
-        match self {
-            Value::BTreeSet(set) => Some(set),
-            _ => None,
-        }
-    }
-
-    pub fn as_btreeset_mut(&mut self) -> Option<&mut BTreeSet<Value>> {
-        match self {
-            Value::BTreeSet(set) => Some(set),
             _ => None,
         }
     }
@@ -747,7 +703,7 @@ impl Value {
     }
 
     pub fn is_object(&self) -> bool {
-        self.as_objct().is_some()
+        self.as_object().is_some()
     }
 
     pub fn as_object(&self) -> Option<&Object> {
@@ -825,8 +781,6 @@ impl PartialOrd for Value {
             (DateTime(s), DateTime(o)) => s.partial_cmp(o),
             (Vec(s), Vec(o)) => s.partial_cmp(o),
             (HashMap(_s), HashMap(_o)) => None,
-            (HashSet(_s), HashSet(_o)) => None,
-            (BTreeSet(_s), BTreeSet(_o)) => None,
             (BTreeMap(_s), BTreeMap(_o)) => None,
             (Object(_s), Object(_o)) => None,
             _ => None,
@@ -948,48 +902,20 @@ impl Neg for Value {
     type Output = Value;
     fn neg(self) -> Value {
         match self {
-            Value::Bool(val) => {
-                Value::Bool(if val { false } else { true })
-            }
-            Value::I8(val) => {
-                Value::I8(-val)
-            }
-            Value::I16(val) => {
-                Value::I16(-val)
-            }
-            Value::I32(val) => {
-                Value::I32(-val)
-            }
-            Value::I64(val) => {
-                Value::I64(-val)
-            }
-            Value::I128(val) => {
-                Value::I128(-val)
-            }
-            Value::F32(val) => {
-                Value::F32(-val)
-            }
-            Value::F64(val) => {
-                Value::F64(-val)
-            }
-            Value::Decimal(val) => {
-                Value::Decimal(-val)
-            }
-            Value::U8(val) => {
-                Value::I8(-(val as i8))
-            }
-            Value::U16(val) => {
-                Value::I16(-(val as i16))
-            }
-            Value::U32(val) => {
-                Value::I32(-(val as i32))
-            }
-            Value::U64(val) => {
-                Value::I64(-(val as i64))
-            }
-            Value::U128(val) => {
-                Value::I128(-(val as i128))
-            }
+            Value::Bool(val) => Value::Bool(if val { false } else { true }),
+            Value::I8(val) => Value::I8(-val),
+            Value::I16(val) => Value::I16(-val),
+            Value::I32(val) => Value::I32(-val),
+            Value::I64(val) => Value::I64(-val),
+            Value::I128(val) => Value::I128(-val),
+            Value::U8(val) => Value::I8(-(val as i8)),
+            Value::U16(val) => Value::I16(-(val as i16)),
+            Value::U32(val) => Value::I32(-(val as i32)),
+            Value::U64(val) => Value::I64(-(val as i64)),
+            Value::U128(val) => Value::I128(-(val as i128)),
+            Value::F32(val) => Value::F32(-val),
+            Value::F64(val) => Value::F64(-val),
+            Value::Decimal(val) => Value::Decimal(-val),
             _ => Value::Null,
         }
     }

@@ -184,7 +184,7 @@ impl MongoDBConnector {
                 };
                 let relation = relation.unwrap();
                 let model_name = relation.model();
-                let object_bsons = document.get(key).unwrap().as_vec().unwrap();
+                let object_bsons = document.get(key).unwrap().as_array().unwrap();
                 let mut related: Vec<Object> = vec![];
                 for related_object_bson in object_bsons {
                     let env = object.env().nested(Intent::NestedIncluded);
@@ -398,7 +398,7 @@ impl MongoDBConnector {
                 }
             }
             FieldType::Vec(inner) => {
-                match bson_value.as_vec() {
+                match bson_value.as_array() {
                     Some(arr) => {
                         let mut vec: Vec<Value> = vec![];
                         for val in arr {
@@ -411,7 +411,10 @@ impl MongoDBConnector {
                     }
                 }
             }
-            FieldType::Map(_) => {
+            FieldType::HashMap(_) => {
+                panic!()
+            }
+            FieldType::BTreeMap(_) => {
                 panic!()
             }
             FieldType::Object(_) => {
@@ -763,7 +766,7 @@ impl Connector for MongoDBConnector {
     }
 
     async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError> {
-        Ok(Value::Array(self.aggregate_or_group_by(graph, model, finder).await?))
+        Ok(Value::Vec(self.aggregate_or_group_by(graph, model, finder).await?))
     }
 
     fn new_save_session(&self) -> Arc<dyn SaveSession> {

@@ -217,22 +217,6 @@ impl FieldBuilder {
         self
     }
 
-    pub fn hashset<F: Fn(&mut FieldBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut builder = FieldBuilder::new("", self.connector_builder());
-        build(&mut builder);
-        let field = builder.build(self.connector_builder());
-        self.field_type = FieldType::HashSet(Box::new(field));
-        self
-    }
-
-    pub fn btreeset<F: Fn(&mut FieldBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut builder = FieldBuilder::new("", self.connector_builder());
-        build(&mut builder);
-        let field = builder.build(self.connector_builder());
-        self.field_type = FieldType::BTreeSet(Box::new(field));
-        self
-    }
-
     pub fn object(&mut self, model: impl Into<String>) -> &mut Self {
         self.field_type = FieldType::Object(model.into());
         self

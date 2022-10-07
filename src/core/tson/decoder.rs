@@ -1,4 +1,4 @@
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashSet, HashMap, BTreeSet, BTreeMap};
 use std::str::FromStr;
 #[cfg(feature = "data-source-mongodb")]
 use bson::oid::ObjectId;
@@ -76,14 +76,14 @@ impl Decoder {
     fn decode_include<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         let path = path.as_ref();
         if let Some(json_map) = json_value.as_object() {
-            Ok(Value::HashMap(HashMap::from(json_map.iter().map(|(k, v)| {
+            Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
                 let path = path + k;
                 if model.relation_output_keys().contains(k) {
                     Ok((k.to_owned(), Self::decode_include_item(model, graph, k, v, path)?))
                 } else {
                     Err(ActionError::unexpected_input_key(k, path))
                 }
-            }))))
+            }).collect::<Result<HashMap<String, Value>, ActionError>>()?))
         } else {
             Err(ActionError::unexpected_input_type("object", path))
         }
@@ -103,14 +103,14 @@ impl Decoder {
     fn decode_select<'a>(model: &Model, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         let path = path.as_ref();
         if let Some(json_map) = json_value.as_object() {
-            Ok(Value::HashMap(HashMap::from(json_map.iter().map(|(k, v)| {
+            Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
                 let path = path + k;
                 if model.local_output_keys().contains(k) {
                     Ok((k.to_owned(), Self::decode_bool(v, path)?))
                 } else {
                     Err(ActionError::unexpected_input_key(k, path))
                 }
-            }))))
+            }).collect::<Result<HashMap<String, Value>, ActionError>>()?))
         } else {
             Err(ActionError::unexpected_input_type("object", path))
         }
@@ -139,9 +139,9 @@ impl Decoder {
         if let Some(_) = json_value.as_str() {
             Ok(Self::decode_distinct_item(model, json_value, path)?)
         } else if let Some(json_array) = json_value.as_array() {
-            Ok(Value::Vec(json_array.iter().enumerate().map(|i, v| {
-                Self::decode_distinct_item(model, v, path + i)?
-            })?))
+            Ok(Value::Vec(json_array.iter().enumerate().map(|(i, v)| {
+                Self::decode_distinct_item(model, v, path + i)
+            }).collect::<Result<Vec<Value>, ActionError>>()?))
         } else {
             Err(ActionError::unexpected_input_type("string or array", path))
         }
@@ -165,8 +165,8 @@ impl Decoder {
             Ok(Value::Vec(vec![Self::decode_order_by_item(model, json_value, path)?]))
         } else if let Some(json_array) = json_value.as_array() {
             Ok(Value::Vec(json_array.iter().enumerate().map(|(i, v)| {
-                Self::decode_order_by_item(model, v, path + i)?
-            }).collect()?))
+                Self::decode_order_by_item(model, v, path + i)
+            }).collect::<Result<Vec<Value>, ActionError>>()?))
         } else {
             Err(ActionError::unexpected_input_type("object or array", path))
         }
@@ -207,8 +207,8 @@ impl Decoder {
                         }
                         JsonValue::Array(inner_array) => {
                             retval.insert(key.to_owned(), Value::Vec(inner_array.iter().enumerate().map(|(i, v)| {
-                                Self::decode_where(model, graph, v, path + i)?
-                            }).collect()?));
+                                Self::decode_where(model, graph, v, path + i)
+                            }).collect::<Result<Vec<Value>, ActionError>>()?));
                         }
                         _ => {
                             return Err(ActionError::unexpected_input_type("object or array", path));
@@ -321,10 +321,11 @@ impl Decoder {
     }
 
     fn decode_value_array_for_field_type<'a>(graph: &Graph, r#type: &FieldType, optional: bool, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
         if let Some(array) = json_value.as_array() {
             Ok(Value::Vec(array.iter().enumerate().map(|(i, v)| {
-                Self::decode_value_for_field_type(graph, r#type, optional, v, path + i)?
-            }).collect()?))
+                Self::decode_value_for_field_type(graph, r#type, optional, v, path + i)
+            }).collect::<Result<Vec<Value>, ActionError>>()?))
         } else {
             Err(ActionError::unexpected_input_type("array", path))
         }
@@ -334,6 +335,7 @@ impl Decoder {
         if optional && json_value.is_null() {
             return Ok(Value::Null);
         }
+        let path = path.as_ref();
         match r#type {
             FieldType::Undefined => panic!("A field cannot have undefined field type"),
             #[cfg(feature = "data-source-mongodb")]
@@ -405,7 +407,7 @@ impl Decoder {
                     Err(_) => Err(ActionError::unexpected_input_value("decimal string or float", path))
                 }
                 None => match json_value.as_f64() {
-                    Some(f) => Ok(Value::Decimal(Decimal::from(f))),
+                    Some(f) => Ok(Value::Decimal(Decimal::from_f64_retain(f).unwrap())),
                     None => Err(ActionError::unexpected_input_value("decimal string or float", path))
                 }
             }
@@ -438,40 +440,24 @@ impl Decoder {
             FieldType::Vec(inner_field) => match json_value.as_array() {
                 Some(a) => {
                     Ok(Value::Vec(a.iter().enumerate().map(|(i, v)| {
-                        Self::decode_value_for_field_type(graph, inner_field.r#type(), inner_field.is_optional(), v, path + i)?
-                    }).collect()?))
-                },
-                None => Err(ActionError::unexpected_input_type("array", path))
-            }
-            FieldType::HashSet(inner_field) => match json_value.as_array() {
-                Some(a) => {
-                    Ok(Value::HashSet(a.iter().enumerate().map(|(i, v)| {
-                        Self::decode_value_for_field_type(graph, inner_field.r#type(), inner_field.is_optional(), v, path + i)?
-                    }).collect()?))
-                },
-                None => Err(ActionError::unexpected_input_type("array", path))
-            }
-            FieldType::BTreeSet(inner_field) => match json_value.as_array() {
-                Some(a) => {
-                    Ok(Value::BTreeSet(a.iter().enumerate().map(|(i, v)| {
-                        Self::decode_value_for_field_type(graph, inner_field.r#type(), inner_field.is_optional(), v, path + i)?
-                    }).collect()?))
+                        Self::decode_value_for_field_type(graph, inner_field.r#type(), inner_field.is_optional(), v, path + i)
+                    }).collect::<Result<Vec<Value>, ActionError>>()?))
                 },
                 None => Err(ActionError::unexpected_input_type("array", path))
             }
             FieldType::HashMap(inner_field) => match json_value.as_object() {
                 Some(a) => {
                     Ok(Value::HashMap(a.iter().map(|(i, v)| {
-                        (i.to_string(), Self::decode_value_for_field_type(graph, inner_field.r#type(), inner_field.is_optional(), v, path + i)?)
-                    }).collect()?))
+                        Ok((i.to_string(), Self::decode_value_for_field_type(graph, inner_field.r#type(), inner_field.is_optional(), v, path + i)?))
+                    }).collect::<Result<HashMap<String, Value>, ActionError>>()?))
                 },
                 None => Err(ActionError::unexpected_input_type("object", path))
             }
             FieldType::BTreeMap(inner_field) => match json_value.as_object() {
                 Some(a) => {
                     Ok(Value::BTreeMap(a.iter().map(|(i, v)| {
-                        (i.to_string(), Self::decode_value_for_field_type(graph, inner_field.r#type(), inner_field.is_optional(), v, path + i)?)
-                    }).collect()?))
+                        Ok((i.to_string(), Self::decode_value_for_field_type(graph, inner_field.r#type(), inner_field.is_optional(), v, path + i)?))
+                    }).collect::<Result<BTreeMap<String, Value>, ActionError>>()?))
                 },
                 None => Err(ActionError::unexpected_input_type("object", path))
             }

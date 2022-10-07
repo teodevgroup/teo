@@ -27,7 +27,7 @@ impl ToBsonValue for Value {
                 Bson::Null
             }
             Value::ObjectId(val) => {
-                Bson::ObjectId(ObjectId::parse_str(val.as_str()).unwrap())
+                Bson::ObjectId(val.clone())
             }
             Value::Bool(val) => {
                 Bson::Boolean(*val)
@@ -83,7 +83,14 @@ impl ToBsonValue for Value {
             Value::Vec(val) => {
                 Bson::Array(val.iter().map(|i| { i.to_bson_value() }).collect())
             }
-            Value::Map(val) => {
+            Value::HashMap(val) => {
+                let mut doc = doc!{};
+                for (k, v) in val {
+                    doc.insert(k.to_string(), v.to_bson_value());
+                }
+                Bson::Document(doc)
+            }
+            Value::BTreeMap(val) => {
                 let mut doc = doc!{};
                 for (k, v) in val {
                     doc.insert(k.to_string(), v.to_bson_value());
@@ -91,9 +98,6 @@ impl ToBsonValue for Value {
                 Bson::Document(doc)
             }
             Value::Object(_obj) => {
-                panic!()
-            }
-            Value::Json(_json_value) => {
                 panic!()
             }
         }
@@ -288,7 +292,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
             }
         }
         FieldType::Bool => {
-            if value.is_boolean() {
+            if value.is_bool() {
                 Ok(Bson::Boolean(value.as_bool().unwrap()))
             } else if value.is_object() {
                 let map = value.as_hashmap().unwrap();
@@ -776,7 +780,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                         }
                     }
                     "hasEvery" => {
-                        if !matcher.is_array() {
+                        if !matcher.is_vec() {
                             return Err(ActionError::unexpected_input_type("array", &(path + "hasEvery")));
                         }
                         let matcher = matcher.as_vec().unwrap();
@@ -824,7 +828,10 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                 Err(ActionError::unexpected_input_type("object", path))
             }
         }
-        FieldType::Map(_) => {
+        FieldType::HashMap(_) => {
+            panic!()
+        }
+        FieldType::BTreeMap(_) => {
             panic!()
         }
         FieldType::Object(_) => {

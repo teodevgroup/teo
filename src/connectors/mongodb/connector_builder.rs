@@ -42,7 +42,8 @@ impl ConnectorBuilder for MongoDBConnectorBuilder {
             FieldType::DateTime => DatabaseType::DateTime(3),
             FieldType::Enum(_) => DatabaseType::Undefined,
             FieldType::Vec(_) => DatabaseType::Undefined,
-            FieldType::Map(_) => DatabaseType::Undefined,
+            FieldType::HashMap(_) => DatabaseType::Undefined,
+            FieldType::BTreeMap(_) => DatabaseType::Undefined,
             FieldType::Object(_) => DatabaseType::Undefined,
         }
     }

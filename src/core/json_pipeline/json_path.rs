@@ -29,7 +29,7 @@ pub(crate) fn json_set(object_or_array: &Value, path: Vec<String>, value: Value)
             if some_cursor.is_object() {
                 let object = some_cursor.as_hashmap_mut().unwrap();
                 cursor = object.get_mut(item);
-            } else if some_cursor.is_array() {
+            } else if some_cursor.is_vec() {
                 let array = some_cursor.as_vec_mut().unwrap();
                 cursor = array.get_mut(item.parse::<usize>().unwrap());
             } else {

@@ -117,12 +117,10 @@ impl<'a> Display for Type<'a> {
             Value::String(_) => formatter.write_str("string"),
             Value::Vec(_) => formatter.write_str("vec"),
             Value::HashMap(_) => formatter.write_str("hash map"),
-            Value::HashSet(_) => formatter.write_str("hash set"),
             Value::Decimal(_) => formatter.write_str("decimal"),
             Value::Date(_) => formatter.write_str("date"),
             Value::DateTime(_) => formatter.write_str("date time"),
             Value::BTreeMap(_) => formatter.write_str("btree map"),
-            Value::BTreeSet(_) => formatter.write_str("btree set"),
             Value::Object(_) => formatter.write_str("object"),
         }
     }

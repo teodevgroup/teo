@@ -80,12 +80,6 @@ impl Into<JsonValue> for Value {
                 }
                 JsonValue::Object(map)
             }
-            Value::HashSet(val) => {
-                JsonValue::Array(val.iter().map(|v| v.into()).collect())
-            }
-            Value::BTreeSet(val) => {
-                JsonValue::Array(val.iter().map(|v| v.into()).collect())
-            }
             Value::Object(_obj) => {
                 panic!("Cannot convert object into json. Use specific method instead.")
             }
