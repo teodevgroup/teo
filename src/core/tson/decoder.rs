@@ -79,13 +79,24 @@ impl Decoder {
             Ok(Value::HashMap(HashMap::from(json_map.iter().map(|(k, v)| {
                 let path = path + k;
                 if model.relation_output_keys().contains(k) {
-                    Ok((k.to_owned(), Self::decode_bool(v, path)?))
+                    Ok((k.to_owned(), Self::decode_include_item(model, graph, k, v, path)?))
                 } else {
                     Err(ActionError::unexpected_input_key(k, path))
                 }
             })?)))
         } else {
             Err(ActionError::unexpected_input_type("object", path))
+        }
+    }
+
+    fn decode_include_item<'a>(model: &Model, graph: &Graph, name: &str, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if let Some(b) = json_value.as_bool() {
+            Ok(Value::Bool(b))
+        } else if let Some(json_map) = json_value.as_object() {
+            Ok(Value::HashMap(HashMap::new()))
+        } else {
+            Err(ActionError::unexpected_input_type("bool or object", path))
         }
     }
 

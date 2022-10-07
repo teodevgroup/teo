@@ -16,7 +16,7 @@ use crate::core::property::Property;
 use crate::core::relation::delete_rule::DeleteRule;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::model::index::builder::{ModelIndexBuilder};
-use crate::core::model::ModelInner;
+use crate::core::model::{Model, ModelInner};
 
 pub struct ModelBuilder {
     pub(crate) name: String,

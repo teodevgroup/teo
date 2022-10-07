@@ -85,7 +85,7 @@ impl MongoDBConnector {
                         continue
                     }
                     let name = (&index).options.as_ref().unwrap().name.as_ref().unwrap();
-                    let result = model.indices().iter().find(|i| &i.name == name);
+                    let result = model.indices().iter().find(|i| i.name() == name);
                     if result.is_none() {
                         // not in our model definition, but in the database
                         // drop this index
@@ -99,15 +99,15 @@ impl MongoDBConnector {
                             let _ = collection.drop_index(name, None).await.unwrap();
                             // create index
                             let index_options = IndexOptions::builder()
-                                .name(result.name.clone())
-                                .unique(result.index_type == ModelIndexType::Unique || result.index_type == ModelIndexType::Primary)
+                                .name(result.name().to_owned())
+                                .unique(result.r#type() == ModelIndexType::Unique || result.r#type() == ModelIndexType::Primary)
                                 .sparse(true)
                                 .build();
                             let mut keys = doc!{};
-                            for item in &result.items {
-                                let field = model.field(&item.field_name).unwrap();
+                            for item in result.items() {
+                                let field = model.field(item.field_name()).unwrap();
                                 let column_name = field.column_name();
-                                keys.insert(column_name, if item.sort == Sort::Asc { 1 } else { -1 });
+                                keys.insert(column_name, if item.sort() == Sort::Asc { 1 } else { -1 });
                             }
                             let index_model = IndexModel::builder().keys(keys).options(index_options).build();
                             let _result = collection.create_index(index_model, None).await;
@@ -117,18 +117,18 @@ impl MongoDBConnector {
                 }
             }
             for index in model.indices() {
-                if !reviewed_names.contains(&index.name) {
+                if !reviewed_names.contains(&index.name().to_string()) {
                     // create this index
                     let index_options = IndexOptions::builder()
-                        .name(index.name.clone())
-                        .unique(index.index_type == ModelIndexType::Unique || index.index_type == ModelIndexType::Primary)
+                        .name(index.name().to_owned())
+                        .unique(index.r#type() == ModelIndexType::Unique || index.r#type() == ModelIndexType::Primary)
                         .sparse(true)
                         .build();
                     let mut keys = doc!{};
-                    for item in &index.items {
-                        let field = model.field(&item.field_name).unwrap();
+                    for item in index.items() {
+                        let field = model.field(item.field_name()).unwrap();
                         let column_name = field.column_name();
-                        keys.insert(column_name, if item.sort == Sort::Asc { 1 } else { -1 });
+                        keys.insert(column_name, if item.sort() == Sort::Asc { 1 } else { -1 });
                     }
                     let index_model = IndexModel::builder().keys(keys).options(index_options).build();
                     let _result = collection.create_index(index_model, None).await;
@@ -209,7 +209,7 @@ impl MongoDBConnector {
             FieldType::ObjectId => {
                 match bson_value.as_object_id() {
                     Some(object_id) => {
-                        Ok(Value::ObjectId(object_id.to_hex()))
+                        Ok(Value::ObjectId(object_id))
                     }
                     None => {
                         Err(ActionError::unmatched_data_type_in_database(field_name))

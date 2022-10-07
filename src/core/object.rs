@@ -837,8 +837,8 @@ impl Object {
                     } else {
                         // array are removed here, see if bug happens
                         // write on their side since it's primary
-                        for item in &self.model().primary_index().items {
-                            if &item.field_name == field_name {
+                        for item in self.model().primary_index().items() {
+                            if item.field_name() == field_name {
                                 let local_value = self.get_value(field_name)?;
                                 if !local_value.is_null() {
                                     obj.set_value(reference, local_value.clone())?;

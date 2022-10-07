@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use crate::core::field::{Field, Sort};
-use crate::core::model::{ModelIndex, ModelIndexType};
+use crate::core::model::index::{ModelIndex, ModelIndexType};
 
 #[derive(PartialEq, Copy, Clone)]
 pub(crate) enum MySQLIndexItemCollation {
@@ -85,12 +85,12 @@ pub struct MySQLIndex {
 impl From<&ModelIndex> for MySQLIndex {
     fn from(idx: &ModelIndex) -> Self {
         MySQLIndex {
-            key_name: idx.name.clone(),
-            non_unique: idx.index_type == ModelIndexType::Index,
-            items: idx.items.iter().map(|item| {
+            key_name: idx.name().to_owned(),
+            non_unique: idx.index_type() == ModelIndexType::Index,
+            items: idx.items().iter().map(|item| {
                 MySQLIndexItem {
-                    column_name: item.field_name.clone(),
-                    collation: if item.sort == Sort::Asc { MySQLIndexItemCollation::A } else { MySQLIndexItemCollation::D }
+                    column_name: item.field_name().to_owned(),
+                    collation: if item.sort() == Sort::Asc { MySQLIndexItemCollation::A } else { MySQLIndexItemCollation::D }
                 }
             }).collect()
         }

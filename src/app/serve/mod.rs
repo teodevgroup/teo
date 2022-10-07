@@ -12,7 +12,7 @@ use serde_json::{json, Value as JsonValue};
 use crate::core::action::r#type::ActionType;
 use crate::app::app::ServerConfiguration;
 use crate::app::serve::jwt_token::{Claims, decode_token, encode_token};
-
+use crate::core::tson::json;
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
 use crate::core::env::source::Source;
@@ -207,7 +207,10 @@ async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: Sour
     let select = input.get("select");
     let result = handle_create_internal(graph, create, include, select, model, &path!["create"], env).await;
     match result {
-        Ok(val) => HttpResponse::Ok().json(json!({"data": val.into()})),
+        Ok(val) => {
+            let json_val: JsonValue = val.into();
+            HttpResponse::Ok().json(json!({"data": json_val}))
+        },
         Err(err) => HttpResponse::BadRequest().json(json!({"error": err}))
     }
 }
@@ -235,7 +238,8 @@ async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: Sour
     let update_result = handle_update_internal(graph, result.clone(), update, include, select, r#where, model).await;
     match update_result {
         Ok(value) => {
-            HttpResponse::Ok().json(json!({"data": value}))
+            let json_val: JsonValue = value.into();
+            HttpResponse::Ok().json(json!({"data": json_val}))
         }
         Err(err) => {
             HttpResponse::BadRequest().json(json!({"error": err}))
@@ -267,7 +271,8 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Sour
                         Ok(_) => {
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
-                            HttpResponse::Ok().json(json!({"data": refetched.to_json().await.unwrap()}))
+                            let json_val: JsonValue = refetched.to_json().await.unwrap().into();
+                            HttpResponse::Ok().json(json!({"data": json_val}))
                         }
                         Err(err) => {
                             HttpResponse::BadRequest().json(json!({"error": err}))
@@ -298,7 +303,7 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Sour
                         Ok(_) => {
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
-                            let json_data = refetched.to_json().await.unwrap();
+                            let json_data: JsonValue = refetched.to_json().await.unwrap().into();
                             return HttpResponse::Ok().json(json!({"data": json_data}));
                         }
                         Err(err) => {
@@ -324,7 +329,7 @@ async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: Sour
     // find the object here
     return match result.delete().await {
         Ok(_) => {
-            let json_data = result.to_json().await.unwrap();
+            let json_data: JsonValue = result.to_json().await.unwrap().into();
             HttpResponse::Ok().json(json!({"data": json_data}))
         }
         Err(err) => {
@@ -344,7 +349,7 @@ async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source:
         return HttpResponse::BadRequest().json(json!({"error": err}));
     }
     let create = create.unwrap();
-    if !create.is_array() {
+    if !create.is_vec() {
         let err = ActionError::unexpected_input_type("array", path!["create"]);
         return HttpResponse::BadRequest().json(json!({"error": err}));
     }
@@ -361,10 +366,11 @@ async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source:
             }
         }
     }
+    let json_ret_data: JsonValue = Value::Vec(ret_data).into();
     HttpResponse::Ok().json(json!({
-            "meta": {"count": count},
-            "data": ret_data
-        }))
+        "meta": {"count": count},
+        "data": json_ret_data
+    }))
 }
 
 async fn handle_update_many(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {

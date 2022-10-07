@@ -6,7 +6,7 @@ use crate::client::csharp::r#type::ToCSharpType;
 use crate::client::shared::code::Code;
 
 use crate::core::graph::Graph;
-use crate::core::model::{Model, ModelIndexType};
+use crate::core::model::{Model};
 
 mod doc;
 
@@ -712,13 +712,12 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _conf: &ClientConfiguration
                 let mut where_unique_fields = Vec::<CSharpClassField>::new();
                 let mut used_where_unique_field_names: Vec<&str> = Vec::new();
                 m.indices().iter().for_each(|index| {
-                    use ModelIndexType::*;
-                    if index.index_type == Primary || index.index_type == Unique {
-                        index.items.iter().for_each(|item| {
-                            if !used_where_unique_field_names.contains(&&***&&item.field_name) {
-                                if let Some(field) = m.field(&item.field_name) {
+                    if index.r#type().is_unique() {
+                        index.items().iter().for_each(|item| {
+                            if !used_where_unique_field_names.contains(&&***&&item.field_name()) {
+                                if let Some(field) = m.field(&item.field_name()) {
                                     let cs_type = field.field_type.to_csharp_type(false);
-                                    let field_name = &item.field_name;
+                                    let field_name = &item.field_name();
                                     where_unique_fields.push(CSharpClassField {
                                         n: field_name.to_pascal_case(),
                                         t: cs_type,
@@ -727,7 +726,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _conf: &ClientConfiguration
                                         j: None
                                     });
                                 }
-                                used_where_unique_field_names.push(&item.field_name);
+                                used_where_unique_field_names.push(item.field_name());
                             }
                         });
                     }

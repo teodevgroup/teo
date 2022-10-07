@@ -6,7 +6,8 @@ use crate::client::typescript::pkg::src::index_ts::docs::{action_doc, action_gro
 use crate::client::typescript::r#type::ToTypeScriptType;
 
 use crate::core::graph::Graph;
-use crate::core::model::{Model, ModelIndexType};
+use crate::core::model::{Model};
+use crate::core::model::index::ModelIndexType::{Primary, Unique};
 
 mod docs;
 
@@ -401,19 +402,18 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
             }, "}");
             // where unique
             c.block(format!("export type {model_name}WhereUniqueInput = {{"), |b| {
-                use ModelIndexType::*;
                 let mut used_field_names: Vec<&str> = Vec::new();
                 m.indices().iter().for_each(|index| {
-                    if index.index_type == Primary || index.index_type == Unique {
-                        index.items.iter().for_each(|item| {
-                            if !used_field_names.contains(&&***&&item.field_name) {
-                                if let Some(field) = m.field(&item.field_name) {
+                    if index.r#type() == Primary || index.r#type() == Unique {
+                        index.items().iter().for_each(|item| {
+                            if !used_field_names.contains(&&***&&item.field_name()) {
+                                if let Some(field) = m.field(&item.field_name()) {
                                     let ts_type = field.field_type.to_typescript_type(field.optionality.is_optional());
-                                    let field_name = &item.field_name;
+                                    let field_name = &item.field_name();
                                     b.doc(field_doc(field));
                                     b.line(format!("{field_name}?: {ts_type}"));
                                 }
-                                used_field_names.push(&item.field_name);
+                                used_field_names.push(item.field_name());
                             }
                         });
                     }

@@ -10,9 +10,10 @@ use crate::connectors::shared::user_json_args::user_json_args;
 use crate::core::field::r#type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::input_decoder::{input_to_vec, one_length_json_obj};
-use crate::core::model::{Model, ModelIndexType};
+use crate::core::model::{Model};
 use crate::core::tson::Value;
 use crate::core::error::ActionError;
+use crate::core::model::index::ModelIndexType;
 use crate::tson;
 
 pub trait ToBsonValue {
@@ -1426,9 +1427,9 @@ fn build_query_pipeline(
         }
         let mut valid = false;
         for index in model.indices() {
-            if index.items.len() == 1 {
-                if index.index_type == ModelIndexType::Unique || index.index_type == ModelIndexType::Primary {
-                    if index.items.get(0).unwrap().field_name == cursor_key {
+            if index.items().len() == 1 {
+                if index.index_type() == ModelIndexType::Unique || index.index_type() == ModelIndexType::Primary {
+                    if index.items().get(0).unwrap().field_name() == cursor_key {
                         valid = true;
                     }
                 }
