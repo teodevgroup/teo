@@ -16,6 +16,7 @@ use crate::core::property::Property;
 use crate::core::relation::delete_rule::DeleteRule;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::model::index::builder::{ModelIndexBuilder};
+use crate::core::model::ModelInner;
 
 pub struct ModelBuilder {
     pub(crate) name: String,
@@ -340,6 +341,7 @@ impl ModelBuilder {
             auth_by_keys: self.get_auth_by_keys(),
             auto_keys: self.get_auto_keys(),
             deny_relation_keys: self.get_deny_relation_keys(),
+            scalar_keys: self.get_scalar_keys(),
             field_property_map: self.get_field_property_map(),
         };
         Model::new_with_inner(Arc::new(inner))
@@ -440,7 +442,7 @@ impl ModelBuilder {
         let mut result: Vec<HashSet<String>> = Vec::new();
         for index in indices {
             let set = HashSet::from_iter(index.items.iter().map(|i| {
-                i.field_name.clone()
+                i.field_name().to_string()
             }));
             result.push(set);
         }
@@ -477,6 +479,13 @@ impl ModelBuilder {
             .iter()
             .filter(|&r| { r.delete_rule == DeleteRule::Deny })
             .map(|r| r.name.clone())
+            .collect()
+    }
+
+    fn get_scalar_keys(&self) -> Vec<String> {
+        self.field_builders
+            .iter()
+            .map(|f| f.name.clone())
             .collect()
     }
 

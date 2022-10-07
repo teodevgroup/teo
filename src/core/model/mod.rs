@@ -46,6 +46,7 @@ pub struct ModelInner {
     pub(crate) auth_by_keys: Vec<String>,
     pub(crate) auto_keys: Vec<String>,
     pub(crate) deny_relation_keys: Vec<String>,
+    pub(crate) scalar_keys: Vec<String>,
     pub(crate) field_property_map: HashMap<String, Vec<String>>
 }
 
@@ -176,6 +177,8 @@ impl Model {
     pub(crate) fn auth_by_keys(&self) -> &Vec<String> { &self.inner.auth_by_keys }
 
     pub(crate) fn auto_keys(&self) -> &Vec<String> { &self.inner.auto_keys }
+
+    pub(crate) fn scalar_keys(&self) -> &Vec<String> { &self.inner.scalar_keys }
 
     pub(crate) fn field_property_map(&self) -> &HashMap<String, Vec<String>> {
         &self.inner.field_property_map

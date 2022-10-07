@@ -39,6 +39,16 @@ impl Decoder {
                 retval.insert("where".to_owned(), Self::decode_where_unique(model, graph, json_map.get("where").unwrap(), path + "where")?);
             }
         }
+        if json_map.contains_key("orderBy") {
+            retval.insert("orderBy".to_owned(), Self::decode_order_by(model, json_map.get("orderBy").unwrap(), path + "orderBy")?);
+        }
+        if json_map.contains_key("cursor") {
+            retval.insert("cursor".to_owned(), Self::decode_where_unique(model, graph, json_map.get("cursor").unwrap(), path + "cursor")?);
+        }
+        if json_map.contains_key("distinct") {
+            retval.insert("distinct".to_owned(), Self::decode_distinct(model, json_map.get("distinct").unwrap(), path + "distinct")?);
+        }
+        if json_map.contains_key()
         Ok(Value::HashMap(retval))
     }
 
@@ -47,6 +57,73 @@ impl Decoder {
             return Err(ActionError::unexpected_input_key(unallowed, path + unallowed));
         }
         Ok(())
+    }
+
+    pub(crate) fn check_length_1<'a, 'b>(json_value: &'a JsonValue, path: impl AsRef<KeyPath<'b>>) -> Result<(&'a str, &'a JsonValue), ActionError> {
+        let path = path.as_ref();
+        if let Some(json_map) = json_value.as_object() {
+            if json_map.len() != 1 {
+                Err(ActionError::unexpected_object_length(1, path))
+            } else {
+                Ok((json_map.keys().next().unwrap(), json_map.values().next().unwrap()))
+            }
+        } else {
+            Err(ActionError::unexpected_input_type("object", path))
+        }
+    }
+
+    fn decode_distinct<'a>(model: &Model, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if let Some(_) = json_value.as_str() {
+            Ok(Self::decode_distinct_item(model, json_value, path)?)
+        } else if let Some(json_array) = json_value.as_array() {
+            Ok(Value::Vec(json_array.iter().enumerate().map(|i, v| {
+                Self::decode_distinct_item(model, v, path + i)?
+            })?))
+        } else {
+            Err(ActionError::unexpected_input_type("string or array", path))
+        }
+    }
+
+    fn decode_distinct_item<'a>(model: &Model, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        if let Some(s) = json_value.as_str() {
+            if model.scalar_keys().contains(&s.to_string()) {
+                Ok(Value::String(s.to_owned()))
+            } else {
+                Err(ActionError::unexpected_input_value("scalar fields enum", path))
+            }
+        } else {
+            Err(ActionError::unexpected_input_type("string", path))
+        }
+    }
+
+    fn decode_order_by<'a>(model: &Model, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if let Some(_) = json_value.as_object() {
+            Ok(Value::Vec(vec![Self::decode_order_by_item(model, json_value, path)?]))
+        } else if let Some(json_array) = json_value.as_array() {
+            Ok(Value::Vec(json_array.iter().enumerate().map(|(i, v)| {
+                Self::decode_order_by_item(model, v, path + i)?
+            }).collect()?))
+        } else {
+            Err(ActionError::unexpected_input_type("object or array", path))
+        }
+    }
+
+    fn decode_order_by_item<'a>(model: &Model, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if let Some(json_map) = json_value.as_object() {
+            let (key, value) = Self::check_length_1(json_value, path)?;
+            match value.as_str() {
+                Some(s) => match s {
+                    "asc" | "desc" => Ok(Value::HashMap(hashmap!{key.to_owned() => Value::String(s.to_owned())})),
+                    _ => Err(ActionError::unexpected_input_type("string", path))
+                },
+                None => Err(ActionError::unexpected_input_type("string", path))
+            }
+        } else {
+            Err(ActionError::unexpected_input_type("object", path))
+        }
     }
 
     fn decode_where<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
