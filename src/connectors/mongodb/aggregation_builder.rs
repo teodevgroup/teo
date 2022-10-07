@@ -790,7 +790,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                         result.insert("$all", inner);
                     }
                     "hasSome" => {
-                        if !matcher.is_array() {
+                        if !matcher.is_vec() {
                             return Err(ActionError::unexpected_input_type("array", &(path + "hasSome")));
                         }
                         let matcher = matcher.as_vec().unwrap();
@@ -800,7 +800,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                         result.insert("$in", inner);
                     }
                     "isEmpty" => {
-                        if matcher.is_boolean() && (matcher.as_bool().unwrap() == true) {
+                        if matcher.is_bool() && (matcher.as_bool().unwrap() == true) {
                             result.insert("$size", 0);
                         }
                     }
@@ -810,7 +810,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
                         result.insert("$size", num);
                     }
                     "equals" => {
-                        if !matcher.is_array() {
+                        if !matcher.is_vec() {
                             return Err(ActionError::unexpected_input_type("array", &(path + "equals")));
                         }
                         let matcher = matcher.as_vec().unwrap();
@@ -889,7 +889,7 @@ pub(crate) fn build_match_prediction_lookup(model: &Model, graph: &Graph, r#wher
         }
     }
     Ok(if !include_input.is_empty() {
-        build_lookup_inputs(model, graph, QueryPipelineType::Many, false, &Value::Object(include_input), path)?
+        build_lookup_inputs(model, graph, QueryPipelineType::Many, false, &Value::HashMap(include_input), path)?
     } else {
         vec![]
     })
@@ -965,7 +965,7 @@ pub(crate) fn build_order_by_input(_model: &Model, _graph: &Graph, order_by: Opt
         return Ok(doc!{});
     }
     let order_by = order_by.unwrap();
-    if !order_by.is_object() && !order_by.is_array() {
+    if !order_by.is_hashmap() && !order_by.is_vec() {
         return Err(ActionError::unexpected_input_type("object or array", path))
     }
     let order_by = input_to_vec(order_by, path)?;
@@ -1017,7 +1017,7 @@ fn build_select_input(model: &Model, _graph: &Graph, select: &Value, distinct: O
     }
     if !false_empty || (true_empty && false_empty) {
         // all - false
-        let primary_names = model.primary_index().items.iter().map(|i| i.field_name.clone()).collect::<Vec<String>>();
+        let primary_names = model.primary_index().items().iter().map(|i| i.field_name().to_string()).collect::<Vec<String>>();
         let mut keys: HashSet<String> = HashSet::new();
         model.all_keys().iter().for_each(|k| {
             if let Some(field) = model.field(k) {
@@ -1052,7 +1052,7 @@ fn build_select_input(model: &Model, _graph: &Graph, select: &Value, distinct: O
         return Ok(Some(result));
     } else {
         // true
-        let primary_names = model.primary_index().items.iter().map(|i| i.field_name.clone()).collect::<Vec<String>>();
+        let primary_names = model.primary_index().items().iter().map(|i| i.field_name().to_string()).collect::<Vec<String>>();
         let mut keys: HashSet<String> = HashSet::new();
         model.all_keys().iter().for_each(|k| {
             if let Some(field) = model.field(k) {
@@ -1113,7 +1113,7 @@ fn build_lookup_inputs(
         let relation_name = relation.name();
         let relation_model_name = relation.model();
         let relation_model = graph.model(relation_model_name).unwrap();
-        if value.is_boolean() || value.is_object() {
+        if value.is_bool() || value.is_hashmap() {
             if relation.through().is_none() { // without join table
                 let mut let_value = doc!{};
                 let mut eq_values: Vec<Document> = vec![];
@@ -1144,7 +1144,7 @@ fn build_lookup_inputs(
                 if inner_match_inner.get("$expr").unwrap().as_document().unwrap().get("$and").is_none() {
                     inner_match_inner.get_mut("$expr").unwrap().as_document_mut().unwrap().insert("$and", vec![] as Vec<Document>);
                 }
-                inner_match_inner.get_mut("$expr").unwrap().as_document_mut().unwrap().get_mut("$and").unwrap().as_vec_mut().unwrap().extend(eq_values.iter().map(|item| Bson::Document(item.clone())));
+                inner_match_inner.get_mut("$expr").unwrap().as_document_mut().unwrap().get_mut("$and").unwrap().as_array_mut().unwrap().extend(eq_values.iter().map(|item| Bson::Document(item.clone())));
                 if has_inner_match {
                     let index = inner_pipeline.iter().position(|v| v.get("$match").is_some()).unwrap();
                     inner_pipeline.remove(index);
@@ -1435,7 +1435,7 @@ fn build_query_pipeline(
         let mut valid = false;
         for index in model.indices() {
             if index.items().len() == 1 {
-                if index.index_type() == ModelIndexType::Unique || index.index_type() == ModelIndexType::Primary {
+                if index.r#type() == ModelIndexType::Unique || index.r#type() == ModelIndexType::Primary {
                     if index.items().get(0).unwrap().field_name() == cursor_key {
                         valid = true;
                     }

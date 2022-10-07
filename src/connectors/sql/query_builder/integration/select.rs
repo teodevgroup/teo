@@ -162,7 +162,10 @@ fn parse_sql_where_entry<'a>(
         FieldType::Vec(inner_field) => {
             parse_sql_where_entry_item(column_name, field_type, optional, value, graph, dialect, key_path, &vec!["equals", "has", "hasEvery", "hasSome", "isEmpty", "length"])
         }
-        FieldType::Map(_) => {
+        FieldType::HashMap(_) => {
+            panic!()
+        }
+        FieldType::BTreeMap(_) => {
             panic!()
         }
         FieldType::Object(_) => {

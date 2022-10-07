@@ -282,7 +282,7 @@ impl SQLConnector {
                             }
                             let relation = relation.unwrap();
                             let empty = tson!({});
-                            let mut nested_include = if include_value.is_boolean() {
+                            let mut nested_include = if include_value.is_bool() {
                                 if include_value.as_bool().unwrap() == true {
                                     Some(&empty)
                                 } else {

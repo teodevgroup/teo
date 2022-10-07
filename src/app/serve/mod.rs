@@ -96,6 +96,8 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
         return Err(ActionError::invalid_auth_token());
     }
     let claims = claims_result.unwrap();
+    let id = claims.id;
+    // Decoder::
     let _model = graph.model(claims.model.as_str()).unwrap();
     let identity = graph.find_unique(
         graph.model(claims.model.as_str()).unwrap().name(),

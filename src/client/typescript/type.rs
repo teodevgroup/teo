@@ -19,7 +19,8 @@ impl ToTypeScriptType for FieldType {
             FieldType::Decimal => "string".to_string(),
             FieldType::Enum(name) => name.to_string(),
             FieldType::Vec(internal) => internal.field_type.to_typescript_type(internal.optionality.is_optional()) + "[]",
-            FieldType::Map(_) => panic!(),
+            FieldType::HashMap(_) => panic!(),
+            FieldType::BTreeMap(_) => panic!(),
             FieldType::Object(name) => name.to_string(),
         };
         if optional {
@@ -57,7 +58,8 @@ impl ToTypeScriptType for FieldType {
                     format!("{create_type}[] | ArrayFilter<{create_type}>")
                 }
             },
-            FieldType::Map(_) => panic!(),
+            FieldType::HashMap(_) => panic!(),
+            FieldType::BTreeMap(_) => panic!(),
             FieldType::Object(_name) => "undefined | Unimplemented".to_string(),
         };
         if !with_generic {
@@ -80,7 +82,8 @@ impl ToTypeScriptType for FieldType {
             FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number".to_string(),
             FieldType::Enum(name) => name.to_string(),
             FieldType::Vec(internal) => internal.field_type.to_typescript_type(internal.optionality.is_optional()) + "[]",
-            FieldType::Map(_) => panic!(),
+            FieldType::HashMap(_) => panic!(),
+            FieldType::BTreeMap(_) => panic!(),
             FieldType::Object(name) => name.to_string(),
         };
         if optional {

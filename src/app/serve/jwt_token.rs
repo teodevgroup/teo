@@ -1,11 +1,12 @@
 use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
 use serde::{Serialize, Deserialize};
+use sqlx::types::JsonValue;
 use crate::core::error::ActionError;
 use crate::prelude::Value;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    pub id: Value,
+    pub id: JsonValue,
     pub model: String,
     pub exp: usize
 }

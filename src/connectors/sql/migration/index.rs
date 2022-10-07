@@ -86,7 +86,7 @@ impl From<&ModelIndex> for MySQLIndex {
     fn from(idx: &ModelIndex) -> Self {
         MySQLIndex {
             key_name: idx.name().to_owned(),
-            non_unique: idx.index_type() == ModelIndexType::Index,
+            non_unique: idx.r#type() == ModelIndexType::Index,
             items: idx.items().iter().map(|item| {
                 MySQLIndexItem {
                     column_name: item.field_name().to_owned(),

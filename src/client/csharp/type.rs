@@ -64,7 +64,8 @@ impl ToCSharpType for FieldType {
             FieldType::DateTime => "DateTime".to_string(),
             FieldType::Enum(name) => name.to_string(),
             FieldType::Vec(internal) => internal.field_type.to_csharp_type(internal.optionality.is_optional()) + "[]",
-            FieldType::Map(_) => panic!(),
+            FieldType::HashMap(_) => panic!(),
+            FieldType::BTreeMap(_) => panic!(),
             FieldType::Object(name) => name.to_string(),
         };
         if optional {
@@ -97,7 +98,8 @@ impl ToCSharpType for FieldType {
                 let prefix = array_prefix(&internal_type);
                 one_of(base_type, format!("{prefix}Array{nullable}Filter<{internal_type}>"))
             },
-            FieldType::Map(_) => panic!(),
+            FieldType::HashMap(_) => panic!(),
+            FieldType::BTreeMap(_) => panic!(),
             FieldType::Object(_name) => "Unimplemented".to_string(),
         }
     }
@@ -141,7 +143,8 @@ impl ToCSharpType for FieldType {
                 let arr_prefix = array_prefix(&internal_type);
                 format!("{prefix}{arr_prefix}ArrayFieldUpdateOperationsInput<{internal_type}>")
             },
-            FieldType::Map(_) => panic!(),
+            FieldType::HashMap(_) => panic!(),
+            FieldType::BTreeMap(_) => panic!(),
             FieldType::Object(_name) => "Unimplemented".to_string(),
         }
     }
