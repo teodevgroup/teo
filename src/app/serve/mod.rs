@@ -30,6 +30,10 @@ use crate::tson;
 pub(crate) mod response;
 pub(crate) mod jwt_token;
 
+fn j(v: Value) -> JsonValue {
+    v.into()
+}
+
 fn path_components(path: &str) -> Vec<&str> {
     let components = path.split("/");
     let mut retval: Vec<&str> = Vec::new();
@@ -400,7 +404,7 @@ async fn handle_update_many(graph: &Graph, input: &Value, model: &Model, source:
             "meta": {
                 "count": count
             },
-            "data": ret_data
+            "data": j(Value::Vec(ret_data))
         }))
 }
 
@@ -431,7 +435,7 @@ async fn handle_delete_many(graph: &Graph, input: &Value, model: &Model, source:
             "meta": {
                 "count": count
             },
-            "data": retval
+            "data": j(Value::Vec(retval))
         }))
 }
 
@@ -450,7 +454,7 @@ async fn handle_count(graph: &Graph, input: &Value, model: &Model, _source: Sour
 async fn handle_aggregate(graph: &Graph, input: &Value, model: &Model, _source: Source) -> HttpResponse {
     match graph.aggregate(model.name(), input).await {
         Ok(count) => {
-            HttpResponse::Ok().json(json!({"data": count}))
+            HttpResponse::Ok().json(json!({"data": j(count)}))
         }
         Err(err) => {
             HttpResponse::BadRequest().json(json!({"error": err}))
@@ -461,7 +465,7 @@ async fn handle_aggregate(graph: &Graph, input: &Value, model: &Model, _source: 
 async fn handle_group_by(graph: &Graph, input: &Value, model: &Model, _source: Source) -> HttpResponse {
     match graph.group_by(model.name(), input).await {
         Ok(count) => {
-            HttpResponse::Ok().json(json!({"data": count}))
+            HttpResponse::Ok().json(json!({"data": j(count)}))
         }
         Err(err) => {
             HttpResponse::BadRequest().json(json!({"error": err}))
@@ -476,7 +480,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
         return ActionError::missing_required_input("object", path!["credentials"]).into();
     }
     let credentials = credentials.unwrap();
-    if !credentials.is_object() {
+    if !credentials.is_hashmap() {
         return ActionError::unexpected_input_type("object", path!["credentials"]).into();
     }
     let credentials = credentials.as_hashmap().unwrap();
@@ -556,7 +560,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
             "meta": {
                 "token": token
             },
-            "data": json_data
+            "data": j(json_data.unwrap())
         }))
         }
     }
@@ -573,7 +577,7 @@ async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &S
         let refreshed = identity.refreshed(include, select).await.unwrap();
         let json_data = refreshed.to_json().await;
         HttpResponse::Ok().json(json!({
-            "data": json_data
+            "data": j(json_data.unwrap())
         }))
     } else {
         HttpResponse::Ok().json(json!({
