@@ -1,5 +1,7 @@
 use std::collections::{HashMap, HashSet};
+use std::ops::BitAnd;
 use std::sync::Arc;
+use maplit::hashset;
 use crate::core::action::Action;
 use crate::core::action::r#type::ActionType;
 use crate::core::field::Field;
@@ -47,6 +49,7 @@ pub struct ModelInner {
     pub(crate) auto_keys: Vec<String>,
     pub(crate) deny_relation_keys: Vec<String>,
     pub(crate) scalar_keys: Vec<String>,
+    pub(crate) scalar_number_keys: Vec<String>,
     pub(crate) local_output_keys: Vec<String>,
     pub(crate) relation_output_keys: Vec<String>,
     pub(crate) field_property_map: HashMap<String, Vec<String>>
@@ -181,6 +184,15 @@ impl Model {
     pub(crate) fn auto_keys(&self) -> &Vec<String> { &self.inner.auto_keys }
 
     pub(crate) fn scalar_keys(&self) -> &Vec<String> { &self.inner.scalar_keys }
+
+    pub(crate) fn scalar_number_keys(&self) -> &Vec<String> { &self.inner.scalar_number_keys }
+
+    pub(crate) fn allowed_keys_for_aggregate(&self, name: &str) -> HashSet<&str> {
+        match name {
+            "_count" => HashSet::from(self.scalar_number_keys()).bitand(&hashset!{"_all"}),
+            _ => HashSet::from(self.scalar_number_keys()),
+        }
+    }
 
     pub(crate) fn local_output_keys(&self) -> &Vec<String> {
         &self.inner.local_output_keys

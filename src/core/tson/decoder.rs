@@ -19,11 +19,11 @@ pub(crate) struct Decoder {}
 
 impl Decoder {
 
-    pub(crate) fn decode(model: &Model, graph: &Graph, action: ActionType, json_value: &JsonValue) -> ActionResult<Value> {
-        Self::decode_internal(model, graph, action, json_value, path![])
+    pub(crate) fn decode_action_arg(model: &Model, graph: &Graph, action: ActionType, json_value: &JsonValue) -> ActionResult<Value> {
+        Self::decode_action_arg_at_path(model, graph, action, json_value, path![])
     }
 
-    fn decode_internal<'a>(model: &Model, graph: &Graph, action: ActionType, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+    fn decode_action_arg_at_path<'a>(model: &Model, graph: &Graph, action: ActionType, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         let path = path.as_ref();
         let json_map = if let Some(json_map) = json_value.as_object() {
             json_map
@@ -47,7 +47,20 @@ impl Decoder {
                 "skip" | "take" | "pageSize" | "pageNumber" => { retval.insert(key.to_owned(), Self::decode_usize(value, path)?); }
                 "select" => { retval.insert(key.to_owned(), Self::decode_select(model, value, path)?); }
                 "include" => { retval.insert(key.to_owned(), Self::decode_include(model, graph, value, path)?); }
+                "_avg" | "_sum" | "_min" | "_max" | "_count" => { retval.insert(key.to_owned(), Self::decode_aggregate(model, key, value, path)?); }
+                "by" => { retval.insert(key.to_owned(), Self::decode_by(model, value, path)?); }
+                "having" => { retval.insert(key.to_owned(), Self::decode_having(model, graph, value, path)?); }
+                "create" => { retval.insert(key.to_owned(), Self::decode_create(model, graph, value, path)?); }
+                "update" => { retval.insert(key.to_owned(), Self::decode_update(model, graph, value, path)?); }
+                "credentials" => { retval.insert(key.to_owned(), Self::decode_credentials(model, value, path)?); }
                 _ => panic!("Unhandled key.")
+            }
+        }
+        if retval.contains_key("skip") || retval.contains_key("take") {
+            for k in ["pageSize", "pageNumber"] {
+                if retval.contains_key(k) {
+                    return Err(ActionError::unexpected_input_key(k, path))
+                }
             }
         }
         Ok(Value::HashMap(retval))
@@ -68,6 +81,56 @@ impl Decoder {
             } else {
                 Ok((json_map.keys().next().unwrap(), json_map.values().next().unwrap()))
             }
+        } else {
+            Err(ActionError::unexpected_input_type("object", path))
+        }
+    }
+
+    fn decode_credentials<'a>(model: &Model, json_value: &JsonValue, path: impl AsRef<keyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        todo!("Implement this later")
+    }
+
+    fn decode_create<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<keyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        todo!("Implement this later")
+    }
+
+    fn decode_update<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<keyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        todo!("Implement this later")
+    }
+
+    fn decode_having<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<keyPath<'a>>) -> ActionResult<Value> {
+        todo!("Implement this later")
+    }
+
+    fn decode_by<'a>(model: &Model, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if let Some(json_array) = json_value.as_array() {
+            Ok(Value::Vec(json_array.iter().enumerate().map(|(i, v)| {
+                let path = path + i;
+                match v.as_str() {
+                    Some(s) => if model.scalar_keys().contains(&s.to_string()) {
+                        Ok(Value::String(s.to_owned()))
+                    } else {
+                        Err(ActionError::unexpected_input_value("scalar field name", path))
+                    }
+                    None => Err(ActionError::unexpected_input_type("string", path))
+                }
+            }).collect::<Result<Vec<Value>, ActionError>>()?))
+        } else {
+            Err(ActionError::unexpected_input_type("array", path))
+        }
+    }
+
+    fn decode_aggregate<'a>(model: &Model, key: &str, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if let Some(json_map) = json_value.as_object() {
+            Self::check_json_keys(json_map, &model.allowed_keys_for_aggregate(key), path)?;
+            Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+                Ok((k.to_owned(), Self::decode_bool(v, path + k)?))
+            }).collect::<Result<HashMap<String, Value>, ActionError>>()?))
         } else {
             Err(ActionError::unexpected_input_type("object", path))
         }
@@ -94,7 +157,13 @@ impl Decoder {
         if let Some(b) = json_value.as_bool() {
             Ok(Value::Bool(b))
         } else if let Some(json_map) = json_value.as_object() {
-            Ok(Value::HashMap(HashMap::new()))
+            let relation = model.relation(name).unwrap();
+            let model = graph.model(relation.model()).unwrap();
+            if relation.is_vec() {
+                Ok(Self::decode_action_arg_at_path(model, graph, ActionType::FindMany, json_value, path)?)
+            } else {
+                Ok(Self::decode_action_arg_at_path(model, graph, ActionType::FindUnique, json_value, path)?)
+            }
         } else {
             Err(ActionError::unexpected_input_type("bool or object", path))
         }

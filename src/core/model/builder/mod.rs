@@ -300,6 +300,7 @@ impl ModelBuilder {
             auto_keys: self.get_auto_keys(),
             deny_relation_keys: self.get_deny_relation_keys(),
             scalar_keys: self.get_scalar_keys(),
+            scalar_number_keys: self.get_scalar_number_keys(),
             local_output_keys: self.output_field_keys_and_property_keys(),
             relation_output_keys: self.output_relation_keys(),
             field_property_map: self.get_field_property_map(),
@@ -452,6 +453,14 @@ impl ModelBuilder {
     fn get_scalar_keys(&self) -> Vec<String> {
         self.field_builders
             .iter()
+            .map(|f| f.name.clone())
+            .collect()
+    }
+
+    fn get_scalar_number_keys(&self) -> Vec<String> {
+        self.field_builders
+            .iter()
+            .filter(|f| f.field_type.is_number())
             .map(|f| f.name.clone())
             .collect()
     }

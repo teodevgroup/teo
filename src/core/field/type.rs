@@ -56,6 +56,17 @@ impl FieldType {
         }
     }
 
+    pub(crate) fn is_decimal(&self) -> bool {
+        match self {
+            FieldType::Decimal => true,
+            _ => false,
+        }
+    }
+
+    pub(crate) fn is_number(&self) -> bool {
+        self.is_int() || self.is_float() || self.is_decimal()
+    }
+
     pub(crate) fn is_bool(&self) -> bool {
         match self {
             FieldType::Bool => true,
