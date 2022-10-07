@@ -32,23 +32,24 @@ impl Decoder {
         };
         Self::check_json_keys(json_map, action.allowed_input_json_keys(), path)?;
         let mut retval: HashMap<String, Value> = hashmap!{};
-        if json_map.contains_key("where") {
-            if action.requires_where() {
-                retval.insert("where".to_owned(), Self::decode_where(model, graph, json_map.get("where").unwrap(), path + "where")?);
-            } else if action.requires_where_unique() {
-                retval.insert("where".to_owned(), Self::decode_where_unique(model, graph, json_map.get("where").unwrap(), path + "where")?);
+        for (key, value) in json_map {
+            let key = key.as_str();
+            let path = path + key;
+            match key {
+                "where" => if action.requires_where() {
+                    retval.insert(key.to_owned(), Self::decode_where(model, graph, value, path)?);
+                } else if action.requires_where_unique() {
+                    retval.insert(key.to_owned(), Self::decode_where_unique(model, graph, value, path)?);
+                },
+                "orderBy" => retval.insert(key.to_owned(), Self::decode_order_by(model, value, path)?),
+                "cursor" => retval.insert(key.to_owned(), Self::decode_where_unique(model, graph, value, path)?),
+                "distinct" => retval.insert(key.to_owned(), Self::decode_distinct(model, value, path)?),
+                "skip" | "take" | "pageSize" | "pageNumber" => retval.insert(key.to_owned(), Self::decode_usize(value, path)?),
+                "select" => retval.insert(key.to_owned(), Self::decode_select(model, value, path)?),
+                "include" => retval.insert(key.to_owned(), Self::decode_include(model, graph, value, path)?),
+                _ => panic!("Unhandled key.")
             }
         }
-        if json_map.contains_key("orderBy") {
-            retval.insert("orderBy".to_owned(), Self::decode_order_by(model, json_map.get("orderBy").unwrap(), path + "orderBy")?);
-        }
-        if json_map.contains_key("cursor") {
-            retval.insert("cursor".to_owned(), Self::decode_where_unique(model, graph, json_map.get("cursor").unwrap(), path + "cursor")?);
-        }
-        if json_map.contains_key("distinct") {
-            retval.insert("distinct".to_owned(), Self::decode_distinct(model, json_map.get("distinct").unwrap(), path + "distinct")?);
-        }
-        if json_map.contains_key()
         Ok(Value::HashMap(retval))
     }
 
@@ -69,6 +70,56 @@ impl Decoder {
             }
         } else {
             Err(ActionError::unexpected_input_type("object", path))
+        }
+    }
+
+    fn decode_include<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if let Some(json_map) = json_value.as_object() {
+            Ok(Value::HashMap(HashMap::from(json_map.iter().map(|(k, v)| {
+                let path = path + k;
+                if model.relation_output_keys().contains(k) {
+                    Ok((k.to_owned(), Self::decode_bool(v, path)?))
+                } else {
+                    Err(ActionError::unexpected_input_key(k, path))
+                }
+            })?)))
+        } else {
+            Err(ActionError::unexpected_input_type("object", path))
+        }
+    }
+
+    fn decode_select<'a>(model: &Model, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if let Some(json_map) = json_value.as_object() {
+            Ok(Value::HashMap(HashMap::from(json_map.iter().map(|(k, v)| {
+                let path = path + k;
+                if model.local_output_keys().contains(k) {
+                    Ok((k.to_owned(), Self::decode_bool(v, path)?))
+                } else {
+                    Err(ActionError::unexpected_input_key(k, path))
+                }
+            }))))
+        } else {
+            Err(ActionError::unexpected_input_type("object", path))
+        }
+    }
+
+    fn decode_usize<'a>(json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if let Some(u) = json_value.as_u64() {
+            Ok(Value::U64(u))
+        } else {
+            Err(ActionError::unexpected_input_type("positive integer number", path))
+        }
+    }
+
+    fn decode_bool<'a>(json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if let Some(b) = json_value.as_bool() {
+            Ok(Value::Bool(b))
+        } else {
+            Err(ActionError::unexpected_input_type("bool", path))
         }
     }
 

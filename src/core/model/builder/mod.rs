@@ -342,6 +342,8 @@ impl ModelBuilder {
             auto_keys: self.get_auto_keys(),
             deny_relation_keys: self.get_deny_relation_keys(),
             scalar_keys: self.get_scalar_keys(),
+            local_output_keys: self.output_field_keys_and_property_keys(),
+            relation_output_keys: self.output_relation_keys(),
             field_property_map: self.get_field_property_map(),
         };
         Model::new_with_inner(Arc::new(inner))
@@ -425,6 +427,13 @@ impl ModelBuilder {
         let mut fields: Vec<String> = vec![];
         fields.extend(self.output_field_keys());
         fields.extend(self.output_relation_keys());
+        fields.extend(self.output_property_keys());
+        fields
+    }
+
+    fn output_field_keys_and_property_keys(&self) -> Vec<String> {
+        let mut fields: Vec<String> = vec![];
+        fields.extend(self.output_field_keys());
         fields.extend(self.output_property_keys());
         fields
     }

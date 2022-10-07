@@ -47,6 +47,8 @@ pub struct ModelInner {
     pub(crate) auto_keys: Vec<String>,
     pub(crate) deny_relation_keys: Vec<String>,
     pub(crate) scalar_keys: Vec<String>,
+    pub(crate) local_output_keys: Vec<String>,
+    pub(crate) relation_output_keys: Vec<String>,
     pub(crate) field_property_map: HashMap<String, Vec<String>>
 }
 
@@ -179,6 +181,14 @@ impl Model {
     pub(crate) fn auto_keys(&self) -> &Vec<String> { &self.inner.auto_keys }
 
     pub(crate) fn scalar_keys(&self) -> &Vec<String> { &self.inner.scalar_keys }
+
+    pub(crate) fn local_output_keys(&self) -> &Vec<String> {
+        &self.inner.local_output_keys
+    }
+
+    pub(crate) fn relation_output_keys(&self) -> &Vec<String> {
+        &self.inner.relation_output_keys
+    }
 
     pub(crate) fn field_property_map(&self) -> &HashMap<String, Vec<String>> {
         &self.inner.field_property_map
