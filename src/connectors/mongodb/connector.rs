@@ -15,9 +15,8 @@ use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
 use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use regex::Regex;
 use rust_decimal::Decimal;
-use crate::connectors::mongodb::aggregation_builder::{build_query_pipeline_from_json, build_where_input, ToBsonValue};
+use crate::connectors::mongodb::aggregation_builder::{build_query_pipeline_from_json, build_where_input};
 use crate::connectors::mongodb::save_session::MongoDBSaveSession;
-use crate::connectors::mongodb::utils::bson_identifier;
 use crate::connectors::shared::has_negative_take::has_negative_take;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::core::connector::Connector;
@@ -45,30 +44,23 @@ pub struct MongoDBConnector {
 
 impl MongoDBConnector {
     pub(crate) async fn new(url: String, models: &Vec<Model>, reset_database: bool) -> MongoDBConnector {
-        let options = ClientOptions::parse(url).await;
-        if options.is_err() {
-            println!("mongodb option is error");
-            panic!("Wrong mongodb options");
+        let options = match ClientOptions::parse(url).await {
+            Ok(options) => options,
+            Err(_) => panic!("MongoDB url is invalid.")
+        };
+        let database_name = match options.default_database {
+            Some(database_name) => database_name,
+            None => panic!("No database name found in MongoDB url.")
+        };
+        let client = match Client::with_options(options.clone()) {
+            Ok(client) => client,
+            Err(_) => panic!("MongoDB client creating error.")
+        };
+        match client.database("xxxxxpingpingpingxxxxx").run_command(doc! {"ping": 1}, None).await {
+            Ok(_) => (),
+            Err(_) => panic!("Cannot connect to MongoDB database."),
         }
-        let options = options.unwrap();
-        let client = Client::with_options(options.clone());
-        if client.is_err() {
-            println!("mongodb connection error");
-            panic!("Error occurred when establishing mongodb connection.");
-        }
-        let client = client.unwrap();
-        match client
-            .database("xxxxxpingpingpingxxxxx")
-            .run_command(doc! {"ping": 1}, None)
-            .await {
-            Ok(_) => {
-            },
-            Err(_) => {
-                println!("cannot connect mongodb");
-                panic!("cannot connect mongodb");
-            }
-        }
-        let database = client.database(&options.default_database.clone().unwrap());
+        let database = client.database(&database_name);
         if reset_database {
             let _ = database.drop(None).await;
         }
@@ -201,228 +193,6 @@ impl MongoDBConnector {
         Ok(())
     }
 
-    fn bson_value_to_field_value(&self, field_name: &str, bson_value: &Bson, field_type: &FieldType) -> Result<Value, ActionError> {
-        return match field_type {
-            FieldType::Undefined => {
-                panic!()
-            }
-            FieldType::ObjectId => {
-                match bson_value.as_object_id() {
-                    Some(object_id) => {
-                        Ok(Value::ObjectId(object_id))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-
-            }
-            FieldType::Bool => {
-                match bson_value.as_bool() {
-                    Some(bool) => {
-                        Ok(Value::Bool(bool))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::I8 => {
-                match bson_value.as_i32() {
-                    Some(val) => {
-                        Ok(Value::I8(val as i8))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::I16 => {
-                match bson_value.as_i32() {
-                    Some(val) => {
-                        Ok(Value::I16(val as i16))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::I32 => {
-                match bson_value.as_i32() {
-                    Some(val) => {
-                        Ok(Value::I32(val as i32))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::I64 => {
-                match bson_value.as_i64() {
-                    Some(val) => {
-                        Ok(Value::I64(val))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::I128 => {
-                match bson_value.as_i64() {
-                    Some(val) => {
-                        Ok(Value::I128(val as i128))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::U8 => {
-                match bson_value.as_i32() {
-                    Some(val) => {
-                        Ok(Value::U8(val as u8))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::U16 => {
-                match bson_value.as_i32() {
-                    Some(val) => {
-                        Ok(Value::U16(val as u16))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::U32 => {
-                match bson_value.as_i64() {
-                    Some(val) => {
-                        Ok(Value::U32(val as u32))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::U64 => {
-                match bson_value.as_i64() {
-                    Some(val) => {
-                        Ok(Value::U64(val as u64))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::U128 => {
-                match bson_value.as_i64() {
-                    Some(val) => {
-                        Ok(Value::U128(val as u128))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::F32 => {
-                match bson_value.as_f64() {
-                    Some(val) => {
-                        Ok(Value::F32(val as f32))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::F64 => {
-                match bson_value.as_f64() {
-                    Some(val) => {
-                        Ok(Value::F64(val))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::Decimal => {
-                match bson_value {
-                    Bson::Decimal128(d128) => {
-                        Ok(Value::Decimal(Decimal::from_str(&d128.to_string()).unwrap()))
-                    }
-                    _ => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::String => {
-                match bson_value.as_str() {
-                    Some(val) => {
-                        Ok(Value::String(val.to_string()))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::Date => {
-                match bson_value.as_datetime() {
-                    Some(val) => {
-                        Ok(Value::Date(val.to_chrono().date()))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::DateTime => {
-                match bson_value.as_datetime() {
-                    Some(val) => {
-                        Ok(Value::DateTime(val.to_chrono()))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::Enum(_) => {
-                match bson_value.as_str() {
-                    Some(val) => {
-                        Ok(Value::String(val.to_string()))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::Vec(inner) => {
-                match bson_value.as_array() {
-                    Some(arr) => {
-                        let mut vec: Vec<Value> = vec![];
-                        for val in arr {
-                            vec.push(self.bson_value_to_field_value("", val, &inner.field_type)?);
-                        }
-                        Ok(Value::Vec(vec))
-                    }
-                    None => {
-                        Err(ActionError::unmatched_data_type_in_database(field_name))
-                    }
-                }
-            }
-            FieldType::HashMap(_) => {
-                panic!()
-            }
-            FieldType::BTreeMap(_) => {
-                panic!()
-            }
-            FieldType::Object(_) => {
-                panic!()
-            }
-        };
-    }
-
     fn _handle_write_error(&self, error_kind: &ErrorKind) -> ActionError {
         return match error_kind {
             ErrorKind::Write(write) => {
@@ -544,8 +314,7 @@ impl MongoDBConnector {
         let model = object.model();
         let keys = object.keys_for_save();
         let col = &self.collections[model.name()];
-        let identifier = object.identifier();
-        let bson_identifier = bson_identifier(&identifier, model);
+        let identifier: Document = object.identifier().into().as_document().unwrap();
         let mut set = doc!{};
         let mut unset = doc!{};
         let mut inc = doc!{};
@@ -617,7 +386,7 @@ impl MongoDBConnector {
             return Ok(());
         }
         if !return_new {
-            let result = col.update_one(bson_identifier, update_doc, None).await;
+            let result = col.update_one(identifier, update_doc, None).await;
             return match result {
                 Ok(_) => Ok(()),
                 Err(error) => {
@@ -626,7 +395,7 @@ impl MongoDBConnector {
             }
         } else {
             let options = FindOneAndUpdateOptions::builder().return_document(ReturnDocument::After).build();
-            let result = col.find_one_and_update(bson_identifier, update_doc, options).await;
+            let result = col.find_one_and_update(identifier, update_doc, options).await;
             match result {
                 Ok(updated_document) => {
                     for key in object.inner.atomic_updator_map.lock().unwrap().keys() {

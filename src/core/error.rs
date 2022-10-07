@@ -16,7 +16,6 @@ pub enum ActionErrorType {
     InternalServerError,
     ObjectIsNotSaved,
     FieldIsNotUnique,
-    UnmatchedDataTypeInDatabase,
     InvalidQueryInput,
     SaveCallingError,
     WrongIdentityModel,
@@ -53,6 +52,9 @@ pub enum ActionErrorType {
 
     // user defined
     CustomError,
+
+    // database
+    RecordDecodingError,
 }
 
 impl ActionErrorType {
@@ -65,7 +67,6 @@ impl ActionErrorType {
             ActionErrorType::UnknownDatabaseFindError => { 500 }
             ActionErrorType::UnknownDatabaseFindUniqueError => { 500 }
             ActionErrorType::UnknownDatabaseCountError => { 500 }
-            ActionErrorType::UnmatchedDataTypeInDatabase => { 500 }
             ActionErrorType::DestinationNotFound => { 404 }
             ActionErrorType::InternalServerError => { 500 }
             ActionErrorType::ObjectNotFound => { 404 }
@@ -87,6 +88,7 @@ impl ActionErrorType {
             ActionErrorType::PermissionDenied => { 401 }
             ActionErrorType::UnexpectedOutputException => { 500 }
             ActionErrorType::DeletionDenied => { 400 }
+            ActionErrorType::RecordDecodingError => { 500 }
         }
     }
 }
@@ -208,10 +210,10 @@ impl ActionError {
         }
     }
 
-    pub fn unmatched_data_type_in_database(field_name: &str) -> Self {
+    pub fn record_decoding_error<'a>(model: &str, path: impl AsRef<KeyPath<'a>>, expected: impl AsRef<str>) -> Self {
         ActionError {
-            r#type: ActionErrorType::UnmatchedDataTypeInDatabase,
-            message: format!("Unmatched data type for field '{field_name}' in database."),
+            r#type: ActionErrorType::RecordDecodingError,
+            message: format!("Expect `{}' for value at path `{}' of model `{model}'.", expected.as_ref(), path.as_ref()),
             errors: None
         }
     }

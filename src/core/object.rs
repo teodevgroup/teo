@@ -1102,14 +1102,14 @@ impl Object {
         &self.inner.graph
     }
 
-    pub(crate) fn identifier(&self) -> HashMap<&str, Value> {
+    pub(crate) fn identifier(&self) -> Value {
         let model = self.model();
-        let mut identifier: HashMap<&str, Value> = HashMap::new();
+        let mut identifier: HashMap<String, Value> = HashMap::new();
         for item in model.primary_index().items() {
             let val = self.get_value(item.field_name()).unwrap();
-            identifier.insert(item.field_name(), val.clone());
+            identifier.insert(item.field_name().to_owned(), val.clone());
         }
-        identifier
+        Value::HashMap(identifier)
     }
 
     pub(crate) fn json_identifier(&self) -> Value {
