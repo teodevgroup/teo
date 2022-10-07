@@ -1,3 +1,4 @@
+use bson::oid::ObjectId;
 use chrono::{Date, DateTime, NaiveDate, Utc};
 use key_path::KeyPath;
 use rust_decimal::Decimal;
@@ -22,9 +23,9 @@ enum NumberInputType {
 }
 
 pub(crate) fn input_to_vec<'a, 'b>(json_value: &'b Value, path: &'a KeyPath<'a>) -> Result<Vec<&'b Value>, ActionError> {
-    if json_value.is_object() {
+    if json_value.is_hashmap() {
         Ok(vec![json_value])
-    } else if json_value.is_array() {
+    } else if json_value.is_vec() {
         let array = json_value.as_vec().unwrap();
         let mapped: Vec<&Value> = array.iter().map(|i| i).collect();
         Ok(mapped)
@@ -108,7 +109,7 @@ fn number_to_target_type(json_value: &Value, target: &FieldType, number_type: Nu
 pub(crate) fn str_to_target_type(json_str: &str, target: &FieldType, graph: &Graph, path: &KeyPath) -> Result<Value, ActionError> {
     match target {
         #[cfg(feature = "data-source-mongodb")]
-        FieldType::ObjectId => Ok(Value::ObjectId(json_str.to_string())),
+        FieldType::ObjectId => Ok(Value::ObjectId(ObjectId::from_str(json_str).unwrap())),
         FieldType::String => Ok(Value::String(json_str.to_string())),
         FieldType::Date => match NaiveDate::parse_from_str(json_str, "%Y-%m-%d") {
             Ok(naive_date) => {
@@ -144,7 +145,7 @@ pub(crate) fn str_to_target_type(json_str: &str, target: &FieldType, graph: &Gra
 fn decode_string_input(graph: &Graph, json_value: &Value, field_type: &FieldType, optionality: Optionality, path: &KeyPath) -> Result<Input, ActionError> {
     if json_value.is_string() {
         Ok(SetValue(str_to_target_type(json_value.as_str().unwrap(), field_type, graph, path)?))
-    } else if json_value.is_object() {
+    } else if json_value.is_hashmap() {
         let (key, value) = one_length_json_obj(json_value, path)?;
         match key {
             "set" => {
@@ -170,9 +171,9 @@ fn decode_string_input(graph: &Graph, json_value: &Value, field_type: &FieldType
 }
 
 fn decode_bool_input(json_value: &Value, field_type: &FieldType, optionality: Optionality, path: &KeyPath) -> Result<Input, ActionError> {
-    if json_value.is_boolean() {
+    if json_value.is_bool() {
         Ok(SetValue(Value::Bool(json_value.as_bool().unwrap())))
-    } else if json_value.is_object() {
+    } else if json_value.is_hashmap() {
         let (key, value) = one_length_json_obj(json_value, path)?;
         match key {
             "set" => {
@@ -198,7 +199,7 @@ fn decode_bool_input(json_value: &Value, field_type: &FieldType, optionality: Op
 }
 
 fn decode_vec_input(graph: &Graph, json_value: &Value, field_type: &FieldType, optionality: Optionality, path: &KeyPath, inner_field: &Box<Field>) -> Result<Input, ActionError> {
-    if json_value.is_array() {
+    if json_value.is_vec() {
         let arr = json_value.as_vec().unwrap();
         Ok(SetValue(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
             let new_path = path + i;
@@ -214,7 +215,7 @@ fn decode_vec_input(graph: &Graph, json_value: &Value, field_type: &FieldType, o
                 }
             }
         }).collect())))
-    } else if json_value.is_object() {
+    } else if json_value.is_hashmap() {
         let (key, value) = one_length_json_obj(json_value, path)?;
         match key {
             "set" => {
@@ -222,7 +223,7 @@ fn decode_vec_input(graph: &Graph, json_value: &Value, field_type: &FieldType, o
                     Value::Null => {
                         decode_null(&field_type, optionality, &(path + "set"))
                     }
-                    Value::Array(arr) => {
+                    Value::Vec(arr) => {
                         Ok(SetValue(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
                             let new_path = path + "set" + i;
                             match decode_field_input(graph, v, field_type, optionality.clone(), &new_path) {
@@ -276,7 +277,7 @@ fn decode_number_input(json_value: &Value, field_type: &FieldType, optionality: 
         }
     } else if json_value.is_number() {
         Ok(SetValue(number_to_target_type(json_value, field_type, number_type, path)?))
-    } else if json_value.is_object() {
+    } else if json_value.is_hashmap() {
         let (key, value) = one_length_json_obj(json_value, path)?;
         let arg = match value {
             Value::Null => {
@@ -286,7 +287,7 @@ fn decode_number_input(json_value: &Value, field_type: &FieldType, optionality: 
                     Err(ActionError::unexpected_input_value("number", &(path + key)))
                 }
             }
-            Value::Number(_num) => {
+            Value::I64(_num) => {
                 number_to_target_type(value, field_type, number_type, &(path + key))
             }
             Value::String(_str) => {

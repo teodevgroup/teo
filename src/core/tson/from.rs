@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::hash::Hash;
 use chrono::{Date, DateTime, Utc};
 use rust_decimal::Decimal;
 use crate::core::tson::Value;
@@ -33,7 +34,7 @@ impl<'a> From<Value> for &'a str {
 
 impl From<Value> for String {
     fn from(v: Value) -> Self {
-        v.as_string().unwrap()
+        v.as_str().unwrap().to_string()
     }
 }
 
@@ -270,7 +271,7 @@ impl<T> From<Value> for HashMap<String, T> where T: From<Value> {
         let value = value.as_hashmap().unwrap();
         let mut result: HashMap<String, T> = HashMap::new();
         for (k, v) in value {
-            result.insert(k.to_owned(), v);
+            result.insert(k.to_owned(), (*v).into());
         }
         result
     }
@@ -281,29 +282,29 @@ impl<T> From<Value> for BTreeMap<String, T> where T: From<Value> {
         let value = value.as_hashmap().unwrap();
         let mut result: BTreeMap<String, T> = BTreeMap::new();
         for (k, v) in value {
-            result.insert(k.to_owned(), v);
+            result.insert(k.to_owned(), (*v).into());
         }
         result
     }
 }
 
-impl<T> From<Value> for HashSet<T> where T: From<Value> {
+impl<T> From<Value> for HashSet<T> where T: From<Value> + Hash + Eq + Ord {
     fn from(value: Value) -> Self {
         let value = value.as_hashmap().unwrap();
         let mut result: HashSet<T> = HashSet::new();
         for (k, v) in value {
-            result.insert(v);
+            result.insert((*v).into());
         }
         result
     }
 }
 
-impl<T> From<Value> for BTreeSet<T> where T: From<Value> {
+impl<T> From<Value> for BTreeSet<T> where T: From<Value> + Hash + Eq + Ord {
     fn from(value: Value) -> Self {
         let value = value.as_hashmap().unwrap();
         let mut result: BTreeSet<T> = BTreeSet::new();
         for (k, v) in value {
-            result.insert(v);
+            result.insert((*v).into());
         }
         result
     }

@@ -1105,9 +1105,9 @@ impl Object {
     pub(crate) fn identifier(&self) -> HashMap<&str, Value> {
         let model = self.model();
         let mut identifier: HashMap<&str, Value> = HashMap::new();
-        for item in &model.primary_index().items {
-            let val = self.get_value(&item.field_name).unwrap();
-            identifier.insert(&item.field_name, val.clone());
+        for item in model.primary_index().items() {
+            let val = self.get_value(item.field_name()).unwrap();
+            identifier.insert(item.field_name(), val.clone());
         }
         identifier
     }
@@ -1115,9 +1115,9 @@ impl Object {
     pub(crate) fn json_identifier(&self) -> Value {
         let model = self.model();
         let mut identifier = tson!({});
-        for item in &model.primary_index().items {
-            let val = self.get_value(&item.field_name).unwrap();
-            identifier.as_hashmap_mut().unwrap().insert(item.field_name.clone(), val);
+        for item in model.primary_index().items() {
+            let val = self.get_value(item.field_name()).unwrap();
+            identifier.as_hashmap_mut().unwrap().insert(item.field_name().to_string(), val);
         }
         identifier
     }

@@ -22,7 +22,7 @@ impl Modifier for IsObjectOfModifier {
     }
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
-        match ctx.value.as_hashmap() {
+        match ctx.value.as_object() {
             Some(o) => {
                 if o.model().name() == self.model {
                     ctx

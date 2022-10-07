@@ -41,12 +41,12 @@ impl Decoder {
                 } else if action.requires_where_unique() {
                     retval.insert(key.to_owned(), Self::decode_where_unique(model, graph, value, path)?);
                 },
-                "orderBy" => retval.insert(key.to_owned(), Self::decode_order_by(model, value, path)?),
-                "cursor" => retval.insert(key.to_owned(), Self::decode_where_unique(model, graph, value, path)?),
-                "distinct" => retval.insert(key.to_owned(), Self::decode_distinct(model, value, path)?),
-                "skip" | "take" | "pageSize" | "pageNumber" => retval.insert(key.to_owned(), Self::decode_usize(value, path)?),
-                "select" => retval.insert(key.to_owned(), Self::decode_select(model, value, path)?),
-                "include" => retval.insert(key.to_owned(), Self::decode_include(model, graph, value, path)?),
+                "orderBy" => { retval.insert(key.to_owned(), Self::decode_order_by(model, value, path)?); }
+                "cursor" => { retval.insert(key.to_owned(), Self::decode_where_unique(model, graph, value, path)?); }
+                "distinct" => { retval.insert(key.to_owned(), Self::decode_distinct(model, value, path)?); }
+                "skip" | "take" | "pageSize" | "pageNumber" => { retval.insert(key.to_owned(), Self::decode_usize(value, path)?); }
+                "select" => { retval.insert(key.to_owned(), Self::decode_select(model, value, path)?); }
+                "include" => { retval.insert(key.to_owned(), Self::decode_include(model, graph, value, path)?); }
                 _ => panic!("Unhandled key.")
             }
         }
@@ -83,7 +83,7 @@ impl Decoder {
                 } else {
                     Err(ActionError::unexpected_input_key(k, path))
                 }
-            })?)))
+            }))))
         } else {
             Err(ActionError::unexpected_input_type("object", path))
         }

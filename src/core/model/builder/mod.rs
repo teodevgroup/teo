@@ -141,17 +141,10 @@ impl ModelBuilder {
         let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
         let name = string_keys.join("_");
         let items: Vec<ModelIndexItem> = string_keys.iter().map(|k| {
-            ModelIndexItem { field_name: k.to_string(), sort: Sort::Asc, len: None }
+            ModelIndexItem::new(k, Sort::Asc, None)
         }).collect();
-        let keys: Vec<String> = items.iter().map(|i| i.field_name().to_string()).collect();
-        let index = ModelIndex {
-            index_type: ModelIndexType::Primary,
-            name,
-            items,
-            keys,
-        };
-        let primary_index = index.clone();
-        self.indices.push(index);
+        let primary_index = ModelIndex::new(ModelIndexType::Primary, name, items);
+        self.indices.push(primary_index.clone());
         self.primary = Some(primary_index);
         self
     }
@@ -167,15 +160,9 @@ impl ModelBuilder {
         let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
         let name = string_keys.join("_");
         let items: Vec<ModelIndexItem> = string_keys.iter().map(|k| {
-            ModelIndexItem { field_name: k.to_string(), sort: Sort::Asc, len: None }
+            ModelIndexItem::new(k, Sort::Asc, None)
         }).collect();
-        let keys: Vec<String> = items.iter().map(|i| i.field_name().to_string()).collect();
-        let index = ModelIndex {
-            index_type: ModelIndexType::Index,
-            name,
-            items,
-            keys,
-        };
+        let index = ModelIndex::new(ModelIndexType::Index, name, items);
         self.indices.push(index);
         self
     }
@@ -191,15 +178,9 @@ impl ModelBuilder {
         let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
         let name = string_keys.join("_");
         let items: Vec<ModelIndexItem> = string_keys.iter().map(|k| {
-            ModelIndexItem { field_name: k.to_string(), sort: Sort::Asc, len: None }
+            ModelIndexItem::new(k, Sort::Asc, None)
         }).collect();
-        let keys: Vec<String> = items.iter().map(|i| i.field_name().to_string()).collect();
-        let index = ModelIndex {
-            index_type: ModelIndexType::Unique,
-            name,
-            items,
-            keys,
-        };
+        let index = ModelIndex::new(ModelIndexType::Unique, name, items);
         self.indices.push(index);
         self
     }
@@ -248,46 +229,23 @@ impl ModelBuilder {
             fields_map.insert(field.name.clone(), field.clone());
             if field.primary {
                 primary_field = Some(field.clone());
-                primary = Some(ModelIndex {
-                    index_type: ModelIndexType::Primary,
-                    name: "".to_string(),
-                    items: vec![
-                        ModelIndexItem {
-                            field_name: field.name.clone(),
-                            sort: Sort::Asc,
-                            len: None
-                        }
-                    ]
-                });
+                primary = Some(ModelIndex::new(ModelIndexType::Primary, "", vec![
+                    ModelIndexItem::new(field.name(), Sort::Asc, None)
+                ]));
                 indices.push(primary.as_ref().unwrap().clone());
             }
             if field.index != FieldIndex::NoIndex {
                 match &field.index {
                     FieldIndex::Index(settings) => {
-                        indices.push(ModelIndex {
-                            index_type: ModelIndexType::Index,
-                            name: if settings.name.is_some() { settings.name.as_ref().unwrap().clone() } else { field.name.clone() },
-                            items: vec![
-                                ModelIndexItem {
-                                    field_name: field.name.clone(),
-                                    sort: settings.sort,
-                                    len: settings.length
-                                }
-                            ]
-                        })
+                        indices.push(ModelIndex::new(ModelIndexType::Index, if settings.name.is_some() { settings.name.as_ref().unwrap().clone() } else { field.name.clone() }, vec![
+                            ModelIndexItem::new(field.name(), settings.sort, settings.length)
+                        ]));
+
                     }
                     FieldIndex::Unique(settings) => {
-                        indices.push(ModelIndex {
-                            index_type: ModelIndexType::Unique,
-                            name: if settings.name.is_some() { settings.name.as_ref().unwrap().clone() } else { field.name.clone() },
-                            items: vec![
-                                ModelIndexItem {
-                                    field_name: field.name.clone(),
-                                    sort: settings.sort,
-                                    len: settings.length
-                                }
-                            ]
-                        })
+                        indices.push(ModelIndex::new(ModelIndexType::Unique, if settings.name.is_some() { settings.name.as_ref().unwrap().clone() } else { field.name.clone() }, vec![
+                            ModelIndexItem::new(field.name(), settings.sort, settings.length)
+                        ]));
                     }
                     _ => { }
                 }
@@ -450,13 +408,13 @@ impl ModelBuilder {
     pub(crate) fn unique_query_keys(&self, indices: &Vec<ModelIndex>, primary: Option<&ModelIndex>) -> Vec<HashSet<String>> {
         let mut result: Vec<HashSet<String>> = Vec::new();
         for index in indices {
-            let set = HashSet::from_iter(index.items.iter().map(|i| {
+            let set = HashSet::from_iter(index.items().iter().map(|i| {
                 i.field_name().to_string()
             }));
             result.push(set);
         }
         if let Some(primary) = primary {
-            result.push(HashSet::from_iter(primary.items.iter().map(|i| i.field_name.clone())));
+            result.push(HashSet::from_iter(primary.items().iter().map(|i| i.field_name().to_string())));
         }
         result
     }

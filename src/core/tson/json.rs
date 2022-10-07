@@ -16,40 +16,40 @@ impl Into<JsonValue> for Value {
                 JsonValue::Bool(val.clone())
             }
             Value::I8(val) => {
-                JsonValue::Number(JsonNumber::from(*val))
+                JsonValue::Number(JsonNumber::from(val))
             }
             Value::I16(val) => {
-                JsonValue::Number(JsonNumber::from(*val))
+                JsonValue::Number(JsonNumber::from(val))
             }
             Value::I32(val) => {
-                JsonValue::Number(JsonNumber::from(*val))
+                JsonValue::Number(JsonNumber::from(val))
             }
             Value::I64(val) => {
-                JsonValue::Number(JsonNumber::from(*val))
+                JsonValue::Number(JsonNumber::from(val))
             }
             Value::I128(val) => {
-                JsonValue::Number(JsonNumber::from(*val as i64))
+                JsonValue::Number(JsonNumber::from(val as i64))
             }
             Value::U8(val) => {
-                JsonValue::Number(JsonNumber::from(*val))
+                JsonValue::Number(JsonNumber::from(val))
             }
             Value::U16(val) => {
-                JsonValue::Number(JsonNumber::from(*val))
+                JsonValue::Number(JsonNumber::from(val))
             }
             Value::U32(val) => {
-                JsonValue::Number(JsonNumber::from(*val))
+                JsonValue::Number(JsonNumber::from(val))
             }
             Value::U64(val) => {
-                JsonValue::Number(JsonNumber::from(*val))
+                JsonValue::Number(JsonNumber::from(val))
             }
             Value::U128(val) => {
-                JsonValue::Number(JsonNumber::from(*val as u64))
+                JsonValue::Number(JsonNumber::from(val as u64))
             }
             Value::F32(val) => {
-                JsonValue::Number(JsonNumber::from_f64(*val as f64).unwrap())
+                JsonValue::Number(JsonNumber::from_f64(val as f64).unwrap())
             }
             Value::F64(val) => {
-                JsonValue::Number(JsonNumber::from_f64(*val).unwrap())
+                JsonValue::Number(JsonNumber::from_f64(val).unwrap())
             }
             Value::Decimal(val) => {
                 JsonValue::String(val.to_string())
@@ -64,31 +64,37 @@ impl Into<JsonValue> for Value {
                 JsonValue::String(val.to_rfc3339_opts(SecondsFormat::Millis, true))
             }
             Value::Vec(val) => {
-                JsonValue::Array(val.iter().map(|i| { i }).collect())
+                JsonValue::Array(val.iter().map(|v| v.into()).collect())
             }
             Value::HashMap(val) => {
                 let mut map = JsonMap::new();
                 for (k, v) in val {
-                    map.insert(k.to_string(), v);
+                    map.insert(k.to_string(), v.into());
                 }
                 JsonValue::Object(map)
             }
             Value::BTreeMap(val) => {
                 let mut map = JsonMap::new();
                 for (k, v) in val {
-                    map.insert(k.to_string(), v);
+                    map.insert(k.to_string(), v.into());
                 }
                 JsonValue::Object(map)
             }
             Value::HashSet(val) => {
-                JsonValue::Array(val.iter().map(|i| { i }).collect())
+                JsonValue::Array(val.iter().map(|v| v.into()).collect())
             }
             Value::BTreeSet(val) => {
-                JsonValue::Array(val.iter().map(|i| { i }).collect())
+                JsonValue::Array(val.iter().map(|v| v.into()).collect())
             }
             Value::Object(_obj) => {
                 panic!("Cannot convert object into json. Use specific method instead.")
             }
         }
+    }
+}
+
+impl Into<JsonValue> for &Value {
+    fn into(self) -> JsonValue {
+        (*self).into()
     }
 }

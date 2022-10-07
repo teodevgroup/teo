@@ -201,11 +201,35 @@ impl FieldBuilder {
         self
     }
 
-    pub fn map<F: Fn(&mut FieldBuilder)>(&mut self, build: F) -> &mut Self {
+    pub fn hashmap<F: Fn(&mut FieldBuilder)>(&mut self, build: F) -> &mut Self {
         let mut builder = FieldBuilder::new("", self.connector_builder());
         build(&mut builder);
         let field = builder.build(self.connector_builder());
-        self.field_type = FieldType::Map(Box::new(field));
+        self.field_type = FieldType::HashMap(Box::new(field));
+        self
+    }
+
+    pub fn btreemap<F: Fn(&mut FieldBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut builder = FieldBuilder::new("", self.connector_builder());
+        build(&mut builder);
+        let field = builder.build(self.connector_builder());
+        self.field_type = FieldType::BTreeMap(Box::new(field));
+        self
+    }
+
+    pub fn hashset<F: Fn(&mut FieldBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut builder = FieldBuilder::new("", self.connector_builder());
+        build(&mut builder);
+        let field = builder.build(self.connector_builder());
+        self.field_type = FieldType::HashSet(Box::new(field));
+        self
+    }
+
+    pub fn btreeset<F: Fn(&mut FieldBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut builder = FieldBuilder::new("", self.connector_builder());
+        build(&mut builder);
+        let field = builder.build(self.connector_builder());
+        self.field_type = FieldType::BTreeSet(Box::new(field));
         self
     }
 

@@ -33,6 +33,15 @@ pub(crate) struct ModelIndexItem {
 }
 
 impl ModelIndexItem {
+
+    pub(crate) fn new(name: impl Into<String>, sort: Sort, len: Option<usize>) -> Self {
+        Self {
+            field_name: name.into(),
+            sort,
+            len,
+        }
+    }
+
     pub(crate) fn field_name(&self) -> &str {
         &self.field_name
     }
@@ -55,6 +64,16 @@ pub(crate) struct ModelIndex {
 }
 
 impl ModelIndex {
+
+    pub(crate) fn new(r#type: ModelIndexType, name: impl Into<String>, items: Vec<ModelIndexItem>) -> Self {
+        let keys: Vec<String> = items.iter().map(|i| i.field_name.clone()).collect();
+        Self {
+            index_type: r#type,
+            name: name.into(),
+            items,
+            keys,
+        }
+    }
     pub(crate) fn r#type(&self) -> ModelIndexType {
         self.index_type
     }

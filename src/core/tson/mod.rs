@@ -746,6 +746,17 @@ impl Value {
         }
     }
 
+    pub fn is_object(&self) -> bool {
+        self.as_objct().is_some()
+    }
+
+    pub fn as_object(&self) -> Option<&Object> {
+        match self {
+            Value::Object(o) => Some(o),
+            _ => None,
+        }
+    }
+
     pub fn is_null(&self) -> bool {
         self.as_null().is_some()
     }
