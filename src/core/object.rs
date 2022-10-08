@@ -606,16 +606,6 @@ impl Object {
         use RelationManipulation::*;
         let graph = self.graph();
         match manipulation {
-            Create(entry) => {
-                let env = self.env().nested(Intent::NestedCreate);
-                let new_object = graph.new_object(relation.model(), env)?;
-                new_object.set_tson(entry).await?;
-                if relation.through().is_none() {
-                    self.link_connect(&new_object, relation, session.clone()).await?;
-                }
-                new_object.save_with_session_and_path(session.clone(), false, &(path + relation.name())).await?;
-                self.link_connect(&new_object, relation, session.clone()).await?;
-            }
             ConnectOrCreate(entry) => {
                 let r#where = entry.as_hashmap().unwrap().get("where").unwrap();
                 let create = entry.as_hashmap().unwrap().get("create").unwrap();
@@ -640,16 +630,6 @@ impl Object {
                         self.link_connect(&new_obj, relation, session.clone()).await?;
                     }
                 }
-            }
-            Connect(entry) | Set(entry) => {
-                let unique_query = tson!({"where": entry});
-                let env = self.env().nested(Intent::NestedConnect);
-                let exist_object = graph.find_unique(relation.model(), &unique_query, true, env).await?;
-                if relation.through().is_none() {
-                    self.link_connect(&exist_object, relation, session.clone()).await?;
-                }
-                exist_object.save_with_session_and_path(session.clone(), false, &(path + relation.name())).await?;
-                self.link_connect(&exist_object, relation, session.clone()).await?;
             }
             Update(entry) => {
                 let env = self.env().nested(Intent::NestedUpdate);
@@ -716,62 +696,6 @@ impl Object {
         Ok(())
     }
 
-    pub(crate) async fn link_connect(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> ActionResult<()> {
-        match &relation.through() {
-            Some(through) => { // with join table
-                let relation_model = self.graph().model(through).unwrap();
-                let env = self.env().nested(Intent::NestedJoinTableRecordCreate);
-                let relation_object = self.graph().new_object(through, env)?;
-                relation_object.set_tson(&tson!({})).await?;
-                let local_relation_name = relation.fields().get(0).unwrap();
-                let foreign_relation_name = relation.references().get(0).unwrap();
-                let local_relation = relation_model.relation(local_relation_name).unwrap();
-                let foreign_relation = relation_model.relation(foreign_relation_name).unwrap();
-                for (index, field_name) in local_relation.fields().iter().enumerate() {
-                    let local_field_name = local_relation.references().get(index).unwrap();
-                    let val = self.get_value(local_field_name).unwrap();
-                    relation_object.set_value(field_name, val.clone()).unwrap();
-                }
-                for (index, field_name) in foreign_relation.fields().iter().enumerate() {
-                    let foreign_field_name = foreign_relation.references().get(index).unwrap();
-                    let val = obj.get_value(foreign_field_name).unwrap();
-                    relation_object.set_value(field_name, val.clone()).unwrap();
-                }
-                relation_object.save_with_session_and_path(session.clone(), &path![]).await?;
-            }
-            None => { // no join table
-                for (index, reference) in relation.references().iter().enumerate() {
-                    let field_name = relation.fields().get(index).unwrap();
-                    if relation.is_vec() {
-                        // if relation is vec, otherwise must have saved the value
-                        let local_value = self.get_value(field_name)?;
-                        if !local_value.is_null() {
-                            obj.set_value(reference, local_value.clone())?;
-                        }
-                    } else {
-                        // array are removed here, see if bug happens
-                        // write on their side since it's primary
-                        for item in self.model().primary_index().items() {
-                            if item.field_name() == field_name {
-                                let local_value = self.get_value(field_name)?;
-                                if !local_value.is_null() {
-                                    obj.set_value(reference, local_value.clone())?;
-                                }
-                                break;
-                            }
-                        }
-                        // write on our side since it's not primary
-                        let foreign_value = obj.get_value(reference)?;
-                        if !foreign_value.is_null() {
-                            self.set_value(field_name, foreign_value.clone())?;
-                        }
-                    }
-                }
-            }
-        }
-        Ok(())
-    }
-
     pub(crate) async fn link_disconnect(&self, obj: &Object, relation: &Relation, session: Arc<dyn SaveSession>) -> ActionResult<()> {
         match relation.through() {
             Some(through) => { // with join table
@@ -829,7 +753,7 @@ impl Object {
         self.before_save_callback_check()?;
         let is_new = self.is_new();
         // perform relation manipulations (has foreign key)
-        self.perform_relation_manipulations(|r| r.has_foreign_key())?;
+        self.perform_relation_manipulations(|r| r.has_foreign_key(), session.clone(), path)?;
         // validate and save
         let is_modified = self.is_modified();
         if is_modified || is_new {
@@ -841,7 +765,7 @@ impl Object {
             }
         }
         // perform relation manipulations (doesn't have foreign key)
-        self.perform_relation_manipulations(|r| !r.has_foreign_key())?;
+        self.perform_relation_manipulations(|r| !r.has_foreign_key(), session.clone(), path)?;
         // clear properties
         self.clear_state();
         if is_modified || is_new {
@@ -944,20 +868,7 @@ impl Object {
         self.inner.is_modified.load(Ordering::SeqCst)
     }
 
-    fn insert_relation_manipulation(&self, key: &str, manipulation: RelationManipulation) {
-        if self.inner.relation_mutation_map.lock().unwrap().get(key).is_none() {
-            self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), vec![]);
-        }
-        let mut relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
-        let objects = relation_mutation_map.get_mut(key).unwrap();
-        objects.push(manipulation);
-    }
-
-    pub(crate) fn is_instance_of(&self, model_name: &'static str) -> bool {
-        self.model().name() == model_name
-    }
-
-    pub(crate) fn model(&self) -> &Model {
+    pub fn model(&self) -> &Model {
         &self.inner.model
     }
 
@@ -975,24 +886,94 @@ impl Object {
         Value::HashMap(identifier)
     }
 
-    fn perform_relation_manipulations<F: Fn(&Relation) -> bool>(&self, f: F) -> ActionResult<()> {
+    async fn perform_relation_manipulations<F: Fn(&Relation) -> bool>(&self, f: F, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
         for relation in self.model().relations() {
             if f(relation) {
                 let many = relation.is_vec();
-                let name = relation.name();
                 let map = self.inner.relation_mutation_map.lock().unwrap();
-                let vec_option = map.get(name);
-                match vec_option {
+                match map.get(relation.name()) {
                     None => {},
-                    Some(vec) => {
-                        for manipulation in vec {
-                            self.handle_manipulation(relation, manipulation, session.clone(), path).await?;
+                    Some(manipulation) => {
+                        if many {
+                            self.perform_relation_manipulation_many(relation, manipulation, session.clone(), path).await?;
+                        } else {
+                            self.perform_relation_manipulation_one(relation, manipulation, session.clone(), path).await?;
                         }
                     }
                 }
             }
         }
         Ok(())
+    }
+
+    async fn create_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation) {
+        let join_model = self.graph().model(relation.through().unwrap()).unwrap();
+        let env = self.env().nested(Intent::NestedJoinTableRecordCreate);
+        let join_object = self.graph().new_object(join_model.name(), env)?;
+        join_object.set_tson(&tson!({})).await?; // initialize
+        let local = relation.local();
+        let foreign = opposite_relation.local();
+        let join_local_relation = join_model.relation(local).unwrap();
+        self.assign_linked_values_to_related_object(&join_object, join_local_relation);
+        let join_foreign_relation = join_model.relation(foreign).unwrap();
+        object.assign_linked_values_to_related_object(&join_object, join_foreign_relation);
+        join_object.save_with_session_and_path(session.clone(), &path![]).await?;
+    }
+
+    fn assign_linked_values_to_related_object(&self, object: &Object, opposite_relation: &Relation) {
+        for (field, reference) in opposite_relation.iter() {
+            object.set_value_to_value_map(field, self.get_value_map_value(reference));
+        }
+    }
+
+    async fn link_and_save_relation_object(&self, relation: &Relation, object: &Object, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+        let mut linked = false;
+        let (opposite_model, opposite_relation) = self.graph().opposite_relation(relation);
+        if let Some(opposite_relation) = opposite_relation {
+            if opposite_relation.has_foreign_key() {
+                self.assign_linked_values_to_related_object(object, opposite_relation);
+                linked = true;
+            }
+        }
+        object.save_with_session_and_path(session.clone(), path).await?;
+        if !linked {
+            if relation.has_foreign_key() {
+                object.assign_linked_values_to_related_object(object, relation);
+            } else if relation.has_join_table() {
+                self.create_join_object(object, relation, opposite_relation.unwrap()).await?;
+            }
+        }
+        Ok(())
+    }
+
+    async fn nested_create_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+        let env = self.env().nested(Intent::NestedCreate);
+        let object = self.graph().new_object(relation.model(), env)?;
+        object.set_tson_with_path(value, path).await?;
+        self.link_and_save_relation_object(relation, &object, session.clone(), path).await
+    }
+
+    async fn nested_connect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+
+    }
+
+    async fn perform_relation_manipulation_one(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+        for (key, value) in value.as_hashmap().unwrap() {
+            let key = key.as_str();
+            let path = path + key;
+            match key {
+                "create" => self.nested_create_relation_object(relation, value, session.clone(), &path),
+                "connect" | "set" => self.nested_connect_relation_object(relation, value, session.clone(), &path),
+                "connectOrCreate" => ,
+                "disconnect" => ,
+                "update" => ,
+                "delete" => ,
+            }
+        }
+    }
+
+    async fn perform_relation_manipulation_many(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+
     }
 
     pub async fn refreshed(&self, include: Option<&Value>, select: Option<&Value>) -> Result<Object, ActionError> {

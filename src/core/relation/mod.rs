@@ -23,6 +23,7 @@ pub(crate) struct Relation {
 }
 
 impl Relation {
+    
     pub(crate) fn name(&self) -> &str {
         &self.name
     }
@@ -80,23 +81,31 @@ impl Relation {
     pub(crate) fn has_foreign_key(&self) -> bool {
         self.has_foreign_key
     }
+
+    pub(crate) fn has_join_table(&self) -> bool {
+        self.through().is_some()
+    }
+
+    pub(crate) fn iter(&self) -> RelationIter {
+        RelationIter { index: 0, relation: self }
+    }
 }
 
-#[derive(Debug)]
-pub(crate) enum RelationManipulation {
-    Create(Value),
-    ConnectOrCreate(Value),
-    Connect(Value),
-    Set(Value),
-    Update(Value),
-    Upsert(Value),
-    Disconnect(Value),
-    Delete(Value),
+struct RelationIter<'a> {
+    index: usize,
+    relation: &'a Relation,
 }
 
-#[derive(Debug)]
-pub(crate) enum RelationConnection {
-    Link(Object),
-    Unlink(Object),
-    UnlinkAndDelete(Object),
+impl<'a> Iterator for RelationIter<'a> {
+    type Item = (&'a str, &'a str);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(f) = self.relation.fields().get(index) {
+            let result = Some((f.as_str(), self.relation.references().get(index).unwrap().as_str()));
+            index += 1;
+            result
+        } else {
+            None
+        }
+    }
 }
