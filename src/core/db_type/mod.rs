@@ -167,6 +167,7 @@ impl Into<FieldType> for &DatabaseType {
     fn into(self) -> FieldType {
         match self {
             DatabaseType::Undefined => FieldType::Undefined,
+            #[cfg(feature = "data-source-mongodb")]
             DatabaseType::ObjectId => FieldType::ObjectId,
             DatabaseType::Bool => FieldType::Bool,
             DatabaseType::Bit(_) => todo!(),

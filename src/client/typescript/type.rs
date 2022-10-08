@@ -13,7 +13,9 @@ impl ToTypeScriptType for FieldType {
     fn to_typescript_type(&self, optional: bool) -> String {
         let base: String = match self {
             FieldType::Undefined => panic!(),
-            FieldType::ObjectId | FieldType::String | FieldType::Date | FieldType::DateTime => "string".to_string(),
+            #[cfg(feature = "data-source-mongodb")]
+            FieldType::ObjectId => "string".to_string(),
+            FieldType::String | FieldType::Date | FieldType::DateTime => "string".to_string(),
             FieldType::Bool => "boolean".to_string(),
             FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number".to_string(),
             FieldType::Decimal => "string".to_string(),
@@ -34,6 +36,7 @@ impl ToTypeScriptType for FieldType {
         let mut with_generic = false;
         let base: String = match self {
             FieldType::Undefined => panic!(),
+            #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => "string | ObjectId".to_string(),
             FieldType::String => "string | String".to_string(),
             FieldType::Date => "string | Date | Date".to_string(),
@@ -76,7 +79,9 @@ impl ToTypeScriptType for FieldType {
     fn to_typescript_create_input_type(&self, optional: bool) -> String {
         let base: String = match self {
             FieldType::Undefined => panic!(),
-            FieldType::ObjectId | FieldType::String | FieldType::Decimal => "string".to_string(),
+            #[cfg(feature = "data-source-mongodb")]
+            FieldType::ObjectId => "string".to_string(),
+            FieldType::String | FieldType::Decimal => "string".to_string(),
             FieldType::Date | FieldType::DateTime => "Date | string".to_string(),
             FieldType::Bool => "boolean".to_string(),
             FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number".to_string(),
@@ -103,6 +108,7 @@ impl ToTypeScriptType for FieldType {
         let mut generic = "".to_owned();
         let base: &str = match self {
             FieldType::Undefined => panic!(),
+            #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => "ObjectId",
             FieldType::String => "String",
             FieldType::Date => "Date",

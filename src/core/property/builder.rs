@@ -62,6 +62,7 @@ impl PropertyBuilder {
         self
     }
 
+    #[cfg(feature = "data-source-mongodb")]
     pub fn object_id(&mut self) -> &mut Self {
         self.field_type = FieldType::ObjectId;
         self

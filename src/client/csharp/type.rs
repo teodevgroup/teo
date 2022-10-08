@@ -45,7 +45,9 @@ impl ToCSharpType for FieldType {
     fn to_csharp_type(&self, optional: bool) -> String {
         let base: String = match self {
             FieldType::Undefined => panic!(),
-            FieldType::ObjectId | FieldType::String => "string".to_string(),
+            #[cfg(feature = "data-source-mongodb")]
+            FieldType::ObjectId => "string".to_string(),
+            FieldType::String => "string".to_string(),
             FieldType::Bool => "bool".to_string(),
             FieldType::I8 => "sbyte".to_string(),
             FieldType::U8 => "byte".to_string(),
@@ -125,6 +127,7 @@ impl ToCSharpType for FieldType {
         let prefix = if optional { "Nullable" } else { "" };
         match self {
             FieldType::Undefined => panic!(),
+            #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => format!("{prefix}ObjectIdFieldUpdateOperationsInput"),
             FieldType::String => format!("{prefix}StringFieldUpdateOperationsInput"),
             FieldType::Date => format!("{prefix}DateOnlyFieldUpdateOperationsInput"),
