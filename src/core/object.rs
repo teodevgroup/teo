@@ -25,6 +25,7 @@ use crate::core::field::write_rule::WriteRule;
 use crate::core::relation::delete_rule::DeleteRule;
 use crate::core::relation::delete_rule::DeleteRule::Deny;
 use crate::core::result::ActionResult;
+use crate::core::tson::decoder::Decoder;
 use crate::tson;
 
 #[derive(Clone)]
@@ -51,6 +52,13 @@ pub(crate) struct ObjectInner {
     pub(crate) relation_mutation_map: Arc<Mutex<HashMap<String, Vec<RelationManipulation>>>>,
     pub(crate) relation_query_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
     pub(crate) cached_property_map: Arc<Mutex<HashMap<String, Value>>>,
+}
+
+fn check_user_json_keys<'a>(map: &HashMap<String, Value>, allowed: &HashSet<&str>, model: &Model) -> ActionResult<()> {
+    if let Some(unallowed) = map.keys().find(|k| !allowed.contains(k.as_str())) {
+        return Err(ActionError::invalid_key(unallowed, model));
+    }
+    Ok(())
 }
 
 impl Object {
@@ -90,43 +98,46 @@ impl Object {
         self.set_tson_with_path_and_user_mode(json_value, path, false).await
     }
 
-    pub(crate) async fn set_tson_with_path_and_user_mode(&self, json_value: &Value, path: &KeyPath<'_>, user_mode: bool) -> ActionResult<()> {
+    pub(crate) async fn check_write_permission(&self) -> ActionResult<()> {
+        let is_new = self.is_new();
+        if let Some(permission) = self.model().permission() {
+            if let Some(can) = if is_new { permission.can_create() } else { permission.can_update() } {
+                let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
+                let result_ctx = can.process(ctx).await;
+                if !result_ctx.is_valid() {
+                    return Err(ActionError::permission_denied(if is_new { "create" } else { "update" }));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub(crate) async fn set_tson_with_path_and_user_mode(&self, value: &Value, path: &KeyPath<'_>, user_mode: bool) -> ActionResult<()> {
         let model = self.model();
         let is_new = self.is_new();
         // permission
         if !user_mode {
-            if let Some(permission) = model.permission() {
-                if let Some(can) = if is_new { permission.can_create() } else { permission.can_update() } {
-                    let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
-                    let result_ctx = can.process(ctx).await;
-                    if !result_ctx.is_valid() {
-                        return Err(ActionError::permission_denied(if is_new { "create" } else { "update" }));
-                    }
-                }
-            }
+            self.check_write_permission().await?;
         }
+        // get value map
+        let value_map = value.as_hashmap().unwrap();
+        let value_map_keys: Vec<&String> = value_map.keys().collect();
         // check keys
-        let json_map = json_value.as_hashmap().unwrap();
-        let json_keys: Vec<&String> = json_map.keys().map(|k| { k }).collect();
-        let valid_keys = self.model().input_keys().iter().map(|k| k).collect::<Vec<&String>>();
-        if let Some(invalid_key) = json_keys.iter().find(|k| !valid_keys.contains(k)) {
-            return if user_mode {
-                Err(ActionError::invalid_key(invalid_key, model))
-            } else {
-                Err(ActionError::unexpected_input_key(invalid_key.as_str(), path + invalid_key.as_str()))
-            };
+        if user_mode {
+            check_user_json_keys(value_map, &model.input_keys().iter().map(|k| k.as_str()).collect(), model)?;
         }
-        let all_model_keys = self.model().all_keys().iter().map(|k| k).collect::<Vec<&String>>();
         // find keys to iterate
         let initialized = self.inner.is_initialized.load(Ordering::SeqCst);
-        let keys_to_iterate = if initialized {
-            all_model_keys.iter().filter(|k| { json_keys.contains(k)}).map(|k| *k).collect()
-        } else { all_model_keys };
+        let keys = if initialized {
+            self.model().all_keys().iter().filter(|k| { value_map_keys.contains(k)}).collect::<Vec<&String>>()
+        } else {
+            self.model().all_keys().iter().collect::<Vec<&String>>()
+        };
         // assign values
-        for key in keys_to_iterate {
+        for key in keys {
             if let Some(field) = self.model().field(key) {
                 let need_to_trigger_default_value = if initialized { false } else {
-                    !json_keys.contains(&key)
+                    !value_map_keys.contains(&key)
                 };
                 if need_to_trigger_default_value {
                     // apply default values
@@ -155,7 +166,7 @@ impl Object {
                             }
                         }
                     }
-                    let json_value = json_map.get(key).unwrap();
+                    let json_value = value_map.get(key).unwrap();
                     let input_result = decode_field_input(self.graph(), json_value, &field.field_type, field.optionality.clone(), &(path + field.name()))?;
                     match input_result {
                         SetValue(value) => {
@@ -188,7 +199,7 @@ impl Object {
                     }
                 }
             } else if let Some(relation) = self.model().relation(key) {
-                let relation_object = json_map.get(&key.to_string());
+                let relation_object = value_map.get(&key.to_string());
                 if relation_object.is_none() {
                     continue;
                 }
@@ -292,9 +303,9 @@ impl Object {
                     }
                 }
             } else if let Some(property) = self.model().property(key) {
-                if json_keys.contains(&key) {
+                if value_map_keys.contains(&key) {
                     if let Some(setter) = property.setter.as_ref() {
-                        let json_value = &json_map[&key.to_string()];
+                        let json_value = &value_map[&key.to_string()];
                         let input_result = decode_field_input(self.graph(), json_value, &property.field_type, Optionality::Required, &(path + key))?;
                         let value = match input_result {
                             Input::SetValue(v) => v,
