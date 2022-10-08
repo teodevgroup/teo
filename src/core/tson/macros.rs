@@ -1,4 +1,3 @@
-use bson::bson;
 /// Construct a `teo::tson::Value` from a Tson literal. This is inspired by serde_json package and
 /// bson package.
 ///
