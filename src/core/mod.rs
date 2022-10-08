@@ -10,7 +10,6 @@ pub mod field;
 pub mod relation;
 pub mod property;
 pub(crate) mod input;
-pub(crate) mod input_decoder;
 pub mod pipeline;
 pub mod env;
 pub mod object;

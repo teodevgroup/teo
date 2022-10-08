@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::core::input::Input::{AtomicUpdator, SetValue};
 use crate::core::tson::Value;
 
@@ -33,6 +34,10 @@ impl Input {
         } else {
             SetValue(value.clone())
         }
+    }
+
+    pub(crate) fn key_value(value: &HashMap<String, Value>) -> (&str, &Value) {
+        (value.keys().next().unwrap().as_str(), value.values().next().unwrap())
     }
 
     // pub(crate) fn decode_relation(value: &Value) -> Input {

@@ -197,114 +197,16 @@ impl Object {
                     }
                 }
             } else if let Some(relation) = self.model().relation(key) {
-                let relation_object = value_map.get(&key.to_string());
-                if relation_object.is_none() {
-                    continue;
-                }
-                let relation_object = relation_object.unwrap();
-                let (command, command_input) = one_length_json_obj(relation_object, &(path + key))?;
-                match command {
-                    "create" | "createMany" => {
-                        if !relation.is_vec() && command == "createMany" {
-                            return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-                        }
-                        let entries = input_to_vec(command_input, path)?;
-                        for entry in entries {
-                            self.insert_relation_manipulation(key, RelationManipulation::Create(entry.clone()));
-                        }
-                    }
-                    "connect" => {
-                        let entries = input_to_vec(command_input, path)?;
-                        for entry in entries {
-                            self.insert_relation_manipulation(key, RelationManipulation::Connect(entry.clone()));
-                        }
-                    }
-                    "set" => {
-                        let entries = input_to_vec(command_input, path)?;
-                        for entry in entries {
-                            self.insert_relation_manipulation(key, RelationManipulation::Set(entry.clone()));
-                        }
-                    }
-                    "connectOrCreate" => {
-                        let entries = input_to_vec(command_input, path)?;
-                        for entry in entries {
-                            self.insert_relation_manipulation(key, RelationManipulation::ConnectOrCreate(entry.clone()));
-                        }
-                    }
-                    "disconnect" => {
-                        if self.is_new() {
-                            return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-                        }
-                        let graph = self.graph();
-                        let entries = input_to_vec(command_input, path)?;
-                        for entry in entries {
-                            let model = graph.model(relation.model()).unwrap();
-                            if !relation.is_vec() && (relation.is_required()) {
-                                return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-                            }
-                            let opposite_relation = model.relations().iter().find(|r| {
-                                r.fields() == relation.references() && r.references() == relation.fields()
-                            });
-                            if opposite_relation.is_some() {
-                                let opposite_relation = opposite_relation.unwrap();
-                                if !opposite_relation.is_vec() && (opposite_relation.is_required()) {
-                                    return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-                                }
-                            }
-                            self.insert_relation_manipulation(key, RelationManipulation::Disconnect(entry.clone()));
-                        }
-                    }
-                    "update" | "updateMany" => {
-                        if !relation.is_vec() && command == "updateMany" {
-                            return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-                        }
-                        let entries = input_to_vec(command_input, path)?;
-                        for entry in entries {
-                            self.insert_relation_manipulation(key, RelationManipulation::Update(entry.clone()));
-                        }
-                    }
-                    "upsert" => {
-                        let entries = input_to_vec(command_input, path)?;
-                        for entry in entries {
-                            self.insert_relation_manipulation(key, RelationManipulation::Upsert(entry.clone()));
-                        }
-                    }
-                    "delete" | "deleteMany" => {
-                        if self.is_new() {
-                            return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-                        }
-                        if !relation.is_vec() && command == "deleteMany" {
-                            return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-                        }
-                        let graph = self.graph();
-                        let model_name = relation.model();
-                        let model = graph.model(model_name).unwrap();
-                        if !relation.is_vec() && (relation.is_required()) {
-                            return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-                        }
-                        let opposite_relation = model.relations().iter().find(|r| {
-                            r.fields() == relation.references() && r.references() == relation.fields()
-                        });
-                        if opposite_relation.is_some() {
-                            let opposite_relation = opposite_relation.unwrap();
-                            if !opposite_relation.is_vec() && (opposite_relation.is_required()) {
-                                return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-                            }
-                        }
-                        let entries = input_to_vec(command_input, path)?;
-                        for entry in entries {
-                            self.insert_relation_manipulation(key, RelationManipulation::Delete(entry.clone()));
-                        }
-                    }
-                    _ => {
-                        return Err(ActionError::unexpected_input_key(command, &(path + key + command)));
-                    }
-                }
+                let manipulation = match value_map.get(&key.to_string()) {
+                    Some(value) => value,
+                    None => continue,
+                };
+                self.set_value_to_relation_manipulation_map(key, manipulation);
             } else if let Some(property) = self.model().property(key) {
                 if value_map_keys.contains(&key) {
                     if let Some(setter) = property.setter.as_ref() {
-                        let value = &value_map[&key.to_string()];
-                        let input_result = decode_field_input(self.graph(), value, &property.field_type, Optionality::Required, &(path + key))?;
+                        let value = value_map.get(&key.to_string()).unwrap();
+                        let input_result = Input::decode_field(value);
                         let value = match input_result {
                             Input::SetValue(v) => v,
                             _ => return Err(ActionError::unexpected_input_type("value", &(path + key))),
@@ -1298,6 +1200,103 @@ impl Object {
     pub(crate) fn env(&self) -> &Env {
         &self.inner.env
     }
+
+    // pub(crate) fn obsolete_code() {
+    //     match key {
+    //         "create" | "createMany" => {
+    //             let entries = input_to_vec(command_input, path)?;
+    //             for entry in entries {
+    //                 self.insert_relation_manipulation(key, RelationManipulation::Create(entry.clone()));
+    //             }
+    //         }
+    //         "connect" => {
+    //             let entries = input_to_vec(command_input, path)?;
+    //             for entry in entries {
+    //                 self.insert_relation_manipulation(key, RelationManipulation::Connect(entry.clone()));
+    //             }
+    //         }
+    //         "set" => {
+    //             let entries = input_to_vec(command_input, path)?;
+    //             for entry in entries {
+    //                 self.insert_relation_manipulation(key, RelationManipulation::Set(entry.clone()));
+    //             }
+    //         }
+    //         "connectOrCreate" => {
+    //             let entries = input_to_vec(command_input, path)?;
+    //             for entry in entries {
+    //                 self.insert_relation_manipulation(key, RelationManipulation::ConnectOrCreate(entry.clone()));
+    //             }
+    //         }
+    //         "disconnect" => {
+    //             if self.is_new() {
+    //                 return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
+    //             }
+    //             let graph = self.graph();
+    //             let entries = input_to_vec(command_input, path)?;
+    //             for entry in entries {
+    //                 let model = graph.model(relation.model()).unwrap();
+    //                 if !relation.is_vec() && (relation.is_required()) {
+    //                     return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
+    //                 }
+    //                 let opposite_relation = model.relations().iter().find(|r| {
+    //                     r.fields() == relation.references() && r.references() == relation.fields()
+    //                 });
+    //                 if opposite_relation.is_some() {
+    //                     let opposite_relation = opposite_relation.unwrap();
+    //                     if !opposite_relation.is_vec() && (opposite_relation.is_required()) {
+    //                         return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
+    //                     }
+    //                 }
+    //                 self.insert_relation_manipulation(key, RelationManipulation::Disconnect(entry.clone()));
+    //             }
+    //         }
+    //         "update" | "updateMany" => {
+    //             if !relation.is_vec() && command == "updateMany" {
+    //                 return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
+    //             }
+    //             let entries = input_to_vec(command_input, path)?;
+    //             for entry in entries {
+    //                 self.insert_relation_manipulation(key, RelationManipulation::Update(entry.clone()));
+    //             }
+    //         }
+    //         "upsert" => {
+    //             let entries = input_to_vec(command_input, path)?;
+    //             for entry in entries {
+    //                 self.insert_relation_manipulation(key, RelationManipulation::Upsert(entry.clone()));
+    //             }
+    //         }
+    //         "delete" | "deleteMany" => {
+    //             if self.is_new() {
+    //                 return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
+    //             }
+    //             if !relation.is_vec() && command == "deleteMany" {
+    //                 return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
+    //             }
+    //             let graph = self.graph();
+    //             let model_name = relation.model();
+    //             let model = graph.model(model_name).unwrap();
+    //             if !relation.is_vec() && (relation.is_required()) {
+    //                 return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
+    //             }
+    //             let opposite_relation = model.relations().iter().find(|r| {
+    //                 r.fields() == relation.references() && r.references() == relation.fields()
+    //             });
+    //             if opposite_relation.is_some() {
+    //                 let opposite_relation = opposite_relation.unwrap();
+    //                 if !opposite_relation.is_vec() && (opposite_relation.is_required()) {
+    //                     return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
+    //                 }
+    //             }
+    //             let entries = input_to_vec(command_input, path)?;
+    //             for entry in entries {
+    //                 self.insert_relation_manipulation(key, RelationManipulation::Delete(entry.clone()));
+    //             }
+    //         }
+    //         _ => {
+    //             return Err(ActionError::unexpected_input_key(command, &(path + key + command)));
+    //         }
+    //     }
+    // }
 }
 
 impl Debug for Object {
