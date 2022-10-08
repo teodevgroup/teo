@@ -88,12 +88,33 @@ impl FieldType {
         }
     }
 
+    pub(crate) fn is_vec(&self) -> bool {
+        match self {
+            FieldType::Vec(_) => true,
+            _ => false,
+        }
+    }
+
     pub(crate) fn element_field(&self) -> Option<&Field> {
         match self {
             FieldType::Vec(inner) => Some(inner.as_ref()),
             FieldType::HashMap(inner) => Some(inner.as_ref()),
             FieldType::BTreeMap(inner) => Some(inner.as_ref()),
             _ => None,
+        }
+    }
+
+    pub(crate) fn default_updators(&self) -> &HashSet<&str> {
+        &DEFAULT_UPDATORS
+    }
+
+    pub(crate) fn updators(&self) -> &HashSet<&str> {
+        if self.is_number() {
+            &NUMBER_UPDATORS
+        } else if self.is_vec() {
+            &VEC_UPDATORS
+        } else {
+            &DEFAULT_UPDATORS
         }
     }
 
@@ -117,6 +138,15 @@ impl FieldType {
     }
 }
 
+static DEFAULT_UPDATORS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"set"}
+});
+static NUMBER_UPDATORS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"set", "add", "sub", "mul", "div"}
+});
+static VEC_UPDATORS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"set", "push"}
+});
 static BOOL_FILTERS: Lazy<HashSet<&str>> = Lazy::new(|| {
     hashset!{"equals", "not"}
 });

@@ -130,9 +130,34 @@ impl Decoder {
             let path = path + k;
             let (model, relation) = graph.opposite_relation(relation);
             match k {
-                "create" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_create_input(model, graph, relation, v, p)))),
-                "connect" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_connect_input(model, graph, v, p)))),
+                "create" | "createMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_create_input(model, graph, relation, v, p)))),
+                "connect" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_where_unique(model, graph, v, p)))),
                 "connectOrCreate" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_connect_or_create_input(model, graph, relation, v, p)))),
+                _ => ()
+            }
+        }).collect::<ActionResult<HashMap<String, Value>>>()?))
+    }
+
+    fn decode_nested_many_update_arg<'a>(graph: &Graph, relation: &Relation, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        let json_map = if let Some(json_map) = json_value.as_object() {
+            json_map
+        } else {
+            return Err(ActionError::unexpected_input_type("object", path));
+        };
+        Self::check_json_keys(json_map, &NESTED_UPDATE_MANY_ARG_KEYS, path)?;
+        Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+            let k = k.as_str();
+            let path = path + k;
+            let (model, relation) = graph.opposite_relation(relation);
+            match k {
+                "create" | "createMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_create_input(model, graph, relation, v, p)))),
+                "connect" | "set" | "disconnect" | "delete" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_where_unique(model, graph, v, p)))),
+                "connectOrCreate" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_connect_or_create_input(model, graph, relation, v, p)))),
+                "update" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_update_input(model, graph, relation, v, p)))),
+                "updateMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_update_many_input(model, graph, relation, v, p)))),
+                "deleteMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_where(model, graph, v, p)))),
+                "upsert" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_upsert_input(model, graph, relation, v, p)))),
                 _ => ()
             }
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
@@ -165,8 +190,50 @@ impl Decoder {
             let (model, relation) = graph.opposite_relation(relation);
             match k {
                 "create" => Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?)),
-                "connect" => Ok((k.to_owned(), Self::decode_nested_connect_input(model, graph, v, path)?)),
+                "connect" => Ok((k.to_owned(), Self::decode_where_unique(model, graph, v, path)?)),
                 "connectOrCreate" => Ok((k.to_owned(), Self::decode_nested_connect_or_create_input(model, graph, relation, v, path)?)),
+                _ => ()
+            }
+        }).collect::<ActionResult<HashMap<String, Value>>>()?))
+    }
+
+    fn decode_nested_one_update_arg<'a>(graph: &Graph, relation: &Relation, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        let json_map = if let Some(json_map) = json_value.as_object() {
+            json_map
+        } else {
+            return Err(ActionError::unexpected_input_type("object", path));
+        };
+        Self::check_json_keys(json_map, &NESTED_UPDATE_ONE_ARG_KEYS, path)?;
+        Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+            let k = k.as_str();
+            let path = path + k;
+            let (model, relation) = graph.opposite_relation(relation);
+            match k {
+                "create" => Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?)),
+                "connect" | "set" => Ok((k.to_owned(), Self::decode_where_unique(model, graph, v, path)?)),
+                "connectOrCreate" => Ok((k.to_owned(), Self::decode_nested_connect_or_create_input(model, graph, relation, v, path)?)),
+                "disconnect" | "delete" => Ok((k.to_owned(), Self::decode_bool(v, path)?)),
+                "update" => Ok((k.to_owned(), Self::decode_nested_inner_update_input(model, graph, relation, v, path)?)),
+                _ => ()
+            }
+        }).collect::<ActionResult<HashMap<String, Value>>>()?))
+    }
+
+    fn decode_nested_upsert_input<'a>(model: &Model, graph: &Graph, relation: Option<&Relation>, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        let json_map = match json_value.as_object() {
+            Some(json_map) => json_map,
+            None => return Err(ActionError::unexpected_input_type("object", path))
+        };
+        Self::check_json_keys(json_map, &NESTED_UPSERT_INPUT_KEYS, path)?;
+        Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+            let k = k.as_str();
+            let path = path + k;
+            match k {
+                "create" => Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?)),
+                "update" => Ok((k.to_owned(), Self::decode_nested_inner_update_input(model, graph, relation, v, path)?)),
+                "where" => Ok((k.to_owned(), Self::decode_where_unique(model, graph, v, path)?)),
                 _ => ()
             }
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
@@ -184,15 +251,63 @@ impl Decoder {
             let path = path + k;
             match k {
                 "create" => Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?)),
-                "where" => Ok((k.to_owned(), Self::decode_nested_connect_input(model, graph, v, path)?)),
+                "where" => Ok((k.to_owned(), Self::decode_where_unique(model, graph, v, path)?)),
                 _ => ()
             }
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
 
-    fn decode_nested_connect_input<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+    fn decode_nested_update_input<'a>(model: &Model, graph: &Graph, relation: Option<&Relation>, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         let path = path.as_ref();
-        Self::decode_where_unique(model, graph, json_value, path)
+        let json_map = match json_value.as_object() {
+            Some(json_map) => json_map,
+            None => return Err(ActionError::unexpected_input_type("object", path))
+        };
+        Self::check_json_keys(json_map, &NESTED_UPDATE_INPUT_KEYS, path)?;
+        Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+            let k = k.as_str();
+            let path = path + k;
+            match k {
+                "update" => Ok((k.to_owned(), Self::decode_nested_inner_update_input(model, graph, relation, v, path)?)),
+                "where" => Ok((k.to_owned(), Self::decode_where_unique(model, graph, v, path)?)),
+                _ => ()
+            }
+        }).collect::<ActionResult<HashMap<String, Value>>>()?))
+    }
+    
+    fn decode_nested_update_many_input<'a>(model: &Model, graph: &Graph, relation: Option<&Relation>, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        let json_map = match json_value.as_object() {
+            Some(json_map) => json_map,
+            None => return Err(ActionError::unexpected_input_type("object", path))
+        };
+        Self::check_json_keys(json_map, &NESTED_UPDATE_INPUT_KEYS, path)?;
+        Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+            let k = k.as_str();
+            let path = path + k;
+            match k {
+                "update" => Ok((k.to_owned(), Self::decode_nested_inner_update_input(model, graph, relation, v, path)?)),
+                "where" => Ok((k.to_owned(), Self::decode_where(model, graph, v, path)?)),
+                _ => ()
+            }
+        }).collect::<ActionResult<HashMap<String, Value>>>()?))
+    }
+
+    fn decode_nested_inner_update_input<'a>(model: &Model, graph: &Graph, relation: Option<&Relation>, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        let json_map = match json_value.as_object() {
+            Some(json_map) => json_map,
+            None => return Err(ActionError::unexpected_input_type("object", path))
+        };
+        let without: Vec<&str> = if let Some(relation) = relation {
+            let mut without = vec![relation.name()];
+            without.extend(relation.fields());
+            without
+        } else {
+            vec![]
+        };
+        Self::check_json_keys(json_map, &HashSet::from(without), path)?;
+        Self::decode_update(model, graph, &json_value, path)
     }
 
     fn decode_nested_create_input<'a>(model: &Model, graph: &Graph, relation: Option<&Relation>, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
@@ -214,7 +329,26 @@ impl Decoder {
 
     fn decode_update<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         let path = path.as_ref();
-        todo!("Implement this later")
+        let json_map = if let Some(json_map) = json_value.as_object() {
+            json_map
+        } else {
+            return Err(ActionError::unexpected_input_type("object", path));
+        };
+        Self::check_json_keys(json_map, &HashSet::from(model.input_keys()), path)?;
+        Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+            let path = path + k;
+            if let Some(field) = model.field(k) {
+                Ok((k.to_owned(), Self::decode_value_or_updator_for_field_type(graph, field.r#type(), field.is_optional(), v, path, false)?))
+            } else if let Some(relation) = model.relation(k) {
+                if relation.is_vec() {
+                    Ok((k.to_owned(), Self::decode_nested_many_update_arg(graph, relation, v, path)?))
+                } else {
+                    Ok((k.to_owned(), Self::decode_nested_one_update_arg(graph, relation, v, path)?))
+                }
+            } else if let Some(property) = model.property(k) {
+                Ok((k.to_owned(), Self::decode_value_or_updator_for_field_type(graph, property.r#type(), property.is_optional(), v, path, true)?))
+            }
+        }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
 
     fn decode_having<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
@@ -516,6 +650,29 @@ impl Decoder {
         }
     }
 
+    fn decode_value_or_updator_for_field_type<'a>(graph: &Graph, r#type: &FieldType, optional: bool, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>, set_only: bool) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if let Some(json_map) = json_value.as_object() {
+            Self::check_length_1(json_value, path)?;
+            Self::check_json_keys(json_map, if set_only { r#type.default_updators() } else { r#type.updators() }, path)?;
+            Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+                let k = k.as_str();
+                let path = path + k;
+                Ok((k.to_owned(), match k {
+                    "set" => Self::decode_value_for_field_type(graph, r#type, optional, v, path)?,
+                    "add" | "sub" | "mul" | "div" => Self::decode_value_for_field_type(graph, r#type, false, v, path)?,
+                    "push" => {
+                        let element_field = r#type.element_field().unwrap();
+                        Self::decode_value_for_field_type(graph, element_field.r#type(), element_field.is_optional(), v, path)?
+                    }
+                    _ => panic!("Unknown updator name.")
+                }))
+            }).collect::<ActionResult<HashMap<String, Value>>>()?))
+        } else {
+            Self::decode_value_for_field_type(graph, r#type, optional, json_value, path)
+        }
+    }
+
     fn decode_value_for_field_type<'a>(graph: &Graph, r#type: &FieldType, optional: bool, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         if optional && json_value.is_null() {
             return Ok(Value::Null);
@@ -651,8 +808,16 @@ impl Decoder {
     }
 }
 
+static NESTED_UPDATE_INPUT_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"where", "update"}
+});
+
 static NESTED_CONNECT_OR_CREATE_INPUT_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
     hashset!{"where", "create"}
+});
+
+static NESTED_UPSERT_INPUT_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"where", "create", "update"}
 });
 
 static NESTED_CREATE_ONE_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
@@ -664,7 +829,7 @@ static NESTED_CREATE_MANY_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
 });
 
 static NESTED_UPDATE_ONE_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
-    hashset!{"create", "connect", "connectOrCreate", "set", "disconnect", "update", "upsert", "delete"}
+    hashset!{"create", "connect", "connectOrCreate", "set", "disconnect", "update", "delete"}
 });
 
 static NESTED_UPDATE_MANY_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
