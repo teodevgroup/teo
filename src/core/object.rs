@@ -44,13 +44,13 @@ pub(crate) struct ObjectInner {
     pub(crate) is_partial: AtomicBool,
     pub(crate) is_deleted: AtomicBool,
     pub(crate) inside_before_save_callback: AtomicBool,
-    pub(crate) inside_write_callback: AtomicBool,
+    pub(crate) inside_after_save_callback: AtomicBool,
     pub(crate) selected_fields: Arc<Mutex<Vec<String>>>,
     pub(crate) modified_fields: Arc<Mutex<HashSet<String>>>,
     pub(crate) value_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) previous_value_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) atomic_updator_map: Arc<Mutex<HashMap<String, Value>>>,
-    pub(crate) relation_mutation_map: Arc<Mutex<HashMap<String, Vec<RelationManipulation>>>>,
+    pub(crate) relation_mutation_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) relation_query_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
     pub(crate) cached_property_map: Arc<Mutex<HashMap<String, Value>>>,
 }
@@ -76,7 +76,7 @@ impl Object {
                 is_partial: AtomicBool::new(false),
                 is_deleted: AtomicBool::new(false),
                 inside_before_save_callback: AtomicBool::new(false),
-                inside_write_callback: AtomicBool::new(false),
+                inside_after_save_callback: AtomicBool::new(false),
                 selected_fields: Arc::new(Mutex::new(Vec::new())),
                 modified_fields: Arc::new(Mutex::new(HashSet::new())),
                 previous_value_map: Arc::new(Mutex::new(HashMap::new())),
@@ -823,25 +823,6 @@ impl Object {
         Ok(())
     }
 
-    fn perform_relation_manipulations<F: Fn(&Relation) -> bool>(&self, f: F) -> ActionResult<()> {
-        for relation in self.model().relations() {
-            if f(relation) {
-                let name = relation.name();
-                let map = self.inner.relation_mutation_map.lock().unwrap();
-                let vec_option = map.get(name);
-                match vec_option {
-                    None => {},
-                    Some(vec) => {
-                        for manipulation in vec {
-                            self.handle_manipulation(relation, manipulation, session.clone(), path).await?;
-                        }
-                    }
-                }
-            }
-        }
-        Ok(())
-    }
-
     #[async_recursion(?Send)]
     pub(crate) async fn save_with_session_and_path(&self, session: Arc<dyn SaveSession>, path: &KeyPath) -> ActionResult<()> {
         // check if it's inside before callback
@@ -854,7 +835,7 @@ impl Object {
         if is_modified || is_new {
             // apply pipeline
             self.apply_on_save_pipeline_and_validate_required_fields(path).await?;
-            self.trigger_before_write_callbacks().await?;
+            self.trigger_before_save_callbacks().await?;
             if !self.model().r#virtual() {
                 self.save_to_database(session.clone()).await?;
             }
@@ -864,7 +845,7 @@ impl Object {
         // clear properties
         self.clear_state();
         if is_modified || is_new {
-            self.trigger_write_callbacks().await?;
+            self.trigger_after_save_callbacks().await?;
         }
         Ok(())
     }
@@ -874,7 +855,7 @@ impl Object {
         self.save_with_session_and_path(session, &path![]).await
     }
 
-    async fn trigger_before_write_callbacks(&self) -> ActionResult<()> {
+    async fn trigger_before_save_callbacks(&self) -> ActionResult<()> {
         let model = self.model();
         let pipeline = model.before_save_pipeline();
         let context = Context::initial_state(self.clone());
@@ -882,17 +863,17 @@ impl Object {
         Ok(())
     }
 
-    async fn trigger_write_callbacks(&self) -> ActionResult<()> {
-        let inside_write_callback = self.inner.inside_write_callback.load(Ordering::SeqCst);
-        if inside_write_callback {
+    async fn trigger_after_save_callbacks(&self) -> ActionResult<()> {
+        let inside_after_save_callback = self.inner.inside_after_save_callback.load(Ordering::SeqCst);
+        if inside_after_save_callback {
             return Ok(());
         }
-        self.inner.inside_write_callback.store(true, Ordering::SeqCst);
+        self.inner.inside_after_save_callback.store(true, Ordering::SeqCst);
         let model = self.model();
         let pipeline = model.after_save_pipeline();
         let context = Context::initial_state(self.clone());
         let _result = pipeline.process(context).await;
-        self.inner.inside_write_callback.store(false, Ordering::SeqCst);
+        self.inner.inside_after_save_callback.store(false, Ordering::SeqCst);
         Ok(())
     }
 
@@ -994,14 +975,24 @@ impl Object {
         Value::HashMap(identifier)
     }
 
-    pub(crate) fn json_identifier(&self) -> Value {
-        let model = self.model();
-        let mut identifier = tson!({});
-        for item in model.primary_index().items() {
-            let val = self.get_value(item.field_name()).unwrap();
-            identifier.as_hashmap_mut().unwrap().insert(item.field_name().to_string(), val);
+    fn perform_relation_manipulations<F: Fn(&Relation) -> bool>(&self, f: F) -> ActionResult<()> {
+        for relation in self.model().relations() {
+            if f(relation) {
+                let many = relation.is_vec();
+                let name = relation.name();
+                let map = self.inner.relation_mutation_map.lock().unwrap();
+                let vec_option = map.get(name);
+                match vec_option {
+                    None => {},
+                    Some(vec) => {
+                        for manipulation in vec {
+                            self.handle_manipulation(relation, manipulation, session.clone(), path).await?;
+                        }
+                    }
+                }
+            }
         }
-        identifier
+        Ok(())
     }
 
     pub async fn refreshed(&self, include: Option<&Value>, select: Option<&Value>) -> Result<Object, ActionError> {
