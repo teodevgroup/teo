@@ -129,7 +129,7 @@ impl Graph {
         }
     }
 
-    pub(crate) async fn new_object_with_tson_and_path(&self, model: &str, initial: &Value, path: &KeyPath, env: Env) -> Result<Object, ActionError> {
+    pub(crate) async fn new_object_with_tson_and_path<'a>(&self, model: &str, initial: &Value, path: &KeyPath<'a>, env: Env) -> Result<Object, ActionError> {
         let object = self.new_object(model, env)?;
         object.set_tson_with_path(initial, path).await?;
         Ok(object)

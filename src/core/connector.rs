@@ -7,7 +7,6 @@ use crate::core::field::r#type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::object::Object;
-use crate::core::save_session::SaveSession;
 use crate::core::error::ActionError;
 use crate::core::result::ActionResult;
 use crate::prelude::Value;

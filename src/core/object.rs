@@ -5,20 +5,18 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use key_path::{KeyPath, path};
 use async_recursion::async_recursion;
-use crate::core::connector::SaveSession;
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
 use crate::core::env::source::Source;
 use crate::core::pipeline::argument::Argument;
 use crate::core::field::{Field, PreviousValueRule};
 use crate::core::field::optionality::Optionality;
-use crate::core::input::{AtomicUpdateType, Input};
-use crate::core::input::Input::{AtomicUpdate, AtomicUpdator, SetValue};
+use crate::core::input::Input;
+use crate::core::input::Input::{AtomicUpdator, SetValue};
 use crate::core::graph::Graph;
-use crate::core::input_decoder::{decode_field_input, input_to_vec, one_length_json_obj};
 use crate::core::model::Model;
-use crate::core::relation::{Relation, RelationManipulation};
-use crate::core::save_session::SaveSession;
+use crate::core::relation::Relation;
+use crate::core::connector::SaveSession;
 use crate::core::pipeline::context::{Context};
 use crate::core::tson::Value;
 use crate::core::error::{ActionError, ActionErrorType};
@@ -602,35 +600,9 @@ impl Object {
     }
 
     async fn handle_manipulation(&self, relation: &Relation, manipulation: &RelationManipulation, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
-        let _many = relation.is_vec();
-        use RelationManipulation::*;
         let graph = self.graph();
         match manipulation {
-            ConnectOrCreate(entry) => {
-                let r#where = entry.as_hashmap().unwrap().get("where").unwrap();
-                let create = entry.as_hashmap().unwrap().get("create").unwrap();
-                let env = self.env().nested(Intent::NestedConnectOrCreateActuallyConnect);
-                let unique_result = graph.find_unique(relation.model(), &tson!({"where": r#where}), true, env).await;
-                match unique_result {
-                    Ok(exist_object) => {
-                        if relation.through().is_none() {
-                            self.link_connect(&exist_object, relation, session.clone()).await?;
-                        }
-                        exist_object.save_with_session_and_path(session.clone(), false, &(path + relation.name())).await?;
-                        self.link_connect(&exist_object, relation, session.clone()).await?;
-                    }
-                    Err(_err) => {
-                        let env = self.env().nested(Intent::NestedConnectOrCreateActuallyCreate);
-                        let new_obj = graph.new_object(relation.model(), env)?;
-                        new_obj.set_tson(create).await?;
-                        if relation.through().is_none() {
-                            self.link_connect(&new_obj, relation, session.clone()).await?;
-                        }
-                        new_obj.save_with_session_and_path(session.clone(), false, &(path + relation.name())).await?;
-                        self.link_connect(&new_obj, relation, session.clone()).await?;
-                    }
-                }
-            }
+
             Update(entry) => {
                 let env = self.env().nested(Intent::NestedUpdate);
                 let r#where = entry.get("where").unwrap();
@@ -997,6 +969,46 @@ impl Object {
         } else {
             let r#where = self.intrinsic_where_unique_for_relation(relation);
             let env = self.env().nested(Intent::NestedDisconnect);
+            let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
+                Ok(object) => object,
+                Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+            };
+            object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
+            object.save_with_session_and_path(session.clone(), path).await?;
+        }
+        Ok(())
+    }
+
+    async fn nested_update_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+        let r#where = self.intrinsic_where_unique_for_relation(relation);
+        let env = self.env().nested(Intent::NestedUpdate);
+        let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
+            Ok(object) => object,
+            Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+        };
+        object.set_tson(value).await?;
+        object.save_with_session_and_path(session.clone(), path).await?;
+        Ok(())
+    }
+
+    async fn nested_delete_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+        let delete = value.as_bool().unwrap();
+        if !delete { return Ok(()) }
+        if relation.has_foreign_key() {
+            self.remove_linked_values_from_related_relation(relation);
+        }
+        let r#where = self.intrinsic_where_unique_for_relation(relation);
+        let env = self.env().nested(Intent::NestedDelete);
+        let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
+            Ok(object) => object,
+            Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+        };
+        //object.
+        if relation.has_join_table() {
+
+        }
+        else {
+
             let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
                 Ok(object) => object,
                 Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),

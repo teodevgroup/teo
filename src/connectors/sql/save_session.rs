@@ -1,5 +1,5 @@
 use std::fmt::Debug;
-use crate::core::save_session::SaveSession;
+use crate::core::connector::SaveSession;
 
 #[derive(Debug)]
 pub struct SQLSaveSession { }
