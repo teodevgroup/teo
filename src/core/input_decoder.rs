@@ -1,3 +1,4 @@
+#[cfg(feature = "data-source-mongodb")]
 use bson::oid::ObjectId;
 use chrono::{Date, DateTime, NaiveDate, Utc};
 use key_path::KeyPath;
