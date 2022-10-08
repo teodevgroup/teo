@@ -20,6 +20,11 @@ pub struct Property {
 }
 
 impl Property {
+
+    pub(crate) fn r#type(&self) -> &FieldType {
+        &self.field_type
+    }
+
     pub(crate) fn is_required(&self) -> bool {
         self.optionality.is_required()
     }
@@ -27,4 +32,5 @@ impl Property {
     pub(crate) fn is_optional(&self) -> bool {
         self.optionality.is_optional()
     }
+
 }

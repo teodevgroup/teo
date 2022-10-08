@@ -4,7 +4,8 @@ use std::str::FromStr;
 use bson::oid::ObjectId;
 use chrono::{Date, DateTime, NaiveDate, Utc};
 use key_path::{KeyPath, path};
-use maplit::hashmap;
+use maplit::{hashmap, hashset};
+use once_cell::sync::Lazy;
 use rust_decimal::Decimal;
 use serde_json::{Value as JsonValue, Map as JsonMap};
 use crate::core::action::r#type::ActionType;
@@ -13,6 +14,7 @@ use crate::core::field::r#type::FieldType;
 use crate::core::model::Model;
 use crate::core::result::ActionResult;
 use crate::core::graph::Graph;
+use crate::core::relation::Relation;
 use crate::core::tson::Value;
 
 pub(crate) struct Decoder {}
@@ -86,22 +88,136 @@ impl Decoder {
         }
     }
 
-    fn decode_credentials<'a>(model: &Model, json_value: &JsonValue, path: impl AsRef<keyPath<'a>>) -> ActionResult<Value> {
+    fn decode_credentials<'a>(model: &Model, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         let path = path.as_ref();
         todo!("Implement this later")
     }
 
-    fn decode_create<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<keyPath<'a>>) -> ActionResult<Value> {
+    fn decode_create<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        let json_map = if let Some(json_map) = json_value.as_object() {
+            json_map
+        } else {
+            return Err(ActionError::unexpected_input_type("object", path));
+        };
+        Self::check_json_keys(json_map, &HashSet::from(model.input_keys()), path)?;
+        Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+            let path = path + k;
+            if let Some(field) = model.field(k) {
+                Ok((k.to_owned(), Self::decode_value_for_field_type(graph, field.r#type(), field.is_optional(), v, path)?))
+            } else if let Some(relation) = model.relation(k) {
+                if relation.is_vec() {
+                    Ok((k.to_owned(), Self::decode_nested_many_create_arg(graph, relation, v, path)?))
+                } else {
+                    Ok((k.to_owned(), Self::decode_nested_one_create_arg(graph, relation, v, path)?))
+                }
+            } else if let Some(property) = model.property(k) {
+                Ok((k.to_owned(), Self::decode_value_for_field_type(graph, property.r#type(), property.is_optional(), v, path)?))
+            }
+        }).collect::<ActionResult<HashMap<String, Value>>>()?))
+    }
+
+    fn decode_nested_many_create_arg<'a>(graph: &Graph, relation: &Relation, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        let json_map = if let Some(json_map) = json_value.as_object() {
+            json_map
+        } else {
+            return Err(ActionError::unexpected_input_type("object", path));
+        };
+        Self::check_json_keys(json_map, &NESTED_CREATE_MANY_ARG_KEYS, path)?;
+        Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+            let k = k.as_str();
+            let path = path + k;
+            let (model, relation) = graph.opposite_relation(relation);
+            match k {
+                "create" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_create_input(model, graph, relation, v, p)))),
+                "connect" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_connect_input(model, graph, v, p)))),
+                "connectOrCreate" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_connect_or_create_input(model, graph, relation, v, p)))),
+                _ => ()
+            }
+        }).collect::<ActionResult<HashMap<String, Value>>>()?))
+    }
+
+    fn decode_enumerate<'a, F: Fn(&JsonValue, P) -> ActionResult<Value>, P: AsRef<KeyPath<'a>>>(json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>, f: F) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if let Some(_) = json_value.as_object() {
+            f(json_value, path)
+        } else if let Some(json_array) = json_value.as_array() {
+            Ok(Value::Vec(json_array.iter().enumerate().map(|(i, v)| {
+                f(v, path + i)
+            }).collect::<ActionResult<Vec<Value>>>()?))
+        } else {
+            Err(ActionError::unexpected_input_type("object or array", path))
+        }
+    }
+
+    fn decode_nested_one_create_arg<'a>(graph: &Graph, relation: &Relation, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        let json_map = if let Some(json_map) = json_value.as_object() {
+            json_map
+        } else {
+            return Err(ActionError::unexpected_input_type("object", path));
+        };
+        Self::check_json_keys(json_map, &NESTED_CREATE_ONE_ARG_KEYS, path)?;
+        Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+            let k = k.as_str();
+            let path = path + k;
+            let (model, relation) = graph.opposite_relation(relation);
+            match k {
+                "create" => Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?)),
+                "connect" => Ok((k.to_owned(), Self::decode_nested_connect_input(model, graph, v, path)?)),
+                "connectOrCreate" => Ok((k.to_owned(), Self::decode_nested_connect_or_create_input(model, graph, relation, v, path)?)),
+                _ => ()
+            }
+        }).collect::<ActionResult<HashMap<String, Value>>>()?))
+    }
+
+    fn decode_nested_connect_or_create_input<'a>(model: &Model, graph: &Graph, relation: Option<&Relation>, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        let json_map = match json_value.as_object() {
+            Some(json_map) => json_map,
+            None => return Err(ActionError::unexpected_input_type("object", path))
+        };
+        Self::check_json_keys(json_map, &NESTED_CONNECT_OR_CREATE_INPUT_KEYS, path)?;
+        Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+            let k = k.as_str();
+            let path = path + k;
+            match k {
+                "create" => Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?)),
+                "where" => Ok((k.to_owned(), Self::decode_nested_connect_input(model, graph, v, path)?)),
+                _ => ()
+            }
+        }).collect::<ActionResult<HashMap<String, Value>>>()?))
+    }
+
+    fn decode_nested_connect_input<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        Self::decode_where_unique(model, graph, json_value, path)
+    }
+
+    fn decode_nested_create_input<'a>(model: &Model, graph: &Graph, relation: Option<&Relation>, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        let json_map = match json_value.as_object() {
+            Some(json_map) => json_map,
+            None => return Err(ActionError::unexpected_input_type("object", path))
+        };
+        let without: Vec<&str> = if let Some(relation) = relation {
+            let mut without = vec![relation.name()];
+            without.extend(relation.fields());
+            without
+        } else {
+            vec![]
+        };
+        Self::check_json_keys(json_map, &HashSet::from(without), path)?;
+        Self::decode_create(model, graph, &json_value, path)
+    }
+
+    fn decode_update<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         let path = path.as_ref();
         todo!("Implement this later")
     }
 
-    fn decode_update<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<keyPath<'a>>) -> ActionResult<Value> {
-        let path = path.as_ref();
-        todo!("Implement this later")
-    }
-
-    fn decode_having<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<keyPath<'a>>) -> ActionResult<Value> {
+    fn decode_having<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         todo!("Implement this later")
     }
 
@@ -534,3 +650,23 @@ impl Decoder {
         }
     }
 }
+
+static NESTED_CONNECT_OR_CREATE_INPUT_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"where", "create"}
+});
+
+static NESTED_CREATE_ONE_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"create", "connect", "connectOrCreate"}
+});
+
+static NESTED_CREATE_MANY_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"create", "createMany", "connect", "connectOrCreate"}
+});
+
+static NESTED_UPDATE_ONE_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"create", "connect", "connectOrCreate", "set", "disconnect", "update", "upsert", "delete"}
+});
+
+static NESTED_UPDATE_MANY_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"create", "createMany", "connect", "connectOrCreate", "set", "disconnect", "update", "updateMany", "upsert", "delete", "deleteMany"}
+});
