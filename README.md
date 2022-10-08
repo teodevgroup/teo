@@ -79,7 +79,7 @@ The new generation server software.
 - Fix HTTP API result format **[DONE]**
 
 #### 0.0.31
-- Replace `serde_json` with our own `tson`
+- Replace `serde_json` with our own `tson` **[DONE]**
 
 #### 0.0.32
 - Handle manipulation uses single or many
