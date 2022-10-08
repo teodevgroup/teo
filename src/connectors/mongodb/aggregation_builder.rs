@@ -86,7 +86,7 @@ fn parse_date(value: &Value, path: &KeyPath) -> Result<Bson, ActionError> {
             Ok(naive_date) => {
                 let date: Date<Utc> = Date::from_utc(naive_date, Utc);
                 let val = Value::Date(date);
-                Ok(val.to_bson_value())
+                Ok(val.into())
             }
             Err(_) => {
                 Err(ActionError::unexpected_input_value("date", path))
@@ -103,7 +103,7 @@ fn parse_datetime(value: &Value, path: &KeyPath) -> Result<Bson, ActionError> {
             Ok(fixed_offset_datetime) => {
                 let datetime: DateTime<Utc> = fixed_offset_datetime.with_timezone(&Utc);
                 let value = Value::DateTime(datetime);
-                Ok(value.to_bson_value())
+                Ok(value.into())
             }
             Err(_) => {
                 Err(ActionError::unexpected_input_value("datetime", path))

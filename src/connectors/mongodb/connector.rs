@@ -16,6 +16,7 @@ use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use regex::Regex;
 use rust_decimal::Decimal;
 use crate::connectors::mongodb::aggregation_builder::{build_query_pipeline_from_json, build_where_input};
+use crate::connectors::mongodb::bson::decoder::BsonDecoder;
 use crate::connectors::mongodb::save_session::MongoDBSaveSession;
 use crate::connectors::shared::has_negative_take::has_negative_take;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
@@ -48,7 +49,7 @@ impl MongoDBConnector {
             Ok(options) => options,
             Err(_) => panic!("MongoDB url is invalid.")
         };
-        let database_name = match options.default_database {
+        let database_name = match &options.default_database {
             Some(database_name) => database_name,
             None => panic!("No database name found in MongoDB url.")
         };
@@ -258,7 +259,7 @@ impl MongoDBConnector {
                     // group by field
                     let field = model.field(g).unwrap();
                     let val = if o.as_null().is_some() { Value::Null } else {
-                        self.bson_value_to_field_value(g, o, &field.field_type).unwrap()
+                        BsonDecoder::decode(model, graph, field.r#type(), true, o, path![])?
                     };
                     let json_val = val;
                     retval.as_hashmap_mut().unwrap().insert(g.to_string(), json_val);
@@ -280,13 +281,13 @@ impl MongoDBConnector {
             if let Some(field) = model.field(key) {
                 let column_name = field.column_name();
                 let val = object.get_value(&key).unwrap();
-                let bson_val = val.to_bson_value();
+                let bson_val: Bson = val.into();
                 if bson_val != Bson::Null {
                     doc.insert(column_name, bson_val);
                 }
             } else if let Some(property) = model.property(key) {
                 let val: Value = object.get_property(key).await.unwrap();
-                let bson_val = val.to_bson_value();
+                let bson_val: Bson = val.into();
                 if bson_val != Bson::Null {
                     doc.insert(key, bson_val);
                 }
@@ -314,7 +315,9 @@ impl MongoDBConnector {
         let model = object.model();
         let keys = object.keys_for_save();
         let col = &self.collections[model.name()];
-        let identifier: Document = object.identifier().into().as_document().unwrap();
+        let value_identifier = object.identifier();
+        let bson_identifier = Bson::from(&value_identifier);
+        let identifier = bson_identifier.as_document().unwrap();
         let mut set = doc!{};
         let mut unset = doc!{};
         let mut inc = doc!{};
@@ -328,24 +331,24 @@ impl MongoDBConnector {
                     let updator = atomic_updator_map.get(key).unwrap();
                     match updator {
                         AtomicUpdateType::Increment(val) => {
-                            inc.insert(column_name, val.to_bson_value());
+                            inc.insert(column_name, Bson::from(val));
                         }
                         AtomicUpdateType::Decrement(val) => {
-                            inc.insert(column_name, (val.neg()).to_bson_value());
+                            inc.insert(column_name, Bson::from(&val.neg()));
                         }
                         AtomicUpdateType::Multiply(val) => {
-                            mul.insert(column_name, val.to_bson_value());
+                            mul.insert(column_name, Bson::from(val));
                         }
                         AtomicUpdateType::Divide(val) => {
                             mul.insert(column_name, Bson::Double(val.recip()));
                         }
                         AtomicUpdateType::Push(val) => {
-                            push.insert(column_name, val.to_bson_value());
+                            push.insert(column_name, Bson::from(val));
                         }
                     }
                 } else {
                     let val = object.get_value(key).unwrap();
-                    let bson_val = val.to_bson_value();
+                    let bson_val: Bson = val.into();
                     if bson_val == Bson::Null {
                         unset.insert(key, bson_val);
                     } else {
@@ -354,7 +357,7 @@ impl MongoDBConnector {
                 }
             } else if let Some(property) = model.property(key) {
                 let val: Value = object.get_property(key).await.unwrap();
-                let bson_val = val.to_bson_value();
+                let bson_val: Bson = val.into();
                 if bson_val != Bson::Null {
                     set.insert(key, bson_val);
                 } else {
@@ -386,7 +389,7 @@ impl MongoDBConnector {
             return Ok(());
         }
         if !return_new {
-            let result = col.update_one(identifier, update_doc, None).await;
+            let result = col.update_one(identifier.clone(), update_doc, None).await;
             return match result {
                 Ok(_) => Ok(()),
                 Err(error) => {
@@ -395,13 +398,13 @@ impl MongoDBConnector {
             }
         } else {
             let options = FindOneAndUpdateOptions::builder().return_document(ReturnDocument::After).build();
-            let result = col.find_one_and_update(identifier, update_doc, options).await;
+            let result = col.find_one_and_update(identifier.clone(), update_doc, options).await;
             match result {
                 Ok(updated_document) => {
                     for key in object.inner.atomic_updator_map.lock().unwrap().keys() {
                         let bson_new_val = updated_document.as_ref().unwrap().get(key).unwrap();
                         let field = object.model().field(key).unwrap();
-                        let field_value = self.bson_value_to_field_value(key, bson_new_val, &field.field_type)?;
+                        let field_value = BsonDecoder::decode(model, object.graph(), field.r#type(), field.is_optional(), bson_new_val, path![])?;
                         object.inner.value_map.lock().unwrap().insert(key.to_string(), field_value);
                     }
                 }
@@ -432,7 +435,7 @@ impl Connector for MongoDBConnector {
         }
         let model = object.model();
         let col = &self.collections[model.name()];
-        let bson_identifier = bson_identifier(&object.identifier(), model);
+        let bson_identifier: Document = object.identifier().into();
         let result = col.delete_one(bson_identifier, None).await;
         return match result {
             Ok(_result) => Ok(()),

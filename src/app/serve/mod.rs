@@ -96,7 +96,8 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
         return Err(ActionError::invalid_auth_token());
     }
     let claims = claims_result.unwrap();
-    let id = claims.id;
+    let json_identifier = claims.id;
+
     // Decoder::
     let _model = graph.model(claims.model.as_str()).unwrap();
     let identity = graph.find_unique(
@@ -691,7 +692,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                 Err(err) => return HttpResponse::Unauthorized().json(json!({"error": err }))
             };
             let action_def = model_def.get_action_def(action);
-            let transformed_body = match Decoder::decode(model_def, graph, action, &parsed_body) {
+            let transformed_body = match Decoder::decode_action_arg(model_def, graph, action, &parsed_body) {
                 Ok(body) => body,
                 Err(err) => return err.into()
             };
