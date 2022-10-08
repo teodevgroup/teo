@@ -82,6 +82,7 @@ impl ToCSharpType for FieldType {
         let base_type = to_optional(&self.to_csharp_type(false), optional);
         match self {
             FieldType::Undefined => panic!(),
+            #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => one_of(base_type, format!("ObjectId{nullable}Filter")),
             FieldType::String => one_of(base_type, format!("String{nullable}Filter")),
             FieldType::Date => one_of(base_type, format!("DateOnly{nullable}Filter")),
