@@ -82,12 +82,12 @@ The new generation server software.
 - Replace `serde_json` with our own `tson` **[DONE]**
 
 #### 0.0.32
-- Handle manipulation uses single or many
-- Bug fixes
+- Handle manipulation uses single or many **[IN PROGRESS]**
+- Bug fixes **[DONE]**
 - Remove position from env, it can be inferred from `intent` **[DONE]**
-- Fix assign identity
 
 #### 0.0.33
+- Fix assign identity
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
 - MongoDB update handle column key

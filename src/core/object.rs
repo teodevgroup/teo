@@ -926,9 +926,21 @@ impl Object {
         }
     }
 
+    fn remove_linked_values_from_related_relation(&self, relation: &Relation) {
+        for (field, _) in relation.iter() {
+            self.set_value_to_value_map(field, Value::Null)
+        }
+    }
+
+    fn remove_linked_values_from_related_relation_on_related_object(&self, relation: &Relation, object: &Object) {
+        for (_, reference) in relation.iter() {
+            object.set_value_to_value_map(reference, Value::Null)
+        }
+    }
+
     async fn link_and_save_relation_object(&self, relation: &Relation, object: &Object, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
         let mut linked = false;
-        let (opposite_model, opposite_relation) = self.graph().opposite_relation(relation);
+        let (_, opposite_relation) = self.graph().opposite_relation(relation);
         if let Some(opposite_relation) = opposite_relation {
             if opposite_relation.has_foreign_key() {
                 self.assign_linked_values_to_related_object(object, opposite_relation);
@@ -973,15 +985,26 @@ impl Object {
         self.link_and_save_relation_object(relation, &object, session.clone(), path).await
     }
 
+    fn intrinsic_where_unique_for_relation(&self, relation: &Relation) -> Value {
+        Value::HashMap(relation.iter().map(|(f, r)| (r.to_owned(), self.get_value(f).unwrap())).collect())
+    }
+
     async fn nested_disconnect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
-        let r#where = value.get("where").unwrap();
-        let create = value.get("create").unwrap();
-        let env = self.env().nested(Intent::NestedConnect);
-        let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
-            Ok(object) => object,
-            Err(_) => self.graph().new_object_with_tson_and_path(relation.model(), create, &(path + "create"), env)?,
-        };
-        self.link_and_save_relation_object(relation, &object, session.clone(), path).await
+        let disconnect = value.as_bool().unwrap();
+        if !disconnect { return Ok(()) }
+        if relation.has_foreign_key() {
+            self.remove_linked_values_from_related_relation(relation);
+        } else {
+            let r#where = self.intrinsic_where_unique_for_relation(relation);
+            let env = self.env().nested(Intent::NestedDisconnect);
+            let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
+                Ok(object) => object,
+                Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+            };
+            object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
+            object.save_with_session_and_path(session.clone(), path).await?;
+        }
+        Ok(())
     }
 
     async fn perform_relation_manipulation_one(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
@@ -993,8 +1016,8 @@ impl Object {
                 "connect" | "set" => self.nested_connect_relation_object(relation, value, session.clone(), &path)?,
                 "connectOrCreate" => self.nested_connect_or_create_relation_object(relation, value, session.clone(), &path)?,
                 "disconnect" => self.nested_disconnect_relation_object(relation, value, session.clone(), &path)?,
-                "update" => ,
-                "delete" => ,
+                "update" => self.nested_update_relation_object(relation, value, session.clone(), &path)?,
+                "delete" => self.nested_delete_relation_object(relation, value, session.clone(), &path)?,
                 _ => panic!("Unhandled key.")
             }
         }
@@ -1021,17 +1044,6 @@ impl Object {
             finder.as_hashmap_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
         }
         graph.find_unique(self.model().name(), &finder, false, self.env().clone()).await
-    }
-
-    pub(crate) fn finder_for_relation(&self, relation: &Relation) -> Value {
-        let mut finder_where = tson!({});
-        for (index, local_field_name) in relation.fields().iter().enumerate() {
-            let foreign_field_name = relation.references().get(index).unwrap();
-            let value = self.get_value(local_field_name).unwrap();
-            let json_value = value;
-            finder_where.as_hashmap_mut().unwrap().insert(foreign_field_name.to_owned(), json_value);
-        }
-        tson!({ "where": finder_where })
     }
 
     pub async fn fetch_relation_object(&self, key: impl AsRef<str>, find_unique_arg: Option<&Value>) -> Result<Option<Object>, ActionError> {
@@ -1138,103 +1150,6 @@ impl Object {
     pub(crate) fn env(&self) -> &Env {
         &self.inner.env
     }
-
-    // pub(crate) fn obsolete_code() {
-    //     match key {
-    //         "create" | "createMany" => {
-    //             let entries = input_to_vec(command_input, path)?;
-    //             for entry in entries {
-    //                 self.insert_relation_manipulation(key, RelationManipulation::Create(entry.clone()));
-    //             }
-    //         }
-    //         "connect" => {
-    //             let entries = input_to_vec(command_input, path)?;
-    //             for entry in entries {
-    //                 self.insert_relation_manipulation(key, RelationManipulation::Connect(entry.clone()));
-    //             }
-    //         }
-    //         "set" => {
-    //             let entries = input_to_vec(command_input, path)?;
-    //             for entry in entries {
-    //                 self.insert_relation_manipulation(key, RelationManipulation::Set(entry.clone()));
-    //             }
-    //         }
-    //         "connectOrCreate" => {
-    //             let entries = input_to_vec(command_input, path)?;
-    //             for entry in entries {
-    //                 self.insert_relation_manipulation(key, RelationManipulation::ConnectOrCreate(entry.clone()));
-    //             }
-    //         }
-    //         "disconnect" => {
-    //             if self.is_new() {
-    //                 return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-    //             }
-    //             let graph = self.graph();
-    //             let entries = input_to_vec(command_input, path)?;
-    //             for entry in entries {
-    //                 let model = graph.model(relation.model()).unwrap();
-    //                 if !relation.is_vec() && (relation.is_required()) {
-    //                     return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-    //                 }
-    //                 let opposite_relation = model.relations().iter().find(|r| {
-    //                     r.fields() == relation.references() && r.references() == relation.fields()
-    //                 });
-    //                 if opposite_relation.is_some() {
-    //                     let opposite_relation = opposite_relation.unwrap();
-    //                     if !opposite_relation.is_vec() && (opposite_relation.is_required()) {
-    //                         return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-    //                     }
-    //                 }
-    //                 self.insert_relation_manipulation(key, RelationManipulation::Disconnect(entry.clone()));
-    //             }
-    //         }
-    //         "update" | "updateMany" => {
-    //             if !relation.is_vec() && command == "updateMany" {
-    //                 return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-    //             }
-    //             let entries = input_to_vec(command_input, path)?;
-    //             for entry in entries {
-    //                 self.insert_relation_manipulation(key, RelationManipulation::Update(entry.clone()));
-    //             }
-    //         }
-    //         "upsert" => {
-    //             let entries = input_to_vec(command_input, path)?;
-    //             for entry in entries {
-    //                 self.insert_relation_manipulation(key, RelationManipulation::Upsert(entry.clone()));
-    //             }
-    //         }
-    //         "delete" | "deleteMany" => {
-    //             if self.is_new() {
-    //                 return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-    //             }
-    //             if !relation.is_vec() && command == "deleteMany" {
-    //                 return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-    //             }
-    //             let graph = self.graph();
-    //             let model_name = relation.model();
-    //             let model = graph.model(model_name).unwrap();
-    //             if !relation.is_vec() && (relation.is_required()) {
-    //                 return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-    //             }
-    //             let opposite_relation = model.relations().iter().find(|r| {
-    //                 r.fields() == relation.references() && r.references() == relation.fields()
-    //             });
-    //             if opposite_relation.is_some() {
-    //                 let opposite_relation = opposite_relation.unwrap();
-    //                 if !opposite_relation.is_vec() && (opposite_relation.is_required()) {
-    //                     return Err(ActionError::unexpected_input_value(key.as_str(), &(path + key.as_str())));
-    //                 }
-    //             }
-    //             let entries = input_to_vec(command_input, path)?;
-    //             for entry in entries {
-    //                 self.insert_relation_manipulation(key, RelationManipulation::Delete(entry.clone()));
-    //             }
-    //         }
-    //         _ => {
-    //             return Err(ActionError::unexpected_input_key(command, &(path + key + command)));
-    //         }
-    //     }
-    // }
 }
 
 impl Debug for Object {
