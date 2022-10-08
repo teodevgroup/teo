@@ -954,7 +954,34 @@ impl Object {
     }
 
     async fn nested_connect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+        let env = self.env().nested(Intent::NestedConnect);
+        let object = match self.graph().find_unique(relation.model(), &tson!({ "where": value }), true, env).await {
+            Ok(object) => object,
+            Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+        };
+        self.link_and_save_relation_object(relation, &object, session.clone(), path).await
+    }
 
+    async fn nested_connect_or_create_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+        let r#where = value.get("where").unwrap();
+        let create = value.get("create").unwrap();
+        let env = self.env().nested(Intent::NestedConnect);
+        let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
+            Ok(object) => object,
+            Err(_) => self.graph().new_object_with_tson_and_path(relation.model(), create, &(path + "create"), env)?,
+        };
+        self.link_and_save_relation_object(relation, &object, session.clone(), path).await
+    }
+
+    async fn nested_disconnect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+        let r#where = value.get("where").unwrap();
+        let create = value.get("create").unwrap();
+        let env = self.env().nested(Intent::NestedConnect);
+        let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
+            Ok(object) => object,
+            Err(_) => self.graph().new_object_with_tson_and_path(relation.model(), create, &(path + "create"), env)?,
+        };
+        self.link_and_save_relation_object(relation, &object, session.clone(), path).await
     }
 
     async fn perform_relation_manipulation_one(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
@@ -962,14 +989,16 @@ impl Object {
             let key = key.as_str();
             let path = path + key;
             match key {
-                "create" => self.nested_create_relation_object(relation, value, session.clone(), &path),
-                "connect" | "set" => self.nested_connect_relation_object(relation, value, session.clone(), &path),
-                "connectOrCreate" => ,
-                "disconnect" => ,
+                "create" => self.nested_create_relation_object(relation, value, session.clone(), &path)?,
+                "connect" | "set" => self.nested_connect_relation_object(relation, value, session.clone(), &path)?,
+                "connectOrCreate" => self.nested_connect_or_create_relation_object(relation, value, session.clone(), &path)?,
+                "disconnect" => self.nested_disconnect_relation_object(relation, value, session.clone(), &path)?,
                 "update" => ,
                 "delete" => ,
+                _ => panic!("Unhandled key.")
             }
         }
+        Ok(())
     }
 
     async fn perform_relation_manipulation_many(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {

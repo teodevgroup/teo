@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::future::Future;
 use std::sync::Arc;
+use key_path::KeyPath;
 use crate::core::graph::builder::GraphBuilder;
 use crate::core::connector::Connector;
 use crate::core::env::Env;
@@ -128,9 +129,15 @@ impl Graph {
         }
     }
 
-    pub fn create_object(&self, model: &str, initial: Value) -> Result<Object, ActionError> {
+    pub(crate) async fn new_object_with_tson_and_path(&self, model: &str, initial: &Value, path: &KeyPath, env: Env) -> Result<Object, ActionError> {
+        let object = self.new_object(model, env)?;
+        object.set_tson_with_path(initial, path).await?;
+        Ok(object)
+    }
+
+    pub async fn create_object(&self, model: &str, initial: Value) -> Result<Object, ActionError> {
         let obj = self.new_object(model, Env::custom_code())?;
-        obj.set_tson(&initial);
+        obj.set_tson(&initial).await?;
         Ok(obj)
     }
 
