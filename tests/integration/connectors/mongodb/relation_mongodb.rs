@@ -109,7 +109,7 @@ async fn app() -> App<impl ServiceFactory<
 #[serial]
 async fn create_with_relation_create() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/authors/action").set_json(tson!({
+    let req = test::TestRequest::post().uri("/authors/action").set_tson(tson!({
         "action": "Create",
         "create": {
             "name": "John Peterson",
@@ -136,7 +136,7 @@ async fn create_with_relation_create() {
 #[serial]
 async fn create_with_relation_create_many_implicitly() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/authors/action").set_json(tson!({
+    let req = test::TestRequest::post().uri("/authors/action").set_tson(tson!({
         "action": "Create",
         "create": {
             "name": "John Peterson",
@@ -165,7 +165,7 @@ async fn create_with_relation_create_many_implicitly() {
 #[serial]
 async fn create_with_relation_create_many() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/authors/action").set_json(tson!({
+    let req = test::TestRequest::post().uri("/authors/action").set_tson(tson!({
         "action": "Create",
         "create": {
             "name": "John Peterson",
@@ -194,7 +194,7 @@ async fn create_with_relation_create_many() {
 #[serial]
 async fn create_with_relation_set() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/authors/action").set_json(tson!({
+    let req = test::TestRequest::post().uri("/authors/action").set_tson(tson!({
         "action": "Create",
         "create": {
             "name": "John Peterson",
@@ -221,7 +221,7 @@ async fn create_with_relation_set() {
 #[serial]
 async fn create_with_relation_set_many_implicitly() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/authors/action").set_json(tson!({
+    let req = test::TestRequest::post().uri("/authors/action").set_tson(tson!({
         "action": "Create",
         "create": {
             "name": "John Peterson",
@@ -250,7 +250,7 @@ async fn create_with_relation_set_many_implicitly() {
 #[serial]
 async fn create_with_relation_connect() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/authors/action").set_json(tson!({
+    let req = test::TestRequest::post().uri("/authors/action").set_tson(tson!({
         "action": "Create",
         "create": {
             "name": "John Peterson",
@@ -277,7 +277,7 @@ async fn create_with_relation_connect() {
 #[serial]
 async fn create_with_relation_connect_many_implicitly() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/authors/action").set_json(tson!({
+    let req = test::TestRequest::post().uri("/authors/action").set_tson(tson!({
         "action": "Create",
         "create": {
             "name": "John Peterson",
@@ -306,7 +306,7 @@ async fn create_with_relation_connect_many_implicitly() {
 #[serial]
 async fn create_with_relation_connect_or_create() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/authors/action").set_json(tson!({
+    let req = test::TestRequest::post().uri("/authors/action").set_tson(tson!({
         "action": "Create",
         "create": {
             "name": "John Peterson",
@@ -333,7 +333,7 @@ async fn create_with_relation_connect_or_create() {
 #[serial]
 async fn create_with_relation_connect_or_create_many_implicitly() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/authors/action").set_json(tson!({
+    let req = test::TestRequest::post().uri("/authors/action").set_tson(tson!({
         "action": "Create",
         "create": {
             "name": "John Peterson",

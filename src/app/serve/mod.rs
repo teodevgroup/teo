@@ -192,10 +192,10 @@ async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: 
             if !create.is_hashmap() {
                 return Err(ActionError::unexpected_input_type("object", path));
             }
-            obj._set_json(create, path).await
+            obj.set_tson_with_path(create, path).await
         }
         None => {
-            obj._set_json(&tson!({}), path).await
+            obj.set_tson_with_path(&tson!({}), path).await
         }
     };
     if set_json_result.is_err() {
@@ -225,7 +225,7 @@ async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: Sour
 async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&Value>, include: Option<&Value>, select: Option<&Value>, _where: Option<&Value>, _model: &Model) -> Result<Value, ActionError> {
     let empty = tson!({});
     let updator = if update.is_some() { update.unwrap() } else { &empty };
-    object.set_json(updator).await?;
+    object.set_tson(updator).await?;
     object.save().await?;
     let refetched = object.refreshed(include, select).await?;
     refetched.to_json().await
@@ -265,11 +265,11 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Sour
             let update = input.get("update");
             let set_json_result = match update {
                 Some(update) => {
-                    obj.set_json(update).await
+                    obj.set_tson(update).await
                 }
                 None => {
                     let empty = tson!({});
-                    obj.set_json(&empty).await
+                    obj.set_tson(&empty).await
                 }
             };
             return match set_json_result {
@@ -297,11 +297,11 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Sour
             let obj = graph.new_object(model.name(), env).unwrap();
             let set_json_result = match create {
                 Some(create) => {
-                    obj.set_json(create).await
+                    obj.set_tson(create).await
                 }
                 None => {
                     let empty = tson!({});
-                    obj.set_json(&empty).await
+                    obj.set_tson(&empty).await
                 }
             };
             return match set_json_result {

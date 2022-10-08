@@ -32,42 +32,65 @@ pub struct Object {
     pub(crate) inner: Arc<ObjectInner>
 }
 
+pub(crate) struct ObjectInner {
+    pub(crate) model: Model,
+    pub(crate) graph: Graph,
+    pub(crate) env: Env,
+    pub(crate) is_initialized: AtomicBool,
+    pub(crate) is_new: AtomicBool,
+    pub(crate) is_modified: AtomicBool,
+    pub(crate) is_partial: AtomicBool,
+    pub(crate) is_deleted: AtomicBool,
+    pub(crate) inside_before_save_callback: AtomicBool,
+    pub(crate) inside_write_callback: AtomicBool,
+    pub(crate) selected_fields: Arc<Mutex<Vec<String>>>,
+    pub(crate) modified_fields: Arc<Mutex<HashSet<String>>>,
+    pub(crate) value_map: Arc<Mutex<HashMap<String, Value>>>,
+    pub(crate) previous_value_map: Arc<Mutex<HashMap<String, Value>>>,
+    pub(crate) atomic_updator_map: Arc<Mutex<HashMap<String, AtomicUpdateType>>>,
+    pub(crate) relation_mutation_map: Arc<Mutex<HashMap<String, Vec<RelationManipulation>>>>,
+    pub(crate) relation_query_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
+    pub(crate) cached_property_map: Arc<Mutex<HashMap<String, Value>>>,
+}
+
 impl Object {
 
     pub(crate) fn new(graph: &Graph, model: &Model, env: Env) -> Object {
-        Object { inner: Arc::new(ObjectInner {
-            graph: graph.clone(),
-            model: model.clone(),
-            env,
-            is_initialized: AtomicBool::new(false),
-            is_new: AtomicBool::new(true),
-            is_modified: AtomicBool::new(false),
-            is_partial: AtomicBool::new(false),
-            is_deleted: AtomicBool::new(false),
-            inside_before_save_callback: AtomicBool::new(false),
-            inside_write_callback: AtomicBool::new(false),
-            selected_fields: Arc::new(Mutex::new(Vec::new())),
-            modified_fields: Arc::new(Mutex::new(HashSet::new())),
-            previous_value_map: Arc::new(Mutex::new(HashMap::new())),
-            value_map: Arc::new(Mutex::new(HashMap::new())),
-            atomic_updator_map: Arc::new(Mutex::new(HashMap::new())),
-            relation_query_map: Arc::new(Mutex::new(HashMap::new())),
-            relation_mutation_map: Arc::new(Mutex::new(HashMap::new())),
-            cached_property_map: Arc::new(Mutex::new(HashMap::new())),
-        }) }
+        Object {
+            inner: Arc::new(ObjectInner {
+                graph: graph.clone(),
+                model: model.clone(),
+                env,
+                is_initialized: AtomicBool::new(false),
+                is_new: AtomicBool::new(true),
+                is_modified: AtomicBool::new(false),
+                is_partial: AtomicBool::new(false),
+                is_deleted: AtomicBool::new(false),
+                inside_before_save_callback: AtomicBool::new(false),
+                inside_write_callback: AtomicBool::new(false),
+                selected_fields: Arc::new(Mutex::new(Vec::new())),
+                modified_fields: Arc::new(Mutex::new(HashSet::new())),
+                previous_value_map: Arc::new(Mutex::new(HashMap::new())),
+                value_map: Arc::new(Mutex::new(HashMap::new())),
+                atomic_updator_map: Arc::new(Mutex::new(HashMap::new())),
+                relation_query_map: Arc::new(Mutex::new(HashMap::new())),
+                relation_mutation_map: Arc::new(Mutex::new(HashMap::new())),
+                cached_property_map: Arc::new(Mutex::new(HashMap::new())),
+            })
+        }
     }
 
     #[async_recursion(?Send)]
-    pub async fn set_json(&self, value: &Value) -> ActionResult<()> {
-        self._set_json_internal(value, &path![], true).await
+    pub async fn set_tson(&self, value: &Value) -> ActionResult<()> {
+        self.set_tson_with_path_and_user_mode(value, &path![], true).await
     }
 
     #[async_recursion(?Send)]
-    pub(crate) async fn _set_json(&self, json_value: &Value, path: &KeyPath) -> ActionResult<()> {
-        self._set_json_internal(json_value, path, false).await
+    pub(crate) async fn set_tson_with_path(&self, json_value: &Value, path: &KeyPath) -> ActionResult<()> {
+        self.set_tson_with_path_and_user_mode(json_value, path, false).await
     }
 
-    pub(crate) async fn _set_json_internal(&self, json_value: &Value, path: &KeyPath<'_>, user_mode: bool) -> ActionResult<()> {
+    pub(crate) async fn set_tson_with_path_and_user_mode(&self, json_value: &Value, path: &KeyPath<'_>, user_mode: bool) -> ActionResult<()> {
         let model = self.model();
         let is_new = self.is_new();
         // permission
@@ -298,7 +321,6 @@ impl Object {
     pub fn set_value(&self, key: impl AsRef<str>, value: Value) -> ActionResult<()> {
         self._set_value(key, value, true)
     }
-
 
     pub(crate) async fn _check_write_rule(&self, key: impl AsRef<str>, value: &Value, path: &KeyPath<'_>) -> ActionResult<()> {
         let field = self.model().field(key.as_ref()).unwrap();
@@ -698,7 +720,7 @@ impl Object {
             Create(entry) => {
                 let env = self.env().nested(Intent::NestedCreate);
                 let new_object = graph.new_object(relation.model(), env)?;
-                new_object.set_json(entry).await?;
+                new_object.set_tson(entry).await?;
                 if relation.through().is_none() {
                     self.link_connect(&new_object, relation, session.clone()).await?;
                 }
@@ -721,7 +743,7 @@ impl Object {
                     Err(_err) => {
                         let env = self.env().nested(Intent::NestedConnectOrCreateActuallyCreate);
                         let new_obj = graph.new_object(relation.model(), env)?;
-                        new_obj.set_json(create).await?;
+                        new_obj.set_tson(create).await?;
                         if relation.through().is_none() {
                             self.link_connect(&new_obj, relation, session.clone()).await?;
                         }
@@ -750,7 +772,7 @@ impl Object {
                     return Err(ActionError::object_not_found());
                 }
                 let the_object = the_object.unwrap();
-                the_object.set_json(update).await?;
+                the_object.set_tson(update).await?;
                 the_object._save(session, false, &(path + relation.name())).await?;
             }
             Upsert(entry) => {
@@ -761,13 +783,13 @@ impl Object {
                 let the_object = graph.find_unique(relation.model(), &tson!({"where": r#where}), true, env).await;
                 match the_object {
                     Ok(obj) => {
-                        obj.set_json(update).await?;
+                        obj.set_tson(update).await?;
                         obj._save(session, false, &(path + relation.name())).await?;
                     }
                     Err(_) => {
                         let env = self.env().nested(Intent::NestedUpsertActuallyCreate);
                         let new_obj = graph.new_object(relation.model(), env)?;
-                        new_obj.set_json(create).await?;
+                        new_obj.set_tson(create).await?;
                         if relation.through().is_none() {
                             self.link_connect(&new_obj, relation, session.clone()).await?;
                         }
@@ -812,7 +834,7 @@ impl Object {
                 let relation_model = self.graph().model(through).unwrap();
                 let env = self.env().nested(Intent::NestedJoinTableRecordCreate);
                 let relation_object = self.graph().new_object(through, env)?;
-                relation_object.set_json(&tson!({})).await?;
+                relation_object.set_tson(&tson!({})).await?;
                 let local_relation_name = relation.fields().get(0).unwrap();
                 let foreign_relation_name = relation.references().get(0).unwrap();
                 let local_relation = relation_model.relation(local_relation_name).unwrap();
@@ -905,32 +927,6 @@ impl Object {
         Ok(())
     }
 
-    fn relation_this_object_save_first(&self, relation: &Relation) -> bool {
-        !self.relation_that_object_save_first(relation)
-    }
-
-    fn relation_that_object_save_first(&self, relation: &Relation) -> bool {
-        if relation.through().is_some() {
-            return false;
-        }
-        let primary_field_names = self.model().primary_field_names().iter().map(|n| n.to_string()).collect::<Vec<String>>();
-        if relation.fields() == &primary_field_names {
-            return false;
-        }
-        let relation_model = self.graph().model(relation.model()).unwrap();
-        let relation_primary_field_names = relation_model.primary_field_names().iter().map(|n| n.to_string()).collect::<Vec<String>>();
-        if relation.references() == &relation_primary_field_names {
-            return true;
-        }
-        let mut save_this_first = true;
-        for field in relation.fields() {
-            if self.get_value(field).unwrap().is_null() {
-                save_this_first = false;
-            }
-        }
-        return !save_this_first;
-    }
-
     #[async_recursion(?Send)]
     pub(crate) async fn _save(&self, session: Arc<dyn SaveSession>, no_recursive: bool, path: &KeyPath) -> ActionResult<()> {
         let inside_before_callback = self.inner.inside_before_save_callback.load(Ordering::SeqCst);
@@ -941,7 +937,7 @@ impl Object {
         // handle relations and manipulations (save that first)
         if !no_recursive {
             for relation in self.model().relations() {
-                if self.relation_that_object_save_first(relation) {
+                if relation.has_foreign_key() {
                     let name = relation.name();
                     let map = self.inner.relation_mutation_map.lock().unwrap();
                     let vec_option = map.get(name);
@@ -968,7 +964,7 @@ impl Object {
         // handle relations and manipulations (save this first)
         if !no_recursive {
             for relation in self.model().relations() {
-                if self.relation_this_object_save_first(relation) {
+                if !relation.has_foreign_key() {
                     let name = relation.name();
                     let map = self.inner.relation_mutation_map.lock().unwrap();
                     let vec_option = map.get(name);
@@ -1259,27 +1255,6 @@ impl Object {
     pub(crate) fn env(&self) -> &Env {
         &self.inner.env
     }
-}
-
-pub(crate) struct ObjectInner {
-    pub(crate) model: Model,
-    pub(crate) graph: Graph,
-    pub(crate) env: Env,
-    pub(crate) is_initialized: AtomicBool,
-    pub(crate) is_new: AtomicBool,
-    pub(crate) is_modified: AtomicBool,
-    pub(crate) is_partial: AtomicBool,
-    pub(crate) is_deleted: AtomicBool,
-    pub(crate) inside_before_save_callback: AtomicBool,
-    pub(crate) inside_write_callback: AtomicBool,
-    pub(crate) selected_fields: Arc<Mutex<Vec<String>>>,
-    pub(crate) modified_fields: Arc<Mutex<HashSet<String>>>,
-    pub(crate) value_map: Arc<Mutex<HashMap<String, Value>>>,
-    pub(crate) previous_value_map: Arc<Mutex<HashMap<String, Value>>>,
-    pub(crate) atomic_updator_map: Arc<Mutex<HashMap<String, AtomicUpdateType>>>,
-    pub(crate) relation_mutation_map: Arc<Mutex<HashMap<String, Vec<RelationManipulation>>>>,
-    pub(crate) relation_query_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
-    pub(crate) cached_property_map: Arc<Mutex<HashMap<String, Value>>>,
 }
 
 impl Debug for Object {

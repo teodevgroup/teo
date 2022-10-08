@@ -130,7 +130,7 @@ impl Graph {
 
     pub fn create_object(&self, model: &str, initial: Value) -> Result<Object, ActionError> {
         let obj = self.new_object(model, Env::custom_code())?;
-        obj.set_json(&initial);
+        obj.set_tson(&initial);
         Ok(obj)
     }
 
