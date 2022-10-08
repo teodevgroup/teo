@@ -761,6 +761,7 @@ impl PartialOrd for Value {
         use Value::*;
         match (self, other) {
             (Null, Null) => Some(Ordering::Equal),
+            #[cfg(feature = "data-source-mongodb")]
             (ObjectId(s), ObjectId(o)) => s.partial_cmp(o),
             (Bool(s), Bool(o)) => s.partial_cmp(o),
             (I8(s), I8(o)) => s.partial_cmp(o),
