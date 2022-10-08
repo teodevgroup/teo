@@ -640,12 +640,14 @@ impl Object {
             if relation.through().is_some() {
                 continue
             }
-            let (opposite_model, opposite_relation) = graph.opposite_relation(relation).unwrap();
-            if opposite_relation.delete_rule() == Deny {
-                let finder = self.finder_for_relation(relation);
-                let count = graph.count(opposite_model.name(), &finder).await.unwrap();
-                if count > 0 {
-                    return Err(ActionError::deletion_denied(relation.name()));
+            let (opposite_model, opposite_relation) = graph.opposite_relation(relation);
+            if let Some(opposite_relation) = opposite_relation {
+                if opposite_relation.delete_rule() == Deny {
+                    let finder = self.finder_for_relation(relation);
+                    let count = graph.count(opposite_model.name(), &finder).await.unwrap();
+                    if count > 0 {
+                        return Err(ActionError::deletion_denied(relation.name()));
+                    }
                 }
             }
         }
@@ -657,29 +659,31 @@ impl Object {
             if relation.through().is_some() {
                 continue
             }
-            let (opposite_model, opposite_relation) = graph.opposite_relation(relation).unwrap();
-            match opposite_relation.delete_rule() {
-                DeleteRule::Default => {}, // do nothing
-                DeleteRule::Deny => {}, // done before
-                DeleteRule::Nullify => {
-                    if !opposite_relation.has_foreign_key() {
-                        continue
-                    }
-                    let finder = self.finder_for_relation(relation);
-                    graph.batch(opposite_model.name(), &finder, Env::new(Source::CustomCode, Intent::Delete), |object| async move {
-                        for key in opposite_relation.fields() {
-                            object.set_value(key, Value::Null)?;
+            let (opposite_model, opposite_relation) = graph.opposite_relation(relation);
+            if let Some(opposite_relation) = opposite_relation {
+                match opposite_relation.delete_rule() {
+                    DeleteRule::Default => {}, // do nothing
+                    DeleteRule::Deny => {}, // done before
+                    DeleteRule::Nullify => {
+                        if !opposite_relation.has_foreign_key() {
+                            continue
                         }
-                        object._save(self.graph().connector().new_save_session(), no_recursive, &path![]).await?;
-                        Ok(())
-                    }).await?;
-                },
-                DeleteRule::Cascade => {
-                    let finder = self.finder_for_relation(relation);
-                    graph.batch(opposite_model.name(), &finder, Env::new(Source::CustomCode, Intent::Delete), |object| async move {
-                        object.delete_from_database(self.graph().connector().new_save_session(), no_recursive).await?;
-                        Ok(())
-                    }).await?;
+                        let finder = self.finder_for_relation(relation);
+                        graph.batch(opposite_model.name(), &finder, Env::new(Source::CustomCode, Intent::Delete), |object| async move {
+                            for key in opposite_relation.fields() {
+                                object.set_value(key, Value::Null)?;
+                            }
+                            object._save(self.graph().connector().new_save_session(), no_recursive, &path![]).await?;
+                            Ok(())
+                        }).await?;
+                    },
+                    DeleteRule::Cascade => {
+                        let finder = self.finder_for_relation(relation);
+                        graph.batch(opposite_model.name(), &finder, Env::new(Source::CustomCode, Intent::Delete), |object| async move {
+                            object.delete_from_database(self.graph().connector().new_save_session(), no_recursive).await?;
+                            Ok(())
+                        }).await?;
+                    }
                 }
             }
         }

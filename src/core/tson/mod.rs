@@ -925,6 +925,6 @@ impl Neg for &Value {
     type Output = Value;
 
     fn neg(self) -> Self::Output {
-        (*self).neg()
+        (self.clone()).neg()
     }
 }

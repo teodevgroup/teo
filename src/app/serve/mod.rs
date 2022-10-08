@@ -97,16 +97,16 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
     }
     let claims = claims_result.unwrap();
     let json_identifier = claims.id;
-
+    let tson_identifier = Decoder::decode_object(graph.model(&claims.model).unwrap(), graph, &json_identifier)?;
     // Decoder::
     let _model = graph.model(claims.model.as_str()).unwrap();
     let identity = graph.find_unique(
-        graph.model(claims.model.as_str()).unwrap().name(),
-        &tson!({
-                "where": claims.id
-            }),
-        true,
-    Env::new(Source::CustomCode, Intent::FindUnique)).await;
+    graph.model(claims.model.as_str()).unwrap().name(),
+    &tson!({
+            "where": tson_identifier
+        }),
+    true,
+Env::new(Source::CustomCode, Intent::FindUnique)).await;
     if let Err(_) = identity {
         return Err(ActionError::invalid_auth_token())
     }
@@ -553,8 +553,10 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
             let obj = obj.refreshed(include, select).await.unwrap();
             let json_data = obj.to_json().await;
             let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
+            let tson_identifier = obj.identifier();
+            let json_identifier: JsonValue = tson_identifier.into();
             let claims = Claims {
-                id: obj.json_identifier(),
+                id: json_identifier,
                 model: obj.model().name().to_string(),
                 exp
             };

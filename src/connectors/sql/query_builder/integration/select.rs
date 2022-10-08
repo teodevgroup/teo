@@ -176,8 +176,8 @@ fn parse_sql_where_entry<'a>(
 
 pub(crate) fn build_where_from_identifier(model: &Model, graph: &Graph, identifier: &Value, dialect: SQLDialect) -> String {
     let mut retval: Vec<String> = vec![];
-    for (key, value) in identifier.as_hashmap() {
-        let field = model.field(*key).unwrap();
+    for (key, value) in identifier.as_hashmap().unwrap() {
+        let field = model.field(key).unwrap();
         let column_name = field.column_name();
         retval.push(format!("{} = {}", column_name, value.to_string(dialect)));
     }

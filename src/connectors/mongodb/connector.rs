@@ -145,7 +145,7 @@ impl MongoDBConnector {
                 let object_key = &object_field.name;
                 let field_type = &object_field.field_type;
                 let bson_value = document.get(key).unwrap();
-                let value_result = self.bson_value_to_field_value(object_key, bson_value, field_type);
+                let value_result = BsonDecoder::decode(object.model(), object.graph(), field_type, object_field.is_optional(), bson_value, path![]);
                 match value_result {
                     Ok(value) => {
                         object.inner.value_map.lock().unwrap().insert(object_key.to_string(), value);
@@ -435,8 +435,9 @@ impl Connector for MongoDBConnector {
         }
         let model = object.model();
         let col = &self.collections[model.name()];
-        let bson_identifier: Document = object.identifier().into();
-        let result = col.delete_one(bson_identifier, None).await;
+        let bson_identifier: Bson = object.identifier().into();
+        let document_identifier = bson_identifier.as_document().unwrap();
+        let result = col.delete_one(document_identifier.clone(), None).await;
         return match result {
             Ok(_result) => Ok(()),
             Err(_err) => {

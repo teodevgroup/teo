@@ -89,6 +89,6 @@ impl Into<JsonValue> for Value {
 
 impl Into<JsonValue> for &Value {
     fn into(self) -> JsonValue {
-        (*self).into()
+        self.clone().into()
     }
 }

@@ -21,8 +21,38 @@ pub(crate) struct Decoder {}
 
 impl Decoder {
 
+    pub(crate) fn decode_object(model: &Model, graph: &Graph, json_value: &JsonValue) -> ActionResult<Value> {
+        Self::decode_object_at_path(model, graph, json_value, path![])
+    }
+
     pub(crate) fn decode_action_arg(model: &Model, graph: &Graph, action: ActionType, json_value: &JsonValue) -> ActionResult<Value> {
         Self::decode_action_arg_at_path(model, graph, action, json_value, path![])
+    }
+
+    fn decode_object_at_path<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        let json_map = if let Some(json_map) = json_value.as_object() {
+            json_map
+        } else {
+            return Err(ActionError::unexpected_input_type("object", path));
+        };
+        Self::check_json_keys(json_map, &model.all_keys().iter().map(|k| k.as_str()).collect(), path)?;
+        Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+            let path = path + k;
+            if let Some(field) = model.field(k) {
+                Ok((k.to_owned(), Self::decode_value_for_field_type(graph, field.r#type(), field.is_optional(), v, path)?))
+            } else if let Some(relation) = model.relation(k) {
+                if relation.is_vec() {
+                    Ok((k.to_owned(), Self::decode_nested_many_create_arg(graph, relation, v, path)?))
+                } else {
+                    Ok((k.to_owned(), Self::decode_nested_one_create_arg(graph, relation, v, path)?))
+                }
+            } else if let Some(property) = model.property(k) {
+                Ok((k.to_owned(), Self::decode_value_for_field_type(graph, property.r#type(), property.is_optional(), v, path)?))
+            } else {
+                panic!("Unhandled key.")
+            }
+        }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
 
     fn decode_action_arg_at_path<'a>(model: &Model, graph: &Graph, action: ActionType, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
@@ -100,7 +130,7 @@ impl Decoder {
         } else {
             return Err(ActionError::unexpected_input_type("object", path));
         };
-        Self::check_json_keys(json_map, &HashSet::from(model.input_keys()), path)?;
+        Self::check_json_keys(json_map, &model.input_keys().iter().map(|k| k.as_str()).collect(), path)?;
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
             let path = path + k;
             if let Some(field) = model.field(k) {
@@ -113,6 +143,8 @@ impl Decoder {
                 }
             } else if let Some(property) = model.property(k) {
                 Ok((k.to_owned(), Self::decode_value_for_field_type(graph, property.r#type(), property.is_optional(), v, path)?))
+            } else {
+                panic!("Unhandled key.")
             }
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
@@ -130,10 +162,10 @@ impl Decoder {
             let path = path + k;
             let (model, relation) = graph.opposite_relation(relation);
             match k {
-                "create" | "createMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_create_input(model, graph, relation, v, p)))),
-                "connect" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_where_unique(model, graph, v, p)))),
-                "connectOrCreate" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_connect_or_create_input(model, graph, relation, v, p)))),
-                _ => ()
+                "create" | "createMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_nested_create_input(model, graph, relation, v, p))?)),
+                "connect" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_where_unique(model, graph, v, p))?)),
+                "connectOrCreate" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_nested_connect_or_create_input(model, graph, relation, v, p))?)),
+                _ => panic!("Unhandled key")
             }
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
@@ -151,25 +183,25 @@ impl Decoder {
             let path = path + k;
             let (model, relation) = graph.opposite_relation(relation);
             match k {
-                "create" | "createMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_create_input(model, graph, relation, v, p)))),
-                "connect" | "set" | "disconnect" | "delete" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_where_unique(model, graph, v, p)))),
-                "connectOrCreate" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_connect_or_create_input(model, graph, relation, v, p)))),
-                "update" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_update_input(model, graph, relation, v, p)))),
-                "updateMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_update_many_input(model, graph, relation, v, p)))),
-                "deleteMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_where(model, graph, v, p)))),
-                "upsert" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p| Self::decode_nested_upsert_input(model, graph, relation, v, p)))),
-                _ => ()
+                "create" | "createMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_nested_create_input(model, graph, relation, v, p))?)),
+                "connect" | "set" | "disconnect" | "delete" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_where_unique(model, graph, v, p))?)),
+                "connectOrCreate" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_nested_connect_or_create_input(model, graph, relation, v, p))?)),
+                "update" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_nested_update_input(model, graph, relation, v, p))?)),
+                "updateMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_nested_update_many_input(model, graph, relation, v, p))?)),
+                "deleteMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_where(model, graph, v, p))?)),
+                "upsert" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_nested_upsert_input(model, graph, relation, v, p))?)),
+                _ => panic!("Unhandled key.")
             }
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
 
-    fn decode_enumerate<'a, F: Fn(&JsonValue, P) -> ActionResult<Value>, P: AsRef<KeyPath<'a>>>(json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>, f: F) -> ActionResult<Value> {
+    fn decode_enumerate<'a, F: Fn(&JsonValue, &KeyPath) -> ActionResult<Value>>(json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>, f: F) -> ActionResult<Value> {
         let path = path.as_ref();
         if let Some(_) = json_value.as_object() {
             f(json_value, path)
         } else if let Some(json_array) = json_value.as_array() {
             Ok(Value::Vec(json_array.iter().enumerate().map(|(i, v)| {
-                f(v, path + i)
+                f(v, &(path + i))
             }).collect::<ActionResult<Vec<Value>>>()?))
         } else {
             Err(ActionError::unexpected_input_type("object or array", path))
@@ -192,7 +224,7 @@ impl Decoder {
                 "create" => Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?)),
                 "connect" => Ok((k.to_owned(), Self::decode_where_unique(model, graph, v, path)?)),
                 "connectOrCreate" => Ok((k.to_owned(), Self::decode_nested_connect_or_create_input(model, graph, relation, v, path)?)),
-                _ => ()
+                _ => panic!("Unhandled key.")
             }
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
@@ -215,7 +247,7 @@ impl Decoder {
                 "connectOrCreate" => Ok((k.to_owned(), Self::decode_nested_connect_or_create_input(model, graph, relation, v, path)?)),
                 "disconnect" | "delete" => Ok((k.to_owned(), Self::decode_bool(v, path)?)),
                 "update" => Ok((k.to_owned(), Self::decode_nested_inner_update_input(model, graph, relation, v, path)?)),
-                _ => ()
+                _ => panic!("Unhandled key.")
             }
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
@@ -234,7 +266,7 @@ impl Decoder {
                 "create" => Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?)),
                 "update" => Ok((k.to_owned(), Self::decode_nested_inner_update_input(model, graph, relation, v, path)?)),
                 "where" => Ok((k.to_owned(), Self::decode_where_unique(model, graph, v, path)?)),
-                _ => ()
+                _ => panic!("Unhandled key.")
             }
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
@@ -252,7 +284,7 @@ impl Decoder {
             match k {
                 "create" => Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?)),
                 "where" => Ok((k.to_owned(), Self::decode_where_unique(model, graph, v, path)?)),
-                _ => ()
+                _ => panic!("Unhandled key.")
             }
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
@@ -270,7 +302,7 @@ impl Decoder {
             match k {
                 "update" => Ok((k.to_owned(), Self::decode_nested_inner_update_input(model, graph, relation, v, path)?)),
                 "where" => Ok((k.to_owned(), Self::decode_where_unique(model, graph, v, path)?)),
-                _ => ()
+                _ => panic!("Unhandled key.")
             }
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
@@ -288,7 +320,7 @@ impl Decoder {
             match k {
                 "update" => Ok((k.to_owned(), Self::decode_nested_inner_update_input(model, graph, relation, v, path)?)),
                 "where" => Ok((k.to_owned(), Self::decode_where(model, graph, v, path)?)),
-                _ => ()
+                _ => panic!("Unhandled key.")
             }
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
@@ -301,12 +333,12 @@ impl Decoder {
         };
         let without: Vec<&str> = if let Some(relation) = relation {
             let mut without = vec![relation.name()];
-            without.extend(relation.fields());
+            without.extend(relation.fields().iter().map(|k| k.as_str()));
             without
         } else {
             vec![]
         };
-        Self::check_json_keys(json_map, &HashSet::from(without), path)?;
+        Self::check_json_keys(json_map, &without.into_iter().collect(), path)?;
         Self::decode_update(model, graph, &json_value, path)
     }
 
@@ -318,12 +350,12 @@ impl Decoder {
         };
         let without: Vec<&str> = if let Some(relation) = relation {
             let mut without = vec![relation.name()];
-            without.extend(relation.fields());
+            without.extend(relation.fields().iter().map(|k| k.as_str()));
             without
         } else {
             vec![]
         };
-        Self::check_json_keys(json_map, &HashSet::from(without), path)?;
+        Self::check_json_keys(json_map, &without.into_iter().collect(), path)?;
         Self::decode_create(model, graph, &json_value, path)
     }
 
@@ -334,7 +366,7 @@ impl Decoder {
         } else {
             return Err(ActionError::unexpected_input_type("object", path));
         };
-        Self::check_json_keys(json_map, &HashSet::from(model.input_keys()), path)?;
+        Self::check_json_keys(json_map, &model.input_keys().iter().map(|k| k.as_str()).collect(), path)?;
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
             let path = path + k;
             if let Some(field) = model.field(k) {
@@ -347,6 +379,8 @@ impl Decoder {
                 }
             } else if let Some(property) = model.property(k) {
                 Ok((k.to_owned(), Self::decode_value_or_updator_for_field_type(graph, property.r#type(), property.is_optional(), v, path, true)?))
+            } else {
+                panic!("Unhandled key.")
             }
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
@@ -519,7 +553,7 @@ impl Decoder {
             let key = key.as_str();
             match key {
                 "AND" | "OR" => {
-                    let path = path + key;
+                    let path = &(path + key);
                     match value {
                         JsonValue::Object(_) => {
                             retval.insert(key.to_owned(), Self::decode_where(model, graph, value, path)?);

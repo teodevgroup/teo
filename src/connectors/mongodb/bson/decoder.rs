@@ -101,7 +101,7 @@ impl BsonDecoder {
                 match bson_value.as_array() {
                     Some(arr) => Ok((Value::Vec(arr.iter().enumerate().map(|(i, v)| {
                         let path = path + i;
-                        Self::decode(model, graph, inner_field.r#type(), inner_field.is_optional(), v, path)?
+                        Self::decode(model, graph, inner_field.r#type(), inner_field.is_optional(), v, path)
                     }).collect::<ActionResult<Vec<Value>>>()?))),
                     None => Err(ActionError::record_decoding_error(model.name(), path, "array")),
                 }

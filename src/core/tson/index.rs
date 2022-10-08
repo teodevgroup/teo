@@ -6,7 +6,7 @@ use super::Value;
 // Code from this file is inspired from serde json
 // https://github.com/serde-rs/json/blob/master/src/value/index.rs
 
-pub(crate) trait Index {
+pub trait Index {
     fn index_into<'v>(&self, v: &'v Value) -> Option<&'v Value>;
     fn index_into_mut<'v>(&self, v: &'v mut Value) -> Option<&'v mut Value>;
     fn index_or_insert<'v>(&self, v: &'v mut Value) -> &'v mut Value;

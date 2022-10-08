@@ -26,8 +26,8 @@ impl From<String> for Value {
     }
 }
 
-impl<'a> From<Value> for &'a str {
-    fn from(v: Value) -> &'a str {
+impl<'a> From<&'a Value> for &'a str {
+    fn from(v: &'a Value) -> &'a str {
         v.as_str().unwrap()
     }
 }
@@ -271,7 +271,7 @@ impl<T> From<Value> for HashMap<String, T> where T: From<Value> {
         let value = value.as_hashmap().unwrap();
         let mut result: HashMap<String, T> = HashMap::new();
         for (k, v) in value {
-            result.insert(k.to_owned(), (*v).into());
+            result.insert(k.to_owned(), (v.clone()).into());
         }
         result
     }
@@ -282,29 +282,7 @@ impl<T> From<Value> for BTreeMap<String, T> where T: From<Value> {
         let value = value.as_hashmap().unwrap();
         let mut result: BTreeMap<String, T> = BTreeMap::new();
         for (k, v) in value {
-            result.insert(k.to_owned(), (*v).into());
-        }
-        result
-    }
-}
-
-impl<T> From<Value> for HashSet<T> where T: From<Value> + Hash + Eq + Ord {
-    fn from(value: Value) -> Self {
-        let value = value.as_hashmap().unwrap();
-        let mut result: HashSet<T> = HashSet::new();
-        for (k, v) in value {
-            result.insert((*v).into());
-        }
-        result
-    }
-}
-
-impl<T> From<Value> for BTreeSet<T> where T: From<Value> + Hash + Eq + Ord {
-    fn from(value: Value) -> Self {
-        let value = value.as_hashmap().unwrap();
-        let mut result: BTreeSet<T> = BTreeSet::new();
-        for (k, v) in value {
-            result.insert((*v).into());
+            result.insert(k.to_owned(), (v.clone()).into());
         }
         result
     }

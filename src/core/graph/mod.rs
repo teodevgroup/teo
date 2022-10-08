@@ -186,7 +186,7 @@ impl Graph {
             let through_model = self.model(through).unwrap();
             self.opposite_relation(through_model.relation(relation.foreign()).unwrap())
         } else {
-            let opposite_model = self.model(relation.model())?;
+            let opposite_model = self.model(relation.model()).unwrap();
             let opposite_relation = opposite_model.relations().iter().find(|r| r.fields() == relation.references() && r.references() == relation.fields());
             match opposite_relation {
                 Some(relation) => (opposite_model, Some(relation.as_ref())),
