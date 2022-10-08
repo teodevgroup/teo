@@ -1050,8 +1050,29 @@ impl Object {
         Ok(())
     }
 
-    async fn perform_relation_manipulation_many(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn nested_enumerate<F: Fn(&Value, &KeyPath) -> ActionResult<()>>(&self, value: &Value, path: &KeyPath, f: F) -> ActionResult<()> {
+        match value {
+            Value::HashMap(map) => f(value, path),
+            Value::Vec(vec) => vec.iter().enumerate().map(|(i, v)| f(v, &(path + i))),
+            _ => panic!("Unhandled type."),
+        }
+    }
 
+    async fn perform_relation_manipulation_many(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+        for (key, value) in value.as_hashmap().unwrap() {
+            let key = key.as_str();
+            let path = path + key;
+            match key {
+                "create" | "createMany" => self.nested_enumerate(value, &path, |v, p| self.nested_create_relation_object(relation, v, session.clone(), p)?),
+                "connect" | "set" => self.nested_connect_relation_object(relation, value, session.clone(), &path)?,
+                "connectOrCreate" => self.nested_connect_or_create_relation_object(relation, value, session.clone(), &path)?,
+                "disconnect" => self.nested_disconnect_relation_object(relation, value, session.clone(), &path)?,
+                "update" => self.nested_update_relation_object(relation, value, session.clone(), &path)?,
+                "delete" => self.nested_delete_relation_object(relation, value, session.clone(), &path)?,
+                _ => panic!("Unhandled key.")
+            }
+        }
+        Ok(())
     }
 
     pub async fn refreshed(&self, include: Option<&Value>, select: Option<&Value>) -> Result<Object, ActionError> {
