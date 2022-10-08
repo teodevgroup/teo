@@ -98,34 +98,6 @@ impl Object {
         self.set_tson_with_path_and_user_mode(json_value, path, false).await
     }
 
-    pub(crate) async fn check_model_write_permission(&self) -> ActionResult<()> {
-        let is_new = self.is_new();
-        if let Some(permission) = self.model().permission() {
-            if let Some(can) = if is_new { permission.can_create() } else { permission.can_update() } {
-                let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
-                let result_ctx = can.process(ctx).await;
-                if !result_ctx.is_valid() {
-                    return Err(ActionError::permission_denied(if is_new { "create" } else { "update" }));
-                }
-            }
-        }
-        Ok(())
-    }
-
-    pub(crate) async fn check_field_write_permission(&self, field: &Field) -> ActionResult<()> {
-        let is_new = self.is_new();
-        if let Some(permission) = field.permission() {
-            if let Some(can) = if is_new { permission.can_create() } else { permission.can_update() } {
-                let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
-                let result_ctx = can.process(ctx).await;
-                if !result_ctx.is_valid() {
-                    return Err(ActionError::permission_denied(if is_new { "create" } else { "update" }));
-                }
-            }
-        }
-        Ok(())
-    }
-
     pub(crate) async fn set_tson_with_path_and_user_mode(&self, value: &Value, path: &KeyPath<'_>, user_mode: bool) -> ActionResult<()> {
         let model = self.model();
         let is_new = self.is_new();
@@ -196,7 +168,7 @@ impl Object {
                         }
                     }
                 }
-            } else if let Some(relation) = self.model().relation(key) {
+            } else if let Some(_) = self.model().relation(key) {
                 let manipulation = match value_map.get(&key.to_string()) {
                     Some(value) => value,
                     None => continue,
@@ -225,7 +197,35 @@ impl Object {
         Ok(())
     }
 
-    pub fn record_previous_value_for_field_if_needed(&self, field: &Field) {
+    async fn check_model_write_permission(&self) -> ActionResult<()> {
+        let is_new = self.is_new();
+        if let Some(permission) = self.model().permission() {
+            if let Some(can) = if is_new { permission.can_create() } else { permission.can_update() } {
+                let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
+                let result_ctx = can.process(ctx).await;
+                if !result_ctx.is_valid() {
+                    return Err(ActionError::permission_denied(if is_new { "create" } else { "update" }));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    async fn check_field_write_permission(&self, field: &Field) -> ActionResult<()> {
+        let is_new = self.is_new();
+        if let Some(permission) = field.permission() {
+            if let Some(can) = if is_new { permission.can_create() } else { permission.can_update() } {
+                let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
+                let result_ctx = can.process(ctx).await;
+                if !result_ctx.is_valid() {
+                    return Err(ActionError::permission_denied(if is_new { "create" } else { "update" }));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn record_previous_value_for_field_if_needed(&self, field: &Field) {
         if !self.is_new() && field.previous_value_rule == PreviousValueRule::Keep {
             if self.inner.previous_value_map.lock().unwrap().get(field.name()).is_none() {
                 self.inner.previous_value_map.lock().unwrap().insert(field.name().to_string(), self.get_value(field.name()).unwrap());
@@ -233,15 +233,7 @@ impl Object {
         }
     }
 
-    pub fn set(&self, key: impl AsRef<str>, value: impl Into<Value>) -> ActionResult<()> {
-        self.set_value(key, value.into())
-    }
-
-    pub fn set_value(&self, key: impl AsRef<str>, value: Value) -> ActionResult<()> {
-        self._set_value(key, value, true)
-    }
-
-    pub(crate) async fn check_write_rule(&self, key: impl AsRef<str>, value: &Value, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn check_write_rule(&self, key: impl AsRef<str>, value: &Value, path: &KeyPath<'_>) -> ActionResult<()> {
         let field = self.model().field(key.as_ref()).unwrap();
         let is_new = self.is_new();
         let valid = match &field.write_rule {
@@ -273,6 +265,28 @@ impl Object {
         }
     }
 
+    pub fn set(&self, key: impl AsRef<str>, value: impl Into<Value>) -> ActionResult<()> {
+        self.set_value(key, value.into())
+    }
+
+    pub fn set_value(&self, key: impl AsRef<str>, value: Value) -> ActionResult<()> {
+        let model_keys = self.model().save_keys();
+        if !model_keys.contains(&key.as_ref().to_string()) {
+            return Err(ActionError::invalid_key(key, self.model()));
+        }
+        self.set_value_to_value_map(key, value);
+        Ok(())
+    }
+
+    pub async fn set_property(&self, key: impl AsRef<str>, value: impl Into<Value>) -> ActionResult<()> {
+        let property = self.model().property(key.as_ref()).unwrap();
+        let setter = property.setter.as_ref().unwrap();
+        let ctx = Context::initial_state(self.clone())
+            .alter_value(value.into());
+        let _ = setter.process(ctx).await;
+        Ok(())
+    }
+
     fn set_value_to_value_map(&self, key: &str, value: Value) {
         if value.is_null() {
             self.inner.value_map.lock().unwrap().remove(key);
@@ -291,65 +305,27 @@ impl Object {
         }
     }
 
-    pub(crate) fn _set_value(&self, key: impl AsRef<str>, value: Value, check: bool) -> ActionResult<()> {
-        let key = key.as_ref().to_string();
-        if check {
-            let model_keys = self.model().save_keys();
-            if !model_keys.contains(&key) {
-                return Err(ActionError::invalid_key(key, self.model()));
-            }
-        }
-        if value.is_null() {
-            self.inner.value_map.lock().unwrap().remove(&key);
-        } else {
-            self.inner.value_map.lock().unwrap().insert(key.clone(), value);
-        }
-        if !self.is_new() {
-            self.inner.is_modified.store(true, Ordering::SeqCst);
-            self.inner.modified_fields.lock().unwrap().insert(key.clone());
-            if let Some(properties) = self.model().field_property_map().get(&key) {
-                for property in properties {
-                    self.inner.modified_fields.lock().unwrap().insert(property.clone());
-                    self.inner.cached_property_map.lock().unwrap().remove(property);
-                }
-            }
-        }
-        Ok(())
-    }
-
-    pub fn get_relation_object(&self, key: impl AsRef<str>) -> Result<Option<Object>, ActionError> {
+    pub fn get_relation_object(&self, key: impl AsRef<str>) -> ActionResult<Option<Object>> {
         let key = key.as_ref();
         let model_keys = self.model().all_keys();
         if !model_keys.contains(&key.to_string()) {
             return Err(ActionError::invalid_key(key, self.model()));
         }
         match self.inner.relation_query_map.lock().unwrap().get(key) {
-            Some(list) => {
-                if list.is_empty() {
-                    Ok(None)
-                } else {
-                    Ok(Some(list.get(0).unwrap().clone()))
-                }
-            }
-            None => {
-                Ok(None)
-            }
+            Some(list) => Ok(list.get(0).cloned()),
+            None => Ok(None)
         }
     }
 
-    pub fn get_relation_objects(&self, key: impl AsRef<str>) -> Result<Option<Vec<Object>>, ActionError> {
+    pub fn get_relation_vec(&self, key: impl AsRef<str>) -> ActionResult<Vec<Object>> {
         let key = key.as_ref();
         let model_keys = self.model().all_keys();
         if !model_keys.contains(&key.to_string()) {
             return Err(ActionError::invalid_key(key, self.model()));
         }
         match self.inner.relation_query_map.lock().unwrap().get(key) {
-            Some(list) => {
-                Ok(Some(list.clone()))
-            }
-            None => {
-                Ok(None)
-            }
+            Some(list) => Ok(list.clone()),
+            None => Ok(vec![]),
         }
     }
 
@@ -367,15 +343,6 @@ impl Object {
             self.inner.cached_property_map.lock().unwrap().insert(key.as_ref().to_string(), value.clone());
         }
         Ok(value.into())
-    }
-
-    pub async fn set_property(&self, key: impl AsRef<str>, value: impl Into<Value>) -> ActionResult<()> {
-        let property = self.model().property(key.as_ref()).unwrap();
-        let setter = property.setter.as_ref().unwrap();
-        let ctx = Context::initial_state(self.clone())
-            .alter_value(value.into());
-        let _ = setter.process(ctx).await;
-        Ok(())
     }
 
     pub fn get<T>(&self, key: impl AsRef<str>) -> Result<T, ActionError> where T: From<Value> {
@@ -403,43 +370,19 @@ impl Object {
         }
     }
 
-    pub fn _get_value(&self, key: impl AsRef<str>, check: bool) -> ActionResult<Value> {
-        let key = key.as_ref();
-        if check {
-            let model_keys = self.model().all_keys();
-            if !model_keys.contains(&key.to_string()) {
-                return Err(ActionError::invalid_key(key, self.model()));
-            }
-        }
-        match self.inner.value_map.lock().unwrap().get(&key.to_string()) {
-            Some(value) => {
-                Ok(value.clone())
-            }
-            None => {
-                match self.inner.relation_query_map.lock().unwrap().get(&key.to_string()) {
-                    Some(list) => {
-                        let relation = self.model().relation(&key).unwrap();
-                        if relation.is_vec() {
-                            let vec = list.iter().map(|o| Value::Object(o.clone())).collect();
-                            Ok(Value::Vec(vec))
-                        } else {
-                            if list.is_empty() {
-                                Ok(Value::Null)
-                            } else {
-                                Ok(Value::Object(list.get(0).unwrap().clone()))
-                            }
-                        }
-                    }
-                    None => {
-                        Ok(Value::Null)
-                    }
-                }
-            }
+    fn get_value_map_value(&self, key: impl AsRef<str>) -> Value {
+        match self.inner.value_map.lock().unwrap().get(&key.as_ref().to_string()) {
+            Some(value) => value.clone(),
+            None => Value::Null,
         }
     }
 
     pub fn get_value(&self, key: impl AsRef<str>) -> Result<Value, ActionError> {
-        self._get_value(key, true)
+        let model_keys = self.model().all_keys();
+        if !model_keys.contains(&key.to_string()) {
+            return Err(ActionError::invalid_key(key, self.model()));
+        }
+        Ok(self.get_value_map_value(key))
     }
 
     pub fn set_select(&self, select: Option<&Value>) -> ActionResult<()> {

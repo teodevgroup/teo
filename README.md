@@ -84,7 +84,7 @@ The new generation server software.
 #### 0.0.32
 - Handle manipulation uses single or many
 - Bug fixes
-- Remove position from env, it can be inferred from `intent`
+- Remove position from env, it can be inferred from `intent` **[DONE]**
 - Fix assign identity
 
 #### 0.0.33
