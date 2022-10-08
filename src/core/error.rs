@@ -17,7 +17,6 @@ pub enum ActionErrorType {
     ObjectIsNotSaved,
     FieldIsNotUnique,
     InvalidQueryInput,
-    SaveCallingError,
     WrongIdentityModel,
     PropertySetterError,
 
@@ -73,7 +72,6 @@ impl ActionErrorType {
             ActionErrorType::FieldIsNotUnique => { 400 }
             ActionErrorType::InvalidAuthToken => { 401 }
             ActionErrorType::InvalidQueryInput => { 400 }
-            ActionErrorType::SaveCallingError => { 500 }
             ActionErrorType::CustomError => { 500 }
             ActionErrorType::WrongIdentityModel => { 401 }
             ActionErrorType::PropertySetterError => { 400 }
@@ -222,14 +220,6 @@ impl ActionError {
         ActionError {
             r#type: ActionErrorType::InvalidAuthToken,
             message: "This auth token is invalid.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn save_calling_error(model_name: impl AsRef<str> + Display) -> Self {
-        ActionError {
-            r#type: ActionErrorType::SaveCallingError,
-            message: format!("Model `{model_name}', save method cannot be called inside before save callbacks."),
             errors: None
         }
     }

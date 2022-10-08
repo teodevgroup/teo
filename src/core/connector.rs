@@ -15,9 +15,9 @@ use crate::prelude::Value;
 #[async_trait]
 pub(crate) trait Connector: Debug + Send + Sync {
 
-    async fn save_object(&self, object: &Object) -> ActionResult<()>;
+    async fn save_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()>;
 
-    async fn delete_object(&self, object: &Object) -> ActionResult<()>;
+    async fn delete_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()>;
 
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Object, ActionError>;
 
@@ -39,3 +39,6 @@ pub(crate) trait ConnectorBuilder: Debug + Send + Sync {
 
     async fn build_connector(&self, models: &Vec<Model>, reset_database: bool) -> Box<dyn Connector>;
 }
+
+#[async_trait]
+pub(crate) trait SaveSession: Debug + Send + Sync { }

@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use key_path::{KeyPath, path};
 use async_recursion::async_recursion;
+use crate::core::connector::SaveSession;
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
 use crate::core::env::source::Source;
@@ -583,7 +584,7 @@ impl Object {
                             for key in opposite_relation.fields() {
                                 object.set_value(key, Value::Null)?;
                             }
-                            object._save(self.graph().connector().new_save_session(), no_recursive, &path![]).await?;
+                            object.save_with_session_and_path(self.graph().connector().new_save_session(), no_recursive, &path![]).await?;
                             Ok(())
                         }).await?;
                     },
@@ -612,7 +613,7 @@ impl Object {
                 if relation.through().is_none() {
                     self.link_connect(&new_object, relation, session.clone()).await?;
                 }
-                new_object._save(session.clone(), false, &(path + relation.name())).await?;
+                new_object.save_with_session_and_path(session.clone(), false, &(path + relation.name())).await?;
                 self.link_connect(&new_object, relation, session.clone()).await?;
             }
             ConnectOrCreate(entry) => {
@@ -625,7 +626,7 @@ impl Object {
                         if relation.through().is_none() {
                             self.link_connect(&exist_object, relation, session.clone()).await?;
                         }
-                        exist_object._save(session.clone(), false, &(path + relation.name())).await?;
+                        exist_object.save_with_session_and_path(session.clone(), false, &(path + relation.name())).await?;
                         self.link_connect(&exist_object, relation, session.clone()).await?;
                     }
                     Err(_err) => {
@@ -635,7 +636,7 @@ impl Object {
                         if relation.through().is_none() {
                             self.link_connect(&new_obj, relation, session.clone()).await?;
                         }
-                        new_obj._save(session.clone(), false, &(path + relation.name())).await?;
+                        new_obj.save_with_session_and_path(session.clone(), false, &(path + relation.name())).await?;
                         self.link_connect(&new_obj, relation, session.clone()).await?;
                     }
                 }
@@ -647,7 +648,7 @@ impl Object {
                 if relation.through().is_none() {
                     self.link_connect(&exist_object, relation, session.clone()).await?;
                 }
-                exist_object._save(session.clone(), false, &(path + relation.name())).await?;
+                exist_object.save_with_session_and_path(session.clone(), false, &(path + relation.name())).await?;
                 self.link_connect(&exist_object, relation, session.clone()).await?;
             }
             Update(entry) => {
@@ -661,7 +662,7 @@ impl Object {
                 }
                 let the_object = the_object.unwrap();
                 the_object.set_tson(update).await?;
-                the_object._save(session, false, &(path + relation.name())).await?;
+                the_object.save_with_session_and_path(session, false, &(path + relation.name())).await?;
             }
             Upsert(entry) => {
                 let env = self.env().nested(Intent::NestedUpsertActuallyUpdate);
@@ -672,7 +673,7 @@ impl Object {
                 match the_object {
                     Ok(obj) => {
                         obj.set_tson(update).await?;
-                        obj._save(session, false, &(path + relation.name())).await?;
+                        obj.save_with_session_and_path(session, false, &(path + relation.name())).await?;
                     }
                     Err(_) => {
                         let env = self.env().nested(Intent::NestedUpsertActuallyCreate);
@@ -681,7 +682,7 @@ impl Object {
                         if relation.through().is_none() {
                             self.link_connect(&new_obj, relation, session.clone()).await?;
                         }
-                        new_obj._save(session.clone(), false, &(path + relation.name())).await?;
+                        new_obj.save_with_session_and_path(session.clone(), false, &(path + relation.name())).await?;
                         self.link_connect(&new_obj, relation, session.clone()).await?;
                     }
                 }
@@ -708,10 +709,9 @@ impl Object {
     }
 
     #[async_recursion(?Send)]
-    pub(crate) async fn save_to_database(&self, _session: Arc<dyn SaveSession>, _no_recursive: bool) -> ActionResult<()> {
-        // send to database to save self
+    async fn save_to_database(&self, session: Arc<dyn SaveSession>) -> ActionResult<()> {
         let connector = self.graph().connector();
-        connector.save_object(self).await?;
+        connector.save_object(self, session).await?;
         self.clear_new_state();
         Ok(())
     }
@@ -737,7 +737,7 @@ impl Object {
                     let val = obj.get_value(foreign_field_name).unwrap();
                     relation_object.set_value(field_name, val.clone()).unwrap();
                 }
-                relation_object._save(session.clone(), false, &path![]).await?;
+                relation_object.save_with_session_and_path(session.clone(), &path![]).await?;
             }
             None => { // no join table
                 for (index, reference) in relation.references().iter().enumerate() {
@@ -815,72 +815,66 @@ impl Object {
         Ok(())
     }
 
-    #[async_recursion(?Send)]
-    pub(crate) async fn _save(&self, session: Arc<dyn SaveSession>, no_recursive: bool, path: &KeyPath) -> ActionResult<()> {
+    fn before_save_callback_check(&self) -> ActionResult<()> {
         let inside_before_callback = self.inner.inside_before_save_callback.load(Ordering::SeqCst);
         if inside_before_callback {
-            return Err(ActionError::save_calling_error(self.model().name()));
+            return Err(ActionError::invalid_operation("Save called inside before callback."));
         }
-        let is_new = self.is_new();
-        // handle relations and manipulations (save that first)
-        if !no_recursive {
-            for relation in self.model().relations() {
-                if relation.has_foreign_key() {
-                    let name = relation.name();
-                    let map = self.inner.relation_mutation_map.lock().unwrap();
-                    let vec_option = map.get(name);
-                    match vec_option {
-                        None => {},
-                        Some(vec) => {
-                            for manipulation in vec {
-                                self.handle_manipulation(relation, manipulation, session.clone(), path).await?;
-                            }
+        Ok(())
+    }
+
+    fn perform_relation_manipulations<F: Fn(&Relation) -> bool>(&self, f: F) -> ActionResult<()> {
+        for relation in self.model().relations() {
+            if f(relation) {
+                let name = relation.name();
+                let map = self.inner.relation_mutation_map.lock().unwrap();
+                let vec_option = map.get(name);
+                match vec_option {
+                    None => {},
+                    Some(vec) => {
+                        for manipulation in vec {
+                            self.handle_manipulation(relation, manipulation, session.clone(), path).await?;
                         }
                     }
                 }
             }
         }
+        Ok(())
+    }
+
+    #[async_recursion(?Send)]
+    pub(crate) async fn save_with_session_and_path(&self, session: Arc<dyn SaveSession>, path: &KeyPath) -> ActionResult<()> {
+        // check if it's inside before callback
+        self.before_save_callback_check()?;
+        let is_new = self.is_new();
+        // perform relation manipulations (has foreign key)
+        self.perform_relation_manipulations(|r| r.has_foreign_key())?;
+        // validate and save
         let is_modified = self.is_modified();
         if is_modified || is_new {
             // apply pipeline
             self.apply_on_save_pipeline_and_validate_required_fields(path).await?;
-            self.trigger_before_write_callbacks(is_new).await?;
+            self.trigger_before_write_callbacks().await?;
             if !self.model().r#virtual() {
-                self.save_to_database(session.clone(), no_recursive).await?;
+                self.save_to_database(session.clone()).await?;
             }
         }
-        // handle relations and manipulations (save this first)
-        if !no_recursive {
-            for relation in self.model().relations() {
-                if !relation.has_foreign_key() {
-                    let name = relation.name();
-                    let map = self.inner.relation_mutation_map.lock().unwrap();
-                    let vec_option = map.get(name);
-                    match vec_option {
-                        None => {},
-                        Some(vec) => {
-                            for manipulation in vec {
-                                self.handle_manipulation(relation, manipulation, session.clone(), path).await?;
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        // perform relation manipulations (doesn't have foreign key)
+        self.perform_relation_manipulations(|r| !r.has_foreign_key())?;
         // clear properties
         self.clear_state();
         if is_modified || is_new {
-            self.trigger_write_callbacks(is_new).await?;
+            self.trigger_write_callbacks().await?;
         }
         Ok(())
     }
 
     pub async fn save(&self) -> ActionResult<()> {
         let session = self.graph().connector().new_save_session();
-        self._save(session, false, &path![]).await
+        self.save_with_session_and_path(session, &path![]).await
     }
 
-    async fn trigger_before_write_callbacks(&self, _newly_created: bool) -> ActionResult<()> {
+    async fn trigger_before_write_callbacks(&self) -> ActionResult<()> {
         let model = self.model();
         let pipeline = model.before_save_pipeline();
         let context = Context::initial_state(self.clone());
@@ -888,7 +882,7 @@ impl Object {
         Ok(())
     }
 
-    async fn trigger_write_callbacks(&self, _newly_created: bool) -> ActionResult<()> {
+    async fn trigger_write_callbacks(&self) -> ActionResult<()> {
         let inside_write_callback = self.inner.inside_write_callback.load(Ordering::SeqCst);
         if inside_write_callback {
             return Ok(());
