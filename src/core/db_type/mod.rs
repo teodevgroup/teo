@@ -10,6 +10,7 @@ pub enum DatabaseType {
     Undefined,
 
     // MongoDB only
+    #[cfg(feature = "data-source-mongodb")]
     ObjectId,
 
     // In MySQL, it's alias for TINYINT(1).
