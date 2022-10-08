@@ -9,10 +9,10 @@ use crate::core::env::Env;
 use crate::core::env::intent::Intent;
 use crate::core::env::source::Source;
 use crate::core::pipeline::argument::Argument;
-use crate::core::field::{PreviousValueRule};
+use crate::core::field::{Field, PreviousValueRule};
 use crate::core::field::optionality::Optionality;
 use crate::core::input::{AtomicUpdateType, Input};
-use crate::core::input::Input::{AtomicUpdate, SetValue};
+use crate::core::input::Input::{AtomicUpdate, AtomicUpdator, SetValue};
 use crate::core::graph::Graph;
 use crate::core::input_decoder::{decode_field_input, input_to_vec, one_length_json_obj};
 use crate::core::model::Model;
@@ -48,7 +48,7 @@ pub(crate) struct ObjectInner {
     pub(crate) modified_fields: Arc<Mutex<HashSet<String>>>,
     pub(crate) value_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) previous_value_map: Arc<Mutex<HashMap<String, Value>>>,
-    pub(crate) atomic_updator_map: Arc<Mutex<HashMap<String, AtomicUpdateType>>>,
+    pub(crate) atomic_updator_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) relation_mutation_map: Arc<Mutex<HashMap<String, Vec<RelationManipulation>>>>,
     pub(crate) relation_query_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
     pub(crate) cached_property_map: Arc<Mutex<HashMap<String, Value>>>,
@@ -98,9 +98,23 @@ impl Object {
         self.set_tson_with_path_and_user_mode(json_value, path, false).await
     }
 
-    pub(crate) async fn check_write_permission(&self) -> ActionResult<()> {
+    pub(crate) async fn check_model_write_permission(&self) -> ActionResult<()> {
         let is_new = self.is_new();
         if let Some(permission) = self.model().permission() {
+            if let Some(can) = if is_new { permission.can_create() } else { permission.can_update() } {
+                let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
+                let result_ctx = can.process(ctx).await;
+                if !result_ctx.is_valid() {
+                    return Err(ActionError::permission_denied(if is_new { "create" } else { "update" }));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub(crate) async fn check_field_write_permission(&self, field: &Field) -> ActionResult<()> {
+        let is_new = self.is_new();
+        if let Some(permission) = field.permission() {
             if let Some(can) = if is_new { permission.can_create() } else { permission.can_update() } {
                 let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
                 let result_ctx = can.process(ctx).await;
@@ -117,7 +131,7 @@ impl Object {
         let is_new = self.is_new();
         // permission
         if !user_mode {
-            self.check_write_permission().await?;
+            self.check_model_write_permission().await?;
         }
         // get value map
         let value_map = value.as_hashmap().unwrap();
@@ -129,12 +143,13 @@ impl Object {
         // find keys to iterate
         let initialized = self.inner.is_initialized.load(Ordering::SeqCst);
         let keys = if initialized {
-            self.model().all_keys().iter().filter(|k| { value_map_keys.contains(k)}).collect::<Vec<&String>>()
+            self.model().all_keys().iter().filter(|k| value_map_keys.contains(k)).collect::<Vec<&String>>()
         } else {
             self.model().all_keys().iter().collect::<Vec<&String>>()
         };
         // assign values
         for key in keys {
+            let path = path + key;
             if let Some(field) = self.model().field(key) {
                 let need_to_trigger_default_value = if initialized { false } else {
                     !value_map_keys.contains(&key)
@@ -144,58 +159,41 @@ impl Object {
                     if let Some(argument) = &field.default {
                         match argument {
                             Argument::ValueArgument(value) => {
-                                self.inner.value_map.lock().unwrap().insert(key.to_string(), value.clone());
+                                self.set_value_to_value_map(key, value.clone());
                             }
                             Argument::PipelineArgument(pipeline) => {
                                 let ctx = Context::initial_state(self.clone());
                                 let value = pipeline.process(ctx).await.value;
                                 // todo: default value calculation error here
-                                self.inner.value_map.lock().unwrap().insert(key.to_string(), value);
+                                self.set_value_to_value_map(key, value);
                             }
                         }
                     }
                 } else {
                     if !user_mode {
-                        if let Some(permission) = field.permission() {
-                            if let Some(can) = if is_new { permission.can_create() } else { permission.can_update() } {
-                                let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
-                                let result_ctx = can.process(ctx).await;
-                                if !result_ctx.is_valid() {
-                                    return Err(ActionError::permission_denied(if is_new { "create" } else { "update" }));
-                                }
-                            }
-                        }
+                        self.check_field_write_permission(field).await?;
                     }
-                    let json_value = value_map.get(key).unwrap();
-                    let input_result = decode_field_input(self.graph(), json_value, &field.field_type, field.optionality.clone(), &(path + field.name()))?;
-                    match input_result {
+                    // set_value_to_value_map
+                    let value = value_map.get(key).unwrap();
+                    match Input::decode_field(value) {
+                        AtomicUpdator(updator) => self.set_value_to_atomic_updator_map(key, updator),
                         SetValue(value) => {
+                            // record previous value if needed
+                            self.record_previous_value_for_field_if_needed(field);
+                            // on set pipeline
                             let mut value = value;
-                            // pipeline
                             let context = Context::initial_state(self.clone())
-                                .alter_key_path(path![key.as_str()])
+                                .alter_key_path(path.clone())
                                 .alter_value(value);
-                            if !self.is_new() && field.previous_value_rule == PreviousValueRule::Keep {
-                                if self.inner.previous_value_map.lock().unwrap().get(field.name()).is_none() {
-                                    self.inner.previous_value_map.lock().unwrap().insert(field.name().to_string(), self.get_value(field.name()).unwrap());
-                                }
-                            }
                             let result_context = field.on_set_pipeline.process(context).await;
                             match result_context.invalid_reason() {
-                                Some(reason) => {
-                                    return Err(ActionError::unexpected_input_value_with_reason(reason, &(path + &field.name)));
-                                }
+                                Some(reason) => return Err(ActionError::unexpected_input_value_with_reason(reason, &path)),
                                 None => {
-                                    value = result_context.value
+                                    self.check_write_rule(key, &value, &path).await?;
+                                    self.set_value_to_value_map(key, value.clone());
                                 }
                             }
-                            self._check_write_rule(key, &value, path).await?;
-                            self._set_value(key, value, false)?;
                         }
-                        AtomicUpdate(update_type) => {
-                            self.inner.atomic_updator_map.lock().unwrap().insert(key.to_string(), update_type);
-                        }
-                        _ => { }
                     }
                 }
             } else if let Some(relation) = self.model().relation(key) {
@@ -305,8 +303,8 @@ impl Object {
             } else if let Some(property) = self.model().property(key) {
                 if value_map_keys.contains(&key) {
                     if let Some(setter) = property.setter.as_ref() {
-                        let json_value = &value_map[&key.to_string()];
-                        let input_result = decode_field_input(self.graph(), json_value, &property.field_type, Optionality::Required, &(path + key))?;
+                        let value = &value_map[&key.to_string()];
+                        let input_result = decode_field_input(self.graph(), value, &property.field_type, Optionality::Required, &(path + key))?;
                         let value = match input_result {
                             Input::SetValue(v) => v,
                             _ => return Err(ActionError::unexpected_input_type("value", &(path + key))),
@@ -325,6 +323,14 @@ impl Object {
         Ok(())
     }
 
+    pub fn record_previous_value_for_field_if_needed(&self, field: &Field) {
+        if !self.is_new() && field.previous_value_rule == PreviousValueRule::Keep {
+            if self.inner.previous_value_map.lock().unwrap().get(field.name()).is_none() {
+                self.inner.previous_value_map.lock().unwrap().insert(field.name().to_string(), self.get_value(field.name()).unwrap());
+            }
+        }
+    }
+
     pub fn set(&self, key: impl AsRef<str>, value: impl Into<Value>) -> ActionResult<()> {
         self.set_value(key, value.into())
     }
@@ -333,7 +339,7 @@ impl Object {
         self._set_value(key, value, true)
     }
 
-    pub(crate) async fn _check_write_rule(&self, key: impl AsRef<str>, value: &Value, path: &KeyPath<'_>) -> ActionResult<()> {
+    pub(crate) async fn check_write_rule(&self, key: impl AsRef<str>, value: &Value, path: &KeyPath<'_>) -> ActionResult<()> {
         let field = self.model().field(key.as_ref()).unwrap();
         let is_new = self.is_new();
         let valid = match &field.write_rule {
@@ -351,9 +357,35 @@ impl Object {
             }
         };
         if valid {
-            Err(ActionError::unexpected_input_key(key.as_ref(), &(path + key.as_ref())))
+            Err(ActionError::unexpected_input_key(key.as_ref(), path))
         } else {
             Ok(())
+        }
+    }
+
+    fn set_value_to_atomic_updator_map(&self, key: &str, value: Value) {
+        self.inner.atomic_updator_map.lock().unwrap().insert(key.to_string(), value);
+        if !self.is_new() {
+            self.inner.is_modified.store(true, Ordering::SeqCst);
+            self.inner.modified_fields.lock().unwrap().insert(key.to_string());
+        }
+    }
+
+    fn set_value_to_value_map(&self, key: &str, value: Value) {
+        if value.is_null() {
+            self.inner.value_map.lock().unwrap().remove(key);
+        } else {
+            self.inner.value_map.lock().unwrap().insert(key.to_string(), value);
+        }
+        if !self.is_new() {
+            self.inner.is_modified.store(true, Ordering::SeqCst);
+            self.inner.modified_fields.lock().unwrap().insert(key.to_string());
+            if let Some(properties) = self.model().field_property_map().get(&key) {
+                for property in properties {
+                    self.inner.modified_fields.lock().unwrap().insert(property.clone());
+                    self.inner.cached_property_map.lock().unwrap().remove(property);
+                }
+            }
         }
     }
 

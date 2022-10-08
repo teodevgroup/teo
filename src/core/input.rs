@@ -1,14 +1,7 @@
+use crate::core::input::Input::{AtomicUpdator, SetValue};
 use crate::core::tson::Value;
 
-pub(crate) enum AtomicUpdateType {
-    Increment(Value),
-    Decrement(Value),
-    Multiply(Value),
-    Divide(Value),
-    Push(Value),
-}
-
-pub enum RelationInputType {
+pub enum RelationInput {
     // both create and update
     Create(Value),
     Set(Value),
@@ -24,9 +17,25 @@ pub enum RelationInputType {
 
 pub(crate) enum Input {
     SetValue(Value),
-    AtomicUpdate(AtomicUpdateType),
-    RelationInput(RelationInputType),
+    AtomicUpdator(Value),
 }
 
-unsafe impl Send for AtomicUpdateType { }
-unsafe impl Sync for AtomicUpdateType { }
+impl Input {
+    pub(crate) fn decode_field(value: &Value) -> Input {
+        if let Some(value) = value.as_hashmap() {
+            let key = value.keys().next().unwrap();
+            let value = value.values().next().unwrap();
+            if key.as_str() == "set" {
+                SetValue(value.clone())
+            } else {
+                AtomicUpdator(value.clone())
+            }
+        } else {
+            SetValue(value.clone())
+        }
+    }
+
+    // pub(crate) fn decode_relation(value: &Value) -> Input {
+    //
+    // }
+}
