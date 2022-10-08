@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use key_path::{KeyPath, path};
 use async_recursion::async_recursion;
+use maplit::hashmap;
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
 use crate::core::env::source::Source;
@@ -541,7 +542,7 @@ impl Object {
     }
 
     #[async_recursion(?Send)]
-    pub(crate) async fn delete_from_database(&self, session: Arc<dyn SaveSession>, no_recursive: bool) -> ActionResult<()> {
+    pub(crate) async fn delete_from_database(&self, session: Arc<dyn SaveSession>) -> ActionResult<()> {
         let model = self.model();
         let graph = self.graph();
         // check deny first
@@ -689,7 +690,7 @@ impl Object {
                     finder.insert(field_name.to_string(), val);
                 }
                 let relation_object = self.graph().find_unique(through, &tson!({"where": finder}), true, env).await?;
-                relation_object.delete_from_database(session.clone(), false).await?;
+                relation_object.delete_from_database(session.clone()).await?;
             }
             None => { // no join table
                 for (index, reference) in relation.references().iter().enumerate() {
@@ -774,7 +775,7 @@ impl Object {
     }
 
     pub async fn delete(&self) -> ActionResult<()> {
-        self.delete_from_database(self.graph().connector().new_save_session(), false).await
+        self.delete_from_database(self.graph().connector().new_save_session()).await
     }
 
     pub(crate) async fn to_json(&self) -> ActionResult<Value> {
@@ -892,6 +893,27 @@ impl Object {
         join_object.save_with_session_and_path(session.clone(), &path![]).await?;
     }
 
+    async fn delete_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation) {
+        let join_model = self.graph().model(relation.through().unwrap()).unwrap();
+        let env = self.env().nested(Intent::NestedJoinTableRecordDelete);
+        let local = relation.local();
+        let foreign = opposite_relation.local();
+        let join_local_relation = join_model.relation(local).unwrap();
+        let join_foreign_relation = join_model.relation(foreign).unwrap();
+        let local_join_relation = self.graph().opposite_relation(join_local_relation).1.unwrap();
+        let foreign_join_relation = self.graph().opposite_relation(join_foreign_relation).1.unwrap();
+        let where_local = self.intrinsic_where_unique_for_relation(local_join_relation);
+        let where_foreign = object.intrinsic_where_unique_for_relation(foreign_join_relation);
+        let mut r#where_map: HashMap<String, Value> = hashmap!{};
+        r#where_map.extend(where_local.as_hashmap().unwrap()).extend(where_foreign.as_hashmap().unwrap());
+        let r#where = Value::HashMap(r#where_map);
+        let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
+            Ok(object) => object,
+            Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Join object is not found.", path![])),
+        };
+        object.delete_from_database(session.clone()).await?;
+    }
+
     fn assign_linked_values_to_related_object(&self, object: &Object, opposite_relation: &Relation) {
         for (field, reference) in opposite_relation.iter() {
             object.set_value_to_value_map(field, self.get_value_map_value(reference));
@@ -1003,18 +1025,10 @@ impl Object {
             Ok(object) => object,
             Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
         };
-        //object.
+        object.delete_from_database(session.clone()).await?;
         if relation.has_join_table() {
-
-        }
-        else {
-
-            let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
-                Ok(object) => object,
-                Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
-            };
-            object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
-            object.save_with_session_and_path(session.clone(), path).await?;
+            let opposite_relation = self.graph().opposite_relation(relation).1.unwrap();
+            self.delete_join_object(&object, relation, opposite_relation).await?;
         }
         Ok(())
     }
