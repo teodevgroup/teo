@@ -40,7 +40,7 @@ impl Input {
         (value.keys().next().unwrap().as_str(), value.values().next().unwrap())
     }
 
-    pub fn has_i_mode(map: &HashMap<String, Value>) -> bool {
+    pub(crate) fn has_i_mode(map: &HashMap<String, Value>) -> bool {
         match map.get("mode") {
             Some(val) => {
                 if let Some(str) = val.as_str() {
@@ -55,4 +55,17 @@ impl Input {
         }
     }
 
+    pub(crate) fn has_negative_take(json_value: &Value) -> bool {
+        if json_value.is_hashmap() {
+            let take = json_value.as_hashmap().unwrap().get("take");
+            if take.is_some() {
+                let take = take.unwrap();
+                if take.is_number() {
+                    let take = take.as_i64().unwrap();
+                    return take < 0;
+                }
+            }
+        }
+        false
+    }
 }
