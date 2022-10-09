@@ -16,8 +16,15 @@ impl Aggregation {
     pub(crate) fn build(model: &Model, graph: &Graph, r#type: QueryPipelineType, mutation_mode: bool, value: &Value) -> ActionResult<Vec<Document>> {
         let mut retval: Vec<Document> = vec![];
         let r#where = value.get("where");
+        let order_by = value.get("orderBy");
+        let distinct = value.get("distinct");
         let skip = value.get("skip");
         let take = value.get("take");
+        let page_size = value.get("pageSize");
+        let page_number = value.get("pageNumber");
+        let select = value.get("select");
+        let include = value.get("include");
+
         // if cursor exists, we modify the actual where
         let cursor_where_additions = if let Some(cursor) = value.get("cursor") {
             let cursor = cursor.as_hashmap().unwrap();
@@ -40,9 +47,112 @@ impl Aggregation {
             let lookups_for_relation_where = Self::build_lookups_for_relation_where(model, graph, r#where)?;
             retval.extend(lookups_for_relation_where)
         }
+        // $match
+        if let Some(r#where) = r#where {
+            let r#match = Self::build_where(model, graph, r#where)?;
+            if !r#match.is_empty() {
+                if let Some(cursor_where_additions) = cursor_where_additions {
+                    retval.push(doc!{"$match": {"$and": [r#match, cursor_where_additions]}});
+                } else {
+                    retval.push(doc!{"$match": r#match});
+                }
+            } else {
+                if let Some(cursor_where_additions) = cursor_where_additions {
+                    retval.push(doc!{"$match": cursor_where_additions});
+                }
+            }
+        }
+        // remove lookup for matching here
+        if let Some(r#where) = r#where {
+            let unsets = Self::build_unsets_for_relation_where(model, r#where)?;
+            if !unsets.is_empty() {
+                retval.extend(unsets);
+            }
+        }
+        // sort without distinct. If distinct, sort later in distinct
+        if let Some(order_by) = order_by {
+            if distinct.is_none() {
+                let reverse = match take {
+                    Some(take) => take.as_i64().unwrap() < 0,
+                    None => false
+                };
+                let sort = Self::build_order_by(model, order_by, reverse)?;
+                if !sort.is_empty() {
+                    retval.push(doc!{"$sort": sort});
+                }
+            }
+        }
+        // $skip and $limit
+        if page_size.is_some() && page_number.is_some() {
+            retval.push(doc!{"$skip": ((page_number.unwrap() - 1) * page_size.unwrap()) as i64});
+            retval.push(doc!{"$limit": page_size.unwrap() as i64});
+        } else {
+            if skip.is_some() {
+                retval.push(doc!{"$skip": skip.unwrap() as i64});
+            }
+            if take.is_some() {
+                retval.push(doc!{"$limit": take.unwrap().abs() as i64});
+            }
+        }
+        // distinct or select
+        // distinct ($group and $project)
+        if let Some(distinct) = distinct {
+            // $group
+            let mut group_id = doc!{};
+            for value in distinct.as_vec().unwrap().iter() {
+                let val = value.as_str().unwrap();
+                group_id.insert(val, format!("${val}"));
+            }
+            let empty = tson!({});
+            let mut group_data = build_select_input(model, graph, select.unwrap_or(&empty), Some(distinct))?.unwrap();
+            group_data.insert("_id", group_id);
+            retval.push(doc!{"$group": &group_data});
+            if group_data.get("__id").is_some() {
+                retval.push(doc!{"$addFields": {"_id": "$__id"}});
+                retval.push(doc!{"$unset": "__id"});
+            } else {
+                retval.push(doc!{"$unset": "_id"});
+            }
+            // $sort again if distinct
+            let reverse = match take {
+                Some(take) => take.as_i64().unwrap() < 0,
+                None => false
+            };
+            if let Some(order_by) = order_by {
+                let sort = Self::build_order_by(model, order_by, reverse)?;
+                if !sort.is_empty() {
+                    retval.push(doc!{"$sort": sort});
+                }
+            }
+        } else {
+            // $project
+            if select.is_some() {
+                let select_input = build_select_input(model, graph, select.unwrap(), distinct)?;
+                if let Some(select_input) = select_input {
+                    retval.push(doc!{"$project": select_input})
+                }
+            }
+        }
+        Ok(retval)
+    }
 
+    fn build_select(model: &Model, graph: &Graph, select: &Value, distinct: Option<&Value>) -> ActionResult<Document> {
 
+    }
 
+    fn build_order_by(_model: &Model, order_by: &Value, reverse: bool) -> ActionResult<Document> {
+        let mut retval = doc!{};
+        for sort in order_by.as_vec().unwrap().iter() {
+            let (key, value) = Input::key_value(sort.as_hashmap().unwrap());
+            if value.is_string() {
+                let str_val = value.as_str().unwrap();
+                if str_val == "asc" {
+                    retval.insert(key, if reverse { -1 } else { 1 });
+                } else if str_val == "desc" {
+                    retval.insert(key, if reverse { 1 } else { -1 });
+                }
+            }
+        }
         Ok(retval)
     }
 
@@ -402,6 +512,17 @@ impl Aggregation {
         Ok(retval)
     }
 
+    fn build_unsets_for_relation_where(model: &Model, r#where: &Value) -> ActionResult<Vec<Document>> {
+        let r#where = r#where.as_hashmap().unwrap();
+        let mut retval: Vec<Document> = vec![];
+        for (key, _) in r#where.iter() {
+            if let Some(_) = model.relation(key) {
+                retval.push(doc!{"$unset": key})
+            }
+        }
+        Ok(retval)
+    }
+
     fn build_lookups_for_relation_where(model: &Model, graph: &Graph, r#where: &Value) -> ActionResult<Vec<Document>> {
         let r#where = r#where.as_hashmap().unwrap();
         let mut include_input = HashMap::new();
@@ -433,7 +554,7 @@ impl Aggregation {
             }
         }
         Ok(if !include_input.is_empty() {
-            build_lookup_inputs(model, graph, QueryPipelineType::Many, false, &Value::HashMap(include_input), path)?
+            Self::build_lookups(model, graph, &Value::HashMap(include_input))?
         } else {
             vec![]
         })

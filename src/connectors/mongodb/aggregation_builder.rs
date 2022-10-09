@@ -16,43 +16,6 @@ use crate::core::input::Input;
 use crate::core::model::index::ModelIndexType;
 use crate::tson;
 
-pub(crate) fn build_unsets_for_match_lookup(model: &Model, _graph: &Graph, r#where: Option<&Value>) -> Result<Vec<Document>, ActionError> {
-    if let None = r#where { return Ok(vec![]); }
-    let r#where = r#where.unwrap();
-    if !r#where.is_object() { return Err(ActionError::invalid_query_input("'where' should be an object.")); }
-    let r#where = r#where.as_hashmap().unwrap();
-    let mut retval: Vec<Document> = vec![];
-    for (key, _value) in r#where.iter() {
-        let relation = model.relation(key);
-        if relation.is_some() {
-            retval.push(doc!{"$unset": key})
-        }
-    }
-    Ok(retval)
-}
-
-pub(crate) fn build_order_by_input(_model: &Model, _graph: &Graph, order_by: Option<&Value>, reverse: bool, path: &KeyPath) -> Result<Document, ActionError> {
-    if order_by.is_none() {
-        return Ok(doc!{});
-    }
-    let order_by = order_by.unwrap();
-    let mut retval = doc!{};
-    for (index, sort) in order_by.as_vec().unwrap().iter().enumerate() {
-        let (key, value) = Input::key_value(sort.as_hashmap().unwrap());
-        if value.is_string() {
-            let str_val = value.as_str().unwrap();
-            if str_val == "asc" {
-                retval.insert(key, if reverse { -1 } else { 1 });
-            } else if str_val == "desc" {
-                retval.insert(key, if reverse { 1 } else { -1 });
-            }
-        } else {
-            return Err(ActionError::unexpected_input_value("'asc' or 'desc'", &(path + index)))
-        }
-    }
-    Ok(retval)
-}
-
 fn distinct_key(original: impl AsRef<str>) -> String {
     if original.as_ref() == "_id" {
         "__id".to_string()
@@ -224,83 +187,9 @@ fn build_query_pipeline(
     // $build the pipeline
     let mut retval: Vec<Document> = vec![];
 
-    // $match
-    let r#match = build_where_input(model, graph, r#where, &(path + "where"))?;
-    if !r#match.is_empty() {
-        if cursor_additional_where.is_some() {
-            retval.push(doc!{"$match": {"$and": [r#match, cursor_additional_where.unwrap()]}});
-        } else {
-            retval.push(doc!{"$match": r#match});
-        }
-    } else {
-        if cursor_additional_where.is_some() {
-            retval.push(doc!{"$match": cursor_additional_where.unwrap()});
-        }
-    }
-    // remove lookup for matching here
-    let unsets = build_unsets_for_match_lookup(model, graph, r#where)?;
-    if !unsets.is_empty() {
-        retval.extend(unsets);
-    }
-    if distinct.is_none() {
-        // $sort, if distinct, sort later in distinct
-        let reverse = match take {
-            Some(take) => take < 0,
-            None => false
-        };
-        let sort = build_order_by_input(model, graph, order_by, reverse, &(path + "orderBy"))?;
-        if !sort.is_empty() {
-            retval.push(doc!{"$sort": sort});
-        }
-    }
-    // $skip and $limit
-    if page_size.is_some() && page_number.is_some() {
-        retval.push(doc!{"$skip": ((page_number.unwrap() - 1) * page_size.unwrap()) as i64});
-        retval.push(doc!{"$limit": page_size.unwrap() as i64});
-    } else {
-        if skip.is_some() {
-            retval.push(doc!{"$skip": skip.unwrap() as i64});
-        }
-        if take.is_some() {
-            retval.push(doc!{"$limit": take.unwrap().abs() as i64});
-        }
-    }
-    // distinct ($group and $project)
-    if let Some(distinct) = distinct {
-        // $group
-        let mut group_id = doc!{};
-        for value in distinct.as_vec().unwrap().iter() {
-            let val = value.as_str().unwrap();
-            group_id.insert(val, format!("${val}"));
-        }
-        let empty = tson!({});
-        let mut group_data = build_select_input(model, graph, select.unwrap_or(&empty), Some(distinct))?.unwrap();
-        group_data.insert("_id", group_id);
-        retval.push(doc!{"$group": &group_data});
-        if group_data.get("__id").is_some() {
-            retval.push(doc!{"$addFields": {"_id": "$__id"}});
-            retval.push(doc!{"$unset": "__id"});
-        } else {
-            retval.push(doc!{"$unset": "_id"});
-        }
-        // $sort again if distinct
-        let reverse = match take {
-            Some(take) => take < 0,
-            None => false
-        };
-        let sort = build_order_by_input(model, graph, order_by, reverse, &(path + "orderBy"))?;
-        if !sort.is_empty() {
-            retval.push(doc!{"$sort": sort});
-        }
-    } else {
-        // $project
-        if select.is_some() {
-            let select_input = build_select_input(model, graph, select.unwrap(), distinct)?;
-            if let Some(select_input) = select_input {
-                retval.push(doc!{"$project": select_input})
-            }
-        }
-    }
+
+
+
     // $lookup
     if include.is_some() {
         let mut lookups = build_lookup_inputs(model, graph, QueryPipelineType::Many, mutation_mode, include.unwrap(), path)?;
