@@ -134,9 +134,15 @@ impl Aggregation {
                     }
                 }
             }
-            if select.is_some() {
+        }
+        // $lookup
+        if let Some(include) = include {
+            let mut lookups = Self::build_lookups(model, graph, include)?;
+            if !lookups.is_empty() {
+                retval.append(&mut lookups);
             }
         }
+
         Ok(retval)
     }
 
@@ -164,7 +170,7 @@ impl Aggregation {
         let mut result = doc!{};
         for key in keys.iter() {
             if distinct.is_some() {
-                result.insert(distinct_key(key), doc!{"$first": format!("${key}")});
+                result.insert(Self::distinct_key(key), doc!{"$first": format!("${key}")});
             } else {
                 result.insert(key, 1);
             }
@@ -593,5 +599,13 @@ impl Aggregation {
         } else {
             vec![]
         })
+    }
+
+    fn distinct_key(original: impl AsRef<str>) -> String {
+        if original.as_ref() == "_id" {
+            "__id".to_string()
+        } else {
+            original.as_ref().to_string()
+        }
     }
 }

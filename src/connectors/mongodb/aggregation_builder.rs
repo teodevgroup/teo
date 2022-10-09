@@ -16,14 +16,6 @@ use crate::core::input::Input;
 use crate::core::model::index::ModelIndexType;
 use crate::tson;
 
-fn distinct_key(original: impl AsRef<str>) -> String {
-    if original.as_ref() == "_id" {
-        "__id".to_string()
-    } else {
-        original.as_ref().to_string()
-    }
-}
-
 fn insert_group_set_unset_for_aggregate(model: &Model, group: &mut Document, set: &mut Document, unset: &mut Vec<String>, k: &str, g: &str, having_mode: bool) {
     let prefix = if having_mode { "_having" } else { "" };
     let dbk = if k == "_all" { "_all" } else {model.field(k).unwrap().column_name() };
@@ -94,15 +86,6 @@ fn build_query_pipeline(
     let mut retval: Vec<Document> = vec![];
 
 
-
-
-    // $lookup
-    if include.is_some() {
-        let mut lookups = build_lookup_inputs(model, graph, QueryPipelineType::Many, mutation_mode, include.unwrap(), path)?;
-        if !lookups.is_empty() {
-            retval.append(&mut lookups);
-        }
-    }
     // group by contains it's own aggregates
     let empty_aggregates = tson!({});
     let the_aggregates = if by.is_some() {
@@ -190,40 +173,4 @@ fn build_query_pipeline(
         }
     }
     Ok(retval)
-}
-
-/// Build MongoDB aggregation pipeline for querying.
-/// # Arguments
-///
-/// * `mutation_mode` - When mutation mode is true, `select` and `include` is ignored.
-///
-pub(crate) fn build_query_pipeline_from_json(
-    model: &Model,
-    graph: &Graph,
-    r#type: QueryPipelineType,
-    mutation_mode: bool,
-    json_value: &Value,
-    path: &KeyPath,
-) -> Result<Vec<Document>, ActionError> {
-    let user_args = user_json_args(model, graph, r#type, mutation_mode, json_value)?;
-    let result = build_query_pipeline(
-        model,
-        graph,
-        r#type,
-        mutation_mode,
-        user_args.r#where,
-        user_args.order_by,
-        user_args.cursor,
-        user_args.take,
-        user_args.skip,
-        user_args.page_size,
-        user_args.page_number,
-        user_args.include,
-        user_args.distinct,
-        user_args.select,
-        user_args.aggregates.as_ref(),
-        user_args.by,
-        user_args.having,
-        path);
-    result
 }
