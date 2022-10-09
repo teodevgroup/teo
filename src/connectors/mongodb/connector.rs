@@ -286,7 +286,8 @@ impl MongoDBConnector {
                     doc.insert(column_name, val);
                 }
             } else if let Some(property) = model.property(key) {
-                let val: Bson = object.get_property(key).await.unwrap().into();
+                let val: Value = object.get_property(key).await.unwrap();
+                let val: Bson = val.into();
                 if val != Bson::Null {
                     doc.insert(key, val);
                 }
@@ -327,13 +328,13 @@ impl MongoDBConnector {
                 if let Some(updator) = object.get_atomic_updator(key) {
                     let (key, val) = Input::key_value(updator.as_hashmap().unwrap());
                     match key {
-                        "increment" => inc.insert(column_name, val.into()),
+                        "increment" => inc.insert(column_name, Bson::from(val)),
                         "decrement" => inc.insert(column_name, Bson::from(&val.neg())),
                         "multiply" => mul.insert(column_name, Bson::from(val)),
                         "divide" => mul.insert(column_name, Bson::Double(val.recip())),
                         "push" => push.insert(column_name, Bson::from(val)),
                         _ => panic!("Unhandled key."),
-                    }
+                    };
                 } else {
                     let val = object.get_value(key).unwrap();
                     let bson_val: Bson = val.into();

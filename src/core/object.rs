@@ -567,7 +567,7 @@ impl Object {
             let (opposite_model, opposite_relation) = graph.opposite_relation(relation);
             if let Some(opposite_relation) = opposite_relation {
                 if opposite_relation.delete_rule() == Deny {
-                    let finder = self.finder_for_relation(relation);
+                    let finder = self.intrinsic_where_unique_for_relation(relation);
                     let count = graph.count(opposite_model.name(), &finder).await.unwrap();
                     if count > 0 {
                         return Err(ActionError::deletion_denied(relation.name()));
@@ -592,7 +592,7 @@ impl Object {
                         if !opposite_relation.has_foreign_key() {
                             continue
                         }
-                        let finder = self.finder_for_relation(relation);
+                        let finder = self.intrinsic_where_unique_for_relation(relation);
                         graph.batch(opposite_model.name(), &finder, Env::new(Source::CustomCode, Intent::Delete), |object| async move {
                             for key in opposite_relation.fields() {
                                 object.set_value(key, Value::Null)?;
@@ -602,7 +602,7 @@ impl Object {
                         }).await?;
                     },
                     DeleteRule::Cascade => {
-                        let finder = self.finder_for_relation(relation);
+                        let finder = self.intrinsic_where_unique_for_relation(relation);
                         graph.batch(opposite_model.name(), &finder, Env::new(Source::CustomCode, Intent::Delete), |object| async move {
                             object.delete_from_database(self.graph().connector().new_save_session()).await?;
                             Ok(())
@@ -818,7 +818,8 @@ impl Object {
         let where_local = self.intrinsic_where_unique_for_relation(local_join_relation);
         let where_foreign = object.intrinsic_where_unique_for_relation(foreign_join_relation);
         let mut r#where_map: HashMap<String, Value> = hashmap!{};
-        r#where_map.extend(where_local.as_hashmap().unwrap()).extend(where_foreign.as_hashmap().unwrap());
+        r#where_map.extend(where_local.as_hashmap().cloned().unwrap());
+        r#where_map.extend(where_foreign.as_hashmap().cloned().unwrap());
         let r#where = Value::HashMap(r#where_map);
         let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
             Ok(object) => object,
@@ -890,7 +891,7 @@ impl Object {
         let env = self.env().alter_intent(Intent::NestedConnect);
         let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
             Ok(object) => object,
-            Err(_) => self.graph().new_object_with_tson_and_path(relation.model(), create, &(path + "create"), env)?,
+            Err(_) => self.graph().new_object_with_tson_and_path(relation.model(), create, &(path + "create"), env).await?,
         };
         self.link_and_save_relation_object(relation, &object, session.clone(), path).await
     }
@@ -909,7 +910,7 @@ impl Object {
             let env = self.env().alter_intent(Intent::NestedDisconnect);
             let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
                 Ok(object) => object,
-                Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+                Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
             };
             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
             object.save_with_session_and_path(session.clone(), path).await?;
@@ -919,19 +920,19 @@ impl Object {
 
     async fn nested_upsert_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
         let mut r#where = self.intrinsic_where_unique_for_relation(relation);
-        r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap());
+        r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().cloned().unwrap());
         let create = value.get("create").unwrap();
         let update = value.get("update").unwrap();
         let env = self.env().alter_intent(Intent::NestedUpsertActuallyUpdate);
         match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env).await {
             Ok(object) => {
                 let path = path + "update";
-                object.set_tson_with_path(update, &path)?;
-                object.save_with_session_and_path(session.clone(), &path)?;
+                object.set_tson_with_path(update, &path).await?;
+                object.save_with_session_and_path(session.clone(), &path).await?;
             },
             Err(_) => {
                 let env = self.env().alter_intent(Intent::NestedUpsertActuallyCreate);
-                let object = self.graph().new_object_with_tson_and_path(relation.model(), create, &(path + "create"), env)?;
+                let object = self.graph().new_object_with_tson_and_path(relation.model(), create, &(path + "create"), env).await?;
                 self.link_and_save_relation_object(relation, &object, session.clone(), path).await?;
             },
         };
@@ -943,16 +944,16 @@ impl Object {
             let env = self.env().alter_intent(Intent::NestedJoinTableRecordDelete);
             let object = match self.graph().find_unique(relation.model(), &tson!({ "where": value }), true, env.clone()).await {
                 Ok(object) => object,
-                Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+                Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
             };
-            self.delete_join_object(&object, relation, self.graph().opposite_relation(relation).1.unwrap()).await?;
+            self.delete_join_object(&object, relation, self.graph().opposite_relation(relation).1.unwrap(), session.clone(), path).await?;
         } else {
             let mut r#where = self.intrinsic_where_unique_for_relation(relation);
-            r#where.as_hashmap_mut().unwrap().extend(value.as_hashmap());
+            r#where.as_hashmap_mut().unwrap().extend(value.as_hashmap().cloned().unwrap().into_iter());
             let env = self.env().alter_intent(Intent::NestedDisconnect);
             let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
                 Ok(object) => object,
-                Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+                Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
             };
             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
             object.save_with_session_and_path(session.clone(), path).await?;
@@ -962,11 +963,11 @@ impl Object {
 
     async fn nested_many_update_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
         let mut r#where = self.intrinsic_where_unique_for_relation(relation);
-        r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().unwrap());
+        r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().cloned().unwrap());
         let env = self.env().alter_intent(Intent::NestedUpdate);
         let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
             Ok(object) => object,
-            Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", &(path + "where"))),
+            Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", &(path + "where"))),
         };
         object.set_tson_with_path(value.get("update").unwrap(), &(path + "update")).await?;
         object.save_with_session_and_path(session.clone(), path).await?;
@@ -975,7 +976,7 @@ impl Object {
 
     async fn nested_many_update_many_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
         let mut r#where = self.intrinsic_where_unique_for_relation(relation);
-        r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().unwrap());
+        r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().cloned().unwrap());
         let env = self.env().alter_intent(Intent::NestedUpdate);
         let update = value.get("update").unwrap();
         let objects = self.graph().find_many(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await.unwrap();
@@ -991,7 +992,7 @@ impl Object {
         let env = self.env().alter_intent(Intent::NestedUpdate);
         let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
             Ok(object) => object,
-            Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+            Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
         };
         object.set_tson_with_path(value, path).await?;
         object.save_with_session_and_path(session.clone(), path).await?;
@@ -1008,12 +1009,12 @@ impl Object {
         let env = self.env().alter_intent(Intent::NestedDelete);
         let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
             Ok(object) => object,
-            Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+            Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
         };
         object.delete_from_database(session.clone()).await?;
         if relation.has_join_table() {
             let opposite_relation = self.graph().opposite_relation(relation).1.unwrap();
-            self.delete_join_object(&object, relation, opposite_relation).await?;
+            self.delete_join_object(&object, relation, opposite_relation, session.clone(), path).await?;
         }
         Ok(())
     }
@@ -1023,16 +1024,16 @@ impl Object {
             self.remove_linked_values_from_related_relation(relation);
         }
         let mut r#where = self.intrinsic_where_unique_for_relation(relation);
-        r#where.as_hashmap_mut().unwrap().extend(value.as_hashmap().unwrap());
+        r#where.as_hashmap_mut().unwrap().extend(value.as_hashmap().cloned().unwrap());
         let env = self.env().alter_intent(Intent::NestedUpdate);
         let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
             Ok(object) => object,
-            Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+            Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
         };
         object.delete_from_database(session.clone()).await?;
         if relation.has_join_table() {
             let opposite_relation = self.graph().opposite_relation(relation).1.unwrap();
-            self.delete_join_object(&object, relation, opposite_relation).await?;
+            self.delete_join_object(&object, relation, opposite_relation, session.clone(), path).await?;
         }
         Ok(())
     }
@@ -1042,14 +1043,14 @@ impl Object {
             self.remove_linked_values_from_related_relation(relation);
         }
         let mut r#where = self.intrinsic_where_unique_for_relation(relation);
-        r#where.as_hashmap_mut().unwrap().extend(value.as_hashmap().unwrap());
+        r#where.as_hashmap_mut().unwrap().extend(value.as_hashmap().cloned().unwrap());
         let env = self.env().alter_intent(Intent::NestedUpdate);
         let objects = self.graph().find_many(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await.unwrap();
         for object in objects {
             object.delete_from_database(session.clone()).await?;
             if relation.has_join_table() {
                 let opposite_relation = self.graph().opposite_relation(relation).1.unwrap();
-                self.delete_join_object(&object, relation, opposite_relation).await?;
+                self.delete_join_object(&object, relation, opposite_relation, session.clone(), path).await?;
             }
         }
         Ok(())
@@ -1072,37 +1073,110 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_enumerate<'a, 'b, F, Fut, S>(&self, value: &'a Value, path: &'a KeyPath<'a>, session: Arc<dyn SaveSession>, f: F) -> ActionResult<()> where
-    F: Fn(&'a Value, KeyPath<'a>, &Arc<S>) -> Fut,
-    Fut: Future<Output = ActionResult<()>>,
-    S: SaveSession,
-    {
-        match value {
-            Value::HashMap(map) => f(value, path.clone(), &session).await,
-            Value::Vec(vec) => {
-                for (i, v) in vec.iter().enumerate() {
-                    f(v, path + i, &session).await?;
-                }
-                Ok(())
-            },
-            _ => panic!("Unhandled type."),
-        }
-    }
-
     async fn perform_relation_manipulation_many(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
         for (key, value) in value.as_hashmap().unwrap() {
             let key = key.as_str();
             let path = path + key;
             match key {
-                "create" | "createMany" => { self.nested_enumerate(value, &path, session.clone(), |v, p, s| async move { self.nested_create_relation_object(relation, v, s.clone(), &p).await }).await? },
-                "connect" | "set" => { self.nested_enumerate(value, &path, session.clone(), |v, p, s| async move { self.nested_connect_relation_object(relation, v, s.clone(), &p).await }).await? },
-                "connectOrCreate" => { self.nested_enumerate(value, &path, session.clone(), |v, p, s| async move { self.nested_connect_or_create_relation_object(relation, v, s.clone(), &p).await }).await? },
-                "disconnect" => { self.nested_enumerate(value, &path,session.clone(), |v, p, s| async move { self.nested_many_disconnect_relation_object(relation, v, s.clone(), &p).await }).await? },
-                "upsert" => { self.nested_enumerate(value, &path, session.clone(), |v, p, s| async move { self.nested_upsert_relation_object(relation, v, s.clone(), &p).await }).await? },
-                "update" => { self.nested_enumerate(value, &path, session.clone(), |v, p, s| async move { self.nested_many_update_relation_object(relation, v, s.clone(), &p).await }).await? },
-                "updateMany" => { self.nested_enumerate(value, &path, session.clone(), |v, p, s| async move { self.nested_many_update_many_relation_object(relation, v, s.clone(), &p).await }).await? },
-                "delete" => { self.nested_enumerate(value, &path, session.clone(), |v, p, s| async move { self.nested_many_delete_relation_object(relation, v, s.clone(), &p).await }).await? },
-                "deleteMany" => { self.nested_enumerate(value, &path, session.clone(), |v, p, s| async move { self.nested_many_delete_many_relation_object(relation, v, s.clone(), &p).await }).await? },
+                "create" | "createMany" => {
+                    if let Some(_) = value.as_hashmap() {
+                        self.nested_create_relation_object(relation, value, session.clone(), &path).await?;
+                    } else if let Some(vec) = value.as_vec() {
+                        for (i, v) in vec.iter().enumerate() {
+                            self.nested_create_relation_object(relation, v, session.clone(), &(&path + i)).await?;
+                        }
+                    } else {
+                        panic!("Unhandled type.")
+                    }
+                },
+                "connect" | "set" => {
+                    if let Some(_) = value.as_hashmap() {
+                        self.nested_connect_relation_object(relation, value, session.clone(), &path).await?;
+                    } else if let Some(vec) = value.as_vec() {
+                        for (i, v) in vec.iter().enumerate() {
+                            self.nested_connect_relation_object(relation, v, session.clone(), &(&path + i)).await?;
+                        }
+                    } else {
+                        panic!("Unhandled type.")
+                    }
+                },
+                "connectOrCreate" => {
+                    if let Some(_) = value.as_hashmap() {
+                        self.nested_connect_or_create_relation_object(relation, value, session.clone(), &path).await?;
+                    } else if let Some(vec) = value.as_vec() {
+                        for (i, v) in vec.iter().enumerate() {
+                            self.nested_connect_or_create_relation_object(relation, v, session.clone(), &(&path + i)).await?;
+                        }
+                    } else {
+                        panic!("Unhandled type.")
+                    }
+                },
+                "disconnect" => {
+                    if let Some(_) = value.as_hashmap() {
+                        self.nested_many_disconnect_relation_object(relation, value, session.clone(), &path).await?;
+                    } else if let Some(vec) = value.as_vec() {
+                        for (i, v) in vec.iter().enumerate() {
+                            self.nested_many_disconnect_relation_object(relation, v, session.clone(), &(&path + i)).await?;
+                        }
+                    } else {
+                        panic!("Unhandled type.")
+                    }
+                },
+                "upsert" => {
+                    if let Some(_) = value.as_hashmap() {
+                        self.nested_upsert_relation_object(relation, value, session.clone(), &path).await?;
+                    } else if let Some(vec) = value.as_vec() {
+                        for (i, v) in vec.iter().enumerate() {
+                            self.nested_upsert_relation_object(relation, v, session.clone(), &(&path + i)).await?;
+                        }
+                    } else {
+                        panic!("Unhandled type.")
+                    }
+                },
+                "update" => {
+                    if let Some(_) = value.as_hashmap() {
+                        self.nested_many_update_relation_object(relation, value, session.clone(), &path).await?;
+                    } else if let Some(vec) = value.as_vec() {
+                        for (i, v) in vec.iter().enumerate() {
+                            self.nested_many_update_relation_object(relation, v, session.clone(), &(&path + i)).await?;
+                        }
+                    } else {
+                        panic!("Unhandled type.")
+                    }
+                },
+                "updateMany" => {
+                    if let Some(_) = value.as_hashmap() {
+                        self.nested_many_update_many_relation_object(relation, value, session.clone(), &path).await?;
+                    } else if let Some(vec) = value.as_vec() {
+                        for (i, v) in vec.iter().enumerate() {
+                            self.nested_many_update_many_relation_object(relation, v, session.clone(), &(&path + i)).await?;
+                        }
+                    } else {
+                        panic!("Unhandled type.")
+                    }
+                },
+                "delete" => {
+                    if let Some(_) = value.as_hashmap() {
+                        self.nested_many_delete_relation_object(relation, value, session.clone(), &path).await?;
+                    } else if let Some(vec) = value.as_vec() {
+                        for (i, v) in vec.iter().enumerate() {
+                            self.nested_many_delete_relation_object(relation, v, session.clone(), &(&path + i)).await?;
+                        }
+                    } else {
+                        panic!("Unhandled type.")
+                    }
+                },
+                "deleteMany" => {
+                    if let Some(_) = value.as_hashmap() {
+                        self.nested_many_delete_many_relation_object(relation, value, session.clone(), &path).await?;
+                    } else if let Some(vec) = value.as_vec() {
+                        for (i, v) in vec.iter().enumerate() {
+                            self.nested_many_delete_many_relation_object(relation, v, session.clone(), &(&path + i)).await?;
+                        }
+                    } else {
+                        panic!("Unhandled type.")
+                    }
+                },
                 _ => panic!("Unhandled key."),
             }
         }
@@ -1135,7 +1209,7 @@ impl Object {
             // todo() err here
         }
         let relation = relation.unwrap();
-        let mut finder = self.finder_for_relation(relation);
+        let mut finder = self.intrinsic_where_unique_for_relation(relation);
         if let Some(find_unique_arg) = find_unique_arg {
             if let Some(include) = find_unique_arg.get("include") {
                 finder.as_hashmap_mut().unwrap().insert("include".to_owned(), include.clone());
@@ -1180,7 +1254,7 @@ impl Object {
         };
         let env = self.env().alter_intent(Intent::NestedIncluded);
         if let Some(_join_table) = relation.through() {
-            let identifier = self.json_identifier();
+            let identifier = self.identifier();
             let new_self = self.graph().find_unique(model.name(), &tson!({
                 "where": identifier,
                 "include": {
