@@ -707,7 +707,7 @@ impl Decoder {
         }
     }
 
-    fn decode_value_for_field_type<'a>(graph: &Graph, r#type: &FieldType, optional: bool, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+    pub(crate) fn decode_value_for_field_type<'a>(graph: &Graph, r#type: &FieldType, optional: bool, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         if optional && json_value.is_null() {
             return Ok(Value::Null);
         }

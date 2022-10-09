@@ -154,15 +154,15 @@ impl Object {
                             // record previous value if needed
                             self.record_previous_value_for_field_if_needed(field);
                             // on set pipeline
-                            let mut value = value;
                             let context = Context::initial_state(self.clone())
                                 .alter_key_path(path.clone())
                                 .alter_value(value);
                             let result_context = field.on_set_pipeline.process(context).await;
+                            let value = result_context.value();
                             match result_context.invalid_reason() {
                                 Some(reason) => return Err(ActionError::unexpected_input_value_with_reason(reason, &path)),
                                 None => {
-                                    self.check_write_rule(key, &value, &path).await?;
+                                    self.check_write_rule(key, value, &path).await?;
                                     self.set_value_to_value_map(key, value.clone());
                                 }
                             }
@@ -260,6 +260,14 @@ impl Object {
 
     fn set_value_to_atomic_updator_map(&self, key: &str, value: Value) {
         self.inner.atomic_updator_map.lock().unwrap().insert(key.to_string(), value);
+        if !self.is_new() {
+            self.inner.is_modified.store(true, Ordering::SeqCst);
+            self.inner.modified_fields.lock().unwrap().insert(key.to_string());
+        }
+    }
+
+    fn set_value_to_relation_manipulation_map(&self, key: &str, value: &Value) {
+        self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), value);
         if !self.is_new() {
             self.inner.is_modified.store(true, Ordering::SeqCst);
             self.inner.modified_fields.lock().unwrap().insert(key.to_string());

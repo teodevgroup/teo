@@ -100,4 +100,8 @@ impl<'a> Context<'a> {
     pub(crate) fn is_condition_false(&self) -> bool {
         self.stage.is_condition_false()
     }
+
+    pub(crate) fn value(&self) -> &Value {
+        &self.value
+    }
 }

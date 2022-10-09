@@ -526,7 +526,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     let obj = obj_result.unwrap();
     let auth_by_arg = by_field.auth_by_arg.as_ref().unwrap();
     let pipeline = auth_by_arg.as_pipeline().unwrap();
-    let action_by_input = decode_field_input(obj.graph(), by_value.unwrap(), &by_field.field_type, by_field.optionality.clone(), &path!["credentials", by_field.name()]);
+    let action_by_input = Decoder::decode_value_for_field_type(obj.graph(), by_field.r#type(), by_field.is_optional(), by_value.unwrap(), path!["credentials", by_field.name()])?;
     let _action_by_value = match action_by_input {
         Err(_err) => {
             return ActionError::unexpected_input_type("field value", path!["credentials", by_key.unwrap()]).into();
