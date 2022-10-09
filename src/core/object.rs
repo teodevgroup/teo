@@ -775,7 +775,7 @@ impl Object {
         Ok(())
     }
 
-    async fn create_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation) {
+    async fn create_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation) -> ActionResult<()> {
         let join_model = self.graph().model(relation.through().unwrap()).unwrap();
         let env = self.env().nested(Intent::NestedJoinTableRecordCreate);
         let join_object = self.graph().new_object(join_model.name(), env)?;
@@ -789,7 +789,7 @@ impl Object {
         join_object.save_with_session_and_path(session.clone(), &path![]).await?;
     }
 
-    async fn delete_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation) {
+    async fn delete_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation) -> ActionResult<()> {
         let join_model = self.graph().model(relation.through().unwrap()).unwrap();
         let env = self.env().nested(Intent::NestedJoinTableRecordDelete);
         let local = relation.local();
