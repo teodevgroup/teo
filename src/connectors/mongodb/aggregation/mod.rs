@@ -13,7 +13,7 @@ use crate::tson;
 pub(crate) struct Aggregation { }
 
 impl Aggregation {
-    pub(crate) fn build(model: &Model, graph: &Graph, r#type: QueryPipelineType, mutation_mode: bool, value: &Value) -> ActionResult<Vec<Document>> {
+    pub(crate) fn build(model: &Model, graph: &Graph, value: &Value) -> ActionResult<Vec<Document>> {
         let mut retval: Vec<Document> = vec![];
         let r#where = value.get("where");
         let order_by = value.get("orderBy");
@@ -354,7 +354,7 @@ impl Aggregation {
             inner_eq_values.push(doc! {"$eq": [format!("${foreign_column_name}"), format!("$${jt_column_name}")]});
         }
         let mut original_inner_pipeline = if value.is_hashmap() {
-            Self::build(opposite_model, graph, QueryPipelineType::Many, false, value)?;
+            Self::build(opposite_model, graph, value)?;
         } else {
             vec![]
         };
@@ -511,7 +511,7 @@ impl Aggregation {
             eq_values.push(doc!{"$eq": [format!("${reference_column_name}"), format!("$${reference_column_name}")]});
         }
         let mut inner_pipeline = if value.is_hashmap() {
-            Self::build(opposite_model, graph, QueryPipelineType::Many, false, value)?
+            Self::build(opposite_model, graph, value)?
         } else {
             vec![]
         };
