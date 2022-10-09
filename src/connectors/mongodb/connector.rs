@@ -181,7 +181,7 @@ impl MongoDBConnector {
                 let object_bsons = document.get(key).unwrap().as_array().unwrap();
                 let mut related: Vec<Object> = vec![];
                 for related_object_bson in object_bsons {
-                    let env = object.env().nested(Intent::NestedIncluded);
+                    let env = object.env().alter_intent(Intent::NestedIncluded);
                     let related_object = object.graph().new_object(model_name, env)?;
                     self.document_to_object(related_object_bson.as_document().unwrap(), &related_object, inner_select, inner_include)?;
                     related.push(related_object);
@@ -410,7 +410,7 @@ impl MongoDBConnector {
 #[async_trait]
 impl Connector for MongoDBConnector {
 
-    async fn save_object(&self, object: &Object) -> ActionResult<()> {
+    async fn save_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
             self.create_object(object).await
         } else {
@@ -418,7 +418,7 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn delete_object(&self, object: &Object) -> ActionResult<()> {
+    async fn delete_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
             return Err(ActionError::object_is_not_saved());
         }

@@ -82,7 +82,7 @@ The new generation server software.
 - Replace `serde_json` with our own `tson` **[DONE]**
 
 #### 0.0.32
-- Handle manipulation uses single or many **[IN PROGRESS]**
+- Handle manipulation uses single or many **[DONE]**
 - Bug fixes **[DONE]**
 - Remove position from env, it can be inferred from `intent` **[DONE]**
 

@@ -776,7 +776,7 @@ pub(crate) fn build_match_prediction_lookup(model: &Model, graph: &Graph, r#wher
     for (key, value) in r#where.iter() {
         let relation = model.relation(key);
         if relation.is_some() {
-            let (command, r_where) = Input::key_value(value, &(path + key))?;
+            let (command, r_where) = Input::key_value(value.as_hashmap().unwrap());
             match command {
                 "some" | "is" => {
                     include_input.insert(key.to_string(), tson!({
@@ -851,7 +851,7 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&V
             let relation = model.relation(key).unwrap();
             let model_name = relation.model();
             let this_model = graph.model(model_name).unwrap();
-            let (command, inner_where) = Input::key_value(value, &(path + key))?;
+            let (command, inner_where) = Input::key_value(value.as_hashmap().unwrap());
             let _inner_where = build_where_input(this_model, graph, Some(inner_where), &(path + key))?;
             match command {
                 "none" | "isNot" => {
@@ -1328,8 +1328,8 @@ fn build_query_pipeline(
         if cursor_map.len() != 1 {
             return Err(ActionError::invalid_query_input("'cursor' should have a single key which represents a unique constraint."));
         }
-        let (order_by_key, order_by_value) = Input::key_value(order_by.as_hashmap().unwrap())?;
-        let (cursor_key, cursor_value) = Input::key_value(cursor.as_hashmap().unwrap())?;
+        let (order_by_key, order_by_value) = Input::key_value(order_by.as_hashmap().unwrap());
+        let (cursor_key, cursor_value) = Input::key_value(cursor.as_hashmap().unwrap());
         if order_by_key != cursor_key {
             return Err(ActionError::invalid_query_input("'cursor' and 'orderBy' should have single same key."));
         }

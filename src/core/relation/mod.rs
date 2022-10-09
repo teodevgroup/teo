@@ -91,7 +91,7 @@ impl Relation {
     }
 }
 
-struct RelationIter<'a> {
+pub(crate) struct RelationIter<'a> {
     index: usize,
     relation: &'a Relation,
 }

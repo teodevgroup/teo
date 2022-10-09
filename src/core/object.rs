@@ -268,7 +268,7 @@ impl Object {
     }
 
     fn set_value_to_relation_manipulation_map(&self, key: &str, value: &Value) {
-        self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), value);
+        self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), value.clone());
         if !self.is_new() {
             self.inner.is_modified.store(true, Ordering::SeqCst);
             self.inner.modified_fields.lock().unwrap().insert(key.to_string());
@@ -284,7 +284,7 @@ impl Object {
         if !model_keys.contains(&key.as_ref().to_string()) {
             return Err(ActionError::invalid_key(key, self.model()));
         }
-        self.set_value_to_value_map(key, value);
+        self.set_value_to_value_map(key.as_ref(), value);
         Ok(())
     }
 
@@ -306,7 +306,7 @@ impl Object {
         if !self.is_new() {
             self.inner.is_modified.store(true, Ordering::SeqCst);
             self.inner.modified_fields.lock().unwrap().insert(key.to_string());
-            if let Some(properties) = self.model().field_property_map().get(&key) {
+            if let Some(properties) = self.model().field_property_map().get(key) {
                 for property in properties {
                     self.inner.modified_fields.lock().unwrap().insert(property.clone());
                     self.inner.cached_property_map.lock().unwrap().remove(property);
@@ -380,8 +380,8 @@ impl Object {
         }
     }
 
-    fn get_value_map_value(&self, key: impl AsRef<str>) -> Value {
-        match self.inner.value_map.lock().unwrap().get(&key.as_ref().to_string()) {
+    fn get_value_map_value(&self, key: &str) -> Value {
+        match self.inner.value_map.lock().unwrap().get(key) {
             Some(value) => value.clone(),
             None => Value::Null,
         }
@@ -389,14 +389,14 @@ impl Object {
 
     pub fn get_value(&self, key: impl AsRef<str>) -> Result<Value, ActionError> {
         let model_keys = self.model().all_keys();
-        if !model_keys.contains(&key.to_string()) {
+        if !model_keys.contains(&key.as_ref().to_string()) {
             return Err(ActionError::invalid_key(key, self.model()));
         }
-        Ok(self.get_value_map_value(key))
+        Ok(self.get_value_map_value(key.as_ref()))
     }
 
-    pub(crate) fn get_atomic_updator(&self, key: &str) -> Option<&Value> {
-        self.inner.atomic_updator_map.lock().unwrap().get(key)
+    pub(crate) fn get_atomic_updator(&self, key: &str) -> Option<Value> {
+        self.inner.atomic_updator_map.lock().unwrap().get(key).cloned()
     }
 
     pub fn set_select(&self, select: Option<&Value>) -> ActionResult<()> {
@@ -577,7 +577,7 @@ impl Object {
         }
         // real delete
         let connector = self.graph().connector();
-        connector.delete_object(self).await?;
+        connector.delete_object(self, session.clone()).await?;
         // nullify and cascade
         for relation in model.relations() {
             if relation.through().is_some() {
@@ -636,7 +636,7 @@ impl Object {
         self.before_save_callback_check()?;
         let is_new = self.is_new();
         // perform relation manipulations (has foreign key)
-        self.perform_relation_manipulations(|r| r.has_foreign_key(), session.clone(), path)?;
+        self.perform_relation_manipulations(|r| r.has_foreign_key(), session.clone(), path).await?;
         // validate and save
         let is_modified = self.is_modified();
         if is_modified || is_new {
@@ -648,7 +648,7 @@ impl Object {
             }
         }
         // perform relation manipulations (doesn't have foreign key)
-        self.perform_relation_manipulations(|r| !r.has_foreign_key(), session.clone(), path)?;
+        self.perform_relation_manipulations(|r| !r.has_foreign_key(), session.clone(), path).await?;
         // clear properties
         self.clear_state();
         if is_modified || is_new {

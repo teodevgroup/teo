@@ -408,7 +408,7 @@ impl SQLConnector {
 
 #[async_trait]
 impl Connector for SQLConnector {
-    async fn save_object(&self, object: &Object) -> ActionResult<()> {
+    async fn save_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()> {
         let is_new = object.inner.is_new.load(Ordering::SeqCst);
         if is_new {
             self.create_object(object).await
@@ -417,7 +417,7 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn delete_object(&self, object: &Object) -> ActionResult<()> {
+    async fn delete_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
             return Err(ActionError::object_is_not_saved());
         }
