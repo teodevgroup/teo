@@ -87,19 +87,19 @@ The new generation server software.
 - Remove position from env, it can be inferred from `intent` **[DONE]**
 
 #### 0.0.33
-- MongoDB Aggregation: rewrite
+- MongoDB Aggregation: rewrite **[DONE]**
+- MongoDB update: column keys **[DONE]**
 - SQL query process: rewrite
 - SQL update: column keys
-- MongoDB update: column keys
-- Fix assign identity
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
 - Fix broken `connectIdentity` modifier
 
 #### 0.0.34
-- Custom SQL database types
+- Fix assign identity
 
 #### 0.0.35 - 0.0.50
+- Custom SQL database types
 - Migration II with SQL databases
 
 #### 0.0.51
