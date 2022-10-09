@@ -181,39 +181,39 @@ impl Aggregation {
     }
 
     fn build_lookup_with_join_table(model: &Model, graph: &Graph, relation: &Relation, value: &Value) -> ActionResult<Vec<Document>> {
-        let join_model = graph.model(relation.through().as_ref().unwrap()).unwrap();
-        let local_relation_on_join_table = join_model.relation(relation.fields().get(0).unwrap()).unwrap();
-        let foreign_relation_on_join_table = join_model.relation(relation.references().get(0).unwrap()).unwrap();
+        let join_model = graph.model(relation.through().unwrap()).unwrap();
+        let local_relation_on_join_table = join_model.relation(relation.local()).unwrap();
+        let foreign_relation_on_join_table = join_model.relation(relation.foreign()).unwrap();
         let foreign_model_name = foreign_relation_on_join_table.model();
-        let foreign_model = graph.model(foreign_model_name).unwrap();
+        let (opposite_model, opposite_relation) = graph.opposite_relation(relation);
         let mut outer_let_value = doc! {};
         let mut outer_eq_values: Vec<Document> = vec![];
         let mut inner_let_value = doc! {};
         let mut inner_eq_values: Vec<Document> = vec![];
-        for (index, join_table_field_name) in local_relation_on_join_table.fields().iter().enumerate() {
-            let local_unique_field_name = local_relation_on_join_table.references().get(index).unwrap();
-            let local_unique_field_column_name = model.field(local_unique_field_name).unwrap().column_name();
-            outer_let_value.insert(join_table_field_name, format!("${local_unique_field_column_name}"));
-            outer_eq_values.push(doc! {"$eq": [format!("${join_table_field_name}"), format!("$${join_table_field_name}")]});
+        for (jt_field, local_field) in local_relation_on_join_table.iter() {
+            let jt_column_name = join_model.field(jt_field).unwrap().column_name();
+            let local_column_name = model.field(local_field).unwrap().column_name();
+            outer_let_value.insert(join_table_field_name, format!("${local_column_name}"));
+            outer_eq_values.push(doc! {"$eq": [format!("${jt_column_name}"), format!("$${jt_column_name}")]});
         }
-        for (index, join_table_reference_name) in foreign_relation_on_join_table.fields().iter().enumerate() {
-            let foreign_unique_field_name = foreign_relation_on_join_table.references().get(index).unwrap();
-            let foreign_unique_field_column_name = foreign_model.field(foreign_unique_field_name).unwrap().column_name();
-            inner_let_value.insert(join_table_reference_name, format!("${join_table_reference_name}"));
-            inner_eq_values.push(doc! {"$eq": [format!("${foreign_unique_field_column_name}"), format!("$${join_table_reference_name}")]});
+        for (jt_field, foreign_field) in foreign_relation_on_join_table.iter() {
+            let jt_column_name = join_model.field(jt_field).unwrap().column_name();
+            let foreign_column_name = model.field(foreign_field).unwrap().column_name();
+            inner_let_value.insert(jt_column_name, format!("${jt_column_name}"));
+            inner_eq_values.push(doc! {"$eq": [format!("${foreign_column_name}"), format!("$${jt_column_name}")]});
         }
-        let mut original_inner_pipeline = if value.is_object() {
-            build_query_pipeline_from_json(foreign_model, graph, QueryPipelineType::Many, false, value, &(path + key))?
+        let mut original_inner_pipeline = if value.is_hashmap() {
+            Self::build(opposite_model, graph, QueryPipelineType::Many, false, value)?;
         } else {
             vec![]
         };
-        let inner_is_reversed = has_negative_take(value);
+        let inner_is_reversed = Input::has_negative_take(value);
         let original_inner_pipeline_immu = original_inner_pipeline.clone();
         let mut inner_match = doc! {
-                    "$expr": {
-                        "$and": inner_eq_values
-                    }
-                };
+            "$expr": {
+                "$and": inner_eq_values
+            }
+        };
         let original_inner_match = original_inner_pipeline.iter().find(|v| {
             v.get("$match").is_some()
         });
@@ -289,34 +289,34 @@ impl Aggregation {
             original_inner_pipeline.remove(index.unwrap());
         }
         let mut target = doc! {
-                    "$lookup": {
-                        "from": join_model.table_name(),
-                        "as": relation_name,
-                        "let": outer_let_value,
-                        "pipeline": [{
-                            "$match": {
-                                "$expr": {
-                                    "$and": outer_eq_values
-                                }
-                            }
-                        }, {
-                            "$lookup": {
-                                "from": foreign_model.table_name(),
-                                "as": relation_name,
-                                "let": inner_let_value,
-                                "pipeline": original_inner_pipeline
-                            }
-                        }, {
-                            "$unwind": {
-                                "path": format!("${relation_name}")
-                            }
-                        }, {
-                            "$replaceRoot": {
-                                "newRoot": format!("${relation_name}")
-                            }
-                        }]
+            "$lookup": {
+                "from": join_model.table_name(),
+                "as": relation_name,
+                "let": outer_let_value,
+                "pipeline": [{
+                    "$match": {
+                        "$expr": {
+                            "$and": outer_eq_values
+                        }
                     }
-                };
+                }, {
+                    "$lookup": {
+                        "from": foreign_model.table_name(),
+                        "as": relation_name,
+                        "let": inner_let_value,
+                        "pipeline": original_inner_pipeline
+                    }
+                }, {
+                    "$unwind": {
+                        "path": format!("${}", relation.name())
+                    }
+                }, {
+                    "$replaceRoot": {
+                        "newRoot": format!("${}", relation.name())
+                    }
+                }]
+            }
+        };
         if original_inner_group.is_some() {
             let original_inner_group = original_inner_group.unwrap();
             target.get_document_mut("$lookup").unwrap().get_array_mut("pipeline").unwrap().push(Bson::Document(original_inner_group.clone()));
@@ -343,7 +343,7 @@ impl Aggregation {
         }
         retval.push(target);
         if inner_is_reversed {
-            retval.push(doc! {"$set": {relation_name: {"$reverseArray": format!("${relation_name}")}}});
+            retval.push(doc! {"$set": {relation_name: {"$reverseArray": format!("${}", relation.name())}}});
         }
         Ok(retval)
     }
