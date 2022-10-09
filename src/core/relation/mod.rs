@@ -100,7 +100,7 @@ impl<'a> Iterator for RelationIter<'a> {
     type Item = (&'a str, &'a str);
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(f) = self.relation.fields().get(index) {
+        if let Some(f) = self.relation.fields().get(self.index) {
             let result = Some((f.as_str(), self.relation.references().get(index).unwrap().as_str()));
             index += 1;
             result

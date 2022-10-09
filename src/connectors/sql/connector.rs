@@ -22,6 +22,7 @@ use crate::core::connector::{Connector, SaveSession};
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
 use crate::core::error::ActionError;
+use crate::core::input::Input;
 use crate::core::result::ActionResult;
 use crate::prelude::{Graph, Object, Value};
 use crate::tson;
@@ -191,25 +192,15 @@ impl SQLConnector {
         for key in &keys {
             if let Some(field) = model.field(key) {
                 let column_name = field.column_name();
-                let updator_map = object.inner.atomic_updator_map.lock().unwrap();
-                if updator_map.contains_key(*key) {
-                    let updator = updator_map.get(*key).unwrap();
-                    match updator {
-                        AtomicUpdateType::Increment(val) => {
-                            values.push((column_name, format!("{} + {}", column_name, val.to_string(self.dialect))));
-                        }
-                        AtomicUpdateType::Decrement(val) => {
-                            values.push((column_name, format!("{} - {}", column_name, val.to_string(self.dialect))));
-                        }
-                        AtomicUpdateType::Multiply(val) => {
-                            values.push((column_name, format!("{} * {}", column_name, val.to_string(self.dialect))));
-                        }
-                        AtomicUpdateType::Divide(val) => {
-                            values.push((column_name, format!("{} / {}", column_name, val.to_string(self.dialect))));
-                        }
-                        AtomicUpdateType::Push(val) => {
-                            values.push((column_name, format!("ARRAY_APPEND({}, {})", column_name, val.to_string(self.dialect))));
-                        }
+                if let Some(updator) = object.get_atomic_updator(key) {
+                    let (key, value) = Input::key_value(updator.as_hashmap().unwrap());
+                    match key {
+                        "increment" => values.push((column_name, format!("{} + {}", column_name, val.to_string(self.dialect)))),
+                        "decrement" => values.push((column_name, format!("{} - {}", column_name, val.to_string(self.dialect)))),
+                        "multiply" => values.push((column_name, format!("{} * {}", column_name, val.to_string(self.dialect)))),
+                        "divide" => values.push((column_name, format!("{} / {}", column_name, val.to_string(self.dialect)))),
+                        "push" => values.push((column_name, format!("ARRAY_APPEND({}, {})", column_name, val.to_string(self.dialect)))),
+                        _ => panic!("Unhandled key."),
                     }
                 } else {
                     let val = object.get_value(key).unwrap();
