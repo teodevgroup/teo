@@ -40,7 +40,19 @@ impl Input {
         (value.keys().next().unwrap().as_str(), value.values().next().unwrap())
     }
 
-    // pub(crate) fn decode_relation(value: &Value) -> Input {
-    //
-    // }
+    pub fn has_i_mode(map: &HashMap<String, Value>) -> bool {
+        match map.get("mode") {
+            Some(val) => {
+                if let Some(str) = val.as_str() {
+                    return str == "caseInsensitive"
+                } else {
+                    false
+                }
+            }
+            None => {
+                false
+            }
+        }
+    }
+
 }

@@ -14,24 +14,6 @@ fn unwrap_i32(value: Option<&Value>) -> Option<i32> {
     }
 }
 
-pub(crate) fn validate_where_unique(model: &Model, r#where: &Option<&Value>) -> ActionResult<()> {
-    if r#where.is_none() {
-        return Err(ActionError::invalid_query_input("Unique query should have a where which represents unique key or keys."));
-    }
-    let r#where = r#where.unwrap();
-    if !r#where.is_object() {
-        return Err(ActionError::unexpected_input_type("object", path!["where"]));
-    }
-    let values = r#where.as_hashmap().unwrap();
-    // see if key is valid
-    let set_vec: Vec<String> = values.keys().map(|k| k.clone()).collect();
-    let set = HashSet::from_iter(set_vec.iter().map(|k| k.clone()));
-    if !model.unique_query_keys().contains(&set) {
-        return Err(ActionError::field_is_not_unique())
-    }
-    Ok(())
-}
-
 pub struct UserJsonArgs<'a> {
     pub(crate) r#where: Option<&'a Value>,
     pub(crate) order_by: Option<&'a Value>,

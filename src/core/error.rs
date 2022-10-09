@@ -16,7 +16,6 @@ pub enum ActionErrorType {
     InternalServerError,
     ObjectIsNotSaved,
     FieldIsNotUnique,
-    InvalidQueryInput,
     WrongIdentityModel,
     PropertySetterError,
 
@@ -71,7 +70,6 @@ impl ActionErrorType {
             ActionErrorType::ObjectNotFound => { 404 }
             ActionErrorType::FieldIsNotUnique => { 400 }
             ActionErrorType::InvalidAuthToken => { 401 }
-            ActionErrorType::InvalidQueryInput => { 400 }
             ActionErrorType::CustomError => { 500 }
             ActionErrorType::WrongIdentityModel => { 401 }
             ActionErrorType::PropertySetterError => { 400 }
@@ -99,14 +97,6 @@ pub struct ActionError {
 }
 
 impl ActionError {
-
-    pub fn invalid_query_input(reason: impl Into<String>) -> Self {
-        ActionError {
-            r#type: ActionErrorType::InvalidQueryInput,
-            message: reason.into(),
-            errors: None
-        }
-    }
 
     pub fn unexpected_enum_value(field: impl Into<String>) -> Self {
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
