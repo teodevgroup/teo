@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use key_path::{KeyPath, path};
 use async_recursion::async_recursion;
+use futures_util::future::join_all;
 use maplit::hashmap;
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
@@ -939,6 +940,32 @@ impl Object {
         Ok(())
     }
 
+    async fn nested_many_update_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+        let mut r#where = self.intrinsic_where_unique_for_relation(relation);
+        r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().unwrap());
+        let env = self.env().nested(Intent::NestedUpdate);
+        let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
+            Ok(object) => object,
+            Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", &(path + "where"))),
+        };
+        object.set_tson_with_path(value.get("update").unwrap(), &(path + "update")).await?;
+        object.save_with_session_and_path(session.clone(), path).await?;
+        Ok(())
+    }
+
+    async fn nested_many_update_many_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+        let mut r#where = self.intrinsic_where_unique_for_relation(relation);
+        r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().unwrap());
+        let env = self.env().nested(Intent::NestedUpdate);
+        let update = value.get("update").unwrap();
+        let objects = self.graph().find_many(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await.unwrap();
+        for object in objects {
+            object.set_tson_with_path(update, path).await?;
+            object.save_with_session_and_path(session.clone(), path).await?;
+        }
+        Ok(())
+    }
+
     async fn nested_update_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
         let r#where = self.intrinsic_where_unique_for_relation(relation);
         let env = self.env().nested(Intent::NestedUpdate);
@@ -946,7 +973,7 @@ impl Object {
             Ok(object) => object,
             Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
         };
-        object.set_tson(value).await?;
+        object.set_tson_with_path(value, path).await?;
         object.save_with_session_and_path(session.clone(), path).await?;
         Ok(())
     }
@@ -967,6 +994,43 @@ impl Object {
         if relation.has_join_table() {
             let opposite_relation = self.graph().opposite_relation(relation).1.unwrap();
             self.delete_join_object(&object, relation, opposite_relation).await?;
+        }
+        Ok(())
+    }
+
+    async fn nested_many_delete_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+        if relation.has_foreign_key() {
+            self.remove_linked_values_from_related_relation(relation);
+        }
+        let mut r#where = self.intrinsic_where_unique_for_relation(relation);
+        r#where.as_hashmap_mut().unwrap().extend(value.as_hashmap().unwrap());
+        let env = self.env().nested(Intent::NestedUpdate);
+        let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
+            Ok(object) => object,
+            Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+        };
+        object.delete_from_database(session.clone()).await?;
+        if relation.has_join_table() {
+            let opposite_relation = self.graph().opposite_relation(relation).1.unwrap();
+            self.delete_join_object(&object, relation, opposite_relation).await?;
+        }
+        Ok(())
+    }
+
+    async fn nested_many_delete_many_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+        if relation.has_foreign_key() {
+            self.remove_linked_values_from_related_relation(relation);
+        }
+        let mut r#where = self.intrinsic_where_unique_for_relation(relation);
+        r#where.as_hashmap_mut().unwrap().extend(value.as_hashmap().unwrap());
+        let env = self.env().nested(Intent::NestedUpdate);
+        let objects = self.graph().find_many(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await.unwrap();
+        for object in objects {
+            object.delete_from_database(session.clone()).await?;
+            if relation.has_join_table() {
+                let opposite_relation = self.graph().opposite_relation(relation).1.unwrap();
+                self.delete_join_object(&object, relation, opposite_relation).await?;
+            }
         }
         Ok(())
     }
