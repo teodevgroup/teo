@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use bson::{Bson, doc, Document};
+use bson::{Bson, doc, Document, Regex as BsonRegex};
 use key_path::KeyPath;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::core::field::r#type::FieldType;
@@ -59,91 +59,85 @@ impl Aggregation {
 
     pub(crate) fn build_for_aggregate(model: &Model, graph: &Graph, value: &Value) -> ActionResult<Vec<Document>> {
         let mut retval = Self::build(model, graph, value)?;
-        // group by contains it's own aggregates
-        let empty_aggregates = tson!({});
-        let the_aggregates = if by.is_some() {
-            if aggregates.is_none() {
-                Some(&empty_aggregates)
-            } else {
-                aggregates
+        let by = value.get("by");
+        let having = value.get("having");
+        let mut aggregates = tson!({});
+        for k in ["_sum", "_count", "_avg", "_min", "_max"] {
+            if value.as_hashmap().unwrap().contains_key(k) {
+                aggregates[k] = value.as_hashmap().unwrap().get(k).unwrap().clone();
             }
+        }
+        let mut group = if let Some(by) = by {
+            let mut id_for_group_by = doc!{};
+            for key in by.as_vec().unwrap() {
+                let k = key.as_str().unwrap();
+                let dbk = model.field(k).unwrap().column_name();
+                id_for_group_by.insert(dbk, doc!{
+                "$cond": [{"$ifNull": [format!("${dbk}"), false]}, format!("${dbk}"), null]
+            });
+            }
+            doc!{"_id": id_for_group_by}
         } else {
-            aggregates
+            doc!{"_id": Bson::Null}
         };
-        // $aggregates at last
-        if let Some(aggregates) = the_aggregates {
-            let mut group = if let Some(by) = by {
-                let mut id_for_group_by = doc!{};
-                for key in by.as_vec().unwrap() {
-                    let k = key.as_str().unwrap();
-                    let dbk = model.field(k).unwrap().column_name();
-                    id_for_group_by.insert(dbk, doc!{
-                    "$cond": [{"$ifNull": [format!("${dbk}"), false]}, format!("${dbk}"), null]
-                });
-                }
-                doc!{"_id": id_for_group_by}
-            } else {
-                doc!{"_id": Bson::Null}
-            };
-            let mut set = doc!{};
-            let mut unset: Vec<String> = vec![];
-            if let Some(by) = by {
-                for key in by.as_vec().unwrap() {
-                    let k = key.as_str().unwrap();
-                    let dbk = model.field(k).unwrap().column_name();
-                    set.insert(k, format!("$_id.{dbk}"));
+        let mut set = doc!{};
+        let mut unset: Vec<String> = vec![];
+        if let Some(by) = by {
+            for key in by.as_vec().unwrap() {
+                let k = key.as_str().unwrap();
+                let dbk = model.field(k).unwrap().column_name();
+                set.insert(k, format!("$_id.{dbk}"));
+            }
+        }
+        if let Some(having) = having {
+            for (k, o) in having.as_hashmap().unwrap() {
+                let _dbk = model.field(k).unwrap().column_name();
+                for (g, _matcher) in o.as_hashmap().unwrap() {
+                    let g = g.strip_prefix("_").unwrap();
+                    Self::insert_group_set_unset_for_aggregate(model, &mut group, &mut set, &mut unset, k, g, true);
                 }
             }
-            if let Some(having) = having {
-                for (k, o) in having.as_hashmap().unwrap() {
-                    let _dbk = model.field(k).unwrap().column_name();
-                    for (g, _matcher) in o.as_hashmap().unwrap() {
-                        let g = g.strip_prefix("_").unwrap();
-                        Self::insert_group_set_unset_for_aggregate(model, &mut group, &mut set, &mut unset, k, g, true);
+        }
+        for (g, o) in aggregates.as_hashmap().unwrap() {
+            let g = g.strip_prefix("_").unwrap();
+            for (k, _t) in o.as_hashmap().unwrap() {
+                Self::insert_group_set_unset_for_aggregate(model, &mut group, &mut set, &mut unset, k, g, false);
+            }
+        }
+        retval.push(doc!{"$group": group});
+        retval.push(doc!{"$set": set});
+        if !unset.is_empty() {
+            retval.push(doc!{"$unset": unset});
+        }
+        // filter if there is a having
+        if let Some(having) = having {
+            let mut having_match = doc!{};
+            let mut having_unset: Vec<String> = Vec::new();
+            for (k, o) in having.as_hashmap().unwrap() {
+                let dbk = model.field(k).unwrap().column_name();
+                for (g, matcher) in o.as_hashmap().unwrap() {
+                    let g = g.strip_prefix("_").unwrap();
+                    let matcher_bson = Self::build_where_item(model, graph, &FieldType::F64, true, matcher)?;
+                    having_match.insert(format!("_having_{g}.{dbk}"), matcher_bson);
+                    let having_group = format!("_having_{g}");
+                    if !having_unset.contains(&having_group) {
+                        having_unset.push(having_group);
                     }
                 }
             }
-            for (g, o) in aggregates.as_hashmap().unwrap() {
-                let g = g.strip_prefix("_").unwrap();
-                for (k, _t) in o.as_hashmap().unwrap() {
-                    Self::insert_group_set_unset_for_aggregate(model, &mut group, &mut set, &mut unset, k, g, false);
-                }
+            retval.push(doc!{"$match": having_match});
+            retval.push(doc!{"$unset": having_unset});
+        }
+        let mut group_by_sort = doc!{};
+        if let Some(by) = by {
+            // we need to order these
+            for key in by.as_vec().unwrap() {
+                let k = key.as_str().unwrap();
+                group_by_sort.insert(k, 1);
             }
-            retval.push(doc!{"$group": group});
-            retval.push(doc!{"$set": set});
-            if !unset.is_empty() {
-                retval.push(doc!{"$unset": unset});
-            }
-            // filter if there is a having
-            if let Some(having) = having {
-                let mut having_match = doc!{};
-                let mut having_unset: Vec<String> = Vec::new();
-                for (k, o) in having.as_hashmap().unwrap() {
-                    let dbk = model.field(k).unwrap().column_name();
-                    for (g, matcher) in o.as_hashmap().unwrap() {
-                        let g = g.strip_prefix("_").unwrap();
-                        let matcher_bson = parse_bson_where_entry(&FieldType::F64, matcher, graph, &(path + "having" + k + format!("_{g}")))?;
-                        having_match.insert(format!("_having_{g}.{dbk}"), matcher_bson);
-                        let having_group = format!("_having_{g}");
-                        if !having_unset.contains(&having_group) {
-                            having_unset.push(having_group);
-                        }
-                    }
-                }
-                retval.push(doc!{"$match": having_match});
-                retval.push(doc!{"$unset": having_unset});
-            }
-            let mut group_by_sort = doc!{};
-            if let Some(by) = by {
-                // we need to order these
-                for key in by.as_vec().unwrap() {
-                    let k = key.as_str().unwrap();
-                    group_by_sort.insert(k, 1);
-                }
-            }
-            if !group_by_sort.is_empty() {
-                retval.push(doc!{"$sort": group_by_sort});
-            }
+        }
+        if !group_by_sort.is_empty() {
+            retval.push(doc!{"$sort": group_by_sort});
         }
         Ok(retval)
     }
@@ -167,17 +161,19 @@ impl Aggregation {
         // if cursor exists, we modify the actual where
         let cursor_where_additions = if let Some(cursor) = value.get("cursor") {
             let cursor = cursor.as_hashmap().unwrap();
+            let cursor_key = cursor.keys().next().unwrap();
+            let cursor_key = model.field(cursor_key).unwrap().column_name();
             let cursor_value = cursor.values().next().unwrap();
             let order_by = value.get("orderBy").unwrap().as_hashmap().unwrap().values().next().unwrap().as_str().unwrap();
             let mut order_asc = order_by == "asc";
             if let Some(take) = take {
-                if take.as_u64().unwrap() < 0 {
+                if take.as_i64().unwrap() < 0 {
                     order_asc = !order_asc;
                 }
             }
             let cursor_where_key = if order_asc { "gte" } else { "lte" };
             let cursor_additional_where = Self::build_where(model, graph, &tson!({cursor_key: {cursor_where_key: cursor_value}}));
-            Some(cursor_additional_where)
+            Some(cursor_additional_where?)
         } else {
             None
         };
@@ -223,14 +219,14 @@ impl Aggregation {
         }
         // $skip and $limit
         if page_size.is_some() && page_number.is_some() {
-            retval.push(doc!{"$skip": ((page_number.unwrap() - 1) * page_size.unwrap()) as i64});
-            retval.push(doc!{"$limit": page_size.unwrap() as i64});
+            retval.push(doc!{"$skip": ((page_number.unwrap().as_i64().unwrap() - 1) * page_size.unwrap().as_i64().unwrap()) as i64});
+            retval.push(doc!{"$limit": page_size.unwrap().as_i64().unwrap()});
         } else {
             if skip.is_some() {
-                retval.push(doc!{"$skip": skip.unwrap() as i64});
+                retval.push(doc!{"$skip": skip.unwrap().as_i64().unwrap()});
             }
             if take.is_some() {
-                retval.push(doc!{"$limit": take.unwrap().abs() as i64});
+                retval.push(doc!{"$limit": take.unwrap().as_i64().unwrap().abs()});
             }
         }
         // distinct or select
@@ -243,7 +239,7 @@ impl Aggregation {
                 group_id.insert(val, format!("${val}"));
             }
             let empty = tson!({});
-            let mut group_data = build_select_input(model, graph, select.unwrap_or(&empty), Some(distinct))?.unwrap();
+            let mut group_data = Self::build_select(model, graph, select.unwrap_or(&tson!({})), Some(distinct))?;
             group_data.insert("_id", group_id);
             retval.push(doc!{"$group": &group_data});
             if group_data.get("__id").is_some() {
@@ -268,7 +264,7 @@ impl Aggregation {
             if let Some(select) = select {
                 if !select.as_hashmap().unwrap().is_empty() {
                     let select_input = Self::build_select(model, graph, select, distinct)?;
-                    if let Some(select_input) = select_input {
+                    if !select_input.is_empty() {
                         retval.push(doc!{"$project": select_input})
                     }
                 }
@@ -387,7 +383,7 @@ impl Aggregation {
 
     fn build_where_item(model: &Model, graph: &Graph, r#type: &FieldType, optional: bool, value: &Value) -> ActionResult<Bson> {
         if let Some(map) = value.as_hashmap() {
-            Ok(Bson::Document(map.iter().map(|(k, v)| {
+            Ok(Bson::Document(map.iter().filter(|(k, _)| k.as_str() != "mode").map(|(k, v)| {
                 let k = k.as_str();
                 match k {
                     "startsWith" => {
@@ -396,7 +392,7 @@ impl Aggregation {
                             options: if Input::has_i_mode(map) { "i".to_string() } else { "".to_string() }
                         };
                         let regex = Bson::RegularExpression(bson_regex);
-                        Some(("$regex".to_string(), regex))
+                        ("$regex".to_string(), regex)
                     },
                     "endsWith" => {
                         let bson_regex = BsonRegex {
@@ -404,7 +400,7 @@ impl Aggregation {
                             options: if Input::has_i_mode(map) { "i".to_string() } else { "".to_string() }
                         };
                         let regex = Bson::RegularExpression(bson_regex);
-                        Some(("$regex".to_string(), regex))
+                        ("$regex".to_string(), regex)
                     },
                     "contains" => {
                         let bson_regex = BsonRegex {
@@ -412,21 +408,20 @@ impl Aggregation {
                             options: if Input::has_i_mode(map) { "i".to_string() } else { "".to_string() }
                         };
                         let regex = Bson::RegularExpression(bson_regex);
-                        Some(("$regex".to_string(), regex))
+                        ("$regex".to_string(), regex)
                     },
                     "matches" => {
                         let bson_regex = BsonRegex {
-                            pattern: v.as_str().unwrap(),
-                            options: if map_has_i_mode(map) { "i".to_string() } else { "".to_string() }
+                            pattern: v.as_str().unwrap().to_string(),
+                            options: if Input::has_i_mode(map) { "i".to_string() } else { "".to_string() }
                         };
                         let regex = Bson::RegularExpression(bson_regex);
-                        Some(("$regex".to_string(), regex))
+                        ("$regex".to_string(), regex)
                     },
                     "isEmpty" => {
-                        Some(("$size", Bson::from(0)))
+                        ("$size".to_string(), Bson::from(0))
                     },
-                    "mode" => None,
-                    _ => Some((Self::build_where_key(k), Bson::from(v)))
+                    _ => (Self::build_where_key(k).as_str().unwrap().to_string(), Bson::from(v))
                 }
             }).collect()))
         } else {
@@ -460,16 +455,17 @@ impl Aggregation {
             let relation_model = graph.model(relation.model()).unwrap();
             if (value.is_bool() && (value.as_bool().unwrap() == true)) || (value.is_hashmap()) {
                 if relation.has_join_table() {
-                    retval.extend(Self::build_lookup_with_join_table(model, graph, relation, value)?)
+                    retval.extend(Self::build_lookup_with_join_table(model, graph, key, relation, value)?)
                 } else {
-                    retval.extend(Self::build_lookup_without_join_table(model, graph, relation, value)?)
+                    retval.extend(Self::build_lookup_without_join_table(model, graph, key, relation, value)?)
                 }
             }
         }
         Ok(retval)
     }
 
-    fn build_lookup_with_join_table(model: &Model, graph: &Graph, relation: &Relation, value: &Value) -> ActionResult<Vec<Document>> {
+    fn build_lookup_with_join_table(model: &Model, graph: &Graph, key: &str, relation: &Relation, value: &Value) -> ActionResult<Vec<Document>> {
+        let mut retval = vec![];
         let join_model = graph.model(relation.through().unwrap()).unwrap();
         let local_relation_on_join_table = join_model.relation(relation.local()).unwrap();
         let foreign_relation_on_join_table = join_model.relation(relation.foreign()).unwrap();
@@ -482,7 +478,7 @@ impl Aggregation {
         for (jt_field, local_field) in local_relation_on_join_table.iter() {
             let jt_column_name = join_model.field(jt_field).unwrap().column_name();
             let local_column_name = model.field(local_field).unwrap().column_name();
-            outer_let_value.insert(join_table_field_name, format!("${local_column_name}"));
+            outer_let_value.insert(jt_column_name, format!("${local_column_name}"));
             outer_eq_values.push(doc! {"$eq": [format!("${jt_column_name}"), format!("$${jt_column_name}")]});
         }
         for (jt_field, foreign_field) in foreign_relation_on_join_table.iter() {
@@ -492,7 +488,7 @@ impl Aggregation {
             inner_eq_values.push(doc! {"$eq": [format!("${foreign_column_name}"), format!("$${jt_column_name}")]});
         }
         let mut original_inner_pipeline = if value.is_hashmap() {
-            Self::build(opposite_model, graph, value)?;
+            Self::build(opposite_model, graph, value)?
         } else {
             vec![]
         };
@@ -580,7 +576,7 @@ impl Aggregation {
         let mut target = doc! {
             "$lookup": {
                 "from": join_model.table_name(),
-                "as": relation_name,
+                "as": relation.name(),
                 "let": outer_let_value,
                 "pipeline": [{
                     "$match": {
@@ -590,8 +586,8 @@ impl Aggregation {
                     }
                 }, {
                     "$lookup": {
-                        "from": foreign_model.table_name(),
-                        "as": relation_name,
+                        "from": opposite_model.table_name(),
+                        "as": relation.name(),
                         "let": inner_let_value,
                         "pipeline": original_inner_pipeline
                     }
@@ -632,12 +628,12 @@ impl Aggregation {
         }
         retval.push(target);
         if inner_is_reversed {
-            retval.push(doc! {"$set": {relation_name: {"$reverseArray": format!("${}", relation.name())}}});
+            retval.push(doc! {"$set": {relation.name(): {"$reverseArray": format!("${}", relation.name())}}});
         }
         Ok(retval)
     }
 
-    fn build_lookup_without_join_table(model: &Model, graph: &Graph, relation: &Relation, value: &Value) -> ActionResult<Vec<Document>> {
+    fn build_lookup_without_join_table(model: &Model, graph: &Graph, key: &str, relation: &Relation, value: &Value) -> ActionResult<Vec<Document>> {
         let mut retval = vec![];
         let mut let_value = doc!{};
         let mut eq_values: Vec<Document> = vec![];
@@ -678,7 +674,7 @@ impl Aggregation {
         }
         let lookup = doc!{
             "$lookup": {
-                "from": &relation_model.table_name(),
+                "from": opposite_model.table_name(),
                 "as": key,
                 "let": let_value,
                 "pipeline": inner_pipeline

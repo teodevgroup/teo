@@ -15,10 +15,9 @@ use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
 use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use regex::Regex;
 use rust_decimal::Decimal;
-use crate::connectors::mongodb::aggregation_builder::{build_query_pipeline_from_json, build_where_input};
+use crate::connectors::mongodb::aggregation::Aggregation;
 use crate::connectors::mongodb::bson::decoder::BsonDecoder;
 use crate::connectors::mongodb::save_session::MongoDBSaveSession;
-use crate::connectors::shared::has_negative_take::has_negative_take;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::core::connector::Connector;
 use crate::core::env::Env;
@@ -223,7 +222,7 @@ impl MongoDBConnector {
     }
 
     async fn aggregate_or_group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Vec<Value>, ActionError> {
-        let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, false, finder, &path![])?;
+        let aggregate_input = Aggregation::build_for_aggregate(model, graph, finder)?;
         let col = &self.collections[model.name()];
         let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
@@ -438,7 +437,8 @@ impl Connector for MongoDBConnector {
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
-        let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Unique, mutation_mode, finder, &path![])?;
+
+        let aggregate_input = Aggregation::build(model, graph, finder)?;
         let col = &self.collections[model.name()];
         let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
@@ -460,8 +460,8 @@ impl Connector for MongoDBConnector {
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
-        let aggregate_input = build_query_pipeline_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, &path![])?;
-        let reverse = has_negative_take(finder);
+        let aggregate_input = Aggregation::build(model, graph, finder)?;
+        let reverse = Input::has_negative_take(finder);
         let col = &self.collections[model.name()];
         let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
@@ -490,23 +490,7 @@ impl Connector for MongoDBConnector {
     }
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize, ActionError> {
-        let finder = finder.as_hashmap().unwrap();
-        let r#where = finder.get("where");
-        let col = &self.collections[model.name()];
-        let where_input = build_where_input(model, graph, r#where, &path![]);
-        if let Err(err) = where_input {
-            return Err(err);
-        }
-        let where_input = where_input.unwrap();
-        let result = col.count_documents(where_input, None).await;
-        match result {
-            Ok(val) => {
-                Ok(val as usize)
-            }
-            Err(_) => {
-                Err(ActionError::unknown_database_count_error())
-            }
-        }
+        todo!("rewrite with aggregation")
     }
 
     async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError> {

@@ -9,7 +9,6 @@ use sqlx::pool::Pool;
 use sqlx::any::{AnyRow, AnyValueRef};
 use crate::core::model::Model;
 use url::Url;
-use crate::connectors::shared::has_negative_take::has_negative_take;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::connectors::sql::migration::migrate::migrate;
 use crate::connectors::sql::query_builder::dialect::SQLDialect;
@@ -246,7 +245,7 @@ impl SQLConnector {
         let include = finder.get("include");
         let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, self.dialect, additional_where, additional_left_join.clone(), key_path)?;
         println!("see sql query: {}", sql_query);
-        let reverse = has_negative_take(finder);
+        let reverse = Input::has_negative_take(finder);
         let results = self.pool.fetch_all(&*sql_query).await;
         let mut retval: Vec<Object> = vec![];
         match results {

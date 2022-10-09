@@ -38,14 +38,8 @@ pub(crate) fn user_json_args<'a>(
     json_value: &'a Value,
 ) -> Result<UserJsonArgs<'a>, ActionError> {
     let json_value = json_value.as_hashmap();
-    if json_value.is_none() {
-        return Err(ActionError::invalid_query_input("Query input should be an object."));
-    }
     let json_value = json_value.unwrap();
     let r#where = json_value.get("where");
-    if r#type == QueryPipelineType::Unique {
-        validate_where_unique(model, &r#where)?;
-    }
     let order_by = json_value.get("orderBy");
     let cursor = json_value.get("cursor");
     let take = unwrap_i32(json_value.get("take"));

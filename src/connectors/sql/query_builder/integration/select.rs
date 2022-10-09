@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::format;
 use key_path::KeyPath;
-use crate::connectors::shared::map_has_i_mode::map_has_i_mode;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::connectors::shared::user_json_args::{user_json_args, UserJsonArgs};
 use crate::connectors::sql::query_builder::dialect::SQLDialect;
@@ -13,6 +12,7 @@ use crate::connectors::sql::query_builder::traits::to_sql_string::ToSQLString;
 use crate::connectors::sql::query_builder::integration::value_encoder::ValueToSQLString;
 use crate::core::error::ActionError;
 use crate::core::field::r#type::FieldType;
+use crate::core::input::Input;
 use crate::core::model::Model;
 use crate::prelude::{Graph, Value};
 
@@ -85,19 +85,19 @@ fn parse_sql_where_entry_item<'a>(
                     result.push(parse_sql_where_entry_array(column_name, r#type, optional, value, key_path.as_ref(), graph, "NOT IN")?);
                 }
                 "contains" => {
-                    let i_mode = map_has_i_mode(map);
+                    let i_mode = Input::has_i_mode(map);
                     result.push(sql_where_item(&column_name.to_i_mode(i_mode), "LIKE", value.to_sql_string(r#type, false, key_path.as_ref(), graph)?.to_like(true, true).to_i_mode(i_mode)));
                 }
                 "startsWith" => {
-                    let i_mode = map_has_i_mode(map);
+                    let i_mode = Input::has_i_mode(map);
                     result.push(sql_where_item(&column_name.to_i_mode(i_mode), "LIKE", value.to_sql_string(r#type, false, key_path.as_ref(), graph)?.to_like(false, true).to_i_mode(i_mode)));
                 }
                 "endsWith" => {
-                    let i_mode = map_has_i_mode(map);
+                    let i_mode = Input::has_i_mode(map);
                     result.push(sql_where_item(&column_name.to_i_mode(i_mode), "LIKE", value.to_sql_string(r#type, false, key_path.as_ref(), graph)?.to_like(true, false).to_i_mode(i_mode)));
                 }
                 "matches" => {
-                    let i_mode = map_has_i_mode(map);
+                    let i_mode = Input::has_i_mode(map);
                     result.push(sql_where_item(&column_name.to_i_mode(i_mode), "REGEXP", value.to_sql_string(r#type, false, key_path.as_ref(), graph)?.to_i_mode(i_mode)));
                 }
                 "mode" => { }
