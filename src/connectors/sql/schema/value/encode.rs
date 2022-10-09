@@ -6,6 +6,10 @@ use crate::core::error::ActionError;
 use crate::core::field::r#type::FieldType;
 use crate::prelude::{Graph, Value};
 
+pub trait ToSQLString {
+    fn to_string(&self, dialect: SQLDialect) -> String;
+}
+
 pub trait TypeOrNull {
     fn or_null(&self, optional: bool) -> String;
 }

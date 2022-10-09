@@ -3,30 +3,6 @@ use std::collections::HashMap;
 use crate::core::field::{Field, Sort};
 use crate::core::model::index::{ModelIndex, ModelIndexType};
 
-#[derive(PartialEq, Copy, Clone)]
-pub(crate) enum MySQLIndexItemCollation {
-    A,
-    D
-}
-
-#[derive(PartialEq)]
-pub(crate) struct MySQLIndexItem {
-    pub(crate) column_name: String,
-    pub(crate) collation: MySQLIndexItemCollation,
-}
-
-impl MySQLIndexItem {
-    pub fn new(column_name: impl Into<String>) -> Self {
-        MySQLIndexItem { column_name: column_name.into(), collation: MySQLIndexItemCollation::A }
-    }
-}
-
-#[derive(PartialEq)]
-pub struct MySQLIndex {
-    pub(crate) non_unique: bool,
-    pub(crate) key_name: String,
-    pub(crate) items: Vec<MySQLIndexItem>,
-}
 //
 // pub fn mysql_indices_from_rows(rows: &Vec<Row>) -> Vec<MySQLIndex> {
 //     let mut retval: Vec<MySQLIndex> = Vec::new();
@@ -81,18 +57,3 @@ pub struct MySQLIndex {
 //     }
 //     retval
 // }
-
-impl From<&ModelIndex> for MySQLIndex {
-    fn from(idx: &ModelIndex) -> Self {
-        MySQLIndex {
-            key_name: idx.name().to_owned(),
-            non_unique: idx.r#type() == ModelIndexType::Index,
-            items: idx.items().iter().map(|item| {
-                MySQLIndexItem {
-                    column_name: item.field_name().to_owned(),
-                    collation: if item.sort() == Sort::Asc { MySQLIndexItemCollation::A } else { MySQLIndexItemCollation::D }
-                }
-            }).collect()
-        }
-    }
-}

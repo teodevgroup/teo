@@ -1,49 +1,36 @@
+
 use std::sync::Arc;
 use sqlx::any::AnyRow;
 use sqlx::Row;
+use crate::connectors::sql::column::SQLColumn;
 use crate::connectors::sql::dialect::SQLDialect;
 use crate::connectors::sql::query_builder::structs::column::SQLColumn;
 use crate::connectors::sql::to_sql_string::ToSQLString;
 use crate::core::field::Field;
 use crate::core::property::Property;
 
-#[derive(PartialEq, Debug)]
-pub struct MySQLColumn {
-    pub(crate) field: String,
-    pub(crate) field_type: String,
-    pub(crate) null: String,
-    pub(crate) key: String,
-    pub(crate) default: Option<String>,
-    pub(crate) extra: String
-}
+pub(crate) struct ColumnDecoder { }
 
-pub trait ValueHelpers {
-    fn to_string(&self) -> String;
-    fn to_i64(&self) -> i64;
-    fn to_u64(&self) -> u64;
-}
-
-impl From<AnyRow> for MySQLColumn {
-    fn from(row: AnyRow) -> Self {
+impl ColumnDecoder {
+    fn decode(row: AnyRow, dialect: SQLDialect) -> SQLColumn {
         let field: String = row.get("Field");
-        let field_type: String = row.get("Type");
-        let null = row.get("Null");
-        let key = row.get("Key");
-        let default = None;
-        let extra = row.get("Extra");
-        MySQLColumn { field, field_type, null, key, default, extra }
-    }
-}
+        let field_type_in_string: String = row.get("Type");
+        let null_in_string: String = row.get("Null");
+        let null = &null_in_string == "YES";
+        let key: String = row.get("Key");
+        let extra: String = row.get("Extra");
+        let auto_increment = extra.contains("auto_increment");
+        let primary = &key == "PRI";
+        let unique = extra.contains("unique");
+        SQLColumn {
+            name: field,
 
-impl From<&SQLColumn> for MySQLColumn {
-    fn from(def: &SQLColumn) -> Self {
-        let field = def.name.clone();
-        let field_type = def.column_type.to_string(SQLDialect::MySQL).to_lowercase();
-        let null = if def.not_null { "NO" } else { "YES" }.to_string();
-        let key = if def.primary_key { "PRI" } else { "" }.to_string();
-        let default = None;
-        let extra = if def.auto_increment { "auto_increment" } else { "" }.to_string();
-        MySQLColumn { field, field_type, null, key, default, extra }
+            not_null: !null,
+            auto_increment,
+            default: None,
+            primary_key: primary,
+            unique_key: unique,
+        }
     }
 }
 

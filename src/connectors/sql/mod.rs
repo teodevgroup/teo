@@ -4,7 +4,5 @@ pub mod inferred_types;
 pub mod query;
 pub mod migration;
 pub mod save_session;
-pub(crate) mod column;
-pub mod to_sql_string;
-pub mod dialect;
 pub mod integration;
+pub mod schema;
