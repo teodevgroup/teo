@@ -1,9 +1,9 @@
 use sqlx::{AnyPool, Connection, Database, Executor, MySqlPool, Pool, Row};
-use crate::connectors::sql::query_builder::dialect::SQLDialect;
-use crate::connectors::sql::query_builder::traits::to_sql_string::ToSQLString;
+use crate::connectors::sql::dialect::SQLDialect;
+use crate::connectors::sql::to_sql_string::ToSQLString;
 use crate::connectors::sql::query_builder::integration::column::MySQLColumn;
-use crate::connectors::sql::query_builder::stmt::create::table::SQLCreateTableStatement;
-use crate::connectors::sql::query_builder::stmt::SQL;
+use crate::connectors::sql::query::create::table::SQLCreateTableStatement;
+use crate::connectors::sql::query::SQL;
 use crate::connectors::sql::query_builder::structs::column::SQLColumn;
 use crate::core::model::Model;
 

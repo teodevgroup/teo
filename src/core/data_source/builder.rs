@@ -3,7 +3,7 @@ use crate::connectors::mongodb::connector_builder::MongoDBConnectorBuilder;
 #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres", feature = "data-source-mssql", feature = "data-source-sqlite"))]
 use crate::connectors::sql::connector_builder::SQLConnectorBuilder;
 #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres", feature = "data-source-mssql", feature = "data-source-sqlite"))]
-use crate::connectors::sql::query_builder::dialect::SQLDialect;
+use crate::connectors::sql::dialect::SQLDialect;
 use crate::core::graph::builder::GraphBuilder;
 
 pub struct DataSourceBuilder<'a> {
