@@ -224,7 +224,7 @@ pub(crate) fn build_where_input<'a>(model: &Model, graph: &Graph, r#where: Optio
             // let relation = model.relation(key).unwrap();
             // let model_name = relation.model();
             // let this_model = graph.model(model_name)?;
-            // let (command, inner_where) = one_length_json_obj(value, "")?;
+            // let (command, inner_where) = Input::key_value(value, "")?;
             // let _inner_where = build_where_input(this_model, graph, Some(inner_where))?;
             // match command {
             //     "none" | "isNot" => {

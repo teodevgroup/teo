@@ -325,7 +325,7 @@ impl MongoDBConnector {
             if let Some(field) = model.field(key) {
                 let column_name = field.column_name();
                 if let Some(updator) = object.get_atomic_updator(key) {
-                    let (key, value) = Input::key_value(updator.as_hashmap().unwrap());
+                    let (key, val) = Input::key_value(updator.as_hashmap().unwrap());
                     match key {
                         "increment" => inc.insert(column_name, val.into()),
                         "decrement" => inc.insert(column_name, Bson::from(&val.neg())),

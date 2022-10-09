@@ -193,7 +193,7 @@ impl SQLConnector {
             if let Some(field) = model.field(key) {
                 let column_name = field.column_name();
                 if let Some(updator) = object.get_atomic_updator(key) {
-                    let (key, value) = Input::key_value(updator.as_hashmap().unwrap());
+                    let (key, val) = Input::key_value(updator.as_hashmap().unwrap());
                     match key {
                         "increment" => values.push((column_name, format!("{} + {}", column_name, val.to_string(self.dialect)))),
                         "decrement" => values.push((column_name, format!("{} - {}", column_name, val.to_string(self.dialect)))),
@@ -310,7 +310,7 @@ impl SQLConnector {
                                         format!("(VALUES {})", pairs)
                                     };
                                     let relation_where = format!("{} IN {}", before_in, after_in);
-                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), None, env.nested(Intent::NestedIncluded)).await?;
+                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), None, env.alter_intent(Intent::NestedIncluded)).await?;
                                     println!("see included: {:?}", included);
                                     for o in included {
                                         let owners = retval.iter().filter(|r| {
@@ -369,7 +369,7 @@ impl SQLConnector {
                                     };
                                     let relation_where = format!("{} IN {}", before_in, after_in);
                                     let path = key_path.as_ref() + relation_name;
-                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), Some(left_join), env.nested(Intent::NestedIncluded)).await?;
+                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), Some(left_join), env.alter_intent(Intent::NestedIncluded)).await?;
                                     println!("see included {:?}", included);
                                     for o in included {
                                         let owners = retval.iter().filter(|r| {

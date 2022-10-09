@@ -12,6 +12,7 @@ use crate::core::graph::Graph;
 use crate::core::model::{Model};
 use crate::core::tson::Value;
 use crate::core::error::ActionError;
+use crate::core::input::Input;
 use crate::core::model::index::ModelIndexType;
 use crate::tson;
 
@@ -680,7 +681,7 @@ fn parse_bson_where_entry(field_type: &FieldType, value: &Value, graph: &Graph, 
         FieldType::Vec(inner_field) => {
             if value.is_object() {
                 let mut result = doc!{};
-                let (key, matcher) = one_length_json_obj(value, path)?;
+                let (key, matcher) = Input::key_value(value.as_hashmap().unwrap());
                 match key {
                     "has" => {
                         let inner = parse_bson_where_entry(&inner_field.field_type, matcher, graph, path)?;
@@ -775,7 +776,7 @@ pub(crate) fn build_match_prediction_lookup(model: &Model, graph: &Graph, r#wher
     for (key, value) in r#where.iter() {
         let relation = model.relation(key);
         if relation.is_some() {
-            let (command, r_where) = one_length_json_obj(value, &(path + key))?;
+            let (command, r_where) = Input::key_value(value, &(path + key))?;
             match command {
                 "some" | "is" => {
                     include_input.insert(key.to_string(), tson!({
@@ -850,7 +851,7 @@ pub(crate) fn build_where_input(model: &Model, graph: &Graph, r#where: Option<&V
             let relation = model.relation(key).unwrap();
             let model_name = relation.model();
             let this_model = graph.model(model_name).unwrap();
-            let (command, inner_where) = one_length_json_obj(value, &(path + key))?;
+            let (command, inner_where) = Input::key_value(value, &(path + key))?;
             let _inner_where = build_where_input(this_model, graph, Some(inner_where), &(path + key))?;
             match command {
                 "none" | "isNot" => {
@@ -876,13 +877,9 @@ pub(crate) fn build_order_by_input(_model: &Model, _graph: &Graph, order_by: Opt
         return Ok(doc!{});
     }
     let order_by = order_by.unwrap();
-    if !order_by.is_hashmap() && !order_by.is_vec() {
-        return Err(ActionError::unexpected_input_type("object or array", path))
-    }
-    let order_by = input_to_vec(order_by, path)?;
     let mut retval = doc!{};
-    for (index, sort) in order_by.iter().enumerate() {
-        let (key, value) = one_length_json_obj(sort, &(path + index))?;
+    for (index, sort) in order_by.as_vec().unwrap().iter().enumerate() {
+        let (key, value) = Input::key_value(sort.as_hashmap().unwrap());
         if value.is_string() {
             let str_val = value.as_str().unwrap();
             if str_val == "asc" {
@@ -1331,8 +1328,8 @@ fn build_query_pipeline(
         if cursor_map.len() != 1 {
             return Err(ActionError::invalid_query_input("'cursor' should have a single key which represents a unique constraint."));
         }
-        let (order_by_key, order_by_value) = one_length_json_obj(order_by, &(path + "orderBy"))?;
-        let (cursor_key, cursor_value) = one_length_json_obj(cursor, &(path + "cursor"))?;
+        let (order_by_key, order_by_value) = Input::key_value(order_by.as_hashmap().unwrap())?;
+        let (cursor_key, cursor_value) = Input::key_value(cursor.as_hashmap().unwrap())?;
         if order_by_key != cursor_key {
             return Err(ActionError::invalid_query_input("'cursor' and 'orderBy' should have single same key."));
         }

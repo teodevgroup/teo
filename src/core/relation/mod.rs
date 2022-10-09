@@ -101,8 +101,8 @@ impl<'a> Iterator for RelationIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(f) = self.relation.fields().get(self.index) {
-            let result = Some((f.as_str(), self.relation.references().get(index).unwrap().as_str()));
-            index += 1;
+            let result = Some((f.as_str(), self.relation.references().get(self.index).unwrap().as_str()));
+            self.index += 1;
             result
         } else {
             None

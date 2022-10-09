@@ -24,38 +24,6 @@ impl Env {
         }
     }
 
-    pub(crate) fn custom_code() -> Self {
-        Self {
-            source: CustomCode,
-            trigger: CustomCode,
-            intent: None,
-        }
-    }
-
-    pub(crate) fn nested(&self, intent: Intent) -> Self {
-        Self {
-            source: self.source.clone(),
-            trigger: self.trigger.clone(),
-            intent: Some(intent),
-        }
-    }
-
-    pub(crate) fn alter_position(&self) -> Self {
-        Self {
-            source: self.source.clone(),
-            trigger: self.trigger.clone(),
-            intent: self.intent,
-        }
-    }
-
-    pub(crate) fn alter_trigger(&self, trigger: Source) -> Self {
-        Self {
-            source: self.source.clone(),
-            trigger,
-            intent: self.intent,
-        }
-    }
-
     pub(crate) fn source(&self) -> &Source {
         &self.source
     }
@@ -68,4 +36,27 @@ impl Env {
         self.intent
     }
 
+    pub(crate) fn custom_code() -> Self {
+        Self {
+            source: CustomCode,
+            trigger: CustomCode,
+            intent: None,
+        }
+    }
+
+    pub(crate) fn alter_intent(&self, intent: Intent) -> Self {
+        Self {
+            source: self.source.clone(),
+            trigger: self.trigger.clone(),
+            intent: Some(intent),
+        }
+    }
+
+    pub(crate) fn alter_trigger(&self, trigger: Source) -> Self {
+        Self {
+            source: self.source.clone(),
+            trigger,
+            intent: self.intent,
+        }
+    }
 }

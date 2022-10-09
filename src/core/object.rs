@@ -588,14 +588,14 @@ impl Object {
                             for key in opposite_relation.fields() {
                                 object.set_value(key, Value::Null)?;
                             }
-                            object.save_with_session_and_path(self.graph().connector().new_save_session(), no_recursive, &path![]).await?;
+                            object.save_with_session_and_path(self.graph().connector().new_save_session(), &path![]).await?;
                             Ok(())
                         }).await?;
                     },
                     DeleteRule::Cascade => {
                         let finder = self.finder_for_relation(relation);
                         graph.batch(opposite_model.name(), &finder, Env::new(Source::CustomCode, Intent::Delete), |object| async move {
-                            object.delete_from_database(self.graph().connector().new_save_session(), no_recursive).await?;
+                            object.delete_from_database(self.graph().connector().new_save_session()).await?;
                             Ok(())
                         }).await?;
                     }
@@ -931,6 +931,7 @@ impl Object {
 
     async fn nested_many_disconnect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
         if relation.has_join_table() {
+            let env = self.env().alter_intent(Intent::NestedJoinTableRecordDelete);
             let object = match self.graph().find_unique(relation.model(), &tson!({ "where": value }), true, env.clone()).await {
                 Ok(object) => object,
                 Err(_) => Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
