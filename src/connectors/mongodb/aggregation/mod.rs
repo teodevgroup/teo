@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use bson::{Bson, doc, Document};
 use key_path::KeyPath;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
@@ -126,18 +126,53 @@ impl Aggregation {
             }
         } else {
             // $project
-            if select.is_some() {
-                let select_input = build_select_input(model, graph, select.unwrap(), distinct)?;
-                if let Some(select_input) = select_input {
-                    retval.push(doc!{"$project": select_input})
+            if let Some(select) = select {
+                if !select.as_hashmap().unwrap().is_empty() {
+                    let select_input = Self::build_select(model, graph, select, distinct)?;
+                    if let Some(select_input) = select_input {
+                        retval.push(doc!{"$project": select_input})
+                    }
                 }
+            }
+            if select.is_some() {
             }
         }
         Ok(retval)
     }
 
     fn build_select(model: &Model, graph: &Graph, select: &Value, distinct: Option<&Value>) -> ActionResult<Document> {
-
+        let map = select.as_hashmap().unwrap();
+        let true_keys: Vec<&String> = map.iter().filter(|(k, v)| v.as_bool().unwrap() == true).map(|(k, _)| k).collect();
+        let false_keys: Vec<&String> = map.iter().filter(|(k, v)| v.as_bool().unwrap() == false).map(|(k, _)| k).collect();
+        let primary_field_names = model.primary_index().keys();
+        let mut keys: HashSet<String> = HashSet::new();
+        let save_unmentioned_keys = true_keys.is_empty();
+        model.all_keys().iter().for_each(|k| {
+            let save = primary_field_names.contains(k) || (!false_keys.contains(&k) && (true_keys.contains(&k) || save_unmentioned_keys));
+            if save {
+                if let Some(field) = model.field(k) {
+                    let column_name = field.column_name();
+                    keys.insert(column_name.to_string());
+                } else if let Some(property) = model.property(k) {
+                    for d in &property.dependencies {
+                        let column_name = model.field(d).unwrap().name();
+                        keys.insert(column_name.to_string());
+                    }
+                }
+            }
+        });
+        let mut result = doc!{};
+        for key in keys.iter() {
+            if distinct.is_some() {
+                result.insert(distinct_key(key), doc!{"$first": format!("${key}")});
+            } else {
+                result.insert(key, 1);
+            }
+        }
+        if result.get("_id").is_none() {
+            result.insert("_id", 0);
+        }
+        Ok(result)
     }
 
     fn build_order_by(_model: &Model, order_by: &Value, reverse: bool) -> ActionResult<Document> {
