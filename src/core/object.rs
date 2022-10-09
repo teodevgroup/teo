@@ -1072,13 +1072,18 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_enumerate<'a, F, Fut>(&self, value: &'a Value, path: &'a KeyPath<'a>, f: F) -> ActionResult<()> where
-    F: Fn(&'a Value, &'a KeyPath) -> Fut,
+    async fn nested_enumerate<'a, 'b, F, Fut>(&self, value: &'a Value, path: &'a KeyPath<'a>, f: F) -> ActionResult<()> where
+    F: Fn(&'a Value, KeyPath<'a>) -> Fut,
     Fut: Future<Output = ActionResult<()>>,
     {
         match value {
-            Value::HashMap(map) => f(value, path).await,
-            Value::Vec(vec) => join_all(vec.iter().enumerate().map(|(i, v)| async { f(v, &(path + i)).await })).await,
+            Value::HashMap(map) => f(value, path.clone()).await,
+            Value::Vec(vec) => {
+                for (i, v) in vec.iter().enumerate() {
+                    f(v, path + i).await?;
+                }
+                Ok(())
+            },
             _ => panic!("Unhandled type."),
         }
     }
@@ -1088,15 +1093,15 @@ impl Object {
             let key = key.as_str();
             let path = path + key;
             match key {
-                "create" | "createMany" => self.nested_enumerate(value, &path, |v, p| async { self.nested_create_relation_object(relation, v, session.clone(), p).await }).await?,
-                "connect" | "set" => self.nested_enumerate(value, &path, |v, p| async { self.nested_connect_relation_object(relation, v, session.clone(), p).await }).await?,
-                "connectOrCreate" => self.nested_enumerate(value, &path, |v, p| async { self.nested_connect_or_create_relation_object(relation, v, session.clone(), p).await }).await?,
-                "disconnect" => self.nested_enumerate(value, &path, |v, p| async { self.nested_many_disconnect_relation_object(relation, v, session.clone(), p).await }).await?,
-                "upsert" => self.nested_enumerate(value, &path, |v, p| async { self.nested_upsert_relation_object(relation, v, session.clone(), p).await }).await?,
-                "update" => self.nested_enumerate(value, &path, |v, p| async { self.nested_many_update_relation_object(relation, v, session.clone(), p).await }).await?,
-                "updateMany" => self.nested_enumerate(value, &path, |v, p| async { self.nested_many_update_many_relation_object(relation, v, session.clone(), p).await }).await?,
-                "delete" => self.nested_enumerate(value, &path, |v, p| async { self.nested_many_delete_relation_object(relation, v, session.clone(), p).await }).await?,
-                "deleteMany" => self.nested_enumerate(value, &path, |v, p| async { self.nested_many_delete_many_relation_object(relation, v, session.clone(), p).await }).await?,
+                "create" | "createMany" => { let session = session.clone(); self.nested_enumerate(value, &path, |v, p| async move { self.nested_create_relation_object(relation, v, session.clone(), &p).await }).await? },
+                "connect" | "set" => { let session = session.clone(); self.nested_enumerate(value, &path, |v, p| async move { self.nested_connect_relation_object(relation, v, session.clone(), &p).await }).await? },
+                "connectOrCreate" => { let session = session.clone(); self.nested_enumerate(value, &path, |v, p| async move { self.nested_connect_or_create_relation_object(relation, v, session.clone(), &p).await }).await? },
+                "disconnect" => { let session = session.clone(); self.nested_enumerate(value, &path, |v, p| async move { self.nested_many_disconnect_relation_object(relation, v, session.clone(), &p).await }).await? },
+                "upsert" => { let session = session.clone(); self.nested_enumerate(value, &path, |v, p| async move { self.nested_upsert_relation_object(relation, v, session.clone(), &p).await }).await? },
+                "update" => { let session = session.clone(); self.nested_enumerate(value, &path, |v, p| async move { self.nested_many_update_relation_object(relation, v, session.clone(), &p).await }).await? },
+                "updateMany" => { let session = session.clone(); self.nested_enumerate(value, &path, |v, p| async move { self.nested_many_update_many_relation_object(relation, v, session.clone(), &p).await }).await? },
+                "delete" => { let session = session.clone(); self.nested_enumerate(value, &path, |v, p| async move { self.nested_many_delete_relation_object(relation, v, session.clone(), &p).await }).await? },
+                "deleteMany" => { let session = session.clone(); self.nested_enumerate(value, &path, |v, p| async move { self.nested_many_delete_many_relation_object(relation, v, session.clone(), &p).await }).await? },
                 _ => panic!("Unhandled key."),
             }
         }
