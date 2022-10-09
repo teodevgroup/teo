@@ -386,6 +386,10 @@ impl Object {
         Ok(self.get_value_map_value(key))
     }
 
+    pub(crate) fn get_atomic_updator(&self, key: &str) -> Option<&Value> {
+        self.inner.atomic_updator_map.lock().unwrap().get(key)
+    }
+
     pub fn set_select(&self, select: Option<&Value>) -> ActionResult<()> {
         if select.is_none() {
             return Ok(());
@@ -776,7 +780,7 @@ impl Object {
         Ok(())
     }
 
-    async fn create_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation) -> ActionResult<()> {
+    async fn create_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
         let join_model = self.graph().model(relation.through().unwrap()).unwrap();
         let env = self.env().nested(Intent::NestedJoinTableRecordCreate);
         let join_object = self.graph().new_object(join_model.name(), env)?;
@@ -787,10 +791,13 @@ impl Object {
         self.assign_linked_values_to_related_object(&join_object, join_local_relation);
         let join_foreign_relation = join_model.relation(foreign).unwrap();
         object.assign_linked_values_to_related_object(&join_object, join_foreign_relation);
-        join_object.save_with_session_and_path(session.clone(), &path![]).await?;
+        match join_object.save_with_session_and_path(session.clone(), path).await {
+            Ok(_) => Ok(()),
+            Err(_) => Err(ActionError::unexpected_input_value_with_reason("Can't create join record.", path)),
+        }
     }
 
-    async fn delete_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation) -> ActionResult<()> {
+    async fn delete_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
         let join_model = self.graph().model(relation.through().unwrap()).unwrap();
         let env = self.env().nested(Intent::NestedJoinTableRecordDelete);
         let local = relation.local();
@@ -806,9 +813,12 @@ impl Object {
         let r#where = Value::HashMap(r#where_map);
         let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
             Ok(object) => object,
-            Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Join object is not found.", path![])),
+            Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Join object is not found.", path)),
         };
-        object.delete_from_database(session.clone()).await?;
+        match object.delete_from_database(session.clone()).await {
+            Ok(_) => Ok(()),
+            Err(_) => Err(ActionError::unexpected_input_value_with_reason("Can't delete join record.", path)),
+        }
     }
 
     fn assign_linked_values_to_related_object(&self, object: &Object, opposite_relation: &Relation) {
@@ -1052,7 +1062,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_enumerate<F: Fn(&Value, &KeyPath) -> ActionResult<()>>(&self, value: &Value, path: &KeyPath, f: F) -> ActionResult<()> {
+    async fn nested_enumerate<'a, F: Fn(&'a Value, &'a KeyPath) -> ActionResult<()>>(&self, value: &'a Value, path: &'a KeyPath<'a>, f: F) -> ActionResult<()> {
         match value {
             Value::HashMap(map) => f(value, path),
             Value::Vec(vec) => vec.iter().enumerate().map(|(i, v)| f(v, &(path + i))),
@@ -1074,7 +1084,7 @@ impl Object {
                 "updateMany" => self.nested_enumerate(value, &path, |v, p| self.nested_many_update_many_relation_object(relation, v, session.clone(), p)?),
                 "delete" => self.nested_enumerate(value, &path, |v, p| self.nested_many_delete_relation_object(relation, v, session.clone(), p)?),
                 "deleteMany" => self.nested_enumerate(value, &path, |v, p| self.nested_many_delete_many_relation_object(relation, v, session.clone(), p)?),
-                _ => panic!("Unhandled key.")
+                _ => panic!("Unhandled key."),
             }
         }
         Ok(())
@@ -1087,13 +1097,13 @@ impl Object {
         }
         let graph = self.graph();
         let mut finder = tson!({
-            "where": self.json_identifier(),
+            "where": self.identifier(),
         });
-        if include.is_some() {
-            finder.as_hashmap_mut().unwrap().insert("include".to_string(), include.unwrap().clone());
+        if let Some(include) = include {
+            finder.as_hashmap_mut().unwrap().insert("include".to_string(), include.clone());
         }
-        if select.is_some() {
-            finder.as_hashmap_mut().unwrap().insert("select".to_string(), select.unwrap().clone());
+        if let Some(select) = select {
+            finder.as_hashmap_mut().unwrap().insert("select".to_string(), select.clone());
         }
         graph.find_unique(self.model().name(), &finder, false, self.env().clone()).await
     }

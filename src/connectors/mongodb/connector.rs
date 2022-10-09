@@ -32,7 +32,9 @@ use crate::core::model::index::{ModelIndex, ModelIndexType};
 use crate::core::connector::SaveSession;
 use crate::core::tson::Value;
 use crate::core::error::ActionError;
+use crate::core::input::Input;
 use crate::core::result::ActionResult;
+use crate::core::tson::decoder::Decoder;
 use crate::tson;
 
 #[derive(Debug)]
@@ -279,27 +281,25 @@ impl MongoDBConnector {
         for key in keys {
             if let Some(field) = model.field(key) {
                 let column_name = field.column_name();
-                let val = object.get_value(&key).unwrap();
-                let bson_val: Bson = val.into();
-                if bson_val != Bson::Null {
-                    doc.insert(column_name, bson_val);
+                let val: Bson = object.get_value(&key).unwrap().into();
+                if val != Bson::Null {
+                    doc.insert(column_name, val);
                 }
             } else if let Some(property) = model.property(key) {
-                let val: Value = object.get_property(key).await.unwrap();
-                let bson_val: Bson = val.into();
-                if bson_val != Bson::Null {
-                    doc.insert(key, bson_val);
+                let val: Bson = object.get_property(key).await.unwrap().into();
+                if val != Bson::Null {
+                    doc.insert(key, val);
                 }
             }
         }
         let result = col.insert_one(doc, None).await;
         match result {
             Ok(insert_one_result) => {
-                let id = insert_one_result.inserted_id.as_object_id().unwrap().to_hex();
+                let id = insert_one_result.inserted_id.as_object_id().unwrap();
                 for key in auto_keys {
                     let field = model.field(key).unwrap();
                     if field.column_name() == "_id" {
-                        object.set_value(field.name(), Value::ObjectId(ObjectId::from_str(id.as_str()).unwrap()))?;
+                        object.set_value(field.name(), Value::ObjectId(id))?;
                     }
                 }
             }
@@ -314,9 +314,8 @@ impl MongoDBConnector {
         let model = object.model();
         let keys = object.keys_for_save();
         let col = &self.collections[model.name()];
-        let value_identifier = object.identifier();
-        let bson_identifier = Bson::from(&value_identifier);
-        let identifier = bson_identifier.as_document().unwrap();
+        let identifier: Bson = object.identifier().into();
+        let identifier = identifier.as_document().unwrap();
         let mut set = doc!{};
         let mut unset = doc!{};
         let mut inc = doc!{};
@@ -325,25 +324,15 @@ impl MongoDBConnector {
         for key in keys {
             if let Some(field) = model.field(key) {
                 let column_name = field.column_name();
-                let atomic_updator_map = object.inner.atomic_updator_map.lock().unwrap();
-                if atomic_updator_map.contains_key(key) {
-                    let updator = atomic_updator_map.get(key).unwrap();
-                    match updator {
-                        AtomicUpdateType::Increment(val) => {
-                            inc.insert(column_name, Bson::from(val));
-                        }
-                        AtomicUpdateType::Decrement(val) => {
-                            inc.insert(column_name, Bson::from(&val.neg()));
-                        }
-                        AtomicUpdateType::Multiply(val) => {
-                            mul.insert(column_name, Bson::from(val));
-                        }
-                        AtomicUpdateType::Divide(val) => {
-                            mul.insert(column_name, Bson::Double(val.recip()));
-                        }
-                        AtomicUpdateType::Push(val) => {
-                            push.insert(column_name, Bson::from(val));
-                        }
+                if let Some(updator) = object.get_atomic_updator(key) {
+                    let (key, value) = Input::key_value(updator.as_hashmap().unwrap());
+                    match key {
+                        "increment" => inc.insert(column_name, val.into()),
+                        "decrement" => inc.insert(column_name, Bson::from(&val.neg())),
+                        "multiply" => mul.insert(column_name, Bson::from(val)),
+                        "divide" => mul.insert(column_name, Bson::Double(val.recip())),
+                        "push" => push.insert(column_name, Bson::from(val)),
+                        _ => panic!("Unhandled key."),
                     }
                 } else {
                     let val = object.get_value(key).unwrap();
@@ -354,7 +343,7 @@ impl MongoDBConnector {
                         set.insert(key, bson_val);
                     }
                 }
-            } else if let Some(property) = model.property(key) {
+            } else if let Some(_) = model.property(key) {
                 let val: Value = object.get_property(key).await.unwrap();
                 let bson_val: Bson = val.into();
                 if bson_val != Bson::Null {

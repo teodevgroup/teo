@@ -694,7 +694,7 @@ impl Decoder {
                 let path = path + k;
                 Ok((k.to_owned(), match k {
                     "set" => Self::decode_value_for_field_type(graph, r#type, optional, v, path)?,
-                    "add" | "sub" | "mul" | "div" => Self::decode_value_for_field_type(graph, r#type, false, v, path)?,
+                    "increment" | "decrement" | "multiply" | "divide" => Self::decode_value_for_field_type(graph, r#type, false, v, path)?,
                     "push" => {
                         let element_field = r#type.element_field().unwrap();
                         Self::decode_value_for_field_type(graph, element_field.r#type(), element_field.is_optional(), v, path)?
