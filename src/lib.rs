@@ -1,3 +1,5 @@
+extern crate core;
+
 pub mod core;
 pub mod connectors;
 pub mod client;

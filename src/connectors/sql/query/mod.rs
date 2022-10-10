@@ -14,8 +14,8 @@ pub(crate) struct Query { }
 
 impl Query {
 
-    fn where_item(col_name: &str, op: &str, val: &str) -> String {
-        format!("{col_name} {op} {val}")
+    pub(crate) fn where_item(lhs: &str, op: &str, rhs: &str) -> String {
+        format!("{lhs} {op} {rhs}")
     }
 
     pub(crate) fn where_from_identifier(object: &Object, dialect: SQLDialect) -> String {

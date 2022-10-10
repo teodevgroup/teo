@@ -50,98 +50,7 @@ impl SQLConnector {
         Self { dialect, pool }
     }
 
-    fn row_to_object(&self, row: &AnyRow, object: &Object, select: Option<&Value>, include: Option<&Value>, left_join: bool) -> ActionResult<()> {
-        for column in row.columns() {
-            let column_name = column.name();
-            let result_name = if left_join {
-                // "t.".to_owned() + column_name
-                column_name.to_owned()
-            } else {
-                column_name.to_owned()
-            };
-            if let Some(field) = object.model().field_with_column_name(column_name) {
-                if field.r#type().is_bool() {
-                    let any_value: AnyValueRef = row.try_get_raw(result_name.as_str()).unwrap();
-                    if !any_value.is_null() {
-                        let bool_value: bool = row.get(result_name.as_str());
-                        object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::Bool(bool_value));
-                    }
-                } else if field.r#type().is_int() {
-                    let any_value: AnyValueRef = row.try_get_raw(result_name.as_str()).unwrap();
-                    if !any_value.is_null() {
-                        let i64_value: i64 = row.get(result_name.as_str());
-                        object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::number_from_i64(i64_value, field.r#type()));
-                    }
-                } else if field.r#type().is_float() {
-                    let any_value: AnyValueRef = row.try_get_raw(result_name.as_str()).unwrap();
-                    if !any_value.is_null() {
-                        let f64_value: f64 = row.get(result_name.as_str());
-                        object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::number_from_f64(f64_value, field.r#type()));
-                    }
-                } else if field.r#type().is_string() {
-                    let any_value: AnyValueRef = row.try_get_raw(result_name.as_str()).unwrap();
-                    if !any_value.is_null() {
-                        let string_value: String = row.get(result_name.as_str());
-                        object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::String(string_value));
-                    }
-                } else if field.r#type().is_date() {
-                    let any_value: AnyValueRef = row.try_get_raw(result_name.as_str()).unwrap();
-                    #[cfg(not(feature = "data-source-mssql"))]
-                    if !any_value.is_null() {
-                        let naive_date: NaiveDate = row.get(result_name.as_str());
-                        let date: Date<Utc> = Date::from_utc(naive_date, Utc);
-                        object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::Date(date));
-                    }
-                } else if field.r#type().is_datetime() {
-                    let any_value: AnyValueRef = row.try_get_raw(result_name.as_str()).unwrap();
-                    #[cfg(not(feature = "data-source-mssql"))]
-                    if !any_value.is_null() {
-                        let datetime_value: DateTime<Utc> = row.get(result_name.as_str());
-                        object.inner.value_map.lock().unwrap().insert(field.name().to_owned(), Value::DateTime(datetime_value));
-                    }
-                }
-            } else if let Some(relation) = object.model().relation(column_name) {}
-        }
-        object.inner.is_initialized.store(true, Ordering::SeqCst);
-        object.inner.is_new.store(false, Ordering::SeqCst);
-        if let Some(select) = select {
-            object.set_select(Some(select)).unwrap();
-        }
-        Ok(())
-
-        // // relation
-        // let relation = object.model().relation(key);
-        // if relation.is_none() {
-        //     continue;
-        // }
-        // let inner_finder = if let Some(include) = include {
-        //     include.get(key)
-        // } else {
-        //     None
-        // };
-        // let inner_select = if let Some(inner_finder) = inner_finder {
-        //     inner_finder.get("select")
-        // } else {
-        //     None
-        // };
-        // let inner_include = if let Some(inner_finder) = inner_finder {
-        //     inner_finder.get("include")
-        // } else {
-        //     None
-        // };
-        // let relation = relation.unwrap();
-        // let model_name = relation.model();
-        // let object_bsons = document.get(key).unwrap().as_vec().unwrap();
-        // let mut related: Vec<Object> = vec![];
-        // for related_object_bson in object_bsons {
-        //     let related_object = object.graph().new_object(model_name)?;
-        //     self.document_to_object(related_object_bson.as_document().unwrap(), &related_object, inner_select, inner_include)?;
-        //     related.push(related_object);
-        // }
-        // object.inner.relation_query_map.lock().unwrap().insert(key.to_string(), related);
-    }
-
-    async fn create_object(&self, object: &Object) -> ActionResult<()> {
+    async fn create_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()> {
         let model = object.model();
         let keys = object.keys_for_save();
         let auto_keys = model.auto_keys();
@@ -165,7 +74,7 @@ impl SQLConnector {
         Ok(())
     }
 
-    async fn update_object(&self, object: &Object) -> ActionResult<()> {
+    async fn update_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()> {
         let model = object.model();
         let keys = object.keys_for_save();
         let mut values: Vec<(&str, String)> = vec![];
@@ -242,145 +151,11 @@ impl SQLConnector {
                 }
                 if let Some(include) = include {
                     if let Some(include_map) = include.as_hashmap() {
-                        for (relation_name, include_value) in include_map {
-                            let relation = model.relation(relation_name);
-                            if relation.is_none() {
-                                let path = key_path.as_ref() + relation_name;
-                                return Err(ActionError::unexpected_input_key(relation_name, path));
-                            }
-                            let relation = relation.unwrap();
-                            let empty = tson!({});
-                            let mut nested_include = if include_value.is_bool() {
-                                if include_value.as_bool().unwrap() == true {
-                                    Some(&empty)
-                                } else {
-                                    None
-                                }
-                            } else if include_value.is_object() {
-                                Some(include_value)
-                            } else {
-                                let path = key_path.as_ref() + relation_name;
-                                return Err(ActionError::unexpected_input_value("bool or object", &path));
-                            };
-                            if let Some(nested_include) = nested_include {
-                                if relation.through().is_none() { // no join tables
-                                    let relation_model = graph.model(relation.model()).unwrap();
-                                    let left_fields = relation.fields();
-                                    let right_fields = relation.references();
-                                    let path = key_path.as_ref() + relation_name;
-                                    // todo: transform to column name
-                                    let before_in: String = if right_fields.len() == 1 {
-                                        right_fields.get(0).unwrap().to_string()
-                                    } else {
-                                        right_fields.join(",").to_wrapped()
-                                    };
-                                    let after_in: String = if right_fields.len() == 1 {
-                                        // (?,?,?,?,?)
-                                        let field_name = left_fields.get(0).unwrap();
-                                        // let column_name = relation_model.field(field_name).unwrap().column_name();
-                                        let values: Vec<String> = retval.iter().map(|o| {
-                                            o.get_value(field_name).unwrap().to_string(self.dialect)
-                                        }).collect();
-                                        values.join(",").to_wrapped()
-                                    } else {
-                                        // (VALUES (?,?),(?,?))
-                                        let pairs = retval.iter().map(|o| {
-                                            left_fields.iter().map(|f| o.get_value(f).unwrap().to_string(self.dialect)).collect::<Vec<String>>().join(",").to_wrapped()
-                                        }).collect::<Vec<String>>().join(",");
-                                        format!("(VALUES {})", pairs)
-                                    };
-                                    let relation_where = format!("{} IN {}", before_in, after_in);
-                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), None, env.alter_intent(Intent::NestedIncluded)).await?;
-                                    println!("see included: {:?}", included);
-                                    for o in included {
-                                        let owners = retval.iter().filter(|r| {
-                                            for (index, left_field) in left_fields.iter().enumerate() {
-                                                let right_field = &right_fields[index];
-                                                if o.get_value(right_field) != r.get_value(left_field) {
-                                                    return false;
-                                                }
-                                            }
-                                            true
-                                        });
-                                        for owner in owners {
-                                            if owner.inner.relation_query_map.lock().unwrap().get_mut(relation_name).is_none() {
-                                                owner.inner.relation_query_map.lock().unwrap().insert(relation_name.to_string(), vec![]);
-                                            }
-                                            owner.inner.relation_query_map.lock().unwrap().get_mut(relation_name).unwrap().push(o.clone());
-                                        }
-                                    }
-                                } else { // with join tables
-                                    let relation_model = graph.model(relation.model()).unwrap();
-                                    let relation_model_table_name = relation_model.table_name();
-                                    let through_model = graph.model(&relation.through().as_ref().unwrap()).unwrap();
-                                    let through_table_name = through_model.table_name();
-                                    let through_relation = through_model.relation(relation.references().get(0).unwrap()).unwrap();
-                                    let mut join_parts: Vec<String> = vec![];
-                                    for (index, field_name) in through_relation.fields().iter().enumerate() {
-                                        let reference_name = through_relation.references().get(index).unwrap();
-                                        join_parts.push(format!("t.{} = j.{}", reference_name, field_name));
-                                    }
-                                    let joins = join_parts.join(" AND ");
-                                    let left_join = format!("{} AS j ON {}", through_table_name, joins);
-                                    let this_relation_on_join_table = through_model.relation(relation.fields().get(0).unwrap()).unwrap();
-                                    let left_fields = this_relation_on_join_table.references();
-                                    let right_fields = this_relation_on_join_table.fields();
-                                    let before_in: String = if right_fields.len() == 1 {
-                                        "j.".to_owned() + right_fields.get(0).unwrap()
-                                    } else {
-                                        right_fields.iter().map(|f| format!("j.{}", f)).collect::<Vec<String>>().join(",").to_wrapped()
-                                    };
-                                    let after_in: String = if right_fields.len() == 1 {
-                                        // (?,?,?,?,?)
-                                        let field_name = left_fields.get(0).unwrap();
-                                        // let column_name = relation_model.field(field_name).unwrap().column_name();
-                                        let values: Vec<String> = retval.iter().map(|o| {
-                                            let result = o.get_value(field_name).unwrap().to_string(self.dialect);
-                                            println!("see retval: {:?}", &retval);
-                                            result
-                                        }).collect();
-                                        values.join(",").to_wrapped()
-                                    } else {
-                                        // (VALUES (?,?),(?,?))
-                                        let pairs = retval.iter().map(|o| {
-                                            left_fields.iter().map(|f| o.get_value(f).unwrap().to_string(self.dialect)).collect::<Vec<String>>().join(",").to_wrapped()
-                                        }).collect::<Vec<String>>().join(",");
-                                        format!("(VALUES {})", pairs)
-                                    };
-                                    let relation_where = format!("{} IN {}", before_in, after_in);
-                                    let path = key_path.as_ref() + relation_name;
-                                    let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), Some(left_join), env.alter_intent(Intent::NestedIncluded)).await?;
-                                    println!("see included {:?}", included);
-                                    for o in included {
-                                        let owners = retval.iter().filter(|r| {
-                                            for (index, left_field) in left_fields.iter().enumerate() {
-                                                let right_field = &right_fields[index];
-                                                if o.get_value(right_field) != r.get_value(left_field) {
-                                                    return false;
-                                                }
-                                            }
-                                            true
-                                        });
-                                        for owner in owners {
-                                            if owner.inner.relation_query_map.lock().unwrap().get_mut(relation_name).is_none() {
-                                                owner.inner.relation_query_map.lock().unwrap().insert(relation_name.to_string(), vec![]);
-                                            }
-                                            owner.inner.relation_query_map.lock().unwrap().get_mut(relation_name).unwrap().push(o.clone());
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        let path = key_path.as_ref() + "include";
-                        return Err(ActionError::unexpected_input_type("object", &path));
+
                     }
                 }
             }
-            Err(err) => {
-                println!("{:?}", err);
-                return Err(ActionError::unknown_database_find_error());
-            }
+
         }
         Ok(retval)
     }
@@ -388,12 +163,13 @@ impl SQLConnector {
 
 #[async_trait]
 impl Connector for SQLConnector {
+
     async fn save_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()> {
         let is_new = object.inner.is_new.load(Ordering::SeqCst);
         if is_new {
-            self.create_object(object).await
+            self.create_object(object, session.clone()).await
         } else {
-            self.update_object(object).await
+            self.update_object(object, session.clone()).await
         }
     }
 
