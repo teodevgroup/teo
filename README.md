@@ -90,8 +90,8 @@ The new generation server software.
 - MongoDB Aggregation: rewrite **[DONE]**
 - MongoDB update: column keys **[DONE]**
 - SQL: MySQL: Fix bool column is always altered bug **[DONE]**
-- SQL query process: rewrite
-- SQL update: column keys
+- SQL query process: rewrite **[DONE]**
+- SQL update: column keys **[DONE]**
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
 - SQL: Distinct
