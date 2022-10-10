@@ -18,7 +18,7 @@ impl MongoDBConnectorBuilder {
 
 #[async_trait]
 impl ConnectorBuilder for MongoDBConnectorBuilder {
-    fn inferred_database_type(&self, field_type: &FieldType) -> DatabaseType {
+    fn default_database_type(&self, field_type: &FieldType) -> DatabaseType {
         match field_type {
             FieldType::Undefined => DatabaseType::Undefined,
             FieldType::ObjectId => DatabaseType::ObjectId,

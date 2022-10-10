@@ -32,13 +32,17 @@ pub enum DatabaseType {
     /// TinyInt
     /// Represents a tiny integer from -128 to 127. The unsigned version is from 0 to 255.
     /// Arguments:
-    ///     m: ,
+    ///     m: column length,
     ///     u: unsigned
     /// Availability: MySQL
     TinyInt { m: Option<u8>, u: bool },
 
-    // SmallInt(signed), from -32768 to 32767. Unsigned version is from 0 - 65535.
-    // Available for MySQL and PostgreSQL. The signed option is ignored in PostgreSQL.
+    /// SmallInt
+    /// Represents a small integer from -32768 to 32767. The unsigned version is from 0 to 65535.
+    /// Arguments:
+    ///     m: column length, ignored for PostgreSQL
+    ///     u: unsigned, ignored for PostgreSQL
+    /// Availability: MySQL, PostgreSQL
     SmallInt { m: Option<u8>, u: bool },
 
     // MediumInt(M), from -8388608 to 8388607. Unsigned version is from 0 - 16777215.

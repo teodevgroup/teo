@@ -34,7 +34,7 @@ pub(crate) trait Connector: Debug + Send + Sync {
 #[async_trait]
 pub(crate) trait ConnectorBuilder: Debug + Send + Sync {
 
-    fn inferred_database_type(&self, field_type: &FieldType) -> DatabaseType;
+    fn default_database_type(&self, field_type: &FieldType) -> DatabaseType;
 
     async fn build_connector(&self, models: &Vec<Model>, reset_database: bool) -> Box<dyn Connector>;
 }

@@ -214,7 +214,7 @@ impl PropertyBuilder {
             description: self.description.clone(),
             optionality: self.optionality.clone(),
             field_type: self.field_type.clone(),
-            database_type: if self.database_type.is_undefined() { connector_builder.inferred_database_type(&self.field_type) } else { self.database_type.clone() },
+            database_type: if self.database_type.is_undefined() { connector_builder.default_database_type(&self.field_type) } else { self.database_type.clone() },
             dependencies: self.dependencies.clone(),
             setter: self.setter.clone(),
             getter: self.getter.clone(),

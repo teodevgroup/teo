@@ -25,7 +25,8 @@ impl SQLConnectorBuilder {
 
 #[async_trait]
 impl ConnectorBuilder for SQLConnectorBuilder {
-    fn inferred_database_type(&self, field_type: &FieldType) -> DatabaseType {
+
+    fn default_database_type(&self, field_type: &FieldType) -> DatabaseType {
         field_type.to_database_type(self.dialect)
     }
 

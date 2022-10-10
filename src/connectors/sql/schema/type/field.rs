@@ -9,21 +9,21 @@ pub trait ToDatabaseType {
 impl ToDatabaseType for FieldType {
     fn to_database_type(&self, dialect: SQLDialect) -> DatabaseType {
         match dialect {
-            SQLDialect::SQLite => inferred_database_type_sqlite(field_type),
-            SQLDialect::MySQL => inferred_database_type_mysql(field_type),
-            SQLDialect::PostgreSQL => inferred_database_type_postgresql(field_type),
-            SQLDialect::MSSQL => inferred_database_type_mssql(field_type),
+            SQLDialect::SQLite => default_database_type_sqlite(field_type),
+            SQLDialect::MySQL => default_database_type_mysql(field_type),
+            SQLDialect::PostgreSQL => default_database_type_postgresql(field_type),
+            SQLDialect::MSSQL => default_database_type_mssql(field_type),
         }
     }
 }
 
-fn inferred_database_type_mssql(field_type: &FieldType) -> DatabaseType {
+fn default_database_type_mssql(field_type: &FieldType) -> DatabaseType {
     match field_type {
         _ => panic!("Unhandled."),
     }
 }
 
-fn inferred_database_type_mysql(field_type: &FieldType) -> DatabaseType {
+fn default_database_type_mysql(field_type: &FieldType) -> DatabaseType {
     match field_type {
         FieldType::Undefined => DatabaseType::Undefined,
         FieldType::ObjectId => DatabaseType::Undefined,
@@ -52,13 +52,13 @@ fn inferred_database_type_mysql(field_type: &FieldType) -> DatabaseType {
     }
 }
 
-fn inferred_database_type_postgresql(field_type: &FieldType) -> DatabaseType {
+fn default_database_type_postgresql(field_type: &FieldType) -> DatabaseType {
     match field_type {
         _ => DatabaseType::Undefined,
     }
 }
 
-fn inferred_database_type_sqlite(field_type: &FieldType) -> DatabaseType {
+fn default_database_type_sqlite(field_type: &FieldType) -> DatabaseType {
     match field_type {
         _ => DatabaseType::Undefined,
     }
