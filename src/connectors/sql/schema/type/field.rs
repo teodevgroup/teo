@@ -1,7 +1,29 @@
+use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::db_type::DatabaseType;
 use crate::core::field::r#type::FieldType;
 
-pub(crate) fn inferred_database_type_mysql(field_type: &FieldType) -> DatabaseType {
+pub trait ToDatabaseType {
+    fn to_database_type(&self, dialect: SQLDialect) -> DatabaseType;
+}
+
+impl ToDatabaseType for FieldType {
+    fn to_database_type(&self, dialect: SQLDialect) -> DatabaseType {
+        match dialect {
+            SQLDialect::SQLite => inferred_database_type_sqlite(field_type),
+            SQLDialect::MySQL => inferred_database_type_mysql(field_type),
+            SQLDialect::PostgreSQL => inferred_database_type_postgresql(field_type),
+            SQLDialect::MSSQL => inferred_database_type_mssql(field_type),
+        }
+    }
+}
+
+fn inferred_database_type_mssql(field_type: &FieldType) -> DatabaseType {
+    match field_type {
+        _ => panic!("Unhandled."),
+    }
+}
+
+fn inferred_database_type_mysql(field_type: &FieldType) -> DatabaseType {
     match field_type {
         FieldType::Undefined => DatabaseType::Undefined,
         FieldType::ObjectId => DatabaseType::Undefined,
@@ -26,6 +48,18 @@ pub(crate) fn inferred_database_type_mysql(field_type: &FieldType) -> DatabaseTy
         FieldType::HashMap(_) => DatabaseType::Undefined,
         FieldType::BTreeMap(_) => DatabaseType::Undefined,
         FieldType::Object(_) => DatabaseType::Undefined,
+        _ => DatabaseType::Undefined,
+    }
+}
+
+fn inferred_database_type_postgresql(field_type: &FieldType) -> DatabaseType {
+    match field_type {
+        _ => DatabaseType::Undefined,
+    }
+}
+
+fn inferred_database_type_sqlite(field_type: &FieldType) -> DatabaseType {
+    match field_type {
         _ => DatabaseType::Undefined,
     }
 }
