@@ -1,31 +1,40 @@
-use crate::core::field::r#type::FieldType;
-
-// The database internal types.
+/// This enum represents the field type in the actual database. This enum is designed to support
+/// all SQL databases and MongoDB.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatabaseType {
 
-    // This value will be finally altered.
-    Undefined,
-
-    // MongoDB only
+    /// ObjectId
+    /// Represents an object's id.
+    /// Availability: MongoDB
     #[cfg(feature = "data-source-mongodb")]
     ObjectId,
 
-    // In MySQL, it's alias for TINYINT(1).
-    // All database supports.
+    /// Bool
+    /// Represents a bool value.
+    /// Note: In MySQL, this type is synonyms only and you should alter this with TINYINT(1).
+    /// Availability: All
     Bool,
 
-    // Bit(M), M is from 1 - 64. If M is omitted, M is 1 by default. To assign,
-    // b'value' is used. For example, assigning a value of b'101' to a BIT(6) column is, in effect,
-    // the same as assigning b'000101'.
-    // MySQL and PostgreSQL
-    Bit { m: u8 },
+    /// Bit
+    /// Represents the smallest integer.
+    /// Arguments:
+    ///     m: m is from 1 to 64. If m is omitted, m is 1 by default.
+    /// Note: To assign a value to it, b'value' is used. For example, assigning a value of b'101'
+    /// to a BIT(6) column is, in effect, the same as assigning b'000101'.
+    /// Availability: MySQL, PostgreSQL
+    Bit { m: Option<u8> },
 
-    // PostgreSQL only
+    /// BitVarying
+    /// Represents a bit but varying in length.
+    /// Availability: PostgreSQL
     BitVarying,
 
-    // TinyInt(bit, unsigned), from -128 to 127. Unsigned version is from 0 - 255.
-    // Available on MySQL only.
+    /// TinyInt
+    /// Represents a tiny integer from -128 to 127. The unsigned version is from 0 to 255.
+    /// Arguments:
+    ///     m: ,
+    ///     u: unsigned
+    /// Availability: MySQL
     TinyInt { m: Option<u8>, u: bool },
 
     // SmallInt(signed), from -32768 to 32767. Unsigned version is from 0 - 65535.
@@ -71,12 +80,12 @@ pub enum DatabaseType {
     // 24, the data type becomes FLOAT with no M or D values. If p is from 25 to 53, the data type
     // becomes DOUBLE with no M or D values.
     // MySQL and PostgreSQL only
-    Float(u8),
+    Float { m: Option<u8>, d: Option<u8> },
 
     // Double
     // A double precision. This name is remapped to DOUBLE PRECISION for PostgreSQL.
     // All database supports
-    Double,
+    Double { m: Option<u8>, d: Option<u8> },
 
     // Real
     // A normal float in MySQL or real in PostgreSQL.
@@ -160,49 +169,6 @@ pub enum DatabaseType {
     // ByteA type
     // PostgreSQL only
     ByteA,
-}
-
-impl Into<FieldType> for &DatabaseType {
-    fn into(self) -> FieldType {
-        match self {
-            DatabaseType::Undefined => FieldType::Undefined,
-            #[cfg(feature = "data-source-mongodb")]
-            DatabaseType::ObjectId => FieldType::ObjectId,
-            DatabaseType::Bool => FieldType::Bool,
-            DatabaseType::Bit { m: _ } => todo!(),
-            DatabaseType::BitVarying => todo!(),
-            DatabaseType::TinyInt { m: _, unsigned } => if *unsigned { FieldType::U8 } else { FieldType::I8 },
-            DatabaseType::SmallInt { m: _, unsigned } => if *unsigned { FieldType::U16 } else { FieldType::I16 },
-            DatabaseType::MediumInt { m: _, unsigned } => if *unsigned { FieldType::U32 } else { FieldType::I32 },
-            DatabaseType::Int { m: _, unsigned } => if *unsigned { FieldType::U32 } else { FieldType::I32 },
-            DatabaseType::BigInt { m: _, unsigned } => if *unsigned { FieldType::U64 } else { FieldType::I64 },
-            DatabaseType::Int32 => FieldType::I32,
-            DatabaseType::Int64 => FieldType::I64,
-            DatabaseType::Decimal(_, _) => FieldType::Decimal,
-            DatabaseType::Float(precision) => if *precision >= 25 { FieldType::F64 } else { FieldType::F32 },
-            DatabaseType::Double => FieldType::F64,
-            DatabaseType::Real => FieldType::F32,
-            DatabaseType::Date => FieldType::Date,
-            DatabaseType::DateTime(_) => FieldType::DateTime,
-            DatabaseType::Timestamp(_, _) => FieldType::DateTime,
-            DatabaseType::Time(_, _) => todo!(),
-            DatabaseType::Year => FieldType::String,
-            DatabaseType::Char(_, _, _) => FieldType::String,
-            DatabaseType::VarChar(_, _, _) => FieldType::String,
-            DatabaseType::TinyText(_, _) => FieldType::String,
-            DatabaseType::MediumText(_, _) => FieldType::String,
-            DatabaseType::LongText(_, _) => FieldType::String,
-            DatabaseType::Text(_, _, _) => FieldType::String,
-            DatabaseType::String => FieldType::String,
-            DatabaseType::Binary(_) => FieldType::String,
-            DatabaseType::VarBinary(_) => FieldType::String,
-            DatabaseType::TinyBlob => FieldType::String,
-            DatabaseType::MediumBlob => FieldType::String,
-            DatabaseType::LongBlob => FieldType::String,
-            DatabaseType::Blob(_) => FieldType::String,
-            DatabaseType::ByteA => FieldType::String,
-        }
-    }
 }
 
 impl DatabaseType {

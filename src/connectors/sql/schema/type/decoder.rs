@@ -22,9 +22,23 @@ fn mysql_type_to_database_type(r#type: &str) -> DatabaseType {
         None => panic!("Unhandled database type."),
         Some(captures) => {
             let name = captures.get(1).unwrap().as_str();
-            let trailing1 = captures.get(3);
-            let arg = captures.get(4);
+            let trailing1 = captures.get(3).map(|m| m.as_str());
+            let arg = captures.get(4).map(|m| m.as_str());
+            match name {
+                "bit" => DatabaseType::Bit { m: arg.map(|a| u8::from_str(a).unwrap()) },
+                "tinyint" => DatabaseType::TinyInt { m: arg.map(|a| u8::from_str(a).unwrap()), u: trailing1.is_some() },
+                "smallint" => DatabaseType::SmallInt { m: arg.map(|a| u8::from_str(a).unwrap()), u: trailing1.is_some() },
+                "mediumint" => DatabaseType::MediumInt { m: arg.map(|a| u8::from_str(a).unwrap()), u: trailing1.is_some() },
+                "int" => DatabaseType::Int { m: arg.map(|a| u8::from_str(a).unwrap()), u: trailing1.is_some() },
+                "bigint" => DatabaseType::BigInt { m: arg.map(|a| u8::from_str(a).unwrap()), u: trailing1.is_some() },
+            }
+            if name == "int" {
 
+            } else if name == "tinyint" {
+
+            } else if name == "smallint" {
+
+            }
         }
     }
     if r#type == "int" {
