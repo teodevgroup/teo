@@ -1,6 +1,6 @@
-use crate::connectors::sql::query::create::database::SQLCreateDatabaseStatement;
-use crate::connectors::sql::query::create::index::SQLCreateIndexStatement;
-use crate::connectors::sql::query::create::table::SQLCreateTableStatement;
+use crate::connectors::sql::stmts::create::database::SQLCreateDatabaseStatement;
+use crate::connectors::sql::stmts::create::index::SQLCreateIndexStatement;
+use crate::connectors::sql::stmts::create::table::SQLCreateTableStatement;
 
 pub mod database;
 pub mod table;

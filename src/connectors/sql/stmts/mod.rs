@@ -1,13 +1,13 @@
-use crate::connectors::sql::query::alter_table::SQLAlterTableStatement;
-use crate::connectors::sql::query::create::SQLCreateStatement;
-use crate::connectors::sql::query::delete_from::SQLDeleteFromStatement;
-use crate::connectors::sql::query::describe::SQLDescribeStatement;
-use crate::connectors::sql::query::drop::SQLDropStatement;
-use crate::connectors::sql::query::insert_into::SQLInsertIntoStatement;
-use crate::connectors::sql::query::r#use::SQLUseStatement;
-use crate::connectors::sql::query::select::SQLSelectStatement;
-use crate::connectors::sql::query::show::SQLShowStatement;
-use crate::connectors::sql::query::update::SQLUpdateStatement;
+use crate::connectors::sql::stmts::alter_table::SQLAlterTableStatement;
+use crate::connectors::sql::stmts::create::SQLCreateStatement;
+use crate::connectors::sql::stmts::delete_from::SQLDeleteFromStatement;
+use crate::connectors::sql::stmts::describe::SQLDescribeStatement;
+use crate::connectors::sql::stmts::drop::SQLDropStatement;
+use crate::connectors::sql::stmts::insert_into::SQLInsertIntoStatement;
+use crate::connectors::sql::stmts::r#use::SQLUseStatement;
+use crate::connectors::sql::stmts::select::SQLSelectStatement;
+use crate::connectors::sql::stmts::show::SQLShowStatement;
+use crate::connectors::sql::stmts::update::SQLUpdateStatement;
 
 pub mod create;
 pub mod drop;

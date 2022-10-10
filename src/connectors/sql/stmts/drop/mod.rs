@@ -1,6 +1,6 @@
-use crate::connectors::sql::query::drop::database::SQLDropDatabaseStatement;
-use crate::connectors::sql::query::drop::index::SQLDropIndexStatement;
-use crate::connectors::sql::query::drop::table::SQLDropTableStatement;
+use crate::connectors::sql::stmts::drop::database::SQLDropDatabaseStatement;
+use crate::connectors::sql::stmts::drop::index::SQLDropIndexStatement;
+use crate::connectors::sql::stmts::drop::table::SQLDropTableStatement;
 
 pub mod database;
 pub mod table;

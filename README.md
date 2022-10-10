@@ -89,6 +89,7 @@ The new generation server software.
 #### 0.0.33
 - MongoDB Aggregation: rewrite **[DONE]**
 - MongoDB update: column keys **[DONE]**
+- SQL: MySQL: Fix bool column is always altered bug **[DONE]**
 - SQL query process: rewrite
 - SQL update: column keys
 - SQL: join table relationship: cannot insert into object query map

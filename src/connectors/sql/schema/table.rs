@@ -1,5 +1,5 @@
-use crate::connectors::sql::query::create::table::SQLCreateTableStatement;
-use crate::connectors::sql::query::SQL;
+use crate::connectors::sql::stmts::create::table::SQLCreateTableStatement;
+use crate::connectors::sql::stmts::SQL;
 use crate::core::model::Model;
 
 impl From<&Model> for SQLCreateTableStatement {

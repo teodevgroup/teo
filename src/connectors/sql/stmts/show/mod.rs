@@ -1,5 +1,5 @@
-use crate::connectors::sql::query::show::index_from::SQLShowIndexFromStatement;
-use crate::connectors::sql::query::show::tables::SQLShowTablesStatement;
+use crate::connectors::sql::stmts::show::index_from::SQLShowIndexFromStatement;
+use crate::connectors::sql::stmts::show::tables::SQLShowTablesStatement;
 
 pub mod tables;
 pub mod index_from;

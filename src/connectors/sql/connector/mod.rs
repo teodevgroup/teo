@@ -13,9 +13,9 @@ use sqlx::any::{AnyRow, AnyValueRef};
 use crate::core::model::Model;
 use url::Url;
 use crate::connectors::sql::migration::migrate::{migrate, SQLMigration};
-use crate::connectors::sql::query_builder::integration::select::{build_sql_query_from_json, build_where_from_identifier};
-use crate::connectors::sql::query_builder::integration::value_encoder::ToWrapped;
-use crate::connectors::sql::query::SQL;
+use crate::connectors::sql::stmts_builder::integration::select::{build_sql_query_from_json, build_where_from_identifier};
+use crate::connectors::sql::stmts_builder::integration::value_encoder::ToWrapped;
+use crate::connectors::sql::stmts::SQL;
 use crate::connectors::sql::to_sql_string::ToSQLString;
 use crate::connectors::sql::save_session::SQLSaveSession;
 use crate::connectors::sql::schema::dialect::SQLDialect;
@@ -151,7 +151,7 @@ impl SQLConnector {
                 let column_name = field.column_name();
                 let val = object.get_value(key).unwrap();
                 values.push((column_name, val.to_string(self.dialect)));
-            } else if let Some(property) = model.property(key) {
+            } else if let Some(_property) = model.property(key) {
                 let val: Value = object.get_property(key).await.unwrap();
                 values.push((key, val.to_string(self.dialect)));
             }
@@ -186,7 +186,7 @@ impl SQLConnector {
                     let val = object.get_value(key).unwrap();
                     values.push((column_name, val.to_string(self.dialect)));
                 }
-            } else if let Some(property) = model.property(key) {
+            } else if let Some(_property) = model.property(key) {
                 let val: Value = object.get_property(key).await.unwrap();
                 values.push((key, val.to_string(self.dialect)));
             }

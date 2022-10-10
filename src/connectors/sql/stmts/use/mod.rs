@@ -1,4 +1,4 @@
-use crate::connectors::sql::query::r#use::database::SQLUseDatabaseStatement;
+use crate::connectors::sql::stmts::r#use::database::SQLUseDatabaseStatement;
 
 pub mod database;
 
