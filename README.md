@@ -100,6 +100,7 @@ The new generation server software.
 - SQL: Group by
 
 #### 0.0.34
+- Merge json pipeline into pipeline (hashmap)
 - Fix assign identity
 - Fix broken `connectIdentity` modifier
 

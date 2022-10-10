@@ -1,7 +1,5 @@
 use crate::core::field::r#type::FieldType;
 
-pub(crate) mod builder;
-
 // The database internal types.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatabaseType {
@@ -21,31 +19,31 @@ pub enum DatabaseType {
     // b'value' is used. For example, assigning a value of b'101' to a BIT(6) column is, in effect,
     // the same as assigning b'000101'.
     // MySQL and PostgreSQL
-    Bit(u8),
+    Bit { m: u8 },
 
     // PostgreSQL only
     BitVarying,
 
-    // TinyInt(signed), from -128 to 127. Unsigned version is from 0 - 255.
+    // TinyInt(bit, unsigned), from -128 to 127. Unsigned version is from 0 - 255.
     // Available on MySQL only.
-    TinyInt(bool),
+    TinyInt { m: Option<u8>, u: bool },
 
     // SmallInt(signed), from -32768 to 32767. Unsigned version is from 0 - 65535.
     // Available for MySQL and PostgreSQL. The signed option is ignored in PostgreSQL.
-    SmallInt(bool),
+    SmallInt { m: Option<u8>, u: bool },
 
     // MediumInt(M), from -8388608 to 8388607. Unsigned version is from 0 - 16777215.
     // Available for MySQL only.
-    MediumInt(bool),
+    MediumInt { m: Option<u8>, u: bool },
 
     // Int(signed), from -2147483648 to 2147483647. Unsigned version is from 0 to 4294967295.
     // Available for MySQL and PostgreSQL. The signed option is ignored in PostgreSQL.
-    Int(bool),
+    Int { m: Option<u8>, u: bool },
 
     // BigInt(M), from -9223372036854775808 to 9223372036854775807. Unsigned version is from 0 to
     // 18446744073709551615.
     // Available for MySQL and PostgreSQL. The signed option is ignored in PostgreSQL.
-    BigInt(bool),
+    BigInt { m: Option<u8>, u: bool },
 
     // MongoDB's int type
     // MongoDB only
@@ -171,13 +169,13 @@ impl Into<FieldType> for &DatabaseType {
             #[cfg(feature = "data-source-mongodb")]
             DatabaseType::ObjectId => FieldType::ObjectId,
             DatabaseType::Bool => FieldType::Bool,
-            DatabaseType::Bit(_) => todo!(),
+            DatabaseType::Bit { m: _ } => todo!(),
             DatabaseType::BitVarying => todo!(),
-            DatabaseType::TinyInt(unsigned) => if *unsigned { FieldType::U8 } else { FieldType::I8 },
-            DatabaseType::SmallInt(unsigned) => if *unsigned { FieldType::U16 } else { FieldType::I16 },
-            DatabaseType::MediumInt(unsigned) => if *unsigned { FieldType::U32 } else { FieldType::I32 },
-            DatabaseType::Int(unsigned) => if *unsigned { FieldType::U32 } else { FieldType::I32 },
-            DatabaseType::BigInt(unsigned) => if *unsigned { FieldType::U64 } else { FieldType::I64 },
+            DatabaseType::TinyInt { m: _, unsigned } => if *unsigned { FieldType::U8 } else { FieldType::I8 },
+            DatabaseType::SmallInt { m: _, unsigned } => if *unsigned { FieldType::U16 } else { FieldType::I16 },
+            DatabaseType::MediumInt { m: _, unsigned } => if *unsigned { FieldType::U32 } else { FieldType::I32 },
+            DatabaseType::Int { m: _, unsigned } => if *unsigned { FieldType::U32 } else { FieldType::I32 },
+            DatabaseType::BigInt { m: _, unsigned } => if *unsigned { FieldType::U64 } else { FieldType::I64 },
             DatabaseType::Int32 => FieldType::I32,
             DatabaseType::Int64 => FieldType::I64,
             DatabaseType::Decimal(_, _) => FieldType::Decimal,

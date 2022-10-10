@@ -7,10 +7,14 @@ impl ToSQLString for DatabaseType {
         match self {
             DatabaseType::Undefined => panic!("Unhandled undefined database type."),
             DatabaseType::ObjectId => panic!(),
-            DatabaseType::Bool => "Bool".to_string(),
-            DatabaseType::Bit(l) => format!("BIT({l})"),
+            DatabaseType::Bool => if dialect == SQLDialect::MySQL {
+                "TINYINT(1)".to_string()
+            } else {
+                "Bool".to_string()
+            },
+            DatabaseType::Bit { m } => format!("BIT({m})"),
             DatabaseType::BitVarying => "BIT VARYING".to_string(),
-            DatabaseType::TinyInt(u) => (if *u { "TINYINT UNSIGNED" } else { "TINYINT" }).to_string(),
+            DatabaseType::TinyInt { m , unsigned } => (if *u { "TINYINT UNSIGNED" } else { "TINYINT" }).to_string(),
             DatabaseType::SmallInt(u) => (if *u { "SMALLINT UNSIGNED" } else { "SMALLINT" }).to_string(),
             DatabaseType::MediumInt(u) => (if *u { "MEDIUMINT UNSIGNED" } else { "MEDIUMINT" }).to_string(),
             DatabaseType::Int(u) => (if *u { "INT UNSIGNED" } else { "INT" }).to_string(),

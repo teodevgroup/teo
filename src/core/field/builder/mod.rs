@@ -425,17 +425,8 @@ impl FieldBuilder {
         self
     }
 
-    pub fn db<F, A>(&mut self, build: F) -> &mut Self where F: Fn(&mut DatabaseTypeBuilder) -> A, A: Into<DatabaseType> {
-        let mut builder = DatabaseTypeBuilder::new();
-        let result = build(&mut builder);
-        let db_type = result.into();
-        self.database_type = db_type;
-        match self.field_type {
-            FieldType::Undefined => {
-                self.field_type = (&self.database_type).into();
-            }
-            _ => {}
-        }
+    pub fn db(&mut self, database_type: DatabaseType) -> &mut Self {
+        self.database_type = database_type;
         self
     }
 
