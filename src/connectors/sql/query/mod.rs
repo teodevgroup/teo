@@ -2,6 +2,7 @@ use key_path::KeyPath;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::stmts::select::r#where::{ToWrappedSQLString, WhereClause};
 use crate::connectors::sql::stmts::select::r#where::WhereClause::And;
+use crate::connectors::sql::stmts::SQL;
 use crate::core::error::ActionError;
 use crate::core::field::r#type::FieldType;
 use crate::core::input::Input;
@@ -190,5 +191,74 @@ impl Query {
             }
         }
         retval.join(",")
+    }
+
+    pub(crate) fn build_for_count(
+        model: &Model,
+        graph: &Graph,
+        value: &Value,
+        dialect: SQLDialect,
+        additional_where: Option<String>,
+        additional_left_join: Option<String>,
+    ) -> String {
+        format!("SELECT COUNT(*) FROM ({}) AS _", Self::build(model, graph, value, dialect, additional_where, additional_left_join))
+    }
+
+    pub(crate) fn build(
+        model: &Model,
+        graph: &Graph,
+        value: &Value,
+        dialect: SQLDialect,
+        additional_where: Option<String>,
+        additional_left_join: Option<String>,
+    ) -> String {
+        let r#where = value.get("where");
+        let order_by = value.get("orderBy");
+        let page_size = value.get("pageSize");
+        let page_number = value.get("pageNumber");
+        let skip = value.get("skip");
+        let take = value.get("take");
+        let table_name = if additional_left_join.is_some() {
+            model.table_name().to_string() + " AS t"
+        } else {
+            model.table_name().to_string()
+        };
+        let mut columns: Vec<String> = vec![];
+        if additional_left_join.is_some() {
+            columns = model.save_keys().iter().map(|k| format!("t.{} AS {}", k, k)).collect::<Vec<String>>();
+        }
+        let column_refs = columns.iter().map(|c| c.as_str()).collect::<Vec<&str>>();
+
+        let mut stmt = SQL::select(if columns.is_empty() { None } else { Some(&column_refs) }, &table_name);
+        if let Some(r#where) = r#where {
+            if let Some(where_result) = build_where_input(model, graph, Some(r#where), dialect)? {
+                stmt.r#where(where_result);
+            }
+        }
+        if let Some(additional_where) = additional_where {
+            if stmt.r#where.is_some() {
+                stmt.r#where(stmt.r#where.as_ref().unwrap().clone() + &additional_where);
+            } else {
+                stmt.r#where(additional_where.to_string());
+            }
+        }
+        if let Some(additional_left_join) = additional_left_join {
+            stmt.left_join(additional_left_join);
+        }
+        if let Some(order_by) = order_by {
+            if let Some(order_by_result) = build_order_by_input(model, graph, Some(order_by), dialect)? {
+                stmt.order_by(order_by_result);
+            }
+        }
+        if page_size.is_some() && page_number.is_some() {
+            let skip: u64 = ((page_number.unwrap() - 1) * page_size.unwrap()) as u64;
+            let limit: u64 = page_size.unwrap() as u64;
+            stmt.limit(limit, skip);
+        } else if skip.is_some() || take.is_some() {
+            let skip: u64 = if skip.is_some() { skip.unwrap() as u64 } else { 0 };
+            let limit: u64 = if take.is_some() { take.unwrap() as u64 } else { 18446744073709551615 };
+            stmt.limit(limit, skip);
+        }
+        stmt.to_string(dialect)
     }
 }
