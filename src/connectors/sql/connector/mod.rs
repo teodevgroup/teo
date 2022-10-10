@@ -1,3 +1,6 @@
+pub mod builder;
+pub mod save_session;
+
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use async_recursion::async_recursion;
@@ -9,7 +12,6 @@ use sqlx::pool::Pool;
 use sqlx::any::{AnyRow, AnyValueRef};
 use crate::core::model::Model;
 use url::Url;
-use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::connectors::sql::migration::migrate::{migrate, SQLMigration};
 use crate::connectors::sql::query_builder::integration::select::{build_sql_query_from_json, build_where_from_identifier};
 use crate::connectors::sql::query_builder::integration::value_encoder::ToWrapped;
@@ -108,35 +110,35 @@ impl SQLConnector {
         Ok(())
 
         // // relation
-                // let relation = object.model().relation(key);
-                // if relation.is_none() {
-                //     continue;
-                // }
-                // let inner_finder = if let Some(include) = include {
-                //     include.get(key)
-                // } else {
-                //     None
-                // };
-                // let inner_select = if let Some(inner_finder) = inner_finder {
-                //     inner_finder.get("select")
-                // } else {
-                //     None
-                // };
-                // let inner_include = if let Some(inner_finder) = inner_finder {
-                //     inner_finder.get("include")
-                // } else {
-                //     None
-                // };
-                // let relation = relation.unwrap();
-                // let model_name = relation.model();
-                // let object_bsons = document.get(key).unwrap().as_vec().unwrap();
-                // let mut related: Vec<Object> = vec![];
-                // for related_object_bson in object_bsons {
-                //     let related_object = object.graph().new_object(model_name)?;
-                //     self.document_to_object(related_object_bson.as_document().unwrap(), &related_object, inner_select, inner_include)?;
-                //     related.push(related_object);
-                // }
-                // object.inner.relation_query_map.lock().unwrap().insert(key.to_string(), related);
+        // let relation = object.model().relation(key);
+        // if relation.is_none() {
+        //     continue;
+        // }
+        // let inner_finder = if let Some(include) = include {
+        //     include.get(key)
+        // } else {
+        //     None
+        // };
+        // let inner_select = if let Some(inner_finder) = inner_finder {
+        //     inner_finder.get("select")
+        // } else {
+        //     None
+        // };
+        // let inner_include = if let Some(inner_finder) = inner_finder {
+        //     inner_finder.get("include")
+        // } else {
+        //     None
+        // };
+        // let relation = relation.unwrap();
+        // let model_name = relation.model();
+        // let object_bsons = document.get(key).unwrap().as_vec().unwrap();
+        // let mut related: Vec<Object> = vec![];
+        // for related_object_bson in object_bsons {
+        //     let related_object = object.graph().new_object(model_name)?;
+        //     self.document_to_object(related_object_bson.as_document().unwrap(), &related_object, inner_select, inner_include)?;
+        //     related.push(related_object);
+        // }
+        // object.inner.relation_query_map.lock().unwrap().insert(key.to_string(), related);
     }
 
     async fn create_object(&self, object: &Object) -> ActionResult<()> {

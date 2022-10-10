@@ -1,3 +1,6 @@
+pub mod builder;
+pub mod save_session;
+
 use std::collections::{HashMap};
 use std::fmt::{Debug};
 use std::ops::Neg;
@@ -17,8 +20,7 @@ use regex::Regex;
 use rust_decimal::Decimal;
 use crate::connectors::mongodb::aggregation::Aggregation;
 use crate::connectors::mongodb::bson::decoder::BsonDecoder;
-use crate::connectors::mongodb::save_session::MongoDBSaveSession;
-use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
+use crate::connectors::mongodb::connector::save_session::MongoDBSaveSession;
 use crate::core::connector::Connector;
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;

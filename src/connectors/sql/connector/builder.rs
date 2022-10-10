@@ -1,11 +1,8 @@
 use async_trait::async_trait;
 use sqlx::Database;
 use crate::connectors::sql::connector::SQLConnector;
-use crate::connectors::sql::inferred_types::mssql::inferred_database_type_mssql;
-use crate::connectors::sql::inferred_types::mysql::inferred_database_type_mysql;
-use crate::connectors::sql::inferred_types::postgresql::inferred_database_type_postgresql;
-use crate::connectors::sql::inferred_types::sqlite::inferred_database_type_sqlite;
 use crate::connectors::sql::schema::dialect::SQLDialect;
+use crate::connectors::sql::schema::r#type::field::ToDatabaseType;
 use crate::core::connector::{Connector, ConnectorBuilder};
 use crate::core::db_type::DatabaseType;
 use crate::core::field::r#type::FieldType;

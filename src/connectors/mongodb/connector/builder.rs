@@ -5,7 +5,6 @@ use crate::core::db_type::DatabaseType;
 use crate::core::field::r#type::FieldType;
 use crate::core::model::Model;
 
-
 #[derive(Debug)]
 pub(crate) struct MongoDBConnectorBuilder {
     url: String

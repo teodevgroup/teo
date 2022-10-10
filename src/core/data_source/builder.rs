@@ -1,7 +1,7 @@
 #[cfg(feature = "data-source-mongodb")]
-use crate::connectors::mongodb::connector_builder::MongoDBConnectorBuilder;
+use crate::connectors::mongodb::connector::builder::MongoDBConnectorBuilder;
 #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres", feature = "data-source-mssql", feature = "data-source-sqlite"))]
-use crate::connectors::sql::connector_builder::SQLConnectorBuilder;
+use crate::connectors::sql::connector::builder::SQLConnectorBuilder;
 #[cfg(any(feature = "data-source-mysql", feature = "data-source-postgres", feature = "data-source-mssql", feature = "data-source-sqlite"))]
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::graph::builder::GraphBuilder;

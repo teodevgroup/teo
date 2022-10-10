@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::format;
 use key_path::KeyPath;
-use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::connectors::shared::user_json_args::{user_json_args, UserJsonArgs};
 use crate::connectors::sql::query_builder::integration::value_encoder::{IfIMode, ToLike, ToSQLInput, ToWrapped, WrapInArray};
 use crate::connectors::sql::query::select::r#where::{ToWrappedSQLString, WhereClause};

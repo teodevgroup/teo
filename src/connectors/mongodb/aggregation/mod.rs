@@ -1,7 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use bson::{Bson, doc, Document, Regex as BsonRegex};
 use key_path::KeyPath;
-use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::core::field::r#type::FieldType;
 use crate::core::input::Input;
 use crate::core::model::Model;
