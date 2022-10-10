@@ -1,6 +1,5 @@
 use chrono::{Date, Utc, DateTime, SecondsFormat};
 use key_path::KeyPath;
-use crate::connectors::sql::dialect::SQLDialect;
 use crate::connectors::sql::to_sql_string::ToSQLString;
 use crate::core::error::ActionError;
 use crate::core::field::r#type::FieldType;

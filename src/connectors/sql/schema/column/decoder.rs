@@ -3,8 +3,6 @@ use std::sync::Arc;
 use sqlx::any::AnyRow;
 use sqlx::Row;
 use crate::connectors::sql::column::SQLColumn;
-use crate::connectors::sql::dialect::SQLDialect;
-use crate::connectors::sql::query_builder::structs::column::SQLColumn;
 use crate::connectors::sql::to_sql_string::ToSQLString;
 use crate::core::field::Field;
 use crate::core::property::Property;

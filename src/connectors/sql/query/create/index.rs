@@ -1,5 +1,5 @@
-use crate::connectors::sql::dialect::SQLDialect;
 use crate::connectors::sql::query_builder::structs::index::SQLIndexColumn;
+use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::to_sql_string::ToSQLString;
 
 pub struct SQLCreateIndexOnStatement {

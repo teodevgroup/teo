@@ -1,5 +1,3 @@
-use crate::connectors::sql::dialect::SQLDialect;
-use crate::connectors::sql::query_builder::structs::column::SQLColumn;
 use crate::connectors::sql::to_sql_string::ToSQLString;
 
 pub struct SQLAlterTableModifyStatement {

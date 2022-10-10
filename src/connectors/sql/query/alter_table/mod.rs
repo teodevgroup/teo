@@ -1,7 +1,7 @@
 use crate::connectors::sql::query::alter_table::add::SQLAlterTableAddStatement;
 use crate::connectors::sql::query::alter_table::drop_column::SQLAlterTableDropColumnStatement;
 use crate::connectors::sql::query::alter_table::modify::SQLAlterTableModifyStatement;
-use crate::connectors::sql::query_builder::structs::column::SQLColumn;
+use crate::connectors::sql::schema::column::SQLColumn;
 
 pub mod add;
 pub mod drop_column;

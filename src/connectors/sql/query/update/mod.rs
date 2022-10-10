@@ -1,4 +1,3 @@
-use crate::connectors::sql::dialect::SQLDialect;
 use crate::connectors::sql::to_sql_string::ToSQLString;
 
 pub struct SQLUpdateStatement<'a> {

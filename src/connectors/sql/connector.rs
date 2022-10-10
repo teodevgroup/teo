@@ -11,7 +11,6 @@ use crate::core::model::Model;
 use url::Url;
 use crate::connectors::shared::query_pipeline_type::QueryPipelineType;
 use crate::connectors::sql::migration::migrate::{migrate, SQLMigration};
-use crate::connectors::sql::dialect::SQLDialect;
 use crate::connectors::sql::query_builder::integration::select::{build_sql_query_from_json, build_where_from_identifier};
 use crate::connectors::sql::query_builder::integration::value_encoder::ToWrapped;
 use crate::connectors::sql::query::SQL;
