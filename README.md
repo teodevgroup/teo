@@ -93,17 +93,24 @@ The new generation server software.
 - SQL update: column keys
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
-- Fix broken `connectIdentity` modifier
+- SQL: Distinct
+- SQL: Cursor
+- SQL: Relation where
+- SQL: Aggregation
+- SQL: Group by
 
 #### 0.0.34
 - Fix assign identity
+- Fix broken `connectIdentity` modifier
 
 #### 0.0.35 - 0.0.50
 - Custom SQL database types
 - Migration II with SQL databases
 
 #### 0.0.51
-- MongoDB transaction session, make sure if errors, rollback writes
+- MongoDB transaction
+- SQL transaction
+- Migration II with MongoDB
 
 #### 0.0.52
 - Input omissible and output omissible for generated clients
