@@ -31,6 +31,11 @@ fn mysql_type_to_database_type(r#type: &str) -> DatabaseType {
                 "mediumint" => DatabaseType::MediumInt { m: arg.map(|a| u8::from_str(a).unwrap()), u: trailing1.is_some() },
                 "int" => DatabaseType::Int { m: arg.map(|a| u8::from_str(a).unwrap()), u: trailing1.is_some() },
                 "bigint" => DatabaseType::BigInt { m: arg.map(|a| u8::from_str(a).unwrap()), u: trailing1.is_some() },
+                "float" => DatabaseType::Float { m: None, d: None },
+                "double" => DatabaseType::Double { m: None, d: None },
+                "char" => DatabaseType::Char { m: arg.map(|a| u8::from_str(a).unwrap()), n: None, c: None },
+                "varchar" => DatabaseType::VarChar { m: arg.map(|a| u16::from_str(a).unwrap()).unwrap(), n: None, c: None },
+                _ => panic!("Unhandled type.")
             }
             if name == "int" {
 

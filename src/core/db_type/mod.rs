@@ -116,17 +116,27 @@ pub enum DatabaseType {
     // This is mysql only
     Year,
 
-    // String types
+    /// MARK: - String types
 
-    // Char(len, charset, collate)
-    // On PostgreSQL, charset and collate are ignored.
-    // MySQL and PostgreSQL support this
-    Char(u8, Option<String>, Option<String>),
+    /// Char
+    /// Represents a fixed-length string.
+    /// Arguments:
+    ///     m: column length, from 0 to 255, if omitted, m is 1
+    ///     n: charset name
+    ///     c: collate
+    /// Note: In PostgreSQL, charset and collate are ignored.
+    /// Availability: MySQL, PostgreSQL
+    Char { m: Option<u8>, n: Option<String>, c: Option<String> },
 
-    // VarChar(len, charset, collate)
-    // On PostgreSQL, charset and collate are ignored.
-    // MySQL and PostgreSQL support this
-    VarChar(u16, Option<String>, Option<String>),
+    /// VarChar
+    /// Represents a variable-length string.
+    /// Arguments:
+    ///     m: column length, from 0 to 65,535
+    ///     n: charset name
+    ///     c: collate
+    /// Note: In PostgreSQL, charset and collate are ignored.
+    /// Availability: MySQL, PostgreSQL
+    VarChar { m: u16, n: Option<String>, c: Option<String> },
 
     // TinyText(charset, collate)
     // MySQL support this

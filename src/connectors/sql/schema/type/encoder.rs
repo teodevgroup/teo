@@ -20,7 +20,7 @@ impl ToSQLString for DatabaseType {
             DatabaseType::Int { m, u } => (if *u { "INT UNSIGNED" } else { "INT" }).to_string(),
             DatabaseType::BigInt { m, u } => (if *u { "BIGINT UNSIGNED" } else { "BIGINT" }).to_string(),
             DatabaseType::Decimal(_, _) => todo!(),
-            DatabaseType::Float(p) => format!("FLOAT({p})"),
+            DatabaseType::Float { m: _m, d: _d } => format!("FLOAT"),
             DatabaseType::Double => {
                 if dialect == SQLDialect::PostgreSQL {
                     "DOUBLE PRECISION".to_string()
@@ -112,9 +112,9 @@ impl ToSQLString for DatabaseType {
             DatabaseType::LongBlob => "LONGBLOB".to_string(),
             DatabaseType::Blob(l) => format!("BLOB({l})"),
             DatabaseType::ByteA => "bytea".to_string(),
-            DatabaseType::Int32 => panic!("don't specify this on sql database."),
-            DatabaseType::Int64 => panic!("don't specify this on sql database."),
-            DatabaseType::String => panic!("don't specify this on sql database."),
+            DatabaseType::Int32 => panic!("SQL databases don't support Int32."),
+            DatabaseType::Int64 => panic!("SQL databases don't support Int64."),
+            DatabaseType::String => panic!("SQL databases don't support String."),
         }
     }
 }

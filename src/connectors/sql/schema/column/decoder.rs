@@ -1,8 +1,10 @@
-
 use std::sync::Arc;
 use sqlx::any::AnyRow;
 use sqlx::Row;
 use crate::connectors::sql::column::SQLColumn;
+use crate::connectors::sql::schema::column::SQLColumn;
+use crate::connectors::sql::schema::dialect::SQLDialect;
+use crate::connectors::sql::schema::r#type::decoder::SQLTypeDecoder;
 use crate::connectors::sql::to_sql_string::ToSQLString;
 use crate::core::field::Field;
 use crate::core::property::Property;
@@ -22,7 +24,7 @@ impl ColumnDecoder {
         let unique = extra.contains("unique");
         SQLColumn {
             name: field,
-
+            r#type: SQLTypeDecoder::decode(&field_type_in_string, dialect),
             not_null: !null,
             auto_increment,
             default: None,
