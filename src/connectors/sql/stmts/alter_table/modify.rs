@@ -1,4 +1,3 @@
-use crate::connectors::sql::to_sql_string::ToSQLString;
 
 pub struct SQLAlterTableModifyStatement {
     pub(crate) table: String,

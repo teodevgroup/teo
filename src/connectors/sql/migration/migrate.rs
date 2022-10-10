@@ -1,6 +1,4 @@
 use sqlx::{AnyPool, Connection, Database, Executor, MySqlPool, Pool, Row};
-use crate::connectors::sql::to_sql_string::ToSQLString;
-use crate::connectors::sql::stmts_builder::integration::column::MySQLColumn;
 use crate::connectors::sql::stmts::create::table::SQLCreateTableStatement;
 use crate::connectors::sql::stmts::SQL;
 use crate::connectors::sql::schema::column::SQLColumn;

@@ -12,12 +12,10 @@ use sqlx::pool::Pool;
 use sqlx::any::{AnyRow, AnyValueRef};
 use crate::core::model::Model;
 use url::Url;
-use crate::connectors::sql::migration::migrate::{migrate, SQLMigration};
-use crate::connectors::sql::stmts_builder::integration::select::{build_sql_query_from_json, build_where_from_identifier};
-use crate::connectors::sql::stmts_builder::integration::value_encoder::ToWrapped;
+use crate::connectors::sql::connector::save_session::SQLSaveSession;
+use crate::connectors::sql::execution::Execution;
+use crate::connectors::sql::migration::migrate::SQLMigration;
 use crate::connectors::sql::stmts::SQL;
-use crate::connectors::sql::to_sql_string::ToSQLString;
-use crate::connectors::sql::save_session::SQLSaveSession;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::connector::{Connector, SaveSession};
 use crate::core::env::Env;
@@ -128,37 +126,6 @@ impl SQLConnector {
             }
         }
     }
-
-    #[async_recursion]
-    async fn perform_query<'a>(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, key_path: &KeyPath, additional_where: Option<String>, additional_left_join: Option<String>, env: Env) -> Result<Vec<Object>, ActionError> {
-        let select = finder.get("select");
-        let include = finder.get("include");
-        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Many, mutation_mode, finder, self.dialect, additional_where, additional_left_join.clone(), key_path)?;
-        println!("see sql query: {}", sql_query);
-        let reverse = Input::has_negative_take(finder);
-        let results = self.pool.fetch_all(&*sql_query).await;
-        let mut retval: Vec<Object> = vec![];
-        match results {
-            Ok(rows) => {
-                for row in &rows {
-                    let obj = graph.new_object(model.name(), env.clone())?;
-                    self.row_to_object(&row, &obj, select, include, additional_left_join.is_some())?;
-                    if reverse {
-                        retval.insert(0, obj);
-                    } else {
-                        retval.push(obj);
-                    }
-                }
-                if let Some(include) = include {
-                    if let Some(include_map) = include.as_hashmap() {
-
-                    }
-                }
-            }
-
-        }
-        Ok(retval)
-    }
 }
 
 #[async_trait]
@@ -190,7 +157,7 @@ impl Connector for SQLConnector {
     }
 
     async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
-        let objects = self.perform_query(graph, model, finder, mutation_mode, &path![], None, None, env).await?;
+        let objects = Execution::query_objects(&self.pool, model, graph, finder, self.dialect, env).await?;
         if objects.is_empty() {
             Err(ActionError::object_not_found())
         } else {
@@ -199,22 +166,23 @@ impl Connector for SQLConnector {
     }
 
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
-        self.perform_query(graph, model, finder, mutation_mode, &path![], None, None, env).await
+        Execution::query_objects(&self.pool, model, graph, finder, self.dialect, env).await
     }
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize, ActionError> {
-        let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Count, false, finder, self.dialect, None, None, &path![])?;
-        let result = self.pool.fetch_one(&*sql_query).await;
-        match result {
-            Ok(row) => {
-                let result: i64 = row.get(0);
-                Ok(result as usize)
-            }
-            Err(err) => {
-                println!("{:?}", err);
-                Err(ActionError::unknown_database_find_error())
-            }
-        }
+        todo!()
+        // let sql_query = build_sql_query_from_json(model, graph, QueryPipelineType::Count, false, finder, self.dialect, None, None, &path![])?;
+        // let result = self.pool.fetch_one(&*sql_query).await;
+        // match result {
+        //     Ok(row) => {
+        //         let result: i64 = row.get(0);
+        //         Ok(result as usize)
+        //     }
+        //     Err(err) => {
+        //         println!("{:?}", err);
+        //         Err(ActionError::unknown_database_find_error())
+        //     }
+        // }
     }
 
     async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError> {

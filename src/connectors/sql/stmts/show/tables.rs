@@ -1,4 +1,3 @@
-use crate::connectors::sql::to_sql_string::ToSQLString;
 
 pub struct SQLShowTablesStatement {
     pub(crate) like: Option<String>

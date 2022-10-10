@@ -1,5 +1,5 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
-use crate::connectors::sql::to_sql_string::ToSQLString;
+use crate::connectors::sql::schema::value::encode::ToSQLString;
 
 pub struct SQLCreateDatabaseStatement {
     pub(crate) database: String,

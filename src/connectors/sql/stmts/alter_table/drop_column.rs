@@ -1,5 +1,4 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
-use crate::connectors::sql::to_sql_string::ToSQLString;
 
 pub struct SQLAlterTableDropColumnStatement {
     pub(crate) table: String,

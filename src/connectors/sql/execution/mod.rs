@@ -5,6 +5,7 @@ use crate::connectors::sql::query::Query;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::decode::RowDecoder;
 use crate::connectors::sql::schema::value::encode::{ToSQLString, ToWrapped};
+use crate::core::env::Env;
 use crate::core::error::ActionError;
 use crate::core::input::Input;
 use crate::core::model::Model;
@@ -25,6 +26,10 @@ impl Execution {
                 (property.name().to_owned(), RowDecoder::decode(property.r#type(), property.is_optional(), row, column_name))
             }
         }).collect())
+    }
+
+    pub(crate) async fn query_objects(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect, env: Env) -> ActionResult<Vec<Object>> {
+        todo!()
     }
 
     pub(crate) async fn query(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect) -> ActionResult<Vec<Value>> {
