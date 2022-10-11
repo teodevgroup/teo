@@ -171,9 +171,10 @@ impl Query {
         order_by: &Value,
         dialect: SQLDialect,
     ) -> String {
-        let order_by = order_by.as_hashmap().unwrap();
+        let order_by = order_by.as_vec().unwrap();
         let mut retval: Vec<String> = vec![];
-        for (key, value) in order_by.iter() {
+        for item in order_by.iter() {
+            let (key, value) = Input::key_value(item.as_hashmap().unwrap());
             if let Some(field) = model.field(key) {
                 let column_name = field.column_name();
                 if let Some(str) = value.as_str() {
@@ -226,8 +227,6 @@ impl Query {
 
         let mut stmt = SQL::select(if columns.is_empty() { None } else { Some(&column_refs) }, &table_name);
         if let Some(r#where) = r#where {
-            println!("see build value: {:?}", value);
-            println!("see where: {:?}", r#where);
             if !r#where.as_hashmap().unwrap().is_empty() {
                 stmt.r#where(Query::r#where(model, graph, r#where, dialect));
             }
@@ -243,11 +242,7 @@ impl Query {
             stmt.left_join(additional_left_join);
         }
         if let Some(order_bys) = order_by {
-            if !order_bys.as_vec().unwrap().is_empty() {
-                for order_by in order_bys.as_vec().unwrap() {
-                    stmt.order_by(Query::order_by(model, graph, order_by, dialect));
-                }
-            }
+            stmt.order_by(Query::order_by(model, graph, order_bys, dialect));
         }
         if page_size.is_some() && page_number.is_some() {
             let skip: u64 = ((page_number.unwrap().as_u64().unwrap() - 1) * page_size.unwrap().as_u64().unwrap()) as u64;

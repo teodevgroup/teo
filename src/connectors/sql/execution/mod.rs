@@ -46,7 +46,6 @@ impl Execution {
     pub(crate) async fn query(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect) -> ActionResult<Vec<Value>> {
         let select = value.get("select");
         let include = value.get("include");
-        println!("see value outside: {:?}", value);
         let stmt = Query::build(model, graph, value, dialect, None, None);
         let reverse = Input::has_negative_take(value);
         let rows = match pool.fetch_all(&*stmt).await {
