@@ -210,6 +210,20 @@ impl Object {
         Ok(())
     }
 
+    async fn check_model_read_permission(&self) -> ActionResult<()> {
+        // test for model permission
+        if let Some(permission) = self.model().permission() {
+            if let Some(can_read) = permission.can_read() {
+                let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
+                let result_ctx = can_read.process(ctx).await;
+                if !result_ctx.is_valid() {
+                    return Err(ActionError::permission_denied("read"));
+                }
+            }
+        }
+        Ok(())
+    }
+
     async fn check_field_write_permission(&self, field: &Field) -> ActionResult<()> {
         let is_new = self.is_new();
         if let Some(permission) = field.permission() {
@@ -222,6 +236,20 @@ impl Object {
             }
         }
         Ok(())
+    }
+
+    async fn check_field_read_permission(&self, field: &Field) -> bool {
+        // test for field permission
+        if let Some(permission) = field.permission() {
+            if let Some(can_read) = permission.can_read() {
+                let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
+                let result_ctx = can_read.process(ctx).await;
+                if !result_ctx.is_valid() {
+                    return false;
+                }
+            }
+        }
+        true
     }
 
     fn record_previous_value_for_field_if_needed(&self, field: &Field) {
@@ -297,7 +325,7 @@ impl Object {
     pub(crate) fn set_from_database_result_value(&self, value: &Value) {
         let model = self.model();
         for (k, v) in value.as_hashmap().unwrap() {
-            if let Some(field) = model.field(k) {
+            if let Some(_) = model.field(k) {
                 self.set_value_to_value_map(k, v.clone());
             } else if let Some(relation) = model.relation(k) {
                 self.inner.relation_query_map.lock().unwrap().insert(k.to_owned(), vec![]);
@@ -306,7 +334,6 @@ impl Object {
                     object.set_from_database_result_value(v);
                     self.inner.relation_query_map.lock().unwrap().get_mut(k).unwrap().push(object);
                 }
-
             } else if let Some(property) = model.property(k) {
                 self.inner.cached_property_map.lock().unwrap().insert(k.to_owned(), v.clone());
             }
@@ -705,16 +732,8 @@ impl Object {
     }
 
     pub(crate) async fn to_json(&self) -> ActionResult<Value> {
-        // test for model permission
-        if let Some(permission) = self.model().permission() {
-            if let Some(can_read) = permission.can_read() {
-                let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
-                let result_ctx = can_read.process(ctx).await;
-                if !result_ctx.is_valid() {
-                    return Err(ActionError::permission_denied("read"));
-                }
-            }
-        }
+        // check read permission
+        self.check_model_read_permission().await?;
         // output
         let select_list = self.inner.selected_fields.lock().unwrap().clone();
         let select_filter = if select_list.is_empty() { false } else { true };
@@ -722,36 +741,35 @@ impl Object {
         let keys = self.model().output_keys();
         for key in keys {
             if (!select_filter) || (select_filter && select_list.contains(key)) {
-                let mut value = self.get_value(key).unwrap();
                 if let Some(field) = self.model().field(key) {
-                    // test for field permission
-                    if let Some(permission) = field.permission() {
-                        if let Some(can_read) = permission.can_read() {
-                            let ctx = Context::initial_state(self.clone()).alter_value_with_identity();
-                            let result_ctx = can_read.process(ctx).await;
-                            if !result_ctx.is_valid() {
-                                continue;
-                            }
-                        }
+                    let mut value = self.get_value(key).unwrap();
+                    if !self.check_field_read_permission(field).await {
+                        continue
                     }
                     let context = Context::initial_state(self.clone())
                         .alter_value(value)
                         .alter_key_path(path![key.as_str()]);
                     let result_ctx = field.perform_on_output_callback(context).await;
-                    value = result_ctx.value
-                } else if let Some(property) = self.model().property(key) {
-                    if let Some(getter) = &property.getter {
-                        let ctx = Context::initial_state(self.clone());
-                        value = getter.process(ctx).await.value
-                    }
-                }
-                if !value.is_null() {
-                    if value.is_hashmap() {
-                        map.insert(key.to_string(), value.to_object_json_value().await.unwrap());
-                    } else if value.is_object_vec() {
-                        map.insert(key.to_string(), value.to_object_vec_json_value().await.unwrap());
-                    } else {
+                    value = result_ctx.value;
+                    if !value.is_null() {
                         map.insert(key.to_string(), value);
+                    }
+                } else if let Some(relation) = self.model().relation(key) {
+
+                } else if let Some(property) = self.model().property(key) {
+                    if property.cached && self.inner.cached_property_map.lock().unwrap().contains_key(key) {
+                        let value = self.inner.cached_property_map.lock().unwrap().get(key).unwrap().clone();
+                        if !value.is_null() {
+                            map.insert(key.to_string(), value);
+                        }
+                    } else {
+                        if let Some(getter) = &property.getter {
+                            let ctx = Context::initial_state(self.clone());
+                            let value = getter.process(ctx).await.value;
+                            if !value.is_null() {
+                                map.insert(key.to_string(), value);
+                            }
+                        }
                     }
                 }
             }

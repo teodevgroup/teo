@@ -94,6 +94,7 @@ The new generation server software.
 - SQL update: column keys **[DONE]**
 
 #### 0.0.34
+- Bug fixes
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
 - SQL: Distinct
