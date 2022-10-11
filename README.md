@@ -92,6 +92,8 @@ The new generation server software.
 - SQL: MySQL: Fix bool column is always altered bug **[DONE]**
 - SQL query process: rewrite **[DONE]**
 - SQL update: column keys **[DONE]**
+
+#### 0.0.34
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
 - SQL: Distinct
@@ -100,12 +102,12 @@ The new generation server software.
 - SQL: Aggregation
 - SQL: Group by
 
-#### 0.0.34
+#### 0.0.35
 - Merge json pipeline into pipeline (hashmap)
 - Fix assign identity
 - Fix broken `connectIdentity` modifier
 
-#### 0.0.35 - 0.0.50
+#### 0.0.36 - 0.0.50
 - Custom SQL database types
 - Migration II with SQL databases
 
