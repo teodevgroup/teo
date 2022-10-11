@@ -94,7 +94,9 @@ The new generation server software.
 - SQL update: column keys **[DONE]**
 
 #### 0.0.34
-- Bug fixes **[IN PROGRESS]**
+- Bug fixes for MySQL CRUD without relations **[DONE]**
+
+#### 0.0.35
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
 - SQL: Distinct
@@ -103,12 +105,12 @@ The new generation server software.
 - SQL: Aggregation
 - SQL: Group by
 
-#### 0.0.35
+#### 0.0.36
 - Merge json pipeline into pipeline (hashmap)
 - Fix assign identity
 - Fix broken `connectIdentity` modifier
 
-#### 0.0.36 - 0.0.50
+#### 0.0.37 - 0.0.50
 - Custom SQL database types
 - Migration II with SQL databases
 
