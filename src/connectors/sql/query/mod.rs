@@ -242,9 +242,11 @@ impl Query {
         if let Some(additional_left_join) = additional_left_join {
             stmt.left_join(additional_left_join);
         }
-        if let Some(order_by) = order_by {
-            if !order_by.as_hashmap().unwrap().is_empty() {
-                stmt.order_by(Query::order_by(model, graph, order_by, dialect));
+        if let Some(order_bys) = order_by {
+            if !order_bys.as_vec().unwrap().is_empty() {
+                for order_by in order_bys.as_vec().unwrap() {
+                    stmt.order_by(Query::order_by(model, graph, order_by, dialect));
+                }
             }
         }
         if page_size.is_some() && page_number.is_some() {
