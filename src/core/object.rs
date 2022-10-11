@@ -763,7 +763,7 @@ impl Object {
                     }
                 } else if let Some(relation) = self.model().relation(key) {
                     if self.has_relation_fetched(relation.name()) {
-                        if relation.is_vec() {
+                        if !relation.is_vec() {
                             let o = self.get_relation_object(key).unwrap();
                             match o {
                                 Some(o) => {
