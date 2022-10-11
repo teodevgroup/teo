@@ -5,7 +5,7 @@ use crate::core::db_type::DatabaseType;
 pub(crate) mod decoder;
 pub(crate) mod builder;
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Debug)]
 pub(crate) struct SQLColumn {
     pub(self) name: String,
     pub(self) r#type: DatabaseType,

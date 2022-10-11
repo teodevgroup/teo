@@ -19,7 +19,7 @@ impl ColumnDecoder {
         let extra: String = row.get("Extra");
         let auto_increment = extra.contains("auto_increment");
         let primary = &key == "PRI";
-        let unique = extra.contains("unique");
+        let unique = &key == "UNI";
         SQLColumn {
             name: field,
             r#type: SQLTypeDecoder::decode(&field_type_in_string, dialect),
