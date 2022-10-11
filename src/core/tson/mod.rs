@@ -475,7 +475,7 @@ impl Value {
 
     pub fn is_u8(&self) -> bool {
         match *self {
-            Value::U8(v) => true,
+            Value::U8(_v) => true,
             _ => false,
         }
     }
@@ -498,7 +498,7 @@ impl Value {
 
     pub fn is_u16(&self) -> bool {
         match *self {
-            Value::U16(v) => true,
+            Value::U16(_v) => true,
             _ => false,
         }
     }
@@ -521,7 +521,7 @@ impl Value {
 
     pub fn is_u32(&self) -> bool {
         match *self {
-            Value::U32(v) => true,
+            Value::U32(_v) => true,
             _ => false,
         }
     }
@@ -544,7 +544,7 @@ impl Value {
 
     pub fn is_u64(&self) -> bool {
         match *self {
-            Value::U64(v) => true,
+            Value::U64(_v) => true,
             _ => false,
         }
     }
@@ -567,7 +567,7 @@ impl Value {
 
     pub fn is_u128(&self) -> bool {
         match *self {
-            Value::U128(v) => true,
+            Value::U128(_v) => true,
             _ => false,
         }
     }
@@ -590,7 +590,7 @@ impl Value {
 
     pub fn is_f32(&self) -> bool {
         match *self {
-            Value::F32(v) => true,
+            Value::F32(_v) => true,
             _ => false,
         }
     }
@@ -615,7 +615,7 @@ impl Value {
 
     pub fn is_f64(&self) -> bool {
         match *self {
-            Value::F64(v) => true,
+            Value::F64(_v) => true,
             _ => false,
         }
     }

@@ -118,8 +118,8 @@ impl Decoder {
         }
     }
 
-    fn decode_credentials<'a>(model: &Model, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
-        let path = path.as_ref();
+    fn decode_credentials<'a>(_model: &Model, _json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let _path = path.as_ref();
         todo!("Implement this later")
     }
 
@@ -157,7 +157,7 @@ impl Decoder {
             return Err(ActionError::unexpected_input_type("object", path));
         };
         Self::check_json_keys(json_map, &NESTED_CREATE_MANY_ARG_KEYS, path)?;
-        Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+        Ok(Value::HashMap(json_map.iter().map(|(k, _v)| {
             let k = k.as_str();
             let path = path + k;
             let (model, relation) = graph.opposite_relation(relation);
@@ -178,7 +178,7 @@ impl Decoder {
             return Err(ActionError::unexpected_input_type("object", path));
         };
         Self::check_json_keys(json_map, &NESTED_UPDATE_MANY_ARG_KEYS, path)?;
-        Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+        Ok(Value::HashMap(json_map.iter().map(|(k, _v)| {
             let k = k.as_str();
             let path = path + k;
             let (model, relation) = graph.opposite_relation(relation);
@@ -385,7 +385,7 @@ impl Decoder {
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
 
-    fn decode_having<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+    fn decode_having<'a>(_model: &Model, _graph: &Graph, _json_value: &JsonValue, _path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         todo!("Implement this later")
     }
 
@@ -440,7 +440,7 @@ impl Decoder {
         let path = path.as_ref();
         if let Some(b) = json_value.as_bool() {
             Ok(Value::Bool(b))
-        } else if let Some(json_map) = json_value.as_object() {
+        } else if let Some(_json_map) = json_value.as_object() {
             let relation = model.relation(name).unwrap();
             let model = graph.model(relation.model()).unwrap();
             if relation.is_vec() {
@@ -525,9 +525,9 @@ impl Decoder {
         }
     }
 
-    fn decode_order_by_item<'a>(model: &Model, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+    fn decode_order_by_item<'a>(_model: &Model, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         let path = path.as_ref();
-        if let Some(json_map) = json_value.as_object() {
+        if let Some(_json_map) = json_value.as_object() {
             let (key, value) = Self::check_length_1(json_value, path)?;
             match value.as_str() {
                 Some(s) => match s {
@@ -587,7 +587,7 @@ impl Decoder {
                     if let Some(field) = model.field(key) {
                         let optional = field.optionality.is_optional();
                         retval.insert(key.to_owned(), Self::decode_where_for_field(graph, field.r#type(), optional, value, path)?);
-                    } else if let Some(relation) = model.relation(key) {
+                    } else if let Some(_relation) = model.relation(key) {
 
                     }
                 }

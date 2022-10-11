@@ -99,7 +99,7 @@ impl Object {
 
     pub(crate) async fn set_tson_with_path_and_user_mode(&self, value: &Value, path: &KeyPath<'_>, user_mode: bool) -> ActionResult<()> {
         let model = self.model();
-        let is_new = self.is_new();
+        let _is_new = self.is_new();
         // permission
         if !user_mode {
             self.check_model_write_permission().await?;
@@ -334,7 +334,7 @@ impl Object {
                     object.set_from_database_result_value(v);
                     self.inner.relation_query_map.lock().unwrap().get_mut(k).unwrap().push(object);
                 }
-            } else if let Some(property) = model.property(k) {
+            } else if let Some(_property) = model.property(k) {
                 self.inner.cached_property_map.lock().unwrap().insert(k.to_owned(), v.clone());
             }
         }

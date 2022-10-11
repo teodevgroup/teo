@@ -12,7 +12,7 @@ use serde_json::{json, Value as JsonValue};
 use crate::core::action::r#type::ActionType;
 use crate::app::app::ServerConfiguration;
 use crate::app::serve::jwt_token::{Claims, decode_token, encode_token};
-use crate::core::tson::json;
+
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
 use crate::core::env::source::Source;
@@ -525,7 +525,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     let obj = obj_result.unwrap();
     let auth_by_arg = by_field.auth_by_arg.as_ref().unwrap();
     let pipeline = auth_by_arg.as_pipeline().unwrap();
-    let action_by_input = by_value.unwrap();
+    let _action_by_input = by_value.unwrap();
     let ctx = Context::initial_state(obj.clone());
     let final_ctx = pipeline.process(ctx).await;
     return match final_ctx.invalid_reason() {
@@ -678,7 +678,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
                 Ok(identity) => { identity },
                 Err(err) => return HttpResponse::Unauthorized().json(json!({"error": err }))
             };
-            let action_def = model_def.get_action_def(action);
+            let _action_def = model_def.get_action_def(action);
             let transformed_body = match Decoder::decode_action_arg(model_def, graph, action, &parsed_body) {
                 Ok(body) => body,
                 Err(err) => return err.into()

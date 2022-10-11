@@ -19,9 +19,9 @@ impl SQLTypeDecoder {
 fn mysql_type_to_database_type(r#type: &str) -> DatabaseType {
     let r#type_string = r#type.to_lowercase();
     let r#type: &str = r#type_string.as_str();
-    let regex = Regex::new("(.+)( (.+))?\\((.+)\\)").unwrap();
+    let regex = Regex::new("(.+)( (.+))?\\((.+)\\)?").unwrap();
     match regex.captures(r#type) {
-        None => panic!("Unhandled database type."),
+        None => panic!("Unhandled database type '{}' '{}'.", r#type, regex),
         Some(captures) => {
             let name = captures.get(1).unwrap().as_str();
             let trailing1 = captures.get(3).map(|m| m.as_str());
