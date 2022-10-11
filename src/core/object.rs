@@ -322,22 +322,26 @@ impl Object {
         Ok(())
     }
 
-    pub(crate) fn set_from_database_result_value(&self, value: &Value) {
+    pub(crate) fn set_from_database_result_value(&self, value: &Value, select: Option<&Value>, include: Option<&Value>) {
         let model = self.model();
         for (k, v) in value.as_hashmap().unwrap() {
             if let Some(_) = model.field(k) {
                 self.set_value_to_value_map(k, v.clone());
             } else if let Some(relation) = model.relation(k) {
                 self.inner.relation_query_map.lock().unwrap().insert(k.to_owned(), vec![]);
+                let include_arg = include.unwrap().get(k).unwrap();
+                let inner_select = include_arg.as_hashmap().map(|m| m.get("select")).flatten();
+                let inner_include = include_arg.as_hashmap().map(|m| m.get("include")).flatten();
                 for v in v.as_vec().unwrap() {
                     let object = self.graph().new_object(relation.model(), self.env().alter_intent(Intent::NestedIncluded)).unwrap();
-                    object.set_from_database_result_value(v);
+                    object.set_from_database_result_value(v, inner_select, inner_include);
                     self.inner.relation_query_map.lock().unwrap().get_mut(k).unwrap().push(object);
                 }
             } else if let Some(_property) = model.property(k) {
                 self.inner.cached_property_map.lock().unwrap().insert(k.to_owned(), v.clone());
             }
         }
+        self.set_select(select).unwrap();
         self.inner.is_new.store(false, Ordering::SeqCst);
         self.inner.is_modified.store(false, Ordering::SeqCst);
     }
@@ -747,7 +751,26 @@ impl Object {
         let mut map: IndexMap<String, Value> = IndexMap::new();
         let keys = self.model().output_keys();
         for key in keys {
-            if (!select_filter) || (select_filter && select_list.contains(key)) {
+            if let Some(relation) = self.model().relation(key) {
+                if self.has_relation_fetched(relation.name()) {
+                    if !relation.is_vec() {
+                        let o = self.get_relation_object(key).unwrap();
+                        match o {
+                            Some(o) => {
+                                map.insert(key.to_string(), o.to_json().await.unwrap());
+                            },
+                            None => ()
+                        };
+                    } else {
+                        let mut result_vec = vec![];
+                        let vec = self.get_relation_vec(key).unwrap();
+                        for o in vec {
+                            result_vec.push(o.to_json().await?);
+                        }
+                        map.insert(key.to_string(), Value::Vec(result_vec));
+                    }
+                }
+            } else if (!select_filter) || (select_filter && select_list.contains(key)) {
                 if let Some(field) = self.model().field(key) {
                     let mut value = self.get_value(key).unwrap();
                     if !self.check_field_read_permission(field).await {
@@ -760,25 +783,6 @@ impl Object {
                     value = result_ctx.value;
                     if !value.is_null() {
                         map.insert(key.to_string(), value);
-                    }
-                } else if let Some(relation) = self.model().relation(key) {
-                    if self.has_relation_fetched(relation.name()) {
-                        if !relation.is_vec() {
-                            let o = self.get_relation_object(key).unwrap();
-                            match o {
-                                Some(o) => {
-                                    map.insert(key.to_string(), o.to_json().await.unwrap());
-                                },
-                                None => ()
-                            };
-                        } else {
-                            let mut result_vec = vec![];
-                            let vec = self.get_relation_vec(key).unwrap();
-                            for o in vec {
-                                result_vec.push(o.to_json().await?);
-                            }
-                            map.insert(key.to_string(), Value::Vec(result_vec));
-                        }
                     }
                 } else if let Some(property) = self.model().property(key) {
                     if property.cached && self.inner.cached_property_map.lock().unwrap().contains_key(key) {

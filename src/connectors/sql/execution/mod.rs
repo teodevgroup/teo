@@ -31,12 +31,14 @@ impl Execution {
         }).collect())
     }
 
-    pub(crate) async fn query_objects(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect, env: Env) -> ActionResult<Vec<Object>> {
-        let values = Self::query(pool, model, graph, value, dialect).await?;
+    pub(crate) async fn query_objects(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect, env: Env) -> ActionResult<Vec<Object>> {
+        let values = Self::query(pool, model, graph, finder, dialect).await?;
+        let select = finder.as_hashmap().unwrap().get("select");
+        let include = finder.as_hashmap().unwrap().get("include");
         let mut results = vec![];
         for value in values {
             let object = graph.new_object(model.name(), env.clone())?;
-            object.set_from_database_result_value(&value);
+            object.set_from_database_result_value(&value, select, include);
             results.push(object);
         }
         Ok(results)

@@ -114,7 +114,7 @@ impl SQLConnector {
         if result.is_empty() {
             Err(ActionError::object_not_found())
         } else {
-            object.set_from_database_result_value(result.get(0).unwrap());
+            object.set_from_database_result_value(result.get(0).unwrap(), None, None);
             Ok(())
         }
     }
