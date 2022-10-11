@@ -34,18 +34,7 @@ impl ColumnDecoder {
 
 impl From<&Field> for SQLColumn {
     fn from(field: &Field) -> Self {
-        let mut column = SQLColumn::new(field.column_name());
-        column.column_type(field.database_type.clone());
-        if field.is_required() {
-            column.not_null();
-        }
-        if field.primary {
-            column.primary_key();
-        }
-        if field.auto_increment {
-            column.auto_increment();
-        }
-        column
+        SQLColumn::new(field.column_name().to_owned(), field.database_type.clone(), field.is_required(), field.auto_increment, None, field.primary, field.index.is_unique())
     }
 }
 
@@ -57,12 +46,7 @@ impl From<&Arc<Field>> for SQLColumn {
 
 impl From<&Property> for SQLColumn {
     fn from(property: &Property) -> Self {
-        let mut column = SQLColumn::new(&property.name);
-        column.column_type(property.database_type.clone());
-        if property.is_required() {
-            column.not_null();
-        }
-        column
+        SQLColumn::new(property.name.clone(), property.database_type.clone(), property.is_required(), false, None, false, false)
     }
 }
 

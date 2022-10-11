@@ -13,7 +13,14 @@ impl ToSQLString for DatabaseType {
             } else {
                 "Bool".to_string()
             },
-            DatabaseType::Bit { m } => format!("BIT({m})"),
+            DatabaseType::Bit { m } => {
+                let arg = if let Some(m) = m {
+                    Cow::Owned(format!("({m})"))
+                } else {
+                    Cow::Borrowed("")
+                };
+                format!("BIT{arg}")
+            },
             DatabaseType::BitVarying => "BIT VARYING".to_string(),
             DatabaseType::TinyInt { m , u } => (if *u { "TINYINT UNSIGNED" } else { "TINYINT" }).to_string(),
             DatabaseType::SmallInt { m, u } => (if *u { "SMALLINT UNSIGNED" } else { "SMALLINT" }).to_string(),
@@ -63,11 +70,7 @@ impl ToSQLString for DatabaseType {
                 format!("CHAR{arg}{charset}{collation}")
             }
             DatabaseType::VarChar { m, n, c } => {
-                let arg = if let Some(m) = m {
-                    Cow::Owned(format!("({})", m))
-                } else {
-                    Cow::Borrowed("")
-                };
+                let arg = format!("({})", m);
                 let charset = if let Some(v) = n {
                     Cow::Owned(format!(" CHARACTER SET {v}"))
                 } else { Cow::Borrowed("") };

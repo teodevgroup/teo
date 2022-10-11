@@ -21,6 +21,9 @@ pub struct Property {
 
 impl Property {
 
+    pub(crate) fn name(&self) -> &str {
+        &self.name
+    }
     pub(crate) fn r#type(&self) -> &FieldType {
         &self.field_type
     }

@@ -26,7 +26,7 @@ impl SQLColumnBuilder {
     }
 
     pub(crate) fn column_type(&mut self, column_type: DatabaseType) -> &mut Self {
-        self.column_type = column_type;
+        self.r#type = column_type;
         self
     }
 

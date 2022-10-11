@@ -60,7 +60,7 @@ impl SQLColumn {
 impl ToSQLString for SQLColumn {
     fn to_string(&self, dialect: SQLDialect) -> String {
         let name = &self.name;
-        let t = self.column_type.to_string(dialect.clone());
+        let t = self.r#type.to_string(dialect.clone());
         let not_null = if self.not_null { " NOT NULL" } else { " NULL" };
         let primary = if self.primary_key { " PRIMARY KEY" } else { "" };
         let auto_inc = if self.auto_increment { " AUTO_INCREMENT" } else { "" };

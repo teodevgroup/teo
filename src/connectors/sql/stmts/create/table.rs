@@ -10,17 +10,17 @@ pub struct SQLCreateTableStatement {
 }
 
 impl SQLCreateTableStatement {
-    pub fn if_not_exists(&mut self) -> &mut Self {
+    pub(crate) fn if_not_exists(&mut self) -> &mut Self {
         self.if_not_exists = true;
         self
     }
 
-    pub fn column(&mut self, def: SQLColumn) -> &mut Self {
+    pub(crate) fn column(&mut self, def: SQLColumn) -> &mut Self {
         self.columns.push(def);
         self
     }
 
-    pub fn columns(&mut self, defs: Vec<SQLColumn>) -> &mut Self {
+    pub(crate) fn columns(&mut self, defs: Vec<SQLColumn>) -> &mut Self {
         self.columns.extend(defs);
         self
     }

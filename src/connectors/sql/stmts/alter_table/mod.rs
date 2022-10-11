@@ -12,15 +12,15 @@ pub struct SQLAlterTableStatement {
 }
 
 impl SQLAlterTableStatement {
-    pub fn drop_column(&self, column: impl Into<String>) -> SQLAlterTableDropColumnStatement {
+    pub(crate) fn drop_column(&self, column: impl Into<String>) -> SQLAlterTableDropColumnStatement {
         SQLAlterTableDropColumnStatement { table: self.table.clone(), column: column.into() }
     }
 
-    pub fn modify(&self, column: SQLColumn) -> SQLAlterTableModifyStatement {
+    pub(crate) fn modify(&self, column: SQLColumn) -> SQLAlterTableModifyStatement {
         SQLAlterTableModifyStatement { table: self.table.clone(), column }
     }
 
-    pub fn add(&self, column_def: SQLColumn) -> SQLAlterTableAddStatement {
+    pub(crate) fn add(&self, column_def: SQLColumn) -> SQLAlterTableAddStatement {
         SQLAlterTableAddStatement { table: self.table.clone(), column_def }
     }
 }

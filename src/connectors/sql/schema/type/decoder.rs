@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use regex::Regex;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::db_type::DatabaseType;
@@ -16,7 +17,8 @@ impl SQLTypeDecoder {
 }
 
 fn mysql_type_to_database_type(r#type: &str) -> DatabaseType {
-    let r#type: &str = r#type.to_lowercase().as_str();
+    let r#type_string = r#type.to_lowercase();
+    let r#type: &str = r#type_string.as_str();
     let regex = Regex::new("(.+)( (.+))?\\((.+)\\)").unwrap();
     match regex.captures(r#type) {
         None => panic!("Unhandled database type."),

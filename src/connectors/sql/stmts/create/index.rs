@@ -10,12 +10,12 @@ pub struct SQLCreateIndexOnStatement {
 }
 
 impl SQLCreateIndexOnStatement {
-    pub fn column(&mut self, column: ModelIndexItem) -> &mut Self {
+    pub(crate) fn column(&mut self, column: ModelIndexItem) -> &mut Self {
         self.columns.push(column);
         self
     }
 
-    pub fn columns(&mut self, columns: Vec<ModelIndexItem>) -> &mut Self {
+    pub(crate) fn columns(&mut self, columns: Vec<ModelIndexItem>) -> &mut Self {
         self.columns.extend(columns);
         self
     }

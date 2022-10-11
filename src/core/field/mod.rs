@@ -64,6 +64,15 @@ pub enum FieldIndex {
     Unique(IndexSettings),
 }
 
+impl FieldIndex {
+    pub fn is_unique(&self) -> bool {
+        match self {
+            FieldIndex::Unique(_) => true,
+            _ => false
+        }
+    }
+}
+
 #[derive(Clone)]
 pub(crate) struct Field {
     pub(crate) name: String,

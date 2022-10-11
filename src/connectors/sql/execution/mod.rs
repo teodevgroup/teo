@@ -25,6 +25,8 @@ impl Execution {
                 (field.name().to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, column_name))
             } else if let Some(property) = model.property(column_name) {
                 (property.name().to_owned(), RowDecoder::decode(property.r#type(), property.is_optional(), row, column_name))
+            } else {
+                panic!("Unhandled key.");
             }
         }).collect())
     }

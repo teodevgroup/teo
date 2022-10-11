@@ -27,7 +27,7 @@ impl IndexDecoder {
                 } else {
                     ModelIndexType::Index
                 };
-                indices.push(ModelIndex::new(r#type, index_name, vec![]));
+                indices.push(ModelIndex::new(r#type, index_name.clone(), vec![]));
             }
             let column_name: String = row.get("Column_name");
             let field_name = model.field_with_column_name(&column_name).unwrap().name();
@@ -38,9 +38,11 @@ impl IndexDecoder {
         }
         let mut retval: Vec<ModelIndex> = vec![];
         for index in indices.iter() {
-            let items = items.get(index.name()).unwrap().iter().sorted_by(|(k1, _), (k2, _)| {
+            let mut items = items.get(index.name()).unwrap().iter().collect::<Vec<(&i32, &ModelIndexItem)>>();
+            items.sort_by(|(k1, _), (k2, _)| {
                 k1.cmp(k2)
-            }).map(|(k, v)| v.clone()).collect::<Vec<ModelIndexItem>>();
+            });
+            let items = items.into_iter().map(|(k, v)| v.clone()).collect::<Vec<ModelIndexItem>>();
             retval.push(ModelIndex::new(index.r#type(), index.name(), items));
         }
         retval

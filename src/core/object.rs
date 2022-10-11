@@ -294,7 +294,7 @@ impl Object {
         Ok(())
     }
 
-    pub(crate) async fn set_from_database_result_value(&self, value: &Value) {
+    pub(crate) fn set_from_database_result_value(&self, value: &Value) {
         let model = self.model();
         for (k, v) in value.as_hashmap().unwrap() {
             if let Some(field) = model.field(k) {
