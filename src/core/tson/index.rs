@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::{fmt, ops};
-use std::fmt::Display;
+use std::fmt::{Display, Write};
 use super::Value;
 
 // Code from this file is inspired from serde json
@@ -121,6 +121,7 @@ impl<'a> Display for Type<'a> {
             Value::Date(_) => formatter.write_str("date"),
             Value::DateTime(_) => formatter.write_str("date time"),
             Value::BTreeMap(_) => formatter.write_str("btree map"),
+            Value::IndexMap(_) => formatter.write_str("index map"),
             Value::Object(_) => formatter.write_str("object"),
         }
     }

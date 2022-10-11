@@ -171,7 +171,7 @@ impl Execution {
                 }
             }
         }
-        Ok(vec![])
+        Ok(results)
     }
 
     pub(crate) fn query_count(model: &Model, graph: &Graph, finder: &Value) -> ActionResult<u64> {

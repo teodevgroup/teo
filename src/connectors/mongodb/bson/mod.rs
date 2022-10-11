@@ -29,6 +29,7 @@ impl Into<Bson> for Value {
             Value::Vec(val) => Bson::Array(val.iter().map(|i| { i.into() }).collect()),
             Value::HashMap(val) => Bson::Document(val.iter().map(|(k, v)| (k.clone(), v.into())).collect()),
             Value::BTreeMap(val) => Bson::Document(val.iter().map(|(k, v)| (k.clone(), v.into())).collect()),
+            Value::IndexMap(val) => Bson::Document(val.iter().map(|(k, v)| (k.clone(), v.into())).collect()),
             Value::Object(_) => panic!("Save embedded object is not implemented."),
         }
     }

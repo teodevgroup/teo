@@ -80,6 +80,13 @@ impl Into<JsonValue> for Value {
                 }
                 JsonValue::Object(map)
             }
+            Value::IndexMap(val) => {
+                let mut map = JsonMap::new();
+                for (k, v) in val {
+                    map.insert(k.to_string(), v.into());
+                }
+                JsonValue::Object(map)
+            }
             Value::Object(_obj) => {
                 panic!("Cannot convert object into json. Use specific method instead.")
             }

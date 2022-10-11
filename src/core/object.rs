@@ -6,6 +6,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use key_path::{KeyPath, path};
 use async_recursion::async_recursion;
 use maplit::hashmap;
+use indexmap::IndexMap;
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
 use crate::core::env::source::Source;
@@ -192,7 +193,6 @@ impl Object {
         };
         // set flag
         self.inner.is_initialized.store(true, Ordering::SeqCst);
-        println!("here after set");
         Ok(())
     }
 
@@ -744,7 +744,7 @@ impl Object {
         // output
         let select_list = self.inner.selected_fields.lock().unwrap().clone();
         let select_filter = if select_list.is_empty() { false } else { true };
-        let mut map: HashMap<String, Value> = HashMap::new();
+        let mut map: IndexMap<String, Value> = IndexMap::new();
         let keys = self.model().output_keys();
         for key in keys {
             if (!select_filter) || (select_filter && select_list.contains(key)) {
@@ -798,7 +798,7 @@ impl Object {
                 }
             }
         }
-        return Ok(Value::HashMap(map))
+        return Ok(Value::IndexMap(map))
     }
 
     pub fn is_new(&self) -> bool {

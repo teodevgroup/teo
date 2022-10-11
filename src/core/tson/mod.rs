@@ -5,6 +5,7 @@ use std::ops::{Add, Div, Mul, Sub, Rem, Neg};
 use async_recursion::async_recursion;
 use chrono::prelude::{Date, DateTime, Utc};
 use rust_decimal::Decimal;
+use indexmap::IndexMap;
 #[cfg(feature = "data-source-mongodb")]
 use bson::oid::ObjectId;
 use crate::core::field::r#type::FieldType;
@@ -185,6 +186,10 @@ pub enum Value {
     ///
     BTreeMap(BTreeMap<String, Value>),
 
+    /// Represents a Tson btreemap.
+    ///
+    IndexMap(IndexMap<String, Value>),
+
     /// Represents a Tson object.
     ///
     Object(Object),
@@ -202,7 +207,7 @@ impl Value {
         }
     }
 
-    pub(crate) fn number_from_u64(num: u64, r#type: &FieldType) -> Value {
+    pub(crate) fn number_from_u64(num: i64, r#type: &FieldType) -> Value {
         match r#type {
             FieldType::U8 => Value::U8(num as u8),
             FieldType::U16 => Value::U16(num as u16),
@@ -306,6 +311,24 @@ impl Value {
     pub fn as_btreemap_mut(&mut self) -> Option<&mut BTreeMap<String, Value>> {
         match self {
             Value::BTreeMap(map) => Some(map),
+            _ => None,
+        }
+    }
+
+    pub fn is_indexmap(&self) -> bool {
+        self.as_indexmap().is_some()
+    }
+
+    pub fn as_indexmap(&self) -> Option<&IndexMap<String, Value>> {
+        match self {
+            Value::IndexMap(map) => Some(map),
+            _ => None,
+        }
+    }
+
+    pub fn as_indexmap_mut(&mut self) -> Option<&mut IndexMap<String, Value>> {
+        match self {
+            Value::IndexMap(map) => Some(map),
             _ => None,
         }
     }
