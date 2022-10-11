@@ -226,6 +226,8 @@ impl Query {
 
         let mut stmt = SQL::select(if columns.is_empty() { None } else { Some(&column_refs) }, &table_name);
         if let Some(r#where) = r#where {
+            println!("see build value: {:?}", value);
+            println!("see where: {:?}", r#where);
             if !r#where.as_hashmap().unwrap().is_empty() {
                 stmt.r#where(Query::r#where(model, graph, r#where, dialect));
             }
