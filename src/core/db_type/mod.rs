@@ -3,6 +3,10 @@
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatabaseType {
 
+    /// Undefined
+    /// Represents an invalid database type which hasn't been defined.
+    Undefined,
+
     /// ObjectId
     /// Represents an object's id.
     /// Availability: MongoDB

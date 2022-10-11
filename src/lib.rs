@@ -2,6 +2,7 @@ pub mod core;
 pub mod connectors;
 pub mod client;
 pub mod app;
+pub mod interface;
 
 pub mod prelude {
     pub use crate::app::app::App;

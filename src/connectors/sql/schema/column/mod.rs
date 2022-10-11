@@ -18,6 +18,12 @@ pub(crate) struct SQLColumn {
 
 impl SQLColumn {
 
+    pub(crate) fn new(name: String, r#type: DatabaseType, not_null: bool, auto_increment: bool, default: Option<String>, primary_key: bool, unique_key: bool) -> Self {
+        Self {
+            name, r#type, not_null, auto_increment, default, primary_key, unique_key
+        }
+    }
+
     pub(crate) fn name(&self) -> &str {
         &self.name
     }

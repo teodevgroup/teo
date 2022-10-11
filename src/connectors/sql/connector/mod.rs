@@ -20,6 +20,7 @@ use crate::core::error::ActionError;
 use crate::core::input::Input;
 use crate::core::result::ActionResult;
 use crate::prelude::{Graph, Object, Value};
+use crate::tson;
 
 #[derive(Debug)]
 pub(crate) struct SQLConnector {
@@ -67,7 +68,7 @@ impl SQLConnector {
         Ok(())
     }
 
-    async fn update_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()> {
+    async fn update_object(&self, object: &Object) -> ActionResult<()> {
         let model = object.model();
         let keys = object.keys_for_save();
         let mut values: Vec<(&str, String)> = vec![];
@@ -101,24 +102,12 @@ impl SQLConnector {
             println!("{:?}", result.err().unwrap());
             return Err(ActionError::unknown_database_write_error());
         }
-        let select_stmt = SQL::select(Some(&keys), model.table_name()).r#where(r#where).to_string(self.dialect);
-        let results = self.pool.fetch_optional(&*select_stmt).await;
-        match results {
-            Ok(row) => {
-                match row {
-                    Some(row) => {
-                        self.row_to_object(&row, &object, None, None, false)?;
-                        Ok(())
-                    }
-                    None => {
-                        Err(ActionError::object_not_found())
-                    }
-                }
-            }
-            Err(err) => {
-                println!("{:?}", err);
-                Err(ActionError::unknown_database_find_unique_error())
-            }
+        let result = Execution::query(&self.pool, model, object.graph(), &tson!({"where": r#where, "take": 1}), self.dialect).await?;
+        if result.is_empty() {
+            Err(ActionError::object_not_found())
+        } else {
+            object.set_from_database_result_value(result.get(0).unwrap());
+            Ok(())
         }
     }
 }
@@ -131,7 +120,7 @@ impl Connector for SQLConnector {
         if is_new {
             self.create_object(object).await
         } else {
-            self.update_object(object, session.clone()).await
+            self.update_object(object).await
         }
     }
 

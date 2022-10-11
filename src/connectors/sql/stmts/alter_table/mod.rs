@@ -16,8 +16,8 @@ impl SQLAlterTableStatement {
         SQLAlterTableDropColumnStatement { table: self.table.clone(), column: column.into() }
     }
 
-    pub fn modify(&self, column_def: SQLColumn) -> SQLAlterTableModifyStatement {
-        SQLAlterTableModifyStatement { table: self.table.clone(), column_def }
+    pub fn modify(&self, column: SQLColumn) -> SQLAlterTableModifyStatement {
+        SQLAlterTableModifyStatement { table: self.table.clone(), column }
     }
 
     pub fn add(&self, column_def: SQLColumn) -> SQLAlterTableAddStatement {

@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use async_recursion::async_recursion;
 use sqlx::{AnyPool, Column, Executor, Row};
 use sqlx::any::AnyRow;
 use crate::connectors::sql::query::Query;
@@ -32,6 +33,7 @@ impl Execution {
         todo!()
     }
 
+    #[async_recursion]
     pub(crate) async fn query(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect) -> ActionResult<Vec<Value>> {
         let select = value.get("select");
         let include = value.get("include");
@@ -58,7 +60,7 @@ impl Execution {
                     let names = if opposite_fields.len() == 1 {
                         Cow::Borrowed(opposite_model.field(opposite_fields.get(0).unwrap()).unwrap().column_name())
                     } else {
-                        Cow::Owned(opposite_fields.iter().map(|f| opposite_model.field(f).unwrap().column_name()).collect::<Vec<&String>>().join(",").to_wrapped())
+                        Cow::Owned(opposite_fields.iter().map(|f| opposite_model.field(f).unwrap().column_name()).collect::<Vec<&str>>().join(",").to_wrapped())
                     };
                     let values = if opposite_fields.len() == 1 {
                         // in a (?,?,?,?,?) format

@@ -294,6 +294,25 @@ impl Object {
         Ok(())
     }
 
+    pub(crate) async fn set_from_database_result_value(&self, value: &Value) {
+        let model = self.model();
+        for (k, v) in value.as_hashmap().unwrap() {
+            if let Some(field) = model.field(k) {
+                self.set_value_to_value_map(k, v.clone());
+            } else if let Some(relation) = model.relation(k) {
+                self.inner.relation_query_map.lock().unwrap().insert(k.to_owned(), vec![]);
+                for v in v.as_vec().unwrap() {
+                    let object = self.graph().new_object(relation.model(), self.env().alter_intent(Intent::NestedIncluded)).unwrap();
+                    object.set_from_database_result_value(v);
+                    self.inner.relation_query_map.lock().unwrap().get_mut(k).unwrap().push(object);
+                }
+
+            } else if let Some(property) = model.property(k) {
+                self.inner.cached_property_map.lock().unwrap().insert(k.to_owned(), v.clone());
+            }
+        }
+    }
+
     fn set_value_to_value_map(&self, key: &str, value: Value) {
         if value.is_null() {
             self.inner.value_map.lock().unwrap().remove(key);
