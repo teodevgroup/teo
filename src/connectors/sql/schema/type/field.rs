@@ -9,10 +9,10 @@ pub trait ToDatabaseType {
 impl ToDatabaseType for FieldType {
     fn to_database_type(&self, dialect: SQLDialect) -> DatabaseType {
         match dialect {
-            SQLDialect::SQLite => default_database_type_sqlite(field_type),
-            SQLDialect::MySQL => default_database_type_mysql(field_type),
-            SQLDialect::PostgreSQL => default_database_type_postgresql(field_type),
-            SQLDialect::MSSQL => default_database_type_mssql(field_type),
+            SQLDialect::SQLite => default_database_type_sqlite(self),
+            SQLDialect::MySQL => default_database_type_mysql(self),
+            SQLDialect::PostgreSQL => default_database_type_postgresql(self),
+            SQLDialect::MSSQL => default_database_type_mssql(self),
         }
     }
 }
@@ -28,19 +28,19 @@ fn default_database_type_mysql(field_type: &FieldType) -> DatabaseType {
         FieldType::Undefined => DatabaseType::Undefined,
         FieldType::ObjectId => DatabaseType::Undefined,
         FieldType::Bool => DatabaseType::Bool,
-        FieldType::I8 => DatabaseType::TinyInt(false),
-        FieldType::I16 => DatabaseType::SmallInt(false),
-        FieldType::I32 => DatabaseType::Int(false),
-        FieldType::I64 => DatabaseType::BigInt(false),
-        FieldType::I128 => DatabaseType::BigInt(false),
-        FieldType::U8 => DatabaseType::TinyInt(true),
-        FieldType::U16 => DatabaseType::SmallInt(true),
-        FieldType::U32 => DatabaseType::Int(true),
-        FieldType::U64 => DatabaseType::BigInt(true),
-        FieldType::U128 => DatabaseType::BigInt(true),
+        FieldType::I8 => DatabaseType::TinyInt { m: None, u: false },
+        FieldType::I16 => DatabaseType::SmallInt { m: None, u: false },
+        FieldType::I32 => DatabaseType::Int { m: None, u: false },
+        FieldType::I64 => DatabaseType::BigInt { m: None, u: false },
+        FieldType::I128 => DatabaseType::BigInt { m: None, u: false },
+        FieldType::U8 => DatabaseType::TinyInt { m: None, u: true },
+        FieldType::U16 => DatabaseType::SmallInt { m: None, u: true },
+        FieldType::U32 => DatabaseType::Int { m: None, u: true },
+        FieldType::U64 => DatabaseType::BigInt { m: None, u: true },
+        FieldType::U128 => DatabaseType::BigInt { m: None, u: true },
         FieldType::F32 => DatabaseType::Real,
-        FieldType::F64 => DatabaseType::Double,
-        FieldType::String => DatabaseType::VarChar(191, None, None),
+        FieldType::F64 => DatabaseType::Double { m: None, d: None },
+        FieldType::String => DatabaseType::VarChar { m: 191, n: None, c: None },
         FieldType::Date => DatabaseType::Date,
         FieldType::DateTime => DatabaseType::DateTime(3),
         FieldType::Enum(_) => DatabaseType::Undefined,
@@ -54,12 +54,12 @@ fn default_database_type_mysql(field_type: &FieldType) -> DatabaseType {
 
 fn default_database_type_postgresql(field_type: &FieldType) -> DatabaseType {
     match field_type {
-        _ => DatabaseType::Undefined,
+        _ => panic!("Unhandled."),
     }
 }
 
 fn default_database_type_sqlite(field_type: &FieldType) -> DatabaseType {
     match field_type {
-        _ => DatabaseType::Undefined,
+        _ => panic!("Unhandled."),
     }
 }

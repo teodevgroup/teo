@@ -10,7 +10,7 @@ use crate::core::property::Property;
 pub(crate) struct ColumnDecoder { }
 
 impl ColumnDecoder {
-    fn decode(row: AnyRow, dialect: SQLDialect) -> SQLColumn {
+    pub(crate) fn decode(row: AnyRow, dialect: SQLDialect) -> SQLColumn {
         let field: String = row.get("Field");
         let field_type_in_string: String = row.get("Type");
         let null_in_string: String = row.get("Null");

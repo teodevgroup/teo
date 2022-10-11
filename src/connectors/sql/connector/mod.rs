@@ -15,6 +15,7 @@ use url::Url;
 use crate::connectors::sql::connector::save_session::SQLSaveSession;
 use crate::connectors::sql::execution::Execution;
 use crate::connectors::sql::migration::migrate::SQLMigration;
+use crate::connectors::sql::query::Query;
 use crate::connectors::sql::stmts::SQL;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::connector::{Connector, SaveSession};
@@ -99,7 +100,7 @@ impl SQLConnector {
             }
         }
         let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();
-        let r#where = build_where_from_identifier(model, object.graph(), &object.identifier(), self.dialect);
+        let r#where = Query::where_from_identifier(object, self.dialect);
         let stmt = SQL::update(model.table_name()).values(value_refs).r#where(&r#where).to_string(self.dialect);
         let result = self.pool.execute(stmt.as_str()).await;
         if result.is_err() {
@@ -145,7 +146,7 @@ impl Connector for SQLConnector {
             return Err(ActionError::object_is_not_saved());
         }
         let model = object.model();
-        let r#where = build_where_from_identifier(model, object.graph(), &object.identifier(), self.dialect);
+        let r#where = Query::where_from_identifier(object, self.dialect);
         let stmt = SQL::delete_from(model.table_name()).r#where(r#where).to_string(self.dialect);
         let result = self.pool.execute(stmt.as_str()).await;
         if result.is_err() {

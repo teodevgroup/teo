@@ -20,63 +20,45 @@ impl TypeOrNull for &str {
 }
 
 pub(crate) trait ValueToSQLString {
-    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, path: impl AsRef<KeyPath<'a>>, graph: &Graph) -> Result<String, ActionError>;
+    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph) -> String;
 }
 
 impl ValueToSQLString for Value {
-    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, path: impl AsRef<KeyPath<'a>>, graph: &Graph) -> Result<String, ActionError> {
+    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph) -> String {
         if optional {
             if self.is_null() {
-                return Ok(("NULL".to_owned()));
+                return "NULL".to_owned()
             }
         }
         match r#type {
             FieldType::ObjectId => panic!("SQL doesn't support `ObjectId`."),
-            FieldType::String => if let Some(val) = self.as_str() {
-                Ok(val.to_sql_input())
-            } else {
-                Err(ActionError::unexpected_input_type("string".or_null(optional), path))
-            }
-            FieldType::Bool => if let Some(val) = self.as_bool() {
-                Ok(val.to_sql_input())
-            } else {
-                Err(ActionError::unexpected_input_type("bool".or_null(optional), path))
-            }
+            FieldType::String => self.as_str().unwrap().to_sql_input(),
+            FieldType::Bool => self.as_bool().unwrap().to_sql_input(),
             FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 |
             FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 => if let Some(val) = self.as_i64() {
-                Ok(val.to_string())
+                val.to_string()
             } else if let Some(val) = self.as_u64() {
-                Ok(val.to_string())
+                val.to_string()
             } else {
-                Err(ActionError::unexpected_input_type("int".or_null(optional), path))
+                panic!("Uncoded number.")
             }
             FieldType::F32 | FieldType::F64 => if let Some(val) = self.as_f64() {
-                Ok(val.to_string())
+                val.to_string()
             } else if let Some(val) = self.as_i64() {
-                Ok(val.to_string())
+                val.to_string()
             } else if let Some(val) = self.as_u64() {
-                Ok(val.to_string())
+                val.to_string()
             } else {
-                Err(ActionError::unexpected_input_type("float".or_null(optional), path))
+                panic!("Uncoded number.")
             }
-            FieldType::Enum(enum_name) => if let Some(val) = self.as_str() {
-                if graph.enum_values(enum_name).unwrap().contains(&val.to_string()) {
-                    Ok(val.to_sql_input())
-                } else {
-                    Err(ActionError::unexpected_input_type(enum_name.as_str().or_null(optional), path))
-                }
-            } else {
-                Err(ActionError::unexpected_input_type(enum_name.as_str().or_null(optional), path))
-            }
-            FieldType::Vec(element_field) => if let Some(val) = self.as_vec() {
+            FieldType::Enum(_) => self.as_str().unwrap().to_sql_input(),
+            FieldType::Vec(element_field) => {
+                let val = self.as_vec().unwrap();
                 let mut result: Vec<String> = vec![];
                 for (i, v) in val.iter().enumerate() {
-                    let path = path.as_ref() + i as usize;
-                    result.push(v.to_sql_string(element_field.r#type(), element_field.is_optional(), &path, graph)?);
+                    result.push(v.to_sql_string(element_field.r#type(), element_field.is_optional(), graph));
                 }
-                Ok(result.join(", ").wrap_in_array())
-            } else {
-                Err(ActionError::unexpected_input_type("array".or_null(optional), path))
+                result.join(", ").wrap_in_array()
             }
             _ => { panic!() }
         }
@@ -84,8 +66,8 @@ impl ValueToSQLString for Value {
 }
 
 impl ValueToSQLString for &Value {
-    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, path: impl AsRef<KeyPath<'a>>, graph: &Graph) -> Result<String, ActionError> {
-        (*self).to_sql_string(r#type, optional, path, graph)
+    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph) -> String {
+        (*self).to_sql_string(r#type, optional, graph)
     }
 }
 

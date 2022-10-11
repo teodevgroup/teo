@@ -1,4 +1,5 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
+use crate::connectors::sql::schema::value::encode::ToSQLString;
 
 pub struct SQLDescribeStatement {
     pub(crate) table: String

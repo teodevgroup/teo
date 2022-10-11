@@ -1,4 +1,5 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
+use crate::connectors::sql::schema::value::encode::ToSQLString;
 
 pub struct SQLDeleteFromStatement<'a> {
     pub(crate) from: &'a str,

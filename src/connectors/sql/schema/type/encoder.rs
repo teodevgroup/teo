@@ -1,4 +1,6 @@
+use std::borrow::Cow;
 use crate::connectors::sql::schema::dialect::SQLDialect;
+use crate::connectors::sql::schema::value::encode::ToSQLString;
 use crate::core::db_type::DatabaseType;
 
 impl ToSQLString for DatabaseType {
@@ -20,7 +22,7 @@ impl ToSQLString for DatabaseType {
             DatabaseType::BigInt { m, u } => (if *u { "BIGINT UNSIGNED" } else { "BIGINT" }).to_string(),
             DatabaseType::Decimal(_, _) => todo!(),
             DatabaseType::Float { m: _m, d: _d } => format!("FLOAT"),
-            DatabaseType::Double => {
+            DatabaseType::Double { m: _m, d: _d } => {
                 if dialect == SQLDialect::PostgreSQL {
                     "DOUBLE PRECISION".to_string()
                 } else {
@@ -46,23 +48,33 @@ impl ToSQLString for DatabaseType {
             }
             DatabaseType::Time(_, _) => todo!(),
             DatabaseType::Year => "YEAR".to_string(),
-            DatabaseType::Char(l, cs, co) => {
-                let charset = if let Some(v) = cs {
-                    format!(" CHARACTER SET {v}")
-                } else { "".to_string() };
-                let collation = if let Some(v) = co {
-                    format!(" COLLATION {v}")
-                } else { "".to_string() };
-                format!("CHAR({l}){charset}{collation}")
+            DatabaseType::Char { m, n, c } => {
+                let arg = if let Some(m) = m {
+                    Cow::Owned(format!("({})", m))
+                } else {
+                    Cow::Borrowed("")
+                };
+                let charset = if let Some(v) = n {
+                    Cow::Owned(format!(" CHARACTER SET {v}"))
+                } else { Cow::Borrowed("") };
+                let collation = if let Some(v) = c {
+                    Cow::Owned(format!(" COLLATION {v}"))
+                } else { Cow::Borrowed("") };
+                format!("CHAR{arg}{charset}{collation}")
             }
-            DatabaseType::VarChar(l, cs, co) => {
-                let charset = if let Some(v) = cs {
-                    format!(" CHARACTER SET {v}")
-                } else { "".to_string() };
-                let collation = if let Some(v) = co {
-                    format!(" COLLATION {v}")
-                } else { "".to_string() };
-                format!("VARCHAR({l}){charset}{collation}")
+            DatabaseType::VarChar { m, n, c } => {
+                let arg = if let Some(m) = m {
+                    Cow::Owned(format!("({})", m))
+                } else {
+                    Cow::Borrowed("")
+                };
+                let charset = if let Some(v) = n {
+                    Cow::Owned(format!(" CHARACTER SET {v}"))
+                } else { Cow::Borrowed("") };
+                let collation = if let Some(v) = c {
+                    Cow::Owned(format!(" COLLATION {v}"))
+                } else { Cow::Borrowed("") };
+                format!("VARCHAR{arg}{charset}{collation}")
             }
             DatabaseType::TinyText(cs, co) => {
                 let charset = if let Some(v) = cs {

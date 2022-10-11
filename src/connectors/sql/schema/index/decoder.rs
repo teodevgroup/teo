@@ -9,6 +9,8 @@ use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::model::Model;
 use crate::prelude::Value;
 
+pub(crate) struct IndexDecoder { }
+
 impl IndexDecoder {
     fn decode(model: &Model, rows: Vec<AnyRow>, dialect: SQLDialect) -> Vec<ModelIndex> {
         let mut indices: Vec<ModelIndex> = Vec::new();

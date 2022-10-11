@@ -36,7 +36,7 @@ impl Execution {
         let select = value.get("select");
         let include = value.get("include");
         let stmt = Query::build(model, graph, value, dialect, None, None);
-        let reverse = Input::has_negative_take(finder);
+        let reverse = Input::has_negative_take(value);
         let rows = match pool.fetch_all(&*stmt).await {
             Ok(rows) => rows,
             Err(err) => {

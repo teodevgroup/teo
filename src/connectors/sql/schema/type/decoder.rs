@@ -37,29 +37,7 @@ fn mysql_type_to_database_type(r#type: &str) -> DatabaseType {
                 "varchar" => DatabaseType::VarChar { m: arg.map(|a| u16::from_str(a).unwrap()).unwrap(), n: None, c: None },
                 _ => panic!("Unhandled type.")
             }
-            if name == "int" {
-
-            } else if name == "tinyint" {
-
-            } else if name == "smallint" {
-
-            }
         }
-    }
-    if r#type == "int" {
-        DatabaseType::Int(false)
-    } else if r#type == "int unsigned" {
-        DatabaseType::Int(true)
-    } else if r#type.starts_with("varchar") {
-
-        let captures = regex.captures(r#type).unwrap();
-        let num_str = captures.get(1).unwrap().as_str();
-        let num = u16::from_str(num_str).unwrap();
-        DatabaseType::VarChar(num, None, None)
-    } else if r#type.starts_with("tinyint") {
-        // tinyint(1)
-    } else {
-        panic!("Unhandled database type.")
     }
 }
 

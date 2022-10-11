@@ -1,5 +1,6 @@
 use crate::connectors::sql::schema::column::SQLColumn;
 use crate::connectors::sql::schema::dialect::SQLDialect;
+use crate::connectors::sql::schema::value::encode::ToSQLString;
 
 pub struct SQLAlterTableAddStatement {
     pub(crate) table: String,

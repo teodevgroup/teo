@@ -1,5 +1,6 @@
 use key_path::KeyPath;
 use crate::connectors::sql::schema::dialect::SQLDialect;
+use crate::connectors::sql::schema::value::encode::{ToWrapped, ValueToSQLString};
 use crate::connectors::sql::stmts::select::r#where::{ToWrappedSQLString, WhereClause};
 use crate::connectors::sql::stmts::select::r#where::WhereClause::And;
 use crate::connectors::sql::stmts::SQL;
@@ -35,7 +36,7 @@ impl Query {
         for val in arr_val {
             arr.push(val.to_sql_string(r#type, optional, graph));
         }
-        sql_where_item(column_name, op, arr.join(", ").to_wrapped())
+        Query::where_item(column_name, op, arr.join(", ").to_wrapped())
     }
 
     fn where_entry_item(
@@ -112,7 +113,7 @@ impl Query {
             }
             And(result).to_wrapped_string(dialect)
         } else {
-            sql_where_item(column_name, "=", value.to_sql_string(r#type, optional, graph))
+            Query::where_item(column_name, "=", &value.to_sql_string(r#type, optional, graph))
         }
     }
 
@@ -142,17 +143,14 @@ impl Query {
         let mut retval: Vec<String> = vec![];
         for (key, value) in r#where.iter() {
             if key == "AND" {
-                let path = key_path.as_ref() + "AND";
                 let inner = WhereClause::And(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, graph, w, dialect).unwrap().unwrap()).collect()).to_string(dialect);
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);
             } else if key == "OR" {
-                let path = key_path.as_ref() + "OR";
-                let inner = WhereClause::Or(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, graph, value, dalect).unwrap().unwrap()).collect()).to_string(dialect);
+                let inner = WhereClause::Or(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, graph, value, dialect).unwrap().unwrap()).collect()).to_string(dialect);
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);
             } else if key == "NOT" {
-                let path = key_path.as_ref() + "NOT";
                 let inner = WhereClause::Not(Self::r#where(model, graph, value, dialect).unwrap().unwrap()).to_string(dialect);
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);

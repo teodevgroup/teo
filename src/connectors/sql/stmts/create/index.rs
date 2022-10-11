@@ -1,20 +1,21 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
+use crate::core::model::index::ModelIndexItem;
 
 pub struct SQLCreateIndexOnStatement {
     unique: bool,
     index: String,
     table: String,
-    columns: Vec<SQLIndexColumn>
+    columns: Vec<ModelIndexItem>
 }
 
 impl SQLCreateIndexOnStatement {
-    pub fn column(&mut self, column: SQLIndexColumn) -> &mut Self {
+    pub fn column(&mut self, column: ModelIndexItem) -> &mut Self {
         self.columns.push(column);
         self
     }
 
-    pub fn columns(&mut self, columns: Vec<SQLIndexColumn>) -> &mut Self {
+    pub fn columns(&mut self, columns: Vec<ModelIndexItem>) -> &mut Self {
         self.columns.extend(columns);
         self
     }
