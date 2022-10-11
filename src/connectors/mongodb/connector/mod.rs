@@ -203,8 +203,8 @@ impl MongoDBConnector {
                         match write_error.code {
                             11000 => {
                                 let regex = Regex::new(r"dup key: \{ (.+?):").unwrap();
-                                let match_result = regex.captures(write_error.message.as_str()).unwrap().get(1);
-                                ActionError::unique_value_duplicated(match_result.unwrap().as_str())
+                                let field = regex.captures(write_error.message.as_str()).unwrap().get(1).unwrap().as_str();
+                                ActionError::unique_value_duplicated(field, "''")
                             }
                             _ => {
                                 ActionError::unknown_database_write_error()

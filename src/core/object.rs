@@ -338,6 +338,8 @@ impl Object {
                 self.inner.cached_property_map.lock().unwrap().insert(k.to_owned(), v.clone());
             }
         }
+        self.inner.is_new.store(false, Ordering::SeqCst);
+        self.inner.is_modified.store(false, Ordering::SeqCst);
     }
 
     fn set_value_to_value_map(&self, key: &str, value: Value) {

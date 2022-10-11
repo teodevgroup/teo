@@ -202,6 +202,17 @@ impl Value {
         }
     }
 
+    pub(crate) fn number_from_u64(num: u64, r#type: &FieldType) -> Value {
+        match r#type {
+            FieldType::U8 => Value::U8(num as u8),
+            FieldType::U16 => Value::U16(num as u16),
+            FieldType::U32 => Value::U32(num as u32),
+            FieldType::U64 => Value::U64(num as u64),
+            FieldType::U128 => Value::U128(num as u128),
+            _ => panic!()
+        }
+    }
+
     pub(crate) fn number_from_i64(num: i64, r#type: &FieldType) -> Value {
         match r#type {
             FieldType::I8 => Value::I8(num as i8),
@@ -209,11 +220,6 @@ impl Value {
             FieldType::I32 => Value::I32(num as i32),
             FieldType::I64 => Value::I64(num as i64),
             FieldType::I128 => Value::I128(num as i128),
-            FieldType::U8 => Value::U8(num as u8),
-            FieldType::U16 => Value::U16(num as u16),
-            FieldType::U32 => Value::U32(num as u32),
-            FieldType::U64 => Value::U64(num as u64),
-            FieldType::U128 => Value::U128(num as u128),
             _ => panic!()
         }
     }

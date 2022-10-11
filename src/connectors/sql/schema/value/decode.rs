@@ -20,8 +20,11 @@ impl RowDecoder {
         if r#type.is_string() {
             return Value::String(row.get(column_name))
         }
-        if r#type.is_int() {
+        if r#type.is_sint() {
             return Value::number_from_i64(row.get(column_name), r#type);
+        }
+        if r#type.is_uint() {
+            return Value::number_from_u64(row.get(column_name), r#type);
         }
         if r#type.is_float() {
             return Value::number_from_f64(row.get(column_name), r#type);

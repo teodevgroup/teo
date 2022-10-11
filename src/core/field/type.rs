@@ -41,6 +41,20 @@ impl FieldType {
         }
     }
 
+    pub(crate) fn is_sint(&self) -> bool {
+        match self {
+            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 => true,
+            _ => false
+        }
+    }
+
+    pub(crate) fn is_uint(&self) -> bool {
+        match self {
+            FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 => true,
+            _ => false
+        }
+    }
+
     pub(crate) fn is_int(&self) -> bool {
         match self {
             FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 |

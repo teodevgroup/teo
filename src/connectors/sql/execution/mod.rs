@@ -32,7 +32,14 @@ impl Execution {
     }
 
     pub(crate) async fn query_objects(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect, env: Env) -> ActionResult<Vec<Object>> {
-        todo!()
+        let values = Self::query(pool, model, graph, value, dialect).await?;
+        let mut results = vec![];
+        for value in values {
+            let object = graph.new_object(model.name(), env.clone())?;
+            object.set_from_database_result_value(&value);
+            results.push(object);
+        }
+        Ok(results)
     }
 
     #[async_recursion]

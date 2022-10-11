@@ -4,6 +4,7 @@ pub mod save_session;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use async_trait::async_trait;
+use regex::Regex;
 use sqlx::{AnyPool, Executor};
 use crate::core::model::Model;
 use url::Url;
@@ -61,11 +62,17 @@ impl SQLConnector {
         }
         let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();
         let stmt = SQL::insert_into(model.table_name()).values(value_refs).to_string(self.dialect);
-        let result = self.pool.execute(&*stmt).await.unwrap();
-        for key in auto_keys {
-            object.set_value(key, Value::I64(result.last_insert_id().unwrap()))?;
+        match self.pool.execute(&*stmt).await {
+            Ok(result) => {
+                for key in auto_keys {
+                    object.set_value(key, Value::I64(result.last_insert_id().unwrap()))?;
+                }
+                Ok(())
+            }
+            Err(err) => {
+                Err(Self::handle_err_result(err))
+            }
         }
-        Ok(())
     }
 
     async fn update_object(&self, object: &Object) -> ActionResult<()> {
@@ -108,6 +115,19 @@ impl SQLConnector {
         } else {
             object.set_from_database_result_value(result.get(0).unwrap());
             Ok(())
+        }
+    }
+
+    fn handle_err_result(err: sqlx::Error) -> ActionError {
+        let message = err.as_database_error().unwrap().message();
+        let regex = Regex::new("Duplicate entry (.+) for key '(.+)'").unwrap();
+        if let Some(captures) = regex.captures(message) {
+            let value = captures.get(1).unwrap().as_str();
+            let keys = captures.get(2).unwrap().as_str().split(".").collect::<Vec<&str>>();
+            let key = keys.last().unwrap();
+            ActionError::unique_value_duplicated(key, value)
+        } else {
+            ActionError::unknown_database_write_error()
         }
     }
 }
