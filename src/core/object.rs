@@ -370,6 +370,10 @@ impl Object {
         }
     }
 
+    pub fn has_relation_fetched(&self, key: impl AsRef<str>) -> bool {
+        self.inner.relation_query_map.lock().unwrap().contains_key(key.as_ref())
+    }
+
     pub fn get_relation_vec(&self, key: impl AsRef<str>) -> ActionResult<Vec<Object>> {
         let key = key.as_ref();
         let model_keys = self.model().all_keys();
@@ -755,7 +759,24 @@ impl Object {
                         map.insert(key.to_string(), value);
                     }
                 } else if let Some(relation) = self.model().relation(key) {
-
+                    if self.has_relation_fetched(relation.name()) {
+                        if relation.is_vec() {
+                            let o = self.get_relation_object(key).unwrap();
+                            match o {
+                                Some(o) => {
+                                    map.insert(key.to_string(), o.to_json().await.unwrap());
+                                },
+                                None => ()
+                            };
+                        } else {
+                            let mut result_vec = vec![];
+                            let vec = self.get_relation_vec(key).unwrap();
+                            for o in vec {
+                                result_vec.push(o.to_json().await?);
+                            }
+                            map.insert(key.to_string(), Value::Vec(result_vec));
+                        }
+                    }
                 } else if let Some(property) = self.model().property(key) {
                     if property.cached && self.inner.cached_property_map.lock().unwrap().contains_key(key) {
                         let value = self.inner.cached_property_map.lock().unwrap().get(key).unwrap().clone();
