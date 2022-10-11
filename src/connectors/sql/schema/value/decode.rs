@@ -28,13 +28,13 @@ impl RowDecoder {
         }
         #[cfg(not(feature = "data-source-mssql"))]
         if r#type.is_date() {
-            let naive_date: NaiveDate = row.get(result_name.as_str());
-            let date: Date<Utc> = Da::from_utc(naive_date, Utc);
+            let naive_date: NaiveDate = row.get(column_name);
+            let date: Date<Utc> = Date::from_utc(naive_date, Utc);
             return Value::Date(date);
         }
         #[cfg(not(feature = "data-source-mssql"))]
         if r#type.is_datetime() {
-            let datetime: DateTime<Utc> = row.get(result_name.as_str());
+            let datetime: DateTime<Utc> = row.get(column_name);
             return Value::DateTime(datetime);
         }
         panic!("Unhandled database when decoding type.")

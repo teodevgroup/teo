@@ -31,6 +31,7 @@ impl ValueToSQLString for Value {
             }
         }
         match r#type {
+            #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => panic!("SQL doesn't support `ObjectId`."),
             FieldType::String => self.as_str().unwrap().to_sql_input(),
             FieldType::Bool => self.as_bool().unwrap().to_sql_input(),

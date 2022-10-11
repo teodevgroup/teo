@@ -10,7 +10,6 @@ pub enum DatabaseType {
     /// ObjectId
     /// Represents an object's id.
     /// Availability: MongoDB
-    #[cfg(feature = "data-source-mongodb")]
     ObjectId,
 
     /// Bool

@@ -26,6 +26,7 @@ fn default_database_type_mssql(field_type: &FieldType) -> DatabaseType {
 fn default_database_type_mysql(field_type: &FieldType) -> DatabaseType {
     match field_type {
         FieldType::Undefined => DatabaseType::Undefined,
+        #[cfg(feature = "data-source-mongodb")]
         FieldType::ObjectId => DatabaseType::Undefined,
         FieldType::Bool => DatabaseType::Bool,
         FieldType::I8 => DatabaseType::TinyInt { m: None, u: false },
