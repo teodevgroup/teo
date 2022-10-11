@@ -5,6 +5,7 @@ use crate::connectors::sql::stmts::SQL;
 use crate::connectors::sql::schema::column::SQLColumn;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::model::Model;
+use crate::connectors::sql::schema::value::encode::ToSQLString;
 
 pub(crate) struct SQLMigration { }
 
@@ -52,15 +53,14 @@ impl SQLMigration {
                         pool.execute(&*stmt).await.unwrap();
                     } else {
                         // compare column definition
-                        let sql_column_def: SQLColumn = schema_field.unwrap().into();
-                        let schema_column: SQLColumn = (&sql_column_def).into();
+                        let schema_column: SQLColumn = schema_field.unwrap().into();
                         if schema_column != db_column {
                             // this column is different, alter it
-                            let alter = SQL::alter_table(table_name).modify(sql_column_def).to_string(dialect);
+                            let alter = SQL::alter_table(table_name).modify(schema_column).to_string(dialect);
                             println!("EXECUTE SQL for alter column: {}", &alter);
                             pool.execute(&*alter).await.unwrap();
                         }
-                        reviewed_columns.push(db_column.field.clone());
+                        reviewed_columns.push(db_column.name().to_owned());
                     }
                 }
                 for field in model.fields() {

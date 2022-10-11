@@ -3,13 +3,8 @@ pub mod save_session;
 
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
-use async_recursion::async_recursion;
 use async_trait::async_trait;
-use chrono::{Date, DateTime, NaiveDate, Utc};
-use key_path::{KeyPath, path};
-use sqlx::{AnyPool, Column, Database, Error, Executor, Row, ValueRef};
-use sqlx::pool::Pool;
-use sqlx::any::{AnyRow, AnyValueRef};
+use sqlx::{AnyPool, Executor};
 use crate::core::model::Model;
 use url::Url;
 use crate::connectors::sql::connector::save_session::SQLSaveSession;
@@ -18,14 +13,13 @@ use crate::connectors::sql::migration::migrate::SQLMigration;
 use crate::connectors::sql::query::Query;
 use crate::connectors::sql::stmts::SQL;
 use crate::connectors::sql::schema::dialect::SQLDialect;
+use crate::connectors::sql::schema::value::encode::ToSQLString;
 use crate::core::connector::{Connector, SaveSession};
 use crate::core::env::Env;
-use crate::core::env::intent::Intent;
 use crate::core::error::ActionError;
 use crate::core::input::Input;
 use crate::core::result::ActionResult;
 use crate::prelude::{Graph, Object, Value};
-use crate::tson;
 
 #[derive(Debug)]
 pub(crate) struct SQLConnector {
@@ -49,7 +43,7 @@ impl SQLConnector {
         Self { dialect, pool }
     }
 
-    async fn create_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()> {
+    async fn create_object(&self, object: &Object) -> ActionResult<()> {
         let model = object.model();
         let keys = object.keys_for_save();
         let auto_keys = model.auto_keys();
@@ -135,7 +129,7 @@ impl Connector for SQLConnector {
     async fn save_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()> {
         let is_new = object.inner.is_new.load(Ordering::SeqCst);
         if is_new {
-            self.create_object(object, session.clone()).await
+            self.create_object(object).await
         } else {
             self.update_object(object, session.clone()).await
         }

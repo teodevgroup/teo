@@ -158,7 +158,7 @@ impl Query {
                 if let Some(field) = model.field(key) {
                     let column_name = field.column_name();
                     let optional = field.optionality.is_optional();
-                    let where_entry = parse_sql_where_entry(column_name, &field.field_type, optional, value, graph, dialect, key_path.as_ref())?;
+                    let where_entry = Query::where_entry(column_name, &field.field_type, optional, value, graph, dialect);
                     retval.push(where_entry);
                 } else if let Some(relation) = model.relation(key) {
                     panic!("not handle this yet")
@@ -229,8 +229,8 @@ impl Query {
 
         let mut stmt = SQL::select(if columns.is_empty() { None } else { Some(&column_refs) }, &table_name);
         if let Some(r#where) = r#where {
-            if let Some(where_result) = build_where_input(model, graph, Some(r#where), dialect)? {
-                stmt.r#where(where_result);
+            if !r#where.as_hashmap().unwrap().is_empty() {
+                stmt.r#where(Query::r#where(model, graph, r#where, dialect));
             }
         }
         if let Some(additional_where) = additional_where {
@@ -244,8 +244,8 @@ impl Query {
             stmt.left_join(additional_left_join);
         }
         if let Some(order_by) = order_by {
-            if let Some(order_by_result) = build_order_by_input(model, graph, Some(order_by), dialect)? {
-                stmt.order_by(order_by_result);
+            if !order_by.as_hashmap().unwrap().is_empty() {
+                stmt.order_by(Query::order_by(model, graph, order_by, dialect))
             }
         }
         if page_size.is_some() && page_number.is_some() {
