@@ -19,13 +19,13 @@ impl SQLTypeDecoder {
 fn mysql_type_to_database_type(r#type: &str) -> DatabaseType {
     let r#type_string = r#type.to_lowercase();
     let r#type: &str = r#type_string.as_str();
-    let regex = Regex::new("(.+)( (.+))?\\((.+)\\)?").unwrap();
+    let regex = Regex::new("([^ \\(\\)]+)( (.+))?(\\((.+)\\))?").unwrap();
     match regex.captures(r#type) {
         None => panic!("Unhandled database type '{}' '{}'.", r#type, regex),
         Some(captures) => {
             let name = captures.get(1).unwrap().as_str();
             let trailing1 = captures.get(3).map(|m| m.as_str());
-            let arg = captures.get(4).map(|m| m.as_str());
+            let arg = captures.get(5).map(|m| m.as_str());
             match name {
                 "bit" => DatabaseType::Bit { m: arg.map(|a| u8::from_str(a).unwrap()) },
                 "tinyint" => DatabaseType::TinyInt { m: arg.map(|a| u8::from_str(a).unwrap()), u: trailing1.is_some() },
@@ -37,7 +37,9 @@ fn mysql_type_to_database_type(r#type: &str) -> DatabaseType {
                 "double" => DatabaseType::Double { m: None, d: None },
                 "char" => DatabaseType::Char { m: arg.map(|a| u8::from_str(a).unwrap()), n: None, c: None },
                 "varchar" => DatabaseType::VarChar { m: arg.map(|a| u16::from_str(a).unwrap()).unwrap(), n: None, c: None },
-                _ => panic!("Unhandled type.")
+                "date" => DatabaseType::Date,
+                "datetime" => DatabaseType::DateTime(u8::from_str(arg.unwrap()).unwrap()),
+                _ => panic!("Unhandled type '{}' '{:?}' '{:?}'.", name, trailing1, arg)
             }
         }
     }
