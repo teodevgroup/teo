@@ -97,6 +97,7 @@ The new generation server software.
 - Bug fixes for MySQL CRUD without relations **[DONE]**
 
 #### 0.0.35
+- Bug fixes for select and nested select **[DONE]**
 - SQL: join table relationship: cannot insert into object query map
 - SQL: Enum types
 - SQL: Distinct
