@@ -99,7 +99,6 @@ impl Object {
 
     pub(crate) async fn set_tson_with_path_and_user_mode(&self, value: &Value, path: &KeyPath<'_>, user_mode: bool) -> ActionResult<()> {
         let model = self.model();
-        let _is_new = self.is_new();
         // permission
         if !user_mode {
             self.check_model_write_permission().await?;
@@ -193,6 +192,7 @@ impl Object {
         };
         // set flag
         self.inner.is_initialized.store(true, Ordering::SeqCst);
+        println!("here after set");
         Ok(())
     }
 
@@ -277,7 +277,7 @@ impl Object {
                 result_context.is_valid()
             }
         };
-        if valid {
+        if !valid {
             Err(ActionError::unexpected_input_key(key.as_ref(), path))
         } else {
             Ok(())
