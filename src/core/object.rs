@@ -735,6 +735,7 @@ impl Object {
         self.delete_from_database(self.graph().connector().new_save_session()).await
     }
 
+    #[async_recursion]
     pub(crate) async fn to_json(&self) -> ActionResult<Value> {
         // check read permission
         self.check_model_read_permission().await?;
