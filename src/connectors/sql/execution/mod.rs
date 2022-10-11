@@ -174,7 +174,17 @@ impl Execution {
         Ok(results)
     }
 
-    pub(crate) fn query_count(model: &Model, graph: &Graph, finder: &Value) -> ActionResult<u64> {
-        todo!()
+    pub(crate) async fn query_count(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<u64> {
+        let stmt = Query::build_for_count(model, graph, finder, dialect, None, None);
+        match pool.fetch_one(&*stmt).await {
+            Ok(result) => {
+                let count: i64 = result.get(0);
+                Ok(count as u64)
+            },
+            Err(err) => {
+                println!("{:?}", err);
+                return Err(ActionError::unknown_database_find_error());
+            }
+        }
     }
 }
