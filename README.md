@@ -104,11 +104,13 @@ The new generation server software.
 - SQL: Cursor **[DONE]**
 - SQL: Negative take **[DONE]**
 - SQL: Nested skip and take **[DONE]**
+- SQL: Nested negative take
+- SQL: Negative take without order by
 - SQL: Distinct
 - SQL: Relation where
-- SQL: Enum types
 - SQL: Aggregation
 - SQL: Group by
+- SQL: Enum types
 
 #### 0.0.37
 - Merge json pipeline into pipeline (hashmap)
