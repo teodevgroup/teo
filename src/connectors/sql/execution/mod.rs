@@ -25,6 +25,13 @@ impl Execution {
                 (field.name().to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, column_name))
             } else if let Some(property) = model.property(column_name) {
                 (property.name().to_owned(), RowDecoder::decode(property.r#type(), property.is_optional(), row, column_name))
+            } else if column_name.contains(".") {
+                let names: Vec<&str> = column_name.split(".").collect();
+                let relation_name = names[0];
+                let field_name = names[1];
+                let opposite_model = graph.model(model.relation(relation_name).unwrap().model()).unwrap();
+                let field = opposite_model.field(field_name).unwrap();
+                (column_name.to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, column_name))
             } else {
                 panic!("Unhandled key {}.", column_name);
             }
@@ -49,6 +56,7 @@ impl Execution {
         let select = value.get("select");
         let include = value.get("include");
         let stmt = Query::build(model, graph, value, dialect, additional_where, additional_left_join, join_table_results);
+        println!("see stmt: {}", &stmt);
         let reverse = Input::has_negative_take(value);
         let rows = match pool.fetch_all(&*stmt).await {
             Ok(rows) => rows,
@@ -146,8 +154,9 @@ impl Execution {
                     } else {
                         Cow::Owned(tson!({}))
                     };
-                    let join_table_results = through_relation.fields().iter().map(|f| {
-                        through_model.field(f).unwrap().column_name().to_string()
+                    let join_table_results = through_relation.iter().map(|(f, r)| {
+                        let through_column_name = through_model.field(f).unwrap().column_name().to_string();
+                        format!("j.{} AS `{}.{}`", through_column_name, opposite_relation.unwrap().name(), r)
                     }).collect();
                     let included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results)).await?;
                     println!("see included {:?}", included_values);

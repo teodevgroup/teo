@@ -226,8 +226,8 @@ impl Query {
             columns = model.save_keys().iter().map(|k| format!("t.{} AS {}", k, k)).collect::<Vec<String>>();
         }
         if let Some(join_table_results) = join_table_results {
-            for result_key in join_table_results.iter() {
-                columns.push(format!("j.{} AS j_{}", result_key, result_key))
+            for result_key in join_table_results {
+                columns.push(result_key);
             }
         }
         let column_refs = columns.iter().map(|c| c.as_str()).collect::<Vec<&str>>();
