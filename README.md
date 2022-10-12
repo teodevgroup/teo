@@ -103,9 +103,10 @@ The new generation server software.
 #### 0.0.36
 - SQL: Cursor **[DONE]**
 - SQL: Negative take **[DONE]**
-- SQL: Enum types
+- SQL: Nested skip and take **[DONE]**
 - SQL: Distinct
 - SQL: Relation where
+- SQL: Enum types
 - SQL: Aggregation
 - SQL: Group by
 

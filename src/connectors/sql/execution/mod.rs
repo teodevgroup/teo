@@ -78,6 +78,10 @@ impl Execution {
         }
         if let Some(include) = include.map(|i| i.as_hashmap().unwrap()) {
             for (key, value) in include {
+                let skip = value.as_hashmap().map(|m| m.get("skip")).flatten().map(|v| v.as_u64().unwrap());
+                let take = value.as_hashmap().map(|m| m.get("take")).flatten().map(|v| v.as_i64().unwrap());
+                let take_abs = take.map(|t| t.abs() as u64);
+                println!("see take abs: {:?}", take_abs);
                 let relation = model.relation(key).unwrap();
                 let (opposite_model, _) = graph.opposite_relation(relation);
                 if !relation.has_join_table() {
@@ -102,29 +106,41 @@ impl Execution {
                     };
                     let where_addition = Query::where_item(names.as_ref(), "IN", &values);
                     let nested_query = if value.is_hashmap() {
-                        Cow::Borrowed(value)
+                        Self::without_paging_and_skip_take(value)
                     } else {
                         Cow::Owned(tson!({}))
                     };
                     let included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), None, None).await?;
                     // println!("see included: {:?}", included_values);
-                    for o in included_values.iter() {
-                        let owners = results.iter_mut().filter(|r| {
+                    for result in results.iter_mut() {
+                        let mut skipped = 0;
+                        let mut taken = 0;
+                        for included_value in included_values.iter() {
+                            let mut matched = true;
                             for (field, reference) in relation.iter() {
-                                if o.get(reference).is_none() && r.get(field).is_none() {
-                                    return false;
+                                if included_value.get(reference).is_none() && result.get(field).is_none() {
+                                    matched = false;
+                                    break;
                                 }
-                                if o.get(reference) != r.get(field) {
-                                    return false;
+                                if included_value.get(reference) != result.get(field) {
+                                    matched = false;
+                                    break;
                                 }
                             }
-                            true
-                        }).collect::<Vec<&mut Value>>();
-                        for owner in owners {
-                            if owner.get(relation.name()).is_none() {
-                                owner.as_hashmap_mut().unwrap().insert(relation.name().to_owned(), Value::Vec(vec![]));
+                            if matched {
+                                if (skip.is_none() || skip.unwrap() <= skipped) && (take.is_none() || taken < take_abs.unwrap()) {
+                                    if result.get(relation.name()).is_none() {
+                                        result.as_hashmap_mut().unwrap().insert(relation.name().to_owned(), Value::Vec(vec![]));
+                                    }
+                                    result.as_hashmap_mut().unwrap().get_mut(relation.name()).unwrap().as_vec_mut().unwrap().push(included_value.clone());
+                                    taken += 1;
+                                    if take.is_some() && (taken >= take_abs.unwrap()) {
+                                        break;
+                                    }
+                                } else {
+                                    skipped += 1;
+                                }
                             }
-                            owner.as_hashmap_mut().unwrap().get_mut(relation.name()).unwrap().as_vec_mut().unwrap().push(o.clone());
                         }
                     }
                 } else {
@@ -157,7 +173,7 @@ impl Execution {
                     };
                     let where_addition = Query::where_item(names.as_ref(), "IN", &values);
                     let nested_query = if value.is_hashmap() {
-                        Cow::Borrowed(value)
+                        Self::without_paging_and_skip_take(value)
                     } else {
                         Cow::Owned(tson!({}))
                     };
@@ -167,24 +183,36 @@ impl Execution {
                     }).collect();
                     let included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results)).await?;
                     // println!("see included {:?}", included_values);
-                    for o in included_values.iter() {
-                        let owners = results.iter_mut().filter(|r| {
-                            for (field, reference) in through_relation.iter() {
+                    for result in results.iter_mut() {
+                        let mut skipped = 0;
+                        let mut taken = 0;
+                        for included_value in included_values.iter() {
+                            let mut matched = true;
+                            for (_field, reference) in through_relation.iter() {
                                 let key = format!("{}.{}", opposite_relation.unwrap().name(), reference);
-                                if r.get(reference).is_none() && o.get(&key).is_none() {
-                                    return false;
+                                if result.get(reference).is_none() && included_value.get(&key).is_none() {
+                                    matched = false;
+                                    break;
                                 }
-                                if r.get(reference) != o.get(&key) {
-                                    return false;
+                                if result.get(reference) != included_value.get(&key) {
+                                    matched = false;
+                                    break;
                                 }
                             }
-                            true
-                        }).collect::<Vec<&mut Value>>();
-                        for owner in owners {
-                            if owner.get(relation.name()).is_none() {
-                                owner.as_hashmap_mut().unwrap().insert(relation.name().to_owned(), Value::Vec(vec![]));
+                            if matched {
+                                if (skip.is_none() || skip.unwrap() <= skipped) && (take.is_none() || taken < take_abs.unwrap()) {
+                                    if result.get(relation.name()).is_none() {
+                                        result.as_hashmap_mut().unwrap().insert(relation.name().to_owned(), Value::Vec(vec![]));
+                                    }
+                                    result.as_hashmap_mut().unwrap().get_mut(relation.name()).unwrap().as_vec_mut().unwrap().push(included_value.clone());
+                                    taken += 1;
+                                    if take.is_some() && (taken >= take_abs.unwrap()) {
+                                        break;
+                                    }
+                                } else {
+                                    skipped += 1;
+                                }
                             }
-                            owner.as_hashmap_mut().unwrap().get_mut(relation.name()).unwrap().as_vec_mut().unwrap().push(o.clone());
                         }
                     }
                 }
@@ -208,6 +236,20 @@ impl Execution {
                 println!("{:?}", err);
                 return Err(ActionError::unknown_database_find_error());
             }
+        }
+    }
+
+    fn without_paging_and_skip_take(value: &Value) -> Cow<Value> {
+        let map = value.as_hashmap().unwrap();
+        if map.contains_key("take") || map.contains_key("skip") || map.contains_key("pageSize") || map.contains_key("pageNumber") {
+            let mut map = map.clone();
+            map.remove("take");
+            map.remove("skip");
+            map.remove("pageSize");
+            map.remove("pageNumber");
+            Cow::Owned(Value::HashMap(map))
+        } else {
+            Cow::Borrowed(value)
         }
     }
 }
