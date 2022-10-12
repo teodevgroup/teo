@@ -19,19 +19,23 @@ pub(crate) struct Execution { }
 impl Execution {
 
     fn row_to_value(model: &Model, graph: &Graph, row: &AnyRow) -> Value {
-        Value::HashMap(row.columns().iter().map(|column| {
+        Value::HashMap(row.columns().iter().filter_map(|column| {
             let column_name = column.name();
             if let Some(field) = model.field_with_column_name(column_name) {
-                (field.name().to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, column_name))
+                Some((field.name().to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, column_name)))
             } else if let Some(property) = model.property(column_name) {
-                (property.name().to_owned(), RowDecoder::decode(property.r#type(), property.is_optional(), row, column_name))
+                Some((property.name().to_owned(), RowDecoder::decode(property.r#type(), property.is_optional(), row, column_name)))
             } else if column_name.contains(".") {
                 let names: Vec<&str> = column_name.split(".").collect();
                 let relation_name = names[0];
                 let field_name = names[1];
-                let opposite_model = graph.model(model.relation(relation_name).unwrap().model()).unwrap();
-                let field = opposite_model.field(field_name).unwrap();
-                (column_name.to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, column_name))
+                if relation_name == "c" { // cursor fetch, should remove
+                    None
+                } else {
+                    let opposite_model = graph.model(model.relation(relation_name).unwrap().model()).unwrap();
+                    let field = opposite_model.field(field_name).unwrap();
+                    Some((column_name.to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, column_name)))
+                }
             } else {
                 panic!("Unhandled key {}.", column_name);
             }

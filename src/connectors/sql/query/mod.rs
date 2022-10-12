@@ -234,9 +234,12 @@ impl Query {
         }
         let column_refs = columns.iter().map(|c| c.as_str()).collect::<Vec<&str>>();
         let from = if let Some(cursor) = cursor {
+            let order_by = order_by.unwrap().as_vec().unwrap().get(0).unwrap().as_hashmap().unwrap();
+            let key = order_by.keys().next().unwrap();
+            let column_key = model.field(key).unwrap().column_name();
             let columns = cursor.as_hashmap().unwrap().keys().map(|k| {
                 let column_name = model.field(k).unwrap().column_name();
-                format!("{} AS `c.{}`", column_name, column_name)
+                format!("{} AS `c.{}`", column_key, column_key)
             }).collect::<Vec<String>>();
             let column_refs: Vec<&str> = columns.iter().map(|k| k.as_str()).collect();
             let sub_where = Query::r#where(model, graph, cursor, dialect);
@@ -260,7 +263,7 @@ impl Query {
             }
         }
         if cursor.is_some() {
-            let order_by = order_by.unwrap().as_hashmap().unwrap();
+            let order_by = order_by.unwrap().as_vec().unwrap().get(0).unwrap().as_hashmap().unwrap();
             let key = order_by.keys().next().unwrap();
             let order = if order_by.values().next().unwrap().as_str().unwrap() == "asc" { ">=" } else { "<=" };
             let cursor_where = Query::where_item(&key, order, &format!("`c.{}`", key));
