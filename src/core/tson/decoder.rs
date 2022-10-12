@@ -157,14 +157,14 @@ impl Decoder {
             return Err(ActionError::unexpected_input_type("object", path));
         };
         Self::check_json_keys(json_map, &NESTED_CREATE_MANY_ARG_KEYS, path)?;
-        Ok(Value::HashMap(json_map.iter().map(|(k, _v)| {
+        Ok(Value::HashMap(json_map.iter().map(|(k, value)| {
             let k = k.as_str();
             let path = path + k;
             let (model, relation) = graph.opposite_relation(relation);
             match k {
-                "create" | "createMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_nested_create_input(model, graph, relation, v, p))?)),
-                "connect" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_where_unique(model, graph, v, p))?)),
-                "connectOrCreate" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_nested_connect_or_create_input(model, graph, relation, v, p))?)),
+                "create" | "createMany" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_create_input(model, graph, relation, v, p))?)),
+                "connect" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_where_unique(model, graph, v, p))?)),
+                "connectOrCreate" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_connect_or_create_input(model, graph, relation, v, p))?)),
                 _ => panic!("Unhandled key")
             }
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
@@ -178,18 +178,18 @@ impl Decoder {
             return Err(ActionError::unexpected_input_type("object", path));
         };
         Self::check_json_keys(json_map, &NESTED_UPDATE_MANY_ARG_KEYS, path)?;
-        Ok(Value::HashMap(json_map.iter().map(|(k, _v)| {
+        Ok(Value::HashMap(json_map.iter().map(|(k, value)| {
             let k = k.as_str();
             let path = path + k;
             let (model, relation) = graph.opposite_relation(relation);
             match k {
-                "create" | "createMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_nested_create_input(model, graph, relation, v, p))?)),
-                "connect" | "set" | "disconnect" | "delete" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_where_unique(model, graph, v, p))?)),
-                "connectOrCreate" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_nested_connect_or_create_input(model, graph, relation, v, p))?)),
-                "update" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_nested_update_input(model, graph, relation, v, p))?)),
-                "updateMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_nested_update_many_input(model, graph, relation, v, p))?)),
-                "deleteMany" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_where(model, graph, v, p))?)),
-                "upsert" => Ok((k.to_owned(), Self::decode_enumerate(json_value, path, |v, p: &KeyPath| Self::decode_nested_upsert_input(model, graph, relation, v, p))?)),
+                "create" | "createMany" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_create_input(model, graph, relation, v, p))?)),
+                "connect" | "set" | "disconnect" | "delete" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_where_unique(model, graph, v, p))?)),
+                "connectOrCreate" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_connect_or_create_input(model, graph, relation, v, p))?)),
+                "update" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_update_input(model, graph, relation, v, p))?)),
+                "updateMany" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_update_many_input(model, graph, relation, v, p))?)),
+                "deleteMany" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_where(model, graph, v, p))?)),
+                "upsert" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_upsert_input(model, graph, relation, v, p))?)),
                 _ => panic!("Unhandled key.")
             }
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
@@ -198,6 +198,7 @@ impl Decoder {
     fn decode_enumerate<'a, F: Fn(&JsonValue, &KeyPath) -> ActionResult<Value>>(json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>, f: F) -> ActionResult<Value> {
         let path = path.as_ref();
         if let Some(_) = json_value.as_object() {
+            println!("here see ba {} {}", json_value, path);
             f(json_value, path)
         } else if let Some(json_array) = json_value.as_array() {
             Ok(Value::Vec(json_array.iter().enumerate().map(|(i, v)| {
@@ -338,7 +339,10 @@ impl Decoder {
         } else {
             vec![]
         };
-        Self::check_json_keys(json_map, &without.into_iter().collect(), path)?;
+        let allowed = model.input_keys().iter().filter(|k| {
+            !without.contains(&k.as_str())
+        }).map(|k| k.as_str()).collect();
+        Self::check_json_keys(json_map, &allowed, path)?;
         Self::decode_update(model, graph, &json_value, path)
     }
 
@@ -355,7 +359,10 @@ impl Decoder {
         } else {
             vec![]
         };
-        Self::check_json_keys(json_map, &without.into_iter().collect(), path)?;
+        let allowed = model.input_keys().iter().filter(|k| {
+            !without.contains(&k.as_str())
+        }).map(|k| k.as_str()).collect();
+        Self::check_json_keys(json_map, &allowed, path)?;
         Self::decode_create(model, graph, &json_value, path)
     }
 
