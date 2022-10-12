@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::{IfIMode, ToLike, ToSQLString, ToWrapped, ValueToSQLString, WrapInArray};
 use crate::connectors::sql::stmts::select::r#where::{ToWrappedSQLString, WhereClause};
@@ -216,6 +217,7 @@ impl Query {
         let page_number = value.get("pageNumber");
         let skip = value.get("skip");
         let take = value.get("take");
+        let cursor = value.get("cursor");
         let table_name = if additional_left_join.is_some() {
             model.table_name().to_string() + " AS t"
         } else {
@@ -231,8 +233,20 @@ impl Query {
             }
         }
         let column_refs = columns.iter().map(|c| c.as_str()).collect::<Vec<&str>>();
-
-        let mut stmt = SQL::select(if columns.is_empty() { None } else { Some(&column_refs) }, &table_name);
+        let from = if let Some(cursor) = cursor {
+            let columns = cursor.as_hashmap().unwrap().keys().map(|k| {
+                let column_name = model.field(k).unwrap().column_name();
+                format!("{} AS `c.{}`", column_name, column_name)
+            }).collect::<Vec<String>>();
+            let column_refs: Vec<&str> = columns.iter().map(|k| k.as_str()).collect();
+            let sub_where = Query::r#where(model, graph, cursor, dialect);
+            let mut query = SQL::select(Some(&column_refs), &table_name);
+            query.r#where(sub_where);
+            Cow::Owned(format!("{}, ({}) AS c", &table_name, &query.to_string(dialect)))
+        } else {
+            Cow::Borrowed(&table_name)
+        };
+        let mut stmt = SQL::select(if columns.is_empty() { None } else { Some(&column_refs) }, from.as_ref());
         if let Some(r#where) = r#where {
             if !r#where.as_hashmap().unwrap().is_empty() {
                 stmt.r#where(Query::r#where(model, graph, r#where, dialect));
@@ -240,9 +254,20 @@ impl Query {
         }
         if let Some(additional_where) = additional_where {
             if stmt.r#where.is_some() {
-                stmt.r#where(stmt.r#where.as_ref().unwrap().clone() + &additional_where);
+                stmt.r#where(And(vec![stmt.r#where.as_ref().unwrap().clone(), additional_where.to_string()]).to_string(dialect));
             } else {
                 stmt.r#where(additional_where.to_string());
+            }
+        }
+        if cursor.is_some() {
+            let order_by = order_by.unwrap().as_hashmap().unwrap();
+            let key = order_by.keys().next().unwrap();
+            let order = if order_by.values().next().unwrap().as_str().unwrap() == "asc" { ">=" } else { "<=" };
+            let cursor_where = Query::where_item(&key, order, &format!("`c.{}`", key));
+            if stmt.r#where.is_some() {
+                stmt.r#where(And(vec![stmt.r#where.as_ref().unwrap().clone(), cursor_where]).to_string(dialect));
+            } else {
+                stmt.r#where(cursor_where);
             }
         }
         if let Some(additional_left_join) = additional_left_join {

@@ -101,9 +101,10 @@ The new generation server software.
 - SQL: join table relationship: cannot insert into object query map **[DONE]**
 
 #### 0.0.36
+- SQL: Cursor **[DONE]**
+- SQL: Negative take **[DONE]**
 - SQL: Enum types
 - SQL: Distinct
-- SQL: Cursor
 - SQL: Relation where
 - SQL: Aggregation
 - SQL: Group by
