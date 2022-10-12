@@ -159,15 +159,15 @@ impl Execution {
                         format!("j.{} AS `{}.{}`", through_column_name, opposite_relation.unwrap().name(), r)
                     }).collect();
                     let included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results)).await?;
-                    println!("see included {:?}", included_values);
+                    // println!("see included {:?}", included_values);
                     for o in included_values.iter() {
                         let owners = results.iter_mut().filter(|r| {
                             for (field, reference) in through_relation.iter() {
-                                let key = format!("j_{}", field);
-                                if o.get(reference).is_none() && r.get(&key).is_none() {
+                                let key = format!("{}.{}", opposite_relation.unwrap().name(), reference);
+                                if r.get(reference).is_none() && o.get(&key).is_none() {
                                     return false;
                                 }
-                                if o.get(reference) != r.get(&key) {
+                                if r.get(reference) != o.get(&key) {
                                     return false;
                                 }
                             }
