@@ -87,6 +87,10 @@ impl Relation {
     pub(crate) fn iter(&self) -> RelationIter {
         RelationIter { index: 0, relation: self }
     }
+
+    pub(crate) fn len(&self) -> usize {
+        self.fields().len()
+    }
 }
 
 pub(crate) struct RelationIter<'a> {

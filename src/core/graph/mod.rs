@@ -201,6 +201,40 @@ impl Graph {
             }
         }
     }
+
+    /// Returns the through relation of the argument relation.
+    ///
+    /// # Arguments
+    ///
+    /// * `relation` - The relation must be of a model of this graph. This relation must be a
+    /// through relation.
+    ///
+    /// # Return Value
+    ///
+    /// A tuple of through relation's model and through model's local relation.
+    ///
+    pub(crate) fn through_relation(&self, relation: &Relation) -> (&Model, &Relation) {
+        let through_model = self.model(relation.through().unwrap()).unwrap();
+        let through_local_relation = through_model.relation(relation.local()).unwrap();
+        (through_model, through_local_relation)
+    }
+
+    /// Returns the through opposite relation of the argument relation.
+    ///
+    /// # Arguments
+    ///
+    /// * `relation` - The relation must be of a model of this graph. This relation must be a
+    /// through relation.
+    ///
+    /// # Return Value
+    ///
+    /// A tuple of through relation's model and through model's foreign relation.
+    ///
+    pub(crate) fn through_opposite_relation(&self, relation: &Relation) -> (&Model, &Relation) {
+        let through_model = self.model(relation.through().unwrap()).unwrap();
+        let through_foreign_relation = through_model.relation(relation.foreign()).unwrap();
+        (through_model, through_foreign_relation)
+    }
 }
 
 unsafe impl Send for Graph { }

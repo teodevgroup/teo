@@ -98,7 +98,7 @@ The new generation server software.
 
 #### 0.0.35
 - Bug fixes for select and nested select **[DONE]**
-- SQL: join table relationship: cannot insert into object query map
+- SQL: join table relationship: cannot insert into object query map **[DONE]**
 - SQL: Enum types
 - SQL: Distinct
 - SQL: Cursor

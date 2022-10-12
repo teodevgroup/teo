@@ -196,8 +196,9 @@ impl Query {
         dialect: SQLDialect,
         additional_where: Option<String>,
         additional_left_join: Option<String>,
+        join_table_results: Option<Vec<String>>,
     ) -> String {
-        format!("SELECT COUNT(*) FROM ({}) AS _", Self::build(model, graph, value, dialect, additional_where, additional_left_join))
+        format!("SELECT COUNT(*) FROM ({}) AS _", Self::build(model, graph, value, dialect, additional_where, additional_left_join, join_table_results))
     }
 
     pub(crate) fn build(
@@ -207,6 +208,7 @@ impl Query {
         dialect: SQLDialect,
         additional_where: Option<String>,
         additional_left_join: Option<String>,
+        join_table_results: Option<Vec<String>>,
     ) -> String {
         let r#where = value.get("where");
         let order_by = value.get("orderBy");
@@ -222,6 +224,11 @@ impl Query {
         let mut columns: Vec<String> = vec![];
         if additional_left_join.is_some() {
             columns = model.save_keys().iter().map(|k| format!("t.{} AS {}", k, k)).collect::<Vec<String>>();
+        }
+        if let Some(join_table_results) = join_table_results {
+            for result_key in join_table_results.iter() {
+                columns.push(format!("j.{} AS j.{}", result_key, result_key))
+            }
         }
         let column_refs = columns.iter().map(|c| c.as_str()).collect::<Vec<&str>>();
 

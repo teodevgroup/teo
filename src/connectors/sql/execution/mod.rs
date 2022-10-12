@@ -45,10 +45,10 @@ impl Execution {
     }
 
     #[async_recursion]
-    pub(crate) async fn query(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect) -> ActionResult<Vec<Value>> {
+    async fn query_internal(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect, additional_where: Option<String>, additional_left_join: Option<String>, join_table_results: Option<Vec<String>>) -> ActionResult<Vec<Value>> {
         let select = value.get("select");
         let include = value.get("include");
-        let stmt = Query::build(model, graph, value, dialect, None, None);
+        let stmt = Query::build(model, graph, value, dialect, additional_where, additional_left_join, join_table_results);
         let reverse = Input::has_negative_take(value);
         let rows = match pool.fetch_all(&*stmt).await {
             Ok(rows) => rows,
@@ -68,7 +68,7 @@ impl Execution {
                 if !relation.has_join_table() {
                     let fields = relation.fields();
                     let opposite_fields = relation.references();
-                    let names = if opposite_fields.len() == 1 {
+                    let names = if opposite_fields.len() == 1 { // todo: column name
                         Cow::Borrowed(opposite_model.field(opposite_fields.get(0).unwrap()).unwrap().column_name())
                     } else {
                         Cow::Owned(opposite_fields.iter().map(|f| opposite_model.field(f).unwrap().column_name()).collect::<Vec<&str>>().join(",").to_wrapped())
@@ -91,11 +91,14 @@ impl Execution {
                     } else {
                         Cow::Owned(tson!({}))
                     };
-                    let included_values = Self::query(pool, opposite_model, graph, &nested_query, dialect).await?;
+                    let included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), None, None).await?;
                     println!("see included: {:?}", included_values);
                     for o in included_values.iter() {
                         let owners = results.iter_mut().filter(|r| {
                             for (field, reference) in relation.iter() {
+                                if o.get(reference).is_none() && r.get(field).is_none() {
+                                    return false;
+                                }
                                 if o.get(reference) != r.get(field) {
                                     return false;
                                 }
@@ -110,74 +113,76 @@ impl Execution {
                         }
                     }
                 } else {
-                    //
-                    // let relation_model = graph.model(relation.model()).unwrap();
-                    // let relation_model_table_name = relation_model.table_name();
-                    // let through_model = graph.model(&relation.through().as_ref().unwrap()).unwrap();
-                    // let through_table_name = through_model.table_name();
-                    // let through_relation = through_model.relation(relation.references().get(0).unwrap()).unwrap();
-                    // let mut join_parts: Vec<String> = vec![];
-                    // for (index, field_name) in through_relation.fields().iter().enumerate() {
-                    //     let reference_name = through_relation.references().get(index).unwrap();
-                    //     join_parts.push(format!("t.{} = j.{}", reference_name, field_name));
-                    // }
-                    // let joins = join_parts.join(" AND ");
-                    // let left_join = format!("{} AS j ON {}", through_table_name, joins);
-                    // let this_relation_on_join_table = through_model.relation(relation.fields().get(0).unwrap()).unwrap();
-                    // let left_fields = this_relation_on_join_table.references();
-                    // let right_fields = this_relation_on_join_table.fields();
-                    // let before_in: String = if right_fields.len() == 1 {
-                    //     "j.".to_owned() + right_fields.get(0).unwrap()
-                    // } else {
-                    //     right_fields.iter().map(|f| format!("j.{}", f)).collect::<Vec<String>>().join(",").to_wrapped()
-                    // };
-                    // let after_in: String = if right_fields.len() == 1 {
-                    //     // (?,?,?,?,?)
-                    //     let field_name = left_fields.get(0).unwrap();
-                    //     // let column_name = relation_model.field(field_name).unwrap().column_name();
-                    //     let values: Vec<String> = retval.iter().map(|o| {
-                    //         let result = o.get_value(field_name).unwrap().to_string(self.dialect);
-                    //         println!("see retval: {:?}", &retval);
-                    //         result
-                    //     }).collect();
-                    //     values.join(",").to_wrapped()
-                    // } else {
-                    //     // (VALUES (?,?),(?,?))
-                    //     let pairs = retval.iter().map(|o| {
-                    //         left_fields.iter().map(|f| o.get_value(f).unwrap().to_string(self.dialect)).collect::<Vec<String>>().join(",").to_wrapped()
-                    //     }).collect::<Vec<String>>().join(",");
-                    //     format!("(VALUES {})", pairs)
-                    // };
-                    // let relation_where = format!("{} IN {}", before_in, after_in);
-                    // let path = key_path.as_ref() + relation_name;
-                    // let included = self.perform_query(graph, relation_model, nested_include, mutation_mode, &path, Some(relation_where), Some(left_join), env.alter_intent(Intent::NestedIncluded)).await?;
-                    // println!("see included {:?}", included);
-                    // for o in included {
-                    //     let owners = retval.iter().filter(|r| {
-                    //         for (index, left_field) in left_fields.iter().enumerate() {
-                    //             let right_field = &right_fields[index];
-                    //             if o.get_value(right_field) != r.get_value(left_field) {
-                    //                 return false;
-                    //             }
-                    //         }
-                    //         true
-                    //     });
-                    //     for owner in owners {
-                    //         if owner.inner.relation_query_map.lock().unwrap().get_mut(relation_name).is_none() {
-                    //             owner.inner.relation_query_map.lock().unwrap().insert(relation_name.to_string(), vec![]);
-                    //         }
-                    //         owner.inner.relation_query_map.lock().unwrap().get_mut(relation_name).unwrap().push(o.clone());
-                    //     }
-                    // }
-                    //
+                    let (opposite_model, opposite_relation) = graph.opposite_relation(relation);
+                    let (through_model, through_opposite_relation) = graph.through_opposite_relation(relation);
+                    let mut join_parts: Vec<String> = vec![];
+                    for (field, reference) in through_opposite_relation.iter() {
+                        let field_column_name = through_model.field(field).unwrap().column_name();
+                        let reference_column_name = opposite_model.field(reference).unwrap().column_name();
+                        join_parts.push(format!("t.{} = j.{}", reference_column_name, field_column_name));
+                    }
+                    let joins = join_parts.join(" AND ");
+                    let left_join = format!("{} AS j ON {}", through_model.table_name(), joins);
+                    let (_, through_relation) = graph.through_relation(relation);
+                    let names = if through_relation.len() == 1 { // todo: column name
+                        format!("j.{}", through_relation.fields().get(0).unwrap())
+                    } else {
+                        through_relation.fields().iter().map(|f| format!("j.{}", f)).collect::<Vec<String>>().join(",").to_wrapped()
+                    };
+                    let values = if through_relation.len() == 1 { // (?,?,?,?,?) format
+                        let field_name = through_relation.references().get(0).unwrap();
+                        results.iter().map(|v| {
+                            v.as_hashmap().unwrap().get(field_name).unwrap().to_string(dialect)
+                        }).collect::<Vec<String>>().join(",").to_wrapped()
+                    } else { // (VALUES (?,?),(?,?)) format
+                        let pairs = results.iter().map(|o| {
+                            through_relation.references().iter().map(|f| o.as_hashmap().unwrap().get(f).unwrap().to_string(dialect)).collect::<Vec<String>>().join(",").to_wrapped()
+                        }).collect::<Vec<String>>().join(",");
+                        format!("(VALUES {})", pairs)
+                    };
+                    let where_addition = Query::where_item(names.as_ref(), "IN", &values);
+                    let nested_query = if value.is_hashmap() {
+                        Cow::Borrowed(value)
+                    } else {
+                        Cow::Owned(tson!({}))
+                    };
+                    let join_table_results = through_relation.fields().iter().map(|f| {
+                        through_model.field(f).unwrap().column_name().to_string()
+                    }).collect();
+                    let included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results)).await?;
+                    println!("see included {:?}", included_values);
+                    for o in included_values.iter() {
+                        let owners = results.iter_mut().filter(|r| {
+                            for (field, reference) in through_relation.iter() {
+                                let key = format!("j.{}", field);
+                                if o.get(reference).is_none() && r.get(&key).is_none() {
+                                    return false;
+                                }
+                                if o.get(reference) != r.get(&key) {
+                                    return false;
+                                }
+                            }
+                            true
+                        }).collect::<Vec<&mut Value>>();
+                        for owner in owners {
+                            if owner.get(relation.name()).is_none() {
+                                owner.as_hashmap_mut().unwrap().insert(relation.name().to_owned(), Value::Vec(vec![]));
+                            }
+                            owner.as_hashmap_mut().unwrap().get_mut(relation.name()).unwrap().as_vec_mut().unwrap().push(o.clone());
+                        }
+                    }
                 }
             }
         }
         Ok(results)
     }
 
+    pub(crate) async fn query(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect) -> ActionResult<Vec<Value>> {
+       Self::query_internal(pool, model, graph, value, dialect, None, None, None).await
+    }
+
     pub(crate) async fn query_count(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<u64> {
-        let stmt = Query::build_for_count(model, graph, finder, dialect, None, None);
+        let stmt = Query::build_for_count(model, graph, finder, dialect, None, None, None);
         match pool.fetch_one(&*stmt).await {
             Ok(result) => {
                 let count: i64 = result.get(0);
