@@ -227,7 +227,7 @@ impl Query {
         }
         if let Some(join_table_results) = join_table_results {
             for result_key in join_table_results.iter() {
-                columns.push(format!("j.{} AS j.{}", result_key, result_key))
+                columns.push(format!("j.{} AS j_{}", result_key, result_key))
             }
         }
         let column_refs = columns.iter().map(|c| c.as_str()).collect::<Vec<&str>>();

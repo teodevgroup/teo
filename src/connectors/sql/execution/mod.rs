@@ -26,7 +26,7 @@ impl Execution {
             } else if let Some(property) = model.property(column_name) {
                 (property.name().to_owned(), RowDecoder::decode(property.r#type(), property.is_optional(), row, column_name))
             } else {
-                panic!("Unhandled key.");
+                panic!("Unhandled key {}.", column_name);
             }
         }).collect())
     }
@@ -154,7 +154,7 @@ impl Execution {
                     for o in included_values.iter() {
                         let owners = results.iter_mut().filter(|r| {
                             for (field, reference) in through_relation.iter() {
-                                let key = format!("j.{}", field);
+                                let key = format!("j_{}", field);
                                 if o.get(reference).is_none() && r.get(&key).is_none() {
                                     return false;
                                 }
