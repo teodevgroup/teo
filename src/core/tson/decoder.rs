@@ -76,7 +76,8 @@ impl Decoder {
                 "orderBy" => { retval.insert(key.to_owned(), Self::decode_order_by(model, value, path)?); }
                 "cursor" => { retval.insert(key.to_owned(), Self::decode_where_unique(model, graph, value, path)?); }
                 "distinct" => { retval.insert(key.to_owned(), Self::decode_distinct(model, value, path)?); }
-                "skip" | "take" | "pageSize" | "pageNumber" => { retval.insert(key.to_owned(), Self::decode_usize(value, path)?); }
+                "skip" | "pageSize" | "pageNumber" => { retval.insert(key.to_owned(), Self::decode_usize(value, path)?); }
+                "take" => { retval.insert(key.to_owned(), Self::decode_i64(value, path)?); }
                 "select" => { retval.insert(key.to_owned(), Self::decode_select(model, value, path)?); }
                 "include" => { retval.insert(key.to_owned(), Self::decode_include(model, graph, value, path)?); }
                 "_avg" | "_sum" | "_min" | "_max" | "_count" => { retval.insert(key.to_owned(), Self::decode_aggregate(model, key, value, path)?); }
@@ -482,6 +483,15 @@ impl Decoder {
             Ok(Value::U64(u))
         } else {
             Err(ActionError::unexpected_input_type("positive integer number", path))
+        }
+    }
+
+    fn decode_i64<'a>(json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if let Some(u) = json_value.as_i64() {
+            Ok(Value::I64(u))
+        } else {
+            Err(ActionError::unexpected_input_type("integer number", path))
         }
     }
 

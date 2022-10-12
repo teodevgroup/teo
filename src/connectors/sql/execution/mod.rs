@@ -73,6 +73,9 @@ impl Execution {
             return Ok(vec![])
         }
         let mut results = rows.iter().map(|row| Self::row_to_value(model, graph, row)).collect::<Vec<Value>>();
+        if reverse {
+            results.reverse();
+        }
         if let Some(include) = include.map(|i| i.as_hashmap().unwrap()) {
             for (key, value) in include {
                 let relation = model.relation(key).unwrap();

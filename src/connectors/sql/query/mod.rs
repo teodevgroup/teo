@@ -171,7 +171,10 @@ impl Query {
         graph: &Graph,
         order_by: &Value,
         dialect: SQLDialect,
+        negative_take: bool,
     ) -> String {
+        let asc = if negative_take { "DESC" } else { "ASC" };
+        let desc = if negative_take { "ASC" } else { "DESC" };
         let order_by = order_by.as_vec().unwrap();
         let mut retval: Vec<String> = vec![];
         for item in order_by.iter() {
@@ -180,8 +183,8 @@ impl Query {
                 let column_name = field.column_name();
                 if let Some(str) = value.as_str() {
                     match str {
-                        "asc" => retval.push(format!("{} ASC", column_name)),
-                        "desc" => retval.push(format!("{} DESC", column_name)),
+                        "asc" => retval.push(format!("{} {}", column_name, asc)),
+                        "desc" => retval.push(format!("{} {}", column_name, desc)),
                         _ => panic!("Unhandled."),
                     }
                 }
@@ -218,6 +221,11 @@ impl Query {
         let skip = value.get("skip");
         let take = value.get("take");
         let cursor = value.get("cursor");
+        let negative_take = if let Some(take) = take {
+            take.as_i64().unwrap().is_negative()
+        } else {
+            false
+        };
         let table_name = if additional_left_join.is_some() {
             model.table_name().to_string() + " AS t"
         } else {
@@ -238,7 +246,6 @@ impl Query {
             let key = order_by.keys().next().unwrap();
             let column_key = model.field(key).unwrap().column_name();
             let columns = cursor.as_hashmap().unwrap().keys().map(|k| {
-                let column_name = model.field(k).unwrap().column_name();
                 format!("{} AS `c.{}`", column_key, column_key)
             }).collect::<Vec<String>>();
             let column_refs: Vec<&str> = columns.iter().map(|k| k.as_str()).collect();
@@ -265,7 +272,8 @@ impl Query {
         if cursor.is_some() {
             let order_by = order_by.unwrap().as_vec().unwrap().get(0).unwrap().as_hashmap().unwrap();
             let key = order_by.keys().next().unwrap();
-            let order = if order_by.values().next().unwrap().as_str().unwrap() == "asc" { ">=" } else { "<=" };
+            let order = if order_by.values().next().unwrap().as_str().unwrap() == if negative_take { "desc" } else { "asc" }
+                { ">=" } else { "<=" };
             let cursor_where = Query::where_item(&key, order, &format!("`c.{}`", key));
             if stmt.r#where.is_some() {
                 stmt.r#where(And(vec![stmt.r#where.as_ref().unwrap().clone(), cursor_where]).to_string(dialect));
@@ -277,7 +285,7 @@ impl Query {
             stmt.left_join(additional_left_join);
         }
         if let Some(order_bys) = order_by {
-            stmt.order_by(Query::order_by(model, graph, order_bys, dialect));
+            stmt.order_by(Query::order_by(model, graph, order_bys, dialect, negative_take));
         }
         if page_size.is_some() && page_number.is_some() {
             let skip: u64 = ((page_number.unwrap().as_u64().unwrap() - 1) * page_size.unwrap().as_u64().unwrap()) as u64;
@@ -285,7 +293,7 @@ impl Query {
             stmt.limit(limit, skip);
         } else if skip.is_some() || take.is_some() {
             let skip: u64 = if skip.is_some() { skip.unwrap().as_u64().unwrap() as u64 } else { 0 };
-            let limit: u64 = if take.is_some() { take.unwrap().as_u64().unwrap() as u64 } else { 18446744073709551615 };
+            let limit: u64 = if take.is_some() { take.unwrap().as_i64().unwrap().abs() as u64 } else { 18446744073709551615 };
             stmt.limit(limit, skip);
         }
         stmt.to_string(dialect)
