@@ -99,6 +99,8 @@ The new generation server software.
 #### 0.0.35
 - Bug fixes for select and nested select **[DONE]**
 - SQL: join table relationship: cannot insert into object query map **[DONE]**
+
+#### 0.0.36
 - SQL: Enum types
 - SQL: Distinct
 - SQL: Cursor
@@ -106,12 +108,12 @@ The new generation server software.
 - SQL: Aggregation
 - SQL: Group by
 
-#### 0.0.36
+#### 0.0.37
 - Merge json pipeline into pipeline (hashmap)
 - Fix assign identity
 - Fix broken `connectIdentity` modifier
 
-#### 0.0.37 - 0.0.50
+#### 0.0.38 - 0.0.50
 - Custom SQL database types
 - Migration II with SQL databases
 

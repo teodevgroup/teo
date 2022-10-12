@@ -1,6 +1,6 @@
 [package]
 name = "teo"
-version = "0.0.34"
+version = "0.0.35"
 edition = "2021"
 description = "The next generation HTTP server."
 license = "MIT"
