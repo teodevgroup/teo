@@ -81,7 +81,6 @@ impl Execution {
                 let skip = value.as_hashmap().map(|m| m.get("skip")).flatten().map(|v| v.as_u64().unwrap());
                 let take = value.as_hashmap().map(|m| m.get("take")).flatten().map(|v| v.as_i64().unwrap());
                 let take_abs = take.map(|t| t.abs() as u64);
-                println!("see take abs: {:?}", take_abs);
                 let relation = model.relation(key).unwrap();
                 let (opposite_model, _) = graph.opposite_relation(relation);
                 if !relation.has_join_table() {
