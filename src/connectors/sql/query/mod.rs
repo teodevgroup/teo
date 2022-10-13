@@ -168,6 +168,8 @@ impl Query {
                     let has_join_table = relation.has_join_table();
                     let id_columns: Vec<&str> = model.primary_index().keys().iter().map(|k| model.field(k).unwrap().column_name()).collect();
                     let id_columns_string = id_columns.join(",").to_wrapped();
+                    let id_columns_prefixed_string = id_columns.iter().map(|s| format!("t.{}", s)).collect::<Vec<String>>();
+                    let id_columns_prefixed = id_columns_prefixed_string.iter().map(|s| s.as_str()).collect::<Vec<&str>>();
                     for (key, value) in value.as_hashmap().unwrap() {
                         if !has_join_table {
                             let from = format!("{} AS t", model.table_name());
@@ -187,7 +189,7 @@ impl Query {
                                 inner_where = Not(inner_where.to_wrapped()).to_string(dialect);
                             }
                             inner_where = And(vec![inner_where.to_wrapped(), addition_where]).to_string(dialect);
-                            let inner_stmt = SQL::select(Some(&id_columns), &from)
+                            let inner_stmt = SQL::select(Some(&id_columns_prefixed), &from)
                                 .inner_join(format!("{} AS j ON {}", relation_table_name, on))
                                 .r#where(inner_where).to_string(dialect).to_wrapped();
                             match key.as_str() {
