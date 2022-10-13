@@ -137,20 +137,20 @@ impl Query {
         And(retval).to_string(dialect)
     }
 
-    pub(crate) fn r#where(model: &Model, graph: &Graph, r#where: &Value, dialect: SQLDialect) -> String {
+    pub(crate) fn r#where(model: &Model, graph: &Graph, r#where: &Value, dialect: SQLDialect, table_alias: Option<String>) -> String {
         let r#where = r#where.as_hashmap().unwrap();
         let mut retval: Vec<String> = vec![];
         for (key, value) in r#where.iter() {
             if key == "AND" {
-                let inner = WhereClause::And(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, graph, w, dialect)).collect()).to_string(dialect);
+                let inner = WhereClause::And(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, graph, w, dialect, None)).collect()).to_string(dialect);
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);
             } else if key == "OR" {
-                let inner = WhereClause::Or(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, graph, value, dialect)).collect()).to_string(dialect);
+                let inner = WhereClause::Or(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, graph, value, dialect, None)).collect()).to_string(dialect);
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);
             } else if key == "NOT" {
-                let inner = WhereClause::Not(Self::r#where(model, graph, value, dialect)).to_string(dialect);
+                let inner = WhereClause::Not(Self::r#where(model, graph, value, dialect, None)).to_string(dialect);
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);
             } else {
@@ -177,7 +177,7 @@ impl Query {
                                 let f = model.field(f).unwrap().column_name();
                                 format!("t.{} IS NOT NULL", f)
                             }).collect::<Vec<String>>().join(" AND ");
-                            let mut inner_where = Query::r#where(opposite_model, graph, value, dialect);
+                            let mut inner_where = Query::r#where(opposite_model, graph, value, dialect, None);
                             if key.as_str() == "all" {
                                 inner_where = Not(inner_where.to_wrapped()).to_string(dialect);
                             }
@@ -292,7 +292,7 @@ impl Query {
                 format!("{} AS `c.{}`", column_key, column_key)
             }).collect::<Vec<String>>();
             let column_refs: Vec<&str> = columns.iter().map(|k| k.as_str()).collect();
-            let sub_where = Query::r#where(model, graph, cursor, dialect);
+            let sub_where = Query::r#where(model, graph, cursor, dialect, None);
             let mut query = SQL::select(Some(&column_refs), &table_name);
             query.r#where(sub_where);
             Cow::Owned(format!("{}, ({}) AS c", &table_name, &query.to_string(dialect)))
@@ -302,7 +302,7 @@ impl Query {
         let mut stmt = SQL::select(if columns.is_empty() { None } else { Some(&column_refs) }, from.as_ref());
         if let Some(r#where) = r#where {
             if !r#where.as_hashmap().unwrap().is_empty() {
-                stmt.r#where(Query::r#where(model, graph, r#where, dialect));
+                stmt.r#where(Query::r#where(model, graph, r#where, dialect, None));
             }
         }
         if let Some(additional_where) = additional_where {
