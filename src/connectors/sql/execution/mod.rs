@@ -60,7 +60,7 @@ impl Execution {
         let select = value.get("select");
         let include = value.get("include");
         let stmt = Query::build(model, graph, value, dialect, additional_where, additional_left_join, join_table_results, force_negative_take);
-        println!("see stmt: {}", &stmt);
+        println!("sql stmt: {}", &stmt);
         let reverse = Input::has_negative_take(value);
         let rows = match pool.fetch_all(&*stmt).await {
             Ok(rows) => rows,

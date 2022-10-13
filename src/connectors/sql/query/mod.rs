@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use maplit::hashmap;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::{IfIMode, ToLike, ToSQLString, ToWrapped, ValueToSQLString, WrapInArray};
 use crate::connectors::sql::stmts::select::r#where::{ToWrappedSQLString, WhereClause};
@@ -290,6 +291,9 @@ impl Query {
         }
         if let Some(order_bys) = order_by {
             stmt.order_by(Query::order_by(model, graph, order_bys, dialect, negative_take));
+        } else if negative_take {
+            let val = Self::default_desc_order(model);
+            stmt.order_by(Query::order_by(model, graph, &val, dialect, false));
         }
         if page_size.is_some() && page_number.is_some() {
             let skip: u64 = ((page_number.unwrap().as_u64().unwrap() - 1) * page_size.unwrap().as_u64().unwrap()) as u64;
@@ -301,5 +305,13 @@ impl Query {
             stmt.limit(limit, skip);
         }
         stmt.to_string(dialect)
+    }
+
+    fn default_desc_order(model: &Model) -> Value {
+        let mut vec: Vec<Value> = vec![];
+        for item in model.primary_index().items() {
+            vec.push(Value::HashMap(hashmap!{item.field_name().to_string() => Value::String("desc".to_string())}));
+        }
+        Value::Vec(vec)
     }
 }

@@ -104,7 +104,7 @@ The new generation server software.
 - SQL: Cursor **[DONE]**
 - SQL: Negative take **[DONE]**
 - SQL: Nested skip and take **[DONE]**
-- SQL: Nested negative take
+- SQL: Nested negative take **[DONE]**
 - SQL: Negative take without order by
 - SQL: Distinct
 - SQL: Relation where
