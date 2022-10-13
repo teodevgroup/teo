@@ -60,6 +60,6 @@ impl SQL {
     }
 
     pub fn select<'a>(columns: Option<&'a Vec<&'a str>>, from: &'a str) -> SQLSelectStatement<'a> {
-        SQLSelectStatement { columns, from, r#where: None, order_by: None, limit: None, left_join: None }
+        SQLSelectStatement { columns, from, r#where: None, order_by: None, limit: None, left_join: None, inner_join: None }
     }
 }

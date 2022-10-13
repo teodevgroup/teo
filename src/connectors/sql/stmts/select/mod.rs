@@ -8,6 +8,7 @@ pub struct SQLSelectStatement<'a> {
     pub(crate) from: &'a str,
     pub(crate) r#where: Option<String>,
     pub(crate) left_join: Option<String>,
+    pub(crate) inner_join: Option<String>,
     pub(crate) order_by: Option<String>,
     pub(crate) limit: Option<(u64, u64)>,
 }
@@ -16,6 +17,11 @@ impl<'a> SQLSelectStatement<'a> {
 
     pub fn left_join(&mut self, left_join: String) -> &mut Self {
         self.left_join = Some(left_join);
+        self
+    }
+
+    pub fn inner_join(&mut self, inner_join: String) -> &mut Self {
+        self.inner_join = Some(inner_join);
         self
     }
 

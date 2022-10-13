@@ -3,7 +3,7 @@ use maplit::hashmap;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::{IfIMode, ToLike, ToSQLString, ToWrapped, ValueToSQLString, WrapInArray};
 use crate::connectors::sql::stmts::select::r#where::{ToWrappedSQLString, WhereClause};
-use crate::connectors::sql::stmts::select::r#where::WhereClause::And;
+use crate::connectors::sql::stmts::select::r#where::WhereClause::{And, Not};
 use crate::connectors::sql::stmts::SQL;
 use crate::core::field::r#type::FieldType;
 use crate::core::input::Input;
@@ -160,7 +160,46 @@ impl Query {
                     let where_entry = Query::where_entry(column_name, &field.field_type, optional, value, graph, dialect);
                     retval.push(where_entry);
                 } else if let Some(relation) = model.relation(key) {
-                    panic!("not handle this yet")
+                    let has_join_table = relation.has_join_table();
+                    let id_columns: Vec<&str> = model.primary_index().keys().iter().map(|k| model.field(k).unwrap().column_name()).collect();
+                    let id_columns_string = id_columns.join(",").to_wrapped();
+                    for (key, value) in value.as_hashmap().unwrap() {
+                        if !has_join_table {
+                            let from = format!("{} AS t", model.table_name());
+                            let opposite_model = graph.model(relation.model()).unwrap();
+                            let relation_table_name = opposite_model.table_name();
+                            let on = relation.iter().map(|(f, r)| {
+                                let f = model.field(f).unwrap().column_name();
+                                let r = opposite_model.field(r).unwrap().column_name();
+                                format!("j.{} = t.{}", r, f)
+                            }).collect::<Vec<String>>().join(",");
+                            let addition_where = relation.iter().map(|(f, r)| {
+                                let f = model.field(f).unwrap().column_name();
+                                format!("t.{} IS NOT NULL", f)
+                            }).collect::<Vec<String>>().join(" AND ");
+                            let mut inner_where = Query::r#where(opposite_model, graph, value, dialect);
+                            if key.as_str() == "all" {
+                                inner_where = Not(inner_where.to_wrapped()).to_string(dialect);
+                            }
+                            inner_where = And(vec![inner_where.to_wrapped(), addition_where]).to_string(dialect);
+                            let inner_stmt = SQL::select(Some(&id_columns), &from)
+                                .inner_join(format!("{} AS j ON {}", relation_table_name, on))
+                                .r#where(inner_where).to_string(dialect).to_wrapped();
+
+                            match key.as_str() {
+                                "some" | "is" => {
+                                    retval.push(format!("{} IN {}", id_columns_string, inner_stmt))
+                                }
+                                "none" | "isNot" | "all" => {
+                                    retval.push(format!("{} NOT IN {}", id_columns_string, inner_stmt))
+                                }
+                                _ => panic!("Unhandled key.")
+                            }
+                        } else {
+
+                        }
+                    }
+
                 }
             }
         }
