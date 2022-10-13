@@ -185,10 +185,14 @@ impl Query {
                                 format!("t.{} IS NOT NULL", f)
                             }).collect::<Vec<String>>().join(" AND ");
                             let mut inner_where = Query::r#where(opposite_model, graph, value, dialect, Some("j"));
-                            if key.as_str() == "all" {
-                                inner_where = Not(inner_where.to_wrapped()).to_string(dialect);
+                            if key.as_str() == "every" {
+                                inner_where = Not(inner_where.to_wrapped()).to_string(dialect).to_wrapped();
                             }
-                            inner_where = And(vec![inner_where.to_wrapped(), addition_where]).to_string(dialect);
+                            if &inner_where == "" {
+                                inner_where = addition_where
+                            } else {
+                                inner_where = And(vec![inner_where, addition_where]).to_string(dialect);
+                            }
                             let inner_stmt = SQL::select(Some(&id_columns_prefixed), &from)
                                 .inner_join(format!("{} AS j ON {}", relation_table_name, on))
                                 .r#where(inner_where).to_string(dialect).to_wrapped();
