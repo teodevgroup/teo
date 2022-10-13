@@ -185,12 +185,11 @@ impl Query {
                             let inner_stmt = SQL::select(Some(&id_columns), &from)
                                 .inner_join(format!("{} AS j ON {}", relation_table_name, on))
                                 .r#where(inner_where).to_string(dialect).to_wrapped();
-
                             match key.as_str() {
                                 "some" | "is" => {
                                     retval.push(format!("{} IN {}", id_columns_string, inner_stmt))
                                 }
-                                "none" | "isNot" | "all" => {
+                                "none" | "isNot" | "every" => {
                                     retval.push(format!("{} NOT IN {}", id_columns_string, inner_stmt))
                                 }
                                 _ => panic!("Unhandled key.")

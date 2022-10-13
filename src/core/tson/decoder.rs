@@ -603,8 +603,8 @@ impl Decoder {
                     if let Some(field) = model.field(key) {
                         let optional = field.optionality.is_optional();
                         retval.insert(key.to_owned(), Self::decode_where_for_field(graph, field.r#type(), optional, value, path)?);
-                    } else if let Some(_relation) = model.relation(key) {
-
+                    } else if let Some(relation) = model.relation(key) {
+                        retval.insert(key.to_owned(), Self::decode_where_for_relation(graph, relation, value, path)?);
                     }
                 }
             }
@@ -686,6 +686,23 @@ impl Decoder {
             Ok(Value::HashMap(retval))
         } else {
             Ok(Value::HashMap(hashmap!{"equals".to_owned() => Self::decode_value_for_field_type(graph, r#type, optional, json_value, path)?}))
+        }
+    }
+
+    fn decode_where_for_relation<'a>(graph: &Graph, relation: &Relation, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if let Some(json_map) = json_value.as_object() {
+            Self::check_json_keys(json_map, relation.filters(), path)?;
+            let mut retval: HashMap<String, Value> = hashmap!{};
+            for (key, value) in json_map {
+                let key = key.as_str();
+                let path = path + key;
+                let model = graph.model(relation.model()).unwrap();
+                retval.insert(key.to_owned(), Self::decode_where(model, graph, value, path)?);
+            }
+            Ok(Value::HashMap(retval))
+        } else {
+            Err(ActionError::unexpected_input_type("object", path))
         }
     }
 

@@ -1,3 +1,6 @@
+use std::collections::HashSet;
+use maplit::hashset;
+use once_cell::sync::Lazy;
 use crate::core::field::optionality::Optionality;
 use crate::core::relation::delete_rule::DeleteRule;
 
@@ -91,6 +94,14 @@ impl Relation {
     pub(crate) fn len(&self) -> usize {
         self.fields().len()
     }
+
+    pub(crate) fn filters(&self) -> &HashSet<&str> {
+        if self.is_vec {
+            &VEC_FILTERS
+        } else {
+            &OBJECT_FILTERS
+        }
+    }
 }
 
 pub(crate) struct RelationIter<'a> {
@@ -111,3 +122,10 @@ impl<'a> Iterator for RelationIter<'a> {
         }
     }
 }
+
+static VEC_FILTERS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"some", "none", "every"}
+});
+static OBJECT_FILTERS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"is", "isNot"}
+});
