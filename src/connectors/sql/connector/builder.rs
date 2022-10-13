@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use sqlx::Database;
 use crate::connectors::sql::connector::SQLConnector;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::r#type::field::ToDatabaseType;

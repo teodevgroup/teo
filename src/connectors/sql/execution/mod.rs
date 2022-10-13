@@ -62,8 +62,8 @@ impl Execution {
     async fn query_internal(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect, additional_where: Option<String>, additional_left_join: Option<String>, join_table_results: Option<Vec<String>>, force_negative_take: bool, additional_distinct: Option<Vec<String>>) -> ActionResult<Vec<Value>> {
         let select = value.get("select");
         let include = value.get("include");
-        let distinct = value.get("distinct").map(|v| if v.as_vec().unwrap().is_empty() { None } else { Some(v.as_vec().unwrap()) }).flatten();
-        let distinct = Self::merge_distinct(distinct, additional_distinct);
+        let original_distinct = value.get("distinct").map(|v| if v.as_vec().unwrap().is_empty() { None } else { Some(v.as_vec().unwrap()) }).flatten();
+        let distinct = Self::merge_distinct(original_distinct, additional_distinct);
         let skip = value.get("skip");
         let take = value.get("take");
         let should_in_memory_take_skip = distinct.is_some() && (skip.is_some() || take.is_some());
@@ -93,7 +93,7 @@ impl Execution {
             let distinct_keys = distinct.iter().map(|s| s.as_str()).collect::<Vec<&str>>();
             results = results.unique_via(|a, b| {
                 Self::sub_hashmap(a, &distinct_keys) == Self::sub_hashmap(b, &distinct_keys)
-            });//.map(|x| x.clone()).collect();
+            });
         }
         if should_in_memory_take_skip {
             let skip = skip.map(|s| s.as_u64().unwrap()).unwrap_or(0) as usize;
@@ -207,7 +207,7 @@ impl Execution {
                     };
                     let where_addition = Query::where_item(names.as_ref(), "IN", &values);
                     let nested_query = if value.is_hashmap() {
-                        Self::without_paging_and_skip_take_distinct(value)
+                        Self::without_paging_and_skip_take(value)
                     } else {
                         Cow::Owned(tson!({}))
                     };
@@ -217,7 +217,6 @@ impl Execution {
                     }).collect();
                     let additional_inner_distinct = if inner_distinct.is_some() {
                         Some(through_relation.iter().map(|(f, r)| {
-                            let through_column_name = through_model.field(f).unwrap().column_name().to_string();
                             format!("{}.{}", opposite_relation.unwrap().name(), r)
                         }).collect())
                     } else {
