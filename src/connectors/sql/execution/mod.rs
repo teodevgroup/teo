@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use itertools::Itertools;
+use array_tool::vec::Uniq;
 use std::collections::HashMap;
 use async_recursion::async_recursion;
 use sqlx::{AnyPool, Column, Executor, Row};
@@ -58,10 +59,11 @@ impl Execution {
     }
 
     #[async_recursion]
-    async fn query_internal(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect, additional_where: Option<String>, additional_left_join: Option<String>, join_table_results: Option<Vec<String>>, force_negative_take: bool) -> ActionResult<Vec<Value>> {
+    async fn query_internal(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect, additional_where: Option<String>, additional_left_join: Option<String>, join_table_results: Option<Vec<String>>, force_negative_take: bool, additional_distinct: Option<Vec<String>>) -> ActionResult<Vec<Value>> {
         let select = value.get("select");
         let include = value.get("include");
         let distinct = value.get("distinct").map(|v| if v.as_vec().unwrap().is_empty() { None } else { Some(v.as_vec().unwrap()) }).flatten();
+        let distinct = Self::merge_distinct(distinct, additional_distinct);
         let skip = value.get("skip");
         let take = value.get("take");
         let should_in_memory_take_skip = distinct.is_some() && (skip.is_some() || take.is_some());
@@ -88,10 +90,10 @@ impl Execution {
             results.reverse();
         }
         if let Some(distinct) = distinct {
-            let distinct_keys = distinct.iter().map(|s| s.as_str().unwrap()).collect::<Vec<&str>>();
-            results = results.iter().dedup_by(|a, b| {
+            let distinct_keys = distinct.iter().map(|s| s.as_str()).collect::<Vec<&str>>();
+            results = results.unique_via(|a, b| {
                 Self::sub_hashmap(a, &distinct_keys) == Self::sub_hashmap(b, &distinct_keys)
-            }).map(|x| x.clone()).collect();
+            });//.map(|x| x.clone()).collect();
         }
         if should_in_memory_take_skip {
             let skip = skip.map(|s| s.as_u64().unwrap()).unwrap_or(0) as usize;
@@ -133,11 +135,11 @@ impl Execution {
                     };
                     let where_addition = Query::where_item(names.as_ref(), "IN", &values);
                     let nested_query = if value.is_hashmap() {
-                        Self::without_paging_and_skip_take(value)
+                        Self::without_paging_and_skip_take_distinct(value)
                     } else {
                         Cow::Owned(tson!({}))
                     };
-                    let mut included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), None, None, negative_take).await?;
+                    let mut included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), None, None, negative_take, None).await?;
                     // println!("see included: {:?}", included_values);
                     for result in results.iter_mut() {
                         let mut skipped = 0;
@@ -204,7 +206,7 @@ impl Execution {
                     };
                     let where_addition = Query::where_item(names.as_ref(), "IN", &values);
                     let nested_query = if value.is_hashmap() {
-                        Self::without_paging_and_skip_take(value)
+                        Self::without_paging_and_skip_take_distinct(value)
                     } else {
                         Cow::Owned(tson!({}))
                     };
@@ -212,7 +214,11 @@ impl Execution {
                         let through_column_name = through_model.field(f).unwrap().column_name().to_string();
                         format!("j.{} AS `{}.{}`", through_column_name, opposite_relation.unwrap().name(), r)
                     }).collect();
-                    let mut included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results), negative_take).await?;
+                    let additional_inner_distinct = through_relation.iter().map(|(f, r)| {
+                        let through_column_name = through_model.field(f).unwrap().column_name().to_string();
+                        format!("{}.{}", opposite_relation.unwrap().name(), r)
+                    }).collect();
+                    let mut included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results), negative_take, Some(additional_inner_distinct)).await?;
                     // println!("see included {:?}", included_values);
                     for result in results.iter_mut() {
                         let mut skipped = 0;
@@ -257,7 +263,7 @@ impl Execution {
     }
 
     pub(crate) async fn query(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect) -> ActionResult<Vec<Value>> {
-       Self::query_internal(pool, model, graph, value, dialect, None, None, None, false).await
+       Self::query_internal(pool, model, graph, value, dialect, None, None, None, false, None).await
     }
 
     pub(crate) async fn query_count(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<u64> {
@@ -288,6 +294,21 @@ impl Execution {
         }
     }
 
+    fn without_paging_and_skip_take_distinct(value: &Value) -> Cow<Value> {
+        let map = value.as_hashmap().unwrap();
+        if map.contains_key("take") || map.contains_key("skip") || map.contains_key("pageSize") || map.contains_key("pageNumber") {
+            let mut map = map.clone();
+            map.remove("take");
+            map.remove("skip");
+            map.remove("pageSize");
+            map.remove("pageNumber");
+            map.remove("distinct");
+            Cow::Owned(Value::HashMap(map))
+        } else {
+            Cow::Borrowed(value)
+        }
+    }
+
     fn sub_hashmap(value: &Value, keys: &Vec<&str>) -> HashMap<String, Value> {
         let map = value.as_hashmap().unwrap();
         let mut retval = HashMap::new();
@@ -295,5 +316,24 @@ impl Execution {
             retval.insert(key.to_string(), map.get(*key).cloned().unwrap_or(Value::Null));
         }
         retval
+    }
+
+    fn merge_distinct(value1: Option<&Vec<Value>>, value2: Option<Vec<String>>) -> Option<Vec<String>> {
+        let mut result: Vec<String> = vec![];
+        if let Some(value1) = value1 {
+            for v in value1 {
+                result.push(v.as_str().unwrap().to_string());
+            }
+        }
+        if let Some(value2) = value2 {
+            for v in value2 {
+                result.push(v.to_string())
+            }
+        }
+        if result.is_empty() {
+            None
+        } else {
+            Some(result)
+        }
     }
 }
