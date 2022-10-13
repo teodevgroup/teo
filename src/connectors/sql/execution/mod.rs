@@ -111,9 +111,6 @@ impl Execution {
                         Cow::Owned(tson!({}))
                     };
                     let mut included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), None, None, negative_take).await?;
-                    if negative_take {
-                        included_values.reverse()
-                    }
                     // println!("see included: {:?}", included_values);
                     for result in results.iter_mut() {
                         let mut skipped = 0;
@@ -189,9 +186,6 @@ impl Execution {
                         format!("j.{} AS `{}.{}`", through_column_name, opposite_relation.unwrap().name(), r)
                     }).collect();
                     let mut included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results), negative_take).await?;
-                    if negative_take {
-                        included_values.reverse()
-                    }
                     // println!("see included {:?}", included_values);
                     for result in results.iter_mut() {
                         let mut skipped = 0;
