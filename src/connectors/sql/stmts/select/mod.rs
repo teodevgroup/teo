@@ -49,6 +49,11 @@ impl<'a> ToSQLString for SQLSelectStatement<'a> {
         } else {
             "".to_owned()
         };
+        let inner_join = if let Some(inner_join) = &self.inner_join {
+            " INNER JOIN ".to_owned() + inner_join
+        } else {
+            "".to_owned()
+        };
         let r#where = if let Some(r#where) = &self.r#where {
             " WHERE ".to_owned() + r#where
         } else {
@@ -64,6 +69,6 @@ impl<'a> ToSQLString for SQLSelectStatement<'a> {
         } else {
             "".to_owned()
         };
-        format!("SELECT {columns} from {}{}{}{}{}", self.from, left_join, r#where, order_by, limit)
+        format!("SELECT {columns} from {}{}{}{}{}{}", self.from, left_join, inner_join, r#where, order_by, limit)
     }
 }

@@ -137,27 +137,32 @@ impl Query {
         And(retval).to_string(dialect)
     }
 
-    pub(crate) fn r#where(model: &Model, graph: &Graph, r#where: &Value, dialect: SQLDialect, table_alias: Option<String>) -> String {
+    pub(crate) fn r#where(model: &Model, graph: &Graph, r#where: &Value, dialect: SQLDialect, table_alias: Option<&str>) -> String {
         let r#where = r#where.as_hashmap().unwrap();
         let mut retval: Vec<String> = vec![];
         for (key, value) in r#where.iter() {
             if key == "AND" {
-                let inner = WhereClause::And(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, graph, w, dialect, None)).collect()).to_string(dialect);
+                let inner = WhereClause::And(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, graph, w, dialect, table_alias)).collect()).to_string(dialect);
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);
             } else if key == "OR" {
-                let inner = WhereClause::Or(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, graph, value, dialect, None)).collect()).to_string(dialect);
+                let inner = WhereClause::Or(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, graph, value, dialect, table_alias)).collect()).to_string(dialect);
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);
             } else if key == "NOT" {
-                let inner = WhereClause::Not(Self::r#where(model, graph, value, dialect, None)).to_string(dialect);
+                let inner = WhereClause::Not(Self::r#where(model, graph, value, dialect, table_alias)).to_string(dialect);
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);
             } else {
                 if let Some(field) = model.field(key) {
                     let column_name = field.column_name();
                     let optional = field.optionality.is_optional();
-                    let where_entry = Query::where_entry(column_name, &field.field_type, optional, value, graph, dialect);
+                    let entry_column_name = if let Some(alias) = table_alias {
+                        Cow::Owned(format!("{}.{}", alias, column_name))
+                    } else {
+                        Cow::Borrowed(column_name)
+                    };
+                    let where_entry = Query::where_entry(&entry_column_name, &field.field_type, optional, value, graph, dialect);
                     retval.push(where_entry);
                 } else if let Some(relation) = model.relation(key) {
                     let has_join_table = relation.has_join_table();
@@ -177,7 +182,7 @@ impl Query {
                                 let f = model.field(f).unwrap().column_name();
                                 format!("t.{} IS NOT NULL", f)
                             }).collect::<Vec<String>>().join(" AND ");
-                            let mut inner_where = Query::r#where(opposite_model, graph, value, dialect, None);
+                            let mut inner_where = Query::r#where(opposite_model, graph, value, dialect, Some("j"));
                             if key.as_str() == "all" {
                                 inner_where = Not(inner_where.to_wrapped()).to_string(dialect);
                             }
