@@ -99,6 +99,9 @@ impl Execution {
             results = results.into_iter().enumerate().filter(|(i, r)| {
                 *i >= skip && *i < (skip + take)
             }).map(|(i, r)| r.clone()).collect();
+            if reverse {
+                results.reverse();
+            }
         }
         if let Some(include) = include.map(|i| i.as_hashmap().unwrap()) {
             for (key, value) in include {
