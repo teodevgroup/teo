@@ -111,6 +111,7 @@ impl Execution {
                 let take = value.as_hashmap().map(|m| m.get("take")).flatten().map(|v| v.as_i64().unwrap());
                 let take_abs = take.map(|t| t.abs() as u64);
                 let negative_take = take.map(|v| v.is_negative()).unwrap_or(false);
+                let inner_distinct = value.as_hashmap().map(|m| m.get("distinct")).flatten().map(|v| if v.as_vec().unwrap().is_empty() { None } else { Some(v.as_vec().unwrap()) }).flatten();
                 let relation = model.relation(key).unwrap();
                 let (opposite_model, _) = graph.opposite_relation(relation);
                 if !relation.has_join_table() {
@@ -214,11 +215,15 @@ impl Execution {
                         let through_column_name = through_model.field(f).unwrap().column_name().to_string();
                         format!("j.{} AS `{}.{}`", through_column_name, opposite_relation.unwrap().name(), r)
                     }).collect();
-                    let additional_inner_distinct = through_relation.iter().map(|(f, r)| {
-                        let through_column_name = through_model.field(f).unwrap().column_name().to_string();
-                        format!("{}.{}", opposite_relation.unwrap().name(), r)
-                    }).collect();
-                    let mut included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results), negative_take, Some(additional_inner_distinct)).await?;
+                    let additional_inner_distinct = if inner_distinct.is_some() {
+                        Some(through_relation.iter().map(|(f, r)| {
+                            let through_column_name = through_model.field(f).unwrap().column_name().to_string();
+                            format!("{}.{}", opposite_relation.unwrap().name(), r)
+                        }).collect())
+                    } else {
+                        None
+                    };
+                    let mut included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results), negative_take, additional_inner_distinct).await?;
                     // println!("see included {:?}", included_values);
                     for result in results.iter_mut() {
                         let mut skipped = 0;
