@@ -2,19 +2,6 @@ use std::collections::HashMap;
 use crate::core::input::Input::{AtomicUpdator, SetValue};
 use crate::core::tson::Value;
 
-pub enum RelationInput {
-    // both create and update
-    Create(Value),
-    Set(Value),
-    Connect(Value),
-    ConnectOrCreate { r#where: Value, create: Value },
-
-    // update only
-    Disconnect(Value),
-    Update(Value),
-    Upsert { r#where: Value, create: Value,  update: Value },
-    Delete(Value),
-}
 
 pub(crate) enum Input {
     SetValue(Value),

@@ -56,10 +56,10 @@ impl Execution {
     }
 
     #[async_recursion]
-    async fn query_internal(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect, additional_where: Option<String>, additional_left_join: Option<String>, join_table_results: Option<Vec<String>>) -> ActionResult<Vec<Value>> {
+    async fn query_internal(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect, additional_where: Option<String>, additional_left_join: Option<String>, join_table_results: Option<Vec<String>>, force_negative_take: bool) -> ActionResult<Vec<Value>> {
         let select = value.get("select");
         let include = value.get("include");
-        let stmt = Query::build(model, graph, value, dialect, additional_where, additional_left_join, join_table_results);
+        let stmt = Query::build(model, graph, value, dialect, additional_where, additional_left_join, join_table_results, force_negative_take);
         println!("see stmt: {}", &stmt);
         let reverse = Input::has_negative_take(value);
         let rows = match pool.fetch_all(&*stmt).await {
@@ -81,6 +81,7 @@ impl Execution {
                 let skip = value.as_hashmap().map(|m| m.get("skip")).flatten().map(|v| v.as_u64().unwrap());
                 let take = value.as_hashmap().map(|m| m.get("take")).flatten().map(|v| v.as_i64().unwrap());
                 let take_abs = take.map(|t| t.abs() as u64);
+                let negative_take = take.map(|v| v.is_negative()).unwrap_or(false);
                 let relation = model.relation(key).unwrap();
                 let (opposite_model, _) = graph.opposite_relation(relation);
                 if !relation.has_join_table() {
@@ -109,7 +110,7 @@ impl Execution {
                     } else {
                         Cow::Owned(tson!({}))
                     };
-                    let included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), None, None).await?;
+                    let included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), None, None, negative_take).await?;
                     // println!("see included: {:?}", included_values);
                     for result in results.iter_mut() {
                         let mut skipped = 0;
@@ -180,7 +181,7 @@ impl Execution {
                         let through_column_name = through_model.field(f).unwrap().column_name().to_string();
                         format!("j.{} AS `{}.{}`", through_column_name, opposite_relation.unwrap().name(), r)
                     }).collect();
-                    let included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results)).await?;
+                    let included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results), negative_take).await?;
                     // println!("see included {:?}", included_values);
                     for result in results.iter_mut() {
                         let mut skipped = 0;
@@ -221,11 +222,11 @@ impl Execution {
     }
 
     pub(crate) async fn query(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect) -> ActionResult<Vec<Value>> {
-       Self::query_internal(pool, model, graph, value, dialect, None, None, None).await
+       Self::query_internal(pool, model, graph, value, dialect, None, None, None, false).await
     }
 
     pub(crate) async fn query_count(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<u64> {
-        let stmt = Query::build_for_count(model, graph, finder, dialect, None, None, None);
+        let stmt = Query::build_for_count(model, graph, finder, dialect, None, None, None, false);
         match pool.fetch_one(&*stmt).await {
             Ok(result) => {
                 let count: i64 = result.get(0);

@@ -201,8 +201,9 @@ impl Query {
         additional_where: Option<String>,
         additional_left_join: Option<String>,
         join_table_results: Option<Vec<String>>,
+        force_negative_take: bool,
     ) -> String {
-        format!("SELECT COUNT(*) FROM ({}) AS _", Self::build(model, graph, value, dialect, additional_where, additional_left_join, join_table_results))
+        format!("SELECT COUNT(*) FROM ({}) AS _", Self::build(model, graph, value, dialect, additional_where, additional_left_join, join_table_results, force_negative_take))
     }
 
     pub(crate) fn build(
@@ -213,6 +214,7 @@ impl Query {
         additional_where: Option<String>,
         additional_left_join: Option<String>,
         join_table_results: Option<Vec<String>>,
+        force_negative_take: bool,
     ) -> String {
         let r#where = value.get("where");
         let order_by = value.get("orderBy");
@@ -223,6 +225,8 @@ impl Query {
         let cursor = value.get("cursor");
         let negative_take = if let Some(take) = take {
             take.as_i64().unwrap().is_negative()
+        } else if force_negative_take {
+            true
         } else {
             false
         };
