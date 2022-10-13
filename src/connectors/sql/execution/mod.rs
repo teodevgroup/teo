@@ -1,4 +1,6 @@
 use std::borrow::Cow;
+use itertools::Itertools;
+use std::collections::HashMap;
 use async_recursion::async_recursion;
 use sqlx::{AnyPool, Column, Executor, Row};
 use sqlx::any::AnyRow;
@@ -59,7 +61,16 @@ impl Execution {
     async fn query_internal(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect, additional_where: Option<String>, additional_left_join: Option<String>, join_table_results: Option<Vec<String>>, force_negative_take: bool) -> ActionResult<Vec<Value>> {
         let select = value.get("select");
         let include = value.get("include");
-        let stmt = Query::build(model, graph, value, dialect, additional_where, additional_left_join, join_table_results, force_negative_take);
+        let distinct = value.get("distinct").map(|v| if v.as_vec().unwrap().is_empty() { None } else { Some(v.as_vec().unwrap()) }).flatten();
+        let skip = value.get("skip");
+        let take = value.get("take");
+        let should_in_memory_take_skip = distinct.is_some() && (skip.is_some() || take.is_some());
+        let value_for_build = if should_in_memory_take_skip {
+            Self::without_paging_and_skip_take(value)
+        } else {
+            Cow::Borrowed(value)
+        };
+        let stmt = Query::build(model, graph, value_for_build.as_ref(), dialect, additional_where, additional_left_join, join_table_results, force_negative_take);
         println!("sql stmt: {}", &stmt);
         let reverse = Input::has_negative_take(value);
         let rows = match pool.fetch_all(&*stmt).await {
@@ -75,6 +86,19 @@ impl Execution {
         let mut results = rows.iter().map(|row| Self::row_to_value(model, graph, row)).collect::<Vec<Value>>();
         if reverse {
             results.reverse();
+        }
+        if let Some(distinct) = distinct {
+            let distinct_keys = distinct.iter().map(|s| s.as_str().unwrap()).collect::<Vec<&str>>();
+            results = results.iter().dedup_by(|a, b| {
+                Self::sub_hashmap(a, &distinct_keys) == Self::sub_hashmap(b, &distinct_keys)
+            }).map(|x| x.clone()).collect();
+        }
+        if should_in_memory_take_skip {
+            let skip = skip.map(|s| s.as_u64().unwrap()).unwrap_or(0) as usize;
+            let take = take.map(|s| s.as_i64().unwrap().abs() as u64).unwrap_or(0) as usize;
+            results = results.into_iter().enumerate().filter(|(i, r)| {
+                *i >= skip && *i < (skip + take)
+            }).map(|(i, r)| r.clone()).collect();
         }
         if let Some(include) = include.map(|i| i.as_hashmap().unwrap()) {
             for (key, value) in include {
@@ -259,5 +283,14 @@ impl Execution {
         } else {
             Cow::Borrowed(value)
         }
+    }
+
+    fn sub_hashmap(value: &Value, keys: &Vec<&str>) -> HashMap<String, Value> {
+        let map = value.as_hashmap().unwrap();
+        let mut retval = HashMap::new();
+        for key in keys {
+            retval.insert(key.to_string(), map.get(*key).cloned().unwrap_or(Value::Null));
+        }
+        retval
     }
 }

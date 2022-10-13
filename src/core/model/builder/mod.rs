@@ -222,13 +222,11 @@ impl ModelBuilder {
         let properties_vec: Vec<Arc<Property>> = self.property_builders.iter().map(|pb| { Arc::new(pb.build(connector_builder)) }).collect();
         let mut fields_map: HashMap<String, Arc<Field>> = HashMap::new();
         let mut properties_map: HashMap<String, Arc<Property>> = HashMap::new();
-        let mut primary_field: Option<Arc<Field>> = None;
         let mut primary = self.primary.clone();
         let mut indices = self.indices.clone();
         for field in fields_vec.iter() {
             fields_map.insert(field.name.clone(), field.clone());
             if field.primary {
-                primary_field = Some(field.clone());
                 primary = Some(ModelIndex::new(ModelIndexType::Primary, "", vec![
                     ModelIndexItem::new(field.name(), Sort::Asc, None)
                 ]));

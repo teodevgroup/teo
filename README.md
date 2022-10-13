@@ -105,7 +105,7 @@ The new generation server software.
 - SQL: Negative take **[DONE]**
 - SQL: Nested skip and take **[DONE]**
 - SQL: Nested negative take **[DONE]**
-- SQL: Negative take without order by
+- SQL: Negative take without order by **[DONE]**
 - SQL: Distinct
 - SQL: Relation where
 - SQL: Aggregation
