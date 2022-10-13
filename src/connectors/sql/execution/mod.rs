@@ -110,7 +110,10 @@ impl Execution {
                     } else {
                         Cow::Owned(tson!({}))
                     };
-                    let included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), None, None, negative_take).await?;
+                    let mut included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), None, None, negative_take).await?;
+                    if negative_take {
+                        included_values.reverse()
+                    }
                     // println!("see included: {:?}", included_values);
                     for result in results.iter_mut() {
                         let mut skipped = 0;
@@ -132,7 +135,11 @@ impl Execution {
                                     if result.get(relation.name()).is_none() {
                                         result.as_hashmap_mut().unwrap().insert(relation.name().to_owned(), Value::Vec(vec![]));
                                     }
-                                    result.as_hashmap_mut().unwrap().get_mut(relation.name()).unwrap().as_vec_mut().unwrap().push(included_value.clone());
+                                    if negative_take {
+                                        result.as_hashmap_mut().unwrap().get_mut(relation.name()).unwrap().as_vec_mut().unwrap().insert(0, included_value.clone());
+                                    } else {
+                                        result.as_hashmap_mut().unwrap().get_mut(relation.name()).unwrap().as_vec_mut().unwrap().push(included_value.clone());
+                                    }
                                     taken += 1;
                                     if take.is_some() && (taken >= take_abs.unwrap()) {
                                         break;
@@ -181,7 +188,10 @@ impl Execution {
                         let through_column_name = through_model.field(f).unwrap().column_name().to_string();
                         format!("j.{} AS `{}.{}`", through_column_name, opposite_relation.unwrap().name(), r)
                     }).collect();
-                    let included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results), negative_take).await?;
+                    let mut included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results), negative_take).await?;
+                    if negative_take {
+                        included_values.reverse()
+                    }
                     // println!("see included {:?}", included_values);
                     for result in results.iter_mut() {
                         let mut skipped = 0;
@@ -204,7 +214,11 @@ impl Execution {
                                     if result.get(relation.name()).is_none() {
                                         result.as_hashmap_mut().unwrap().insert(relation.name().to_owned(), Value::Vec(vec![]));
                                     }
-                                    result.as_hashmap_mut().unwrap().get_mut(relation.name()).unwrap().as_vec_mut().unwrap().push(included_value.clone());
+                                    if negative_take {
+                                        result.as_hashmap_mut().unwrap().get_mut(relation.name()).unwrap().as_vec_mut().unwrap().insert(0, included_value.clone());
+                                    } else {
+                                        result.as_hashmap_mut().unwrap().get_mut(relation.name()).unwrap().as_vec_mut().unwrap().push(included_value.clone());
+                                    }
                                     taken += 1;
                                     if take.is_some() && (taken >= take_abs.unwrap()) {
                                         break;

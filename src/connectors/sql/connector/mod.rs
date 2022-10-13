@@ -104,11 +104,13 @@ impl SQLConnector {
         let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();
         let identifier = object.identifier();
         let r#where = Query::where_from_identifier(object, self.dialect);
-        let stmt = SQL::update(model.table_name()).values(value_refs).r#where(&r#where).to_string(self.dialect);
-        let result = self.pool.execute(stmt.as_str()).await;
-        if result.is_err() {
-            println!("{:?}", result.err().unwrap());
-            return Err(ActionError::unknown_database_write_error());
+        if !value_refs.is_empty() {
+            let stmt = SQL::update(model.table_name()).values(value_refs).r#where(&r#where).to_string(self.dialect);
+            let result = self.pool.execute(stmt.as_str()).await;
+            if result.is_err() {
+                println!("{:?}", result.err().unwrap());
+                return Err(ActionError::unknown_database_write_error());
+            }
         }
         let result = Execution::query(&self.pool, model, object.graph(), &tson!({"where": identifier, "take": 1}), self.dialect).await?;
         if result.is_empty() {

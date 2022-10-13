@@ -199,7 +199,6 @@ impl Decoder {
     fn decode_enumerate<'a, F: Fn(&JsonValue, &KeyPath) -> ActionResult<Value>>(json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>, f: F) -> ActionResult<Value> {
         let path = path.as_ref();
         if let Some(_) = json_value.as_object() {
-            println!("here see ba {} {}", json_value, path);
             f(json_value, path)
         } else if let Some(json_array) = json_value.as_array() {
             Ok(Value::Vec(json_array.iter().enumerate().map(|(i, v)| {

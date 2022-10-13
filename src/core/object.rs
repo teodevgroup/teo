@@ -172,7 +172,6 @@ impl Object {
                     Some(value) => value,
                     None => continue,
                 };
-                println!("see key {} see mani {:?}", key, manipulation);
                 self.set_value_to_relation_manipulation_map(key, manipulation);
             } else if let Some(property) = self.model().property(key) {
                 if value_map_keys.contains(&key) {
