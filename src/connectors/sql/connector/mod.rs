@@ -188,7 +188,7 @@ impl Connector for SQLConnector {
     }
 
     async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError> {
-        todo!()
+        Execution::query_group_by(&self.pool, model, graph, finder, self.dialect).await
     }
 
     fn new_save_session(&self) -> Arc<dyn SaveSession> {

@@ -306,6 +306,11 @@ impl Execution {
         }
     }
 
+    pub(crate) async fn query_group_by(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<Value> {
+        let stmt = Query::build_for_group_by(model, graph, finder, dialect, None, None, None, false);
+
+    }
+
     pub(crate) async fn query_count(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<u64> {
         let stmt = Query::build_for_count(model, graph, finder, dialect, None, None, None, false);
         match pool.fetch_one(&*stmt).await {

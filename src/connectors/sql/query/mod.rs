@@ -289,6 +289,25 @@ impl Query {
         format!("SELECT COUNT(*) FROM ({}) AS _", Self::build(model, graph, value, dialect, additional_where, additional_left_join, join_table_results, force_negative_take))
     }
 
+    pub(crate) fn build_for_group_by(
+        model: &Model,
+        graph: &Graph,
+        value: &Value,
+        dialect: SQLDialect,
+        additional_where: Option<String>,
+        additional_left_join: Option<String>,
+        join_table_results: Option<Vec<String>>,
+        force_negative_take: bool,
+    ) -> String {
+        let aggregate = Self::build_for_aggregate(model, graph, value, dialect, additional_where, additional_left_join, join_table_results, force_negative_take);
+        let map = value.as_hashmap().unwrap();
+        let by = map.get("by").unwrap().as_vec().unwrap().iter().map(|v| {
+            let field_name = v.as_str().unwrap();
+            model.field(field_name).unwrap().column_name()
+        }).collect::<Vec<&str>>().join(",");
+        format!("{} GROUP BY {}", aggregate, by)
+    }
+
     pub(crate) fn build_for_aggregate(
         model: &Model,
         graph: &Graph,
