@@ -107,12 +107,13 @@ The new generation server software.
 - SQL: Nested negative take **[DONE]**
 - SQL: Negative take without order by **[DONE]**
 - SQL: Distinct **[DONE]**
-- SQL: Relation where
+- SQL: Relation where for without join table **[DONE]**
+- SQL: Relation where for with join table
+
+#### 0.0.37
 - SQL: Aggregation
 - SQL: Group by
 - SQL: Enum types
-
-#### 0.0.37
 - Merge json pipeline into pipeline (hashmap)
 - Fix assign identity
 - Fix broken `connectIdentity` modifier

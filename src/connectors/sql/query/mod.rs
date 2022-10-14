@@ -170,43 +170,74 @@ impl Query {
                     let id_columns_string = id_columns.join(",").to_wrapped();
                     let id_columns_prefixed_string = id_columns.iter().map(|s| format!("t.{}", s)).collect::<Vec<String>>();
                     let id_columns_prefixed = id_columns_prefixed_string.iter().map(|s| s.as_str()).collect::<Vec<&str>>();
+                    let join_columns = if has_join_table {
+                        let (m, r) = graph.through_relation(relation);
+                        Some(r.references().iter().map(|k| model.field(k).unwrap().column_name()).collect::<Vec<&str>>())
+                    } else { None };
+                    let through_columns_string = if has_join_table {
+                        let (m, r) = graph.through_relation(relation);
+                        r.fields().iter().map(|k| format!("t.{}", m.field(k).unwrap().column_name())).collect::<Vec<String>>()
+                    } else { vec![] };
+                    let through_columns = if has_join_table {
+                        through_columns_string.iter().map(|k| k.as_str()).collect::<Vec<&str>>()
+                    } else { vec![] };
                     for (key, value) in value.as_hashmap().unwrap() {
-                        if !has_join_table {
-                            let from = format!("{} AS t", model.table_name());
-                            let opposite_model = graph.model(relation.model()).unwrap();
-                            let relation_table_name = opposite_model.table_name();
-                            let on = relation.iter().map(|(f, r)| {
+                        let from = if !has_join_table {
+                            format!("{} AS t", model.table_name())
+                        } else {
+                            let through_table_name = graph.model(relation.through().unwrap()).unwrap().table_name();
+                            format!("{} AS t", through_table_name)
+                        };
+                        let opposite_model = graph.model(relation.model()).unwrap();
+                        let relation_table_name = opposite_model.table_name();
+                        let on = if has_join_table {
+                            let (_, opposite_relation) = graph.opposite_relation(relation);
+                            let opposite_relation = opposite_relation.unwrap();
+                            let (join_model, join_relation) = graph.through_relation(opposite_relation);
+                            join_relation.iter().map(|(f, r)| {
+                                let f = join_model.field(f).unwrap().column_name();
+                                let r = opposite_model.field(r).unwrap().column_name();
+                                format!("j.{} = t.{}", r, f)
+                            }).collect::<Vec<String>>().join(",")
+                        } else {
+                            relation.iter().map(|(f, r)| {
                                 let f = model.field(f).unwrap().column_name();
                                 let r = opposite_model.field(r).unwrap().column_name();
                                 format!("j.{} = t.{}", r, f)
-                            }).collect::<Vec<String>>().join(",");
-                            let addition_where = relation.iter().map(|(f, r)| {
+                            }).collect::<Vec<String>>().join(",")
+                        };
+                        let addition_where = if has_join_table {
+                            let (m, r) = graph.through_relation(relation);
+                            r.iter().map(|(f, r)| {
+                                let f = m.field(f).unwrap().column_name();
+                                format!("t.{} IS NOT NULL", f)
+                            }).collect::<Vec<String>>().join(" AND ")
+                        } else {
+                            relation.iter().map(|(f, r)| {
                                 let f = model.field(f).unwrap().column_name();
                                 format!("t.{} IS NOT NULL", f)
-                            }).collect::<Vec<String>>().join(" AND ");
-                            let mut inner_where = Query::r#where(opposite_model, graph, value, dialect, Some("j"));
-                            if key.as_str() == "every" {
-                                inner_where = Not(inner_where.to_wrapped()).to_string(dialect).to_wrapped();
-                            }
-                            if &inner_where == "" {
-                                inner_where = addition_where
-                            } else {
-                                inner_where = And(vec![inner_where, addition_where]).to_string(dialect);
-                            }
-                            let inner_stmt = SQL::select(Some(&id_columns_prefixed), &from)
-                                .inner_join(format!("{} AS j ON {}", relation_table_name, on))
-                                .r#where(inner_where).to_string(dialect).to_wrapped();
-                            match key.as_str() {
-                                "some" | "is" => {
-                                    retval.push(format!("{} IN {}", id_columns_string, inner_stmt))
-                                }
-                                "none" | "isNot" | "every" => {
-                                    retval.push(format!("{} NOT IN {}", id_columns_string, inner_stmt))
-                                }
-                                _ => panic!("Unhandled key.")
-                            }
+                            }).collect::<Vec<String>>().join(" AND ")
+                        };
+                        let mut inner_where = Query::r#where(opposite_model, graph, value, dialect, Some("j"));
+                        if key.as_str() == "every" {
+                            inner_where = Not(inner_where.to_wrapped()).to_string(dialect).to_wrapped();
+                        }
+                        if &inner_where == "" {
+                            inner_where = addition_where
                         } else {
-
+                            inner_where = And(vec![inner_where, addition_where]).to_string(dialect);
+                        }
+                        let inner_stmt = SQL::select(Some(if has_join_table { &through_columns } else { &id_columns_prefixed }), &from)
+                            .inner_join(format!("{} AS j ON {}", relation_table_name, on))
+                            .r#where(inner_where).to_string(dialect).to_wrapped();
+                        match key.as_str() {
+                            "some" | "is" => {
+                                retval.push(format!("{} IN {}", id_columns_string, inner_stmt))
+                            }
+                            "none" | "isNot" | "every" => {
+                                retval.push(format!("{} NOT IN {}", id_columns_string, inner_stmt))
+                            }
+                            _ => panic!("Unhandled key.")
                         }
                     }
 
