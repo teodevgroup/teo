@@ -25,7 +25,7 @@ url = "2.2.2"
 bcrypt = "0.13"
 uuid = { version = "1.1.1", features = ["v4", "fast-rng"] }
 cuid = "1.2.0"
-sqlx = { version = "0.6.2", features = ["runtime-tokio-native-tls", "chrono"], optional = true }
+sqlx = { version = "0.6.2", features = ["runtime-tokio-native-tls", "chrono", "decimal"], optional = true }
 mongodb = { version = "2.2", optional = true }
 bson = { version = "2.2", features = ["chrono-0_4", "serde_with"], optional = true }
 rust_decimal = "1.24"

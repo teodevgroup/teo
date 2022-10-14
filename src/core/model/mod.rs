@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use std::ops::BitAnd;
+use std::ops::{BitAnd, BitOr};
 use std::sync::Arc;
 use maplit::hashset;
 use crate::core::action::Action;
@@ -189,7 +189,7 @@ impl Model {
 
     pub(crate) fn allowed_keys_for_aggregate(&self, name: &str) -> HashSet<&str> {
         match name {
-            "_count" => self.scalar_number_keys().iter().map(|k| k.as_str()).collect::<HashSet<&str>>().bitand(&hashset!{"_all"}),
+            "_count" => self.scalar_number_keys().iter().map(|k| k.as_str()).collect::<HashSet<&str>>().bitor(&hashset!{"_all"}),
             _ => self.scalar_number_keys().iter().map(|k| k.as_str()).collect(),
         }
     }
