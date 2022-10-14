@@ -1,5 +1,7 @@
 use std::borrow::Cow;
-use maplit::hashmap;
+use std::collections::BTreeMap;
+use maplit::{btreemap, hashmap};
+use once_cell::sync::Lazy;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::{IfIMode, ToLike, ToSQLString, ToWrapped, ValueToSQLString, WrapInArray};
 use crate::connectors::sql::stmts::select::r#where::{ToWrappedSQLString, WhereClause};
@@ -287,6 +289,41 @@ impl Query {
         format!("SELECT COUNT(*) FROM ({}) AS _", Self::build(model, graph, value, dialect, additional_where, additional_left_join, join_table_results, force_negative_take))
     }
 
+    pub(crate) fn build_for_aggregate(
+        model: &Model,
+        graph: &Graph,
+        value: &Value,
+        dialect: SQLDialect,
+        additional_where: Option<String>,
+        additional_left_join: Option<String>,
+        join_table_results: Option<Vec<String>>,
+        force_negative_take: bool,
+    ) -> String {
+        let map = value.as_hashmap().unwrap();
+        let mut results: Vec<String> = vec![];
+        for (key, value) in map {
+            match key.as_str() {
+                "_count" | "_sum" | "_avg" | "_min" | "_max" => {
+                    for (k, v) in value.as_hashmap().unwrap() {
+                        let k = k.as_str();
+                        if v.as_bool().unwrap() {
+                            match k {
+                                "_all" => results.push("COUNT(*)".to_owned()),
+                                _ => {
+                                    let column_name = model.field(k).unwrap().column_name();
+                                    let func = SQL_AGGREGATE_MAP.get(key).unwrap();
+                                    results.push(format!("{}({})", func, column_name));
+                                }
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        format!("SELECT {} FROM ({}) AS sub", results.join(","), Self::build(model, graph, value, dialect, additional_where, additional_left_join, join_table_results, force_negative_take))
+    }
+
     pub(crate) fn build(
         model: &Model,
         graph: &Graph,
@@ -395,3 +432,13 @@ impl Query {
         Value::Vec(vec)
     }
 }
+
+static SQL_AGGREGATE_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
+    btreemap!{
+        "_count" => "COUNT",
+        "_sum" => "SUM",
+        "_avg" => "AVG",
+        "_min" => "MIN",
+        "_max" => "MAX"
+    }
+});
