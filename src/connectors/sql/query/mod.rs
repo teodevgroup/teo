@@ -308,11 +308,17 @@ impl Query {
                         let k = k.as_str();
                         if v.as_bool().unwrap() {
                             match k {
-                                "_all" => results.push("COUNT(*)".to_owned()),
+                                "_all" => results.push("COUNT(*) as `_count._all`".to_owned()),
                                 _ => {
                                     let column_name = model.field(k).unwrap().column_name();
                                     let func = SQL_AGGREGATE_MAP.get(key.as_str()).unwrap();
-                                    results.push(format!("{}({})", func, column_name));
+                                    // CAST(AVG(id) as DOUBLE)
+                                    let mut left = format!("{}({})", func, column_name);
+                                    match key.as_str() {
+                                        "_avg" | "_sum" => left = format!("CAST({} AS DOUBLE)", left),
+                                        _ => ()
+                                    }
+                                    results.push(format!("{} as `{}.{}`", left, key, k));
                                 }
                             }
                         }

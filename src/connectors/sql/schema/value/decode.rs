@@ -29,7 +29,7 @@ impl RowDecoder {
         if r#type.is_float() {
             return Value::number_from_f64(row.get(column_name), r#type);
         }
-        // #[cfg(not(any(feature = "data-source-mssql", feature = "data-source-sqlite")))]
+        // #[cfg(feature = "data-source-mysql")]
         // if r#type.is_decimal() {
         //     return Value::Decimal(row.get(column_name));
         // }
