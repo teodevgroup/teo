@@ -108,7 +108,7 @@ The new generation server software.
 - SQL: Negative take without order by **[DONE]**
 - SQL: Distinct **[DONE]**
 - SQL: Relation where for without join table **[DONE]**
-- SQL: Relation where for with join table
+- SQL: Relation where for with join table **[DONE]**
 
 #### 0.0.37
 - SQL: Aggregation
