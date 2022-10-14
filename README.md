@@ -111,7 +111,7 @@ The new generation server software.
 - SQL: Relation where for with join table **[DONE]**
 
 #### 0.0.37
-- SQL: Aggregation
+- SQL: Aggregation **[DONE]**
 - SQL: Group by
 
 #### 0.0.38
@@ -122,9 +122,11 @@ The new generation server software.
 
 #### 0.0.40 - 0.0.50
 - Replace buggy sqlx
+- Full support of decimal type
+- Support unsigned types for MySQL
+- Custom SQL database types
 
 #### 0.0.51 - 0.0.61
-- Custom SQL database types
 - Fix assign identity
 - Fix broken `connectIdentity` modifier
 - MongoDB transaction

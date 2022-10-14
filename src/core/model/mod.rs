@@ -189,7 +189,8 @@ impl Model {
 
     pub(crate) fn allowed_keys_for_aggregate(&self, name: &str) -> HashSet<&str> {
         match name {
-            "_count" => self.scalar_number_keys().iter().map(|k| k.as_str()).collect::<HashSet<&str>>().bitor(&hashset!{"_all"}),
+            "_count" => self.scalar_keys().iter().map(|k| k.as_str()).collect::<HashSet<&str>>().bitor(&hashset!{"_all"}),
+            "_min" | "_max" => self.scalar_keys().iter().map(|k| k.as_str()).collect(),
             _ => self.scalar_number_keys().iter().map(|k| k.as_str()).collect(),
         }
     }
