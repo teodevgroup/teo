@@ -294,12 +294,8 @@ impl Query {
         graph: &Graph,
         value: &Value,
         dialect: SQLDialect,
-        additional_where: Option<String>,
-        additional_left_join: Option<String>,
-        join_table_results: Option<Vec<String>>,
-        force_negative_take: bool,
     ) -> String {
-        let aggregate = Self::build_for_aggregate(model, graph, value, dialect, additional_where, additional_left_join, join_table_results, force_negative_take);
+        let aggregate = Self::build_for_aggregate(model, graph, value, dialect);
         let map = value.as_hashmap().unwrap();
         let by = map.get("by").unwrap().as_vec().unwrap().iter().map(|v| {
             let field_name = v.as_str().unwrap();
@@ -313,10 +309,6 @@ impl Query {
         graph: &Graph,
         value: &Value,
         dialect: SQLDialect,
-        additional_where: Option<String>,
-        additional_left_join: Option<String>,
-        join_table_results: Option<Vec<String>>,
-        force_negative_take: bool,
     ) -> String {
         let map = value.as_hashmap().unwrap();
         let mut results: Vec<String> = vec![];
@@ -346,7 +338,13 @@ impl Query {
                 _ => {}
             }
         }
-        format!("SELECT {} FROM ({}) AS sub", results.join(","), Self::build(model, graph, value, dialect, additional_where, additional_left_join, join_table_results, force_negative_take))
+        if let Some(by) = map.get("by") {
+            for k in by.as_vec().unwrap() {
+                let field_name = k.as_str().unwrap();
+                results.push(model.field(field_name).unwrap().column_name().to_string());
+            }
+        }
+        format!("SELECT {} FROM ({}) AS _", results.join(","), Self::build(model, graph, value, dialect, None, None, None, false))
     }
 
     pub(crate) fn build(

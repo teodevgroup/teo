@@ -47,6 +47,37 @@ impl Execution {
         }).collect())
     }
 
+    fn row_to_aggregate_value(model: &Model, graph: &Graph, row: &AnyRow) -> Value {
+        let mut retval: HashMap<String, Value> = HashMap::new();
+        for column in row.columns() {
+            let result_key = column.name();
+            if result_key.contains(".") {
+                let splitted = result_key.split(".").collect::<Vec<&str>>();
+                let group = *splitted.get(0).unwrap();
+                let field_name = *splitted.get(1).unwrap();
+                if !retval.contains_key(group) {
+                    retval.insert(group.to_string(), Value::HashMap(HashMap::new()));
+                }
+                if group == "_count" { // force i64
+                    let count: i64 = row.get(result_key);
+                    retval.get_mut(group).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), tson!(count));
+                } else if group == "_avg" || group == "_sum" { // force f64
+                    let v = RowDecoder::decode(&FieldType::F64, true, &row, result_key);
+                    retval.get_mut(group).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), v);
+                } else { // field type
+                    let field = model.field(field_name).unwrap();
+                    let v = RowDecoder::decode(field.r#type(), true, &row, result_key);
+                    retval.get_mut(group).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), v);
+                }
+            } else if let Some(field) = model.field_with_column_name(result_key) {
+                retval.insert(field.name().to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, result_key));
+            } else if let Some(property) = model.property(result_key) {
+                retval.insert(property.name().to_owned(), RowDecoder::decode(property.r#type(), property.is_optional(), row, result_key));
+            }
+        }
+        Value::HashMap(retval)
+    }
+
     pub(crate) async fn query_objects(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect, env: Env) -> ActionResult<Vec<Object>> {
         let values = Self::query(pool, model, graph, finder, dialect).await?;
         let select = finder.as_hashmap().unwrap().get("select");
@@ -273,31 +304,10 @@ impl Execution {
     }
 
     pub(crate) async fn query_aggregate(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<Value> {
-        let stmt = Query::build_for_aggregate(model, graph, finder, dialect, None, None, None, false);
+        let stmt = Query::build_for_aggregate(model, graph, finder, dialect);
         match pool.fetch_one(&*stmt).await {
             Ok(result) => {
-                let mut retval: HashMap<String, Value> = HashMap::new();
-                for column in result.columns() {
-                    let result_key = column.name();
-                    let splitted = result_key.split(".").collect::<Vec<&str>>();
-                    let group = *splitted.get(0).unwrap();
-                    let field_name = *splitted.get(1).unwrap();
-                    if !retval.contains_key(group) {
-                        retval.insert(group.to_string(), Value::HashMap(HashMap::new()));
-                    }
-                    if group == "_count" { // force i64
-                        let count: i64 = result.get(result_key);
-                        retval.get_mut(group).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), tson!(count));
-                    } else if group == "_avg" || group == "_sum" { // force f64
-                        let v = RowDecoder::decode(&FieldType::F64, true, &result, result_key);
-                        retval.get_mut(group).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), v);
-                    } else { // field type
-                        let field = model.field(field_name).unwrap();
-                        let v = RowDecoder::decode(field.r#type(), true, &result, result_key);
-                        retval.get_mut(group).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), v);
-                    }
-                }
-                Ok(Value::HashMap(retval))
+                Ok(Self::row_to_aggregate_value(model, graph, &result))
             },
             Err(err) => {
                 println!("{:?}", err);
@@ -307,8 +317,17 @@ impl Execution {
     }
 
     pub(crate) async fn query_group_by(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<Value> {
-        let stmt = Query::build_for_group_by(model, graph, finder, dialect, None, None, None, false);
-
+        let stmt = Query::build_for_group_by(model, graph, finder, dialect);
+        let rows = match pool.fetch_all(&*stmt).await {
+            Ok(rows) => rows,
+            Err(err) => {
+                println!("{:?}", err);
+                return Err(ActionError::unknown_database_find_error());
+            }
+        };
+        Ok(Value::Vec(rows.iter().map(|r| {
+            Self::row_to_aggregate_value(model, graph, r)
+        }).collect::<Vec<Value>>()))
     }
 
     pub(crate) async fn query_count(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<u64> {
