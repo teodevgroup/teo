@@ -184,7 +184,7 @@ impl Connector for SQLConnector {
     }
 
     async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError> {
-        todo!()
+        Execution::query_aggregate(&self.pool, model, graph, finder, self.dialect).await
     }
 
     async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError> {

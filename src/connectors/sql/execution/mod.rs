@@ -3,6 +3,8 @@ use itertools::Itertools;
 use array_tool::vec::Uniq;
 use std::collections::HashMap;
 use async_recursion::async_recursion;
+use once_cell::sync::Lazy;
+use regex::Regex;
 use sqlx::{AnyPool, Column, Executor, Row};
 use sqlx::any::AnyRow;
 use crate::connectors::sql::query::Query;
@@ -11,6 +13,7 @@ use crate::connectors::sql::schema::value::decode::RowDecoder;
 use crate::connectors::sql::schema::value::encode::{ToSQLString, ToWrapped};
 use crate::core::env::Env;
 use crate::core::error::ActionError;
+use crate::core::field::r#type::FieldType;
 use crate::core::input::Input;
 use crate::core::model::Model;
 use crate::core::result::ActionResult;
@@ -274,7 +277,41 @@ impl Execution {
         let stmt = Query::build_for_aggregate(model, graph, finder, dialect, None, None, None, false);
         match pool.fetch_one(&*stmt).await {
             Ok(result) => {
-
+                let mut retval: HashMap<String, Value> = HashMap::new();
+                for column in result.columns() {
+                    let result_key = column.name();
+                    let captures = AGGREGATE_ROW_REGEX.captures(result_key).unwrap();
+                    let func = captures.get(1).unwrap().as_str();
+                    let column_name = captures.get(2).unwrap().as_str();
+                    match column_name {
+                        "*" => {
+                            if !retval.contains_key("_count") {
+                                retval.insert("_count".to_owned(), Value::HashMap(HashMap::new()));
+                            }
+                            let count: i64 = result.get(result_key);
+                            retval.get_mut("_count").unwrap().as_hashmap_mut().unwrap().insert("_all".to_string(), tson!(count));
+                        },
+                        _ => {
+                            let field = model.field_with_column_name(column_name).unwrap();
+                            let field_name = field.name();
+                            let retval_key = "_".to_owned() + &func.to_lowercase();
+                            if !retval.contains_key(&retval_key) {
+                                retval.insert(retval_key.clone(), Value::HashMap(HashMap::new()));
+                            }
+                            if func == "COUNT" { // force i64
+                                let count: i64 = result.get(result_key);
+                                retval.get_mut("_count").unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), tson!(count));
+                            } else if func == "AVG" { // force f64
+                                let v = RowDecoder::decode(&FieldType::F64, true, &result, result_key);
+                                retval.get_mut("_avg").unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), v);
+                            } else { // field type
+                                let v = RowDecoder::decode(field.r#type(), true, &result, result_key);
+                                retval.get_mut(&retval_key).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), v);
+                            }
+                        }
+                    }
+                }
+                Ok(Value::HashMap(retval))
             },
             Err(err) => {
                 println!("{:?}", err);
@@ -354,3 +391,7 @@ impl Execution {
         }
     }
 }
+
+static AGGREGATE_ROW_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new("(.+)\\((.+)\\)").unwrap()
+});

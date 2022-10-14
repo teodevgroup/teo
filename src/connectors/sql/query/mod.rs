@@ -311,7 +311,7 @@ impl Query {
                                 "_all" => results.push("COUNT(*)".to_owned()),
                                 _ => {
                                     let column_name = model.field(k).unwrap().column_name();
-                                    let func = SQL_AGGREGATE_MAP.get(key).unwrap();
+                                    let func = SQL_AGGREGATE_MAP.get(key.as_str()).unwrap();
                                     results.push(format!("{}({})", func, column_name));
                                 }
                             }
