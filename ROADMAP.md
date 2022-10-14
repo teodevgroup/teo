@@ -108,10 +108,12 @@
 
 #### 0.0.37
 - SQL: Aggregation **[DONE]**
-- SQL: Group by
+- SQL: Group by without having **[DONE]**
+- SQL: Group by with having
 
 #### 0.0.38
 - SQL: Enum types
+- MongoDB catch up with SQL features
 
 #### 0.0.39
 - Merge json pipeline into pipeline (hashmap)
