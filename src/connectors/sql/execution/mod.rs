@@ -266,8 +266,21 @@ impl Execution {
         Ok(results)
     }
 
-    pub(crate) async fn query(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect) -> ActionResult<Vec<Value>> {
-       Self::query_internal(pool, model, graph, value, dialect, None, None, None, false, None).await
+    pub(crate) async fn query(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<Vec<Value>> {
+       Self::query_internal(pool, model, graph, finder, dialect, None, None, None, false, None).await
+    }
+
+    pub(crate) async fn query_aggregate(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<Value> {
+        let stmt = Query::build_for_aggregate(model, graph, finder, dialect, None, None, None, false);
+        match pool.fetch_one(&*stmt).await {
+            Ok(result) => {
+
+            },
+            Err(err) => {
+                println!("{:?}", err);
+                return Err(ActionError::unknown_database_find_error());
+            }
+        }
     }
 
     pub(crate) async fn query_count(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<u64> {
