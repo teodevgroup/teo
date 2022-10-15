@@ -113,6 +113,7 @@
 
 #### 0.0.38
 - MongoDB: Bug fixes
+- All many actions should through errors
 - SQL: Enum types
 - MongoDB catch up with SQL features
 

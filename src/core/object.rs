@@ -978,6 +978,9 @@ impl Object {
     async fn nested_disconnect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
         let disconnect = value.as_bool().unwrap();
         if !disconnect { return Ok(()) }
+        if !relation.is_vec() && relation.is_required() {
+            return Err(ActionError::unexpected_input_value_with_reason("Cannot disconnect required relation.", path));
+        }
         if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
         } else {
@@ -1077,8 +1080,8 @@ impl Object {
     async fn nested_delete_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
         let delete = value.as_bool().unwrap();
         if !delete { return Ok(()) }
-        if relation.has_foreign_key() {
-            self.remove_linked_values_from_related_relation(relation);
+        if !relation.is_vec() && relation.is_required() {
+            return Err(ActionError::unexpected_input_value_with_reason("Cannot delete required relation.", path));
         }
         let r#where = self.intrinsic_where_unique_for_relation(relation);
         let env = self.env().alter_intent(Intent::NestedDelete);
@@ -1090,6 +1093,9 @@ impl Object {
         if relation.has_join_table() {
             let opposite_relation = self.graph().opposite_relation(relation).1.unwrap();
             self.delete_join_object(&object, relation, opposite_relation, session.clone(), path).await?;
+        }
+        if relation.has_foreign_key() {
+            self.remove_linked_values_from_related_relation(relation);
         }
         Ok(())
     }
