@@ -113,6 +113,8 @@
 
 #### 0.0.38
 - MongoDB: Bug fixes for one-to-many relationship **[DONE]**
+
+#### 0.0.39
 - MongoDB: root skip take and distinct bug
 - MongoDB: nested skip take and distinct bug
 - MongoDB: if cursor key is not orderBy key, result is wrong
@@ -122,22 +124,22 @@
 - All many actions should throw errors
 - SQL: Enum types
 
-#### 0.0.39
+#### 0.0.40
 - Merge json pipeline into pipeline (hashmap)
 - Pipeline allows action error
 - Delete callbacks: `when_delete`, `before_delete` and `after_delete`
 
-#### 0.0.40
+#### 0.0.41
 - PostgreSQL
 - SQLite
 
-#### 0.0.41
+#### 0.0.42
 - TypeScript Client
 
-#### 0.0.42
+#### 0.0.43
 - The copy action
 
-#### 0.0.43 - 0.0.55
+#### 0.0.44 - 0.0.55
 - Setup unit tests
 - Replace buggy sqlx
 - Full support of decimal type
