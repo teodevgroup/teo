@@ -399,7 +399,7 @@ impl Decoder {
             Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
                 let path = path + k;
                 let field = model.field(k).unwrap();
-                Ok(((k.clone(), Self::decode_where_with_aggregates_for_field(graph, field.r#type(), field.is_optional(), v, &path)?)))
+                Ok((k.clone(), Self::decode_where_with_aggregates_for_field(graph, field.r#type(), field.is_optional(), v, &path)?))
             }).collect::<ActionResult<HashMap<String, Value>>>()?))
         } else {
             Err(ActionError::unexpected_input_type("object", path))
