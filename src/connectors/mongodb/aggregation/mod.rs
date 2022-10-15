@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use bson::{Bson, doc, Document, Regex as BsonRegex};
 use key_path::KeyPath;
+use maplit::hashmap;
 use crate::core::field::r#type::FieldType;
 use crate::core::input::Input;
 use crate::core::model::Model;
@@ -146,6 +147,7 @@ impl Aggregation {
         retval.push(doc! {"$count": "count"});
         Ok(retval)
     }
+
     pub(crate) fn build(model: &Model, graph: &Graph, value: &Value) -> ActionResult<Vec<Document>> {
         let mut retval: Vec<Document> = vec![];
         let r#where = value.get("where");
@@ -204,14 +206,19 @@ impl Aggregation {
             }
         }
         // sort without distinct. If distinct, sort later in distinct
-        if let Some(order_by) = order_by {
-            if distinct.is_none() {
+        if distinct.is_none() {
+            if let Some(order_by) = order_by {
                 let reverse = match take {
                     Some(take) => take.as_i64().unwrap() < 0,
                     None => false
                 };
                 let sort = Self::build_order_by(model, order_by, reverse)?;
                 if !sort.is_empty() {
+                    retval.push(doc!{"$sort": sort});
+                }
+            } else if let Some(take) = take {
+                if take.as_i64().unwrap() < 0 {
+                    let sort = Self::build_order_by(model, &Self::default_desc_order(model), false)?;
                     retval.push(doc!{"$sort": sort});
                 }
             }
@@ -314,10 +321,11 @@ impl Aggregation {
         Ok(result)
     }
 
-    fn build_order_by(_model: &Model, order_by: &Value, reverse: bool) -> ActionResult<Document> {
+    fn build_order_by(model: &Model, order_by: &Value, reverse: bool) -> ActionResult<Document> {
         let mut retval = doc!{};
         for sort in order_by.as_vec().unwrap().iter() {
             let (key, value) = Input::key_value(sort.as_hashmap().unwrap());
+            let key = model.field(key).unwrap().column_name();
             if value.is_string() {
                 let str_val = value.as_str().unwrap();
                 if str_val == "asc" {
@@ -742,5 +750,13 @@ impl Aggregation {
         } else {
             original.as_ref().to_string()
         }
+    }
+
+    fn default_desc_order(model: &Model) -> Value {
+        let mut vec: Vec<Value> = vec![];
+        for item in model.primary_index().items() {
+            vec.push(Value::HashMap(hashmap!{item.field_name().to_string() => Value::String("desc".to_string())}));
+        }
+        Value::Vec(vec)
     }
 }
