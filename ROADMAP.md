@@ -115,18 +115,19 @@
 - MongoDB: Bug fixes for one-to-many relationship **[DONE]**
 
 #### 0.0.39
+- Merge json pipeline into pipeline (hashmap)
+- Pipeline allows action error
+- More pipeline modifiers
+
+#### 0.0.40
 - MongoDB: root skip take and distinct bug
 - MongoDB: nested skip take and distinct bug
 - MongoDB: if cursor key is not orderBy key, result is wrong
 - MongoDB: relation where: multiple keys should be allowed
 - MongoDB: relation where: 'every' results is incorrect
-- MongoDB: aggregate and group by for string and dates 
+- MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 - SQL: Enum types
-
-#### 0.0.40
-- Merge json pipeline into pipeline (hashmap)
-- Pipeline allows action error
 - Delete callbacks: `when_delete`, `before_delete` and `after_delete`
 
 #### 0.0.41
