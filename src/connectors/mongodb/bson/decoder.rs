@@ -117,10 +117,10 @@ impl BsonDecoder {
             }
             FieldType::BTreeMap(inner_field) => {
                 match bson_value.as_document() {
-                    Some(doc) => Ok((Value::BTreeMap(doc.iter().map(|(k, v)| {
+                    Some(doc) => Ok(Value::BTreeMap(doc.iter().map(|(k, v)| {
                         let path = path + k;
                         Ok((k.to_owned(), Self::decode(model, graph, inner_field.r#type(), inner_field.is_optional(), v, path)?))
-                    }).collect::<ActionResult<BTreeMap<String, Value>>>()?))),
+                    }).collect::<ActionResult<BTreeMap<String, Value>>>()?)),
                     None => Err(ActionError::record_decoding_error(model.name(), path, "document")),
                 }
             }

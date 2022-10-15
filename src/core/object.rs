@@ -923,7 +923,7 @@ impl Object {
         object.save_with_session_and_path(session.clone(), path).await?;
         if !linked {
             if relation.has_foreign_key() {
-                object.assign_linked_values_to_related_object(object, relation);
+                object.assign_linked_values_to_related_object(self, relation);
             } else if relation.has_join_table() {
                 self.create_join_object(object, relation, opposite_relation.unwrap(), session.clone(), path).await?;
             }
