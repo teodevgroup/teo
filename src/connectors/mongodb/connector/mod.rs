@@ -506,7 +506,12 @@ impl Connector for MongoDBConnector {
             Ok(0)
         } else {
             let v = results.get(0).unwrap().as_ref().unwrap();
-            Ok(v.get("count").unwrap().as_i64().unwrap() as usize)
+            let bson_count = v.get("count").unwrap();
+            match bson_count {
+                Bson::Int32(i) => Ok(*i as usize),
+                Bson::Int64(i) => Ok(*i as usize),
+                _ => panic!("Unhandled count number type.")
+            }
         }
     }
 
