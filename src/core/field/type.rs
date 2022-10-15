@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::ops::BitOr;
 use maplit::hashset;
 use once_cell::sync::Lazy;
 use crate::core::field::Field;
@@ -150,6 +151,25 @@ impl FieldType {
             FieldType::Object(_) => panic!("Object filter is not implemented.")
         }
     }
+
+    pub(crate) fn filters_with_aggregates(&self) -> &HashSet<&str> {
+        match self {
+            FieldType::Undefined => panic!("Field type cannot be undefined."),
+            #[cfg(feature = "data-source-mongodb")]
+            FieldType::ObjectId => &DEFAULT_FILTERS_WITH_AGGREGATE,
+            FieldType::Bool => &BOOL_FILTERS,
+            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 |
+            FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 |
+            FieldType::F32 | FieldType::F64 | FieldType::Decimal => &NUMBER_FILTERS_WITH_AGGREGATE,
+            FieldType::Date | FieldType::DateTime => &DEFAULT_FILTERS_WITH_AGGREGATE,
+            FieldType::String => &STRING_FILTERS_WITH_AGGREGATE,
+            FieldType::Enum(_) => &ENUM_FILTERS_WITH_AGGREGATE,
+            FieldType::Vec(_) => &VEC_FILTERS,
+            FieldType::HashMap(_) => &MAP_FILTERS,
+            FieldType::BTreeMap(_) => &MAP_FILTERS,
+            FieldType::Object(_) => panic!("Object filter is not implemented.")
+        }
+    }
 }
 
 static DEFAULT_UPDATORS: Lazy<HashSet<&str>> = Lazy::new(|| {
@@ -178,4 +198,16 @@ static VEC_FILTERS: Lazy<HashSet<&str>> = Lazy::new(|| {
 });
 static MAP_FILTERS: Lazy<HashSet<&str>> = Lazy::new(|| {
     hashset! {"equals", "has", "hasEvery", "hasSome", "isEmpty", "length", "hasKey"}
+});
+static STRING_FILTERS_WITH_AGGREGATE: Lazy<HashSet<&str>> = Lazy::new(|| {
+    STRING_FILTERS.bitor(&hashset!{"_min", "_max", "_count"})
+});
+static NUMBER_FILTERS_WITH_AGGREGATE: Lazy<HashSet<&str>> = Lazy::new(|| {
+    DEFAULT_FILTERS.bitor(&hashset!{"_min", "_max", "_count", "_avg", "_sum"})
+});
+static DEFAULT_FILTERS_WITH_AGGREGATE: Lazy<HashSet<&str>> = Lazy::new(|| {
+    DEFAULT_FILTERS.bitor(&hashset!{"_min", "_max", "_count"})
+});
+static ENUM_FILTERS_WITH_AGGREGATE: Lazy<HashSet<&str>> = Lazy::new(|| {
+    ENUM_FILTERS.bitor(&hashset!{"_count"})
 });

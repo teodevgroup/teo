@@ -392,8 +392,18 @@ impl Decoder {
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
 
-    fn decode_having<'a>(_model: &Model, _graph: &Graph, _json_value: &JsonValue, _path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
-        todo!("Implement this later")
+    fn decode_having<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        let path = path.as_ref();
+        if let Some(json_map) = json_value.as_object() {
+            Self::check_json_keys(json_map, &model.scalar_keys().iter().map(|k| k.as_str()).collect(), path)?;
+            Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
+                let path = path + k;
+                let field = model.field(k).unwrap();
+                Ok(((k.clone(), Self::decode_where_with_aggregates_for_field(graph, field.r#type(), field.is_optional(), v, &path)?)))
+            }).collect::<ActionResult<HashMap<String, Value>>>()?))
+        } else {
+            Err(ActionError::unexpected_input_type("object", path))
+        }
     }
 
     fn decode_by<'a>(model: &Model, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
@@ -636,11 +646,11 @@ impl Decoder {
         Err(ActionError::unexpected_input_key(json_map.keys().next().unwrap(), path))
     }
 
-    fn decode_where_for_field<'a>(graph: &Graph, r#type: &FieldType, optional: bool, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+    fn decode_where_for_field_internal<'a>(graph: &Graph, r#type: &FieldType, optional: bool, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>, aggregate: bool) -> ActionResult<Value> {
         let path = path.as_ref();
         if json_value.is_object() {
             let json_map = json_value.as_object().unwrap();
-            Self::check_json_keys(json_map, r#type.filters(), path)?;
+            Self::check_json_keys(json_map, if aggregate { r#type.filters_with_aggregates() } else { r#type.filters() }, path)?;
             let mut retval: HashMap<String, Value> = hashmap!{};
             for (key, value) in json_map {
                 let key = key.as_str();
@@ -687,6 +697,14 @@ impl Decoder {
         } else {
             Ok(Value::HashMap(hashmap!{"equals".to_owned() => Self::decode_value_for_field_type(graph, r#type, optional, json_value, path)?}))
         }
+    }
+
+    fn decode_where_with_aggregates_for_field<'a>(graph: &Graph, r#type: &FieldType, optional: bool, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        Self::decode_where_for_field_internal(graph, r#type, optional, json_value, path, true)
+    }
+
+    fn decode_where_for_field<'a>(graph: &Graph, r#type: &FieldType, optional: bool, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        Self::decode_where_for_field_internal(graph, r#type, optional, json_value, path, false)
     }
 
     fn decode_where_for_relation<'a>(graph: &Graph, relation: &Relation, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
