@@ -690,6 +690,15 @@ impl Decoder {
                     "length" => {
                         retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, &FieldType::U64, false, value, path)?);
                     }
+                    "_avg" | "_sum" => {
+                        retval.insert(key.to_owned(), Self::decode_where_for_field(graph, &FieldType::U64, true, value, path)?);
+                    }
+                    "_count" => {
+                        retval.insert(key.to_owned(), Self::decode_where_for_field(graph, &FieldType::I64, false, value, path)?);
+                    }
+                    "_min" | "_max" => {
+                        retval.insert(key.to_owned(), Self::decode_where_for_field(graph, r#type, optional, value, path)?);
+                    }
                     _ => return Err(ActionError::unexpected_input_key(key, path))
                 }
             }
