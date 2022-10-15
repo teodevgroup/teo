@@ -245,7 +245,8 @@ impl MongoDBConnector {
                 if g.starts_with("_") {
                     retval.as_hashmap_mut().unwrap().insert(g.clone(), tson!({}));
                     for (dbk, v) in o.as_document().unwrap() {
-                        let k = if dbk == "_all" { "_all" } else { model.column_name_for_field_name(dbk).unwrap() };
+                        println!("see dbk {}", dbk);
+                        let k = dbk;
                         if let Some(f) = v.as_f64() {
                             retval.as_hashmap_mut().unwrap().get_mut(g.as_str()).unwrap().as_hashmap_mut().unwrap().insert(k.to_string(), tson!(f));
                         } else if let Some(i) = v.as_i64() {
