@@ -112,8 +112,13 @@
 - SQL: Group by with having **[DONE]**
 
 #### 0.0.38
-- MongoDB: Bug fixes
-- All many actions should through errors
+- MongoDB: Bug fixes for one-to-many relationship **[DONE]**
+- MongoDB: root skip take and distinct bug
+- MongoDB: nested skip take and distinct bug
+- MongoDB: if cursor key is not orderBy key, result is wrong
+- MongoDB: relation where: multiple keys should be allowed
+- MongoDB: relation where: 'every' results is incorrect
+- All many actions should throw errors
 - SQL: Enum types
 - MongoDB catch up with SQL features
 

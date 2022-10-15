@@ -163,9 +163,8 @@ impl Aggregation {
         let cursor_where_additions = if let Some(cursor) = value.get("cursor") {
             let cursor = cursor.as_hashmap().unwrap();
             let cursor_key = cursor.keys().next().unwrap();
-            let cursor_key = model.field(cursor_key).unwrap().column_name();
             let cursor_value = cursor.values().next().unwrap();
-            let order_by = value.get("orderBy").unwrap().as_hashmap().unwrap().values().next().unwrap().as_str().unwrap();
+            let order_by = value.get("orderBy").unwrap().as_vec().unwrap().get(0).unwrap().as_hashmap().unwrap().values().next().unwrap().as_str().unwrap();
             let mut order_asc = order_by == "asc";
             if let Some(take) = take {
                 if take.as_i64().unwrap() < 0 {
@@ -196,6 +195,10 @@ impl Aggregation {
                 if let Some(cursor_where_additions) = cursor_where_additions {
                     retval.push(doc!{"$match": cursor_where_additions});
                 }
+            }
+        } else {
+            if let Some(cursor_where_additions) = cursor_where_additions {
+                retval.push(doc!{"$match": cursor_where_additions});
             }
         }
         // remove lookup for matching here
