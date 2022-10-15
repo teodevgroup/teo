@@ -359,12 +359,15 @@ async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source:
         return HttpResponse::BadRequest().json(json!({"error": err}));
     }
     let create = create.as_vec().unwrap();
+    println!("here see create:: {:?}", create);
     let mut count = 0;
     let mut ret_data: Vec<Value> = vec![];
     for (index, val) in create.iter().enumerate() {
         let result = handle_create_internal(graph, Some(val), include, select, model, &path!["create", index], env.clone()).await;
         match result {
-            Err(_) => (),
+            Err(err) => {
+                println!("{:?}", err.errors);
+            },
             Ok(val) => {
                 count += 1;
                 ret_data.push(val);

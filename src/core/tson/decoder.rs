@@ -83,7 +83,7 @@ impl Decoder {
                 "_avg" | "_sum" | "_min" | "_max" | "_count" => { retval.insert(key.to_owned(), Self::decode_aggregate(model, key, value, path)?); }
                 "by" => { retval.insert(key.to_owned(), Self::decode_by(model, value, path)?); }
                 "having" => { retval.insert(key.to_owned(), Self::decode_having(model, graph, value, path)?); }
-                "create" => { retval.insert(key.to_owned(), Self::decode_create(model, graph, value, path)?); }
+                "create" => { retval.insert(key.to_owned(), if action == ActionType::CreateMany { Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_create(model, graph, v, p))? } else { Self::decode_create(model, graph, value, path)? } ); }
                 "update" => { retval.insert(key.to_owned(), Self::decode_update(model, graph, value, path)?); }
                 "credentials" => { retval.insert(key.to_owned(), Self::decode_credentials(model, value, path)?); }
                 _ => panic!("Unhandled key.")
@@ -96,6 +96,7 @@ impl Decoder {
                 }
             }
         }
+        println!("let's see retval: {:?}", retval);
         Ok(Value::HashMap(retval))
     }
 

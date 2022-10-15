@@ -960,10 +960,13 @@ impl Object {
     async fn nested_connect_or_create_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
         let r#where = value.get("where").unwrap();
         let create = value.get("create").unwrap();
-        let env = self.env().alter_intent(Intent::NestedConnect);
+        let env = self.env().alter_intent(Intent::NestedConnectOrCreateActuallyConnect);
         let object = match self.graph().find_unique(relation.model(), &tson!({ "where": r#where }), true, env.clone()).await {
             Ok(object) => object,
-            Err(_) => self.graph().new_object_with_tson_and_path(relation.model(), create, &(path + "create"), env).await?,
+            Err(_) => {
+                let env = self.env().alter_intent(Intent::NestedConnectOrCreateActuallyCreate);
+                self.graph().new_object_with_tson_and_path(relation.model(), create, &(path + "create"), env).await?
+            },
         };
         self.link_and_save_relation_object(relation, &object, session.clone(), path).await
     }

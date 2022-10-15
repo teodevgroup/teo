@@ -112,6 +112,7 @@
 - SQL: Group by with having **[DONE]**
 
 #### 0.0.38
+- MongoDB: Bug fixes
 - SQL: Enum types
 - MongoDB catch up with SQL features
 
