@@ -118,9 +118,9 @@
 - MongoDB: if cursor key is not orderBy key, result is wrong
 - MongoDB: relation where: multiple keys should be allowed
 - MongoDB: relation where: 'every' results is incorrect
+- MongoDB: aggregate and group by for string and dates 
 - All many actions should throw errors
 - SQL: Enum types
-- MongoDB catch up with SQL features
 
 #### 0.0.39
 - Merge json pipeline into pipeline (hashmap)
