@@ -493,7 +493,22 @@ impl Connector for MongoDBConnector {
     }
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize, ActionError> {
-        todo!("rewrite with aggregation")
+        let input = Aggregation::build_for_count(model, graph, finder)?;
+        println!("see count input: {:?}", input);
+        let col = &self.collections[model.name()];
+        let cur = col.aggregate(input, None).await;
+        if cur.is_err() {
+            println!("{:?}", cur);
+            return Err(ActionError::unknown_database_find_error());
+        }
+        let cur = cur.unwrap();
+        let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
+        if results.is_empty() {
+            Ok(0)
+        } else {
+            let v = results.get(0).unwrap().as_ref().unwrap();
+            Ok(v.get("count").unwrap().as_i64().unwrap() as usize)
+        }
     }
 
     async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError> {

@@ -142,8 +142,8 @@ impl Aggregation {
     }
 
     pub(crate) fn build_for_count(model: &Model, graph: &Graph, value: &Value) -> ActionResult<Vec<Document>> {
-        let retval = Self::build(model, graph, value)?;
-        todo!("add code for count");
+        let mut retval = Self::build(model, graph, value)?;
+        retval.push(doc! {"$count": "count"});
         Ok(retval)
     }
     pub(crate) fn build(model: &Model, graph: &Graph, value: &Value) -> ActionResult<Vec<Document>> {
