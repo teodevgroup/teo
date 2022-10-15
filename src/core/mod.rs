@@ -16,4 +16,3 @@ pub mod object;
 pub mod permission;
 pub mod connector;
 pub mod tson;
-pub mod json_pipeline;

@@ -1,5 +1,5 @@
 use crate::core::action::Action;
-use crate::core::json_pipeline::builder::JsonPipelineBuilder;
+use crate::prelude::PipelineBuilder;
 
 pub struct ActionBuilder {
     pub(crate) action: Action
@@ -10,8 +10,8 @@ impl ActionBuilder {
         ActionBuilder { action }
     }
 
-    pub fn transform<F: Fn(&mut JsonPipelineBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut builder = JsonPipelineBuilder::new();
+    pub fn transform<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut builder = PipelineBuilder::new();
         build(&mut builder);
         self.action.transformers.push(builder.build());
         self

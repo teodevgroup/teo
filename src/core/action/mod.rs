@@ -1,6 +1,5 @@
-use crate::core::json_pipeline::JsonPipeline;
-
 use crate::core::object::Object;
+use crate::core::pipeline::Pipeline;
 use crate::prelude::Value;
 
 pub mod r#type;
@@ -8,7 +7,7 @@ pub mod builder;
 
 #[derive(Clone)]
 pub(crate) struct Action {
-    transformers: Vec<JsonPipeline>,
+    transformers: Vec<Pipeline>,
 }
 
 impl Action {
