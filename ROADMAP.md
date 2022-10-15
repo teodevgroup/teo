@@ -109,7 +109,7 @@
 #### 0.0.37
 - SQL: Aggregation **[DONE]**
 - SQL: Group by without having **[DONE]**
-- SQL: Group by with having
+- SQL: Group by with having **[DONE]**
 
 #### 0.0.38
 - SQL: Enum types

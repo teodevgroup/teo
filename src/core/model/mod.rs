@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use std::ops::{BitAnd, BitOr};
+use std::ops::BitOr;
 use std::sync::Arc;
 use maplit::hashset;
 use crate::core::action::Action;

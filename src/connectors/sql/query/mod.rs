@@ -109,6 +109,15 @@ impl Query {
                     "length" => {
                         result.push(Self::where_item(&format!("ARRAY_LENGTH({})", column_name), "=", &value.to_sql_string(&FieldType::U64, false, graph)));
                     }
+                    "_count" => {
+                        result.push(Self::where_entry_item(&format!("COUNT({})", column_name), &FieldType::I64, false, value, graph, dialect));
+                    }
+                    "_avg" | "_sum" => {
+                        result.push(Self::where_entry_item(&format!("{}({})", key[1..].to_uppercase(), column_name), &FieldType::F64, true, value, graph, dialect));
+                    }
+                    "_min" | "_max" => {
+                        result.push(Self::where_entry_item(&format!("{}({})", key[1..].to_uppercase(), column_name), r#type, optional, value, graph, dialect));
+                    }
                     _ => panic!("Unhandled key."),
                 }
             }
@@ -301,7 +310,13 @@ impl Query {
             let field_name = v.as_str().unwrap();
             model.field(field_name).unwrap().column_name()
         }).collect::<Vec<&str>>().join(",");
-        format!("{} GROUP BY {}", aggregate, by)
+        let having = if let Some(having) = map.get("having") {
+            let inner = Query::r#where(model, graph, having, dialect, None);
+            " HAVING (".to_owned() + &inner + ")"
+        } else {
+            "".to_owned()
+        };
+        format!("{} GROUP BY {}{}", aggregate, by, having)
     }
 
     pub(crate) fn build_for_aggregate(
