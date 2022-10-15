@@ -831,6 +831,16 @@ impl Object {
         Value::HashMap(identifier)
     }
 
+    pub(crate) fn db_identifier(&self) -> Value {
+        let model = self.model();
+        let mut identifier: HashMap<String, Value> = HashMap::new();
+        for item in model.primary_index().items() {
+            let val = self.get_value(item.field_name()).unwrap();
+            identifier.insert(self.model().field(item.field_name()).unwrap().column_name().to_owned(), val.clone());
+        }
+        Value::HashMap(identifier)
+    }
+
     async fn perform_relation_manipulations<F: Fn(&Relation) -> bool>(&self, f: F, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
         for relation in self.model().relations() {
             if f(relation) {

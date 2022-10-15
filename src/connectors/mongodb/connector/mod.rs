@@ -245,7 +245,6 @@ impl MongoDBConnector {
                 if g.starts_with("_") {
                     retval.as_hashmap_mut().unwrap().insert(g.clone(), tson!({}));
                     for (dbk, v) in o.as_document().unwrap() {
-                        println!("see dbk {}", dbk);
                         let k = dbk;
                         if let Some(f) = v.as_f64() {
                             retval.as_hashmap_mut().unwrap().get_mut(g.as_str()).unwrap().as_hashmap_mut().unwrap().insert(k.to_string(), tson!(f));
@@ -316,7 +315,7 @@ impl MongoDBConnector {
         let model = object.model();
         let keys = object.keys_for_save();
         let col = &self.collections[model.name()];
-        let identifier: Bson = object.identifier().into();
+        let identifier: Bson = object.db_identifier().into();
         let identifier = identifier.as_document().unwrap();
         let mut set = doc!{};
         let mut unset = doc!{};
@@ -425,7 +424,7 @@ impl Connector for MongoDBConnector {
         }
         let model = object.model();
         let col = &self.collections[model.name()];
-        let bson_identifier: Bson = object.identifier().into();
+        let bson_identifier: Bson = object.db_identifier().into();
         let document_identifier = bson_identifier.as_document().unwrap();
         let result = col.delete_one(document_identifier.clone(), None).await;
         return match result {
