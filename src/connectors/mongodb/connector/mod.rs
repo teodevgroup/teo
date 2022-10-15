@@ -459,11 +459,13 @@ impl Connector for MongoDBConnector {
     }
 
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
+        println!("see into find many");
         let select = finder.get("select");
         let include = finder.get("include");
         let aggregate_input = Aggregation::build(model, graph, finder)?;
         let reverse = Input::has_negative_take(finder);
         let col = &self.collections[model.name()];
+        println!("see aggregate input: {:?}", aggregate_input);
         let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
             println!("{:?}", cur);

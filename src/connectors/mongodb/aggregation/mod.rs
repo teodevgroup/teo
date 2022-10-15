@@ -638,10 +638,11 @@ impl Aggregation {
         let mut eq_values: Vec<Document> = vec![];
         let (opposite_model, opposite_relation) = graph.opposite_relation(relation);
         for (field, reference) in relation.iter() {
-            let field_column_name = model.field(field).unwrap().column_name();
+            let field_name = model.field(field).unwrap().name();
+            let reference_name = opposite_model.field(reference).unwrap().name();
             let reference_column_name = opposite_model.field(reference).unwrap().column_name();
-            let_value.insert(reference_column_name, format!("${field_column_name}"));
-            eq_values.push(doc!{"$eq": [format!("${reference_column_name}"), format!("$${reference_column_name}")]});
+            let_value.insert(reference_name, format!("${field_name}"));
+            eq_values.push(doc!{"$eq": [format!("${reference_column_name}"), format!("$${reference_name}")]});
         }
         let mut inner_pipeline = if value.is_hashmap() {
             Self::build(opposite_model, graph, value)?
