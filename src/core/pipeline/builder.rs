@@ -1,4 +1,5 @@
 use std::sync::{Arc};
+use key_path::KeyPath;
 use crate::core::pipeline::argument::Argument;
 use crate::core::pipeline::context::validity::Validity;
 use crate::core::pipeline::modifier::Modifier;
@@ -71,6 +72,9 @@ use crate::core::pipeline::modifiers::string::validation::is_prefix_of::IsPrefix
 use crate::core::pipeline::modifiers::string::validation::is_secure_password::IsSecurePasswordModifier;
 use crate::core::pipeline::modifiers::string::validation::is_suffix_of::IsSuffixOfModifier;
 use crate::core::pipeline::modifiers::string::validation::regex_match::RegexMatchModifier;
+use crate::core::pipeline::modifiers::tson::tson_get::TsonGetModifier;
+use crate::core::pipeline::modifiers::tson::tson_set::TsonSetModifier;
+use crate::core::pipeline::modifiers::tson::tson_set_default::TsonSetDefaultModifier;
 use crate::core::pipeline::modifiers::value::eq::EqModifier;
 use crate::core::pipeline::modifiers::value::is_exist::IsExistModifier;
 use crate::core::pipeline::modifiers::value::is_false::IsFalseModifier;
@@ -503,6 +507,21 @@ impl PipelineBuilder {
 
     pub fn slug(&mut self) -> &mut Self {
         self.modifiers.push(Arc::new(SlugModifier::new()));
+        self
+    }
+
+    pub fn tson_set(&mut self, path: KeyPath<'static>, value: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(TsonSetModifier::new(path, value)));
+        self
+    }
+
+    pub fn tson_set_default(&mut self, path: KeyPath<'static>, value: impl Into<Argument>) -> &mut Self {
+        self.modifiers.push(Arc::new(TsonSetDefaultModifier::new(path, value)));
+        self
+    }
+
+    pub fn tson_get(&mut self, path: KeyPath<'static>) -> &mut Self {
+        self.modifiers.push(Arc::new(TsonGetModifier::new(path)));
         self
     }
 
