@@ -24,7 +24,7 @@ impl Modifier for WhenSingleResultModifier {
     }
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
-        if let Some(intent) = ctx.object.env().intent() {
+        if let Some(intent) = ctx.object.as_ref().unwrap().env().intent() {
             if intent.is_single() {
                 self.pipeline.process(ctx.clone()).await
             } else {

@@ -25,7 +25,7 @@ impl Modifier for WhenUpdateModifier {
     }
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
-        if let Some(intent) = ctx.object.env().intent() {
+        if let Some(intent) = ctx.object.as_ref().unwrap().env().intent() {
             if intent.is_update() {
                 return self.pipeline.process(ctx.clone()).await;
             }

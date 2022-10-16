@@ -53,14 +53,14 @@ impl<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync> Modifier for
     }
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
-        if ctx.object.is_new() {
+        if ctx.object.as_ref().unwrap().is_new() {
             return ctx;
         }
         if ctx.key_path.len() != 1 {
             return ctx.invalid("Compare can only be used on first level fields.");
         }
         let key = ctx.key_path[0].as_key().unwrap();
-        let previous_value = ctx.object.get_previous_value(key);
+        let previous_value = ctx.object.as_ref().unwrap().get_previous_value(key);
         if let Ok(previous_value) = previous_value {
             let current_value = (&ctx).value.clone();
             if previous_value == current_value {

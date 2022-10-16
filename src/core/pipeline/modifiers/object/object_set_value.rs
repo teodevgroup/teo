@@ -30,7 +30,7 @@ impl Modifier for ObjectSetValueModifier {
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let key = self.key.resolve(ctx.clone()).await;
         let value = self.value.resolve(ctx.clone()).await;
-        ctx.object.set_value(key.as_str().unwrap(), value).unwrap();
+        ctx.object.as_ref().unwrap().set_value(key.as_str().unwrap(), value).unwrap();
         ctx
     }
 }

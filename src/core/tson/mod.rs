@@ -17,6 +17,7 @@ pub mod json;
 pub mod from;
 pub mod macros;
 pub(crate) mod decoder;
+pub(crate) mod utils;
 
 // Code from this file is inspired from serde json
 // https://github.com/serde-rs/json/blob/master/src/value/mod.rs

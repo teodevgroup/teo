@@ -23,6 +23,6 @@ impl Modifier for GetObjectModifier {
     }
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
-        ctx.alter_value(Value::Object(ctx.object.clone())).alter_key_path(path![])
+        ctx.alter_value(Value::Object(ctx.object.as_ref().unwrap().clone())).alter_key_path(path![])
     }
 }

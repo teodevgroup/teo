@@ -529,7 +529,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     let auth_by_arg = by_field.auth_by_arg.as_ref().unwrap();
     let pipeline = auth_by_arg.as_pipeline().unwrap();
     let _action_by_input = by_value.unwrap();
-    let ctx = Context::initial_state(obj.clone());
+    let ctx = Context::initial_state_with_object(obj.clone());
     let final_ctx = pipeline.process(ctx).await;
     return match final_ctx.invalid_reason() {
         Some(_reason) => {

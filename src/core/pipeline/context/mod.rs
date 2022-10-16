@@ -13,7 +13,7 @@ pub(crate) mod stage;
 #[derive(Clone)]
 pub struct Context<'a> {
     pub(crate) value: Value,
-    pub(crate) object: Object,
+    pub(crate) object: Option<Object>,
     pub(crate) key_path: KeyPath<'a>,
     pub(crate) validity: Validity,
     pub(crate) stage: Stage,
@@ -21,10 +21,20 @@ pub struct Context<'a> {
 
 impl<'a> Context<'a> {
 
-    pub(crate) fn initial_state(object: Object) -> Self {
+    pub(crate) fn initial_state_with_value(value: Value) -> Self {
+        Context {
+            value,
+            object: None,
+            key_path: KeyPath::default(),
+            validity: Valid,
+            stage: Default,
+        }
+    }
+
+    pub(crate) fn initial_state_with_object(object: Object) -> Self {
         Context {
             value: Value::Object(object.clone()),
-            object: object.clone(),
+            object: Some(object.clone()),
             key_path: KeyPath::default(),
             validity: Valid,
             stage: Default,
@@ -43,7 +53,7 @@ impl<'a> Context<'a> {
 
     pub(crate) fn alter_value_with_identity(&self) -> Self {
         Self {
-            value: self.object.env().source().as_identity_value().or(Some(Value::Null)).unwrap(),
+            value: self.object.as_ref().unwrap().env().source().as_identity_value().or(Some(Value::Null)).unwrap(),
             object: self.object.clone(),
             key_path: self.key_path.clone(),
             validity: self.validity.clone(),

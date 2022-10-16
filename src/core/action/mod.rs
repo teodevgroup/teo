@@ -1,4 +1,5 @@
 use crate::core::object::Object;
+use crate::core::pipeline::context::Context;
 use crate::core::pipeline::Pipeline;
 use crate::prelude::Value;
 
@@ -18,9 +19,10 @@ impl Action {
 
     pub(crate) async fn transform(&self, value: &Value, identity: Option<Object>) -> Value {
         let mut value = value.clone();
+        let mut context = Context::initial_state_with_value(value.clone());
         for transformer in self.transformers.iter() {
-            value = transformer.call(&value, identity.clone()).await;
+            context = transformer.process(context.clone()).await;
         }
-        value
+        context.value
     }
 }

@@ -23,8 +23,8 @@ impl Modifier for ConnectIdentityModifier {
     }
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
-        if let Some(identity) = ctx.object.env().trigger().as_identity() {
-            let model = ctx.object.model();
+        if let Some(identity) = ctx.object.as_ref().unwrap().env().trigger().as_identity() {
+            let model = ctx.object.as_ref().unwrap().model();
             let relation_name = ctx.key_path[0].as_key().unwrap();
             let relation = model.relation(relation_name).unwrap();
             let relation_model_name = relation.model();
