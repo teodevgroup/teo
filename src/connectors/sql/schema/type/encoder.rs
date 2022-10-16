@@ -10,8 +10,14 @@ impl ToSQLString for DatabaseType {
             DatabaseType::ObjectId => panic!(),
             DatabaseType::Bool => if dialect == SQLDialect::MySQL {
                 "TINYINT(1)".to_string()
+            } else if dialect == SQLDialect::PostgreSQL {
+                "boolean".to_string()
+            } else if dialect == SQLDialect::SQLite {
+                "INTEGER".to_string()
+            } else if dialect == SQLDialect::MSSQL {
+                "bit".to_string()
             } else {
-                "Bool".to_string()
+                "BOOL".to_string()
             },
             DatabaseType::Bit { m } => {
                 let arg = if let Some(m) = m {
@@ -25,9 +31,29 @@ impl ToSQLString for DatabaseType {
             DatabaseType::TinyInt { m , u } => (if *u { "TINYINT UNSIGNED" } else { "TINYINT" }).to_string(),
             DatabaseType::SmallInt { m, u } => (if *u { "SMALLINT UNSIGNED" } else { "SMALLINT" }).to_string(),
             DatabaseType::MediumInt { m, u } => (if *u { "MEDIUMINT UNSIGNED" } else { "MEDIUMINT" }).to_string(),
-            DatabaseType::Int { m, u } => (if *u { "INT UNSIGNED" } else { "INT" }).to_string(),
+            DatabaseType::Int { m, u } => if dialect == SQLDialect::MySQL {
+                (if *u { "INT UNSIGNED" } else { "INT" }).to_string()
+            } else if dialect == SQLDialect::PostgreSQL || dialect == SQLDialect::SQLite {
+                "integer".to_string()
+            } else {
+                "INT".to_string()
+            },
             DatabaseType::BigInt { m, u } => (if *u { "BIGINT UNSIGNED" } else { "BIGINT" }).to_string(),
-            DatabaseType::Decimal(_, _) => todo!(),
+            DatabaseType::Decimal { m, d } => if dialect == SQLDialect::PostgreSQL {
+                let m = m.unwrap_or(65);
+                let d = d.unwrap_or(30);
+                format!("DECIMAL({}, {})", m, d)
+            } else if dialect == SQLDialect::MySQL {
+                let m = m.unwrap_or(65);
+                let d = d.unwrap_or(30);
+                format!("DECIMAL({}, {})", m, d)
+            } else if dialect == SQLDialect::MSSQL {
+                let m = m.unwrap_or(32);
+                let d = d.unwrap_or(16);
+                format!("DECIMAL({}, {})", m, d)
+            } else {
+                "DECIMAL".to_string()
+            },
             DatabaseType::Float { m: _m, d: _d } => format!("FLOAT"),
             DatabaseType::Double { m: _m, d: _d } => {
                 if dialect == SQLDialect::PostgreSQL {
@@ -45,12 +71,12 @@ impl ToSQLString for DatabaseType {
             }
             DatabaseType::Date => "DATE".to_string(),
             DatabaseType::DateTime(fsp) => format!("DATETIME({fsp})"),
-            DatabaseType::Timestamp(fsp, tz) => {
+            DatabaseType::Timestamp { p, z } => {
                 if dialect == SQLDialect::PostgreSQL {
-                    let tzinfo = if *tz { " WITH TIME ZONE" } else { "" };
-                    format!("TIMESTAMP({fsp}){tzinfo}")
+                    let tzinfo = if *z { " WITH TIME ZONE" } else { "" };
+                    format!("TIMESTAMP({p}){tzinfo}")
                 } else {
-                    format!("TIMESTAMP({fsp})")
+                    format!("TIMESTAMP({p})")
                 }
             }
             DatabaseType::Time(_, _) => todo!(),
@@ -79,44 +105,44 @@ impl ToSQLString for DatabaseType {
                 } else { Cow::Borrowed("") };
                 format!("VARCHAR{arg}{charset}{collation}")
             }
-            DatabaseType::TinyText(cs, co) => {
-                let charset = if let Some(v) = cs {
+            DatabaseType::TinyText { n , c } => {
+                let charset = if let Some(v) = n {
                     format!(" CHARACTER SET {v}")
                 } else { "".to_string() };
-                let collation = if let Some(v) = co {
+                let collation = if let Some(v) = c {
                     format!(" COLLATION {v}")
                 } else { "".to_string() };
                 format!("TINYTEXT{charset}{collation}")
             }
-            DatabaseType::MediumText(cs, co) => {
-                let charset = if let Some(v) = cs {
+            DatabaseType::MediumText { n, c } => {
+                let charset = if let Some(v) = n {
                     format!(" CHARACTER SET {v}")
                 } else { "".to_string() };
-                let collation = if let Some(v) = co {
+                let collation = if let Some(v) = c {
                     format!(" COLLATION {v}")
                 } else { "".to_string() };
                 format!("MEDIUMTEXT{charset}{collation}")
             }
-            DatabaseType::LongText(cs, co) => {
-                let charset = if let Some(v) = cs {
+            DatabaseType::LongText { n, c } => {
+                let charset = if let Some(v) = n {
                     format!(" CHARACTER SET {v}")
                 } else { "".to_string() };
-                let collation = if let Some(v) = co {
+                let collation = if let Some(v) = c {
                     format!(" COLLATION {v}")
                 } else { "".to_string() };
                 format!("LONGTEXT{charset}{collation}")
             }
-            DatabaseType::Text(l, cs, co) => {
+            DatabaseType::Text { m, n ,c } => {
                 if dialect == SQLDialect::PostgreSQL {
                     "TEXT".to_string()
                 } else {
-                    let charset = if let Some(v) = cs {
+                    let charset = if let Some(v) = n {
                         format!(" CHARACTER SET {v}")
                     } else { "".to_string() };
-                    let collation = if let Some(v) = co {
+                    let collation = if let Some(v) = c {
                         format!(" COLLATION {v}")
                     } else { "".to_string() };
-                    format!("TINYTEXT{charset}{collation}")
+                    format!("TEXT{charset}{collation}")
                 }
             }
             DatabaseType::Binary(l) => format!("BINARY({l})"),

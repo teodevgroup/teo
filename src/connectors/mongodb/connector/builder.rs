@@ -35,7 +35,7 @@ impl ConnectorBuilder for MongoDBConnectorBuilder {
             FieldType::U128 => DatabaseType::Int64,
             FieldType::F32 => DatabaseType::Double { m: None, d: None },
             FieldType::F64 => DatabaseType::Double { m: None, d: None },
-            FieldType::Decimal => DatabaseType::Decimal(None, None),
+            FieldType::Decimal => DatabaseType::Decimal { m: None, d: None },
             FieldType::String => DatabaseType::String,
             FieldType::Date => DatabaseType::DateTime(3),
             FieldType::DateTime => DatabaseType::DateTime(3),

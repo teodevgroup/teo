@@ -79,7 +79,7 @@ pub enum DatabaseType {
     // Available for MySQL and PostgreSQL.
     // Numeric, Dec, Fixed are all the same.
     // Supports on all databases. MongoDB doesn't have full support.
-    Decimal(Option<u8>, Option<u8>),
+    Decimal { m: Option<u8>, d: Option<u8> },
 
     // Float(p)
     // A floating-point number. p represents the precision in bits, but MySQL uses this value only
@@ -110,11 +110,15 @@ pub enum DatabaseType {
     // MongoDB supports this, too.
     DateTime(u8),
 
-    // Timestamp(p, with timezone)
-    // A timestamp. In MySQL, the range is '1970-01-01 00:00:01.000000' UTC to
-    // '2038-01-19 03:14:07.999999' UTC. In MySQL, the with timezone option is ignored.
-    // All database supports this.
-    Timestamp(u8, bool),
+    /// Timestamp
+    /// Arguments:
+    ///     p: precision
+    ///     z: time zone info
+    /// Represents a timestamp.
+    /// Note: In MySQL, the range is '1970-01-01 00:00:01.000000' UTC to
+    /// '2038-01-19 03:14:07.999999' UTC. In MySQL, the with timezone option is ignored.
+    /// Availability: PostgreSQL, MySQL, SQLite, MongoDB
+    Timestamp { p: u8, z: bool },
 
     // Time(fsp, with timezone), fsp is from 0 - 6. Time zone is ignored for MySQL.
     // MySQL and PostgreSQL only
@@ -145,24 +149,42 @@ pub enum DatabaseType {
     /// Availability: MySQL, PostgreSQL
     VarChar { m: u16, n: Option<String>, c: Option<String> },
 
-    // TinyText(charset, collate)
-    // MySQL support this
-    TinyText(Option<String>, Option<String>),
+    /// TinyText
+    /// Represents a tiny text.
+    /// Arguments:
+    ///     n: charset name
+    ///     c: collate
+    /// Availability: MySQL
+    TinyText { n: Option<String>, c: Option<String> },
 
-    // MediumText(charset, collate)
-    // MySQL support this
-    MediumText(Option<String>, Option<String>),
+    /// MediumText
+    /// Represents a medium text.
+    /// Arguments:
+    ///     n: charset name
+    ///     c: collate
+    /// Availability: MySQL
+    MediumText { n: Option<String>, c: Option<String> },
 
-    // LongText(charset, collate)
-    // MySQL support this
-    LongText(Option<String>, Option<String>),
+    /// LongText
+    /// Represents a long text.
+    /// Arguments:
+    ///     n: charset name
+    ///     c: collate
+    /// Availability: MySQL
+    LongText { n: Option<String>, c: Option<String> },
 
-    // Text is different in MySQL and PostgreSQL
-    // MySQL and PostgreSQL support this
-    Text(Option<u16>, Option<String>, Option<String>),
+    /// Text
+    /// Represents a text.
+    /// Arguments:
+    ///     n: charset name
+    ///     c: collate
+    /// Note: In PostgreSQL, arguments are ingored.
+    /// Availability: MySQL, PostgreSQL
+    Text { m: Option<u16>, n: Option<String>, c: Option<String> },
 
-    // String
-    // MongoDB only
+    /// String
+    /// Represents a string.
+    // Availability: MongoDB
     String,
 
     // MySQL and MongoDB only
