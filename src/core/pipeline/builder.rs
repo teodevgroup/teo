@@ -86,8 +86,10 @@ use crate::core::pipeline::modifiers::value::gte::GteModifier;
 use crate::core::pipeline::modifiers::value::lt::LtModifier;
 use crate::core::pipeline::modifiers::value::lte::LteModifier;
 use crate::core::pipeline::modifiers::value::one_of::OneOfModifier;
+use crate::core::pipeline::modifiers::vector::filter::FilterModifier;
 use crate::core::pipeline::modifiers::vector::item_at::ItemAtModifier;
 use crate::core::pipeline::modifiers::vector::join::JoinModifier;
+use crate::core::pipeline::modifiers::vector::map::MapModifier;
 use crate::core::pipeline::Pipeline;
 use crate::core::tson::Value;
 
@@ -437,6 +439,20 @@ impl PipelineBuilder {
 
     pub fn item_at(&mut self, index: impl Into<Argument>) -> &mut Self {
         self.modifiers.push(Arc::new(ItemAtModifier::new(index)));
+        self
+    }
+
+    pub fn map<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut builder = PipelineBuilder::new();
+        build(&mut builder);
+        self.modifiers.push(Arc::new(MapModifier::new(builder.build())));
+        self
+    }
+
+    pub fn filter<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
+        let mut builder = PipelineBuilder::new();
+        build(&mut builder);
+        self.modifiers.push(Arc::new(FilterModifier::new(builder.build())));
         self
     }
 

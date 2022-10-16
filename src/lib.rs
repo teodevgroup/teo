@@ -15,4 +15,6 @@ pub mod prelude {
     pub use crate::core::object::Object;
     pub extern crate tokio;
     pub use tokio::main;
+    pub extern crate key_path;
+    pub use key_path::path;
 }
