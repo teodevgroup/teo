@@ -7,19 +7,19 @@ use crate::core::pipeline::context::Context;
 use crate::core::tson::utils::TsonUtils;
 
 #[derive(Debug, Clone)]
-pub struct TsonSetDefault<'a> {
+pub struct TsonSetDefaultModifier<'a> {
     path: KeyPath<'a>,
     argument: Argument
 }
 
-impl<'a> TsonSetDefault<'a> {
+impl<'a> TsonSetDefaultModifier<'a> {
     pub fn new(path: KeyPath<'a>, argument: impl Into<Argument>) -> Self {
         Self { path, argument: argument.into() }
     }
 }
 
 #[async_trait]
-impl Modifier for TsonSetDefault<'_> {
+impl Modifier for TsonSetDefaultModifier<'_> {
 
     fn name(&self) -> &'static str {
         "tsonSetDefault"
