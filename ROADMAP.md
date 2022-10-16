@@ -115,7 +115,7 @@
 - MongoDB: Bug fixes for one-to-many relationship **[DONE]**
 
 #### 0.0.39
-- Merge json pipeline into pipeline (hashmap)
+- Merge json pipeline into pipeline **[DONE]**
 - Pipeline allows action error
 - More pipeline modifiers
 
