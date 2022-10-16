@@ -17,11 +17,26 @@ impl SQLMigration {
             let stmt = SQL::drop().database(db_name).if_exists().to_string(dialect);
             pool.execute(&*stmt).await.unwrap();
         }
-        // create and use database
-        let stmt = SQL::create().database(db_name).if_not_exists().to_string(dialect);
-        pool.execute(&*stmt).await.unwrap();
-        let stmt = SQL::r#use().database(db_name).to_string(dialect);
-        pool.execute(&*stmt).await.unwrap();
+        // create database if needed
+        if dialect == SQLDialect::PostgreSQL {
+            let stmt = format!("select from pg_database where datname = '{}'", db_name);
+            let result = pool.fetch_one(&*stmt).await;
+            if result.is_err() {
+                let stmt = SQL::create().database(db_name).to_string(dialect);
+                pool.execute(&*stmt).await.unwrap();
+            }
+        } else {
+            let stmt = SQL::create().database(db_name).if_not_exists().to_string(dialect);
+            pool.execute(&*stmt).await.unwrap();
+        }
+        // use database
+        if dialect == SQLDialect::PostgreSQL {
+            let stmt = format!("SET search_path TO {db_name}");
+            pool.execute(&*stmt).await.unwrap();
+        } else {
+            let stmt = SQL::r#use().database(db_name).to_string(dialect);
+            pool.execute(&*stmt).await.unwrap();
+        }
     }
 
     pub(crate) async fn migrate(dialect: SQLDialect, pool: &mut AnyPool, models: &Vec<Model>) {

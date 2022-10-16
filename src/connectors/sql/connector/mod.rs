@@ -37,7 +37,11 @@ impl SQLConnector {
         }
         let mut url_without_db = url_result.unwrap();
         let database_name = url_without_db.path()[1..].to_string();
-        url_without_db.set_path("/");
+        if dialect == SQLDialect::PostgreSQL {
+            url_without_db.set_path("/postgres");
+        } else {
+            url_without_db.set_path("/");
+        }
         let mut pool: AnyPool = AnyPool::connect(url_without_db.as_str()).await.unwrap();
         SQLMigration::create_database_if_needed(dialect, &mut pool, &database_name, reset_database).await;
         let mut pool: AnyPool = AnyPool::connect(url.as_str()).await.unwrap();

@@ -17,6 +17,6 @@ impl ToSQLString for SQLDropTableStatement {
     fn to_string(&self, _dialect: SQLDialect) -> String {
         let table = &self.table;
         let if_exists = if self.if_exists { " IF EXISTS" } else { "" };
-        format!("DROP TABLE{if_exists} `{table}`;")
+        format!("DROP TABLE{if_exists} '{table}';")
     }
 }

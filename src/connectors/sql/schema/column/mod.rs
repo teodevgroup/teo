@@ -64,7 +64,22 @@ impl ToSQLString for SQLColumn {
         let not_null = if self.not_null { " NOT NULL" } else { " NULL" };
         let primary = if self.primary_key { " PRIMARY KEY" } else { "" };
         let auto_inc = if self.auto_increment { " AUTO_INCREMENT" } else { "" };
-        let unique = if self.unique_key { " UNIQUE KEY" } else { "" };
-        format!("`{name}` {t}{not_null}{primary}{unique}{auto_inc}")
+        let unique = if self.unique_key {
+            if dialect == SQLDialect::PostgreSQL {
+                " UNIQUE"
+            } else {
+                " UNIQUE KEY"
+            }
+        } else { "" };
+        if dialect == SQLDialect::PostgreSQL {
+            let t_with_auto_inc = if self.auto_increment {
+                "SERIAL".to_owned()
+            } else {
+                t
+            };
+            format!("{name} {t_with_auto_inc}{not_null}{primary}{unique}")
+        } else {
+            format!("`{name}` {t}{not_null}{primary}{unique}{auto_inc}")
+        }
     }
 }

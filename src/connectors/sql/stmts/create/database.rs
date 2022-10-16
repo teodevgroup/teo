@@ -14,9 +14,13 @@ impl SQLCreateDatabaseStatement {
 }
 
 impl ToSQLString for SQLCreateDatabaseStatement {
-    fn to_string(&self, _dialect: SQLDialect) -> String {
+    fn to_string(&self, dialect: SQLDialect) -> String {
         let database = &self.database;
         let if_not_exists = if self.if_not_exists { " IF NOT EXISTS" } else { "" };
-        format!("CREATE DATABASE{if_not_exists} `{database}`;")
+        if dialect == SQLDialect::PostgreSQL {
+            format!("CREATE DATABASE{if_not_exists} {database};")
+        } else {
+            format!("CREATE DATABASE{if_not_exists} `{database}`;")
+        }
     }
 }
