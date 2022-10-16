@@ -116,10 +116,13 @@
 
 #### 0.0.39
 - Merge json pipeline into pipeline **[DONE]**
+- Fix decode credentials **[DONE]**
+
+#### 0.0.40
 - Pipeline allows action error
 - More pipeline modifiers
 
-#### 0.0.40
+#### 0.0.41
 - MongoDB: root skip take and distinct bug
 - MongoDB: nested skip take and distinct bug
 - MongoDB: if cursor key is not orderBy key, result is wrong
@@ -130,17 +133,17 @@
 - SQL: Enum types
 - Delete callbacks: `when_delete`, `before_delete` and `after_delete`
 
-#### 0.0.41
+#### 0.0.42
 - PostgreSQL
 - SQLite
 
-#### 0.0.42
+#### 0.0.43
 - TypeScript Client
 
-#### 0.0.43
+#### 0.0.44
 - The copy action
 
-#### 0.0.44 - 0.0.55
+#### 0.0.45 - 0.0.55
 - Setup unit tests
 - Replace buggy sqlx
 - Full support of decimal type

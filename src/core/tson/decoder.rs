@@ -1,4 +1,5 @@
 use std::collections::{HashSet, HashMap, BTreeMap};
+use std::ops::BitOr;
 use std::str::FromStr;
 #[cfg(feature = "data-source-mongodb")]
 use bson::oid::ObjectId;
@@ -85,7 +86,7 @@ impl Decoder {
                 "having" => { retval.insert(key.to_owned(), Self::decode_having(model, graph, value, path)?); }
                 "create" => { retval.insert(key.to_owned(), if action == ActionType::CreateMany { Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_create(model, graph, v, p))? } else { Self::decode_create(model, graph, value, path)? } ); }
                 "update" => { retval.insert(key.to_owned(), Self::decode_update(model, graph, value, path)?); }
-                "credentials" => { retval.insert(key.to_owned(), Self::decode_credentials(model, value, path)?); }
+                "credentials" => { retval.insert(key.to_owned(), Self::decode_credentials(model, graph, value, path)?); }
                 _ => panic!("Unhandled key.")
             }
         }
@@ -119,9 +120,16 @@ impl Decoder {
         }
     }
 
-    fn decode_credentials<'a>(_model: &Model, _json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
-        let _path = path.as_ref();
-        todo!("Implement this later")
+    fn decode_credentials<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+        if let Some(map) = json_value.as_object() {
+            let by_set = model.auth_by_keys().iter().map(|k| k.as_str()).collect::<HashSet<&str>>();
+            let identity_set = model.auth_identity_keys().iter().map(|k| k.as_str()).collect::<HashSet<&str>>();
+            let allowed = by_set.bitor(&identity_set);
+            Self::check_json_keys(map, &allowed, path.as_ref())?;
+            Ok(Self::decode_create(model, graph, json_value, path.as_ref())?)
+        } else {
+            Err(ActionError::unexpected_input_type("object", path))
+        }
     }
 
     fn decode_create<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
