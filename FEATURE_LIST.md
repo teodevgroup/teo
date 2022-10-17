@@ -1,4 +1,4 @@
-# Roadmap
+# Feature List
 
 #### 0.0.20
 - `on_output` pipeline is called in save function **[DONE]**
@@ -120,11 +120,13 @@
 
 #### 0.0.40
 - PostgreSQL: CRUD and decoding **[DONE]**
+
+#### 0.0.41
 - SQLite: CRUD and decoding
 - Pipeline allows action error
 - More pipeline modifiers
 
-#### 0.0.41
+#### 0.0.42
 - MongoDB: root skip take and distinct bug
 - MongoDB: nested skip take and distinct bug
 - MongoDB: if cursor key is not orderBy key, result is wrong
@@ -135,17 +137,17 @@
 - SQL: Enum types
 - Delete callbacks: `when_delete`, `before_delete` and `after_delete`
 
-#### 0.0.42
-- PostgreSQL: Migration I
-- SQLite
-
 #### 0.0.43
-- TypeScript Client
+- PostgreSQL: Migration I
+- SQLite: Migration I
 
 #### 0.0.44
+- TypeScript Client
+
+#### 0.0.45
 - The copy action
 
-#### 0.0.45 - 0.0.55
+#### 0.0.46 - 0.0.55
 - Setup unit tests
 - Replace buggy sqlx
 - Full support of decimal type
