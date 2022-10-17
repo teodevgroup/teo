@@ -457,8 +457,13 @@ impl Query {
             stmt.limit(limit, skip);
         } else if skip.is_some() || take.is_some() {
             let skip: u64 = if skip.is_some() { skip.unwrap().as_u64().unwrap() as u64 } else { 0 };
-            let limit: u64 = if take.is_some() { take.unwrap().as_i64().unwrap().abs() as u64 } else { 18446744073709551615 };
-            stmt.limit(limit, skip);
+            if dialect == SQLDialect::MySQL {
+                let limit: u64 = if take.is_some() { take.unwrap().as_i64().unwrap().abs() as u64 } else { 18446744073709551615 };
+                stmt.limit(limit, skip);
+            } else {
+                let limit: u64 = if take.is_some() { take.unwrap().as_i64().unwrap().abs() as u64 } else { 9223372036854775806 };
+                stmt.limit(limit, skip);
+            }
         }
         stmt.to_string(dialect)
     }
