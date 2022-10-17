@@ -31,22 +31,28 @@ pub(crate) struct SQLConnector {
 
 impl SQLConnector {
     pub(crate) async fn new(dialect: SQLDialect, url: String, models: &Vec<Model>, reset_database: bool) -> Self {
-        let url_result = Url::parse(&url);
-        if url_result.is_err() {
-            panic!("Data source URL is invalid.");
-        }
-        let mut url_without_db = url_result.unwrap();
-        let database_name = url_without_db.path()[1..].to_string();
-        if dialect == SQLDialect::PostgreSQL {
-            url_without_db.set_path("/postgres");
+        if dialect == SQLDialect::SQLite {
+            let mut pool: AnyPool = AnyPool::connect(url.as_str()).await.unwrap();
+            SQLMigration::migrate(dialect, &mut pool, models).await;
+            Self { dialect, pool }
         } else {
-            url_without_db.set_path("/");
+            let url_result = Url::parse(&url);
+            if url_result.is_err() {
+                panic!("Data source URL is invalid.");
+            }
+            let mut url_without_db = url_result.unwrap();
+            let database_name = url_without_db.path()[1..].to_string();
+            if dialect == SQLDialect::PostgreSQL {
+                url_without_db.set_path("/postgres");
+            } else {
+                url_without_db.set_path("/");
+            }
+            let mut pool: AnyPool = AnyPool::connect(url_without_db.as_str()).await.unwrap();
+            SQLMigration::create_database_if_needed(dialect, &mut pool, &database_name, reset_database).await;
+            let mut pool: AnyPool = AnyPool::connect(url.as_str()).await.unwrap();
+            SQLMigration::migrate(dialect, &mut pool, models).await;
+            Self { dialect, pool }
         }
-        let mut pool: AnyPool = AnyPool::connect(url_without_db.as_str()).await.unwrap();
-        SQLMigration::create_database_if_needed(dialect, &mut pool, &database_name, reset_database).await;
-        let mut pool: AnyPool = AnyPool::connect(url.as_str()).await.unwrap();
-        SQLMigration::migrate(dialect, &mut pool, models).await;
-        Self { dialect, pool }
     }
 
     async fn create_object(&self, object: &Object) -> ActionResult<()> {

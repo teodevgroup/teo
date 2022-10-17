@@ -1,5 +1,5 @@
 use std::fmt::format;
-use chrono::{Date, Utc, DateTime};
+use chrono::{Date, Utc, DateTime, SecondsFormat};
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::field::r#type::FieldType;
 use crate::prelude::{Graph, Value};
@@ -73,7 +73,7 @@ impl ValueToSQLString for &Value {
 }
 
 impl ToSQLString for Value {
-    fn to_string(&self, _dialect: SQLDialect) -> String {
+    fn to_string(&self, dialect: SQLDialect) -> String {
         match self {
             Value::Null => "NULL".to_owned(),
             Value::String(string) => string.to_sql_input(),
@@ -90,8 +90,8 @@ impl ToSQLString for Value {
             Value::F32(i) => i.to_string(),
             Value::F64(i) => i.to_string(),
             Value::Bool(b) => b.to_sql_input(),
-            Value::Date(d) => d.to_sql_input(),
-            Value::DateTime(d) => d.to_sql_input(),
+            Value::Date(d) => d.to_sql_input(dialect),
+            Value::DateTime(d) => d.to_sql_input(dialect),
             _ => panic!("unhandled"),
         }
     }
@@ -109,6 +109,10 @@ impl ToWrapped for String {
 
 pub trait ToSQLInput {
     fn to_sql_input(&self) -> String;
+}
+
+pub trait ToSQLInputDialect {
+    fn to_sql_input(&self, dialect: SQLDialect) -> String;
 }
 
 impl ToSQLInput for String {
@@ -147,15 +151,19 @@ impl ToSQLInput for bool {
     }
 }
 
-impl ToSQLInput for Date<Utc> {
-    fn to_sql_input(&self) -> String {
+impl ToSQLInputDialect for Date<Utc> {
+    fn to_sql_input(&self, _dialect: SQLDialect) -> String {
         self.format("%Y-%m-%d").to_string().to_sql_input()
     }
 }
 
-impl ToSQLInput for DateTime<Utc> {
-    fn to_sql_input(&self) -> String {
-        self.format("%Y-%m-%d %H:%M:%S.%f").to_string().to_sql_input()
+impl ToSQLInputDialect for DateTime<Utc> {
+    fn to_sql_input(&self, dialect: SQLDialect) -> String {
+        if dialect == SQLDialect::SQLite {
+            self.to_rfc3339_opts(SecondsFormat::Millis, true).to_sql_input()
+        } else {
+            self.format("%Y-%m-%d %H:%M:%S.%3f").to_string().to_sql_input()
+        }
     }
 }
 

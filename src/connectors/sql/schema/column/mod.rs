@@ -63,12 +63,18 @@ impl ToSQLString for SQLColumn {
         let t = self.r#type.to_string(dialect.clone());
         let not_null = if self.not_null { " NOT NULL" } else { " NULL" };
         let primary = if self.primary_key { " PRIMARY KEY" } else { "" };
-        let auto_inc = if self.auto_increment { " AUTO_INCREMENT" } else { "" };
-        let unique = if self.unique_key {
-            if dialect == SQLDialect::PostgreSQL {
-                " UNIQUE"
+        let auto_inc = if self.auto_increment {
+            if dialect == SQLDialect::MySQL {
+                " AUTO_INCREMENT"
             } else {
+                " AUTOINCREMENT"
+            }
+        } else { "" };
+        let unique = if self.unique_key {
+            if dialect == SQLDialect::MySQL {
                 " UNIQUE KEY"
+            } else {
+                " UNIQUE"
             }
         } else { "" };
         if dialect == SQLDialect::PostgreSQL {

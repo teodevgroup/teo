@@ -79,6 +79,7 @@ impl RowDecoder {
                 return Value::DateTime(datetime);
             } else if dialect == SQLDialect::SQLite {
                 let timestamp: String = row.get(column_name);
+                println!("see timestamp '{}'", &timestamp);
                 return Value::DateTime(DateTime::parse_from_rfc3339(&timestamp).unwrap().with_timezone(&Utc));
             } else {
                 let datetime: DateTime<Utc> = row.get(column_name);
