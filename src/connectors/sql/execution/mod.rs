@@ -178,7 +178,7 @@ impl Execution {
                         Cow::Owned(tson!({}))
                     };
                     let mut included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), None, None, negative_take, None).await?;
-                    // println!("see included: {:?}", included_values);
+                    println!("see included: {:?}", included_values);
                     for result in results.iter_mut() {
                         let mut skipped = 0;
                         let mut taken = 0;
