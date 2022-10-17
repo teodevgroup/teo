@@ -39,6 +39,7 @@ impl ValueToSQLString for Value {
             } else if let Some(val) = self.as_u64() {
                 val.to_string()
             } else {
+                println!("see val: {:?}", self);
                 panic!("Uncoded number.")
             }
             FieldType::F32 | FieldType::F64 => if let Some(val) = self.as_f64() {

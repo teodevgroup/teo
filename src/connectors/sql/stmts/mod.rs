@@ -48,7 +48,7 @@ impl SQL {
     }
 
     pub fn insert_into(table: &str) -> SQLInsertIntoStatement {
-        SQLInsertIntoStatement { table, values: vec![] }
+        SQLInsertIntoStatement { table, values: vec![], returning: vec![] }
     }
 
     pub fn update(table: &str) -> SQLUpdateStatement {

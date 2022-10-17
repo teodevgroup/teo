@@ -23,13 +23,17 @@ pub(crate) struct Execution { }
 
 impl Execution {
 
-    fn row_to_value(model: &Model, graph: &Graph, row: &AnyRow) -> Value {
+    pub(crate) fn row_to_value(model: &Model, graph: &Graph, row: &AnyRow, dialect: SQLDialect) -> Value {
         Value::HashMap(row.columns().iter().filter_map(|column| {
             let column_name = column.name();
             if let Some(field) = model.field_with_column_name(column_name) {
-                Some((field.name().to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, column_name)))
+                if field.auto_increment && dialect == SQLDialect::PostgreSQL {
+                    Some((field.name().to_owned(), RowDecoder::decode_serial(field.is_optional(), row, column_name)))
+                } else {
+                    Some((field.name().to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, column_name, dialect)))
+                }
             } else if let Some(property) = model.property(column_name) {
-                Some((property.name().to_owned(), RowDecoder::decode(property.r#type(), property.is_optional(), row, column_name)))
+                Some((property.name().to_owned(), RowDecoder::decode(property.r#type(), property.is_optional(), row, column_name, dialect)))
             } else if column_name.contains(".") {
                 let names: Vec<&str> = column_name.split(".").collect();
                 let relation_name = names[0];
@@ -39,7 +43,7 @@ impl Execution {
                 } else {
                     let opposite_model = graph.model(model.relation(relation_name).unwrap().model()).unwrap();
                     let field = opposite_model.field(field_name).unwrap();
-                    Some((column_name.to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, column_name)))
+                    Some((column_name.to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, column_name, dialect)))
                 }
             } else {
                 panic!("Unhandled key {}.", column_name);
@@ -47,7 +51,7 @@ impl Execution {
         }).collect())
     }
 
-    fn row_to_aggregate_value(model: &Model, graph: &Graph, row: &AnyRow) -> Value {
+    fn row_to_aggregate_value(model: &Model, graph: &Graph, row: &AnyRow, dialect: SQLDialect) -> Value {
         let mut retval: HashMap<String, Value> = HashMap::new();
         for column in row.columns() {
             let result_key = column.name();
@@ -62,17 +66,17 @@ impl Execution {
                     let count: i64 = row.get(result_key);
                     retval.get_mut(group).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), tson!(count));
                 } else if group == "_avg" || group == "_sum" { // force f64
-                    let v = RowDecoder::decode(&FieldType::F64, true, &row, result_key);
+                    let v = RowDecoder::decode(&FieldType::F64, true, &row, result_key, dialect);
                     retval.get_mut(group).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), v);
                 } else { // field type
                     let field = model.field(field_name).unwrap();
-                    let v = RowDecoder::decode(field.r#type(), true, &row, result_key);
+                    let v = RowDecoder::decode(field.r#type(), true, &row, result_key, dialect);
                     retval.get_mut(group).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), v);
                 }
             } else if let Some(field) = model.field_with_column_name(result_key) {
-                retval.insert(field.name().to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, result_key));
+                retval.insert(field.name().to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, result_key, dialect));
             } else if let Some(property) = model.property(result_key) {
-                retval.insert(property.name().to_owned(), RowDecoder::decode(property.r#type(), property.is_optional(), row, result_key));
+                retval.insert(property.name().to_owned(), RowDecoder::decode(property.r#type(), property.is_optional(), row, result_key, dialect));
             }
         }
         Value::HashMap(retval)
@@ -118,7 +122,7 @@ impl Execution {
         if rows.is_empty() {
             return Ok(vec![])
         }
-        let mut results = rows.iter().map(|row| Self::row_to_value(model, graph, row)).collect::<Vec<Value>>();
+        let mut results = rows.iter().map(|row| Self::row_to_value(model, graph, row, dialect)).collect::<Vec<Value>>();
         if reverse {
             results.reverse();
         }
@@ -307,7 +311,7 @@ impl Execution {
         let stmt = Query::build_for_aggregate(model, graph, finder, dialect);
         match pool.fetch_one(&*stmt).await {
             Ok(result) => {
-                Ok(Self::row_to_aggregate_value(model, graph, &result))
+                Ok(Self::row_to_aggregate_value(model, graph, &result, dialect))
             },
             Err(err) => {
                 println!("{:?}", err);
@@ -326,7 +330,7 @@ impl Execution {
             }
         };
         Ok(Value::Vec(rows.iter().map(|r| {
-            Self::row_to_aggregate_value(model, graph, r)
+            Self::row_to_aggregate_value(model, graph, r, dialect)
         }).collect::<Vec<Value>>()))
     }
 

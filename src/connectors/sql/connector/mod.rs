@@ -58,23 +58,43 @@ impl SQLConnector {
             if let Some(field) = model.field(key) {
                 let column_name = field.column_name();
                 let val = object.get_value(key).unwrap();
-                values.push((column_name, val.to_string(self.dialect)));
+                if !(field.auto_increment && val.is_null()) {
+                    values.push((column_name, val.to_string(self.dialect)));
+                }
             } else if let Some(_property) = model.property(key) {
                 let val: Value = object.get_property(key).await.unwrap();
                 values.push((key, val.to_string(self.dialect)));
             }
         }
         let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();
-        let stmt = SQL::insert_into(model.table_name()).values(value_refs).to_string(self.dialect);
-        match self.pool.execute(&*stmt).await {
-            Ok(result) => {
-                for key in auto_keys {
-                    object.set_value(key, Value::I64(result.last_insert_id().unwrap()))?;
+        let stmt = SQL::insert_into(model.table_name()).values(value_refs).returning(auto_keys).to_string(self.dialect);
+        if self.dialect == SQLDialect::PostgreSQL {
+            match self.pool.fetch_one(&*stmt).await {
+                Ok(result) => {
+                    let value = Execution::row_to_value(model, object.graph(), &result, self.dialect);
+                    for (k, v) in value.as_hashmap().unwrap() {
+                        object.set_value(k, v.clone())?;
+                    }
+                    Ok(())
                 }
-                Ok(())
+                Err(err) => {
+                    println!("{:?}", err);
+                    Err(Self::handle_err_result(err))
+                }
             }
-            Err(err) => {
-                Err(Self::handle_err_result(err))
+        } else {
+            match self.pool.execute(&*stmt).await {
+                Ok(result) => {
+                    println!("see result {:?}", result);
+                    for key in auto_keys {
+                        object.set_value(key, Value::I64(result.last_insert_id().unwrap()))?;
+                    }
+                    Ok(())
+                }
+                Err(err) => {
+                    println!("{:?}", err);
+                    Err(Self::handle_err_result(err))
+                }
             }
         }
     }
@@ -127,6 +147,7 @@ impl SQLConnector {
 
     fn handle_err_result(err: sqlx::Error) -> ActionError {
         let message = err.as_database_error().unwrap().message();
+        // mysql
         let regex = Regex::new("Duplicate entry (.+) for key '(.+)'").unwrap();
         if let Some(captures) = regex.captures(message) {
             let value = captures.get(1).unwrap().as_str();

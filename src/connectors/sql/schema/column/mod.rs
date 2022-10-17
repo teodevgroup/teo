@@ -77,7 +77,7 @@ impl ToSQLString for SQLColumn {
             } else {
                 t
             };
-            format!("{name} {t_with_auto_inc}{not_null}{primary}{unique}")
+            format!("\"{name}\" {t_with_auto_inc}{not_null}{primary}{unique}")
         } else {
             format!("`{name}` {t}{not_null}{primary}{unique}{auto_inc}")
         }

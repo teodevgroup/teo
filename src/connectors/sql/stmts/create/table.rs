@@ -34,7 +34,7 @@ impl ToSQLString for SQLCreateTableStatement {
             c.to_string(dialect)
         }).collect::<Vec<String>>().join(", ");
         if dialect == SQLDialect::PostgreSQL {
-            format!("CREATE TABLE{if_not_exists} {table_name}( {columns} );")
+            format!("CREATE TABLE{if_not_exists} \"{table_name}\"( {columns} );")
         } else {
             format!("CREATE TABLE{if_not_exists} `{table_name}`( {columns} );")
         }
