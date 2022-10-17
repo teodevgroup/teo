@@ -5,7 +5,7 @@ use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use async_trait::async_trait;
 use regex::Regex;
-use sqlx::{AnyPool, Executor, Postgres};
+use sqlx::{AnyPool, Executor};
 use crate::core::model::Model;
 use url::Url;
 use crate::connectors::sql::connector::save_session::SQLSaveSession;

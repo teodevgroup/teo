@@ -133,9 +133,7 @@ impl ToSQLString for DatabaseType {
                 format!("LONGTEXT{charset}{collation}")
             }
             DatabaseType::Text { m, n ,c } => {
-                if dialect == SQLDialect::PostgreSQL {
-                    "TEXT".to_string()
-                } else {
+                if dialect == SQLDialect::MySQL {
                     let charset = if let Some(v) = n {
                         format!(" CHARACTER SET {v}")
                     } else { "".to_string() };
@@ -143,6 +141,8 @@ impl ToSQLString for DatabaseType {
                         format!(" COLLATION {v}")
                     } else { "".to_string() };
                     format!("TEXT{charset}{collation}")
+                } else {
+                    "TEXT".to_string()
                 }
             }
             DatabaseType::Binary(l) => format!("BINARY({l})"),

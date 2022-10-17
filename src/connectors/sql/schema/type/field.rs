@@ -81,6 +81,28 @@ fn default_database_type_postgresql(field_type: &FieldType) -> DatabaseType {
 
 fn default_database_type_sqlite(field_type: &FieldType) -> DatabaseType {
     match field_type {
-        _ => panic!("Unhandled."),
+        FieldType::Undefined => DatabaseType::Undefined,
+        FieldType::Bool => DatabaseType::Int { m: None, u: false, },
+        FieldType::I8 => DatabaseType::Int { m: None, u: false },
+        FieldType::I16 => DatabaseType::Int { m: None, u: false },
+        FieldType::I32 => DatabaseType::Int { m: None, u: false },
+        FieldType::I64 => DatabaseType::Int { m: None, u: false },
+        FieldType::I128 => DatabaseType::Int { m: None, u: false },
+        FieldType::U8 => DatabaseType::Int { m: None, u: true },
+        FieldType::U16 => DatabaseType::Int { m: None, u: true },
+        FieldType::U32 => DatabaseType::Int { m: None, u: true },
+        FieldType::U64 => DatabaseType::Int { m: None, u: true },
+        FieldType::U128 => DatabaseType::Int { m: None, u: true },
+        FieldType::F32 => DatabaseType::Real,
+        FieldType::F64 => DatabaseType::Real,
+        FieldType::String => DatabaseType::Text { m: None, n: None, c: None },
+        FieldType::Date => DatabaseType::Text { m: None, n: None, c: None },
+        FieldType::DateTime => DatabaseType::Text { m: None, n: None, c: None },
+        FieldType::Enum(_) => DatabaseType::Undefined,
+        FieldType::Vec(_) => DatabaseType::Undefined,
+        FieldType::HashMap(_) => DatabaseType::Undefined,
+        FieldType::BTreeMap(_) => DatabaseType::Undefined,
+        FieldType::Object(_) => DatabaseType::Undefined,
+        _ => DatabaseType::Undefined,
     }
 }

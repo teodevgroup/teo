@@ -119,6 +119,8 @@
 - Fix decode credentials **[DONE]**
 
 #### 0.0.40
+- PostgreSQL: CRUD and decoding **[DONE]**
+- SQLite: CRUD and decoding
 - Pipeline allows action error
 - More pipeline modifiers
 
@@ -134,7 +136,7 @@
 - Delete callbacks: `when_delete`, `before_delete` and `after_delete`
 
 #### 0.0.42
-- PostgreSQL
+- PostgreSQL: Migration I
 - SQLite
 
 #### 0.0.43
