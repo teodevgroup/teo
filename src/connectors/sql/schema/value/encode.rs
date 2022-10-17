@@ -1,3 +1,4 @@
+use std::fmt::format;
 use chrono::{Date, Utc, DateTime};
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::field::r#type::FieldType;
@@ -217,5 +218,19 @@ impl WrapInArray for &str {
 impl WrapInArray for String {
     fn wrap_in_array(&self) -> String {
         self.as_str().wrap_in_array()
+    }
+}
+
+pub trait SQLEscape {
+    fn escape(&self, dialect: SQLDialect) -> String;
+}
+
+impl SQLEscape for &str {
+    fn escape(&self, dialect: SQLDialect) -> String {
+        match dialect {
+            SQLDialect::MySQL => format!("`{}`", self),
+            SQLDialect::PostgreSQL => format!("\"{}\"", self),
+            _ => format!("`{}`", self),
+        }
     }
 }

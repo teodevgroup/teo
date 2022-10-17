@@ -45,7 +45,7 @@ impl RowDecoder {
         // if r#type.is_decimal() {
         //     return Value::Decimal(row.get(column_name));
         // }
-        // #[cfg(not(feature = "data-source-mssql"))]
+        #[cfg(not(feature = "data-source-mssql"))]
         if r#type.is_date() {
             if dialect == SQLDialect::PostgreSQL {
                 let timestamp: NaiveDateTime = row.get(column_name);
@@ -58,7 +58,7 @@ impl RowDecoder {
                 return Value::Date(date);
             }
         }
-        // #[cfg(not(feature = "data-source-mssql"))]
+        #[cfg(not(feature = "data-source-mssql"))]
         if r#type.is_datetime() {
             if dialect == SQLDialect::PostgreSQL {
                 let timestamp: NaiveDateTime = row.get(column_name);

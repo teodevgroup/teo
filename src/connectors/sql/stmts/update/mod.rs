@@ -25,16 +25,24 @@ impl<'a> SQLUpdateStatement<'a> {
 }
 
 impl<'a> ToSQLString for SQLUpdateStatement<'a> {
-    fn to_string(&self, _dialect: SQLDialect) -> String {
+    fn to_string(&self, dialect: SQLDialect) -> String {
         let mut exprs: Vec<String> = vec![];
         for (k, v) in self.values.iter() {
-            exprs.push(format!("{} = {}", k, v));
+            if dialect == SQLDialect::PostgreSQL {
+                exprs.push(format!("\"{}\" = {}", k, v));
+            } else {
+                exprs.push(format!("{} = {}", k, v));
+            }
         }
         let r#where = if self.r#where.is_empty() {
             "".to_owned()
         } else {
             " WHERE ".to_owned() + self.r#where
         };
-        format!("UPDATE `{}` SET {}{};", self.table, exprs.join(","), r#where)
+        if dialect == SQLDialect::PostgreSQL {
+            format!("UPDATE \"{}\" SET {}{};", self.table, exprs.join(","), r#where)
+        } else {
+            format!("UPDATE `{}` SET {}{};", self.table, exprs.join(","), r#where)
+        }
     }
 }

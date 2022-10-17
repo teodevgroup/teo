@@ -42,7 +42,7 @@ impl<'a> SQLSelectStatement<'a> {
 }
 
 impl<'a> ToSQLString for SQLSelectStatement<'a> {
-    fn to_string(&self, _dialect: SQLDialect) -> String {
+    fn to_string(&self, dialect: SQLDialect) -> String {
         let columns = if self.columns.is_none() { "*".to_owned() } else { self.columns.unwrap().join(", ") };
         let left_join = if let Some(left_join) = &self.left_join {
             " LEFT JOIN ".to_owned() + left_join
@@ -65,7 +65,11 @@ impl<'a> ToSQLString for SQLSelectStatement<'a> {
             "".to_owned()
         };
         let limit = if let Some(limit) = &self.limit {
-            format!(" LIMIT {},{}", limit.1, limit.0)
+            if dialect == SQLDialect::PostgreSQL {
+                format!(" LIMIT {} OFFSET {}", limit.0, limit.1)
+            } else {
+                format!(" LIMIT {},{}", limit.1, limit.0)
+            }
         } else {
             "".to_owned()
         };
