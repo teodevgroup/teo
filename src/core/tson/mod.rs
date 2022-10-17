@@ -198,7 +198,22 @@ pub enum Value {
 
 impl Value {
 
-    // TODO: remove after
+    pub(crate) fn number_from_i16(num: i16, r#type: &FieldType) -> Value {
+        match r#type {
+            FieldType::U8 => Value::U8(num as u8),
+            FieldType::I8 => Value::I8(num as i8),
+            FieldType::I16 => Value::I16(num),
+            _ => panic!(),
+        }
+    }
+
+    pub(crate) fn number_from_i32(num: i32, r#type: &FieldType) -> Value {
+        match r#type {
+            FieldType::U16 => Value::U16(num as u16),
+            FieldType::I32 => Value::I32(num as i32),
+            _ => panic!(),
+        }
+    }
 
     pub(crate) fn number_from_f64(num: f64, r#type: &FieldType) -> Value {
         match r#type {

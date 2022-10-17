@@ -9,7 +9,7 @@ use sqlx::any::AnyRow;
 use crate::connectors::sql::query::Query;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::decode::RowDecoder;
-use crate::connectors::sql::schema::value::encode::{ToSQLString, ToWrapped};
+use crate::connectors::sql::schema::value::encode::{SQLEscape, ToSQLString, ToWrapped};
 use crate::core::env::Env;
 use crate::core::error::ActionError;
 use crate::core::field::r#type::FieldType;
@@ -154,10 +154,10 @@ impl Execution {
                 if !relation.has_join_table() {
                     let fields = relation.fields();
                     let opposite_fields = relation.references();
-                    let names = if opposite_fields.len() == 1 { // todo: column name
-                        Cow::Borrowed(opposite_model.field(opposite_fields.get(0).unwrap()).unwrap().column_name())
+                    let names = if opposite_fields.len() == 1 {
+                        opposite_model.field(opposite_fields.get(0).unwrap()).unwrap().column_name().escape(dialect)
                     } else {
-                        Cow::Owned(opposite_fields.iter().map(|f| opposite_model.field(f).unwrap().column_name()).collect::<Vec<&str>>().join(",").to_wrapped())
+                        opposite_fields.iter().map(|f| opposite_model.field(f).unwrap().column_name().escape(dialect)).collect::<Vec<String>>().join(",").to_wrapped()
                     };
                     let values = if opposite_fields.len() == 1 {
                         // in a (?,?,?,?,?) format
@@ -171,7 +171,7 @@ impl Execution {
                             fields.iter().map(|f| o.as_hashmap().unwrap().get(f).unwrap().to_string(dialect)).collect::<Vec<String>>().join(",").to_wrapped()
                         }).collect::<Vec<String>>().join(","))
                     };
-                    let where_addition = Query::where_item(names.as_ref(), "IN", &values);
+                    let where_addition = Query::where_item(&names, "IN", &values);
                     let nested_query = if value.is_hashmap() {
                         Self::without_paging_and_skip_take_distinct(value)
                     } else {
@@ -242,7 +242,7 @@ impl Execution {
                         }).collect::<Vec<String>>().join(",");
                         format!("(VALUES {})", pairs)
                     };
-                    let where_addition = Query::where_item(names.as_ref(), "IN", &values);
+                    let where_addition = Query::where_item(&names, "IN", &values);
                     let nested_query = if value.is_hashmap() {
                         Self::without_paging_and_skip_take(value)
                     } else {

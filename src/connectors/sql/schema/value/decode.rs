@@ -32,11 +32,23 @@ impl RowDecoder {
         if r#type.is_string() {
             return Value::String(row.get(column_name))
         }
-        if r#type.is_sint() {
-            return Value::number_from_i64(row.get(column_name), r#type);
-        }
-        if r#type.is_uint() {
-            return Value::number_from_u64(row.get(column_name), r#type);
+        if r#type.is_int() {
+            if dialect == SQLDialect::MySQL {
+                if r#type.is_sint() {
+                    return Value::number_from_i64(row.get(column_name), r#type);
+                }
+                if r#type.is_uint() {
+                    return Value::number_from_u64(row.get(column_name), r#type);
+                }
+                panic!("Unhandled database when decoding type.")
+            } else {
+                match r#type {
+                    FieldType::I8 | FieldType::I16 | FieldType::U8 => return Value::number_from_i16(row.get(column_name), r#type),
+                    FieldType::I32 | FieldType::U16 => return Value::number_from_i32(row.get(column_name), r#type),
+                    FieldType::I64 | FieldType::U32 | FieldType::U64 => return Value::number_from_i64(row.get(column_name), r#type),
+                    _ => panic!(""),
+                }
+            }
         }
         if r#type.is_float() {
             return Value::number_from_f64(row.get(column_name), r#type);
