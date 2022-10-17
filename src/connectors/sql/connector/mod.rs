@@ -5,7 +5,7 @@ use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use async_trait::async_trait;
 use regex::Regex;
-use sqlx::{AnyPool, Executor};
+use sqlx::{AnyPool, Executor, Postgres};
 use crate::core::model::Model;
 use url::Url;
 use crate::connectors::sql::connector::save_session::SQLSaveSession;
@@ -79,13 +79,12 @@ impl SQLConnector {
                 }
                 Err(err) => {
                     println!("{:?}", err);
-                    Err(Self::handle_err_result(err))
+                    Err(Self::handle_err_result(self, err))
                 }
             }
         } else {
             match self.pool.execute(&*stmt).await {
                 Ok(result) => {
-                    println!("see result {:?}", result);
                     for key in auto_keys {
                         object.set_value(key, Value::I64(result.last_insert_id().unwrap()))?;
                     }
@@ -93,7 +92,7 @@ impl SQLConnector {
                 }
                 Err(err) => {
                     println!("{:?}", err);
-                    Err(Self::handle_err_result(err))
+                    Err(Self::handle_err_result(self,err))
                 }
             }
         }
@@ -145,15 +144,27 @@ impl SQLConnector {
         }
     }
 
-    fn handle_err_result(err: sqlx::Error) -> ActionError {
+    fn handle_err_result(&self, err: sqlx::Error) -> ActionError {
         let message = err.as_database_error().unwrap().message();
-        // mysql
-        let regex = Regex::new("Duplicate entry (.+) for key '(.+)'").unwrap();
-        if let Some(captures) = regex.captures(message) {
-            let value = captures.get(1).unwrap().as_str();
-            let keys = captures.get(2).unwrap().as_str().split(".").collect::<Vec<&str>>();
-            let key = keys.last().unwrap();
-            ActionError::unique_value_duplicated(key, value)
+        if self.dialect == SQLDialect::MySQL {
+            // mysql
+            let regex = Regex::new("Duplicate entry (.+) for key '(.+)'").unwrap();
+            if let Some(captures) = regex.captures(message) {
+                let value = captures.get(1).unwrap().as_str();
+                let keys = captures.get(2).unwrap().as_str().split(".").collect::<Vec<&str>>();
+                let key = keys.last().unwrap();
+                ActionError::unique_value_duplicated(key, value)
+            } else {
+                ActionError::unknown_database_write_error()
+            }
+        } else if self.dialect == SQLDialect::PostgreSQL {
+            // duplicate key value violates unique constraint \"users_email_key\"
+            let regex = Regex::new("^duplicate key value violates unique constraint").unwrap();
+            if regex.is_match(message) {
+                ActionError::unique_value_duplicated_reason("", message)
+            } else {
+                ActionError::unknown_database_write_error()
+            }
         } else {
             ActionError::unknown_database_write_error()
         }

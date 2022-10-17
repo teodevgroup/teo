@@ -108,6 +108,16 @@ impl ActionError {
         }
     }
 
+    pub fn unique_value_duplicated_reason(field: impl AsRef<str>, reason: impl AsRef<str>) -> Self {
+        let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
+        errors.insert(field.as_ref().into(), format!("{}", reason.as_ref()));
+        ActionError {
+            r#type: ActionErrorType::UnexpectedInputValue,
+            message: "Unique value duplicated.".to_string(),
+            errors: Some(errors)
+        }
+    }
+
     pub fn unique_value_duplicated(field: impl AsRef<str>, value: impl AsRef<str>) -> Self {
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
         errors.insert(field.as_ref().into(), format!("Value {} is not unique.", value.as_ref()));
