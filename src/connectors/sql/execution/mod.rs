@@ -178,7 +178,7 @@ impl Execution {
                         Cow::Owned(tson!({}))
                     };
                     let mut included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), None, None, negative_take, None).await?;
-                    println!("see included: {:?}", included_values);
+                    // println!("see included: {:?}", included_values);
                     for result in results.iter_mut() {
                         let mut skipped = 0;
                         let mut taken = 0;
@@ -221,15 +221,15 @@ impl Execution {
                     for (field, reference) in through_opposite_relation.iter() {
                         let field_column_name = through_model.field(field).unwrap().column_name();
                         let reference_column_name = opposite_model.field(reference).unwrap().column_name();
-                        join_parts.push(format!("t.{} = j.{}", reference_column_name, field_column_name));
+                        join_parts.push(format!("t.{} = j.{}", reference_column_name.escape(dialect), field_column_name.escape(dialect)));
                     }
                     let joins = join_parts.join(" AND ");
                     let left_join = format!("{} AS j ON {}", through_model.table_name(), joins);
-                    let (_, through_relation) = graph.through_relation(relation);
+                    let (through_table, through_relation) = graph.through_relation(relation);
                     let names = if through_relation.len() == 1 { // todo: column name
-                        format!("j.{}", through_relation.fields().get(0).unwrap())
+                        format!("j.{}", through_table.field(through_relation.fields().get(0).unwrap()).unwrap().column_name().escape(dialect))
                     } else {
-                        through_relation.fields().iter().map(|f| format!("j.{}", f)).collect::<Vec<String>>().join(",").to_wrapped()
+                        through_relation.fields().iter().map(|f| format!("j.{}", through_table.field(f).unwrap().column_name().escape(dialect))).collect::<Vec<String>>().join(",").to_wrapped()
                     };
                     let values = if through_relation.len() == 1 { // (?,?,?,?,?) format
                         let field_name = through_relation.references().get(0).unwrap();
@@ -250,7 +250,11 @@ impl Execution {
                     };
                     let join_table_results = through_relation.iter().map(|(f, r)| {
                         let through_column_name = through_model.field(f).unwrap().column_name().to_string();
-                        format!("j.{} AS `{}.{}`", through_column_name, opposite_relation.unwrap().name(), r)
+                        if dialect == SQLDialect::PostgreSQL {
+                            format!("j.{} AS \"{}.{}\"", through_column_name.as_str().escape(dialect), opposite_relation.unwrap().name(), r)
+                        } else {
+                            format!("j.{} AS `{}.{}`", through_column_name, opposite_relation.unwrap().name(), r)
+                        }
                     }).collect();
                     let additional_inner_distinct = if inner_distinct.is_some() {
                         Some(through_relation.iter().map(|(f, r)| {

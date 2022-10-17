@@ -394,7 +394,7 @@ impl Query {
         };
         let mut columns: Vec<String> = vec![];
         if additional_left_join.is_some() {
-            columns = model.save_keys().iter().map(|k| format!("t.{} AS {}", k, k)).collect::<Vec<String>>();
+            columns = model.save_keys().iter().map(|k| format!("t.{} AS {}", k.as_str().escape(dialect), k.as_str().escape(dialect))).collect::<Vec<String>>();
         }
         if let Some(join_table_results) = join_table_results {
             for result_key in join_table_results {
@@ -407,7 +407,11 @@ impl Query {
             let key = order_by.keys().next().unwrap();
             let column_key = model.field(key).unwrap().column_name();
             let columns = cursor.as_hashmap().unwrap().keys().map(|k| {
-                format!("{} AS `c.{}`", column_key, column_key)
+                if dialect == SQLDialect::PostgreSQL {
+                    format!("{} AS \"c.{}\"", column_key, column_key)
+                } else {
+                    format!("{} AS `c.{}`", column_key, column_key)
+                }
             }).collect::<Vec<String>>();
             let column_refs: Vec<&str> = columns.iter().map(|k| k.as_str()).collect();
             let sub_where = Query::r#where(model, graph, cursor, dialect, None);
