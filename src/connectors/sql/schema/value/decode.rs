@@ -53,15 +53,16 @@ impl RowDecoder {
         if r#type.is_float() {
             return Value::number_from_f64(row.get(column_name), r#type);
         }
-        // #[cfg(feature = "data-source-mysql")]
-        // if r#type.is_decimal() {
-        //     return Value::Decimal(row.get(column_name));
-        // }
         #[cfg(not(feature = "data-source-mssql"))]
         if r#type.is_date() {
             if dialect == SQLDialect::PostgreSQL {
                 let timestamp: NaiveDateTime = row.get(column_name);
                 let naive_date = timestamp.date();
+                let date: Date<Utc> = Date::from_utc(naive_date, Utc);
+                return Value::Date(date);
+            } else if dialect == SQLDialect::SQLite {
+                let timestamp: String = row.get(column_name);
+                let naive_date = NaiveDate::parse_from_str(&timestamp, "%Y-%m-%d").unwrap();
                 let date: Date<Utc> = Date::from_utc(naive_date, Utc);
                 return Value::Date(date);
             } else {
@@ -76,6 +77,9 @@ impl RowDecoder {
                 let timestamp: NaiveDateTime = row.get(column_name);
                 let datetime: DateTime<Utc> = DateTime::from_utc(timestamp, Utc);
                 return Value::DateTime(datetime);
+            } else if dialect == SQLDialect::SQLite {
+                let timestamp: String = row.get(column_name);
+                return Value::DateTime(DateTime::parse_from_rfc3339(&timestamp).unwrap().with_timezone(&Utc));
             } else {
                 let datetime: DateTime<Utc> = row.get(column_name);
                 return Value::DateTime(datetime);
