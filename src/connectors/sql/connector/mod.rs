@@ -1,7 +1,10 @@
 pub mod builder;
 pub mod save_session;
 
+use std::fs;
+use std::path::PathBuf;
 use std::sync::Arc;
+use std::env;
 use std::sync::atomic::Ordering;
 use async_trait::async_trait;
 use regex::Regex;
@@ -32,6 +35,19 @@ pub(crate) struct SQLConnector {
 impl SQLConnector {
     pub(crate) async fn new(dialect: SQLDialect, url: String, models: &Vec<Model>, reset_database: bool) -> Self {
         if dialect == SQLDialect::SQLite {
+            let filename = &url[7..];
+            let loc = PathBuf::from(filename);
+            let absolute_location = if loc.is_absolute() {
+                loc
+            } else {
+                env::current_dir().unwrap().join(loc)
+            };
+            if !absolute_location.exists() {
+                fs::File::create(absolute_location).expect("SQLite database create failed.");
+            } else if reset_database {
+                let _ = fs::remove_file(absolute_location.clone());
+                fs::File::create(absolute_location).expect("SQLite database create failed.");
+            }
             let mut pool: AnyPool = AnyPool::connect(url.as_str()).await.unwrap();
             SQLMigration::migrate(dialect, &mut pool, models).await;
             Self { dialect, pool }

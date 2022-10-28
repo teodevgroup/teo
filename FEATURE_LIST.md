@@ -120,6 +120,8 @@
 
 #### 0.0.40
 - PostgreSQL: CRUD and decoding **[DONE]**
+- Fix including has no result keys bug **[DONE]**
+- SQLite: auto create or delete database file **[DONE]**
 
 #### 0.0.41
 - SQLite: CRUD and decoding
