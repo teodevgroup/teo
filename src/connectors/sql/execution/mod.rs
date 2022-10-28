@@ -144,6 +144,7 @@ impl Execution {
         }
         if let Some(include) = include.map(|i| i.as_hashmap().unwrap()) {
             for (key, value) in include {
+
                 let skip = value.as_hashmap().map(|m| m.get("skip")).flatten().map(|v| v.as_u64().unwrap());
                 let take = value.as_hashmap().map(|m| m.get("take")).flatten().map(|v| v.as_i64().unwrap());
                 let take_abs = take.map(|t| t.abs() as u64);
@@ -182,6 +183,9 @@ impl Execution {
                     for result in results.iter_mut() {
                         let mut skipped = 0;
                         let mut taken = 0;
+                        if relation.is_vec() {
+                            result.as_hashmap_mut().unwrap().insert(relation.name().to_owned(), Value::Vec(vec![]));
+                        }
                         for included_value in included_values.iter() {
                             let mut matched = true;
                             for (field, reference) in relation.iter() {
