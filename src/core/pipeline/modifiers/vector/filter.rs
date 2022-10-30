@@ -2,7 +2,6 @@ use async_trait::async_trait;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::Context;
-use crate::core::pipeline::context::stage::Stage::{ConditionFalse, ConditionTrue};
 use crate::prelude::Value;
 
 #[derive(Debug, Clone)]

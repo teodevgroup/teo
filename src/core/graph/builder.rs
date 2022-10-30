@@ -25,6 +25,8 @@ impl GraphBuilder {
         }
     }
 
+
+
     pub fn r#enum<F: Fn(&mut EnumBuilder)>(&mut self, name: impl Into<String>, build: F) -> &mut Self {
         let name = name.into();
         let mut enum_builder = EnumBuilder::new(name.clone());

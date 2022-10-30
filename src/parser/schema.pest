@@ -1,0 +1,80 @@
+schema = {
+    SOI
+    ~ (model_declaration | enum_declaration | empty_lines | CATCH_ALL)*
+    ~ EOI
+}
+
+empty_lines = @{ (WHITESPACE* ~ NEWLINE)+ }
+
+identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | "-" | ASCII_ALPHANUMERIC)* }
+path = @{ identifier ~ ("." ~ path?)* }
+
+WHITESPACE = _{ SPACE_SEPARATOR | "\t" } // tabs are also whitespace
+BLOCK_OPEN = { "{" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+BLOCK_CLOSE = { "}" }
+ENUM_KEYWORD = { "enum" }
+MODEL_KEYWORD = { "model" }
+COLON = { ":" }
+
+CATCH_ALL = { (!NEWLINE ~ ANY)+ ~ NEWLINE? }
+BLOCK_LEVEL_CATCH_ALL = { !BLOCK_CLOSE ~ CATCH_ALL }
+
+enum_declaration = {
+    ENUM_KEYWORD
+    ~ identifier
+    ~ BLOCK_OPEN
+    ~ (enum_value_declaration | (block_decorator ~ NEWLINE) | comment_block | empty_lines | BLOCK_LEVEL_CATCH_ALL)*
+    ~ BLOCK_CLOSE
+}
+
+enum_value_declaration = { item_decorator* ~ identifier ~ trailing_comment? ~ NEWLINE }
+
+model_declaration = {
+    (item_decorator ~ (NEWLINE | WHITESPACE)*)*
+    ~ MODEL_KEYWORD
+    ~ identifier
+    ~ BLOCK_OPEN
+    ~ (field_declaration | (block_decorator ~ NEWLINE) | comment_block | empty_lines | BLOCK_LEVEL_CATCH_ALL)*
+    ~ BLOCK_CLOSE
+    }
+
+field_declaration = {
+    (item_decorator ~ (NEWLINE | WHITESPACE)*)*
+    ~ identifier
+    ~ COLON
+    ~ field_type?
+    ~ trailing_comment?
+    ~ NEWLINE
+}
+
+arguments_list = { "(" ~ (argument ~ ("," ~ argument)*)? ~ trailing_comma? ~ ")" }
+argument = _{ named_argument | empty_argument | expression }
+empty_argument = { identifier ~ ":" }
+named_argument = { identifier ~ ":" ~ expression }
+trailing_comma = @{ "," }
+
+array_expression = { "[" ~ (expression ~ ( "," ~ expression )*)? ~ "]" }
+expression = { function_call | array_expression | numeric_literal | string_literal | path }
+numeric_literal = @{ ("-")? ~ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
+
+function_call = { path ~ arguments_list }
+item_decorator = { "@" ~ path ~ arguments_list? }
+block_decorator = { "@@" ~ path ~ arguments_list? }
+
+field_type = { optional_list_type | list_type | optional_type | base_type  }
+ASCII_CONTROL_CHARACTER = _{ '\u{0000}'..'\u{001F}' }
+string_escape = _{ "\\" ~ ANY }
+string_content = @{ (string_escape | !("\"" | ASCII_CONTROL_CHARACTER) ~ ANY)* }
+string_literal = ${ "\"" ~ string_content ~ "\"" }
+
+comment_block = ${ ((doc_comment | comment) ~ NEWLINE?)+ }
+trailing_comment = ${ doc_comment | comment }
+doc_comment = { WHITESPACE* ~ "///" ~ doc_content }
+comment = { WHITESPACE* ~ (!"///") ~ "//" ~ doc_content }
+doc_content = @{ (!NEWLINE ~ ANY)* }
+
+
+base_type = { identifier } // Called base type to not conflict with type rust keyword
+optional_list_type = { base_type ~ "[]" ~ "?" }
+list_type = { base_type ~ "[]" }
+optional_type = { base_type ~ "?" }
