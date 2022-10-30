@@ -1,0 +1,7 @@
+use crate::parser::ast::span::Span;
+
+#[derive(Debug, Clone)]
+pub struct Decorator {
+    pub(crate) call: Call,
+    pub(crate) span: Span,
+}
