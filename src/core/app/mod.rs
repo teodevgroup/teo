@@ -1,9 +1,9 @@
-use crate::parser::parser::parse;
+use crate::parser::parser::Parser;
 
 pub struct App { }
 
 impl App {
     pub fn load() -> () {
-        parse("abc");
+        Parser::parse_entry_file("");
     }
 }

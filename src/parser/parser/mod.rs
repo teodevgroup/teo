@@ -1,4 +1,4 @@
-use pest::Parser;
+use pest::Parser as PestParser;
 use crate::parser::ast::top::Top;
 
 #[derive(pest_derive::Parser)]
