@@ -1,4 +1,6 @@
 use pest::Parser as PestParser;
+use crate::parser::ast::model::Model;
+use crate::parser::ast::r#enum::Enum;
 use crate::parser::ast::top::Top;
 
 #[derive(pest_derive::Parser)]
@@ -6,6 +8,8 @@ use crate::parser::ast::top::Top;
 pub(crate) struct SchemaParser;
 
 pub(crate) struct Parser { }
+
+type Pair<'a> = pest::iterators::Pair<'a, Rule>;
 
 impl Parser {
     pub(crate) fn parse_entry_file(file: &str) -> () {
@@ -16,52 +20,29 @@ impl Parser {
         let result = result.unwrap();
         let result = result.next().unwrap();
         let mut tops: Vec<Top> = vec![];
-        let mut pairs = datamodel.into_inner().peekable();
+        let mut pairs = result.into_inner().peekable();
         while let Some(current) = pairs.next() {
             match current.as_rule() {
                 Rule::model_declaration => {
-                    tops.push(Top::Model(parse_model(current, pending_block_comment.take(), diagnostics)))
+                    tops.push(Top::Model(Self::parse_model(current)));
                 },
-                Rule::enum_declaration => top_level_definitions.push(Top::Enum(parse_enum(current,pending_block_comment.take(),  diagnostics))),
-                Rule::config_block => {
-                    top_level_definitions.push(parse_config_block(current, diagnostics));
-                },
-                Rule::type_alias => {
-                    let error = DatamodelError::new_validation_error(
-                        "Invalid type definition. Please check the documentation in https://pris.ly/d/composite-types",
-                        current.as_span().into()
-                    );
-
-                    diagnostics.push_error(error);
+                Rule::enum_declaration => {
+                    tops.push(Top::Enum(Self::parse_enum(current)));
                 }
-                Rule::comment_block => {
-                    match pairs.peek().map(|b| b.as_rule()) {
-                        Some(Rule::empty_lines) => {
-                            // free floating
-                        }
-                        Some(Rule::model_declaration) | Some(Rule::enum_declaration) | Some(Rule::config_block) => {
-                            pending_block_comment = Some(current);
-                        }
-                        _ => (),
-                    }
-                },
                 Rule::EOI => {}
-                Rule::CATCH_ALL => diagnostics.push_error(DatamodelError::new_validation_error(
-                    "This line is invalid. It does not start with any known Prisma schema keyword.",
-                    current.as_span().into(),
-                )),
-                Rule::arbitrary_block => diagnostics.push_error(DatamodelError::new_validation_error(
-                    "This block is invalid. It does not start with any known Prisma schema keyword. Valid keywords include \'model\', \'enum\', \'datasource\' and \'generator\'.",
-                    current.as_span().into(),
-                )),
+                Rule::CATCH_ALL => panic!("Found catch all."),
                 Rule::empty_lines => (),
-                _ => unreachable!(),
+                _ => panic!("Parsing panic!"),
             }
         }
         println!("{:?}", result)
     }
 
-    pub(crate) fn parse_model() -> () {
+    pub(crate) fn parse_model(current: Pair<'_>) -> Model {
+        Model {}
+    }
+
+    pub(crate) fn parse_enum(current: Pair<'_>) -> Enum {
 
     }
 }
