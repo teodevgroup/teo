@@ -3,7 +3,7 @@ use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::r#type::Type;
 use crate::parser::ast::span::Span;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Field {
     pub(crate) identifier: Identifier,
     pub(crate) r#type: Type,

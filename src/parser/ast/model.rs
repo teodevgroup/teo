@@ -3,7 +3,7 @@ use crate::parser::ast::field::Field;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::span::Span;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Model {
     pub(crate) id: usize,
     pub(crate) source_id: usize,

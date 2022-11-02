@@ -1,12 +1,13 @@
 use crate::parser::ast::identifier::Identifier;
 
+#[derive(Debug)]
 pub(crate) enum Arity {
     Scalar,
     Array,
     Dictionary,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct Type {
     pub(crate) identifier: Identifier,
     pub(crate) arity: Arity,

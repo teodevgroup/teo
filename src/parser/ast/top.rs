@@ -1,7 +1,7 @@
 use crate::parser::ast::model::Model;
 use crate::parser::ast::r#enum::Enum;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum Top {
     Enum(Enum),
     Model(Model),

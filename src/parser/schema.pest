@@ -42,7 +42,7 @@ field_declaration = {
     (item_decorator ~ (NEWLINE | WHITESPACE)*)*
     ~ identifier
     ~ COLON
-    ~ field_type?
+    ~ field_type
     ~ trailing_comment?
     ~ NEWLINE
 }
@@ -61,7 +61,10 @@ function_call = { path ~ arguments_list }
 item_decorator = { "@" ~ path ~ arguments_list? }
 block_decorator = { "@@" ~ path ~ arguments_list? }
 
-field_type = { optional_list_type | list_type | optional_type | base_type  }
+field_type = { identifier ~ arity? ~ optionality? }
+arity = {"[]" | "{}" }
+optionality = { "?" }
+
 ASCII_CONTROL_CHARACTER = _{ '\u{0000}'..'\u{001F}' }
 string_escape = _{ "\\" ~ ANY }
 string_content = @{ (string_escape | !("\"" | ASCII_CONTROL_CHARACTER) ~ ANY)* }
@@ -72,9 +75,3 @@ trailing_comment = ${ doc_comment | comment }
 doc_comment = { WHITESPACE* ~ "///" ~ doc_content }
 comment = { WHITESPACE* ~ (!"///") ~ "//" ~ doc_content }
 doc_content = @{ (!NEWLINE ~ ANY)* }
-
-
-base_type = { identifier } // Called base type to not conflict with type rust keyword
-optional_list_type = { base_type ~ "[]" ~ "?" }
-list_type = { base_type ~ "[]" }
-optional_type = { base_type ~ "?" }
