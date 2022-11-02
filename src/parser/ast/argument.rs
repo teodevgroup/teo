@@ -14,7 +14,7 @@ impl Display for Argument {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         if let Some(name) = &self.name {
             f.write_str(&name.name)?;
-            f.write_str(":")?;
+            f.write_str(": ")?;
         }
         Display::fmt(&self.value, f)
     }

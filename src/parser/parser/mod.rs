@@ -49,7 +49,8 @@ impl Parser {
             Ok(path) => path,
             Err(_) => panic!("Schema file '{}' is not found.", relative.to_str().unwrap()),
         };
-        let source = self.parse_source(absolute, self.next_id());
+        let id = self.next_id();
+        let source = self.parse_source(absolute, id);
         self.main = Some(source.clone());
     }
 
@@ -58,7 +59,7 @@ impl Parser {
             Ok(content) => content,
             Err(err) => panic!("{}", err)
         };
-        let pairs = match SchemaParser::parse(Rule::schema, &content) {
+        let mut pairs = match SchemaParser::parse(Rule::schema, &content) {
             Ok(pairs) => pairs,
             Err(err) => panic!("{}", err)
         };
@@ -159,14 +160,14 @@ impl Parser {
         }
     }
 
-    fn parse_identifier(pair: Pair<'_>) -> Identifier {
+    fn parse_identifier(pair: &Pair<'_>) -> Identifier {
         Identifier {
             name: pair.as_str().to_owned(),
             span: Self::parse_span(pair),
         }
     }
 
-    fn parse_span(pair: Pair<'_>) -> Span {
+    fn parse_span(pair: &Pair<'_>) -> Span {
         let span = pair.as_span();
         Span {
             start: span.start(),

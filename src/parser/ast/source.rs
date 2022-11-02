@@ -3,7 +3,7 @@ use std::path::{PathBuf};
 use std::sync::Arc;
 use crate::parser::ast::top::Top;
 
-#[derive(PartialOrd, Ord, PartialEq, Eq, Clone, Default, Hash)]
+#[derive(Clone)]
 pub(crate) struct Source {
     pub(crate) id: usize,
     pub(crate) path: PathBuf,

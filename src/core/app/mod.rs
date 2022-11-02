@@ -4,7 +4,7 @@ pub struct App { }
 
 impl App {
     pub fn load() -> () {
-        let parser = Parser::new();
+        let mut parser = Parser::new();
         parser.parse(Some("schema.teo"));
     }
 }
