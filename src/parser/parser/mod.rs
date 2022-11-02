@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use std::fs;
 use std::sync::Arc;
 use pest::Parser as PestParser;
+use crate::parser::ast::call::Call;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::field::Field;
 use crate::parser::ast::identifier::Identifier;
@@ -118,7 +119,7 @@ impl Parser {
                 Rule::COLON => {},
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::field_type => r#type = Some(Self::parse_type(current)),
-                Rule::item_decorator => (),
+                Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
                 _ => panic!("error."),
             }
         }
@@ -142,6 +143,16 @@ impl Parser {
         }));
         self.tops.insert(result.id(), result.clone());
         result
+    }
+
+    fn parse_decorator(pair: Pair<'_>) -> Decorator {
+        let span = Self::parse_span(&pair);
+        let call = Self::parse_call(pair);
+        Decorator { call, span }
+    }
+
+    fn parse_call(pair: Pair<'_>) -> Call {
+
     }
     
     fn parse_type(pair: Pair<'_>) -> Type {
