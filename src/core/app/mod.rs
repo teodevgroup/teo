@@ -4,6 +4,6 @@ pub struct App { }
 
 impl App {
     pub fn load() -> () {
-        Parser::parse_entry_file("");
+        Parser::parse_file("");
     }
 }

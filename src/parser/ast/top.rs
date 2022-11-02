@@ -8,3 +8,13 @@ pub enum Top {
     // Connector(Connector),
     // Client(Client),
 }
+
+impl Top {
+    pub(crate) fn id(&self) -> usize {
+        match self {
+            Top::Enum(e) => e.id,
+            Top::Model(m) => m.id,
+            _ => 0,
+        }
+    }
+}

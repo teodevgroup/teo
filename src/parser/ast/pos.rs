@@ -2,10 +2,8 @@ use std::fmt;
 
 #[derive(PartialOrd, Ord, PartialEq, Eq, Clone, Copy, Default, Hash)]
 pub struct Pos {
-    /// One-based line number
-    pub line: usize,
-    /// One-based column number
-    pub column: usize,
+    pub line: usize, // one-based
+    pub column: usize, // one-based
 }
 
 impl fmt::Debug for Pos {

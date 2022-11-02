@@ -21,12 +21,3 @@ impl Span {
         self.contains(other.start) || self.contains(other.end)
     }
 }
-
-impl From<pest::Span<'_>> for Span {
-    fn from(s: pest::Span<'_>) -> Self {
-        Span {
-            start: s.start(),
-            end: s.end(),
-        }
-    }
-}
