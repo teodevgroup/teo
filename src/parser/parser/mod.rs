@@ -19,6 +19,7 @@ pub(crate) struct SchemaParser;
 
 type Pair<'a> = pest::iterators::Pair<'a, Rule>;
 
+#[derive(Debug)]
 pub(crate) struct Parser {
     main: Option<Arc<Source>>,
     sources: HashMap<usize, Arc<Source>>,
@@ -52,6 +53,7 @@ impl Parser {
         let id = self.next_id();
         let source = self.parse_source(absolute, id);
         self.main = Some(source.clone());
+        println!("{:?}", self);
     }
 
     fn parse_source(&mut self, path: PathBuf, id: usize) -> Arc<Source> {
