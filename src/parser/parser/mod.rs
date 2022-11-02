@@ -87,10 +87,11 @@ impl Parser {
         let mut identifier: Option<Identifier> = None;
         let mut fields: Vec<Field> = vec![];
         let mut decorators: Vec<Decorator> = vec![];
+        let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::MODEL_KEYWORD | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => {}
-                Rule::identifier => identifier = Some(Self::parse_identifier(current)),
+                Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::field_declaration => fields.push(Self::parse_field(current)),
                 _ => panic!("error."),
             }
@@ -101,7 +102,7 @@ impl Parser {
             identifier: identifier.unwrap(),
             fields,
             decorators,
-            span: Self::parse_span(pair),
+            span,
         }));
         self.tops.insert(result.id(), result.clone());
         result
@@ -111,10 +112,11 @@ impl Parser {
         let mut identifier: Option<Identifier> = None;
         let mut r#type: Option<Type> = None;
         let mut decorators: Vec<Decorator> = vec![];
+        let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::COLON => {},
-                Rule::identifier => identifier = Some(Self::parse_identifier(current)),
+                Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::field_type => r#type = Some(Self::parse_type(current)),
                 Rule::item_decorator => (),
                 _ => panic!("error."),
@@ -124,7 +126,7 @@ impl Parser {
             identifier: identifier.unwrap(),
             r#type: r#type.unwrap(),
             decorators,
-            span: Self::parse_span(pair),
+            span,
         }
     }
 
@@ -136,7 +138,7 @@ impl Parser {
             source_id,
             identifier: identifier.unwrap(),
             choices,
-            span: Self::parse_span(pair),
+            span: Self::parse_span(&pair),
         }));
         self.tops.insert(result.id(), result.clone());
         result
@@ -149,7 +151,7 @@ impl Parser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::COLON => {},
-                Rule::identifier => identifier = Some(Self::parse_identifier(current)),
+                Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::arity => if current.as_str() == "[]" { arity = Arity::Array; } else { arity = Arity::Dictionary; },
                 Rule::optionality => required = false,
                 _ => panic!(),

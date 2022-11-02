@@ -2,7 +2,7 @@ use crate::parser::ast::model::Model;
 use crate::parser::ast::r#enum::Enum;
 
 #[derive(Debug)]
-pub enum Top {
+pub(crate) enum Top {
     Enum(Enum),
     Model(Model),
     // Connector(Connector),
