@@ -159,8 +159,8 @@ impl Parser {
         }
         Type {
             identifier: identifier.unwrap(),
-            arity: Arity::Scalar,
-            required: false
+            arity,
+            required,
         }
     }
 
