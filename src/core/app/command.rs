@@ -1,4 +1,4 @@
-pub enum Command {
+pub(crate) enum Command {
     Serve,
     Client,
 }

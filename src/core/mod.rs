@@ -17,3 +17,4 @@ pub mod permission;
 pub mod connector;
 pub mod tson;
 pub mod app;
+pub mod conf;

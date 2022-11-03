@@ -9,7 +9,7 @@ use crate::core::r#enum::Enum;
 
 pub struct GraphBuilder {
     pub(crate) enum_builders: HashMap<String, EnumBuilder>,
-    pub(crate) models: Vec<ModelBuilder>,
+    pub(crate) model_builders: Vec<ModelBuilder>,
     pub(crate) connector_builder: Option<Box<dyn ConnectorBuilder>>,
     pub(crate) reset_database: bool,
 }
@@ -19,13 +19,11 @@ impl GraphBuilder {
     pub(crate) fn new() -> Self {
         GraphBuilder {
             enum_builders: HashMap::new(),
-            models: Vec::new(),
+            model_builders: Vec::new(),
             connector_builder: None,
             reset_database: false,
         }
     }
-
-
 
     pub fn r#enum<F: Fn(&mut EnumBuilder)>(&mut self, name: impl Into<String>, build: F) -> &mut Self {
         let name = name.into();
@@ -38,7 +36,7 @@ impl GraphBuilder {
     pub fn model<F: Fn(&mut ModelBuilder)>(&mut self, name: impl Into<String>, build: F) -> &mut Self {
         let mut model: ModelBuilder = ModelBuilder::new(name, self.connector_builder());
         build(&mut model);
-        self.models.push(model);
+        self.model_builders.push(model);
         self
     }
 
