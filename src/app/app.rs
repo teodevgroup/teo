@@ -1,50 +1,3 @@
-pub struct App {
-    pub(crate) server: ServerConfiguration,
-    pub(crate) client: ClientConfiguration,
-}
-
-impl App {
-    pub fn new<F: Fn(&mut AppBuilder)>(build: F) -> App {
-        let mut builder = AppBuilder::new();
-        build(&mut builder);
-        builder.build()
-    }
-}
-
-pub struct AppBuilder {
-    server: ServerConfiguration,
-    client: ClientConfiguration,
-}
-
-impl AppBuilder {
-    pub(crate) fn new() -> AppBuilder {
-        AppBuilder {
-            server: ServerConfiguration::default(),
-            client: ClientConfiguration::default(),
-        }
-    }
-
-    pub(crate) fn build(&self) -> App {
-        App {
-            server: self.server.clone(),
-            client: self.client.clone(),
-        }
-    }
-
-    pub fn server<F: Fn(&mut ServerConfigurationBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut builder = ServerConfigurationBuilder::new();
-        build(&mut builder);
-        self.server = builder.build();
-        self
-    }
-
-    pub fn client<F: Fn(&mut ClientBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut builder = ClientBuilder::new();
-        build(&mut builder);
-        self.client = builder.build();
-        self
-    }
-}
 
 pub struct ClientBuilder {
     type_script: Option<TypeScriptClient>,
@@ -108,27 +61,3 @@ impl ClientBuilder {
         self
     }
 }
-
-#[derive(Clone)]
-pub struct ClientConfiguration {
-    pub(crate) type_script: Option<TypeScriptClient>,
-    pub(crate) swift: Option<SwiftClient>,
-    pub(crate) kotlin: Option<KotlinClient>,
-    pub(crate) csharp: Option<CSharpClient>,
-    pub(crate) host_url: Option<String>,
-}
-
-impl Default for ClientConfiguration {
-    fn default() -> Self {
-        ClientConfiguration {
-            type_script: None,
-            swift: None,
-            kotlin: None,
-            csharp: None,
-            host_url: None,
-        }
-    }
-}
-
-unsafe impl Send for App {}
-unsafe impl Sync for App {}
