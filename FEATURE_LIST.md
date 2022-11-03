@@ -124,11 +124,13 @@
 - SQLite: auto create or delete database file **[DONE]**
 
 #### 0.0.41
+- Schema parser
+- Rewrite app & graph
+
+#### 0.0.42
 - SQLite: CRUD and decoding
 - Pipeline allows action error
 - More pipeline modifiers
-
-#### 0.0.42
 - MongoDB: root skip take and distinct bug
 - MongoDB: nested skip take and distinct bug
 - MongoDB: if cursor key is not orderBy key, result is wrong
