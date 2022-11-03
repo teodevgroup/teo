@@ -1,6 +1,8 @@
 pub mod builder;
 pub mod client;
 
+use crate::core::conf::client::Client;
+
 #[derive(Clone)]
 pub struct Conf {
     pub(crate) bind: (String, u16),

@@ -1,4 +1,7 @@
+use crate::core::conf::client::{CSharpClient, DartClient, KotlinClient, SwiftClient, TypeScriptClient};
+
 pub struct TypeScriptClientBuilder {
+    name: String,
     host_url: String,
     react_queries: bool,
     react_forms: bool,
@@ -6,8 +9,9 @@ pub struct TypeScriptClientBuilder {
 }
 
 impl TypeScriptClientBuilder {
-    pub(crate) fn new() -> TypeScriptClientBuilder {
+    pub(crate) fn new(name: String) -> TypeScriptClientBuilder {
         TypeScriptClientBuilder {
+            name,
             host_url: "".to_string(),
             react_queries: false,
             react_forms: false,
@@ -46,13 +50,15 @@ impl TypeScriptClientBuilder {
 }
 
 pub struct SwiftClientBuilder {
+    name: String,
     host_url: String,
     combine_observable_objects: bool,
 }
 
 impl SwiftClientBuilder {
-    pub(crate) fn new() -> SwiftClientBuilder {
+    pub(crate) fn new(name: String) -> SwiftClientBuilder {
         SwiftClientBuilder {
+            name,
             host_url: "".to_string(),
             combine_observable_objects: false,
         }
@@ -77,13 +83,15 @@ impl SwiftClientBuilder {
 }
 
 pub struct KotlinClientBuilder {
+    name: String,
     host_url: String,
     jetpack_compose_states: bool,
 }
 
 impl KotlinClientBuilder {
-    pub(crate) fn new() -> KotlinClientBuilder {
+    pub(crate) fn new(name: String) -> KotlinClientBuilder {
         KotlinClientBuilder {
+            name,
             host_url: "".to_string(),
             jetpack_compose_states: false,
         }
@@ -108,12 +116,14 @@ impl KotlinClientBuilder {
 }
 
 pub struct CSharpClientBuilder {
+    name: String,
     host_url: String,
 }
 
 impl CSharpClientBuilder {
-    pub(crate) fn new() -> CSharpClientBuilder {
+    pub(crate) fn new(name: String) -> CSharpClientBuilder {
         CSharpClientBuilder {
+            name,
             host_url: "".to_string(),
         }
     }
@@ -131,12 +141,14 @@ impl CSharpClientBuilder {
 }
 
 pub struct DartClientBuilder {
+    name: String,
     host_url: String,
 }
 
 impl DartClientBuilder {
-    pub(crate) fn new() -> DartClientBuilder {
+    pub(crate) fn new(name: String) -> DartClientBuilder {
         DartClientBuilder {
+            name,
             host_url: "".to_string(),
         }
     }
