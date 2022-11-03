@@ -11,13 +11,12 @@ BLOCK_CLOSE = { "}" }
 ENUM_KEYWORD = { "enum" }
 MODEL_KEYWORD = { "model" }
 COLON = { ":" }
+TRAILING_COMMA = @{ "," }
+CATCH_ALL = { (!NEWLINE ~ ANY)+ ~ NEWLINE? }
+BLOCK_LEVEL_CATCH_ALL = { !BLOCK_CLOSE ~ CATCH_ALL }
 
 identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | "-" | ASCII_ALPHANUMERIC)* }
 path = @{ identifier ~ ("." ~ path?)* }
-
-
-CATCH_ALL = { (!NEWLINE ~ ANY)+ ~ NEWLINE? }
-BLOCK_LEVEL_CATCH_ALL = { !BLOCK_CLOSE ~ CATCH_ALL }
 
 enum_declaration = {
     ENUM_KEYWORD
@@ -47,13 +46,12 @@ field_declaration = {
     ~ NEWLINE
 }
 
-arguments_list = { "(" ~ (argument ~ ("," ~ argument)*)? ~ trailing_comma? ~ ")" }
+arguments_list = { "(" ~ (argument ~ ("," ~ argument)*)? ~ TRAILING_COMMA? ~ ")" }
 argument = _{ named_argument | empty_argument | expression }
 empty_argument = { identifier ~ ":" }
 named_argument = { identifier ~ ":" ~ expression }
-trailing_comma = @{ "," }
 
-expression = { call | array_literal | numeric_literal | string_literal | path }
+expression = { bool_literal | null_literal | numeric_literal | string_literal | call | array_literal | dictionary_literal | path }
 
 call = { path ~ arguments_list }
 item_decorator = { "@" ~ path ~ arguments_list? }

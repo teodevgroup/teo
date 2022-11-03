@@ -1,13 +1,16 @@
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::fs;
 use std::sync::Arc;
 use pest::Parser as PestParser;
+use crate::parser::ast::argument::Argument;
 use crate::parser::ast::call::Call;
 use crate::parser::ast::decorator::Decorator;
+use crate::parser::ast::expression::Expression;
 use crate::parser::ast::field::Field;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::model::Model;
+use crate::parser::ast::path::Path;
 use crate::parser::ast::r#enum::{Enum, EnumChoice};
 use crate::parser::ast::r#type::{Arity, Type};
 use crate::parser::ast::source::Source;
@@ -152,7 +155,51 @@ impl Parser {
     }
 
     fn parse_call(pair: Pair<'_>) -> Call {
+        let span = Self::parse_span(&pair);
+        let mut path: Option<Path> = None;
+        let mut arguments: Vec<Argument> = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::path => path = Some(Self::parse_path(current)),
+                Rule::arguments_list => arguments = Self::parse_arguments(current),
+            }
+        }
+        Call { path: path.unwrap(), arguments, span }
+    }
 
+    fn parse_arguments(pair: Pair<'_>) -> Vec<Argument> {
+        let mut arguments: Vec<Argument> = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::argument => arguments.push(Self::parse_argument(current)),
+                _ => panic!(),
+            }
+        }
+        arguments
+    }
+
+    fn parse_argument(pair: Pair<'_>) -> Argument {
+        let span = Self::parse_span(&pair);
+        let mut name: Option<Identifier> = None;
+        let mut value: Option<Expression> = None;
+        for current in pair.into_inner() {
+            match current.as_rule() {
+
+            }
+        }
+        Argument { name, value: value.unwrap(), span }
+    }
+
+    fn parse_path(pair: Pair<'_>) -> Path {
+        let span = Self::parse_span(&pair);
+        let mut identifiers: Vec<Identifier> = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::identifier => identifier = identifiers.push(Self::parse_identifier(&current)),
+                Rule::path => identifiers.extend(Self::parse_path(current).identifiers.iter()),
+            }
+        }
+        Path { identifiers, span }
     }
     
     fn parse_type(pair: Pair<'_>) -> Type {

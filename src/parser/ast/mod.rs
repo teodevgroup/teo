@@ -11,3 +11,4 @@ pub(crate) mod call;
 pub(crate) mod argument;
 pub(crate) mod expression;
 pub(crate) mod source;
+pub(crate) mod path;
