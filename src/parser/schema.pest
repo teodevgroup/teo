@@ -4,19 +4,21 @@ schema = {
     ~ EOI
 }
 
+// #############
+// constants
+// #############
 WHITESPACE = _{ SPACE_SEPARATOR | "\t" }
 EMPTY_LINES = @{ (WHITESPACE* ~ NEWLINE)+ }
 BLOCK_OPEN = { "{" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
 BLOCK_CLOSE = { "}" }
 ENUM_KEYWORD = { "enum" }
 MODEL_KEYWORD = { "model" }
+CONFIG_KEYWORD = { "config" }
+CONNECTOR_KEYWORD = { "connector" }
 COLON = { ":" }
 TRAILING_COMMA = @{ "," }
 CATCH_ALL = { (!NEWLINE ~ ANY)+ ~ NEWLINE? }
 BLOCK_LEVEL_CATCH_ALL = { !BLOCK_CLOSE ~ CATCH_ALL }
-
-identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | "-" | ASCII_ALPHANUMERIC)* }
-path = @{ identifier ~ ("." ~ path?)* }
 
 enum_declaration = {
     ENUM_KEYWORD
@@ -48,17 +50,30 @@ field_declaration = {
     ~ NEWLINE
 }
 
+// #############
+// identifier & path
+// #############
+identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | "-" | ASCII_ALPHANUMERIC)* }
+path = @{ identifier ~ ("." ~ path?)* }
+
+// #############
+// function call & decorator
+// #############
+call = { path ~ arguments_list }
+item_decorator = { "@" ~ path ~ arguments_list? }
+block_decorator = { "@@" ~ path ~ arguments_list? }
+
+// #############
+// arguments
+// #############
 arguments_list = { "(" ~ (argument ~ ("," ~ argument)*)? ~ TRAILING_COMMA? ~ ")" }
 argument = _{ named_argument | empty_argument | expression }
 empty_argument = { identifier ~ ":" }
 named_argument = { identifier ~ ":" ~ expression }
 
-expression = { bool_literal | null_literal | numeric_literal | string_literal | call | array_literal | dictionary_literal | path | enum_choice }
-
-call = { path ~ arguments_list }
-item_decorator = { "@" ~ path ~ arguments_list? }
-block_decorator = { "@@" ~ path ~ arguments_list? }
-
+// #############
+// type
+// #############
 field_type = { identifier ~ arity? ~ optionality? }
 arity = {"[]" | "{}" }
 optionality = { "?" }
@@ -104,3 +119,8 @@ triple_comment = { WHITESPACE* ~ "///" ~ doc_content }
 double_comment = { WHITESPACE* ~ (!"///") ~ "//" ~ doc_content }
 comment_block = ${ ((triple_comment | double_comment) ~ NEWLINE?)+ }
 trailing_comment = ${ triple_comment | double_comment }
+
+// #############
+// expression
+// #############
+expression = { bool_literal | null_literal | numeric_literal | string_literal | call | array_literal | dictionary_literal | path | enum_choice }
