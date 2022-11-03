@@ -54,7 +54,7 @@ field_declaration = {
 // identifier & path
 // #############
 identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | "-" | ASCII_ALPHANUMERIC)* }
-path = @{ identifier ~ ("." ~ path?)* }
+path = { identifier ~ ("." ~ path?)* }
 
 // #############
 // function call & decorator

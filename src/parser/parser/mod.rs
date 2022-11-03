@@ -248,6 +248,7 @@ impl Parser {
     fn parse_path(pair: Pair<'_>) -> Path {
         let span = Self::parse_span(&pair);
         let mut identifiers: Vec<Identifier> = vec![];
+        println!("see this path: {:?}", pair);
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier => identifiers.push(Self::parse_identifier(&current)),
