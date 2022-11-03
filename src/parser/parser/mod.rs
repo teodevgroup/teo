@@ -6,7 +6,7 @@ use pest::Parser as PestParser;
 use crate::parser::ast::argument::Argument;
 use crate::parser::ast::call::Call;
 use crate::parser::ast::decorator::Decorator;
-use crate::parser::ast::expression::Expression;
+use crate::parser::ast::expression::{ArrayExpression, BoolExpression, DictionaryExpression, EnumChoiceExpression, Expression, NullExpression, NumericExpression, StringExpression};
 use crate::parser::ast::field::Field;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::model::Model;
@@ -184,10 +184,57 @@ impl Parser {
         let mut value: Option<Expression> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
-
+                Rule::named_argument => {
+                    return Self::parse_named_argument(current);
+                },
+                Rule::expression => value = Some(Self::parse_expression(current)),
+                Rule::empty_argument => panic!("Empty argument found."),
+                _ => panic!(),
             }
         }
         Argument { name, value: value.unwrap(), span }
+    }
+
+    fn parse_named_argument(pair: Pair<'_>) -> Argument {
+        let span = Self::parse_span(&pair);
+        let mut name: Option<Identifier> = None;
+        let mut value: Option<Expression> = None;
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::identifier => name = Some(Self::parse_identifier(&current)),
+                Rule::expression => value = Some(Self::parse_expression(current)),
+                Rule::empty_argument => panic!("Empty argument found."),
+                _ => panic!(),
+            }
+        }
+        Argument { name, value: value.unwrap(), span }
+    }
+
+    fn parse_expression(pair: Pair<'_>) -> Expression {
+        let span = Self::parse_span(&pair);
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::bool_literal => return Expression::Bool(BoolExpression { value: current.as_str().to_string(), span }),
+                Rule::null_literal => return Expression::Null(NullExpression { value: current.as_str().to_string(), span }),
+                Rule::numeric_literal => return Expression::Numeric(NumericExpression { value: current.as_str().to_string(), span }),
+                Rule::string_literal => return Expression::String(StringExpression { value: current.as_str().to_string(), span }),
+                Rule::call => return Expression::Call(Self::parse_call(current)),
+                Rule::array_literal => return Expression::Array(Self::parse_array_literal(current)),
+                Rule::dictionary_literal => return Expression::Dictionary(Self::parse_dictionary_literal(current)),
+                Rule::path => return Expression::Path(Self::parse_path(current)),
+                Rule::enum_choice => return Expression::EnumChoice(EnumChoiceExpression { value: current.as_str().to_string(), span }),
+                _ => panic!(),
+            }
+        }
+        panic!();
+    }
+
+    fn parse_array_literal(pair: Pair<'_>) -> ArrayExpression {
+
+    }
+
+    fn parse_dictionary_literal(pair: Pair<'_>) -> DictionaryExpression {
+
     }
 
     fn parse_path(pair: Pair<'_>) -> Path {

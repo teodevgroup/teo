@@ -28,6 +28,8 @@ enum_declaration = {
 
 enum_value_declaration = { item_decorator* ~ identifier ~ trailing_comment? ~ NEWLINE }
 
+enum_choice = @{ "." ~ identifier }
+
 model_declaration = {
     (item_decorator ~ (NEWLINE | WHITESPACE)*)*
     ~ MODEL_KEYWORD
@@ -51,7 +53,7 @@ argument = _{ named_argument | empty_argument | expression }
 empty_argument = { identifier ~ ":" }
 named_argument = { identifier ~ ":" ~ expression }
 
-expression = { bool_literal | null_literal | numeric_literal | string_literal | call | array_literal | dictionary_literal | path }
+expression = { bool_literal | null_literal | numeric_literal | string_literal | call | array_literal | dictionary_literal | path | enum_choice }
 
 call = { path ~ arguments_list }
 item_decorator = { "@" ~ path ~ arguments_list? }

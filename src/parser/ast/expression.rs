@@ -2,12 +2,13 @@ use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Write};
 use crate::parser::ast::call::Call;
 use crate::parser::ast::identifier::Identifier;
+use crate::parser::ast::path::Path;
 use crate::parser::ast::span::Span;
 
 #[derive(Debug, Clone)]
 pub(crate) struct NumericExpression {
-    value: String,
-    span: Span,
+    pub(crate) value: String,
+    pub(crate) span: Span,
 }
 
 impl Display for NumericExpression {
@@ -18,8 +19,8 @@ impl Display for NumericExpression {
 
 #[derive(Debug, Clone)]
 pub(crate) struct StringExpression {
-    value: String,
-    span: Span,
+    pub(crate) value: String,
+    pub(crate) span: Span,
 }
 
 impl Display for StringExpression {
@@ -30,8 +31,8 @@ impl Display for StringExpression {
 
 #[derive(Debug, Clone)]
 pub(crate) struct BoolExpression {
-    value: String,
-    span: Span,
+    pub(crate) value: String,
+    pub(crate) span: Span,
 }
 
 impl Display for BoolExpression {
@@ -42,8 +43,8 @@ impl Display for BoolExpression {
 
 #[derive(Debug, Clone)]
 pub(crate) struct NullExpression {
-    value: String,
-    span: Span,
+    pub(crate) value: String,
+    pub(crate) span: Span,
 }
 
 impl Display for NullExpression {
@@ -54,8 +55,8 @@ impl Display for NullExpression {
 
 #[derive(Debug, Clone)]
 pub(crate) struct EnumChoiceExpression {
-    value: String,
-    span: Span,
+    pub(crate) value: String,
+    pub(crate) span: Span,
 }
 
 impl Display for EnumChoiceExpression {
@@ -67,8 +68,8 @@ impl Display for EnumChoiceExpression {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ArrayExpression {
-    expressions: Vec<Expression>,
-    span: Span,
+    pub(crate) expressions: Vec<Expression>,
+    pub(crate) span: Span,
 }
 
 impl Display for ArrayExpression {
@@ -87,8 +88,8 @@ impl Display for ArrayExpression {
 
 #[derive(Debug, Clone)]
 pub(crate) struct DictionaryExpression {
-    expressions: HashMap<String, Expression>,
-    span: Span,
+    pub(crate) expressions: HashMap<String, Expression>,
+    pub(crate) span: Span,
 }
 
 #[derive(Debug, Clone)]
@@ -98,7 +99,7 @@ pub(crate) enum Expression {
     Bool(BoolExpression),
     Null(NullExpression),
     EnumChoice(EnumChoiceExpression),
-    Identifier(Identifier),
+    Path(Path),
     Call(Call),
     Array(ArrayExpression),
     Dictionary(DictionaryExpression),
@@ -128,7 +129,7 @@ impl Display for Expression {
             Expression::Bool(b) => Display::fmt(b, f),
             Expression::Null(n) => Display::fmt(n, f),
             Expression::EnumChoice(e) => Display::fmt(e, f),
-            Expression::Identifier(i) => Display::fmt(i, f),
+            Expression::Path(p) => Display::fmt(p, f),
             Expression::Call(c) => Display::fmt(c, f),
             Expression::Array(a) => Display::fmt(a, f),
             Expression::Dictionary(d) => Display::fmt(d, f),
