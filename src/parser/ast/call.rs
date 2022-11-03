@@ -13,13 +13,13 @@ pub struct Call {
 
 impl Display for Call {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        Display::fmt(&self.identifier, f)?;
+        Display::fmt(&self.path, f)?;
         f.write_str("(")?;
         let len = self.arguments.len();
         for (index, argument) in self.arguments.iter().enumerate() {
             Display::fmt(argument, f)?;
             if index < len - 1 {
-                f.write_str(", ")
+                f.write_str(", ")?;
             }
         }
         f.write_str(")")

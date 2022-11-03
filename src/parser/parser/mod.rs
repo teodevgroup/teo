@@ -76,9 +76,8 @@ impl Parser {
             match current.as_rule() {
                 Rule::model_declaration => tops.push(self.parse_model(current, id)),
                 Rule::enum_declaration => tops.push(self.parse_enum(current, id)),
-                Rule::EOI => {},
+                Rule::EOI | Rule::EMPTY_LINES => {},
                 Rule::CATCH_ALL => panic!("Found catch all."),
-                Rule::empty_lines => (),
                 _ => panic!("Parsing panic!"),
             }
         }
@@ -162,6 +161,7 @@ impl Parser {
             match current.as_rule() {
                 Rule::path => path = Some(Self::parse_path(current)),
                 Rule::arguments_list => arguments = Self::parse_arguments(current),
+                _ => panic!(),
             }
         }
         Call { path: path.unwrap(), arguments, span }
@@ -230,11 +230,19 @@ impl Parser {
     }
 
     fn parse_array_literal(pair: Pair<'_>) -> ArrayExpression {
-
+        let span = Self::parse_span(&pair);
+        let mut expressions: Vec<Expression> = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::expression => expressions.push(Self::parse_expression(current)),
+                _ => panic!(),
+            }
+        }
+        ArrayExpression { expressions, span }
     }
 
     fn parse_dictionary_literal(pair: Pair<'_>) -> DictionaryExpression {
-
+        panic!()
     }
 
     fn parse_path(pair: Pair<'_>) -> Path {
@@ -242,8 +250,9 @@ impl Parser {
         let mut identifiers: Vec<Identifier> = vec![];
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::identifier => identifier = identifiers.push(Self::parse_identifier(&current)),
-                Rule::path => identifiers.extend(Self::parse_path(current).identifiers.iter()),
+                Rule::identifier => identifiers.push(Self::parse_identifier(&current)),
+                Rule::path => identifiers.extend(Self::parse_path(current).identifiers),
+                _ => panic!(),
             }
         }
         Path { identifiers, span }
