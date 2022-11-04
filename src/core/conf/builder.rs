@@ -58,7 +58,7 @@ impl ConfBuilder {
     pub fn csharp_client<F: Fn(&mut CSharpClientBuilder)>(&mut self, name: impl Into<String>, build: F) -> &mut Self {
         let mut builder = CSharpClientBuilder::new(name.into());
         build(&mut builder);
-        self.clients.push(Client::CSharpClientBuilder(builder.build()));
+        self.clients.push(Client::CSharpClient(builder.build()));
         self
     }
 

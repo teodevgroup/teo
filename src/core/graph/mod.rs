@@ -42,7 +42,7 @@ impl Graph {
             url_segment_name_map: HashMap::new(),
             connector: None,
         };
-        graph.models_vec = builder.models.iter().map(|mb| { mb.build(&builder.connector_builder()) }).collect();
+        graph.models_vec = builder.model_builders.iter().map(|mb| { mb.build(&builder.connector_builder()) }).collect();
         let mut models_map: HashMap<String, Model> = HashMap::new();
         let mut url_segment_name_map: HashMap<String, String> = HashMap::new();
         for model in graph.models_vec.iter() {

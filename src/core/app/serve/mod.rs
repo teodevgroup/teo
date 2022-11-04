@@ -10,8 +10,8 @@ use futures_util::StreamExt;
 use key_path::{KeyPath, path};
 use serde_json::{json, Value as JsonValue};
 use crate::core::action::r#type::ActionType;
-use crate::app::app::ServerConfiguration;
-use crate::app::serve::jwt_token::{Claims, decode_token, encode_token};
+use self::jwt_token::{Claims, decode_token, encode_token};
+use crate::core::conf::Conf;
 
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
@@ -79,7 +79,7 @@ fn log_request(start: SystemTime, action: &str, model: &str, code: u16) {
     println!("{} {} on {} - {} {}", local_formatted, action.bright_yellow(), model.bright_magenta(), code_string, ms_str);
 }
 
-async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration) -> Result<Option<Object>, ActionError> {
+async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &Conf) -> Result<Option<Object>, ActionError> {
     let header_value = r.headers().get("authorization");
     if let None = header_value {
         return Ok(None);
@@ -99,12 +99,12 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConfiguration
     // Decoder::
     let _model = graph.model(claims.model.as_str()).unwrap();
     let identity = graph.find_unique(
-    graph.model(claims.model.as_str()).unwrap().name(),
-    &tson!({
+        graph.model(claims.model.as_str()).unwrap().name(),
+        &tson!({
             "where": tson_identifier
         }),
-    true,
-Env::new(Source::CustomCode, Intent::FindUnique)).await;
+        true,
+        Env::new(Source::CustomCode, Intent::FindUnique)).await;
     if let Err(_) = identity {
         return Err(ActionError::invalid_auth_token())
     }
@@ -477,7 +477,7 @@ async fn handle_group_by(graph: &Graph, input: &Value, model: &Model, _source: S
     }
 }
 
-async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &ServerConfiguration) -> HttpResponse {
+async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Conf) -> HttpResponse {
     let input = input.as_hashmap().unwrap();
     let credentials = input.get("credentials");
     if let None = credentials {
@@ -559,7 +559,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     }
 }
 
-async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &ServerConfiguration, source: Source) -> HttpResponse {
+async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &Conf, source: Source) -> HttpResponse {
     let identity = source.as_identity();
     if let Some(identity) = identity {
         if identity.model() != model {
@@ -579,7 +579,7 @@ async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &S
     }
 }
 
-pub fn make_app(graph: Graph, conf: ServerConfiguration) ->  App<impl ServiceFactory<
+pub fn make_app(graph: Graph, conf: Conf) ->  App<impl ServiceFactory<
     ServiceRequest,
     Response = ServiceResponse<BoxBody>,
     Config = (),
@@ -591,7 +591,7 @@ pub fn make_app(graph: Graph, conf: ServerConfiguration) ->  App<impl ServiceFac
     make_app_inner(leaked_graph, leaked_conf)
 }
 
-fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> App<impl ServiceFactory<
+fn make_app_inner(graph: &'static Graph, conf: &'static Conf) -> App<impl ServiceFactory<
     ServiceRequest,
     Response = ServiceResponse<BoxBody>,
     Config = (),
@@ -773,7 +773,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConfiguration) -> 
     app
 }
 
-pub(crate) async fn serve(graph: Graph, conf: ServerConfiguration) -> Result<(), std::io::Error> {
+pub(crate) async fn serve(graph: Graph, conf: Conf) -> Result<(), std::io::Error> {
     let conf2 = conf.clone();
     HttpServer::new(move || {
         make_app(graph.clone(), conf.clone())
