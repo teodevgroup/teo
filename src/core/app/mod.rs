@@ -23,6 +23,7 @@ impl App {
                 serve(self.graph.clone(), self.conf.clone()).await?
             }
             Command::Client => {
+
                 // generate_clients(graph.clone(), app.client.clone()).await?
             }
         }

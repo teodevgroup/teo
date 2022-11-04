@@ -1,6 +1,6 @@
 pub mod core;
 pub mod connectors;
-//pub mod client;
+pub mod client;
 pub mod interface;
 pub mod parser;
 
