@@ -12,3 +12,8 @@ pub(crate) mod argument;
 pub(crate) mod expression;
 pub(crate) mod source;
 pub(crate) mod path;
+pub(crate) mod connector;
+pub(crate) mod config;
+pub(crate) mod generator;
+pub(crate) mod client;
+pub(crate) mod item;
