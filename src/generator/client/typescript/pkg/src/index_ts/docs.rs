@@ -1,5 +1,5 @@
 use inflector::Inflector;
-use crate::client::shared::helpers::{field_description, field_localized_name, model_api_object_description, model_localized_name, model_localized_name_word_case, relation_description, relation_localized_name};
+use crate::generator::lib::cases::{field_description, field_localized_name, model_api_object_description, model_localized_name, model_localized_name_word_case, relation_description, relation_localized_name};
 use crate::core::action::r#type::{ActionResultData, ActionType};
 use crate::core::field::Field;
 use crate::core::graph::Graph;

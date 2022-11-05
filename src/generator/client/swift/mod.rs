@@ -1,5 +1,4 @@
-use crate::app::app::ClientConfiguration;
-use crate::client::shared::{clear_directory, ensure_directory, generate_file};
+use async_trait::async_trait;
 use crate::generator::client::swift::pkg::gitignore::generate_gitignore;
 use crate::generator::client::swift::pkg::package_swift::generate_package_swift;
 use crate::generator::client::swift::pkg::readme_md::generate_readme_md;

@@ -38,3 +38,40 @@ pub enum Client {
     CSharpClient(CSharpClient),
     DartClient(DartClient),
 }
+
+impl Client {
+    pub(crate) fn as_typescript(&self) -> &TypeScriptClient {
+        match self {
+            Client::TypeScriptClient(c) => c,
+            _ => panic!()
+        }
+    }
+
+    pub(crate) fn as_swift(&self) -> &SwiftClient {
+        match self {
+            Client::SwiftClient(c) => c,
+            _ => panic!()
+        }
+    }
+
+    pub(crate) fn as_kotlin(&self) -> &KotlinClient {
+        match self {
+            Client::KotlinClient(c) => c,
+            _ => panic!()
+        }
+    }
+
+    pub(crate) fn as_csharp(&self) -> &CSharpClient {
+        match self {
+            Client::CSharpClient(c) => c,
+            _ => panic!()
+        }
+    }
+
+    pub(crate) fn as_dart(&self) -> &DartClient {
+        match self {
+            Client::DartClient(c) => c,
+            _ => panic!()
+        }
+    }
+}

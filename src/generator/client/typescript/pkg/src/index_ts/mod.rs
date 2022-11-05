@@ -1,13 +1,13 @@
 use inflector::Inflector;
 use crate::core::action::r#type::{ActionResultData, ActionResultMeta, ActionType};
-use crate::app::app::ClientConfiguration;
-use crate::client::shared::code::Code;
-use crate::client::typescript::pkg::src::index_ts::docs::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, main_object_doc, nested_connect_doc, nested_create_doc, nested_create_or_connect_doc, nested_delete_doc, nested_disconnect_doc, nested_set_doc, nested_update_doc, nested_upsert_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_connect_create_doc, unique_connect_doc, unique_where_doc, where_doc, where_doc_first, with_token_doc};
-use crate::client::typescript::r#type::ToTypeScriptType;
+use crate::core::conf::client::TypeScriptClient;
+use crate::generator::client::typescript::pkg::src::index_ts::docs::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, main_object_doc, nested_connect_doc, nested_create_doc, nested_create_or_connect_doc, nested_delete_doc, nested_disconnect_doc, nested_set_doc, nested_update_doc, nested_upsert_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_connect_create_doc, unique_connect_doc, unique_where_doc, where_doc, where_doc_first, with_token_doc};
+use crate::generator::client::typescript::r#type::ToTypeScriptType;
 
 use crate::core::graph::Graph;
 use crate::core::model::{Model};
 use crate::core::model::index::ModelIndexType::{Primary, Unique};
+use crate::generator::lib::code::Code;
 
 mod docs;
 
@@ -316,7 +316,7 @@ fn generate_model_credentials_input(model: &Model) -> String {
     }).to_string()
 }
 
-pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration) -> String {
+pub(crate) async fn generate_index_ts(graph: &Graph, conf: &TypeScriptClient) -> String {
     Code::new(0, 4, |c| {
         c.line(r#"import { request, Response, PagingInfo, TokenInfo, SortOrder, Enumerable, CheckSelectInclude, SelectSubset, ExistKeys } from "./runtime""#);
         c.block("import {", |b| {
@@ -556,7 +556,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &ClientConfiguration)
             }, "")
         });
         // delegates
-        let object_name = &conf.type_script.as_ref().unwrap().object_name;
+        let object_name = &conf.object_name;
         let object_class_name = object_name.to_pascal_case();
         graph.models().iter().for_each(|m| {
             if m.actions().len() > 0 {
