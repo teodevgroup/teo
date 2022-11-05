@@ -16,9 +16,9 @@ impl AppBuilder {
         }
     }
 
-    pub fn load(&mut self, schema: Option<&str>) {
+    pub fn load(&mut self, schema_file_name: Option<&str>) {
         let mut parser = Parser::new();
-        parser.parse(schema);
+        parser.parse(schema_file_name);
     }
 
     pub fn graph_builder(&mut self) -> &mut GraphBuilder {
