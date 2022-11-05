@@ -124,10 +124,13 @@
 - SQLite: auto create or delete database file **[DONE]**
 
 #### 0.0.41
-- Schema parser
-- Rewrite app & graph
+- Rewrite app & graph **[DONE]**
+- Rewrite client generation **[DONE]**
 
 #### 0.0.42
+- Schema parser
+
+#### 0.0.43
 - SQLite: CRUD and decoding
 - Pipeline allows action error
 - More pipeline modifiers
@@ -141,17 +144,17 @@
 - SQL: Enum types
 - Delete callbacks: `when_delete`, `before_delete` and `after_delete`
 
-#### 0.0.43
+#### 0.0.44
 - PostgreSQL: Migration I
 - SQLite: Migration I
 
-#### 0.0.44
-- TypeScript Client
-
 #### 0.0.45
+- Rewrite TypeScript client
+
+#### 0.0.46
 - The copy action
 
-#### 0.0.46 - 0.0.55
+#### 0.0.47 - 0.0.55
 - Setup unit tests
 - Replace buggy sqlx
 - Full support of decimal type
