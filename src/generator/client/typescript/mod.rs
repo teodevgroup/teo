@@ -15,11 +15,11 @@ pub(crate) struct TypeScriptClientGenerator { }
 
 #[async_trait]
 impl ClientGenerator for TypeScriptClientGenerator {
-    async fn generate_main(graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_main(&self, graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()> {
         generator.generate_file("client/typescript/src/index.ts", generate_index_ts(graph, client.as_typescript()).await).await
     }
 
-    async fn generate_accessories(graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_accessories(&self, graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()> {
         generator.ensure_directory("client").await?;
         generator.clear_directory("client/typescript").await?;
         generator.ensure_directory("client/typescript/src").await?;

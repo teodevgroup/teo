@@ -11,6 +11,6 @@ use crate::core::graph::Graph;
 
 #[async_trait]
 pub(crate) trait ClientGenerator {
-    async fn generate_main(graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()>;
-    async fn generate_accessories(graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()>;
+    async fn generate_main(&self, graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()>;
+    async fn generate_accessories(&self, graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()>;
 }

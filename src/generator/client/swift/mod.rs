@@ -13,11 +13,11 @@ pub(crate) struct SwiftClientGenerator { }
 
 #[async_trait]
 impl ClientGenerator for SwiftClientGenerator {
-    async fn generate_main(graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_main(&self, graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()> {
         Ok(())
     }
 
-    async fn generate_accessories(graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_accessories(&self, graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()> {
         generator.ensure_directory("client").await?;
         generator.clear_directory("client/swift").await?;
         generator.generate_file("client/swift/README.md", generate_readme_md(graph).await).await?;

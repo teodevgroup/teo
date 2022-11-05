@@ -74,4 +74,39 @@ impl Client {
             _ => panic!()
         }
     }
+
+    pub(crate) fn is_typescript(&self) -> bool {
+        match self {
+            Client::TypeScriptClient(c) => true,
+            _ => false,
+        }
+    }
+
+    pub(crate) fn is_swift(&self) -> bool {
+        match self {
+            Client::SwiftClient(c) => true,
+            _ => false,
+        }
+    }
+
+    pub(crate) fn is_kotlin(&self) -> bool {
+        match self {
+            Client::KotlinClient(c) => true,
+            _ => false,
+        }
+    }
+
+    pub(crate) fn is_csharp(&self) -> bool {
+        match self {
+            Client::CSharpClient(c) => true,
+            _ => false,
+        }
+    }
+
+    pub(crate) fn is_dart(&self) -> bool {
+        match self {
+            Client::DartClient(c) => true,
+            _ => false,
+        }
+    }
 }

@@ -1,8 +1,10 @@
 pub mod builder;
 pub(crate) mod serve;
+pub(crate) mod generate;
 pub(crate) mod command;
 
 use crate::core::app::command::Command;
+use crate::core::app::generate::generate;
 use crate::core::app::serve::serve;
 use crate::core::conf::Conf;
 use crate::core::graph::Graph;
@@ -23,8 +25,7 @@ impl App {
                 serve(self.graph.clone(), self.conf.clone()).await?
             }
             Command::Client => {
-
-                // generate_clients(graph.clone(), app.client.clone()).await?
+                generate(&self.graph, &self.conf).await?
             }
         }
         Ok(())

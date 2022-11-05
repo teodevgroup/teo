@@ -20,11 +20,11 @@ pub(crate) struct CSharpClientGenerator { }
 
 #[async_trait]
 impl ClientGenerator for CSharpClientGenerator {
-    async fn generate_main(graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_main(&self, graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()> {
         generator.generate_file("client/csharp/Index.cs", generate_index_cs(graph, client.as_csharp()).await).await
     }
 
-    async fn generate_accessories(graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_accessories(&self, graph: &Graph, client: &Client, generator: &Generator) -> std::io::Result<()> {
         generator.ensure_directory("client").await?;
         generator.clear_directory("client/csharp").await?;
         generator.ensure_directory("client/csharp").await?;
