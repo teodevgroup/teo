@@ -98,7 +98,7 @@ field_declaration = {
 // #############
 identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | "-" | ASCII_ALPHANUMERIC)* }
 path = { identifier ~ ("." ~ path?)* }
-identifier_list = { "{" ~ (identifier ~ ("," ~ identifier)*)? ~ TRAILING_COMMA? ~ "}" }
+identifier_list = { BLOCK_OPEN ~ (identifier ~ ("," ~ identifier)*)? ~ TRAILING_COMMA? ~ BLOCK_CLOSE }
 
 // #############
 // function call & decorator
@@ -163,7 +163,7 @@ array_literal = { "[" ~ (expression ~ ( "," ~ expression )*)? ~ "]" }
 // #############
 // dict literals
 // #############
-dictionary_literal = { "{" ~ (expression ~ ( "," ~ expression )*)? ~ "}" }
+dictionary_literal = { BLOCK_OPEN ~ (expression ~ ( "," ~ expression )*)? ~ BLOCK_CLOSE }
 
 // #############
 // comments

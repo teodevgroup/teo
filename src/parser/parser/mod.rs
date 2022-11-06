@@ -13,6 +13,7 @@ use crate::parser::ast::expression::{ArrayExpression, BoolExpression, Dictionary
 use crate::parser::ast::field::Field;
 use crate::parser::ast::generator::Generator;
 use crate::parser::ast::identifier::Identifier;
+use crate::parser::ast::import::Import;
 use crate::parser::ast::item::Item;
 use crate::parser::ast::model::Model;
 use crate::parser::ast::path::Path;
@@ -94,7 +95,17 @@ impl Parser {
     }
 
     fn parse_import(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Top> {
-
+        let mut identifiers = vec![];
+        let span = Self::parse_span(&pair);
+        let mut source: Option<StringExpression> = None;
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::string_literal => source = Some(StringExpression { value: current.as_str().to_string(), span }),
+                Rule::identifier_list => identifiers = Self::parse_identifier_list(current),
+                _ => panic!("error."),
+            }
+        }
+        Arc::new(Top::Import(Import { identifiers, source: source.unwrap(), span }))
     }
 
     fn parse_model(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Top> {
@@ -356,6 +367,17 @@ impl Parser {
             arity,
             required,
         }
+    }
+
+    fn parse_identifier_list(pair: Pair<'_>) -> Vec<Identifier> {
+        let mut identifiers = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::identifier => identifiers.push(Self::parse_identifier(&current)),
+                _ => panic!(),
+            }
+        }
+        identifiers
     }
 
     fn parse_identifier(pair: &Pair<'_>) -> Identifier {
