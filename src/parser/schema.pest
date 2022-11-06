@@ -19,6 +19,8 @@ CLIENT_KEYWORD = { "client" }
 GENERATOR_KEYWORD = { "generator" }
 COLON = { ":" }
 TRAILING_COMMA = @{ "," }
+RANGE_OPEN = { ".." }
+RANGE_CLOSE = { "..." }
 CATCH_ALL = { (!NEWLINE ~ ANY)+ ~ NEWLINE? }
 BLOCK_LEVEL_CATCH_ALL = { !BLOCK_CLOSE ~ CATCH_ALL }
 
@@ -129,6 +131,11 @@ bool_literal = @{ "true" | "false" }
 // null literals
 // #############
 null_literal = { "null" }
+
+// #############
+// range literals
+// #############
+range_literal = { expression ~ (RANGE_OPEN | RANGE_CLOSE)  ~ expression }
 
 // #############
 // tuple literals

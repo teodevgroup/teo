@@ -9,7 +9,7 @@ use crate::parser::ast::client::Client;
 use crate::parser::ast::config::Config;
 use crate::parser::ast::connector::Connector;
 use crate::parser::ast::decorator::Decorator;
-use crate::parser::ast::expression::{ArrayExpression, BoolExpression, DictionaryExpression, EnumChoiceExpression, Expression, NullExpression, NumericExpression, StringExpression, TupleExpression};
+use crate::parser::ast::expression::{ArrayExpression, BoolExpression, DictionaryExpression, EnumChoiceExpression, Expression, NullExpression, NumericExpression, RangeExpression, StringExpression, TupleExpression};
 use crate::parser::ast::field::Field;
 use crate::parser::ast::generator::Generator;
 use crate::parser::ast::identifier::Identifier;
@@ -264,6 +264,7 @@ impl Parser {
                 Rule::numeric_literal => return Expression::Numeric(NumericExpression { value: current.as_str().to_string(), span }),
                 Rule::string_literal => return Expression::String(StringExpression { value: current.as_str().to_string(), span }),
                 Rule::call => return Expression::Call(Self::parse_call(current)),
+                Rule::range_literal => return Expression::Range(Self::parse_range_literal(current)),
                 Rule::tuple_literal => return Expression::Tuple(Self::parse_tuple_literal(current)),
                 Rule::array_literal => return Expression::Array(Self::parse_array_literal(current)),
                 Rule::dictionary_literal => return Expression::Dictionary(Self::parse_dictionary_literal(current)),
@@ -273,6 +274,21 @@ impl Parser {
             }
         }
         panic!();
+    }
+
+    fn parse_range_literal(pair: Pair<'_>) -> RangeExpression {
+        let span = Self::parse_span(&pair);
+        let mut expressions: Vec<Expression> = vec![];
+        let mut closed = false;
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::expression => expressions.push(Self::parse_expression(current)),
+                Rule::RANGE_OPEN => closed = false,
+                Rule::RANGE_CLOSE => closed = true,
+                _ => panic!(),
+            }
+        }
+        RangeExpression { closed, expressions, span }
     }
 
     fn parse_tuple_literal(pair: Pair<'_>) -> TupleExpression {

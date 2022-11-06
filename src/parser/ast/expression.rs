@@ -67,6 +67,26 @@ impl Display for EnumChoiceExpression {
 }
 
 #[derive(Debug, Clone)]
+pub(crate) struct RangeExpression {
+    pub(crate) closed: bool,
+    pub(crate) expressions: Vec<Expression>,
+    pub(crate) span: Span,
+}
+
+impl Display for RangeExpression {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let len = self.expressions.len();
+        for (index, expression) in self.expressions.iter().enumerate() {
+            Display::fmt(expression, f)?;
+            if index != len - 1 {
+                f.write_str(if self.closed { "..." } else { ".." })?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
 pub(crate) struct TupleExpression {
     pub(crate) expressions: Vec<Expression>,
     pub(crate) span: Span,
@@ -137,6 +157,7 @@ pub(crate) enum Expression {
     EnumChoice(EnumChoiceExpression),
     Path(Path),
     Call(Call),
+    Range(RangeExpression),
     Tuple(TupleExpression),
     Array(ArrayExpression),
     Dictionary(DictionaryExpression),
@@ -152,6 +173,7 @@ impl Display for Expression {
             Expression::EnumChoice(e) => Display::fmt(e, f),
             Expression::Path(p) => Display::fmt(p, f),
             Expression::Call(c) => Display::fmt(c, f),
+            Expression::Range(r) => Display::fmt(r, f),
             Expression::Tuple(t) => Display::fmt(t, f),
             Expression::Array(a) => Display::fmt(a, f),
             Expression::Dictionary(d) => Display::fmt(d, f),
