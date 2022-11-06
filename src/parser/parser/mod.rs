@@ -79,6 +79,7 @@ impl Parser {
         let mut pairs = pairs.into_inner().peekable();
         while let Some(current) = pairs.next() {
             match current.as_rule() {
+                Rule::import_statement => tops.push(self.parse_import(current, id)),
                 Rule::model_declaration => tops.push(self.parse_model(current, id)),
                 Rule::enum_declaration => tops.push(self.parse_enum(current, id)),
                 Rule::config_declaration => tops.push(self.parse_config_block(current, id)),
@@ -90,6 +91,10 @@ impl Parser {
         let result = Arc::new(Source { id, path, tops });
         self.sources.insert(id, result.clone());
         result
+    }
+
+    fn parse_import(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Top> {
+
     }
 
     fn parse_model(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Top> {
