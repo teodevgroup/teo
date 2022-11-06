@@ -17,12 +17,24 @@ CONFIG_KEYWORD = { "config" }
 CONNECTOR_KEYWORD = { "connector" }
 CLIENT_KEYWORD = { "client" }
 GENERATOR_KEYWORD = { "generator" }
+IMPORT_KEYWORD = { "import" }
+FROM_KEYWORD = { "from" }
 COLON = { ":" }
 TRAILING_COMMA = @{ "," }
 RANGE_OPEN = { ".." }
 RANGE_CLOSE = { "..." }
 CATCH_ALL = { (!NEWLINE ~ ANY)+ ~ NEWLINE? }
 BLOCK_LEVEL_CATCH_ALL = { !BLOCK_CLOSE ~ CATCH_ALL }
+
+// #############
+// import
+// #############
+
+import_statement = {
+    IMPORT_KEYWORD
+    ~ (identifier_list ~ FROM_KEYWORD)?
+    ~ string_literal
+}
 
 // #############
 // config blocks
@@ -86,6 +98,7 @@ field_declaration = {
 // #############
 identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | "-" | ASCII_ALPHANUMERIC)* }
 path = { identifier ~ ("." ~ path?)* }
+identifier_list = { "{" ~ (identifier ~ ("," ~ identifier)*)? ~ TRAILING_COMMA? ~ "}" }
 
 // #############
 // function call & decorator
