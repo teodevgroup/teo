@@ -5,10 +5,15 @@ use std::sync::Arc;
 use pest::Parser as PestParser;
 use crate::parser::ast::argument::Argument;
 use crate::parser::ast::call::Call;
+use crate::parser::ast::client::Client;
+use crate::parser::ast::config::Config;
+use crate::parser::ast::connector::Connector;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::expression::{ArrayExpression, BoolExpression, DictionaryExpression, EnumChoiceExpression, Expression, NullExpression, NumericExpression, StringExpression};
 use crate::parser::ast::field::Field;
+use crate::parser::ast::generator::Generator;
 use crate::parser::ast::identifier::Identifier;
+use crate::parser::ast::item::Item;
 use crate::parser::ast::model::Model;
 use crate::parser::ast::path::Path;
 use crate::parser::ast::r#enum::{Enum, EnumChoice};
@@ -76,6 +81,7 @@ impl Parser {
             match current.as_rule() {
                 Rule::model_declaration => tops.push(self.parse_model(current, id)),
                 Rule::enum_declaration => tops.push(self.parse_enum(current, id)),
+                Rule::config_declaration => tops.push(self.parse_config_block(current, id)),
                 Rule::EOI | Rule::EMPTY_LINES => {},
                 Rule::CATCH_ALL => panic!("Found catch all."),
                 _ => panic!("Parsing panic!"),
@@ -145,6 +151,45 @@ impl Parser {
         }));
         self.tops.insert(result.id(), result.clone());
         result
+    }
+
+    fn parse_config_block(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Top> {
+        let mut identifier: Option<Identifier> = None;
+        let mut items: Vec<Item> = vec![];
+        let mut keyword = "";
+        let span = Self::parse_span(&pair);
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => (),
+                Rule::config_keywords => keyword = current.as_str(),
+                Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
+                Rule::config_item => items.push(Self::parse_config_item(current)),
+                _ => panic!("error."),
+            }
+        }
+        let result = Arc::new(match keyword {
+            "config" => Top::Config(Config { items, span }),
+            "connector" => Top::Connector(Connector { items, span }),
+            "generator" => Top::Generator(Generator { identifier: identifier.unwrap(), items, span }),
+            "client" => Top::Client(Client { identifier: identifier.unwrap(), items, span }),
+            _ => panic!(),
+        });
+        self.tops.insert(result.id(), result.clone());
+        result
+    }
+
+    fn parse_config_item(pair: Pair<'_>) -> Item {
+        let span = Self::parse_span(&pair);
+        let mut identifier: Option<Identifier> = None;
+        let mut expression: Option<Expression> = None;
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
+                Rule::expression => expression = Some(Self::parse_expression(current)),
+                _ => panic!("error."),
+            }
+        }
+        Item { identifier: identifier.unwrap(), expression: expression.unwrap(), span }
     }
 
     fn parse_decorator(pair: Pair<'_>) -> Decorator {
