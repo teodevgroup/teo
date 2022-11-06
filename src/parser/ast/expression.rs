@@ -67,6 +67,26 @@ impl Display for EnumChoiceExpression {
 }
 
 #[derive(Debug, Clone)]
+pub(crate) struct TupleExpression {
+    pub(crate) expressions: Vec<Expression>,
+    pub(crate) span: Span,
+}
+
+impl Display for TupleExpression {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("(")?;
+        let len = self.expressions.len();
+        for (index, expression) in self.expressions.iter().enumerate() {
+            Display::fmt(expression, f)?;
+            if index != len - 1 {
+                f.write_str(", ")?;
+            }
+        }
+        f.write_str(")")
+    }
+}
+
+#[derive(Debug, Clone)]
 pub(crate) struct ArrayExpression {
     pub(crate) expressions: Vec<Expression>,
     pub(crate) span: Span,
@@ -92,19 +112,6 @@ pub(crate) struct DictionaryExpression {
     pub(crate) span: Span,
 }
 
-#[derive(Debug, Clone)]
-pub(crate) enum Expression {
-    Numeric(NumericExpression),
-    String(StringExpression),
-    Bool(BoolExpression),
-    Null(NullExpression),
-    EnumChoice(EnumChoiceExpression),
-    Path(Path),
-    Call(Call),
-    Array(ArrayExpression),
-    Dictionary(DictionaryExpression),
-}
-
 impl Display for DictionaryExpression {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str("{")?;
@@ -121,6 +128,20 @@ impl Display for DictionaryExpression {
     }
 }
 
+#[derive(Debug, Clone)]
+pub(crate) enum Expression {
+    Numeric(NumericExpression),
+    String(StringExpression),
+    Bool(BoolExpression),
+    Null(NullExpression),
+    EnumChoice(EnumChoiceExpression),
+    Path(Path),
+    Call(Call),
+    Tuple(TupleExpression),
+    Array(ArrayExpression),
+    Dictionary(DictionaryExpression),
+}
+
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -131,6 +152,7 @@ impl Display for Expression {
             Expression::EnumChoice(e) => Display::fmt(e, f),
             Expression::Path(p) => Display::fmt(p, f),
             Expression::Call(c) => Display::fmt(c, f),
+            Expression::Tuple(t) => Display::fmt(t, f),
             Expression::Array(a) => Display::fmt(a, f),
             Expression::Dictionary(d) => Display::fmt(d, f),
         }

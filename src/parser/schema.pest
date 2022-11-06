@@ -131,6 +131,11 @@ bool_literal = @{ "true" | "false" }
 null_literal = { "null" }
 
 // #############
+// tuple literals
+// #############
+tuple_literal = { "(" ~ (expression ~ ( "," ~ expression )*)? ~ ")" }
+
+// #############
 // array literals
 // #############
 array_literal = { "[" ~ (expression ~ ( "," ~ expression )*)? ~ "]" }
@@ -152,4 +157,4 @@ trailing_comment = ${ triple_comment | double_comment }
 // #############
 // expression
 // #############
-expression = { bool_literal | null_literal | numeric_literal | string_literal | call | array_literal | dictionary_literal | path | enum_choice }
+expression = { bool_literal | null_literal | numeric_literal | string_literal | call | tuple_literal | array_literal | dictionary_literal | path | enum_choice }

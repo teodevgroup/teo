@@ -9,7 +9,7 @@ use crate::parser::ast::client::Client;
 use crate::parser::ast::config::Config;
 use crate::parser::ast::connector::Connector;
 use crate::parser::ast::decorator::Decorator;
-use crate::parser::ast::expression::{ArrayExpression, BoolExpression, DictionaryExpression, EnumChoiceExpression, Expression, NullExpression, NumericExpression, StringExpression};
+use crate::parser::ast::expression::{ArrayExpression, BoolExpression, DictionaryExpression, EnumChoiceExpression, Expression, NullExpression, NumericExpression, StringExpression, TupleExpression};
 use crate::parser::ast::field::Field;
 use crate::parser::ast::generator::Generator;
 use crate::parser::ast::identifier::Identifier;
@@ -264,6 +264,7 @@ impl Parser {
                 Rule::numeric_literal => return Expression::Numeric(NumericExpression { value: current.as_str().to_string(), span }),
                 Rule::string_literal => return Expression::String(StringExpression { value: current.as_str().to_string(), span }),
                 Rule::call => return Expression::Call(Self::parse_call(current)),
+                Rule::tuple_literal => return Expression::Tuple(Self::parse_tuple_literal(current)),
                 Rule::array_literal => return Expression::Array(Self::parse_array_literal(current)),
                 Rule::dictionary_literal => return Expression::Dictionary(Self::parse_dictionary_literal(current)),
                 Rule::path => return Expression::Path(Self::parse_path(current)),
@@ -272,6 +273,18 @@ impl Parser {
             }
         }
         panic!();
+    }
+
+    fn parse_tuple_literal(pair: Pair<'_>) -> TupleExpression {
+        let span = Self::parse_span(&pair);
+        let mut expressions: Vec<Expression> = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::expression => expressions.push(Self::parse_expression(current)),
+                _ => panic!(),
+            }
+        }
+        TupleExpression { expressions, span }
     }
 
     fn parse_array_literal(pair: Pair<'_>) -> ArrayExpression {
