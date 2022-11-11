@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Write};
+use chrono::format::Numeric;
 use crate::parser::ast::call::Call;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::path::Path;
@@ -155,12 +156,140 @@ pub(crate) enum Expression {
     Bool(BoolExpression),
     Null(NullExpression),
     EnumChoice(EnumChoiceExpression),
-    Path(Path),
-    Call(Call),
     Range(RangeExpression),
     Tuple(TupleExpression),
     Array(ArrayExpression),
     Dictionary(DictionaryExpression),
+    Path(Path),
+    Call(Call),
+}
+
+impl Expression {
+    pub(crate) fn as_numeric(&self) -> Option<&NumericExpression> {
+        match self {
+            Expression::Numeric(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_numeric_mut(&mut self) -> Option<&mut NumericExpression> {
+        match self {
+            Expression::Numeric(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_string(&self) -> Option<&StringExpression> {
+        match self {
+            Expression::String(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_string_mut(&mut self) -> Option<&mut StringExpression> {
+        match self {
+            Expression::String(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_bool(&self) -> Option<&BoolExpression> {
+        match self {
+            Expression::Bool(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_bool_mut(&mut self) -> Option<&mut BoolExpression> {
+        match self {
+            Expression::Bool(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_null(&self) -> Option<&NullExpression> {
+        match self {
+            Expression::Null(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_null_mut(&mut self) -> Option<&mut NullExpression> {
+        match self {
+            Expression::Null(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_enum_choice(&self) -> Option<&EnumChoiceExpression> {
+        match self {
+            Expression::EnumChoice(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_enum_choice_mut(&mut self) -> Option<&mut EnumChoiceExpression> {
+        match self {
+            Expression::EnumChoice(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_range(&self) -> Option<&RangeExpression> {
+        match self {
+            Expression::Range(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_range_mut(&mut self) -> Option<&mut RangeExpression> {
+        match self {
+            Expression::Range(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_tuple(&self) -> Option<&TupleExpression> {
+        match self {
+            Expression::Tuple(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_tuple_mut(&mut self) -> Option<&mut TupleExpression> {
+        match self {
+            Expression::Tuple(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_array(&self) -> Option<&ArrayExpression> {
+        match self {
+            Expression::Array(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_array_mut(&mut self) -> Option<&mut ArrayExpression> {
+        match self {
+            Expression::Array(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_dictionary(&self) -> Option<&DictionaryExpression> {
+        match self {
+            Expression::Dictionary(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_dictionary_mut(&mut self) -> Option<&mut DictionaryExpression> {
+        match self {
+            Expression::Dictionary(n) => Some(n),
+            _ => None,
+        }
+    }
 }
 
 impl Display for Expression {
