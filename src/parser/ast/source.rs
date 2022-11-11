@@ -1,13 +1,13 @@
 use std::fmt;
-use std::path::{PathBuf};
-use std::sync::Arc;
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 use crate::parser::ast::top::Top;
 
 #[derive(Clone)]
 pub(crate) struct Source {
     pub(crate) id: usize,
     pub(crate) path: PathBuf,
-    pub(crate) tops: Vec<Arc<Top>>,
+    pub(crate) tops: Vec<Arc<Mutex<Top>>>,
 }
 
 impl fmt::Debug for Source {

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::fs;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use pest::Parser as PestParser;
 use crate::parser::ast::argument::Argument;
 use crate::parser::ast::call::Call;
@@ -32,9 +32,9 @@ type Pair<'a> = pest::iterators::Pair<'a, Rule>;
 
 #[derive(Debug)]
 pub(crate) struct Parser {
-    main: Option<Arc<Source>>,
-    sources: HashMap<usize, Arc<Source>>,
-    tops: HashMap<usize, Arc<Top>>,
+    main: Option<Arc<Mutex<Source>>>,
+    sources: HashMap<usize, Arc<Mutex<Source>>>,
+    tops: HashMap<usize, Arc<Mutex<Top>>>,
     next_id: usize,
 }
 
@@ -67,7 +67,7 @@ impl Parser {
         println!("{:?}", self);
     }
 
-    fn parse_source(&mut self, path: PathBuf, id: usize) -> Arc<Source> {
+    fn parse_source(&mut self, path: PathBuf, id: usize) -> Arc<Mutex<Source>> {
         let content = match fs::read_to_string(&path) {
             Ok(content) => content,
             Err(err) => panic!("{}", err)
@@ -77,7 +77,7 @@ impl Parser {
             Err(err) => panic!("{}", err)
         };
         let pairs = pairs.next().unwrap();
-        let mut tops: Vec<Arc<Top>> = vec![];
+        let mut tops: Vec<Arc<Mutex<Top>>> = vec![];
         let mut pairs = pairs.into_inner().peekable();
         while let Some(current) = pairs.next() {
             match current.as_rule() {
@@ -90,12 +90,12 @@ impl Parser {
                 _ => panic!("Parsing panic!"),
             }
         }
-        let result = Arc::new(Source { id, path, tops });
+        let result = Arc::new(Mutex::new(Source { id, path, tops }));
         self.sources.insert(id, result.clone());
         result
     }
 
-    fn parse_import(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Top> {
+    fn parse_import(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Mutex<Top>> {
         let mut identifiers = vec![];
         let span = Self::parse_span(&pair);
         let mut source: Option<StringExpression> = None;
@@ -106,10 +106,10 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        Arc::new(Top::Import(Import { identifiers, source: source.unwrap(), span }))
+        Arc::new(Mutex::new(Top::Import(Import { identifiers, source: source.unwrap(), span })))
     }
 
-    fn parse_model(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Top> {
+    fn parse_model(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Mutex<Top>> {
         let mut identifier: Option<Identifier> = None;
         let mut fields: Vec<Field> = vec![];
         let mut decorators: Vec<Decorator> = vec![];
@@ -122,15 +122,15 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        let result = Arc::new(Top::Model(Model::new(
+        let result = Arc::new(Mutex::new(Top::Model(Model::new(
             self.next_id(),
             source_id,
             identifier.unwrap(),
             fields,
             decorators,
             span,
-        )));
-        self.tops.insert(result.id(), result.clone());
+        ))));
+        self.tops.insert(result.lock().unwrap().id(), result.clone());
         result
     }
 
@@ -156,21 +156,21 @@ impl Parser {
         )
     }
 
-    fn parse_enum(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Top> {
+    fn parse_enum(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Mutex<Top>> {
         let mut identifier: Option<Identifier> = None;
         let mut choices: Vec<EnumChoice> = vec![];
-        let result = Arc::new(Top::Enum(Enum {
+        let result = Arc::new(Mutex::new(Top::Enum(Enum {
             id: self.next_id(),
             source_id,
             identifier: identifier.unwrap(),
             choices,
             span: Self::parse_span(&pair),
-        }));
-        self.tops.insert(result.id(), result.clone());
+        })));
+        self.tops.insert(result.lock().unwrap().id(), result.clone());
         result
     }
 
-    fn parse_config_block(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Top> {
+    fn parse_config_block(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Mutex<Top>> {
         let mut identifier: Option<Identifier> = None;
         let mut items: Vec<Item> = vec![];
         let mut keyword = "";
@@ -184,14 +184,14 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        let result = Arc::new(match keyword {
+        let result = Arc::new(Mutex::new(match keyword {
             "config" => Top::Config(Config { items, span }),
             "connector" => Top::Connector(Connector { items, span }),
             "generator" => Top::Generator(Generator { identifier: identifier.unwrap(), items, span }),
             "client" => Top::Client(Client { identifier: identifier.unwrap(), items, span }),
             _ => panic!(),
-        });
-        self.tops.insert(result.id(), result.clone());
+        }));
+        self.tops.insert(result.lock().unwrap().id(), result.clone());
         result
     }
 
