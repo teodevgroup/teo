@@ -8,6 +8,7 @@ pub(crate) mod field;
 pub(crate) mod r#type;
 pub(crate) mod decorator;
 pub(crate) mod call;
+pub(crate) mod pipeline;
 pub(crate) mod argument;
 pub(crate) mod expression;
 pub(crate) mod source;

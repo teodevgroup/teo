@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Write};
 use chrono::format::Numeric;
 use crate::parser::ast::call::Call;
+use crate::parser::ast::pipeline::Pipeline;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::path::Path;
 use crate::parser::ast::span::Span;
@@ -162,6 +163,7 @@ pub(crate) enum Expression {
     Dictionary(DictionaryExpression),
     Path(Path),
     Call(Call),
+    Pipeline(Pipeline),
 }
 
 impl Expression {
@@ -302,6 +304,7 @@ impl Display for Expression {
             Expression::EnumChoice(e) => Display::fmt(e, f),
             Expression::Path(p) => Display::fmt(p, f),
             Expression::Call(c) => Display::fmt(c, f),
+            Expression::Pipeline(p) => Display::fmt(p, f),
             Expression::Range(r) => Display::fmt(r, f),
             Expression::Tuple(t) => Display::fmt(t, f),
             Expression::Array(a) => Display::fmt(a, f),

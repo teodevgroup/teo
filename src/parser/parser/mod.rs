@@ -17,6 +17,7 @@ use crate::parser::ast::import::Import;
 use crate::parser::ast::item::Item;
 use crate::parser::ast::model::Model;
 use crate::parser::ast::path::Path;
+use crate::parser::ast::pipeline::Pipeline;
 use crate::parser::ast::r#enum::{Enum, EnumChoice};
 use crate::parser::ast::r#type::{Arity, Type};
 use crate::parser::ast::source::Source;
@@ -228,6 +229,23 @@ impl Parser {
         Call { path: path.unwrap(), arguments, span }
     }
 
+    fn parse_pipeline(pair: Pair<'_>) -> Pipeline {
+        let span = Self::parse_span(&pair);
+        let mut path: Option<Path> = None;
+        let mut arguments: Vec<Argument> = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::path => path = Some(Self::parse_path(current)),
+                Rule::arguments_list => arguments = Self::parse_arguments(current),
+                _ => panic!(),
+            }
+        }
+        Pipeline {
+            call: Call { path: path.unwrap(), arguments, span: span.clone() },
+            span,
+        }
+    }
+
     fn parse_arguments(pair: Pair<'_>) -> Vec<Argument> {
         let mut arguments: Vec<Argument> = vec![];
         for current in pair.into_inner() {
@@ -280,6 +298,7 @@ impl Parser {
                 Rule::numeric_literal => return Expression::Numeric(NumericExpression { value: current.as_str().to_string(), span }),
                 Rule::string_literal => return Expression::String(StringExpression { value: current.as_str().to_string(), span }),
                 Rule::call => return Expression::Call(Self::parse_call(current)),
+                Rule::pipeline => return Expression::Pipeline(Self::parse_pipeline(current)),
                 Rule::range_literal => return Expression::Range(Self::parse_range_literal(current)),
                 Rule::tuple_literal => return Expression::Tuple(Self::parse_tuple_literal(current)),
                 Rule::array_literal => return Expression::Array(Self::parse_array_literal(current)),

@@ -18,7 +18,7 @@ pub(crate) type PropertyDecorator = fn(args: Vec<Argument>, property: &mut Prope
 pub(crate) type ModelDecorator = fn(args: Vec<Argument>, model: &mut Model);
 
 pub(crate) struct Container {
-    objects: HashMap<String, Object>
+    pub(crate) objects: HashMap<String, Object>
 }
 
 impl Container {

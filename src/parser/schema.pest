@@ -101,11 +101,12 @@ path = { identifier ~ ("." ~ path?)* }
 identifier_list = { BLOCK_OPEN ~ (identifier ~ ("," ~ identifier)*)? ~ TRAILING_COMMA? ~ BLOCK_CLOSE }
 
 // #############
-// function call & decorator
+// function call, decorator and pipeline
 // #############
 call = { path ~ arguments_list }
 item_decorator = { "@" ~ path ~ arguments_list? }
 block_decorator = { "@@" ~ path ~ arguments_list? }
+pipeline = { "$" ~ path ~ arguments_list? }
 
 // #############
 // arguments
@@ -177,4 +178,4 @@ trailing_comment = ${ triple_comment | double_comment }
 // #############
 // expression
 // #############
-expression = { bool_literal | null_literal | numeric_literal | string_literal | call | tuple_literal | array_literal | dictionary_literal | path | enum_choice }
+expression = { bool_literal | null_literal | numeric_literal | string_literal | call | pipeline | tuple_literal | array_literal | dictionary_literal | path | enum_choice }

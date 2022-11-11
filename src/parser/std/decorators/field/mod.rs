@@ -22,6 +22,7 @@ use crate::core::relation::Relation;
 use crate::parser::ast::argument::Argument;
 use crate::parser::ast::object::Object;
 use crate::parser::std::decorators::field::atomic::{atomic_decorator};
+use crate::parser::std::decorators::field::db::db_container;
 use crate::parser::std::decorators::field::id::{id_decorator};
 use crate::parser::std::decorators::field::internal::{internal_decorator};
 use crate::parser::std::decorators::field::nonatomic::{nonatomic_decorator};
@@ -42,6 +43,7 @@ pub(crate) struct GlobalFieldDecorators {
 impl GlobalFieldDecorators {
     pub(crate) fn new(database_name: DatabaseName) -> GlobalFieldDecorators {
         let mut objects: HashMap<String, Object> = HashMap::new();
+        objects.insert("db".to_owned(), Object::Container(db_container(database_name)));
         objects.insert("id".to_owned(), Object::FieldDecorator(id_decorator));
         objects.insert("internal".to_owned(), Object::FieldDecorator(internal_decorator));
         objects.insert("readonly".to_owned(), Object::FieldDecorator(readonly_decorator));
