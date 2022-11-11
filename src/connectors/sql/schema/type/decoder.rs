@@ -1,7 +1,7 @@
 use std::str::FromStr;
 use regex::Regex;
 use crate::connectors::sql::schema::dialect::SQLDialect;
-use crate::core::db_type::DatabaseType;
+use crate::core::database::r#type::DatabaseType;
 
 pub(crate) struct SQLTypeDecoder { }
 

@@ -3,7 +3,7 @@ use crate::connectors::sql::connector::SQLConnector;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::r#type::field::ToDatabaseType;
 use crate::core::connector::{Connector, ConnectorBuilder};
-use crate::core::db_type::DatabaseType;
+use crate::core::database::r#type::DatabaseType;
 use crate::core::field::r#type::FieldType;
 use crate::core::model::Model;
 

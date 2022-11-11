@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Formatter};
 use crate::core::pipeline::argument::Argument;
-use crate::core::db_type::DatabaseType;
+use crate::core::database::r#type::DatabaseType;
 use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::FieldType;
 use crate::core::field::read_rule::ReadRule;

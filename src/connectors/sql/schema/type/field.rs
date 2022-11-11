@@ -1,5 +1,5 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
-use crate::core::db_type::DatabaseType;
+use crate::core::database::r#type::DatabaseType;
 use crate::core::field::r#type::FieldType;
 
 pub trait ToDatabaseType {

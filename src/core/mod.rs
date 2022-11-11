@@ -4,7 +4,7 @@ pub mod action;
 pub mod graph;
 pub mod model;
 pub mod r#enum;
-pub mod db_type;
+pub mod database;
 pub mod data_source;
 pub mod field;
 pub mod relation;

@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
-use crate::core::db_type::DatabaseType;
+use crate::core::database::r#type::DatabaseType;
 
 impl ToSQLString for DatabaseType {
     fn to_string(&self, dialect: SQLDialect) -> String {

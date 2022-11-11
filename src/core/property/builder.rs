@@ -1,5 +1,5 @@
 use crate::core::connector::ConnectorBuilder;
-use crate::core::db_type::DatabaseType;
+use crate::core::database::r#type::DatabaseType;
 use crate::core::field::builder::FieldBuilder;
 use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::FieldType;

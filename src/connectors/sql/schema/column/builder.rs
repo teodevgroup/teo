@@ -1,5 +1,5 @@
 use crate::connectors::sql::schema::column::SQLColumn;
-use crate::core::db_type::DatabaseType;
+use crate::core::database::r#type::DatabaseType;
 
 #[derive(PartialEq, Clone)]
 pub(crate) struct SQLColumnBuilder {

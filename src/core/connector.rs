@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 use async_trait::async_trait;
-use crate::core::db_type::DatabaseType;
+use crate::core::database::r#type::DatabaseType;
 use crate::core::env::Env;
 use crate::core::field::r#type::FieldType;
 use crate::core::graph::Graph;

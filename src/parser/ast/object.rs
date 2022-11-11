@@ -1,13 +1,24 @@
 use std::sync::Arc;
+use crate::core::field::Field;
+use crate::core::model::Model;
+use crate::core::property::Property;
+use crate::core::relation::Relation;
 use crate::core::tson::Value;
+use crate::parser::ast::argument::Argument;
+use crate::parser::std::decorators::field::FieldDecorator;
 
-pub(crate) trait Object {
+pub(crate) type FieldDecorator = fn(args: Vec<Argument>, field: &mut Field);
 
-    fn get_object(&self, key: &str) -> Arc<dyn Object>;
+pub(crate) type RelationDecorator = fn(args: Vec<Argument>, relation: &mut Relation);
 
-    fn set_object(&mut self, key: &str, obj: Arc<dyn Object>);
+pub(crate) type PropertyDecorator = fn(args: Vec<Argument>, property: &mut Property);
 
-    fn get_value(&self, key: &str) -> Arc<Value>;
+pub(crate) type ModelDecorator = fn(args: Vec<Argument>, model: &mut Model);
 
-    fn set_value(&self, key: &str, value: &Value);
+pub(crate) enum Object {
+    FieldDecorator(FieldDecorator),
+    RelationDecorator(RelationDecorator),
+    PropertyDecorator(PropertyDecorator),
+    ModelDecorator(ModelDecorator),
+    Value(Value),
 }

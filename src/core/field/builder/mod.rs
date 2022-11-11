@@ -5,7 +5,7 @@ use crate::core::field::builder::index_builder::FieldIndexBuilder;
 use crate::core::permission::builder::PermissionBuilder;
 use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::connector::{ConnectorBuilder};
-use crate::core::db_type::DatabaseType;
+use crate::core::database::r#type::DatabaseType;
 use crate::core::field::*;
 use crate::core::field::optionality::Optionality::{PresentIf, PresentWith, PresentWithout};
 use crate::core::field::r#type::FieldType;
@@ -85,16 +85,6 @@ impl FieldBuilder {
         unsafe {
             &*self.connector_builder
         }
-    }
-
-    pub fn localized_name(&mut self, localized_name: impl Into<String>) -> &mut Self {
-        self.localized_name = localized_name.into();
-        self
-    }
-
-    pub fn description(&mut self, description: impl Into<String>) -> &mut Self {
-        self.description = description.into();
-        self
     }
 
     #[cfg(feature = "data-source-mongodb")]
@@ -222,42 +212,10 @@ impl FieldBuilder {
         self
     }
 
-    pub fn atomic(&mut self) -> &mut Self {
-        self.atomic = true;
-        self
-    }
-
-    pub fn nonatomic(&mut self) -> &mut Self {
-        self.atomic = false;
-        self
-    }
-
-    pub fn primary(&mut self) -> &mut Self {
-        self.primary = true;
-        self
-    }
-
-    pub fn internal(&mut self) -> &mut Self {
-        self.write_rule = WriteRule::NoWrite;
-        self.read_rule = ReadRule::NoRead;
-        self
-    }
-
-    pub fn readonly(&mut self) -> &mut Self {
-        self.write_rule = WriteRule::NoWrite;
-        self
-    }
-
     pub fn read_if<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
         self.read_rule = ReadRule::ReadIf(pipeline.build());
-        self
-    }
-
-    pub fn writeonly(&mut self) -> &mut Self {
-        self.read_rule = ReadRule::NoRead;
-        self.query_ability = QueryAbility::Unqueryable;
         self
     }
 
