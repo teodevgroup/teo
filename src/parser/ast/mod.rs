@@ -18,3 +18,4 @@ pub(crate) mod generator;
 pub(crate) mod client;
 pub(crate) mod item;
 pub(crate) mod import;
+pub(crate) mod variable;

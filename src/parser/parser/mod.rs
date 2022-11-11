@@ -121,14 +121,14 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        let result = Arc::new(Top::Model(Model {
-            id: self.next_id(),
+        let result = Arc::new(Top::Model(Model::new(
+            self.next_id(),
             source_id,
-            identifier: identifier.unwrap(),
+            identifier.unwrap(),
             fields,
             decorators,
             span,
-        }));
+        )));
         self.tops.insert(result.id(), result.clone());
         result
     }
@@ -147,12 +147,12 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        Field {
-            identifier: identifier.unwrap(),
-            r#type: r#type.unwrap(),
+        Field::new(
+            identifier.unwrap(),
+            r#type.unwrap(),
             decorators,
             span,
-        }
+        )
     }
 
     fn parse_enum(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Top> {
@@ -362,11 +362,11 @@ impl Parser {
                 _ => panic!(),
             }
         }
-        Type {
-            identifier: identifier.unwrap(),
+        Type::new(
+            identifier.unwrap(),
             arity,
             required,
-        }
+        )
     }
 
     fn parse_identifier_list(pair: Pair<'_>) -> Vec<Identifier> {
