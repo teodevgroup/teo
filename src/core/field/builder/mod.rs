@@ -219,21 +219,6 @@ impl FieldBuilder {
         self
     }
 
-    pub fn write_once(&mut self) -> &mut Self {
-        self.write_rule = WriteRule::WriteOnce;
-        self
-    }
-
-    pub fn write_on_create(&mut self) -> &mut Self {
-        self.write_rule = WriteRule::WriteOnCreate;
-        self
-    }
-
-    pub fn write_nonnull(&mut self) -> &mut Self {
-        self.write_rule = WriteRule::WriteNonNull;
-        self
-    }
-
     pub fn write_if<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
