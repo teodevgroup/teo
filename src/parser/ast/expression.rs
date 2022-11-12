@@ -6,11 +6,19 @@ use crate::parser::ast::pipeline::Pipeline;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::path::Path;
 use crate::parser::ast::span::Span;
+use crate::prelude::Value;
 
 #[derive(Debug, Clone)]
 pub(crate) struct NumericExpression {
     pub(crate) value: String,
     pub(crate) span: Span,
+    pub(crate) resolved: Option<Value>,
+}
+
+impl NumericExpression {
+    pub(crate) fn new(value: String, span: Span) -> Self {
+        Self { value, span, resolved: None }
+    }
 }
 
 impl Display for NumericExpression {
@@ -23,6 +31,13 @@ impl Display for NumericExpression {
 pub(crate) struct StringExpression {
     pub(crate) value: String,
     pub(crate) span: Span,
+    pub(crate) resolved: Option<Value>,
+}
+
+impl StringExpression {
+    pub(crate) fn new(value: String, span: Span) -> Self {
+        Self { value, span, resolved: None }
+    }
 }
 
 impl Display for StringExpression {
@@ -35,6 +50,13 @@ impl Display for StringExpression {
 pub(crate) struct BoolExpression {
     pub(crate) value: String,
     pub(crate) span: Span,
+    pub(crate) resolved: Option<Value>,
+}
+
+impl BoolExpression {
+    pub(crate) fn new(value: String, span: Span) -> Self {
+        Self { value, span, resolved: None }
+    }
 }
 
 impl Display for BoolExpression {
@@ -47,6 +69,13 @@ impl Display for BoolExpression {
 pub(crate) struct NullExpression {
     pub(crate) value: String,
     pub(crate) span: Span,
+    pub(crate) resolved: Option<Value>,
+}
+
+impl NullExpression {
+    pub(crate) fn new(value: String, span: Span) -> Self {
+        Self { value, span, resolved: None }
+    }
 }
 
 impl Display for NullExpression {
@@ -59,6 +88,13 @@ impl Display for NullExpression {
 pub(crate) struct EnumChoiceExpression {
     pub(crate) value: String,
     pub(crate) span: Span,
+    pub(crate) resolved: Option<Value>,
+}
+
+impl EnumChoiceExpression {
+    pub(crate) fn new(value: String, span: Span) -> Self {
+        Self { value, span, resolved: None }
+    }
 }
 
 impl Display for EnumChoiceExpression {
@@ -73,6 +109,13 @@ pub(crate) struct RangeExpression {
     pub(crate) closed: bool,
     pub(crate) expressions: Vec<Expression>,
     pub(crate) span: Span,
+    pub(crate) resolved: Option<Vec<Value>>,
+}
+
+impl RangeExpression {
+    pub(crate) fn new(closed: bool, expressions: Vec<Expression>, span: Span) -> Self {
+        Self { closed, expressions, span, resolved: None }
+    }
 }
 
 impl Display for RangeExpression {
@@ -92,6 +135,13 @@ impl Display for RangeExpression {
 pub(crate) struct TupleExpression {
     pub(crate) expressions: Vec<Expression>,
     pub(crate) span: Span,
+    pub(crate) resolved: Option<Vec<Expression>>,
+}
+
+impl TupleExpression {
+    pub(crate) fn new(expressions: Vec<Expression>, span: Span) -> Self {
+        Self { expressions, span, resolved: None }
+    }
 }
 
 impl Display for TupleExpression {
@@ -112,6 +162,13 @@ impl Display for TupleExpression {
 pub(crate) struct ArrayExpression {
     pub(crate) expressions: Vec<Expression>,
     pub(crate) span: Span,
+    pub(crate) resolved: Option<Vec<Expression>>,
+}
+
+impl ArrayExpression {
+    pub(crate) fn new(expressions: Vec<Expression>, span: Span) -> Self {
+        Self { expressions, span, resolved: None }
+    }
 }
 
 impl Display for ArrayExpression {
@@ -132,6 +189,13 @@ impl Display for ArrayExpression {
 pub(crate) struct DictionaryExpression {
     pub(crate) expressions: HashMap<String, Expression>,
     pub(crate) span: Span,
+    pub(crate) resolved: Option<HashMap<String, Expression>>,
+}
+
+impl DictionaryExpression {
+    pub(crate) fn new(expressions: HashMap<String, Expression>, span: Span) -> Self {
+        Self { expressions, span, resolved: None }
+    }
 }
 
 impl Display for DictionaryExpression {

@@ -101,7 +101,7 @@ impl Parser {
         let mut source: Option<StringExpression> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::string_literal => source = Some(StringExpression { value: current.as_str().to_string(), span }),
+                Rule::string_literal => source = Some(StringExpression::new(current.as_str().to_string(), span)),
                 Rule::identifier_list => identifiers = Self::parse_identifier_list(current),
                 _ => panic!("error."),
             }
@@ -293,10 +293,10 @@ impl Parser {
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::bool_literal => return Expression::Bool(BoolExpression { value: current.as_str().to_string(), span }),
-                Rule::null_literal => return Expression::Null(NullExpression { value: current.as_str().to_string(), span }),
-                Rule::numeric_literal => return Expression::Numeric(NumericExpression { value: current.as_str().to_string(), span }),
-                Rule::string_literal => return Expression::String(StringExpression { value: current.as_str().to_string(), span }),
+                Rule::bool_literal => return Expression::Bool(BoolExpression::new(current.as_str().to_string(), span)),
+                Rule::null_literal => return Expression::Null(NullExpression::new(current.as_str().to_string(), span)),
+                Rule::numeric_literal => return Expression::Numeric(NumericExpression::new(current.as_str().to_string(), span)),
+                Rule::string_literal => return Expression::String(StringExpression::new(current.as_str().to_string(), span)),
                 Rule::call => return Expression::Call(Self::parse_call(current)),
                 Rule::pipeline => return Expression::Pipeline(Self::parse_pipeline(current)),
                 Rule::range_literal => return Expression::Range(Self::parse_range_literal(current)),
@@ -304,7 +304,7 @@ impl Parser {
                 Rule::array_literal => return Expression::Array(Self::parse_array_literal(current)),
                 Rule::dictionary_literal => return Expression::Dictionary(Self::parse_dictionary_literal(current)),
                 Rule::path => return Expression::Path(Self::parse_path(current)),
-                Rule::enum_choice => return Expression::EnumChoice(EnumChoiceExpression { value: current.as_str().to_string(), span }),
+                Rule::enum_choice => return Expression::EnumChoice(EnumChoiceExpression::new(current.as_str().to_string(), span)),
                 _ => panic!(),
             }
         }
@@ -323,7 +323,7 @@ impl Parser {
                 _ => panic!(),
             }
         }
-        RangeExpression { closed, expressions, span }
+        RangeExpression::new(closed, expressions, span)
     }
 
     fn parse_tuple_literal(pair: Pair<'_>) -> TupleExpression {
@@ -335,7 +335,7 @@ impl Parser {
                 _ => panic!(),
             }
         }
-        TupleExpression { expressions, span }
+        TupleExpression::new(expressions, span)
     }
 
     fn parse_array_literal(pair: Pair<'_>) -> ArrayExpression {
@@ -347,7 +347,7 @@ impl Parser {
                 _ => panic!(),
             }
         }
-        ArrayExpression { expressions, span }
+        ArrayExpression::new(expressions, span)
     }
 
     fn parse_dictionary_literal(pair: Pair<'_>) -> DictionaryExpression {
