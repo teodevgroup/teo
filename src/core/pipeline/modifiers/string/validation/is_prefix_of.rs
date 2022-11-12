@@ -1,15 +1,15 @@
 use async_trait::async_trait;
-use crate::core::pipeline::argument::Argument;
+use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 
 #[derive(Debug, Clone)]
 pub struct IsPrefixOfModifier {
-    full: Argument
+    full: FunctionArgument
 }
 
 impl IsPrefixOfModifier {
-    pub fn new(full: impl Into<Argument>) -> Self {
+    pub fn new(full: impl Into<FunctionArgument>) -> Self {
         Self { full: full.into() }
     }
 }

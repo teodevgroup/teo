@@ -271,7 +271,7 @@ impl Parser {
                 _ => panic!(),
             }
         }
-        Argument { name, value: value.unwrap(), span }
+        Argument { name, value: value.unwrap(), span, resolved: None }
     }
 
     fn parse_named_argument(pair: Pair<'_>) -> Argument {
@@ -286,7 +286,7 @@ impl Parser {
                 _ => panic!(),
             }
         }
-        Argument { name, value: value.unwrap(), span }
+        Argument { name, value: value.unwrap(), span, resolved: None }
     }
 
     fn parse_expression(pair: Pair<'_>) -> Expression {

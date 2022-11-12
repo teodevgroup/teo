@@ -3,16 +3,16 @@ use random_string::generate;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::tson::Value;
 
-use crate::core::pipeline::argument::Argument;
+use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::pipeline::context::Context;
 
 #[derive(Debug, Clone)]
 pub struct RandomDigitsModifier {
-    len: Argument
+    len: FunctionArgument
 }
 
 impl RandomDigitsModifier {
-    pub fn new(len: impl Into<Argument>) -> Self {
+    pub fn new(len: impl Into<FunctionArgument>) -> Self {
         return RandomDigitsModifier {
             len: len.into()
         };

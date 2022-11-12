@@ -1,17 +1,17 @@
 use std::cmp::{max};
 use async_trait::async_trait;
 use crate::core::tson::Value;
-use crate::core::pipeline::argument::Argument;
+use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 
 #[derive(Debug, Clone)]
 pub struct MinModifier {
-    argument: Argument
+    argument: FunctionArgument
 }
 
 impl MinModifier {
-    pub fn new(argument: impl Into<Argument>) -> Self {
+    pub fn new(argument: impl Into<FunctionArgument>) -> Self {
         Self { argument: argument.into() }
     }
 }

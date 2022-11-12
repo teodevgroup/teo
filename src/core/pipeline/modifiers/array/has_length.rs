@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use std::ops::Range;
-use crate::core::pipeline::argument::Argument;
+use crate::core::pipeline::argument::FunctionArgument;
 
 use crate::core::pipeline::context::Context;
 use crate::core::pipeline::modifier::Modifier;
@@ -8,8 +8,8 @@ use crate::core::tson::Value;
 
 #[derive(Debug, Clone)]
 pub struct LengthArgument {
-    lower: Argument,
-    upper: Argument,
+    lower: FunctionArgument,
+    upper: FunctionArgument,
     closed: bool,
 }
 
@@ -18,16 +18,16 @@ impl<T> Into<LengthArgument> for Range<T> where T: Into<Value> {
         let start_value: Value = self.start.into();
         let end_value: Value = self.end.into();
         LengthArgument {
-            lower: Argument::ValueArgument(start_value),
-            upper: Argument::ValueArgument(end_value),
+            lower: FunctionArgument::ValueArgument(start_value),
+            upper: FunctionArgument::ValueArgument(end_value),
             closed: false,
         }
     }
 }
 
-impl<T> From<T> for LengthArgument where T: Into<Argument> {
+impl<T> From<T> for LengthArgument where T: Into<FunctionArgument> {
     fn from(arg: T) -> Self {
-        let value: Argument = arg.into();
+        let value: FunctionArgument = arg.into();
         LengthArgument {
             lower: value.clone(),
             upper: value.clone(),
@@ -56,10 +56,10 @@ impl Modifier for HasLengthModifier {
 
     async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
         let (lower, upper) = match &self.argument.lower {
-            Argument::ValueArgument(l) => {
+            FunctionArgument::ValueArgument(l) => {
                 (l.as_usize().unwrap(), self.argument.upper.as_value().unwrap().as_usize().unwrap())
             }
-            Argument::PipelineArgument(p) => {
+            FunctionArgument::PipelineArgument(p) => {
                 match p.process(context.clone()).await.value.as_vec() {
                     Some(v) => {
                         if v.len() == 2 {

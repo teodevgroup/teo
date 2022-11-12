@@ -1,16 +1,16 @@
 use async_trait::async_trait;
-use crate::core::pipeline::argument::Argument;
+use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 use crate::prelude::Value;
 
 #[derive(Debug, Clone)]
 pub struct SplitModifier {
-    separator: Argument
+    separator: FunctionArgument
 }
 
 impl SplitModifier {
-    pub fn new(separator: impl Into<Argument>) -> Self {
+    pub fn new(separator: impl Into<FunctionArgument>) -> Self {
         Self { separator: separator.into() }
     }
 }

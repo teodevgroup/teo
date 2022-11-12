@@ -1,17 +1,17 @@
 use async_trait::async_trait;
 use num_integer::Roots;
-use crate::core::pipeline::argument::Argument;
+use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 use crate::prelude::Value;
 
 #[derive(Debug, Clone)]
 pub struct RootModifier {
-    argument: Argument
+    argument: FunctionArgument
 }
 
 impl RootModifier {
-    pub fn new(argument: impl Into<Argument>) -> Self {
+    pub fn new(argument: impl Into<FunctionArgument>) -> Self {
         Self { argument: argument.into() }
     }
 }

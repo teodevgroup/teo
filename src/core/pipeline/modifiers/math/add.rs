@@ -1,15 +1,15 @@
 use async_trait::async_trait;
-use crate::core::pipeline::argument::Argument;
+use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 
 #[derive(Debug, Clone)]
 pub struct AddModifier {
-    argument: Argument
+    argument: FunctionArgument
 }
 
 impl AddModifier {
-    pub fn new(argument: impl Into<Argument>) -> Self {
+    pub fn new(argument: impl Into<FunctionArgument>) -> Self {
         Self { argument: argument.into() }
     }
 }

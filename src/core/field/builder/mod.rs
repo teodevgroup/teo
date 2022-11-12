@@ -1,6 +1,6 @@
 
 
-use crate::core::pipeline::argument::Argument;
+use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::field::builder::index_builder::FieldIndexBuilder;
 use crate::core::permission::builder::PermissionBuilder;
 use crate::core::pipeline::builder::PipelineBuilder;
@@ -34,8 +34,8 @@ pub struct FieldBuilder {
     pub(crate) auto_increment: bool,
     pub(crate) auth_identity: bool,
     pub(crate) auth_by: bool,
-    pub(crate) auth_by_arg: Option<Argument>,
-    pub(crate) default: Option<Argument>,
+    pub(crate) auth_by_arg: Option<FunctionArgument>,
+    pub(crate) default: Option<FunctionArgument>,
     pub(crate) on_set_pipeline: PipelineBuilder,
     pub(crate) on_save_pipeline: PipelineBuilder,
     pub(crate) on_output_pipeline: PipelineBuilder,
@@ -349,7 +349,7 @@ impl FieldBuilder {
         self
     }
 
-    pub fn default(&mut self, value: impl Into<Argument>) -> &mut Self {
+    pub fn default(&mut self, value: impl Into<FunctionArgument>) -> &mut Self {
         self.default = Some(value.into());
         self.input_omissible = true;
         self

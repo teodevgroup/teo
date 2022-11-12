@@ -10,7 +10,7 @@ use indexmap::IndexMap;
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
 use crate::core::env::source::Source;
-use crate::core::pipeline::argument::Argument;
+use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::field::{Field, PreviousValueRule};
 use crate::core::field::optionality::Optionality;
 use crate::core::input::Input;
@@ -129,10 +129,10 @@ impl Object {
                     // apply default values
                     if let Some(argument) = &field.default {
                         match argument {
-                            Argument::ValueArgument(value) => {
+                            FunctionArgument::ValueArgument(value) => {
                                 self.set_value_to_value_map(key, value.clone());
                             }
-                            Argument::PipelineArgument(pipeline) => {
+                            FunctionArgument::PipelineArgument(pipeline) => {
                                 let ctx = Context::initial_state_with_object(self.clone());
                                 let value = pipeline.process(ctx).await.value;
                                 // todo: default value calculation error here
