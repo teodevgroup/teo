@@ -25,4 +25,53 @@ impl Top {
             _ => 0,
         }
     }
+
+    pub(crate) fn as_import(&self) -> Option<&Import> {
+        match self {
+            Top::Import(i) => Some(i),
+            _ => None
+        }
+    }
+
+    pub(crate) fn as_connector(&self) -> Option<&Connector> {
+        match self {
+            Top::Connector(i) => Some(i),
+            _ => None
+        }
+    }
+
+    pub(crate) fn as_enum(&self) -> Option<&Enum> {
+        match self {
+            Top::Enum(i) => Some(i),
+            _ => None
+        }
+    }
+
+    pub(crate) fn as_model(&self) -> Option<&Model> {
+        match self {
+            Top::Model(i) => Some(i),
+            _ => None
+        }
+    }
+
+    pub(crate) fn as_generator(&self) -> Option<&Generator> {
+        match self {
+            Top::Generator(i) => Some(i),
+            _ => None
+        }
+    }
+
+    pub(crate) fn as_client(&self) -> Option<&Client> {
+        match self {
+            Top::Client(i) => Some(i),
+            _ => None
+        }
+    }
+
+    pub(crate) fn as_config(&self) -> Option<&Config> {
+        match self {
+            Top::Config(i) => Some(i),
+            _ => None
+        }
+    }
 }

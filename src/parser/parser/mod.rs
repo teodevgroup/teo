@@ -1,3 +1,5 @@
+pub(crate) mod resolver;
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::fs;
@@ -23,6 +25,7 @@ use crate::parser::ast::r#type::{Arity, Type};
 use crate::parser::ast::source::Source;
 use crate::parser::ast::span::Span;
 use crate::parser::ast::top::Top;
+use crate::parser::parser::resolver::Resolver;
 
 #[derive(pest_derive::Parser)]
 #[grammar = "./src/parser/schema.pest"]
@@ -32,10 +35,11 @@ type Pair<'a> = pest::iterators::Pair<'a, Rule>;
 
 #[derive(Debug)]
 pub(crate) struct Parser {
-    main: Option<Arc<Mutex<Source>>>,
-    sources: HashMap<usize, Arc<Mutex<Source>>>,
-    tops: HashMap<usize, Arc<Mutex<Top>>>,
-    next_id: usize,
+    pub(crate) main: Option<Arc<Mutex<Source>>>,
+    pub(crate) sources: HashMap<usize, Arc<Mutex<Source>>>,
+    pub(crate) tops: HashMap<usize, Arc<Mutex<Top>>>,
+    pub(crate) connector: Option<Arc<Mutex<Top>>>,
+    pub(crate) next_id: usize,
 }
 
 impl Parser {
@@ -45,6 +49,7 @@ impl Parser {
             main: None,
             sources: HashMap::new(),
             tops: HashMap::new(),
+            connector: None,
             next_id: 0,
         }
     }
@@ -64,7 +69,8 @@ impl Parser {
         let id = self.next_id();
         let source = self.parse_source(absolute, id);
         self.main = Some(source.clone());
-        println!("{:?}", self);
+        // println!("{:?}", self);
+        Resolver::resolve_parser(self);
     }
 
     fn parse_source(&mut self, path: PathBuf, id: usize) -> Arc<Mutex<Source>> {
@@ -192,6 +198,9 @@ impl Parser {
             _ => panic!(),
         }));
         self.tops.insert(result.lock().unwrap().id(), result.clone());
+        if keyword == "connector" {
+            self.connector = Some(result.clone());
+        }
         result
     }
 
