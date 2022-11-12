@@ -6,4 +6,5 @@ use crate::parser::ast::identifier::Identifier;
 pub struct Config {
     pub(crate) items: Vec<Item>,
     pub(crate) span: Span,
+    pub(crate) source_id: usize,
 }

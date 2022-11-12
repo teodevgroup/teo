@@ -1,15 +1,23 @@
 use std::fmt::{Debug};
 use chrono::{Date, DateTime, Utc};
-use crate::core::pipeline::argument::FunctionArgument::{PipelineArgument, ValueArgument};
+use crate::core::pipeline::argument::FunctionArgument::{PipelineArgument, ValueArgument, EnumChoiceArgument, RangeArgument};
 use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::Context;
 use crate::core::tson::Value;
 
+pub struct ArgumentRange {
+    pub closed: bool,
+    pub start: Value,
+    pub end: Value,
+}
+
 #[derive(Debug, Clone)]
 pub enum FunctionArgument {
     ValueArgument(Value),
     PipelineArgument(Pipeline),
+    EnumChoiceArgument(String),
+    RangeArgument(ArgumentRange),
 }
 
 impl FunctionArgument {
@@ -17,21 +25,36 @@ impl FunctionArgument {
     pub(crate) fn as_value(&self) -> Option<&Value> {
         match self {
             ValueArgument(v) => Some(v),
-            PipelineArgument(_) => None
+            _ => None
         }
     }
 
     pub(crate) fn as_pipeline(&self) -> Option<&Pipeline> {
         match self {
-            ValueArgument(_) => None,
-            PipelineArgument(p) => Some(p)
+            PipelineArgument(p) => Some(p),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_enum_choice(&self) -> Option<&String> {
+        match self {
+            EnumChoiceArgument(a) => Some(a),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_argument_range(&self) -> Option<&ArgumentRange> {
+        match self {
+            RangeArgument(r) => Some(r),
+            _ => None,
         }
     }
 
     pub(crate) async fn resolve(&self, context: Context<'_>) -> Value {
         match self {
             ValueArgument(v) => v.clone(),
-            PipelineArgument(p) => p.process(context).await.value
+            PipelineArgument(p) => p.process(context).await.value,
+            _ => panic!("Cannot resolve argument.")
         }
     }
 }

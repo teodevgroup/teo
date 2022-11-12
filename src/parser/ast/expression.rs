@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Write};
+use std::str::FromStr;
 use chrono::format::Numeric;
+use snailquote::unescape;
+use crate::core::pipeline::argument::ArgumentRange;
 use crate::parser::ast::call::Call;
 use crate::parser::ast::pipeline::Pipeline;
 use crate::parser::ast::identifier::Identifier;
@@ -18,6 +21,18 @@ pub(crate) struct NumericExpression {
 impl NumericExpression {
     pub(crate) fn new(value: String, span: Span) -> Self {
         Self { value, span, resolved: None }
+    }
+
+    pub(crate) fn resolve(&mut self) {
+        let i = i64::from_str(&self.value);
+        if i.is_ok() {
+            self.resolved = Some(Value::I64(i.unwrap()))
+        }
+        let i = f64::from_str(&self.value);
+        if i.is_ok() {
+            self.resolved = Some(Value::F64(i.unwrap()));
+        }
+        panic!("Cannot resolve numeric value: {}.", &self.value)
     }
 }
 
@@ -38,6 +53,10 @@ impl StringExpression {
     pub(crate) fn new(value: String, span: Span) -> Self {
         Self { value, span, resolved: None }
     }
+
+    pub(crate) fn resolve(&mut self) {
+        self.resolved = Some(unescape(&self.value));
+    }
 }
 
 impl Display for StringExpression {
@@ -56,6 +75,14 @@ pub(crate) struct BoolExpression {
 impl BoolExpression {
     pub(crate) fn new(value: String, span: Span) -> Self {
         Self { value, span, resolved: None }
+    }
+
+    pub(crate) fn resolve(&mut self) {
+        match self.value.as_str() {
+            "true" => self.resolved = Some(Value::Bool(true)),
+            "false" => self.resolved = Some(Value::Bool(false)),
+            _ => panic!("Cannot resolve bool value: {}", &self.value)
+        }
     }
 }
 
@@ -76,6 +103,10 @@ impl NullExpression {
     pub(crate) fn new(value: String, span: Span) -> Self {
         Self { value, span, resolved: None }
     }
+
+    pub(crate) fn resolve(&mut self) {
+        self.resolved = Some(Value::Null);
+    }
 }
 
 impl Display for NullExpression {
@@ -95,6 +126,10 @@ impl EnumChoiceExpression {
     pub(crate) fn new(value: String, span: Span) -> Self {
         Self { value, span, resolved: None }
     }
+
+    pub(crate) fn resolve(&mut self) {
+        self.resolved = Some(Value::String(self.value.clone()));
+    }
 }
 
 impl Display for EnumChoiceExpression {
@@ -109,12 +144,16 @@ pub(crate) struct RangeExpression {
     pub(crate) closed: bool,
     pub(crate) expressions: Vec<Expression>,
     pub(crate) span: Span,
-    pub(crate) resolved: Option<Vec<Value>>,
+    pub(crate) resolved: Option<ArgumentRange>,
 }
 
 impl RangeExpression {
     pub(crate) fn new(closed: bool, expressions: Vec<Expression>, span: Span) -> Self {
         Self { closed, expressions, span, resolved: None }
+    }
+
+    pub(crate) fn resolve(&mut self) {
+        self.resolved = Some(ArgumentRange { closed: self.closed, start: , end: })
     }
 }
 

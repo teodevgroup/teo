@@ -7,4 +7,5 @@ pub struct Generator {
     pub(crate) identifier: Identifier,
     pub(crate) items: Vec<Item>,
     pub(crate) span: Span,
+    pub(crate) source_id: usize,
 }

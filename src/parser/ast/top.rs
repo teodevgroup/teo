@@ -40,6 +40,13 @@ impl Top {
         }
     }
 
+    pub(crate) fn as_connector_mut(&mut self) -> Option<&mut Connector> {
+        match self {
+            Top::Connector(i) => Some(i),
+            _ => None
+        }
+    }
+
     pub(crate) fn as_enum(&self) -> Option<&Enum> {
         match self {
             Top::Enum(i) => Some(i),

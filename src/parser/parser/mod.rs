@@ -191,10 +191,10 @@ impl Parser {
             }
         }
         let result = Arc::new(Mutex::new(match keyword {
-            "config" => Top::Config(Config { items, span }),
-            "connector" => Top::Connector(Connector { items, span }),
-            "generator" => Top::Generator(Generator { identifier: identifier.unwrap(), items, span }),
-            "client" => Top::Client(Client { identifier: identifier.unwrap(), items, span }),
+            "config" => Top::Config(Config { items, span, source_id }),
+            "connector" => Top::Connector(Connector::new(items, span, source_id)),
+            "generator" => Top::Generator(Generator { identifier: identifier.unwrap(), items, span, source_id }),
+            "client" => Top::Client(Client { identifier: identifier.unwrap(), items, span, source_id }),
             _ => panic!(),
         }));
         self.tops.insert(result.lock().unwrap().id(), result.clone());
@@ -421,5 +421,9 @@ impl Parser {
             start: span.start(),
             end: span.end(),
         }
+    }
+
+    pub(crate) fn get_source_by_id(&self, id: usize) -> Option<Arc<Mutex<Source>>> {
+        self.sources.get(&id).cloned()
     }
 }
