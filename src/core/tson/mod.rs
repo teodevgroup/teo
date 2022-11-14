@@ -18,6 +18,7 @@ use indexmap::IndexMap;
 use bson::oid::ObjectId;
 use crate::core::field::r#type::FieldType;
 use crate::core::object::Object;
+use crate::core::pipeline::context::Context;
 use crate::core::pipeline::Pipeline;
 use crate::core::tson::index::Index;
 use crate::core::tson::range::Range;
@@ -205,6 +206,10 @@ pub enum Value {
     /// Represents a Tson pipeline.
     ///
     Pipeline(Pipeline),
+
+    /// Raw enum choice.
+    ///
+    RawEnumChoice(String),
 
     /// Represents a Tson object.
     ///
@@ -738,6 +743,58 @@ impl Value {
         match *self {
             Value::Null => Some(()),
             _ => None,
+        }
+    }
+
+    pub fn is_raw_enum_choice(&self) -> bool {
+        self.as_raw_enum_choice().is_some()
+    }
+
+    pub fn as_raw_enum_choice(&self) -> Option<&str> {
+        match self {
+            Value::RawEnumChoice(s) => Some(s.as_str()),
+            _ => None,
+        }
+    }
+
+    pub fn is_range(&self) -> bool {
+        self.as_range().is_some()
+    }
+
+    pub fn as_range(&self) -> Option<&Range> {
+        match self {
+            Value::Range(r) => Some(r),
+            _ => None,
+        }
+    }
+
+    pub fn is_tuple(&self) -> bool {
+        self.as_range().is_some()
+    }
+
+    pub fn as_tuple(&self) -> Option<&Vec<Value>> {
+        match self {
+            Value::Tuple(t) => Some(t),
+            _ => None,
+        }
+    }
+
+    pub fn is_pipeline(&self) -> bool {
+        self.as_range().is_some()
+    }
+
+    pub fn as_pipeline(&self) -> Option<&Pipeline> {
+        match self {
+            Value::Pipeline(p) => Some(p),
+            _ => None,
+        }
+    }
+
+    // resolve pipeline as value
+    pub(crate) async fn resolve(&self, context: Context<'_>) -> Value {
+        match self {
+            Value::Pipeline(p) => p.process(context).await.value,
+            _ => self.clone(),
         }
     }
 

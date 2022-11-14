@@ -1,12 +1,11 @@
-use std::sync::Arc;
-use crate::core::pipeline::modifier::Modifier;
-use crate::core::pipeline::context::Context;
-
 pub mod builder;
 pub mod context;
 pub mod modifier;
 pub mod modifiers;
-pub mod argument;
+
+use std::sync::Arc;
+use crate::core::pipeline::modifier::Modifier;
+use crate::core::pipeline::context::Context;
 
 #[derive(Debug, Clone)]
 pub struct Pipeline {
