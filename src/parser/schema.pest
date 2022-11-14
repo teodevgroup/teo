@@ -88,7 +88,8 @@ enum_choice_literal = @{ "." ~ identifier }
 // #############
 // range literals
 // #############
-range_literal = { expression ~ (RANGE_OPEN | RANGE_CLOSE)  ~ expression }
+range_literal = { range_end ~ (RANGE_OPEN | RANGE_CLOSE) ~ range_end }
+range_end = { numeric_literal | call | path | subscript | chain_without_range_literal }
 
 // #############
 // tuple literals
@@ -135,11 +136,12 @@ nullish_coalescing = { operand ~ ("??" ~ operand)+ }
 // expression
 // #############
 
-literal = { null_literal | bool_literal | numeric_literal | string_literal | regexp_literal | enum_choice_literal | tuple_literal | array_literal | dictionary_literal }
-
+literal = { null_literal | bool_literal | numeric_literal | string_literal | regexp_literal | enum_choice_literal | tuple_literal | array_literal | dictionary_literal | range_literal }
+literal_without_range = { null_literal | bool_literal | numeric_literal | string_literal | regexp_literal | enum_choice_literal | tuple_literal | array_literal | dictionary_literal }
 call = { path ~ arguments_list+ }
 
 chain = { literal | path | call | subscript ~ (subscript_item | arguments_list | "." ~ path | call | subscript)* }
+chain_without_range_literal = { literal_without_range | path | call | subscript ~ (subscript_item | arguments_list | "." ~ path | call | subscript)* }
 
 expression = { literal | call | pipeline | path | subscript | chain | nullish_coalescing }
 
