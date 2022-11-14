@@ -111,6 +111,7 @@ dictionary_literal = { "{" ~ (named_expression ~ ( "," ~ named_expression )*)? ~
 // #############
 subscript_item = { "[" ~ expression ~ "]" }
 subscript = { (path | array_literal | dictionary_literal) ~ subscript_item+ }
+path_subscript = { path ~ subscript_item+ }
 
 // #############
 // comments
@@ -127,7 +128,8 @@ trailing_comment = ${ triple_comment | double_comment }
 OPERATORS = { "??" | "+" | "-" | "*" | "/" | "%" | "!" | "&" | "|" | "&&" | "||" | ">" | "<" | ">>" | "<<" }
 mul = { expression ~ (("*" | "/" | "%") ~ expression)+ }
 add = { (mul | expression) ~ (("+" | "-") ~ (mul | expression))+ }
-nullish_coalescing = { expression ~ ("??" ~ expression)+ }
+operand = { literal | call | pipeline | path | subscript | chain }
+nullish_coalescing = { operand ~ ("??" ~ operand)+ }
 
 // #############
 // expression
@@ -139,7 +141,7 @@ call = { path ~ arguments_list+ }
 
 chain = { literal | path | call | subscript ~ (subscript_item | arguments_list | "." ~ path | call | subscript)* }
 
-expression = { literal | call | pipeline | path | subscript }
+expression = { literal | call | pipeline | path | subscript | chain | nullish_coalescing }
 
 // #############
 // variable & constant declaration
@@ -160,7 +162,7 @@ named_argument = { identifier ~ ":" ~ expression }
 // #############
 item_decorator = { "@" ~ path ~ arguments_list? }
 block_decorator = { "@@" ~ path ~ arguments_list? }
-pipeline = { "$" ~ expression }
+pipeline = { "$" ~ call | path ~ ("." ~ call | path)* }
 
 // #############
 // config blocks
