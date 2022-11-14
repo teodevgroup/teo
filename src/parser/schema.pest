@@ -1,6 +1,6 @@
 schema = {
     SOI
-    ~ (config_declaration | enum_declaration | model_declaration | EMPTY_LINES | CATCH_ALL)*
+    ~ (config_declaration | enum_declaration | model_declaration | comment_block | let_declaration | EMPTY_LINES | CATCH_ALL)*
     ~ EOI
 }
 
@@ -27,14 +27,122 @@ CATCH_ALL = { (!NEWLINE ~ ANY)+ ~ NEWLINE? }
 BLOCK_LEVEL_CATCH_ALL = { !BLOCK_CLOSE ~ CATCH_ALL }
 
 // #############
+// identifier & path
+// #############
+identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | "-" | ASCII_ALPHANUMERIC)* }
+path = { identifier ~ ("." ~ path?)* }
+
+// #############
+// type
+// #############
+field_type = { identifier ~ arity? ~ optionality? }
+arity = {"[]" | "{}" }
+optionality = { "?" }
+
+// #############
 // import
 // #############
 
 import_statement = {
     IMPORT_KEYWORD
-    ~ (identifier_list ~ FROM_KEYWORD)?
+    ~ (import_identifier_list ~ FROM_KEYWORD)?
     ~ string_literal
 }
+
+import_identifier_list = { BLOCK_OPEN ~ (identifier ~ ("," ~ identifier)*)? ~ TRAILING_COMMA? ~ BLOCK_CLOSE }
+
+// #############
+// numeric literals
+// #############
+numeric_literal = @{ ("-")? ~ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
+
+// #############
+// string literals
+// #############
+ASCII_CONTROL_CHARACTER = _{ '\u{0000}'..'\u{001F}' }
+string_escape = _{ "\\" ~ ANY }
+string_content = @{ (string_escape | !("\"" | ASCII_CONTROL_CHARACTER) ~ ANY)* }
+string_literal = ${ "\"" ~ string_content ~ "\"" }
+
+// #############
+// bool literals
+// #############
+bool_literal = @{ "true" | "false" }
+
+// #############
+// null literals
+// #############
+null_literal = { "null" }
+
+// #############
+// range literals
+// #############
+range_literal = { expression ~ (RANGE_OPEN | RANGE_CLOSE)  ~ expression }
+
+// #############
+// tuple literals
+// #############
+tuple_literal = { "(" ~ (expression ~ ( "," ~ expression )*)? ~ ")" }
+
+// #############
+// array literals
+// #############
+array_literal = { "[" ~ (expression ~ ( "," ~ expression )*)? ~ "]" }
+
+// #############
+// dict literals
+// #############
+dictionary_literal = { "{" ~ (named_expression ~ ( "," ~ named_expression )*)? ~ "}" }
+named_expression = { string_literal ~ ":" ~ expression }
+
+// #############
+// subscript
+// #############
+subscript_item = { "[" ~ subscript_expression ~ "]" }
+subscript = { expression ~ subscript_item }
+subscript_expression = { expression }
+
+// #############
+// comments
+// #############
+doc_content = @{ (!NEWLINE ~ ANY)* }
+triple_comment = { WHITESPACE* ~ "///" ~ doc_content }
+double_comment = { WHITESPACE* ~ (!"///") ~ "//" ~ doc_content }
+comment_block = ${ ((triple_comment | double_comment) ~ NEWLINE?)+ }
+trailing_comment = ${ triple_comment | double_comment }
+
+// #############
+// operators
+// #############
+OPERATORS = { "??" | "+" | "-" | "*" | "/" | "%" | "!" | "&" | "|" | "&&" | "||" | ">" | "<" | ">>" | "<<"}
+
+// #############
+// expression
+// #############
+expression = { bool_literal | null_literal | numeric_literal | string_literal | call | chain | pipeline | tuple_literal | array_literal | dictionary_literal | path | enum_choice | subscript }
+
+// #############
+// variable & constant declaration
+// #############
+
+let_declaration = { "let" ~ identifier ~ "=" ~ expression }
+
+// #############
+// arguments
+// #############
+arguments_list = { "(" ~ (argument ~ ("," ~ argument)*)? ~ TRAILING_COMMA? ~ ")" }
+argument = _{ named_argument | empty_argument | expression }
+empty_argument = { identifier ~ ":" }
+named_argument = { identifier ~ ":" ~ expression }
+
+// #############
+// function call, decorator and pipeline
+// #############
+call = { path ~ arguments_list }
+item_decorator = { "@" ~ path ~ arguments_list? }
+block_decorator = { "@@" ~ path ~ arguments_list? }
+chain = { expression ~ (subscript_item | "." ~ (path | call | subscript))* }
+pipeline = { "$" ~ chain }
 
 // #############
 // config blocks
@@ -92,90 +200,3 @@ field_declaration = {
     ~ trailing_comment?
     ~ NEWLINE
 }
-
-// #############
-// identifier & path
-// #############
-identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | "-" | ASCII_ALPHANUMERIC)* }
-path = { identifier ~ ("." ~ path?)* }
-identifier_list = { BLOCK_OPEN ~ (identifier ~ ("," ~ identifier)*)? ~ TRAILING_COMMA? ~ BLOCK_CLOSE }
-
-// #############
-// function call, decorator and pipeline
-// #############
-call = { path ~ arguments_list }
-item_decorator = { "@" ~ path ~ arguments_list? }
-block_decorator = { "@@" ~ path ~ arguments_list? }
-pipeline = { "$" ~ path ~ arguments_list? }
-
-// #############
-// arguments
-// #############
-arguments_list = { "(" ~ (argument ~ ("," ~ argument)*)? ~ TRAILING_COMMA? ~ ")" }
-argument = _{ named_argument | empty_argument | expression }
-empty_argument = { identifier ~ ":" }
-named_argument = { identifier ~ ":" ~ expression }
-
-// #############
-// type
-// #############
-field_type = { identifier ~ arity? ~ optionality? }
-arity = {"[]" | "{}" }
-optionality = { "?" }
-
-// #############
-// numeric literals
-// #############
-numeric_literal = @{ ("-")? ~ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
-
-// #############
-// string literals
-// #############
-ASCII_CONTROL_CHARACTER = _{ '\u{0000}'..'\u{001F}' }
-string_escape = _{ "\\" ~ ANY }
-string_content = @{ (string_escape | !("\"" | ASCII_CONTROL_CHARACTER) ~ ANY)* }
-string_literal = ${ "\"" ~ string_content ~ "\"" }
-
-// #############
-// bool literals
-// #############
-bool_literal = @{ "true" | "false" }
-
-// #############
-// null literals
-// #############
-null_literal = { "null" }
-
-// #############
-// range literals
-// #############
-range_literal = { expression ~ (RANGE_OPEN | RANGE_CLOSE)  ~ expression }
-
-// #############
-// tuple literals
-// #############
-tuple_literal = { "(" ~ (expression ~ ( "," ~ expression )*)? ~ ")" }
-
-// #############
-// array literals
-// #############
-array_literal = { "[" ~ (expression ~ ( "," ~ expression )*)? ~ "]" }
-
-// #############
-// dict literals
-// #############
-dictionary_literal = { BLOCK_OPEN ~ (expression ~ ( "," ~ expression )*)? ~ BLOCK_CLOSE }
-
-// #############
-// comments
-// #############
-doc_content = @{ (!NEWLINE ~ ANY)* }
-triple_comment = { WHITESPACE* ~ "///" ~ doc_content }
-double_comment = { WHITESPACE* ~ (!"///") ~ "//" ~ doc_content }
-comment_block = ${ ((triple_comment | double_comment) ~ NEWLINE?)+ }
-trailing_comment = ${ triple_comment | double_comment }
-
-// #############
-// expression
-// #############
-expression = { bool_literal | null_literal | numeric_literal | string_literal | call | pipeline | tuple_literal | array_literal | dictionary_literal | path | enum_choice }

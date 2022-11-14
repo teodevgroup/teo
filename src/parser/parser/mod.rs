@@ -108,7 +108,7 @@ impl Parser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::string_literal => source = Some(StringExpression::new(current.as_str().to_string(), span)),
-                Rule::identifier_list => identifiers = Self::parse_identifier_list(current),
+                Rule::import_identifier_list => identifiers = Self::parse_import_identifier_list(current),
                 _ => panic!("error."),
             }
         }
@@ -397,7 +397,7 @@ impl Parser {
         )
     }
 
-    fn parse_identifier_list(pair: Pair<'_>) -> Vec<Identifier> {
+    fn parse_import_identifier_list(pair: Pair<'_>) -> Vec<Identifier> {
         let mut identifiers = vec![];
         for current in pair.into_inner() {
             match current.as_rule() {
