@@ -1,6 +1,5 @@
 use std::sync::{Arc};
 use key_path::KeyPath;
-use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::pipeline::context::validity::Validity;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::modifiers::logical::all::AllModifier;
@@ -22,7 +21,7 @@ use crate::core::pipeline::modifiers::logical::then::ThenModifier;
 use crate::core::pipeline::modifiers::string::generation::uuid::UUIDModifier;
 use crate::core::pipeline::modifiers::array::append::AppendModifier;
 use crate::core::pipeline::modifiers::array::get_length::GetLengthModifier;
-use crate::core::pipeline::modifiers::array::has_length::{HasLengthModifier, LengthArgument};
+use crate::core::pipeline::modifiers::array::has_length::{HasLengthModifier};
 use crate::core::pipeline::modifiers::array::prepend::PrependModifier;
 use crate::core::pipeline::modifiers::array::reverse::ReverseModifier;
 use crate::core::pipeline::modifiers::function::perform::{PerformArgument, PerformModifier};
@@ -115,27 +114,27 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn add(&mut self, argument: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn add(&mut self, argument: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(AddModifier::new(argument)));
         self
     }
 
-    pub fn subtract(&mut self, argument: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn subtract(&mut self, argument: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(SubtractModifier::new(argument)));
         self
     }
 
-    pub fn multiply(&mut self, argument: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn multiply(&mut self, argument: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(MultiplyModifier::new(argument)));
         self
     }
 
-    pub fn divide(&mut self, argument: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn divide(&mut self, argument: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(DivideModifier::new(argument)));
         self
     }
 
-    pub fn modular(&mut self, argument: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn modular(&mut self, argument: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(ModularModifier::new(argument)));
         self
     }
@@ -155,12 +154,12 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn pow(&mut self, argument: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn pow(&mut self, argument: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(PowModifier::new(argument)));
         self
     }
 
-    pub fn root(&mut self, argument: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn root(&mut self, argument: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(RootModifier::new(argument)));
         self
     }
@@ -175,12 +174,12 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn min(&mut self, argument: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn min(&mut self, argument: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(MinModifier::new(argument)));
         self
     }
 
-    pub fn max(&mut self, argument: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn max(&mut self, argument: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(MaxModifier::new(argument)));
         self
     }
@@ -205,32 +204,32 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn regex_match(&mut self, regex: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn regex_match(&mut self, regex: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(RegexMatchModifier::new(regex)));
         self
     }
 
-    pub fn regex_replace(&mut self, regex: impl Into<FunctionArgument>, substitute: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn regex_replace(&mut self, regex: impl Into<Value>, substitute: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(RegexReplaceModifier::new(regex, substitute)));
         self
     }
 
-    pub fn ellipsis(&mut self, ellipsis: impl Into<String>, length: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn ellipsis(&mut self, ellipsis: impl Into<String>, length: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(EllipsisModifier::new(ellipsis, length)));
         self
     }
 
-    pub fn pad_start(&mut self, char: char, width: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn pad_start(&mut self, char: char, width: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(PadStartModifier::new(char, width)));
         self
     }
 
-    pub fn pad_end(&mut self, char: char, width: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn pad_end(&mut self, char: char, width: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(PadEndModifier::new(char, width)));
         self
     }
 
-    pub fn random_digits(&mut self, argument: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn random_digits(&mut self, argument: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(RandomDigitsModifier::new(argument)));
         self
     }
@@ -240,12 +239,12 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn append(&mut self, argument: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn append(&mut self, argument: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(AppendModifier::new(argument)));
         self
     }
 
-    pub fn prepend(&mut self, argument: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn prepend(&mut self, argument: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(PrependModifier::new(argument)));
         self
     }
@@ -340,37 +339,37 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn eq(&mut self, rhs: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn eq(&mut self, rhs: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(EqModifier::new(rhs)));
         self
     }
 
-    pub fn neq(&mut self, rhs: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn neq(&mut self, rhs: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(NeqModifier::new(rhs)));
         self
     }
 
-    pub fn gt(&mut self, rhs: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn gt(&mut self, rhs: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(GtModifier::new(rhs)));
         self
     }
 
-    pub fn gte(&mut self, rhs: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn gte(&mut self, rhs: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(GteModifier::new(rhs)));
         self
     }
 
-    pub fn lt(&mut self, rhs: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn lt(&mut self, rhs: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(LtModifier::new(rhs)));
         self
     }
 
-    pub fn lte(&mut self, rhs: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn lte(&mut self, rhs: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(LteModifier::new(rhs)));
         self
     }
 
-    pub fn one_of(&mut self, choices: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn one_of(&mut self, choices: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(OneOfModifier::new(choices)));
         self
     }
@@ -380,17 +379,17 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn object_value(&mut self, key: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn object_value(&mut self, key: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(ObjectValueModifier::new(key)));
         self
     }
 
-    pub fn object_previous_value(&mut self, key: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn object_previous_value(&mut self, key: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(ObjectPreviousValueModifier::new(key)));
         self
     }
 
-    pub fn object_set_value(&mut self, key: impl Into<FunctionArgument>, value: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn object_set_value(&mut self, key: impl Into<Value>, value: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(ObjectSetValueModifier::new(key, value)));
         self
     }
@@ -412,7 +411,7 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn has_length(&mut self, len: impl Into<LengthArgument>) -> &mut Self {
+    pub fn has_length(&mut self, len: Value) -> &mut Self {
         self.modifiers.push(Arc::new(HasLengthModifier::new(len)));
         self
     }
@@ -427,17 +426,17 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn split(&mut self, separator: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn split(&mut self, separator: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(SplitModifier::new(separator)));
         self
     }
 
-    pub fn join(&mut self, separator: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn join(&mut self, separator: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(JoinModifier::new(separator)));
         self
     }
 
-    pub fn item_at(&mut self, index: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn item_at(&mut self, index: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(ItemAtModifier::new(index)));
         self
     }
@@ -456,22 +455,22 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn has_prefix(&mut self, prefix: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn has_prefix(&mut self, prefix: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(HasPrefixModifier::new(prefix)));
         self
     }
 
-    pub fn has_suffix(&mut self, prefix: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn has_suffix(&mut self, prefix: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(HasSuffixModifier::new(prefix)));
         self
     }
 
-    pub fn is_prefix_of(&mut self, prefix: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn is_prefix_of(&mut self, prefix: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(IsPrefixOfModifier::new(prefix)));
         self
     }
 
-    pub fn is_suffix_of(&mut self, prefix: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn is_suffix_of(&mut self, prefix: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(IsSuffixOfModifier::new(prefix)));
         self
     }
@@ -526,12 +525,12 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn tson_set(&mut self, path: KeyPath<'static>, value: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn tson_set(&mut self, path: KeyPath<'static>, value: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(TsonSetModifier::new(path, value)));
         self
     }
 
-    pub fn tson_set_default(&mut self, path: KeyPath<'static>, value: impl Into<FunctionArgument>) -> &mut Self {
+    pub fn tson_set_default(&mut self, path: KeyPath<'static>, value: impl Into<Value>) -> &mut Self {
         self.modifiers.push(Arc::new(TsonSetDefaultModifier::new(path, value)));
         self
     }

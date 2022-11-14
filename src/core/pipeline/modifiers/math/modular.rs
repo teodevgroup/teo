@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::pipeline::modifier::Modifier;
 
 
@@ -7,11 +6,11 @@ use crate::core::pipeline::context::Context;
 
 #[derive(Debug, Clone)]
 pub struct ModularModifier {
-    argument: FunctionArgument
+    argument: Value
 }
 
 impl ModularModifier {
-    pub fn new(argument: impl Into<FunctionArgument>) -> Self {
+    pub fn new(argument: impl Into<Value>) -> Self {
         Self { argument: argument.into() }
     }
 }

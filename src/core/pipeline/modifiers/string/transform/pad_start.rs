@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use pad::{PadStr, Alignment};
-use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 use crate::prelude::Value;
@@ -8,11 +7,11 @@ use crate::prelude::Value;
 #[derive(Debug, Clone)]
 pub struct PadStartModifier {
     char: char,
-    width: FunctionArgument,
+    width: Value,
 }
 
 impl PadStartModifier {
-    pub fn new(char: char, width: impl Into<FunctionArgument>) -> Self {
+    pub fn new(char: char, width: impl Into<Value>) -> Self {
         Self { char, width: width.into() }
     }
 }

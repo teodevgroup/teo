@@ -1,16 +1,15 @@
 use async_trait::async_trait;
 use key_path::path;
 use crate::core::pipeline::modifier::Modifier;
-use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::pipeline::context::Context;
 
 #[derive(Debug, Clone)]
 pub struct ObjectPreviousValueModifier {
-    key: FunctionArgument
+    key: Value
 }
 
 impl ObjectPreviousValueModifier {
-    pub fn new(key: impl Into<FunctionArgument>) -> Self {
+    pub fn new(key: impl Into<Value>) -> Self {
         Self { key: key.into() }
     }
 }

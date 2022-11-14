@@ -2,18 +2,17 @@ use async_trait::async_trait;
 use key_path::KeyPath;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::tson::Value;
-use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::pipeline::context::Context;
 use crate::core::tson::utils::TsonUtils;
 
 #[derive(Debug, Clone)]
 pub struct TsonSetModifier<'a> {
     path: KeyPath<'a>,
-    argument: FunctionArgument
+    argument: Value
 }
 
 impl<'a> TsonSetModifier<'a> {
-    pub fn new(path: KeyPath<'a>, argument: impl Into<FunctionArgument>) -> Self {
+    pub fn new(path: KeyPath<'a>, argument: impl Into<Value>) -> Self {
         Self { path, argument: argument.into() }
     }
 }

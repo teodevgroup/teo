@@ -2,17 +2,16 @@ use async_trait::async_trait;
 
 use crate::core::pipeline::modifier::Modifier;
 
-use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::pipeline::context::Context;
 
 #[derive(Debug, Clone)]
 pub struct ObjectSetValueModifier {
-    key: FunctionArgument,
-    value: FunctionArgument,
+    key: Value,
+    value: Value,
 }
 
 impl ObjectSetValueModifier {
-    pub fn new(key: impl Into<FunctionArgument>, value: impl Into<FunctionArgument>) -> Self {
+    pub fn new(key: impl Into<Value>, value: impl Into<Value>) -> Self {
         Self {
             key: key.into(),
             value: value.into(),

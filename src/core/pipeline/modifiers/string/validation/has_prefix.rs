@@ -1,15 +1,14 @@
 use async_trait::async_trait;
-use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 
 #[derive(Debug, Clone)]
 pub struct HasPrefixModifier {
-    prefix: FunctionArgument
+    prefix: Value
 }
 
 impl HasPrefixModifier {
-    pub fn new(prefix: impl Into<FunctionArgument>) -> Self {
+    pub fn new(prefix: impl Into<Value>) -> Self {
         Self { prefix: prefix.into() }
     }
 }

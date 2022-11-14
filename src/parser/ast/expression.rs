@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter, Write};
 use std::str::FromStr;
 use chrono::format::Numeric;
 use snailquote::unescape;
-use crate::core::pipeline::argument::{ArgumentRange, ArgumentTuple};
+use crate::core::tson::range::Range;
 use crate::parser::ast::call::Call;
 use crate::parser::ast::pipeline::Pipeline;
 use crate::parser::ast::identifier::Identifier;
@@ -128,7 +128,7 @@ impl EnumChoiceExpression {
     }
 
     pub(crate) fn resolve(&mut self) {
-        self.resolved = Some(Value::String(self.value.clone()));
+        self.resolved = Some(Value::RawEnumChoice(self.value.clone()));
     }
 }
 
@@ -144,7 +144,7 @@ pub(crate) struct RangeExpression {
     pub(crate) closed: bool,
     pub(crate) expressions: Vec<Expression>,
     pub(crate) span: Span,
-    pub(crate) resolved: Option<ArgumentRange>,
+    pub(crate) resolved: Option<Value>,
 }
 
 impl RangeExpression {
@@ -170,7 +170,7 @@ impl Display for RangeExpression {
 pub(crate) struct TupleExpression {
     pub(crate) expressions: Vec<Expression>,
     pub(crate) span: Span,
-    pub(crate) resolved: Option<ArgumentTuple>,
+    pub(crate) resolved: Option<Value>,
 }
 
 impl TupleExpression {
@@ -197,7 +197,7 @@ impl Display for TupleExpression {
 pub(crate) struct ArrayExpression {
     pub(crate) expressions: Vec<Expression>,
     pub(crate) span: Span,
-    pub(crate) resolved: Option<Vec<Expression>>,
+    pub(crate) resolved: Option<Value>,
 }
 
 impl ArrayExpression {
@@ -222,13 +222,13 @@ impl Display for ArrayExpression {
 
 #[derive(Debug, Clone)]
 pub(crate) struct DictionaryExpression {
-    pub(crate) expressions: HashMap<String, Expression>,
+    pub(crate) expressions: Vec<(Expression, Expression)>,
     pub(crate) span: Span,
-    pub(crate) resolved: Option<HashMap<String, Expression>>,
+    pub(crate) resolved: Option<Value>,
 }
 
 impl DictionaryExpression {
-    pub(crate) fn new(expressions: HashMap<String, Expression>, span: Span) -> Self {
+    pub(crate) fn new(expressions: Vec<(Expression, Expression)>, span: Span) -> Self {
         Self { expressions, span, resolved: None }
     }
 }
@@ -238,7 +238,7 @@ impl Display for DictionaryExpression {
         f.write_str("{")?;
         let len = self.expressions.len();
         for (index, (key, expression)) in self.expressions.iter().enumerate() {
-            f.write_str(key)?;
+            Display::fmt(key, f)?;
             f.write_str(": ")?;
             Display::fmt(expression, f)?;
             if index != len - 1 {

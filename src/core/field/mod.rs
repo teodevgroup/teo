@@ -1,5 +1,4 @@
 use std::fmt::{Debug, Formatter};
-use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::database::r#type::DatabaseType;
 use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::FieldType;
@@ -96,8 +95,8 @@ pub(crate) struct Field {
     pub(crate) auto_increment: bool,
     pub(crate) auth_identity: bool,
     pub(crate) auth_by: bool,
-    pub(crate) auth_by_arg: Option<FunctionArgument>,
-    pub(crate) default: Option<FunctionArgument>,
+    pub(crate) auth_by_arg: Option<Value>,
+    pub(crate) default: Option<Value>,
     pub(crate) on_set_pipeline: Pipeline,
     pub(crate) on_save_pipeline: Pipeline,
     pub(crate) on_output_pipeline: Pipeline,

@@ -3,17 +3,16 @@ use regex::Regex;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::tson::Value;
 
-use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::pipeline::context::Context;
 
 #[derive(Debug, Clone)]
 pub struct RegexReplaceModifier {
-    format: FunctionArgument,
-    substitute: FunctionArgument,
+    format: Value,
+    substitute: Value,
 }
 
 impl RegexReplaceModifier {
-    pub fn new(format: impl Into<FunctionArgument>, substitute: impl Into<FunctionArgument>) -> Self {
+    pub fn new(format: impl Into<Value>, substitute: impl Into<Value>) -> Self {
         return RegexReplaceModifier {
             format: format.into(),
             substitute: substitute.into(),

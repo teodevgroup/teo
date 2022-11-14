@@ -1,16 +1,15 @@
 use async_trait::async_trait;
-use crate::core::pipeline::argument::FunctionArgument;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 use crate::prelude::Value;
 
 #[derive(Debug, Clone)]
 pub struct JoinModifier {
-    separator: FunctionArgument
+    separator: Value
 }
 
 impl JoinModifier {
-    pub fn new(separator: impl Into<FunctionArgument>) -> Self {
+    pub fn new(separator: impl Into<Value>) -> Self {
         Self { separator: separator.into() }
     }
 }
