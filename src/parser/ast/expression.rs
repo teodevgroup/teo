@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter, Write};
 use std::str::FromStr;
 use chrono::format::Numeric;
 use snailquote::unescape;
-use crate::core::pipeline::argument::ArgumentRange;
+use crate::core::pipeline::argument::{ArgumentRange, ArgumentTuple};
 use crate::parser::ast::call::Call;
 use crate::parser::ast::pipeline::Pipeline;
 use crate::parser::ast::identifier::Identifier;
@@ -55,7 +55,7 @@ impl StringExpression {
     }
 
     pub(crate) fn resolve(&mut self) {
-        self.resolved = Some(unescape(&self.value));
+        self.resolved = Some(Value::String(unescape(&self.value).unwrap()));
     }
 }
 
@@ -151,10 +151,6 @@ impl RangeExpression {
     pub(crate) fn new(closed: bool, expressions: Vec<Expression>, span: Span) -> Self {
         Self { closed, expressions, span, resolved: None }
     }
-
-    pub(crate) fn resolve(&mut self) {
-        self.resolved = Some(ArgumentRange { closed: self.closed, start: , end: })
-    }
 }
 
 impl Display for RangeExpression {
@@ -174,7 +170,7 @@ impl Display for RangeExpression {
 pub(crate) struct TupleExpression {
     pub(crate) expressions: Vec<Expression>,
     pub(crate) span: Span,
-    pub(crate) resolved: Option<Vec<Expression>>,
+    pub(crate) resolved: Option<ArgumentTuple>,
 }
 
 impl TupleExpression {

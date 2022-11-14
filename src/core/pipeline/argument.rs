@@ -1,11 +1,17 @@
 use std::fmt::{Debug};
 use chrono::{Date, DateTime, Utc};
-use crate::core::pipeline::argument::FunctionArgument::{PipelineArgument, ValueArgument, EnumChoiceArgument, RangeArgument};
+use crate::core::pipeline::argument::FunctionArgument::{PipelineArgument, ValueArgument, EnumChoiceArgument, RangeArgument, TupleArgument};
 use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::Context;
 use crate::core::tson::Value;
 
+#[derive(Clone, Debug)]
+pub struct ArgumentTuple {
+    pub values: Vec<FunctionArgument>
+}
+
+#[derive(Clone, Debug)]
 pub struct ArgumentRange {
     pub closed: bool,
     pub start: Value,
@@ -18,6 +24,7 @@ pub enum FunctionArgument {
     PipelineArgument(Pipeline),
     EnumChoiceArgument(String),
     RangeArgument(ArgumentRange),
+    TupleArgument(ArgumentTuple),
 }
 
 impl FunctionArgument {
@@ -46,6 +53,13 @@ impl FunctionArgument {
     pub(crate) fn as_argument_range(&self) -> Option<&ArgumentRange> {
         match self {
             RangeArgument(r) => Some(r),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_argument_tuple(&self) -> Option<&ArgumentTuple> {
+        match self {
+            TupleArgument(t) => Some(t),
             _ => None,
         }
     }

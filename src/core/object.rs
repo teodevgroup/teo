@@ -138,6 +138,7 @@ impl Object {
                                 // todo: default value calculation error here
                                 self.set_value_to_value_map(key, value);
                             }
+                            _ => { panic!()}
                         }
                     }
                 } else {

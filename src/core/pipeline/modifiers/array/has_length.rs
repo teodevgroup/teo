@@ -73,6 +73,7 @@ impl Modifier for HasLengthModifier {
                     }
                 }
             }
+            _ => { panic!("")}
         };
         let len = match &context.value {
             Value::String(s) => s.len(),
