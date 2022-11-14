@@ -65,6 +65,12 @@ string_content = @{ (string_escape | !("\"" | ASCII_CONTROL_CHARACTER) ~ ANY)* }
 string_literal = ${ "\"" ~ string_content ~ "\"" }
 
 // #############
+// regexp literals
+// #############
+regexp_content = @{ (string_escape | !("/") ~ ANY)+ }
+regexp_literal = ${ "/" ~ string_content ~ "/" }
+
+// #############
 // bool literals
 // #############
 bool_literal = @{ "true" | "false" }
@@ -73,6 +79,11 @@ bool_literal = @{ "true" | "false" }
 // null literals
 // #############
 null_literal = { "null" }
+
+// #############
+// enum choice literals
+// #############
+enum_choice_literal = @{ "." ~ identifier }
 
 // #############
 // range literals
@@ -92,15 +103,14 @@ array_literal = { "[" ~ (expression ~ ( "," ~ expression )*)? ~ "]" }
 // #############
 // dict literals
 // #############
+named_expression = { expression ~ ":" ~ expression }
 dictionary_literal = { "{" ~ (named_expression ~ ( "," ~ named_expression )*)? ~ "}" }
-named_expression = { string_literal ~ ":" ~ expression }
 
 // #############
 // subscript
 // #############
-subscript_item = { "[" ~ subscript_expression ~ "]" }
-subscript = { expression ~ subscript_item }
-subscript_expression = { expression }
+subscript_item = { "[" ~ expression ~ "]" }
+subscript = { (path | array_literal | dictionary_literal) ~ subscript_item+ }
 
 // #############
 // comments
@@ -115,11 +125,21 @@ trailing_comment = ${ triple_comment | double_comment }
 // operators
 // #############
 OPERATORS = { "??" | "+" | "-" | "*" | "/" | "%" | "!" | "&" | "|" | "&&" | "||" | ">" | "<" | ">>" | "<<" }
+mul = { expression ~ (("*" | "/" | "%") ~ expression)+ }
+add = { (mul | expression) ~ (("+" | "-") ~ (mul | expression))+ }
+nullish_coalescing = { expression ~ ("??" ~ expression)+ }
 
 // #############
 // expression
 // #############
-expression = { bool_literal | null_literal | numeric_literal | string_literal | call | chain | pipeline | tuple_literal | array_literal | dictionary_literal | path | enum_choice | subscript }
+
+literal = { null_literal | bool_literal | numeric_literal | string_literal | regexp_literal | enum_choice_literal | tuple_literal | array_literal | dictionary_literal }
+
+call = { path ~ arguments_list+ }
+
+chain = { literal | path | call | subscript ~ (subscript_item | arguments_list | "." ~ path | call | subscript)* }
+
+expression = { literal | call | pipeline | path | subscript }
 
 // #############
 // variable & constant declaration
@@ -138,11 +158,9 @@ named_argument = { identifier ~ ":" ~ expression }
 // #############
 // function call, decorator and pipeline
 // #############
-call = { path ~ arguments_list }
 item_decorator = { "@" ~ path ~ arguments_list? }
 block_decorator = { "@@" ~ path ~ arguments_list? }
-chain = { expression ~ (subscript_item | "." ~ (path | call | subscript))* }
-pipeline = { "$" ~ chain }
+pipeline = { "$" ~ expression }
 
 // #############
 // config blocks
@@ -166,7 +184,8 @@ config_item = {
 // enum
 // #############
 enum_declaration = {
-    ENUM_KEYWORD
+    (item_decorator ~ (NEWLINE | WHITESPACE)*)*
+    ~ ENUM_KEYWORD
     ~ identifier
     ~ BLOCK_OPEN
     ~ (enum_value_declaration | (block_decorator ~ NEWLINE) | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
@@ -174,8 +193,6 @@ enum_declaration = {
 }
 
 enum_value_declaration = { item_decorator* ~ identifier ~ trailing_comment? ~ NEWLINE }
-
-enum_choice = @{ "." ~ identifier }
 
 // #############
 // model

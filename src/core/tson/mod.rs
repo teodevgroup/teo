@@ -1,3 +1,11 @@
+pub mod index;
+pub mod json;
+pub mod from;
+pub mod macros;
+pub mod range;
+pub(crate) mod decoder;
+pub(crate) mod utils;
+
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap};
 use std::mem;
@@ -10,14 +18,9 @@ use indexmap::IndexMap;
 use bson::oid::ObjectId;
 use crate::core::field::r#type::FieldType;
 use crate::core::object::Object;
+use crate::core::pipeline::Pipeline;
 use crate::core::tson::index::Index;
-
-pub mod index;
-pub mod json;
-pub mod from;
-pub mod macros;
-pub(crate) mod decoder;
-pub(crate) mod utils;
+use crate::core::tson::range::Range;
 
 // Code from this file is inspired from serde json
 // https://github.com/serde-rs/json/blob/master/src/value/mod.rs
@@ -190,6 +193,18 @@ pub enum Value {
     /// Represents a Tson btreemap.
     ///
     IndexMap(IndexMap<String, Value>),
+
+    /// Represents a Tson range.
+    ///
+    Range(Range),
+
+    /// Represents a Tson tuple.
+    ///
+    Tuple(Vec<Value>),
+
+    /// Represents a Tson pipeline.
+    ///
+    Pipeline(Pipeline),
 
     /// Represents a Tson object.
     ///

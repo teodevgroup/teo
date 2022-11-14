@@ -32,3 +32,9 @@ impl Pipeline {
 
 unsafe impl Send for Pipeline {}
 unsafe impl Sync for Pipeline {}
+
+impl PartialEq for Pipeline {
+    fn eq(&self, _other: &Self) -> bool {
+        false
+    }
+}

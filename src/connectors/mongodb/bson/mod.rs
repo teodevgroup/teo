@@ -31,6 +31,7 @@ impl Into<Bson> for Value {
             Value::BTreeMap(val) => Bson::Document(val.iter().map(|(k, v)| (k.clone(), v.into())).collect()),
             Value::IndexMap(val) => Bson::Document(val.iter().map(|(k, v)| (k.clone(), v.into())).collect()),
             Value::Object(_) => panic!("Save embedded object is not implemented."),
+            _ => panic!("Cannot convert to bson.")
         }
     }
 }

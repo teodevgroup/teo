@@ -123,6 +123,9 @@ impl<'a> Display for Type<'a> {
             Value::BTreeMap(_) => formatter.write_str("btree map"),
             Value::IndexMap(_) => formatter.write_str("index map"),
             Value::Object(_) => formatter.write_str("object"),
+            Value::Range(_) => formatter.write_str("range"),
+            Value::Tuple(_) => formatter.write_str("tuple"),
+            Value::Pipeline(_) => formatter.write_str("pipeline"),
         }
     }
 }

@@ -313,7 +313,7 @@ impl Parser {
                 Rule::array_literal => return Expression::Array(Self::parse_array_literal(current)),
                 Rule::dictionary_literal => return Expression::Dictionary(Self::parse_dictionary_literal(current)),
                 Rule::path => return Expression::Path(Self::parse_path(current)),
-                Rule::enum_choice => return Expression::EnumChoice(EnumChoiceExpression::new(current.as_str().to_string(), span)),
+                Rule::enum_choice_literal => return Expression::EnumChoice(EnumChoiceExpression::new(current.as_str().to_string(), span)),
                 _ => panic!(),
             }
         }
