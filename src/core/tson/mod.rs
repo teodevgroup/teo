@@ -245,48 +245,6 @@ impl Value {
         }
     }
 
-    #[async_recursion]
-    pub(crate) async fn to_object_json_value(&self) -> Option<Value> {
-        match self {
-            Value::Object(o) => {
-                match o.to_json().await {
-                    Ok(v) => Some(v),
-                    Err(_) => None,
-                }
-            }
-            _ => None
-        }
-    }
-
-    #[async_recursion]
-    pub(crate) async fn to_object_vec_json_value(&self) -> Option<Value> {
-        match self {
-            Value::Vec(vec) => {
-                let mut result: Vec<Value> = vec![];
-                for object in vec {
-                    result.push(object.to_object_json_value().await.unwrap());
-                }
-                Some(Value::Vec(result))
-            }
-            _ => None
-        }
-    }
-
-    pub fn is_object_vec(&self) -> bool {
-        match self {
-            Value::Vec(v) => {
-                if v.is_empty() {
-                    false
-                } else {
-                    v.get(0).unwrap().is_object()
-                }
-            }
-            _ => false,
-        }
-    }
-
-    // TODO: remove before
-
     pub fn get<I: Index>(&self, index: I) -> Option<&Value> {
         index.index_into(self)
     }
