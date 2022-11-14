@@ -40,9 +40,9 @@ impl Resolver {
 
     fn resolve_range(range: &mut RangeExpression, source: Arc<Mutex<Source>>, parser: &Parser) {
         let a = Self::resolve_expression(range.expressions.get_mut(0).unwrap(), source.clone(), parser);
-        let start = a.as_value().unwrap();
+        let start = Box::new(a.clone());
         let b = Self::resolve_expression(range.expressions.get_mut(1).unwrap(), source.clone(), parser);
-        let end = b.as_value().unwrap();
+        let end = Box::new(b.clone());
         range.resolved = Some(Value::Range(Range { closed: range.closed, start, end }));
     }
 
@@ -59,7 +59,7 @@ impl Resolver {
         for expression in array.expressions.iter_mut() {
             resolved.push(Self::resolve_expression(expression, source.clone(), parser).clone());
         }
-        array.resolved = Some(Value::Array(resolved));
+        array.resolved = Some(Value::Vec(resolved));
     }
 
     fn resolve_dictionary(dic: &mut DictionaryExpression, source: Arc<Mutex<Source>>, parser: &Parser) {
@@ -67,9 +67,9 @@ impl Resolver {
         for (key, value) in dic.expressions.iter_mut() {
             let k = Self::resolve_expression(key, source.clone(), parser).clone();
             let v = Self::resolve_expression(value, source.clone(), parser).clone();
-
+            resolved.insert(k.as_str().unwrap().to_string(), v);
         }
-        dic.resolved = Some(Value::Array(resolved));
+        dic.resolved = Some(Value::IndexMap(resolved));
     }
 
     pub(crate) fn resolve_expression<'a>(expression: &'a mut Expression, source: Arc<Mutex<Source>>, parser: &Parser) -> &'a Value {
