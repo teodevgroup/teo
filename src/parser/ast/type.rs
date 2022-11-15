@@ -19,16 +19,17 @@ pub(crate) enum TypeClass {
 pub(crate) struct Type {
     pub(crate) identifier: Identifier,
     pub(crate) arity: Arity,
-    pub(crate) required: bool,
+    pub(crate) item_required: bool,
+    pub(crate) collection_required: bool,
     pub(crate) resolved: bool,
     pub(crate) type_id: (usize, usize),
     pub(crate) type_class: TypeClass,
 }
 
 impl Type {
-    pub(crate) fn new(identifier: Identifier, arity: Arity, required: bool) -> Self {
+    pub(crate) fn new(identifier: Identifier, arity: Arity, item_required: bool, collection_required: bool) -> Self {
         Self {
-            identifier, arity, required,
+            identifier, arity, item_required, collection_required,
             resolved: false,
             type_id: (0, 0),
             type_class: TypeClass::Unresolved,

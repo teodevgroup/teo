@@ -358,7 +358,7 @@ impl Parser {
                 _ => panic!(),
             }
         }
-        RangeExpression::new(closed, expressions, span)
+        RangeLiteral { closed, expressions, span }
     }
 
     fn parse_tuple_literal(pair: Pair<'_>) -> TupleExpression {
@@ -370,7 +370,7 @@ impl Parser {
                 _ => panic!(),
             }
         }
-        TupleExpression::new(expressions, span)
+        TupleLiteral { expressions, span }
     }
 
     fn parse_array_literal(pair: Pair<'_>) -> ArrayExpression {
@@ -382,7 +382,7 @@ impl Parser {
                 _ => panic!(),
             }
         }
-        ArrayExpression::new(expressions, span)
+        ArrayLiteral { expressions, span }
     }
 
     fn parse_dictionary_literal(pair: Pair<'_>) -> DictionaryExpression {
@@ -406,20 +406,28 @@ impl Parser {
     fn parse_type(pair: Pair<'_>) -> Type {
         let mut identifier = None;
         let mut arity = Arity::Scalar;
-        let mut required = true;
+        let mut item_required = true;
+        let mut collection_required = true;
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::COLON => {},
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::arity => if current.as_str() == "[]" { arity = Arity::Array; } else { arity = Arity::Dictionary; },
-                Rule::optionality => required = false,
+                Rule::optionality => {
+                    if arity == Arity::Scalar {
+                        item_required = false;
+                    } else {
+                        collection_required = false;
+                    }
+                },
                 _ => panic!(),
             }
         }
         Type::new(
             identifier.unwrap(),
             arity,
-            required,
+            item_required,
+            collection_required,
         )
     }
 
