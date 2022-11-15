@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Write};
 use std::str::FromStr;
 use chrono::format::Numeric;
-use snailquote::unescape;
+
 use crate::core::tson::range::Range;
 use crate::parser::ast::call::Call;
 use crate::parser::ast::pipeline::Pipeline;
@@ -12,127 +12,72 @@ use crate::parser::ast::span::Span;
 use crate::prelude::Value;
 
 #[derive(Debug, Clone)]
-pub(crate) struct NumericExpression {
+pub(crate) struct NumericLiteral {
     pub(crate) value: String,
     pub(crate) span: Span,
-    pub(crate) resolved: Option<Value>,
 }
 
-impl NumericExpression {
-    pub(crate) fn new(value: String, span: Span) -> Self {
-        Self { value, span, resolved: None }
-    }
-
-    pub(crate) fn resolve(&mut self) {
-        let i = i64::from_str(&self.value);
-        if i.is_ok() {
-            self.resolved = Some(Value::I64(i.unwrap()))
-        }
-        let i = f64::from_str(&self.value);
-        if i.is_ok() {
-            self.resolved = Some(Value::F64(i.unwrap()));
-        }
-        panic!("Cannot resolve numeric value: {}.", &self.value)
-    }
-}
-
-impl Display for NumericExpression {
+impl Display for NumericLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.value)
     }
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct StringExpression {
+pub(crate) struct StringLiteral {
     pub(crate) value: String,
     pub(crate) span: Span,
-    pub(crate) resolved: Option<Value>,
 }
 
-impl StringExpression {
-    pub(crate) fn new(value: String, span: Span) -> Self {
-        Self { value, span, resolved: None }
-    }
-
-    pub(crate) fn resolve(&mut self) {
-        self.resolved = Some(Value::String(unescape(&self.value).unwrap()));
-    }
-}
-
-impl Display for StringExpression {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        Display::fmt(&self.value, f)
-    }
-}
-
-#[derive(Debug, Clone)]
-pub(crate) struct BoolExpression {
-    pub(crate) value: String,
-    pub(crate) span: Span,
-    pub(crate) resolved: Option<Value>,
-}
-
-impl BoolExpression {
-    pub(crate) fn new(value: String, span: Span) -> Self {
-        Self { value, span, resolved: None }
-    }
-
-    pub(crate) fn resolve(&mut self) {
-        match self.value.as_str() {
-            "true" => self.resolved = Some(Value::Bool(true)),
-            "false" => self.resolved = Some(Value::Bool(false)),
-            _ => panic!("Cannot resolve bool value: {}", &self.value)
-        }
-    }
-}
-
-impl Display for BoolExpression {
+impl Display for StringLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.value)
     }
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct NullExpression {
+pub(crate) struct RegExpLiteral {
     pub(crate) value: String,
     pub(crate) span: Span,
-    pub(crate) resolved: Option<Value>,
 }
 
-impl NullExpression {
-    pub(crate) fn new(value: String, span: Span) -> Self {
-        Self { value, span, resolved: None }
-    }
-
-    pub(crate) fn resolve(&mut self) {
-        self.resolved = Some(Value::Null);
-    }
-}
-
-impl Display for NullExpression {
+impl Display for RegExpLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.value)
     }
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct EnumChoiceExpression {
+pub(crate) struct BoolLiteral {
     pub(crate) value: String,
     pub(crate) span: Span,
-    pub(crate) resolved: Option<Value>,
 }
 
-impl EnumChoiceExpression {
-    pub(crate) fn new(value: String, span: Span) -> Self {
-        Self { value, span, resolved: None }
-    }
-
-    pub(crate) fn resolve(&mut self) {
-        self.resolved = Some(Value::RawEnumChoice(self.value.clone()));
+impl Display for BoolLiteral {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.value)
     }
 }
 
-impl Display for EnumChoiceExpression {
+#[derive(Debug, Clone)]
+pub(crate) struct NullLiteral {
+    pub(crate) value: String,
+    pub(crate) span: Span,
+}
+
+impl Display for NullLiteral {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.value)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct EnumChoiceLiteral {
+    pub(crate) value: String,
+    pub(crate) span: Span,
+}
+
+impl Display for EnumChoiceLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str(".")?;
         f.write_str(&self.value)
@@ -140,20 +85,13 @@ impl Display for EnumChoiceExpression {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct RangeExpression {
+pub(crate) struct RangeLiteral {
     pub(crate) closed: bool,
     pub(crate) expressions: Vec<Expression>,
     pub(crate) span: Span,
-    pub(crate) resolved: Option<Value>,
 }
 
-impl RangeExpression {
-    pub(crate) fn new(closed: bool, expressions: Vec<Expression>, span: Span) -> Self {
-        Self { closed, expressions, span, resolved: None }
-    }
-}
-
-impl Display for RangeExpression {
+impl Display for RangeLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let len = self.expressions.len();
         for (index, expression) in self.expressions.iter().enumerate() {
@@ -167,19 +105,12 @@ impl Display for RangeExpression {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct TupleExpression {
+pub(crate) struct TupleLiteral {
     pub(crate) expressions: Vec<Expression>,
     pub(crate) span: Span,
-    pub(crate) resolved: Option<Value>,
 }
 
-impl TupleExpression {
-    pub(crate) fn new(expressions: Vec<Expression>, span: Span) -> Self {
-        Self { expressions, span, resolved: None }
-    }
-}
-
-impl Display for TupleExpression {
+impl Display for TupleLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str("(")?;
         let len = self.expressions.len();
@@ -194,19 +125,12 @@ impl Display for TupleExpression {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct ArrayExpression {
+pub(crate) struct ArrayLiteral {
     pub(crate) expressions: Vec<Expression>,
     pub(crate) span: Span,
-    pub(crate) resolved: Option<Value>,
 }
 
-impl ArrayExpression {
-    pub(crate) fn new(expressions: Vec<Expression>, span: Span) -> Self {
-        Self { expressions, span, resolved: None }
-    }
-}
-
-impl Display for ArrayExpression {
+impl Display for ArrayLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str("[")?;
         let len = self.expressions.len();
@@ -221,19 +145,12 @@ impl Display for ArrayExpression {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct DictionaryExpression {
+pub(crate) struct DictionaryLiteral {
     pub(crate) expressions: Vec<(Expression, Expression)>,
     pub(crate) span: Span,
-    pub(crate) resolved: Option<Value>,
 }
 
-impl DictionaryExpression {
-    pub(crate) fn new(expressions: Vec<(Expression, Expression)>, span: Span) -> Self {
-        Self { expressions, span, resolved: None }
-    }
-}
-
-impl Display for DictionaryExpression {
+impl Display for DictionaryLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str("{")?;
         let len = self.expressions.len();
@@ -250,164 +167,193 @@ impl Display for DictionaryExpression {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum Expression {
-    Numeric(NumericExpression),
-    String(StringExpression),
-    Bool(BoolExpression),
-    Null(NullExpression),
-    EnumChoice(EnumChoiceExpression),
-    Range(RangeExpression),
-    Tuple(TupleExpression),
-    Array(ArrayExpression),
-    Dictionary(DictionaryExpression),
+pub(crate) enum ExpressionKind {
+    NumericLiteral(NumericLiteral),
+    StringLiteral(StringLiteral),
+    RegExpLiteral(RegExpLiteral),
+    BoolLiteral(BoolLiteral),
+    NullLiteral(NullLiteral),
+    EnumChoiceLiteral(EnumChoiceLiteral),
+    RangeLiteral(RangeLiteral),
+    TupleLiteral(TupleLiteral),
+    ArrayLiteral(ArrayLiteral),
+    DictionaryLiteral(DictionaryLiteral),
     Path(Path),
     Call(Call),
     Pipeline(Pipeline),
 }
 
-impl Expression {
-    pub(crate) fn as_numeric(&self) -> Option<&NumericExpression> {
+impl ExpressionKind {
+
+    pub(crate) fn as_numeric_literal(&self) -> Option<&NumericLiteral> {
         match self {
-            Expression::Numeric(n) => Some(n),
+            ExpressionKind::NumericLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_numeric_mut(&mut self) -> Option<&mut NumericExpression> {
+    pub(crate) fn as_numeric_mut(&mut self) -> Option<&mut NumericLiteral> {
         match self {
-            Expression::Numeric(n) => Some(n),
+            ExpressionKind::NumericLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_string(&self) -> Option<&StringExpression> {
+    pub(crate) fn as_string(&self) -> Option<&StringLiteral> {
         match self {
-            Expression::String(n) => Some(n),
+            ExpressionKind::StringLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_string_mut(&mut self) -> Option<&mut StringExpression> {
+    pub(crate) fn as_string_mut(&mut self) -> Option<&mut StringLiteral> {
         match self {
-            Expression::String(n) => Some(n),
+            ExpressionKind::StringLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_bool(&self) -> Option<&BoolExpression> {
+    pub(crate) fn as_regexp(&self) -> Option<&RegExpLiteral> {
         match self {
-            Expression::Bool(n) => Some(n),
+            ExpressionKind::RegExpLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_bool_mut(&mut self) -> Option<&mut BoolExpression> {
+    pub(crate) fn as_regexp_mut(&mut self) -> Option<&mut RegExpLiteral> {
         match self {
-            Expression::Bool(n) => Some(n),
+            ExpressionKind::RegExpLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_null(&self) -> Option<&NullExpression> {
+    pub(crate) fn as_bool(&self) -> Option<&BoolLiteral> {
         match self {
-            Expression::Null(n) => Some(n),
+            ExpressionKind::BoolLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_null_mut(&mut self) -> Option<&mut NullExpression> {
+    pub(crate) fn as_bool_mut(&mut self) -> Option<&mut BoolLiteral> {
         match self {
-            Expression::Null(n) => Some(n),
+            ExpressionKind::BoolLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_enum_choice(&self) -> Option<&EnumChoiceExpression> {
+    pub(crate) fn as_null(&self) -> Option<&NullLiteral> {
         match self {
-            Expression::EnumChoice(n) => Some(n),
+            ExpressionKind::NullLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_enum_choice_mut(&mut self) -> Option<&mut EnumChoiceExpression> {
+    pub(crate) fn as_null_mut(&mut self) -> Option<&mut NullLiteral> {
         match self {
-            Expression::EnumChoice(n) => Some(n),
+            ExpressionKind::NullLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_range(&self) -> Option<&RangeExpression> {
+    pub(crate) fn as_enum_choice(&self) -> Option<&EnumChoiceLiteral> {
         match self {
-            Expression::Range(n) => Some(n),
+            ExpressionKind::EnumChoiceLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_range_mut(&mut self) -> Option<&mut RangeExpression> {
+    pub(crate) fn as_enum_choice_mut(&mut self) -> Option<&mut EnumChoiceLiteral> {
         match self {
-            Expression::Range(n) => Some(n),
+            ExpressionKind::EnumChoiceLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_tuple(&self) -> Option<&TupleExpression> {
+    pub(crate) fn as_range(&self) -> Option<&RangeLiteral> {
         match self {
-            Expression::Tuple(n) => Some(n),
+            ExpressionKind::RangeLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_tuple_mut(&mut self) -> Option<&mut TupleExpression> {
+    pub(crate) fn as_range_mut(&mut self) -> Option<&mut RangeLiteral> {
         match self {
-            Expression::Tuple(n) => Some(n),
+            ExpressionKind::RangeLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_array(&self) -> Option<&ArrayExpression> {
+    pub(crate) fn as_tuple(&self) -> Option<&TupleLiteral> {
         match self {
-            Expression::Array(n) => Some(n),
+            ExpressionKind::TupleLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_array_mut(&mut self) -> Option<&mut ArrayExpression> {
+    pub(crate) fn as_tuple_mut(&mut self) -> Option<&mut TupleLiteral> {
         match self {
-            Expression::Array(n) => Some(n),
+            ExpressionKind::TupleLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_dictionary(&self) -> Option<&DictionaryExpression> {
+    pub(crate) fn as_array(&self) -> Option<&ArrayLiteral> {
         match self {
-            Expression::Dictionary(n) => Some(n),
+            ExpressionKind::ArrayLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_dictionary_mut(&mut self) -> Option<&mut DictionaryExpression> {
+    pub(crate) fn as_array_mut(&mut self) -> Option<&mut ArrayLiteral> {
         match self {
-            Expression::Dictionary(n) => Some(n),
+            ExpressionKind::ArrayLiteral(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_dictionary(&self) -> Option<&DictionaryLiteral> {
+        match self {
+            ExpressionKind::DictionaryLiteral(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_dictionary_mut(&mut self) -> Option<&mut DictionaryLiteral> {
+        match self {
+            ExpressionKind::DictionaryLiteral(n) => Some(n),
             _ => None,
         }
     }
 }
 
-impl Display for Expression {
+impl Display for ExpressionKind {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Expression::Numeric(e) => Display::fmt(e, f),
-            Expression::String(s) => Display::fmt(s, f),
-            Expression::Bool(b) => Display::fmt(b, f),
-            Expression::Null(n) => Display::fmt(n, f),
-            Expression::EnumChoice(e) => Display::fmt(e, f),
-            Expression::Path(p) => Display::fmt(p, f),
-            Expression::Call(c) => Display::fmt(c, f),
-            Expression::Pipeline(p) => Display::fmt(p, f),
-            Expression::Range(r) => Display::fmt(r, f),
-            Expression::Tuple(t) => Display::fmt(t, f),
-            Expression::Array(a) => Display::fmt(a, f),
-            Expression::Dictionary(d) => Display::fmt(d, f),
+            ExpressionKind::NumericLiteral(e) => Display::fmt(e, f),
+            ExpressionKind::StringLiteral(s) => Display::fmt(s, f),
+            ExpressionKind::RegExpLiteral(r) => Display::fmt(r, f),
+            ExpressionKind::BoolLiteral(b) => Display::fmt(b, f),
+            ExpressionKind::NullLiteral(n) => Display::fmt(n, f),
+            ExpressionKind::EnumChoiceLiteral(e) => Display::fmt(e, f),
+            ExpressionKind::RangeLiteral(r) => Display::fmt(r, f),
+            ExpressionKind::TupleLiteral(t) => Display::fmt(t, f),
+            ExpressionKind::ArrayLiteral(a) => Display::fmt(a, f),
+            ExpressionKind::DictionaryLiteral(d) => Display::fmt(d, f),
+            ExpressionKind::Path(p) => Display::fmt(p, f),
+            ExpressionKind::Call(c) => Display::fmt(c, f),
+            ExpressionKind::Pipeline(p) => Display::fmt(p, f),
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct Expression {
+    pub(crate) kind: ExpressionKind,
+    pub(crate) resolved: Option<Value>,
+}
+
+impl Expression {
+    pub(crate) fn new(kind: ExpressionKind) -> Self {
+        Self { kind, resolved: None }
     }
 }
