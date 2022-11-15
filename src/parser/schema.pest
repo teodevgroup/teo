@@ -129,21 +129,37 @@ trailing_comment = ${ triple_comment | double_comment }
 OPERATORS = { "??" | "+" | "-" | "*" | "/" | "%" | "!" | "&" | "|" | "&&" | "||" | ">" | "<" | ">>" | "<<" }
 mul = { expression ~ (("*" | "/" | "%") ~ expression)+ }
 add = { (mul | expression) ~ (("+" | "-") ~ (mul | expression))+ }
-operand = { literal | call | pipeline | path | subscript | chain }
+operand = { null_literal | bool_literal | numeric_literal | string_literal | regexp_literal | enum_choice_literal | tuple_literal | array_literal | dictionary_literal | range_literal | call | pipeline | path | subscript | chain }
 nullish_coalescing = { operand ~ ("??" ~ operand)+ }
 
 // #############
 // expression
 // #############
 
-literal = { null_literal | bool_literal | numeric_literal | string_literal | regexp_literal | enum_choice_literal | tuple_literal | array_literal | dictionary_literal | range_literal }
 literal_without_range = { null_literal | bool_literal | numeric_literal | string_literal | regexp_literal | enum_choice_literal | tuple_literal | array_literal | dictionary_literal }
 call = { path ~ arguments_list+ }
 
-chain = { literal | path | call | subscript ~ (subscript_item | arguments_list | "." ~ path | call | subscript)* }
+chain = { null_literal | bool_literal | numeric_literal | string_literal | regexp_literal | enum_choice_literal | tuple_literal | array_literal | dictionary_literal | range_literal | path | call | subscript ~ (subscript_item | arguments_list | "." ~ path | call | subscript)* }
 chain_without_range_literal = { literal_without_range | path | call | subscript ~ (subscript_item | arguments_list | "." ~ path | call | subscript)* }
 
-expression = { literal | call | pipeline | path | subscript | chain | nullish_coalescing }
+expression = {
+    null_literal |
+    bool_literal |
+    numeric_literal |
+    string_literal |
+    regexp_literal |
+    enum_choice_literal |
+    tuple_literal |
+    array_literal |
+    dictionary_literal |
+    range_literal |
+    path |
+    call |
+    pipeline |
+    subscript |
+    chain |
+    nullish_coalescing
+}
 
 // #############
 // variable & constant declaration

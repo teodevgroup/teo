@@ -1,5 +1,5 @@
 pub(crate) mod resolver;
-
+use snailquote::unescape;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::fs;
@@ -84,10 +84,15 @@ impl Parser {
         };
         let pairs = pairs.next().unwrap();
         let mut tops: Vec<Arc<Mutex<Top>>> = vec![];
+        let mut imports: Vec<Arc<Mutex<Top>>> = vec![];
         let mut pairs = pairs.into_inner().peekable();
         while let Some(current) = pairs.next() {
             match current.as_rule() {
-                Rule::import_statement => tops.push(self.parse_import(current, id)),
+                Rule::import_statement => {
+                    let import = self.parse_import(current, id);
+                    tops.push(import.clone());
+                    imports.push(import.clone());
+                },
                 Rule::model_declaration => tops.push(self.parse_model(current, id)),
                 Rule::enum_declaration => tops.push(self.parse_enum(current, id)),
                 Rule::config_declaration => tops.push(self.parse_config_block(current, id)),
@@ -96,8 +101,26 @@ impl Parser {
                 _ => panic!("Parsing panic!"),
             }
         }
-        let result = Arc::new(Mutex::new(Source { id, path, tops }));
+        let result = Arc::new(Mutex::new(Source { id, path, tops, imports }));
         self.sources.insert(id, result.clone());
+        for import in imports {
+            let import = import.lock().unwrap().as_import().unwrap();
+            let relative = unescape(&import.source.value);
+            let relative = PathBuf::from(relative);
+            let mut dir = path.clone();
+            dir.pop();
+            let new = dir.join(relative);
+            let absolute = match fs::canonicalize(&new) {
+                Ok(path) => path,
+                Err(_) => panic!("Schema file '{}' is not found.", relative.to_str().unwrap()),
+            };
+            let found = self.sources.values().find(|v| {
+                v.lock().unwrap().path == absolute
+            });
+            if found.is_none() {
+                self.parse_source(absolute, self.next_id());
+            }
+        }
         result
     }
 

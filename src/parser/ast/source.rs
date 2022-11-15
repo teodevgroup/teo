@@ -8,6 +8,7 @@ pub(crate) struct Source {
     pub(crate) id: usize,
     pub(crate) path: PathBuf,
     pub(crate) tops: Vec<Arc<Mutex<Top>>>,
+    pub(crate) imports: Vec<Arc<Mutex<Top>>>,
 }
 
 impl fmt::Debug for Source {
