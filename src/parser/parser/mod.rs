@@ -11,7 +11,7 @@ use crate::parser::ast::client::Client;
 use crate::parser::ast::config::Config;
 use crate::parser::ast::connector::Connector;
 use crate::parser::ast::decorator::Decorator;
-use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral};
+use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral, RegExpLiteral};
 use crate::parser::ast::field::Field;
 use crate::parser::ast::generator::Generator;
 use crate::parser::ast::identifier::Identifier;
@@ -325,18 +325,21 @@ impl Parser {
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::bool_literal => return Expression::Bool(BoolExpression::new(current.as_str().to_string(), span)),
-                Rule::null_literal => return Expression::Null(NullExpression::new(current.as_str().to_string(), span)),
-                Rule::numeric_literal => return Expression::Numeric(NumericExpression::new(current.as_str().to_string(), span)),
-                Rule::string_literal => return Expression::String(StringExpression::new(current.as_str().to_string(), span)),
+                Rule::bool_literal => return Expression::new(ExpressionKind::BoolLiteral(BoolLiteral { value: current.as_str().to_string(), span })),
+                Rule::null_literal => return Expression::new(ExpressionKind::NullLiteral(NullLiteral { value: current.as_str().to_string(), span })),
+                Rule::numeric_literal => return Expression::new(ExpressionKind::NumericLiteral(NumericLiteral { value: current.as_str().to_string(), span })),
+                Rule::string_literal => return Expression::new(ExpressionKind::StringLiteral(StringLiteral { value: current.as_str().to_string(), span })),
+                Rule::regexp_literal => return Expression::new(ExpressionKind::RegExpLiteral(RegExpLiteral { value: current.as_str().to_string(), span })),
+                Rule::enum_choice_literal => return Expression::new(ExpressionKind::EnumChoiceLiteral(EnumChoiceLiteral { value: current.as_str().to_string(), span })),
+                Rule::range_literal => return Expression::new(ExpressionKind::RangeLiteral(Self::parse_range_literal(current))),
+                Rule::tuple_literal => return Expression::new(ExpressionKind::TupleLiteral(Self::parse_tuple_literal(current))),
+                Rule::array_literal => Expression::new(ExpressionKind::ArrayLiteral(Self::parse_array_literal(current))),
+                Rule::dictionary_literal => return Expression::new(ExpressionKind::DictionaryLiteral(Self::parse_dictionary_literal(current))),
+
                 Rule::call => return Expression::Call(Self::parse_call(current)),
                 Rule::pipeline => return Expression::Pipeline(Self::parse_pipeline(current)),
-                Rule::range_literal => return Expression::Range(Self::parse_range_literal(current)),
-                Rule::tuple_literal => return Expression::Tuple(Self::parse_tuple_literal(current)),
-                Rule::array_literal => return Expression::Array(Self::parse_array_literal(current)),
-                Rule::dictionary_literal => return Expression::Dictionary(Self::parse_dictionary_literal(current)),
+
                 Rule::path => return Expression::Path(Self::parse_path(current)),
-                Rule::enum_choice_literal => return Expression::EnumChoice(EnumChoiceExpression::new(current.as_str().to_string(), span)),
                 _ => panic!(),
             }
         }
