@@ -16,6 +16,7 @@ use rust_decimal::Decimal;
 use indexmap::IndexMap;
 #[cfg(feature = "data-source-mongodb")]
 use bson::oid::ObjectId;
+use regex::Regex;
 use crate::core::field::r#type::FieldType;
 use crate::core::object::Object;
 use crate::core::pipeline::context::Context;
@@ -210,6 +211,10 @@ pub enum Value {
     /// Raw enum choice.
     ///
     RawEnumChoice(String),
+
+    /// Regular expression
+    ///
+    RegExp(Regex),
 
     /// Represents a Tson object.
     ///
@@ -786,6 +791,17 @@ impl Value {
     pub fn as_pipeline(&self) -> Option<&Pipeline> {
         match self {
             Value::Pipeline(p) => Some(p),
+            _ => None,
+        }
+    }
+
+    pub fn is_regexp(&self) -> bool {
+        self.as_regexp().is_some()
+    }
+
+    pub fn as_regexp(&self) -> Option<&Regex> {
+        match self {
+            Value::RegExp(r) => Some(r),
             _ => None,
         }
     }

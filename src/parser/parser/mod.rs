@@ -11,7 +11,7 @@ use crate::parser::ast::client::Client;
 use crate::parser::ast::config::Config;
 use crate::parser::ast::connector::Connector;
 use crate::parser::ast::decorator::Decorator;
-use crate::parser::ast::expression::{ArrayExpression, BoolExpression, DictionaryExpression, EnumChoiceExpression, Expression, NullExpression, NumericExpression, RangeExpression, StringExpression, TupleExpression};
+use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral};
 use crate::parser::ast::field::Field;
 use crate::parser::ast::generator::Generator;
 use crate::parser::ast::identifier::Identifier;
@@ -107,7 +107,7 @@ impl Parser {
         let mut source: Option<StringExpression> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::string_literal => source = Some(StringExpression::new(current.as_str().to_string(), span)),
+                Rule::string_literal => source = Some(StringLiteral { value: current.as_str().to_string(), span }),
                 Rule::import_identifier_list => identifiers = Self::parse_import_identifier_list(current),
                 _ => panic!("error."),
             }

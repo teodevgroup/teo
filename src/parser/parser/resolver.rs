@@ -1,10 +1,11 @@
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use indexmap::map::IndexMap;
+use regex::Regex;
 use snailquote::unescape;
 use crate::core::database::name::DatabaseName;
 use crate::core::tson::range::Range;
-use crate::parser::ast::expression::{ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral};
+use crate::parser::ast::expression::{ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
 use crate::parser::ast::source::Source;
 use crate::parser::parser::Parser;
 use crate::prelude::Value;
@@ -59,6 +60,9 @@ impl Resolver {
             ExpressionKind::StringLiteral(s) => {
                 Self::resolve_string_literal(s)
             }
+            ExpressionKind::RegExpLiteral(r) => {
+                Self::resolve_regexp_literal(r)
+            }
             ExpressionKind::BoolLiteral(b) => {
                 Self::resolve_bool_literal(b)
             }
@@ -103,6 +107,10 @@ impl Resolver {
 
     fn resolve_string_literal(s: &StringLiteral) -> Value {
         return Value::String(unescape(&s.value).unwrap());
+    }
+
+    fn resolve_regexp_literal(r: &RegExpLiteral) -> Value {
+        return Value::RegExp(Regex::new(r.value.as_str()).unwrap())
     }
 
     fn resolve_bool_literal(b: &BoolLiteral) -> Value {
