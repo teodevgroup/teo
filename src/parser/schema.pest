@@ -94,7 +94,7 @@ range_end = { numeric_literal | call | path | subscript | chain_without_range_li
 // #############
 // tuple literals
 // #############
-tuple_literal = { "(" ~ (expression ~ ( "," ~ expression )*)? ~ ")" }
+tuple_literal = { "(" ~ ("," | (expression ~ "," ~ ( expression ~ ("," ~ expression)* ~ ","?)*)) ~ ")" }
 
 // #############
 // array literals
@@ -135,6 +135,8 @@ nullish_coalescing = { operand ~ ("??" ~ operand)+ }
 // #############
 // expression
 // #############
+
+group = { "(" ~ expression ~ ")" }
 
 literal_without_range = { null_literal | bool_literal | numeric_literal | string_literal | regexp_literal | enum_choice_literal | tuple_literal | array_literal | dictionary_literal }
 call = { path ~ arguments_list+ }
