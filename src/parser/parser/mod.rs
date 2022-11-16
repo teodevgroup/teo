@@ -254,7 +254,7 @@ impl Parser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::path => path = Some(Self::parse_path(current)),
-                Rule::arguments_list => arguments = Self::parse_arguments(current),
+                Rule::argument_list => arguments = Self::parse_arguments(current),
                 _ => panic!(),
             }
         }
@@ -268,7 +268,7 @@ impl Parser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::path => path = Some(Self::parse_path(current)),
-                Rule::arguments_list => arguments = Self::parse_arguments(current),
+                Rule::argument_list => arguments = Self::parse_arguments(current),
                 _ => panic!(),
             }
         }

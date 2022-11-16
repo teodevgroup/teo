@@ -89,7 +89,7 @@ enum_choice_literal = @{ "." ~ identifier }
 // range literals
 // #############
 range_literal = { range_end ~ (RANGE_OPEN | RANGE_CLOSE) ~ range_end }
-range_end = { numeric_literal | call | path | subscript | chain_without_range_literal }
+range_end = { numeric_literal | unit_without_range_literal }
 
 // #############
 // tuple literals
@@ -110,9 +110,7 @@ dictionary_literal = { "{" ~ (named_expression ~ ( "," ~ named_expression )*)? ~
 // #############
 // subscript
 // #############
-subscript_item = { "[" ~ expression ~ "]" }
-subscript = { (path | array_literal | dictionary_literal) ~ subscript_item+ }
-path_subscript = { path ~ subscript_item+ }
+subscript = { "[" ~ expression ~ "]" }
 
 // #############
 // comments
@@ -129,19 +127,18 @@ trailing_comment = ${ triple_comment | double_comment }
 OPERATORS = { "??" | "+" | "-" | "*" | "/" | "%" | "!" | "&" | "|" | "&&" | "||" | ">" | "<" | ">>" | "<<" }
 mul = { expression ~ (("*" | "/" | "%") ~ expression)+ }
 add = { (mul | expression) ~ (("+" | "-") ~ (mul | expression))+ }
-operand = { null_literal | bool_literal | numeric_literal | string_literal | regexp_literal | enum_choice_literal | tuple_literal | array_literal | dictionary_literal | range_literal | call | pipeline | path | subscript | chain }
-nullish_coalescing = { operand ~ ("??" ~ operand)+ }
+nullish_coalescing = { unit ~ ("??" ~ unit)+ }
 
 // #############
-// expression
+// group
 // #############
-
 group = { "(" ~ expression ~ ")" }
 
-literal_without_range = { null_literal | bool_literal | numeric_literal | string_literal | regexp_literal | enum_choice_literal | tuple_literal | array_literal | dictionary_literal }
-call = { path ~ arguments_list+ }
+// #############
+// unit & expression
+// #############
 
-chain = {
+unit = {
     group |
     null_literal |
     bool_literal |
@@ -153,15 +150,29 @@ chain = {
     array_literal |
     dictionary_literal |
     range_literal |
-    path
-    ~ (subscript_item | arguments_list | "." ~ path)*
+    identifier
+    ~ (subscript | argument_list | "." ~ identifier)*
 }
 
-chain_without_range_literal = { literal_without_range | path | call | subscript ~ (subscript_item | arguments_list | "." ~ path | call | subscript)* }
+unit_without_range_literal = {
+    group |
+    null_literal |
+    bool_literal |
+    numeric_literal |
+    string_literal |
+    regexp_literal |
+    enum_choice_literal |
+    tuple_literal |
+    array_literal |
+    dictionary_literal |
+    identifier
+    ~ (subscript | argument_list | "." ~ identifier)*
+}
 
 expression = {
     nullish_coalescing |
-    chain
+    unit |
+    pipeline
 }
 
 // #############
@@ -173,7 +184,7 @@ let_declaration = { "let" ~ identifier ~ "=" ~ expression }
 // #############
 // arguments
 // #############
-arguments_list = { "(" ~ (argument ~ ("," ~ argument)*)? ~ TRAILING_COMMA? ~ ")" }
+argument_list = { "(" ~ (argument ~ ("," ~ argument)*)? ~ TRAILING_COMMA? ~ ")" }
 argument = _{ named_argument | empty_argument | expression }
 empty_argument = { identifier ~ ":" }
 named_argument = { identifier ~ ":" ~ expression }
@@ -181,9 +192,9 @@ named_argument = { identifier ~ ":" ~ expression }
 // #############
 // function call, decorator and pipeline
 // #############
-item_decorator = { "@" ~ path ~ arguments_list? }
-block_decorator = { "@@" ~ path ~ arguments_list? }
-pipeline = { "$" ~ call | path ~ ("." ~ call | path)* }
+item_decorator = { "@" ~ path ~ argument_list? }
+block_decorator = { "@@" ~ path ~ argument_list? }
+pipeline = { "$" ~ identifier ~ argument_list? ~ ("." ~ ((identifier ~ argument_list) | identifier))* }
 
 // #############
 // config blocks

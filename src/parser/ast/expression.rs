@@ -1,14 +1,16 @@
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Write};
 use std::str::FromStr;
-use chrono::format::Numeric;
 
 use crate::core::tson::range::Range;
+use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::call::Call;
 use crate::parser::ast::pipeline::Pipeline;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::path::Path;
 use crate::parser::ast::span::Span;
+use crate::parser::ast::subscript::Subscript;
+use crate::parser::ast::unit::Unit;
 use crate::prelude::Value;
 
 #[derive(Debug, Clone)]
@@ -198,8 +200,10 @@ pub(crate) enum ExpressionKind {
     TupleLiteral(TupleLiteral),
     ArrayLiteral(ArrayLiteral),
     DictionaryLiteral(DictionaryLiteral),
-    Path(Path),
-    Call(Call),
+    Identifier(Identifier),
+    ArgumentList(ArgumentList),
+    Subscript(Subscript),
+    Unit(Unit),
     Pipeline(Pipeline),
 }
 
@@ -344,11 +348,82 @@ impl ExpressionKind {
             _ => None,
         }
     }
+
+    pub(crate) fn as_identifier(&self) -> Option<&Identifier> {
+        match self {
+            ExpressionKind::Identifier(i) => Some(i),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_identifier_mut(&mut self) -> Option<&mut Identifier> {
+        match self {
+            ExpressionKind::Identifier(i) => Some(i),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_unit(&self) -> Option<&Unit> {
+        match self {
+            ExpressionKind::Unit(u) => Some(u),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_unit_mut(&mut self) -> Option<&mut Unit> {
+        match self {
+            ExpressionKind::Unit(u) => Some(u),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_argument_list(&self) -> Option<&ArgumentList> {
+        match self {
+            ExpressionKind::ArgumentList(a) => Some(a),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_argument_list_mut(&mut self) -> Option<&mut ArgumentList> {
+        match self {
+            ExpressionKind::ArgumentList(a) => Some(a),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_subscript(&self) -> Option<&Subscript> {
+        match self {
+            ExpressionKind::Subscript(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_subscript_mut(&mut self) -> Option<&mut Subscript> {
+        match self {
+            ExpressionKind::Subscript(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_pipeline(&self) -> Option<&Pipeline> {
+        match self {
+            ExpressionKind::Pipeline(p) => Some(p),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_pipeline_mut(&mut self) -> Option<&mut Pipeline> {
+        match self {
+            ExpressionKind::Pipeline(p) => Some(p),
+            _ => None,
+        }
+    }
 }
 
 impl Display for ExpressionKind {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            ExpressionKind::NullishCoalescing(n) => Display::fmt(n, f),
             ExpressionKind::NumericLiteral(e) => Display::fmt(e, f),
             ExpressionKind::StringLiteral(s) => Display::fmt(s, f),
             ExpressionKind::RegExpLiteral(r) => Display::fmt(r, f),
@@ -359,8 +434,10 @@ impl Display for ExpressionKind {
             ExpressionKind::TupleLiteral(t) => Display::fmt(t, f),
             ExpressionKind::ArrayLiteral(a) => Display::fmt(a, f),
             ExpressionKind::DictionaryLiteral(d) => Display::fmt(d, f),
-            ExpressionKind::Path(p) => Display::fmt(p, f),
-            ExpressionKind::Call(c) => Display::fmt(c, f),
+            ExpressionKind::Identifier(i) => Display::fmt(i, f),
+            ExpressionKind::ArgumentList(a) => Display::fmt(a, f),
+            ExpressionKind::Subscript(s) => Display::fmt(s, f),
+            ExpressionKind::Unit(u) => Display::fmt(u, f),
             ExpressionKind::Pipeline(p) => Display::fmt(p, f),
         }
     }
