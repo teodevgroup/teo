@@ -302,16 +302,16 @@ impl Parser {
     fn parse_named_argument(pair: Pair<'_>) -> Argument {
         let span = Self::parse_span(&pair);
         let mut name: Option<Identifier> = None;
-        let mut value: Option<Expression> = None;
+        let mut value: Option<ExpressionKind> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier => name = Some(Self::parse_identifier(&current)),
-                Rule::expression => value = Some(Self::parse_expression(current)),
+                Rule::expression => value = Some(Self::parse_expression(current).kind),
                 Rule::empty_argument => panic!("Empty argument found."),
                 _ => panic!(),
             }
         }
-        Argument { name, value: value.unwrap(), span, resolved: None }
+        Argument { name, value: value.unwrap(), span }
     }
 
     fn parse_expression(pair: Pair<'_>) -> Expression {
@@ -338,6 +338,14 @@ impl Parser {
             }
         }
         panic!();
+    }
+
+    fn parse_unit(pair: Pair<'_>) -> ExpressionKind {
+
+    }
+
+    fn parse_identifier_unit(pair: Pair<'_>) -> Unit {
+
     }
 
     fn parse_nullish_coalescing(pair: Pair<'_>) -> NullishCoalescing {
