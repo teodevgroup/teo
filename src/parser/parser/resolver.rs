@@ -5,7 +5,7 @@ use regex::Regex;
 use snailquote::unescape;
 use crate::core::database::name::DatabaseName;
 use crate::core::tson::range::Range;
-use crate::parser::ast::expression::{ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
+use crate::parser::ast::expression::{ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
 use crate::parser::ast::source::Source;
 use crate::parser::parser::Parser;
 use crate::prelude::Value;
@@ -51,9 +51,15 @@ impl Resolver {
     }
 
     // Expression
-
-    pub(crate) fn resolve_expression(expression: &mut Expression, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
-        match &expression.kind {
+    pub(crate) fn resolve_expression<'a>(expression: &'a mut Expression, source: Arc<Mutex<Source>>, parser: &Parser) -> &'a Value {
+        expression.resolved = Some(Self::resolve_expression_kind(&expression.kind, source.clone(), parser));
+        expression.resolved.as_ref().unwrap()
+    }
+    pub(crate) fn resolve_expression_kind(expression: &ExpressionKind, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+        match expression {
+            ExpressionKind::NullishCoalescing(n) => {
+                Self::resolve_nullish_coalescing(n, source.clone(), parser)
+            }
             ExpressionKind::NumericLiteral(n) => {
                 Self::resolve_numeric_literal(n)
             }
@@ -129,37 +135,48 @@ impl Resolver {
         Value::RawEnumChoice(e.value.clone())
     }
 
-    fn resolve_range_literal(range: &mut RangeLiteral, source: Arc<Mutex<Source>>, parser: &Parser) {
-        let a = Self::resolve_expression(range.expressions.get_mut(0).unwrap(), source.clone(), parser);
+    fn resolve_range_literal(range: &RangeLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+        let a = Self::resolve_expression_kind(range.expressions.get(0).unwrap(), source.clone(), parser);
         let start = Box::new(a.clone());
-        let b = Self::resolve_expression(range.expressions.get_mut(1).unwrap(), source.clone(), parser);
+        let b = Self::resolve_expression_kind(range.expressions.get(1).unwrap(), source.clone(), parser);
         let end = Box::new(b.clone());
-        range.resolved = Some(Value::Range(Range { closed: range.closed, start, end }));
+        Value::Range(Range { closed: range.closed, start, end })
     }
 
-    fn resolve_tuple_literal(tuple: &mut TupleLiteral, source: Arc<Mutex<Source>>, parser: &Parser) {
+    fn resolve_tuple_literal(tuple: &TupleLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
         let mut resolved = vec![];
-        for expression in tuple.expressions.iter_mut() {
-            resolved.push(Self::resolve_expression(expression, source.clone(), parser).clone());
+        for expression in tuple.expressions.iter() {
+            resolved.push(Self::resolve_expression_kind(expression, source.clone(), parser).clone());
         }
-        tuple.resolved = Some(Value::Tuple(resolved));
+        Value::Tuple(resolved)
     }
 
-    fn resolve_array_literal(array: &mut ArrayLiteral, source: Arc<Mutex<Source>>, parser: &Parser) {
+    fn resolve_array_literal(array: &ArrayLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
         let mut resolved = vec![];
-        for expression in array.expressions.iter_mut() {
-            resolved.push(Self::resolve_expression(expression, source.clone(), parser).clone());
+        for expression in array.expressions.iter() {
+            resolved.push(Self::resolve_expression_kind(expression, source.clone(), parser).clone());
         }
-        array.resolved = Some(Value::Vec(resolved));
+        Value::Vec(resolved)
     }
 
-    fn resolve_dictionary_literal(dic: &mut DictionaryLiteral, source: Arc<Mutex<Source>>, parser: &Parser) {
+    fn resolve_dictionary_literal(dic: &DictionaryLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
         let mut resolved: IndexMap<String, Value> = IndexMap::new();
-        for (key, value) in dic.expressions.iter_mut() {
-            let k = Self::resolve_expression(key, source.clone(), parser).clone();
-            let v = Self::resolve_expression(value, source.clone(), parser).clone();
+        for (key, value) in dic.expressions.iter() {
+            let k = Self::resolve_expression_kind(key, source.clone(), parser).clone();
+            let v = Self::resolve_expression_kind(value, source.clone(), parser).clone();
             resolved.insert(k.as_str().unwrap().to_string(), v);
         }
-        dic.resolved = Some(Value::IndexMap(resolved));
+        Value::IndexMap(resolved)
+    }
+
+    fn resolve_nullish_coalescing(n: &NullishCoalescing, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+        let mut resolved: Value = Value::Null;
+        for e in n.expressions.iter() {
+            resolved = Self::resolve_expression_kind(e, source.clone(), parser);
+            if !resolved.is_null() {
+                return resolved;
+            }
+        }
+        return resolved
     }
 }

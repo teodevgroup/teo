@@ -143,6 +143,7 @@ chain = { null_literal | bool_literal | numeric_literal | string_literal | regex
 chain_without_range_literal = { literal_without_range | path | call | subscript ~ (subscript_item | arguments_list | "." ~ path | call | subscript)* }
 
 expression = {
+    nullish_coalescing |
     null_literal |
     bool_literal |
     numeric_literal |
@@ -157,8 +158,7 @@ expression = {
     call |
     pipeline |
     subscript |
-    chain |
-    nullish_coalescing
+    chain
 }
 
 // #############

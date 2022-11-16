@@ -11,7 +11,7 @@ use crate::parser::ast::client::Client;
 use crate::parser::ast::config::Config;
 use crate::parser::ast::connector::Connector;
 use crate::parser::ast::decorator::Decorator;
-use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral, RegExpLiteral};
+use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral, RegExpLiteral, NullishCoalescing};
 use crate::parser::ast::field::Field;
 use crate::parser::ast::generator::Generator;
 use crate::parser::ast::identifier::Identifier;
@@ -127,7 +127,7 @@ impl Parser {
     fn parse_import(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Mutex<Top>> {
         let mut identifiers = vec![];
         let span = Self::parse_span(&pair);
-        let mut source: Option<StringExpression> = None;
+        let mut source: Option<StringLiteral> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::string_literal => source = Some(StringLiteral { value: current.as_str().to_string(), span }),
@@ -325,6 +325,7 @@ impl Parser {
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
+                Rule::nullish_coalescing => return Expression::new(ExpressionKind::NullishCoalescing(Self::parse_nullish_coalescing(current))),
                 Rule::bool_literal => return Expression::new(ExpressionKind::BoolLiteral(BoolLiteral { value: current.as_str().to_string(), span })),
                 Rule::null_literal => return Expression::new(ExpressionKind::NullLiteral(NullLiteral { value: current.as_str().to_string(), span })),
                 Rule::numeric_literal => return Expression::new(ExpressionKind::NumericLiteral(NumericLiteral { value: current.as_str().to_string(), span })),
@@ -346,13 +347,25 @@ impl Parser {
         panic!();
     }
 
-    fn parse_range_literal(pair: Pair<'_>) -> RangeExpression {
+    fn parse_nullish_coalescing(pair: Pair<'_>) -> NullishCoalescing {
         let span = Self::parse_span(&pair);
-        let mut expressions: Vec<Expression> = vec![];
+        let mut expressions = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::operand => expressions.push(Self::parse_expression(current).kind),
+                _ => panic!()
+            }
+        }
+        NullishCoalescing { expressions, span }
+    }
+
+    fn parse_range_literal(pair: Pair<'_>) -> RangeLiteral {
+        let span = Self::parse_span(&pair);
+        let mut expressions: Vec<ExpressionKind> = vec![];
         let mut closed = false;
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::expression => expressions.push(Self::parse_expression(current)),
+                Rule::expression => expressions.push(Self::parse_expression(current).kind),
                 Rule::RANGE_OPEN => closed = false,
                 Rule::RANGE_CLOSE => closed = true,
                 _ => panic!(),
@@ -361,31 +374,31 @@ impl Parser {
         RangeLiteral { closed, expressions, span }
     }
 
-    fn parse_tuple_literal(pair: Pair<'_>) -> TupleExpression {
+    fn parse_tuple_literal(pair: Pair<'_>) -> TupleLiteral {
         let span = Self::parse_span(&pair);
-        let mut expressions: Vec<Expression> = vec![];
+        let mut expressions: Vec<ExpressionKind> = vec![];
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::expression => expressions.push(Self::parse_expression(current)),
+                Rule::expression => expressions.push(Self::parse_expression(current).kind),
                 _ => panic!(),
             }
         }
         TupleLiteral { expressions, span }
     }
 
-    fn parse_array_literal(pair: Pair<'_>) -> ArrayExpression {
+    fn parse_array_literal(pair: Pair<'_>) -> ArrayLiteral {
         let span = Self::parse_span(&pair);
-        let mut expressions: Vec<Expression> = vec![];
+        let mut expressions: Vec<ExpressionKind> = vec![];
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::expression => expressions.push(Self::parse_expression(current)),
+                Rule::expression => expressions.push(Self::parse_expression(current).kind),
                 _ => panic!(),
             }
         }
         ArrayLiteral { expressions, span }
     }
 
-    fn parse_dictionary_literal(pair: Pair<'_>) -> DictionaryExpression {
+    fn parse_dictionary_literal(pair: Pair<'_>) -> DictionaryLiteral {
         panic!()
     }
 

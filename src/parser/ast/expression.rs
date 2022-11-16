@@ -12,6 +12,25 @@ use crate::parser::ast::span::Span;
 use crate::prelude::Value;
 
 #[derive(Debug, Clone)]
+pub(crate) struct NullishCoalescing {
+    pub(crate) expressions: Vec<ExpressionKind>,
+    pub(crate) span: Span,
+}
+
+impl Display for NullishCoalescing {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let len = self.expressions.len();
+        for (index, expression) in self.expressions.iter().enumerate() {
+            Display::fmt(expression, f)?;
+            if index != len - 1 {
+                f.write_str(" ?? ")?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
 pub(crate) struct NumericLiteral {
     pub(crate) value: String,
     pub(crate) span: Span,
@@ -87,7 +106,7 @@ impl Display for EnumChoiceLiteral {
 #[derive(Debug, Clone)]
 pub(crate) struct RangeLiteral {
     pub(crate) closed: bool,
-    pub(crate) expressions: Vec<Expression>,
+    pub(crate) expressions: Vec<ExpressionKind>,
     pub(crate) span: Span,
 }
 
@@ -106,7 +125,7 @@ impl Display for RangeLiteral {
 
 #[derive(Debug, Clone)]
 pub(crate) struct TupleLiteral {
-    pub(crate) expressions: Vec<Expression>,
+    pub(crate) expressions: Vec<ExpressionKind>,
     pub(crate) span: Span,
 }
 
@@ -126,7 +145,7 @@ impl Display for TupleLiteral {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ArrayLiteral {
-    pub(crate) expressions: Vec<Expression>,
+    pub(crate) expressions: Vec<ExpressionKind>,
     pub(crate) span: Span,
 }
 
@@ -146,7 +165,7 @@ impl Display for ArrayLiteral {
 
 #[derive(Debug, Clone)]
 pub(crate) struct DictionaryLiteral {
-    pub(crate) expressions: Vec<(Expression, Expression)>,
+    pub(crate) expressions: Vec<(ExpressionKind, ExpressionKind)>,
     pub(crate) span: Span,
 }
 
@@ -168,6 +187,7 @@ impl Display for DictionaryLiteral {
 
 #[derive(Debug, Clone)]
 pub(crate) enum ExpressionKind {
+    NullishCoalescing(NullishCoalescing),
     NumericLiteral(NumericLiteral),
     StringLiteral(StringLiteral),
     RegExpLiteral(RegExpLiteral),
