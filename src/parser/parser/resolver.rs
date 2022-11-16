@@ -90,10 +90,6 @@ impl Resolver {
             ExpressionKind::DictionaryLiteral(d) => {
                 Self::resolve_dictionary_literal(d, source.clone(), parser)
             }
-            ExpressionKind::Path(p) => {
-            }
-            ExpressionKind::Call(c) => {
-            }
             ExpressionKind::Pipeline(p) => {
             }
         }

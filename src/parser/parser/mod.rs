@@ -6,7 +6,6 @@ use std::fs;
 use std::sync::{Arc, Mutex};
 use pest::Parser as PestParser;
 use crate::parser::ast::argument::Argument;
-use crate::parser::ast::call::Call;
 use crate::parser::ast::client::Client;
 use crate::parser::ast::config::Config;
 use crate::parser::ast::connector::Connector;
@@ -25,6 +24,7 @@ use crate::parser::ast::r#type::{Arity, Type};
 use crate::parser::ast::source::Source;
 use crate::parser::ast::span::Span;
 use crate::parser::ast::top::Top;
+use crate::parser::ast::unit::Unit;
 use crate::parser::parser::resolver::Resolver;
 
 #[derive(pest_derive::Parser)]
@@ -243,37 +243,30 @@ impl Parser {
 
     fn parse_decorator(pair: Pair<'_>) -> Decorator {
         let span = Self::parse_span(&pair);
-        let call = Self::parse_call(pair);
-        Decorator { call, span }
-    }
-
-    fn parse_call(pair: Pair<'_>) -> Call {
-        let span = Self::parse_span(&pair);
-        let mut path: Option<Path> = None;
-        let mut arguments: Vec<Argument> = vec![];
+        let mut unit: Option<Unit> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::path => path = Some(Self::parse_path(current)),
-                Rule::argument_list => arguments = Self::parse_arguments(current),
+                Rule::identifier_unit => unit = Some(Self::parse_unit(current)),
                 _ => panic!(),
             }
         }
-        Call { path: path.unwrap(), arguments, span }
+        Decorator {
+            unit: unit.unwrap(),
+            span,
+        }
     }
 
     fn parse_pipeline(pair: Pair<'_>) -> Pipeline {
         let span = Self::parse_span(&pair);
-        let mut path: Option<Path> = None;
-        let mut arguments: Vec<Argument> = vec![];
+        let mut unit: Option<Unit> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::path => path = Some(Self::parse_path(current)),
-                Rule::argument_list => arguments = Self::parse_arguments(current),
+                Rule::identifier_unit => unit = Some(Self::parse_unit(current)),
                 _ => panic!(),
             }
         }
         Pipeline {
-            call: Call { path: path.unwrap(), arguments, span: span.clone() },
+            unit: unit.unwrap(),
             span,
         }
     }
@@ -292,18 +285,18 @@ impl Parser {
     fn parse_argument(pair: Pair<'_>) -> Argument {
         let span = Self::parse_span(&pair);
         let mut name: Option<Identifier> = None;
-        let mut value: Option<Expression> = None;
+        let mut value: Option<ExpressionKind> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::named_argument => {
                     return Self::parse_named_argument(current);
                 },
-                Rule::expression => value = Some(Self::parse_expression(current)),
+                Rule::expression => value = Some(Self::parse_expression(current).kind),
                 Rule::empty_argument => panic!("Empty argument found."),
                 _ => panic!(),
             }
         }
-        Argument { name, value: value.unwrap(), span, resolved: None }
+        Argument { name, value: value.unwrap(), span }
     }
 
     fn parse_named_argument(pair: Pair<'_>) -> Argument {

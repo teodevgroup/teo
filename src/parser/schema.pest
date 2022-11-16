@@ -1,6 +1,6 @@
 schema = {
     SOI
-    ~ (config_declaration | enum_declaration | model_declaration | comment_block | let_declaration | EMPTY_LINES | CATCH_ALL)*
+    ~ (import_statement | config_declaration | enum_declaration | model_declaration | comment_block | let_declaration | EMPTY_LINES | CATCH_ALL)*
     ~ EOI
 }
 
@@ -27,10 +27,9 @@ CATCH_ALL = { (!NEWLINE ~ ANY)+ ~ NEWLINE? }
 BLOCK_LEVEL_CATCH_ALL = { !BLOCK_CLOSE ~ CATCH_ALL }
 
 // #############
-// identifier & path
+// identifier
 // #############
 identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | "-" | ASCII_ALPHANUMERIC)* }
-path = { identifier ~ ("." ~ path?)* }
 
 // #############
 // type
@@ -154,6 +153,11 @@ unit = {
     ~ (subscript | argument_list | "." ~ identifier)*
 }
 
+identifier_unit = {
+    identifier
+    ~ (subscript | argument_list | "." ~ identifier)*
+}
+
 unit_without_range_literal = {
     group |
     null_literal |
@@ -192,9 +196,9 @@ named_argument = { identifier ~ ":" ~ expression }
 // #############
 // function call, decorator and pipeline
 // #############
-item_decorator = { "@" ~ path ~ argument_list? }
-block_decorator = { "@@" ~ path ~ argument_list? }
-pipeline = { "$" ~ identifier ~ argument_list? ~ ("." ~ ((identifier ~ argument_list) | identifier))* }
+item_decorator = { "@" ~ identifier_unit }
+block_decorator = { "@@" ~ identifier_unit }
+pipeline = { "$" ~ identifier_unit }
 
 // #############
 // config blocks
