@@ -141,11 +141,8 @@ group = { "(" ~ expression ~ ")" }
 literal_without_range = { null_literal | bool_literal | numeric_literal | string_literal | regexp_literal | enum_choice_literal | tuple_literal | array_literal | dictionary_literal }
 call = { path ~ arguments_list+ }
 
-chain = { null_literal | bool_literal | numeric_literal | string_literal | regexp_literal | enum_choice_literal | tuple_literal | array_literal | dictionary_literal | range_literal | path | call | subscript ~ (subscript_item | arguments_list | "." ~ path | call | subscript)* }
-chain_without_range_literal = { literal_without_range | path | call | subscript ~ (subscript_item | arguments_list | "." ~ path | call | subscript)* }
-
-expression = {
-    nullish_coalescing |
+chain = {
+    group |
     null_literal |
     bool_literal |
     numeric_literal |
@@ -156,10 +153,14 @@ expression = {
     array_literal |
     dictionary_literal |
     range_literal |
-    path |
-    call |
-    pipeline |
-    subscript |
+    path
+    ~ (subscript_item | arguments_list | "." ~ path)*
+}
+
+chain_without_range_literal = { literal_without_range | path | call | subscript ~ (subscript_item | arguments_list | "." ~ path | call | subscript)* }
+
+expression = {
+    nullish_coalescing |
     chain
 }
 
