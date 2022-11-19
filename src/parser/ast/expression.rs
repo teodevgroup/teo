@@ -7,7 +7,6 @@ use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::group::Group;
 use crate::parser::ast::pipeline::Pipeline;
 use crate::parser::ast::identifier::Identifier;
-use crate::parser::ast::path::Path;
 use crate::parser::ast::span::Span;
 use crate::parser::ast::subscript::Subscript;
 use crate::parser::ast::unit::Unit;

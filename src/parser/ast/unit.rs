@@ -1,9 +1,11 @@
 use std::fmt::{Display, Formatter};
 use crate::parser::ast::expression::ExpressionKind;
+use crate::parser::ast::span::Span;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Unit {
     pub(crate) expressions: Vec<ExpressionKind>,
+    pub(crate) span: Span,
 }
 
 impl Display for Unit {

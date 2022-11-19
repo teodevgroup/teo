@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::fs;
 use std::sync::{Arc, Mutex};
 use pest::Parser as PestParser;
-use crate::parser::ast::argument::Argument;
+use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::client::Client;
 use crate::parser::ast::config::Config;
 use crate::parser::ast::connector::Connector;
@@ -18,12 +18,12 @@ use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::import::Import;
 use crate::parser::ast::item::Item;
 use crate::parser::ast::model::Model;
-use crate::parser::ast::path::Path;
 use crate::parser::ast::pipeline::Pipeline;
 use crate::parser::ast::r#enum::{Enum, EnumChoice};
 use crate::parser::ast::r#type::{Arity, Type};
 use crate::parser::ast::source::Source;
 use crate::parser::ast::span::Span;
+use crate::parser::ast::subscript::Subscript;
 use crate::parser::ast::top::Top;
 use crate::parser::ast::unit::Unit;
 use crate::parser::parser::resolver::Resolver;
@@ -272,17 +272,6 @@ impl Parser {
         }
     }
 
-    fn parse_arguments(pair: Pair<'_>) -> Vec<Argument> {
-        let mut arguments: Vec<Argument> = vec![];
-        for current in pair.into_inner() {
-            match current.as_rule() {
-                Rule::argument => arguments.push(Self::parse_argument(current)),
-                _ => panic!(),
-            }
-        }
-        arguments
-    }
-
     fn parse_argument(pair: Pair<'_>) -> Argument {
         let span = Self::parse_span(&pair);
         let mut name: Option<Identifier> = None;
@@ -342,18 +331,37 @@ impl Parser {
                     Rule::regexp_literal => return ExpressionKind::RegExpLiteral(RegExpLiteral { value: current.as_str().to_string(), span }),
                     Rule::enum_choice_literal => return ExpressionKind::EnumChoiceLiteral(EnumChoiceLiteral { value: current.as_str().to_string(), span }),
                     Rule::tuple_literal => return ExpressionKind::TupleLiteral(Self::parse_tuple_literal(current)),
-                    Rule::array_literal => ExpressionKind::ArrayLiteral(Self::parse_array_literal(current)),
+                    Rule::array_literal => return ExpressionKind::ArrayLiteral(Self::parse_array_literal(current)),
                     Rule::dictionary_literal => return ExpressionKind::DictionaryLiteral(Self::parse_dictionary_literal(current)),
                     Rule::range_literal => return ExpressionKind::RangeLiteral(Self::parse_range_literal(current)),
                     Rule::identifier => return ExpressionKind::Identifier(Self::parse_identifier(&current)),
+                    _ => panic!(),
                 }
-
             }
+            panic!();
         } else {
-
+            let mut unit = Unit { expressions: vec![], span };
+            for current in pair.into_inner() {
+                match current.as_rule() {
+                    Rule::group => unit.expressions.push(ExpressionKind::Group(Self::parse_group(current))),
+                    Rule::null_literal => unit.expressions.push(ExpressionKind::NullLiteral(NullLiteral { value: current.as_str().to_string(), span })),
+                    Rule::bool_literal => unit.expressions.push(ExpressionKind::BoolLiteral(BoolLiteral { value: current.as_str().to_string(), span })),
+                    Rule::numeric_literal => unit.expressions.push(ExpressionKind::NumericLiteral(NumericLiteral { value: current.as_str().to_string(), span })),
+                    Rule::string_literal => unit.expressions.push(ExpressionKind::StringLiteral(StringLiteral { value: current.as_str().to_string(), span })),
+                    Rule::regexp_literal => unit.expressions.push(ExpressionKind::RegExpLiteral(RegExpLiteral { value: current.as_str().to_string(), span })),
+                    Rule::enum_choice_literal => unit.expressions.push(ExpressionKind::EnumChoiceLiteral(EnumChoiceLiteral { value: current.as_str().to_string(), span })),
+                    Rule::tuple_literal => unit.expressions.push(ExpressionKind::TupleLiteral(Self::parse_tuple_literal(current))),
+                    Rule::array_literal => unit.expressions.push(ExpressionKind::ArrayLiteral(Self::parse_array_literal(current))),
+                    Rule::dictionary_literal => unit.expressions.push(ExpressionKind::DictionaryLiteral(Self::parse_dictionary_literal(current))),
+                    Rule::range_literal => unit.expressions.push(ExpressionKind::RangeLiteral(Self::parse_range_literal(current))),
+                    Rule::identifier => unit.expressions.push(ExpressionKind::Identifier(Self::parse_identifier(&current))),
+                    Rule::subscript => unit.expressions.push(ExpressionKind::Subscript(Self::parse_subscript(current))),
+                    Rule::argument_list => unit.expressions.push(ExpressionKind::ArgumentList(Self::parse_argument_list(current))),
+                    _ => panic!(),
+                }
+            }
+            return ExpressionKind::Unit(unit);
         }
-
-        panic!();
     }
 
     fn parse_identifier_unit(pair: Pair<'_>) -> Unit {
@@ -372,11 +380,34 @@ impl Parser {
         NullishCoalescing { expressions, span }
     }
 
+    fn parse_subscript(pair: Pair<'_>) -> Subscript {
+        let span = Self::parse_span(&pair);
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::expression => return Subscript { expression: Box::new(Self::parse_expression_kind(current)), span },
+                _ => panic!(),
+            }
+        }
+        panic!()
+    }
+
+    fn parse_argument_list(pair: Pair<'_>) -> ArgumentList {
+        let span = Self::parse_span(&pair);
+        let mut arguments: Vec<Argument> = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::argument => arguments.push(Self::parse_argument(current)),
+                _ => panic!(),
+            }
+        }
+        ArgumentList { arguments, span }
+    }
+
     fn parse_group(pair: Pair<'_>) -> Group {
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::expression => return Group { expression: Box::new(Self::parse_expression(current)), span },
+                Rule::expression => return Group { expression: Box::new(Self::parse_expression_kind(current)), span },
                 _ => panic!(),
             }
         }
