@@ -425,20 +425,6 @@ impl Parser {
     fn parse_dictionary_literal(pair: Pair<'_>) -> DictionaryLiteral {
         panic!()
     }
-
-    fn parse_path(pair: Pair<'_>) -> Path {
-        let span = Self::parse_span(&pair);
-        let mut identifiers: Vec<Identifier> = vec![];
-        println!("see this path: {:?}", pair);
-        for current in pair.into_inner() {
-            match current.as_rule() {
-                Rule::identifier => identifiers.push(Self::parse_identifier(&current)),
-                Rule::path => identifiers.extend(Self::parse_path(current).identifiers),
-                _ => panic!(),
-            }
-        }
-        Path { identifiers, span }
-    }
     
     fn parse_type(pair: Pair<'_>) -> Type {
         let mut identifier = None;
