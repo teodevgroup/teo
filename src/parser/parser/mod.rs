@@ -97,6 +97,7 @@ impl Parser {
                 Rule::model_declaration => tops.push(self.parse_model(current, id)),
                 Rule::enum_declaration => tops.push(self.parse_enum(current, id)),
                 Rule::config_declaration => tops.push(self.parse_config_block(current, id)),
+                Rule::let_declaration => tops.push(self.parse_let_declaration(current, id)),
                 Rule::EOI | Rule::EMPTY_LINES => {},
                 Rule::CATCH_ALL => panic!("Found catch all."),
                 _ => panic!("Parsing panic!"),
@@ -200,6 +201,10 @@ impl Parser {
         })));
         self.tops.insert(result.lock().unwrap().id(), result.clone());
         result
+    }
+
+    fn parse_let_declaration(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Mutex<Top>> {
+
     }
 
     fn parse_config_block(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Mutex<Top>> {

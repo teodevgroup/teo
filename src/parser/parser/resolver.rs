@@ -6,6 +6,7 @@ use snailquote::unescape;
 use crate::core::database::name::DatabaseName;
 use crate::core::tson::range::Range;
 use crate::parser::ast::expression::{ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
+use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::source::Source;
 use crate::parser::parser::Parser;
 use crate::prelude::Value;
@@ -51,15 +52,16 @@ impl Resolver {
     }
 
     // Expression
+
     pub(crate) fn resolve_expression<'a>(expression: &'a mut Expression, source: Arc<Mutex<Source>>, parser: &Parser) -> &'a Value {
         expression.resolved = Some(Self::resolve_expression_kind(&expression.kind, source.clone(), parser));
         expression.resolved.as_ref().unwrap()
     }
+
     pub(crate) fn resolve_expression_kind(expression: &ExpressionKind, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
         match expression {
             ExpressionKind::Group(g) => {
-                //Self::resolve_group(g, source.clone(), parser);
-                panic!()
+                Self::resolve_group(g, source.clone(), parser)
             }
             ExpressionKind::NullishCoalescing(n) => {
                 Self::resolve_nullish_coalescing(n, source.clone(), parser)
@@ -95,26 +97,30 @@ impl Resolver {
                 Self::resolve_dictionary_literal(d, source.clone(), parser)
             }
             ExpressionKind::Pipeline(p) => {
-                panic!();
-                //Self::resolve_pipeline(p, source.clone(), parser)
+                Self::resolve_pipeline(p, source.clone(), parser)
             }
             ExpressionKind::Identifier(i) => {
-                panic!();
-                //Self::resolve_identifier(i, source.clone(), parser, None)
+                Self::resolve_identifier(i, source.clone(), parser, None)
             }
             ExpressionKind::ArgumentList(a) => {
-                panic!();
-                //Self::resolve_argument_list(a, source.clone(), parser)
+                Self::resolve_argument_list(a, source.clone(), parser)
             }
             ExpressionKind::Subscript(s) => {
                 panic!("Subscript cannot appear alone.")
             }
             ExpressionKind::Unit(u) => {
-                panic!();
-                //Self::resolve_unit(u, source.clone(), parser)
+                Self::resolve_unit(u, source.clone(), parser)
             }
         }
     }
+
+    // identifier
+
+    fn resolve_identifier(i: Identifier, source: Arc<Mutex<Source>>, parser: &Parser) -> Reference {
+
+    }
+
+    // literals and operators
 
     fn resolve_numeric_literal(n: &NumericLiteral) -> Value {
         let i = i64::from_str(&n.value);
