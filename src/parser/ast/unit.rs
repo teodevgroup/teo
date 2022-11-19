@@ -10,10 +10,11 @@ pub(crate) struct Unit {
 
 impl Display for Unit {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        Display::fmt(&self.head, f)?;
-        for item in self.expressions.iter() {
-            if item.as_identifier().is_some() {
-                f.write_str(".")?;
+        for (index, item) in self.expressions.iter().enumerate() {
+            if index != 0 {
+                if item.as_identifier().is_some() {
+                    f.write_str(".")?;
+                }
             }
             Display::fmt(&item, f)?;
         }

@@ -244,30 +244,30 @@ impl Parser {
 
     fn parse_decorator(pair: Pair<'_>) -> Decorator {
         let span = Self::parse_span(&pair);
-        let mut unit: Option<Unit> = None;
+        let mut unit: Option<ExpressionKind> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::identifier_unit => unit = Some(Self::parse_identifier_unit(current)),
+                Rule::identifier_unit => unit = Some(Self::parse_unit(current)),
                 _ => panic!(),
             }
         }
         Decorator {
-            unit: unit.unwrap(),
+            expression: unit.unwrap(),
             span,
         }
     }
 
     fn parse_pipeline(pair: Pair<'_>) -> Pipeline {
         let span = Self::parse_span(&pair);
-        let mut unit: Option<Unit> = None;
+        let mut unit: Option<ExpressionKind> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::identifier_unit => unit = Some(Self::parse_identifier_unit(current)),
+                Rule::identifier_unit => unit = Some(Self::parse_unit(current)),
                 _ => panic!(),
             }
         }
         Pipeline {
-            unit: unit.unwrap(),
+            expression: Box::new(unit.unwrap()),
             span,
         }
     }
@@ -365,16 +365,12 @@ impl Parser {
         }
     }
 
-    fn parse_identifier_unit(pair: Pair<'_>) -> Unit {
-
-    }
-
     fn parse_nullish_coalescing(pair: Pair<'_>) -> NullishCoalescing {
         let span = Self::parse_span(&pair);
         let mut expressions = vec![];
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::operand => expressions.push(Self::parse_expression(current).kind),
+                Rule::unit => expressions.push(Self::parse_unit(current)),
                 _ => panic!()
             }
         }
@@ -385,7 +381,7 @@ impl Parser {
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::expression => return Subscript { expression: Box::new(Self::parse_expression_kind(current)), span },
+                Rule::expression => return Subscript { expression: Box::new(Self::parse_expression(current).kind), span },
                 _ => panic!(),
             }
         }
@@ -408,7 +404,7 @@ impl Parser {
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::expression => return Group { expression: Box::new(Self::parse_expression_kind(current)), span },
+                Rule::expression => return Group { expression: Box::new(Self::parse_expression(current).kind), span },
                 _ => panic!(),
             }
         }
