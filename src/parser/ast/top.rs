@@ -1,6 +1,7 @@
 use crate::parser::ast::client::Client;
 use crate::parser::ast::config::Config;
 use crate::parser::ast::connector::Connector;
+use crate::parser::ast::constant::Constant;
 use crate::parser::ast::generator::Generator;
 use crate::parser::ast::import::Import;
 use crate::parser::ast::model::Model;
@@ -15,6 +16,7 @@ pub(crate) enum Top {
     Generator(Generator),
     Client(Client),
     Config(Config),
+    Constant(Constant),
 }
 
 impl Top {
@@ -79,6 +81,13 @@ impl Top {
         match self {
             Top::Config(i) => Some(i),
             _ => None
+        }
+    }
+
+    pub(crate) fn as_constant(&self) -> Option<&Constant> {
+        match self {
+            Top::Constant(c) => Some(c),
+            _ => None,
         }
     }
 }

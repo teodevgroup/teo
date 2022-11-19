@@ -7,6 +7,7 @@ use crate::core::database::name::DatabaseName;
 use crate::core::tson::range::Range;
 use crate::parser::ast::expression::{ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
 use crate::parser::ast::identifier::Identifier;
+use crate::parser::ast::reference::Reference;
 use crate::parser::ast::source::Source;
 use crate::parser::parser::Parser;
 use crate::prelude::Value;
@@ -117,7 +118,7 @@ impl Resolver {
     // identifier
 
     fn resolve_identifier(i: Identifier, source: Arc<Mutex<Source>>, parser: &Parser) -> Reference {
-
+        panic!()
     }
 
     // literals and operators

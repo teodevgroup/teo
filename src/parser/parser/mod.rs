@@ -9,6 +9,7 @@ use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::client::Client;
 use crate::parser::ast::config::Config;
 use crate::parser::ast::connector::Connector;
+use crate::parser::ast::constant::Constant;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral, RegExpLiteral, NullishCoalescing};
 use crate::parser::ast::field::Field;
@@ -86,6 +87,7 @@ impl Parser {
         let pairs = pairs.next().unwrap();
         let mut tops: Vec<Arc<Mutex<Top>>> = vec![];
         let mut imports: Vec<Arc<Mutex<Top>>> = vec![];
+        let mut constants: Vec<Arc<Mutex<Top>>> = vec![];
         let mut pairs = pairs.into_inner().peekable();
         while let Some(current) = pairs.next() {
             match current.as_rule() {
@@ -94,16 +96,20 @@ impl Parser {
                     tops.push(import.clone());
                     imports.push(import.clone());
                 },
+                Rule::let_declaration => {
+                    let constant = self.parse_let_declaration(current, id);
+                    tops.push(constant.clone());
+                    imports.push(constant.clone());
+                },
                 Rule::model_declaration => tops.push(self.parse_model(current, id)),
                 Rule::enum_declaration => tops.push(self.parse_enum(current, id)),
                 Rule::config_declaration => tops.push(self.parse_config_block(current, id)),
-                Rule::let_declaration => tops.push(self.parse_let_declaration(current, id)),
                 Rule::EOI | Rule::EMPTY_LINES => {},
                 Rule::CATCH_ALL => panic!("Found catch all."),
                 _ => panic!("Parsing panic!"),
             }
         }
-        let result = Arc::new(Mutex::new(Source { id, path: path.clone(), tops, imports: imports.clone() }));
+        let result = Arc::new(Mutex::new(Source { id, path: path.clone(), tops, imports: imports.clone(), constants: constants.clone() }));
         self.sources.insert(id, result.clone());
         for import in imports {
             let import = import.lock().unwrap();
@@ -204,7 +210,17 @@ impl Parser {
     }
 
     fn parse_let_declaration(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Mutex<Top>> {
-
+        let span = Self::parse_span(&pair);
+        let mut identifier: Option<Identifier> = None;
+        let mut expression: Option<Expression> = None;
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
+                Rule::expression => expression = Some(Self::parse_expression(current)),
+                _ => panic!("error."),
+            }
+        }
+        Arc::new(Mutex::new(Top::Constant(Constant { identifier: identifier.unwrap(), expression: expression.unwrap(), span })))
     }
 
     fn parse_config_block(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Mutex<Top>> {

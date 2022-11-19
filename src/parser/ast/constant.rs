@@ -5,9 +5,9 @@ use crate::parser::ast::span::Span;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Constant {
-    identifier: Identifier,
-    expression: Expression,
-    span: Span,
+    pub(crate) identifier: Identifier,
+    pub(crate) expression: Expression,
+    pub(crate) span: Span,
 }
 
 impl Display for Constant {
