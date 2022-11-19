@@ -91,6 +91,24 @@ impl Resolver {
                 Self::resolve_dictionary_literal(d, source.clone(), parser)
             }
             ExpressionKind::Pipeline(p) => {
+                panic!();
+                //Self::resolve_pipeline(p, source.clone(), parser)
+            }
+            ExpressionKind::Identifier(i) => {
+                panic!();
+                //Self::resolve_identifier(i, source.clone(), parser, None)
+            }
+            ExpressionKind::ArgumentList(a) => {
+                panic!();
+                //Self::resolve_argument_list(a, source.clone(), parser)
+            }
+            ExpressionKind::Subscript(s) => {
+                panic!();
+                panic!("Subscript cannot appear alone.")
+            }
+            ExpressionKind::Unit(u) => {
+                panic!();
+                //Self::resolve_unit(u, source.clone(), parser)
             }
         }
     }

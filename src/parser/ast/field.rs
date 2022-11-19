@@ -4,7 +4,7 @@ use crate::parser::ast::r#type::Type;
 use crate::parser::ast::span::Span;
 
 #[derive(Debug)]
-pub enum FieldClass {
+pub(crate) enum FieldClass {
     Unresolved,
     Field,
     Relation,
@@ -12,7 +12,7 @@ pub enum FieldClass {
 }
 
 #[derive(Debug)]
-pub struct Field {
+pub(crate) struct Field {
     pub(crate) identifier: Identifier,
     pub(crate) r#type: Type,
     pub(crate) decorators: Vec<Decorator>,

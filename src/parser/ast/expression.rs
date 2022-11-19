@@ -4,6 +4,7 @@ use std::str::FromStr;
 
 use crate::core::tson::range::Range;
 use crate::parser::ast::argument::{Argument, ArgumentList};
+use crate::parser::ast::group::Group;
 use crate::parser::ast::pipeline::Pipeline;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::path::Path;
@@ -188,6 +189,7 @@ impl Display for DictionaryLiteral {
 
 #[derive(Debug, Clone)]
 pub(crate) enum ExpressionKind {
+    Group(Group),
     NullishCoalescing(NullishCoalescing),
     NumericLiteral(NumericLiteral),
     StringLiteral(StringLiteral),
