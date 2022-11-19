@@ -30,7 +30,7 @@ use crate::core::tson::range::Range;
 /// Represents any valid Tson value. A Tson value is an extension for Teo just like Bson for
 /// MongoDB.
 ///
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum Value {
 
     /// Represents a JSON null value.
@@ -1017,5 +1017,35 @@ impl Neg for &Value {
 
     fn neg(self) -> Self::Output {
         (self.clone()).neg()
+    }
+}
+
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        use Value::*;
+        match (self, other) {
+            (Null, Null) => true,
+            #[cfg(feature = "data-source-mongodb")]
+            (ObjectId(s), ObjectId(o)) => s == o,
+            (Bool(s), Bool(o)) => s == o,
+            (I8(s), I8(o)) => s == o,
+            (I16(s), I16(o)) => s == o,
+            (I32(s), I32(o)) => s == o,
+            (I64(s), I64(o)) => s == o,
+            (I128(s), I128(o)) => s == o,
+            (U8(s), U8(o)) => s == o,
+            (U16(s), U16(o)) => s == o,
+            (U32(s), U32(o)) => s == o,
+            (U64(s), U64(o)) => s == o,
+            (U128(s), U128(o)) => s == o,
+            (F32(s), F32(o)) => s == o,
+            (F64(s), F64(o)) => s == o,
+            (Decimal(s), Decimal(o)) => s == o,
+            (String(s), String(o)) => s == o,
+            (Date(s), Date(o)) => s == o,
+            (DateTime(s), DateTime(o)) => s == o,
+            (Vec(s), Vec(o)) => s == o,
+            _ => false,
+        }
     }
 }

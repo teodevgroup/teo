@@ -102,15 +102,16 @@ impl Parser {
                 _ => panic!("Parsing panic!"),
             }
         }
-        let result = Arc::new(Mutex::new(Source { id, path, tops, imports }));
+        let result = Arc::new(Mutex::new(Source { id, path: path.clone(), tops, imports: imports.clone() }));
         self.sources.insert(id, result.clone());
         for import in imports {
-            let import = import.lock().unwrap().as_import().unwrap();
+            let import = import.lock().unwrap();
+            let import = import.as_import().unwrap();
             let relative = unescape(&import.source.value).unwrap();
             let relative = PathBuf::from(relative);
             let mut dir = path.clone();
             dir.pop();
-            let new = dir.join(relative);
+            let new = dir.join(&relative);
             let absolute = match fs::canonicalize(&new) {
                 Ok(path) => path,
                 Err(_) => panic!("Schema file '{}' is not found.", relative.to_str().unwrap()),
@@ -286,7 +287,7 @@ impl Parser {
                 _ => panic!(),
             }
         }
-        Argument { name, value: value.unwrap(), span }
+        Argument { name, value: value.unwrap(), span, resolved: None }
     }
 
     fn parse_named_argument(pair: Pair<'_>) -> Argument {
@@ -301,7 +302,7 @@ impl Parser {
                 _ => panic!(),
             }
         }
-        Argument { name, value: value.unwrap(), span }
+        Argument { name, value: value.unwrap(), span, resolved: None }
     }
 
     fn parse_expression(pair: Pair<'_>) -> Expression {
@@ -397,7 +398,7 @@ impl Parser {
                 _ => panic!(),
             }
         }
-        ArgumentList { arguments, span }
+        ArgumentList { arguments, span, resolved: false }
     }
 
     fn parse_group(pair: Pair<'_>) -> Group {

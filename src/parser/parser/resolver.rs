@@ -57,6 +57,10 @@ impl Resolver {
     }
     pub(crate) fn resolve_expression_kind(expression: &ExpressionKind, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
         match expression {
+            ExpressionKind::Group(g) => {
+                //Self::resolve_group(g, source.clone(), parser);
+                panic!()
+            }
             ExpressionKind::NullishCoalescing(n) => {
                 Self::resolve_nullish_coalescing(n, source.clone(), parser)
             }
@@ -103,7 +107,6 @@ impl Resolver {
                 //Self::resolve_argument_list(a, source.clone(), parser)
             }
             ExpressionKind::Subscript(s) => {
-                panic!();
                 panic!("Subscript cannot appear alone.")
             }
             ExpressionKind::Unit(u) => {

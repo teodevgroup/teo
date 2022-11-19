@@ -9,6 +9,7 @@ pub struct Argument {
     pub(crate) name: Option<Identifier>,
     pub(crate) value: ExpressionKind,
     pub(crate) span: Span,
+    pub(crate) resolved: Option<Value>,
 }
 
 impl Display for Argument {
@@ -25,6 +26,7 @@ impl Display for Argument {
 pub struct ArgumentList {
     pub(crate) arguments: Vec<Argument>,
     pub(crate) span: Span,
+    pub(crate) resolved: bool,
 }
 
 impl Display for ArgumentList {

@@ -126,6 +126,8 @@ impl<'a> Display for Type<'a> {
             Value::Range(_) => formatter.write_str("range"),
             Value::Tuple(_) => formatter.write_str("tuple"),
             Value::Pipeline(_) => formatter.write_str("pipeline"),
+            Value::RawEnumChoice(_) => formatter.write_str("raw enum choice"),
+            Value::RegExp(_) => formatter.write_str("regular expression")
         }
     }
 }

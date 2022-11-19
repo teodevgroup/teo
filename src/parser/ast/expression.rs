@@ -423,6 +423,7 @@ impl ExpressionKind {
 impl Display for ExpressionKind {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            ExpressionKind::Group(g) => Display::fmt(g, f),
             ExpressionKind::NullishCoalescing(n) => Display::fmt(n, f),
             ExpressionKind::NumericLiteral(e) => Display::fmt(e, f),
             ExpressionKind::StringLiteral(s) => Display::fmt(s, f),

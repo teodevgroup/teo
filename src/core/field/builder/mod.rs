@@ -310,11 +310,11 @@ impl FieldBuilder {
         self
     }
 
-    pub fn auth_by<F>(&mut self, argument: F) -> &mut Self where F: Fn(&mut PipelineBuilder) -> () + Clone + 'static {
-        self.auth_by = true;
-        self.auth_by_arg = Some(argument.into());
-        self
-    }
+    // pub fn auth_by<F>(&mut self, argument: F) -> &mut Self where F: Fn(&mut PipelineBuilder) -> () + Clone + 'static {
+    //     self.auth_by = true;
+    //     self.auth_by_arg = Some(argument.into());
+    //     self
+    // }
 
     pub fn auto(&mut self) -> &mut Self {
         self.auto = true;
