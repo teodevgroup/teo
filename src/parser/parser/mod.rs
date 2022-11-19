@@ -120,7 +120,8 @@ impl Parser {
                 v.lock().unwrap().path == absolute
             });
             if found.is_none() {
-                self.parse_source(absolute, self.next_id());
+                let id = self.next_id();
+                self.parse_source(absolute, id);
             }
         }
         result
@@ -320,48 +321,29 @@ impl Parser {
 
     fn parse_unit(pair: Pair<'_>) -> ExpressionKind {
         let span = Self::parse_span(&pair);
-        let inner = pair.into_inner();
-        let len = inner.count();
-        if len == 1 {
-            for current in inner {
-                match current.as_rule() {
-                    Rule::group => return ExpressionKind::Group(Self::parse_group(current)),
-                    Rule::null_literal => return ExpressionKind::NullLiteral(NullLiteral { value: current.as_str().to_string(), span }),
-                    Rule::bool_literal => return ExpressionKind::BoolLiteral(BoolLiteral { value: current.as_str().to_string(), span }),
-                    Rule::numeric_literal => return ExpressionKind::NumericLiteral(NumericLiteral { value: current.as_str().to_string(), span }),
-                    Rule::string_literal => return ExpressionKind::StringLiteral(StringLiteral { value: current.as_str().to_string(), span }),
-                    Rule::regexp_literal => return ExpressionKind::RegExpLiteral(RegExpLiteral { value: current.as_str().to_string(), span }),
-                    Rule::enum_choice_literal => return ExpressionKind::EnumChoiceLiteral(EnumChoiceLiteral { value: current.as_str().to_string(), span }),
-                    Rule::tuple_literal => return ExpressionKind::TupleLiteral(Self::parse_tuple_literal(current)),
-                    Rule::array_literal => return ExpressionKind::ArrayLiteral(Self::parse_array_literal(current)),
-                    Rule::dictionary_literal => return ExpressionKind::DictionaryLiteral(Self::parse_dictionary_literal(current)),
-                    Rule::range_literal => return ExpressionKind::RangeLiteral(Self::parse_range_literal(current)),
-                    Rule::identifier => return ExpressionKind::Identifier(Self::parse_identifier(&current)),
-                    _ => panic!(),
-                }
+        let mut unit = Unit { expressions: vec![], span };
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::group => unit.expressions.push(ExpressionKind::Group(Self::parse_group(current))),
+                Rule::null_literal => unit.expressions.push(ExpressionKind::NullLiteral(NullLiteral { value: current.as_str().to_string(), span })),
+                Rule::bool_literal => unit.expressions.push(ExpressionKind::BoolLiteral(BoolLiteral { value: current.as_str().to_string(), span })),
+                Rule::numeric_literal => unit.expressions.push(ExpressionKind::NumericLiteral(NumericLiteral { value: current.as_str().to_string(), span })),
+                Rule::string_literal => unit.expressions.push(ExpressionKind::StringLiteral(StringLiteral { value: current.as_str().to_string(), span })),
+                Rule::regexp_literal => unit.expressions.push(ExpressionKind::RegExpLiteral(RegExpLiteral { value: current.as_str().to_string(), span })),
+                Rule::enum_choice_literal => unit.expressions.push(ExpressionKind::EnumChoiceLiteral(EnumChoiceLiteral { value: current.as_str().to_string(), span })),
+                Rule::tuple_literal => unit.expressions.push(ExpressionKind::TupleLiteral(Self::parse_tuple_literal(current))),
+                Rule::array_literal => unit.expressions.push(ExpressionKind::ArrayLiteral(Self::parse_array_literal(current))),
+                Rule::dictionary_literal => unit.expressions.push(ExpressionKind::DictionaryLiteral(Self::parse_dictionary_literal(current))),
+                Rule::range_literal => unit.expressions.push(ExpressionKind::RangeLiteral(Self::parse_range_literal(current))),
+                Rule::identifier => unit.expressions.push(ExpressionKind::Identifier(Self::parse_identifier(&current))),
+                Rule::subscript => unit.expressions.push(ExpressionKind::Subscript(Self::parse_subscript(current))),
+                Rule::argument_list => unit.expressions.push(ExpressionKind::ArgumentList(Self::parse_argument_list(current))),
+                _ => panic!(),
             }
-            panic!();
+        }
+        if unit.expressions.len() == 1 {
+            return unit.expressions.get(0).unwrap().clone()
         } else {
-            let mut unit = Unit { expressions: vec![], span };
-            for current in inner {
-                match current.as_rule() {
-                    Rule::group => unit.expressions.push(ExpressionKind::Group(Self::parse_group(current))),
-                    Rule::null_literal => unit.expressions.push(ExpressionKind::NullLiteral(NullLiteral { value: current.as_str().to_string(), span })),
-                    Rule::bool_literal => unit.expressions.push(ExpressionKind::BoolLiteral(BoolLiteral { value: current.as_str().to_string(), span })),
-                    Rule::numeric_literal => unit.expressions.push(ExpressionKind::NumericLiteral(NumericLiteral { value: current.as_str().to_string(), span })),
-                    Rule::string_literal => unit.expressions.push(ExpressionKind::StringLiteral(StringLiteral { value: current.as_str().to_string(), span })),
-                    Rule::regexp_literal => unit.expressions.push(ExpressionKind::RegExpLiteral(RegExpLiteral { value: current.as_str().to_string(), span })),
-                    Rule::enum_choice_literal => unit.expressions.push(ExpressionKind::EnumChoiceLiteral(EnumChoiceLiteral { value: current.as_str().to_string(), span })),
-                    Rule::tuple_literal => unit.expressions.push(ExpressionKind::TupleLiteral(Self::parse_tuple_literal(current))),
-                    Rule::array_literal => unit.expressions.push(ExpressionKind::ArrayLiteral(Self::parse_array_literal(current))),
-                    Rule::dictionary_literal => unit.expressions.push(ExpressionKind::DictionaryLiteral(Self::parse_dictionary_literal(current))),
-                    Rule::range_literal => unit.expressions.push(ExpressionKind::RangeLiteral(Self::parse_range_literal(current))),
-                    Rule::identifier => unit.expressions.push(ExpressionKind::Identifier(Self::parse_identifier(&current))),
-                    Rule::subscript => unit.expressions.push(ExpressionKind::Subscript(Self::parse_subscript(current))),
-                    Rule::argument_list => unit.expressions.push(ExpressionKind::ArgumentList(Self::parse_argument_list(current))),
-                    _ => panic!(),
-                }
-            }
             return ExpressionKind::Unit(unit);
         }
     }
