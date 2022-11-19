@@ -319,9 +319,10 @@ impl Parser {
 
     fn parse_unit(pair: Pair<'_>) -> ExpressionKind {
         let span = Self::parse_span(&pair);
-        let len = pair.count();
+        let inner = pair.into_inner();
+        let len = inner.count();
         if len == 1 {
-            for current in pair.into_inner() {
+            for current in inner {
                 match current.as_rule() {
                     Rule::group => return ExpressionKind::Group(Self::parse_group(current)),
                     Rule::null_literal => return ExpressionKind::NullLiteral(NullLiteral { value: current.as_str().to_string(), span }),
@@ -341,7 +342,7 @@ impl Parser {
             panic!();
         } else {
             let mut unit = Unit { expressions: vec![], span };
-            for current in pair.into_inner() {
+            for current in inner {
                 match current.as_rule() {
                     Rule::group => unit.expressions.push(ExpressionKind::Group(Self::parse_group(current))),
                     Rule::null_literal => unit.expressions.push(ExpressionKind::NullLiteral(NullLiteral { value: current.as_str().to_string(), span })),
