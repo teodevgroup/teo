@@ -20,7 +20,7 @@ use crate::core::model::Model;
 use crate::core::property::Property;
 use crate::core::relation::Relation;
 use crate::parser::ast::argument::Argument;
-use crate::parser::ast::object::Object;
+use crate::parser::ast::object::Accessible;
 use crate::parser::std::decorators::field::atomic::{atomic_decorator};
 use crate::parser::std::decorators::field::db::db_container;
 use crate::parser::std::decorators::field::id::{id_decorator};
@@ -37,32 +37,32 @@ use crate::parser::std::decorators::field::writeonly::{writeonly_decorator};
 use crate::prelude::Value;
 
 pub(crate) struct GlobalFieldDecorators {
-    objects: HashMap<String, Object>
+    objects: HashMap<String, Accessible>
 }
 
 impl GlobalFieldDecorators {
     pub(crate) fn new(database_name: DatabaseName) -> GlobalFieldDecorators {
-        let mut objects: HashMap<String, Object> = HashMap::new();
-        objects.insert("db".to_owned(), Object::Container(db_container(database_name)));
-        objects.insert("id".to_owned(), Object::FieldDecorator(id_decorator));
-        objects.insert("internal".to_owned(), Object::FieldDecorator(internal_decorator));
-        objects.insert("readonly".to_owned(), Object::FieldDecorator(readonly_decorator));
-        objects.insert("writeonly".to_owned(), Object::FieldDecorator(writeonly_decorator));
-        objects.insert("readwrite".to_owned(), Object::FieldDecorator(readwrite_decorator));
-        objects.insert("writeNonnull".to_owned(), Object::FieldDecorator(write_nonnull_decorator));
-        objects.insert("writeOnCreate".to_owned(), Object::FieldDecorator(write_on_create_decorator));
-        objects.insert("writeOnce".to_owned(), Object::FieldDecorator(write_once_decorator));
-        objects.insert("readIf".to_owned(), Object::FieldDecorator(read_if_decorator));
-        objects.insert("writeIf".to_owned(), Object::FieldDecorator(write_if_decorator));
-        objects.insert("atomic".to_owned(), Object::FieldDecorator(atomic_decorator));
-        objects.insert("nonatomic".to_owned(), Object::FieldDecorator(nonatomic_decorator));
+        let mut objects: HashMap<String, Accessible> = HashMap::new();
+        objects.insert("db".to_owned(), Accessible::Container(db_container(database_name)));
+        objects.insert("id".to_owned(), Accessible::FieldDecorator(id_decorator));
+        objects.insert("internal".to_owned(), Accessible::FieldDecorator(internal_decorator));
+        objects.insert("readonly".to_owned(), Accessible::FieldDecorator(readonly_decorator));
+        objects.insert("writeonly".to_owned(), Accessible::FieldDecorator(writeonly_decorator));
+        objects.insert("readwrite".to_owned(), Accessible::FieldDecorator(readwrite_decorator));
+        objects.insert("writeNonnull".to_owned(), Accessible::FieldDecorator(write_nonnull_decorator));
+        objects.insert("writeOnCreate".to_owned(), Accessible::FieldDecorator(write_on_create_decorator));
+        objects.insert("writeOnce".to_owned(), Accessible::FieldDecorator(write_once_decorator));
+        objects.insert("readIf".to_owned(), Accessible::FieldDecorator(read_if_decorator));
+        objects.insert("writeIf".to_owned(), Accessible::FieldDecorator(write_if_decorator));
+        objects.insert("atomic".to_owned(), Accessible::FieldDecorator(atomic_decorator));
+        objects.insert("nonatomic".to_owned(), Accessible::FieldDecorator(nonatomic_decorator));
         Self { objects }
     }
 }
 
 impl GlobalFieldDecorators {
 
-    fn get(&self, key: &str) -> &Object {
+    fn get(&self, key: &str) -> &Accessible {
         match self.objects.get(key) {
             Some(o) => o.clone(),
             None => panic!("Object with key '{}' is not found.", key),

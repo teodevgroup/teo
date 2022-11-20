@@ -6,6 +6,7 @@ use snailquote::unescape;
 use crate::core::database::name::DatabaseName;
 use crate::core::tson::range::Range;
 use crate::parser::ast::expression::{ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
+use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::reference::Reference;
 use crate::parser::ast::source::Source;
@@ -97,9 +98,6 @@ impl Resolver {
             ExpressionKind::DictionaryLiteral(d) => {
                 Self::resolve_dictionary_literal(d, source.clone(), parser)
             }
-            ExpressionKind::Pipeline(p) => {
-                Self::resolve_pipeline(p, source.clone(), parser)
-            }
             ExpressionKind::Identifier(i) => {
                 Self::resolve_identifier(i, source.clone(), parser, None)
             }
@@ -112,12 +110,19 @@ impl Resolver {
             ExpressionKind::Unit(u) => {
                 Self::resolve_unit(u, source.clone(), parser)
             }
+            ExpressionKind::Pipeline(p) => {
+                Self::resolve_pipeline(p, source.clone(), parser)
+            }
         }
     }
 
     // identifier
 
-    fn resolve_identifier(i: Identifier, source: Arc<Mutex<Source>>, parser: &Parser) -> Reference {
+    fn resolve_group(g: &Group, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+        Self::resolve_expression_kind(g.expression.as_ref(), source.clone(), parser)
+    }
+
+    fn resolve_identifier(i: &Identifier, source: Arc<Mutex<Source>>, parser: &Parser, parent: Option<Parent>) -> Reference {
         panic!()
     }
 

@@ -18,20 +18,20 @@ pub(crate) type PropertyDecorator = fn(args: Vec<Argument>, property: &mut Prope
 pub(crate) type ModelDecorator = fn(args: Vec<Argument>, model: &mut Model);
 
 pub(crate) struct Container {
-    pub(crate) objects: HashMap<String, Object>
+    pub(crate) objects: HashMap<String, Accessible>
 }
 
 impl Container {
     pub(crate) fn std_global_constants() -> Self {
         Self {
             objects: hashmap!{
-                "ENV".to_owned() => Object::Env(EnvObject {})
+                "ENV".to_owned() => Accessible::Env(EnvObject {})
             }
         }
     }
 }
 
-pub(crate) enum Object {
+pub(crate) enum Accessible {
     FieldDecorator(FieldDecorator),
     RelationDecorator(RelationDecorator),
     PropertyDecorator(PropertyDecorator),
