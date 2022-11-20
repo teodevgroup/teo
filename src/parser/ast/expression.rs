@@ -455,3 +455,9 @@ impl Expression {
         Self { kind, resolved: None }
     }
 }
+
+impl Display for Expression {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.kind, f)
+    }
+}

@@ -11,7 +11,6 @@ pub(crate) struct Constant {
     pub(crate) identifier: Identifier,
     pub(crate) expression: Expression,
     pub(crate) span: Span,
-    pub(crate) resolved: Option<Reference>,
 }
 
 impl Display for Constant {

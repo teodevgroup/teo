@@ -6,11 +6,14 @@ use snailquote::unescape;
 use crate::core::database::name::DatabaseName;
 use crate::core::tson::range::Range;
 use crate::parser::ast::accessible::Accessible;
+use crate::parser::ast::argument::ArgumentList;
 use crate::parser::ast::expression::{ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::Identifier;
+use crate::parser::ast::pipeline::Pipeline;
 use crate::parser::ast::reference::Reference;
 use crate::parser::ast::source::Source;
+use crate::parser::ast::unit::Unit;
 use crate::parser::parser::Parser;
 use crate::prelude::Value;
 
@@ -123,7 +126,19 @@ impl Resolver {
         Self::resolve_expression_kind(g.expression.as_ref(), source.clone(), parser)
     }
 
-    fn resolve_identifier(i: &Identifier, source: Arc<Mutex<Source>>, parser: &Parser, parent: Option<Accessible>) -> Reference {
+    fn resolve_identifier(i: &Identifier, source: Arc<Mutex<Source>>, parser: &Parser, parent: Option<Accessible>) -> Value {
+        panic!()
+    }
+
+    fn resolve_argument_list(a: &ArgumentList, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+        panic!()
+    }
+
+    fn resolve_unit(u: &Unit, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+        panic!()
+    }
+
+    fn resolve_pipeline(p: &Pipeline, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
         panic!()
     }
 
@@ -138,11 +153,11 @@ impl Resolver {
         if i.is_ok() {
             return Value::F64(i.unwrap());
         }
-        panic!("Cannot resolve numeric value: {}.", &n.value)
+        panic!("Cannot resolve numeric value: {}.", n.value.as_str())
     }
 
     fn resolve_string_literal(s: &StringLiteral) -> Value {
-        return Value::String(unescape(&s.value).unwrap());
+        return Value::String(unescape(s.value.as_str()).unwrap());
     }
 
     fn resolve_regexp_literal(r: &RegExpLiteral) -> Value {
@@ -153,7 +168,7 @@ impl Resolver {
         match b.value.as_str() {
             "true" => Value::Bool(true),
             "false" => Value::Bool(false),
-            _ => panic!("Cannot resolve bool value: {}", &b.value)
+            _ => panic!("Cannot resolve bool value: {}", b.value.as_str())
         }
     }
 
@@ -170,7 +185,7 @@ impl Resolver {
         let start = Box::new(a.clone());
         let b = Self::resolve_expression_kind(range.expressions.get(1).unwrap(), source.clone(), parser);
         let end = Box::new(b.clone());
-        Value::Range(Range { closed: range.closed, start, end })
+        Value::Range(Range { closed: range.closed.clone(), start, end })
     }
 
     fn resolve_tuple_literal(tuple: &TupleLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {

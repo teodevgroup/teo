@@ -145,7 +145,8 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        Arc::new(Mutex::new(Top::Import(Import { identifiers, source: source.unwrap(), span })))
+        let id = self.next_id();
+        Arc::new(Mutex::new(Top::Import(Import { id, source_id, identifiers, source: source.unwrap(), span })))
     }
 
     fn parse_model(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Mutex<Top>> {
@@ -220,7 +221,8 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        Arc::new(Mutex::new(Top::Constant(Constant { identifier: identifier.unwrap(), expression: expression.unwrap(), span })))
+        let id = self.next_id();
+        Arc::new(Mutex::new(Top::Constant(Constant { id, source_id, identifier: identifier.unwrap(), expression: expression.unwrap(), span })))
     }
 
     fn parse_config_block(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Mutex<Top>> {
