@@ -5,6 +5,7 @@ use regex::Regex;
 use snailquote::unescape;
 use crate::core::database::name::DatabaseName;
 use crate::core::tson::range::Range;
+use crate::parser::ast::accessible::Accessible;
 use crate::parser::ast::expression::{ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::Identifier;
@@ -122,7 +123,7 @@ impl Resolver {
         Self::resolve_expression_kind(g.expression.as_ref(), source.clone(), parser)
     }
 
-    fn resolve_identifier(i: &Identifier, source: Arc<Mutex<Source>>, parser: &Parser, parent: Option<Parent>) -> Reference {
+    fn resolve_identifier(i: &Identifier, source: Arc<Mutex<Source>>, parser: &Parser, parent: Option<Accessible>) -> Reference {
         panic!()
     }
 

@@ -18,7 +18,7 @@ pub(crate) mod client;
 pub(crate) mod item;
 pub(crate) mod import;
 pub(crate) mod variable;
-pub(crate) mod object;
+pub(crate) mod accessible;
 pub(crate) mod function;
 pub(crate) mod subscript;
 pub(crate) mod unit;

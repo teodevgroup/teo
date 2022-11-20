@@ -20,7 +20,7 @@ use crate::core::model::Model;
 use crate::core::property::Property;
 use crate::core::relation::Relation;
 use crate::parser::ast::argument::Argument;
-use crate::parser::ast::object::Accessible;
+use crate::parser::ast::accessible::Accessible;
 use crate::parser::std::decorators::field::atomic::{atomic_decorator};
 use crate::parser::std::decorators::field::db::db_container;
 use crate::parser::std::decorators::field::id::{id_decorator};

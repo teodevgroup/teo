@@ -1,6 +1,6 @@
 use maplit::hashmap;
 use crate::core::database::name::DatabaseName;
-use crate::parser::ast::object::Container;
+use crate::parser::ast::accessible::Container;
 
 pub(crate) fn db_container(database_name: DatabaseName) -> Container {
     match database_name {

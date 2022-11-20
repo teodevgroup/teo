@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::env;
 use std::sync::Arc;
 use maplit::hashmap;
-use crate::parser::ast::object::Accessible;
+use crate::parser::ast::accessible::Accessible;
 use crate::prelude::Value;
 
 pub(crate) struct EnvObject { }
