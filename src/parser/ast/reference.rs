@@ -1,7 +1,11 @@
-use crate::parser::ast::constant::Constant;
-use crate::parser::ast::model::Model;
+#[derive(Debug, Clone)]
+pub(crate) struct IdReference {
+    source_id: usize,
+    top_id: usize,
+}
 
-pub(crate) enum Reference<'a> {
-    ModelReference(&'a Model),
-    ConstantReference(&'a Constant),
+#[derive(Debug, Clone)]
+pub(crate) enum Reference {
+    ModelReference(IdReference),
+    ConstantReference(IdReference),
 }
