@@ -25,3 +25,4 @@ pub(crate) mod unit;
 pub(crate) mod group;
 pub(crate) mod reference;
 pub(crate) mod constant;
+pub(crate) mod entity;
