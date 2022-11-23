@@ -1,7 +1,7 @@
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct IdReference {
     pub(crate) source_id: usize,
-    pub(crate) top_id: usize,
+    pub(crate) item_id: usize,
 }
 
 #[derive(Debug, Clone)]

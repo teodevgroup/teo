@@ -12,7 +12,7 @@ use crate::parser::ast::expression::{ArrayLiteral, BoolLiteral, DictionaryLitera
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::pipeline::Pipeline;
-use crate::parser::ast::reference::Reference;
+use crate::parser::ast::reference::{IdReference, Reference};
 use crate::parser::ast::source::Source;
 use crate::parser::ast::unit::Unit;
 use crate::parser::parser::Parser;
@@ -181,18 +181,6 @@ impl Resolver {
         Entity::Value(Value::RawEnumChoice(e.value.clone()))
     }
 
-    fn unwrap_into_value_if_needed(e: &Entity, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
-        if e.is_value() {
-            return e.as_value().unwrap().clone()
-        } else if e.is_reference() {
-            let r = e.as_reference().unwrap();
-
-            return
-        } else {
-            panic!("Cannot unwrap accessible into value.")
-        }
-    }
-
     fn resolve_range_literal(range: &RangeLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
         let a = Self::resolve_expression_kind(range.expressions.get(0).unwrap(), source.clone(), parser);
         let start = Box::new(a.clone());
@@ -236,5 +224,28 @@ impl Resolver {
             }
         }
         return resolved
+    }
+
+    // Unwrap references
+
+    fn constant_with_reference(r: IdReference, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+        let source = parser.get_source_by_id(r.source_id).unwrap();
+        let v = source.lock().unwrap().get_constant_with_reference(r.item_id).lock().unwrap().as_constant().unwrap().expression.resolved.unwrap().as_value().unwrap();
+        v.clone()
+    }
+
+    fn unwrap_into_value_if_needed(e: &Entity, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+        if e.is_value() {
+            return e.as_value().unwrap().clone()
+        } else if e.is_reference() {
+            let r = e.as_reference().unwrap();
+            if r.is_constant_ref() {
+                return Self::constant_with_reference(r.as_constant_ref().unwrap(), source.clone(), parser);
+            } else {
+                panic!("Model ref cannot be transformed into value.")
+            }
+        } else {
+            panic!("Cannot unwrap accessible into value.")
+        }
     }
 }
