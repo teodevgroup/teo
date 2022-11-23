@@ -4,6 +4,7 @@ use std::str::FromStr;
 
 use crate::core::tson::range::Range;
 use crate::parser::ast::argument::{Argument, ArgumentList};
+use crate::parser::ast::entity::Entity;
 use crate::parser::ast::group::Group;
 use crate::parser::ast::pipeline::Pipeline;
 use crate::parser::ast::identifier::Identifier;
@@ -447,7 +448,7 @@ impl Display for ExpressionKind {
 #[derive(Debug, Clone)]
 pub(crate) struct Expression {
     pub(crate) kind: ExpressionKind,
-    pub(crate) resolved: Option<Value>,
+    pub(crate) resolved: Option<Entity>,
 }
 
 impl Expression {

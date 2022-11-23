@@ -9,6 +9,7 @@ pub(crate) enum Entity {
 }
 
 impl Entity {
+
     pub(crate) fn as_value(&self) -> Option<&Value> {
         match self {
             Entity::Value(v) => Some(v),

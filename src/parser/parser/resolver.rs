@@ -7,6 +7,7 @@ use crate::core::database::name::DatabaseName;
 use crate::core::tson::range::Range;
 use crate::parser::ast::accessible::Accessible;
 use crate::parser::ast::argument::ArgumentList;
+use crate::parser::ast::entity::Entity;
 use crate::parser::ast::expression::{ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::Identifier;
@@ -59,12 +60,12 @@ impl Resolver {
 
     // Expression
 
-    pub(crate) fn resolve_expression<'a>(expression: &'a mut Expression, source: Arc<Mutex<Source>>, parser: &Parser) -> &'a Value {
+    pub(crate) fn resolve_expression<'a>(expression: &'a mut Expression, source: Arc<Mutex<Source>>, parser: &Parser) -> &'a Entity {
         expression.resolved = Some(Self::resolve_expression_kind(&expression.kind, source.clone(), parser));
         expression.resolved.as_ref().unwrap()
     }
 
-    pub(crate) fn resolve_expression_kind(expression: &ExpressionKind, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+    pub(crate) fn resolve_expression_kind(expression: &ExpressionKind, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
         match expression {
             ExpressionKind::Group(g) => {
                 Self::resolve_group(g, source.clone(), parser)
@@ -122,70 +123,82 @@ impl Resolver {
 
     // identifier
 
-    fn resolve_group(g: &Group, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+    fn resolve_group(g: &Group, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
         Self::resolve_expression_kind(g.expression.as_ref(), source.clone(), parser)
     }
 
-    fn resolve_identifier(i: &Identifier, source: Arc<Mutex<Source>>, parser: &Parser, parent: Option<Accessible>) -> Value {
+    fn resolve_identifier(i: &Identifier, source: Arc<Mutex<Source>>, parser: &Parser, parent: Option<Accessible>) -> Entity {
         panic!()
     }
 
-    fn resolve_argument_list(a: &ArgumentList, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+    fn resolve_argument_list(a: &ArgumentList, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
         panic!()
     }
 
-    fn resolve_unit(u: &Unit, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+    fn resolve_unit(u: &Unit, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
         panic!()
     }
 
-    fn resolve_pipeline(p: &Pipeline, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+    fn resolve_pipeline(p: &Pipeline, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
         panic!()
     }
 
     // literals and operators
 
-    fn resolve_numeric_literal(n: &NumericLiteral) -> Value {
+    fn resolve_numeric_literal(n: &NumericLiteral) -> Entity {
         let i = i64::from_str(&n.value);
         if i.is_ok() {
-            return Value::I64(i.unwrap());
+            return Entity::Value(Value::I64(i.unwrap()));
         }
         let i = f64::from_str(&n.value);
         if i.is_ok() {
-            return Value::F64(i.unwrap());
+            return Entity::Value(Value::F64(i.unwrap()));
         }
         panic!("Cannot resolve numeric value: {}.", n.value.as_str())
     }
 
-    fn resolve_string_literal(s: &StringLiteral) -> Value {
-        return Value::String(unescape(s.value.as_str()).unwrap());
+    fn resolve_string_literal(s: &StringLiteral) -> Entity {
+        return Entity::Value(Value::String(unescape(s.value.as_str()).unwrap()));
     }
 
-    fn resolve_regexp_literal(r: &RegExpLiteral) -> Value {
-        return Value::RegExp(Regex::new(r.value.as_str()).unwrap())
+    fn resolve_regexp_literal(r: &RegExpLiteral) -> Entity {
+        return Entity::Value(Value::RegExp(Regex::new(r.value.as_str()).unwrap()));
     }
 
-    fn resolve_bool_literal(b: &BoolLiteral) -> Value {
+    fn resolve_bool_literal(b: &BoolLiteral) -> Entity {
         match b.value.as_str() {
-            "true" => Value::Bool(true),
-            "false" => Value::Bool(false),
+            "true" => Entity::Value(Value::Bool(true)),
+            "false" => Entity::Value(Value::Bool(false)),
             _ => panic!("Cannot resolve bool value: {}", b.value.as_str())
         }
     }
 
-    fn resolve_null_literal(_: &NullLiteral) -> Value {
-        Value::Null
+    fn resolve_null_literal(_: &NullLiteral) -> Entity {
+        Entity::Value(Value::Null)
     }
 
-    fn resolve_enum_choice_literal(e: &EnumChoiceLiteral) -> Value {
-        Value::RawEnumChoice(e.value.clone())
+    fn resolve_enum_choice_literal(e: &EnumChoiceLiteral) -> Entity {
+        Entity::Value(Value::RawEnumChoice(e.value.clone()))
     }
 
-    fn resolve_range_literal(range: &RangeLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+    fn unwrap_into_value_if_needed(e: &Entity, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+        if e.is_value() {
+            return e.as_value().unwrap().clone()
+        } else if e.is_reference() {
+            let r = e.as_reference().unwrap();
+
+            return
+        } else {
+            panic!("Cannot unwrap accessible into value.")
+        }
+    }
+
+    fn resolve_range_literal(range: &RangeLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
         let a = Self::resolve_expression_kind(range.expressions.get(0).unwrap(), source.clone(), parser);
         let start = Box::new(a.clone());
         let b = Self::resolve_expression_kind(range.expressions.get(1).unwrap(), source.clone(), parser);
         let end = Box::new(b.clone());
-        Value::Range(Range { closed: range.closed.clone(), start, end })
+        Entity::Value(Value::Range(Range { closed: range.closed.clone(), start, end }))
     }
 
     fn resolve_tuple_literal(tuple: &TupleLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
