@@ -153,14 +153,11 @@ impl Resolver {
         // test for import
         for (id, import) in s.imports.iter() {
             let i = import.lock().unwrap();
-            let found = i.as_import().unwrap().identifiers.iter().find(|i| i.name == &identifier.name);
+            let found = i.as_import().unwrap().identifiers.iter().find(|i| &i.name == &identifier.name);
             if found.is_some() {
                 let source_id = i.as_import().unwrap().source_id;
                 let origin_source = parser.get_source_by_id(source_id).unwrap();
                 return Self::find_identifier_origin_in_source(identifier, origin_source.clone(), parser);
-            }
-            if &identifier.name == &i.as_import().unwrap().identifier.name {
-                return Reference::ModelReference(IdReference::new(s.id, i.id()));
             }
         }
         panic!("Reference is not found")
@@ -218,40 +215,48 @@ impl Resolver {
 
     fn resolve_range_literal(range: &RangeLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
         let a = Self::resolve_expression_kind(range.expressions.get(0).unwrap(), source.clone(), parser);
-        let start = Box::new(a.clone());
+        let a_v = Self::unwrap_into_value_if_needed(&a, source.clone(), parser);
+        let start = Box::new(a_v);
         let b = Self::resolve_expression_kind(range.expressions.get(1).unwrap(), source.clone(), parser);
-        let end = Box::new(b.clone());
+        let b_v = Self::unwrap_into_value_if_needed(&b, source.clone(), parser);
+        let end = Box::new(b_v);
         Entity::Value(Value::Range(Range { closed: range.closed.clone(), start, end }))
     }
 
-    fn resolve_tuple_literal(tuple: &TupleLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+    fn resolve_tuple_literal(tuple: &TupleLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
         let mut resolved = vec![];
         for expression in tuple.expressions.iter() {
-            resolved.push(Self::resolve_expression_kind(expression, source.clone(), parser).clone());
+            let e = Self::resolve_expression_kind(expression, source.clone(), parser);
+            let v = Self::unwrap_into_value_if_needed(&e, source.clone(), parser);
+            resolved.push(v);
         }
-        Value::Tuple(resolved)
+        Entity::Value(Value::Tuple(resolved))
     }
 
-    fn resolve_array_literal(array: &ArrayLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+    fn resolve_array_literal(array: &ArrayLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
         let mut resolved = vec![];
         for expression in array.expressions.iter() {
-            resolved.push(Self::resolve_expression_kind(expression, source.clone(), parser).clone());
+            let e = Self::resolve_expression_kind(expression, source.clone(), parser);
+            let v = Self::unwrap_into_value_if_needed(&e, source.clone(), parser);
+            resolved.push(v);
         }
-        Value::Vec(resolved)
+        Entity::Value(Value::Vec(resolved))
     }
 
-    fn resolve_dictionary_literal(dic: &DictionaryLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+    fn resolve_dictionary_literal(dic: &DictionaryLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
         let mut resolved: IndexMap<String, Value> = IndexMap::new();
         for (key, value) in dic.expressions.iter() {
-            let k = Self::resolve_expression_kind(key, source.clone(), parser).clone();
-            let v = Self::resolve_expression_kind(value, source.clone(), parser).clone();
+            let k = Self::resolve_expression_kind(key, source.clone(), parser);
+            let k = Self::unwrap_into_value_if_needed(&k, source.clone(), parser);
+            let v = Self::resolve_expression_kind(value, source.clone(), parser);
+            let v = Self::unwrap_into_value_if_needed(&v, source.clone(), parser);
             resolved.insert(k.as_str().unwrap().to_string(), v);
         }
-        Value::IndexMap(resolved)
+        Entity::Value(Value::IndexMap(resolved))
     }
 
-    fn resolve_nullish_coalescing(n: &NullishCoalescing, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
-        let mut resolved: Value = Value::Null;
+    fn resolve_nullish_coalescing(n: &NullishCoalescing, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
+        let mut resolved = Entity::Value(Value::Null);
         for e in n.expressions.iter() {
             resolved = Self::resolve_expression_kind(e, source.clone(), parser);
             if !resolved.is_null() {

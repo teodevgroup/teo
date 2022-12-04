@@ -124,7 +124,7 @@ impl Parser {
             models: models.clone(),
         }));
         self.sources.insert(id, result.clone());
-        for import in imports {
+        for (id, import) in imports {
             let import = import.lock().unwrap();
             let import = import.as_import().unwrap();
             let relative = unescape(&import.source.value).unwrap();

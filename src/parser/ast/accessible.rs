@@ -17,6 +17,7 @@ pub(crate) type PropertyDecorator = fn(args: Vec<Argument>, property: &mut Prope
 
 pub(crate) type ModelDecorator = fn(args: Vec<Argument>, model: &mut Model);
 
+#[derive(Debug, Clone)]
 pub(crate) struct Container {
     pub(crate) objects: HashMap<String, Accessible>
 }
@@ -31,6 +32,7 @@ impl Container {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) enum Accessible {
     FieldDecorator(FieldDecorator),
     RelationDecorator(RelationDecorator),

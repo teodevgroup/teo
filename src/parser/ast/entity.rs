@@ -2,6 +2,7 @@ use crate::parser::ast::accessible::Accessible;
 use crate::parser::ast::reference::Reference;
 use crate::prelude::Value;
 
+#[derive(Debug, Clone)]
 pub(crate) enum Entity {
     Value(Value),
     Reference(Reference),
@@ -41,5 +42,9 @@ impl Entity {
 
     pub(crate) fn is_accessible(&self) -> bool {
         self.as_accessible().is_some()
+    }
+
+    pub(crate) fn is_null(&self) -> bool {
+        self.is_value() && self.as_value().unwrap().is_null()
     }
 }

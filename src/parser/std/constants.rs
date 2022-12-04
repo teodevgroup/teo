@@ -5,6 +5,7 @@ use maplit::hashmap;
 use crate::parser::ast::accessible::Accessible;
 use crate::prelude::Value;
 
+#[derive(Debug, Clone)]
 pub(crate) struct EnvObject { }
 
 impl EnvObject {
