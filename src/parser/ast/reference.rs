@@ -4,6 +4,12 @@ pub(crate) struct IdReference {
     pub(crate) item_id: usize,
 }
 
+impl IdReference {
+    pub(crate) fn new(source_id: usize, item_id: usize) -> Self {
+        Self { source_id, item_id }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub(crate) enum Reference {
     ModelReference(IdReference),

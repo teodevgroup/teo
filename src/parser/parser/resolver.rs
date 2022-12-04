@@ -129,8 +129,41 @@ impl Resolver {
     }
 
     fn resolve_identifier(i: &Identifier, source: Arc<Mutex<Source>>, parser: &Parser, parent: Option<Accessible>) -> Entity {
+        let reference = Self::find_identifier_origin_in_source(i, source.clone(), parser);
+        Entity::Reference(reference)
+    }
 
-        panic!()
+    fn find_identifier_origin_in_source(identifier: &Identifier, source: Arc<Mutex<Source>>, parser: &Parser) -> Reference {
+        let s = source.lock().unwrap();
+        // test for constant
+        for (id, constant) in s.constants.iter() {
+            let c = constant.lock().unwrap();
+            if &identifier.name == &c.as_constant().unwrap().identifier.name {
+                return Reference::ConstantReference(IdReference::new(s.id, c.id()));
+            }
+        }
+        // test for model
+        for (id, model) in s.models.iter() {
+            let m = model.lock().unwrap();
+            if &identifier.name == &m.as_model().unwrap().identifier.name {
+                return Reference::ModelReference(IdReference::new(s.id, m.id()));
+            }
+        }
+        // test for import
+        for (id, import) in s.imports.iter() {
+            let i = import.lock().unwrap();
+            let found = i.as_import().unwrap().identifiers.iter().find(|i| i.name == &identifier.name);
+            if found.is_some() {
+                let source_id = i.as_import().unwrap().source_id;
+                let origin_source = parser.get_source_by_id(source_id).unwrap();
+                return Self::find_identifier_origin_in_source(identifier, origin_source.clone(), parser);
+            }
+            if &identifier.name == &i.as_import().unwrap().identifier.name {
+                return Reference::ModelReference(IdReference::new(s.id, m.id()));
+            }
+        }
+
+        panic!("Reference is not found")
     }
 
     fn resolve_argument_list(a: &ArgumentList, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
