@@ -49,7 +49,8 @@ impl Resolver {
                         },
                         "url" => {
                             let url = Self::resolve_expression(&mut item.expression, source.clone(), parser);
-                            let url_str = url.as_str().unwrap();
+                            let url_value = Self::unwrap_into_value_if_needed(url, source.clone(), parser);
+                            let url_str = url_value.as_str().unwrap();
                             connector.url = Some(url_str.to_owned());
                         },
                         _ => { panic!("Undefined name '{}' in connector block.", item.identifier.name.as_str())}
@@ -108,7 +109,7 @@ impl Resolver {
                 Self::resolve_identifier(i, source.clone(), parser, None)
             }
             ExpressionKind::ArgumentList(a) => {
-                Self::resolve_argument_list(a, source.clone(), parser)
+                panic!("Argument list cannot appear alone.")
             }
             ExpressionKind::Subscript(s) => {
                 panic!("Subscript cannot appear alone.")
@@ -159,10 +160,9 @@ impl Resolver {
                 return Self::find_identifier_origin_in_source(identifier, origin_source.clone(), parser);
             }
             if &identifier.name == &i.as_import().unwrap().identifier.name {
-                return Reference::ModelReference(IdReference::new(s.id, m.id()));
+                return Reference::ModelReference(IdReference::new(s.id, i.id()));
             }
         }
-
         panic!("Reference is not found")
     }
 
