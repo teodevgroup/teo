@@ -37,7 +37,8 @@ impl Resolver {
                     match item.identifier.name.as_str() {
                         "provider" => {
                             let provider = Self::resolve_expression(&mut item.expression, source.clone(), parser);
-                            let provider_str = provider.as_raw_enum_choice().unwrap();
+                            let provider_value = Self::unwrap_into_value_if_needed(provider, source.clone(), parser);
+                            let provider_str = provider_value.as_raw_enum_choice().unwrap();
                             match provider_str {
                                 "sqlite" => connector.provider = Some(DatabaseName::SQLite),
                                 "mongo" => connector.provider = Some(DatabaseName::MongoDB),
@@ -128,6 +129,7 @@ impl Resolver {
     }
 
     fn resolve_identifier(i: &Identifier, source: Arc<Mutex<Source>>, parser: &Parser, parent: Option<Accessible>) -> Entity {
+
         panic!()
     }
 
