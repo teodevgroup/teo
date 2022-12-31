@@ -77,11 +77,11 @@ impl Parser {
             Ok(path) => path,
             Err(_) => panic!("Schema file '{}' is not found.", relative.to_str().unwrap()),
         };
-        self.parse_source(absolute);
+        self.parse_source(&absolute);
         Resolver::resolve_parser(self);
     }
 
-    fn parse_source(&mut self, path: PathBuf) {
+    fn parse_source(&mut self, path: &PathBuf) {
         let source_id = self.next_id();
         let content = match fs::read_to_string(&path) {
             Ok(content) => content,
@@ -133,37 +133,20 @@ impl Parser {
                 _ => panic!("Parsing panic!"),
             }
         }
-        let result = Source {
-            id: source_id,
-            path: path.clone(),
-            tops,
-            imports,
-            constants,
-            enums,
-            models,
-        };
+        let result = Source::new(source_id, path.clone(), tops, imports, constants, enums, models);
         self.sources.insert(source_id, result);
         let source = self.sources.get(&source_id).unwrap();
         for import in source.imports() {
-            let relative = unescape(&import.source.value).unwrap();
-            let relative = PathBuf::from(relative);
-            let mut dir = path.clone();
-            dir.pop();
-            let new = dir.join(&relative);
-            let absolute = match fs::canonicalize(&new) {
-                Ok(path) => path,
-                Err(_) => panic!("Schema file '{}' is not found.", relative.to_str().unwrap()),
-            };
             let found = self.sources.values().find(|v| {
-                v.lock().unwrap().path == absolute
+                v.lock().unwrap().path == import.path
             });
             if found.is_none() {
-                self.parse_source(absolute);
+                self.parse_source(&import.path);
             }
         }
     }
 
-    fn parse_import(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
+    fn parse_import(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, path: PathBuf) -> Top {
         let mut identifiers = vec![];
         let span = Self::parse_span(&pair);
         let mut source: Option<StringLiteral> = None;
@@ -174,7 +157,16 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        Top::Import(Import { id: item_id, source_id, identifiers, source: source.unwrap(), span })
+        let unescaped = unescape(&source.unwrap().value).unwrap();
+        let relative = PathBuf::from(unescaped);
+        let mut dir = path.clone();
+        dir.pop();
+        let new = dir.join(&relative);
+        let absolute = match fs::canonicalize(&new) {
+            Ok(path) => path,
+            Err(_) => panic!("Schema file '{}' is not found.", relative.to_str().unwrap()),
+        };
+        Top::Import(Import { id: item_id, source_id, identifiers, source: source.unwrap(), path: absolute, span })
     }
 
     fn parse_model(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
@@ -245,7 +237,7 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        Top::Constant(Constant { id: item_id, source_id, identifier: identifier.unwrap(), expression: expression.unwrap(), span })
+        Top::Constant(Constant::new(item_id, source_id, identifier.unwrap(), expression.unwrap(), span))
     }
 
     fn parse_config_block(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {

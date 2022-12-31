@@ -7,13 +7,16 @@ use crate::core::database::name::DatabaseName;
 use crate::core::tson::range::Range;
 use crate::parser::ast::accessible::Accessible;
 use crate::parser::ast::argument::ArgumentList;
+use crate::parser::ast::constant::Constant;
 use crate::parser::ast::entity::Entity;
 use crate::parser::ast::expression::{ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::Identifier;
+use crate::parser::ast::import::Import;
 use crate::parser::ast::pipeline::Pipeline;
 use crate::parser::ast::reference::{IdReference, Reference};
 use crate::parser::ast::source::Source;
+use crate::parser::ast::top::Top;
 use crate::parser::ast::unit::Unit;
 use crate::parser::parser::Parser;
 use crate::prelude::Value;
@@ -21,9 +24,77 @@ use crate::prelude::Value;
 pub(crate) struct Resolver { }
 
 impl Resolver {
+
     pub(crate) fn resolve_parser(parser: &mut Parser) {
-        Self::resolve_connector(parser);
+        let main_source = parser.get_source_mut(1);
+        Self::resolve_source(parser, main_source);
+        for (_, source) in parser.sources.iter_mut() {
+            if !source.resolved {
+                Self::resolve_source(parser, source);
+            }
+        }
         parser.resolved = true;
+    }
+
+    pub(crate) fn resolve_source(parser: &mut Parser, source: &mut Source) {
+        for (item_id, top) in source.tops.iter_mut() {
+            match top {
+                Top::Import(import) => {
+                    Self::resolve_import(parser, source, import);
+                }
+                Top::Constant(constant) => {
+                    Self::resolve_constant(parser, source, constant);
+                }
+                Top::Enum(r#enum) => {
+
+                }
+                Top::Model(model) => {
+
+                }
+                Top::Connector(connector) => {
+
+                }
+                Top::Generator(generator) => {
+
+                }
+                Top::Client(client) => {
+
+                }
+                Top::Config(config) => {
+
+                }
+            }
+        }
+        source.resolved = true;
+    }
+
+    pub(crate) fn resolve_import(parser: &mut Parser, source: &mut Source, import: &mut Import) {
+        let from_source = parser.sources.iter().find(|(source_id, source)| {
+            source.path == import.path
+        }).unwrap().1;
+        import.from_id = Some(from_source.id);
+        for (item_id, top) in from_source.tops {
+            if top.is_model() {
+                let model = top.as_model().unwrap();
+                for identifier in import.identifiers.iter() {
+                    if identifier.name == model.identifier.name {
+                        import.references.insert(identifier.name.clone(), Reference::ModelReference((from_source.id, item_id)));
+                    }
+                }
+            } else if top.is_constant() {
+                let constant = top.as_constant().unwrap();
+                for identifier in import.identifiers.iter() {
+                    if identifier.name == constant.identifier.name {
+                        import.references.insert(identifier.name.clone(), Reference::ConstantReference((from_source.id, item_id)));
+                    }
+                }
+            }
+        }
+    }
+
+    pub(crate) fn resolve_constant(parser: &mut Parser, source: &mut Source, constant: &mut Constant) {
+        Self::resolve_expression(parser, source, &mut constant.expression);
+        constant.resolved = true;
     }
 
     pub(crate) fn resolve_connector(parser: &Parser) {
@@ -63,18 +134,17 @@ impl Resolver {
 
     // Expression
 
-    pub(crate) fn resolve_expression<'a>(expression: &'a mut Expression, source: Arc<Mutex<Source>>, parser: &Parser) -> &'a Entity {
-        expression.resolved = Some(Self::resolve_expression_kind(&expression.kind, source.clone(), parser));
-        expression.resolved.as_ref().unwrap()
+    pub(crate) fn resolve_expression<'a>(parser: &mut Parser, source: &mut Source, expression: &mut Expression) {
+        expression.resolved = Some(Self::resolve_expression_kind(parser, source, &expression.kind));
     }
 
-    pub(crate) fn resolve_expression_kind(expression: &ExpressionKind, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
-        match expression {
-            ExpressionKind::Group(g) => {
-                Self::resolve_group(g, source.clone(), parser)
+    pub(crate) fn resolve_expression_kind(parser: &mut Parser, source: &mut Source, expression_kind: &ExpressionKind) -> Entity {
+        match expression_kind {
+            ExpressionKind::Group(group) => {
+                Self::resolve_group(parser, source, group)
             }
-            ExpressionKind::NullishCoalescing(n) => {
-                Self::resolve_nullish_coalescing(n, source.clone(), parser)
+            ExpressionKind::NullishCoalescing(nullish_coalescing) => {
+                Self::resolve_nullish_coalescing(parser, source, nullish_coalescing)
             }
             ExpressionKind::NumericLiteral(n) => {
                 Self::resolve_numeric_literal(n)
@@ -94,17 +164,17 @@ impl Resolver {
             ExpressionKind::EnumChoiceLiteral(e) => {
                 Self::resolve_enum_choice_literal(e)
             }
-            ExpressionKind::RangeLiteral(r) => {
-                Self::resolve_range_literal(r, source.clone(), parser)
+            ExpressionKind::RangeLiteral(range_literal) => {
+                Self::resolve_range_literal(parser, source, range_literal)
             }
-            ExpressionKind::TupleLiteral(t) => {
-                Self::resolve_tuple_literal(t, source.clone(), parser)
+            ExpressionKind::TupleLiteral(tuple_literal) => {
+                Self::resolve_tuple_literal(parser, source, tuple_literal)
             }
-            ExpressionKind::ArrayLiteral(a) => {
-                Self::resolve_array_literal(a, source.clone(), parser)
+            ExpressionKind::ArrayLiteral(array_literal) => {
+                Self::resolve_array_literal(parser, source, array_literal)
             }
-            ExpressionKind::DictionaryLiteral(d) => {
-                Self::resolve_dictionary_literal(d, source.clone(), parser)
+            ExpressionKind::DictionaryLiteral(dictionary_literal) => {
+                Self::resolve_dictionary_literal(parser, source, dictionary_literal)
             }
             ExpressionKind::Identifier(i) => {
                 Self::resolve_identifier(i, source.clone(), parser, None)
@@ -126,8 +196,8 @@ impl Resolver {
 
     // identifier
 
-    fn resolve_group(g: &Group, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
-        Self::resolve_expression_kind(g.expression.as_ref(), source.clone(), parser)
+    fn resolve_group(parser: &mut Parser, source: &mut Source, group: &Group) -> Entity {
+        Self::resolve_expression_kind(parser, source, group.expression.as_ref())
     }
 
     fn resolve_identifier(i: &Identifier, source: Arc<Mutex<Source>>, parser: &Parser, parent: Option<Accessible>) -> Entity {
@@ -214,52 +284,52 @@ impl Resolver {
         Entity::Value(Value::RawEnumChoice(e.value.clone()))
     }
 
-    fn resolve_range_literal(range: &RangeLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
-        let a = Self::resolve_expression_kind(range.expressions.get(0).unwrap(), source.clone(), parser);
-        let a_v = Self::unwrap_into_value_if_needed(&a, source.clone(), parser);
+    fn resolve_range_literal(parser: &mut Parser, source: &mut Source, range_literal: &RangeLiteral) -> Entity {
+        let a = Self::resolve_expression_kind(parser, source, range_literal.expressions.get(0).unwrap());
+        let a_v = Self::unwrap_into_value_if_needed(&a, source, parser);
         let start = Box::new(a_v);
-        let b = Self::resolve_expression_kind(range.expressions.get(1).unwrap(), source.clone(), parser);
-        let b_v = Self::unwrap_into_value_if_needed(&b, source.clone(), parser);
+        let b = Self::resolve_expression_kind(parser, source, range_literal.expressions.get(1).unwrap());
+        let b_v = Self::unwrap_into_value_if_needed(&b, source, parser);
         let end = Box::new(b_v);
-        Entity::Value(Value::Range(Range { closed: range.closed.clone(), start, end }))
+        Entity::Value(Value::Range(Range { closed: range_literal.closed.clone(), start, end }))
     }
 
-    fn resolve_tuple_literal(tuple: &TupleLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
+    fn resolve_tuple_literal(parser: &mut Parser, source: &mut Source, tuple_literal: &TupleLiteral) -> Entity {
         let mut resolved = vec![];
-        for expression in tuple.expressions.iter() {
-            let e = Self::resolve_expression_kind(expression, source.clone(), parser);
-            let v = Self::unwrap_into_value_if_needed(&e, source.clone(), parser);
+        for expression in tuple_literal.expressions.iter() {
+            let e = Self::resolve_expression_kind(parser, source, expression);
+            let v = Self::unwrap_into_value_if_needed(&e, source, parser);
             resolved.push(v);
         }
         Entity::Value(Value::Tuple(resolved))
     }
 
-    fn resolve_array_literal(array: &ArrayLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
+    fn resolve_array_literal(parser: &mut Parser, source: &mut Source, array_literal: &ArrayLiteral) -> Entity {
         let mut resolved = vec![];
         for expression in array.expressions.iter() {
-            let e = Self::resolve_expression_kind(expression, source.clone(), parser);
-            let v = Self::unwrap_into_value_if_needed(&e, source.clone(), parser);
+            let e = Self::resolve_expression_kind(parser, source, expression);
+            let v = Self::unwrap_into_value_if_needed(&e, source, parser);
             resolved.push(v);
         }
         Entity::Value(Value::Vec(resolved))
     }
 
-    fn resolve_dictionary_literal(dic: &DictionaryLiteral, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
+    fn resolve_dictionary_literal(parser: &mut Parser, source: &mut Source, dic: &DictionaryLiteral) -> Entity {
         let mut resolved: IndexMap<String, Value> = IndexMap::new();
         for (key, value) in dic.expressions.iter() {
-            let k = Self::resolve_expression_kind(key, source.clone(), parser);
-            let k = Self::unwrap_into_value_if_needed(&k, source.clone(), parser);
-            let v = Self::resolve_expression_kind(value, source.clone(), parser);
-            let v = Self::unwrap_into_value_if_needed(&v, source.clone(), parser);
+            let k = Self::resolve_expression_kind(parser, source, key);
+            let k = Self::unwrap_into_value_if_needed(&k, source, parser);
+            let v = Self::resolve_expression_kind(parser, source, value);
+            let v = Self::unwrap_into_value_if_needed(&v, source, parser);
             resolved.insert(k.as_str().unwrap().to_string(), v);
         }
         Entity::Value(Value::IndexMap(resolved))
     }
 
-    fn resolve_nullish_coalescing(n: &NullishCoalescing, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
+    fn resolve_nullish_coalescing(parser: &mut Parser, source: &mut Source, nullish_coalescing: &NullishCoalescing) -> Entity {
         let mut resolved = Entity::Value(Value::Null);
-        for e in n.expressions.iter() {
-            resolved = Self::resolve_expression_kind(e, source.clone(), parser);
+        for e in nullish_coalescing.expressions.iter() {
+            resolved = Self::resolve_expression_kind(parser, source, e);
             if !resolved.is_null() {
                 return resolved;
             }
@@ -269,20 +339,20 @@ impl Resolver {
 
     // Unwrap references
 
-    fn constant_with_reference(r: IdReference, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+    fn constant_with_reference(r: IdReference, source: &Source, parser: &Parser) -> Value {
         let source = parser.get_source_by_id(r.source_id).unwrap();
         let c = source.lock().unwrap().get_constant_with_reference(r.item_id).clone();
         let v = c.lock().unwrap().as_constant().unwrap().expression.resolved.unwrap().as_value().unwrap();
         v.clone()
     }
 
-    fn unwrap_into_value_if_needed(e: &Entity, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
+    fn unwrap_into_value_if_needed(e: &Entity, source: &Source, parser: &Parser) -> Value {
         if e.is_value() {
             return e.as_value().unwrap().clone()
         } else if e.is_reference() {
             let r = e.as_reference().unwrap();
             if r.is_constant_ref() {
-                return Self::constant_with_reference(r.as_constant_ref().unwrap(), source.clone(), parser);
+                return Self::constant_with_reference(r.as_constant_ref().unwrap(), source, parser);
             } else {
                 panic!("Model ref cannot be transformed into value.")
             }

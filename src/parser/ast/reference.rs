@@ -1,24 +1,12 @@
-#[derive(Debug, Clone, Copy)]
-pub(crate) struct IdReference {
-    pub(crate) source_id: usize,
-    pub(crate) item_id: usize,
-}
-
-impl IdReference {
-    pub(crate) fn new(source_id: usize, item_id: usize) -> Self {
-        Self { source_id, item_id }
-    }
-}
-
 #[derive(Debug, Clone)]
 pub(crate) enum Reference {
-    ModelReference(IdReference),
-    ConstantReference(IdReference),
+    ModelReference((usize, usize)),
+    ConstantReference((usize, usize)),
 }
 
 impl Reference {
 
-    pub(crate) fn as_model_ref(&self) -> Option<IdReference> {
+    pub(crate) fn as_model_ref(&self) -> Option<(usize, usize)> {
         match self {
             Reference::ModelReference(r) => Some(r.clone()),
             Reference::ConstantReference(_) => None,
@@ -29,7 +17,7 @@ impl Reference {
         self.as_model_ref().is_some()
     }
 
-    pub(crate) fn as_constant_ref(&self) -> Option<IdReference> {
+    pub(crate) fn as_constant_ref(&self) -> Option<(usize, usize)> {
         match self {
             Reference::ModelReference(_) => None,
             Reference::ConstantReference(c) => Some(c.clone()),

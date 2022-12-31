@@ -17,9 +17,23 @@ pub(crate) struct Source {
     pub(crate) constants: BTreeSet<usize>,
     pub(crate) enums: BTreeSet<usize>,
     pub(crate) models: BTreeSet<usize>,
+    pub(crate) resolved: bool,
 }
 
 impl Source {
+
+    pub(crate) fn new(source_id: usize, path: PathBuf, tops: BTreeMap<usize, Top>, imports: BTreeSet<usize>, constants: BTreeSet<usize>, enums: BTreeSet<usize>, models: BTreeSet<usize>) -> Self {
+        Self {
+            id: source_id,
+            path,
+            tops,
+            imports,
+            constants,
+            enums,
+            models,
+            resolved: false,
+        }
+    }
 
     pub(crate) fn imports(&self) -> Vec<&Import> {
         self.imports.iter().map(|id| {

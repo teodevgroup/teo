@@ -11,6 +11,20 @@ pub(crate) struct Constant {
     pub(crate) identifier: Identifier,
     pub(crate) expression: Expression,
     pub(crate) span: Span,
+    pub(crate) resolved: bool,
+}
+
+impl Constant {
+    pub(crate) fn new(item_id: usize, source_id: usize, identifier: Identifier, expression: Expression, span: Span) -> Self {
+        Self {
+            id: item_id,
+            source_id,
+            identifier,
+            expression,
+            span,
+            resolved: false,
+        }
+    }
 }
 
 impl Display for Constant {

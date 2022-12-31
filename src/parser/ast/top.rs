@@ -20,11 +20,17 @@ pub(crate) enum Top {
 }
 
 impl Top {
+
     pub(crate) fn id(&self) -> usize {
         match self {
+            Top::Import(i) => i.id,
+            Top::Constant(c) => c.id,
             Top::Enum(e) => e.id,
             Top::Model(m) => m.id,
-            _ => 0,
+            Top::Connector(c) => c.id,
+            Top::Generator(g) => g.id,
+            Top::Client(c) => c.id,
+            Top::Config(c) => c.id,
         }
     }
 
@@ -33,6 +39,17 @@ impl Top {
             Top::Import(i) => Some(i),
             _ => None
         }
+    }
+
+    pub(crate) fn as_import_mut(&mut self) -> Option<&mut Import> {
+        match self {
+            Top::Import(i) => Some(i),
+            _ => None
+        }
+    }
+
+    pub(crate) fn is_import(&self) -> bool {
+        self.as_import().is_some()
     }
 
     pub(crate) fn as_constant(&self) -> Option<&Constant> {
@@ -49,6 +66,10 @@ impl Top {
         }
     }
 
+    pub(crate) fn is_constant(&self) -> bool {
+        self.as_constant().is_some()
+    }
+
     pub(crate) fn as_enum(&self) -> Option<&Enum> {
         match self {
             Top::Enum(i) => Some(i),
@@ -61,6 +82,10 @@ impl Top {
             Top::Enum(i) => Some(i),
             _ => None
         }
+    }
+
+    pub(crate) fn is_enum(&self) -> bool {
+        self.as_enum().is_some()
     }
 
     pub(crate) fn as_model(&self) -> Option<&Model> {
@@ -77,6 +102,10 @@ impl Top {
         }
     }
 
+    pub(crate) fn is_model(&self) -> bool {
+        self.as_model().is_some()
+    }
+
     pub(crate) fn as_connector(&self) -> Option<&Connector> {
         match self {
             Top::Connector(i) => Some(i),
@@ -89,6 +118,10 @@ impl Top {
             Top::Connector(i) => Some(i),
             _ => None
         }
+    }
+
+    pub(crate) fn is_connector(&self) -> bool {
+        self.as_connector().is_some()
     }
 
     pub(crate) fn as_generator(&self) -> Option<&Generator> {
@@ -105,6 +138,10 @@ impl Top {
         }
     }
 
+    pub(crate) fn is_generator(&self) -> bool {
+        self.as_generator().is_some()
+    }
+
     pub(crate) fn as_client(&self) -> Option<&Client> {
         match self {
             Top::Client(i) => Some(i),
@@ -119,6 +156,10 @@ impl Top {
         }
     }
 
+    pub(crate) fn is_client(&self) -> bool {
+        self.as_client().is_some()
+    }
+
     pub(crate) fn as_config(&self) -> Option<&Config> {
         match self {
             Top::Config(i) => Some(i),
@@ -131,5 +172,9 @@ impl Top {
             Top::Config(i) => Some(i),
             _ => None
         }
+    }
+
+    pub(crate) fn is_config(&self) -> bool {
+        self.as_config().is_some()
     }
 }
