@@ -16,6 +16,7 @@ use crate::parser::ast::import::Import;
 use crate::parser::ast::pipeline::Pipeline;
 use crate::parser::ast::reference::{IdReference, Reference};
 use crate::parser::ast::source::Source;
+use crate::parser::ast::subscript::Subscript;
 use crate::parser::ast::top::Top;
 use crate::parser::ast::unit::Unit;
 use crate::parser::parser::Parser;
@@ -185,11 +186,11 @@ impl Resolver {
             ExpressionKind::Subscript(s) => {
                 panic!("Subscript cannot appear alone.")
             }
-            ExpressionKind::Unit(u) => {
-                Self::resolve_unit(u, source.clone(), parser)
+            ExpressionKind::Unit(unit) => {
+                Self::resolve_unit(parser, source, unit)
             }
-            ExpressionKind::Pipeline(p) => {
-                Self::resolve_pipeline(p, source.clone(), parser)
+            ExpressionKind::Pipeline(pipeline) => {
+                Self::resolve_pipeline(parser, source, pipeline)
             }
         }
     }
@@ -200,15 +201,20 @@ impl Resolver {
         Self::resolve_expression_kind(parser, source, group.expression.as_ref())
     }
 
-    fn resolve_identifier(parser: &mut Parser, source: &mut Source, identifier: &Identifier, parent: Option<Accessible>) -> Entity {
+    fn resolve_identifier(parser: &mut Parser, source: &mut Source, identifier: &Identifier, parent: Option<&Entity>) -> Entity {
         match parent {
             Some(parent) => {
-                if parent.is_container() {
-                    let container = parent.as_container().unwrap();
-                    let result = container.objects.get(&identifier.name);
-                    match result {
-                        Some(entity) => entity.clone(),
-                        None => panic!("Cannot access {}", identifier.name),
+                if parent.is_accessible() {
+                    let parent = parent.as_accessible().unwrap();
+                    if parent.is_container() {
+                        let container = parent.as_container().unwrap();
+                        let result = container.objects.get(&identifier.name);
+                        match result {
+                            Some(entity) => entity.clone(),
+                            None => panic!("Cannot access {}", identifier.name),
+                        }
+                    } else {
+                        panic!("Cannot access {}", identifier.name);
                     }
                 } else {
                     panic!("Cannot access {}", identifier.name);
@@ -254,11 +260,53 @@ impl Resolver {
         panic!()
     }
 
-    fn resolve_unit(u: &Unit, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
-        panic!()
+    fn resolve_unit(parser: &mut Parser, source: &mut Source, unit: &Unit) -> Entity {
+        let first_expression = unit.expressions.get(0).unwrap();
+        let mut entity = Self::resolve_expression_kind(parser, source, first_expression);
+        for (index, expression) in unit.expressions.iter().enumerate() {
+            if index == 0 { continue }
+            entity = Self::resolve_accessor(parser, source, expression, &entity);
+        }
+        return entity
     }
 
-    fn resolve_pipeline(p: &Pipeline, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
+    fn resolve_accessor(parser: &mut Parser, source: &mut Source, expression_kind: &ExpressionKind, entity: &Entity) -> Entity {
+        match expression_kind {
+            ExpressionKind::Subscript(subscript) => {
+                Self::resolve_subscript(parser, source, subscript, entity);
+            }
+            ExpressionKind::ArgumentList(argument_list) => {
+
+            }
+            ExpressionKind::Identifier(identifier) => {
+                Self::resolve_identifier(parser, source, identifier, Some(entity))
+            }
+            _ => panic!()
+        }
+    }
+
+    fn resolve_subscript(parser: &mut Parser, source: &mut Source, subscript: &Subscript, entity: &Entity) -> Entity {
+        let index_expression = Self::resolve_expression_kind(parser, source, subscript.expression.as_ref());
+        let index_value = Self::unwrap_into_value_if_needed()
+        match entity {
+            Entity::Value(value) => {
+
+            }
+            Entity::Reference(reference) => {
+
+            }
+            Entity::Accessible(accessible) => {
+                match accessible {
+                    Accessible::Env(env) => {
+
+                    }
+                    _ => panic!("Cannot access subscript with value {}", index_value);
+                }
+            }
+        }
+    }
+
+    fn resolve_pipeline(parser: &mut Parser, source: &mut Source, pipeline: &Pipeline) -> Entity {
         panic!()
     }
 
@@ -302,10 +350,10 @@ impl Resolver {
 
     fn resolve_range_literal(parser: &mut Parser, source: &mut Source, range_literal: &RangeLiteral) -> Entity {
         let a = Self::resolve_expression_kind(parser, source, range_literal.expressions.get(0).unwrap());
-        let a_v = Self::unwrap_into_value_if_needed(&a, source, parser);
+        let a_v = Self::unwrap_into_value_if_needed(parser, source, &a);
         let start = Box::new(a_v);
         let b = Self::resolve_expression_kind(parser, source, range_literal.expressions.get(1).unwrap());
-        let b_v = Self::unwrap_into_value_if_needed(&b, source, parser);
+        let b_v = Self::unwrap_into_value_if_needed(parser, source, &b);
         let end = Box::new(b_v);
         Entity::Value(Value::Range(Range { closed: range_literal.closed.clone(), start, end }))
     }
@@ -314,7 +362,7 @@ impl Resolver {
         let mut resolved = vec![];
         for expression in tuple_literal.expressions.iter() {
             let e = Self::resolve_expression_kind(parser, source, expression);
-            let v = Self::unwrap_into_value_if_needed(&e, source, parser);
+            let v = Self::unwrap_into_value_if_needed(parser, source, &e);
             resolved.push(v);
         }
         Entity::Value(Value::Tuple(resolved))
@@ -324,7 +372,7 @@ impl Resolver {
         let mut resolved = vec![];
         for expression in array.expressions.iter() {
             let e = Self::resolve_expression_kind(parser, source, expression);
-            let v = Self::unwrap_into_value_if_needed(&e, source, parser);
+            let v = Self::unwrap_into_value_if_needed(parser, source, &e);
             resolved.push(v);
         }
         Entity::Value(Value::Vec(resolved))
@@ -334,9 +382,9 @@ impl Resolver {
         let mut resolved: IndexMap<String, Value> = IndexMap::new();
         for (key, value) in dic.expressions.iter() {
             let k = Self::resolve_expression_kind(parser, source, key);
-            let k = Self::unwrap_into_value_if_needed(&k, source, parser);
+            let k = Self::unwrap_into_value_if_needed(parser, source, &k);
             let v = Self::resolve_expression_kind(parser, source, value);
-            let v = Self::unwrap_into_value_if_needed(&v, source, parser);
+            let v = Self::unwrap_into_value_if_needed(parser, source, &v);
             resolved.insert(k.as_str().unwrap().to_string(), v);
         }
         Entity::Value(Value::IndexMap(resolved))
@@ -355,20 +403,20 @@ impl Resolver {
 
     // Unwrap references
 
-    fn constant_with_reference(r: IdReference, source: &Source, parser: &Parser) -> Value {
-        let source = parser.get_source_by_id(r.source_id).unwrap();
-        let c = source.lock().unwrap().get_constant_with_reference(r.item_id).clone();
-        let v = c.lock().unwrap().as_constant().unwrap().expression.resolved.unwrap().as_value().unwrap();
-        v.clone()
+    fn constant_with_reference(parser: &Parser, source: &Source, reference: (usize, usize)) -> Value {
+        let source = parser.get_source(r.0);
+        let c = source.get_constant(r.1);
+        let entity = &c.expression.resolved.unwrap();
+        Self::unwrap_into_value_if_needed(parser, source, entity)
     }
 
-    fn unwrap_into_value_if_needed(e: &Entity, source: &Source, parser: &Parser) -> Value {
+    fn unwrap_into_value_if_needed(parser: &Parser, source: &Source, entity: &Entity) -> Value {
         if e.is_value() {
             return e.as_value().unwrap().clone()
         } else if e.is_reference() {
             let r = e.as_reference().unwrap();
             if r.is_constant_ref() {
-                return Self::constant_with_reference(r.as_constant_ref().unwrap(), source, parser);
+                return Self::constant_with_reference(parser, source, r.as_constant_ref().unwrap());
             } else {
                 panic!("Model ref cannot be transformed into value.")
             }
