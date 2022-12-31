@@ -21,8 +21,9 @@ use crate::prelude::Value;
 pub(crate) struct Resolver { }
 
 impl Resolver {
-    pub(crate) fn resolve_parser(parser: &Parser) {
+    pub(crate) fn resolve_parser(parser: &mut Parser) {
         Self::resolve_connector(parser);
+        parser.resolved = true;
     }
 
     pub(crate) fn resolve_connector(parser: &Parser) {
@@ -270,7 +271,8 @@ impl Resolver {
 
     fn constant_with_reference(r: IdReference, source: Arc<Mutex<Source>>, parser: &Parser) -> Value {
         let source = parser.get_source_by_id(r.source_id).unwrap();
-        let v = source.lock().unwrap().get_constant_with_reference(r.item_id).lock().unwrap().as_constant().unwrap().expression.resolved.unwrap().as_value().unwrap();
+        let c = source.lock().unwrap().get_constant_with_reference(r.item_id).clone();
+        let v = c.lock().unwrap().as_constant().unwrap().expression.resolved.unwrap().as_value().unwrap();
         v.clone()
     }
 

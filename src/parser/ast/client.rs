@@ -4,8 +4,9 @@ use crate::parser::ast::identifier::Identifier;
 
 #[derive(Debug, Clone)]
 pub struct Client {
+    pub(crate) id: usize,
+    pub(crate) source_id: usize,
     pub(crate) identifier: Identifier,
     pub(crate) items: Vec<Item>,
     pub(crate) span: Span,
-    pub(crate) source_id: usize,
 }

@@ -64,7 +64,7 @@ impl GlobalFieldDecorators {
 
     fn get(&self, key: &str) -> &Accessible {
         match self.objects.get(key) {
-            Some(o) => o.clone(),
+            Some(o) => o,
             None => panic!("Object with key '{}' is not found.", key),
         }
     }

@@ -1,10 +1,10 @@
 pub(crate) mod resolver;
 use snailquote::unescape;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::fs;
 use std::sync::{Arc, Mutex};
-use maplit::btreemap;
+use maplit::{btreemap, btreeset};
 use pest::Parser as PestParser;
 use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::client::Client;
@@ -38,22 +38,30 @@ type Pair<'a> = pest::iterators::Pair<'a, Rule>;
 
 #[derive(Debug)]
 pub(crate) struct Parser {
-    pub(crate) main: Option<Arc<Mutex<Source>>>,
-    pub(crate) sources: HashMap<usize, Arc<Mutex<Source>>>,
-    pub(crate) tops: HashMap<usize, Arc<Mutex<Top>>>,
-    pub(crate) connector: Option<Arc<Mutex<Top>>>,
+    pub(crate) sources: BTreeMap<usize, Source>,
+    pub(crate) enums: Vec<(usize, usize)>,
+    pub(crate) models: Vec<(usize, usize)>,
+    pub(crate) connector: Option<(usize, usize)>,
+    pub(crate) config: Option<(usize, usize)>,
+    pub(crate) generators: Vec<(usize, usize)>,
+    pub(crate) clients: Vec<(usize, usize)>,
     pub(crate) next_id: usize,
+    pub(crate) resolved: bool,
 }
 
 impl Parser {
 
     pub(crate) fn new() -> Self {
         Self {
-            main: None,
-            sources: HashMap::new(),
-            tops: HashMap::new(),
+            sources: btreemap!{},
+            enums: vec![],
+            models: vec![],
             connector: None,
+            config: None,
+            generators: vec![],
+            clients: vec![],
             next_id: 0,
+            resolved: false,
         }
     }
 
@@ -69,14 +77,12 @@ impl Parser {
             Ok(path) => path,
             Err(_) => panic!("Schema file '{}' is not found.", relative.to_str().unwrap()),
         };
-        let id = self.next_id();
-        let source = self.parse_source(absolute, id);
-        self.main = Some(source.clone());
-        // println!("{:?}", self);
+        self.parse_source(absolute);
         Resolver::resolve_parser(self);
     }
 
-    fn parse_source(&mut self, path: PathBuf, id: usize) -> Arc<Mutex<Source>> {
+    fn parse_source(&mut self, path: PathBuf) {
+        let source_id = self.next_id();
         let content = match fs::read_to_string(&path) {
             Ok(content) => content,
             Err(err) => panic!("{}", err)
@@ -86,47 +92,59 @@ impl Parser {
             Err(err) => panic!("{}", err)
         };
         let pairs = pairs.next().unwrap();
-        let mut tops: Vec<Arc<Mutex<Top>>> = vec![];
-        let mut imports: BTreeMap<usize, Arc<Mutex<Top>>> = btreemap!{};
-        let mut constants: BTreeMap<usize, Arc<Mutex<Top>>> = btreemap!{};
-        let mut models: BTreeMap<usize, Arc<Mutex<Top>>> = btreemap!{};
+        let mut tops: BTreeMap<usize, Top> = btreemap![];
+        let mut imports: BTreeSet<usize> = btreeset!{};
+        let mut constants: BTreeSet<usize> = btreeset!{};
+        let mut enums: BTreeSet<usize> = btreeset!{};
+        let mut models: BTreeSet<usize> = btreeset!{};
         let mut pairs = pairs.into_inner().peekable();
+
         while let Some(current) = pairs.next() {
             let item_id = self.next_id();
             match current.as_rule() {
                 Rule::import_statement => {
-                    let import = self.parse_import(current, id, item_id);
-                    tops.push(import.clone());
-                    imports.insert(item_id, import.clone());
+                    let import = self.parse_import(current, source_id, item_id);
+                    tops.insert(source_id, import);
+                    imports.insert(item_id);
                 },
                 Rule::let_declaration => {
-                    let constant = self.parse_let_declaration(current, id, item_id);
-                    tops.push(constant.clone());
-                    imports.insert(item_id, constant.clone());
+                    let constant = self.parse_let_declaration(current, source_id, item_id);
+                    tops.insert(item_id, constant);
+                    constants.insert(item_id);
                 },
                 Rule::model_declaration => {
-                    let model = self.parse_model(current, id, item_id);
-                    tops.push(model.clone());
-                    models.insert(item_id, model);
+                    let model = self.parse_model(current, source_id, item_id);
+                    tops.insert(item_id, model);
+                    models.insert(item_id);
+                    self.models.push((source_id, item_id));
                 },
-                Rule::enum_declaration => tops.push(self.parse_enum(current, id)),
-                Rule::config_declaration => tops.push(self.parse_config_block(current, id)),
+                Rule::enum_declaration => {
+                    let r#enum = self.parse_enum(current, source_id, item_id);
+                    tops.insert(item_id, r#enum);
+                    enums.insert(item_id);
+                    self.enums.push((source_id, item_id));
+                },
+                Rule::config_declaration => {
+                    let config_block = self.parse_config_block(current, source_id, item_id);
+                    tops.insert(item_id, config_block);
+                },
                 Rule::EOI | Rule::EMPTY_LINES => {},
                 Rule::CATCH_ALL => panic!("Found catch all."),
                 _ => panic!("Parsing panic!"),
             }
         }
-        let result = Arc::new(Mutex::new(Source {
-            id,
+        let result = Source {
+            id: source_id,
             path: path.clone(),
-            tops, imports: imports.clone(),
-            constants: constants.clone(),
-            models: models.clone(),
-        }));
-        self.sources.insert(id, result.clone());
-        for (id, import) in imports {
-            let import = import.lock().unwrap();
-            let import = import.as_import().unwrap();
+            tops,
+            imports,
+            constants,
+            enums,
+            models,
+        };
+        self.sources.insert(source_id, result);
+        let source = self.sources.get(&source_id).unwrap();
+        for import in source.imports() {
             let relative = unescape(&import.source.value).unwrap();
             let relative = PathBuf::from(relative);
             let mut dir = path.clone();
@@ -140,14 +158,12 @@ impl Parser {
                 v.lock().unwrap().path == absolute
             });
             if found.is_none() {
-                let id = self.next_id();
-                self.parse_source(absolute, id);
+                self.parse_source(absolute);
             }
         }
-        result
     }
 
-    fn parse_import(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Arc<Mutex<Top>> {
+    fn parse_import(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
         let mut identifiers = vec![];
         let span = Self::parse_span(&pair);
         let mut source: Option<StringLiteral> = None;
@@ -158,10 +174,10 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        Arc::new(Mutex::new(Top::Import(Import { id: item_id, source_id, identifiers, source: source.unwrap(), span })))
+        Top::Import(Import { id: item_id, source_id, identifiers, source: source.unwrap(), span })
     }
 
-    fn parse_model(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Arc<Mutex<Top>> {
+    fn parse_model(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
         let mut identifier: Option<Identifier> = None;
         let mut fields: Vec<Field> = vec![];
         let mut decorators: Vec<Decorator> = vec![];
@@ -174,16 +190,14 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        let result = Arc::new(Mutex::new(Top::Model(Model::new(
+        Top::Model(Model::new(
             item_id,
             source_id,
             identifier.unwrap(),
             fields,
             decorators,
             span,
-        ))));
-        self.tops.insert(item_id, result.clone());
-        result
+        ))
     }
 
     fn parse_field(pair: Pair<'_>) -> Field {
@@ -208,21 +222,19 @@ impl Parser {
         )
     }
 
-    fn parse_enum(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Mutex<Top>> {
+    fn parse_enum(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
         let mut identifier: Option<Identifier> = None;
         let mut choices: Vec<EnumChoice> = vec![];
-        let result = Arc::new(Mutex::new(Top::Enum(Enum {
-            id: self.next_id(),
+        Top::Enum(Enum {
+            id: item_id,
             source_id,
             identifier: identifier.unwrap(),
             choices,
             span: Self::parse_span(&pair),
-        })));
-        self.tops.insert(result.lock().unwrap().id(), result.clone());
-        result
+        })
     }
 
-    fn parse_let_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Arc<Mutex<Top>> {
+    fn parse_let_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
         let span = Self::parse_span(&pair);
         let mut identifier: Option<Identifier> = None;
         let mut expression: Option<Expression> = None;
@@ -233,10 +245,10 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        Arc::new(Mutex::new(Top::Constant(Constant { id: item_id, source_id, identifier: identifier.unwrap(), expression: expression.unwrap(), span })))
+        Top::Constant(Constant { id: item_id, source_id, identifier: identifier.unwrap(), expression: expression.unwrap(), span })
     }
 
-    fn parse_config_block(&mut self, pair: Pair<'_>, source_id: usize) -> Arc<Mutex<Top>> {
+    fn parse_config_block(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
         let mut identifier: Option<Identifier> = None;
         let mut items: Vec<Item> = vec![];
         let mut keyword = "";
@@ -250,18 +262,31 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        let result = Arc::new(Mutex::new(match keyword {
-            "config" => Top::Config(Config { items, span, source_id }),
-            "connector" => Top::Connector(Connector::new(items, span, source_id)),
-            "generator" => Top::Generator(Generator { identifier: identifier.unwrap(), items, span, source_id }),
-            "client" => Top::Client(Client { identifier: identifier.unwrap(), items, span, source_id }),
+        match keyword {
+            "config" => {
+                if self.config.is_some() {
+                    panic!("Duplicated config found.");
+                }
+                self.config = Some((source_id, item_id));
+                Top::Config(Config { items, span, source_id, id: item_id })
+            },
+            "connector" => {
+                if self.connector.is_some() {
+                    panic!("Duplicated connector found.");
+                }
+                self.connector = Some((source_id, item_id));
+                Top::Connector(Connector::new(items, span, source_id, item_id))
+            },
+            "generator" => {
+                self.generators.push((source_id, item_id));
+                Top::Generator(Generator { identifier: identifier.unwrap(), items, span, source_id, id: item_id })
+            },
+            "client" => {
+                self.clients.push((source_id, item_id));
+                Top::Client(Client { identifier: identifier.unwrap(), items, span, source_id, id: item_id })
+            },
             _ => panic!(),
-        }));
-        self.tops.insert(result.lock().unwrap().id(), result.clone());
-        if keyword == "connector" {
-            self.connector = Some(result.clone());
         }
-        result
     }
 
     fn parse_config_item(pair: Pair<'_>) -> Item {
@@ -525,7 +550,11 @@ impl Parser {
         }
     }
 
-    pub(crate) fn get_source_by_id(&self, id: usize) -> Option<Arc<Mutex<Source>>> {
-        self.sources.get(&id).cloned()
+    pub(crate) fn get_source(&self, id: usize) -> &Source {
+        self.sources.get(&id).unwrap()
+    }
+
+    pub(crate) fn get_source_mut(&mut self, id: usize) -> &mut Source {
+        self.sources.get_mut(&id).unwrap()
     }
 }

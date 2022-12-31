@@ -10,13 +10,13 @@ use crate::parser::ast::r#enum::Enum;
 #[derive(Debug)]
 pub(crate) enum Top {
     Import(Import),
-    Connector(Connector),
+    Constant(Constant),
     Enum(Enum),
     Model(Model),
+    Connector(Connector),
     Generator(Generator),
     Client(Client),
     Config(Config),
-    Constant(Constant),
 }
 
 impl Top {
@@ -35,17 +35,10 @@ impl Top {
         }
     }
 
-    pub(crate) fn as_connector(&self) -> Option<&Connector> {
+    pub(crate) fn as_constant(&self) -> Option<&Constant> {
         match self {
-            Top::Connector(i) => Some(i),
-            _ => None
-        }
-    }
-
-    pub(crate) fn as_connector_mut(&mut self) -> Option<&mut Connector> {
-        match self {
-            Top::Connector(i) => Some(i),
-            _ => None
+            Top::Constant(c) => Some(c),
+            _ => None,
         }
     }
 
@@ -63,7 +56,28 @@ impl Top {
         }
     }
 
+    pub(crate) fn as_connector(&self) -> Option<&Connector> {
+        match self {
+            Top::Connector(i) => Some(i),
+            _ => None
+        }
+    }
+
+    pub(crate) fn as_connector_mut(&mut self) -> Option<&mut Connector> {
+        match self {
+            Top::Connector(i) => Some(i),
+            _ => None
+        }
+    }
+
     pub(crate) fn as_generator(&self) -> Option<&Generator> {
+        match self {
+            Top::Generator(i) => Some(i),
+            _ => None
+        }
+    }
+
+    pub(crate) fn as_generator_mut(&mut self) -> Option<&mut Generator> {
         match self {
             Top::Generator(i) => Some(i),
             _ => None
@@ -77,6 +91,13 @@ impl Top {
         }
     }
 
+    pub(crate) fn as_client_mut(&mut self) -> Option<&mut Client> {
+        match self {
+            Top::Client(i) => Some(i),
+            _ => None
+        }
+    }
+
     pub(crate) fn as_config(&self) -> Option<&Config> {
         match self {
             Top::Config(i) => Some(i),
@@ -84,10 +105,10 @@ impl Top {
         }
     }
 
-    pub(crate) fn as_constant(&self) -> Option<&Constant> {
+    pub(crate) fn as_config_mut(&mut self) -> Option<&mut Config> {
         match self {
-            Top::Constant(c) => Some(c),
-            _ => None,
+            Top::Config(i) => Some(i),
+            _ => None
         }
     }
 }
