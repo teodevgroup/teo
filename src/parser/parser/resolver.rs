@@ -273,10 +273,10 @@ impl Resolver {
     fn resolve_accessor(parser: &mut Parser, source: &mut Source, expression_kind: &ExpressionKind, entity: &Entity) -> Entity {
         match expression_kind {
             ExpressionKind::Subscript(subscript) => {
-                Self::resolve_subscript(parser, source, subscript, entity);
+                Self::resolve_subscript(parser, source, subscript, entity)
             }
             ExpressionKind::ArgumentList(argument_list) => {
-
+                panic!()
             }
             ExpressionKind::Identifier(identifier) => {
                 Self::resolve_identifier(parser, source, identifier, Some(entity))
@@ -286,21 +286,53 @@ impl Resolver {
     }
 
     fn resolve_subscript(parser: &mut Parser, source: &mut Source, subscript: &Subscript, entity: &Entity) -> Entity {
-        let index_expression = Self::resolve_expression_kind(parser, source, subscript.expression.as_ref());
-        let index_value = Self::unwrap_into_value_if_needed()
-        match entity {
-            Entity::Value(value) => {
-
-            }
-            Entity::Reference(reference) => {
-
-            }
-            Entity::Accessible(accessible) => {
-                match accessible {
-                    Accessible::Env(env) => {
-
+        let index_entity = Self::resolve_expression_kind(parser, source, subscript.expression.as_ref());
+        let index_value = Self::unwrap_into_value_if_needed(parser, source, &index_entity);
+        if entity.is_accessible() {
+            match accessible {
+                Accessible::Env(env) => {
+                    match index_value.as_str() {
+                        Some(s) => Entity::Value(env.get_value(s)),
+                        None => panic!("ENV can only be subscripted with string.")
                     }
-                    _ => panic!("Cannot access subscript with value {}", index_value);
+                }
+                _ => panic!("Cannot access subscript"),
+            }
+        } else {
+            let entity_value = Self::unwrap_into_value_if_needed(parser, source, entity);
+            match entity_value {
+                Value::String(s) => {
+                    match index_value.as_i64() {
+                        Some(i) => Entity::Value(Value::String(s[i])),
+                        None => panic!("String can only be subscripted with integer.")
+                    }
+                }
+                Value::Vec(v) => {
+                    match index_value.as_i64() {
+                        Some(i) => Entity::Value(v.get(i as usize).unwrap().clone()),
+                        None => panic!("Array can only be subscripted with integer.")
+                    }
+                }
+                Value::HashMap(m) => {
+                    match index_value.as_str() {
+                        Some(s) => Entity::Value(m.get(s).unwrap().clone()),
+                        None => panic!("Map can only be subscripted with string.")
+                    }
+                }
+                Value::BTreeMap(m) => {
+                    match index_value.as_str() {
+                        Some(s) => Entity::Value(m.get(s).unwrap().clone()),
+                        None => panic!("Map can only be subscripted with string.")
+                    }
+                }
+                Value::IndexMap(m) => {
+                    match index_value.as_str() {
+                        Some(s) => Entity::Value(m.get(s).unwrap().clone()),
+                        None => panic!("Map can only be subscripted with string.")
+                    }
+                }
+                _ => {
+                    panic!("")
                 }
             }
         }
