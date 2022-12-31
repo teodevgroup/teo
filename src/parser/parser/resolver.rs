@@ -176,8 +176,8 @@ impl Resolver {
             ExpressionKind::DictionaryLiteral(dictionary_literal) => {
                 Self::resolve_dictionary_literal(parser, source, dictionary_literal)
             }
-            ExpressionKind::Identifier(i) => {
-                Self::resolve_identifier(i, source.clone(), parser, None)
+            ExpressionKind::Identifier(identifier) => {
+                Self::resolve_identifier(parser, source, identifier, None)
             }
             ExpressionKind::ArgumentList(a) => {
                 panic!("Argument list cannot appear alone.")
@@ -200,12 +200,28 @@ impl Resolver {
         Self::resolve_expression_kind(parser, source, group.expression.as_ref())
     }
 
-    fn resolve_identifier(i: &Identifier, source: Arc<Mutex<Source>>, parser: &Parser, parent: Option<Accessible>) -> Entity {
-        let reference = Self::find_identifier_origin_in_source(i, source.clone(), parser);
-        Entity::Reference(reference)
+    fn resolve_identifier(parser: &mut Parser, source: &mut Source, identifier: &Identifier, parent: Option<Accessible>) -> Entity {
+        match parent {
+            Some(parent) => {
+                if parent.is_container() {
+                    let container = parent.as_container().unwrap();
+                    let result = container.objects.get(&identifier.name);
+                    match result {
+                        Some(entity) => entity.clone(),
+                        None => panic!("Cannot access {}", identifier.name),
+                    }
+                } else {
+                    panic!("Cannot access {}", identifier.name);
+                }
+            }
+            None => {
+                let reference = Self::find_identifier_origin_in_source(i, source, parser);
+                Entity::Reference(reference)
+            }
+        }
     }
 
-    fn find_identifier_origin_in_source(identifier: &Identifier, source: Arc<Mutex<Source>>, parser: &Parser) -> Reference {
+    fn find_identifier_origin_in_source(identifier: &Identifier, source: &Source, parser: &Parser) -> Reference {
         let s = source.lock().unwrap();
         // test for constant
         for (id, constant) in s.constants.iter() {
