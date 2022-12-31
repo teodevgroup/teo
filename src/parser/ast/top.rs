@@ -42,6 +42,13 @@ impl Top {
         }
     }
 
+    pub(crate) fn as_constant_mut(&mut self) -> Option<&mut Constant> {
+        match self {
+            Top::Constant(c) => Some(c),
+            _ => None,
+        }
+    }
+
     pub(crate) fn as_enum(&self) -> Option<&Enum> {
         match self {
             Top::Enum(i) => Some(i),
@@ -49,7 +56,21 @@ impl Top {
         }
     }
 
+    pub(crate) fn as_enum_mut(&mut self) -> Option<&mut Enum> {
+        match self {
+            Top::Enum(i) => Some(i),
+            _ => None
+        }
+    }
+
     pub(crate) fn as_model(&self) -> Option<&Model> {
+        match self {
+            Top::Model(i) => Some(i),
+            _ => None
+        }
+    }
+
+    pub(crate) fn as_model_mut(&mut self) -> Option<&mut Model> {
         match self {
             Top::Model(i) => Some(i),
             _ => None

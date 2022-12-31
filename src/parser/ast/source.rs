@@ -27,23 +27,33 @@ impl Source {
         }).collect::<Vec<&Import>>()
     }
 
-    pub(crate) fn get_import_with_id(&self, id: usize) -> &Import {
+    pub(crate) fn get_import(&self, id: usize) -> &Import {
         self.tops.get(&id).unwrap().as_import().unwrap()
     }
 
-    pub(crate) fn get_constant_with_id(&self, id: usize) -> &Constant {
+    pub(crate) fn get_constant(&self, id: usize) -> &Constant {
         self.tops.get(&id).unwrap().as_constant().unwrap()
     }
 
-    pub(crate) fn get_enum_with_id(&self, id: usize) -> &Enum {
+    pub(crate) fn get_constant_mut(&mut self, id: usize) -> &mut Constant {
+        self.tops.get_mut(&id).unwrap().as_constant_mut().unwrap()
+    }
+
+    pub(crate) fn get_enum(&self, id: usize) -> &Enum {
         self.tops.get(&id).unwrap().as_enum().unwrap()
     }
 
-    pub(crate) fn get_model_with_id(&self, id: usize) -> &Model {
+    pub(crate) fn get_enum_mut(&mut self, id: usize) -> &mut Enum {
+        self.tops.get_mut(&id).unwrap().as_enum_mut().unwrap()
+    }
+
+    pub(crate) fn get_model(&self, id: usize) -> &Model {
         self.tops.get(&id).unwrap().as_model().unwrap()
     }
 
-
+    pub(crate) fn get_model_mut(&mut self, id: usize) -> &mut Model {
+        self.tops.get_mut(&id).unwrap().as_model_mut().unwrap()
+    }
 }
 
 impl fmt::Debug for Source {
