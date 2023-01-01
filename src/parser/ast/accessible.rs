@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use maplit::hashmap;
 use crate::core::field::Field;
@@ -33,7 +34,7 @@ impl Container {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub(crate) enum Accessible {
     FieldDecorator(FieldDecorator),
     RelationDecorator(RelationDecorator),
@@ -41,6 +42,12 @@ pub(crate) enum Accessible {
     ModelDecorator(ModelDecorator),
     Container(Container),
     Env(EnvObject),
+}
+
+impl Debug for Accessible {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Accessible")
+    }
 }
 
 impl Accessible {

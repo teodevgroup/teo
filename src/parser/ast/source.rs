@@ -1,7 +1,12 @@
+use std::borrow::Borrow;
+use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
+use std::ops::{Deref, DerefMut};
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::sync::{Arc, Mutex};
+use std::sync::atomic::AtomicBool;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::import::Import;
 use crate::parser::ast::model::Model;
@@ -11,17 +16,40 @@ use crate::parser::ast::top::Top;
 pub(crate) struct Source {
     pub(crate) id: usize,
     pub(crate) path: PathBuf,
-    pub(crate) tops: BTreeMap<usize, Top>,
+    pub(crate) tops: BTreeMap<usize, Rc<RefCell<Top>>>,
     pub(crate) imports: BTreeSet<usize>,
     pub(crate) constants: BTreeSet<usize>,
     pub(crate) enums: BTreeSet<usize>,
     pub(crate) models: BTreeSet<usize>,
-    pub(crate) resolved: bool,
+    pub(crate) resolved: AtomicBool,
+}
+
+pub(crate) struct SourceImportIter<'a> {
+    source: &'a Source,
+    index: usize,
+}
+
+impl<'a> Iterator for SourceImportIter<'a> {
+    type Item = &'a Import;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.source.imports.get(&self.index) {
+            Some(index) => unsafe {
+                let borrow = self.source.tops.get(index).unwrap().as_ref().borrow();
+                let a = borrow.deref().as_import().unwrap();
+                let b: * const Import = a;
+                self.index += 1;
+                Some(&*b)
+            }
+            None => None,
+        }
+
+    }
 }
 
 impl Source {
 
-    pub(crate) fn new(source_id: usize, path: PathBuf, tops: BTreeMap<usize, Top>, imports: BTreeSet<usize>, constants: BTreeSet<usize>, enums: BTreeSet<usize>, models: BTreeSet<usize>) -> Self {
+    pub(crate) fn new(source_id: usize, path: PathBuf, tops: BTreeMap<usize, Rc<RefCell<Top>>>, imports: BTreeSet<usize>, constants: BTreeSet<usize>, enums: BTreeSet<usize>, models: BTreeSet<usize>) -> Self {
         Self {
             id: source_id,
             path,
@@ -30,43 +58,61 @@ impl Source {
             constants,
             enums,
             models,
-            resolved: false,
+            resolved: AtomicBool::new(false),
         }
     }
 
-    pub(crate) fn imports(&self) -> Vec<&Import> {
-        self.imports.iter().map(|id| {
-            self.tops.get(id).unwrap().as_import().unwrap()
-        }).collect::<Vec<&Import>>()
+    pub(crate) fn imports(&self) -> SourceImportIter {
+        SourceImportIter { source: self, index: 0 }
     }
 
     pub(crate) fn get_import(&self, id: &usize) -> &Import {
-        self.tops.get(id).unwrap().as_import().unwrap()
+        unsafe {
+            let borrow = self.tops.get(id).unwrap().as_ref().borrow();
+            let a = borrow.as_import().unwrap();
+            let b: * const Import = a;
+            &*b
+        }
     }
 
     pub(crate) fn get_constant(&self, id: &usize) -> &Constant {
-        self.tops.get(id).unwrap().as_constant().unwrap()
+        unsafe {
+            let borrow = self.tops.get(id).unwrap().as_ref().borrow();
+            let a = borrow.as_constant().unwrap();
+            let b: * const Constant = a;
+            &*b
+        }
     }
 
-    pub(crate) fn get_constant_mut(&mut self, id: usize) -> &mut Constant {
-        self.tops.get_mut(&id).unwrap().as_constant_mut().unwrap()
-    }
+    // pub(crate) fn get_constant_mut(&mut self, id: usize) -> &mut Constant {
+    //     self.tops.get_mut(&id).unwrap().as_ref().borrow_mut().as_constant_mut().unwrap()
+    // }
 
     pub(crate) fn get_enum(&self, id: usize) -> &Enum {
-        self.tops.get(&id).unwrap().as_enum().unwrap()
+        unsafe {
+            let borrow = self.tops.get(&id).unwrap().as_ref().borrow();
+            let a = borrow.as_enum().unwrap();
+            let b: * const Enum = a;
+            &*b
+        }
     }
 
-    pub(crate) fn get_enum_mut(&mut self, id: usize) -> &mut Enum {
-        self.tops.get_mut(&id).unwrap().as_enum_mut().unwrap()
-    }
+    // pub(crate) fn get_enum_mut(&mut self, id: usize) -> &mut Enum {
+    //     self.tops.get_mut(&id).unwrap().as_ref().borrow_mut().as_enum_mut().unwrap()
+    // }
 
     pub(crate) fn get_model(&self, id: &usize) -> &Model {
-        self.tops.get(id).unwrap().as_model().unwrap()
+        unsafe {
+            let borrow = self.tops.get(&id).unwrap().as_ref().borrow();
+            let a = borrow.as_model().unwrap();
+            let b: * const Model = a;
+            &*b
+        }
     }
 
-    pub(crate) fn get_model_mut(&mut self, id: usize) -> &mut Model {
-        self.tops.get_mut(&id).unwrap().as_model_mut().unwrap()
-    }
+    // pub(crate) fn get_model_mut(&mut self, id: usize) -> &mut Model {
+    //     self.tops.get_mut(&id).unwrap().as_ref().borrow_mut().as_model_mut().unwrap()
+    // }
 }
 
 impl fmt::Debug for Source {

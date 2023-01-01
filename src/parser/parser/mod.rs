@@ -1,9 +1,15 @@
 pub(crate) mod resolver;
+
+use std::borrow::Borrow;
+use std::cell::RefCell;
 use snailquote::unescape;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::fs;
+use std::ops::{Deref, DerefMut};
+use std::rc::Rc;
 use std::sync::{Arc, Mutex};
+use std::sync::atomic::AtomicBool;
 use maplit::{btreemap, btreeset};
 use pest::Parser as PestParser;
 use crate::parser::ast::argument::{Argument, ArgumentList};
@@ -38,7 +44,7 @@ type Pair<'a> = pest::iterators::Pair<'a, Rule>;
 
 #[derive(Debug)]
 pub(crate) struct Parser {
-    pub(crate) sources: BTreeMap<usize, Source>,
+    pub(crate) sources: BTreeMap<usize, RefCell<Source>>,
     pub(crate) enums: Vec<(usize, usize)>,
     pub(crate) models: Vec<(usize, usize)>,
     pub(crate) connector: Option<(usize, usize)>,
@@ -46,7 +52,7 @@ pub(crate) struct Parser {
     pub(crate) generators: Vec<(usize, usize)>,
     pub(crate) clients: Vec<(usize, usize)>,
     pub(crate) next_id: usize,
-    pub(crate) resolved: bool,
+    pub(crate) resolved: AtomicBool,
 }
 
 impl Parser {
@@ -61,7 +67,7 @@ impl Parser {
             generators: vec![],
             clients: vec![],
             next_id: 0,
-            resolved: false,
+            resolved: AtomicBool::new(false),
         }
     }
 
@@ -92,7 +98,7 @@ impl Parser {
             Err(err) => panic!("{}", err)
         };
         let pairs = pairs.next().unwrap();
-        let mut tops: BTreeMap<usize, Top> = btreemap![];
+        let mut tops: BTreeMap<usize, Rc<RefCell<Top>>> = btreemap![];
         let mut imports: BTreeSet<usize> = btreeset!{};
         let mut constants: BTreeSet<usize> = btreeset!{};
         let mut enums: BTreeSet<usize> = btreeset!{};
@@ -104,46 +110,45 @@ impl Parser {
             match current.as_rule() {
                 Rule::import_statement => {
                     let import = self.parse_import(current, source_id, item_id, path.clone());
-                    tops.insert(source_id, import);
+                    tops.insert(source_id, Rc::new(RefCell::new(import)));
                     imports.insert(item_id);
                 },
                 Rule::let_declaration => {
                     let constant = self.parse_let_declaration(current, source_id, item_id);
-                    tops.insert(item_id, constant);
+                    tops.insert(item_id, Rc::new(RefCell::new(constant)));
                     constants.insert(item_id);
                 },
                 Rule::model_declaration => {
                     let model = self.parse_model(current, source_id, item_id);
-                    tops.insert(item_id, model);
+                    tops.insert(item_id, Rc::new(RefCell::new(model)));
                     models.insert(item_id);
                     self.models.push((source_id, item_id));
                 },
                 Rule::enum_declaration => {
                     let r#enum = self.parse_enum(current, source_id, item_id);
-                    tops.insert(item_id, r#enum);
+                    tops.insert(item_id, Rc::new(RefCell::new(r#enum)));
                     enums.insert(item_id);
                     self.enums.push((source_id, item_id));
                 },
                 Rule::config_declaration => {
                     let config_block = self.parse_config_block(current, source_id, item_id);
-                    tops.insert(item_id, config_block);
+                    tops.insert(item_id, Rc::new(RefCell::new(config_block)));
                 },
                 Rule::EOI | Rule::EMPTY_LINES => {},
                 Rule::CATCH_ALL => panic!("Found catch all."),
                 _ => panic!("Parsing panic!"),
             }
         }
-        let result = Source::new(source_id, path.clone(), tops, imports, constants, enums, models);
-        self.sources.insert(source_id, result);
-        let source = self.sources.get(&source_id).unwrap();
-        for import in source.imports() {
+        let result = RefCell::new(Source::new(source_id, path.clone(), tops, imports, constants, enums, models));
+        for import in result.borrow().imports() {
             let found = self.sources.values().find(|v| {
-                v.path == import.path
+                (*v).borrow().path == import.path
             });
             if found.is_none() {
                 self.parse_source(&import.path);
             }
         }
+        self.sources.insert(source_id, result);
     }
 
     fn parse_import(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, path: PathBuf) -> Top {
@@ -157,7 +162,7 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        let unescaped = unescape(&source.unwrap().value).unwrap();
+        let unescaped = unescape(source.as_ref().unwrap().value.as_str()).unwrap();
         let relative = PathBuf::from(unescaped);
         let mut dir = path.clone();
         dir.pop();
@@ -541,11 +546,7 @@ impl Parser {
         }
     }
 
-    pub(crate) fn get_source(&self, id: usize) -> &Source {
+    pub(crate) fn get_source(&self, id: usize) -> &RefCell<Source> {
         self.sources.get(&id).unwrap()
-    }
-
-    pub(crate) fn get_source_mut(&mut self, id: usize) -> &mut Source {
-        self.sources.get_mut(&id).unwrap()
     }
 }

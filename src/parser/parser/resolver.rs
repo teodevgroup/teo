@@ -1,5 +1,9 @@
+use std::borrow::{Borrow, BorrowMut};
+use std::cell::RefCell;
+use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
+use std::sync::atomic::Ordering;
 use indexmap::map::IndexMap;
 use regex::Regex;
 use snailquote::unescape;
@@ -26,19 +30,22 @@ pub(crate) struct Resolver { }
 
 impl Resolver {
 
-    pub(crate) fn resolve_parser(parser: &mut Parser) {
-        let main_source = parser.get_source_mut(1);
-        Self::resolve_source(parser, main_source);
-        for (_, source) in parser.sources.iter_mut() {
-            if !source.resolved {
-                Self::resolve_source(parser, source);
-            }
+    pub(crate) fn resolve_parser(parser: &Parser) {
+        let main = parser.get_source(1);
+        Self::resolve_source(parser, main.borrow().deref());
+        for (index, source) in parser.sources.iter() {
+            if *index == 1 { continue }
+            Self::resolve_source(parser, source.borrow().deref());
         }
-        parser.resolved = true;
+        parser.resolved.store(true, Ordering::SeqCst);
     }
 
-    pub(crate) fn resolve_source(parser: &mut Parser, source: &mut Source) {
-        for (item_id, top) in source.tops.iter_mut() {
+    pub(crate) fn resolve_source(parser: &Parser, source: &Source) {
+        if source.resolved.load(Ordering::SeqCst) { return }
+        for (item_id, rc_ref_cell_top) in source.tops.iter() {
+            let ref_cell_top = rc_ref_cell_top.as_ref();
+            let mut top_borrow = ref_cell_top.borrow_mut();
+            let top = top_borrow.deref_mut();
             match top {
                 Top::Import(import) => {
                     Self::resolve_import(parser, source, import);
@@ -66,34 +73,38 @@ impl Resolver {
                 }
             }
         }
-        source.resolved = true;
+        source.resolved.store(true, Ordering::SeqCst);
     }
 
-    pub(crate) fn resolve_import(parser: &mut Parser, source: &mut Source, import: &mut Import) {
-        let from_source = parser.sources.iter().find(|(source_id, source)| {
-            source.path == import.path
+    pub(crate) fn resolve_import(parser: &Parser, source: &Source, import: &mut Import) {
+        let from_source_ref_cell = parser.sources.iter().find(|(source_id, source)| {
+            (*source).borrow().path == import.path
         }).unwrap().1;
+        let from_source_borrow = from_source_ref_cell.borrow();
+        let from_source = from_source_borrow.deref();
         import.from_id = Some(from_source.id);
-        for (item_id, top) in from_source.tops {
+        for (item_id, top) in from_source.tops.iter() {
+            let top = top.as_ref().borrow();
             if top.is_model() {
                 let model = top.as_model().unwrap();
                 for identifier in import.identifiers.iter() {
                     if identifier.name == model.identifier.name {
-                        import.references.insert(identifier.name.clone(), Reference::ModelReference((from_source.id, item_id)));
+                        import.references.insert(identifier.name.clone(), Reference::ModelReference((from_source.id, *item_id)));
                     }
                 }
             } else if top.is_constant() {
                 let constant = top.as_constant().unwrap();
                 for identifier in import.identifiers.iter() {
                     if identifier.name == constant.identifier.name {
-                        import.references.insert(identifier.name.clone(), Reference::ConstantReference((from_source.id, item_id)));
+                        import.references.insert(identifier.name.clone(), Reference::ConstantReference((from_source.id, *item_id)));
                     }
                 }
             }
         }
+        import.resolved = true;
     }
 
-    pub(crate) fn resolve_constant(parser: &mut Parser, source: &mut Source, constant: &mut Constant) {
+    pub(crate) fn resolve_constant(parser: &Parser, source: &Source, constant: &mut Constant) {
         Self::resolve_expression(parser, source, &mut constant.expression);
         constant.resolved = true;
     }
@@ -135,11 +146,11 @@ impl Resolver {
 
     // Expression
 
-    pub(crate) fn resolve_expression<'a>(parser: &mut Parser, source: &mut Source, expression: &mut Expression) {
+    pub(crate) fn resolve_expression<'a>(parser: &Parser, source: &Source, expression: &mut Expression) {
         expression.resolved = Some(Self::resolve_expression_kind(parser, source, &expression.kind));
     }
 
-    pub(crate) fn resolve_expression_kind(parser: &mut Parser, source: &mut Source, expression_kind: &ExpressionKind) -> Entity {
+    pub(crate) fn resolve_expression_kind(parser: &Parser, source: &Source, expression_kind: &ExpressionKind) -> Entity {
         match expression_kind {
             ExpressionKind::Group(group) => {
                 Self::resolve_group(parser, source, group)
@@ -197,11 +208,11 @@ impl Resolver {
 
     // identifier
 
-    fn resolve_group(parser: &mut Parser, source: &mut Source, group: &Group) -> Entity {
+    fn resolve_group(parser: &Parser, source: &Source, group: &Group) -> Entity {
         Self::resolve_expression_kind(parser, source, group.expression.as_ref())
     }
 
-    fn resolve_identifier(parser: &mut Parser, source: &mut Source, identifier: &Identifier, parent: Option<&Entity>) -> Entity {
+    fn resolve_identifier(parser: &Parser, source: &Source, identifier: &Identifier, parent: Option<&Entity>) -> Entity {
         match parent {
             Some(parent) => {
                 if parent.is_accessible() {
@@ -231,7 +242,7 @@ impl Resolver {
         panic!()
     }
 
-    fn resolve_unit(parser: &mut Parser, source: &mut Source, unit: &Unit) -> Entity {
+    fn resolve_unit(parser: &Parser, source: &Source, unit: &Unit) -> Entity {
         let first_expression = unit.expressions.get(0).unwrap();
         let mut entity = Self::resolve_expression_kind(parser, source, first_expression);
         for (index, expression) in unit.expressions.iter().enumerate() {
@@ -241,7 +252,7 @@ impl Resolver {
         return entity
     }
 
-    fn resolve_accessor(parser: &mut Parser, source: &mut Source, expression_kind: &ExpressionKind, entity: &Entity) -> Entity {
+    fn resolve_accessor(parser: &Parser, source: &Source, expression_kind: &ExpressionKind, entity: &Entity) -> Entity {
         match expression_kind {
             ExpressionKind::Subscript(subscript) => {
                 Self::resolve_subscript(parser, source, subscript, entity)
@@ -257,7 +268,7 @@ impl Resolver {
         }
     }
 
-    fn resolve_subscript(parser: &mut Parser, source: &mut Source, subscript: &Subscript, entity: &Entity) -> Entity {
+    fn resolve_subscript(parser: &Parser, source: &Source, subscript: &Subscript, entity: &Entity) -> Entity {
         let index_entity = Self::resolve_expression_kind(parser, source, subscript.expression.as_ref());
         let index_value = Self::unwrap_into_value_if_needed(parser, source, &index_entity);
         if entity.is_accessible() {
@@ -311,7 +322,7 @@ impl Resolver {
         }
     }
 
-    fn resolve_pipeline(parser: &mut Parser, source: &mut Source, pipeline: &Pipeline) -> Entity {
+    fn resolve_pipeline(parser: &Parser, source: &Source, pipeline: &Pipeline) -> Entity {
         panic!()
     }
 
@@ -353,7 +364,7 @@ impl Resolver {
         Entity::Value(Value::RawEnumChoice(e.value.clone()))
     }
 
-    fn resolve_range_literal(parser: &mut Parser, source: &mut Source, range_literal: &RangeLiteral) -> Entity {
+    fn resolve_range_literal(parser: &Parser, source: &Source, range_literal: &RangeLiteral) -> Entity {
         let a = Self::resolve_expression_kind(parser, source, range_literal.expressions.get(0).unwrap());
         let a_v = Self::unwrap_into_value_if_needed(parser, source, &a);
         let start = Box::new(a_v);
@@ -363,7 +374,7 @@ impl Resolver {
         Entity::Value(Value::Range(Range { closed: range_literal.closed.clone(), start, end }))
     }
 
-    fn resolve_tuple_literal(parser: &mut Parser, source: &mut Source, tuple_literal: &TupleLiteral) -> Entity {
+    fn resolve_tuple_literal(parser: &Parser, source: &Source, tuple_literal: &TupleLiteral) -> Entity {
         let mut resolved = vec![];
         for expression in tuple_literal.expressions.iter() {
             let e = Self::resolve_expression_kind(parser, source, expression);
@@ -373,7 +384,7 @@ impl Resolver {
         Entity::Value(Value::Tuple(resolved))
     }
 
-    fn resolve_array_literal(parser: &mut Parser, source: &mut Source, array_literal: &ArrayLiteral) -> Entity {
+    fn resolve_array_literal(parser: &Parser, source: &Source, array_literal: &ArrayLiteral) -> Entity {
         let mut resolved = vec![];
         for expression in array_literal.expressions.iter() {
             let e = Self::resolve_expression_kind(parser, source, expression);
@@ -383,7 +394,7 @@ impl Resolver {
         Entity::Value(Value::Vec(resolved))
     }
 
-    fn resolve_dictionary_literal(parser: &mut Parser, source: &mut Source, dic: &DictionaryLiteral) -> Entity {
+    fn resolve_dictionary_literal(parser: &Parser, source: &Source, dic: &DictionaryLiteral) -> Entity {
         let mut resolved: IndexMap<String, Value> = IndexMap::new();
         for (key, value) in dic.expressions.iter() {
             let k = Self::resolve_expression_kind(parser, source, key);
@@ -395,7 +406,7 @@ impl Resolver {
         Entity::Value(Value::IndexMap(resolved))
     }
 
-    fn resolve_nullish_coalescing(parser: &mut Parser, source: &mut Source, nullish_coalescing: &NullishCoalescing) -> Entity {
+    fn resolve_nullish_coalescing(parser: &Parser, source: &Source, nullish_coalescing: &NullishCoalescing) -> Entity {
         let mut resolved = Entity::Value(Value::Null);
         for e in nullish_coalescing.expressions.iter() {
             resolved = Self::resolve_expression_kind(parser, source, e);
@@ -430,7 +441,7 @@ impl Resolver {
             if found.is_some() {
                 let source_id = i.from_id.unwrap();
                 let origin_source = parser.get_source(source_id);
-                return Self::find_identifier_origin_in_source(parser, origin_source, identifier);
+                return Self::find_identifier_origin_in_source(parser, origin_source.borrow().deref(), identifier);
             }
         }
         panic!("Reference is not found")
@@ -438,9 +449,10 @@ impl Resolver {
 
     fn constant_with_reference(parser: &Parser, source: &Source, reference: (usize, usize)) -> Value {
         let source = parser.get_source(reference.0);
-        let c = source.get_constant(&reference.1);
-        let entity = &c.expression.resolved.unwrap();
-        Self::unwrap_into_value_if_needed(parser, source, entity)
+        let source_borrow = source.borrow();
+        let c = source_borrow.get_constant(&reference.1);
+        let entity = c.expression.resolved.as_ref().unwrap();
+        Self::unwrap_into_value_if_needed(parser, source.borrow().deref(), entity)
     }
 
     fn unwrap_into_value_if_needed(parser: &Parser, source: &Source, entity: &Entity) -> Value {
