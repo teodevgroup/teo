@@ -103,7 +103,7 @@ impl Parser {
             let item_id = self.next_id();
             match current.as_rule() {
                 Rule::import_statement => {
-                    let import = self.parse_import(current, source_id, item_id);
+                    let import = self.parse_import(current, source_id, item_id, path.clone());
                     tops.insert(source_id, import);
                     imports.insert(item_id);
                 },
@@ -138,7 +138,7 @@ impl Parser {
         let source = self.sources.get(&source_id).unwrap();
         for import in source.imports() {
             let found = self.sources.values().find(|v| {
-                v.lock().unwrap().path == import.path
+                v.path == import.path
             });
             if found.is_none() {
                 self.parse_source(&import.path);
@@ -166,7 +166,7 @@ impl Parser {
             Ok(path) => path,
             Err(_) => panic!("Schema file '{}' is not found.", relative.to_str().unwrap()),
         };
-        Top::Import(Import { id: item_id, source_id, identifiers, source: source.unwrap(), path: absolute, span })
+        Top::Import(Import::new(item_id, source_id, identifiers, source.unwrap(), absolute, span))
     }
 
     fn parse_model(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
@@ -358,7 +358,6 @@ impl Parser {
     }
 
     fn parse_expression(pair: Pair<'_>) -> Expression {
-        let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::nullish_coalescing => return Expression::new(ExpressionKind::NullishCoalescing(Self::parse_nullish_coalescing(current))),

@@ -8,7 +8,6 @@ use crate::parser::ast::model::Model;
 use crate::parser::ast::r#enum::Enum;
 use crate::parser::ast::top::Top;
 
-#[derive(Clone)]
 pub(crate) struct Source {
     pub(crate) id: usize,
     pub(crate) path: PathBuf,
@@ -41,12 +40,12 @@ impl Source {
         }).collect::<Vec<&Import>>()
     }
 
-    pub(crate) fn get_import(&self, id: usize) -> &Import {
-        self.tops.get(&id).unwrap().as_import().unwrap()
+    pub(crate) fn get_import(&self, id: &usize) -> &Import {
+        self.tops.get(id).unwrap().as_import().unwrap()
     }
 
-    pub(crate) fn get_constant(&self, id: usize) -> &Constant {
-        self.tops.get(&id).unwrap().as_constant().unwrap()
+    pub(crate) fn get_constant(&self, id: &usize) -> &Constant {
+        self.tops.get(id).unwrap().as_constant().unwrap()
     }
 
     pub(crate) fn get_constant_mut(&mut self, id: usize) -> &mut Constant {
@@ -61,8 +60,8 @@ impl Source {
         self.tops.get_mut(&id).unwrap().as_enum_mut().unwrap()
     }
 
-    pub(crate) fn get_model(&self, id: usize) -> &Model {
-        self.tops.get(&id).unwrap().as_model().unwrap()
+    pub(crate) fn get_model(&self, id: &usize) -> &Model {
+        self.tops.get(id).unwrap().as_model().unwrap()
     }
 
     pub(crate) fn get_model_mut(&mut self, id: usize) -> &mut Model {

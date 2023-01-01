@@ -14,7 +14,7 @@ use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::import::Import;
 use crate::parser::ast::pipeline::Pipeline;
-use crate::parser::ast::reference::{IdReference, Reference};
+use crate::parser::ast::reference::{Reference};
 use crate::parser::ast::source::Source;
 use crate::parser::ast::subscript::Subscript;
 use crate::parser::ast::top::Top;
@@ -97,41 +97,41 @@ impl Resolver {
         Self::resolve_expression(parser, source, &mut constant.expression);
         constant.resolved = true;
     }
-
-    pub(crate) fn resolve_connector(parser: &Parser) {
-        match &parser.connector {
-            None => panic!("Connector is not defined."),
-            Some(c) => {
-                let mut top = c.lock().unwrap();
-                let connector = top.as_connector_mut().unwrap();
-                let id = c.lock().unwrap().id();
-                let source = parser.get_source_by_id(id).unwrap().clone();
-                for item in connector.items.iter_mut() {
-                    match item.identifier.name.as_str() {
-                        "provider" => {
-                            let provider = Self::resolve_expression(&mut item.expression, source.clone(), parser);
-                            let provider_value = Self::unwrap_into_value_if_needed(provider, source.clone(), parser);
-                            let provider_str = provider_value.as_raw_enum_choice().unwrap();
-                            match provider_str {
-                                "sqlite" => connector.provider = Some(DatabaseName::SQLite),
-                                "mongo" => connector.provider = Some(DatabaseName::MongoDB),
-                                "mysql" => connector.provider = Some(DatabaseName::MySQL),
-                                "postgres" => connector.provider = Some(DatabaseName::PostgreSQL),
-                                _ => panic!("Unrecognized provider.")
-                            }
-                        },
-                        "url" => {
-                            let url = Self::resolve_expression(&mut item.expression, source.clone(), parser);
-                            let url_value = Self::unwrap_into_value_if_needed(url, source.clone(), parser);
-                            let url_str = url_value.as_str().unwrap();
-                            connector.url = Some(url_str.to_owned());
-                        },
-                        _ => { panic!("Undefined name '{}' in connector block.", item.identifier.name.as_str())}
-                    }
-                }
-            },
-        };
-    }
+    //
+    // pub(crate) fn resolve_connector(parser: &Parser) {
+    //     match &parser.connector {
+    //         None => panic!("Connector is not defined."),
+    //         Some(c) => {
+    //             let mut top = c.lock().unwrap();
+    //             let connector = top.as_connector_mut().unwrap();
+    //             let id = c.lock().unwrap().id();
+    //             let source = parser.get_source_by_id(id).unwrap().clone();
+    //             for item in connector.items.iter_mut() {
+    //                 match item.identifier.name.as_str() {
+    //                     "provider" => {
+    //                         let provider = Self::resolve_expression(&mut item.expression, source.clone(), parser);
+    //                         let provider_value = Self::unwrap_into_value_if_needed(provider, source.clone(), parser);
+    //                         let provider_str = provider_value.as_raw_enum_choice().unwrap();
+    //                         match provider_str {
+    //                             "sqlite" => connector.provider = Some(DatabaseName::SQLite),
+    //                             "mongo" => connector.provider = Some(DatabaseName::MongoDB),
+    //                             "mysql" => connector.provider = Some(DatabaseName::MySQL),
+    //                             "postgres" => connector.provider = Some(DatabaseName::PostgreSQL),
+    //                             _ => panic!("Unrecognized provider.")
+    //                         }
+    //                     },
+    //                     "url" => {
+    //                         let url = Self::resolve_expression(&mut item.expression, source.clone(), parser);
+    //                         let url_value = Self::unwrap_into_value_if_needed(url, source.clone(), parser);
+    //                         let url_str = url_value.as_str().unwrap();
+    //                         connector.url = Some(url_str.to_owned());
+    //                     },
+    //                     _ => { panic!("Undefined name '{}' in connector block.", item.identifier.name.as_str())}
+    //                 }
+    //             }
+    //         },
+    //     };
+    // }
 
     // Expression
 
@@ -221,39 +221,10 @@ impl Resolver {
                 }
             }
             None => {
-                let reference = Self::find_identifier_origin_in_source(i, source, parser);
+                let reference = Self::find_identifier_origin_in_source(parser, source, identifier);
                 Entity::Reference(reference)
             }
         }
-    }
-
-    fn find_identifier_origin_in_source(identifier: &Identifier, source: &Source, parser: &Parser) -> Reference {
-        let s = source.lock().unwrap();
-        // test for constant
-        for (id, constant) in s.constants.iter() {
-            let c = constant.lock().unwrap();
-            if &identifier.name == &c.as_constant().unwrap().identifier.name {
-                return Reference::ConstantReference(IdReference::new(s.id, c.id()));
-            }
-        }
-        // test for model
-        for (id, model) in s.models.iter() {
-            let m = model.lock().unwrap();
-            if &identifier.name == &m.as_model().unwrap().identifier.name {
-                return Reference::ModelReference(IdReference::new(s.id, m.id()));
-            }
-        }
-        // test for import
-        for (id, import) in s.imports.iter() {
-            let i = import.lock().unwrap();
-            let found = i.as_import().unwrap().identifiers.iter().find(|i| &i.name == &identifier.name);
-            if found.is_some() {
-                let source_id = i.as_import().unwrap().source_id;
-                let origin_source = parser.get_source_by_id(source_id).unwrap();
-                return Self::find_identifier_origin_in_source(identifier, origin_source.clone(), parser);
-            }
-        }
-        panic!("Reference is not found")
     }
 
     fn resolve_argument_list(a: &ArgumentList, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
@@ -276,6 +247,7 @@ impl Resolver {
                 Self::resolve_subscript(parser, source, subscript, entity)
             }
             ExpressionKind::ArgumentList(argument_list) => {
+                // currently don't handle argument list yet
                 panic!()
             }
             ExpressionKind::Identifier(identifier) => {
@@ -289,6 +261,7 @@ impl Resolver {
         let index_entity = Self::resolve_expression_kind(parser, source, subscript.expression.as_ref());
         let index_value = Self::unwrap_into_value_if_needed(parser, source, &index_entity);
         if entity.is_accessible() {
+            let accessible = entity.as_accessible().unwrap();
             match accessible {
                 Accessible::Env(env) => {
                     match index_value.as_str() {
@@ -303,7 +276,7 @@ impl Resolver {
             match entity_value {
                 Value::String(s) => {
                     match index_value.as_i64() {
-                        Some(i) => Entity::Value(Value::String(s[i])),
+                        Some(i) => Entity::Value(Value::String(s.chars().nth(i as usize).unwrap().to_string())),
                         None => panic!("String can only be subscripted with integer.")
                     }
                 }
@@ -402,7 +375,7 @@ impl Resolver {
 
     fn resolve_array_literal(parser: &mut Parser, source: &mut Source, array_literal: &ArrayLiteral) -> Entity {
         let mut resolved = vec![];
-        for expression in array.expressions.iter() {
+        for expression in array_literal.expressions.iter() {
             let e = Self::resolve_expression_kind(parser, source, expression);
             let v = Self::unwrap_into_value_if_needed(parser, source, &e);
             resolved.push(v);
@@ -435,18 +408,46 @@ impl Resolver {
 
     // Unwrap references
 
+    fn find_identifier_origin_in_source(parser: &Parser, source: &Source, identifier: &Identifier) -> Reference {
+        // test for constant
+        for id in source.constants.iter() {
+            let c = source.get_constant(id);
+            if &identifier.name == &c.identifier.name {
+                return Reference::ConstantReference((source.id, c.id));
+            }
+        }
+        // test for model
+        for id in source.models.iter() {
+            let m = source.get_model(id);
+            if &identifier.name == &m.identifier.name {
+                return Reference::ModelReference((source.id, m.id));
+            }
+        }
+        // test for import
+        for id in source.imports.iter() {
+            let i = source.get_import(id);
+            let found = i.identifiers.iter().find(|i| &i.name == &identifier.name);
+            if found.is_some() {
+                let source_id = i.from_id.unwrap();
+                let origin_source = parser.get_source(source_id);
+                return Self::find_identifier_origin_in_source(parser, origin_source, identifier);
+            }
+        }
+        panic!("Reference is not found")
+    }
+
     fn constant_with_reference(parser: &Parser, source: &Source, reference: (usize, usize)) -> Value {
-        let source = parser.get_source(r.0);
-        let c = source.get_constant(r.1);
+        let source = parser.get_source(reference.0);
+        let c = source.get_constant(&reference.1);
         let entity = &c.expression.resolved.unwrap();
         Self::unwrap_into_value_if_needed(parser, source, entity)
     }
 
     fn unwrap_into_value_if_needed(parser: &Parser, source: &Source, entity: &Entity) -> Value {
-        if e.is_value() {
-            return e.as_value().unwrap().clone()
-        } else if e.is_reference() {
-            let r = e.as_reference().unwrap();
+        if entity.is_value() {
+            return entity.as_value().unwrap().clone()
+        } else if entity.is_reference() {
+            let r = entity.as_reference().unwrap();
             if r.is_constant_ref() {
                 return Self::constant_with_reference(parser, source, r.as_constant_ref().unwrap());
             } else {
