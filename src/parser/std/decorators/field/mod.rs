@@ -41,7 +41,8 @@ pub(crate) struct GlobalFieldDecorators {
 }
 
 impl GlobalFieldDecorators {
-    pub(crate) fn new(database_name: DatabaseName) -> GlobalFieldDecorators {
+
+    pub(crate) fn new(database_name: DatabaseName) -> Self {
         let mut objects: HashMap<String, Accessible> = HashMap::new();
         objects.insert("db".to_owned(), Accessible::Container(db_container(database_name)));
         objects.insert("id".to_owned(), Accessible::FieldDecorator(id_decorator));
@@ -58,9 +59,6 @@ impl GlobalFieldDecorators {
         objects.insert("nonatomic".to_owned(), Accessible::FieldDecorator(nonatomic_decorator));
         Self { objects }
     }
-}
-
-impl GlobalFieldDecorators {
 
     fn get(&self, key: &str) -> &Accessible {
         match self.objects.get(key) {

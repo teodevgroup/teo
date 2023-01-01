@@ -3,6 +3,7 @@ use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use maplit::hashmap;
 use crate::core::field::Field;
+use crate::core::model::builder::ModelBuilder;
 use crate::core::model::Model;
 use crate::core::property::Property;
 use crate::core::relation::Relation;
@@ -17,7 +18,7 @@ pub(crate) type RelationDecorator = fn(args: Vec<Argument>, relation: &mut Relat
 
 pub(crate) type PropertyDecorator = fn(args: Vec<Argument>, property: &mut Property);
 
-pub(crate) type ModelDecorator = fn(args: Vec<Argument>, model: &mut Model);
+pub(crate) type ModelDecorator = fn(args: Vec<Argument>, model: &mut ModelBuilder);
 
 #[derive(Debug, Clone)]
 pub(crate) struct Container {
