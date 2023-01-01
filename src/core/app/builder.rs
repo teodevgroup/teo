@@ -1,6 +1,7 @@
 use crate::core::conf::builder::ConfBuilder;
 use crate::core::graph::builder::GraphBuilder;
 use crate::parser::parser::Parser;
+use crate::prelude::App;
 
 pub struct AppBuilder {
     pub(crate) graph_builder: GraphBuilder,
@@ -29,5 +30,8 @@ impl AppBuilder {
         &mut self.conf_builder
     }
 
+    pub async fn build(&self) -> App {
+        App { conf: self.conf_builder.build(), graph: self.graph_builder.build().await }
+    }
 
 }

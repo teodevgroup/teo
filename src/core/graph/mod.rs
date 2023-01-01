@@ -20,40 +20,17 @@ pub struct Graph {
     inner: Arc<GraphInner>
 }
 
-struct GraphInner {
-    enums: HashMap<String, Enum>,
-    models_vec: Vec<Model>,
-    models_map: HashMap<String, Model>,
-    url_segment_name_map: HashMap<String, String>,
-    connector: Option<Box<dyn Connector>>,
+pub(crate) struct GraphInner {
+    pub(crate) enums: HashMap<String, Enum>,
+    pub(crate) models_vec: Vec<Model>,
+    pub(crate) models_map: HashMap<String, Model>,
+    pub(crate) url_segment_name_map: HashMap<String, String>,
+    pub(crate) connector: Option<Box<dyn Connector>>,
 }
 
 impl Graph {
 
     // MARK: - Create a graph
-
-    pub async fn new<'a, F: Fn(&mut GraphBuilder)>(build: F) -> Graph {
-        let mut builder = GraphBuilder::new();
-        build(&mut builder);
-        let mut graph = GraphInner {
-            enums: builder.build_enums(),
-            models_vec: Vec::new(),
-            models_map: HashMap::new(),
-            url_segment_name_map: HashMap::new(),
-            connector: None,
-        };
-        graph.models_vec = builder.model_builders.iter().map(|mb| { mb.build(&builder.connector_builder()) }).collect();
-        let mut models_map: HashMap<String, Model> = HashMap::new();
-        let mut url_segment_name_map: HashMap<String, String> = HashMap::new();
-        for model in graph.models_vec.iter() {
-            models_map.insert(model.name().to_owned(), model.clone());
-            url_segment_name_map.insert(model.url_segment_name().to_owned(), model.name().to_owned());
-        }
-        graph.models_map = models_map;
-        graph.url_segment_name_map = url_segment_name_map;
-        graph.connector = Some(builder.connector_builder().build_connector(&graph.models_vec, builder.reset_database).await);
-        Graph { inner: Arc::new(graph) }
-    }
 
     // MARK: - Queries
 
