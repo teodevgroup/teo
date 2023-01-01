@@ -15,7 +15,7 @@ use crate::parser::ast::constant::Constant;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::entity::Entity;
 use crate::parser::ast::expression::{ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
-use crate::parser::ast::field::Field;
+use crate::parser::ast::field::{Field, FieldClass};
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::import::Import;
@@ -197,7 +197,20 @@ impl Resolver {
     }
 
     fn resolve_field(parser: &Parser, source: &Source, field: &mut Field) {
-        panic!()
+        field.figure_out_class();
+        match &field.field_class {
+            FieldClass::Field => {
+
+            }
+            FieldClass::Relation => {
+
+            }
+            FieldClass::Property => {
+
+            }
+            _ => {}
+        }
+        field.resolved = true;
     }
 
     //

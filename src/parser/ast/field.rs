@@ -1,3 +1,4 @@
+use crate::parser::ast::accessible::Accessible;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::r#type::Type;
@@ -31,5 +32,32 @@ impl Field {
     pub(crate) fn resolve(&mut self, field_class: FieldClass) {
         self.field_class = field_class;
         self.resolved = true;
+    }
+
+    pub(crate) fn figure_out_class(&mut self) {
+        for decorator in self.decorators.iter() {
+            match decorator.expression.as_unit() {
+                Some(unit) => {
+                    let name = unit.expressions.get(0).unwrap().as_identifier().unwrap().name.as_str();
+                    match name {
+                        "relation" => {
+                            self.field_class = FieldClass::Relation;
+                            return;
+                        }
+                        "getter" => {
+                            self.field_class = FieldClass::Property;
+                            return;
+                        }
+                        "setter" => {
+                            self.field_class = FieldClass::Property;
+                            return;
+                        }
+                        _ => {}
+                    }
+                }
+                _ => {},
+            }
+        }
+        self.field_class = FieldClass::Field;
     }
 }
