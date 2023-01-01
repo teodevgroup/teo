@@ -200,13 +200,19 @@ impl Resolver {
         field.figure_out_class();
         match &field.field_class {
             FieldClass::Field => {
-
+                for decorator in field.decorators.iter_mut() {
+                    Self::resolve_field_decorator(parser, source, decorator);
+                }
             }
             FieldClass::Relation => {
-
+                for decorator in field.decorators.iter_mut() {
+                    Self::resolve_relation_decorator(parser, source, decorator);
+                }
             }
             FieldClass::Property => {
-
+                for decorator in field.decorators.iter_mut() {
+                    Self::resolve_property_decorator(parser, source, decorator);
+                }
             }
             _ => {}
         }
