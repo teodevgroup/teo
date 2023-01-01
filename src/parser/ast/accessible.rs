@@ -33,6 +33,10 @@ impl Container {
             }
         }
     }
+
+    pub(crate) fn access_property(&self, name: &str) -> &Entity {
+        self.objects.get(name).unwrap()
+    }
 }
 
 #[derive(Clone)]
@@ -100,6 +104,13 @@ impl Accessible {
         match self {
             Accessible::ModelDecorator(d) => Some(d),
             _ => None,
+        }
+    }
+
+    pub(crate) fn access_property(&self, name: &str) -> &Entity {
+        match self.as_container() {
+            Some(c) => c.access_property(name),
+            None => panic!("Cannot access property '{}'", name),
         }
     }
 }

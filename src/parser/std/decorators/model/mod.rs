@@ -34,7 +34,7 @@ impl GlobalModelDecorators {
         Self { objects }
     }
 
-    fn get(&self, key: &str) -> &Accessible {
+    pub(crate) fn get(&self, key: &str) -> &Accessible {
         match self.objects.get(key) {
             Some(o) => o,
             None => panic!("Object with key '{}' is not found.", key),
