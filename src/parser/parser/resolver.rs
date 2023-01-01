@@ -139,7 +139,8 @@ impl Resolver {
     }
 
     fn resolve_model_decorator(parser: &Parser, source: &Source, decorator: &mut Decorator) {
-        panic!()
+
+        decorator.resolved = true;
     }
 
     fn resolve_field_decorator(parser: &Parser, source: &Source, decorator: &mut Decorator) {
