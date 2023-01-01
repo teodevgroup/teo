@@ -222,13 +222,13 @@ impl Parser {
     fn parse_enum(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
         let mut identifier: Option<Identifier> = None;
         let mut choices: Vec<EnumChoice> = vec![];
-        Top::Enum(Enum {
-            id: item_id,
+        Top::Enum(Enum::new(
+            item_id,
             source_id,
-            identifier: identifier.unwrap(),
+            identifier.unwrap(),
             choices,
-            span: Self::parse_span(&pair),
-        })
+            Self::parse_span(&pair),
+        ))
     }
 
     fn parse_let_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {

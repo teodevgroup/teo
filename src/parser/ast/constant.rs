@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter, Write};
+use crate::parser::ast::entity::Entity;
 use crate::parser::ast::expression::Expression;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::reference::Reference;
@@ -24,6 +25,13 @@ impl Constant {
             span,
             resolved: false,
         }
+    }
+
+    pub(crate) fn entity(&self) -> &Entity {
+        if !self.resolved {
+            panic!("Constant is not resolved while accessed.")
+        }
+        self.expression.resolved.as_ref().unwrap()
     }
 }
 

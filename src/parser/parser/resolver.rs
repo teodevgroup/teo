@@ -18,6 +18,7 @@ use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::import::Import;
 use crate::parser::ast::pipeline::Pipeline;
+use crate::parser::ast::r#enum::{Enum, EnumChoice};
 use crate::parser::ast::reference::{Reference};
 use crate::parser::ast::source::Source;
 use crate::parser::ast::subscript::Subscript;
@@ -54,7 +55,7 @@ impl Resolver {
                     Self::resolve_constant(parser, source, constant);
                 }
                 Top::Enum(r#enum) => {
-
+                    Self::resolve_enum(parser, source, r#enum);
                 }
                 Top::Model(model) => {
 
@@ -107,6 +108,17 @@ impl Resolver {
     pub(crate) fn resolve_constant(parser: &Parser, source: &Source, constant: &mut Constant) {
         Self::resolve_expression(parser, source, &mut constant.expression);
         constant.resolved = true;
+    }
+
+    pub(crate) fn resolve_enum(parser: &Parser, source: &Source, r#enum: &mut Enum) {
+        for choice in r#enum.choices.iter_mut() {
+            Self::resolve_enum_choice(parser, source, choice);
+        }
+        r#enum.resolved = true;
+    }
+
+    pub(crate) fn resolve_enum_choice(parser: &Parser, source: &Source, choice: &mut EnumChoice) {
+        choice.resolved = true;
     }
     //
     // pub(crate) fn resolve_connector(parser: &Parser) {
