@@ -12,11 +12,14 @@ use crate::core::tson::range::Range;
 use crate::parser::ast::accessible::Accessible;
 use crate::parser::ast::argument::ArgumentList;
 use crate::parser::ast::constant::Constant;
+use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::entity::Entity;
 use crate::parser::ast::expression::{ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
+use crate::parser::ast::field::Field;
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::import::Import;
+use crate::parser::ast::model::Model;
 use crate::parser::ast::pipeline::Pipeline;
 use crate::parser::ast::r#enum::{Enum, EnumChoice};
 use crate::parser::ast::reference::{Reference};
@@ -58,7 +61,7 @@ impl Resolver {
                     Self::resolve_enum(parser, source, r#enum);
                 }
                 Top::Model(model) => {
-
+                    Self::resolve_model(parser, source, model);
                 }
                 Top::Connector(connector) => {
 
@@ -120,6 +123,45 @@ impl Resolver {
     pub(crate) fn resolve_enum_choice(parser: &Parser, source: &Source, choice: &mut EnumChoice) {
         choice.resolved = true;
     }
+
+    pub(crate) fn resolve_model(parser: &Parser, source: &Source, model: &mut Model) {
+        // decorators
+        for decorator in model.decorators.iter_mut() {
+            Self::resolve_model_decorator(parser, source, decorator);
+        }
+        // fields
+        for field in model.fields.iter_mut() {
+            Self::resolve_field(parser, source, field);
+        }
+        // cached enums
+        //
+        model.resolved = true;
+    }
+
+    fn resolve_model_decorator(parser: &Parser, source: &Source, decorator: &mut Decorator) {
+        panic!()
+    }
+
+    fn resolve_field_decorator(parser: &Parser, source: &Source, decorator: &mut Decorator) {
+        panic!()
+    }
+
+    fn resolve_property_decorator(parser: &Parser, source: &Source, decorator: &mut Decorator) {
+        panic!()
+    }
+
+    fn resolve_relation_decorator(parser: &Parser, source: &Source, decorator: &mut Decorator) {
+        panic!()
+    }
+
+    fn resolve_pipeline(parser: &Parser, source: &Source, pipeline: &Pipeline) -> Entity {
+        panic!()
+    }
+
+    fn resolve_field(parser: &Parser, source: &Source, field: &mut Field) {
+        panic!()
+    }
+
     //
     // pub(crate) fn resolve_connector(parser: &Parser) {
     //     match &parser.connector {
@@ -159,7 +201,7 @@ impl Resolver {
     // Expression
 
     pub(crate) fn resolve_expression<'a>(parser: &Parser, source: &Source, expression: &mut Expression) {
-        expression.resolved = Some(Self::resolve_expression_kind(parser, source, &expression.kind));
+        expression.resolved = Some(Self::resolve_expression_kind(parser, source, &mut expression.kind));
     }
 
     pub(crate) fn resolve_expression_kind(parser: &Parser, source: &Source, expression_kind: &ExpressionKind) -> Entity {
@@ -221,7 +263,7 @@ impl Resolver {
     // identifier
 
     fn resolve_group(parser: &Parser, source: &Source, group: &Group) -> Entity {
-        Self::resolve_expression_kind(parser, source, group.expression.as_ref())
+        Self::resolve_expression_kind(parser, source, &group.expression)
     }
 
     fn resolve_identifier(parser: &Parser, source: &Source, identifier: &Identifier, parent: Option<&Entity>) -> Entity {
@@ -281,7 +323,7 @@ impl Resolver {
     }
 
     fn resolve_subscript(parser: &Parser, source: &Source, subscript: &Subscript, entity: &Entity) -> Entity {
-        let index_entity = Self::resolve_expression_kind(parser, source, subscript.expression.as_ref());
+        let index_entity = Self::resolve_expression_kind(parser, source, &subscript.expression);
         let index_value = Self::unwrap_into_value_if_needed(parser, source, &index_entity);
         if entity.is_accessible() {
             let accessible = entity.as_accessible().unwrap();
@@ -332,10 +374,6 @@ impl Resolver {
                 }
             }
         }
-    }
-
-    fn resolve_pipeline(parser: &Parser, source: &Source, pipeline: &Pipeline) -> Entity {
-        panic!()
     }
 
     // literals and operators

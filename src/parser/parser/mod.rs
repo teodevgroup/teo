@@ -184,6 +184,8 @@ impl Parser {
                 Rule::MODEL_KEYWORD | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => {}
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::field_declaration => fields.push(Self::parse_field(current)),
+                Rule::block_decorator => decorators.push(Self::parse_decorator(current)),
+                Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
                 _ => panic!("error."),
             }
         }
@@ -309,10 +311,7 @@ impl Parser {
                 _ => panic!(),
             }
         }
-        Decorator {
-            expression: unit.unwrap(),
-            span,
-        }
+        Decorator::new(unit.unwrap(), span)
     }
 
     fn parse_pipeline(pair: Pair<'_>) -> Pipeline {

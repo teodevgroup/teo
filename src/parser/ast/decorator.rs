@@ -6,4 +6,11 @@ use crate::parser::ast::unit::Unit;
 pub struct Decorator {
     pub(crate) expression: ExpressionKind,
     pub(crate) span: Span,
+    pub(crate) resolved: bool,
+}
+
+impl Decorator {
+    pub(crate) fn new(expression: ExpressionKind, span: Span) -> Self {
+        Self { expression, span, resolved: false }
+    }
 }
