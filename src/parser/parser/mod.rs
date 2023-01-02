@@ -256,13 +256,40 @@ impl Parser {
     fn parse_enum(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
         let mut identifier: Option<Identifier> = None;
         let mut choices: Vec<EnumChoice> = vec![];
+        let mut decorators: Vec<Decorator> = vec![];
+        let span = Self::parse_span(&pair);
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::COLON | Rule::EMPTY_LINES | Rule::comment_block => {},
+                Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
+                Rule::enum_value_declaration => choices.push(self.parse_enum_value(current)),
+                Rule::block_decorator => decorators.push(Self::parse_decorator(current)),
+                _ => panic!("error."),
+            }
+        }
         Top::Enum(Enum::new(
             item_id,
             source_id,
             identifier.unwrap(),
+            decorators,
             choices,
-            Self::parse_span(&pair),
+            span,
         ))
+    }
+
+    fn parse_enum_value(&mut self, pair: Pair<'_>) -> EnumChoice {
+        let mut identifier: Option<Identifier> = None;
+        let mut decorators: Vec<Decorator> = vec![];
+        let span = Self::parse_span(&pair);
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::COLON | Rule::EMPTY_LINES | Rule::comment_block => {},
+                Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
+                Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
+                _ => panic!("error."),
+            }
+        }
+        EnumChoice::new(identifier.unwrap(), decorators, span)
     }
 
     fn parse_let_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
