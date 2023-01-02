@@ -35,6 +35,8 @@ use crate::parser::ast::subscript::Subscript;
 use crate::parser::ast::top::Top;
 use crate::parser::ast::unit::Unit;
 use crate::parser::parser::resolver::Resolver;
+use crate::parser::std::decorators::field::GlobalFieldDecorators;
+use crate::parser::std::decorators::model::GlobalModelDecorators;
 
 #[derive(pest_derive::Parser)]
 #[grammar = "./src/parser/schema.pest"]
@@ -53,6 +55,9 @@ pub(crate) struct Parser {
     pub(crate) clients: Vec<(usize, usize)>,
     pub(crate) next_id: usize,
     pub(crate) resolved: AtomicBool,
+    pub(crate) global_model_decorators: RefCell<Option<GlobalModelDecorators>>,
+    pub(crate) global_field_decorators: RefCell<Option<GlobalFieldDecorators>>,
+    pub(crate) global_relation_decorators: RefCell<Option<GlobalRelationDecorators>>,
 }
 
 impl Parser {
