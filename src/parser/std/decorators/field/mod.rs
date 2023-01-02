@@ -13,6 +13,7 @@ pub(crate) mod atomic;
 pub(crate) mod nonatomic;
 
 use std::collections::HashMap;
+use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use crate::core::database::name::DatabaseName;
 use crate::core::field::Field;
@@ -38,6 +39,12 @@ use crate::prelude::Value;
 
 pub(crate) struct GlobalFieldDecorators {
     objects: HashMap<String, Accessible>
+}
+
+impl Debug for GlobalFieldDecorators {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("GlobalFieldDecorators")
+    }
 }
 
 impl GlobalFieldDecorators {

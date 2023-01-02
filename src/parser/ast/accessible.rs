@@ -5,7 +5,9 @@ use maplit::hashmap;
 use crate::core::field::Field;
 use crate::core::model::builder::ModelBuilder;
 use crate::core::model::Model;
+use crate::core::property::builder::PropertyBuilder;
 use crate::core::property::Property;
+use crate::core::relation::builder::RelationBuilder;
 use crate::core::relation::Relation;
 use crate::core::tson::Value;
 use crate::parser::ast::argument::Argument;
@@ -14,9 +16,9 @@ use crate::parser::std::constants::EnvObject;
 
 pub(crate) type FieldDecorator = fn(args: Vec<Argument>, field: &mut Field);
 
-pub(crate) type RelationDecorator = fn(args: Vec<Argument>, relation: &mut Relation);
+pub(crate) type RelationDecorator = fn(args: Vec<Argument>, relation: &mut RelationBuilder);
 
-pub(crate) type PropertyDecorator = fn(args: Vec<Argument>, property: &mut Property);
+pub(crate) type PropertyDecorator = fn(args: Vec<Argument>, property: &mut PropertyBuilder);
 
 pub(crate) type ModelDecorator = fn(args: Vec<Argument>, model: &mut ModelBuilder);
 

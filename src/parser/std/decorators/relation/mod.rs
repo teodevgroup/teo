@@ -1,11 +1,18 @@
 pub(crate) mod relation;
 
 use std::collections::HashMap;
+use std::fmt::{Debug, Formatter};
 use crate::parser::ast::accessible::Accessible;
 use crate::parser::std::decorators::relation::relation::relation_decorator;
 
 pub(crate) struct GlobalRelationDecorators {
     objects: HashMap<String, Accessible>
+}
+
+impl Debug for GlobalRelationDecorators {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("GlobalPropertyDecorator")
+    }
 }
 
 impl GlobalRelationDecorators {

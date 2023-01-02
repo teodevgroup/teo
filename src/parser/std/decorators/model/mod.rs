@@ -7,6 +7,7 @@ pub(crate) mod identity;
 pub(crate) mod r#virtual;
 
 use std::collections::HashMap;
+use std::fmt::{Debug, Formatter};
 use crate::parser::ast::accessible::Accessible;
 use crate::parser::std::decorators::model::id::id_decorator;
 use crate::parser::std::decorators::model::identity::identity_decorator;
@@ -18,6 +19,12 @@ use crate::parser::std::decorators::model::url::url_decorator;
 
 pub(crate) struct GlobalModelDecorators {
     objects: HashMap<String, Accessible>
+}
+
+impl Debug for GlobalModelDecorators {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("GlobalModelDecorators")
+    }
 }
 
 impl GlobalModelDecorators {

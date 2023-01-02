@@ -37,6 +37,8 @@ use crate::parser::ast::unit::Unit;
 use crate::parser::parser::resolver::Resolver;
 use crate::parser::std::decorators::field::GlobalFieldDecorators;
 use crate::parser::std::decorators::model::GlobalModelDecorators;
+use crate::parser::std::decorators::property::GlobalPropertyDecorator;
+use crate::parser::std::decorators::relation::GlobalRelationDecorators;
 
 #[derive(pest_derive::Parser)]
 #[grammar = "./src/parser/schema.pest"]
@@ -58,6 +60,7 @@ pub(crate) struct Parser {
     pub(crate) global_model_decorators: RefCell<Option<GlobalModelDecorators>>,
     pub(crate) global_field_decorators: RefCell<Option<GlobalFieldDecorators>>,
     pub(crate) global_relation_decorators: RefCell<Option<GlobalRelationDecorators>>,
+    pub(crate) global_property_decorators: RefCell<Option<GlobalPropertyDecorator>>,
 }
 
 impl Parser {
@@ -73,6 +76,10 @@ impl Parser {
             clients: vec![],
             next_id: 0,
             resolved: AtomicBool::new(false),
+            global_model_decorators: RefCell::new(None),
+            global_field_decorators: RefCell::new(None),
+            global_relation_decorators: RefCell::new(None),
+            global_property_decorators: RefCell::new(None),
         }
     }
 
@@ -552,5 +559,41 @@ impl Parser {
 
     pub(crate) fn get_source(&self, id: usize) -> &RefCell<Source> {
         self.sources.get(&id).unwrap()
+    }
+
+    pub(crate) fn global_model_decorators(&self) -> &GlobalModelDecorators {
+        unsafe {
+            let borrow = self.global_model_decorators.borrow();
+            let a = borrow.as_ref().unwrap();
+            let b: * const GlobalModelDecorators = a;
+            return &*b;
+        }
+    }
+
+    pub(crate) fn global_field_decorators(&self) -> &GlobalFieldDecorators {
+        unsafe {
+            let borrow = self.global_field_decorators.borrow();
+            let a = borrow.as_ref().unwrap();
+            let b: * const GlobalFieldDecorators = a;
+            return &*b;
+        }
+    }
+
+    pub(crate) fn global_relation_decorators(&self) -> &GlobalRelationDecorators {
+        unsafe {
+            let borrow = self.global_relation_decorators.borrow();
+            let a = borrow.as_ref().unwrap();
+            let b: * const GlobalRelationDecorators = a;
+            return &*b;
+        }
+    }
+
+    pub(crate) fn global_property_decorators(&self) -> &GlobalPropertyDecorator {
+        unsafe {
+            let borrow = self.global_property_decorators.borrow();
+            let a = borrow.as_ref().unwrap();
+            let b: * const GlobalPropertyDecorator = a;
+            return &*b;
+        }
     }
 }

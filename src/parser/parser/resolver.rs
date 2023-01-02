@@ -30,6 +30,8 @@ use crate::parser::ast::unit::Unit;
 use crate::parser::parser::Parser;
 use crate::parser::std::decorators::field::GlobalFieldDecorators;
 use crate::parser::std::decorators::model::GlobalModelDecorators;
+use crate::parser::std::decorators::property::GlobalPropertyDecorator;
+use crate::parser::std::decorators::relation::GlobalRelationDecorators;
 use crate::prelude::Value;
 
 pub(crate) struct Resolver { }
@@ -37,6 +39,11 @@ pub(crate) struct Resolver { }
 impl Resolver {
 
     pub(crate) fn resolve_parser(parser: &Parser) {
+        let database_name = Self::resolve_connector(parser);
+        *parser.global_model_decorators.borrow_mut() = Some(GlobalModelDecorators::new());
+        *parser.global_field_decorators.borrow_mut() = Some(GlobalFieldDecorators::new(database_name));
+        *parser.global_relation_decorators.borrow_mut() = Some(GlobalRelationDecorators::new());
+        *parser.global_property_decorators.borrow_mut() = Some(GlobalPropertyDecorator::new());
         let main = parser.get_source(1);
         Self::resolve_source(parser, main.borrow().deref());
         for (index, source) in parser.sources.iter() {
@@ -66,7 +73,7 @@ impl Resolver {
                     Self::resolve_model(parser, source, model);
                 }
                 Top::Connector(connector) => {
-
+                    continue;
                 }
                 Top::Generator(generator) => {
 
@@ -143,14 +150,14 @@ impl Resolver {
     fn resolve_model_decorator(parser: &Parser, source: &Source, decorator: &mut Decorator) {
         match &decorator.expression {
             ExpressionKind::Identifier(identifier) => {
-                let d = GlobalModelDecorators::new();
+                let d = parser.global_model_decorators();
                 let accessible = d.get(&identifier.name);
                 decorator.accessible = Some(accessible.clone());
                 decorator.arguments = None;
             }
             ExpressionKind::Unit(unit) => {
                 let identifier = unit.expressions.get(0).unwrap().as_identifier().unwrap();
-                let d = GlobalModelDecorators::new();
+                let d = parser.global_model_decorators();
                 let mut accessible = d.get(&identifier.name);
                 let mut arg_list: Option<ArgumentList> = None;
                 for (index, expression) in unit.expressions.iter().enumerate() {
@@ -184,14 +191,14 @@ impl Resolver {
     fn resolve_field_decorator(parser: &Parser, source: &Source, decorator: &mut Decorator) {
         match &decorator.expression {
             ExpressionKind::Identifier(identifier) => {
-                let d = GlobalFieldDecorators::new();
+                let d = parser.global_field_decorators();
                 let accessible = d.get(&identifier.name);
                 decorator.accessible = Some(accessible.clone());
                 decorator.arguments = None;
             }
             ExpressionKind::Unit(unit) => {
                 let identifier = unit.expressions.get(0).unwrap().as_identifier().unwrap();
-                let d = GlobalModelDecorators::new();
+                let d = parser.global_field_decorators();
                 let mut accessible = d.get(&identifier.name);
                 let mut arg_list: Option<ArgumentList> = None;
                 for (index, expression) in unit.expressions.iter().enumerate() {
@@ -257,41 +264,43 @@ impl Resolver {
         field.resolved = true;
     }
 
-    //
-    // pub(crate) fn resolve_connector(parser: &Parser) {
-    //     match &parser.connector {
-    //         None => panic!("Connector is not defined."),
-    //         Some(c) => {
-    //             let mut top = c.lock().unwrap();
-    //             let connector = top.as_connector_mut().unwrap();
-    //             let id = c.lock().unwrap().id();
-    //             let source = parser.get_source_by_id(id).unwrap().clone();
-    //             for item in connector.items.iter_mut() {
-    //                 match item.identifier.name.as_str() {
-    //                     "provider" => {
-    //                         let provider = Self::resolve_expression(&mut item.expression, source.clone(), parser);
-    //                         let provider_value = Self::unwrap_into_value_if_needed(provider, source.clone(), parser);
-    //                         let provider_str = provider_value.as_raw_enum_choice().unwrap();
-    //                         match provider_str {
-    //                             "sqlite" => connector.provider = Some(DatabaseName::SQLite),
-    //                             "mongo" => connector.provider = Some(DatabaseName::MongoDB),
-    //                             "mysql" => connector.provider = Some(DatabaseName::MySQL),
-    //                             "postgres" => connector.provider = Some(DatabaseName::PostgreSQL),
-    //                             _ => panic!("Unrecognized provider.")
-    //                         }
-    //                     },
-    //                     "url" => {
-    //                         let url = Self::resolve_expression(&mut item.expression, source.clone(), parser);
-    //                         let url_value = Self::unwrap_into_value_if_needed(url, source.clone(), parser);
-    //                         let url_str = url_value.as_str().unwrap();
-    //                         connector.url = Some(url_str.to_owned());
-    //                     },
-    //                     _ => { panic!("Undefined name '{}' in connector block.", item.identifier.name.as_str())}
-    //                 }
-    //             }
-    //         },
-    //     };
-    // }
+
+    pub(crate) fn resolve_connector(parser: &Parser) -> DatabaseName {
+        if parser.connector.is_none() {
+            panic!("Connector is not defined.");
+        }
+        let connector_ref = parser.connector.unwrap();
+        let source_borrow = parser.get_source(connector_ref.0).borrow();
+        let source = source_borrow.deref();
+        let mut source_get = source.tops.get(&connector_ref.1).unwrap();;
+        let top_borrow = source_get.borrow_mut();
+        let mut connector_borrow = top_borrow.as_ref().borrow_mut();
+        let mut connector = connector_borrow.deref_mut().as_connector_mut().unwrap();
+        for item in connector.items.iter_mut() {
+            match item.identifier.name.as_str() {
+                "provider" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let provider_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    let provider_str = provider_value.as_raw_enum_choice().unwrap();
+                    match provider_str {
+                        "sqlite" => connector.provider = Some(DatabaseName::SQLite),
+                        "mongo" => connector.provider = Some(DatabaseName::MongoDB),
+                        "mysql" => connector.provider = Some(DatabaseName::MySQL),
+                        "postgres" => connector.provider = Some(DatabaseName::PostgreSQL),
+                        _ => panic!("Unrecognized provider.")
+                    }
+                },
+                "url" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let url_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    let url_str = url_value.as_str().unwrap();
+                    connector.url = Some(url_str.to_owned());
+                },
+                _ => { panic!("Undefined name '{}' in connector block.", item.identifier.name.as_str())}
+            }
+        }
+        connector.provider.unwrap()
+    }
 
     // Expression
 

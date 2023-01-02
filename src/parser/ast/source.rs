@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
+use crate::parser::ast::connector::Connector;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::import::Import;
 use crate::parser::ast::model::Model;
@@ -113,6 +114,15 @@ impl Source {
     // pub(crate) fn get_model_mut(&mut self, id: usize) -> &mut Model {
     //     self.tops.get_mut(&id).unwrap().as_ref().borrow_mut().as_model_mut().unwrap()
     // }
+
+    pub(crate) fn get_connector(&self, id: &usize) -> &Connector {
+        unsafe {
+            let borrow = self.tops.get(&id).unwrap().as_ref().borrow();
+            let a = borrow.as_connector().unwrap();
+            let b: * const Connector = a;
+            &*b
+        }
+    }
 }
 
 impl fmt::Debug for Source {
