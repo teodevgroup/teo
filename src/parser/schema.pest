@@ -189,7 +189,7 @@ let_declaration = { "let" ~ identifier ~ "=" ~ expression }
 // arguments
 // #############
 argument_list = { "(" ~ (argument ~ ("," ~ argument)*)? ~ TRAILING_COMMA? ~ ")" }
-argument = _{ named_argument | empty_argument | expression }
+argument = { named_argument | empty_argument | expression }
 empty_argument = { identifier ~ ":" }
 named_argument = { identifier ~ ":" ~ expression }
 

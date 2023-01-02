@@ -89,7 +89,25 @@ impl Parser {
     }
 
     pub(crate) fn parse(&mut self, main: Option<&str>) -> () {
-        let main = main.unwrap_or("schema.teo");
+        let main = if main.is_some() { main.unwrap() } else {
+            let mut result: Option<&str> = None;
+            for name in ["schema.teo", "src/schema.teo"] {
+                let relative = PathBuf::from(name);
+                let absolute = match fs::canonicalize(&relative) {
+                    Ok(path) => Some(name),
+                    Err(_) => None,
+                };
+                if absolute.is_some() {
+                    result = absolute;
+                    break
+                }
+            }
+            if result.is_some() {
+                result.unwrap()
+            } else {
+                panic!("Cannot find a schema file.")
+            }
+        };
         let relative = PathBuf::from(main);
         let absolute = match fs::canonicalize(&relative) {
             Ok(path) => path,
@@ -148,7 +166,8 @@ impl Parser {
                 },
                 Rule::EOI | Rule::EMPTY_LINES => {},
                 Rule::CATCH_ALL => panic!("Found catch all."),
-                _ => panic!("Parsing panic!"),
+                Rule::comment_block => (),
+                _ => panic!("Parsing panic! {}", current),
             }
         }
         let result = RefCell::new(Source::new(source_id, path.clone(), tops, imports, constants, enums, models));
@@ -193,12 +212,13 @@ impl Parser {
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::MODEL_KEYWORD | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => {}
+                Rule::MODEL_KEYWORD | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE | Rule::EMPTY_LINES => {}
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::field_declaration => fields.push(Self::parse_field(current)),
                 Rule::block_decorator => decorators.push(Self::parse_decorator(current)),
                 Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
-                _ => panic!("error."),
+                Rule::comment_block => (),
+                _ => panic!("error. {}", current),
             }
         }
         Top::Model(Model::new(
@@ -266,11 +286,15 @@ impl Parser {
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => (),
+                Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE | Rule::EMPTY_LINES => (),
                 Rule::config_keywords => keyword = current.as_str(),
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::config_item => items.push(Self::parse_config_item(current)),
-                _ => panic!("error."),
+                Rule::comment_block => (),
+                _ => {
+
+                    panic!("see current {} error.", current)
+                },
             }
         }
         match keyword {
@@ -443,7 +467,7 @@ impl Parser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::argument => arguments.push(Self::parse_argument(current)),
-                _ => panic!(),
+                _ => panic!("{}", current),
             }
         }
         ArgumentList { arguments, span, resolved: false }
