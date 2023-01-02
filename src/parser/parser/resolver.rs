@@ -9,7 +9,7 @@ use regex::Regex;
 use snailquote::unescape;
 use crate::core::database::name::DatabaseName;
 use crate::core::tson::range::Range;
-use crate::parser::ast::accessible::Accessible;
+use crate::parser::ast::accessible::{Accessible, Container};
 use crate::parser::ast::argument::ArgumentList;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::decorator::Decorator;
@@ -390,8 +390,10 @@ impl Resolver {
                 }
             }
             None => {
-                let reference = Self::find_identifier_origin_in_source(parser, source, identifier);
-                Entity::Reference(reference)
+                match Self::find_identifier_origin_in_source(parser, source, identifier) {
+                    Some(reference) => Entity::Reference(reference),
+                    None => Container::std_global_constants().access_property(&identifier.name).clone()
+                }
             }
         }
     }
@@ -573,19 +575,19 @@ impl Resolver {
 
     // Unwrap references
 
-    fn find_identifier_origin_in_source(parser: &Parser, source: &Source, identifier: &Identifier) -> Reference {
+    fn find_identifier_origin_in_source(parser: &Parser, source: &Source, identifier: &Identifier) -> Option<Reference> {
         // test for constant
         for id in source.constants.iter() {
             let c = source.get_constant(id);
             if &identifier.name == &c.identifier.name {
-                return Reference::ConstantReference((source.id, c.id));
+                return Some(Reference::ConstantReference((source.id, c.id)));
             }
         }
         // test for model
         for id in source.models.iter() {
             let m = source.get_model(id);
             if &identifier.name == &m.identifier.name {
-                return Reference::ModelReference((source.id, m.id));
+                return Some(Reference::ModelReference((source.id, m.id)));
             }
         }
         // test for import
@@ -598,7 +600,7 @@ impl Resolver {
                 return Self::find_identifier_origin_in_source(parser, origin_source.borrow().deref(), identifier);
             }
         }
-        panic!("Reference is not found, {:?} {} {}", parser, source, identifier)
+        None
     }
 
     fn constant_with_reference(parser: &Parser, source: &Source, reference: (usize, usize)) -> Value {
