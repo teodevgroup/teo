@@ -287,7 +287,7 @@ impl Resolver {
                         "mongo" => connector.provider = Some(DatabaseName::MongoDB),
                         "mysql" => connector.provider = Some(DatabaseName::MySQL),
                         "postgres" => connector.provider = Some(DatabaseName::PostgreSQL),
-                        _ => panic!("Unrecognized provider.")
+                        _ => panic!("Unrecognized provider. {}", provider_str)
                     }
                 },
                 "url" => {
@@ -515,7 +515,7 @@ impl Resolver {
     }
 
     fn resolve_enum_choice_literal(e: &EnumChoiceLiteral) -> Entity {
-        Entity::Value(Value::RawEnumChoice(e.value.clone()))
+        Entity::Value(Value::RawEnumChoice(e.value.chars().skip(1).take(e.value.len() - 1).collect()))
     }
 
     fn resolve_range_literal(parser: &Parser, source: &Source, range_literal: &RangeLiteral) -> Entity {
@@ -598,7 +598,7 @@ impl Resolver {
                 return Self::find_identifier_origin_in_source(parser, origin_source.borrow().deref(), identifier);
             }
         }
-        panic!("Reference is not found")
+        panic!("Reference is not found, {:?} {} {}", parser, source, identifier)
     }
 
     fn constant_with_reference(parser: &Parser, source: &Source, reference: (usize, usize)) -> Value {

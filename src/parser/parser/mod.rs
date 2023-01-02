@@ -218,7 +218,7 @@ impl Parser {
                 Rule::block_decorator => decorators.push(Self::parse_decorator(current)),
                 Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
                 Rule::comment_block => (),
-                _ => panic!("error. {}", current),
+                _ => panic!("error. {:?}", current.into_span()),
             }
         }
         Top::Model(Model::new(
@@ -260,11 +260,11 @@ impl Parser {
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::COLON | Rule::EMPTY_LINES | Rule::comment_block => {},
+                Rule::ENUM_KEYWORD | Rule::COLON | Rule::EMPTY_LINES | Rule::comment_block | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => {},
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::enum_value_declaration => choices.push(self.parse_enum_value(current)),
                 Rule::block_decorator => decorators.push(Self::parse_decorator(current)),
-                _ => panic!("error."),
+                _ => panic!("error. {}", current),
             }
         }
         Top::Enum(Enum::new(
