@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use maplit::hashmap;
+use crate::core::field::builder::FieldBuilder;
 use crate::core::field::Field;
 use crate::core::model::builder::ModelBuilder;
 use crate::core::model::Model;
@@ -14,7 +15,7 @@ use crate::parser::ast::argument::Argument;
 use crate::parser::ast::entity::Entity;
 use crate::parser::std::constants::EnvObject;
 
-pub(crate) type FieldDecorator = fn(args: Vec<Argument>, field: &mut Field);
+pub(crate) type FieldDecorator = fn(args: Vec<Argument>, field: &mut FieldBuilder);
 
 pub(crate) type RelationDecorator = fn(args: Vec<Argument>, relation: &mut RelationBuilder);
 

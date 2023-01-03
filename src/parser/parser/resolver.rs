@@ -230,11 +230,85 @@ impl Resolver {
     }
 
     fn resolve_property_decorator(parser: &Parser, source: &Source, decorator: &mut Decorator) {
-        panic!()
+        match &decorator.expression {
+            ExpressionKind::Identifier(identifier) => {
+                let d = parser.global_property_decorators();
+                let accessible = d.get(&identifier.name);
+                decorator.accessible = Some(accessible.clone());
+                decorator.arguments = None;
+            }
+            ExpressionKind::Unit(unit) => {
+                let identifier = unit.expressions.get(0).unwrap().as_identifier().unwrap();
+                let d = parser.global_property_decorators();
+                let mut accessible = d.get(&identifier.name);
+                let mut arg_list: Option<ArgumentList> = None;
+                for (index, expression) in unit.expressions.iter().enumerate() {
+                    if index == 0 { continue }
+                    match expression {
+                        ExpressionKind::ArgumentList(argument_list) => {
+                            arg_list = Some(argument_list.clone());
+                        }
+                        ExpressionKind::Subscript(subscript) => {
+                            panic!("Cannot access decorator object with subscript.")
+                        }
+                        ExpressionKind::Identifier(identifier) => {
+                            accessible = accessible.access_property(&identifier.name).as_accessible().unwrap()
+                        }
+                        _ => panic!()
+                    }
+                }
+                decorator.accessible = Some(accessible.clone());
+                for argument in arg_list.as_mut().unwrap().arguments.iter_mut() {
+                    let result = Self::resolve_expression_kind(parser, source, &argument.value);
+                    let value = Self::unwrap_into_value_if_needed(parser, source, &result);
+                    argument.resolved = Some(Entity::Value(value));
+                }
+                decorator.arguments = arg_list;
+            }
+            _ => panic!()
+        }
+        decorator.resolved = true;
     }
 
     fn resolve_relation_decorator(parser: &Parser, source: &Source, decorator: &mut Decorator) {
-        panic!()
+        match &decorator.expression {
+            ExpressionKind::Identifier(identifier) => {
+                let d = parser.global_relation_decorators();
+                let accessible = d.get(&identifier.name);
+                decorator.accessible = Some(accessible.clone());
+                decorator.arguments = None;
+            }
+            ExpressionKind::Unit(unit) => {
+                let identifier = unit.expressions.get(0).unwrap().as_identifier().unwrap();
+                let d = parser.global_relation_decorators();
+                let mut accessible = d.get(&identifier.name);
+                let mut arg_list: Option<ArgumentList> = None;
+                for (index, expression) in unit.expressions.iter().enumerate() {
+                    if index == 0 { continue }
+                    match expression {
+                        ExpressionKind::ArgumentList(argument_list) => {
+                            arg_list = Some(argument_list.clone());
+                        }
+                        ExpressionKind::Subscript(subscript) => {
+                            panic!("Cannot access decorator object with subscript.")
+                        }
+                        ExpressionKind::Identifier(identifier) => {
+                            accessible = accessible.access_property(&identifier.name).as_accessible().unwrap()
+                        }
+                        _ => panic!()
+                    }
+                }
+                decorator.accessible = Some(accessible.clone());
+                for argument in arg_list.as_mut().unwrap().arguments.iter_mut() {
+                    let result = Self::resolve_expression_kind(parser, source, &argument.value);
+                    let value = Self::unwrap_into_value_if_needed(parser, source, &result);
+                    argument.resolved = Some(Entity::Value(value));
+                }
+                decorator.arguments = arg_list;
+            }
+            _ => panic!()
+        }
+        decorator.resolved = true;
     }
 
     fn resolve_pipeline(parser: &Parser, source: &Source, pipeline: &Pipeline) -> Entity {
