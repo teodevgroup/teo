@@ -12,6 +12,8 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
 use maplit::{btreemap, btreeset};
 use pest::Parser as PestParser;
+use to_mut::ToMut;
+use to_mut_proc_macro::ToMut;
 use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::client::Client;
 use crate::parser::ast::config::Config;
@@ -46,9 +48,9 @@ pub(crate) struct SchemaParser;
 
 type Pair<'a> = pest::iterators::Pair<'a, Rule>;
 
-#[derive(Debug)]
+#[derive(Debug, ToMut)]
 pub(crate) struct Parser {
-    pub(crate) sources: BTreeMap<usize, RefCell<Source>>,
+    pub(crate) sources: BTreeMap<usize, Source>,
     pub(crate) enums: Vec<(usize, usize)>,
     pub(crate) models: Vec<(usize, usize)>,
     pub(crate) connector: Option<(usize, usize)>,
@@ -56,11 +58,11 @@ pub(crate) struct Parser {
     pub(crate) generators: Vec<(usize, usize)>,
     pub(crate) clients: Vec<(usize, usize)>,
     pub(crate) next_id: usize,
-    pub(crate) resolved: AtomicBool,
-    pub(crate) global_model_decorators: RefCell<Option<GlobalModelDecorators>>,
-    pub(crate) global_field_decorators: RefCell<Option<GlobalFieldDecorators>>,
-    pub(crate) global_relation_decorators: RefCell<Option<GlobalRelationDecorators>>,
-    pub(crate) global_property_decorators: RefCell<Option<GlobalPropertyDecorator>>,
+    pub(crate) resolved: bool,
+    pub(crate) global_model_decorators: Option<GlobalModelDecorators>,
+    pub(crate) global_field_decorators: Option<GlobalFieldDecorators>,
+    pub(crate) global_relation_decorators: Option<GlobalRelationDecorators>,
+    pub(crate) global_property_decorators: Option<GlobalPropertyDecorator>,
 }
 
 impl Parser {
@@ -75,11 +77,11 @@ impl Parser {
             generators: vec![],
             clients: vec![],
             next_id: 0,
-            resolved: AtomicBool::new(false),
-            global_model_decorators: RefCell::new(None),
-            global_field_decorators: RefCell::new(None),
-            global_relation_decorators: RefCell::new(None),
-            global_property_decorators: RefCell::new(None),
+            resolved: false,
+            global_model_decorators: None,
+            global_field_decorators: None,
+            global_relation_decorators: None,
+            global_property_decorators: None,
         }
     }
 
@@ -128,7 +130,7 @@ impl Parser {
             Err(err) => panic!("{}", err)
         };
         let pairs = pairs.next().unwrap();
-        let mut tops: BTreeMap<usize, Rc<RefCell<Top>>> = btreemap![];
+        let mut tops: BTreeMap<usize, Top> = btreemap![];
         let mut imports: BTreeSet<usize> = btreeset!{};
         let mut constants: BTreeSet<usize> = btreeset!{};
         let mut enums: BTreeSet<usize> = btreeset!{};
@@ -140,29 +142,29 @@ impl Parser {
             match current.as_rule() {
                 Rule::import_statement => {
                     let import = self.parse_import(current, source_id, item_id, path.clone());
-                    tops.insert(source_id, Rc::new(RefCell::new(import)));
+                    tops.insert(source_id, import);
                     imports.insert(item_id);
                 },
                 Rule::let_declaration => {
                     let constant = self.parse_let_declaration(current, source_id, item_id);
-                    tops.insert(item_id, Rc::new(RefCell::new(constant)));
+                    tops.insert(item_id, constant);
                     constants.insert(item_id);
                 },
                 Rule::model_declaration => {
                     let model = self.parse_model(current, source_id, item_id);
-                    tops.insert(item_id, Rc::new(RefCell::new(model)));
+                    tops.insert(item_id, model);
                     models.insert(item_id);
                     self.models.push((source_id, item_id));
                 },
                 Rule::enum_declaration => {
                     let r#enum = self.parse_enum(current, source_id, item_id);
-                    tops.insert(item_id, Rc::new(RefCell::new(r#enum)));
+                    tops.insert(item_id, r#enum);
                     enums.insert(item_id);
                     self.enums.push((source_id, item_id));
                 },
                 Rule::config_declaration => {
                     let config_block = self.parse_config_block(current, source_id, item_id);
-                    tops.insert(item_id, Rc::new(RefCell::new(config_block)));
+                    tops.insert(item_id, config_block);
                 },
                 Rule::EOI | Rule::EMPTY_LINES => {},
                 Rule::CATCH_ALL => panic!("Found catch all."),
@@ -170,7 +172,7 @@ impl Parser {
                 _ => panic!("Parsing panic! {}", current),
             }
         }
-        let result = RefCell::new(Source::new(source_id, path.clone(), tops, imports, constants, enums, models));
+        let result = Source::new(source_id, path.clone(), tops, imports, constants, enums, models);
         for import in result.borrow().imports() {
             let found = self.sources.values().find(|v| {
                 (*v).borrow().path == import.path
@@ -319,7 +321,6 @@ impl Parser {
                 Rule::config_item => items.push(Self::parse_config_item(current)),
                 Rule::comment_block => (),
                 _ => {
-
                     panic!("see current {} error.", current)
                 },
             }
@@ -330,7 +331,7 @@ impl Parser {
                     panic!("Duplicated config found.");
                 }
                 self.config = Some((source_id, item_id));
-                Top::Config(Config { items, span, source_id, id: item_id })
+                Top::Config(Config::new(item_id, source_id, items, span))
             },
             "connector" => {
                 if self.connector.is_some() {
@@ -608,43 +609,39 @@ impl Parser {
         }
     }
 
-    pub(crate) fn get_source(&self, id: usize) -> &RefCell<Source> {
+    pub(crate) fn get_source(&self, id: usize) -> &Source {
         self.sources.get(&id).unwrap()
     }
 
+    pub(crate) fn set_global_model_decorators(&self, deco: GlobalModelDecorators) {
+        self.to_mut().global_model_decorators = Some(deco);
+    }
+
+    pub(crate) fn set_global_field_decorators(&self, deco: GlobalFieldDecorators) {
+        self.to_mut().global_field_decorators = Some(deco);
+    }
+
+    pub(crate) fn set_global_relation_decorators(&self, deco: GlobalRelationDecorators) {
+        self.to_mut().global_relation_decorators = Some(deco);
+    }
+
+    pub(crate) fn set_global_property_decorators(&self, deco: GlobalPropertyDecorator) {
+        self.to_mut().global_property_decorators = Some(deco);
+    }
+
     pub(crate) fn global_model_decorators(&self) -> &GlobalModelDecorators {
-        unsafe {
-            let borrow = self.global_model_decorators.borrow();
-            let a = borrow.as_ref().unwrap();
-            let b: * const GlobalModelDecorators = a;
-            return &*b;
-        }
+        self.global_model_decorators.as_ref().unwrap()
     }
 
     pub(crate) fn global_field_decorators(&self) -> &GlobalFieldDecorators {
-        unsafe {
-            let borrow = self.global_field_decorators.borrow();
-            let a = borrow.as_ref().unwrap();
-            let b: * const GlobalFieldDecorators = a;
-            return &*b;
-        }
+        self.global_field_decorators.as_ref().unwrap()
     }
 
     pub(crate) fn global_relation_decorators(&self) -> &GlobalRelationDecorators {
-        unsafe {
-            let borrow = self.global_relation_decorators.borrow();
-            let a = borrow.as_ref().unwrap();
-            let b: * const GlobalRelationDecorators = a;
-            return &*b;
-        }
+        self.global_relation_decorators.as_ref().unwrap()
     }
 
     pub(crate) fn global_property_decorators(&self) -> &GlobalPropertyDecorator {
-        unsafe {
-            let borrow = self.global_property_decorators.borrow();
-            let a = borrow.as_ref().unwrap();
-            let b: * const GlobalPropertyDecorator = a;
-            return &*b;
-        }
+        self.global_property_decorators.as_ref().unwrap()
     }
 }

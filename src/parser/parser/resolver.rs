@@ -11,6 +11,7 @@ use crate::core::database::name::DatabaseName;
 use crate::core::tson::range::Range;
 use crate::parser::ast::accessible::{Accessible, Container};
 use crate::parser::ast::argument::ArgumentList;
+use crate::parser::ast::config::Config;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::entity::Entity;
@@ -33,6 +34,7 @@ use crate::parser::std::decorators::model::GlobalModelDecorators;
 use crate::parser::std::decorators::property::GlobalPropertyDecorator;
 use crate::parser::std::decorators::relation::GlobalRelationDecorators;
 use crate::prelude::Value;
+use to_mut::ToMut;
 
 pub(crate) struct Resolver { }
 
@@ -40,25 +42,22 @@ impl Resolver {
 
     pub(crate) fn resolve_parser(parser: &Parser) {
         let database_name = Self::resolve_connector(parser);
-        *parser.global_model_decorators.borrow_mut() = Some(GlobalModelDecorators::new());
-        *parser.global_field_decorators.borrow_mut() = Some(GlobalFieldDecorators::new(database_name));
-        *parser.global_relation_decorators.borrow_mut() = Some(GlobalRelationDecorators::new());
-        *parser.global_property_decorators.borrow_mut() = Some(GlobalPropertyDecorator::new());
+        parser.set_global_model_decorators(GlobalModelDecorators::new());
+        parser.set_global_field_decorators(GlobalFieldDecorators::new(database_name));
+        parser.set_global_relation_decorators(GlobalRelationDecorators::new());
+        parser.set_global_property_decorators(GlobalPropertyDecorator::new());
         let main = parser.get_source(1);
         Self::resolve_source(parser, main.borrow().deref());
         for (index, source) in parser.sources.iter() {
             if *index == 1 { continue }
             Self::resolve_source(parser, source.borrow().deref());
         }
-        parser.resolved.store(true, Ordering::SeqCst);
+        parser.to_mut().resolved = true;
     }
 
     pub(crate) fn resolve_source(parser: &Parser, source: &Source) {
-        if source.resolved.load(Ordering::SeqCst) { return }
-        for (item_id, rc_ref_cell_top) in source.tops.iter() {
-            let ref_cell_top = rc_ref_cell_top.as_ref();
-            let mut top_borrow = ref_cell_top.borrow_mut();
-            let top = top_borrow.deref_mut();
+        if source.resolved { return }
+        for (item_id, top) in source.to_mut().tops.iter_mut() {
             match top {
                 Top::Import(import) => {
                     Self::resolve_import(parser, source, import);
@@ -82,11 +81,11 @@ impl Resolver {
 
                 }
                 Top::Config(config) => {
-
+                    Self::resolve_config(parser, source, config);
                 }
             }
         }
-        source.resolved.store(true, Ordering::SeqCst);
+        source.to_mut().resolved = true;
     }
 
     pub(crate) fn resolve_import(parser: &Parser, source: &Source, import: &mut Import) {
@@ -97,7 +96,6 @@ impl Resolver {
         let from_source = from_source_borrow.deref();
         import.from_id = Some(from_source.id);
         for (item_id, top) in from_source.tops.iter() {
-            let top = top.as_ref().borrow();
             if top.is_model() {
                 let model = top.as_model().unwrap();
                 for identifier in import.identifiers.iter() {
@@ -338,18 +336,14 @@ impl Resolver {
         field.resolved = true;
     }
 
-
     pub(crate) fn resolve_connector(parser: &Parser) -> DatabaseName {
         if parser.connector.is_none() {
             panic!("Connector is not defined.");
         }
         let connector_ref = parser.connector.unwrap();
-        let source_borrow = parser.get_source(connector_ref.0).borrow();
-        let source = source_borrow.deref();
-        let mut source_get = source.tops.get(&connector_ref.1).unwrap();;
-        let top_borrow = source_get.borrow_mut();
-        let mut connector_borrow = top_borrow.as_ref().borrow_mut();
-        let mut connector = connector_borrow.deref_mut().as_connector_mut().unwrap();
+        let source = parser.get_source(connector_ref.0).borrow();
+        let mut top = source.to_mut().tops.get_mut(&connector_ref.1).unwrap();;
+        let mut connector = top.as_connector_mut().unwrap();
         for item in connector.items.iter_mut() {
             match item.identifier.name.as_str() {
                 "provider" => {
@@ -374,6 +368,46 @@ impl Resolver {
             }
         }
         connector.provider.unwrap()
+    }
+
+    pub(crate) fn resolve_config(parser: &Parser, source: &Source, config: &mut Config) {
+        for item in config.items.iter_mut() {
+            match item.identifier.name.as_str() {
+                "bind" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let bind_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    match bind_value.as_tuple() {
+                        Some(tuple_vec) => {
+                            let arg1 = tuple_vec.get(0).unwrap();
+                            let arg2 = tuple_vec.get(1).unwrap();
+                            let str = arg1.as_str().unwrap().to_owned();
+                            let int = arg2.as_i32().unwrap().to_owned();
+                            config.bind = Some((str, int));
+                        }
+                        None => panic!("Argument to 'bind' should be a tuple.")
+                    }
+                }
+                "jwtSecret" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let jwt_secret_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    match jwt_secret_value {
+                        Value::Null => (),
+                        Value::String(s) => config.jwtSecret = Some(s.clone()),
+                        _ => panic!("Value of 'jwtSecret' should be string.")
+                    }
+                }
+                "pathPrefix" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let path_prefix_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    match path_prefix_value {
+                        Value::Null => (),
+                        Value::String(s) => config.pathPrefix = Some(s.clone()),
+                        _ => panic!("Value of 'pathPrefix' should be string.")
+                    }
+                }
+                _ => { panic!("Undefined name '{}' in config block.", item.identifier.name.as_str())}
+            }
+        }
     }
 
     // Expression
@@ -652,21 +686,21 @@ impl Resolver {
     fn find_identifier_origin_in_source(parser: &Parser, source: &Source, identifier: &Identifier) -> Option<Reference> {
         // test for constant
         for id in source.constants.iter() {
-            let c = source.get_constant(id);
+            let c = source.get_constant(*id);
             if &identifier.name == &c.identifier.name {
                 return Some(Reference::ConstantReference((source.id, c.id)));
             }
         }
         // test for model
         for id in source.models.iter() {
-            let m = source.get_model(id);
+            let m = source.get_model(*id);
             if &identifier.name == &m.identifier.name {
                 return Some(Reference::ModelReference((source.id, m.id)));
             }
         }
         // test for import
         for id in source.imports.iter() {
-            let i = source.get_import(id);
+            let i = source.get_import(*id);
             let found = i.identifiers.iter().find(|i| &i.name == &identifier.name);
             if found.is_some() {
                 let source_id = i.from_id.unwrap();
@@ -680,7 +714,7 @@ impl Resolver {
     fn constant_with_reference(parser: &Parser, source: &Source, reference: (usize, usize)) -> Value {
         let source = parser.get_source(reference.0);
         let source_borrow = source.borrow();
-        let c = source_borrow.get_constant(&reference.1);
+        let c = source_borrow.get_constant(reference.1);
         let entity = c.expression.resolved.as_ref().unwrap();
         Self::unwrap_into_value_if_needed(parser, source.borrow().deref(), entity)
     }

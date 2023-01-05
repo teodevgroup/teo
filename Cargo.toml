@@ -6,6 +6,8 @@ description = "The next generation HTTP server."
 license = "MIT"
 
 [dependencies]
+to-mut = { version = "0.1.0" }
+to-mut-proc-macro = { version = "0.1.0" }
 actix-web = "4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
