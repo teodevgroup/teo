@@ -11,7 +11,7 @@ pub(crate) struct GlobalRelationDecorators {
 
 impl Debug for GlobalRelationDecorators {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str("GlobalPropertyDecorator")
+        f.write_str("GlobalRelationDecorators")
     }
 }
 

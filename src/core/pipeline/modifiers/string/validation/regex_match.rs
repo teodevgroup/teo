@@ -26,14 +26,13 @@ impl Modifier for RegexMatchModifier {
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let arg_value = self.argument.resolve(ctx.clone()).await;
-        let format = arg_value.as_str().unwrap();
-        let regex = Regex::new(format).unwrap();
+        let regex = arg_value.as_regexp().unwrap();
         match &ctx.value {
             Value::String(s) => {
                 if regex.is_match(s) {
                     ctx.clone()
                 } else {
-                    ctx.invalid(format!("Value does not match '{format}'"))
+                    ctx.invalid(format!("Value does not match '{regex}'"))
                 }
             }
             _ => {

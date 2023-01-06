@@ -10,8 +10,8 @@ pub struct Config {
     pub(crate) items: Vec<Item>,
     pub(crate) span: Span,
     pub(crate) bind: Option<(String, i32)>,
-    pub(crate) jwtSecret: Option<String>,
-    pub(crate) pathPrefix: Option<String>,
+    pub(crate) jwt_secret: Option<String>,
+    pub(crate) path_prefix: Option<String>,
 }
 
 impl Config {
@@ -22,8 +22,8 @@ impl Config {
             items,
             span,
             bind: None,
-            jwtSecret: None,
-            pathPrefix: None,
+            jwt_secret: None,
+            path_prefix: None,
         }
     }
 }

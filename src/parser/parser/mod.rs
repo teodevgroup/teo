@@ -39,8 +39,9 @@ use crate::parser::ast::unit::Unit;
 use crate::parser::parser::resolver::Resolver;
 use crate::parser::std::decorators::field::GlobalFieldDecorators;
 use crate::parser::std::decorators::model::GlobalModelDecorators;
-use crate::parser::std::decorators::property::GlobalPropertyDecorator;
+use crate::parser::std::decorators::property::GlobalPropertyDecorators;
 use crate::parser::std::decorators::relation::GlobalRelationDecorators;
+use crate::parser::std::pipeline::global::GlobalPipelineInstallers;
 
 #[derive(pest_derive::Parser)]
 #[grammar = "./src/parser/schema.pest"]
@@ -62,7 +63,8 @@ pub(crate) struct Parser {
     pub(crate) global_model_decorators: Option<GlobalModelDecorators>,
     pub(crate) global_field_decorators: Option<GlobalFieldDecorators>,
     pub(crate) global_relation_decorators: Option<GlobalRelationDecorators>,
-    pub(crate) global_property_decorators: Option<GlobalPropertyDecorator>,
+    pub(crate) global_property_decorators: Option<GlobalPropertyDecorators>,
+    pub(crate) global_pipeline_installers: Option<GlobalPipelineInstallers>,
 }
 
 impl Parser {
@@ -82,6 +84,7 @@ impl Parser {
             global_field_decorators: None,
             global_relation_decorators: None,
             global_property_decorators: None,
+            global_pipeline_installers: None,
         }
     }
 
@@ -625,8 +628,12 @@ impl Parser {
         self.to_mut().global_relation_decorators = Some(deco);
     }
 
-    pub(crate) fn set_global_property_decorators(&self, deco: GlobalPropertyDecorator) {
+    pub(crate) fn set_global_property_decorators(&self, deco: GlobalPropertyDecorators) {
         self.to_mut().global_property_decorators = Some(deco);
+    }
+
+    pub(crate) fn set_global_pipeline_installers(&self, installer: GlobalPipelineInstallers) {
+        self.to_mut().global_pipeline_installers = Some(installer);
     }
 
     pub(crate) fn global_model_decorators(&self) -> &GlobalModelDecorators {
@@ -641,7 +648,11 @@ impl Parser {
         self.global_relation_decorators.as_ref().unwrap()
     }
 
-    pub(crate) fn global_property_decorators(&self) -> &GlobalPropertyDecorator {
+    pub(crate) fn global_property_decorators(&self) -> &GlobalPropertyDecorators {
         self.global_property_decorators.as_ref().unwrap()
+    }
+
+    pub(crate) fn global_pipeline_installers(&self) -> &GlobalPipelineInstallers {
+        self.global_pipeline_installers.as_ref().unwrap()
     }
 }

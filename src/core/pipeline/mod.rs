@@ -14,6 +14,10 @@ pub struct Pipeline {
 
 impl Pipeline {
 
+    pub(crate) fn new() -> Self {
+        Self { modifiers: vec![] }
+    }
+
     pub(crate) fn has_any_modifier(&self) -> bool {
         self.modifiers.len() > 0
     }

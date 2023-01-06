@@ -10,17 +10,17 @@ use crate::parser::std::decorators::property::getter::getter_decorator;
 use crate::parser::std::decorators::property::setter::setter_decorator;
 use crate::parser::std::decorators::relation::relation::relation_decorator;
 
-pub(crate) struct GlobalPropertyDecorator {
+pub(crate) struct GlobalPropertyDecorators {
     objects: HashMap<String, Accessible>
 }
 
-impl Debug for GlobalPropertyDecorator {
+impl Debug for GlobalPropertyDecorators {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str("GlobalPropertyDecorator")
+        f.write_str("GlobalPropertyDecorators")
     }
 }
 
-impl GlobalPropertyDecorator {
+impl GlobalPropertyDecorators {
 
     pub(crate) fn new() -> Self {
         let mut objects: HashMap<String, Accessible> = HashMap::new();

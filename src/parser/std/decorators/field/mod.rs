@@ -55,7 +55,7 @@ use crate::parser::std::decorators::field::default::default_decorator;
 use crate::parser::std::decorators::field::foreign_key::foreign_key_decorator;
 use crate::parser::std::decorators::field::id::{id_decorator};
 use crate::parser::std::decorators::field::index::index_decorator;
-use crate::parser::std::decorators::field::input_omissible::input_ommissible_decorator;
+use crate::parser::std::decorators::field::input_omissible::input_omissible_decorator;
 use crate::parser::std::decorators::field::internal::{internal_decorator};
 use crate::parser::std::decorators::field::map::map_decorator;
 use crate::parser::std::decorators::field::nonatomic::{nonatomic_decorator};
@@ -116,7 +116,7 @@ impl GlobalFieldDecorators {
         objects.insert("presentWithout".to_owned(), Accessible::FieldDecorator(present_without_decorator));
         objects.insert("presentIf".to_owned(), Accessible::FieldDecorator(present_if_decorator));
         objects.insert("recordPrevious".to_owned(), Accessible::FieldDecorator(record_previous_decorator));
-        objects.insert("inputOmissible".to_owned(), Accessible::FieldDecorator(input_ommissible_decorator));
+        objects.insert("inputOmissible".to_owned(), Accessible::FieldDecorator(input_omissible_decorator));
         objects.insert("outputOmissible".to_owned(), Accessible::FieldDecorator(output_omissible_decorator));
         objects.insert("copy".to_owned(), Accessible::FieldDecorator(copy_decorator));
         objects.insert("auto".to_owned(), Accessible::FieldDecorator(auto_decorator));

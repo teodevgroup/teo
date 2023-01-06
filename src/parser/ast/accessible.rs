@@ -6,6 +6,8 @@ use crate::core::field::builder::FieldBuilder;
 use crate::core::field::Field;
 use crate::core::model::builder::ModelBuilder;
 use crate::core::model::Model;
+use crate::core::pipeline::modifier::Modifier;
+use crate::core::pipeline::Pipeline;
 use crate::core::property::builder::PropertyBuilder;
 use crate::core::property::Property;
 use crate::core::relation::builder::RelationBuilder;
@@ -22,6 +24,29 @@ pub(crate) type RelationDecorator = fn(args: Vec<Argument>, relation: &mut Relat
 pub(crate) type PropertyDecorator = fn(args: Vec<Argument>, property: &mut PropertyBuilder);
 
 pub(crate) type ModelDecorator = fn(args: Vec<Argument>, model: &mut ModelBuilder);
+
+pub(crate) type ASTPipelineInstaller = fn(args: Vec<Argument>) -> Arc<dyn Modifier>;
+
+#[derive(Debug, Clone)]
+pub(crate) struct ASTPipelineItem {
+    pub(crate) installer: ASTPipelineInstaller,
+    pub(crate) args: Vec<Argument>,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct ASTPipeline {
+    pub(crate) items: Vec<ASTPipelineItem>
+}
+
+impl ASTPipeline {
+    pub(crate) fn to_value_pipeline(&self) -> Pipeline {
+        let mut modifiers = vec![];
+        for item in self.items.iter() {
+            modifiers.push((item.installer)(item.args.clone()));
+        }
+        Pipeline { modifiers }
+    }
+}
 
 #[derive(Debug, Clone)]
 pub(crate) struct Container {
@@ -50,6 +75,7 @@ pub(crate) enum Accessible {
     ModelDecorator(ModelDecorator),
     Container(Container),
     Env(EnvObject),
+    ASTPipeline(ASTPipeline),
 }
 
 impl Debug for Accessible {
@@ -106,6 +132,13 @@ impl Accessible {
     pub(crate) fn as_model_decorator(&self) -> Option<&ModelDecorator> {
         match self {
             Accessible::ModelDecorator(d) => Some(d),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_ast_pipeline(&self) -> Option<&ASTPipeline> {
+        match self {
+            Accessible::ASTPipeline(p) => Some(p),
             _ => None,
         }
     }

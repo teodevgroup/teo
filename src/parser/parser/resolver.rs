@@ -9,7 +9,7 @@ use regex::Regex;
 use snailquote::unescape;
 use crate::core::database::name::DatabaseName;
 use crate::core::tson::range::Range;
-use crate::parser::ast::accessible::{Accessible, Container};
+use crate::parser::ast::accessible::{Accessible, ASTPipeline, ASTPipelineItem, Container};
 use crate::parser::ast::argument::ArgumentList;
 use crate::parser::ast::config::Config;
 use crate::parser::ast::constant::Constant;
@@ -31,10 +31,11 @@ use crate::parser::ast::unit::Unit;
 use crate::parser::parser::Parser;
 use crate::parser::std::decorators::field::GlobalFieldDecorators;
 use crate::parser::std::decorators::model::GlobalModelDecorators;
-use crate::parser::std::decorators::property::GlobalPropertyDecorator;
+use crate::parser::std::decorators::property::GlobalPropertyDecorators;
 use crate::parser::std::decorators::relation::GlobalRelationDecorators;
 use crate::prelude::Value;
 use to_mut::ToMut;
+use crate::parser::std::pipeline::global::GlobalPipelineInstallers;
 
 pub(crate) struct Resolver { }
 
@@ -45,7 +46,8 @@ impl Resolver {
         parser.set_global_model_decorators(GlobalModelDecorators::new());
         parser.set_global_field_decorators(GlobalFieldDecorators::new(database_name));
         parser.set_global_relation_decorators(GlobalRelationDecorators::new());
-        parser.set_global_property_decorators(GlobalPropertyDecorator::new());
+        parser.set_global_property_decorators(GlobalPropertyDecorators::new());
+        parser.set_global_pipeline_installers(GlobalPipelineInstallers::new());
         let main = parser.get_source(1);
         Self::resolve_source(parser, main.borrow().deref());
         for (index, source) in parser.sources.iter() {
@@ -310,7 +312,43 @@ impl Resolver {
     }
 
     fn resolve_pipeline(parser: &Parser, source: &Source, pipeline: &Pipeline) -> Entity {
-        panic!()
+        let mut items: Vec<ASTPipelineItem> = vec![];
+        match pipeline.expression.as_ref() {
+            ExpressionKind::Identifier(identifier) => {
+                let installer = parser.global_pipeline_installers().get(&identifier.name);
+                items.push(ASTPipelineItem { installer: installer.clone() , args: vec![]})
+            }
+            ExpressionKind::Unit(unit) => {
+                let mut previous_identifier: Option<&Identifier> = None;
+                for expression in &unit.expressions {
+                    match expression {
+                        ExpressionKind::Identifier(identifier) => {
+                            if let Some(previous_identifier) = previous_identifier {
+                                let installer = parser.global_pipeline_installers().get(&previous_identifier.name);
+                                items.push(ASTPipelineItem { installer: installer.clone() , args: vec![]});
+                            }
+                            previous_identifier = Some(&identifier);
+                        }
+                        ExpressionKind::ArgumentList(argument_list) => {
+                            let mut args = argument_list.clone();
+                            for arg in &mut args.arguments {
+                                let result = Self::resolve_expression_kind(parser, source, &arg.value);
+                                let value = Self::unwrap_into_value_if_needed(parser, source, &result);
+                                arg.resolved = Some(Entity::Value(value));
+                            }
+                            let installer = parser.global_pipeline_installers().get(&previous_identifier.unwrap().name);
+                            items.push(ASTPipelineItem { installer: installer.clone() , args: args.arguments});
+                            previous_identifier = None;
+                        }
+                        _ => panic!()
+                    }
+                }
+            }
+            _ => panic!()
+        }
+        let ast_pipeline = ASTPipeline { items };
+        let value_pipeline = ast_pipeline.to_value_pipeline();
+        Entity::Value(Value::Pipeline(value_pipeline))
     }
 
     fn resolve_field(parser: &Parser, source: &Source, field: &mut Field) {
@@ -392,7 +430,7 @@ impl Resolver {
                     let jwt_secret_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     match jwt_secret_value {
                         Value::Null => (),
-                        Value::String(s) => config.jwtSecret = Some(s.clone()),
+                        Value::String(s) => config.jwt_secret = Some(s.clone()),
                         _ => panic!("Value of 'jwtSecret' should be string.")
                     }
                 }
@@ -401,7 +439,7 @@ impl Resolver {
                     let path_prefix_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     match path_prefix_value {
                         Value::Null => (),
-                        Value::String(s) => config.pathPrefix = Some(s.clone()),
+                        Value::String(s) => config.path_prefix = Some(s.clone()),
                         _ => panic!("Value of 'pathPrefix' should be string.")
                     }
                 }
@@ -504,10 +542,6 @@ impl Resolver {
                 }
             }
         }
-    }
-
-    fn resolve_argument_list(a: &ArgumentList, source: Arc<Mutex<Source>>, parser: &Parser) -> Entity {
-        panic!()
     }
 
     fn resolve_unit(parser: &Parser, source: &Source, unit: &Unit) -> Entity {

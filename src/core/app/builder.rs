@@ -55,11 +55,11 @@ impl AppBuilder {
         let config = source.get_config(config_ref.1);
         let bind = config.bind.as_ref().unwrap();
         self.conf_builder().bind(bind.clone());
-        if let Some(pathPrefix) = &config.pathPrefix {
-            self.conf_builder().path_prefix(pathPrefix);
+        if let Some(path_prefix) = &config.path_prefix {
+            self.conf_builder().path_prefix(path_prefix);
         }
-        if let Some(jwtSecret) = &config.jwtSecret {
-            self.conf_builder().jwt_secret(jwtSecret);
+        if let Some(jwt_secret) = &config.jwt_secret {
+            self.conf_builder().jwt_secret(jwt_secret);
         }
         // load enums
         for enum_ref in parser.enums.clone() {

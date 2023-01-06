@@ -33,9 +33,9 @@ pub struct FieldBuilder {
     pub(crate) auth_by: bool,
     pub(crate) auth_by_arg: Option<Value>,
     pub(crate) default: Option<Value>,
-    pub(crate) on_set_pipeline: PipelineBuilder,
-    pub(crate) on_save_pipeline: PipelineBuilder,
-    pub(crate) on_output_pipeline: PipelineBuilder,
+    pub(crate) on_set_pipeline: Pipeline,
+    pub(crate) on_save_pipeline: Pipeline,
+    pub(crate) on_output_pipeline: Pipeline,
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) column_name: Option<String>,
     pub(crate) foreign_key: bool,
@@ -65,9 +65,9 @@ impl FieldBuilder {
             auth_by: false,
             auth_by_arg: None,
             default: None,
-            on_set_pipeline: PipelineBuilder::new(),
-            on_save_pipeline: PipelineBuilder::new(),
-            on_output_pipeline: PipelineBuilder::new(),
+            on_set_pipeline: Pipeline::new(),
+            on_save_pipeline: Pipeline::new(),
+            on_output_pipeline: Pipeline::new(),
             permission: None,
             column_name: None,
             previous_value_rule: PreviousValueRule::DontKeep,
@@ -209,17 +209,13 @@ impl FieldBuilder {
         self
     }
 
-    pub fn read_if<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut pipeline = PipelineBuilder::new();
-        build(&mut pipeline);
-        self.read_rule = ReadRule::ReadIf(pipeline.build());
+    pub fn read_if(&mut self, pipeline: Pipeline) -> &mut Self {
+        self.read_rule = ReadRule::ReadIf(pipeline);
         self
     }
 
-    pub fn write_if<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut pipeline = PipelineBuilder::new();
-        build(&mut pipeline);
-        self.write_rule = WriteRule::WriteIf(pipeline.build());
+    pub fn write_if(&mut self, pipeline: Pipeline) -> &mut Self {
+        self.write_rule = WriteRule::WriteIf(pipeline);
         self
     }
 
@@ -288,10 +284,8 @@ impl FieldBuilder {
         self
     }
 
-    pub fn present_if<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut builder = PipelineBuilder::new();
-        build(&mut builder);
-        self.optionality = PresentIf(builder.build());
+    pub fn present_if(&mut self, pipeline: Pipeline) -> &mut Self {
+        self.optionality = PresentIf(pipeline);
         self
     }
 
@@ -327,18 +321,18 @@ impl FieldBuilder {
         self
     }
 
-    pub fn on_set<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
-        build(&mut self.on_set_pipeline);
+    pub fn on_set(&mut self, pipeline: Pipeline) -> &mut Self {
+        self.on_set_pipeline = pipeline;
         self
     }
 
-    pub fn on_save<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
-        build(&mut self.on_save_pipeline);
+    pub fn on_save(&mut self, pipeline: Pipeline) -> &mut Self {
+        self.on_save_pipeline = pipeline;
         self
     }
 
-    pub fn on_output<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
-        build(&mut self.on_output_pipeline);
+    pub fn on_output(&mut self, pipeline: Pipeline) -> &mut Self {
+        self.on_output_pipeline = pipeline;
         self
     }
 
@@ -396,9 +390,9 @@ impl FieldBuilder {
             auth_by: self.auth_by,
             auth_by_arg: self.auth_by_arg.clone(),
             default: self.default.clone(),
-            on_set_pipeline: self.on_set_pipeline.build(),
-            on_save_pipeline: self.on_save_pipeline.build(),
-            on_output_pipeline: self.on_output_pipeline.build(),
+            on_set_pipeline: self.on_set_pipeline.clone(),
+            on_save_pipeline: self.on_save_pipeline.clone(),
+            on_output_pipeline: self.on_output_pipeline.clone(),
             permission: if let Some(builder) = &self.permission { Some(builder.build()) } else { None },
             column_name: self.column_name.clone(),
             previous_value_rule: self.previous_value_rule.clone(),

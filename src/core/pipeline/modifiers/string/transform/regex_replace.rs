@@ -29,10 +29,9 @@ impl Modifier for RegexReplaceModifier {
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let arg = self.format.resolve(ctx.clone()).await;
-        let format = arg.as_str().unwrap();
+        let regex = arg.as_regexp().unwrap();
         let s_arg = self.substitute.resolve(ctx.clone()).await;
         let substitute = s_arg.as_str().unwrap();
-        let regex = Regex::new(format).unwrap();
         match &ctx.value {
             Value::String(s) => ctx.alter_value(Value::String(regex.replace(s, substitute).to_string())),
             _ => ctx.invalid("Value is not string.")
