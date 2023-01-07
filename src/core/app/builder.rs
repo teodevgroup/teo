@@ -146,16 +146,21 @@ impl AppBuilder {
                         FieldClass::Field => {
                             model_builder.field(field.identifier.name.as_str(), |field_builder| {
                                 // handle types here
-                                if field.r#type.collection_required {
-                                    field_builder.required();
-                                } else {
-                                    field_builder.optional();
-                                }
                                 match field.r#type.arity {
                                     Arity::Scalar => {
+                                        if field.r#type.item_required {
+                                            field_builder.required();
+                                        } else {
+                                            field_builder.optional();
+                                        }
                                         Self::install_types_to_field_builder(&field.r#type.identifier.name, field_builder);
                                     }
                                     Arity::Array => {
+                                        if field.r#type.collection_required {
+                                            field_builder.required();
+                                        } else {
+                                            field_builder.optional();
+                                        }
                                         field_builder.vec(|builder| {
                                             if field.r#type.item_required {
                                                 builder.required();
@@ -166,6 +171,11 @@ impl AppBuilder {
                                         });
                                     }
                                     Arity::Dictionary => {
+                                        if field.r#type.collection_required {
+                                            field_builder.required();
+                                        } else {
+                                            field_builder.optional();
+                                        }
                                         field_builder.vec(|builder| {
                                             if field.r#type.item_required {
                                                 builder.required();
@@ -186,13 +196,13 @@ impl AppBuilder {
                         FieldClass::Relation => {
                             model_builder.relation(field.identifier.name.as_str(), |relation_builder| {
                                 // handle types here
-                                if field.r#type.collection_required {
-                                    relation_builder.required();
-                                } else {
-                                    relation_builder.optional();
-                                }
                                 match field.r#type.arity {
                                     Arity::Scalar => {
+                                        if field.r#type.item_required {
+                                            relation_builder.required();
+                                        } else {
+                                            relation_builder.optional();
+                                        }
                                         relation_builder.object(&field.r#type.identifier.name);
                                     }
                                     Arity::Array => {
@@ -215,16 +225,21 @@ impl AppBuilder {
                         FieldClass::Property => {
                             model_builder.property(field.identifier.name.as_str(), |property_builder| {
                                 // handle types here
-                                if field.r#type.collection_required {
-                                    property_builder.required();
-                                } else {
-                                    property_builder.optional();
-                                }
                                 match field.r#type.arity {
                                     Arity::Scalar => {
+                                        if field.r#type.item_required {
+                                            property_builder.required();
+                                        } else {
+                                            property_builder.optional();
+                                        }
                                         Self::install_types_to_property_builder(&field.r#type.identifier.name, property_builder);
                                     }
                                     Arity::Array => {
+                                        if field.r#type.collection_required {
+                                            property_builder.required();
+                                        } else {
+                                            property_builder.optional();
+                                        }
                                         property_builder.vec(|builder| {
                                             if field.r#type.item_required {
                                                 builder.required();
@@ -235,6 +250,11 @@ impl AppBuilder {
                                         });
                                     }
                                     Arity::Dictionary => {
+                                        if field.r#type.collection_required {
+                                            property_builder.required();
+                                        } else {
+                                            property_builder.optional();
+                                        }
                                         property_builder.vec(|builder| {
                                             if field.r#type.item_required {
                                                 builder.required();

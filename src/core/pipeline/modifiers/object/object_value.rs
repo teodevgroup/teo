@@ -24,7 +24,7 @@ impl Modifier for ObjectValueModifier {
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let key = self.key.resolve(ctx.clone()).await;
-        let value = ctx.object.as_ref().unwrap().get_value(key.as_str().unwrap()).unwrap();
-        ctx.alter_value(value).alter_key_path(path![key.as_str().unwrap().to_string()])
+        let value = ctx.object.as_ref().unwrap().get_value(key.as_raw_enum_choice().unwrap()).unwrap();
+        ctx.alter_value(value).alter_key_path(path![key.as_raw_enum_choice().unwrap().to_string()])
     }
 }
