@@ -105,10 +105,22 @@ impl AppBuilder {
         let connector = source.get_connector(connector_ref.1);
         let url = connector.url.as_ref().unwrap();
         match connector.provider.unwrap() {
-            DatabaseName::MySQL => self.graph_builder.data_source().mysql(url),
-            DatabaseName::PostgreSQL => self.graph_builder.data_source().postgres(url),
-            DatabaseName::SQLite => self.graph_builder.data_source().sqlite(url),
-            DatabaseName::MongoDB => self.graph_builder.data_source().mongodb(url),
+            DatabaseName::MySQL => {
+                #[cfg(feature = "data-source-mysql")]
+                self.graph_builder.data_source().mysql(url)
+            },
+            DatabaseName::PostgreSQL => {
+                #[cfg(feature = "data-source-postgres")]
+                self.graph_builder.data_source().postgres(url)
+            },
+            DatabaseName::SQLite => {
+                #[cfg(feature = "data-source-sqlite")]
+                self.graph_builder.data_source().sqlite(url)
+            },
+            DatabaseName::MongoDB => {
+                #[cfg(feature = "data-source-mongodb")]
+                self.graph_builder.data_source().mongodb(url)
+            },
         }
         // config
         let config_ref = parser.config.unwrap();
@@ -295,6 +307,7 @@ impl AppBuilder {
             "Float" | "Float64" => field_builder.f64(),
             "Date" => field_builder.date(),
             "DateTime" => field_builder.datetime(),
+            #[cfg(feature = "data-source-mongodb")]
             "ObjectId" => field_builder.object_id(),
             // _ => panic!("Unrecognized type: '{}'.", name)
             _ => field_builder.r#enum(name),
@@ -317,6 +330,7 @@ impl AppBuilder {
             "Float" | "Float64" => property_builder.f64(),
             "Date" => property_builder.date(),
             "DateTime" => property_builder.datetime(),
+            #[cfg(feature = "data-source-mongodb")]
             "ObjectId" => property_builder.object_id(),
             _ => property_builder.r#enum(name),
             // _ => panic!("Unrecognized type: '{}'.", name)
