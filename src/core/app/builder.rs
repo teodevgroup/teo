@@ -9,6 +9,7 @@ use crate::parser::parser::Parser;
 use crate::prelude::{App, Value};
 use futures_util::future::BoxFuture;
 use std::future::Future;
+use crate::core::field::builder::FieldBuilder;
 use crate::core::pipeline::context::Context;
 use crate::core::pipeline::context::validity::Validity;
 use crate::core::pipeline::modifier::Modifier;
@@ -16,6 +17,8 @@ use crate::core::pipeline::modifiers::function::compare::{CompareArgument, Compa
 use crate::core::pipeline::modifiers::function::perform::{PerformArgument, PerformModifier};
 use crate::core::pipeline::modifiers::function::transform::{TransformArgument, TransformModifier};
 use crate::core::pipeline::modifiers::function::validate::{ValidateArgument, ValidateModifier};
+use crate::core::property::builder::PropertyBuilder;
+use crate::parser::ast::r#type::Arity;
 
 #[derive(Debug)]
 pub(crate) struct CallbackLookupTable {
@@ -143,6 +146,37 @@ impl AppBuilder {
                         FieldClass::Field => {
                             model_builder.field(field.identifier.name.as_str(), |field_builder| {
                                 // handle types here
+                                if field.r#type.collection_required {
+                                    field_builder.required();
+                                } else {
+                                    field_builder.optional();
+                                }
+                                match field.r#type.arity {
+                                    Arity::Scalar => {
+                                        Self::install_types_to_field_builder(&field.r#type.identifier.name, field_builder);
+                                    }
+                                    Arity::Array => {
+                                        field_builder.vec(|builder| {
+                                            if field.r#type.item_required {
+                                                builder.required();
+                                            } else {
+                                                builder.optional();
+                                            }
+                                            Self::install_types_to_field_builder(&field.r#type.identifier.name, builder);
+                                        });
+                                    }
+                                    Arity::Dictionary => {
+                                        field_builder.vec(|builder| {
+                                            if field.r#type.item_required {
+                                                builder.required();
+                                            } else {
+                                                builder.optional();
+                                            }
+                                            Self::install_types_to_field_builder(&field.r#type.identifier.name, builder);
+                                        });
+                                    }
+                                }
+                                // handle decorators
                                 for decorator in field.decorators.iter() {
                                     let field_decorator = decorator.accessible.as_ref().unwrap().as_field_decorator().unwrap();
                                     field_decorator(decorator.get_argument_list(), field_builder);
@@ -152,6 +186,26 @@ impl AppBuilder {
                         FieldClass::Relation => {
                             model_builder.relation(field.identifier.name.as_str(), |relation_builder| {
                                 // handle types here
+                                if field.r#type.collection_required {
+                                    relation_builder.required();
+                                } else {
+                                    relation_builder.optional();
+                                }
+                                match field.r#type.arity {
+                                    Arity::Scalar => {
+                                        relation_builder.object(&field.r#type.identifier.name);
+                                    }
+                                    Arity::Array => {
+                                        if !field.r#type.item_required {
+                                            panic!("Relation cannot have optional items.")
+                                        }
+                                        relation_builder.vec(&field.r#type.identifier.name);
+                                    }
+                                    Arity::Dictionary => {
+                                        panic!("Relations cannot be dictionary.")
+                                    }
+                                }
+                                // handle decorators
                                 for decorator in field.decorators.iter() {
                                     let relation_decorator = decorator.accessible.as_ref().unwrap().as_relation_decorator().unwrap();
                                     relation_decorator(decorator.get_argument_list(), relation_builder);
@@ -161,6 +215,37 @@ impl AppBuilder {
                         FieldClass::Property => {
                             model_builder.property(field.identifier.name.as_str(), |property_builder| {
                                 // handle types here
+                                if field.r#type.collection_required {
+                                    property_builder.required();
+                                } else {
+                                    property_builder.optional();
+                                }
+                                match field.r#type.arity {
+                                    Arity::Scalar => {
+                                        Self::install_types_to_property_builder(&field.r#type.identifier.name, property_builder);
+                                    }
+                                    Arity::Array => {
+                                        property_builder.vec(|builder| {
+                                            if field.r#type.item_required {
+                                                builder.required();
+                                            } else {
+                                                builder.optional();
+                                            }
+                                            Self::install_types_to_field_builder(&field.r#type.identifier.name, builder);
+                                        });
+                                    }
+                                    Arity::Dictionary => {
+                                        property_builder.vec(|builder| {
+                                            if field.r#type.item_required {
+                                                builder.required();
+                                            } else {
+                                                builder.optional();
+                                            }
+                                            Self::install_types_to_field_builder(&field.r#type.identifier.name, builder);
+                                        });
+                                    }
+                                }
+                                // handle decorators
                                 for decorator in field.decorators.iter() {
                                     let property_decorator = decorator.accessible.as_ref().unwrap().as_property_decorator().unwrap();
                                     property_decorator(decorator.get_argument_list(), property_builder);
@@ -172,5 +257,49 @@ impl AppBuilder {
                 }
             });
         }
+    }
+
+    fn install_types_to_field_builder(name: &str, field_builder: &mut FieldBuilder) {
+        match name {
+            "String" => field_builder.string(),
+            "Bool" => field_builder.bool(),
+            "Int" | "Int32" => field_builder.i32(),
+            "Int64" => field_builder.i64(),
+            "Int8" => field_builder.i8(),
+            "Int16" => field_builder.i16(),
+            "UInt" | "UInt32" => field_builder.u32(),
+            "UInt64" => field_builder.u64(),
+            "UInt8" => field_builder.u8(),
+            "UInt16" => field_builder.u16(),
+            "Float32" => field_builder.f32(),
+            "Float" | "Float64" => field_builder.f64(),
+            "Date" => field_builder.date(),
+            "DateTime" => field_builder.datetime(),
+            "ObjectId" => field_builder.object_id(),
+            // _ => panic!("Unrecognized type: '{}'.", name)
+            _ => field_builder.r#enum(name),
+        };
+    }
+
+    fn install_types_to_property_builder(name: &str, property_builder: &mut PropertyBuilder) {
+        match name {
+            "String" => property_builder.string(),
+            "Bool" => property_builder.bool(),
+            "Int" | "Int32" => property_builder.i32(),
+            "Int64" => property_builder.i64(),
+            "Int8" => property_builder.i8(),
+            "Int16" => property_builder.i16(),
+            "UInt" | "UInt32" => property_builder.u32(),
+            "UInt64" => property_builder.u64(),
+            "UInt8" => property_builder.u8(),
+            "UInt16" => property_builder.u16(),
+            "Float32" => property_builder.f32(),
+            "Float" | "Float64" => property_builder.f64(),
+            "Date" => property_builder.date(),
+            "DateTime" => property_builder.datetime(),
+            "ObjectId" => property_builder.object_id(),
+            _ => property_builder.r#enum(name),
+            // _ => panic!("Unrecognized type: '{}'.", name)
+        };
     }
 }
