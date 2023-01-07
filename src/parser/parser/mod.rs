@@ -14,6 +14,7 @@ use maplit::{btreemap, btreeset};
 use pest::Parser as PestParser;
 use to_mut::ToMut;
 use to_mut_proc_macro::ToMut;
+use crate::core::app::builder::CallbackLookupTable;
 use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::client::Client;
 use crate::parser::ast::config::Config;
@@ -41,7 +42,7 @@ use crate::parser::std::decorators::field::GlobalFieldDecorators;
 use crate::parser::std::decorators::model::GlobalModelDecorators;
 use crate::parser::std::decorators::property::GlobalPropertyDecorators;
 use crate::parser::std::decorators::relation::GlobalRelationDecorators;
-use crate::parser::std::pipeline::global::GlobalPipelineInstallers;
+use crate::parser::std::pipeline::global::{GlobalFunctionInstallers, GlobalPipelineInstallers};
 
 #[derive(pest_derive::Parser)]
 #[grammar = "./src/parser/schema.pest"]
@@ -65,11 +66,13 @@ pub(crate) struct Parser {
     pub(crate) global_relation_decorators: Option<GlobalRelationDecorators>,
     pub(crate) global_property_decorators: Option<GlobalPropertyDecorators>,
     pub(crate) global_pipeline_installers: Option<GlobalPipelineInstallers>,
+    pub(crate) global_function_installers: Option<GlobalFunctionInstallers>,
+    pub(crate) callback_lookup_table: Arc<Mutex<CallbackLookupTable>>,
 }
 
 impl Parser {
 
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(callback_lookup_table: Arc<Mutex<CallbackLookupTable>>) -> Self {
         Self {
             sources: btreemap!{},
             enums: vec![],
@@ -85,6 +88,8 @@ impl Parser {
             global_relation_decorators: None,
             global_property_decorators: None,
             global_pipeline_installers: None,
+            global_function_installers: None,
+            callback_lookup_table,
         }
     }
 
@@ -636,6 +641,10 @@ impl Parser {
         self.to_mut().global_pipeline_installers = Some(installer);
     }
 
+    pub(crate) fn set_global_function_installers(&self, installer: GlobalFunctionInstallers) {
+        self.to_mut().global_function_installers = Some(installer);
+    }
+
     pub(crate) fn global_model_decorators(&self) -> &GlobalModelDecorators {
         self.global_model_decorators.as_ref().unwrap()
     }
@@ -655,4 +664,9 @@ impl Parser {
     pub(crate) fn global_pipeline_installers(&self) -> &GlobalPipelineInstallers {
         self.global_pipeline_installers.as_ref().unwrap()
     }
+
+    pub(crate) fn global_function_installers(&self) -> &GlobalFunctionInstallers {
+        self.global_function_installers.as_ref().unwrap()
+    }
+
 }

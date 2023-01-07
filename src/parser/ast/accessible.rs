@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use maplit::hashmap;
+use crate::core::app::builder::CallbackLookupTable;
 use crate::core::field::builder::FieldBuilder;
 use crate::core::field::Field;
 use crate::core::model::builder::ModelBuilder;
@@ -27,9 +28,13 @@ pub(crate) type ModelDecorator = fn(args: Vec<Argument>, model: &mut ModelBuilde
 
 pub(crate) type ASTPipelineInstaller = fn(args: Vec<Argument>) -> Arc<dyn Modifier>;
 
+pub(crate) type ASTFunctionInstaller = fn(lookup_table: Arc<Mutex<CallbackLookupTable>>, args: Vec<Argument>) -> Arc<dyn Modifier>;
+
 #[derive(Debug, Clone)]
 pub(crate) struct ASTPipelineItem {
-    pub(crate) installer: ASTPipelineInstaller,
+    pub(crate) installer: Option<ASTPipelineInstaller>,
+    pub(crate) function_installer: Option<ASTFunctionInstaller>,
+    pub(crate) lookup_table: Option<Arc<Mutex<CallbackLookupTable>>>,
     pub(crate) args: Vec<Argument>,
 }
 
@@ -42,7 +47,11 @@ impl ASTPipeline {
     pub(crate) fn to_value_pipeline(&self) -> Pipeline {
         let mut modifiers = vec![];
         for item in self.items.iter() {
-            modifiers.push((item.installer)(item.args.clone()));
+            if let Some(installer) = item.installer {
+                modifiers.push((installer)(item.args.clone()));
+            } else if let Some(function_installer) = item.function_installer {
+                modifiers.push((function_installer)(item.lookup_table.as_ref().unwrap().clone(), item.args.clone()));
+            }
         }
         Pipeline { modifiers }
     }

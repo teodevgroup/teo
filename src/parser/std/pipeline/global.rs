@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
-use crate::parser::ast::accessible::ASTPipelineInstaller;
+use crate::parser::ast::accessible::{ASTFunctionInstaller, ASTPipelineInstaller};
 use crate::parser::std::pipeline::array::append::append;
 use crate::parser::std::pipeline::array::get_length::get_length;
 use crate::parser::std::pipeline::array::has_length::has_length;
@@ -9,6 +9,7 @@ use crate::parser::std::pipeline::array::reverse::reverse;
 use crate::parser::std::pipeline::array::truncate::truncate;
 use crate::parser::std::pipeline::bcrypt::bcrypt_salt::bcrypt_salt;
 use crate::parser::std::pipeline::bcrypt::bcrypt_verify::bcrypt_verify;
+use crate::parser::std::pipeline::custom_function::{custom_callback, custom_compare, custom_transform, custom_validate};
 use crate::parser::std::pipeline::datetime::{now, today};
 use crate::parser::std::pipeline::intent::when;
 use crate::parser::std::pipeline::logical::valid;
@@ -121,10 +122,34 @@ impl GlobalPipelineInstallers {
         Self { objects }
     }
 
-    pub(crate) fn get(&self, key: &str) -> &ASTPipelineInstaller {
-        match self.objects.get(key) {
-            Some(o) => o,
-            None => panic!("Pipeline modifier with key '{}' is not found.", key),
-        }
+    pub(crate) fn get(&self, key: &str) -> Option<&ASTPipelineInstaller> {
+        self.objects.get(key)
+    }
+}
+
+pub(crate) struct GlobalFunctionInstallers {
+    objects: HashMap<String, ASTFunctionInstaller>
+}
+
+impl Debug for GlobalFunctionInstallers {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("GlobalFunctionInstallers")
+    }
+}
+
+impl GlobalFunctionInstallers {
+
+    pub(crate) fn new() -> Self {
+        let mut objects: HashMap<String, ASTFunctionInstaller> = HashMap::new();
+        // array
+        objects.insert("transform".to_owned(), custom_transform);
+        objects.insert("validate".to_owned(), custom_validate);
+        objects.insert("callback".to_owned(), custom_callback);
+        objects.insert("compare".to_owned(), custom_compare);
+        Self { objects }
+    }
+
+    pub(crate) fn get(&self, key: &str) -> Option<&ASTFunctionInstaller> {
+        self.objects.get(key)
     }
 }

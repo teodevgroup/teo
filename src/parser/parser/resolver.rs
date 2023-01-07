@@ -1,4 +1,3 @@
-use std::borrow::{Borrow, BorrowMut};
 use std::cell::RefCell;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
@@ -35,7 +34,7 @@ use crate::parser::std::decorators::property::GlobalPropertyDecorators;
 use crate::parser::std::decorators::relation::GlobalRelationDecorators;
 use crate::prelude::Value;
 use to_mut::ToMut;
-use crate::parser::std::pipeline::global::GlobalPipelineInstallers;
+use crate::parser::std::pipeline::global::{GlobalFunctionInstallers, GlobalPipelineInstallers};
 
 pub(crate) struct Resolver { }
 
@@ -48,11 +47,12 @@ impl Resolver {
         parser.set_global_relation_decorators(GlobalRelationDecorators::new());
         parser.set_global_property_decorators(GlobalPropertyDecorators::new());
         parser.set_global_pipeline_installers(GlobalPipelineInstallers::new());
+        parser.set_global_function_installers(GlobalFunctionInstallers::new());
         let main = parser.get_source(1);
-        Self::resolve_source(parser, main.borrow().deref());
+        Self::resolve_source(parser, main);
         for (index, source) in parser.sources.iter() {
             if *index == 1 { continue }
-            Self::resolve_source(parser, source.borrow().deref());
+            Self::resolve_source(parser, source);
         }
         parser.to_mut().resolved = true;
     }
@@ -92,7 +92,7 @@ impl Resolver {
 
     pub(crate) fn resolve_import(parser: &Parser, source: &Source, import: &mut Import) {
         let from_source = parser.sources.iter().find(|(source_id, source)| {
-            (*source).borrow().path == import.path
+            &source.path == &import.path
         }).unwrap().1;
         import.from_id = Some(from_source.id);
         for (item_id, top) in from_source.tops.iter() {
@@ -314,7 +314,26 @@ impl Resolver {
         match pipeline.expression.as_ref() {
             ExpressionKind::Identifier(identifier) => {
                 let installer = parser.global_pipeline_installers().get(&identifier.name);
-                items.push(ASTPipelineItem { installer: installer.clone() , args: vec![]})
+                if let Some(installer) = installer {
+                    items.push(ASTPipelineItem {
+                        installer: Some(installer.clone()),
+                        function_installer: None,
+                        lookup_table: None,
+                        args: vec![]
+                    })
+                } else {
+                    let installer = parser.global_function_installers().get(&identifier.name);
+                    if let Some(installer) = installer {
+                        items.push(ASTPipelineItem {
+                            installer: None,
+                            function_installer: Some(installer.clone()),
+                            lookup_table: Some(parser.callback_lookup_table.clone()),
+                            args: vec![]
+                        })
+                    } else {
+                        panic!("Cannot find pipeline item named '{}'.", identifier.name);
+                    }
+                }
             }
             ExpressionKind::Unit(unit) => {
                 let mut previous_identifier: Option<&Identifier> = None;
@@ -323,7 +342,11 @@ impl Resolver {
                         ExpressionKind::Identifier(identifier) => {
                             if let Some(previous_identifier) = previous_identifier {
                                 let installer = parser.global_pipeline_installers().get(&previous_identifier.name);
-                                items.push(ASTPipelineItem { installer: installer.clone() , args: vec![]});
+                                if let Some(installer) = installer {
+                                    items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: None, args: vec![]});
+                                } else {
+                                    panic!("Cannot find pipeline item named '{}'.", identifier.name);
+                                }
                             }
                             previous_identifier = Some(&identifier);
                         }
@@ -335,7 +358,16 @@ impl Resolver {
                                 arg.resolved = Some(Entity::Value(value));
                             }
                             let installer = parser.global_pipeline_installers().get(&previous_identifier.unwrap().name);
-                            items.push(ASTPipelineItem { installer: installer.clone() , args: args.arguments});
+                            if let Some(installer) = installer {
+                                items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: None, args: args.arguments});
+                            } else {
+                                let installer = parser.global_function_installers().get(&previous_identifier.unwrap().name);
+                                if let Some(installer) = installer {
+                                    items.push(ASTPipelineItem { installer: None, function_installer: Some(installer.clone()), lookup_table: Some(parser.callback_lookup_table.clone()), args: args.arguments});
+                                } else {
+                                    panic!("Cannot find pipeline item named '{}'.", previous_identifier.unwrap().name);
+                                }
+                            }
                             previous_identifier = None;
                         }
                         _ => panic!()
@@ -377,7 +409,7 @@ impl Resolver {
             panic!("Connector is not defined.");
         }
         let connector_ref = parser.connector.unwrap();
-        let source = parser.get_source(connector_ref.0).borrow();
+        let source = parser.get_source(connector_ref.0);
         let mut top = source.to_mut().tops.get_mut(&connector_ref.1).unwrap();;
         let mut connector = top.as_connector_mut().unwrap();
         for item in connector.items.iter_mut() {
@@ -737,7 +769,7 @@ impl Resolver {
             if found.is_some() {
                 let source_id = i.from_id.unwrap();
                 let origin_source = parser.get_source(source_id);
-                return Self::find_identifier_origin_in_source(parser, origin_source.borrow().deref(), identifier);
+                return Self::find_identifier_origin_in_source(parser, origin_source, identifier);
             }
         }
         None
@@ -745,10 +777,9 @@ impl Resolver {
 
     fn constant_with_reference(parser: &Parser, source: &Source, reference: (usize, usize)) -> Value {
         let source = parser.get_source(reference.0);
-        let source_borrow = source.borrow();
-        let c = source_borrow.get_constant(reference.1);
+        let c = source.get_constant(reference.1);
         let entity = c.expression.resolved.as_ref().unwrap();
-        Self::unwrap_into_value_if_needed(parser, source.borrow().deref(), entity)
+        Self::unwrap_into_value_if_needed(parser, source, entity)
     }
 
     fn unwrap_into_value_if_needed(parser: &Parser, source: &Source, entity: &Entity) -> Value {

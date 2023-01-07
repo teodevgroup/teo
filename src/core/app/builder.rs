@@ -1,13 +1,40 @@
+use std::collections::HashMap;
+use std::fmt::{Debug, Formatter};
+use std::sync::{Arc, Mutex};
 use crate::core::conf::builder::ConfBuilder;
 use crate::core::database::name::DatabaseName;
 use crate::core::graph::builder::GraphBuilder;
 use crate::parser::ast::field::FieldClass;
 use crate::parser::parser::Parser;
-use crate::prelude::App;
+use crate::prelude::{App, Value};
+use futures_util::future::BoxFuture;
+use std::future::Future;
+use crate::core::pipeline::context::Context;
+use crate::core::pipeline::context::validity::Validity;
+use crate::core::pipeline::modifier::Modifier;
+use crate::core::pipeline::modifiers::function::compare::{CompareArgument, CompareModifier};
+use crate::core::pipeline::modifiers::function::perform::{PerformArgument, PerformModifier};
+use crate::core::pipeline::modifiers::function::transform::{TransformArgument, TransformModifier};
+use crate::core::pipeline::modifiers::function::validate::{ValidateArgument, ValidateModifier};
+
+#[derive(Debug)]
+pub(crate) struct CallbackLookupTable {
+    pub(crate) transforms: HashMap<String, Arc<dyn Modifier>>,
+    pub(crate) validators: HashMap<String, Arc<dyn Modifier>>,
+    pub(crate) callbacks: HashMap<String, Arc<dyn Modifier>>,
+    pub(crate) compares: HashMap<String, Arc<dyn Modifier>>,
+}
+
+impl CallbackLookupTable {
+    fn new() -> Self {
+        Self { transforms: HashMap::new(), validators: HashMap::new(), callbacks: HashMap::new(), compares: HashMap::new() }
+    }
+}
 
 pub struct AppBuilder {
     pub(crate) graph_builder: GraphBuilder,
     pub(crate) conf_builder: ConfBuilder,
+    pub(crate) callback_lookup_table: Arc<Mutex<CallbackLookupTable>>,
 }
 
 impl AppBuilder {
@@ -16,25 +43,56 @@ impl AppBuilder {
         Self {
             graph_builder: GraphBuilder::new(),
             conf_builder: ConfBuilder::new(),
+            callback_lookup_table: Arc::new(Mutex::new(CallbackLookupTable::new())),
         }
     }
 
+    pub fn transform<T, F>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
+        T: From<Value> + Into<Value> + Send + Sync + 'static,
+        F: TransformArgument<T> + 'static {
+        self.callback_lookup_table.lock().unwrap().transforms.insert(name.into(), Arc::new(TransformModifier::new(f)));
+        self
+    }
+
+    pub fn perform<T, F>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
+        T: From<Value> + Send + Sync + 'static,
+        F: PerformArgument<T> + 'static {
+        self.callback_lookup_table.lock().unwrap().callbacks.insert(name.into(), Arc::new(PerformModifier::new(f)));
+        self
+    }
+
+    pub fn validate<T, O, F>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
+        T: From<Value> + Send + Sync + 'static,
+        O: Into<Validity> + Send + Sync + 'static,
+        F: ValidateArgument<T, O> + 'static {
+        self.callback_lookup_table.lock().unwrap().validators.insert(name.into(), Arc::new(ValidateModifier::new(f)));
+        self
+    }
+
+    pub fn compare<T, O, F>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
+        T: From<Value> + Send + Sync + 'static,
+        O: Into<Validity> + Send + Sync + 'static,
+        F: CompareArgument<T, O> + 'static {
+        self.callback_lookup_table.lock().unwrap().compares.insert(name.into(), Arc::new(CompareModifier::new(f)));
+        self
+    }
+
     pub fn load(&mut self, schema_file_name: Option<&str>) {
-        let mut parser = Parser::new();
+        let mut parser = Parser::new(self.callback_lookup_table.clone());
         parser.parse(schema_file_name);
         self.load_config_from_parser(&parser);
     }
 
-    pub fn graph_builder(&mut self) -> &mut GraphBuilder {
+    pub async fn build(&self) -> App {
+        App { conf: self.conf_builder.build(), graph: self.graph_builder.build().await }
+    }
+
+    fn graph_builder(&mut self) -> &mut GraphBuilder {
         &mut self.graph_builder
     }
 
-    pub fn conf_builder(&mut self) -> &mut ConfBuilder {
+    fn conf_builder(&mut self) -> &mut ConfBuilder {
         &mut self.conf_builder
-    }
-
-    pub async fn build(&self) -> App {
-        App { conf: self.conf_builder.build(), graph: self.graph_builder.build().await }
     }
 
     fn load_config_from_parser(&mut self, parser: &Parser) {
