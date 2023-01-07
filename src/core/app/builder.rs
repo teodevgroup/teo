@@ -136,7 +136,7 @@ impl AppBuilder {
             self.graph_builder.model(&model.identifier.name, |model_builder| {
                 for decorator in model.decorators.iter() {
                    let model_decorator = decorator.accessible.as_ref().unwrap().as_model_decorator().unwrap();
-                    model_decorator(decorator.arguments.clone().unwrap().arguments, model_builder);
+                    model_decorator(decorator.get_argument_list(), model_builder);
                 }
                 for field in model.fields.iter() {
                     match &field.field_class {
@@ -145,7 +145,7 @@ impl AppBuilder {
                                 // handle types here
                                 for decorator in field.decorators.iter() {
                                     let field_decorator = decorator.accessible.as_ref().unwrap().as_field_decorator().unwrap();
-                                    field_decorator(decorator.arguments.clone().unwrap().arguments, field_builder);
+                                    field_decorator(decorator.get_argument_list(), field_builder);
                                 }
                             });
                         }
@@ -154,7 +154,7 @@ impl AppBuilder {
                                 // handle types here
                                 for decorator in field.decorators.iter() {
                                     let relation_decorator = decorator.accessible.as_ref().unwrap().as_relation_decorator().unwrap();
-                                    relation_decorator(decorator.arguments.clone().unwrap().arguments, relation_builder);
+                                    relation_decorator(decorator.get_argument_list(), relation_builder);
                                 }
                             });
                         }
@@ -163,7 +163,7 @@ impl AppBuilder {
                                 // handle types here
                                 for decorator in field.decorators.iter() {
                                     let property_decorator = decorator.accessible.as_ref().unwrap().as_property_decorator().unwrap();
-                                    property_decorator(decorator.arguments.clone().unwrap().arguments, property_builder);
+                                    property_decorator(decorator.get_argument_list(), property_builder);
                                 }
                             });
                         }
