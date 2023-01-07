@@ -131,7 +131,13 @@
 - Schema parser **[DONE]**
 
 #### 0.0.43
-- SQLite: CRUD and decoding
+- Message output for starting server **[DONE]**
+- Better syntax highlighting for VSCode
+- Better syntax highlighting for IntelliJ IDEA
+- Syntax highlighting for official website
+- Design client config blocks and fix client code generation
+
+#### 0.0.50
 - Pipeline allows action error
 - More pipeline modifiers
 - MongoDB: root skip take and distinct bug
@@ -144,17 +150,17 @@
 - SQL: Enum types
 - Delete callbacks: `when_delete`, `before_delete` and `after_delete`
 
-#### 0.0.44
+#### 0.0.51
 - PostgreSQL: Migration I
 - SQLite: Migration I
 
-#### 0.0.45
+#### 0.0.52
 - Rewrite TypeScript client
 
-#### 0.0.46
+#### 0.0.53
 - The copy action
 
-#### 0.0.47 - 0.0.55
+#### 0.0.54 - 0.0.70
 - Setup unit tests
 - Replace buggy sqlx
 - Full support of decimal type
@@ -162,51 +168,44 @@
 - Custom SQL database types
 - MySQL: Enum types
 
-#### 0.0.56 - 0.0.66
+#### 0.0.71 - 0.0.81
 - Fix assign identity
 - Fix broken `connectIdentity` modifier
 - MongoDB transaction
 - SQL transaction
 
-#### 0.0.67
+#### 0.0.82
 - Migration II with MongoDB
 - Migration II with SQL databases
 
-#### 0.0.68
+#### 0.0.83
 - Input omissible and output omissible for generated clients
 
-#### 0.0.69
+#### 0.0.84
 - Correct count with cursor
 
-#### 0.0.70
+#### 0.0.85
 - `auth_by_companion`
 
-#### 0.0.71
+#### 0.0.86
 - Relation with read write rules
 
-#### 0.0.72
+#### 0.0.87
 - random float modifier
 - random int modifier
 
-#### 0.0.73
+#### 0.0.88
 - to uppercase modifier
 - to lowercase modifier
 - to word case modifier
 - to sentence case modifier
 - to title case modifier
 
-#### 0.0.74 - 0.0.110
-- parsers and schema
-- language servers
-
 #### 0.1.0
 - Swift client
 - Kotlin client
 - Dart client
 - Full unit test covering
-
-#### 0.2.0
-- Make schema language robust
 
 #### 0.3.0
 - Plugins

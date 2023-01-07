@@ -1,5 +1,4 @@
 use std::str::FromStr;
-use std::sync::{Arc, Mutex};
 use std::sync::atomic::Ordering;
 use indexmap::map::IndexMap;
 use regex::Regex;

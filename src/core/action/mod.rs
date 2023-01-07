@@ -18,7 +18,7 @@ impl Action {
     }
 
     pub(crate) async fn transform(&self, value: &Value, identity: Option<Object>) -> Value {
-        let mut value = value.clone();
+        let value = value.clone();
         let mut context = Context::initial_state_with_value(value.clone());
         for transformer in self.transformers.iter() {
             context = transformer.process(context.clone()).await;

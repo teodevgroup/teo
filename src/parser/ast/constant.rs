@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter, Write};
+use std::fmt::{Display, Formatter};
 use crate::parser::ast::entity::Entity;
 use crate::parser::ast::expression::Expression;
 use crate::parser::ast::identifier::Identifier;

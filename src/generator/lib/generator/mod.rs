@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use std::env::current_dir;
 use std::fs::{File};
 use std::io::Write;
 use std::fs::create_dir_all;

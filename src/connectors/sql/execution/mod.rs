@@ -1,9 +1,7 @@
 use std::borrow::Cow;
-use itertools::Itertools;
 use array_tool::vec::Uniq;
 use std::collections::HashMap;
 use async_recursion::async_recursion;
-use once_cell::sync::Lazy;
 use sqlx::{AnyPool, Column, Executor, Row};
 use sqlx::any::AnyRow;
 use crate::connectors::sql::query::Query;

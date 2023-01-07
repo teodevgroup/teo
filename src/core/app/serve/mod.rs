@@ -1,3 +1,4 @@
+use futures_util::future;
 use std::time::SystemTime;
 use actix_http::body::BoxBody;
 use actix_http::{Method};
@@ -12,7 +13,6 @@ use serde_json::{json, Value as JsonValue};
 use crate::core::action::r#type::ActionType;
 use self::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::conf::Conf;
-
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
 use crate::core::env::source::Source;
@@ -359,7 +359,6 @@ async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source:
         return HttpResponse::BadRequest().json(json!({"error": err}));
     }
     let create = create.as_vec().unwrap();
-    println!("here see create:: {:?}", create);
     let mut count = 0;
     let mut ret_data: Vec<Value> = vec![];
     for (index, val) in create.iter().enumerate() {
@@ -773,13 +772,24 @@ fn make_app_inner(graph: &'static Graph, conf: &'static Conf) -> App<impl Servic
     app
 }
 
+async fn server_start_message(port: u16) -> Result<(), std::io::Error> {
+    let local: DateTime<Local> = Local::now();
+    let local_formatted = format!("{local}").cyan();
+    let port_str = format!("{port}").bold().bright_magenta();
+    let text = "Listening".bright_yellow();
+    println!("{} {} on {}", local_formatted, text, port_str);
+    Ok(())
+}
+
 pub(crate) async fn serve(graph: Graph, conf: Conf) -> Result<(), std::io::Error> {
-    let conf2 = conf.clone();
-    HttpServer::new(move || {
+    let bind = conf.bind.clone();
+    let port = bind.1;
+    let server = HttpServer::new(move || {
         make_app(graph.clone(), conf.clone())
     })
-        .bind(conf2.bind.clone())
+        .bind(bind)
         .unwrap()
-        .run()
-        .await
+        .run();
+    let result = future::join(server, server_start_message(port)).await;
+    result.0
 }

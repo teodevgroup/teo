@@ -1,4 +1,3 @@
-use std::fmt::format;
 use chrono::{Date, Utc, DateTime, SecondsFormat};
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::field::r#type::FieldType;
