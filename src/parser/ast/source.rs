@@ -101,6 +101,7 @@ impl Source {
     }
 
     pub(crate) fn get_config(&self, id: usize) -> &Config {
+        let a = self.tops.get(&id).unwrap();
         self.tops.get(&id).unwrap().as_config().unwrap()
     }
 }

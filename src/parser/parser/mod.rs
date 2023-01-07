@@ -668,5 +668,4 @@ impl Parser {
     pub(crate) fn global_function_installers(&self) -> &GlobalFunctionInstallers {
         self.global_function_installers.as_ref().unwrap()
     }
-
 }

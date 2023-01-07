@@ -108,7 +108,7 @@ impl AppBuilder {
             DatabaseName::MongoDB => self.graph_builder.data_source().mongodb(url),
         }
         // config
-        let config_ref = parser.connector.unwrap();
+        let config_ref = parser.config.unwrap();
         let source = parser.get_source(config_ref.0);
         let config = source.get_config(config_ref.1);
         let bind = config.bind.as_ref().unwrap();
@@ -122,7 +122,7 @@ impl AppBuilder {
         // load enums
         for enum_ref in parser.enums.clone() {
             let source = parser.get_source(enum_ref.0);
-            let r#enum = source.get_enum(connector_ref.1);
+            let r#enum = source.get_enum(enum_ref.1);
             self.graph_builder.r#enum(&r#enum.identifier.name, |enum_builder| {
                for choice in r#enum.choices.iter() {
                     enum_builder.choice(&choice.identifier.name, |_| {});
