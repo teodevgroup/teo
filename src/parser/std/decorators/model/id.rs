@@ -10,7 +10,7 @@ pub(crate) fn id_decorator(args: Vec<Argument>, model: &mut ModelBuilder) {
             model.primary(vec![str_value]);
         }
         Value::Vec(vec_value) => {
-            let str_values: Vec<&str> = vec_value.iter().map(|v| v.as_str().unwrap()).collect();
+            let str_values: Vec<&str> = vec_value.iter().map(|v| v.as_raw_enum_choice().unwrap()).collect();
             model.primary(str_values);
         }
         _ => {
