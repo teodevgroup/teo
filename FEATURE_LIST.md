@@ -128,7 +128,7 @@
 - Rewrite client generation **[DONE]**
 
 #### 0.0.42
-- Schema parser **[IN PROGRESS]**
+- Schema parser **[DONE]**
 
 #### 0.0.43
 - SQLite: CRUD and decoding
