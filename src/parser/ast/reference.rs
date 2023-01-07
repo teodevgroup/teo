@@ -1,12 +1,12 @@
 #[derive(Debug, Clone)]
 pub(crate) enum Reference {
-    ModelReference((usize, usize)),
+    ModelReference((usize, usize, String)),
     ConstantReference((usize, usize)),
 }
 
 impl Reference {
 
-    pub(crate) fn as_model_ref(&self) -> Option<(usize, usize)> {
+    pub(crate) fn as_model_ref(&self) -> Option<(usize, usize, String)> {
         match self {
             Reference::ModelReference(r) => Some(r.clone()),
             Reference::ConstantReference(_) => None,

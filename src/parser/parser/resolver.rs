@@ -91,18 +91,16 @@ impl Resolver {
     }
 
     pub(crate) fn resolve_import(parser: &Parser, source: &Source, import: &mut Import) {
-        let from_source_ref_cell = parser.sources.iter().find(|(source_id, source)| {
+        let from_source = parser.sources.iter().find(|(source_id, source)| {
             (*source).borrow().path == import.path
         }).unwrap().1;
-        let from_source_borrow = from_source_ref_cell.borrow();
-        let from_source = from_source_borrow.deref();
         import.from_id = Some(from_source.id);
         for (item_id, top) in from_source.tops.iter() {
             if top.is_model() {
                 let model = top.as_model().unwrap();
                 for identifier in import.identifiers.iter() {
                     if identifier.name == model.identifier.name {
-                        import.references.insert(identifier.name.clone(), Reference::ModelReference((from_source.id, *item_id)));
+                        import.references.insert(identifier.name.clone(), Reference::ModelReference((from_source.id, *item_id, identifier.name.clone())));
                     }
                 }
             } else if top.is_constant() {
@@ -729,7 +727,7 @@ impl Resolver {
         for id in source.models.iter() {
             let m = source.get_model(*id);
             if &identifier.name == &m.identifier.name {
-                return Some(Reference::ModelReference((source.id, m.id)));
+                return Some(Reference::ModelReference((source.id, m.id, identifier.name.clone())));
             }
         }
         // test for import
@@ -761,7 +759,7 @@ impl Resolver {
             if r.is_constant_ref() {
                 return Self::constant_with_reference(parser, source, r.as_constant_ref().unwrap());
             } else {
-                panic!("Model ref cannot be transformed into value.")
+                return Value::RawEnumChoice(r.as_model_ref().unwrap().2.clone());
             }
         } else {
             panic!("Cannot unwrap accessible into value.")
