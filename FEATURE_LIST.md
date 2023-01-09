@@ -149,6 +149,7 @@
 - Node.js CLI
 - CLI mode: if run server, panic if custom programming callback is provided
 - Fix Node.js cannot Ctrl+C bug
+- TypeScript docs and index.d.ts for Node.js
 - Syntax highlighting for official website
 - Fix pipeline highlighting bug for VSCode
 - Syntax highlighting for IntelliJ IDEA
