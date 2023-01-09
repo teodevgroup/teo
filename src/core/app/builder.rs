@@ -9,6 +9,9 @@ use crate::parser::parser::Parser;
 use crate::prelude::{App, Value};
 use futures_util::future::BoxFuture;
 use std::future::Future;
+use to_mut_proc_macro::ToMut;
+use to_mut::ToMut;
+use crate::core::app::environment::EnvironmentVersion;
 use crate::core::field::builder::FieldBuilder;
 use crate::core::pipeline::context::Context;
 use crate::core::pipeline::context::validity::Validity;
@@ -34,19 +37,26 @@ impl CallbackLookupTable {
     }
 }
 
+#[derive(ToMut)]
 pub struct AppBuilder {
     pub(crate) graph_builder: GraphBuilder,
     pub(crate) conf_builder: ConfBuilder,
     pub(crate) callback_lookup_table: Arc<Mutex<CallbackLookupTable>>,
+    pub(crate) environment_version: EnvironmentVersion,
 }
 
 impl AppBuilder {
 
     pub fn new() -> Self {
+        Self::new_with_environment_version(EnvironmentVersion::Rust)
+    }
+
+    pub fn new_with_environment_version(environment_version: EnvironmentVersion) -> Self {
         Self {
             graph_builder: GraphBuilder::new(),
             conf_builder: ConfBuilder::new(),
             callback_lookup_table: Arc::new(Mutex::new(CallbackLookupTable::new())),
+            environment_version,
         }
     }
 
@@ -87,7 +97,7 @@ impl AppBuilder {
     }
 
     pub async fn build(&self) -> App {
-        App { conf: self.conf_builder.build(), graph: self.graph_builder.build().await }
+        App { conf: self.conf_builder.build(), graph: self.graph_builder.build().await, environment_version: self.environment_version.clone() }
     }
 
     fn graph_builder(&mut self) -> &mut GraphBuilder {
@@ -337,3 +347,6 @@ impl AppBuilder {
         };
     }
 }
+
+unsafe impl Send for AppBuilder { }
+unsafe impl Sync for AppBuilder { }

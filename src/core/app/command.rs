@@ -13,7 +13,7 @@ impl Into<Command> for String {
                 Command::Client
             }
             _ => {
-                panic!("Unrecognized command `{self}'")
+                Command::Serve
             }
         }
     }

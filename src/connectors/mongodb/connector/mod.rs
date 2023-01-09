@@ -461,7 +461,7 @@ impl Connector for MongoDBConnector {
         let aggregate_input = Aggregation::build(model, graph, finder)?;
         let reverse = Input::has_negative_take(finder);
         let col = &self.collections[model.name()];
-        println!("see aggregate input: {:?}", aggregate_input);
+        // println!("see aggregate input: {:?}", aggregate_input);
         let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
             println!("{:?}", cur);

@@ -132,10 +132,29 @@
 
 #### 0.0.43
 - Message output for starting server **[DONE]**
-- Better syntax highlighting for VSCode
-- Better syntax highlighting for IntelliJ IDEA
+- Great README for VSCode teo plugin **[DONE]**
+- Better syntax highlighting for VSCode **[DONE]**
+- Basic Python bindings without custom callbacks **[DONE]**
+- Basic Node.js bindings without custom callbacks **[DONE]**
+- When starting application, show framework version **[DONE]**
+- When starting application, show environment name and version **[DONE]**
+- When starting application, show rust compiler version, too
+- When starting application, show CLI or APP
+- Load support optional string parameter for Node.js
+- Load support optional string parameter for Python
+- CLI --version
+- CLI --help
+- Rust CLI
+- Python CLI
+- Node.js CLI
+- CLI mode: if run server, panic if custom programming callback is provided
+- Fix Node.js cannot Ctrl+C bug
 - Syntax highlighting for official website
+- Fix pipeline highlighting bug for VSCode
+- Syntax highlighting for IntelliJ IDEA
 - Design client config blocks and fix client code generation
+- Support code comment tags for VSCode
+- Support code comment parsing in schema parser
 
 #### 0.0.50
 - Pipeline allows action error

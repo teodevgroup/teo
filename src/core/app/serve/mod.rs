@@ -11,6 +11,7 @@ use futures_util::StreamExt;
 use key_path::{KeyPath, path};
 use serde_json::{json, Value as JsonValue};
 use crate::core::action::r#type::ActionType;
+use crate::core::app::environment::EnvironmentVersion;
 use self::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::conf::Conf;
 use crate::core::env::Env;
@@ -772,16 +773,23 @@ fn make_app_inner(graph: &'static Graph, conf: &'static Conf) -> App<impl Servic
     app
 }
 
-async fn server_start_message(port: u16) -> Result<(), std::io::Error> {
-    let local: DateTime<Local> = Local::now();
-    let local_formatted = format!("{local}").cyan();
+async fn server_start_message(port: u16, environment_version: EnvironmentVersion) -> Result<(), std::io::Error> {
+    // Introducing
+    let now: DateTime<Local> = Local::now();
+    let now_formatted = format!("{now}").cyan();
+    let teo_version = env!("CARGO_PKG_VERSION");
+    let teo = format!("Teo {}", teo_version).bright_purple().bold();
+    println!("{} {} ({})", now_formatted, teo, environment_version.to_string().bright_blue().bold());
+    // Listening
+    let now: DateTime<Local> = Local::now();
+    let now_formatted = format!("{now}").cyan();
     let port_str = format!("{port}").bold().bright_magenta();
     let text = "Listening".bright_yellow();
-    println!("{} {} on {}", local_formatted, text, port_str);
+    println!("{} {} on {}", now_formatted, text, port_str);
     Ok(())
 }
 
-pub(crate) async fn serve(graph: Graph, conf: Conf) -> Result<(), std::io::Error> {
+pub(crate) async fn serve(graph: Graph, conf: Conf, environment_version: EnvironmentVersion) -> Result<(), std::io::Error> {
     let bind = conf.bind.clone();
     let port = bind.1;
     let server = HttpServer::new(move || {
@@ -790,6 +798,6 @@ pub(crate) async fn serve(graph: Graph, conf: Conf) -> Result<(), std::io::Error
         .bind(bind)
         .unwrap()
         .run();
-    let result = future::join(server, server_start_message(port)).await;
+    let result = future::join(server, server_start_message(port, environment_version)).await;
     result.0
 }

@@ -498,3 +498,6 @@ impl ModelBuilder {
         map
     }
 }
+
+unsafe impl Send for ModelBuilder { }
+unsafe impl Sync for ModelBuilder { }
