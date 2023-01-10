@@ -48,7 +48,7 @@ pub struct AppBuilder {
 impl AppBuilder {
 
     pub fn new() -> Self {
-        Self::new_with_environment_version(EnvironmentVersion::Rust)
+        Self::new_with_environment_version(EnvironmentVersion::Rust("Unknown".to_string()))
     }
 
     pub fn new_with_environment_version(environment_version: EnvironmentVersion) -> Self {

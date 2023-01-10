@@ -53,6 +53,7 @@ serial_test = "0.10.0"
 rustc_version = "0.4.0"
 
 [features]
+default = ["data-source-mongodb", "data-source-mysql", "data-source-postgres", "data-source-sqlite"]
 data-source-mongodb = ["mongodb", "bson"]
 data-source-mysql = ["sqlx/mysql", "sqlx/any"]
 data-source-postgres = ["sqlx/postgres", "sqlx/any"]
