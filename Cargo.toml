@@ -1,9 +1,10 @@
 [package]
 name = "teo"
-version = "0.0.42"
+version = "0.0.43"
 edition = "2021"
 description = "The next generation HTTP server."
 license = "MIT"
+build = "build.rs"
 
 [dependencies]
 to-mut = { version = "0.1.0" }

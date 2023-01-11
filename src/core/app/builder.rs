@@ -11,6 +11,7 @@ use futures_util::future::BoxFuture;
 use std::future::Future;
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
+use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use crate::core::field::builder::FieldBuilder;
 use crate::core::pipeline::context::Context;
@@ -43,21 +44,35 @@ pub struct AppBuilder {
     pub(crate) conf_builder: ConfBuilder,
     pub(crate) callback_lookup_table: Arc<Mutex<CallbackLookupTable>>,
     pub(crate) environment_version: EnvironmentVersion,
+    pub(crate) entrance: Entrance,
 }
 
 impl AppBuilder {
 
     pub fn new() -> Self {
-        Self::new_with_environment_version(EnvironmentVersion::Rust("Unknown".to_string()))
+        Self::new_with_environment_version_and_entrance(Self::rust_environment_version(), Entrance::APP)
     }
 
     pub fn new_with_environment_version(environment_version: EnvironmentVersion) -> Self {
+        Self::new_with_environment_version_and_entrance(environment_version, Entrance::APP)
+    }
+
+    pub fn new_with_entrance(entrance: Entrance) -> Self {
+        Self::new_with_environment_version_and_entrance(Self::rust_environment_version(), entrance)
+    }
+
+    pub fn new_with_environment_version_and_entrance(environment_version: EnvironmentVersion, entrance: Entrance) -> Self {
         Self {
             graph_builder: GraphBuilder::new(),
             conf_builder: ConfBuilder::new(),
             callback_lookup_table: Arc::new(Mutex::new(CallbackLookupTable::new())),
             environment_version,
+            entrance,
         }
+    }
+
+    fn rust_environment_version() -> EnvironmentVersion {
+        EnvironmentVersion::Rust(env!("TEO_RUSTC_VERSION").to_string())
     }
 
     pub fn transform<T, F>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
@@ -97,7 +112,12 @@ impl AppBuilder {
     }
 
     pub async fn build(&self) -> App {
-        App { conf: self.conf_builder.build(), graph: self.graph_builder.build().await, environment_version: self.environment_version.clone() }
+        App {
+            conf: self.conf_builder.build(),
+            graph: self.graph_builder.build().await,
+            environment_version: self.environment_version.clone(),
+            entrance: self.entrance.clone()
+        }
     }
 
     fn graph_builder(&mut self) -> &mut GraphBuilder {

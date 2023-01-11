@@ -2,7 +2,6 @@ use crate::parser::ast::accessible::Accessible;
 use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::expression::ExpressionKind;
 use crate::parser::ast::span::Span;
-use crate::parser::ast::unit::Unit;
 
 #[derive(Debug, Clone)]
 pub struct Decorator {

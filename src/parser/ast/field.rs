@@ -1,4 +1,3 @@
-use crate::parser::ast::accessible::Accessible;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::r#type::Type;

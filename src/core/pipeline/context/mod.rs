@@ -7,7 +7,7 @@ use crate::core::pipeline::context::validity::Validity;
 use crate::core::pipeline::context::validity::Validity::{Invalid, Valid};
 use crate::core::tson::Value;
 
-pub(crate) mod validity;
+pub mod validity;
 pub(crate) mod stage;
 
 #[derive(Clone)]

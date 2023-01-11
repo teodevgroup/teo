@@ -136,10 +136,13 @@
 - Better syntax highlighting for VSCode **[DONE]**
 - Basic Python bindings without custom callbacks **[DONE]**
 - Basic Node.js bindings without custom callbacks **[DONE]**
+- Basic Go bindings without custom callbacks **[DONE]**
 - When starting application, show framework version **[DONE]**
 - When starting application, show environment name and version **[DONE]**
-- When starting application, show rust compiler version, too
-- When starting application, show CLI or APP
+- When starting application, show rust compiler version, too **[DONE]**
+- When starting application, show application entrance aka CLI or APP **[DONE]**
+- Node.js: remove App.prototype.run and rename AppBuilder into App **[DONE]**
+- Python: remove App.run and rename AppBuilder into App
 - Load support optional string parameter for Node.js
 - Load support optional string parameter for Python
 - CLI --version
@@ -148,8 +151,11 @@
 - Python CLI
 - Node.js CLI
 - CLI mode: if run server, panic if custom programming callback is provided
+- Cross language error handling
 - Fix Node.js cannot Ctrl+C bug
 - TypeScript docs and index.d.ts for Node.js
+
+#### 0.0.44
 - Syntax highlighting for official website
 - Fix pipeline highlighting bug for VSCode
 - Syntax highlighting for IntelliJ IDEA

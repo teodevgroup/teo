@@ -1,5 +1,4 @@
 use std::str::FromStr;
-use std::sync::atomic::Ordering;
 use indexmap::map::IndexMap;
 use regex::Regex;
 use snailquote::unescape;
@@ -407,7 +406,7 @@ impl Resolver {
         }
         let connector_ref = parser.connector.unwrap();
         let source = parser.get_source(connector_ref.0);
-        let mut top = source.to_mut().tops.get_mut(&connector_ref.1).unwrap();;
+        let mut top = source.to_mut().tops.get_mut(&connector_ref.1).unwrap();
         let mut connector = top.as_connector_mut().unwrap();
         for item in connector.items.iter_mut() {
             match item.identifier.name.as_str() {

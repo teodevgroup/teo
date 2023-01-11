@@ -11,6 +11,7 @@ use futures_util::StreamExt;
 use key_path::{KeyPath, path};
 use serde_json::{json, Value as JsonValue};
 use crate::core::action::r#type::ActionType;
+use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use self::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::conf::Conf;
@@ -773,13 +774,13 @@ fn make_app_inner(graph: &'static Graph, conf: &'static Conf) -> App<impl Servic
     app
 }
 
-async fn server_start_message(port: u16, environment_version: EnvironmentVersion) -> Result<(), std::io::Error> {
+async fn server_start_message(port: u16, environment_version: EnvironmentVersion, entrance: Entrance) -> Result<(), std::io::Error> {
     // Introducing
     let now: DateTime<Local> = Local::now();
     let now_formatted = format!("{now}").cyan();
     let teo_version = env!("CARGO_PKG_VERSION");
     let teo = format!("Teo {}", teo_version).bright_purple().bold();
-    println!("{} {} ({})", now_formatted, teo, environment_version.to_string().bright_blue().bold());
+    println!("{} {} ({}) [{}]", now_formatted, teo, environment_version.to_string().bright_blue().bold(), entrance.to_str().bright_green().bold());
     // Listening
     let now: DateTime<Local> = Local::now();
     let now_formatted = format!("{now}").cyan();
@@ -789,7 +790,7 @@ async fn server_start_message(port: u16, environment_version: EnvironmentVersion
     Ok(())
 }
 
-pub(crate) async fn serve(graph: Graph, conf: Conf, environment_version: EnvironmentVersion) -> Result<(), std::io::Error> {
+pub(crate) async fn serve(graph: Graph, conf: Conf, environment_version: EnvironmentVersion, entrance: Entrance) -> Result<(), std::io::Error> {
     let bind = conf.bind.clone();
     let port = bind.1;
     let server = HttpServer::new(move || {
@@ -798,6 +799,6 @@ pub(crate) async fn serve(graph: Graph, conf: Conf, environment_version: Environ
         .bind(bind)
         .unwrap()
         .run();
-    let result = future::join(server, server_start_message(port, environment_version)).await;
+    let result = future::join(server, server_start_message(port, environment_version, entrance)).await;
     result.0
 }

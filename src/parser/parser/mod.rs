@@ -1,15 +1,11 @@
 pub(crate) mod resolver;
 
 use std::borrow::Borrow;
-use std::cell::RefCell;
 use snailquote::unescape;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::fs;
-use std::ops::{Deref, DerefMut};
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
-use std::sync::atomic::AtomicBool;
 use maplit::{btreemap, btreeset};
 use pest::Parser as PestParser;
 use to_mut::ToMut;
