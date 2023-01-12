@@ -146,10 +146,10 @@
 - CLI --version **[DONE]**
 - CLI --help **[DONE]**
 - Rust CLI **[DONE]**
-- Rust: move load into build
-- Python: move load into run
-- Node.js: move load into run
-- Go: move load into run
+- Rust: move load into build **[DONE]**
+- Python: move load into run **[DONE]**
+- Node.js: move load into run **[DONE]**
+- Go: move load into run **[DONE]**
 - Python CLI
 - Node.js CLI
 - CLI mode: When run generation, ignore custom programming callbacks
