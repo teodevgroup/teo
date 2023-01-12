@@ -207,12 +207,16 @@ impl AppBuilder {
 
     fn load(&mut self) {
         let mut parser = Parser::new(self.callback_lookup_table.clone());
-        parser.parse(self.args.schema.map(|s| s.as_str()));
+        let main = match self.args.schema.as_ref() {
+            Some(s) => Some(s.as_str()),
+            None => None
+        };
+        parser.parse(main);
         self.load_config_from_parser(&parser);
     }
 
     pub async fn build(&mut self) -> App {
-        Self.load();
+        self.load();
         App {
             conf: self.conf_builder.build(),
             graph: self.graph_builder.build().await,
