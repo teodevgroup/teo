@@ -150,15 +150,17 @@
 - Python: move load into run **[DONE]**
 - Node.js: move load into run **[DONE]**
 - Go: move load into run **[DONE]**
-- Python CLI
+- Python CLI **[DONE]**
 - Node.js CLI
+- TypeScript docs and index.d.ts for Node.js
+
+#### 0.0.44
 - CLI mode: When run generation, ignore custom programming callbacks
 - CLI mode: if run server, panic if custom programming callback is provided
 - Cross language error handling
 - Fix Node.js cannot Ctrl+C bug
-- TypeScript docs and index.d.ts for Node.js
 
-#### 0.0.44
+#### 0.0.45
 - Support code comment tags for VSCode
 - Support code comment parsing in schema parser
 - Parser: parsing generations
@@ -166,13 +168,13 @@
 - Rewrite TypeScript client package
 - Rust entity generation
 
-#### 0.0.45
+#### 0.0.46
 - Syntax highlighting for official website
 - Fix pipeline highlighting bug for VSCode
 - Syntax highlighting for IntelliJ IDEA
 - Design client config blocks and fix client code generation
 
-#### 0.0.46
+#### 0.0.47
 - Swift package
 - Kotlin package
 
