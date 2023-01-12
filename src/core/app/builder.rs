@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::ffi::OsStr;
 use std::fmt::{Debug, Formatter};
 use std::sync::{Arc, Mutex};
 use crate::core::conf::builder::ConfBuilder;
@@ -11,6 +12,8 @@ use futures_util::future::BoxFuture;
 use std::future::Future;
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
+use clap::{Arg, arg, ArgAction, Command as ClapCommand, Parser as ClapParser};
+use crate::core::app::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, MigrateCommand, ServeCommand};
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use crate::core::field::builder::FieldBuilder;
@@ -45,6 +48,7 @@ pub struct AppBuilder {
     pub(crate) callback_lookup_table: Arc<Mutex<CallbackLookupTable>>,
     pub(crate) environment_version: EnvironmentVersion,
     pub(crate) entrance: Entrance,
+    pub(crate) args: Arc<CLI>,
 }
 
 impl AppBuilder {
@@ -66,9 +70,105 @@ impl AppBuilder {
             graph_builder: GraphBuilder::new(),
             conf_builder: ConfBuilder::new(),
             callback_lookup_table: Arc::new(Mutex::new(CallbackLookupTable::new())),
-            environment_version,
+            environment_version: environment_version.clone(),
             entrance,
+            args: Arc::new(Self::parse_cli_args(environment_version.clone(), entrance.clone())),
         }
+    }
+
+    fn parse_cli_args(environment_version: EnvironmentVersion, entrance: Entrance) -> CLI {
+        let version = Box::leak(Box::new(format!("Teo {} ({}) [{}]", env!("CARGO_PKG_VERSION"), environment_version.to_string(), entrance.to_str())));
+        let about = Box::leak(Box::new(match entrance {
+            Entrance::CLI => format!("{version}\n\nRun Teo application with CLI."),
+            Entrance::APP => format!("{version}\n\nRun Teo application with custom code loaded."),
+        }));
+        let matches = ClapCommand::new("teo")
+            .version(version.as_str())
+            .disable_version_flag(true)
+            .disable_help_subcommand(true)
+            .arg_required_else_help(true)
+            .about(about.as_str())
+            .subcommand_required(true)
+            .arg(Arg::new("SCHEMA_FILE")
+                .short('s')
+                .long("schema")
+                .help("The schema file to load").action(ArgAction::Set)
+                .required(false)
+                .num_args(1))
+            .arg(Arg::new("version")
+                .short('v')
+                .long("version")
+                .help("Print version information")
+                .action(ArgAction::Version))
+            .subcommand(ClapCommand::new("serve")
+                .about("Run migration and start the server")
+                .arg_required_else_help(false)
+                .arg(Arg::new("no-migration")
+                    .short('M')
+                    .long("no-migration")
+                    .help("Start server without running migration")
+                    .action(ArgAction::SetTrue)))
+            .subcommand(ClapCommand::new("generate")
+                .about("Generate code")
+                .arg_required_else_help(true)
+                .subcommand(ClapCommand::new("client")
+                    .about("Generate client")
+                    .arg(Arg::new("all")
+                        .short('a')
+                        .long("all")
+                        .help("Generate all clients")
+                        .action(ArgAction::SetTrue)
+                        .conflicts_with("NAME"))
+                    .arg(Arg::new("NAME")
+                        .action(ArgAction::Append)
+                        .conflicts_with("all")
+                        .help("Client names to generate")
+                        .num_args(1..)))
+                .subcommand(ClapCommand::new("entity")
+                    .about("Generate model entities")
+                    .arg_required_else_help(false)
+                    .arg(Arg::new("all")
+                        .short('a')
+                        .long("all")
+                        .help("Generate all clients")
+                        .action(ArgAction::SetTrue)
+                        .conflicts_with("NAME"))
+                    .arg(Arg::new("NAME")
+                        .action(ArgAction::Append)
+                        .conflicts_with("all")
+                        .help("Entity names to generate")
+                        .num_args(1..))))
+            .subcommand(ClapCommand::new("migrate")
+                .about("Run migration")
+                .arg(Arg::new("dry")
+                    .short('d')
+                    .long("dry")
+                    .help("Dry run")
+                    .action(ArgAction::SetTrue))).get_matches();
+        let schema: Option<&String> = matches.get_one("SCHEMA_FILE");
+        let command = match matches.subcommand() {
+            Some(("serve", submatches)) => {
+                CLICommand::Serve(ServeCommand { no_migration: submatches.get_flag("no-migration") })
+            }
+            Some(("generate", submatches)) => {
+                match submatches.subcommand() {
+                    Some(("client", submatches)) => {
+                        let names: Option<Vec<String>> = submatches.get_many::<String>("NAME").map(|s| s.map(|v| v.to_string()).collect::<Vec<String>>());
+                        CLICommand::Generate(GenerateCommand::GenerateClientCommand(GenerateClientCommand { all: false, names }))
+                    }
+                    Some(("entity", submatches)) => {
+                        let names: Option<Vec<String>> = submatches.get_many::<String>("NAME").map(|s| s.map(|v| v.to_string()).collect::<Vec<String>>());
+                        CLICommand::Generate(GenerateCommand::GenerateEntityCommand(GenerateEntityCommand { all: false, names }))
+                    }
+                    _ => unreachable!()
+                }
+            }
+            Some(("migrate", submatches)) => {
+                CLICommand::Migrate(MigrateCommand { dry: submatches.get_flag("dry") })
+            }
+            _ => unreachable!()
+        };
+        CLI { command: None, schema: schema.map(|s| s.to_string()) }
     }
 
     fn rust_environment_version() -> EnvironmentVersion {
@@ -105,18 +205,20 @@ impl AppBuilder {
         self
     }
 
-    pub fn load(&mut self, schema_file_name: Option<&str>) {
+    fn load(&mut self) {
         let mut parser = Parser::new(self.callback_lookup_table.clone());
-        parser.parse(schema_file_name);
+        parser.parse(self.args.schema.map(|s| s.as_str()));
         self.load_config_from_parser(&parser);
     }
 
-    pub async fn build(&self) -> App {
+    pub async fn build(&mut self) -> App {
+        Self.load();
         App {
             conf: self.conf_builder.build(),
             graph: self.graph_builder.build().await,
             environment_version: self.environment_version.clone(),
-            entrance: self.entrance.clone()
+            entrance: self.entrance.clone(),
+            args: self.args.clone(),
         }
     }
 

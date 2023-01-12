@@ -1,7 +1,6 @@
 use std::fmt::{Display, Formatter};
 use crate::parser::ast::expression::ExpressionKind;
 use crate::parser::ast::span::Span;
-use crate::parser::ast::unit::Unit;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Pipeline {

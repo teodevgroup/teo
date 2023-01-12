@@ -142,26 +142,39 @@
 - When starting application, show rust compiler version, too **[DONE]**
 - When starting application, show application entrance aka CLI or APP **[DONE]**
 - Node.js: remove App.prototype.run and rename AppBuilder into App **[DONE]**
-- Python: remove App.run and rename AppBuilder into App
-- Load support optional string parameter for Node.js
-- Load support optional string parameter for Python
-- CLI --version
-- CLI --help
-- Rust CLI
+- Python: remove App.run and rename AppBuilder into App **[DONE]**
+- CLI --version **[DONE]**
+- CLI --help **[DONE]**
+- Rust CLI **[DONE]**
+- Rust: move load into build
+- Python: move load into run
+- Node.js: move load into run
+- Go: move load into run
 - Python CLI
 - Node.js CLI
+- CLI mode: When run generation, ignore custom programming callbacks
 - CLI mode: if run server, panic if custom programming callback is provided
 - Cross language error handling
 - Fix Node.js cannot Ctrl+C bug
 - TypeScript docs and index.d.ts for Node.js
 
 #### 0.0.44
+- Support code comment tags for VSCode
+- Support code comment parsing in schema parser
+- Parser: parsing generations
+- Rewrite generation process
+- Rewrite TypeScript client package
+- Rust entity generation
+
+#### 0.0.45
 - Syntax highlighting for official website
 - Fix pipeline highlighting bug for VSCode
 - Syntax highlighting for IntelliJ IDEA
 - Design client config blocks and fix client code generation
-- Support code comment tags for VSCode
-- Support code comment parsing in schema parser
+
+#### 0.0.46
+- Swift package
+- Kotlin package
 
 #### 0.0.50
 - Pipeline allows action error

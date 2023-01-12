@@ -46,6 +46,7 @@ array_tool = "1.0.3"
 pest = "2.4.0"
 pest_derive = "2.4.0"
 snailquote = "0.3.1"
+clap = { version = "4.0.32", features = ["derive"] }
 
 [dev-dependencies]
 serial_test = "0.10.0"

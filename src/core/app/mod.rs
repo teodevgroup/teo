@@ -5,7 +5,8 @@ pub(crate) mod command;
 pub mod environment;
 pub mod entrance;
 
-use crate::core::app::command::Command;
+use std::sync::Arc;
+use crate::core::app::command::{CLI, CLICommand};
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use crate::core::app::generate::generate;
@@ -18,20 +19,20 @@ pub struct App {
     conf: Conf,
     environment_version: EnvironmentVersion,
     entrance: Entrance,
+    args: Arc<CLI>,
 }
 
 impl App {
     pub async fn run(&self) -> Result<(), std::io::Error> {
-        let command = match std::env::args().nth(1) {
-            Some(result) => result.into(),
-            None => Command::Serve
-        };
-        match command {
-            Command::Serve => {
+        match self.args.command.as_ref().unwrap() {
+            CLICommand::Serve(_) => {
                 serve(self.graph.clone(), self.conf.clone(), self.environment_version.clone(), self.entrance.clone()).await?
             }
-            Command::Client => {
+            CLICommand::Generate(_) => {
                 generate(&self.graph, &self.conf).await?
+            }
+            _ => {
+
             }
         }
         Ok(())
