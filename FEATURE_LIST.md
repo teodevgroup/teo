@@ -249,20 +249,8 @@
 #### 0.3.0
 - Plugins
 
-#### 0.4.0
-- Node.js support
-
-#### 0.5.0
-- Python support
-
 #### 0.6.0
 - Java support
-
-#### 0.7.0
-- Ruby support
-
-#### 0.8.0
-- Go support
 
 #### 1.0.0
 - First stable version

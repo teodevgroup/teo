@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use std::ffi::OsStr;
+use std::env;
+use std::ffi::{OsStr, OsString};
 use std::fmt::{Debug, Formatter};
 use std::sync::{Arc, Mutex};
 use crate::core::conf::builder::ConfBuilder;
@@ -144,7 +145,11 @@ impl AppBuilder {
                     .short('d')
                     .long("dry")
                     .help("Dry run")
-                    .action(ArgAction::SetTrue))).get_matches();
+                    .action(ArgAction::SetTrue)))
+            .get_matches_from(match environment_version {
+                EnvironmentVersion::Python(_) | EnvironmentVersion::NodeJS(_) => env::args_os().enumerate().filter(|(i, x)| *i != 1).map(|(i, x)| x).collect::<Vec<OsString>>(),
+                _ => env::args_os().collect::<Vec<OsString>>(),
+            });
         let schema: Option<&String> = matches.get_one("SCHEMA_FILE");
         let command = match matches.subcommand() {
             Some(("serve", submatches)) => {
@@ -168,7 +173,7 @@ impl AppBuilder {
             }
             _ => unreachable!()
         };
-        CLI { command: None, schema: schema.map(|s| s.to_string()) }
+        CLI { command, schema: schema.map(|s| s.to_string()) }
     }
 
     fn rust_environment_version() -> EnvironmentVersion {

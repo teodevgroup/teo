@@ -1,6 +1,6 @@
 #[derive(Debug)]
 pub(crate) struct CLI {
-    pub(crate) command: Option<CLICommand>,
+    pub(crate) command: CLICommand,
     pub(crate) schema: Option<String>,
 }
 

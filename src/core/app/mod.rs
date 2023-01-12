@@ -24,7 +24,7 @@ pub struct App {
 
 impl App {
     pub async fn run(&self) -> Result<(), std::io::Error> {
-        match self.args.command.as_ref().unwrap() {
+        match &self.args.command {
             CLICommand::Serve(_) => {
                 serve(self.graph.clone(), self.conf.clone(), self.environment_version.clone(), self.entrance.clone()).await?
             }
