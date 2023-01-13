@@ -344,7 +344,7 @@ impl Parser {
                 self.connector = Some((source_id, item_id));
                 Top::Connector(Connector::new(items, span, source_id, item_id))
             },
-            "generator" => {
+            "entity" => {
                 self.generators.push((source_id, item_id));
                 Top::Generator(Generator { identifier: identifier.unwrap(), items, span, source_id, id: item_id })
             },

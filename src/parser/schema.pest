@@ -16,7 +16,7 @@ MODEL_KEYWORD = { "model" }
 CONFIG_KEYWORD = { "config" }
 CONNECTOR_KEYWORD = { "connector" }
 CLIENT_KEYWORD = { "client" }
-GENERATOR_KEYWORD = { "generator" }
+ENTITY_KEYWORD = { "entity" }
 IMPORT_KEYWORD = { "import" }
 FROM_KEYWORD = { "from" }
 COLON = { ":" }
@@ -29,7 +29,7 @@ BLOCK_LEVEL_CATCH_ALL = { !BLOCK_CLOSE ~ CATCH_ALL }
 // #############
 // identifier
 // #############
-identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | "-" | ASCII_ALPHANUMERIC)* }
+identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | ASCII_ALPHANUMERIC)* }
 
 // #############
 // type
@@ -204,7 +204,7 @@ pipeline = { "$" ~ identifier_unit }
 // config blocks
 // #############
 
-config_keywords = { CONFIG_KEYWORD | CONNECTOR_KEYWORD | CLIENT_KEYWORD | GENERATOR_KEYWORD }
+config_keywords = { CONFIG_KEYWORD | CONNECTOR_KEYWORD | CLIENT_KEYWORD | ENTITY_KEYWORD }
 
 config_declaration = {
     config_keywords
