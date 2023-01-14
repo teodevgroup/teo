@@ -2,7 +2,7 @@
 name = "teo"
 version = "0.0.43"
 edition = "2021"
-description = "The next generation HTTP server."
+description = "The next generation HTTP server framework."
 license = "MIT"
 build = "build.rs"
 homepage = "https://teocloud.io"

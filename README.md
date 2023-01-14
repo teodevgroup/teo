@@ -1,6 +1,6 @@
 TEO [![License][license-image]][license-url] [![PR Welcome][pr-image]][pr-url]
 ===
-Teo is the new generation server software.
+The next generation HTTP server framework.
 
 Official website: https://teocloud.io
 
@@ -11,7 +11,7 @@ Official documentation: https://teocloud.io/docs
 |     | **Features**                                                                                                               |
 | --- |----------------------------------------------------------------------------------------------------------------------------|
 | 🛠  | **Intuitive Schema Language** Intuitive and readable schema language with intellisense support                             |
-| 🛠  | **Common database support** MySQL, PostgreSQL, SQLite and MongoDB are supported                                            |
+| 🛠  | **Builtin ORM** MySQL, PostgreSQL, SQLite and MongoDB are supported                                                        |
 | 🛠  | **Performant and optimized server** The engine is built with rust and we code carefully to make it very optimized and fast |
 | 🛠  | **Data Modeling** Declarative data modeling with auto completion                                                           |
 | 🍸  | **Data Sanitization** Strict user input checking                                                                           |
