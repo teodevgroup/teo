@@ -156,23 +156,23 @@
 - TypeScript docs and index.d.ts for Node.js **[DONE]**
 
 #### 0.0.44
+- Syntax highlighting for official website **[DONE]**
+- Syntax highlighting for IntelliJ IDEA **[DONE]**
+- Design client config blocks and fix client code generation
+- Fix pipeline highlighting bug for VSCode
+
+#### 0.0.45
 - CLI mode: When running generation, ignore custom programming callbacks
 - CLI mode: When running server, panic if custom programming callback is provided
 - Cross language error handling
 
-#### 0.0.45
+#### 0.0.46
 - Support code comment tags for VSCode
 - Support code comment parsing in schema parser
 - Parser: parsing generations
 - Rewrite generation process
 - Rewrite TypeScript client package
 - Rust entity generation
-
-#### 0.0.46
-- Syntax highlighting for official website **[DONE]**
-- Fix pipeline highlighting bug for VSCode
-- Syntax highlighting for IntelliJ IDEA
-- Design client config blocks and fix client code generation
 
 #### 0.0.47
 - Swift package

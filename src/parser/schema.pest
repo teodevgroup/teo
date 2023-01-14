@@ -98,13 +98,13 @@ tuple_literal = { "(" ~ ("," | (expression ~ "," ~ ( expression ~ ("," ~ express
 // #############
 // array literals
 // #############
-array_literal = { "[" ~ (expression ~ ( "," ~ expression )*)? ~ "]" }
+array_literal = { "[" ~ (expression ~ ( "," ~ expression )* ~ ","?)? ~ "]" }
 
 // #############
 // dict literals
 // #############
 named_expression = { expression ~ ":" ~ expression }
-dictionary_literal = { "{" ~ (named_expression ~ ( "," ~ named_expression )*)? ~ "}" }
+dictionary_literal = { "{" ~ (named_expression ~ ( "," ~ named_expression )* ~ ","?)? ~ "}" }
 
 // #############
 // subscript
