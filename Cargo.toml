@@ -5,6 +5,9 @@ edition = "2021"
 description = "The next generation HTTP server."
 license = "MIT"
 build = "build.rs"
+homepage = "https://teocloud.io"
+documentation = "https://teocloud.io/docs"
+repository = "https://github.com/teocloud/teo"
 
 [dependencies]
 to-mut = { version = "0.1.0" }
