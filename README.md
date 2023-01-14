@@ -1,4 +1,4 @@
-TEO [![License][license-image]][license-url] [![PR Welcome][pr-image]]
+TEO [![License][license-image]][license-url] [![PR Welcome][pr-image]][pr-url]
 ===
 Teo is the new generation server software.
 
