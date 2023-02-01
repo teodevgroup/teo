@@ -346,7 +346,7 @@ impl Parser {
             },
             "entity" => {
                 self.generators.push((source_id, item_id));
-                Top::Generator(Generator { identifier: identifier.unwrap(), items, span, source_id, id: item_id })
+                Top::Generator(Generator::new(item_id, source_id, identifier.unwrap(), items, span))
             },
             "client" => {
                 self.clients.push((source_id, item_id));
