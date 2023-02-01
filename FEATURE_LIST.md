@@ -158,8 +158,12 @@
 #### 0.0.44
 - Syntax highlighting for official website **[DONE]**
 - Syntax highlighting for IntelliJ IDEA **[DONE]**
-- Design client config blocks and fix client code generation
 - Fix pipeline highlighting bug for VSCode
+- Design client config blocks
+- Rewrite client code generation with TS and JS
+- `invalid` modifier **[DONE]**
+- Remove stage from pipeline context **[DONE]**
+- `if` modifier **[DONE]**
 
 #### 0.0.45
 - CLI mode: When running generation, ignore custom programming callbacks
