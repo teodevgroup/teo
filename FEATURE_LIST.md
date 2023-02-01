@@ -169,6 +169,7 @@
 - `and` and `or` modifier **[DONE]**
 - `validate` supports pipeline argument **[DONE]**
 - `transform` supports pipeline argument **[DONE]**
+- Fixed range literal bug **[DONE]**
 
 #### 0.0.45
 - CLI mode: When running generation, ignore custom programming callbacks

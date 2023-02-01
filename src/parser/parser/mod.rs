@@ -224,7 +224,7 @@ impl Parser {
                 Rule::block_decorator => decorators.push(Self::parse_decorator(current)),
                 Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
                 Rule::comment_block => (),
-                _ => panic!("error. {:?}", current.into_span()),
+                _ => panic!("error. {:?}", current),
             }
         }
         Top::Model(Model::new(
@@ -522,13 +522,25 @@ impl Parser {
         let mut closed = false;
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::expression => expressions.push(Self::parse_expression(current).kind),
+                Rule::range_end => expressions.push(Self::parse_range_end(current)),
                 Rule::RANGE_OPEN => closed = false,
                 Rule::RANGE_CLOSE => closed = true,
-                _ => panic!(),
+                _ => panic!("{:?} {:?}", current.as_rule(), current.as_span()),
             }
         }
         RangeLiteral { closed, expressions, span }
+    }
+
+    fn parse_range_end(pair: Pair<'_>) -> ExpressionKind {
+        let span = Self::parse_span(&pair);
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::numeric_literal => return ExpressionKind::NumericLiteral(NumericLiteral { value: current.as_str().to_string(), span }),
+                Rule::unit_without_range_literal => return Self::parse_unit(current),
+                _ => panic!(),
+            }
+        }
+        panic!()
     }
 
     fn parse_tuple_literal(pair: Pair<'_>) -> TupleLiteral {

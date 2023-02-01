@@ -87,7 +87,7 @@ enum_choice_literal = @{ "." ~ identifier }
 // #############
 // range literals
 // #############
-range_literal = { range_end ~ (RANGE_OPEN | RANGE_CLOSE) ~ range_end }
+range_literal = { range_end ~ (RANGE_CLOSE | RANGE_OPEN) ~ range_end }
 range_end = { numeric_literal | unit_without_range_literal }
 
 // #############
@@ -141,6 +141,7 @@ unit = {
     group |
     null_literal |
     bool_literal |
+    range_literal |
     numeric_literal |
     string_literal |
     regexp_literal |
@@ -148,7 +149,6 @@ unit = {
     tuple_literal |
     array_literal |
     dictionary_literal |
-    range_literal |
     identifier
     ~ (subscript | argument_list | "." ~ identifier)*
 }
@@ -188,7 +188,7 @@ let_declaration = { "let" ~ identifier ~ "=" ~ expression }
 // #############
 // arguments
 // #############
-argument_list = { "(" ~ (argument ~ ("," ~ argument)*)? ~ TRAILING_COMMA? ~ ")" }
+argument_list = { "(" ~ (NEWLINE | WHITESPACE)* ~ (argument ~ ((NEWLINE | WHITESPACE)* ~ "," ~ (NEWLINE | WHITESPACE)* ~ argument ~ (NEWLINE | WHITESPACE)*)*)? ~ TRAILING_COMMA? ~ (NEWLINE | WHITESPACE)* ~ ")" }
 argument = { named_argument | empty_argument | expression }
 empty_argument = { identifier ~ ":" }
 named_argument = { identifier ~ ":" ~ expression }
