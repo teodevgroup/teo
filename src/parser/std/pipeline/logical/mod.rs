@@ -21,7 +21,7 @@ pub(crate) fn if_modifier(args: Vec<Argument>) -> Arc<dyn Modifier> {
     if !arg0.name.is_none() && &arg0.name.as_ref().unwrap().name != "cond" {
         panic!("First argument of `if` must be nameless or with name 'cond'.")
     }
-    let cond = arg0.resolved.unwrap().as_value().unwrap();
+    let cond = arg0.resolved.as_ref().unwrap().as_value().unwrap();
     let mut then = None;
     let mut r#else = None;
     for (index, arg) in args.iter().enumerate() {
@@ -29,12 +29,12 @@ pub(crate) fn if_modifier(args: Vec<Argument>) -> Arc<dyn Modifier> {
             if arg.name.is_none() {
                 panic!("Second and third argument of `if` should have name 'then' or 'else'.")
             }
-            match arg.name.unwrap().name.as_str() {
+            match arg.name.as_ref().unwrap().name.as_str() {
                 "then" => {
-                    then = Some(arg.resolved.unwrap().as_value().unwrap().clone())
+                    then = Some(arg.resolved.as_ref().unwrap().as_value().unwrap().clone())
                 }
                 "else" => {
-                    r#else = Some(arg.resolved.unwrap().as_value().unwrap().clone())
+                    r#else = Some(arg.resolved.as_ref().unwrap().as_value().unwrap().clone())
                 }
                 _ => panic!("Second and third argument of `if` should have name 'then' or 'else'.")
             }

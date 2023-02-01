@@ -8,7 +8,6 @@ use crate::core::pipeline::modifiers::bcrypt::bcrypt_salt::BcryptSaltModifier;
 use crate::core::pipeline::modifiers::bcrypt::bcrypt_verify::BcryptVerifyModifier;
 use crate::core::pipeline::modifiers::math::ceil::CeilModifier;
 use crate::core::pipeline::modifiers::string::generation::cuid::CUIDModifier;
-use crate::core::pipeline::modifiers::logical::r#else::ElseModifier;
 use crate::core::pipeline::modifiers::math::floor::FloorModifier;
 use crate::core::pipeline::modifiers::logical::r#if::IfModifier;
 use crate::core::pipeline::modifiers::datetime::now::NowModifier;
@@ -17,7 +16,6 @@ use crate::core::pipeline::modifiers::logical::or::OrModifier;
 use crate::core::pipeline::modifiers::logical::r#do::DoModifier;
 use crate::core::pipeline::modifiers::string::transform::regex_replace::RegexReplaceModifier;
 use crate::core::pipeline::modifiers::string::generation::slug::SlugModifier;
-use crate::core::pipeline::modifiers::logical::then::ThenModifier;
 use crate::core::pipeline::modifiers::string::generation::uuid::UUIDModifier;
 use crate::core::pipeline::modifiers::array::append::AppendModifier;
 use crate::core::pipeline::modifiers::array::get_length::GetLengthModifier;
@@ -253,27 +251,6 @@ impl PipelineBuilder {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);
         self.modifiers.push(Arc::new(NotModifier::new(pipeline.build())));
-        self
-    }
-
-    pub fn r#if<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut pipeline = PipelineBuilder::new();
-        build(&mut pipeline);
-        self.modifiers.push(Arc::new(IfModifier::new(pipeline.build())));
-        self
-    }
-
-    pub fn r#else<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut pipeline = PipelineBuilder::new();
-        build(&mut pipeline);
-        self.modifiers.push(Arc::new(ElseModifier::new(pipeline.build())));
-        self
-    }
-
-    pub fn then<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut pipeline = PipelineBuilder::new();
-        build(&mut pipeline);
-        self.modifiers.push(Arc::new(ThenModifier::new(pipeline.build())));
         self
     }
 
