@@ -11,15 +11,8 @@ pub struct AllModifier {
 }
 
 impl AllModifier {
-    pub fn new<F: Fn(&mut PipelineBuilder)>(build: F) -> Self {
-        let mut pipeline = PipelineBuilder::new();
-        build(&mut pipeline);
-        let pipelines: Vec<Pipeline> = pipeline.modifiers.iter().map(|modifier| {
-            let mut p = PipelineBuilder::new();
-            p.modifiers.push(modifier.clone());
-            p.build()
-        }).collect();
-        return AllModifier { pipelines };
+    pub fn new(pipelines: Vec<Pipeline>) -> Self {
+        return Self { pipelines };
     }
 }
 

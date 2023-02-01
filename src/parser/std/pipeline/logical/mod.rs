@@ -1,5 +1,7 @@
 use std::sync::Arc;
 use crate::core::pipeline::modifier::Modifier;
+use crate::core::pipeline::modifiers::logical::all::AllModifier;
+use crate::core::pipeline::modifiers::logical::any::AnyModifier;
 use crate::core::pipeline::modifiers::logical::valid::ValidModifier;
 use crate::core::pipeline::modifiers::logical::invalid::InvalidModifier;
 use crate::core::pipeline::modifiers::logical::r#if::IfModifier;
@@ -41,4 +43,28 @@ pub(crate) fn if_modifier(args: Vec<Argument>) -> Arc<dyn Modifier> {
         }
     }
     Arc::new(IfModifier::new(cond.clone(), then, r#else))
+}
+
+
+pub(crate) fn all_modifier(args: Vec<Argument>) -> Arc<dyn Modifier> {
+    if args.len() == 0 {
+        panic!("`all` takes at least 1 argument.")
+    }
+    let mut pipelines = vec![];
+    for arg in args.iter() {
+        pipelines.push(arg.resolved.as_ref().unwrap().as_value().unwrap().as_pipeline().unwrap().clone());
+    }
+    Arc::new(AllModifier::new(pipelines))
+}
+
+
+pub(crate) fn any_modifier(args: Vec<Argument>) -> Arc<dyn Modifier> {
+    if args.len() == 0 {
+        panic!("`any` takes at least 1 argument.")
+    }
+    let mut pipelines = vec![];
+    for arg in args.iter() {
+        pipelines.push(arg.resolved.as_ref().unwrap().as_value().unwrap().as_pipeline().unwrap().clone());
+    }
+    Arc::new(AnyModifier::new(pipelines))
 }

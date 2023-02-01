@@ -12,7 +12,7 @@ use crate::parser::std::pipeline::bcrypt::bcrypt_verify::bcrypt_verify;
 use crate::parser::std::pipeline::custom_function::{custom_callback, custom_compare, custom_transform, custom_validate};
 use crate::parser::std::pipeline::datetime::{now, today};
 use crate::parser::std::pipeline::intent::when;
-use crate::parser::std::pipeline::logical::{if_modifier, invalid, valid};
+use crate::parser::std::pipeline::logical::{all_modifier, any_modifier, if_modifier, invalid, valid};
 use crate::parser::std::pipeline::math::{abs, add, cbrt, ceil, divide, floor, max, min, modular, multiply, pow, root, round, sqrt, subtract};
 use crate::parser::std::pipeline::number::{is_even, is_odd};
 use crate::parser::std::pipeline::object::{get_object, is_a, object_get, object_previous_value, object_set};
@@ -55,6 +55,8 @@ impl GlobalPipelineInstallers {
         objects.insert("valid".to_owned(), valid);
         objects.insert("invalid".to_owned(), invalid);
         objects.insert("if".to_owned(), if_modifier);
+        objects.insert("all".to_owned(), all_modifier);
+        objects.insert("any".to_owned(), any_modifier);
         // math
         objects.insert("abs".to_owned(), abs);
         objects.insert("add".to_owned(), add);

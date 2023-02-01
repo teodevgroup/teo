@@ -457,28 +457,8 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn all<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
-        self.modifiers.push(Arc::new(AllModifier::new(build)));
-        self
-    }
-
-    pub fn any<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
-        self.modifiers.push(Arc::new(AnyModifier::new(build)));
-        self
-    }
-
     pub fn r#do<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         self.modifiers.push(Arc::new(DoModifier::new(build)));
-        self
-    }
-
-    pub fn or<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
-        self.modifiers.push(Arc::new(OrModifier::new(build)));
-        self
-    }
-
-    pub fn and<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
-        self.modifiers.push(Arc::new(AndModifier::new(build)));
         self
     }
 
