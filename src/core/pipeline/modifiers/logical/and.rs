@@ -32,7 +32,6 @@ impl Modifier for AndModifier {
                 Value::Pipeline(p) => p.process(ctx).await,
                 _ => ctx.alter_value(self.value.clone()),
             }
-
         }
     }
 }

@@ -32,7 +32,6 @@ impl Modifier for OrModifier {
                 Value::Pipeline(p) => p.process(ctx).await,
                 _ => ctx.alter_value(self.value.clone()),
             }
-
         }
     }
 }

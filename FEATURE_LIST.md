@@ -167,6 +167,8 @@
 - `not` modifier **[DONE]**
 - `passed` modifier **[DONE]**
 - `and` and `or` modifier **[DONE]**
+- `validate` supports pipeline argument **[DONE]**
+- `transform` supports pipeline argument **[DONE]**
 
 #### 0.0.45
 - CLI mode: When running generation, ignore custom programming callbacks
