@@ -30,6 +30,8 @@ use crate::parser::std::decorators::property::GlobalPropertyDecorators;
 use crate::parser::std::decorators::relation::GlobalRelationDecorators;
 use crate::prelude::Value;
 use to_mut::ToMut;
+use crate::core::app::environment::Environment;
+use crate::parser::ast::generator::Generator;
 use crate::parser::std::pipeline::global::{GlobalFunctionInstallers, GlobalPipelineInstallers};
 
 pub(crate) struct Resolver { }
@@ -73,7 +75,7 @@ impl Resolver {
                     continue;
                 }
                 Top::Generator(generator) => {
-
+                    Self::resolve_model_entity_generator(parser, source, generator);
                 }
                 Top::Client(client) => {
 
@@ -432,6 +434,33 @@ impl Resolver {
             }
         }
         connector.provider.unwrap()
+    }
+
+    pub(crate) fn resolve_model_entity_generator(parser: &Parser, source: &Source, generator: &mut Generator) {
+        for item in generator.items.iter_mut() {
+            match item.identifier.name.as_str() {
+                "provider" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let provider_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    let provider_str = provider_value.as_raw_enum_choice().unwrap();
+                    match provider_str {
+                        "rust" => generator.provider = Some(Environment::Rust),
+                        "node" => generator.provider = Some(Environment::NodeJS),
+                        "python" => generator.provider = Some(Environment::Python),
+                        "go" => generator.provider = Some(Environment::Go),
+                        "java" => generator.provider = Some(Environment::Java),
+                        _ => panic!("Unrecognized entity generator provider. {}", provider_str)
+                    }
+                },
+                "dest" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let dest_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    let dest_str = dest_value.as_str().unwrap();
+                    generator.dest = Some(dest_str.to_owned());
+                },
+                _ => { panic!("Undefined name '{}' in entity generator block.", item.identifier.name.as_str())}
+            }
+        }
     }
 
     pub(crate) fn resolve_config(parser: &Parser, source: &Source, config: &mut Config) {
