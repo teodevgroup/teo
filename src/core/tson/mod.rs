@@ -361,6 +361,14 @@ impl Value {
         }
     }
 
+    pub fn str_from_string_or_raw_enum_choice(&self) -> Option<&str> {
+        match self {
+            Value::String(s) => Some(s),
+            Value::RawEnumChoice(s) => Some(s),
+            _ => None,
+        }
+    }
+
     pub fn is_i(&self) -> bool {
         match *self {
             Value::I8(_) | Value::I16(_) | Value::I32(_) | Value::I64(_) | Value::I128(_) => true,
