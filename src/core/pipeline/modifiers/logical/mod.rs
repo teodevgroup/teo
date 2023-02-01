@@ -11,3 +11,4 @@ pub mod or;
 pub mod validate_with;
 pub mod transform_with;
 pub mod valid;
+pub mod invalid;
