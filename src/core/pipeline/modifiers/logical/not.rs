@@ -2,17 +2,19 @@ use async_trait::async_trait;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::Context;
+use crate::core::pipeline::context::validity::Validity;
+use crate::prelude::Value;
 
 
 #[derive(Debug, Clone)]
 pub struct NotModifier {
-    pipeline: Pipeline
+    value: Value
 }
 
 impl NotModifier {
-    pub fn new(pipeline: Pipeline) -> Self {
+    pub fn new(value: Value) -> Self {
         return NotModifier {
-            pipeline
+            value
         };
     }
 }
@@ -25,10 +27,18 @@ impl Modifier for NotModifier {
     }
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
-        if self.pipeline.process(ctx.clone()).await.is_valid() {
-            ctx.invalid("Condition is valid.")
-        } else {
-            ctx
+        match &self.value {
+            Value::Bool(b) => if *b {
+                ctx.invalid("Value is invalid")
+            } else {
+                ctx.alter_validity(Validity::Valid)
+            }
+            Value::Pipeline(p) => if p.process(ctx.clone()).await.is_valid() {
+                ctx.invalid("Value is invalid.")
+            } else {
+                ctx
+            }
+            _ => panic!("Argument to `not` should be null, bool or pipeline.")
         }
     }
 }

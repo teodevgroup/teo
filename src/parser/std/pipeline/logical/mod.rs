@@ -1,9 +1,13 @@
 use std::sync::Arc;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::modifiers::logical::all::AllModifier;
+use crate::core::pipeline::modifiers::logical::and::AndModifier;
 use crate::core::pipeline::modifiers::logical::any::AnyModifier;
 use crate::core::pipeline::modifiers::logical::valid::ValidModifier;
 use crate::core::pipeline::modifiers::logical::invalid::InvalidModifier;
+use crate::core::pipeline::modifiers::logical::not::NotModifier;
+use crate::core::pipeline::modifiers::logical::or::OrModifier;
+use crate::core::pipeline::modifiers::logical::passed::PassedModifier;
 use crate::core::pipeline::modifiers::logical::r#if::IfModifier;
 use crate::parser::ast::argument::Argument;
 
@@ -67,4 +71,36 @@ pub(crate) fn any_modifier(args: Vec<Argument>) -> Arc<dyn Modifier> {
         pipelines.push(arg.resolved.as_ref().unwrap().as_value().unwrap().as_pipeline().unwrap().clone());
     }
     Arc::new(AnyModifier::new(pipelines))
+}
+
+pub(crate) fn not_modifier(args: Vec<Argument>) -> Arc<dyn Modifier> {
+    if args.len() != 1 {
+        panic!("`not` takes exactly 1 argument.")
+    }
+    let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap().clone();
+    Arc::new(NotModifier::new(value))
+}
+
+pub(crate) fn passed(args: Vec<Argument>) -> Arc<dyn Modifier> {
+    if args.len() != 1 {
+        panic!("`passed` takes exactly 1 argument.")
+    }
+    let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap().as_pipeline().unwrap().clone();
+    Arc::new(PassedModifier::new(value))
+}
+
+pub(crate) fn and_modifier(args: Vec<Argument>) -> Arc<dyn Modifier> {
+    if args.len() != 1 {
+        panic!("`and` takes exactly 1 argument.")
+    }
+    let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap().clone();
+    Arc::new(AndModifier::new(value))
+}
+
+pub(crate) fn or_modifier(args: Vec<Argument>) -> Arc<dyn Modifier> {
+    if args.len() != 1 {
+        panic!("`or` takes exactly 1 argument.")
+    }
+    let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap().clone();
+    Arc::new(OrModifier::new(value))
 }

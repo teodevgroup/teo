@@ -1,21 +1,19 @@
 use async_trait::async_trait;
 use crate::core::pipeline::builder::PipelineBuilder;
 use crate::core::pipeline::modifier::Modifier;
-
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::Context;
+use crate::prelude::Value;
 
 
 #[derive(Debug, Clone)]
 pub struct OrModifier {
-    pipeline: Pipeline
+    value: Value
 }
 
 impl OrModifier {
-    pub fn new<F: Fn(&mut PipelineBuilder)>(build: F) -> Self {
-        let mut pipeline = PipelineBuilder::new();
-        build(&mut pipeline);
-        return OrModifier { pipeline: pipeline.build() };
+    pub fn new(value: Value) -> Self {
+        Self { value }
     }
 }
 
@@ -28,9 +26,13 @@ impl Modifier for OrModifier {
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         if ctx.value.is_null() {
-            self.pipeline.process(ctx).await
-        } else {
             ctx
+        } else {
+            match &self.value {
+                Value::Pipeline(p) => p.process(ctx).await,
+                _ => ctx.alter_value(self.value.clone()),
+            }
+
         }
     }
 }

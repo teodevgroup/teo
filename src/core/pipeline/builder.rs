@@ -247,13 +247,6 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn not<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut pipeline = PipelineBuilder::new();
-        build(&mut pipeline);
-        self.modifiers.push(Arc::new(NotModifier::new(pipeline.build())));
-        self
-    }
-
     pub fn when_create<F: Fn(&mut PipelineBuilder)>(&mut self, build: F) -> &mut Self {
         let mut pipeline = PipelineBuilder::new();
         build(&mut pipeline);

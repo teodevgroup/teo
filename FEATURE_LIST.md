@@ -164,6 +164,9 @@
 - `invalid` modifier **[DONE]**
 - Remove stage from pipeline context **[DONE]**
 - `if` modifier **[DONE]**
+- `not` modifier **[DONE]**
+- `passed` modifier **[DONE]**
+- `and` and `or` modifier **[DONE]**
 
 #### 0.0.45
 - CLI mode: When running generation, ignore custom programming callbacks
