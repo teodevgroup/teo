@@ -15,7 +15,7 @@ use crate::core::input::Input;
 use crate::core::model::Model;
 use crate::core::result::ActionResult;
 use crate::prelude::{Graph, Object, Value};
-use crate::tson;
+use crate::teon;
 
 pub(crate) struct Execution { }
 
@@ -62,7 +62,7 @@ impl Execution {
                 }
                 if group == "_count" { // force i64
                     let count: i64 = row.get(result_key);
-                    retval.get_mut(group).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), tson!(count));
+                    retval.get_mut(group).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), teon!(count));
                 } else if group == "_avg" || group == "_sum" { // force f64
                     let v = RowDecoder::decode(&FieldType::F64, true, &row, result_key, dialect);
                     retval.get_mut(group).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), v);
@@ -174,7 +174,7 @@ impl Execution {
                     let nested_query = if value.is_hashmap() {
                         Self::without_paging_and_skip_take_distinct(value)
                     } else {
-                        Cow::Owned(tson!({}))
+                        Cow::Owned(teon!({}))
                     };
                     let mut included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), None, None, negative_take, None).await?;
                     // println!("see included: {:?}", included_values);
@@ -248,7 +248,7 @@ impl Execution {
                     let nested_query = if value.is_hashmap() {
                         Self::without_paging_and_skip_take(value)
                     } else {
-                        Cow::Owned(tson!({}))
+                        Cow::Owned(teon!({}))
                     };
                     let join_table_results = through_relation.iter().map(|(f, r)| {
                         let through_column_name = through_model.field(f).unwrap().column_name().to_string();

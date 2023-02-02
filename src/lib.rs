@@ -10,8 +10,8 @@ pub mod prelude {
     pub use crate::core::graph::Graph;
     pub use crate::core::graph::builder::GraphBuilder;
     pub use crate::core::pipeline::builder::PipelineBuilder;
-    pub use crate::core::tson::Value;
-    pub use crate::tson;
+    pub use crate::core::teon::Value;
+    pub use crate::teon;
     pub use crate::core::object::Object;
     pub extern crate tokio;
     pub use tokio::main;

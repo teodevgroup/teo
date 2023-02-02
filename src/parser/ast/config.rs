@@ -9,7 +9,7 @@ pub struct Config {
     pub(crate) source_id: usize,
     pub(crate) items: Vec<Item>,
     pub(crate) span: Span,
-    pub(crate) bind: Option<(String, i32)>,
+    pub(crate) bind: Option<(String, u16)>,
     pub(crate) jwt_secret: Option<String>,
     pub(crate) path_prefix: Option<String>,
 }

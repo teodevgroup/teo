@@ -75,7 +75,7 @@
 - Fix HTTP API result format **[DONE]**
 
 #### 0.0.31
-- Replace `serde_json` with our own `tson` **[DONE]**
+- Replace `serde_json` with our own `teon` **[DONE]**
 
 #### 0.0.32
 - Handle manipulation uses single or many **[DONE]**
@@ -168,11 +168,15 @@
 - `transform` supports pipeline argument **[DONE]**
 - `previous` modifier accepts both string and enum choice **[DONE]**
 - Fixed range literal bug **[DONE]**
-- Fix pipeline highlighting bug for VSCode
-- Design client config blocks
-- Design entity config blocks
-- Rewrite client code generation with TS and JS
+- Removed conf builder **[DONE]**
+- Design client config blocks **[DONE]**
+- Design entity config blocks **[DONE]**
+- Rewrite client code generation with separated TS and JS **[DONE]**
+- Rename `tson` to `teon` **[DONE]**
+- Add callback model decorators **[DONE]**
 - Generate rust entities
+- Fix compiler warnings
+- Fix pipeline highlighting bug for VSCode
 
 #### 0.0.45
 - CLI mode: When running generation, ignore custom programming callbacks

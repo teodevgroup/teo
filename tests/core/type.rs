@@ -86,8 +86,8 @@ async fn make_graph() -> &Graph {
 #[test]
 async fn object_id_input_is_string() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"objectId": "1234567890abcd1234567890abcd"})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"objectId": "1234567890abcd1234567890abcd"})).await;
     let value = simple.get_value("objectId").unwrap().unwrap();
     assert_eq!(value, Value::ObjectId("1234567890abcd1234567890abcd".to_string()));
 }
@@ -95,8 +95,8 @@ async fn object_id_input_is_string() {
 #[test]
 async fn object_id_output_is_string() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"objectId": "1234567890abcd1234567890abcd"})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"objectId": "1234567890abcd1234567890abcd"})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("objectId").unwrap().as_str().unwrap(), "1234567890abcd1234567890abcd");
 }
@@ -104,8 +104,8 @@ async fn object_id_output_is_string() {
 #[test]
 async fn string_input_is_string() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"string": "strval"})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"string": "strval"})).await;
     let value = simple.get_value("string").unwrap().unwrap();
     assert_eq!(value, Value::String("strval".to_string()));
 }
@@ -113,8 +113,8 @@ async fn string_input_is_string() {
 #[test]
 async fn string_output_is_string() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"string": "strval"})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"string": "strval"})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("string").unwrap().as_str().unwrap(), "strval");
 }
@@ -122,8 +122,8 @@ async fn string_output_is_string() {
 #[test]
 async fn bool_input_is_bool() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"bool": false})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"bool": false})).await;
     let value = simple.get_value("bool").unwrap().unwrap();
     assert_eq!(value, Value::Bool(false));
 }
@@ -131,8 +131,8 @@ async fn bool_input_is_bool() {
 #[test]
 async fn bool_output_is_bool() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"bool": true})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"bool": true})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("bool").unwrap().as_bool().unwrap(), true);
 }
@@ -140,8 +140,8 @@ async fn bool_output_is_bool() {
 #[test]
 async fn i8_input_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"i8": 2})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"i8": 2})).await;
     let value = simple.get_value("i8").unwrap().unwrap();
     assert_eq!(value, Value::I8(2));
 }
@@ -149,8 +149,8 @@ async fn i8_input_is_number() {
 #[test]
 async fn i8_output_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"i8": 3})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"i8": 3})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("i8").unwrap().as_i64().unwrap(), 3);
 }
@@ -158,8 +158,8 @@ async fn i8_output_is_number() {
 #[test]
 async fn i16_input_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"i16": 2})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"i16": 2})).await;
     let value = simple.get_value("i16").unwrap().unwrap();
     assert_eq!(value, Value::I16(2));
 }
@@ -167,8 +167,8 @@ async fn i16_input_is_number() {
 #[test]
 async fn i16_output_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"i16": 3})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"i16": 3})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("i16").unwrap().as_i64().unwrap(), 3);
 }
@@ -176,8 +176,8 @@ async fn i16_output_is_number() {
 #[test]
 async fn i32_input_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"i32": 2})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"i32": 2})).await;
     let value = simple.get_value("i32").unwrap().unwrap();
     assert_eq!(value, Value::I32(2));
 }
@@ -185,8 +185,8 @@ async fn i32_input_is_number() {
 #[test]
 async fn i32_output_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"i32": 3})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"i32": 3})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("i32").unwrap().as_i64().unwrap(), 3);
 }
@@ -194,8 +194,8 @@ async fn i32_output_is_number() {
 #[test]
 async fn i64_input_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"i64": 2})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"i64": 2})).await;
     let value = simple.get_value("i64").unwrap().unwrap();
     assert_eq!(value, Value::I64(2));
 }
@@ -203,8 +203,8 @@ async fn i64_input_is_number() {
 #[test]
 async fn i64_output_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"i64": 3})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"i64": 3})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("i64").unwrap().as_i64().unwrap(), 3);
 }
@@ -212,8 +212,8 @@ async fn i64_output_is_number() {
 #[test]
 async fn i128_input_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"i128": 2})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"i128": 2})).await;
     let value = simple.get_value("i128").unwrap().unwrap();
     assert_eq!(value, Value::I128(2));
 }
@@ -221,8 +221,8 @@ async fn i128_input_is_number() {
 #[test]
 async fn i128_output_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"i128": 3})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"i128": 3})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("i128").unwrap().as_i64().unwrap(), 3);
 }
@@ -230,8 +230,8 @@ async fn i128_output_is_number() {
 #[test]
 async fn u8_input_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"u8": 2})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"u8": 2})).await;
     let value = simple.get_value("u8").unwrap().unwrap();
     assert_eq!(value, Value::U8(2));
 }
@@ -239,8 +239,8 @@ async fn u8_input_is_number() {
 #[test]
 async fn u8_output_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"u8": 3})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"u8": 3})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("u8").unwrap().as_u64().unwrap(), 3);
 }
@@ -248,8 +248,8 @@ async fn u8_output_is_number() {
 #[test]
 async fn u16_input_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"u16": 2})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"u16": 2})).await;
     let value = simple.get_value("u16").unwrap().unwrap();
     assert_eq!(value, Value::U16(2));
 }
@@ -257,8 +257,8 @@ async fn u16_input_is_number() {
 #[test]
 async fn u16_output_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"u16": 3})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"u16": 3})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("u16").unwrap().as_u64().unwrap(), 3);
 }
@@ -266,8 +266,8 @@ async fn u16_output_is_number() {
 #[test]
 async fn u32_input_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"u32": 2})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"u32": 2})).await;
     let value = simple.get_value("u32").unwrap().unwrap();
     assert_eq!(value, Value::U32(2));
 }
@@ -275,8 +275,8 @@ async fn u32_input_is_number() {
 #[test]
 async fn u32_output_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"u32": 3})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"u32": 3})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("u32").unwrap().as_u64().unwrap(), 3);
 }
@@ -284,8 +284,8 @@ async fn u32_output_is_number() {
 #[test]
 async fn u64_input_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"u64": 2})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"u64": 2})).await;
     let value = simple.get_value("u64").unwrap().unwrap();
     assert_eq!(value, Value::U64(2));
 }
@@ -293,8 +293,8 @@ async fn u64_input_is_number() {
 #[test]
 async fn u64_output_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"u64": 3})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"u64": 3})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("u64").unwrap().as_u64().unwrap(), 3);
 }
@@ -302,8 +302,8 @@ async fn u64_output_is_number() {
 #[test]
 async fn u128_input_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"u128": 2})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"u128": 2})).await;
     let value = simple.get_value("u128").unwrap().unwrap();
     assert_eq!(value, Value::U128(2));
 }
@@ -311,8 +311,8 @@ async fn u128_input_is_number() {
 #[test]
 async fn u128_output_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"u128": 3})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"u128": 3})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("u128").unwrap().as_u64().unwrap(), 3);
 }
@@ -320,8 +320,8 @@ async fn u128_output_is_number() {
 #[test]
 async fn f32_input_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"f32": 2.0})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"f32": 2.0})).await;
     let value = simple.get_value("f32").unwrap().unwrap();
     assert_eq!(value, Value::F32(2.0));
 }
@@ -329,8 +329,8 @@ async fn f32_input_is_number() {
 #[test]
 async fn f32_output_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"f32": 2.0})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"f32": 2.0})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("f32").unwrap().as_f64().unwrap(), 2.0);
 }
@@ -338,8 +338,8 @@ async fn f32_output_is_number() {
 #[test]
 async fn f64_input_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"f64": 2.0})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"f64": 2.0})).await;
     let value = simple.get_value("f64").unwrap().unwrap();
     assert_eq!(value, Value::F64(2.0));
 }
@@ -347,8 +347,8 @@ async fn f64_input_is_number() {
 #[test]
 async fn f64_output_is_number() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"f64": 2.0})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"f64": 2.0})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("f64").unwrap().as_f64().unwrap(), 2.0);
 }
@@ -356,8 +356,8 @@ async fn f64_output_is_number() {
 #[test]
 async fn date_input_is_string() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"date": "2022-05-20"})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"date": "2022-05-20"})).await;
     let value = simple.get_value("date").unwrap().unwrap();
     let date = Date::from_utc(NaiveDate::parse_from_str("2022-05-20", "%Y-%m-%d").unwrap(), Utc);
     assert_eq!(value, Value::Date(date));
@@ -366,8 +366,8 @@ async fn date_input_is_string() {
 #[test]
 async fn date_output_is_string() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"date": "2022-05-20"})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"date": "2022-05-20"})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("date").unwrap().as_str().unwrap(), "2022-05-20");
 }
@@ -375,16 +375,16 @@ async fn date_output_is_string() {
 #[test]
 async fn returns_err_if_date_format_is_unexpected() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let result = simple.set_tson(&tson!({"date": "2022-0520"})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let result = simple.set_tson(&teon!({"date": "2022-0520"})).await;
     assert_eq!(result.err().unwrap(), ActionError::wrong_date_format());
 }
 
 #[test]
 async fn datetime_input_is_string() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"datetime": "2022-05-20T04:27:16.428Z"})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"datetime": "2022-05-20T04:27:16.428Z"})).await;
     let value = simple.get_value("datetime").unwrap().unwrap();
     let datetime = DateTime::parse_from_rfc3339("2022-05-20T04:27:16.428Z").unwrap().with_timezone(&Utc);
     assert_eq!(value, Value::DateTime(datetime));
@@ -393,8 +393,8 @@ async fn datetime_input_is_string() {
 #[test]
 async fn datetime_output_is_string() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"datetime": "2022-05-20T04:27:16.428Z"})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"datetime": "2022-05-20T04:27:16.428Z"})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("datetime").unwrap().as_str().unwrap(), "2022-05-20T04:27:16.428Z");
 }
@@ -402,16 +402,16 @@ async fn datetime_output_is_string() {
 #[test]
 async fn returns_err_if_datetime_format_is_unexpected() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let result = simple.set_tson(&tson!({"datetime": "2022-05-20::04:27:16.428"})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let result = simple.set_tson(&teon!({"datetime": "2022-05-20::04:27:16.428"})).await;
     assert_eq!(result.err().unwrap(), ActionError::wrong_datetime_format());
 }
 
 #[test]
 async fn enum_input_is_string() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"sex": "MALE"})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"sex": "MALE"})).await;
     let value = simple.get_value("sex").unwrap().unwrap();
     assert_eq!(value, Value::String("MALE".to_string()));
 }
@@ -419,8 +419,8 @@ async fn enum_input_is_string() {
 #[test]
 async fn enum_output_is_string() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let _ = simple.set_tson(&tson!({"sex": "FEMALE"})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let _ = simple.set_tson(&teon!({"sex": "FEMALE"})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("sex").unwrap().as_str().unwrap(), "FEMALE");
 }
@@ -428,7 +428,7 @@ async fn enum_output_is_string() {
 #[test]
 async fn returns_err_if_enum_value_is_unexpected() {
     let graph = make_graph().await;
-    let simple = graph.create_object("Simple", tson!({})).unwrap();
-    let result = simple.set_tson(&tson!({"sex": "NAM"})).await;
+    let simple = graph.create_object("Simple", teon!({})).unwrap();
+    let result = simple.set_tson(&teon!({"sex": "NAM"})).await;
     assert_eq!(result.err().unwrap(), ActionError::wrong_enum_choice());
 }

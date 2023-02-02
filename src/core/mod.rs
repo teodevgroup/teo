@@ -15,6 +15,5 @@ pub mod env;
 pub mod object;
 pub mod permission;
 pub mod connector;
-pub mod tson;
+pub mod teon;
 pub mod app;
-pub mod conf;

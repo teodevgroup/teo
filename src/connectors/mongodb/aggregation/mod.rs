@@ -8,7 +8,7 @@ use crate::core::model::Model;
 use crate::core::relation::Relation;
 use crate::core::result::ActionResult;
 use crate::prelude::{Graph, Value};
-use crate::tson;
+use crate::teon;
 
 pub(crate) struct Aggregation { }
 
@@ -61,7 +61,7 @@ impl Aggregation {
         let mut retval = Self::build(model, graph, value)?;
         let by = value.get("by");
         let having = value.get("having");
-        let mut aggregates = tson!({});
+        let mut aggregates = teon!({});
         for k in ["_sum", "_count", "_avg", "_min", "_max"] {
             if value.as_hashmap().unwrap().contains_key(k) {
                 aggregates[k] = value.as_hashmap().unwrap().get(k).unwrap().clone();
@@ -172,7 +172,7 @@ impl Aggregation {
                 }
             }
             let cursor_where_key = if order_asc { "gte" } else { "lte" };
-            let cursor_additional_where = Self::build_where(model, graph, &tson!({cursor_key: {cursor_where_key: cursor_value}}));
+            let cursor_additional_where = Self::build_where(model, graph, &teon!({cursor_key: {cursor_where_key: cursor_value}}));
             Some(cursor_additional_where?)
         } else {
             None
@@ -247,8 +247,8 @@ impl Aggregation {
                 let val = value.as_str().unwrap();
                 group_id.insert(val, format!("${val}"));
             }
-            let empty = tson!({});
-            let mut group_data = Self::build_select(model, graph, select.unwrap_or(&tson!({})), Some(distinct))?;
+            let empty = teon!({});
+            let mut group_data = Self::build_select(model, graph, select.unwrap_or(&teon!({})), Some(distinct))?;
             group_data.insert("_id", group_id);
             retval.push(doc!{"$group": &group_data});
             if group_data.get("__id").is_some() {
@@ -719,19 +719,19 @@ impl Aggregation {
                 let (command, r_where) = Input::key_value(value.as_hashmap().unwrap());
                 match command {
                     "some" | "is" => {
-                        include_input.insert(key.to_string(), tson!({
+                        include_input.insert(key.to_string(), teon!({
                         "where": r_where,
                         "take": 1
                     }));
                     }
                     "none" | "isNot" => {
-                        include_input.insert(key.to_string(), tson!({
+                        include_input.insert(key.to_string(), teon!({
                         "where": r_where,
                         "take": 1
                     }));
                     }
                     "all" => {
-                        include_input.insert(key.to_string(), tson!({
+                        include_input.insert(key.to_string(), teon!({
                         "where": {"NOT": r_where},
                         "take": 1
                     }));

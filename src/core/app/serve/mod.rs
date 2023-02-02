@@ -11,10 +11,10 @@ use futures_util::StreamExt;
 use key_path::{KeyPath, path};
 use serde_json::{json, Value as JsonValue};
 use crate::core::action::r#type::ActionType;
+use crate::core::app::conf::ServerConf;
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use self::jwt_token::{Claims, decode_token, encode_token};
-use crate::core::conf::Conf;
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
 use crate::core::env::source::Source;
@@ -23,9 +23,9 @@ use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::pipeline::context::{Context};
 use crate::core::error::ActionError;
-use crate::core::tson::decoder::Decoder;
+use crate::core::teon::decoder::Decoder;
 use crate::prelude::Value;
-use crate::tson;
+use crate::teon;
 
 pub(crate) mod response;
 pub(crate) mod jwt_token;
@@ -81,7 +81,7 @@ fn log_request(start: SystemTime, action: &str, model: &str, code: u16) {
     println!("{} {} on {} - {} {}", local_formatted, action.bright_yellow(), model.bright_magenta(), code_string, ms_str);
 }
 
-async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &Conf) -> Result<Option<Object>, ActionError> {
+async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConf) -> Result<Option<Object>, ActionError> {
     let header_value = r.headers().get("authorization");
     if let None = header_value {
         return Ok(None);
@@ -102,7 +102,7 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &Conf) -> Result<Opt
     let _model = graph.model(claims.model.as_str()).unwrap();
     let identity = graph.find_unique(
         graph.model(claims.model.as_str()).unwrap().name(),
-        &tson!({
+        &teon!({
             "where": tson_identifier
         }),
         true,
@@ -195,7 +195,7 @@ async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: 
             obj.set_tson_with_path(create, path).await
         }
         None => {
-            obj.set_tson_with_path(&tson!({}), path).await
+            obj.set_tson_with_path(&teon!({}), path).await
         }
     };
     if set_json_result.is_err() {
@@ -223,7 +223,7 @@ async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: Sour
 }
 
 async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&Value>, include: Option<&Value>, select: Option<&Value>, _where: Option<&Value>, _model: &Model) -> Result<Value, ActionError> {
-    let empty = tson!({});
+    let empty = teon!({});
     let updator = if update.is_some() { update.unwrap() } else { &empty };
     object.set_tson(updator).await?;
     object.save().await?;
@@ -268,7 +268,7 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Sour
                     obj.set_tson(update).await
                 }
                 None => {
-                    let empty = tson!({});
+                    let empty = teon!({});
                     obj.set_tson(&empty).await
                 }
             };
@@ -300,7 +300,7 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Sour
                     obj.set_tson(create).await
                 }
                 None => {
-                    let empty = tson!({});
+                    let empty = teon!({});
                     obj.set_tson(&empty).await
                 }
             };
@@ -478,7 +478,7 @@ async fn handle_group_by(graph: &Graph, input: &Value, model: &Model, _source: S
     }
 }
 
-async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Conf) -> HttpResponse {
+async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &ServerConf) -> HttpResponse {
     let input = input.as_hashmap().unwrap();
     let credentials = input.get("credentials");
     if let None = credentials {
@@ -518,7 +518,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Conf
         return ActionError::missing_required_input("auth checker", path!["credentials"]).into();
     }
     let by_field = model.field(by_key.unwrap()).unwrap();
-    let obj_result = graph.find_unique(model.name(), &tson!({
+    let obj_result = graph.find_unique(model.name(), &teon!({
         "where": {
             identity_key.unwrap(): identity_value.unwrap()
         }
@@ -560,7 +560,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Conf
     }
 }
 
-async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &Conf, source: Source) -> HttpResponse {
+async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &ServerConf, source: Source) -> HttpResponse {
     let identity = source.as_identity();
     if let Some(identity) = identity {
         if identity.model() != model {
@@ -580,7 +580,7 @@ async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &C
     }
 }
 
-pub fn make_app(graph: Graph, conf: Conf) ->  App<impl ServiceFactory<
+pub fn make_app(graph: Graph, conf: ServerConf) ->  App<impl ServiceFactory<
     ServiceRequest,
     Response = ServiceResponse<BoxBody>,
     Config = (),
@@ -589,10 +589,11 @@ pub fn make_app(graph: Graph, conf: Conf) ->  App<impl ServiceFactory<
 > + 'static> {
     let leaked_graph = Box::leak(Box::new(graph));
     let leaked_conf = Box::leak(Box::new(conf));
+    Graph::set_current(leaked_graph);
     make_app_inner(leaked_graph, leaked_conf)
 }
 
-fn make_app_inner(graph: &'static Graph, conf: &'static Conf) -> App<impl ServiceFactory<
+fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl ServiceFactory<
     ServiceRequest,
     Response = ServiceResponse<BoxBody>,
     Config = (),
@@ -790,7 +791,7 @@ async fn server_start_message(port: u16, environment_version: EnvironmentVersion
     Ok(())
 }
 
-pub(crate) async fn serve(graph: Graph, conf: Conf, environment_version: EnvironmentVersion, entrance: Entrance) -> Result<(), std::io::Error> {
+pub(crate) async fn serve(graph: Graph, conf: ServerConf, environment_version: EnvironmentVersion, entrance: Entrance) -> Result<(), std::io::Error> {
     let bind = conf.bind.clone();
     let port = bind.1;
     let server = HttpServer::new(move || {

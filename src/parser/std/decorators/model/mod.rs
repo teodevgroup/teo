@@ -5,10 +5,18 @@ pub(crate) mod unique;
 pub(crate) mod url;
 pub(crate) mod identity;
 pub(crate) mod r#virtual;
+pub(crate) mod before_save;
+pub(crate) mod after_save;
+pub(crate) mod before_delete;
+pub(crate) mod after_delete;
 
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use crate::parser::ast::accessible::Accessible;
+use crate::parser::std::decorators::model::after_delete::after_delete_decorator;
+use crate::parser::std::decorators::model::after_save::after_save_decorator;
+use crate::parser::std::decorators::model::before_delete::before_delete_decorator;
+use crate::parser::std::decorators::model::before_save::before_save_decorator;
 use crate::parser::std::decorators::model::id::id_decorator;
 use crate::parser::std::decorators::model::identity::identity_decorator;
 use crate::parser::std::decorators::model::index::index_decorator;
@@ -38,6 +46,10 @@ impl GlobalModelDecorators {
         objects.insert("unique".to_owned(), Accessible::ModelDecorator(unique_decorator));
         objects.insert("index".to_owned(), Accessible::ModelDecorator(index_decorator));
         objects.insert("virtual".to_owned(), Accessible::ModelDecorator(virtual_decorator));
+        objects.insert("beforeSave".to_owned(), Accessible::ModelDecorator(before_save_decorator));
+        objects.insert("afterSave".to_owned(), Accessible::ModelDecorator(after_save_decorator));
+        objects.insert("beforeDelete".to_owned(), Accessible::ModelDecorator(before_delete_decorator));
+        objects.insert("afterDelete".to_owned(), Accessible::ModelDecorator(after_delete_decorator));
         Self { objects }
     }
 

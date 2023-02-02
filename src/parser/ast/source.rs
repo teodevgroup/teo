@@ -9,9 +9,11 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
 use to_mut::ToMut;
 use to_mut_proc_macro::ToMut;
+use crate::parser::ast::client::Client;
 use crate::parser::ast::config::Config;
 use crate::parser::ast::connector::Connector;
 use crate::parser::ast::constant::Constant;
+use crate::parser::ast::generator::Generator;
 use crate::parser::ast::import::Import;
 use crate::parser::ast::model::Model;
 use crate::parser::ast::r#enum::Enum;
@@ -76,33 +78,28 @@ impl Source {
         self.tops.get(&id).unwrap().as_constant().unwrap()
     }
 
-    // pub(crate) fn get_constant_mut(&mut self, id: usize) -> &mut Constant {
-    //     self.tops.get_mut(&id).unwrap().as_ref().borrow_mut().as_constant_mut().unwrap()
-    // }
-
     pub(crate) fn get_enum(&self, id: usize) -> &Enum {
         self.tops.get(&id).unwrap().as_enum().unwrap()
     }
 
-    // pub(crate) fn get_enum_mut(&mut self, id: usize) -> &mut Enum {
-    //     self.tops.get_mut(&id).unwrap().as_ref().borrow_mut().as_enum_mut().unwrap()
-    // }
-
     pub(crate) fn get_model(&self, id: usize) -> &Model {
         self.tops.get(&id).unwrap().as_model().unwrap()
     }
-
-    // pub(crate) fn get_model_mut(&mut self, id: usize) -> &mut Model {
-    //     self.tops.get_mut(&id).unwrap().as_ref().borrow_mut().as_model_mut().unwrap()
-    // }
 
     pub(crate) fn get_connector(&self, id: usize) -> &Connector {
         self.tops.get(&id).unwrap().as_connector().unwrap()
     }
 
     pub(crate) fn get_config(&self, id: usize) -> &Config {
-        let a = self.tops.get(&id).unwrap();
         self.tops.get(&id).unwrap().as_config().unwrap()
+    }
+
+    pub(crate) fn get_entity(&self, id: usize) -> &Generator {
+        self.tops.get(&id).unwrap().as_generator().unwrap()
+    }
+
+    pub(crate) fn get_client(&self, id: usize) -> &Client {
+        self.tops.get(&id).unwrap().as_client().unwrap()
     }
 }
 

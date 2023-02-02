@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::future::Future;
+use std::ptr::null;
 use std::sync::Arc;
 use key_path::KeyPath;
 use crate::core::graph::builder::GraphBuilder;
@@ -28,9 +29,24 @@ pub(crate) struct GraphInner {
     pub(crate) connector: Option<Box<dyn Connector>>,
 }
 
+static mut CURRENT: Option<&'static Graph> = None;
+
 impl Graph {
 
-    // MARK: - Create a graph
+    pub fn current() -> &'static Self {
+        unsafe {
+            if CURRENT.is_none() {
+                panic!("Current graph is accessed before app is initialized.")
+            }
+            CURRENT.unwrap()
+        }
+    }
+
+    pub(crate) fn set_current(current: &'static Graph) {
+        unsafe {
+            CURRENT = Some(current);
+        }
+    }
 
     // MARK: - Queries
 

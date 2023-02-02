@@ -24,7 +24,7 @@ use crate::core::error::ActionError;
 use crate::core::input::Input;
 use crate::core::result::ActionResult;
 use crate::prelude::{Graph, Object, Value};
-use crate::tson;
+use crate::teon;
 
 #[derive(Debug)]
 pub(crate) struct SQLConnector {
@@ -157,7 +157,7 @@ impl SQLConnector {
                 return Err(ActionError::unknown_database_write_error());
             }
         }
-        let result = Execution::query(&self.pool, model, object.graph(), &tson!({"where": identifier, "take": 1}), self.dialect).await?;
+        let result = Execution::query(&self.pool, model, object.graph(), &teon!({"where": identifier, "take": 1}), self.dialect).await?;
         if result.is_empty() {
             Err(ActionError::object_not_found())
         } else {

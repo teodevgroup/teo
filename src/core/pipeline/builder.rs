@@ -69,9 +69,9 @@ use crate::core::pipeline::modifiers::string::validation::is_prefix_of::IsPrefix
 use crate::core::pipeline::modifiers::string::validation::is_secure_password::IsSecurePasswordModifier;
 use crate::core::pipeline::modifiers::string::validation::is_suffix_of::IsSuffixOfModifier;
 use crate::core::pipeline::modifiers::string::validation::regex_match::RegexMatchModifier;
-use crate::core::pipeline::modifiers::tson::tson_get::TsonGetModifier;
-use crate::core::pipeline::modifiers::tson::tson_set::TsonSetModifier;
-use crate::core::pipeline::modifiers::tson::tson_set_default::TsonSetDefaultModifier;
+use crate::core::pipeline::modifiers::teon::tson_get::TsonGetModifier;
+use crate::core::pipeline::modifiers::teon::tson_set::TsonSetModifier;
+use crate::core::pipeline::modifiers::teon::tson_set_default::TsonSetDefaultModifier;
 use crate::core::pipeline::modifiers::value::eq::EqModifier;
 use crate::core::pipeline::modifiers::value::is_exist::IsExistModifier;
 use crate::core::pipeline::modifiers::value::is_false::IsFalseModifier;
@@ -88,7 +88,7 @@ use crate::core::pipeline::modifiers::vector::item_at::ItemAtModifier;
 use crate::core::pipeline::modifiers::vector::join::JoinModifier;
 use crate::core::pipeline::modifiers::vector::map::MapModifier;
 use crate::core::pipeline::Pipeline;
-use crate::core::tson::Value;
+use crate::core::teon::Value;
 
 #[derive(Debug)]
 pub struct PipelineBuilder {

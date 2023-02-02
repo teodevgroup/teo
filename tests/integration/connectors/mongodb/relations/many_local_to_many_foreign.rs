@@ -65,7 +65,7 @@ async fn app() -> App<impl ServiceFactory<
 #[serial]
 async fn create_with_nested_create() {
     let app = test::init_service(app().await).await;
-    let res = request(&app, "many-locals", "Create", tson!({
+    let res = request(&app, "many-locals", "Create", teon!({
         "create": {
             "foreigns": {
                 "create": {}
@@ -75,7 +75,7 @@ async fn create_with_nested_create() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"is": "objectId"},
             "foreigns": [
@@ -91,7 +91,7 @@ async fn create_with_nested_create() {
 #[serial]
 async fn create_with_nested_create_many() {
     let app = test::init_service(app().await).await;
-    let res = request(&app, "many-locals", "Create", tson!({
+    let res = request(&app, "many-locals", "Create", teon!({
         "create": {
             "foreigns": {
                 "createMany": [{}, {}]
@@ -101,7 +101,7 @@ async fn create_with_nested_create_many() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"is": "objectId"},
             "foreigns": [
@@ -120,7 +120,7 @@ async fn create_with_nested_create_many() {
 #[serial]
 async fn create_with_nested_connect() {
     let app = test::init_service(app().await).await;
-    let foreign_id = request_get(&app, "many-locals", "Create", tson!({
+    let foreign_id = request_get(&app, "many-locals", "Create", teon!({
         "create": {
             "foreigns": {
                 "create": {}
@@ -131,7 +131,7 @@ async fn create_with_nested_connect() {
         }
     }), 200, "data.foreigns.0.id").await;
     let foreign_id = foreign_id.as_str().unwrap();
-    let res = request(&app, "many-locals", "Create", tson!({
+    let res = request(&app, "many-locals", "Create", teon!({
         "create": {
             "foreigns": {
                 "connect": {
@@ -143,7 +143,7 @@ async fn create_with_nested_connect() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"is": "objectId"},
             "foreigns": [
@@ -159,7 +159,7 @@ async fn create_with_nested_connect() {
 #[serial]
 async fn create_with_nested_connect_or_create_actually_create() {
     let app = test::init_service(app().await).await;
-    let res = request(&app, "many-locals", "Create", tson!({
+    let res = request(&app, "many-locals", "Create", teon!({
         "create": {
             "foreigns": {
                 "connectOrCreate": {
@@ -172,7 +172,7 @@ async fn create_with_nested_connect_or_create_actually_create() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"is": "objectId"},
             "foreigns": [
@@ -188,7 +188,7 @@ async fn create_with_nested_connect_or_create_actually_create() {
 #[serial]
 async fn create_with_nested_connect_or_create_actually_connect() {
     let app = test::init_service(app().await).await;
-    let foreign_id = request_get(&app, "many-locals", "Create", tson!({
+    let foreign_id = request_get(&app, "many-locals", "Create", teon!({
         "create": {
             "foreigns": {
                 "create": {}
@@ -199,7 +199,7 @@ async fn create_with_nested_connect_or_create_actually_connect() {
         }
     }), 200, "data.foreigns.0.id").await;
     let foreign_id = foreign_id.as_str().unwrap();
-    let res = request(&app, "many-locals", "Create", tson!({
+    let res = request(&app, "many-locals", "Create", teon!({
         "create": {
             "foreigns": {
                 "connectOrCreate": {
@@ -212,7 +212,7 @@ async fn create_with_nested_connect_or_create_actually_connect() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"is": "objectId"},
             "foreigns": [
@@ -228,11 +228,11 @@ async fn create_with_nested_connect_or_create_actually_connect() {
 #[serial]
 async fn update_with_nested_create() {
     let app = test::init_service(app().await).await;
-    let id = request_get(&app, "many-locals", "Create", tson!({
+    let id = request_get(&app, "many-locals", "Create", teon!({
         "create": {},
     }), 200, "data.id").await;
     let id = id.as_str().unwrap();
-    let res = request(&app, "many-locals", "Update", tson!({
+    let res = request(&app, "many-locals", "Update", teon!({
         "where": {
             "id": id
         },
@@ -245,7 +245,7 @@ async fn update_with_nested_create() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"is": "objectId"},
             "foreigns": [
@@ -261,14 +261,14 @@ async fn update_with_nested_create() {
 #[serial]
 async fn update_with_nested_create_many() {
     let app = test::init_service(app().await).await;
-    let id = request_get(&app, "many-locals", "Create", tson!({
+    let id = request_get(&app, "many-locals", "Create", teon!({
         "create": {},
         "include": {
             "foreigns": true
         }
     }), 200, "data.id").await;
     let id = id.as_str().unwrap();
-    let res = request(&app, "many-locals", "Update", tson!({
+    let res = request(&app, "many-locals", "Update", teon!({
         "where": {
             "id": id
         },
@@ -281,7 +281,7 @@ async fn update_with_nested_create_many() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"is": "objectId"},
             "foreigns": [
@@ -300,15 +300,15 @@ async fn update_with_nested_create_many() {
 #[serial]
 async fn update_with_nested_connect() {
     let app = test::init_service(app().await).await;
-    let id = request_get(&app, "many-locals", "Create", tson!({
+    let id = request_get(&app, "many-locals", "Create", teon!({
         "create": {},
     }), 200, "data.id").await;
     let id = id.as_str().unwrap();
-    let foreign_id = request_get(&app, "many-foreigns", "Create", tson!({
+    let foreign_id = request_get(&app, "many-foreigns", "Create", teon!({
         "create": {},
     }), 200, "data.id").await;
     let foreign_id = foreign_id.as_str().unwrap();
-    let res = request(&app, "many-locals", "Update", tson!({
+    let res = request(&app, "many-locals", "Update", teon!({
         "where": {
             "id": id
         },
@@ -323,7 +323,7 @@ async fn update_with_nested_connect() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"equals": id},
             "foreigns": [
@@ -339,11 +339,11 @@ async fn update_with_nested_connect() {
 #[serial]
 async fn update_with_nested_connect_or_create_actually_create() {
     let app = test::init_service(app().await).await;
-    let id = request_get(&app, "many-locals", "Create", tson!({
+    let id = request_get(&app, "many-locals", "Create", teon!({
         "create": {},
     }), 200, "data.id").await;
     let id = id.as_str().unwrap();
-    let res = request(&app, "many-locals", "Update", tson!({
+    let res = request(&app, "many-locals", "Update", teon!({
         "where": {
             "id": id
         },
@@ -359,7 +359,7 @@ async fn update_with_nested_connect_or_create_actually_create() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"equals": id},
             "foreigns": [
@@ -375,15 +375,15 @@ async fn update_with_nested_connect_or_create_actually_create() {
 #[serial]
 async fn update_with_nested_connect_or_create_actually_connect() {
     let app = test::init_service(app().await).await;
-    let id = request_get(&app, "many-locals", "Create", tson!({
+    let id = request_get(&app, "many-locals", "Create", teon!({
         "create": {},
     }), 200, "data.id").await;
     let id = id.as_str().unwrap();
-    let foreign_id = request_get(&app, "many-foreigns", "Create", tson!({
+    let foreign_id = request_get(&app, "many-foreigns", "Create", teon!({
         "create": {},
     }), 200, "data.id").await;
     let foreign_id = foreign_id.as_str().unwrap();
-    let res = request(&app, "many-locals", "Update", tson!({
+    let res = request(&app, "many-locals", "Update", teon!({
         "where": {
             "id": id
         },
@@ -399,7 +399,7 @@ async fn update_with_nested_connect_or_create_actually_connect() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"equals": id},
             "foreigns": [
@@ -415,15 +415,15 @@ async fn update_with_nested_connect_or_create_actually_connect() {
 #[serial]
 async fn update_with_nested_set() {
     let app = test::init_service(app().await).await;
-    let id = request_get(&app, "many-locals", "Create", tson!({
+    let id = request_get(&app, "many-locals", "Create", teon!({
         "create": {},
     }), 200, "data.id").await;
     let id = id.as_str().unwrap();
-    let foreign_id = request_get(&app, "many-foreigns", "Create", tson!({
+    let foreign_id = request_get(&app, "many-foreigns", "Create", teon!({
         "create": {},
     }), 200, "data.id").await;
     let foreign_id = foreign_id.as_str().unwrap();
-    let res = request(&app, "many-locals", "Update", tson!({
+    let res = request(&app, "many-locals", "Update", teon!({
         "where": {
             "id": id
         },
@@ -438,7 +438,7 @@ async fn update_with_nested_set() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"equals": id},
             "foreigns": [
@@ -454,7 +454,7 @@ async fn update_with_nested_set() {
 #[serial]
 async fn update_with_nested_disconnect() {
     let app = test::init_service(app().await).await;
-    let ids = request_get(&app, "many-locals", "Create", tson!({
+    let ids = request_get(&app, "many-locals", "Create", teon!({
         "create": {
             "foreigns": {
                 "create": {}
@@ -466,7 +466,7 @@ async fn update_with_nested_disconnect() {
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
     let id = ids.as_vec().unwrap().get(0).unwrap().as_str().unwrap();
     let foreign_id = ids.as_vec().unwrap().get(1).unwrap().as_str().unwrap();
-    let res = request(&app, "many-locals", "Update", tson!({
+    let res = request(&app, "many-locals", "Update", teon!({
         "where": {"id": id},
         "update": {
             "foreigns": {
@@ -479,7 +479,7 @@ async fn update_with_nested_disconnect() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"is": "objectId"},
             "foreigns": []
@@ -491,7 +491,7 @@ async fn update_with_nested_disconnect() {
 #[serial]
 async fn update_with_nested_update() {
     let app = test::init_service(app().await).await;
-    let ids = request_get(&app, "many-locals", "Create", tson!({
+    let ids = request_get(&app, "many-locals", "Create", teon!({
         "create": {
             "foreigns": {
                 "create": {}
@@ -503,7 +503,7 @@ async fn update_with_nested_update() {
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
     let id = ids.as_vec().unwrap().get(0).unwrap().as_str().unwrap();
     let foreign_id = ids.as_vec().unwrap().get(1).unwrap().as_str().unwrap();
-    let res = request(&app, "many-locals", "Update", tson!({
+    let res = request(&app, "many-locals", "Update", teon!({
         "where": {"id": id},
         "update": {
             "foreigns": {
@@ -517,7 +517,7 @@ async fn update_with_nested_update() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"equals": id},
             "foreigns": [
@@ -533,7 +533,7 @@ async fn update_with_nested_update() {
 #[serial]
 async fn update_with_nested_update_many() {
     let app = test::init_service(app().await).await;
-    let ids = request_get(&app, "many-locals", "Create", tson!({
+    let ids = request_get(&app, "many-locals", "Create", teon!({
         "create": {
             "foreigns": {
                 "create": {}
@@ -545,7 +545,7 @@ async fn update_with_nested_update_many() {
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
     let id = ids.as_vec().unwrap().get(0).unwrap().as_str().unwrap();
     let foreign_id = ids.as_vec().unwrap().get(1).unwrap().as_str().unwrap();
-    let res = request(&app, "many-locals", "Update", tson!({
+    let res = request(&app, "many-locals", "Update", teon!({
         "where": {"id": id},
         "update": {
             "foreigns": {
@@ -559,7 +559,7 @@ async fn update_with_nested_update_many() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"equals": id},
             "foreigns": [
@@ -575,7 +575,7 @@ async fn update_with_nested_update_many() {
 #[serial]
 async fn update_with_nested_upsert_actually_create() {
     let app = test::init_service(app().await).await;
-    let id = request_get(&app, "many-locals", "Create", tson!({
+    let id = request_get(&app, "many-locals", "Create", teon!({
         "create": {
             "foreigns": {
                 "create": {}
@@ -583,7 +583,7 @@ async fn update_with_nested_upsert_actually_create() {
         }
     }), 200, "data.id").await;
     let id = id.as_str().unwrap();
-    let res = request(&app, "many-locals", "Update", tson!({
+    let res = request(&app, "many-locals", "Update", teon!({
         "where": {"id": id},
         "update": {
             "foreigns": {
@@ -598,7 +598,7 @@ async fn update_with_nested_upsert_actually_create() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"equals": id},
             "foreigns": [
@@ -617,7 +617,7 @@ async fn update_with_nested_upsert_actually_create() {
 #[serial]
 async fn update_with_nested_upsert_actually_update() {
     let app = test::init_service(app().await).await;
-    let ids = request_get(&app, "many-locals", "Create", tson!({
+    let ids = request_get(&app, "many-locals", "Create", teon!({
         "create": {
             "foreigns": {
                 "create": {}
@@ -629,7 +629,7 @@ async fn update_with_nested_upsert_actually_update() {
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
     let id = ids.as_vec().unwrap().get(0).unwrap().as_str().unwrap();
     let foreign_id = ids.as_vec().unwrap().get(1).unwrap().as_str().unwrap();
-    let res = request(&app, "many-locals", "Update", tson!({
+    let res = request(&app, "many-locals", "Update", teon!({
         "where": {"id": id},
         "update": {
             "foreigns": {
@@ -644,7 +644,7 @@ async fn update_with_nested_upsert_actually_update() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"equals": id},
             "foreigns": [
@@ -660,7 +660,7 @@ async fn update_with_nested_upsert_actually_update() {
 #[serial]
 async fn update_with_nested_delete() {
     let app = test::init_service(app().await).await;
-    let ids = request_get(&app, "many-locals", "Create", tson!({
+    let ids = request_get(&app, "many-locals", "Create", teon!({
         "create": {
             "foreigns": {
                 "create": {}
@@ -672,7 +672,7 @@ async fn update_with_nested_delete() {
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
     let id = ids.as_vec().unwrap().get(0).unwrap().as_str().unwrap();
     let foreign_id = ids.as_vec().unwrap().get(1).unwrap().as_str().unwrap();
-    let res = request(&app, "many-locals", "Update", tson!({
+    let res = request(&app, "many-locals", "Update", teon!({
         "where": {"id": id},
         "update": {
             "foreigns": {
@@ -685,7 +685,7 @@ async fn update_with_nested_delete() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"equals": id},
             "foreigns": []
@@ -697,7 +697,7 @@ async fn update_with_nested_delete() {
 #[serial]
 async fn update_with_nested_delete_many() {
     let app = test::init_service(app().await).await;
-    let ids = request_get(&app, "many-locals", "Create", tson!({
+    let ids = request_get(&app, "many-locals", "Create", teon!({
         "create": {
             "foreigns": {
                 "create": {}
@@ -709,7 +709,7 @@ async fn update_with_nested_delete_many() {
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
     let id = ids.as_vec().unwrap().get(0).unwrap().as_str().unwrap();
     let foreign_id = ids.as_vec().unwrap().get(1).unwrap().as_str().unwrap();
-    let res = request(&app, "many-locals", "Update", tson!({
+    let res = request(&app, "many-locals", "Update", teon!({
         "where": {"id": id},
         "update": {
             "foreigns": {
@@ -722,7 +722,7 @@ async fn update_with_nested_delete_many() {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"equals": id},
             "foreigns": []
@@ -734,7 +734,7 @@ async fn update_with_nested_delete_many() {
 #[serial]
 async fn include() {
     let app = test::init_service(app().await).await;
-    let ids = request_get(&app, "many-locals", "Create", tson!({
+    let ids = request_get(&app, "many-locals", "Create", teon!({
         "create": {
             "foreigns": {
                 "create": {}
@@ -746,13 +746,13 @@ async fn include() {
     }), 200, vec!["data.id", "data.foreigns.0.id"]).await;
     let id = ids.as_vec().unwrap().get(0).unwrap().as_str().unwrap();
     let foreign_id = ids.as_vec().unwrap().get(1).unwrap().as_str().unwrap();
-    let res = request(&app, "many-locals", "FindUnique", tson!({
+    let res = request(&app, "many-locals", "FindUnique", teon!({
         "where": {"id": id},
         "include": {
             "foreigns": true
         }
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "id": {"equals": id},
             "foreigns": [

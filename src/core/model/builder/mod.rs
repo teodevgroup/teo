@@ -17,6 +17,7 @@ use crate::core::relation::delete_rule::DeleteRule;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::model::index::builder::{ModelIndexBuilder};
 use crate::core::model::{Model, ModelInner};
+use crate::core::pipeline::Pipeline;
 
 pub struct ModelBuilder {
     pub(crate) name: String,
@@ -33,10 +34,10 @@ pub struct ModelBuilder {
     pub(crate) permission: Option<PermissionBuilder>,
     pub(crate) primary: Option<ModelIndex>,
     pub(crate) indices: Vec<ModelIndex>,
-    pub(crate) before_save_pipeline: PipelineBuilder,
-    pub(crate) after_save_pipeline: PipelineBuilder,
-    pub(crate) before_delete_pipeline: PipelineBuilder,
-    pub(crate) after_delete_pipeline: PipelineBuilder,
+    pub(crate) before_save_pipeline: Pipeline,
+    pub(crate) after_save_pipeline: Pipeline,
+    pub(crate) before_delete_pipeline: Pipeline,
+    pub(crate) after_delete_pipeline: Pipeline,
     pub(crate) actions_builder: ActionsBuilder,
     connector_builder: * const Box<dyn ConnectorBuilder>,
 }
@@ -59,10 +60,10 @@ impl ModelBuilder {
             permission: None,
             primary: None,
             indices: Vec::new(),
-            before_save_pipeline: PipelineBuilder::new(),
-            after_save_pipeline: PipelineBuilder::new(),
-            before_delete_pipeline: PipelineBuilder::new(),
-            after_delete_pipeline: PipelineBuilder::new(),
+            before_save_pipeline: Pipeline::new(),
+            after_save_pipeline: Pipeline::new(),
+            before_delete_pipeline: Pipeline::new(),
+            after_delete_pipeline: Pipeline::new(),
             actions_builder: ActionsBuilder::new(),
             connector_builder
         }
@@ -192,26 +193,6 @@ impl ModelBuilder {
         self
     }
 
-    pub fn before_save<F: Fn(&mut PipelineBuilder)>(&mut self, callback: F) -> &mut Self {
-        callback(&mut self.before_save_pipeline);
-        self
-    }
-
-    pub fn after_save<F: Fn(&mut PipelineBuilder)>(&mut self, callback: F) -> &mut Self {
-        callback(&mut self.after_save_pipeline);
-        self
-    }
-
-    pub fn before_delete<F: Fn(&mut PipelineBuilder)>(&mut self, callback: F) -> &mut Self {
-        callback(&mut self.before_delete_pipeline);
-        self
-    }
-
-    pub fn after_delete<F: Fn(&mut PipelineBuilder)>(&mut self, callback: F) -> &mut Self {
-        callback(&mut self.after_delete_pipeline);
-        self
-    }
-
     pub fn actions<F: Fn(&mut ActionsBuilder)>(&mut self, build: F) -> &mut Self {
         build(&mut self.actions_builder);
         self
@@ -283,10 +264,10 @@ impl ModelBuilder {
             properties_map,
             primary,
             indices: indices.clone(),
-            before_save_pipeline: self.before_save_pipeline.build(),
-            after_save_pipeline: self.after_save_pipeline.build(),
-            before_delete_pipeline: self.before_delete_pipeline.build(),
-            after_delete_pipeline: self.after_delete_pipeline.build(),
+            before_save_pipeline: self.before_save_pipeline.clone(),
+            after_save_pipeline: self.after_save_pipeline.clone(),
+            before_delete_pipeline: self.before_delete_pipeline.clone(),
+            after_delete_pipeline: self.after_delete_pipeline.clone(),
             all_keys: self.all_keys(),
             input_keys: self.input_keys(),
             save_keys: self.save_keys(),

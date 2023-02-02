@@ -21,8 +21,8 @@ use crate::core::field::r#type::FieldType;
 use crate::core::object::Object;
 use crate::core::pipeline::context::Context;
 use crate::core::pipeline::Pipeline;
-use crate::core::tson::index::Index;
-use crate::core::tson::range::Range;
+use crate::core::teon::index::Index;
+use crate::core::teon::range::Range;
 
 // Code from this file is inspired from serde json
 // https://github.com/serde-rs/json/blob/master/src/value/mod.rs
@@ -36,126 +36,126 @@ pub enum Value {
     /// Represents a JSON null value.
     ///
     /// ```
-    /// # use teo::prelude::tson;
+    /// # use teo::prelude::teon;
     /// #
-    /// let v = tson!(null);
+    /// let v = teon!(null);
     /// ```
     Null,
 
     /// Represents a Tson bool.
     ///
     /// ```
-    /// # use teo::prelude::tson;
+    /// # use teo::prelude::teon;
     /// #
-    /// let v = tson!(true);
+    /// let v = teon!(true);
     /// ```
     Bool(bool),
 
     /// Represents a Tson i8.
     ///
     /// ```
-    /// # use teo::prelude::tson;
+    /// # use teo::prelude::teon;
     /// #
-    /// let v = tson!(12_i8);
+    /// let v = teon!(12_i8);
     /// ```
     I8(i8),
 
     /// Represents a Tson i16.
     ///
     /// ```
-    /// # use teo::prelude::tson;
+    /// # use teo::prelude::teon;
     /// #
-    /// let v = tson!(12_i16);
+    /// let v = teon!(12_i16);
     /// ```
     I16(i16),
 
     /// Represents a Tson i32.
     ///
     /// ```
-    /// # use teo::prelude::tson;
+    /// # use teo::prelude::teon;
     /// #
-    /// let v = tson!(12_i32);
+    /// let v = teon!(12_i32);
     /// ```
     I32(i32),
 
     /// Represents a Tson i64.
     ///
     /// ```
-    /// # use teo::prelude::tson;
+    /// # use teo::prelude::teon;
     /// #
-    /// let v = tson!(12_i64);
+    /// let v = teon!(12_i64);
     /// ```
     I64(i64),
 
     /// Represents a Tson i128.
     ///
     /// ```
-    /// # use teo::prelude::tson;
+    /// # use teo::prelude::teon;
     /// #
-    /// let v = tson!(12_i128);
+    /// let v = teon!(12_i128);
     /// ```
     I128(i128),
 
     /// Represents a Tson u8.
     ///
     /// ```
-    /// # use teo::prelude::tson;
+    /// # use teo::prelude::teon;
     /// #
-    /// let v = tson!(12_u8);
+    /// let v = teon!(12_u8);
     /// ```
     U8(u8),
 
     /// Represents a Tson u16.
     ///
     /// ```
-    /// # use teo::prelude::tson;
+    /// # use teo::prelude::teon;
     /// #
-    /// let v = tson!(12_u16);
+    /// let v = teon!(12_u16);
     /// ```
     U16(u16),
 
     /// Represents a Tson u32.
     ///
     /// ```
-    /// # use teo::prelude::tson;
+    /// # use teo::prelude::teon;
     /// #
-    /// let v = tson!(12_u32);
+    /// let v = teon!(12_u32);
     /// ```
     U32(u32),
 
     /// Represents a Tson u64.
     ///
     /// ```
-    /// # use teo::prelude::tson;
+    /// # use teo::prelude::teon;
     /// #
-    /// let v = tson!(12_u64);
+    /// let v = teon!(12_u64);
     /// ```
     U64(u64),
 
     /// Represents a Tson u128.
     ///
     /// ```
-    /// # use teo::prelude::tson;
+    /// # use teo::prelude::teon;
     /// #
-    /// let v = tson!(12_u128);
+    /// let v = teon!(12_u128);
     /// ```
     U128(u128),
 
     /// Represents a Tson f32.
     ///
     /// ```
-    /// # use teo::prelude::tson;
+    /// # use teo::prelude::teon;
     /// #
-    /// let v = tson!(12.5_f32);
+    /// let v = teon!(12.5_f32);
     /// ```
     F32(f32),
 
     /// Represents a Tson f64.
     ///
     /// ```
-    /// # use teo::prelude::tson;
+    /// # use teo::prelude::teon;
     /// #
-    /// let v = tson!(12.5_f64);
+    /// let v = teon!(12.5_f64);
     /// ```
     F64(f64),
 
@@ -733,6 +733,19 @@ impl Value {
     pub fn as_datetime(&self) -> Option<&DateTime<Utc>> {
         match self {
             Value::DateTime(d) => Some(d),
+            _ => None,
+        }
+    }
+
+    #[cfg(feature = "data-source-mongodb")]
+    pub fn is_object_id(&self) -> bool {
+        self.as_object_id().is_some()
+    }
+
+    #[cfg(feature = "data-source-mongodb")]
+    pub fn as_object_id(&self) -> Option<&ObjectId> {
+        match self {
+            Value::ObjectId(o) => Some(o),
             _ => None,
         }
     }

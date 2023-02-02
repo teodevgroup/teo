@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
-use crate::core::tson::range::Range;
+use crate::core::teon::range::Range;
 use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::entity::Entity;
 use crate::parser::ast::group::Group;

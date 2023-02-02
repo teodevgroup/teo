@@ -1,8 +1,9 @@
-use crate::core::conf::client::CSharpClient;
+use crate::core::app::conf::ClientGeneratorConf;
 use crate::core::graph::Graph;
+use crate::parser::ast::client::Client;
 
-pub(crate) async fn generate_runtime_cs(_graph: &Graph, conf: &CSharpClient) -> String {
-    let url = &conf.host_url;
+pub(crate) async fn generate_runtime_cs(_graph: &Graph, client: &ClientGeneratorConf) -> String {
+    let url = &client.host;
     format!(r#"using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

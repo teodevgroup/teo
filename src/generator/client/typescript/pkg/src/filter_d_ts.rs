@@ -1,6 +1,6 @@
 use crate::core::graph::Graph;
 
-pub(crate) async fn generate_filter_ts(_graph: &Graph) -> String {
+pub(crate) async fn generate_filter_d_ts(_graph: &Graph) -> String {
     format!(r#"export type ObjectIdFilter = {{
     equals?: string
     in?: string[]

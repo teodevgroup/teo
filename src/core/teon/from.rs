@@ -1,7 +1,8 @@
 use std::collections::{BTreeMap, HashMap};
+use bson::oid::ObjectId;
 use chrono::{Date, DateTime, Utc};
 use rust_decimal::Decimal;
-use crate::core::tson::Value;
+use crate::core::teon::Value;
 use crate::prelude::Object;
 
 // MARK: - Self
@@ -239,6 +240,13 @@ impl From<Value> for Date<Utc> {
 impl From<Value> for DateTime<Utc> {
     fn from(v: Value) -> Self {
         v.as_datetime().unwrap().to_owned()
+    }
+}
+
+#[cfg(feature = "data-source-mongodb")]
+impl From<Value> for ObjectId {
+    fn from(value: Value) -> Self {
+        value.as_object_id().unwrap().clone()
     }
 }
 

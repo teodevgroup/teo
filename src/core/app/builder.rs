@@ -3,11 +3,9 @@ use std::env;
 use std::ffi::{OsStr, OsString};
 use std::fmt::{Debug, Formatter};
 use std::sync::{Arc, Mutex};
-use crate::core::conf::builder::ConfBuilder;
 use crate::core::database::name::DatabaseName;
 use crate::core::graph::builder::GraphBuilder;
 use crate::parser::ast::field::FieldClass;
-use crate::parser::parser::Parser;
 use crate::prelude::{App, Value};
 use futures_util::future::BoxFuture;
 use std::future::Future;
@@ -15,6 +13,7 @@ use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
 use clap::{Arg, arg, ArgAction, Command as ClapCommand, Parser as ClapParser};
 use crate::core::app::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, MigrateCommand, ServeCommand};
+use crate::core::app::conf::{ClientGeneratorConf, EntityGeneratorConf, ServerConf};
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use crate::core::field::builder::FieldBuilder;
@@ -26,7 +25,9 @@ use crate::core::pipeline::modifiers::function::perform::{PerformArgument, Perfo
 use crate::core::pipeline::modifiers::function::transform::{TransformArgument, TransformModifier};
 use crate::core::pipeline::modifiers::function::validate::{ValidateArgument, ValidateModifier};
 use crate::core::property::builder::PropertyBuilder;
+use crate::generator::client::ClientGenerator;
 use crate::parser::ast::r#type::Arity;
+use crate::parser::parser::Parser;
 
 #[derive(Debug)]
 pub(crate) struct CallbackLookupTable {
@@ -45,7 +46,9 @@ impl CallbackLookupTable {
 #[derive(ToMut)]
 pub struct AppBuilder {
     pub(crate) graph_builder: GraphBuilder,
-    pub(crate) conf_builder: ConfBuilder,
+    pub(crate) server_conf: Option<ServerConf>,
+    pub(crate) entity_generator_confs: Vec<EntityGeneratorConf>,
+    pub(crate) client_generator_confs: Vec<ClientGeneratorConf>,
     pub(crate) callback_lookup_table: Arc<Mutex<CallbackLookupTable>>,
     pub(crate) environment_version: EnvironmentVersion,
     pub(crate) entrance: Entrance,
@@ -69,7 +72,9 @@ impl AppBuilder {
     pub fn new_with_environment_version_and_entrance(environment_version: EnvironmentVersion, entrance: Entrance) -> Self {
         Self {
             graph_builder: GraphBuilder::new(),
-            conf_builder: ConfBuilder::new(),
+            server_conf: None,
+            entity_generator_confs: vec![],
+            client_generator_confs: vec![],
             callback_lookup_table: Arc::new(Mutex::new(CallbackLookupTable::new())),
             environment_version: environment_version.clone(),
             entrance,
@@ -187,7 +192,7 @@ impl AppBuilder {
         self
     }
 
-    pub fn perform<T, F>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
+    pub fn callback<T, F>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
         T: From<Value> + Send + Sync + 'static,
         F: PerformArgument<T> + 'static {
         self.callback_lookup_table.lock().unwrap().callbacks.insert(name.into(), Arc::new(PerformModifier::new(f)));
@@ -223,7 +228,9 @@ impl AppBuilder {
     pub async fn build(&mut self) -> App {
         self.load();
         App {
-            conf: self.conf_builder.build(),
+            server_conf: self.server_conf.clone().unwrap(),
+            entity_generator_confs: self.entity_generator_confs.clone(),
+            client_generator_confs: self.client_generator_confs.clone(),
             graph: self.graph_builder.build().await,
             environment_version: self.environment_version.clone(),
             entrance: self.entrance.clone(),
@@ -233,10 +240,6 @@ impl AppBuilder {
 
     fn graph_builder(&mut self) -> &mut GraphBuilder {
         &mut self.graph_builder
-    }
-
-    fn conf_builder(&mut self) -> &mut ConfBuilder {
-        &mut self.conf_builder
     }
 
     fn load_config_from_parser(&mut self, parser: &Parser) {
@@ -263,17 +266,46 @@ impl AppBuilder {
                 self.graph_builder.data_source().mongodb(url)
             },
         }
-        // config
+        // server config
         let config_ref = parser.config.unwrap();
         let source = parser.get_source(config_ref.0);
         let config = source.get_config(config_ref.1);
         let bind = config.bind.as_ref().unwrap();
-        self.conf_builder().bind(bind.clone());
-        if let Some(path_prefix) = &config.path_prefix {
-            self.conf_builder().path_prefix(path_prefix);
+        self.server_conf = Some(ServerConf {
+            bind: bind.clone(),
+            path_prefix: if let Some(path_prefix) = &config.path_prefix {
+                Some(path_prefix.clone())
+            } else {
+                None
+            },
+            jwt_secret: if let Some(jwt_secret) = &config.jwt_secret {
+                Some(jwt_secret.clone())
+            } else {
+                None
+            }
+        });
+        // entity generators
+        for entity_generator_ref in parser.generators.iter() {
+            let source = parser.get_source(entity_generator_ref.0);
+            let entity = source.get_entity(entity_generator_ref.1);
+            self.entity_generator_confs.push(EntityGeneratorConf {
+                name: Some(entity.identifier.name.clone()),
+                provider: entity.provider.unwrap(),
+                dest: entity.dest.clone().unwrap(),
+            })
         }
-        if let Some(jwt_secret) = &config.jwt_secret {
-            self.conf_builder().jwt_secret(jwt_secret);
+        // client generators
+        for client_generator_ref in parser.clients.iter() {
+            let source = parser.get_source(client_generator_ref.0);
+            let client = source.get_client(client_generator_ref.1);
+            self.client_generator_confs.push(ClientGeneratorConf {
+                name: Some(client.identifier.name.clone()),
+                provider: client.provider.unwrap(),
+                dest: client.dest.clone().unwrap(),
+                package: client.package.unwrap(),
+                host: client.host.clone().unwrap(),
+                object_name: client.object_name.clone(),
+            })
         }
         // load enums
         for enum_ref in parser.enums.clone() {

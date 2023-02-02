@@ -6,7 +6,7 @@ use futures_util::future::BoxFuture;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::context::Context;
 use crate::core::pipeline::context::validity::Validity;
-use crate::core::tson::Value;
+use crate::core::teon::Value;
 
 pub trait ValidateArgument<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync>: Send + Sync {
     fn call(&self, args: T) -> BoxFuture<'static, O>;

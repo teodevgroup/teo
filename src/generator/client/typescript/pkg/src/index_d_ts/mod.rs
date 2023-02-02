@@ -1,13 +1,14 @@
 use inflector::Inflector;
 use crate::core::action::r#type::{ActionResultData, ActionResultMeta, ActionType};
-use crate::core::conf::client::TypeScriptClient;
-use crate::generator::client::typescript::pkg::src::index_ts::docs::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, main_object_doc, nested_connect_doc, nested_create_doc, nested_create_or_connect_doc, nested_delete_doc, nested_disconnect_doc, nested_set_doc, nested_update_doc, nested_upsert_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_connect_create_doc, unique_connect_doc, unique_where_doc, where_doc, where_doc_first, with_token_doc};
+use crate::core::app::conf::ClientGeneratorConf;
+use crate::generator::client::typescript::pkg::src::index_d_ts::docs::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, main_object_doc, nested_connect_doc, nested_create_doc, nested_create_or_connect_doc, nested_delete_doc, nested_disconnect_doc, nested_set_doc, nested_update_doc, nested_upsert_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_connect_create_doc, unique_connect_doc, unique_where_doc, where_doc, where_doc_first, with_token_doc};
 use crate::generator::client::typescript::r#type::ToTypeScriptType;
 
 use crate::core::graph::Graph;
 use crate::core::model::{Model};
 use crate::core::model::index::ModelIndexType::{Primary, Unique};
 use crate::generator::lib::code::Code;
+use crate::parser::ast::client::Client;
 
 mod docs;
 
@@ -316,9 +317,9 @@ fn generate_model_credentials_input(model: &Model) -> String {
     }).to_string()
 }
 
-pub(crate) async fn generate_index_ts(graph: &Graph, conf: &TypeScriptClient) -> String {
+pub(crate) async fn generate_index_d_ts(graph: &Graph, client: &ClientGeneratorConf) -> String {
     Code::new(0, 4, |c| {
-        c.line(r#"import { request, Response, PagingInfo, TokenInfo, SortOrder, Enumerable, CheckSelectInclude, SelectSubset, ExistKeys } from "./runtime""#);
+        c.line(r#"import { Response, PagingInfo, TokenInfo, SortOrder, Enumerable, CheckSelectInclude, SelectSubset, ExistKeys } from "./runtime""#);
         c.block("import {", |b| {
             b.line("ObjectIdFilter, ObjectIdNullableFilter, StringFilter, StringNullableFilter, NumberFilter,");
             b.line("NumberNullableFilter, BoolFilter, BoolNullableFilter, DateFilter, DateNullableFilter,");
@@ -333,7 +334,21 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &TypeScriptClient) ->
             b.line("EnumFieldUpdateOperationsInput, NullableEnumFieldUpdateOperationsInput,");
             b.line("ArrayFieldUpdateOperationsInput, NullableArrayFieldUpdateOperationsInput,");
         }, "} from \"./operation\"");
+        c.line(r#"
 
+export declare function setBearerToken(token: string | undefined)
+
+export declare function getBearerToken(): string | undefined
+
+export declare class TeoError extends Error {{
+
+    type: string
+    errors: {{[key: string]: string}} | null
+
+    declare constructor(responseError: ResponseError)
+
+    declare get name(): string
+}}"#);
         c.empty_line();
         // enum definitions
         graph.enums().iter().for_each(|e| {
@@ -556,24 +571,18 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &TypeScriptClient) ->
             }, "")
         });
         // delegates
-        let object_name = &conf.object_name;
+        let object_name = client.object_name.as_ref().unwrap();
         let object_class_name = object_name.to_pascal_case();
         graph.models().iter().for_each(|m| {
             if m.actions().len() > 0 {
                 let model_name = m.name();
                 let model_var_name = model_name.to_camel_case();
                 let model_class_name = model_var_name.to_pascal_case();
-                let model_url_segment_name = m.url_segment_name();
-                c.block(format!("class {model_class_name}Delegate {{"), |b| {
-                    b.line("_token?: string");
-                    b.block("constructor(token?: string) {", |b| {
-                        b.line("this._token = token");
-                    }, "}");
+                c.block(format!("declare class {model_class_name}Delegate {{"), |b| {
                     ActionType::iter().for_each(|a| {
                         if m.actions().contains(a) {
                             let action_name = a.as_str();
                             let action_var_name = a.as_str().to_camel_case();
-                            let action_url_name = a.as_url_segment();
                             let result_meta = match a.result_meta() {
                                 ActionResultMeta::PagingInfo => "PagingInfo",
                                 ActionResultMeta::TokenInfo => "TokenInfo",
@@ -592,9 +601,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &TypeScriptClient) ->
                             };
                             b.empty_line();
                             b.doc(action_doc(object_name, a.clone(), m));
-                            b.block(format!("async {action_var_name}<T extends {model_name}{action_name}Args>(args?: T): Promise<Response<{result_meta}, CheckSelectInclude<T, {result_data}, {model_name}GetPayload<T>{payload_array}>>> {{"), |b| {
-                                b.line(format!(r#"return await request("{model_url_segment_name}", "{action_url_name}", args ?? {{}}, this._token)"#));
-                            }, "}");
+                            b.line(format!("async {action_var_name}<T extends {model_name}{action_name}Args>(args?: T): Promise<Response<{result_meta}, CheckSelectInclude<T, {result_data}, {model_name}GetPayload<T>{payload_array}>>>"));
                         }
                     });
                 }, "}");
@@ -602,8 +609,7 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &TypeScriptClient) ->
             }
         });
         // main interface
-        c.block(format!("class {object_class_name} {{"), |b| {
-            b.line("_token?: string");
+        c.block(format!("declare class {object_class_name} {{"), |b| {
             graph.models().iter().for_each(|m| {
                 if m.actions().len() > 0 {
                     let model_name = m.name();
@@ -613,26 +619,12 @@ pub(crate) async fn generate_index_ts(graph: &Graph, conf: &TypeScriptClient) ->
                     b.line(format!("{model_var_name}: {model_class_name}Delegate"));
                 }
             });
-            b.block("constructor(token?: string) {", |b| {
-                b.line("this._token = token");
-                graph.models().iter().for_each(|m| {
-                    if m.actions().len() > 0 {
-                        let model_name = m.name();
-                        let model_var_name = model_name.to_camel_case();
-                        let model_class_name = model_var_name.to_pascal_case();
-                        b.line(format!("this.{model_var_name} = new {model_class_name}Delegate(token)"));
-                    }
-                })
-            }, "}");
+            b.line("constructor(token?: string)");
             b.doc(with_token_doc());
-            b.block("$withToken(token?: string) {", |b| {
-                b.line(format!("return new {object_class_name}(token)"));
-            }, "}")
+            b.line("$withToken(token?: string)");
         }, "}");
         c.empty_line();
         c.line(main_object_doc(object_name, graph));
-        c.line(format!("const {object_name} = new {object_class_name}()"));
-        c.empty_line();
-        c.line(format!("export default {object_name}"));
+        c.line(format!("declare export const {object_name} = new {object_class_name}()"));
     }).to_string()
 }

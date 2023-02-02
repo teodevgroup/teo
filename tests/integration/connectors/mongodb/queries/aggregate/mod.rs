@@ -42,13 +42,13 @@ async fn app() -> App<impl ServiceFactory<
 #[serial]
 async fn aggregate_returns_null_for_fields_if_no_record() {
     let app = test::init_service(app().await).await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_sum": {
             "age": true,
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_sum": {
                 "age": {"is": "null"},
@@ -62,27 +62,27 @@ async fn aggregate_returns_null_for_fields_if_no_record() {
 #[serial]
 async fn aggregate_can_sum_for_each_number_field() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "people", "create", tson!({
+    let _id1 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "scalar",
             "age": 20,
             "salary": 5000
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "people", "create", tson!({
+    let _id2 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "jobs",
             "age": 22,
             "salary": 1
         },
     }), 200, "data.id").await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_sum": {
             "age": true,
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_sum": {
                 "age": {"equals": 42},
@@ -96,27 +96,27 @@ async fn aggregate_can_sum_for_each_number_field() {
 #[serial]
 async fn aggregate_can_avg_for_each_number_field() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "people", "create", tson!({
+    let _id1 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "scalar",
             "age": 20,
             "salary": 5000
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "people", "create", tson!({
+    let _id2 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "jobs",
             "age": 21,
             "salary": 1
         },
     }), 200, "data.id").await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_avg": {
             "age": true,
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_avg": {
                 "age": {"equals": 20.5},
@@ -130,27 +130,27 @@ async fn aggregate_can_avg_for_each_number_field() {
 #[serial]
 async fn aggregate_can_min_for_each_number_field() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "people", "create", tson!({
+    let _id1 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "scalar",
             "age": 20,
             "salary": 5000
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "people", "create", tson!({
+    let _id2 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "jobs",
             "age": 21,
             "salary": 1
         },
     }), 200, "data.id").await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_min": {
             "age": true,
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_min": {
                 "age": {"equals": 20},
@@ -164,27 +164,27 @@ async fn aggregate_can_min_for_each_number_field() {
 #[serial]
 async fn aggregate_can_max_for_each_number_field() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "people", "create", tson!({
+    let _id1 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "scalar",
             "age": 20,
             "salary": 5000
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "people", "create", tson!({
+    let _id2 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "jobs",
             "age": 21,
             "salary": 1
         },
     }), 200, "data.id").await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_max": {
             "age": true,
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_max": {
                 "age": {"equals": 21},
@@ -198,21 +198,21 @@ async fn aggregate_can_max_for_each_number_field() {
 #[serial]
 async fn aggregate_can_do_together_for_each_number_field() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "people", "create", tson!({
+    let _id1 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "scalar",
             "age": 20,
             "salary": 5000
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "people", "create", tson!({
+    let _id2 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "jobs",
             "age": 21,
             "salary": 1
         },
     }), 200, "data.id").await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_min": {
             "age": true
         },
@@ -221,7 +221,7 @@ async fn aggregate_can_do_together_for_each_number_field() {
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_min": {
                 "age": {"equals": 20}
@@ -238,27 +238,27 @@ async fn aggregate_can_do_together_for_each_number_field() {
 #[serial]
 async fn aggregate_can_count_for_each_number_field() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "people", "create", tson!({
+    let _id1 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "scalar",
             "age": 20,
             "salary": 5000
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "people", "create", tson!({
+    let _id2 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "jobs",
             "age": 21,
             "salary": null
         },
     }), 200, "data.id").await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_count": {
             "age": true,
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_count": {
                 "age": {"equals": 2},
@@ -272,28 +272,28 @@ async fn aggregate_can_count_for_each_number_field() {
 #[serial]
 async fn aggregate_can_count_all() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "people", "create", tson!({
+    let _id1 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "scalar",
             "age": 20,
             "salary": 5000
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "people", "create", tson!({
+    let _id2 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "jobs",
             "age": 21,
             "salary": null
         },
     }), 200, "data.id").await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_count": {
             "age": true,
             "salary": true,
             "_all": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_count": {
                 "age": {"equals": 2},
@@ -308,13 +308,13 @@ async fn aggregate_can_count_all() {
 #[serial]
 async fn aggregate_when_no_records_avg_is_null() {
     let app = test::init_service(app().await).await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_avg": {
             "age": true,
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_avg": {
                 "age": {"is": "null"},
@@ -328,13 +328,13 @@ async fn aggregate_when_no_records_avg_is_null() {
 #[serial]
 async fn aggregate_when_no_records_sum_is_null() {
     let app = test::init_service(app().await).await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_sum": {
             "age": true,
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_sum": {
                 "age": {"is": "null"},
@@ -348,13 +348,13 @@ async fn aggregate_when_no_records_sum_is_null() {
 #[serial]
 async fn aggregate_when_no_records_min_is_null() {
     let app = test::init_service(app().await).await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_min": {
             "age": true,
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_min": {
                 "age": {"is": "null"},
@@ -368,13 +368,13 @@ async fn aggregate_when_no_records_min_is_null() {
 #[serial]
 async fn aggregate_when_no_records_max_is_null() {
     let app = test::init_service(app().await).await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_max": {
             "age": true,
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_max": {
                 "age": {"is": "null"},
@@ -388,14 +388,14 @@ async fn aggregate_when_no_records_max_is_null() {
 #[serial]
 async fn aggregate_when_no_records_count_is_zero() {
     let app = test::init_service(app().await).await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_count": {
             "age": true,
             "salary": true,
             "_all": true
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_count": {
                 "age": {"equals": 0},
@@ -410,27 +410,27 @@ async fn aggregate_when_no_records_count_is_zero() {
 #[serial]
 async fn aggregate_when_no_value_avg_is_null() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "people", "create", tson!({
+    let _id1 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "scalar",
             "age": 20,
             "salary": null
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "people", "create", tson!({
+    let _id2 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "jobs",
             "age": 21,
             "salary": null
         },
     }), 200, "data.id").await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_avg": {
             "age": true,
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_avg": {
                 "age": {"equals": 20.5},
@@ -444,27 +444,27 @@ async fn aggregate_when_no_value_avg_is_null() {
 #[serial]
 async fn aggregate_when_no_value_sum_is_null() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "people", "create", tson!({
+    let _id1 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "scalar",
             "age": 20,
             "salary": null
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "people", "create", tson!({
+    let _id2 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "jobs",
             "age": 21,
             "salary": null
         },
     }), 200, "data.id").await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_sum": {
             "age": true,
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_sum": {
                 "age": {"equals": 41},
@@ -478,27 +478,27 @@ async fn aggregate_when_no_value_sum_is_null() {
 #[serial]
 async fn aggregate_when_no_value_min_is_null() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "people", "create", tson!({
+    let _id1 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "scalar",
             "age": 20,
             "salary": null
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "people", "create", tson!({
+    let _id2 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "jobs",
             "age": 21,
             "salary": null
         },
     }), 200, "data.id").await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_min": {
             "age": true,
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_min": {
                 "age": {"equals": 20},
@@ -512,27 +512,27 @@ async fn aggregate_when_no_value_min_is_null() {
 #[serial]
 async fn aggregate_when_no_value_max_is_null() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "people", "create", tson!({
+    let _id1 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "scalar",
             "age": 20,
             "salary": null
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "people", "create", tson!({
+    let _id2 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "jobs",
             "age": 21,
             "salary": null
         },
     }), 200, "data.id").await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_max": {
             "age": true,
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_max": {
                 "age": {"equals": 21},
@@ -546,27 +546,27 @@ async fn aggregate_when_no_value_max_is_null() {
 #[serial]
 async fn aggregate_when_no_value_count_is_zero() {
     let app = test::init_service(app().await).await;
-    let _id1 = request_get(&app, "people", "create", tson!({
+    let _id1 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "scalar",
             "age": 20,
             "salary": null
         },
     }), 200, "data.id").await;
-    let _id2 = request_get(&app, "people", "create", tson!({
+    let _id2 = request_get(&app, "people", "create", teon!({
         "create": {
             "name": "jobs",
             "age": 21,
             "salary": null
         },
     }), 200, "data.id").await;
-    let res = request(&app, "people", "aggregate", tson!({
+    let res = request(&app, "people", "aggregate", teon!({
         "_count": {
             "age": true,
             "salary": true,
         },
     })).await;
-    assert_json_response(res, 200, tson!({
+    assert_json_response(res, 200, teon!({
         "data": {
             "_count": {
                 "age": {"equals": 2},

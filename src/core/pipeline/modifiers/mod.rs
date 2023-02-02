@@ -11,4 +11,4 @@ pub mod value;
 pub mod identity;
 pub mod vector;
 pub mod intent;
-pub mod tson;
+pub mod teon;

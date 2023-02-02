@@ -3,7 +3,7 @@ use indexmap::map::IndexMap;
 use regex::Regex;
 use snailquote::unescape;
 use crate::core::database::name::DatabaseName;
-use crate::core::tson::range::Range;
+use crate::core::teon::range::Range;
 use crate::parser::ast::accessible::{Accessible, ASTPipeline, ASTPipelineItem, Container};
 use crate::parser::ast::argument::ArgumentList;
 use crate::parser::ast::config::Config;
@@ -31,6 +31,7 @@ use crate::parser::std::decorators::relation::GlobalRelationDecorators;
 use crate::prelude::Value;
 use to_mut::ToMut;
 use crate::core::app::environment::Environment;
+use crate::parser::ast::client::{Client, ClientLanguage};
 use crate::parser::ast::generator::Generator;
 use crate::parser::std::pipeline::global::{GlobalFunctionInstallers, GlobalPipelineInstallers};
 
@@ -78,7 +79,7 @@ impl Resolver {
                     Self::resolve_model_entity_generator(parser, source, generator);
                 }
                 Top::Client(client) => {
-
+                    Self::resolve_client_generator(parser, source, client);
                 }
                 Top::Config(config) => {
                     Self::resolve_config(parser, source, config);
@@ -436,6 +437,51 @@ impl Resolver {
         connector.provider.unwrap()
     }
 
+    pub(crate) fn resolve_client_generator(parser: &Parser, source: &Source, client: &mut Client) {
+        for item in client.items.iter_mut() {
+            match item.identifier.name.as_str() {
+                "provider" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let provider_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    let provider_str = provider_value.as_raw_enum_choice().unwrap();
+                    match provider_str {
+                        "javaScript" | "typeScript" => client.provider = Some(ClientLanguage::TypeScript),
+                        "swift" => client.provider = Some(ClientLanguage::Swift),
+                        "kotlin" => client.provider = Some(ClientLanguage::Kotlin),
+                        "cSharp" => client.provider = Some(ClientLanguage::CSharp),
+                        "dart" => client.provider = Some(ClientLanguage::Dart),
+                        _ => panic!("Unrecognized client generator provider. {}", provider_str)
+                    }
+                },
+                "dest" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let dest_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    let dest_str = dest_value.as_str().unwrap();
+                    client.dest = Some(dest_str.to_owned());
+                },
+                "package" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let package_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    let package_bool = package_value.as_bool().unwrap();
+                    client.package = Some(package_bool);
+                },
+                "host" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let host_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    let host_str = host_value.as_str().unwrap();
+                    client.host = Some(host_str.to_owned());
+                },
+                "objectName" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let object_name_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    let object_name_str = object_name_value.as_str().unwrap();
+                    client.object_name = Some(object_name_str.to_owned());
+                },
+                _ => { panic!("Undefined name '{}' in entity generator block.", item.identifier.name.as_str())}
+            }
+        }
+    }
+
     pub(crate) fn resolve_model_entity_generator(parser: &Parser, source: &Source, generator: &mut Generator) {
         for item in generator.items.iter_mut() {
             match item.identifier.name.as_str() {
@@ -474,7 +520,7 @@ impl Resolver {
                             let arg1 = tuple_vec.get(0).unwrap();
                             let arg2 = tuple_vec.get(1).unwrap();
                             let str = arg1.as_str().unwrap().to_owned();
-                            let int = arg2.as_i32().unwrap().to_owned();
+                            let int = arg2.as_u16().unwrap().to_owned();
                             config.bind = Some((str, int));
                         }
                         None => panic!("Argument to 'bind' should be a tuple.")

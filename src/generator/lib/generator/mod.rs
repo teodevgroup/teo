@@ -16,12 +16,28 @@ impl Generator {
         }
     }
 
+    pub(crate) async fn ensure_root_directory(&self) -> std::io::Result<()> {
+        if !self.base_dir.exists() {
+            create_dir_all(&self.base_dir)?;
+        }
+        Ok(())
+    }
+
     pub(crate) async fn ensure_directory<D: Into<String>>(&self, dir_name: D) -> std::io::Result<()> {
         let dirname = self.base_dir.join(dir_name.into());
         if !dirname.exists() {
             create_dir_all(dirname)
         } else {
             Ok(())
+        }
+    }
+
+    pub(crate) async fn clear_root_directory(&self) -> std::io::Result<()> {
+        if !&self.base_dir.exists() {
+            create_dir_all(&self.base_dir)
+        } else {
+            remove_dir_all(&self.base_dir)?;
+            create_dir_all(&self.base_dir)
         }
     }
 

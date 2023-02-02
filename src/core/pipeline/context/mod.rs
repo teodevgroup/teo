@@ -3,7 +3,7 @@ use key_path::KeyPath;
 use crate::core::object::Object;
 use crate::core::pipeline::context::validity::Validity;
 use crate::core::pipeline::context::validity::Validity::{Invalid, Valid};
-use crate::core::tson::Value;
+use crate::core::teon::Value;
 
 pub mod validity;
 
