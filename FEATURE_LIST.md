@@ -174,6 +174,7 @@
 - Rewrite client code generation with separated TS and JS **[DONE]**
 - Rename `tson` to `teon` **[DONE]**
 - Add callback model decorators **[DONE]**
+- Load environment variables from .env
 - Generate rust entities
 - Fix compiler warnings
 - Fix pipeline highlighting bug for VSCode
