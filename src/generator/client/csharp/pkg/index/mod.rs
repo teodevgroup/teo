@@ -7,7 +7,7 @@ use crate::generator::client::csharp::r#type::ToCSharpType;
 use crate::core::graph::Graph;
 use crate::core::model::{Model};
 use crate::generator::lib::code::Code;
-use crate::parser::ast::client::Client;
+
 
 mod doc;
 

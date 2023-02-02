@@ -21,7 +21,7 @@ pub(crate) fn relation_decorator(args: Vec<Argument>, relation: &mut RelationBui
         }
         let references = references.unwrap();
         let fields_value = fields.resolved.as_ref().unwrap().as_value().unwrap();
-        let references_value = references.resolved.as_ref().unwrap().as_value().unwrap();
+        let _references_value = references.resolved.as_ref().unwrap().as_value().unwrap();
         if let Some(_) = fields_value.as_vec() {
             let fields_vec: Vec<&str> = fields.resolved.as_ref().unwrap().as_value().unwrap().as_vec().unwrap().iter().map(|v| {
                 v.as_raw_enum_choice().unwrap()

@@ -2,17 +2,17 @@ use std::sync::{Arc};
 use key_path::KeyPath;
 use crate::core::pipeline::context::validity::Validity;
 use crate::core::pipeline::modifier::Modifier;
-use crate::core::pipeline::modifiers::logical::all::AllModifier;
-use crate::core::pipeline::modifiers::logical::and::AndModifier;
+
+
 use crate::core::pipeline::modifiers::bcrypt::bcrypt_salt::BcryptSaltModifier;
 use crate::core::pipeline::modifiers::bcrypt::bcrypt_verify::BcryptVerifyModifier;
 use crate::core::pipeline::modifiers::math::ceil::CeilModifier;
 use crate::core::pipeline::modifiers::string::generation::cuid::CUIDModifier;
 use crate::core::pipeline::modifiers::math::floor::FloorModifier;
-use crate::core::pipeline::modifiers::logical::r#if::IfModifier;
+
 use crate::core::pipeline::modifiers::datetime::now::NowModifier;
 use crate::core::pipeline::modifiers::object::object_value::ObjectValueModifier;
-use crate::core::pipeline::modifiers::logical::or::OrModifier;
+
 use crate::core::pipeline::modifiers::logical::r#do::DoModifier;
 use crate::core::pipeline::modifiers::string::transform::regex_replace::RegexReplaceModifier;
 use crate::core::pipeline::modifiers::string::generation::slug::SlugModifier;
@@ -26,8 +26,8 @@ use crate::core::pipeline::modifiers::function::perform::{PerformArgument, Perfo
 use crate::core::pipeline::modifiers::function::compare::{CompareArgument, CompareModifier};
 use crate::core::pipeline::modifiers::function::transform::{TransformArgument, TransformModifier};
 use crate::core::pipeline::modifiers::function::validate::{ValidateArgument, ValidateModifier};
-use crate::core::pipeline::modifiers::logical::any::AnyModifier;
-use crate::core::pipeline::modifiers::logical::not::NotModifier;
+
+
 use crate::core::pipeline::modifiers::logical::transform_with::TransformWithModifier;
 use crate::core::pipeline::modifiers::logical::validate_with::ValidateWithModifier;
 use crate::core::pipeline::modifiers::math::abs::AbsModifier;

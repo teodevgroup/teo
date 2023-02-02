@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use crate::core::pipeline::modifier::Modifier;
-use crate::core::pipeline::modifiers::array::append::AppendModifier;
+
 use crate::core::pipeline::modifiers::vector::filter::FilterModifier;
 use crate::core::pipeline::modifiers::vector::item_at::ItemAtModifier;
 use crate::core::pipeline::modifiers::vector::join::JoinModifier;

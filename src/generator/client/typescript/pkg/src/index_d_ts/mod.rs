@@ -8,7 +8,7 @@ use crate::core::graph::Graph;
 use crate::core::model::{Model};
 use crate::core::model::index::ModelIndexType::{Primary, Unique};
 use crate::generator::lib::code::Code;
-use crate::parser::ast::client::Client;
+
 
 mod docs;
 

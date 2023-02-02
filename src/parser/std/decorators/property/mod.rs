@@ -8,7 +8,7 @@ use crate::parser::ast::accessible::Accessible;
 use crate::parser::std::decorators::property::cached::cached_decorator;
 use crate::parser::std::decorators::property::getter::getter_decorator;
 use crate::parser::std::decorators::property::setter::setter_decorator;
-use crate::parser::std::decorators::relation::relation::relation_decorator;
+
 
 pub(crate) struct GlobalPropertyDecorators {
     objects: HashMap<String, Accessible>

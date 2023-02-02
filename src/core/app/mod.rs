@@ -14,7 +14,7 @@ use crate::core::app::serve::serve;
 use crate::core::graph::Graph;
 use crate::generator::client::generate_client;
 use crate::generator::server::generate_entity;
-use crate::parser::parser::Parser;
+
 
 pub struct App {
     graph: Graph,

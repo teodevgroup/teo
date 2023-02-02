@@ -10,7 +10,7 @@ use crate::core::field::builder::FieldBuilder;
 use crate::core::permission::builder::PermissionBuilder;
 use crate::core::relation::builder::RelationBuilder;
 use crate::core::relation::Relation;
-use crate::core::pipeline::builder::PipelineBuilder;
+
 use crate::core::property::builder::PropertyBuilder;
 use crate::core::property::Property;
 use crate::core::relation::delete_rule::DeleteRule;

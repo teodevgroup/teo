@@ -1,5 +1,5 @@
 use crate::core::field::builder::FieldBuilder;
-use crate::core::field::Field;
+
 use crate::core::field::write_rule::WriteRule;
 use crate::parser::ast::argument::Argument;
 

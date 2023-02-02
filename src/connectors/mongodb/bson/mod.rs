@@ -22,7 +22,7 @@ impl Into<Bson> for Value {
             Value::U128(u) => Bson::Int64(u as i64),
             Value::F32(f) => Bson::Double(f as f64),
             Value::F64(f) => Bson::Double(f as f64),
-            Value::Decimal(d) => panic!("Decimal is not implemented by MongoDB."),
+            Value::Decimal(_d) => panic!("Decimal is not implemented by MongoDB."),
             Value::String(s) => Bson::String(s),
             Value::Date(val) => Bson::DateTime(BsonDateTime::parse_rfc3339_str(val.format("%Y-%m-%d").to_string()).unwrap()),
             Value::DateTime(val) => Bson::DateTime(BsonDateTime::from(val)),

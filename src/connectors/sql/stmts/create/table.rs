@@ -30,7 +30,7 @@ impl ToSQLString for SQLCreateTableStatement {
     fn to_string(&self, dialect: SQLDialect) -> String {
         let if_not_exists = if self.if_not_exists { " IF NOT EXISTS" } else { "" };
         let table_name = &self.table;
-        let mut columns = self.columns.iter().map(|c| {
+        let columns = self.columns.iter().map(|c| {
             c.to_string(dialect)
         }).collect::<Vec<String>>().join(", ");
         if dialect == SQLDialect::PostgreSQL {

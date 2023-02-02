@@ -6,7 +6,7 @@ use crate::generator::client::swift::pkg::readme_md::generate_readme_md;
 use crate::core::graph::Graph;
 use crate::generator::client::ClientGenerator;
 use crate::generator::lib::generator::Generator;
-use crate::parser::ast::client::Client;
+
 
 pub(crate) mod pkg;
 
@@ -18,17 +18,17 @@ impl SwiftClientGenerator {
 
 #[async_trait]
 impl ClientGenerator for SwiftClientGenerator {
-    fn module_directory_in_package(&self, client: &ClientGeneratorConf) -> String {
+    fn module_directory_in_package(&self, _client: &ClientGeneratorConf) -> String {
         return "src".to_owned()
     }
 
-    async fn generate_module_files(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_module_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
         generator.clear_root_directory().await?;
         Ok(())
     }
 
-    async fn generate_package_files(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_package_files(&self, graph: &Graph, _client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
         generator.clear_root_directory().await?;
         generator.generate_file("client/swift/README.md", generate_readme_md(graph).await).await?;
@@ -37,7 +37,7 @@ impl ClientGenerator for SwiftClientGenerator {
         Ok(())
     }
 
-    async fn generate_main(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_main(&self, _graph: &Graph, _client: &ClientGeneratorConf, _generator: &Generator) -> std::io::Result<()> {
         Ok(())
     }
 }

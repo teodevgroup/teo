@@ -11,7 +11,7 @@ use crate::core::graph::Graph;
 use crate::generator::client::ClientGenerator;
 use crate::generator::client::typescript::pkg::src::index_js::generate_index_js;
 use crate::generator::lib::generator::Generator;
-use crate::parser::ast::client::Client;
+
 
 pub(crate) struct TypeScriptClientGenerator { }
 
@@ -21,7 +21,7 @@ impl TypeScriptClientGenerator {
 
 #[async_trait]
 impl ClientGenerator for TypeScriptClientGenerator {
-    fn module_directory_in_package(&self, client: &ClientGeneratorConf) -> String {
+    fn module_directory_in_package(&self, _client: &ClientGeneratorConf) -> String {
         return "src".to_owned();
     }
 
@@ -33,7 +33,7 @@ impl ClientGenerator for TypeScriptClientGenerator {
         generator.generate_file("runtime.d.ts", generate_runtime_d_ts(graph, client).await).await
     }
 
-    async fn generate_package_files(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_package_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, _generator: &Generator) -> std::io::Result<()> {
         Ok(())
     }
 

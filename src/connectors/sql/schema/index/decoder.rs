@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+
 use std::collections::HashMap;
 use maplit::hashmap;
 use sqlx::any::AnyRow;
@@ -7,12 +7,12 @@ use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::field::Sort;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::model::Model;
-use crate::prelude::Value;
+
 
 pub(crate) struct IndexDecoder { }
 
 impl IndexDecoder {
-    fn decode(model: &Model, rows: Vec<AnyRow>, dialect: SQLDialect) -> Vec<ModelIndex> {
+    fn decode(model: &Model, rows: Vec<AnyRow>, _dialect: SQLDialect) -> Vec<ModelIndex> {
         let mut indices: Vec<ModelIndex> = Vec::new();
         let mut items: HashMap<String, HashMap<i32, ModelIndexItem>> = HashMap::new();
         for row in rows.iter() {
@@ -42,7 +42,7 @@ impl IndexDecoder {
             items.sort_by(|(k1, _), (k2, _)| {
                 k1.cmp(k2)
             });
-            let items = items.into_iter().map(|(k, v)| v.clone()).collect::<Vec<ModelIndexItem>>();
+            let items = items.into_iter().map(|(_k, v)| v.clone()).collect::<Vec<ModelIndexItem>>();
             retval.push(ModelIndex::new(index.r#type(), index.name(), items));
         }
         retval

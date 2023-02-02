@@ -55,7 +55,7 @@ impl ValueToSQLString for Value {
             FieldType::Vec(element_field) => {
                 let val = self.as_vec().unwrap();
                 let mut result: Vec<String> = vec![];
-                for (i, v) in val.iter().enumerate() {
+                for (_i, v) in val.iter().enumerate() {
                     result.push(v.to_sql_string(element_field.r#type(), element_field.is_optional(), graph));
                 }
                 result.join(", ").wrap_in_array()

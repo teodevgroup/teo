@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 use bson::Bson;
 use key_path::KeyPath;
-use rust_decimal::Decimal;
+
 use crate::core::error::ActionError;
 use crate::core::field::r#type::FieldType;
 use crate::core::model::Model;
@@ -99,19 +99,19 @@ impl BsonDecoder {
             }
             FieldType::Vec(inner_field) => {
                 match bson_value.as_array() {
-                    Some(arr) => Ok((Value::Vec(arr.iter().enumerate().map(|(i, v)| {
+                    Some(arr) => Ok(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
                         let path = path + i;
                         Self::decode(model, graph, inner_field.r#type(), inner_field.is_optional(), v, path)
-                    }).collect::<ActionResult<Vec<Value>>>()?))),
+                    }).collect::<ActionResult<Vec<Value>>>()?)),
                     None => Err(ActionError::record_decoding_error(model.name(), path, "array")),
                 }
             }
             FieldType::HashMap(inner_field) => {
                 match bson_value.as_document() {
-                    Some(doc) => Ok((Value::HashMap(doc.iter().map(|(k, v)| {
+                    Some(doc) => Ok(Value::HashMap(doc.iter().map(|(k, v)| {
                         let path = path + k;
                         Ok((k.to_owned(), Self::decode(model, graph, inner_field.r#type(), inner_field.is_optional(), v, path)?))
-                    }).collect::<ActionResult<HashMap<String, Value>>>()?))),
+                    }).collect::<ActionResult<HashMap<String, Value>>>()?)),
                     None => Err(ActionError::record_decoding_error(model.name(), path, "document")),
                 }
             }

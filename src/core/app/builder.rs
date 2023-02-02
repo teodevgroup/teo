@@ -1,23 +1,23 @@
 use std::collections::HashMap;
 use std::env;
-use std::ffi::{OsStr, OsString};
-use std::fmt::{Debug, Formatter};
+use std::ffi::{OsString};
+use std::fmt::{Debug};
 use std::sync::{Arc, Mutex};
 use crate::core::database::name::DatabaseName;
 use crate::core::graph::builder::GraphBuilder;
 use crate::parser::ast::field::FieldClass;
 use crate::prelude::{App, Value};
-use futures_util::future::BoxFuture;
-use std::future::Future;
+
+
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
-use clap::{Arg, arg, ArgAction, Command as ClapCommand, Parser as ClapParser};
+use clap::{Arg, ArgAction, Command as ClapCommand, Parser as ClapParser};
 use crate::core::app::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, MigrateCommand, ServeCommand};
 use crate::core::app::conf::{ClientGeneratorConf, EntityGeneratorConf, ServerConf};
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use crate::core::field::builder::FieldBuilder;
-use crate::core::pipeline::context::Context;
+
 use crate::core::pipeline::context::validity::Validity;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::modifiers::function::compare::{CompareArgument, CompareModifier};
@@ -25,7 +25,7 @@ use crate::core::pipeline::modifiers::function::perform::{PerformArgument, Perfo
 use crate::core::pipeline::modifiers::function::transform::{TransformArgument, TransformModifier};
 use crate::core::pipeline::modifiers::function::validate::{ValidateArgument, ValidateModifier};
 use crate::core::property::builder::PropertyBuilder;
-use crate::generator::client::ClientGenerator;
+
 use crate::parser::ast::r#type::Arity;
 use crate::parser::parser::Parser;
 
@@ -152,7 +152,7 @@ impl AppBuilder {
                     .help("Dry run")
                     .action(ArgAction::SetTrue)))
             .get_matches_from(match environment_version {
-                EnvironmentVersion::Python(_) | EnvironmentVersion::NodeJS(_) => env::args_os().enumerate().filter(|(i, x)| *i != 1).map(|(i, x)| x).collect::<Vec<OsString>>(),
+                EnvironmentVersion::Python(_) | EnvironmentVersion::NodeJS(_) => env::args_os().enumerate().filter(|(i, _x)| *i != 1).map(|(_i, x)| x).collect::<Vec<OsString>>(),
                 _ => env::args_os().collect::<Vec<OsString>>(),
             });
         let schema: Option<&String> = matches.get_one("SCHEMA_FILE");

@@ -158,7 +158,7 @@ impl Query {
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);
             } else if key == "OR" {
-                let inner = WhereClause::Or(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, graph, value, dialect, table_alias)).collect()).to_string(dialect);
+                let inner = WhereClause::Or(value.as_vec().unwrap().iter().map(|_w| Self::r#where(model, graph, value, dialect, table_alias)).collect()).to_string(dialect);
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);
             } else if key == "NOT" {
@@ -182,8 +182,8 @@ impl Query {
                     let id_columns_string = id_columns.iter().map(|k| k.escape(dialect)).collect::<Vec<String>>().join(",").to_wrapped();
                     let id_columns_prefixed_string = id_columns.iter().map(|s| format!("t.{}", s)).collect::<Vec<String>>();
                     let id_columns_prefixed = id_columns_prefixed_string.iter().map(|s| s.as_str()).collect::<Vec<&str>>();
-                    let join_columns = if has_join_table {
-                        let (m, r) = graph.through_relation(relation);
+                    let _join_columns = if has_join_table {
+                        let (_m, r) = graph.through_relation(relation);
                         Some(r.references().iter().map(|k| model.field(k).unwrap().column_name()).collect::<Vec<&str>>())
                     } else { None };
                     let through_columns_string = if has_join_table {
@@ -220,12 +220,12 @@ impl Query {
                         };
                         let addition_where = if has_join_table {
                             let (m, r) = graph.through_relation(relation);
-                            r.iter().map(|(f, r)| {
+                            r.iter().map(|(f, _r)| {
                                 let f = m.field(f).unwrap().column_name();
                                 format!("t.{} IS NOT NULL", f.escape(dialect))
                             }).collect::<Vec<String>>().join(" AND ")
                         } else {
-                            relation.iter().map(|(f, r)| {
+                            relation.iter().map(|(f, _r)| {
                                 let f = model.field(f).unwrap().column_name();
                                 format!("t.{} IS NOT NULL", f.escape(dialect))
                             }).collect::<Vec<String>>().join(" AND ")
@@ -261,9 +261,9 @@ impl Query {
 
     pub(crate) fn order_by(
         model: &Model,
-        graph: &Graph,
+        _graph: &Graph,
         order_by: &Value,
-        dialect: SQLDialect,
+        _dialect: SQLDialect,
         negative_take: bool,
     ) -> String {
         let asc = if negative_take { "DESC" } else { "ASC" };
@@ -406,7 +406,7 @@ impl Query {
             let order_by = order_by.unwrap().as_vec().unwrap().get(0).unwrap().as_hashmap().unwrap();
             let key = order_by.keys().next().unwrap();
             let column_key = model.field(key).unwrap().column_name();
-            let columns = cursor.as_hashmap().unwrap().keys().map(|k| {
+            let columns = cursor.as_hashmap().unwrap().keys().map(|_k| {
                 if dialect == SQLDialect::PostgreSQL {
                     format!("{} AS \"c.{}\"", column_key, column_key)
                 } else {

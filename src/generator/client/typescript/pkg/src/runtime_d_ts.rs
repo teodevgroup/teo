@@ -1,11 +1,11 @@
 use crate::core::action::r#type::ActionType;
 use crate::core::app::conf::ClientGeneratorConf;
 use crate::core::graph::Graph;
-use crate::parser::ast::client::Client;
+
 
 pub(crate) async fn generate_runtime_d_ts(_graph: &Graph, conf: &ClientGeneratorConf) -> String {
     let actions = ActionType::iter().map(|a| { String::from("\"") + a.as_url_segment() + "\"" }).collect::<Vec<String>>().join(" | ");
-    let url = &conf.host;
+    let _url = &conf.host;
     format!(r#"type Action = {actions}
 
 export type ExistKeys<T> = {{

@@ -1,5 +1,5 @@
 use crate::core::field::builder::FieldBuilder;
-use crate::core::field::{Field, QueryAbility};
+use crate::core::field::{QueryAbility};
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn queryable_decorator(_args: Vec<Argument>, field: &mut FieldBuilder) {

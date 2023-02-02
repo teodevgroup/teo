@@ -28,17 +28,17 @@ impl ToSQLString for DatabaseType {
                 format!("BIT{arg}")
             },
             DatabaseType::BitVarying => "BIT VARYING".to_string(),
-            DatabaseType::TinyInt { m , u } => (if *u { "TINYINT UNSIGNED" } else { "TINYINT" }).to_string(),
-            DatabaseType::SmallInt { m, u } => (if *u { "SMALLINT UNSIGNED" } else { "SMALLINT" }).to_string(),
-            DatabaseType::MediumInt { m, u } => (if *u { "MEDIUMINT UNSIGNED" } else { "MEDIUMINT" }).to_string(),
-            DatabaseType::Int { m, u } => if dialect == SQLDialect::MySQL {
+            DatabaseType::TinyInt { m: _ , u } => (if *u { "TINYINT UNSIGNED" } else { "TINYINT" }).to_string(),
+            DatabaseType::SmallInt { m: _, u } => (if *u { "SMALLINT UNSIGNED" } else { "SMALLINT" }).to_string(),
+            DatabaseType::MediumInt { m: _, u } => (if *u { "MEDIUMINT UNSIGNED" } else { "MEDIUMINT" }).to_string(),
+            DatabaseType::Int { m: _, u } => if dialect == SQLDialect::MySQL {
                 (if *u { "INT UNSIGNED" } else { "INT" }).to_string()
             } else if dialect == SQLDialect::PostgreSQL || dialect == SQLDialect::SQLite {
                 "integer".to_string()
             } else {
                 "INT".to_string()
             },
-            DatabaseType::BigInt { m, u } => (if *u { "BIGINT UNSIGNED" } else { "BIGINT" }).to_string(),
+            DatabaseType::BigInt { m: _, u } => (if *u { "BIGINT UNSIGNED" } else { "BIGINT" }).to_string(),
             DatabaseType::Decimal { m, d } => if dialect == SQLDialect::PostgreSQL {
                 let m = m.unwrap_or(65);
                 let d = d.unwrap_or(30);
@@ -132,7 +132,7 @@ impl ToSQLString for DatabaseType {
                 } else { "".to_string() };
                 format!("LONGTEXT{charset}{collation}")
             }
-            DatabaseType::Text { m, n ,c } => {
+            DatabaseType::Text { m: _, n ,c } => {
                 if dialect == SQLDialect::MySQL {
                     let charset = if let Some(v) = n {
                         format!(" CHARACTER SET {v}")

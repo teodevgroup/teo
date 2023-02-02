@@ -49,7 +49,7 @@ impl Execution {
         }).collect())
     }
 
-    fn row_to_aggregate_value(model: &Model, graph: &Graph, row: &AnyRow, dialect: SQLDialect) -> Value {
+    fn row_to_aggregate_value(model: &Model, _graph: &Graph, row: &AnyRow, dialect: SQLDialect) -> Value {
         let mut retval: HashMap<String, Value> = HashMap::new();
         for column in row.columns() {
             let result_key = column.name();
@@ -95,7 +95,7 @@ impl Execution {
 
     #[async_recursion]
     async fn query_internal(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect, additional_where: Option<String>, additional_left_join: Option<String>, join_table_results: Option<Vec<String>>, force_negative_take: bool, additional_distinct: Option<Vec<String>>) -> ActionResult<Vec<Value>> {
-        let select = value.get("select");
+        let _select = value.get("select");
         let include = value.get("include");
         let original_distinct = value.get("distinct").map(|v| if v.as_vec().unwrap().is_empty() { None } else { Some(v.as_vec().unwrap()) }).flatten();
         let distinct = Self::merge_distinct(original_distinct, additional_distinct);
@@ -133,9 +133,9 @@ impl Execution {
         if should_in_memory_take_skip {
             let skip = skip.map(|s| s.as_u64().unwrap()).unwrap_or(0) as usize;
             let take = take.map(|s| s.as_i64().unwrap().abs() as u64).unwrap_or(0) as usize;
-            results = results.into_iter().enumerate().filter(|(i, r)| {
+            results = results.into_iter().enumerate().filter(|(i, _r)| {
                 *i >= skip && *i < (skip + take)
-            }).map(|(i, r)| r.clone()).collect();
+            }).map(|(_i, r)| r.clone()).collect();
             if reverse {
                 results.reverse();
             }
@@ -176,7 +176,7 @@ impl Execution {
                     } else {
                         Cow::Owned(teon!({}))
                     };
-                    let mut included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), None, None, negative_take, None).await?;
+                    let included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), None, None, negative_take, None).await?;
                     // println!("see included: {:?}", included_values);
                     for result in results.iter_mut() {
                         let mut skipped = 0;
@@ -259,13 +259,13 @@ impl Execution {
                         }
                     }).collect();
                     let additional_inner_distinct = if inner_distinct.is_some() {
-                        Some(through_relation.iter().map(|(f, r)| {
+                        Some(through_relation.iter().map(|(_f, r)| {
                             format!("{}.{}", opposite_relation.unwrap().name(), r)
                         }).collect())
                     } else {
                         None
                     };
-                    let mut included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results), negative_take, additional_inner_distinct).await?;
+                    let included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results), negative_take, additional_inner_distinct).await?;
                     // println!("see included {:?}", included_values);
                     for result in results.iter_mut() {
                         let mut skipped = 0;

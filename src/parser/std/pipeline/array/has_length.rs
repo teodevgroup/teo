@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use crate::core::pipeline::modifier::Modifier;
-use crate::core::pipeline::modifiers::array::get_length::GetLengthModifier;
+
 use crate::core::pipeline::modifiers::array::has_length::HasLengthModifier;
 use crate::parser::ast::argument::Argument;
 

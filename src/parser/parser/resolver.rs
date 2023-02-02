@@ -58,7 +58,7 @@ impl Resolver {
 
     pub(crate) fn resolve_source(parser: &Parser, source: &Source) {
         if source.resolved { return }
-        for (item_id, top) in source.to_mut().tops.iter_mut() {
+        for (_item_id, top) in source.to_mut().tops.iter_mut() {
             match top {
                 Top::Import(import) => {
                     Self::resolve_import(parser, source, import);
@@ -72,7 +72,7 @@ impl Resolver {
                 Top::Model(model) => {
                     Self::resolve_model(parser, source, model);
                 }
-                Top::Connector(connector) => {
+                Top::Connector(_connector) => {
                     continue;
                 }
                 Top::Generator(generator) => {
@@ -89,8 +89,8 @@ impl Resolver {
         source.to_mut().resolved = true;
     }
 
-    pub(crate) fn resolve_import(parser: &Parser, source: &Source, import: &mut Import) {
-        let from_source = parser.sources.iter().find(|(source_id, source)| {
+    pub(crate) fn resolve_import(parser: &Parser, _source: &Source, import: &mut Import) {
+        let from_source = parser.sources.iter().find(|(_source_id, source)| {
             &source.path == &import.path
         }).unwrap().1;
         import.from_id = Some(from_source.id);
@@ -126,7 +126,7 @@ impl Resolver {
         r#enum.resolved = true;
     }
 
-    pub(crate) fn resolve_enum_choice(parser: &Parser, source: &Source, choice: &mut EnumChoice) {
+    pub(crate) fn resolve_enum_choice(_parser: &Parser, _source: &Source, choice: &mut EnumChoice) {
         choice.resolved = true;
     }
 
@@ -163,7 +163,7 @@ impl Resolver {
                         ExpressionKind::ArgumentList(argument_list) => {
                             arg_list = Some(argument_list.clone());
                         }
-                        ExpressionKind::Subscript(subscript) => {
+                        ExpressionKind::Subscript(_subscript) => {
                             panic!("Cannot access decorator object with subscript.")
                         }
                         ExpressionKind::Identifier(identifier) => {
@@ -204,7 +204,7 @@ impl Resolver {
                         ExpressionKind::ArgumentList(argument_list) => {
                             arg_list = Some(argument_list.clone());
                         }
-                        ExpressionKind::Subscript(subscript) => {
+                        ExpressionKind::Subscript(_subscript) => {
                             panic!("Cannot access decorator object with subscript.")
                         }
                         ExpressionKind::Identifier(identifier) => {
@@ -245,7 +245,7 @@ impl Resolver {
                         ExpressionKind::ArgumentList(argument_list) => {
                             arg_list = Some(argument_list.clone());
                         }
-                        ExpressionKind::Subscript(subscript) => {
+                        ExpressionKind::Subscript(_subscript) => {
                             panic!("Cannot access decorator object with subscript.")
                         }
                         ExpressionKind::Identifier(identifier) => {
@@ -286,7 +286,7 @@ impl Resolver {
                         ExpressionKind::ArgumentList(argument_list) => {
                             arg_list = Some(argument_list.clone());
                         }
-                        ExpressionKind::Subscript(subscript) => {
+                        ExpressionKind::Subscript(_subscript) => {
                             panic!("Cannot access decorator object with subscript.")
                         }
                         ExpressionKind::Identifier(identifier) => {
@@ -409,7 +409,7 @@ impl Resolver {
         }
         let connector_ref = parser.connector.unwrap();
         let source = parser.get_source(connector_ref.0);
-        let mut top = source.to_mut().tops.get_mut(&connector_ref.1).unwrap();
+        let top = source.to_mut().tops.get_mut(&connector_ref.1).unwrap();
         let mut connector = top.as_connector_mut().unwrap();
         for item in connector.items.iter_mut() {
             match item.identifier.name.as_str() {
@@ -596,10 +596,10 @@ impl Resolver {
             ExpressionKind::Identifier(identifier) => {
                 Self::resolve_identifier(parser, source, identifier, None)
             }
-            ExpressionKind::ArgumentList(a) => {
+            ExpressionKind::ArgumentList(_a) => {
                 panic!("Argument list cannot appear alone.")
             }
-            ExpressionKind::Subscript(s) => {
+            ExpressionKind::Subscript(_s) => {
                 panic!("Subscript cannot appear alone.")
             }
             ExpressionKind::Unit(unit) => {
@@ -660,7 +660,7 @@ impl Resolver {
             ExpressionKind::Subscript(subscript) => {
                 Self::resolve_subscript(parser, source, subscript, entity)
             }
-            ExpressionKind::ArgumentList(argument_list) => {
+            ExpressionKind::ArgumentList(_argument_list) => {
                 // currently don't handle argument list yet
                 panic!()
             }
@@ -846,7 +846,7 @@ impl Resolver {
         None
     }
 
-    fn constant_with_reference(parser: &Parser, source: &Source, reference: (usize, usize)) -> Value {
+    fn constant_with_reference(parser: &Parser, _source: &Source, reference: (usize, usize)) -> Value {
         let source = parser.get_source(reference.0);
         let c = source.get_constant(reference.1);
         let entity = c.expression.resolved.as_ref().unwrap();

@@ -1,5 +1,5 @@
 use crate::core::model::builder::ModelBuilder;
-use crate::core::model::Model;
+
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn map_decorator(args: Vec<Argument>, model: &mut ModelBuilder) {

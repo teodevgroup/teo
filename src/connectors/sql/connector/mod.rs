@@ -196,7 +196,7 @@ impl SQLConnector {
 #[async_trait]
 impl Connector for SQLConnector {
 
-    async fn save_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()> {
+    async fn save_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> ActionResult<()> {
         let is_new = object.inner.is_new.load(Ordering::SeqCst);
         if is_new {
             self.create_object(object).await
@@ -205,7 +205,7 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn delete_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()> {
+    async fn delete_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> ActionResult<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
             return Err(ActionError::object_is_not_saved());
         }
@@ -221,7 +221,7 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
         let objects = Execution::query_objects(&self.pool, model, graph, finder, self.dialect, env).await?;
         if objects.is_empty() {
             Err(ActionError::object_not_found())
@@ -230,7 +230,7 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
         Execution::query_objects(&self.pool, model, graph, finder, self.dialect, env).await
     }
 

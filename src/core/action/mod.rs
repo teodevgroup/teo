@@ -17,7 +17,7 @@ impl Action {
         Action { transformers: vec![] }
     }
 
-    pub(crate) async fn transform(&self, value: &Value, identity: Option<Object>) -> Value {
+    pub(crate) async fn transform(&self, value: &Value, _identity: Option<Object>) -> Value {
         let value = value.clone();
         let mut context = Context::initial_state_with_value(value.clone());
         for transformer in self.transformers.iter() {

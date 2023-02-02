@@ -1,6 +1,6 @@
 use crate::core::app::conf::ClientGeneratorConf;
 use crate::core::graph::Graph;
-use crate::parser::ast::client::Client;
+
 
 pub(crate) async fn generate_runtime_cs(_graph: &Graph, client: &ClientGeneratorConf) -> String {
     let url = &client.host;

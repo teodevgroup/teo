@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use bson::{Bson, doc, Document, Regex as BsonRegex};
-use key_path::KeyPath;
+
 use maplit::hashmap;
 use crate::core::field::r#type::FieldType;
 use crate::core::input::Input;
@@ -247,7 +247,7 @@ impl Aggregation {
                 let val = value.as_str().unwrap();
                 group_id.insert(val, format!("${val}"));
             }
-            let empty = teon!({});
+            let _empty = teon!({});
             let mut group_data = Self::build_select(model, graph, select.unwrap_or(&teon!({})), Some(distinct))?;
             group_data.insert("_id", group_id);
             retval.push(doc!{"$group": &group_data});
@@ -289,10 +289,10 @@ impl Aggregation {
         Ok(retval)
     }
 
-    fn build_select(model: &Model, graph: &Graph, select: &Value, distinct: Option<&Value>) -> ActionResult<Document> {
+    fn build_select(model: &Model, _graph: &Graph, select: &Value, distinct: Option<&Value>) -> ActionResult<Document> {
         let map = select.as_hashmap().unwrap();
-        let true_keys: Vec<&String> = map.iter().filter(|(k, v)| v.as_bool().unwrap() == true).map(|(k, _)| k).collect();
-        let false_keys: Vec<&String> = map.iter().filter(|(k, v)| v.as_bool().unwrap() == false).map(|(k, _)| k).collect();
+        let true_keys: Vec<&String> = map.iter().filter(|(_k, v)| v.as_bool().unwrap() == true).map(|(k, _)| k).collect();
+        let false_keys: Vec<&String> = map.iter().filter(|(_k, v)| v.as_bool().unwrap() == false).map(|(k, _)| k).collect();
         let primary_field_names = model.primary_index().keys();
         let mut keys: HashSet<String> = HashSet::new();
         let save_unmentioned_keys = true_keys.is_empty();
@@ -391,7 +391,7 @@ impl Aggregation {
         Ok(retval)
     }
 
-    fn build_where_item(model: &Model, graph: &Graph, r#type: &FieldType, optional: bool, value: &Value) -> ActionResult<Bson> {
+    fn build_where_item(_model: &Model, _graph: &Graph, _type: &FieldType, _optional: bool, value: &Value) -> ActionResult<Bson> {
         if let Some(map) = value.as_hashmap() {
             Ok(Bson::Document(map.iter().filter(|(k, _)| k.as_str() != "mode").map(|(k, v)| {
                 let k = k.as_str();
@@ -462,7 +462,7 @@ impl Aggregation {
         let mut retval: Vec<Document> = vec![];
         for (key, value) in include {
             let relation = model.relation(key).unwrap();
-            let relation_model = graph.model(relation.model()).unwrap();
+            let _relation_model = graph.model(relation.model()).unwrap();
             if (value.is_bool() && (value.as_bool().unwrap() == true)) || (value.is_hashmap()) {
                 if relation.has_join_table() {
                     retval.extend(Self::build_lookup_with_join_table(model, graph, key, relation, value)?)
@@ -474,13 +474,13 @@ impl Aggregation {
         Ok(retval)
     }
 
-    fn build_lookup_with_join_table(model: &Model, graph: &Graph, key: &str, relation: &Relation, value: &Value) -> ActionResult<Vec<Document>> {
+    fn build_lookup_with_join_table(model: &Model, graph: &Graph, _key: &str, relation: &Relation, value: &Value) -> ActionResult<Vec<Document>> {
         let mut retval = vec![];
         let join_model = graph.model(relation.through().unwrap()).unwrap();
         let local_relation_on_join_table = join_model.relation(relation.local()).unwrap();
         let foreign_relation_on_join_table = join_model.relation(relation.foreign()).unwrap();
-        let foreign_model_name = foreign_relation_on_join_table.model();
-        let (opposite_model, opposite_relation) = graph.opposite_relation(relation);
+        let _foreign_model_name = foreign_relation_on_join_table.model();
+        let (opposite_model, _opposite_relation) = graph.opposite_relation(relation);
         let mut outer_let_value = doc! {};
         let mut outer_eq_values: Vec<Document> = vec![];
         let mut inner_let_value = doc! {};
@@ -647,9 +647,9 @@ impl Aggregation {
         let mut retval = vec![];
         let mut let_value = doc!{};
         let mut eq_values: Vec<Document> = vec![];
-        let (opposite_model, opposite_relation) = graph.opposite_relation(relation);
+        let (opposite_model, _opposite_relation) = graph.opposite_relation(relation);
         for (field, reference) in relation.iter() {
-            let field_name = model.field(field).unwrap().name();
+            let _field_name = model.field(field).unwrap().name();
             let field_column_name = model.field(field).unwrap().column_name();
             let reference_name = opposite_model.field(reference).unwrap().name();
             let reference_column_name = opposite_model.field(reference).unwrap().column_name();

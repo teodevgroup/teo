@@ -1,6 +1,6 @@
 use crate::core::field::builder::index_builder::FieldIndexBuilder;
 use crate::core::permission::builder::PermissionBuilder;
-use crate::core::pipeline::builder::PipelineBuilder;
+
 use crate::core::connector::{ConnectorBuilder};
 use crate::core::database::r#type::DatabaseType;
 use crate::core::field::*;

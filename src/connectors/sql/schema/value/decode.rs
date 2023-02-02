@@ -1,4 +1,4 @@
-use chrono::{Date, DateTime, Local, NaiveDate, NaiveDateTime, TimeZone, Utc};
+use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, Utc};
 use sqlx::any::{AnyRow, AnyValueRef};
 use sqlx::{Row, ValueRef};
 use crate::connectors::sql::schema::dialect::SQLDialect;

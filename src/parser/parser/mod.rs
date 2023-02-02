@@ -100,7 +100,7 @@ impl Parser {
             for name in ["schema.teo", "src/schema.teo"] {
                 let relative = PathBuf::from(name);
                 let absolute = match fs::canonicalize(&relative) {
-                    Ok(path) => Some(name),
+                    Ok(_path) => Some(name),
                     Err(_) => None,
                 };
                 if absolute.is_some() {
@@ -399,7 +399,7 @@ impl Parser {
 
     fn parse_argument(pair: Pair<'_>) -> Argument {
         let span = Self::parse_span(&pair);
-        let mut name: Option<Identifier> = None;
+        let name: Option<Identifier> = None;
         let mut value: Option<ExpressionKind> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
@@ -567,7 +567,7 @@ impl Parser {
         ArrayLiteral { expressions, span }
     }
 
-    fn parse_dictionary_literal(pair: Pair<'_>) -> DictionaryLiteral {
+    fn parse_dictionary_literal(_pair: Pair<'_>) -> DictionaryLiteral {
         panic!()
     }
     

@@ -4,8 +4,8 @@ pub mod typescript;
 pub mod dart;
 pub mod csharp;
 
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::path::{Path};
+
 use async_trait::async_trait;
 use crate::core::app::conf::ClientGeneratorConf;
 use crate::generator::lib::generator::Generator;
@@ -16,7 +16,7 @@ use crate::generator::client::kotlin::KotlinClientGenerator;
 use crate::generator::client::swift::SwiftClientGenerator;
 use crate::generator::client::typescript::TypeScriptClientGenerator;
 use crate::generator::lib::path::relative_to_absolute;
-use crate::parser::ast::client::{Client, ClientLanguage};
+use crate::parser::ast::client::{ClientLanguage};
 
 #[async_trait]
 pub(crate) trait ClientGenerator {

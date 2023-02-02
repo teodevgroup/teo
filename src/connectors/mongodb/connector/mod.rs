@@ -14,7 +14,7 @@ use mongodb::{options::ClientOptions, Client, Database, Collection, IndexModel};
 use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
 use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use regex::Regex;
-use rust_decimal::Decimal;
+
 use crate::connectors::mongodb::aggregation::Aggregation;
 use crate::connectors::mongodb::bson::decoder::BsonDecoder;
 use crate::connectors::mongodb::connector::save_session::MongoDBSaveSession;
@@ -31,7 +31,7 @@ use crate::core::teon::Value;
 use crate::core::error::ActionError;
 use crate::core::input::Input;
 use crate::core::result::ActionResult;
-use crate::core::teon::decoder::Decoder;
+
 use crate::teon;
 
 #[derive(Debug)]
@@ -282,7 +282,7 @@ impl MongoDBConnector {
                 if val != Bson::Null {
                     doc.insert(column_name, val);
                 }
-            } else if let Some(property) = model.property(key) {
+            } else if let Some(_property) = model.property(key) {
                 let val: Value = object.get_property(key).await.unwrap();
                 let val: Bson = val.into();
                 if val != Bson::Null {
@@ -407,7 +407,7 @@ impl MongoDBConnector {
 #[async_trait]
 impl Connector for MongoDBConnector {
 
-    async fn save_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()> {
+    async fn save_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> ActionResult<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
             self.create_object(object).await
         } else {
@@ -415,7 +415,7 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn delete_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()> {
+    async fn delete_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> ActionResult<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
             return Err(ActionError::object_is_not_saved());
         }
@@ -432,7 +432,7 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
 
@@ -455,7 +455,7 @@ impl Connector for MongoDBConnector {
         Err(ActionError::object_not_found())
     }
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
         let aggregate_input = Aggregation::build(model, graph, finder)?;

@@ -12,7 +12,7 @@ use crate::generator::client::csharp::pkg::sort_order::generate_sort_order_cs;
 use crate::core::graph::Graph;
 use crate::generator::client::ClientGenerator;
 use crate::generator::lib::generator::Generator;
-use crate::parser::ast::client::Client;
+
 
 pub mod r#type;
 pub mod pkg;
@@ -25,7 +25,7 @@ impl CSharpClientGenerator {
 
 #[async_trait]
 impl ClientGenerator for CSharpClientGenerator {
-    fn module_directory_in_package(&self, client: &ClientGeneratorConf) -> String {
+    fn module_directory_in_package(&self, _client: &ClientGeneratorConf) -> String {
         return "src".to_owned();
     }
 
@@ -42,7 +42,7 @@ impl ClientGenerator for CSharpClientGenerator {
         generator.generate_file("Runtime.cs", generate_runtime_cs(graph, client).await).await
     }
 
-    async fn generate_package_files(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_package_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, _generator: &Generator) -> std::io::Result<()> {
         Ok(())
     }
 
