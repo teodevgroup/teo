@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -1390,8 +1390,22 @@ impl Object {
 impl Debug for Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut result = f.debug_struct(self.model().name());
-        for (key, value) in self.inner.value_map.lock().unwrap().iter() {
-            result.field(key, value);
+        for field in self.model().fields() {
+            let map = self.inner.value_map.lock().unwrap();
+            let value = map.get(field.name()).unwrap_or(&Value::Null);
+            result.field(field.name(), value);
+        }
+        result.finish()
+    }
+}
+
+impl Display for Object {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut result = f.debug_struct(self.model().name());
+        for field in self.model().fields() {
+            let map = self.inner.value_map.lock().unwrap();
+            let value = map.get(field.name()).unwrap_or(&Value::Null);
+            result.field(field.name(), value);
         }
         result.finish()
     }

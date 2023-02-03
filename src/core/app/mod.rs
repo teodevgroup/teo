@@ -39,7 +39,7 @@ impl App {
                             0 => println!("Cannot find an entity generator declaration."),
                             1 => {
                                 let conf = self.entity_generator_confs.get(0).unwrap();
-                                generate_entity(conf.provider, &conf.dest).await?;
+                                generate_entity(&self.graph, conf).await?;
                             },
                             _ => {
                                 let mut names = entity_command.names.clone().unwrap_or(vec![]);
@@ -48,7 +48,7 @@ impl App {
                                 }
                                 for name in names.iter() {
                                     let conf = self.entity_generator_confs.iter().find(|c| c.name.as_ref().unwrap() == name).unwrap();
-                                    generate_entity(conf.provider, &conf.dest).await?;
+                                    generate_entity(&self.graph, conf).await?;
                                 }
                             }
                         }

@@ -11,11 +11,12 @@ use std::collections::{BTreeMap, HashMap};
 use std::mem;
 use std::ops::{Add, Div, Mul, Sub, Rem, Neg};
 
-use chrono::prelude::{Date, DateTime, Utc};
+use chrono::prelude::{DateTime, Utc};
 use rust_decimal::Decimal;
 use indexmap::IndexMap;
 #[cfg(feature = "data-source-mongodb")]
 use bson::oid::ObjectId;
+use chrono::NaiveDate;
 use regex::Regex;
 use crate::core::field::r#type::FieldType;
 use crate::core::object::Object;
@@ -174,7 +175,7 @@ pub enum Value {
 
     /// Represents a Tson date.
     ///
-    Date(Date<Utc>),
+    Date(NaiveDate),
 
     /// Represents a Tson datetime.
     ///
@@ -719,7 +720,7 @@ impl Value {
         self.as_date().is_some()
     }
 
-    pub fn as_date(&self) -> Option<&Date<Utc>> {
+    pub fn as_date(&self) -> Option<&NaiveDate> {
         match self {
             Value::Date(d) => Some(d),
             _ => None,

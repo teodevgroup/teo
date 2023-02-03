@@ -51,6 +51,7 @@ pest_derive = "2.5.3"
 snailquote = "0.3.1"
 clap = { version = "4.0.32", features = ["derive"] }
 path-absolutize = "3.0.14"
+dotenvy = "0.15.6"
 
 [dev-dependencies]
 serial_test = "0.10.0"
@@ -63,7 +64,6 @@ default = ["data-source-mongodb", "data-source-mysql", "data-source-postgres", "
 data-source-mongodb = ["mongodb", "bson"]
 data-source-mysql = ["sqlx/mysql", "sqlx/any"]
 data-source-postgres = ["sqlx/postgres", "sqlx/any"]
-data-source-mssql = ["sqlx/mssql", "sqlx/any"]
 data-source-sqlite = ["sqlx/sqlite", "sqlx/any"]
 
 [[test]]

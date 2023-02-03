@@ -1,6 +1,5 @@
 use std::sync::Arc;
 use crate::core::pipeline::modifier::Modifier;
-
 use crate::core::pipeline::modifiers::bcrypt::bcrypt_salt::BcryptSaltModifier;
 use crate::parser::ast::argument::Argument;
 

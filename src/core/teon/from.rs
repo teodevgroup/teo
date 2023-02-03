@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 use bson::oid::ObjectId;
-use chrono::{Date, DateTime, Utc};
+use chrono::{NaiveDate, DateTime, Utc};
 use rust_decimal::Decimal;
 use crate::core::teon::Value;
 use crate::prelude::Object;
@@ -219,8 +219,8 @@ impl From<Value> for Decimal {
 
 // MARK: - Date
 
-impl From<Date<Utc>> for Value {
-    fn from(v: Date<Utc>) -> Self {
+impl From<NaiveDate> for Value {
+    fn from(v: NaiveDate) -> Self {
         Value::Date(v)
     }
 }
@@ -231,7 +231,7 @@ impl From<DateTime<Utc>> for Value {
     }
 }
 
-impl From<Value> for Date<Utc> {
+impl From<Value> for NaiveDate {
     fn from(v: Value) -> Self {
         v.as_date().unwrap().to_owned()
     }
@@ -247,6 +247,34 @@ impl From<Value> for DateTime<Utc> {
 impl From<Value> for ObjectId {
     fn from(value: Value) -> Self {
         value.as_object_id().unwrap().clone()
+    }
+}
+
+#[cfg(feature = "data-source-mongodb")]
+impl From<Value> for Option<ObjectId> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            Value::ObjectId(o) => Some(o.clone()),
+            _ => panic!(),
+        }
+    }
+}
+
+#[cfg(feature = "data-source-mongodb")]
+impl From<ObjectId> for Value {
+    fn from(value: ObjectId) -> Self {
+        Value::ObjectId(value)
+    }
+}
+
+#[cfg(feature = "data-source-mongodb")]
+impl From<Option<ObjectId>> for Value {
+    fn from(value: Option<ObjectId>) -> Self {
+        match value {
+            Some(o) => Value::ObjectId(o.clone()),
+            None => Value::Null,
+        }
     }
 }
 
@@ -306,11 +334,29 @@ impl From<Value> for Option<bool> {
     }
 }
 
+impl From<Option<bool>> for Value {
+    fn from(value: Option<bool>) -> Self {
+        match value {
+            Some(b) => Value::Bool(b),
+            None => Value::Null,
+        }
+    }
+}
+
 impl From<Value> for Option<String> {
     fn from(value: Value) -> Self {
         match value {
             Value::Null => None,
             _ => Some(value.into())
+        }
+    }
+}
+
+impl From<Option<String>> for Value {
+    fn from(value: Option<String>) -> Self {
+        match value {
+            Some(s) => Value::String(s.clone()),
+            None => Value::Null,
         }
     }
 }

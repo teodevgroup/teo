@@ -80,7 +80,7 @@ impl BsonDecoder {
                 None => Err(ActionError::record_decoding_error(model.name(), path, "string")),
             }
             FieldType::Date => match bson_value.as_datetime() {
-                Some(val) => Ok(Value::Date(val.to_chrono().date())),
+                Some(val) => Ok(Value::Date(val.to_chrono().date_naive())),
                 None => Err(ActionError::record_decoding_error(model.name(), path, "datetime")),
             }
             FieldType::DateTime => match bson_value.as_datetime() {

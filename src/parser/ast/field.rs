@@ -28,11 +28,6 @@ impl Field {
         }
     }
 
-    pub(crate) fn resolve(&mut self, field_class: FieldClass) {
-        self.field_class = field_class;
-        self.resolved = true;
-    }
-
     pub(crate) fn figure_out_class(&mut self) {
         for decorator in self.decorators.iter() {
             match decorator.expression.as_unit() {

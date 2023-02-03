@@ -6,7 +6,7 @@ use crate::core::database::name::DatabaseName;
 use crate::core::teon::range::Range;
 use crate::parser::ast::accessible::{Accessible, ASTPipeline, ASTPipelineItem, Container};
 use crate::parser::ast::argument::ArgumentList;
-use crate::parser::ast::config::Config;
+use crate::parser::ast::config::ServerConfig;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::entity::Entity;
@@ -81,7 +81,7 @@ impl Resolver {
                 Top::Client(client) => {
                     Self::resolve_client_generator(parser, source, client);
                 }
-                Top::Config(config) => {
+                Top::ServerConfig(config) => {
                     Self::resolve_config(parser, source, config);
                 }
             }
@@ -509,7 +509,7 @@ impl Resolver {
         }
     }
 
-    pub(crate) fn resolve_config(parser: &Parser, source: &Source, config: &mut Config) {
+    pub(crate) fn resolve_config(parser: &Parser, source: &Source, config: &mut ServerConfig) {
         for item in config.items.iter_mut() {
             match item.identifier.name.as_str() {
                 "bind" => {

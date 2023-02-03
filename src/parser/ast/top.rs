@@ -1,5 +1,5 @@
 use crate::parser::ast::client::Client;
-use crate::parser::ast::config::Config;
+use crate::parser::ast::config::ServerConfig;
 use crate::parser::ast::connector::Connector;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::generator::Generator;
@@ -16,7 +16,7 @@ pub(crate) enum Top {
     Connector(Connector),
     Generator(Generator),
     Client(Client),
-    Config(Config),
+    ServerConfig(ServerConfig),
 }
 
 impl Top {
@@ -30,7 +30,7 @@ impl Top {
             Top::Connector(c) => c.id,
             Top::Generator(g) => g.id,
             Top::Client(c) => c.id,
-            Top::Config(c) => c.id,
+            Top::ServerConfig(c) => c.id,
         }
     }
 
@@ -160,21 +160,21 @@ impl Top {
         self.as_client().is_some()
     }
 
-    pub(crate) fn as_config(&self) -> Option<&Config> {
+    pub(crate) fn as_server_config(&self) -> Option<&ServerConfig> {
         match self {
-            Top::Config(i) => Some(i),
+            Top::ServerConfig(i) => Some(i),
             _ => None
         }
     }
 
-    pub(crate) fn as_config_mut(&mut self) -> Option<&mut Config> {
+    pub(crate) fn as_server_config_mut(&mut self) -> Option<&mut ServerConfig> {
         match self {
-            Top::Config(i) => Some(i),
+            Top::ServerConfig(i) => Some(i),
             _ => None
         }
     }
 
-    pub(crate) fn is_config(&self) -> bool {
-        self.as_config().is_some()
+    pub(crate) fn is_server_config(&self) -> bool {
+        self.as_server_config().is_some()
     }
 }

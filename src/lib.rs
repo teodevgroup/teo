@@ -17,4 +17,6 @@ pub mod prelude {
     pub use tokio::main;
     pub extern crate key_path;
     pub use key_path::path;
+    pub use crate::core::result::ActionResult;
+    pub use crate::core::error::ActionError;
 }

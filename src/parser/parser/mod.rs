@@ -13,7 +13,7 @@ use to_mut_proc_macro::ToMut;
 use crate::core::app::builder::CallbackLookupTable;
 use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::client::Client;
-use crate::parser::ast::config::Config;
+use crate::parser::ast::config::ServerConfig;
 use crate::parser::ast::connector::Connector;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::decorator::Decorator;
@@ -330,12 +330,12 @@ impl Parser {
             }
         }
         match keyword {
-            "config" => {
+            "server" => {
                 if self.config.is_some() {
                     panic!("Duplicated config found.");
                 }
                 self.config = Some((source_id, item_id));
-                Top::Config(Config::new(item_id, source_id, items, span))
+                Top::ServerConfig(ServerConfig::new(item_id, source_id, items, span))
             },
             "connector" => {
                 if self.connector.is_some() {

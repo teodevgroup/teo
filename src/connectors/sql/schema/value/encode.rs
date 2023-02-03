@@ -1,4 +1,4 @@
-use chrono::{Date, Utc, DateTime, SecondsFormat};
+use chrono::{NaiveDate, Utc, DateTime, SecondsFormat};
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::field::r#type::FieldType;
 use crate::prelude::{Graph, Value};
@@ -150,7 +150,7 @@ impl ToSQLInput for bool {
     }
 }
 
-impl ToSQLInputDialect for Date<Utc> {
+impl ToSQLInputDialect for NaiveDate {
     fn to_sql_input(&self, _dialect: SQLDialect) -> String {
         self.format("%Y-%m-%d").to_string().to_sql_input()
     }

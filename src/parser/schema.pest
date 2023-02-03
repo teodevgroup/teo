@@ -13,7 +13,7 @@ BLOCK_OPEN = { "{" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
 BLOCK_CLOSE = { "}" }
 ENUM_KEYWORD = { "enum" }
 MODEL_KEYWORD = { "model" }
-CONFIG_KEYWORD = { "config" }
+SERVER_KEYWORD = { "server" }
 CONNECTOR_KEYWORD = { "connector" }
 CLIENT_KEYWORD = { "client" }
 ENTITY_KEYWORD = { "entity" }
@@ -204,7 +204,7 @@ pipeline = { "$" ~ identifier_unit }
 // config blocks
 // #############
 
-config_keywords = { CONFIG_KEYWORD | CONNECTOR_KEYWORD | CLIENT_KEYWORD | ENTITY_KEYWORD }
+config_keywords = { SERVER_KEYWORD | CONNECTOR_KEYWORD | CLIENT_KEYWORD | ENTITY_KEYWORD }
 
 config_declaration = {
     config_keywords

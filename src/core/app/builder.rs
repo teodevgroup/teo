@@ -3,21 +3,19 @@ use std::env;
 use std::ffi::{OsString};
 use std::fmt::{Debug};
 use std::sync::{Arc, Mutex};
-use crate::core::database::name::DatabaseName;
-use crate::core::graph::builder::GraphBuilder;
-use crate::parser::ast::field::FieldClass;
-use crate::prelude::{App, Value};
-
-
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
-use clap::{Arg, ArgAction, Command as ClapCommand, Parser as ClapParser};
+use clap::{Arg, ArgAction, Command as ClapCommand};
+use dotenvy::dotenv;
 use crate::core::app::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, MigrateCommand, ServeCommand};
 use crate::core::app::conf::{ClientGeneratorConf, EntityGeneratorConf, ServerConf};
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use crate::core::field::builder::FieldBuilder;
-
+use crate::core::database::name::DatabaseName;
+use crate::core::graph::builder::GraphBuilder;
+use crate::parser::ast::field::FieldClass;
+use crate::prelude::{App, Value};
 use crate::core::pipeline::context::validity::Validity;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::modifiers::function::compare::{CompareArgument, CompareModifier};
@@ -25,7 +23,6 @@ use crate::core::pipeline::modifiers::function::perform::{PerformArgument, Perfo
 use crate::core::pipeline::modifiers::function::transform::{TransformArgument, TransformModifier};
 use crate::core::pipeline::modifiers::function::validate::{ValidateArgument, ValidateModifier};
 use crate::core::property::builder::PropertyBuilder;
-
 use crate::parser::ast::r#type::Arity;
 use crate::parser::parser::Parser;
 
@@ -70,6 +67,7 @@ impl AppBuilder {
     }
 
     pub fn new_with_environment_version_and_entrance(environment_version: EnvironmentVersion, entrance: Entrance) -> Self {
+        let _ = dotenv(); // load dotenv file if exist. If the file is not exist, do nothing.
         Self {
             graph_builder: GraphBuilder::new(),
             server_conf: None,
@@ -238,10 +236,6 @@ impl AppBuilder {
         }
     }
 
-    fn graph_builder(&mut self) -> &mut GraphBuilder {
-        &mut self.graph_builder
-    }
-
     fn load_config_from_parser(&mut self, parser: &Parser) {
         // connector
         let connector_ref = parser.connector.unwrap();
@@ -269,7 +263,7 @@ impl AppBuilder {
         // server config
         let config_ref = parser.config.unwrap();
         let source = parser.get_source(config_ref.0);
-        let config = source.get_config(config_ref.1);
+        let config = source.get_server_config(config_ref.1);
         let bind = config.bind.as_ref().unwrap();
         self.server_conf = Some(ServerConf {
             bind: bind.clone(),

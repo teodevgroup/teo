@@ -1,16 +1,10 @@
-
-
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
-
 use std::path::PathBuf;
-
-
-
 use to_mut::ToMut;
 use to_mut_proc_macro::ToMut;
 use crate::parser::ast::client::Client;
-use crate::parser::ast::config::Config;
+use crate::parser::ast::config::ServerConfig;
 use crate::parser::ast::connector::Connector;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::generator::Generator;
@@ -41,7 +35,7 @@ impl<'a> Iterator for SourceImportIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.source.imports.get(&self.index) {
-            Some(index) => unsafe {
+            Some(index) => {
                 let top = self.source.tops.get(index).unwrap();
                 Some(top.as_import().unwrap())
             }
@@ -90,8 +84,8 @@ impl Source {
         self.tops.get(&id).unwrap().as_connector().unwrap()
     }
 
-    pub(crate) fn get_config(&self, id: usize) -> &Config {
-        self.tops.get(&id).unwrap().as_config().unwrap()
+    pub(crate) fn get_server_config(&self, id: usize) -> &ServerConfig {
+        self.tops.get(&id).unwrap().as_server_config().unwrap()
     }
 
     pub(crate) fn get_entity(&self, id: usize) -> &Generator {

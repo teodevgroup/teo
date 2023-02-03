@@ -1,4 +1,4 @@
-# Feature List
+# Changelog & Feature List
 
 #### 0.0.20
 - `on_output` pipeline is called in save function **[DONE]**
@@ -141,8 +141,8 @@
 - When starting application, show environment name and version **[DONE]**
 - When starting application, show rust compiler version, too **[DONE]**
 - When starting application, show application entrance aka CLI or APP **[DONE]**
-- Node.js: remove App.prototype.run and rename AppBuilder into App **[DONE]**
-- Python: remove App.run and rename AppBuilder into App **[DONE]**
+- Node.js: remove `App.prototype.run` and rename AppBuilder into App **[DONE]**
+- Python: remove `App.run` and rename AppBuilder into App **[DONE]**
 - CLI --version **[DONE]**
 - CLI --help **[DONE]**
 - Rust CLI **[DONE]**
@@ -174,31 +174,40 @@
 - Rewrite client code generation with separated TS and JS **[DONE]**
 - Rename `tson` to `teon` **[DONE]**
 - Add callback model decorators **[DONE]**
-- Load environment variables from .env
-- Generate rust entities
-- Fix compiler warnings
-- Fix pipeline highlighting bug for VSCode
+- Fix compiler warnings **[DONE]**
+- Load environment variables from .env **[DONE]**
+- Generate rust entities **[DONE]**
+- Fix pipeline highlighting bug for VSCode **[DONE]**
+- Rename config keyword to server **[DONE]**
 
 #### 0.0.45
+- Detailed API documentations
+- Support highlighting `import` and `let` for VSCode plugin
+- Before delete and after delete callback
+- Can delete permission checker
+- Rust entities for optional numbers
+- Rust entities for optional `Date`s
+- Rust entities for optional `DateTime`s
+- Rust entities with relations
+- Rust entities with properties
 - CLI mode: When running generation, ignore custom programming callbacks
 - CLI mode: When running server, panic if custom programming callback is provided
-- Cross language error handling
-
-#### 0.0.46
 - Support code comment tags for VSCode
 - Support code comment parsing in schema parser
-- Parser: parsing generations
-- Rewrite generation process
-- Rewrite TypeScript client package
-- Rust entity generation
 
-#### 0.0.47
-- Swift package
-- Kotlin package
+#### 0.0.46
+- Rust entities with documentation
 
-#### 0.0.50
+#### 0.0.48
 - Pipeline allows action error
 - More pipeline modifiers
+
+#### 0.0.49
+- Node.js object
+- Node.js entity generation
+- Cross language error handling for node.js
+
+#### 0.0.50
 - MongoDB: root skip take and distinct bug
 - MongoDB: nested skip take and distinct bug
 - MongoDB: if cursor key is not orderBy key, result is wrong
@@ -206,15 +215,13 @@
 - MongoDB: relation where: 'every' results is incorrect
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
-- SQL: Enum types
-- Delete callbacks: `when_delete`, `before_delete` and `after_delete`
 
 #### 0.0.51
-- PostgreSQL: Migration I
-- SQLite: Migration I
+- SQL: Enum types
 
 #### 0.0.52
-- Rewrite TypeScript client
+- PostgreSQL: Migration I
+- SQLite: Migration I
 
 #### 0.0.53
 - The copy action
@@ -252,18 +259,18 @@
 #### 0.0.87
 - random float modifier
 - random int modifier
-
-#### 0.0.88
 - to uppercase modifier
 - to lowercase modifier
 - to word case modifier
 - to sentence case modifier
 - to title case modifier
 
-#### 0.1.0
-- Swift client
-- Kotlin client
+#### 0.0.88
+- Swift package
+- Kotlin package
 - Dart client
+
+#### 0.1.0
 - Full unit test covering
 
 #### 0.3.0

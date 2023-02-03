@@ -1,9 +1,9 @@
-use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, Utc};
 use sqlx::any::{AnyRow, AnyValueRef};
 use sqlx::{Row, ValueRef};
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::field::r#type::FieldType;
 use crate::core::teon::Value;
+use chrono::{NaiveDateTime, NaiveDate, DateTime, Utc};
 
 pub(crate) struct RowDecoder { }
 
@@ -58,17 +58,14 @@ impl RowDecoder {
             if dialect == SQLDialect::PostgreSQL {
                 let timestamp: NaiveDateTime = row.get(column_name);
                 let naive_date = timestamp.date();
-                let date: Date<Utc> = Date::from_utc(naive_date, Utc);
-                return Value::Date(date);
+                return Value::Date(naive_date);
             } else if dialect == SQLDialect::SQLite {
                 let timestamp: String = row.get(column_name);
                 let naive_date = NaiveDate::parse_from_str(&timestamp, "%Y-%m-%d").unwrap();
-                let date: Date<Utc> = Date::from_utc(naive_date, Utc);
-                return Value::Date(date);
+                return Value::Date(naive_date);
             } else {
                 let naive_date: NaiveDate = row.get(column_name);
-                let date: Date<Utc> = Date::from_utc(naive_date, Utc);
-                return Value::Date(date);
+                return Value::Date(naive_date);
             }
         }
         #[cfg(not(feature = "data-source-mssql"))]

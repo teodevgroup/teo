@@ -3,7 +3,7 @@ use std::ops::BitOr;
 use std::str::FromStr;
 #[cfg(feature = "data-source-mongodb")]
 use bson::oid::ObjectId;
-use chrono::{Date, DateTime, NaiveDate, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use key_path::{KeyPath, path};
 use maplit::{hashmap, hashset};
 use once_cell::sync::Lazy;
@@ -861,7 +861,7 @@ impl Decoder {
             }
             FieldType::Date => match json_value.as_str() {
                 Some(s) => match NaiveDate::parse_from_str(s, "%Y-%m-%d") {
-                    Ok(naive_date) => Ok(Value::Date(Date::from_utc(naive_date, Utc))),
+                    Ok(naive_date) => Ok(Value::Date(naive_date)),
                     Err(_) => Err(ActionError::unexpected_input_value("date string", path))
                 }
                 None => Err(ActionError::unexpected_input_type("date string", path))

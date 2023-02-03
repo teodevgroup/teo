@@ -79,7 +79,6 @@ pub(crate) enum Accessible {
     ModelDecorator(ModelDecorator),
     Container(Container),
     Env(EnvObject),
-    ASTPipeline(ASTPipeline),
 }
 
 impl Debug for Accessible {
@@ -136,13 +135,6 @@ impl Accessible {
     pub(crate) fn as_model_decorator(&self) -> Option<&ModelDecorator> {
         match self {
             Accessible::ModelDecorator(d) => Some(d),
-            _ => None,
-        }
-    }
-
-    pub(crate) fn as_ast_pipeline(&self) -> Option<&ASTPipeline> {
-        match self {
-            Accessible::ASTPipeline(p) => Some(p),
             _ => None,
         }
     }

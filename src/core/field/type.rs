@@ -42,6 +42,13 @@ impl FieldType {
         }
     }
 
+    pub(crate) fn is_enum(&self) -> bool {
+        match self {
+            FieldType::Enum(_) => true,
+            _ => false,
+        }
+    }
+
     pub(crate) fn is_sint(&self) -> bool {
         match self {
             FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 => true,
@@ -86,6 +93,14 @@ impl FieldType {
         match self {
             FieldType::Bool => true,
             _ => false
+        }
+    }
+
+    #[cfg(feature = "data-source-mongodb")]
+    pub(crate) fn is_object_id(&self) -> bool {
+        match self {
+            FieldType::ObjectId => true,
+            _ => false,
         }
     }
 
