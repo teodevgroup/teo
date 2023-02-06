@@ -184,6 +184,9 @@
 - Detailed API documentations **[IN PROGRESS]**
 - `print` pipeline item **[DONE]**
 - Support highlighting `import` and `let` for VSCode plugin **[DONE]**
+- Rename `intent` to action
+- Rename `source` to action source
+- Always record previous id value and support modifying `@id` fields
 - Before delete and after delete callback
 - Can delete permission checker
 - Rust entities for optional numbers
@@ -201,6 +204,14 @@
 - Object method for String like `ENV["PORT"].toInt()`
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
 - Remove `unqueryable` and `unsortable` from generated clients
+- Support regular expression for VSCode plugin
+
+#### 0.0.46
+- Relation onUpdate
+- Relation onDelete
+
+#### 0.0.47
+- Seed with datasets
 
 #### 0.0.48
 - Pipeline allows action error
