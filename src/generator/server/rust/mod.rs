@@ -126,7 +126,7 @@ impl RustEntityGenerator {
         }}
     }}"#));
                 b.line("");
-                b.line(format!(r#"pub async fn empty() -> Self {{
+                b.line(format!(r#"pub async fn default() -> Self {{
         Self {{
             inner: Graph::current().create_object("{model_name}", Value::HashMap(HashMap::new())).await.unwrap(),
         }}
