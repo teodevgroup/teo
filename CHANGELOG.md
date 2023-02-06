@@ -183,7 +183,7 @@
 #### 0.0.45
 - Detailed API documentations **[IN PROGRESS]**
 - `print` pipeline item **[DONE]**
-- Support highlighting `import` and `let` for VSCode plugin
+- Support highlighting `import` and `let` for VSCode plugin **[DONE]**
 - Before delete and after delete callback
 - Can delete permission checker
 - Rust entities for optional numbers
