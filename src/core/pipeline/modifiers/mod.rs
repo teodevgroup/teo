@@ -12,3 +12,4 @@ pub mod identity;
 pub mod vector;
 pub mod intent;
 pub mod teon;
+pub mod debug;

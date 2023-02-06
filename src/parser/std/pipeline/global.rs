@@ -11,6 +11,7 @@ use crate::parser::std::pipeline::bcrypt::bcrypt_salt::bcrypt_salt;
 use crate::parser::std::pipeline::bcrypt::bcrypt_verify::bcrypt_verify;
 use crate::parser::std::pipeline::custom_function::{custom_callback, custom_compare, custom_transform, custom_validate};
 use crate::parser::std::pipeline::datetime::{now, today};
+use crate::parser::std::pipeline::debug::print;
 use crate::parser::std::pipeline::intent::when;
 use crate::parser::std::pipeline::logical::{all_modifier, and_modifier, any_modifier, if_modifier, invalid, not_modifier, or_modifier, passed, valid};
 use crate::parser::std::pipeline::math::{abs, add, cbrt, ceil, divide, floor, max, min, modular, multiply, pow, root, round, sqrt, subtract};
@@ -127,6 +128,8 @@ impl GlobalPipelineInstallers {
         objects.insert("itemAt".to_owned(), item_at);
         objects.insert("filter".to_owned(), filter);
         objects.insert("map".to_owned(), map);
+        // debug
+        objects.insert("print".to_owned(), print);
         Self { objects }
     }
 

@@ -75,7 +75,7 @@
 - Fix HTTP API result format **[DONE]**
 
 #### 0.0.31
-- Replace `serde_json` with our own `teon` **[DONE]**
+- Replace `serde_json` with our own `tson` **[DONE]**
 
 #### 0.0.32
 - Handle manipulation uses single or many **[DONE]**
@@ -181,7 +181,8 @@
 - Rename config keyword to server **[DONE]**
 
 #### 0.0.45
-- Detailed API documentations
+- Detailed API documentations **[IN PROGRESS]**
+- `print` pipeline item **[DONE]**
 - Support highlighting `import` and `let` for VSCode plugin
 - Before delete and after delete callback
 - Can delete permission checker
@@ -194,9 +195,12 @@
 - CLI mode: When running server, panic if custom programming callback is provided
 - Support code comment tags for VSCode
 - Support code comment parsing in schema parser
-
-#### 0.0.46
+- Database type mapping for `Date`
+- Database type mapping
 - Rust entities with documentation
+- Object method for String like `ENV["PORT"].toInt()`
+- Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
+- Remove `unqueryable` and `unsortable` from generated clients
 
 #### 0.0.48
 - Pipeline allows action error
