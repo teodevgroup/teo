@@ -246,8 +246,8 @@
 - Replace buggy sqlx
 - Full support of decimal type
 - Support unsigned types for MySQL
-- Custom SQL database types
 - MySQL: Enum types
+- Postgres: Enum types
 
 #### 0.0.71 - 0.0.81
 - Fix assign identity
