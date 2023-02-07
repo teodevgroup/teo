@@ -187,6 +187,7 @@
 - Rename `@authIdentity` and `@authBy` **[DONE]**
 - Rename `intent` to action
 - Rename `source` to action source
+- Remove `FieldBuilder` and `FieldIndexBuilder`
 - Always record previous id value and support modifying `@id` fields
 - Before delete and after delete callback
 - Can delete permission checker
