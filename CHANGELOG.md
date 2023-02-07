@@ -181,9 +181,10 @@
 - Rename config keyword to server **[DONE]**
 
 #### 0.0.45
-- Detailed API documentations **[IN PROGRESS]**
+- More detailed API documentation **[IN PROGRESS]**
 - `print` pipeline item **[DONE]**
 - Support highlighting `import` and `let` for VSCode plugin **[DONE]**
+- Rename `@authIdentity` and `@authBy` **[DONE]**
 - Rename `intent` to action
 - Rename `source` to action source
 - Always record previous id value and support modifying `@id` fields

@@ -126,8 +126,8 @@ impl GlobalFieldDecorators {
         objects.insert("onSet".to_owned(), Accessible::FieldDecorator(on_set_decorator));
         objects.insert("onSave".to_owned(), Accessible::FieldDecorator(on_save_decorator));
         objects.insert("onOutput".to_owned(), Accessible::FieldDecorator(on_output_decorator));
-        objects.insert("authIdentity".to_owned(), Accessible::FieldDecorator(auth_identity_decorator));
-        objects.insert("authBy".to_owned(), Accessible::FieldDecorator(auth_by_decorator));
+        objects.insert("identity".to_owned(), Accessible::FieldDecorator(auth_identity_decorator));
+        objects.insert("identityChecker".to_owned(), Accessible::FieldDecorator(auth_by_decorator));
         objects.insert("queryable".to_owned(), Accessible::FieldDecorator(queryable_decorator));
         objects.insert("unqueryable".to_owned(), Accessible::FieldDecorator(unqueryable_decorator));
         Self { objects }
