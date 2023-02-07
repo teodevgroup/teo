@@ -190,6 +190,8 @@
 - Always record previous id value and support modifying `@id` fields
 - Before delete and after delete callback
 - Can delete permission checker
+- Remove permission builder and permission
+- Add `@canUpdate`, `@canCreate`, `@canWrite`, `@canRead` and `@canDelete`
 - Rust entities for optional numbers
 - Rust entities for optional `Date`s
 - Rust entities for optional `DateTime`s
