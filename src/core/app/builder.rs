@@ -7,12 +7,17 @@ use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
 use clap::{Arg, ArgAction, Command as ClapCommand};
 use dotenvy::dotenv;
+use crate::connectors::mongodb::connector::MongoDBConnector;
+use crate::connectors::sql::connector::SQLConnector;
+use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::app::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, MigrateCommand, ServeCommand};
 use crate::core::app::conf::{ClientGeneratorConf, EntityGeneratorConf, ServerConf};
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
-use crate::core::field::builder::FieldBuilder;
+use crate::core::connector::Connector;
+use crate::core::field::Field;
 use crate::core::database::name::DatabaseName;
+use crate::core::field::r#type::FieldType;
 use crate::core::graph::builder::GraphBuilder;
 use crate::parser::ast::field::FieldClass;
 use crate::prelude::{App, Value};
@@ -22,7 +27,8 @@ use crate::core::pipeline::modifiers::function::compare::{CompareArgument, Compa
 use crate::core::pipeline::modifiers::function::perform::{PerformArgument, PerformModifier};
 use crate::core::pipeline::modifiers::function::transform::{TransformArgument, TransformModifier};
 use crate::core::pipeline::modifiers::function::validate::{ValidateArgument, ValidateModifier};
-use crate::core::property::builder::PropertyBuilder;
+use crate::core::property::Property;
+use crate::core::relation::Relation;
 use crate::parser::ast::r#type::Arity;
 use crate::parser::parser::Parser;
 
@@ -42,6 +48,7 @@ impl CallbackLookupTable {
 
 #[derive(ToMut)]
 pub struct AppBuilder {
+    pub(crate) connector: Option<Arc<dyn Connector>>,
     pub(crate) graph_builder: GraphBuilder,
     pub(crate) server_conf: Option<ServerConf>,
     pub(crate) entity_generator_confs: Vec<EntityGeneratorConf>,
@@ -69,6 +76,7 @@ impl AppBuilder {
     pub fn new_with_environment_version_and_entrance(environment_version: EnvironmentVersion, entrance: Entrance) -> Self {
         let _ = dotenv(); // load dotenv file if exist. If the file is not exist, do nothing.
         Self {
+            connector: None,
             graph_builder: GraphBuilder::new(),
             server_conf: None,
             entity_generator_confs: vec![],
@@ -213,53 +221,53 @@ impl AppBuilder {
         self
     }
 
-    fn load(&mut self) {
+    async fn load(&mut self) {
         let mut parser = Parser::new(self.callback_lookup_table.clone());
         let main = match self.args.schema.as_ref() {
             Some(s) => Some(s.as_str()),
             None => None
         };
         parser.parse(main);
-        self.load_config_from_parser(&parser);
+        self.load_config_from_parser(&parser).await;
     }
 
     pub async fn build(&mut self) -> App {
-        self.load();
+        self.load().await;
         App {
             server_conf: self.server_conf.clone().unwrap(),
             entity_generator_confs: self.entity_generator_confs.clone(),
             client_generator_confs: self.client_generator_confs.clone(),
-            graph: self.graph_builder.build().await,
+            graph: self.graph_builder.build(self.connector.as_ref().unwrap().clone()).await,
             environment_version: self.environment_version.clone(),
             entrance: self.entrance.clone(),
             args: self.args.clone(),
         }
     }
 
-    fn load_config_from_parser(&mut self, parser: &Parser) {
+    async fn load_config_from_parser(&mut self, parser: &Parser) {
         // connector
         let connector_ref = parser.connector.unwrap();
         let source = parser.get_source(connector_ref.0);
-        let connector = source.get_connector(connector_ref.1);
-        let url = connector.url.as_ref().unwrap();
-        match connector.provider.unwrap() {
+        let connector_declaration = source.get_connector(connector_ref.1);
+        let url = connector_declaration.url.as_ref().unwrap();
+        let connector: Arc<dyn Connector> = match connector_declaration.provider.unwrap() {
             DatabaseName::MySQL => {
                 #[cfg(feature = "data-source-mysql")]
-                self.graph_builder.data_source().mysql(url)
+                Arc::new(SQLConnector::new(SQLDialect::MySQL, url.clone(), false).await)
             },
             DatabaseName::PostgreSQL => {
                 #[cfg(feature = "data-source-postgres")]
-                self.graph_builder.data_source().postgres(url)
+                Arc::new(SQLConnector::new(SQLDialect::PostgreSQL, url.clone(), false).await)
             },
             DatabaseName::SQLite => {
                 #[cfg(feature = "data-source-sqlite")]
-                self.graph_builder.data_source().sqlite(url)
+                Arc::new(SQLConnector::new(SQLDialect::SQLite, url.clone(), false).await)
             },
             DatabaseName::MongoDB => {
                 #[cfg(feature = "data-source-mongodb")]
-                self.graph_builder.data_source().mongodb(url)
+                Arc::new(MongoDBConnector::new(url.clone()).await)
             },
-        }
+        };
         // server config
         let config_ref = parser.config.unwrap();
         let source = parser.get_source(config_ref.0);
@@ -323,133 +331,139 @@ impl AppBuilder {
                 for field in model.fields.iter() {
                     match &field.field_class {
                         FieldClass::Field => {
-                            model_builder.field(field.identifier.name.as_str(), |field_builder| {
-                                // handle types here
-                                match field.r#type.arity {
-                                    Arity::Scalar => {
+                            let mut model_field = Field::new(field.identifier.name.as_str().to_owned());
+                            // type
+                            match field.r#type.arity {
+                                Arity::Scalar => {
+                                    if field.r#type.item_required {
+                                        model_field.set_required();
+                                    } else {
+                                        model_field.set_optional();
+                                    }
+                                    Self::install_types_to_field_builder(&field.r#type.identifier.name, &mut model_field);
+                                }
+                                Arity::Array => {
+                                    if field.r#type.collection_required {
+                                        model_field.set_required();
+                                    } else {
+                                        model_field.set_optional();
+                                    }
+                                    model_field.field_type = Some(FieldType::Vec(Box::new({
+                                        let mut inner = Field::new("".to_owned());
                                         if field.r#type.item_required {
-                                            field_builder.required();
+                                            inner.set_required();
                                         } else {
-                                            field_builder.optional();
+                                            inner.set_optional();
                                         }
-                                        Self::install_types_to_field_builder(&field.r#type.identifier.name, field_builder);
-                                    }
-                                    Arity::Array => {
-                                        if field.r#type.collection_required {
-                                            field_builder.required();
-                                        } else {
-                                            field_builder.optional();
-                                        }
-                                        field_builder.vec(|builder| {
-                                            if field.r#type.item_required {
-                                                builder.required();
-                                            } else {
-                                                builder.optional();
-                                            }
-                                            Self::install_types_to_field_builder(&field.r#type.identifier.name, builder);
-                                        });
-                                    }
-                                    Arity::Dictionary => {
-                                        if field.r#type.collection_required {
-                                            field_builder.required();
-                                        } else {
-                                            field_builder.optional();
-                                        }
-                                        field_builder.vec(|builder| {
-                                            if field.r#type.item_required {
-                                                builder.required();
-                                            } else {
-                                                builder.optional();
-                                            }
-                                            Self::install_types_to_field_builder(&field.r#type.identifier.name, builder);
-                                        });
-                                    }
+                                        Self::install_types_to_field_builder(&field.r#type.identifier.name, &mut inner);
+                                        inner
+                                    })));
                                 }
-                                // handle decorators
-                                for decorator in field.decorators.iter() {
-                                    let field_decorator = decorator.accessible.as_ref().unwrap().as_field_decorator().unwrap();
-                                    field_decorator(decorator.get_argument_list(), field_builder);
+                                Arity::Dictionary => {
+                                    if field.r#type.collection_required {
+                                        model_field.set_required();
+                                    } else {
+                                        model_field.set_optional();
+                                    }
+                                    model_field.field_type = Some(FieldType::HashMap(Box::new({
+                                        let mut inner = Field::new("".to_owned());
+                                        if field.r#type.item_required {
+                                            inner.set_required();
+                                        } else {
+                                            inner.set_optional();
+                                        }
+                                        Self::install_types_to_field_builder(&field.r#type.identifier.name, &mut inner);
+                                        inner
+                                    })));
                                 }
-                            });
+                            }
+                            // decorators
+                            for decorator in field.decorators.iter() {
+                                let field_decorator = decorator.accessible.as_ref().unwrap().as_field_decorator().unwrap();
+                                field_decorator(decorator.get_argument_list(), &mut model_field);
+                            }
+                            model_builder.field(model_field);
                         }
                         FieldClass::Relation => {
-                            model_builder.relation(field.identifier.name.as_str(), |relation_builder| {
-                                // handle types here
-                                match field.r#type.arity {
-                                    Arity::Scalar => {
-                                        if field.r#type.item_required {
-                                            relation_builder.required();
-                                        } else {
-                                            relation_builder.optional();
-                                        }
-                                        relation_builder.object(&field.r#type.identifier.name);
+                            let mut model_relation = Relation::new(field.identifier.name.as_str().to_owned());
+                            match field.r#type.arity {
+                                Arity::Scalar => {
+                                    if field.r#type.item_required {
+                                        model_relation.set_required();
+                                    } else {
+                                        model_relation.set_optional();
                                     }
-                                    Arity::Array => {
-                                        if !field.r#type.item_required {
-                                            panic!("Relation cannot have optional items.")
-                                        }
-                                        relation_builder.vec(&field.r#type.identifier.name);
-                                    }
-                                    Arity::Dictionary => {
-                                        panic!("Relations cannot be dictionary.")
-                                    }
+                                    model_relation.set_is_vec(false);
+                                    model_relation.set_model(field.r#type.identifier.name.clone());
                                 }
-                                // handle decorators
-                                for decorator in field.decorators.iter() {
-                                    let relation_decorator = decorator.accessible.as_ref().unwrap().as_relation_decorator().unwrap();
-                                    relation_decorator(decorator.get_argument_list(), relation_builder);
+                                Arity::Array => {
+                                    if !field.r#type.item_required {
+                                        panic!("Relation cannot have optional items.")
+                                    }
+                                    model_relation.set_is_vec(true);
+                                    model_relation.set_model(field.r#type.identifier.name.clone());
                                 }
-                            });
+                                Arity::Dictionary => panic!("Relations cannot be dictionary.")
+                            }
+                            // handle decorators
+                            for decorator in field.decorators.iter() {
+                                let relation_decorator = decorator.accessible.as_ref().unwrap().as_relation_decorator().unwrap();
+                                relation_decorator(decorator.get_argument_list(), &mut model_relation);
+                            }
+                            model_builder.relation(model_relation);
                         }
                         FieldClass::Property => {
-                            model_builder.property(field.identifier.name.as_str(), |property_builder| {
-                                // handle types here
-                                match field.r#type.arity {
-                                    Arity::Scalar => {
+                            let mut model_property = Property::new(field.identifier.name.clone());
+                            // type
+                            match field.r#type.arity {
+                                Arity::Scalar => {
+                                    if field.r#type.item_required {
+                                        model_property.set_required();
+                                    } else {
+                                        model_property.set_optional();
+                                    }
+                                    Self::install_types_to_property_builder(&field.r#type.identifier.name, &mut model_property);
+                                }
+                                Arity::Array => {
+                                    if field.r#type.collection_required {
+                                        model_property.set_required();
+                                    } else {
+                                        model_property.set_optional();
+                                    }
+                                    model_property.field_type = Some(FieldType::Vec(Box::new({
+                                        let mut inner = Field::new("".to_owned());
                                         if field.r#type.item_required {
-                                            property_builder.required();
+                                            inner.set_required();
                                         } else {
-                                            property_builder.optional();
+                                            inner.set_optional();
                                         }
-                                        Self::install_types_to_property_builder(&field.r#type.identifier.name, property_builder);
-                                    }
-                                    Arity::Array => {
-                                        if field.r#type.collection_required {
-                                            property_builder.required();
-                                        } else {
-                                            property_builder.optional();
-                                        }
-                                        property_builder.vec(|builder| {
-                                            if field.r#type.item_required {
-                                                builder.required();
-                                            } else {
-                                                builder.optional();
-                                            }
-                                            Self::install_types_to_field_builder(&field.r#type.identifier.name, builder);
-                                        });
-                                    }
-                                    Arity::Dictionary => {
-                                        if field.r#type.collection_required {
-                                            property_builder.required();
-                                        } else {
-                                            property_builder.optional();
-                                        }
-                                        property_builder.vec(|builder| {
-                                            if field.r#type.item_required {
-                                                builder.required();
-                                            } else {
-                                                builder.optional();
-                                            }
-                                            Self::install_types_to_field_builder(&field.r#type.identifier.name, builder);
-                                        });
-                                    }
+                                        Self::install_types_to_field_builder(&field.r#type.identifier.name, &mut inner);
+                                        inner
+                                    })));
                                 }
-                                // handle decorators
-                                for decorator in field.decorators.iter() {
-                                    let property_decorator = decorator.accessible.as_ref().unwrap().as_property_decorator().unwrap();
-                                    property_decorator(decorator.get_argument_list(), property_builder);
+                                Arity::Dictionary => {
+                                    if field.r#type.collection_required {
+                                        model_property.set_required();
+                                    } else {
+                                        model_property.set_optional();
+                                    }
+                                    model_property.field_type = Some(FieldType::HashMap(Box::new({
+                                        let mut inner = Field::new("".to_owned());
+                                        if field.r#type.item_required {
+                                            inner.set_required();
+                                        } else {
+                                            inner.set_optional();
+                                        }
+                                        Self::install_types_to_field_builder(&field.r#type.identifier.name, &mut inner);
+                                        inner
+                                    })));
                                 }
-                            });
+                            }
+                            for decorator in field.decorators.iter() {
+                                let property_decorator = decorator.accessible.as_ref().unwrap().as_property_decorator().unwrap();
+                                property_decorator(decorator.get_argument_list(), &mut model_property);
+                            }
+                            model_builder.property(model_property);
                         }
                         FieldClass::Unresolved => panic!()
                     }
@@ -458,48 +472,48 @@ impl AppBuilder {
         }
     }
 
-    fn install_types_to_field_builder(name: &str, field_builder: &mut FieldBuilder) {
+    fn install_types_to_field_builder(name: &str, field: &mut Field) {
         match name {
-            "String" => field_builder.string(),
-            "Bool" => field_builder.bool(),
-            "Int" | "Int32" => field_builder.i32(),
-            "Int64" => field_builder.i64(),
-            "Int8" => field_builder.i8(),
-            "Int16" => field_builder.i16(),
-            "UInt" | "UInt32" => field_builder.u32(),
-            "UInt64" => field_builder.u64(),
-            "UInt8" => field_builder.u8(),
-            "UInt16" => field_builder.u16(),
-            "Float32" => field_builder.f32(),
-            "Float" | "Float64" => field_builder.f64(),
-            "Date" => field_builder.date(),
-            "DateTime" => field_builder.datetime(),
+            "String" => field.field_type = Some(FieldType::String),
+            "Bool" => field.field_type = Some(FieldType::Bool),
+            "Int" | "Int32" => field.field_type = Some(FieldType::I32),
+            "Int64" => field.field_type = Some(FieldType::I64),
+            "Int8" => field.field_type = Some(FieldType::I8),
+            "Int16" => field.field_type = Some(FieldType::I16),
+            "UInt" | "UInt32" => field.field_type = Some(FieldType::U32),
+            "UInt64" => field.field_type = Some(FieldType::U64),
+            "UInt8" => field.field_type = Some(FieldType::U8),
+            "UInt16" => field.field_type = Some(FieldType::U16),
+            "Float32" => field.field_type = Some(FieldType::F32),
+            "Float" | "Float64" => field.field_type = Some(FieldType::F64),
+            "Date" => field.field_type = Some(FieldType::Date),
+            "DateTime" => field.field_type = Some(FieldType::DateTime),
             #[cfg(feature = "data-source-mongodb")]
-            "ObjectId" => field_builder.object_id(),
+            "ObjectId" => field.field_type = Some(FieldType::ObjectId),
             // _ => panic!("Unrecognized type: '{}'.", name)
-            _ => field_builder.r#enum(name),
+            _ => field.field_type = Some(FieldType::Enum(name.to_string())),
         };
     }
 
-    fn install_types_to_property_builder(name: &str, property_builder: &mut PropertyBuilder) {
+    fn install_types_to_property_builder(name: &str, property: &mut Property) {
         match name {
-            "String" => property_builder.string(),
-            "Bool" => property_builder.bool(),
-            "Int" | "Int32" => property_builder.i32(),
-            "Int64" => property_builder.i64(),
-            "Int8" => property_builder.i8(),
-            "Int16" => property_builder.i16(),
-            "UInt" | "UInt32" => property_builder.u32(),
-            "UInt64" => property_builder.u64(),
-            "UInt8" => property_builder.u8(),
-            "UInt16" => property_builder.u16(),
-            "Float32" => property_builder.f32(),
-            "Float" | "Float64" => property_builder.f64(),
-            "Date" => property_builder.date(),
-            "DateTime" => property_builder.datetime(),
+            "String" => property.field_type = Some(FieldType::String),
+            "Bool" => property.field_type = Some(FieldType::Bool),
+            "Int" | "Int32" => property.field_type = Some(FieldType::I32),
+            "Int64" =>  property.field_type = Some(FieldType::I64),
+            "Int8" =>  property.field_type = Some(FieldType::I8),
+            "Int16" =>  property.field_type = Some(FieldType::I16),
+            "UInt" | "UInt32" =>  property.field_type = Some(FieldType::U32),
+            "UInt64" =>  property.field_type = Some(FieldType::U64),
+            "UInt8" =>  property.field_type = Some(FieldType::U8),
+            "UInt16" =>  property.field_type = Some(FieldType::U16),
+            "Float32" =>  property.field_type = Some(FieldType::F32),
+            "Float" | "Float64" =>  property.field_type = Some(FieldType::F64),
+            "Date" =>  property.field_type = Some(FieldType::Date),
+            "DateTime" =>  property.field_type = Some(FieldType::DateTime),
             #[cfg(feature = "data-source-mongodb")]
-            "ObjectId" => property_builder.object_id(),
-            _ => property_builder.r#enum(name),
+            "ObjectId" =>  property.field_type = Some(FieldType::ObjectId),
+            _ => property.field_type = Some(FieldType::Enum(name.to_string())),
             // _ => panic!("Unrecognized type: '{}'.", name)
         };
     }

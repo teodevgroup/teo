@@ -1,15 +1,18 @@
 pub mod builder;
-pub(crate) mod serve;
-pub(crate) mod command;
 pub mod environment;
 pub mod entrance;
 pub(crate) mod conf;
+pub(crate) mod serve;
+pub(crate) mod command;
+pub(crate) mod migrate;
 
 use std::sync::Arc;
+use to_mut::ToMut;
 use crate::core::app::command::{CLI, CLICommand, GenerateCommand};
 use crate::core::app::conf::{ClientGeneratorConf, EntityGeneratorConf, ServerConf};
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
+use crate::core::app::migrate::migrate;
 use crate::core::app::serve::serve;
 use crate::core::graph::Graph;
 use crate::generator::client::generate_client;
@@ -29,8 +32,14 @@ pub struct App {
 impl App {
     pub async fn run(&self) -> Result<(), std::io::Error> {
         match &self.args.command {
-            CLICommand::Serve(_) => {
-                serve(self.graph.clone(), self.server_conf.clone(), self.environment_version.clone(), self.entrance.clone()).await?
+            CLICommand::Serve(serve_command) => {
+                serve(
+                    self.graph.clone(),
+                    self.server_conf.clone(),
+                    self.environment_version.clone(),
+                    self.entrance.clone(),
+                    serve_command.no_migration,
+                ).await?
             }
             CLICommand::Generate(cmd) => {
                 match cmd {
@@ -74,8 +83,8 @@ impl App {
                     }
                 }
             }
-            _ => {
-
+            CLICommand::Migrate(migrate_command) => {
+                migrate(self.graph.to_mut(), migrate_command.dry).await;
             }
         }
         Ok(())

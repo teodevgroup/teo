@@ -1,5 +1,4 @@
 use key_path::KeyPath;
-
 use crate::core::object::Object;
 use crate::core::pipeline::context::validity::Validity;
 use crate::core::pipeline::context::validity::Validity::{Invalid, Valid};
@@ -23,6 +22,15 @@ impl<'a> Context<'a> {
             object: None,
             key_path: KeyPath::default(),
             validity: Valid,
+        }
+    }
+
+    pub(crate) fn initial_state_with_null(object: Object) -> Self {
+        Context {
+            value: Value::Null,
+            object: Some(object.clone()),
+            key_path: KeyPath::default(),
+            validity: Valid
         }
     }
 
@@ -80,7 +88,7 @@ impl<'a> Context<'a> {
     }
 
     pub(crate) fn invalid_reason(&self) -> Option<&str> {
-        self.validity.reason()
+        self.validity.invalid_reason()
     }
 
     pub(crate) fn value(&self) -> &Value {

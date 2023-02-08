@@ -2,10 +2,10 @@ use std::{collections::HashSet, slice::Iter};
 use once_cell::sync::Lazy;
 use maplit::hashset;
 
-use self::ActionType::*;
+use self::Handler::*;
 
 #[derive(Debug, Clone, Copy, Eq, Hash, PartialEq)]
-pub enum ActionType {
+pub enum Handler {
     FindUnique,
     FindFirst,
     FindMany,
@@ -24,7 +24,7 @@ pub enum ActionType {
 }
 
 #[derive(PartialEq)]
-pub enum ActionResultMeta {
+pub enum ResMeta {
     PagingInfo,
     TokenInfo,
     NoMeta,
@@ -32,24 +32,24 @@ pub enum ActionResultMeta {
 }
 
 #[derive(PartialEq)]
-pub enum ActionResultData {
+pub enum ResData {
     Single,
     Vec,
     Other,
     Number,
 }
 
-impl ActionType {
+impl Handler {
 
-    pub fn iter() -> Iter<'static, ActionType> {
-        static ACTION_TYPES: [ActionType; 15] = [
+    pub fn iter() -> Iter<'static, Handler> {
+        static ACTION_TYPES: [Handler; 15] = [
             FindUnique, FindFirst, FindMany, Create, Update, Upsert, Delete, CreateMany,
             UpdateMany, DeleteMany, Count, Aggregate, GroupBy, SignIn, Identity
         ];
         ACTION_TYPES.iter()
     }
 
-    pub(crate) fn default() -> HashSet<ActionType> {
+    pub(crate) fn default() -> HashSet<Handler> {
         HashSet::from_iter(vec![
             FindUnique,
             FindFirst,
@@ -67,125 +67,84 @@ impl ActionType {
         ].iter().map(|x| *x))
     }
 
-    pub(crate) fn as_url_segment(&self) -> &'static str {
+    pub(crate) fn as_str(&self) -> &'static str {
         match self {
-            FindUnique => "find-unique",
-            FindFirst => "find-first",
-            FindMany => "find-many",
+            FindUnique => "findUnique",
+            FindFirst => "findFirst",
+            FindMany => "findMany",
             Create => "create",
             Update => "update",
             Upsert => "upsert",
             Delete => "delete",
-            CreateMany => "create-many",
-            UpdateMany => "update-many",
-            DeleteMany => "delete-many",
+            CreateMany => "createMany",
+            UpdateMany => "updateMany",
+            DeleteMany => "deleteMany",
             Count => "count",
             Aggregate => "aggregate",
-            GroupBy => "group-by",
-            SignIn => "sign-in",
+            GroupBy => "groupBy",
+            SignIn => "signIn",
             Identity => "identity"
         }
     }
 
-    pub(crate) fn as_str(&self) -> &'static str {
-        match self {
-            FindUnique => "FindUnique",
-            FindFirst => "FindFirst",
-            FindMany => "FindMany",
-            Create => "Create",
-            Update => "Update",
-            Upsert => "Upsert",
-            Delete => "Delete",
-            CreateMany => "CreateMany",
-            UpdateMany => "UpdateMany",
-            DeleteMany => "DeleteMany",
-            Count => "Count",
-            Aggregate => "Aggregate",
-            GroupBy => "GroupBy",
-            SignIn => "SignIn",
-            Identity => "Identity"
-        }
-    }
-
-    pub(crate) fn from_str(str: &str) -> Option<ActionType> {
+    pub(crate) fn from_str(str: &str) -> Option<Handler> {
         match str {
-            "FindUnique" => Some(FindUnique),
-            "FindFirst" => Some(FindFirst),
-            "FindMany" => Some(FindMany),
-            "Create" => Some(Create),
-            "Update" => Some(Update),
-            "Upsert" => Some(Upsert),
-            "Delete" => Some(Delete),
-            "CreateMany" => Some(CreateMany),
-            "UpdateMany" => Some(UpdateMany),
-            "DeleteMany" => Some(DeleteMany),
-            "Count" => Some(Count),
-            "Aggregate" => Some(Aggregate),
-            "GroupBy" => Some(GroupBy),
-            "SignIn" => Some(SignIn),
-            "Identity" => Some(Identity),
-            _ => None
-        }
-    }
-
-    pub(crate) fn from_url_segment(str: &str) -> Option<ActionType> {
-        match str {
-            "find-unique" => Some(FindUnique),
-            "find-first" => Some(FindFirst),
-            "find-many" => Some(FindMany),
+            "findUnique" => Some(FindUnique),
+            "findFirst" => Some(FindFirst),
+            "findMany" => Some(FindMany),
             "create" => Some(Create),
             "update" => Some(Update),
             "upsert" => Some(Upsert),
             "delete" => Some(Delete),
-            "create-many" => Some(CreateMany),
-            "update-many" => Some(UpdateMany),
-            "delete-many" => Some(DeleteMany),
+            "createMany" => Some(CreateMany),
+            "updateMany" => Some(UpdateMany),
+            "deleteMany" => Some(DeleteMany),
             "count" => Some(Count),
             "aggregate" => Some(Aggregate),
-            "group-by" => Some(GroupBy),
-            "sign-in" => Some(SignIn),
+            "groupBy" => Some(GroupBy),
+            "signIn" => Some(SignIn),
             "identity" => Some(Identity),
             _ => None
         }
     }
 
-    pub(crate) fn result_meta(&self) -> ActionResultMeta {
+    pub(crate) fn res_meta(&self) -> ResMeta {
         match self {
-            FindUnique => ActionResultMeta::NoMeta,
-            FindFirst => ActionResultMeta::NoMeta,
-            FindMany => ActionResultMeta::PagingInfo,
-            Create => ActionResultMeta::NoMeta,
-            Update => ActionResultMeta::NoMeta,
-            Upsert => ActionResultMeta::NoMeta,
-            Delete => ActionResultMeta::NoMeta,
-            CreateMany => ActionResultMeta::NoMeta,
-            UpdateMany => ActionResultMeta::NoMeta,
-            DeleteMany => ActionResultMeta::NoMeta,
-            Count => ActionResultMeta::NoMeta,
-            Aggregate => ActionResultMeta::NoMeta,
-            GroupBy => ActionResultMeta::NoMeta,
-            SignIn => ActionResultMeta::TokenInfo,
-            Identity => ActionResultMeta::NoMeta,
+            FindUnique => ResMeta::NoMeta,
+            FindFirst => ResMeta::NoMeta,
+            FindMany => ResMeta::PagingInfo,
+            Create => ResMeta::NoMeta,
+            Update => ResMeta::NoMeta,
+            Upsert => ResMeta::NoMeta,
+            Delete => ResMeta::NoMeta,
+            CreateMany => ResMeta::NoMeta,
+            UpdateMany => ResMeta::NoMeta,
+            DeleteMany => ResMeta::NoMeta,
+            Count => ResMeta::NoMeta,
+            Aggregate => ResMeta::NoMeta,
+            GroupBy => ResMeta::NoMeta,
+            SignIn => ResMeta::TokenInfo,
+            Identity => ResMeta::NoMeta,
         }
     }
 
-    pub(crate) fn result_data(&self) -> ActionResultData {
+    pub(crate) fn res_data(&self) -> ResData {
         match self {
-            FindUnique => ActionResultData::Single,
-            FindFirst => ActionResultData::Single,
-            FindMany => ActionResultData::Vec,
-            Create => ActionResultData::Single,
-            Update => ActionResultData::Single,
-            Upsert => ActionResultData::Single,
-            Delete => ActionResultData::Single,
-            CreateMany => ActionResultData::Vec,
-            UpdateMany => ActionResultData::Vec,
-            DeleteMany => ActionResultData::Vec,
-            Count => ActionResultData::Number,
-            Aggregate => ActionResultData::Other,
-            GroupBy => ActionResultData::Other,
-            SignIn => ActionResultData::Single,
-            Identity => ActionResultData::Single,
+            FindUnique => ResData::Single,
+            FindFirst => ResData::Single,
+            FindMany => ResData::Vec,
+            Create => ResData::Single,
+            Update => ResData::Single,
+            Upsert => ResData::Single,
+            Delete => ResData::Single,
+            CreateMany => ResData::Vec,
+            UpdateMany => ResData::Vec,
+            DeleteMany => ResData::Vec,
+            Count => ResData::Number,
+            Aggregate => ResData::Other,
+            GroupBy => ResData::Other,
+            SignIn => ResData::Single,
+            Identity => ResData::Single,
         }
     }
 

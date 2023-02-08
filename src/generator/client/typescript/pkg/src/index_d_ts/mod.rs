@@ -1,5 +1,5 @@
 use inflector::Inflector;
-use crate::core::action::r#type::{ActionResultData, ActionResultMeta, ActionType};
+use crate::core::handler::{ResMeta, ResData, Handler};
 use crate::core::app::conf::ClientGeneratorConf;
 use crate::generator::client::typescript::pkg::src::index_d_ts::docs::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, main_object_doc, nested_connect_doc, nested_create_doc, nested_create_or_connect_doc, nested_delete_doc, nested_disconnect_doc, nested_set_doc, nested_update_doc, nested_upsert_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_connect_create_doc, unique_connect_doc, unique_where_doc, where_doc, where_doc_first, with_token_doc};
 use crate::generator::client::typescript::r#type::ToTypeScriptType;
@@ -78,7 +78,7 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
             model.input_keys().iter().for_each(|k| {
                 if let Some(field) = model.field(k) {
                     let field_name = &field.name;
-                    let field_ts_type = field.field_type.to_typescript_create_input_type(field.optionality.is_optional());
+                    let field_ts_type = field.field_type().to_typescript_create_input_type(field.optionality.is_optional());
                     if let Some(without_relation) = without_relation {
                         if !without_relation.fields().contains(k) {
                             b.doc(field_doc(field));
@@ -136,9 +136,9 @@ fn generate_model_upsert_with_where_unique_input(model: &Model, without: Option<
         c.block(format!("export type {model_name}UpsertWithWhereUnique{without_title}Input = {{"), |b| {
             b.doc(unique_where_doc(model));
             b.line(format!("where: {model_name}WhereUniqueInput"));
-            b.doc(create_or_update_doc(model, ActionType::Update));
+            b.doc(create_or_update_doc(model, Handler::Update));
             b.line(format!("update: {model_name}Update{without_title}Input"));
-            b.doc(create_or_update_doc(model, ActionType::Create));
+            b.doc(create_or_update_doc(model, Handler::Create));
             b.line(format!("create: {model_name}Create{without_title}Input"));
         }, "}")
     }).to_string()
@@ -156,7 +156,7 @@ fn generate_model_update_with_where_unique_input(model: &Model, without: Option<
         c.block(format!("export type {model_name}UpdateWithWhereUnique{without_title}Input = {{"), |b| {
             b.doc(unique_where_doc(model));
             b.line(format!("where: {model_name}WhereUniqueInput"));
-            b.doc(create_or_update_doc(model, ActionType::Update));
+            b.doc(create_or_update_doc(model, Handler::Update));
             b.line(format!("update: {model_name}Update{without_title}Input"));
         }, "}")
     }).to_string()
@@ -174,7 +174,7 @@ fn generate_model_update_many_with_where_input(model: &Model, without: Option<&s
         c.block(format!("export type {model_name}UpdateManyWithWhere{without_title}Input = {{"), |b| {
             b.doc(where_doc(model));
             b.line(format!("where: {model_name}WhereInput"));
-            b.doc(create_or_update_doc(model, ActionType::UpdateMany));
+            b.doc(create_or_update_doc(model, Handler::UpdateMany));
             b.line(format!("update: {model_name}Update{without_title}Input"));
         }, "}")
     }).to_string()
@@ -252,7 +252,7 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
             model.input_keys().iter().for_each(|k| {
                 if let Some(field) = model.field(k) {
                     let field_name = &field.name;
-                    let field_ts_type = field.field_type.to_typescript_update_input_type(field.optionality.is_optional());
+                    let field_ts_type = field.field_type().to_typescript_update_input_type(field.optionality.is_optional());
                     b.doc(field_doc(field));
                     b.line(format!("{field_name}?: {field_ts_type}"));
                 } else if let Some(relation) = model.relation(k) {
@@ -302,14 +302,14 @@ fn generate_model_credentials_input(model: &Model) -> String {
             for key in auth_identity_keys {
                 let field = model.field(key).unwrap();
                 let field_name = &field.name;
-                let field_type = field.field_type.to_typescript_type(auth_identity_optional);
+                let field_type = field.field_type().to_typescript_type(auth_identity_optional);
                 b.doc(field_doc(field));
                 b.line(format!("{field_name}: {field_type}"));
             }
             for key in auth_by_keys {
                 let field = model.field(key).unwrap();
                 let field_name = &field.name;
-                let field_type = field.field_type.to_typescript_type(auth_by_keys_optional);
+                let field_type = field.field_type().to_typescript_type(auth_by_keys_optional);
                 b.doc(field_doc(field));
                 b.line(format!("{field_name}: {field_type}"));
             }
@@ -364,7 +364,7 @@ export declare class TeoError extends Error {{
                 m.output_keys().iter().for_each(|k| {
                     if let Some(field) = m.field(k) {
                         let field_name = &field.name;
-                        let field_type = field.field_type.to_typescript_type(field.optionality.is_optional());
+                        let field_type = field.field_type().to_typescript_type(field.optionality.is_optional());
                         b.line(format!("{field_name}: {field_type}"));
                     }
                 });
@@ -403,7 +403,7 @@ export declare class TeoError extends Error {{
                 m.query_keys().iter().for_each(|k| {
                     if let Some(field) = m.field(k) {
                         let field_name = &field.name;
-                        let field_filter = field.field_type.to_typescript_filter_type(field.optionality.is_optional());
+                        let field_filter = field.field_type().to_typescript_filter_type(field.optionality.is_optional());
                         b.doc(field_doc(field));
                         b.line(format!("{field_name}?: {field_filter}"));
                     } else if let Some(relation) = m.relation(k) {
@@ -423,7 +423,7 @@ export declare class TeoError extends Error {{
                         index.items().iter().for_each(|item| {
                             if !used_field_names.contains(&&***&&item.field_name()) {
                                 if let Some(field) = m.field(&item.field_name()) {
-                                    let ts_type = field.field_type.to_typescript_type(field.optionality.is_optional());
+                                    let ts_type = field.field_type().to_typescript_type(field.optionality.is_optional());
                                     let field_name = &item.field_name();
                                     b.doc(field_doc(field));
                                     b.line(format!("{field_name}?: {ts_type}"));
@@ -494,12 +494,12 @@ export declare class TeoError extends Error {{
                 b.doc(include_doc(m));
                 b.line(format!(r#"include?: {model_name}Include"#));
             }, "}");
-            ActionType::iter().for_each(|a| {
+            Handler::iter().for_each(|a| {
                 if !m.actions().contains(a) { return }
                 let action_name = a.as_str();
                 c.block(format!(r#"export type {model_name}{action_name}Args = {{"#), |b| {
                     if a.requires_where() {
-                        if a == &ActionType::FindFirst {
+                        if a == &Handler::FindFirst {
                             b.doc(where_doc_first(m));
                         } else {
                             b.doc(where_doc(m));
@@ -530,11 +530,11 @@ export declare class TeoError extends Error {{
                         //b.line(format!{r#"distinct? {model_name}ScalarFieldEnum"#})
                     }
                     if a.requires_create() {
-                        b.doc(create_or_update_doc(m, if a == &ActionType::Upsert { ActionType::Create } else { a.clone() }));
+                        b.doc(create_or_update_doc(m, if a == &Handler::Upsert { Handler::Create } else { a.clone() }));
                         b.line(format!(r#"create: {model_name}CreateInput"#));
                     }
                     if a.requires_update() {
-                        b.doc(create_or_update_doc(m, if a == &ActionType::Upsert { ActionType::Update } else { a.clone() }));
+                        b.doc(create_or_update_doc(m, if a == &Handler::Upsert { Handler::Update } else { a.clone() }));
                         b.line(format!(r#"update: {model_name}UpdateInput"#));
                     }
                     if a.requires_credentials() {
@@ -579,29 +579,29 @@ export declare class TeoError extends Error {{
                 let model_var_name = model_name.to_camel_case();
                 let model_class_name = model_var_name.to_pascal_case();
                 c.block(format!("declare class {model_class_name}Delegate {{"), |b| {
-                    ActionType::iter().for_each(|a| {
+                    Handler::iter().for_each(|a| {
                         if m.actions().contains(a) {
                             let action_name = a.as_str();
                             let action_var_name = a.as_str().to_camel_case();
-                            let result_meta = match a.result_meta() {
-                                ActionResultMeta::PagingInfo => "PagingInfo",
-                                ActionResultMeta::TokenInfo => "TokenInfo",
-                                ActionResultMeta::NoMeta => "undefined",
-                                ActionResultMeta::Other => "undefined",
+                            let res_meta = match a.res_meta() {
+                                ResMeta::PagingInfo => "PagingInfo",
+                                ResMeta::TokenInfo => "TokenInfo",
+                                ResMeta::NoMeta => "undefined",
+                                ResMeta::Other => "undefined",
                             };
-                            let result_data = match a.result_data() {
-                                ActionResultData::Single => model_name.to_string(),
-                                ActionResultData::Vec => model_name.to_string() + "[]",
-                                ActionResultData::Other => "never".to_string(),
-                                ActionResultData::Number => "number".to_string(),
+                            let res_data = match a.res_data() {
+                                ResData::Single => model_name.to_string(),
+                                ResData::Vec => model_name.to_string() + "[]",
+                                ResData::Other => "never".to_string(),
+                                ResData::Number => "number".to_string(),
                             };
-                            let payload_array = match a.result_data() {
-                                ActionResultData::Vec => "[]",
+                            let payload_array = match a.res_data() {
+                                ResData::Vec => "[]",
                                 _ => ""
                             };
                             b.empty_line();
                             b.doc(action_doc(object_name, a.clone(), m));
-                            b.line(format!("async {action_var_name}<T extends {model_name}{action_name}Args>(args?: T): Promise<Response<{result_meta}, CheckSelectInclude<T, {result_data}, {model_name}GetPayload<T>{payload_array}>>>"));
+                            b.line(format!("async {action_var_name}<T extends {model_name}{action_name}Args>(args?: T): Promise<Response<{res_meta}, CheckSelectInclude<T, {res_data}, {model_name}GetPayload<T>{payload_array}>>>"));
                         }
                     });
                 }, "}");

@@ -1,10 +1,10 @@
-use crate::core::action::r#type::ActionType;
+use crate::core::handler::Handler;
 use crate::core::app::conf::ClientGeneratorConf;
 use crate::core::graph::Graph;
 
 
 pub(crate) async fn generate_runtime_d_ts(_graph: &Graph, conf: &ClientGeneratorConf) -> String {
-    let actions = ActionType::iter().map(|a| { String::from("\"") + a.as_url_segment() + "\"" }).collect::<Vec<String>>().join(" | ");
+    let actions = Handler::iter().map(|a| { String::from("\"") + a.as_str() + "\"" }).collect::<Vec<String>>().join(" | ");
     let _url = &conf.host;
     format!(r#"type Action = {actions}
 

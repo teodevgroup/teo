@@ -3,21 +3,21 @@ use std::fmt::{Debug, Formatter};
 use std::sync::{Arc, Mutex};
 use maplit::hashmap;
 use crate::core::app::builder::CallbackLookupTable;
-use crate::core::field::builder::FieldBuilder;
+use crate::core::field::Field;
 use crate::core::model::builder::ModelBuilder;
 use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::Pipeline;
-use crate::core::property::builder::PropertyBuilder;
-use crate::core::relation::builder::RelationBuilder;
+use crate::core::property::Property;
+use crate::core::relation::Relation;
 use crate::parser::ast::argument::Argument;
 use crate::parser::ast::entity::Entity;
 use crate::parser::std::constants::EnvObject;
 
-pub(crate) type FieldDecorator = fn(args: Vec<Argument>, field: &mut FieldBuilder);
+pub(crate) type FieldDecorator = fn(args: Vec<Argument>, field: &mut Field);
 
-pub(crate) type RelationDecorator = fn(args: Vec<Argument>, relation: &mut RelationBuilder);
+pub(crate) type RelationDecorator = fn(args: Vec<Argument>, relation: &mut Relation);
 
-pub(crate) type PropertyDecorator = fn(args: Vec<Argument>, property: &mut PropertyBuilder);
+pub(crate) type PropertyDecorator = fn(args: Vec<Argument>, property: &mut Property);
 
 pub(crate) type ModelDecorator = fn(args: Vec<Argument>, model: &mut ModelBuilder);
 

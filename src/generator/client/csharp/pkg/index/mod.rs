@@ -1,5 +1,5 @@
 use inflector::Inflector;
-use crate::core::action::r#type::{ActionResultData, ActionResultMeta, ActionType};
+use crate::core::handler::{ResData, ResMeta, Handler};
 use crate::core::app::conf::ClientGeneratorConf;
 use crate::generator::client::csharp::pkg::index::doc::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, nested_connect_doc, nested_create_doc, nested_create_or_connect_doc, nested_delete_doc, nested_disconnect_doc, nested_set_doc, nested_update_doc, nested_upsert_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_connect_create_doc, unique_connect_doc, unique_where_doc, where_doc, where_doc_first};
 use crate::generator::client::csharp::r#type::ToCSharpType;
@@ -190,7 +190,7 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
     model.input_keys().iter().for_each(|k| {
         if let Some(field) = model.field(k) {
             let field_name = &field.name;
-            let field_cs_type = field.field_type.to_csharp_type(false);
+            let field_cs_type = field.field_type().to_csharp_type(false);
             let ignore_this_field = if let Some(without_relation) = without_relation {
                 without_relation.fields().contains(k)
             } else {
@@ -263,14 +263,14 @@ fn generate_model_upsert_with_where_unique_input(model: &Model, without: Option<
         n: "Update".to_string(),
         t: format!("{model_name}Update{without_title}Input"),
         o: false,
-        d: Some(create_or_update_doc(model, ActionType::Update)),
+        d: Some(create_or_update_doc(model, Handler::Update)),
         j: None
     });
     class_fields.push(CSharpClassField {
         n: "Create".to_string(),
         t: format!("{model_name}Create{without_title}Input"),
         o: false,
-        d: Some(create_or_update_doc(model, ActionType::Create)),
+        d: Some(create_or_update_doc(model, Handler::Create)),
         j: None
     });
     let builder = CSharpClassBuilder {
@@ -302,7 +302,7 @@ fn generate_model_update_with_where_unique_input(model: &Model, without: Option<
         n: "Update".to_string(),
         t: format!("{model_name}Update{without_title}Input"),
         o: false,
-        d: Some(create_or_update_doc(model, ActionType::Update)),
+        d: Some(create_or_update_doc(model, Handler::Update)),
         j: None
     });
     let builder = CSharpClassBuilder {
@@ -336,7 +336,7 @@ fn generate_model_update_many_with_where_input(model: &Model, without: Option<&s
                 n: "Update".to_string(),
                 t: format!("{model_name}Update{without_title}Input"),
                 o: false,
-                d: Some(create_or_update_doc(model, ActionType::UpdateMany)),
+                d: Some(create_or_update_doc(model, Handler::UpdateMany)),
                 j: None
             }
         ],
@@ -456,7 +456,7 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
     model.input_keys().iter().for_each(|k| {
         if let Some(field) = model.field(k) {
             let field_name = &field.name;
-            let field_cs_type = field.field_type.to_csharp_update_input_type(field.optionality.is_optional(), true);
+            let field_cs_type = field.field_type().to_csharp_update_input_type(field.optionality.is_optional(), true);
             let ignore_this_field = if let Some(without_relation) = without_relation {
                 without_relation.fields().contains(k)
             } else {
@@ -520,7 +520,7 @@ fn generate_model_credentials_input(model: &Model) -> String {
     for key in auth_identity_keys {
         let field = model.field(key).unwrap();
         let field_name = &field.name;
-        let field_type = field.field_type.to_csharp_type(auth_identity_optional);
+        let field_type = field.field_type().to_csharp_type(auth_identity_optional);
         class_fields.push(CSharpClassField {
             n: field_name.to_pascal_case(),
             t: field_type,
@@ -532,7 +532,7 @@ fn generate_model_credentials_input(model: &Model) -> String {
     for key in auth_by_keys {
         let field = model.field(key).unwrap();
         let field_name = &field.name;
-        let field_type = field.field_type.to_csharp_type(auth_by_keys_optional);
+        let field_type = field.field_type().to_csharp_type(auth_by_keys_optional);
         class_fields.push(CSharpClassField {
             n: field_name.to_pascal_case(),
             t: field_type,
@@ -578,7 +578,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _client: &ClientGeneratorCo
                 m.output_keys().iter().for_each(|k| {
                     if let Some(field) = m.field(k) {
                         let field_name = field.name.to_pascal_case();
-                        let field_type = field.field_type.to_csharp_type(false);
+                        let field_type = field.field_type().to_csharp_type(false);
                         model_fields.push(CSharpClassField {
                             n: field_name,
                             t: field_type,
@@ -681,7 +681,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _client: &ClientGeneratorCo
                 m.query_keys().iter().for_each(|k| {
                     if let Some(field) = m.field(k) {
                         let field_name = &field.name;
-                        let field_filter = field.field_type.to_csharp_filter_type(field.optionality.is_optional());
+                        let field_filter = field.field_type().to_csharp_filter_type(field.optionality.is_optional());
                         where_fields.push(CSharpClassField {
                             n: field_name.to_pascal_case(),
                             t: field_filter,
@@ -717,7 +717,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _client: &ClientGeneratorCo
                         index.items().iter().for_each(|item| {
                             if !used_where_unique_field_names.contains(&&***&&item.field_name()) {
                                 if let Some(field) = m.field(&item.field_name()) {
-                                    let cs_type = field.field_type.to_csharp_type(false);
+                                    let cs_type = field.field_type().to_csharp_type(false);
                                     let field_name = &item.field_name();
                                     where_unique_fields.push(CSharpClassField {
                                         n: field_name.to_pascal_case(),
@@ -866,7 +866,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _client: &ClientGeneratorCo
                     indent_level: 0
                 };
                 c.indented(builder.build());
-                ActionType::iter().for_each(|a| {
+                Handler::iter().for_each(|a| {
                     if !m.actions().contains(a) { return }
                     let action_name = a.as_str();
                     let mut fields = Vec::<CSharpClassField>::new();
@@ -875,7 +875,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _client: &ClientGeneratorCo
                             n: "Where".to_owned(),
                             t: format!("{model_name}WhereInput"),
                             o: true,
-                            d: Some(if a == &ActionType::FindFirst { where_doc_first(m) } else { where_doc(m) }),
+                            d: Some(if a == &Handler::FindFirst { where_doc_first(m) } else { where_doc(m) }),
                             j: None,
                         });
                     }
@@ -951,7 +951,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _client: &ClientGeneratorCo
                             n: "Create".to_owned(),
                             t: format!("{model_name}CreateInput"),
                             o: true,
-                            d: Some(create_or_update_doc(m, if a == &ActionType::Upsert { ActionType::Create } else { a.clone() })),
+                            d: Some(create_or_update_doc(m, if a == &Handler::Upsert { Handler::Create } else { a.clone() })),
                             j: None,
                         });
                     }
@@ -960,7 +960,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _client: &ClientGeneratorCo
                             n: "Update".to_owned(),
                             t: format!("{model_name}UpdateInput"),
                             o: true,
-                            d: Some(create_or_update_doc(m, if a == &ActionType::Upsert { ActionType::Update } else { a.clone() })),
+                            d: Some(create_or_update_doc(m, if a == &Handler::Upsert { Handler::Update } else { a.clone() })),
                             j: None,
                         });
                     }
@@ -998,27 +998,27 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _client: &ClientGeneratorCo
                         b.block(format!("protected internal {model_class_name}Delegate(string? token = null) {{"), |b| {
                             b.line("_Token = token;");
                         }, "}");
-                        ActionType::iter().for_each(|a| {
+                        Handler::iter().for_each(|a| {
                             if m.actions().contains(a) {
                                 let action_name = a.as_str();
                                 let action_var_name = a.as_str().to_pascal_case();
-                                let action_url_name = a.as_url_segment();
-                                let result_meta = match a.result_meta() {
-                                    ActionResultMeta::PagingInfo => "PagingInfo, ",
-                                    ActionResultMeta::TokenInfo => "TokenInfo, ",
-                                    ActionResultMeta::NoMeta => "",
-                                    ActionResultMeta::Other => "",
+                                let action_url_name = a.as_str();
+                                let res_meta = match a.res_meta() {
+                                    ResMeta::PagingInfo => "PagingInfo, ",
+                                    ResMeta::TokenInfo => "TokenInfo, ",
+                                    ResMeta::NoMeta => "",
+                                    ResMeta::Other => "",
                                 };
-                                let result_data = match a.result_data() {
-                                    ActionResultData::Single => model_name.to_string(),
-                                    ActionResultData::Vec => model_name.to_string() + "[]",
-                                    ActionResultData::Other => "short".to_string(),
-                                    ActionResultData::Number => "uint".to_string(),
+                                let res_data = match a.res_data() {
+                                    ResData::Single => model_name.to_string(),
+                                    ResData::Vec => model_name.to_string() + "[]",
+                                    ResData::Other => "short".to_string(),
+                                    ResData::Number => "uint".to_string(),
                                 };
                                 b.empty_line();
                                 b.doc(action_doc(object_name, a.clone(), m));
-                                b.block(format!("public async Task<Response<{result_meta}{result_data}>> {action_var_name}({model_name}{action_name}Args? args = null, string? token = null) {{"), |b| {
-                                    b.line(format!(r#"return await Request<Response<{result_meta}{result_data}>>("{model_url_segment_name}", "{action_url_name}", args ?? new(), token ?? _Token);"#));
+                                b.block(format!("public async Task<Response<{res_meta}{res_data}>> {action_var_name}({model_name}{action_name}Args? args = null, string? token = null) {{"), |b| {
+                                    b.line(format!(r#"return await Request<Response<{res_meta}{res_data}>>("{model_url_segment_name}", "{action_url_name}", args ?? new(), token ?? _Token);"#));
                                 }, "}");
                             }
                         });

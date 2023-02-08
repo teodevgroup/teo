@@ -1,19 +1,19 @@
+pub(crate) mod r#type;
+pub(crate) mod optionality;
+pub(crate) mod read_rule;
+pub(crate) mod write_rule;
+
 use std::fmt::{Debug, Formatter};
+use std::sync::Arc;
+use crate::core::connector::Connector;
 use crate::core::database::r#type::DatabaseType;
 use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::FieldType;
 use crate::core::field::read_rule::ReadRule;
 use crate::core::field::write_rule::WriteRule;
-use crate::core::permission::Permission;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::context::Context;
 use crate::core::teon::Value;
-
-pub(crate) mod r#type;
-pub(crate) mod builder;
-pub mod optionality;
-pub mod read_rule;
-pub mod write_rule;
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum PreviousValueRule {
@@ -58,7 +58,6 @@ impl Default for IndexSettings {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum FieldIndex {
-    NoIndex,
     Index(IndexSettings),
     Unique(IndexSettings),
 }
@@ -75,10 +74,10 @@ impl FieldIndex {
 #[derive(Clone)]
 pub(crate) struct Field {
     pub(crate) name: String,
-    pub(crate) localized_name: String,
-    pub(crate) description: String,
-    pub(crate) field_type: FieldType,
-    pub(crate) database_type: DatabaseType,
+    pub(crate) localized_name: Option<String>,
+    pub(crate) description: Option<String>,
+    pub(crate) field_type: Option<FieldType>,
+    pub(crate) database_type: Option<DatabaseType>,
     pub(crate) optionality: Optionality,
     pub(crate) r#virtual: bool,
     pub(crate) atomic: bool,
@@ -88,19 +87,18 @@ pub(crate) struct Field {
     pub(crate) previous_value_rule: PreviousValueRule,
     pub(crate) input_omissible: bool,
     pub(crate) output_omissible: bool,
-    pub(crate) index: FieldIndex,
+    pub(crate) index: Option<FieldIndex>,
     pub(crate) query_ability: QueryAbility,
-    pub(crate) object_assignment: ObjectAssignment,
     pub(crate) auto: bool,
     pub(crate) auto_increment: bool,
-    pub(crate) auth_identity: bool,
-    pub(crate) auth_by: bool,
-    pub(crate) auth_by_arg: Option<Value>,
+    pub(crate) identity: bool,
+    pub(crate) identity_checker: Option<Value>,
     pub(crate) default: Option<Value>,
     pub(crate) on_set_pipeline: Pipeline,
     pub(crate) on_save_pipeline: Pipeline,
     pub(crate) on_output_pipeline: Pipeline,
-    pub(crate) permission: Option<Permission>,
+    pub(crate) can_mutate_pipeline: Pipeline,
+    pub(crate) can_read_pipeline: Pipeline,
     pub(crate) column_name: Option<String>,
     pub(crate) foreign_key: bool,
 }
@@ -115,20 +113,56 @@ impl Debug for Field {
 
 impl Field {
 
+    pub(crate) fn new(name: String) -> Self {
+        return Self {
+            name: name.into(),
+            localized_name: None,
+            description: None,
+            field_type: None,
+            database_type: None,
+            optionality: Optionality::Required,
+            r#virtual: false,
+            atomic: false,
+            primary: false,
+            read_rule: ReadRule::Read,
+            write_rule: WriteRule::Write,
+            index: None,
+            query_ability: QueryAbility::Queryable,
+            auto: false,
+            auto_increment: false,
+            identity: false,
+            identity_checker: None,
+            default: None,
+            on_set_pipeline: Pipeline::new(),
+            on_save_pipeline: Pipeline::new(),
+            on_output_pipeline: Pipeline::new(),
+            can_mutate_pipeline: Pipeline::new(),
+            can_read_pipeline: Pipeline::new(),
+            column_name: None,
+            previous_value_rule: PreviousValueRule::DontKeep,
+            input_omissible: false,
+            output_omissible: false,
+            foreign_key: false,
+        }
+    }
+
     pub(crate) fn name(&self) -> &str {
         &self.name
     }
 
     pub(crate) fn localized_name(&self) -> &str {
-        &self.localized_name
+        &self.localized_name.as_ref().unwrap()
     }
 
-    pub(crate) fn description(&self) -> &str {
-        &self.description
+    pub(crate) fn description(&self) -> Option<&str> {
+        match self.description.as_ref() {
+            Some(d) => Some(d),
+            None => None
+        }
     }
 
     pub(crate) fn r#type(&self) -> &FieldType {
-        &self.field_type
+        self.field_type.as_ref().unwrap()
     }
 
     pub(crate) fn is_optional(&self) -> bool {
@@ -150,17 +184,25 @@ impl Field {
         if self.on_save_pipeline.has_any_modifier() {
             return true;
         }
-        return match &self.field_type {
+        return match self.field_type() {
             FieldType::Vec(inner) => inner.needs_on_save_callback(),
             _ => false
         }
+    }
+
+    pub(crate) fn field_type(&self) -> &FieldType {
+        self.field_type.as_ref().unwrap()
+    }
+
+    pub(crate) fn database_type(&self) -> &DatabaseType {
+        self.database_type.as_ref().unwrap()
     }
 
     pub(crate) fn needs_on_output_callback(&self) -> bool {
         if self.on_output_pipeline.has_any_modifier() {
             return true;
         }
-        return match &self.field_type {
+        return match self.field_type() {
             FieldType::Vec(inner) => inner.needs_on_output_callback(),
             _ => false
         }
@@ -168,7 +210,7 @@ impl Field {
 
     pub(crate) async fn perform_on_save_callback<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let mut new_ctx = ctx.clone();
-        match &self.field_type {
+        match self.field_type() {
             FieldType::Vec(inner) => {
                 let val = &new_ctx.value;
                 let arr = val.as_vec();
@@ -190,7 +232,7 @@ impl Field {
 
     pub(crate) async fn perform_on_output_callback<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let mut new_ctx = ctx.clone();
-        match &self.field_type {
+        match self.field_type() {
             FieldType::Vec(inner) => {
                 let val = &new_ctx.value;
                 let arr = val.as_vec();
@@ -210,8 +252,18 @@ impl Field {
         self.on_output_pipeline.process(new_ctx.clone()).await
     }
 
-    pub(crate) fn permission(&self) -> Option<&Permission> {
-        self.permission.as_ref()
+    pub(crate) fn finalize(&mut self, connector: Arc<dyn Connector>) {
+        self.database_type = Some(connector.default_database_type(self.field_type()));
+    }
+
+    pub(crate) fn set_required(&mut self) {
+        self.optionality = Optionality::Required;
+    }
+
+    pub(crate) fn set_optional(&mut self) {
+        self.optionality = Optionality::Optional;
+        self.input_omissible = true;
+        self.output_omissible = true;
     }
 }
 

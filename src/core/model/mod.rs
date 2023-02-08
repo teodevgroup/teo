@@ -2,10 +2,8 @@ use std::collections::{HashMap, HashSet};
 use std::ops::BitOr;
 use std::sync::Arc;
 use maplit::hashset;
-use crate::core::action::Action;
-use crate::core::action::r#type::ActionType;
+use crate::core::handler::Handler;
 use crate::core::field::Field;
-use crate::core::permission::Permission;
 use crate::core::relation::Relation;
 use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
@@ -23,9 +21,7 @@ pub struct ModelInner {
     pub(crate) description: String,
     pub(crate) identity: bool,
     pub(crate) r#virtual: bool,
-    pub(crate) actions: HashSet<ActionType>,
-    pub(crate) action_defs: HashMap<ActionType, Action>,
-    pub(crate) permission: Option<Permission>,
+    pub(crate) actions: HashSet<Handler>,
     pub(crate) fields_vec: Vec<Arc<Field>>,
     pub(crate) fields_map: HashMap<String, Arc<Field>>,
     pub(crate) relations_vec: Vec<Arc<Relation>>,
@@ -38,6 +34,8 @@ pub struct ModelInner {
     pub(crate) after_save_pipeline: Pipeline,
     pub(crate) before_delete_pipeline: Pipeline,
     pub(crate) after_delete_pipeline: Pipeline,
+    pub(crate) can_read_pipeline: Pipeline,
+    pub(crate) can_mutate_pipeline: Pipeline,
     pub(crate) all_keys: Vec<String>,
     pub(crate) input_keys: Vec<String>,
     pub(crate) save_keys: Vec<String>,
@@ -94,7 +92,7 @@ impl Model {
         self.inner.r#virtual
     }
 
-    pub(crate) fn actions(&self) -> &HashSet<ActionType> {
+    pub(crate) fn actions(&self) -> &HashSet<Handler> {
         &self.inner.actions
     }
 
@@ -207,12 +205,8 @@ impl Model {
         &self.inner.field_property_map
     }
 
-    pub(crate) fn has_action(&self, action: ActionType) -> bool {
+    pub(crate) fn has_action(&self, action: Handler) -> bool {
         self.inner.actions.contains(&action)
-    }
-
-    pub(crate) fn get_action_def(&self, action: ActionType) -> Option<&Action> {
-        self.inner.action_defs.get(&action)
     }
 
     pub(crate) fn has_field(&self, name: &str) -> bool {
@@ -247,9 +241,9 @@ impl Model {
         &self.inner.after_delete_pipeline
     }
 
-    pub(crate) fn permission(&self) -> Option<&Permission> {
-        self.inner.permission.as_ref()
-    }
+    pub(crate) fn can_mutate_pipeline(&self) -> &Pipeline { &self.inner.can_mutate_pipeline }
+
+    pub(crate) fn can_read_pipeline(&self) -> &Pipeline { &self.inner.can_read_pipeline }
 }
 
 impl PartialEq for Model {

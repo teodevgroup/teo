@@ -34,7 +34,7 @@ impl ColumnDecoder {
 
 impl From<&Field> for SQLColumn {
     fn from(field: &Field) -> Self {
-        SQLColumn::new(field.column_name().to_owned(), field.database_type.clone(), field.is_required(), field.auto_increment, None, field.primary, field.index.is_unique())
+        SQLColumn::new(field.column_name().to_owned(), field.database_type().clone(), field.is_required(), field.auto_increment, None, field.primary, field.index.is_some() && field.index.as_ref().unwrap().is_unique())
     }
 }
 
@@ -46,7 +46,7 @@ impl From<&Arc<Field>> for SQLColumn {
 
 impl From<&Property> for SQLColumn {
     fn from(property: &Property) -> Self {
-        SQLColumn::new(property.name.clone(), property.database_type.clone(), property.is_required(), false, None, false, false)
+        SQLColumn::new(property.name.clone(), property.database_type().clone(), property.is_required(), false, None, false, false)
     }
 }
 

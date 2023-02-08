@@ -1,7 +1,7 @@
-use crate::core::relation::builder::RelationBuilder;
+use crate::core::relation::Relation;
 use crate::parser::ast::argument::Argument;
 
-pub(crate) fn relation_decorator(args: Vec<Argument>, relation: &mut RelationBuilder) {
+pub(crate) fn relation_decorator(args: Vec<Argument>, relation: &mut Relation) {
     let fields_arg = args.iter().find(|a| {
         a.name.as_ref().unwrap().name == "fields"
     });
@@ -23,32 +23,32 @@ pub(crate) fn relation_decorator(args: Vec<Argument>, relation: &mut RelationBui
         let fields_value = fields.resolved.as_ref().unwrap().as_value().unwrap();
         let _references_value = references.resolved.as_ref().unwrap().as_value().unwrap();
         if let Some(_) = fields_value.as_vec() {
-            let fields_vec: Vec<&str> = fields.resolved.as_ref().unwrap().as_value().unwrap().as_vec().unwrap().iter().map(|v| {
-                v.as_raw_enum_choice().unwrap()
+            let fields_vec: Vec<String> = fields.resolved.as_ref().unwrap().as_value().unwrap().as_vec().unwrap().iter().map(|v| {
+                v.as_raw_enum_choice().unwrap().to_owned()
             }).collect();
-            relation.fields(fields_vec);
-            let references_vec: Vec<&str> = references.resolved.as_ref().unwrap().as_value().unwrap().as_vec().unwrap().iter().map(|v| {
-                v.as_raw_enum_choice().unwrap()
+            relation.set_fields(fields_vec);
+            let references_vec: Vec<String> = references.resolved.as_ref().unwrap().as_value().unwrap().as_vec().unwrap().iter().map(|v| {
+                v.as_raw_enum_choice().unwrap().to_owned()
             }).collect();
-            relation.references(references_vec);
+            relation.set_references(references_vec);
         } else if let Some(_) = fields_value.as_raw_enum_choice() {
-            let field = fields.resolved.as_ref().unwrap().as_value().unwrap().as_raw_enum_choice().unwrap();
-            relation.fields(vec![field]);
-            let reference = references.resolved.as_ref().unwrap().as_value().unwrap().as_raw_enum_choice().unwrap();
-            relation.references(vec![reference]);
+            let field = fields.resolved.as_ref().unwrap().as_value().unwrap().as_raw_enum_choice().unwrap().to_owned();
+            relation.set_fields(vec![field]);
+            let reference = references.resolved.as_ref().unwrap().as_value().unwrap().as_raw_enum_choice().unwrap().to_owned();
+            relation.set_references(vec![reference]);
         }
     } else if through_arg.is_some() {
         // use through, local and foreign
-        let through_model_ref = through_arg.unwrap().resolved.as_ref().unwrap().as_value().unwrap().as_raw_enum_choice().unwrap();
-        relation.through(through_model_ref);
+        let through_model_ref = through_arg.unwrap().resolved.as_ref().unwrap().as_value().unwrap().as_raw_enum_choice().unwrap().to_owned();
+        relation.set_through(through_model_ref);
         let local = args.iter().find(|a| {
             a.name.as_ref().unwrap().name == "local"
         }).unwrap();
-        relation.local(local.resolved.as_ref().unwrap().as_value().unwrap().as_raw_enum_choice().unwrap());
+        relation.set_local(local.resolved.as_ref().unwrap().as_value().unwrap().as_raw_enum_choice().unwrap().to_owned());
         let foreign = args.iter().find(|a| {
             a.name.as_ref().unwrap().name == "foreign"
         }).unwrap();
-        relation.foreign(foreign.resolved.as_ref().unwrap().as_value().unwrap().as_raw_enum_choice().unwrap());
+        relation.set_foreign(foreign.resolved.as_ref().unwrap().as_value().unwrap().as_raw_enum_choice().unwrap().to_owned());
     } else {
         panic!("One of 'fields' or 'through' must be provided.")
     }

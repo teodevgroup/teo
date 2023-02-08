@@ -174,7 +174,7 @@ impl Query {
                     } else {
                         Cow::Borrowed(column_name)
                     };
-                    let where_entry = Query::where_entry(&entry_column_name, &field.field_type, optional, value, graph, dialect);
+                    let where_entry = Query::where_entry(&entry_column_name, field.field_type(), optional, value, graph, dialect);
                     retval.push(where_entry);
                 } else if let Some(relation) = model.relation(key) {
                     let has_join_table = relation.has_join_table();

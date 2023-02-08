@@ -19,24 +19,23 @@ impl RustEntityGenerator {
     }
 
     fn setter_type_for_field(&self, field: &Field) -> String {
-        if field.is_optional() && !field.field_type.is_string() {
-            format!("Option<{}>", self.setter_type_for_field_type(&field.field_type, false))
+        if field.is_optional() && !field.field_type().is_string() {
+            format!("Option<{}>", self.setter_type_for_field_type(field.field_type(), false))
         } else {
-            self.setter_type_for_field_type(&field.field_type, field.is_optional())
+            self.setter_type_for_field_type(field.field_type(), field.is_optional())
         }
     }
 
     fn getter_type_for_field(&self, field: &Field) -> String {
         if field.is_optional() {
-            format!("Option<{}>", self.getter_type_for_field_type(&field.field_type))
+            format!("Option<{}>", self.getter_type_for_field_type(field.field_type()))
         } else {
-            self.getter_type_for_field_type(&field.field_type)
+            self.getter_type_for_field_type(field.field_type())
         }
     }
 
     fn getter_type_for_field_type(&self, field_type: &FieldType) -> String {
         match field_type {
-            FieldType::Undefined => panic!("Undefined type cannot generate setters."),
             FieldType::ObjectId => "ObjectId".to_owned(),
             FieldType::Bool => "bool".to_owned(),
             FieldType::I8 => "i8".to_owned(),
@@ -77,14 +76,14 @@ impl RustEntityGenerator {
             b.line("use std::{collections::HashMap, fmt::{Debug, Display, Formatter}};");
             b.line("use teo::prelude::{Graph, Object, Value, ActionResult};");
             #[cfg(feature = "data-source-mongodb")]
-            if model.fields().iter().find(|f| f.field_type.is_object_id()).is_some() {
+            if model.fields().iter().find(|f| f.field_type().is_object_id()).is_some() {
                 b.line("use bson::oid::ObjectId;");
             }
             let mut chrono_requirements = vec![];
-            if model.fields().iter().find(|f| f.field_type.is_date()).is_some() {
+            if model.fields().iter().find(|f| f.field_type().is_date()).is_some() {
                 chrono_requirements.push("NaiveDate");
             }
-            if model.fields().iter().find(|f| f.field_type.is_datetime()).is_some() {
+            if model.fields().iter().find(|f| f.field_type().is_datetime()).is_some() {
                 chrono_requirements.push("DateTime");
                 chrono_requirements.push("Utc");
             }
@@ -96,7 +95,7 @@ impl RustEntityGenerator {
             let mut enum_names = vec![];
             let mut has_optional_enum = false;
             model.fields().iter().for_each(|f| {
-               match &f.field_type {
+               match f.field_type() {
                    FieldType::Enum(name) => {
                        enum_names.push(name);
                        if f.is_optional() {
@@ -148,7 +147,7 @@ impl RustEntityGenerator {
                 for field in model.fields() {
                     let field_method_name = field.name.to_snake_case();
                     b.block(format!("pub fn {}(&self) -> {} {{", &field_method_name, self.getter_type_for_field(field.as_ref())), |b| {
-                        if field.field_type.is_enum() && field.is_optional() {
+                        if field.field_type().is_enum() && field.is_optional() {
                             b.block(format!("match self.inner.get(\"{}\").unwrap() {{", field.name()), |b| {
                                 b.line("Value::Null => None,");
                                 b.line("Value::String(s) => Some(Sex::from_str(&s).unwrap()),");
@@ -160,12 +159,12 @@ impl RustEntityGenerator {
                     }, "}");
                     b.line("");
                     b.block(format!("pub fn set_{}(&self, new_value: {}) {{", &field_method_name, self.setter_type_for_field(field.as_ref())), |b| {
-                        if field.field_type.is_enum() && field.is_optional() {
+                        if field.field_type().is_enum() && field.is_optional() {
                             b.block(format!("self.inner.set(\"{}\", match new_value {{", field.name()), |b| {
                                 b.line("Some(v) => v.into(),");
                                 b.line("None => Value::Null,");
                             }, "}).unwrap();");
-                        } else if field.field_type.is_string() {
+                        } else if field.field_type().is_string() {
                             b.line(format!("self.inner.set(\"{}\", new_value.into()).unwrap();", field.name()));
                         } else {
                             b.line(format!("self.inner.set(\"{}\", new_value).unwrap();", field.name()));

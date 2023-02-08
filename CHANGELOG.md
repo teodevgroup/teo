@@ -185,14 +185,23 @@
 - `print` pipeline item **[DONE]**
 - Support highlighting `import` and `let` for VSCode plugin **[DONE]**
 - Rename `@authIdentity` and `@authBy` **[DONE]**
+- Remove permission builder and permission **[DONE]**
+- Remove `FieldBuilder` and `FieldIndexBuilder` **[DONE]**
+- Remove `PropertyBuilder` **[DONE]**
+- Remove `RelationBuilder` **[DONE]**
+- Remove `ConnectorBuilder` and `DataSourceBuilder` **[DONE]**
+- Remove `ActionBuilder` **[DONE]**
+- Rename `Action` into `Handler` **[DONE]**
+- CLI migrate command **[DONE]**
+- Migrate when starting server **[DONE]**
 - Rename `intent` to action
 - Rename `source` to action source
-- Remove `FieldBuilder` and `FieldIndexBuilder`
+- Finalize item field for collection
+- Finalize fields and properties
+- Add `@canRead` and `@canMutate`
 - Always record previous id value and support modifying `@id` fields
-- Before delete and after delete callback
-- Can delete permission checker
-- Remove permission builder and permission
-- Add `@canUpdate`, `@canCreate`, `@canWrite`, `@canRead` and `@canDelete`
+- Add before delete and after delete callback to delete
+- Add `@canMutate` to delete
 - Rust entities for optional numbers
 - Rust entities for optional `Date`s
 - Rust entities for optional `DateTime`s
@@ -213,6 +222,8 @@
 #### 0.0.46
 - Relation onUpdate
 - Relation onDelete
+- Object assignment `copy` and `reference`
+- Move field's `copy` decorator to relation
 
 #### 0.0.47
 - Seed with datasets

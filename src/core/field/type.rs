@@ -6,7 +6,6 @@ use crate::core::field::Field;
 
 #[derive(Debug, Clone)]
 pub(crate) enum FieldType {
-    Undefined,
     #[cfg(feature = "data-source-mongodb")]
     ObjectId,
     Bool,
@@ -150,7 +149,6 @@ impl FieldType {
 
     pub(crate) fn filters(&self) -> &HashSet<&str> {
         match self {
-            FieldType::Undefined => panic!("Field type cannot be undefined."),
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => &DEFAULT_FILTERS,
             FieldType::Bool => &BOOL_FILTERS,
@@ -169,7 +167,6 @@ impl FieldType {
 
     pub(crate) fn filters_with_aggregates(&self) -> &HashSet<&str> {
         match self {
-            FieldType::Undefined => panic!("Field type cannot be undefined."),
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => &DEFAULT_FILTERS_WITH_AGGREGATE,
             FieldType::Bool => &BOOL_FILTERS,

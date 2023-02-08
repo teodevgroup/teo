@@ -1,4 +1,3 @@
-pub mod builder;
 pub mod save_session;
 
 use std::fs;
@@ -11,6 +10,7 @@ use regex::Regex;
 use sqlx::{AnyPool, Executor};
 use crate::core::model::Model;
 use url::Url;
+use crate::connectors::sql::schema::r#type::field::ToDatabaseType;
 use crate::connectors::sql::connector::save_session::SQLSaveSession;
 use crate::connectors::sql::execution::Execution;
 use crate::connectors::sql::migration::migrate::SQLMigration;
@@ -19,8 +19,10 @@ use crate::connectors::sql::stmts::SQL;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
 use crate::core::connector::{Connector, SaveSession};
+use crate::core::database::r#type::DatabaseType;
 use crate::core::env::Env;
 use crate::core::error::ActionError;
+use crate::core::field::r#type::FieldType;
 use crate::core::input::Input;
 use crate::core::result::ActionResult;
 use crate::prelude::{Graph, Object, Value};
@@ -28,12 +30,13 @@ use crate::teon;
 
 #[derive(Debug)]
 pub(crate) struct SQLConnector {
+    loaded: bool,
     dialect: SQLDialect,
     pool: AnyPool,
 }
 
 impl SQLConnector {
-    pub(crate) async fn new(dialect: SQLDialect, url: String, models: &Vec<Model>, reset_database: bool) -> Self {
+    pub(crate) async fn new(dialect: SQLDialect, url: String, reset_database: bool) -> Self {
         if dialect == SQLDialect::SQLite {
             let filename = &url[7..];
             let loc = PathBuf::from(filename);
@@ -48,9 +51,8 @@ impl SQLConnector {
                 let _ = fs::remove_file(absolute_location.clone());
                 fs::File::create(absolute_location).expect("SQLite database create failed.");
             }
-            let mut pool: AnyPool = AnyPool::connect(url.as_str()).await.unwrap();
-            SQLMigration::migrate(dialect, &mut pool, models).await;
-            Self { dialect, pool }
+            let pool: AnyPool = AnyPool::connect(url.as_str()).await.unwrap();
+            Self { loaded: false, dialect, pool }
         } else {
             let url_result = Url::parse(&url);
             if url_result.is_err() {
@@ -65,9 +67,8 @@ impl SQLConnector {
             }
             let mut pool: AnyPool = AnyPool::connect(url_without_db.as_str()).await.unwrap();
             SQLMigration::create_database_if_needed(dialect, &mut pool, &database_name, reset_database).await;
-            let mut pool: AnyPool = AnyPool::connect(url.as_str()).await.unwrap();
-            SQLMigration::migrate(dialect, &mut pool, models).await;
-            Self { dialect, pool }
+            let pool: AnyPool = AnyPool::connect(url.as_str()).await.unwrap();
+            Self { loaded: false, dialect, pool }
         }
     }
 
@@ -195,6 +196,25 @@ impl SQLConnector {
 
 #[async_trait]
 impl Connector for SQLConnector {
+    fn default_database_type(&self, field_type: &FieldType) -> DatabaseType {
+        field_type.to_database_type(self.dialect)
+    }
+
+    async fn is_loaded(&self) -> bool {
+        self.loaded
+    }
+
+    async fn load(&mut self, models: &Vec<Model>) -> ActionResult<()> {
+        Ok(())
+    }
+
+    async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> ActionResult<()> {
+        // if self.dialect != SQLDialect::SQLite {
+        //     SQLMigration::create_database_if_needed(dialect, &mut pool, &database_name, reset_database).await;
+        // }
+        SQLMigration::migrate(self.dialect, &mut self.pool, models).await;
+        Ok(())
+    }
 
     async fn save_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> ActionResult<()> {
         let is_new = object.inner.is_new.load(Ordering::SeqCst);

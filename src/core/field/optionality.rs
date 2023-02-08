@@ -1,11 +1,12 @@
 use crate::core::pipeline::Pipeline;
+use crate::prelude::Value;
 
 #[derive(Debug, Clone)]
 pub enum Optionality {
     Optional,
     Required,
-    PresentWith(Vec<String>),
-    PresentWithout(Vec<String>),
+    PresentWith(Vec<Value>),
+    PresentWithout(Vec<Value>),
     PresentIf(Pipeline),
 }
 

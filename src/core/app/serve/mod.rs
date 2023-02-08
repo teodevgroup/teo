@@ -10,10 +10,12 @@ use colored::Colorize;
 use futures_util::StreamExt;
 use key_path::{KeyPath, path};
 use serde_json::{json, Value as JsonValue};
-use crate::core::action::r#type::ActionType;
+use to_mut::ToMut;
+use crate::core::handler::Handler;
 use crate::core::app::conf::ServerConf;
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
+use crate::core::app::migrate::migrate;
 use self::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::env::Env;
 use crate::core::env::intent::Intent;
@@ -527,7 +529,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
         return ActionError::unexpected_input_value("This identity is not found.", path!["credentials", identity_key.unwrap()]).into();
     }
     let obj = obj_result.unwrap();
-    let auth_by_arg = by_field.auth_by_arg.as_ref().unwrap();
+    let auth_by_arg = by_field.identity_checker.as_ref().unwrap();
     let pipeline = auth_by_arg.as_pipeline().unwrap();
     let _action_by_input = by_value.unwrap();
     let ctx = Context::initial_state_with_object(obj.clone());
@@ -633,7 +635,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
             }
             let model_url_segment_name = path_components[0];
             let action_segment_name = path_components[2];
-            let action = ActionType::from_url_segment(action_segment_name);
+            let action = Handler::from_str(action_segment_name);
             let action = match action {
                 Some(a) => a,
                 None => {
@@ -683,7 +685,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
                 Ok(identity) => { identity },
                 Err(err) => return HttpResponse::Unauthorized().json(json!({"error": err }))
             };
-            let _action_def = model_def.get_action_def(action);
+            // let _action_def = model_def.get_action_def(action);
             let transformed_body = match Decoder::decode_action_arg(model_def, graph, action, &parsed_body) {
                 Ok(body) => body,
                 Err(err) => return err.into()
@@ -695,77 +697,77 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
             // };
             let source = Source::Identity(identity);
             match action {
-                ActionType::FindUnique => {
+                Handler::FindUnique => {
                     let result = handle_find_unique(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "FindUnique", model_def.name(), result.status().as_u16());
                     return result;
                 }
-                ActionType::FindFirst => {
+                Handler::FindFirst => {
                     let result = handle_find_first(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "FindFirst", model_def.name(), result.status().as_u16());
                     result
                 }
-                ActionType::FindMany => {
+                Handler::FindMany => {
                     let result = handle_find_many(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "FindMany", model_def.name(), result.status().as_u16());
                     result
                 }
-                ActionType::Create => {
+                Handler::Create => {
                     let result = handle_create(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "Create", model_def.name(), result.status().as_u16());
                     result
                 }
-                ActionType::Update => {
+                Handler::Update => {
                     let result = handle_update(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "Update", model_def.name(), result.status().as_u16());
                     result
                 }
-                ActionType::Upsert => {
+                Handler::Upsert => {
                     let result = handle_upsert(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "Upsert", model_def.name(), result.status().as_u16());
                     result
                 }
-                ActionType::Delete => {
+                Handler::Delete => {
                     let result = handle_delete(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "Delete", model_def.name(), result.status().as_u16());
                     result
                 }
-                ActionType::CreateMany => {
+                Handler::CreateMany => {
                     let result = handle_create_many(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "CreateMany", model_def.name(), result.status().as_u16());
                     result
                 }
-                ActionType::UpdateMany => {
+                Handler::UpdateMany => {
                     let result = handle_update_many(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "UpdateMany", model_def.name(), result.status().as_u16());
                     result
                 }
-                ActionType::DeleteMany => {
+                Handler::DeleteMany => {
                     let result = handle_delete_many(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "DeleteMany", model_def.name(), result.status().as_u16());
                     result
                 }
-                ActionType::Count => {
+                Handler::Count => {
                     let result = handle_count(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "Count", model_def.name(), result.status().as_u16());
                     result
                 }
-                ActionType::Aggregate => {
+                Handler::Aggregate => {
                     let result = handle_aggregate(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "Aggregate", model_def.name(), result.status().as_u16());
                     result
                 }
-                ActionType::GroupBy => {
+                Handler::GroupBy => {
                     let result = handle_group_by(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "GroupBy", model_def.name(), result.status().as_u16());
                     result
                 }
-                ActionType::SignIn => {
+                Handler::SignIn => {
                     let result = handle_sign_in(&graph, &transformed_body, model_def, conf).await;
                     log_request(start, "SignIn", model_def.name(), result.status().as_u16());
                     result
                 }
-                ActionType::Identity => {
+                Handler::Identity => {
                     let result = handle_identity(&graph, &transformed_body, model_def, conf, source.clone()).await;
                     log_request(start, "Identity", model_def.name(), result.status().as_u16());
                     result
@@ -791,7 +793,16 @@ async fn server_start_message(port: u16, environment_version: EnvironmentVersion
     Ok(())
 }
 
-pub(crate) async fn serve(graph: Graph, conf: ServerConf, environment_version: EnvironmentVersion, entrance: Entrance) -> Result<(), std::io::Error> {
+pub(crate) async fn serve(
+    graph: Graph,
+    conf: ServerConf,
+    environment_version: EnvironmentVersion,
+    entrance: Entrance,
+    no_migration: bool,
+) -> Result<(), std::io::Error> {
+    if !no_migration {
+        migrate(graph.to_mut(), false).await;
+    }
     let bind = conf.bind.clone();
     let port = bind.1;
     let server = HttpServer::new(move || {

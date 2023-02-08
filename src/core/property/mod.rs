@@ -1,17 +1,18 @@
+use std::sync::Arc;
+use crate::core::connector::Connector;
 use crate::core::database::r#type::DatabaseType;
 use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::FieldType;
 use crate::core::pipeline::Pipeline;
 
-pub mod builder;
-
+#[derive(Clone)]
 pub struct Property {
     pub(crate) name: String,
-    pub(crate) localized_name: String,
-    pub(crate) description: String,
+    pub(crate) localized_name: Option<String>,
+    pub(crate) description: Option<String>,
     pub(crate) optionality: Optionality,
-    pub(crate) field_type: FieldType,
-    pub(crate) database_type: DatabaseType,
+    pub(crate) field_type: Option<FieldType>,
+    pub(crate) database_type: Option<DatabaseType>,
     pub(crate) dependencies: Vec<String>,
     pub(crate) setter: Option<Pipeline>,
     pub(crate) getter: Option<Pipeline>,
@@ -21,11 +22,32 @@ pub struct Property {
 
 impl Property {
 
+    pub(crate) fn new(name: String) -> Self {
+        Self {
+            name,
+            localized_name: None,
+            description: None,
+            optionality: Optionality::Optional,
+            field_type: None,
+            database_type: None,
+            dependencies: vec![],
+            setter: None,
+            getter: None,
+            cached: false,
+            input_omissible: false,
+        }
+    }
+
     pub(crate) fn name(&self) -> &str {
         &self.name
     }
+
     pub(crate) fn r#type(&self) -> &FieldType {
-        &self.field_type
+        self.field_type.as_ref().unwrap()
+    }
+
+    pub(crate) fn database_type(&self) -> &DatabaseType {
+        self.database_type.as_ref().unwrap()
     }
 
     pub(crate) fn is_required(&self) -> bool {
@@ -36,4 +58,15 @@ impl Property {
         self.optionality.is_optional()
     }
 
+    pub(crate) fn finalize(&mut self, connector: Arc<dyn Connector>) {
+        self.database_type = Some(connector.default_database_type(self.r#type()));
+    }
+
+    pub(crate) fn set_required(&mut self) {
+        self.optionality = Optionality::Required;
+    }
+
+    pub(crate) fn set_optional(&mut self) {
+        self.optionality = Optionality::Optional;
+    }
 }

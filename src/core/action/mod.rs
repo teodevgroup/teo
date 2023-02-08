@@ -1,28 +1,19 @@
-use crate::core::object::Object;
-use crate::core::pipeline::context::Context;
-use crate::core::pipeline::Pipeline;
-use crate::prelude::Value;
+pub(crate) mod actual;
+pub(crate) mod intent;
+pub(crate) mod amount;
+pub(crate) mod source;
+pub(crate) mod position;
 
-pub mod r#type;
-pub mod builder;
+use self::actual::ActionActual;
+use self::intent::ActionIntent;
+use self::amount::ActionAmount;
+use self::source::ActionSource;
+use self::position::ActionPosition;
 
-#[derive(Clone)]
 pub(crate) struct Action {
-    transformers: Vec<Pipeline>,
-}
-
-impl Action {
-
-    pub(crate) fn new() -> Self {
-        Action { transformers: vec![] }
-    }
-
-    pub(crate) async fn transform(&self, value: &Value, _identity: Option<Object>) -> Value {
-        let value = value.clone();
-        let mut context = Context::initial_state_with_value(value.clone());
-        for transformer in self.transformers.iter() {
-            context = transformer.process(context.clone()).await;
-        }
-        context.value
-    }
+    intent: ActionIntent,
+    actual: ActionActual,
+    position: ActionPosition,
+    amount: ActionAmount,
+    source: ActionSource,
 }

@@ -17,7 +17,6 @@ impl BsonDecoder {
         }
         let path = path.as_ref();
         match r#type {
-            FieldType::Undefined => panic!("Field type can't be undefined."),
             FieldType::ObjectId => match bson_value.as_object_id() {
                 Some(oid) => Ok(Value::ObjectId(oid)),
                 None => Err(ActionError::record_decoding_error(model.name(), path, "object id")),

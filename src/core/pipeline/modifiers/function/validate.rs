@@ -59,7 +59,7 @@ impl<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync> Modifier for
         if validity.is_valid() {
             ctx
         } else {
-            ctx.invalid(validity.reason().unwrap())
+            ctx.invalid(validity.invalid_reason().unwrap())
         }
     }
 }

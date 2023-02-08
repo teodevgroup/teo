@@ -4,15 +4,15 @@ use once_cell::sync::Lazy;
 use crate::core::field::optionality::Optionality;
 use crate::core::relation::delete_rule::DeleteRule;
 
-pub mod builder;
+pub mod update_rule;
 pub mod delete_rule;
 pub mod disconnect_rule;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Relation {
     pub(self) name: String,
-    pub(self) localized_name: String,
-    pub(self) description: String,
+    pub(self) localized_name: Option<String>,
+    pub(self) description: Option<String>,
     pub(self) optionality: Optionality,
     pub(self) model: String,
     pub(self) through: Option<String>,
@@ -24,17 +24,33 @@ pub(crate) struct Relation {
 }
 
 impl Relation {
+
+    pub(crate) fn new(name: impl Into<String>) -> Self {
+        return Self {
+            name: name.into(),
+            localized_name: None,
+            description: None,
+            optionality: Optionality::Required,
+            model: "".into(),
+            through: None,
+            is_vec: false,
+            fields: Vec::new(),
+            references: Vec::new(),
+            delete_rule: DeleteRule::Default,
+            has_foreign_key: false,
+        }
+    }
     
     pub(crate) fn name(&self) -> &str {
         &self.name
     }
 
     pub(crate) fn localized_name(&self) -> &str {
-        &self.localized_name
+        self.localized_name.as_ref().unwrap()
     }
 
     pub(crate) fn description(&self) -> &str {
-        &self.description
+        self.description.as_ref().unwrap()
     }
 
     pub(crate) fn optionality(&self) -> &Optionality { &self.optionality }
@@ -51,6 +67,10 @@ impl Relation {
         &self.model
     }
 
+    pub(crate) fn set_through(&mut self, through: String) {
+        self.through = Some(through);
+    }
+
     pub(crate) fn through(&self) -> Option<&str> {
         self.through.as_deref()
     }
@@ -59,16 +79,32 @@ impl Relation {
         self.is_vec
     }
 
+    pub(crate) fn set_fields(&mut self, fields: Vec<String>) {
+        self.fields = fields;
+    }
+
     pub(crate) fn fields(&self) -> &Vec<String> {
         &self.fields
+    }
+
+    pub(crate) fn set_references(&mut self, references: Vec<String>) {
+        self.references = references;
     }
 
     pub(crate) fn references(&self) -> &Vec<String> {
         &self.references
     }
 
+    pub(crate) fn set_local(&mut self, local: String) {
+        self.fields = vec![local];
+    }
+
     pub(crate) fn local(&self) -> &str {
         self.fields.get(0).unwrap()
+    }
+
+    pub(crate) fn set_foreign(&mut self, foreign: String) {
+        self.references = vec![foreign];
     }
 
     pub(crate) fn foreign(&self) -> &str {
@@ -102,6 +138,22 @@ impl Relation {
             &OBJECT_FILTERS
         }
     }
+
+    pub(crate) fn set_required(&mut self) {
+        self.optionality = Optionality::Required;
+    }
+
+    pub(crate) fn set_optional(&mut self) {
+        self.optionality = Optionality::Optional;
+    }
+
+    pub(crate) fn set_is_vec(&mut self, is_vec: bool) {
+        self.is_vec = is_vec
+    }
+
+    pub(crate) fn set_model(&mut self, model: String) {
+        self.model = model;
+    }
 }
 
 pub(crate) struct RelationIter<'a> {
@@ -129,3 +181,7 @@ static VEC_FILTERS: Lazy<HashSet<&str>> = Lazy::new(|| {
 static OBJECT_FILTERS: Lazy<HashSet<&str>> = Lazy::new(|| {
     hashset!{"is", "isNot"}
 });
+
+// has_foreign_key: if self.through.is_some() { false } else {
+// self.fields.iter().find(|name| fields.get(name.as_str()).unwrap().foreign_key).is_some()
+// }

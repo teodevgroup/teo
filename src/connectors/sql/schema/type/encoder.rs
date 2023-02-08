@@ -6,7 +6,6 @@ use crate::core::database::r#type::DatabaseType;
 impl ToSQLString for DatabaseType {
     fn to_string(&self, dialect: SQLDialect) -> String {
         match self {
-            DatabaseType::Undefined => panic!("Unhandled undefined database type."),
             DatabaseType::ObjectId => panic!(),
             DatabaseType::Bool => if dialect == SQLDialect::MySQL {
                 "TINYINT(1)".to_string()

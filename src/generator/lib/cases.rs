@@ -41,10 +41,10 @@ pub(crate) fn field_localized_name_word_case(field: &Field) -> String {
 }
 
 pub(crate) fn field_description(field: &Field) -> String {
-    if field.description().is_empty() {
+    if field.description().is_none() {
         "This field doesn't have a description.".to_owned()
     } else {
-        field.description().to_owned()
+        field.description().unwrap().to_owned()
     }
 }
 

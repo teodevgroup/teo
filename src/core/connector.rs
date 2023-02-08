@@ -12,7 +12,26 @@ use crate::core::result::ActionResult;
 use crate::prelude::Value;
 
 #[async_trait]
+pub(crate) trait SaveSession: Debug + Send + Sync { }
+
+#[async_trait]
 pub(crate) trait Connector: Debug + Send + Sync {
+
+    // Query database types
+
+    fn default_database_type(&self, field_type: &FieldType) -> DatabaseType;
+
+    // Load
+
+    async fn is_loaded(&self) -> bool;
+
+    async fn load(&mut self, models: &Vec<Model>) -> ActionResult<()>;
+
+    // Migration
+
+    async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> ActionResult<()>;
+
+    // Object manipulation
 
     async fn save_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()>;
 
@@ -28,16 +47,7 @@ pub(crate) trait Connector: Debug + Send + Sync {
 
     async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError>;
 
+    // Save session
+
     fn new_save_session(&self) -> Arc<dyn SaveSession>;
 }
-
-#[async_trait]
-pub(crate) trait ConnectorBuilder: Debug + Send + Sync {
-
-    fn default_database_type(&self, field_type: &FieldType) -> DatabaseType;
-
-    async fn build_connector(&self, models: &Vec<Model>, reset_database: bool) -> Box<dyn Connector>;
-}
-
-#[async_trait]
-pub(crate) trait SaveSession: Debug + Send + Sync { }

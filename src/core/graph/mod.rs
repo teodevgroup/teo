@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use std::future::Future;
-
 use std::sync::Arc;
 use key_path::KeyPath;
-
+use to_mut_proc_macro::ToMut;
+use to_mut::ToMut;
 use crate::core::connector::Connector;
 use crate::core::env::Env;
 use crate::core::model::Model;
@@ -16,7 +16,7 @@ use crate::prelude::Value;
 
 pub mod builder;
 
-#[derive(Clone)]
+#[derive(Clone, ToMut)]
 pub struct Graph {
     inner: Arc<GraphInner>
 }
@@ -26,7 +26,7 @@ pub(crate) struct GraphInner {
     pub(crate) models_vec: Vec<Model>,
     pub(crate) models_map: HashMap<String, Model>,
     pub(crate) url_segment_name_map: HashMap<String, String>,
-    pub(crate) connector: Option<Box<dyn Connector>>,
+    pub(crate) connector: Option<Arc<dyn Connector>>,
 }
 
 static mut CURRENT: Option<&'static Graph> = None;
@@ -143,7 +143,20 @@ impl Graph {
         }
     }
 
-
+    pub(crate) fn connector_mut(&self) -> &mut dyn Connector {
+        match &self.inner.connector {
+            Some(c) => {
+                let r = c.as_ref();
+                let result = unsafe {
+                    let d: * const dyn Connector = r;
+                    let e: * mut dyn Connector = d as *mut dyn Connector;
+                    &mut *e
+                };
+                result
+            }
+            None => { panic!() }
+        }
+    }
 
     pub(crate) fn model(&self, name: &str) -> Option<&Model> {
         self.inner.models_map.get(name)

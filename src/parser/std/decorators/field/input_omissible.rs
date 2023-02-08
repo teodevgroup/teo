@@ -1,6 +1,6 @@
-use crate::core::field::builder::FieldBuilder;
+use crate::core::field::Field;
 use crate::parser::ast::argument::Argument;
 
-pub(crate) fn input_omissible_decorator(_args: Vec<Argument>, field: &mut FieldBuilder) {
-    field.input_omissible();
+pub(crate) fn input_omissible_decorator(_args: Vec<Argument>, field: &mut Field) {
+    field.input_omissible = true;
 }

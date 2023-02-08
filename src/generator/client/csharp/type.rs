@@ -44,7 +44,6 @@ fn array_prefix(t: &str) -> &str {
 impl ToCSharpType for FieldType {
     fn to_csharp_type(&self, optional: bool) -> String {
         let base: String = match self {
-            FieldType::Undefined => panic!(),
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => "string".to_string(),
             FieldType::String => "string".to_string(),
@@ -65,7 +64,7 @@ impl ToCSharpType for FieldType {
             FieldType::Date => "DateOnly".to_string(),
             FieldType::DateTime => "DateTime".to_string(),
             FieldType::Enum(name) => name.to_string(),
-            FieldType::Vec(internal) => internal.field_type.to_csharp_type(internal.optionality.is_optional()) + "[]",
+            FieldType::Vec(internal) => internal.field_type().to_csharp_type(internal.optionality.is_optional()) + "[]",
             FieldType::HashMap(_) => panic!(),
             FieldType::BTreeMap(_) => panic!(),
             FieldType::Object(name) => name.to_string(),
@@ -81,7 +80,6 @@ impl ToCSharpType for FieldType {
         let nullable = nullable_if_optional(optional);
         let base_type = to_optional(&self.to_csharp_type(false), optional);
         match self {
-            FieldType::Undefined => panic!(),
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => one_of(base_type, format!("ObjectId{nullable}Filter")),
             FieldType::String => one_of(base_type, format!("String{nullable}Filter")),
@@ -97,7 +95,7 @@ impl ToCSharpType for FieldType {
                 one_of(base_type, format!("Enum{nullable}Filter<{enum_type}>"))
             },
             FieldType::Vec(internal) => {
-                let internal_type = internal.field_type.to_csharp_type(false);
+                let internal_type = internal.field_type().to_csharp_type(false);
                 let prefix = array_prefix(&internal_type);
                 one_of(base_type, format!("{prefix}Array{nullable}Filter<{internal_type}>"))
             },
@@ -127,7 +125,6 @@ impl ToCSharpType for FieldType {
     fn to_csharp_update_operation_input(&self, optional: bool) -> String {
         let prefix = if optional { "Nullable" } else { "" };
         match self {
-            FieldType::Undefined => panic!(),
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => format!("{prefix}ObjectIdFieldUpdateOperationsInput"),
             FieldType::String => format!("{prefix}StringFieldUpdateOperationsInput"),
@@ -143,7 +140,7 @@ impl ToCSharpType for FieldType {
                 format!("{prefix}EnumFieldUpdateOperationsInput<{enum_type}>")
             },
             FieldType::Vec(internal) => {
-                let internal_type = internal.field_type.to_csharp_type(false);
+                let internal_type = internal.field_type().to_csharp_type(false);
                 let arr_prefix = array_prefix(&internal_type);
                 format!("{prefix}{arr_prefix}ArrayFieldUpdateOperationsInput<{internal_type}>")
             },

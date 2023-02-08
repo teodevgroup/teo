@@ -12,7 +12,6 @@ pub(crate) trait ToTypeScriptType {
 impl ToTypeScriptType for FieldType {
     fn to_typescript_type(&self, optional: bool) -> String {
         let base: String = match self {
-            FieldType::Undefined => panic!(),
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => "string".to_string(),
             FieldType::String | FieldType::Date | FieldType::DateTime => "string".to_string(),
@@ -20,7 +19,7 @@ impl ToTypeScriptType for FieldType {
             FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number".to_string(),
             FieldType::Decimal => "string".to_string(),
             FieldType::Enum(name) => name.to_string(),
-            FieldType::Vec(internal) => internal.field_type.to_typescript_type(internal.optionality.is_optional()) + "[]",
+            FieldType::Vec(internal) => internal.field_type().to_typescript_type(internal.optionality.is_optional()) + "[]",
             FieldType::HashMap(_) => panic!(),
             FieldType::BTreeMap(_) => panic!(),
             FieldType::Object(name) => name.to_string(),
@@ -35,7 +34,6 @@ impl ToTypeScriptType for FieldType {
     fn to_typescript_filter_type(&self, optional: bool) -> String {
         let mut with_generic = false;
         let base: String = match self {
-            FieldType::Undefined => panic!(),
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => "string | ObjectId".to_string(),
             FieldType::String => "string | String".to_string(),
@@ -54,7 +52,7 @@ impl ToTypeScriptType for FieldType {
             },
             FieldType::Vec(internal) => {
                 with_generic = true;
-                let create_type = internal.field_type.to_typescript_create_input_type(false);
+                let create_type = internal.field_type().to_typescript_create_input_type(false);
                 if optional {
                     format!("{create_type}[] | ArrayNullableFilter<{create_type}> | null")
                 } else {
@@ -78,7 +76,6 @@ impl ToTypeScriptType for FieldType {
 
     fn to_typescript_create_input_type(&self, optional: bool) -> String {
         let base: String = match self {
-            FieldType::Undefined => panic!(),
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => "string".to_string(),
             FieldType::String | FieldType::Decimal => "string".to_string(),
@@ -86,7 +83,7 @@ impl ToTypeScriptType for FieldType {
             FieldType::Bool => "boolean".to_string(),
             FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number".to_string(),
             FieldType::Enum(name) => name.to_string(),
-            FieldType::Vec(internal) => internal.field_type.to_typescript_type(internal.optionality.is_optional()) + "[]",
+            FieldType::Vec(internal) => internal.field_type().to_typescript_type(internal.optionality.is_optional()) + "[]",
             FieldType::HashMap(_) => panic!(),
             FieldType::BTreeMap(_) => panic!(),
             FieldType::Object(name) => name.to_string(),
@@ -107,7 +104,6 @@ impl ToTypeScriptType for FieldType {
     fn to_typescript_update_operation_input(&self, optional: bool) -> String {
         let mut generic = "".to_owned();
         let base: &str = match self {
-            FieldType::Undefined => panic!(),
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => "ObjectId",
             FieldType::String => "String",
@@ -121,7 +117,7 @@ impl ToTypeScriptType for FieldType {
                 "Enum"
             },
             FieldType::Vec(inner) => {
-                let create_type = inner.field_type.to_typescript_create_input_type(false);
+                let create_type = inner.field_type().to_typescript_create_input_type(false);
                 generic = format!("<{create_type}>");
                 "Array"
             },

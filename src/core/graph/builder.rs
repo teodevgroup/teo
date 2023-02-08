@@ -1,20 +1,16 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-
-use crate::core::data_source::builder::DataSourceBuilder;
+use crate::core::connector::Connector;
 use crate::core::r#enum::builder::EnumBuilder;
-use crate::core::connector::{ConnectorBuilder};
 use crate::core::graph::GraphInner;
 use crate::core::model::builder::ModelBuilder;
 use crate::core::model::Model;
-
 use crate::core::r#enum::Enum;
 use crate::prelude::Graph;
 
 pub struct GraphBuilder {
     pub(crate) enum_builders: HashMap<String, EnumBuilder>,
     pub(crate) model_builders: Vec<ModelBuilder>,
-    pub(crate) connector_builder: Option<Box<dyn ConnectorBuilder>>,
     pub(crate) reset_database: bool,
 }
 
@@ -24,7 +20,6 @@ impl GraphBuilder {
         GraphBuilder {
             enum_builders: HashMap::new(),
             model_builders: Vec::new(),
-            connector_builder: None,
             reset_database: false,
         }
     }
@@ -38,7 +33,7 @@ impl GraphBuilder {
     }
 
     pub fn model<F: Fn(&mut ModelBuilder)>(&mut self, name: impl Into<String>, build: F) -> &mut Self {
-        let mut model: ModelBuilder = ModelBuilder::new(name, self.connector_builder());
+        let mut model: ModelBuilder = ModelBuilder::new(name);
         build(&mut model);
         self.model_builders.push(model);
         self
@@ -49,17 +44,6 @@ impl GraphBuilder {
         self
     }
 
-    pub fn data_source(&mut self) -> DataSourceBuilder {
-        DataSourceBuilder { graph_builder: self }
-    }
-
-    pub(crate) fn connector_builder(&self) -> &Box<dyn ConnectorBuilder> {
-        match &self.connector_builder {
-            Some(connector_builder) => connector_builder,
-            None => panic!("Graph doesn't have a database connector.")
-        }
-    }
-
     pub(crate) fn build_enums(&self) -> HashMap<String, Enum> {
         let mut retval: HashMap<String, Enum> = HashMap::new();
         for (k, v) in &self.enum_builders {
@@ -68,7 +52,7 @@ impl GraphBuilder {
         retval
     }
 
-    pub(crate) async fn build(&self) -> Graph {
+    pub(crate) async fn build(&self, connector: Arc<dyn Connector>) -> Graph {
         let mut graph = GraphInner {
             enums: self.build_enums(),
             models_vec: Vec::new(),
@@ -76,7 +60,7 @@ impl GraphBuilder {
             url_segment_name_map: HashMap::new(),
             connector: None,
         };
-        graph.models_vec = self.model_builders.iter().map(|mb| { mb.build(&self.connector_builder()) }).collect();
+        graph.models_vec = self.model_builders.iter().map(|mb| { mb.build(connector.clone()) }).collect();
         let mut models_map: HashMap<String, Model> = HashMap::new();
         let mut url_segment_name_map: HashMap<String, String> = HashMap::new();
         for model in graph.models_vec.iter() {
@@ -85,7 +69,14 @@ impl GraphBuilder {
         }
         graph.models_map = models_map;
         graph.url_segment_name_map = url_segment_name_map;
-        graph.connector = Some(self.connector_builder().build_connector(&graph.models_vec, self.reset_database).await);
+        let c = connector.as_ref();
+        let connector_mut = unsafe {
+            let d: * const dyn Connector = c;
+            let e: * mut dyn Connector = d as *mut dyn Connector;
+            &mut *e
+        };
+        let _ = connector_mut.load(&graph.models_vec).await;
+        graph.connector = Some(connector.clone());
         Graph { inner: Arc::new(graph) }
     }
 }

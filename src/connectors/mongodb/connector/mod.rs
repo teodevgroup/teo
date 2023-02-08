@@ -1,4 +1,3 @@
-pub mod builder;
 pub mod save_session;
 
 use std::collections::{HashMap};
@@ -14,7 +13,6 @@ use mongodb::{options::ClientOptions, Client, Database, Collection, IndexModel};
 use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
 use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use regex::Regex;
-
 use crate::connectors::mongodb::aggregation::Aggregation;
 use crate::connectors::mongodb::bson::decoder::BsonDecoder;
 use crate::connectors::mongodb::connector::save_session::MongoDBSaveSession;
@@ -27,22 +25,24 @@ use crate::core::graph::Graph;
 use crate::core::model::{Model};
 use crate::core::model::index::{ModelIndex, ModelIndexType};
 use crate::core::connector::SaveSession;
+use crate::core::database::r#type::DatabaseType;
 use crate::core::teon::Value;
 use crate::core::error::ActionError;
+use crate::core::field::r#type::FieldType;
 use crate::core::input::Input;
 use crate::core::result::ActionResult;
-
 use crate::teon;
 
 #[derive(Debug)]
 pub struct MongoDBConnector {
+    loaded: bool,
     client: Client,
     database: Database,
     collections: HashMap<String, Collection<Document>>
 }
 
 impl MongoDBConnector {
-    pub(crate) async fn new(url: String, models: &Vec<Model>, reset_database: bool) -> MongoDBConnector {
+    pub(crate) async fn new(url: String) -> MongoDBConnector {
         let options = match ClientOptions::parse(url).await {
             Ok(options) => options,
             Err(_) => panic!("MongoDB url is invalid.")
@@ -60,77 +60,11 @@ impl MongoDBConnector {
             Err(_) => panic!("Cannot connect to MongoDB database."),
         }
         let database = client.database(&database_name);
-        if reset_database {
-            let _ = database.drop(None).await;
-        }
-        let mut collections: HashMap<String, Collection<Document>> = HashMap::new();
-        for model in models {
-            let name = model.name();
-            let collection: Collection<Document> = database.collection(model.table_name());
-            let mut reviewed_names: Vec<String> = Vec::new();
-            let cursor_result = collection.list_indexes(None).await;
-            if cursor_result.is_ok() {
-                let mut cursor = cursor_result.unwrap();
-                while let Some(Ok(index)) = cursor.next().await {
-                    if index.keys == doc!{"_id": 1} {
-                        continue
-                    }
-                    let name = (&index).options.as_ref().unwrap().name.as_ref().unwrap();
-                    let result = model.indices().iter().find(|i| i.name() == name);
-                    if result.is_none() {
-                        // not in our model definition, but in the database
-                        // drop this index
-                        let _ = collection.drop_index(name, None).await.unwrap();
-                    } else {
-                        let result = result.unwrap();
-                        let our_format_index: ModelIndex = (&index).into();
-                        if result != &our_format_index {
-                            // alter this index
-                            // drop first
-                            let _ = collection.drop_index(name, None).await.unwrap();
-                            // create index
-                            let index_options = IndexOptions::builder()
-                                .name(result.name().to_owned())
-                                .unique(result.r#type() == ModelIndexType::Unique || result.r#type() == ModelIndexType::Primary)
-                                .sparse(true)
-                                .build();
-                            let mut keys = doc!{};
-                            for item in result.items() {
-                                let field = model.field(item.field_name()).unwrap();
-                                let column_name = field.column_name();
-                                keys.insert(column_name, if item.sort() == Sort::Asc { 1 } else { -1 });
-                            }
-                            let index_model = IndexModel::builder().keys(keys).options(index_options).build();
-                            let _result = collection.create_index(index_model, None).await;
-                        }
-                    }
-                    reviewed_names.push(name.clone());
-                }
-            }
-            for index in model.indices() {
-                if !reviewed_names.contains(&index.name().to_string()) {
-                    // create this index
-                    let index_options = IndexOptions::builder()
-                        .name(index.name().to_owned())
-                        .unique(index.r#type() == ModelIndexType::Unique || index.r#type() == ModelIndexType::Primary)
-                        .sparse(true)
-                        .build();
-                    let mut keys = doc!{};
-                    for item in index.items() {
-                        let field = model.field(item.field_name()).unwrap();
-                        let column_name = field.column_name();
-                        keys.insert(column_name, if item.sort() == Sort::Asc { 1 } else { -1 });
-                    }
-                    let index_model = IndexModel::builder().keys(keys).options(index_options).build();
-                    let _result = collection.create_index(index_model, None).await;
-                }
-            }
-            collections.insert(name.to_owned(), collection);
-        }
         MongoDBConnector {
+            loaded: false,
             client,
             database,
-            collections
+            collections: HashMap::new()
         }
     }
 
@@ -141,7 +75,7 @@ impl MongoDBConnector {
                 // field
                 let object_field = object_field.unwrap();
                 let object_key = &object_field.name;
-                let field_type = &object_field.field_type;
+                let field_type = object_field.field_type();
                 let bson_value = document.get(key).unwrap();
                 let value_result = BsonDecoder::decode(object.model(), object.graph(), field_type, object_field.is_optional(), bson_value, path![]);
                 match value_result {
@@ -406,6 +340,116 @@ impl MongoDBConnector {
 
 #[async_trait]
 impl Connector for MongoDBConnector {
+    fn default_database_type(&self, field_type: &FieldType) -> DatabaseType {
+        match field_type {
+            FieldType::ObjectId => DatabaseType::ObjectId,
+            FieldType::Bool => DatabaseType::Bool,
+            FieldType::I8 => DatabaseType::Int32,
+            FieldType::I16 => DatabaseType::Int32,
+            FieldType::I32 => DatabaseType::Int32,
+            FieldType::I64 => DatabaseType::Int64,
+            FieldType::I128 => DatabaseType::Int64,
+            FieldType::U8 => DatabaseType::Int32,
+            FieldType::U16 => DatabaseType::Int32,
+            FieldType::U32 => DatabaseType::Int64,
+            FieldType::U64 => DatabaseType::Int64,
+            FieldType::U128 => DatabaseType::Int64,
+            FieldType::F32 => DatabaseType::Double { m: None, d: None },
+            FieldType::F64 => DatabaseType::Double { m: None, d: None },
+            FieldType::Decimal => DatabaseType::Decimal { m: None, d: None },
+            FieldType::String => DatabaseType::String,
+            FieldType::Date => DatabaseType::DateTime(3),
+            FieldType::DateTime => DatabaseType::DateTime(3),
+            FieldType::Enum(_) => DatabaseType::String,
+            FieldType::Vec(_) => panic!(""),
+            FieldType::HashMap(_) => panic!(""),
+            FieldType::BTreeMap(_) => panic!(""),
+            FieldType::Object(_) => panic!(""),
+        }
+    }
+
+    async fn is_loaded(&self) -> bool {
+        self.loaded
+    }
+
+    async fn load(&mut self, models: &Vec<Model>) -> ActionResult<()> {
+        let mut collections: HashMap<String, Collection<Document>> = HashMap::new();
+        for model in models {
+            let collection: Collection<Document> = self.database.collection(model.table_name());
+            collections.insert(model.name().to_owned(), collection);
+        }
+        self.collections = collections;
+        Ok(())
+    }
+
+    async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> ActionResult<()> {
+        if reset_database {
+            let _ = self.database.drop(None).await;
+        }
+        for model in models {
+            let name = model.name();
+            let collection = self.collections.get(name).unwrap();
+            let mut reviewed_names: Vec<String> = Vec::new();
+            let cursor_result = collection.list_indexes(None).await;
+            if cursor_result.is_ok() {
+                let mut cursor = cursor_result.unwrap();
+                while let Some(Ok(index)) = cursor.next().await {
+                    if index.keys == doc!{"_id": 1} {
+                        continue
+                    }
+                    let name = (&index).options.as_ref().unwrap().name.as_ref().unwrap();
+                    let result = model.indices().iter().find(|i| i.name() == name);
+                    if result.is_none() {
+                        // not in our model definition, but in the database
+                        // drop this index
+                        let _ = collection.drop_index(name, None).await.unwrap();
+                    } else {
+                        let result = result.unwrap();
+                        let our_format_index: ModelIndex = (&index).into();
+                        if result != &our_format_index {
+                            // alter this index
+                            // drop first
+                            let _ = collection.drop_index(name, None).await.unwrap();
+                            // create index
+                            let index_options = IndexOptions::builder()
+                                .name(result.name().to_owned())
+                                .unique(result.r#type() == ModelIndexType::Unique || result.r#type() == ModelIndexType::Primary)
+                                .sparse(true)
+                                .build();
+                            let mut keys = doc!{};
+                            for item in result.items() {
+                                let field = model.field(item.field_name()).unwrap();
+                                let column_name = field.column_name();
+                                keys.insert(column_name, if item.sort() == Sort::Asc { 1 } else { -1 });
+                            }
+                            let index_model = IndexModel::builder().keys(keys).options(index_options).build();
+                            let _result = collection.create_index(index_model, None).await;
+                        }
+                    }
+                    reviewed_names.push(name.clone());
+                }
+            }
+            for index in model.indices() {
+                if !reviewed_names.contains(&index.name().to_string()) {
+                    // create this index
+                    let index_options = IndexOptions::builder()
+                        .name(index.name().to_owned())
+                        .unique(index.r#type() == ModelIndexType::Unique || index.r#type() == ModelIndexType::Primary)
+                        .sparse(true)
+                        .build();
+                    let mut keys = doc!{};
+                    for item in index.items() {
+                        let field = model.field(item.field_name()).unwrap();
+                        let column_name = field.column_name();
+                        keys.insert(column_name, if item.sort() == Sort::Asc { 1 } else { -1 });
+                    }
+                    let index_model = IndexModel::builder().keys(keys).options(index_options).build();
+                    let _result = collection.create_index(index_model, None).await;
+                }
+            }
+        }
+        Ok(())
+    }
 
     async fn save_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> ActionResult<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {

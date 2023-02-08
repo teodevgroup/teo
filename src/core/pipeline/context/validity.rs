@@ -10,11 +10,11 @@ impl Validity {
     pub(crate) fn is_valid(&self) -> bool {
         match self {
             Valid => true,
-            _ => false
+            _ => false,
         }
     }
 
-    pub(crate) fn reason(&self) -> Option<&str> {
+    pub(crate) fn invalid_reason(&self) -> Option<&str> {
         match self {
             Invalid(reason) => Some(&reason),
             _ => None,
@@ -38,7 +38,7 @@ impl From<bool> for Validity {
     fn from(valid: bool) -> Self {
         match valid {
             true => Valid,
-            false => Invalid("Value is invalid.".to_owned())
+            false => Invalid("Invalid.".to_owned())
         }
     }
 }

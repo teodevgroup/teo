@@ -1,17 +1,11 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use inflector::Inflector;
-use crate::core::action::Action;
-use crate::core::action::builder::ActionsBuilder;
-use crate::core::action::r#type::ActionType;
-use crate::core::connector::{ConnectorBuilder};
+use crate::core::handler::Handler;
+use crate::core::connector::Connector;
 use crate::core::field::*;
-use crate::core::field::builder::FieldBuilder;
-use crate::core::permission::builder::PermissionBuilder;
-use crate::core::relation::builder::RelationBuilder;
+use crate::core::field::Field;
 use crate::core::relation::Relation;
-
-use crate::core::property::builder::PropertyBuilder;
 use crate::core::property::Property;
 use crate::core::relation::delete_rule::DeleteRule;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
@@ -28,23 +22,20 @@ pub struct ModelBuilder {
     pub(crate) identity: bool,
     pub(crate) internal: bool,
     pub(crate) r#virtual: bool,
-    pub(crate) field_builders: Vec<FieldBuilder>,
-    pub(crate) relation_builders: Vec<RelationBuilder>,
-    pub(crate) property_builders: Vec<PropertyBuilder>,
-    pub(crate) permission: Option<PermissionBuilder>,
+    pub(crate) fields: Vec<Field>,
+    pub(crate) relations: Vec<Relation>,
+    pub(crate) properties: Vec<Property>,
     pub(crate) primary: Option<ModelIndex>,
     pub(crate) indices: Vec<ModelIndex>,
     pub(crate) before_save_pipeline: Pipeline,
     pub(crate) after_save_pipeline: Pipeline,
     pub(crate) before_delete_pipeline: Pipeline,
     pub(crate) after_delete_pipeline: Pipeline,
-    pub(crate) actions_builder: ActionsBuilder,
-    connector_builder: * const Box<dyn ConnectorBuilder>,
 }
 
 impl ModelBuilder {
 
-    pub(crate) fn new(name: impl Into<String>, connector_builder: &Box<dyn ConnectorBuilder>) -> Self {
+    pub(crate) fn new(name: impl Into<String>) -> Self {
         Self {
             name: name.into(),
             table_name: "".to_string(),
@@ -54,24 +45,15 @@ impl ModelBuilder {
             identity: false,
             internal: false,
             r#virtual: false,
-            field_builders: vec![],
-            relation_builders: vec![],
-            property_builders: vec![],
-            permission: None,
+            fields: vec![],
+            relations: vec![],
+            properties: vec![],
             primary: None,
             indices: Vec::new(),
             before_save_pipeline: Pipeline::new(),
             after_save_pipeline: Pipeline::new(),
             before_delete_pipeline: Pipeline::new(),
             after_delete_pipeline: Pipeline::new(),
-            actions_builder: ActionsBuilder::new(),
-            connector_builder
-        }
-    }
-
-    fn connector_builder(&self) -> &Box<dyn ConnectorBuilder> {
-        unsafe {
-            &*self.connector_builder
         }
     }
 
@@ -100,24 +82,18 @@ impl ModelBuilder {
         self
     }
 
-    pub fn field<F: Fn(&mut FieldBuilder)>(&mut self, name: impl Into<String>, build: F) -> &mut Self {
-        let mut f = FieldBuilder::new(name, self.connector_builder());
-        build(&mut f);
-        self.field_builders.push(f);
+    pub(crate) fn field(&mut self, field: Field) -> &mut Self {
+        self.fields.push(field);
         self
     }
 
-    pub fn relation<F: Fn(&mut RelationBuilder)>(&mut self, name: impl Into<String>, build: F) -> &mut Self {
-        let mut f = RelationBuilder::new(name, self.connector_builder());
-        build(&mut f);
-        self.relation_builders.push(f);
+    pub(crate) fn relation(&mut self, relation: Relation) -> &mut Self {
+        self.relations.push(relation);
         self
     }
 
-    pub fn property<F: Fn(&mut PropertyBuilder)>(&mut self, name: impl Into<String>, build: F) -> &mut Self {
-        let mut p = PropertyBuilder::new(name.into(), self.connector_builder());
-        build(&mut p);
-        self.property_builders.push(p);
+    pub(crate) fn property(&mut self, property: Property) -> &mut Self {
+        self.properties.push(property);
         self
     }
 
@@ -128,13 +104,6 @@ impl ModelBuilder {
 
     pub fn r#virtual(&mut self) -> &mut Self {
         self.r#virtual = true;
-        self
-    }
-
-    pub fn permissions<F: Fn(&mut PermissionBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut permission_builder = PermissionBuilder::new();
-        build(&mut permission_builder);
-        self.permission = Some(permission_builder);
         self
     }
 
@@ -193,14 +162,9 @@ impl ModelBuilder {
         self
     }
 
-    pub fn actions<F: Fn(&mut ActionsBuilder)>(&mut self, build: F) -> &mut Self {
-        build(&mut self.actions_builder);
-        self
-    }
-
-    pub(crate) fn build(&self, connector_builder: &Box<dyn ConnectorBuilder>) -> Model {
-        let fields_vec: Vec<Arc<Field>> = self.field_builders.iter().map(|fb| { Arc::new(fb.build(connector_builder)) }).collect();
-        let properties_vec: Vec<Arc<Property>> = self.property_builders.iter().map(|pb| { Arc::new(pb.build(connector_builder)) }).collect();
+    pub(crate) fn build(&self, connector: Arc<dyn Connector>) -> Model {
+        let fields_vec: Vec<Arc<Field>> = self.fields.clone().iter_mut().map(|fb| { Arc::new({ fb.finalize(connector.clone()); fb.clone()}) }).collect();
+        let properties_vec: Vec<Arc<Property>> = self.properties.clone().iter_mut().map(|pb| { Arc::new({ pb.finalize(connector.clone()); pb.clone() }) }).collect();
         let mut fields_map: HashMap<String, Arc<Field>> = HashMap::new();
         let mut properties_map: HashMap<String, Arc<Property>> = HashMap::new();
         let mut primary = self.primary.clone();
@@ -213,8 +177,8 @@ impl ModelBuilder {
                 ]));
                 indices.push(primary.as_ref().unwrap().clone());
             }
-            if field.index != FieldIndex::NoIndex {
-                match &field.index {
+            if field.index.is_some() {
+                match &field.index.as_ref().unwrap() {
                     FieldIndex::Index(settings) => {
                         indices.push(ModelIndex::new(ModelIndexType::Index, if settings.name.is_some() { settings.name.as_ref().unwrap().clone() } else { field.name.clone() }, vec![
                             ModelIndexItem::new(field.name(), settings.sort, settings.length)
@@ -226,12 +190,11 @@ impl ModelBuilder {
                             ModelIndexItem::new(field.name(), settings.sort, settings.length)
                         ]));
                     }
-                    _ => { }
                 }
             }
         }
         let mut relations_map: HashMap<String, Arc<Relation>> = HashMap::new();
-        let relations_vec: Vec<Arc<Relation>> = self.relation_builders.iter().map(|rb| { Arc::new(rb.build(connector_builder, &fields_map )) }).collect();
+        let relations_vec: Vec<Arc<Relation>> = self.relations.iter().map(|rb| { Arc::new(rb.clone()) }).collect();
         for relation in relations_vec.iter() {
             relations_map.insert(relation.name().to_owned(), relation.clone());
         }
@@ -254,8 +217,6 @@ impl ModelBuilder {
             identity: self.identity,
             r#virtual: self.r#virtual,
             actions: self.figure_out_actions(),
-            action_defs: self.figure_out_action_defs(),
-            permission: if let Some(builder) = &self.permission { Some(builder.build()) } else { None },
             fields_vec,
             fields_map,
             relations_map,
@@ -268,6 +229,8 @@ impl ModelBuilder {
             after_save_pipeline: self.after_save_pipeline.clone(),
             before_delete_pipeline: self.before_delete_pipeline.clone(),
             after_delete_pipeline: self.after_delete_pipeline.clone(),
+            can_read_pipeline: Pipeline::new(),
+            can_mutate_pipeline: Pipeline::new(),
             all_keys: self.all_keys(),
             input_keys: self.input_keys(),
             save_keys: self.save_keys(),
@@ -288,15 +251,15 @@ impl ModelBuilder {
     }
 
     fn all_field_keys(&self) -> Vec<String> {
-        self.field_builders.iter().map(|f| f.name.clone()).collect()
+        self.fields.iter().map(|f| f.name.clone()).collect()
     }
 
     fn all_relation_keys(&self) -> Vec<String> {
-        self.relation_builders.iter().map(|r| r.name.clone()).collect()
+        self.relations.iter().map(|r| r.name().to_owned()).collect()
     }
 
     fn all_property_keys(&self) -> Vec<String> {
-        self.property_builders.iter().map(|p| p.name.clone()).collect()
+        self.properties.iter().map(|p| p.name.clone()).collect()
     }
 
     fn all_keys(&self) -> Vec<String> {
@@ -308,16 +271,16 @@ impl ModelBuilder {
     }
 
     fn input_field_keys(&self) -> Vec<String> {
-        self.field_builders.iter().filter(|&f| !f.write_rule.is_no_write()).map(|f| f.name.clone()).collect()
+        self.fields.iter().filter(|&f| !f.write_rule.is_no_write()).map(|f| f.name.clone()).collect()
     }
 
     fn input_relation_keys(&self) -> Vec<String> {
         // todo: relation can also use readwrite rule
-        self.relation_builders.iter().map(|r| r.name.clone()).collect()
+        self.relations.iter().map(|r| r.name().to_owned()).collect()
     }
 
     fn input_property_keys(&self) -> Vec<String> {
-        self.property_builders.iter().filter(|p| p.setter.is_some()).map(|p| p.name.clone()).collect()
+        self.properties.iter().filter(|p| p.setter.is_some()).map(|p| p.name.clone()).collect()
     }
 
     fn input_keys(&self) -> Vec<String> {
@@ -329,14 +292,14 @@ impl ModelBuilder {
     }
 
     fn field_save_keys(&self) -> Vec<String> {
-        self.field_builders.iter()
+        self.fields.iter()
             .filter(|f| { !f.r#virtual })
             .map(|f| { f.name.clone() })
             .collect()
     }
 
     fn property_save_keys(&self) -> Vec<String> {
-        self.property_builders.iter().filter(|p| p.cached).map(|p| p.name.clone()).collect()
+        self.properties.iter().filter(|p| p.cached).map(|p| p.name.clone()).collect()
     }
 
     fn save_keys(&self) -> Vec<String> {
@@ -347,7 +310,7 @@ impl ModelBuilder {
     }
 
     fn output_field_keys(&self) -> Vec<String> {
-        self.field_builders.iter()
+        self.fields.iter()
             .filter(|&f| { !f.read_rule.is_no_read() })
             .map(|f| { f.name.clone() })
             .collect()
@@ -358,7 +321,7 @@ impl ModelBuilder {
     }
 
     fn output_property_keys(&self) -> Vec<String> {
-        self.property_builders.iter().filter(|p| p.getter.is_some()).map(|p| p.name.clone()).collect()
+        self.properties.iter().filter(|p| p.getter.is_some()).map(|p| p.name.clone()).collect()
     }
 
     fn output_keys(&self) -> Vec<String> {
@@ -377,7 +340,7 @@ impl ModelBuilder {
     }
 
     pub(crate) fn query_keys(&self) -> Vec<String> {
-        let mut fields: Vec<String> = self.field_builders.iter()
+        let mut fields: Vec<String> = self.fields.iter()
             .filter(|&f| { f.query_ability == QueryAbility::Queryable })
             .map(|f| { f.name.clone() })
             .collect();
@@ -400,21 +363,21 @@ impl ModelBuilder {
     }
 
     pub(crate) fn get_auth_identity_keys(&self) -> Vec<String> {
-        self.field_builders.iter()
-            .filter(|&f| { f.auth_identity == true })
+        self.fields.iter()
+            .filter(|&f| { f.identity == true })
             .map(|f| { f.name.clone() })
             .collect()
     }
 
     fn get_auth_by_keys(&self) -> Vec<String> {
-        self.field_builders.iter()
-            .filter(|&f| { f.auth_by == true })
+        self.fields.iter()
+            .filter(|&f| { f.identity_checker.is_some() })
             .map(|f| { f.name.clone() })
             .collect()
     }
 
     fn get_auto_keys(&self) -> Vec<String> {
-        self.field_builders
+        self.fields
             .iter()
             .filter(|&f| { f.auto || f.auto_increment })
             .map(|f| f.name.clone())
@@ -422,51 +385,48 @@ impl ModelBuilder {
     }
 
     fn get_deny_relation_keys(&self) -> Vec<String> {
-        self.relation_builders
+        self.relations
             .iter()
-            .filter(|&r| { r.delete_rule == DeleteRule::Deny })
-            .map(|r| r.name.clone())
+            .filter(|&r| { r.delete_rule() == DeleteRule::Deny })
+            .map(|r| r.name().to_owned())
             .collect()
     }
 
     fn get_scalar_keys(&self) -> Vec<String> {
-        self.field_builders
+        self.fields
             .iter()
             .map(|f| f.name.clone())
             .collect()
     }
 
     fn get_scalar_number_keys(&self) -> Vec<String> {
-        self.field_builders
+        self.fields
             .iter()
-            .filter(|f| f.field_type.is_number())
+            .filter(|f| f.field_type().is_number())
             .map(|f| f.name.clone())
             .collect()
     }
 
-    pub(crate) fn figure_out_actions(&self) -> HashSet<ActionType> {
+    pub(crate) fn figure_out_actions(&self) -> HashSet<Handler> {
         let mut default = if self.internal {
             HashSet::new()
         } else if self.r#virtual {
-            HashSet::from([ActionType::Create, ActionType::CreateMany])
+            HashSet::from([Handler::Create, Handler::CreateMany])
         } else {
-            ActionType::default()
+            Handler::default()
         };
         if self.identity {
-            default.insert(ActionType::SignIn);
-            default.insert(ActionType::Identity);
+            default.insert(Handler::SignIn);
+            default.insert(Handler::Identity);
         }
-        let disabled = self.actions_builder.get_disabled_list();
-        HashSet::from_iter(default.difference(disabled).map(|x| *x))
-    }
-
-    pub(crate) fn figure_out_action_defs(&self) -> HashMap<ActionType, Action> {
-        self.actions_builder.get_action_defs().clone()
+        default
+        // let disabled = self.actions_builder.get_disabled_list();
+        // HashSet::from_iter(default.difference(disabled).map(|x| *x))
     }
 
     fn get_field_property_map(&self) -> HashMap<String, Vec<String>> {
         let mut map: HashMap<String, Vec<String>> = HashMap::new();
-        for property in self.property_builders.iter() {
+        for property in self.properties.iter() {
             if property.cached {
                 for dependency in property.dependencies.iter() {
                     if map.get(dependency).is_none() {

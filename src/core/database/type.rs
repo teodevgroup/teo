@@ -3,10 +3,6 @@
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatabaseType {
 
-    /// Undefined
-    /// Represents an invalid database type which hasn't been defined.
-    Undefined,
-
     /// ObjectId
     /// Represents an object's id.
     /// Availability: MongoDB
@@ -208,13 +204,4 @@ pub enum DatabaseType {
     // ByteA type
     // PostgreSQL only
     ByteA,
-}
-
-impl DatabaseType {
-    pub(crate) fn is_undefined(&self) -> bool {
-        match self {
-            DatabaseType::Undefined => true,
-            _ => false
-        }
-    }
 }

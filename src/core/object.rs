@@ -196,59 +196,39 @@ impl Object {
     }
 
     async fn check_model_write_permission(&self) -> ActionResult<()> {
-        let is_new = self.is_new();
-        if let Some(permission) = self.model().permission() {
-            if let Some(can) = if is_new { permission.can_create() } else { permission.can_update() } {
-                let ctx = Context::initial_state_with_object(self.clone()).alter_value_with_identity();
-                let result_ctx = can.process(ctx).await;
-                if !result_ctx.is_valid() {
-                    return Err(ActionError::permission_denied(if is_new { "create" } else { "update" }));
-                }
-            }
+        let ctx = Context::initial_state_with_null(self.clone());
+        let result_ctx = self.model().can_mutate_pipeline().process(ctx).await;
+        if !result_ctx.is_valid() {
+            return Err(ActionError::permission_denied("mutate"));
         }
         Ok(())
     }
 
     async fn check_model_read_permission(&self) -> ActionResult<()> {
-        // test for model permission
-        if let Some(permission) = self.model().permission() {
-            if let Some(can_read) = permission.can_read() {
-                let ctx = Context::initial_state_with_object(self.clone()).alter_value_with_identity();
-                let result_ctx = can_read.process(ctx).await;
-                if !result_ctx.is_valid() {
-                    return Err(ActionError::permission_denied("read"));
-                }
-            }
+        let ctx = Context::initial_state_with_null(self.clone());
+        let result_ctx = self.model().can_read_pipeline().process(ctx).await;
+        if !result_ctx.is_valid() {
+            return Err(ActionError::permission_denied("read"));
         }
         Ok(())
     }
 
     async fn check_field_write_permission(&self, field: &Field) -> ActionResult<()> {
-        let is_new = self.is_new();
-        if let Some(permission) = field.permission() {
-            if let Some(can) = if is_new { permission.can_create() } else { permission.can_update() } {
-                let ctx = Context::initial_state_with_object(self.clone()).alter_value_with_identity();
-                let result_ctx = can.process(ctx).await;
-                if !result_ctx.is_valid() {
-                    return Err(ActionError::permission_denied(if is_new { "create" } else { "update" }));
-                }
-            }
+        let ctx = Context::initial_state_with_object(self.clone()).alter_value(self.get_value(field.name()).unwrap()).alter_key_path(path![field.name()]);
+        let result = field.can_mutate_pipeline.process(ctx).await;
+        if !result.is_valid() {
+            return Err(ActionError::permission_denied("mutate"));
         }
         Ok(())
     }
 
-    async fn check_field_read_permission(&self, field: &Field) -> bool {
-        // test for field permission
-        if let Some(permission) = field.permission() {
-            if let Some(can_read) = permission.can_read() {
-                let ctx = Context::initial_state_with_object(self.clone()).alter_value_with_identity();
-                let result_ctx = can_read.process(ctx).await;
-                if !result_ctx.is_valid() {
-                    return false;
-                }
-            }
+    async fn check_field_read_permission(&self, field: &Field) -> ActionResult<()> {
+        let ctx = Context::initial_state_with_object(self.clone()).alter_value(self.get_value(field.name()).unwrap()).alter_key_path(path![field.name()]);
+        let result = field.can_read_pipeline.process(ctx).await;
+        if !result.is_valid() {
+            return Err(ActionError::permission_denied("read"));
         }
-        true
+        Ok(())
     }
 
     fn record_previous_value_for_field_if_needed(&self, field: &Field) {
@@ -557,26 +537,54 @@ impl Object {
                             return Err(ActionError::missing_required_input(key, path));
                         }
                     }
-                    Optionality::PresentWith(keys) => {
+                    Optionality::PresentWith(field_names) => {
                         let value = self.get_value(key).unwrap();
                         if value.is_null() {
-                            for key in keys {
-                                let value_at_key = self.get_value(key).unwrap();
-                                if !value_at_key.is_null() {
-                                    return Err(ActionError::missing_required_input(key, path))
+                            for field_name in field_names {
+                                match field_name {
+                                    Value::Vec(names) => {
+                                        for name in names {
+                                            let name = name.as_str().unwrap();
+                                            let value_at_name = self.get_value(name).unwrap();
+                                            if !value_at_name.is_null() {
+                                                return Err(ActionError::missing_required_input(key, path))
+                                            }
+                                        }
+                                    }
+                                    Value::String(name) => {
+                                        let value_at_name = self.get_value(name).unwrap();
+                                        if !value_at_name.is_null() {
+                                            return Err(ActionError::missing_required_input(key, path))
+                                        }
+                                    }
+                                    _ => unreachable!()
                                 }
                             }
                         }
                     }
-                    Optionality::PresentWithout(keys) => {
+                    Optionality::PresentWithout(field_names) => {
                         let value = self.get_value(key).unwrap();
                         if value.is_null() {
-                            for key in keys {
-                                let value_at_key = self.get_value(key).unwrap();
-                                if !value_at_key.is_null() {
-                                    continue;
+                            for field_name in field_names {
+                                match field_name {
+                                    Value::Vec(names) => {
+                                        for name in names {
+                                            let name = name.as_str().unwrap();
+                                            let value_at_name = self.get_value(name).unwrap();
+                                            if !value_at_name.is_null() {
+                                                break;
+                                            }
+                                            return Err(ActionError::missing_required_input(key, path));
+                                        }
+                                    }
+                                    Value::String(name) => {
+                                        let value_at_name = self.get_value(name).unwrap();
+                                        if value_at_name.is_null() {
+                                            return Err(ActionError::missing_required_input(key, path))
+                                        }
+                                    }
+                                    _ => unreachable!()
                                 }
-                                return Err(ActionError::missing_required_input(key, path))
                             }
                         }
                     }
@@ -772,7 +780,7 @@ impl Object {
             } else if (!select_filter) || (select_filter && select_list.contains(key)) {
                 if let Some(field) = self.model().field(key) {
                     let mut value = self.get_value(key).unwrap();
-                    if !self.check_field_read_permission(field).await {
+                    if self.check_field_read_permission(field).await.is_ok() {
                         continue
                     }
                     let context = Context::initial_state_with_object(self.clone())

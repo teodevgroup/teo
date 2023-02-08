@@ -25,7 +25,6 @@ fn default_database_type_mssql(field_type: &FieldType) -> DatabaseType {
 
 fn default_database_type_mysql(field_type: &FieldType) -> DatabaseType {
     match field_type {
-        FieldType::Undefined => DatabaseType::Undefined,
         FieldType::Bool => DatabaseType::TinyInt { m: Some(1), u: false },
         FieldType::I8 => DatabaseType::TinyInt { m: None, u: false },
         FieldType::I16 => DatabaseType::SmallInt { m: None, u: false },
@@ -42,18 +41,17 @@ fn default_database_type_mysql(field_type: &FieldType) -> DatabaseType {
         FieldType::String => DatabaseType::VarChar { m: 191, n: None, c: None },
         FieldType::Date => DatabaseType::Date,
         FieldType::DateTime => DatabaseType::DateTime(3),
-        FieldType::Enum(_) => DatabaseType::Undefined,
-        FieldType::Vec(_) => DatabaseType::Undefined,
-        FieldType::HashMap(_) => DatabaseType::Undefined,
-        FieldType::BTreeMap(_) => DatabaseType::Undefined,
-        FieldType::Object(_) => DatabaseType::Undefined,
-        _ => DatabaseType::Undefined,
+        FieldType::Enum(_) => DatabaseType::String,
+        FieldType::Vec(_) => panic!(),
+        FieldType::HashMap(_) => panic!(),
+        FieldType::BTreeMap(_) => panic!(),
+        FieldType::Object(_) => panic!(),
+        _ => panic!(),
     }
 }
 
 fn default_database_type_postgresql(field_type: &FieldType) -> DatabaseType {
     match field_type {
-        FieldType::Undefined => DatabaseType::Undefined,
         FieldType::Bool => DatabaseType::Bool,
         FieldType::I8 => DatabaseType::SmallInt { m: None, u: false },
         FieldType::I16 => DatabaseType::SmallInt { m: None, u: false },
@@ -70,18 +68,17 @@ fn default_database_type_postgresql(field_type: &FieldType) -> DatabaseType {
         FieldType::String => DatabaseType::Text { m: None, n: None, c: None },
         FieldType::Date => DatabaseType::Date,
         FieldType::DateTime => DatabaseType::Timestamp { p: 3, z: false },
-        FieldType::Enum(_) => DatabaseType::Undefined,
-        FieldType::Vec(_) => DatabaseType::Undefined,
-        FieldType::HashMap(_) => DatabaseType::Undefined,
-        FieldType::BTreeMap(_) => DatabaseType::Undefined,
-        FieldType::Object(_) => DatabaseType::Undefined,
-        _ => DatabaseType::Undefined,
+        FieldType::Enum(_) => panic!(),
+        FieldType::Vec(_) => panic!(),
+        FieldType::HashMap(_) => panic!(),
+        FieldType::BTreeMap(_) => panic!(),
+        FieldType::Object(_) => panic!(),
+        _ => panic!(),
     }
 }
 
 fn default_database_type_sqlite(field_type: &FieldType) -> DatabaseType {
     match field_type {
-        FieldType::Undefined => DatabaseType::Undefined,
         FieldType::Bool => DatabaseType::Int { m: None, u: false, },
         FieldType::I8 => DatabaseType::Int { m: None, u: false },
         FieldType::I16 => DatabaseType::Int { m: None, u: false },
@@ -98,11 +95,11 @@ fn default_database_type_sqlite(field_type: &FieldType) -> DatabaseType {
         FieldType::String => DatabaseType::Text { m: None, n: None, c: None },
         FieldType::Date => DatabaseType::Text { m: None, n: None, c: None },
         FieldType::DateTime => DatabaseType::Text { m: None, n: None, c: None },
-        FieldType::Enum(_) => DatabaseType::Undefined,
-        FieldType::Vec(_) => DatabaseType::Undefined,
-        FieldType::HashMap(_) => DatabaseType::Undefined,
-        FieldType::BTreeMap(_) => DatabaseType::Undefined,
-        FieldType::Object(_) => DatabaseType::Undefined,
-        _ => DatabaseType::Undefined,
+        FieldType::Enum(_) => panic!(),
+        FieldType::Vec(_) => panic!(),
+        FieldType::HashMap(_) => panic!(),
+        FieldType::BTreeMap(_) => panic!(),
+        FieldType::Object(_) => panic!(),
+        _ => panic!(),
     }
 }

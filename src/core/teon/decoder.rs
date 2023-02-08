@@ -9,7 +9,7 @@ use maplit::{hashmap, hashset};
 use once_cell::sync::Lazy;
 use rust_decimal::Decimal;
 use serde_json::{Value as JsonValue, Map as JsonMap};
-use crate::core::action::r#type::ActionType;
+use crate::core::handler::Handler;
 use crate::core::error::ActionError;
 use crate::core::field::r#type::FieldType;
 use crate::core::model::Model;
@@ -26,7 +26,7 @@ impl Decoder {
         Self::decode_object_at_path(model, graph, json_value, path![])
     }
 
-    pub(crate) fn decode_action_arg(model: &Model, graph: &Graph, action: ActionType, json_value: &JsonValue) -> ActionResult<Value> {
+    pub(crate) fn decode_action_arg(model: &Model, graph: &Graph, action: Handler, json_value: &JsonValue) -> ActionResult<Value> {
         Self::decode_action_arg_at_path(model, graph, action, json_value, path![])
     }
 
@@ -56,7 +56,7 @@ impl Decoder {
         }).collect::<ActionResult<HashMap<String, Value>>>()?))
     }
 
-    fn decode_action_arg_at_path<'a>(model: &Model, graph: &Graph, action: ActionType, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
+    fn decode_action_arg_at_path<'a>(model: &Model, graph: &Graph, action: Handler, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         let path = path.as_ref();
         let json_map = if let Some(json_map) = json_value.as_object() {
             json_map
@@ -84,7 +84,7 @@ impl Decoder {
                 "_avg" | "_sum" | "_min" | "_max" | "_count" => { retval.insert(key.to_owned(), Self::decode_aggregate(model, key, value, path)?); }
                 "by" => { retval.insert(key.to_owned(), Self::decode_by(model, value, path)?); }
                 "having" => { retval.insert(key.to_owned(), Self::decode_having(model, graph, value, path)?); }
-                "create" => { retval.insert(key.to_owned(), if action == ActionType::CreateMany { Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_create(model, graph, v, p))? } else { Self::decode_create(model, graph, value, path)? } ); }
+                "create" => { retval.insert(key.to_owned(), if action == Handler::CreateMany { Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_create(model, graph, v, p))? } else { Self::decode_create(model, graph, value, path)? } ); }
                 "update" => { retval.insert(key.to_owned(), Self::decode_update(model, graph, value, path)?); }
                 "credentials" => { retval.insert(key.to_owned(), Self::decode_credentials(model, graph, value, path)?); }
                 _ => panic!("Unhandled key.")
@@ -469,9 +469,9 @@ impl Decoder {
             let relation = model.relation(name).unwrap();
             let model = graph.model(relation.model()).unwrap();
             if relation.is_vec() {
-                Ok(Self::decode_action_arg_at_path(model, graph, ActionType::FindMany, json_value, path)?)
+                Ok(Self::decode_action_arg_at_path(model, graph, Handler::FindMany, json_value, path)?)
             } else {
-                Ok(Self::decode_action_arg_at_path(model, graph, ActionType::FindUnique, json_value, path)?)
+                Ok(Self::decode_action_arg_at_path(model, graph, Handler::FindUnique, json_value, path)?)
             }
         } else {
             Err(ActionError::unexpected_input_type("bool or object", path))
@@ -781,7 +781,6 @@ impl Decoder {
         }
         let path = path.as_ref();
         match r#type {
-            FieldType::Undefined => panic!("A field cannot have undefined field type"),
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => match json_value.as_str() {
                 Some(str) => match ObjectId::from_str(str) {

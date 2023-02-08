@@ -1,18 +1,18 @@
 use crate::prelude::{Object, Value};
-use crate::core::env::source::Source::*;
+use self::ActionSource::*;
 
 #[derive(Clone)]
-pub(crate) enum Source {
-    DataBrowser,
+pub(crate) enum ActionSource {
     Identity(Option<Object>),
-    CustomCode,
+    DataClient,
+    ProgramCode,
 }
 
-impl Source {
+impl ActionSource {
 
-    pub(crate) fn is_data_browser(&self) -> bool {
+    pub(crate) fn is_data_client(&self) -> bool {
         match self {
-            DataBrowser => true,
+            DataClient => true,
             _ => false,
         }
     }
@@ -24,9 +24,9 @@ impl Source {
         }
     }
 
-    pub(crate) fn is_custom_browser(&self) -> bool {
+    pub(crate) fn is_program_code(&self) -> bool {
         match self {
-            CustomCode => true,
+            ProgramCode => true,
             _ => false,
         }
     }
