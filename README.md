@@ -1,5 +1,7 @@
-TEO [![License][license-image]][license-url] [![PR Welcome][pr-image]][pr-url]
+TEO
 ===
+[![License][license-image]][license-url] [![PR Welcome][pr-image]][pr-url]
+
 **REDEFINED** HTTP server framework.
 
 Official site: https://teocloud.io
