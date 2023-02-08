@@ -15,7 +15,8 @@ Official documentation: https://teocloud.io/docs
 * Supports MySQL, PostgreSQL, SQLite and MongoDB
 * Generated query clients for frontend
 * Very efficient and performant
-* User sessions
+* Data sanitization, transformation and validation
+* Builtin user sessions
 
 ## Get started
 
