@@ -129,10 +129,12 @@ impl Parser {
             Ok(content) => content,
             Err(err) => panic!("{}", err)
         };
+        println!("{:?}", path);
         let mut pairs = match SchemaParser::parse(Rule::schema, &content) {
             Ok(pairs) => pairs,
             Err(err) => panic!("{}", err)
         };
+        println!("{:?}", pairs);
         let pairs = pairs.next().unwrap();
         let mut tops: BTreeMap<usize, Top> = btreemap![];
         let mut imports: BTreeSet<usize> = btreeset!{};
@@ -142,6 +144,7 @@ impl Parser {
         let mut pairs = pairs.into_inner().peekable();
 
         while let Some(current) = pairs.next() {
+            println!("{}", current);
             let item_id = self.next_id();
             match current.as_rule() {
                 Rule::import_statement => {
