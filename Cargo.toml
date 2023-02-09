@@ -54,7 +54,7 @@ path-absolutize = "3.0.14"
 dotenvy = "0.15.6"
 
 [dev-dependencies]
-serial_test = "0.10.0"
+serial_test = "1.0.0"
 
 [build-dependencies]
 rustc_version = "0.4.0"

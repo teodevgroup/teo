@@ -268,6 +268,7 @@ impl AppBuilder {
                 Arc::new(MongoDBConnector::new(url.clone()).await)
             },
         };
+        self.connector = Some(connector.clone());
         // server config
         let config_ref = parser.config.unwrap();
         let source = parser.get_source(config_ref.0);
