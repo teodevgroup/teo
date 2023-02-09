@@ -10,6 +10,6 @@ pub mod number;
 pub mod value;
 pub mod identity;
 pub mod vector;
-pub mod intent;
+pub mod action;
 pub mod teon;
 pub mod debug;

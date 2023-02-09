@@ -54,7 +54,7 @@ impl<'a> Context<'a> {
 
     pub(crate) fn alter_value_with_identity(&self) -> Self {
         Self {
-            value: self.object.as_ref().unwrap().env().source().as_identity_value().or(Some(Value::Null)).unwrap(),
+            value: self.object.as_ref().unwrap().action_source().as_identity_value().or(Some(Value::Null)).unwrap(),
             object: self.object.clone(),
             key_path: self.key_path.clone(),
             validity: self.validity.clone(),

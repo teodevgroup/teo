@@ -16,9 +16,9 @@ use regex::Regex;
 use crate::connectors::mongodb::aggregation::Aggregation;
 use crate::connectors::mongodb::bson::decoder::BsonDecoder;
 use crate::connectors::mongodb::connector::save_session::MongoDBSaveSession;
+use crate::core::action::{Action, FIND, MANY, NESTED, SINGLE};
+use crate::core::action::source::ActionSource;
 use crate::core::connector::Connector;
-use crate::core::env::Env;
-use crate::core::env::intent::Intent;
 use crate::core::object::Object;
 use crate::core::field::Sort;
 use crate::core::graph::Graph;
@@ -112,8 +112,8 @@ impl MongoDBConnector {
                 let object_bsons = document.get(key).unwrap().as_array().unwrap();
                 let mut related: Vec<Object> = vec![];
                 for related_object_bson in object_bsons {
-                    let env = object.env().alter_intent(Intent::NestedIncluded);
-                    let related_object = object.graph().new_object(model_name, env)?;
+                    let action = Action::from_u32(NESTED | FIND | (if relation.is_vec() { MANY } else { SINGLE }));
+                    let related_object = object.graph().new_object(model_name, action, object.action_source().clone())?;
                     self.document_to_object(related_object_bson.as_document().unwrap(), &related_object, inner_select, inner_include)?;
                     related.push(related_object);
                 }
@@ -344,16 +344,8 @@ impl Connector for MongoDBConnector {
         match field_type {
             FieldType::ObjectId => DatabaseType::ObjectId,
             FieldType::Bool => DatabaseType::Bool,
-            FieldType::I8 => DatabaseType::Int32,
-            FieldType::I16 => DatabaseType::Int32,
             FieldType::I32 => DatabaseType::Int32,
             FieldType::I64 => DatabaseType::Int64,
-            FieldType::I128 => DatabaseType::Int64,
-            FieldType::U8 => DatabaseType::Int32,
-            FieldType::U16 => DatabaseType::Int32,
-            FieldType::U32 => DatabaseType::Int64,
-            FieldType::U64 => DatabaseType::Int64,
-            FieldType::U128 => DatabaseType::Int64,
             FieldType::F32 => DatabaseType::Double { m: None, d: None },
             FieldType::F64 => DatabaseType::Double { m: None, d: None },
             FieldType::Decimal => DatabaseType::Decimal { m: None, d: None },
@@ -476,7 +468,7 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Object, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
 
@@ -492,14 +484,14 @@ impl Connector for MongoDBConnector {
             return Err(ActionError::object_not_found());
         }
         for doc in results {
-            let obj = graph.new_object(model.name(), env)?;
+            let obj = graph.new_object(model.name(), action, action_source.clone())?;
             self.document_to_object(&doc.unwrap(), &obj, select, include)?;
             return Ok(obj);
         }
         Err(ActionError::object_not_found())
     }
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Vec<Object>, ActionError> {
         let select = finder.get("select");
         let include = finder.get("include");
         let aggregate_input = Aggregation::build(model, graph, finder)?;
@@ -515,7 +507,7 @@ impl Connector for MongoDBConnector {
         let mut result: Vec<Object> = vec![];
         let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
         for doc in results {
-            let obj = graph.new_object(model.name(), env.clone())?;
+            let obj = graph.new_object(model.name(), action, action_source.clone())?;
             match self.document_to_object(&doc.unwrap(), &obj, select, include) {
                 Ok(_) => {
                     if reverse {

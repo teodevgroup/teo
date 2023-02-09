@@ -27,7 +27,7 @@ impl Modifier for EllipsisModifier {
             None => ctx.invalid("Value is not string."),
             Some(s) => {
                 let arg = self.width.resolve(ctx.clone()).await;
-                let width = arg.as_u32().unwrap() as usize;
+                let width = arg.as_i64().unwrap() as usize;
                 if s.len() <= width {
                     ctx
                 } else {

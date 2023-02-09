@@ -54,18 +54,6 @@ impl From<Value> for bool {
 
 // MARK: - Numbers
 
-impl From<i8> for Value {
-    fn from(v: i8) -> Self {
-        Value::I8(v)
-    }
-}
-
-impl From<i16> for Value {
-    fn from(v: i16) -> Self {
-        Value::I16(v)
-    }
-}
-
 impl From<i32> for Value {
     fn from(v: i32) -> Self {
         Value::I32(v)
@@ -75,42 +63,6 @@ impl From<i32> for Value {
 impl From<i64> for Value {
     fn from(v: i64) -> Self {
         Value::I64(v)
-    }
-}
-
-impl From<i128> for Value {
-    fn from(v: i128) -> Self {
-        Value::I128(v)
-    }
-}
-
-impl From<u8> for Value {
-    fn from(v: u8) -> Self {
-        Value::U8(v)
-    }
-}
-
-impl From<u16> for Value {
-    fn from(v: u16) -> Self {
-        Value::U16(v)
-    }
-}
-
-impl From<u32> for Value {
-    fn from(v: u32) -> Self {
-        Value::U32(v)
-    }
-}
-
-impl From<u64> for Value {
-    fn from(v: u64) -> Self {
-        Value::U64(v)
-    }
-}
-
-impl From<u128> for Value {
-    fn from(v: u128) -> Self {
-        Value::U128(v)
     }
 }
 
@@ -131,21 +83,8 @@ impl From<Decimal> for Value {
 }
 
 impl From<usize> for Value {
-    fn from(v: usize) -> Self { Value::U64(v as u64) }
+    fn from(v: usize) -> Self { Value::I64(v as i64) }
 }
-
-impl From<Value> for i8 {
-    fn from(v: Value) -> Self {
-        v.as_i8().unwrap()
-    }
-}
-
-impl From<Value> for i16 {
-    fn from(v: Value) -> Self {
-        v.as_i16().unwrap()
-    }
-}
-
 
 impl From<Value> for i32 {
     fn from(v: Value) -> Self {
@@ -159,45 +98,6 @@ impl From<Value> for i64 {
         v.as_i64().unwrap()
     }
 }
-
-impl From<Value> for i128 {
-    fn from(v: Value) -> Self {
-        v.as_i128().unwrap()
-    }
-}
-
-impl From<Value> for u8 {
-    fn from(v: Value) -> Self {
-        v.as_u8().unwrap()
-    }
-}
-
-
-impl From<Value> for u16 {
-    fn from(v: Value) -> Self {
-        v.as_u16().unwrap()
-    }
-}
-
-impl From<Value> for u32 {
-    fn from(v: Value) -> Self {
-        v.as_u32().unwrap()
-    }
-}
-
-
-impl From<Value> for u64 {
-    fn from(v: Value) -> Self {
-        v.as_u64().unwrap()
-    }
-}
-
-impl From<Value> for u128 {
-    fn from(v: Value) -> Self {
-        v.as_u128().unwrap()
-    }
-}
-
 
 impl From<Value> for f32 {
     fn from(v: Value) -> Self {
@@ -361,24 +261,6 @@ impl From<Option<String>> for Value {
     }
 }
 
-impl From<Value> for Option<i8> {
-    fn from(value: Value) -> Self {
-        match value {
-            Value::Null => None,
-            _ => Some(value.into())
-        }
-    }
-}
-
-impl From<Value> for Option<i16> {
-    fn from(value: Value) -> Self {
-        match value {
-            Value::Null => None,
-            _ => Some(value.into())
-        }
-    }
-}
-
 impl From<Value> for Option<i32> {
     fn from(value: Value) -> Self {
         match value {
@@ -389,60 +271,6 @@ impl From<Value> for Option<i32> {
 }
 
 impl From<Value> for Option<i64> {
-    fn from(value: Value) -> Self {
-        match value {
-            Value::Null => None,
-            _ => Some(value.into())
-        }
-    }
-}
-
-impl From<Value> for Option<i128> {
-    fn from(value: Value) -> Self {
-        match value {
-            Value::Null => None,
-            _ => Some(value.into())
-        }
-    }
-}
-
-impl From<Value> for Option<u8> {
-    fn from(value: Value) -> Self {
-        match value {
-            Value::Null => None,
-            _ => Some(value.into())
-        }
-    }
-}
-
-impl From<Value> for Option<u16> {
-    fn from(value: Value) -> Self {
-        match value {
-            Value::Null => None,
-            _ => Some(value.into())
-        }
-    }
-}
-
-impl From<Value> for Option<u32> {
-    fn from(value: Value) -> Self {
-        match value {
-            Value::Null => None,
-            _ => Some(value.into())
-        }
-    }
-}
-
-impl From<Value> for Option<u64> {
-    fn from(value: Value) -> Self {
-        match value {
-            Value::Null => None,
-            _ => Some(value.into())
-        }
-    }
-}
-
-impl From<Value> for Option<u128> {
     fn from(value: Value) -> Self {
         match value {
             Value::Null => None,

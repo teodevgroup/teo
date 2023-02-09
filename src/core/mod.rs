@@ -9,7 +9,6 @@ pub mod object;
 pub mod teon;
 pub mod app;
 pub(crate) mod connector;
-pub(crate) mod env;
 pub(crate) mod field;
 pub(crate) mod relation;
 pub(crate) mod property;

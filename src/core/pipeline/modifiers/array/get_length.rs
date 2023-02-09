@@ -27,6 +27,6 @@ impl Modifier for GetLengthModifier {
                 return ctx.invalid("Value doesn't have length.");
             }
         };
-        ctx.alter_value(Value::U64(len as u64))
+        ctx.alter_value(Value::I64(len as i64))
     }
 }

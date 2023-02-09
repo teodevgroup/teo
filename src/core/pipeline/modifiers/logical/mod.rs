@@ -1,6 +1,5 @@
 pub mod not;
 pub mod r#if;
-pub mod r#do;
 pub mod passed;
 pub mod all;
 pub mod any;

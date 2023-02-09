@@ -22,11 +22,8 @@ impl Modifier for AbsModifier {
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         match ctx.value {
-            Value::I8(v) => ctx.alter_value(Value::I8(v.abs())),
-            Value::I16(v) => ctx.alter_value(Value::I16(v.abs())),
             Value::I32(v) => ctx.alter_value(Value::I32(v.abs())),
             Value::I64(v) => ctx.alter_value(Value::I64(v.abs())),
-            Value::I128(v) => ctx.alter_value(Value::I128(v.abs())),
             Value::F32(v) => ctx.alter_value(Value::F32(v.abs())),
             Value::F64(v) => ctx.alter_value(Value::F64(v.abs())),
             _ => ctx.invalid("Value is not number."),

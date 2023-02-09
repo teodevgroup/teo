@@ -102,16 +102,8 @@ impl<'a> Display for Type<'a> {
             Value::Bool(_) => formatter.write_str("bool"),
             #[cfg(feature = "data-source-mongodb")]
             Value::ObjectId(_) => formatter.write_str("object id"),
-            Value::I8(_) => formatter.write_str("i8"),
-            Value::I16(_) => formatter.write_str("i16"),
             Value::I32(_) => formatter.write_str("i32"),
             Value::I64(_) => formatter.write_str("i64"),
-            Value::I128(_) => formatter.write_str("i128"),
-            Value::U8(_) => formatter.write_str("u8"),
-            Value::U16(_) => formatter.write_str("u16"),
-            Value::U32(_) => formatter.write_str("u32"),
-            Value::U64(_) => formatter.write_str("u64"),
-            Value::U128(_) => formatter.write_str("u128"),
             Value::F32(_) => formatter.write_str("f32"),
             Value::F64(_) => formatter.write_str("f64"),
             Value::String(_) => formatter.write_str("string"),
@@ -127,7 +119,8 @@ impl<'a> Display for Type<'a> {
             Value::Tuple(_) => formatter.write_str("tuple"),
             Value::Pipeline(_) => formatter.write_str("pipeline"),
             Value::RawEnumChoice(_) => formatter.write_str("raw enum choice"),
-            Value::RegExp(_) => formatter.write_str("regular expression")
+            Value::RawOptionChoice(_) => formatter.write_str("raw option choice"),
+            Value::RegExp(_) => formatter.write_str("regular expression"),
         }
     }
 }

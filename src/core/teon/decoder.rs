@@ -497,7 +497,7 @@ impl Decoder {
     fn decode_usize<'a>(json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> ActionResult<Value> {
         let path = path.as_ref();
         if let Some(u) = json_value.as_u64() {
-            Ok(Value::U64(u))
+            Ok(Value::I64(u as i64))
         } else {
             Err(ActionError::unexpected_input_type("positive integer number", path))
         }
@@ -696,10 +696,10 @@ impl Decoder {
                         retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, &FieldType::Bool, false, value, path)?);
                     }
                     "length" => {
-                        retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, &FieldType::U64, false, value, path)?);
+                        retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, &FieldType::I64, false, value, path)?);
                     }
                     "_avg" | "_sum" => {
-                        retval.insert(key.to_owned(), Self::decode_where_for_field(graph, &FieldType::U64, true, value, path)?);
+                        retval.insert(key.to_owned(), Self::decode_where_for_field(graph, &FieldType::I64, true, value, path)?);
                     }
                     "_count" => {
                         retval.insert(key.to_owned(), Self::decode_where_for_field(graph, &FieldType::I64, false, value, path)?);
@@ -793,14 +793,6 @@ impl Decoder {
                 Some(b) => Ok(Value::Bool(b)),
                 None => Err(ActionError::unexpected_input_type("bool", path))
             }
-            FieldType::I8 => match json_value.as_i64() {
-                Some(i) => Ok(Value::I8(i as i8)),
-                None => Err(ActionError::unexpected_input_type("8 bit integer", path))
-            }
-            FieldType::I16 => match json_value.as_i64() {
-                Some(i) => Ok(Value::I16(i as i16)),
-                None => Err(ActionError::unexpected_input_type("16 bit integer", path))
-            }
             FieldType::I32 => match json_value.as_i64() {
                 Some(i) => Ok(Value::I32(i as i32)),
                 None => Err(ActionError::unexpected_input_type("32 bit integer", path))
@@ -808,33 +800,6 @@ impl Decoder {
             FieldType::I64 => match json_value.as_i64() {
                 Some(i) => Ok(Value::I64(i as i64)),
                 None => Err(ActionError::unexpected_input_type("64 bit integer", path))
-            }
-            FieldType::I128 => match json_value.as_i64() {
-                Some(i) => Ok(Value::I128(i as i128)),
-                None => match json_value.as_u64() {
-                    Some(u) => Ok(Value::I128(u as i128)),
-                    None => Err(ActionError::unexpected_input_type("128 bit integer", path))
-                }
-            }
-            FieldType::U8 => match json_value.as_u64() {
-                Some(u) => Ok(Value::U8(u as u8)),
-                None => Err(ActionError::unexpected_input_type("8 bit unsigned integer", path))
-            }
-            FieldType::U16 => match json_value.as_u64() {
-                Some(u) => Ok(Value::U16(u as u16)),
-                None => Err(ActionError::unexpected_input_type("16 bit unsigned integer", path))
-            }
-            FieldType::U32 => match json_value.as_u64() {
-                Some(u) => Ok(Value::U32(u as u32)),
-                None => Err(ActionError::unexpected_input_type("32 bit unsigned integer", path))
-            }
-            FieldType::U64 => match json_value.as_u64() {
-                Some(u) => Ok(Value::U64(u as u64)),
-                None => Err(ActionError::unexpected_input_type("64 bit unsigned integer", path))
-            }
-            FieldType::U128 => match json_value.as_u64() {
-                Some(u) => Ok(Value::U128(u as u128)),
-                None => Err(ActionError::unexpected_input_type("128 bit unsigned integer", path))
             }
             FieldType::F32 => match json_value.as_f64() {
                 Some(f) => Ok(Value::F32(f as f32)),

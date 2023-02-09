@@ -25,44 +25,12 @@ impl BsonDecoder {
                 Some(b) => Ok(Value::Bool(b)),
                 None => Err(ActionError::record_decoding_error(model.name(), path, "bool")),
             }
-            FieldType::I8 => match bson_value.as_i32() {
-                Some(n) => Ok(Value::I8(n as i8)),
-                None => Err(ActionError::record_decoding_error(model.name(), path, "int 32")),
-            }
-            FieldType::I16 => match bson_value.as_i32() {
-                Some(n) => Ok(Value::I16(n as i16)),
-                None => Err(ActionError::record_decoding_error(model.name(), path, "int 32")),
-            }
             FieldType::I32 => match bson_value.as_i32() {
                 Some(n) => Ok(Value::I32(n)),
                 None => Err(ActionError::record_decoding_error(model.name(), path, "int 32")),
             }
             FieldType::I64 => match bson_value.as_i64() {
                 Some(n) => Ok(Value::I64(n)),
-                None => Err(ActionError::record_decoding_error(model.name(), path, "int 64")),
-            }
-            FieldType::I128 => match bson_value.as_i64() {
-                Some(n) => Ok(Value::I128(n as i128)),
-                None => Err(ActionError::record_decoding_error(model.name(), path, "int 64")),
-            }
-            FieldType::U8 => match bson_value.as_i32() {
-                Some(n) => Ok(Value::U8(n as u8)),
-                None => Err(ActionError::record_decoding_error(model.name(), path, "int 32")),
-            }
-            FieldType::U16 => match bson_value.as_i32() {
-                Some(n) => Ok(Value::U16(n as u16)),
-                None => Err(ActionError::record_decoding_error(model.name(), path, "int 32")),
-            }
-            FieldType::U32 => match bson_value.as_i64() {
-                Some(n) => Ok(Value::U32(n as u32)),
-                None => Err(ActionError::record_decoding_error(model.name(), path, "int 64")),
-            }
-            FieldType::U64 => match bson_value.as_i64() {
-                Some(n) => Ok(Value::U64(n as u64)),
-                None => Err(ActionError::record_decoding_error(model.name(), path, "int 64")),
-            }
-            FieldType::U128 => match bson_value.as_i64() {
-                Some(n) => Ok(Value::U128(n as u128)),
                 None => Err(ActionError::record_decoding_error(model.name(), path, "int 64")),
             }
             FieldType::F32 => match bson_value.as_f64() {

@@ -1,7 +1,4 @@
-
 use std::fmt::{Display, Formatter};
-
-
 use crate::parser::ast::argument::{ArgumentList};
 use crate::parser::ast::entity::Entity;
 use crate::parser::ast::group::Group;
@@ -11,6 +8,130 @@ use crate::parser::ast::span::Span;
 use crate::parser::ast::subscript::Subscript;
 use crate::parser::ast::unit::Unit;
 
+#[derive(Debug, Clone)]
+pub(crate) struct Negation {
+    pub(crate) expression: Box<ExpressionKind>,
+    pub(crate) span: Span,
+}
+
+impl Display for Negation {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("-")?;
+        Display::fmt(self.expression.as_ref(), f)?;
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct BitwiseNegation {
+    pub(crate) expression: Box<ExpressionKind>,
+    pub(crate) span: Span,
+}
+
+impl Display for BitwiseNegation {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("~")?;
+        Display::fmt(self.expression.as_ref(), f)?;
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct AddSub {
+    pub(crate) expressions: Vec<ExpressionKind>,
+    pub(crate) operators: Vec<&'static str>,
+    pub(crate) span: Span,
+}
+
+impl Display for AddSub {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let len = self.expressions.len();
+        for (index, expression) in self.expressions.iter().enumerate() {
+            Display::fmt(expression, f)?;
+            if index != len - 1 {
+                f.write_str(&format!(" {} ", self.operators.get(index + 1).unwrap()))?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct MulDivMod {
+    pub(crate) expressions: Vec<ExpressionKind>,
+    pub(crate) operators: Vec<&'static str>,
+    pub(crate) span: Span,
+}
+
+impl Display for MulDivMod {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let len = self.expressions.len();
+        for (index, expression) in self.expressions.iter().enumerate() {
+            Display::fmt(expression, f)?;
+            if index != len - 1 {
+                f.write_str(&format!(" {} ", self.operators.get(index + 1).unwrap()))?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct BitwiseAnd {
+    pub(crate) expressions: Vec<ExpressionKind>,
+    pub(crate) span: Span,
+}
+
+impl Display for BitwiseAnd {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let len = self.expressions.len();
+        for (index, expression) in self.expressions.iter().enumerate() {
+            Display::fmt(expression, f)?;
+            if index != len - 1 {
+                f.write_str(" & ")?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct BitwiseXor {
+    pub(crate) expressions: Vec<ExpressionKind>,
+    pub(crate) span: Span,
+}
+
+impl Display for BitwiseXor {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let len = self.expressions.len();
+        for (index, expression) in self.expressions.iter().enumerate() {
+            Display::fmt(expression, f)?;
+            if index != len - 1 {
+                f.write_str(" ^ ")?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct BitwiseOr {
+    pub(crate) expressions: Vec<ExpressionKind>,
+    pub(crate) span: Span,
+}
+
+impl Display for BitwiseOr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let len = self.expressions.len();
+        for (index, expression) in self.expressions.iter().enumerate() {
+            Display::fmt(expression, f)?;
+            if index != len - 1 {
+                f.write_str(" | ")?;
+            }
+        }
+        Ok(())
+    }
+}
 
 #[derive(Debug, Clone)]
 pub(crate) struct NullishCoalescing {
@@ -190,6 +311,13 @@ impl Display for DictionaryLiteral {
 pub(crate) enum ExpressionKind {
     Group(Group),
     NullishCoalescing(NullishCoalescing),
+    Negation(Negation),
+    BitwiseNegation(BitwiseNegation),
+    AddSub(AddSub),
+    MulDivMod(MulDivMod),
+    BitwiseAnd(BitwiseAnd),
+    BitwiseXor(BitwiseXor),
+    BitwiseOr(BitwiseOr),
     NumericLiteral(NumericLiteral),
     StringLiteral(StringLiteral),
     RegExpLiteral(RegExpLiteral),
@@ -425,6 +553,13 @@ impl Display for ExpressionKind {
         match self {
             ExpressionKind::Group(g) => Display::fmt(g, f),
             ExpressionKind::NullishCoalescing(n) => Display::fmt(n, f),
+            ExpressionKind::Negation(n) => Display::fmt(n, f),
+            ExpressionKind::BitwiseNegation(n) => Display::fmt(n, f),
+            ExpressionKind::AddSub(n) => Display::fmt(n, f),
+            ExpressionKind::MulDivMod(n) => Display::fmt(n, f),
+            ExpressionKind::BitwiseAnd(n) => Display::fmt(n, f),
+            ExpressionKind::BitwiseXor(n) => Display::fmt(n, f),
+            ExpressionKind::BitwiseOr(n) => Display::fmt(n, f),
             ExpressionKind::NumericLiteral(e) => Display::fmt(e, f),
             ExpressionKind::StringLiteral(s) => Display::fmt(s, f),
             ExpressionKind::RegExpLiteral(r) => Display::fmt(r, f),

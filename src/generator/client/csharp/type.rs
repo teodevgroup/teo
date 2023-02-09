@@ -48,16 +48,8 @@ impl ToCSharpType for FieldType {
             FieldType::ObjectId => "string".to_string(),
             FieldType::String => "string".to_string(),
             FieldType::Bool => "bool".to_string(),
-            FieldType::I8 => "sbyte".to_string(),
-            FieldType::U8 => "byte".to_string(),
-            FieldType::I16 => "short".to_string(),
-            FieldType::U16 => "ushort".to_string(),
             FieldType::I32 => "int".to_string(),
-            FieldType::U32 => "uint".to_string(),
             FieldType::I64 => "long".to_string(),
-            FieldType::U64 => "ulong".to_string(),
-            FieldType::I128 => "long".to_string(),
-            FieldType::U128 => "ulong".to_string(),
             FieldType::F32 => "float".to_string(),
             FieldType::F64 => "double".to_string(),
             FieldType::Decimal => "decimal".to_string(),
@@ -86,7 +78,7 @@ impl ToCSharpType for FieldType {
             FieldType::Date => one_of(base_type, format!("DateOnly{nullable}Filter")),
             FieldType::DateTime => one_of(base_type, format!("DateTime{nullable}Filter")),
             FieldType::Bool => one_of(base_type, format!("Bool{nullable}Filter")),
-            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 | FieldType::Decimal => {
+            FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 | FieldType::Decimal => {
                 let number_type = self.to_csharp_type(false);
                 one_of(base_type, format!("Number{nullable}Filter<{number_type}>"))
             },
@@ -131,7 +123,7 @@ impl ToCSharpType for FieldType {
             FieldType::Date => format!("{prefix}DateOnlyFieldUpdateOperationsInput"),
             FieldType::DateTime => format!("{prefix}DateTimeFieldUpdateOperationsInput"),
             FieldType::Bool => format!("{prefix}BoolFieldUpdateOperationsInput"),
-            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 | FieldType::Decimal => {
+            FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 | FieldType::Decimal => {
                 let number_type = self.to_csharp_type(false);
                 format!("{prefix}NumberFieldUpdateOperationsInput<{number_type}>")
             },

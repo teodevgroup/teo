@@ -9,16 +9,8 @@ pub(crate) enum FieldType {
     #[cfg(feature = "data-source-mongodb")]
     ObjectId,
     Bool,
-    I8,
-    I16,
     I32,
     I64,
-    I128,
-    U8,
-    U16,
-    U32,
-    U64,
-    U128,
     F32,
     F64,
     Decimal,
@@ -48,24 +40,9 @@ impl FieldType {
         }
     }
 
-    pub(crate) fn is_sint(&self) -> bool {
-        match self {
-            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 => true,
-            _ => false
-        }
-    }
-
-    pub(crate) fn is_uint(&self) -> bool {
-        match self {
-            FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 => true,
-            _ => false
-        }
-    }
-
     pub(crate) fn is_int(&self) -> bool {
         match self {
-            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 |
-            FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 => true,
+            FieldType::I32 | FieldType::I64 => true,
             _ => false
         }
     }
@@ -152,8 +129,7 @@ impl FieldType {
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => &DEFAULT_FILTERS,
             FieldType::Bool => &BOOL_FILTERS,
-            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 |
-            FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 |
+            FieldType::I32 | FieldType::I64 |
             FieldType::F32 | FieldType::F64 | FieldType::Date | FieldType::DateTime |
             FieldType::Decimal => &DEFAULT_FILTERS,
             FieldType::String => &STRING_FILTERS,
@@ -170,8 +146,7 @@ impl FieldType {
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => &DEFAULT_FILTERS_WITH_AGGREGATE,
             FieldType::Bool => &BOOL_FILTERS,
-            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 |
-            FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 |
+            FieldType::I32 | FieldType::I64 |
             FieldType::F32 | FieldType::F64 | FieldType::Decimal => &NUMBER_FILTERS_WITH_AGGREGATE,
             FieldType::Date | FieldType::DateTime => &DEFAULT_FILTERS_WITH_AGGREGATE,
             FieldType::String => &STRING_FILTERS_WITH_AGGREGATE,

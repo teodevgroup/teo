@@ -24,18 +24,10 @@ impl Modifier for RootModifier {
 
     async fn call<'a>(&self, ctx: Context<'a>) -> Context<'a> {
         let argument = self.argument.resolve(ctx.clone()).await;
-        let exp = argument.as_u32().unwrap();
+        let exp = argument.as_i32().unwrap() as u32;
         match ctx.value {
-            Value::I8(v) => ctx.alter_value(Value::I8(v.nth_root(exp))),
-            Value::I16(v) => ctx.alter_value(Value::I16(v.nth_root(exp))),
             Value::I32(v) => ctx.alter_value(Value::I32(v.nth_root(exp))),
             Value::I64(v) => ctx.alter_value(Value::I64(v.nth_root(exp))),
-            Value::I128(v) => ctx.alter_value(Value::I128(v.nth_root(exp))),
-            Value::U8(v) => ctx.alter_value(Value::U8(v.nth_root(exp))),
-            Value::U16(v) => ctx.alter_value(Value::U16(v.nth_root(exp))),
-            Value::U32(v) => ctx.alter_value(Value::U32(v.nth_root(exp))),
-            Value::U64(v) => ctx.alter_value(Value::U64(v.nth_root(exp))),
-            Value::U128(v) => ctx.alter_value(Value::U128(v.nth_root(exp))),
             Value::F32(_v) => ctx.invalid("F32 value doesn't support nth root yet."),
             Value::F64(_v) => ctx.invalid("F64 value doesn't support nth root yet."),
             _ => ctx.invalid("Value is not number."),

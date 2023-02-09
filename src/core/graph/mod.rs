@@ -4,8 +4,9 @@ use std::sync::Arc;
 use key_path::KeyPath;
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
+use crate::core::action::Action;
+use crate::core::action::source::ActionSource;
 use crate::core::connector::Connector;
-use crate::core::env::Env;
 use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::r#enum::Enum;
@@ -50,17 +51,17 @@ impl Graph {
 
     // MARK: - Queries
 
-    pub async fn find_unique(&self, model: &str, finder: &Value, mutation_mode: bool, env: Env) -> ActionResult<Object> {
+    pub(crate) async fn find_unique(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> ActionResult<Object> {
         let model = self.model(model).unwrap();
-        self.connector().find_unique(self, model, finder, mutation_mode, env).await
+        self.connector().find_unique(self, model, finder, mutation_mode, action, action_source).await
     }
 
-    pub async fn find_first(&self, model: &str, finder: &Value, mutation_mode: bool, env: Env) -> ActionResult<Object> {
+    pub(crate) async fn find_first(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> ActionResult<Object> {
         let model = self.model(model).unwrap();
         let mut finder = finder.as_hashmap().clone().unwrap().clone();
         finder.insert("take".to_string(), 1.into());
         let finder = Value::HashMap(finder);
-        let result = self.connector().find_many(self, model, &finder, mutation_mode, env).await;
+        let result = self.connector().find_many(self, model, &finder, mutation_mode, action, action_source).await;
         match result {
             Err(err) => Err(err),
             Ok(retval) => {
@@ -73,12 +74,12 @@ impl Graph {
         }
     }
 
-    pub async fn find_many(&self, model: &str, finder: &Value, mutation_mode: bool, env: Env) -> ActionResult<Vec<Object>> {
+    pub(crate) async fn find_many(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> ActionResult<Vec<Object>> {
         let model = self.model(model).unwrap();
-        self.connector().find_many(self, model, finder, mutation_mode, env).await
+        self.connector().find_many(self, model, finder, mutation_mode, action, action_source).await
     }
 
-    pub async fn batch<F, Fut>(&self, model: &str, finder: &Value, env: Env, f: F) -> ActionResult<()> where
+    pub(crate) async fn batch<F, Fut>(&self, model: &str, finder: &Value, action: Action, action_source: ActionSource, f: F) -> ActionResult<()> where
     F: Fn(Object) -> Fut,
     Fut: Future<Output = ActionResult<()>> {
         let batch_size: usize = 200;
@@ -87,7 +88,7 @@ impl Graph {
             let mut batch_finder = finder.clone();
             batch_finder.as_hashmap_mut().unwrap().insert("skip".to_owned(), (index * batch_size).into());
             batch_finder.as_hashmap_mut().unwrap().insert("take".to_owned(), batch_size.into());
-            let results = self.find_many(model, &batch_finder, true, env.clone()).await?;
+            let results = self.find_many(model, &batch_finder, true, action, action_source.clone()).await?;
             for result in results.iter() {
                 f(result.clone()).await?;
             }
@@ -98,38 +99,38 @@ impl Graph {
         }
     }
 
-    pub async fn count(&self, model: &str, finder: &Value) -> Result<usize, ActionError> {
+    pub(crate) async fn count(&self, model: &str, finder: &Value) -> Result<usize, ActionError> {
         let model = self.model(model).unwrap();
         self.connector().count(self, model, finder).await
     }
 
-    pub async fn aggregate(&self, model: &str, finder: &Value) -> Result<Value, ActionError> {
+    pub(crate) async fn aggregate(&self, model: &str, finder: &Value) -> Result<Value, ActionError> {
         let model = self.model(model).unwrap();
         self.connector().aggregate(self, model, finder).await
     }
 
-    pub async fn group_by(&self, model: &str, finder: &Value) -> Result<Value, ActionError> {
+    pub(crate) async fn group_by(&self, model: &str, finder: &Value) -> Result<Value, ActionError> {
         let model = self.model(model).unwrap();
         self.connector().group_by(self, model, finder).await
     }
 
     // MARK: - Create an object
 
-    pub(crate) fn new_object(&self, model: &str, env: Env) -> Result<Object, ActionError> {
+    pub(crate) fn new_object(&self, model: &str, action: Action, action_source: ActionSource) -> Result<Object, ActionError> {
         match self.model(model) {
-            Some(model) => Ok(Object::new(self, model, env)),
+            Some(model) => Ok(Object::new(self, model, action, action_source)),
             None => Err(ActionError::invalid_operation(format!("Model with name '{model}' is not defined.")))
         }
     }
 
-    pub(crate) async fn new_object_with_tson_and_path<'a>(&self, model: &str, initial: &Value, path: &KeyPath<'a>, env: Env) -> Result<Object, ActionError> {
-        let object = self.new_object(model, env)?;
+    pub(crate) async fn new_object_with_tson_and_path<'a>(&self, model: &str, initial: &Value, path: &KeyPath<'a>, action: Action, action_source: ActionSource) -> Result<Object, ActionError> {
+        let object = self.new_object(model, action, action_source)?;
         object.set_tson_with_path(initial, path).await?;
         Ok(object)
     }
 
     pub async fn create_object(&self, model: &str, initial: Value) -> Result<Object, ActionError> {
-        let obj = self.new_object(model, Env::custom_code())?;
+        let obj = self.new_object(model, Action::program_code_create(), ActionSource::ProgramCode)?;
         obj.set_tson(&initial).await?;
         Ok(obj)
     }

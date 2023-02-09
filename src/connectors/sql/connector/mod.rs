@@ -18,9 +18,10 @@ use crate::connectors::sql::query::Query;
 use crate::connectors::sql::stmts::SQL;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
+use crate::core::action::Action;
+use crate::core::action::source::ActionSource;
 use crate::core::connector::{Connector, SaveSession};
 use crate::core::database::r#type::DatabaseType;
-use crate::core::env::Env;
 use crate::core::error::ActionError;
 use crate::core::field::r#type::FieldType;
 use crate::core::input::Input;
@@ -241,8 +242,8 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, env: Env) -> Result<Object, ActionError> {
-        let objects = Execution::query_objects(&self.pool, model, graph, finder, self.dialect, env).await?;
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Object, ActionError> {
+        let objects = Execution::query_objects(&self.pool, model, graph, finder, self.dialect, action, action_source.clone()).await?;
         if objects.is_empty() {
             Err(ActionError::object_not_found())
         } else {
@@ -250,8 +251,8 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError> {
-        Execution::query_objects(&self.pool, model, graph, finder, self.dialect, env).await
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Vec<Object>, ActionError> {
+        Execution::query_objects(&self.pool, model, graph, finder, self.dialect, action, action_source).await
     }
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize, ActionError> {

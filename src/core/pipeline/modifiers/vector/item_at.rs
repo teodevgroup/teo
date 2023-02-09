@@ -27,7 +27,7 @@ impl Modifier for ItemAtModifier {
             None => ctx.invalid("Value is not vector."),
             Some(v) => {
                 let arg = self.index.resolve(ctx.clone()).await;
-                let index = arg.as_u32().unwrap() as usize;
+                let index = arg.as_i32().unwrap() as usize;
                 let new_keypath = ctx.key_path.as_ref() + index as usize;
                 ctx.alter_value(v.get(index).unwrap().clone())
                    .alter_key_path(new_keypath)

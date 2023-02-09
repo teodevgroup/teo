@@ -16,7 +16,7 @@ impl ToTypeScriptType for FieldType {
             FieldType::ObjectId => "string".to_string(),
             FieldType::String | FieldType::Date | FieldType::DateTime => "string".to_string(),
             FieldType::Bool => "boolean".to_string(),
-            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number".to_string(),
+            FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number".to_string(),
             FieldType::Decimal => "string".to_string(),
             FieldType::Enum(name) => name.to_string(),
             FieldType::Vec(internal) => internal.field_type().to_typescript_type(internal.optionality.is_optional()) + "[]",
@@ -40,7 +40,7 @@ impl ToTypeScriptType for FieldType {
             FieldType::Date => "string | Date | Date".to_string(),
             FieldType::DateTime => "string | Date | DateTime".to_string(),
             FieldType::Bool => "boolean | Bool".to_string(),
-            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number | Number".to_string(),
+            FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number | Number".to_string(),
             FieldType::Decimal => "string | DecimalFilter".to_string(),
             FieldType::Enum(name) => {
                 with_generic = true;
@@ -81,7 +81,7 @@ impl ToTypeScriptType for FieldType {
             FieldType::String | FieldType::Decimal => "string".to_string(),
             FieldType::Date | FieldType::DateTime => "Date | string".to_string(),
             FieldType::Bool => "boolean".to_string(),
-            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "number".to_string(),
+            FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number".to_string(),
             FieldType::Enum(name) => name.to_string(),
             FieldType::Vec(internal) => internal.field_type().to_typescript_type(internal.optionality.is_optional()) + "[]",
             FieldType::HashMap(_) => panic!(),
@@ -111,7 +111,7 @@ impl ToTypeScriptType for FieldType {
             FieldType::DateTime => "DateTime",
             FieldType::Decimal => "Decimal",
             FieldType::Bool => "Bool",
-            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 | FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 | FieldType::F32 | FieldType::F64 => "Number",
+            FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "Number",
             FieldType::Enum(name) => {
                 generic = format!("<{name}>");
                 "Enum"

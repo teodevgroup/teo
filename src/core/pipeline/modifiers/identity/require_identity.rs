@@ -22,7 +22,7 @@ impl Modifier for RequireIdentityModifier {
     }
 
     async fn call<'a>(&self, context: Context<'a>) -> Context<'a> {
-        if context.object.as_ref().unwrap().env().source().as_identity().is_some() {
+        if context.object.as_ref().unwrap().action_source().as_identity().is_some() {
             context
         } else {
             context.invalid("Identity is not present.")

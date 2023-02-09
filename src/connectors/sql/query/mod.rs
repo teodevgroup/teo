@@ -108,7 +108,7 @@ impl Query {
                         result.push(Self::where_item(&format!("ARRAY_LENGTH({})", &column_name), "=", "0"));
                     }
                     "length" => {
-                        result.push(Self::where_item(&format!("ARRAY_LENGTH({})", &column_name), "=", &value.to_sql_string(&FieldType::U64, false, graph)));
+                        result.push(Self::where_item(&format!("ARRAY_LENGTH({})", &column_name), "=", &value.to_sql_string(&FieldType::I64, false, graph)));
                     }
                     "_count" => {
                         result.push(Self::where_entry_item(&format!("COUNT({})", &column_name), &FieldType::I64, false, value, graph, dialect));
@@ -456,11 +456,11 @@ impl Query {
             stmt.order_by(Query::order_by(model, graph, &val, dialect, false));
         }
         if page_size.is_some() && page_number.is_some() {
-            let skip: u64 = ((page_number.unwrap().as_u64().unwrap() - 1) * page_size.unwrap().as_u64().unwrap()) as u64;
-            let limit: u64 = page_size.unwrap().as_u64().unwrap() as u64;
+            let skip: u64 = ((page_number.unwrap().as_i64().unwrap() - 1) * page_size.unwrap().as_i64().unwrap()) as u64;
+            let limit: u64 = page_size.unwrap().as_i64().unwrap() as u64;
             stmt.limit(limit, skip);
         } else if skip.is_some() || take.is_some() {
-            let skip: u64 = if skip.is_some() { skip.unwrap().as_u64().unwrap() as u64 } else { 0 };
+            let skip: u64 = if skip.is_some() { skip.unwrap().as_i64().unwrap() as u64 } else { 0 };
             if dialect == SQLDialect::MySQL {
                 let limit: u64 = if take.is_some() { take.unwrap().as_i64().unwrap().abs() as u64 } else { 18446744073709551615 };
                 stmt.limit(limit, skip);

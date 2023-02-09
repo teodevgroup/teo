@@ -33,20 +33,10 @@ impl ValueToSQLString for Value {
             FieldType::ObjectId => panic!("SQL doesn't support `ObjectId`."),
             FieldType::String => self.as_str().unwrap().to_sql_input(),
             FieldType::Bool => self.as_bool().unwrap().to_sql_input(),
-            FieldType::I8 | FieldType::I16 | FieldType::I32 | FieldType::I64 | FieldType::I128 |
-            FieldType::U8 | FieldType::U16 | FieldType::U32 | FieldType::U64 | FieldType::U128 => if let Some(val) = self.as_i64() {
-                val.to_string()
-            } else if let Some(val) = self.as_u64() {
-                val.to_string()
-            } else {
-                println!("see val: {:?}", self);
-                panic!("Uncoded number.")
-            }
+            FieldType::I32 | FieldType::I64 |
             FieldType::F32 | FieldType::F64 => if let Some(val) = self.as_f64() {
                 val.to_string()
             } else if let Some(val) = self.as_i64() {
-                val.to_string()
-            } else if let Some(val) = self.as_u64() {
                 val.to_string()
             } else {
                 panic!("Uncoded number.")
@@ -76,16 +66,8 @@ impl ToSQLString for Value {
         match self {
             Value::Null => "NULL".to_owned(),
             Value::String(string) => string.to_sql_input(),
-            Value::I8(i) => i.to_string(),
-            Value::I16(i) => i.to_string(),
             Value::I32(i) => i.to_string(),
             Value::I64(i) => i.to_string(),
-            Value::I128(i) => i.to_string(),
-            Value::U8(i) => i.to_string(),
-            Value::U16(i) => i.to_string(),
-            Value::U32(i) => i.to_string(),
-            Value::U64(i) => i.to_string(),
-            Value::U128(i) => i.to_string(),
             Value::F32(i) => i.to_string(),
             Value::F64(i) => i.to_string(),
             Value::Bool(b) => b.to_sql_input(),

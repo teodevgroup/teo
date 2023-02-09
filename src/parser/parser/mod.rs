@@ -17,7 +17,7 @@ use crate::parser::ast::config::ServerConfig;
 use crate::parser::ast::connector::Connector;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::decorator::Decorator;
-use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral, RegExpLiteral, NullishCoalescing};
+use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral, RegExpLiteral, NullishCoalescing, Negation, BitwiseNegation, AddSub, MulDivMod, BitwiseAnd, BitwiseXor, BitwiseOr};
 use crate::parser::ast::field::Field;
 use crate::parser::ast::generator::Generator;
 use crate::parser::ast::group::Group;
@@ -433,6 +433,13 @@ impl Parser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::nullish_coalescing => return Expression::new(ExpressionKind::NullishCoalescing(Self::parse_nullish_coalescing(current))),
+                Rule::negation => return Expression::new(ExpressionKind::Negation(Self::parse_negation(current))),
+                Rule::bitwise_negation => return Expression::new(ExpressionKind::BitwiseNegation(Self::parse_bitwise_negation(current))),
+                Rule::add_sub => return Expression::new(ExpressionKind::AddSub(Self::parse_add_sub(current))),
+                Rule::mul_div_mod => return Expression::new(ExpressionKind::MulDivMod(Self::parse_mul_div_mod(current))),
+                Rule::bitwise_and => return Expression::new(ExpressionKind::BitwiseAnd(Self::parse_bitwise_and(current))),
+                Rule::bitwise_xor => return Expression::new(ExpressionKind::BitwiseXor(Self::parse_bitwise_xor(current))),
+                Rule::bitwise_or => return Expression::new(ExpressionKind::BitwiseOr(Self::parse_bitwise_or(current))),
                 Rule::unit => return Expression::new(Self::parse_unit(current)),
                 Rule::pipeline => return Expression::new(ExpressionKind::Pipeline(Self::parse_pipeline(current))),
                 _ => panic!(),
@@ -480,6 +487,103 @@ impl Parser {
             }
         }
         NullishCoalescing { expressions, span }
+    }
+
+    fn parse_negation(pair: Pair<'_>) -> Negation {
+        let span = Self::parse_span(&pair);
+        let mut expression = None;
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::unit => expression = Some(Self::parse_unit(current)),
+                _ => unreachable!()
+            }
+        }
+        Negation { expression: Box::new(expression.unwrap()), span }
+    }
+
+    fn parse_bitwise_negation(pair: Pair<'_>) -> BitwiseNegation {
+        let span = Self::parse_span(&pair);
+        let mut expression = None;
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::unit => expression = Some(Self::parse_unit(current)),
+                _ => unreachable!()
+            }
+        }
+        BitwiseNegation { expression: Box::new(expression.unwrap()), span }
+    }
+
+    fn parse_add_sub(pair: Pair<'_>) -> AddSub {
+        let span = Self::parse_span(&pair);
+        let mut expressions = vec![];
+        let mut operators = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::add_sub_operand => expressions.push(Self::parse_expression(current).kind),
+                Rule::ADD_SUB_OPERATOR => operators.push(match current.as_span().as_str() {
+                    "-" => "-",
+                    "+" => "+",
+                    _ => unreachable!()
+                }),
+                _ => unreachable!()
+            }
+        }
+        AddSub { expressions, operators, span }
+    }
+
+    fn parse_mul_div_mod(pair: Pair<'_>) -> MulDivMod {
+        let span = Self::parse_span(&pair);
+        let mut expressions = vec![];
+        let mut operators = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::mul_div_mod_operand => expressions.push(Self::parse_expression(current).kind),
+                Rule::ADD_SUB_OPERATOR => operators.push(match current.as_span().as_str() {
+                    "*" => "*",
+                    "/" => "/",
+                    "%" => "%",
+                    _ => unreachable!()
+                }),
+                _ => unreachable!()
+            }
+        }
+        MulDivMod { expressions, operators, span }
+    }
+
+    fn parse_bitwise_and(pair: Pair<'_>) -> BitwiseAnd {
+        let span = Self::parse_span(&pair);
+        let mut expressions = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::bitwise_and_operand => expressions.push(Self::parse_expression(current).kind),
+                _ => unreachable!()
+            }
+        }
+        BitwiseAnd { expressions, span }
+    }
+
+    fn parse_bitwise_xor(pair: Pair<'_>) -> BitwiseXor {
+        let span = Self::parse_span(&pair);
+        let mut expressions = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::bitwise_xor_operand => expressions.push(Self::parse_expression(current).kind),
+                _ => unreachable!()
+            }
+        }
+        BitwiseXor { expressions, span }
+    }
+
+    fn parse_bitwise_or(pair: Pair<'_>) -> BitwiseOr {
+        let span = Self::parse_span(&pair);
+        let mut expressions = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::bitwise_or_operand => expressions.push(Self::parse_expression(current).kind),
+                _ => unreachable!()
+            }
+        }
+        BitwiseOr { expressions, span }
     }
 
     fn parse_subscript(pair: Pair<'_>) -> Subscript {

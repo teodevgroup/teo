@@ -194,14 +194,19 @@
 - Rename `Action` into `Handler` **[DONE]**
 - CLI migrate command **[DONE]**
 - Migrate when starting server **[DONE]**
-- Rename `intent` to action
-- Rename `source` to action source
+- Rename `intent` to action **[DONE]**
+- Rename `source` to action source **[DONE]**
+- Parser: bitwise `~`, `|`, `^`, `&` **[DONE]**
+- Parser: `+` `-` `*` `/` `%` **[DONE]**
+- Remove redundant teon number types **[DONE]**
 - Finalize item field for collection
 - Finalize fields and properties
+- Add `INTERNAL` to action together with `ENTRY` and `NESTED`
 - Add `@canRead` and `@canMutate`
 - Always record previous id value and support modifying `@id` fields
 - Add before delete and after delete callback to delete
 - Add `@canMutate` to delete
+- Rust entities for query methods
 - Rust entities for optional numbers
 - Rust entities for optional `Date`s
 - Rust entities for optional `DateTime`s

@@ -15,35 +15,11 @@ impl Into<JsonValue> for Value {
             Value::Bool(val) => {
                 JsonValue::Bool(val.clone())
             }
-            Value::I8(val) => {
-                JsonValue::Number(JsonNumber::from(val))
-            }
-            Value::I16(val) => {
-                JsonValue::Number(JsonNumber::from(val))
-            }
             Value::I32(val) => {
                 JsonValue::Number(JsonNumber::from(val))
             }
             Value::I64(val) => {
                 JsonValue::Number(JsonNumber::from(val))
-            }
-            Value::I128(val) => {
-                JsonValue::Number(JsonNumber::from(val as i64))
-            }
-            Value::U8(val) => {
-                JsonValue::Number(JsonNumber::from(val))
-            }
-            Value::U16(val) => {
-                JsonValue::Number(JsonNumber::from(val))
-            }
-            Value::U32(val) => {
-                JsonValue::Number(JsonNumber::from(val))
-            }
-            Value::U64(val) => {
-                JsonValue::Number(JsonNumber::from(val))
-            }
-            Value::U128(val) => {
-                JsonValue::Number(JsonNumber::from(val as u64))
             }
             Value::F32(val) => {
                 JsonValue::Number(JsonNumber::from_f64(val as f64).unwrap())

@@ -11,15 +11,14 @@ use futures_util::StreamExt;
 use key_path::{KeyPath, path};
 use serde_json::{json, Value as JsonValue};
 use to_mut::ToMut;
+use crate::core::action::{Action, CREATE, DELETE, ENTRY, FIND, IDENTITY, MANY, SINGLE, UPDATE, UPSERT};
+use crate::core::action::source::ActionSource;
 use crate::core::handler::Handler;
 use crate::core::app::conf::ServerConf;
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use crate::core::app::migrate::migrate;
 use self::jwt_token::{Claims, decode_token, encode_token};
-use crate::core::env::Env;
-use crate::core::env::intent::Intent;
-use crate::core::env::source::Source;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::object::Object;
@@ -107,17 +106,16 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConf) -> Resu
         &teon!({
             "where": tson_identifier
         }),
-        true,
-        Env::new(Source::CustomCode, Intent::FindUnique)).await;
+        true, Action::from_u32(IDENTITY | FIND | SINGLE | ENTRY), ActionSource::ProgramCode).await;
     if let Err(_) = identity {
         return Err(ActionError::invalid_auth_token())
     }
     return Ok(Some(identity.unwrap()));
 }
 
-async fn handle_find_unique(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::FindUnique);
-    let result = graph.find_unique(model.name(), input, false, env).await;
+async fn handle_find_unique(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+    let action = Action::from_u32(FIND | SINGLE | ENTRY);
+    let result = graph.find_unique(model.name(), input, false, action, source).await;
     match result {
         Ok(obj) => {
             let json_data: JsonValue = obj.to_json().await.unwrap().into();
@@ -129,9 +127,9 @@ async fn handle_find_unique(graph: &Graph, input: &Value, model: &Model, source:
     }
 }
 
-async fn handle_find_first(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::FindFirst);
-    let result = graph.find_first(model.name(), input, false, env).await;
+async fn handle_find_first(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+    let action = Action::from_u32(FIND | SINGLE | ENTRY);
+    let result = graph.find_first(model.name(), input, false, action, source).await;
     match result {
         Ok(obj) => {
             let json_data: JsonValue = obj.to_json().await.unwrap().into();
@@ -143,9 +141,9 @@ async fn handle_find_first(graph: &Graph, input: &Value, model: &Model, source: 
     }
 }
 
-async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::FindMany);
-    let result = graph.find_many(model.name(), input, false, env).await;
+async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+    let action = Action::from_u32(FIND | MANY | ENTRY);
+    let result = graph.find_many(model.name(), input, false, action, source).await;
     match result {
         Ok(results) => {
             let mut count_input = input.clone();
@@ -158,8 +156,8 @@ async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: S
             let mut meta = json!({"count": count});
             let page_size = input.get("pageSize");
             if page_size.is_some() {
-                let page_size = page_size.unwrap().as_u64().unwrap();
-                let count = count as u64;
+                let page_size = page_size.unwrap().as_i32().unwrap();
+                let count = count as i32;
                 let mut number_of_pages = count / page_size;
                 if count % page_size != 0 {
                     number_of_pages += 1;
@@ -187,8 +185,8 @@ async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: S
     }
 }
 
-async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: Option<&Value>, select: Option<&Value>, model: &Model, path: &KeyPath<'_>, env: Env) -> Result<Value, ActionError> {
-    let obj = graph.new_object(model.name(), env)?;
+async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: Option<&Value>, select: Option<&Value>, model: &Model, path: &KeyPath<'_>, action: Action, action_source: ActionSource) -> Result<Value, ActionError> {
+    let obj = graph.new_object(model.name(), action, action_source)?;
     let set_json_result = match create {
         Some(create) => {
             if !create.is_hashmap() {
@@ -208,13 +206,13 @@ async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: 
     refetched.to_json().await
 }
 
-async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::Create);
+async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+    let action = Action::from_u32(CREATE | ENTRY | SINGLE);
     let input = input.as_hashmap().unwrap();
     let create = input.get("create");
     let include = input.get("include");
     let select = input.get("select");
-    let result = handle_create_internal(graph, create, include, select, model, &path!["create"], env).await;
+    let result = handle_create_internal(graph, create, include, select, model, &path!["create"], action, source).await;
     match result {
         Ok(val) => {
             let json_val: JsonValue = val.into();
@@ -233,9 +231,9 @@ async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&
     refetched.to_json().await
 }
 
-async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::Update);
-    let result = graph.find_unique(model.name(), input, true, env).await;
+async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+    let action = Action::from_u32(UPDATE | ENTRY | SINGLE);
+    let result = graph.find_unique(model.name(), input, true, action, source).await;
     if result.is_err() {
         return HttpResponse::NotFound().json(json!({"error": result.err()}));
     }
@@ -256,12 +254,12 @@ async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: Sour
     }
 }
 
-async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source.clone(), Intent::UpsertActuallyUpdate);
-    let result = graph.find_unique(model.name(), input, true, env).await;
+async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+    let action = Action::from_u32(UPSERT | UPDATE | ENTRY | SINGLE);
+    let result = graph.find_unique(model.name(), input, true, action, source.clone()).await;
     let include = input.get("include");
     let select = input.get("select");
-    match result {
+    return match result {
         Ok(obj) => {
             // find the object here
             let update = input.get("update");
@@ -274,7 +272,7 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Sour
                     obj.set_tson(&empty).await
                 }
             };
-            return match set_json_result {
+            match set_json_result {
                 Ok(_) => {
                     match obj.save().await {
                         Ok(_) => {
@@ -295,8 +293,8 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Sour
         }
         Err(_) => {
             let create = input.get("create");
-            let env = Env::new(source.clone(), Intent::UpsertActuallyCreate);
-            let obj = graph.new_object(model.name(), env).unwrap();
+            let action = Action::from_u32(UPSERT | CREATE | ENTRY | SINGLE);
+            let obj = graph.new_object(model.name(), action, source).unwrap();
             let set_json_result = match create {
                 Some(create) => {
                     obj.set_tson(create).await
@@ -306,7 +304,7 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Sour
                     obj.set_tson(&empty).await
                 }
             };
-            return match set_json_result {
+            match set_json_result {
                 Ok(_) => {
                     match obj.save().await {
                         Ok(_) => {
@@ -328,9 +326,9 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Sour
     }
 }
 
-async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::Delete);
-    let result = graph.find_unique(model.name(), input, true, env).await;
+async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+    let action = Action::from_u32(DELETE | SINGLE | ENTRY);
+    let result = graph.find_unique(model.name(), input, true, action, source).await;
     if result.is_err() {
         return HttpResponse::NotFound().json(json!({"error": result.err()}));
     }
@@ -347,8 +345,8 @@ async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: Sour
     }
 }
 
-async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::CreateMany);
+async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+    let action = Action::from_u32(CREATE | MANY | ENTRY);
     let input = input.as_hashmap().unwrap();
     let create = input.get("create");
     let include = input.get("include");
@@ -366,7 +364,7 @@ async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source:
     let mut count = 0;
     let mut ret_data: Vec<Value> = vec![];
     for (index, val) in create.iter().enumerate() {
-        let result = handle_create_internal(graph, Some(val), include, select, model, &path!["create", index], env.clone()).await;
+        let result = handle_create_internal(graph, Some(val), include, select, model, &path!["create", index], action, source.clone()).await;
         match result {
             Err(err) => {
                 println!("{:?}", err.errors);
@@ -384,9 +382,9 @@ async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source:
     }))
 }
 
-async fn handle_update_many(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::UpdateMany);
-    let result = graph.find_many(model.name(), input, true, env).await;
+async fn handle_update_many(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+    let action = Action::from_u32(UPDATE | MANY | ENTRY);
+    let result = graph.find_many(model.name(), input, true, action, source).await;
     if result.is_err() {
         return HttpResponse::BadRequest().json(json!({"error": result.err()}));
     }
@@ -415,9 +413,9 @@ async fn handle_update_many(graph: &Graph, input: &Value, model: &Model, source:
         }))
 }
 
-async fn handle_delete_many(graph: &Graph, input: &Value, model: &Model, source: Source) -> HttpResponse {
-    let env = Env::new(source, Intent::DeleteMany);
-    let result = graph.find_many(model.name(), input, true, env).await;
+async fn handle_delete_many(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+    let action = Action::from_u32(DELETE | MANY | ENTRY);
+    let result = graph.find_many(model.name(), input, true, action, source).await;
     if result.is_err() {
         return HttpResponse::BadRequest().json(json!({"error": result.err()}));
     }
@@ -446,7 +444,7 @@ async fn handle_delete_many(graph: &Graph, input: &Value, model: &Model, source:
         }))
 }
 
-async fn handle_count(graph: &Graph, input: &Value, model: &Model, _source: Source) -> HttpResponse {
+async fn handle_count(graph: &Graph, input: &Value, model: &Model, _source: ActionSource) -> HttpResponse {
     let result = graph.count(model.name(), input).await;
     match result {
         Ok(count) => {
@@ -458,7 +456,7 @@ async fn handle_count(graph: &Graph, input: &Value, model: &Model, _source: Sour
     }
 }
 
-async fn handle_aggregate(graph: &Graph, input: &Value, model: &Model, _source: Source) -> HttpResponse {
+async fn handle_aggregate(graph: &Graph, input: &Value, model: &Model, _source: ActionSource) -> HttpResponse {
     match graph.aggregate(model.name(), input).await {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": j(count)}))
@@ -469,7 +467,7 @@ async fn handle_aggregate(graph: &Graph, input: &Value, model: &Model, _source: 
     }
 }
 
-async fn handle_group_by(graph: &Graph, input: &Value, model: &Model, _source: Source) -> HttpResponse {
+async fn handle_group_by(graph: &Graph, input: &Value, model: &Model, _source: ActionSource) -> HttpResponse {
     match graph.group_by(model.name(), input).await {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": j(count)}))
@@ -524,7 +522,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
         "where": {
             identity_key.unwrap(): identity_value.unwrap()
         }
-    }), true, Env::new(Source::CustomCode, Intent::FindUnique)).await;
+    }), true, Action::from_u32(FIND | SINGLE | ENTRY), ActionSource::ProgramCode).await;
     if let Err(_err) = obj_result {
         return ActionError::unexpected_input_value("This identity is not found.", path!["credentials", identity_key.unwrap()]).into();
     }
@@ -562,7 +560,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     }
 }
 
-async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &ServerConf, source: Source) -> HttpResponse {
+async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &ServerConf, source: ActionSource) -> HttpResponse {
     let identity = source.as_identity();
     if let Some(identity) = identity {
         if identity.model() != model {
@@ -695,7 +693,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
             // } else {
             //     parsed_body
             // };
-            let source = Source::Identity(identity);
+            let source = ActionSource::Identity(identity);
             match action {
                 Handler::FindUnique => {
                     let result = handle_find_unique(&graph, &transformed_body, model_def, source.clone()).await;

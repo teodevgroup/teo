@@ -8,7 +8,8 @@ use crate::connectors::sql::query::Query;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::decode::RowDecoder;
 use crate::connectors::sql::schema::value::encode::{SQLEscape, ToSQLString, ToWrapped};
-use crate::core::env::Env;
+use crate::core::action::Action;
+use crate::core::action::source::ActionSource;
 use crate::core::error::ActionError;
 use crate::core::field::r#type::FieldType;
 use crate::core::input::Input;
@@ -80,13 +81,13 @@ impl Execution {
         Value::HashMap(retval)
     }
 
-    pub(crate) async fn query_objects(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect, env: Env) -> ActionResult<Vec<Object>> {
+    pub(crate) async fn query_objects(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect, action: Action, action_source: ActionSource) -> ActionResult<Vec<Object>> {
         let values = Self::query(pool, model, graph, finder, dialect).await?;
         let select = finder.as_hashmap().unwrap().get("select");
         let include = finder.as_hashmap().unwrap().get("include");
         let mut results = vec![];
         for value in values {
-            let object = graph.new_object(model.name(), env.clone())?;
+            let object = graph.new_object(model.name(), action, action_source.clone())?;
             object.set_from_database_result_value(&value, select, include);
             results.push(object);
         }
@@ -131,7 +132,7 @@ impl Execution {
             });
         }
         if should_in_memory_take_skip {
-            let skip = skip.map(|s| s.as_u64().unwrap()).unwrap_or(0) as usize;
+            let skip = skip.map(|s| s.as_i64().unwrap()).unwrap_or(0) as usize;
             let take = take.map(|s| s.as_i64().unwrap().abs() as u64).unwrap_or(0) as usize;
             results = results.into_iter().enumerate().filter(|(i, _r)| {
                 *i >= skip && *i < (skip + take)
@@ -143,7 +144,7 @@ impl Execution {
         if let Some(include) = include.map(|i| i.as_hashmap().unwrap()) {
             for (key, value) in include {
 
-                let skip = value.as_hashmap().map(|m| m.get("skip")).flatten().map(|v| v.as_u64().unwrap());
+                let skip = value.as_hashmap().map(|m| m.get("skip")).flatten().map(|v| v.as_i64().unwrap());
                 let take = value.as_hashmap().map(|m| m.get("take")).flatten().map(|v| v.as_i64().unwrap());
                 let take_abs = take.map(|t| t.abs() as u64);
                 let negative_take = take.map(|v| v.is_negative()).unwrap_or(false);

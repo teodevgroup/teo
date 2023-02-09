@@ -1,8 +1,9 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 use async_trait::async_trait;
+use crate::core::action::Action;
+use crate::core::action::source::ActionSource;
 use crate::core::database::r#type::DatabaseType;
-use crate::core::env::Env;
 use crate::core::field::r#type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
@@ -37,9 +38,9 @@ pub(crate) trait Connector: Debug + Send + Sync {
 
     async fn delete_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()>;
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Object, ActionError>;
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Object, ActionError>;
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, env: Env) -> Result<Vec<Object>, ActionError>;
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Vec<Object>, ActionError>;
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize, ActionError>;
 

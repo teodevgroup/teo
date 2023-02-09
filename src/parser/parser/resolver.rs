@@ -10,7 +10,7 @@ use crate::parser::ast::config::ServerConfig;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::entity::Entity;
-use crate::parser::ast::expression::{ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
+use crate::parser::ast::expression::{AddSub, ArrayLiteral, BitwiseAnd, BitwiseNegation, BitwiseOr, BitwiseXor, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, MulDivMod, Negation, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
 use crate::parser::ast::field::{Field, FieldClass};
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::Identifier;
@@ -30,6 +30,7 @@ use crate::parser::std::decorators::property::GlobalPropertyDecorators;
 use crate::parser::std::decorators::relation::GlobalRelationDecorators;
 use crate::prelude::Value;
 use to_mut::ToMut;
+use crate::core::action::Action;
 use crate::core::app::environment::Environment;
 use crate::parser::ast::client::{Client, ClientLanguage};
 use crate::parser::ast::generator::Generator;
@@ -174,7 +175,7 @@ impl Resolver {
                 }
                 decorator.accessible = Some(accessible.clone());
                 for argument in arg_list.as_mut().unwrap().arguments.iter_mut() {
-                    let result = Self::resolve_expression_kind(parser, source, &argument.value);
+                    let result = Self::resolve_expression_kind(parser, source, &argument.value, false);
                     let value = Self::unwrap_into_value_if_needed(parser, source, &result);
                     argument.resolved = Some(Entity::Value(value));
                 }
@@ -215,7 +216,7 @@ impl Resolver {
                 }
                 decorator.accessible = Some(accessible.clone());
                 for argument in arg_list.as_mut().unwrap().arguments.iter_mut() {
-                    let result = Self::resolve_expression_kind(parser, source, &argument.value);
+                    let result = Self::resolve_expression_kind(parser, source, &argument.value, false);
                     let value = Self::unwrap_into_value_if_needed(parser, source, &result);
                     argument.resolved = Some(Entity::Value(value));
                 }
@@ -256,7 +257,7 @@ impl Resolver {
                 }
                 decorator.accessible = Some(accessible.clone());
                 for argument in arg_list.as_mut().unwrap().arguments.iter_mut() {
-                    let result = Self::resolve_expression_kind(parser, source, &argument.value);
+                    let result = Self::resolve_expression_kind(parser, source, &argument.value, false);
                     let value = Self::unwrap_into_value_if_needed(parser, source, &result);
                     argument.resolved = Some(Entity::Value(value));
                 }
@@ -297,7 +298,7 @@ impl Resolver {
                 }
                 decorator.accessible = Some(accessible.clone());
                 for argument in arg_list.as_mut().unwrap().arguments.iter_mut() {
-                    let result = Self::resolve_expression_kind(parser, source, &argument.value);
+                    let result = Self::resolve_expression_kind(parser, source, &argument.value, false);
                     let value = Self::unwrap_into_value_if_needed(parser, source, &result);
                     argument.resolved = Some(Entity::Value(value));
                 }
@@ -351,9 +352,12 @@ impl Resolver {
                         }
                         ExpressionKind::ArgumentList(argument_list) => {
                             let mut args = argument_list.clone();
-                            for arg in &mut args.arguments {
-                                let result = Self::resolve_expression_kind(parser, source, &arg.value);
-                                let value = Self::unwrap_into_value_if_needed(parser, source, &result);
+                            for (index, arg) in &mut args.arguments.iter_mut().enumerate() {
+                                let value = if &previous_identifier.unwrap().name == "when" && index == 0 {
+                                    Self::resolve_expression_kind_force_value(parser, source, &arg.value, true)
+                                } else {
+                                    Self::resolve_expression_kind_force_value(parser, source, &arg.value, false)
+                                };
                                 arg.resolved = Some(Entity::Value(value));
                             }
                             let installer = parser.global_pipeline_installers().get(&previous_identifier.unwrap().name);
@@ -520,8 +524,8 @@ impl Resolver {
                             let arg1 = tuple_vec.get(0).unwrap();
                             let arg2 = tuple_vec.get(1).unwrap();
                             let str = arg1.as_str().unwrap().to_owned();
-                            let int = arg2.as_u16().unwrap().to_owned();
-                            config.bind = Some((str, int));
+                            let int = arg2.as_i32().unwrap().to_owned();
+                            config.bind = Some((str, int as u16));
                         }
                         None => panic!("Argument to 'bind' should be a tuple.")
                     }
@@ -552,16 +556,37 @@ impl Resolver {
     // Expression
 
     pub(crate) fn resolve_expression<'a>(parser: &Parser, source: &Source, expression: &mut Expression) {
-        expression.resolved = Some(Self::resolve_expression_kind(parser, source, &mut expression.kind));
+        expression.resolved = Some(Self::resolve_expression_kind(parser, source, &mut expression.kind, false));
     }
 
-    pub(crate) fn resolve_expression_kind(parser: &Parser, source: &Source, expression_kind: &ExpressionKind) -> Entity {
+    pub(crate) fn resolve_expression_kind(parser: &Parser, source: &Source, expression_kind: &ExpressionKind, when_option: bool) -> Entity {
         match expression_kind {
             ExpressionKind::Group(group) => {
-                Self::resolve_group(parser, source, group)
+                Self::resolve_group(parser, source, group, when_option)
             }
             ExpressionKind::NullishCoalescing(nullish_coalescing) => {
                 Self::resolve_nullish_coalescing(parser, source, nullish_coalescing)
+            }
+            ExpressionKind::Negation(negation) => {
+                Self::resolve_negation(parser, source, negation)
+            }
+            ExpressionKind::BitwiseNegation(negation) => {
+                Self::resolve_bitwise_negation(parser, source, negation, when_option)
+            }
+            ExpressionKind::AddSub(add_sub) => {
+                Self::resolve_add_sub(parser, source, add_sub)
+            }
+            ExpressionKind::MulDivMod(mul_div_mod) => {
+                Self::resolve_mul_div_mod(parser, source, mul_div_mod)
+            }
+            ExpressionKind::BitwiseAnd(and) => {
+                Self::resolve_bitwise_and(parser, source, and, when_option)
+            }
+            ExpressionKind::BitwiseXor(xor) => {
+                Self::resolve_bitwise_xor(parser, source, xor, when_option)
+            }
+            ExpressionKind::BitwiseOr(or) => {
+                Self::resolve_bitwise_or(parser, source, or, when_option)
             }
             ExpressionKind::NumericLiteral(n) => {
                 Self::resolve_numeric_literal(n)
@@ -588,7 +613,7 @@ impl Resolver {
                 Self::resolve_tuple_literal(parser, source, tuple_literal)
             }
             ExpressionKind::ArrayLiteral(array_literal) => {
-                Self::resolve_array_literal(parser, source, array_literal)
+                Self::resolve_array_literal(parser, source, array_literal, when_option)
             }
             ExpressionKind::DictionaryLiteral(dictionary_literal) => {
                 Self::resolve_dictionary_literal(parser, source, dictionary_literal)
@@ -611,10 +636,15 @@ impl Resolver {
         }
     }
 
+    fn resolve_expression_kind_force_value(parser: &Parser, source: &Source, expression_kind: &ExpressionKind, when_option: bool) -> Value {
+        let entity = Self::resolve_expression_kind(parser, source, expression_kind, when_option);
+        Self::unwrap_into_value_if_needed(parser, source, &entity)
+    }
+
     // identifier
 
-    fn resolve_group(parser: &Parser, source: &Source, group: &Group) -> Entity {
-        Self::resolve_expression_kind(parser, source, &group.expression)
+    fn resolve_group(parser: &Parser, source: &Source, group: &Group, when_option: bool) -> Entity {
+        Self::resolve_expression_kind(parser, source, &group.expression, when_option)
     }
 
     fn resolve_identifier(parser: &Parser, source: &Source, identifier: &Identifier, parent: Option<&Entity>) -> Entity {
@@ -647,7 +677,7 @@ impl Resolver {
 
     fn resolve_unit(parser: &Parser, source: &Source, unit: &Unit) -> Entity {
         let first_expression = unit.expressions.get(0).unwrap();
-        let mut entity = Self::resolve_expression_kind(parser, source, first_expression);
+        let mut entity = Self::resolve_expression_kind(parser, source, first_expression, false);
         for (index, expression) in unit.expressions.iter().enumerate() {
             if index == 0 { continue }
             entity = Self::resolve_accessor(parser, source, expression, &entity);
@@ -672,7 +702,7 @@ impl Resolver {
     }
 
     fn resolve_subscript(parser: &Parser, source: &Source, subscript: &Subscript, entity: &Entity) -> Entity {
-        let index_entity = Self::resolve_expression_kind(parser, source, &subscript.expression);
+        let index_entity = Self::resolve_expression_kind(parser, source, &subscript.expression, false);
         let index_value = Self::unwrap_into_value_if_needed(parser, source, &index_entity);
         if entity.is_accessible() {
             let accessible = entity.as_accessible().unwrap();
@@ -764,10 +794,10 @@ impl Resolver {
     }
 
     fn resolve_range_literal(parser: &Parser, source: &Source, range_literal: &RangeLiteral) -> Entity {
-        let a = Self::resolve_expression_kind(parser, source, range_literal.expressions.get(0).unwrap());
+        let a = Self::resolve_expression_kind(parser, source, range_literal.expressions.get(0).unwrap(), false);
         let a_v = Self::unwrap_into_value_if_needed(parser, source, &a);
         let start = Box::new(a_v);
-        let b = Self::resolve_expression_kind(parser, source, range_literal.expressions.get(1).unwrap());
+        let b = Self::resolve_expression_kind(parser, source, range_literal.expressions.get(1).unwrap(), false);
         let b_v = Self::unwrap_into_value_if_needed(parser, source, &b);
         let end = Box::new(b_v);
         Entity::Value(Value::Range(Range { closed: range_literal.closed.clone(), start, end }))
@@ -776,17 +806,17 @@ impl Resolver {
     fn resolve_tuple_literal(parser: &Parser, source: &Source, tuple_literal: &TupleLiteral) -> Entity {
         let mut resolved = vec![];
         for expression in tuple_literal.expressions.iter() {
-            let e = Self::resolve_expression_kind(parser, source, expression);
+            let e = Self::resolve_expression_kind(parser, source, expression, false);
             let v = Self::unwrap_into_value_if_needed(parser, source, &e);
             resolved.push(v);
         }
         Entity::Value(Value::Tuple(resolved))
     }
 
-    fn resolve_array_literal(parser: &Parser, source: &Source, array_literal: &ArrayLiteral) -> Entity {
+    fn resolve_array_literal(parser: &Parser, source: &Source, array_literal: &ArrayLiteral, when_option: bool) -> Entity {
         let mut resolved = vec![];
         for expression in array_literal.expressions.iter() {
-            let e = Self::resolve_expression_kind(parser, source, expression);
+            let e = Self::resolve_expression_kind(parser, source, expression, when_option);
             let v = Self::unwrap_into_value_if_needed(parser, source, &e);
             resolved.push(v);
         }
@@ -796,9 +826,9 @@ impl Resolver {
     fn resolve_dictionary_literal(parser: &Parser, source: &Source, dic: &DictionaryLiteral) -> Entity {
         let mut resolved: IndexMap<String, Value> = IndexMap::new();
         for (key, value) in dic.expressions.iter() {
-            let k = Self::resolve_expression_kind(parser, source, key);
+            let k = Self::resolve_expression_kind(parser, source, key, false);
             let k = Self::unwrap_into_value_if_needed(parser, source, &k);
-            let v = Self::resolve_expression_kind(parser, source, value);
+            let v = Self::resolve_expression_kind(parser, source, value, false);
             let v = Self::unwrap_into_value_if_needed(parser, source, &v);
             resolved.insert(k.as_str().unwrap().to_string(), v);
         }
@@ -808,12 +838,147 @@ impl Resolver {
     fn resolve_nullish_coalescing(parser: &Parser, source: &Source, nullish_coalescing: &NullishCoalescing) -> Entity {
         let mut resolved = Entity::Value(Value::Null);
         for e in nullish_coalescing.expressions.iter() {
-            resolved = Self::resolve_expression_kind(parser, source, e);
+            resolved = Self::resolve_expression_kind(parser, source, e, false);
             if !resolved.is_null() {
                 return resolved;
             }
         }
         return resolved
+    }
+
+    fn resolve_negation(parser: &Parser, source: &Source, negation: &Negation) -> Entity {
+        let value = Self::resolve_expression_kind_force_value(parser, source, &negation.expression, false);
+        Entity::Value(match value {
+            Value::I32(v) => Value::I32(-v),
+            Value::I64(v) => Value::I64(-v),
+            Value::F32(v) => Value::F32(-v),
+            Value::F64(v) => Value::F64(-v),
+            _ => panic!("Cannot negate value {:?}", value)
+        })
+    }
+
+    fn resolve_add_sub(parser: &Parser, source: &Source, add_sub: &AddSub) -> Entity {
+        let mut lhs = Self::resolve_expression_kind_force_value(parser, source, add_sub.expressions.get(0).unwrap(), false);
+        for (index, expression) in add_sub.expressions.iter().enumerate() {
+            if index == 0 {
+                continue;
+            }
+            let rhs = Self::resolve_expression_kind_force_value(parser, source, expression, false);
+            match *add_sub.operators.get(index - 1).unwrap() {
+                "+" => {
+                    lhs = lhs + rhs;
+                }
+                "-" => {
+                    lhs = lhs - rhs;
+                }
+                _ => unreachable!()
+            }
+        }
+        Entity::Value(lhs)
+    }
+
+    fn resolve_mul_div_mod(parser: &Parser, source: &Source, mul_div_mod: &MulDivMod) -> Entity {
+        let mut lhs = Self::resolve_expression_kind_force_value(parser, source, mul_div_mod.expressions.get(0).unwrap(), false);
+        for (index, expression) in mul_div_mod.expressions.iter().enumerate() {
+            if index == 0 {
+                continue;
+            }
+            let rhs = Self::resolve_expression_kind_force_value(parser, source, expression, false);
+            match *mul_div_mod.operators.get(index - 1).unwrap() {
+                "*" => {
+                    lhs = lhs * rhs;
+                }
+                "/" => {
+                    lhs = lhs / rhs;
+                }
+                "%" => {
+                    lhs = lhs % rhs;
+                }
+                _ => unreachable!()
+            }
+        }
+        Entity::Value(lhs)
+    }
+
+    fn resolve_bitwise_negation(parser: &Parser, source: &Source, negation: &BitwiseNegation, when_option: bool) -> Entity {
+        let value = Self::resolve_expression_kind_force_value(parser, source, &negation.expression, when_option);
+        Entity::Value(match value {
+            Value::I32(v) => Value::I32(!v),
+            Value::I64(v) => Value::I64(!v),
+            Value::RawEnumChoice(e) => if when_option {
+                Value::RawOptionChoice(Action::from_name(&e).neg().to_u32())
+            } else {
+                panic!("Unhandled option bitwise operation")
+            }
+            Value::RawOptionChoice(o) => if when_option {
+                Value::RawOptionChoice(Action::from_u32(o).neg().to_u32())
+            } else {
+                panic!("Unhandled option bitwise operation")
+            },
+            _ => panic!("Cannot negate value {:?}", value)
+        })
+    }
+
+    fn value_to_action_option(v: &Value) -> Action {
+        match v {
+            Value::RawEnumChoice(e) => Action::from_name(&e),
+            Value::RawOptionChoice(u) => Action::from_u32(*u),
+            _ => unreachable!()
+        }
+    }
+
+    fn resolve_bitwise_and(parser: &Parser, source: &Source, bitwise_and: &BitwiseAnd, when_mode: bool) -> Entity {
+        let mut lhs = Self::resolve_expression_kind_force_value(parser, source, bitwise_and.expressions.get(0).unwrap(), false);
+        for (index, expression) in bitwise_and.expressions.iter().enumerate() {
+            if index == 0 {
+                continue;
+            }
+            let rhs = Self::resolve_expression_kind_force_value(parser, source, expression, false);
+            if when_mode {
+                let lhs_action = Self::value_to_action_option(&lhs);
+                let rhs_action = Self::value_to_action_option(&rhs);
+                lhs = Value::RawOptionChoice(lhs_action.and(rhs_action).to_u32());
+            } else {
+                lhs = lhs & rhs;
+            }
+        }
+        Entity::Value(lhs)
+    }
+
+    fn resolve_bitwise_xor(parser: &Parser, source: &Source, bitwise_xor: &BitwiseXor, when_mode: bool) -> Entity {
+        let mut lhs = Self::resolve_expression_kind_force_value(parser, source, bitwise_xor.expressions.get(0).unwrap(), false);
+        for (index, expression) in bitwise_xor.expressions.iter().enumerate() {
+            if index == 0 {
+                continue;
+            }
+            let rhs = Self::resolve_expression_kind_force_value(parser, source, expression, false);
+            if when_mode {
+                let lhs_action = Self::value_to_action_option(&lhs);
+                let rhs_action = Self::value_to_action_option(&rhs);
+                lhs = Value::RawOptionChoice(lhs_action.xor(rhs_action).to_u32());
+            } else {
+                lhs = lhs ^ rhs;
+            }
+        }
+        Entity::Value(lhs)
+    }
+
+    fn resolve_bitwise_or(parser: &Parser, source: &Source, bitwise_or: &BitwiseOr, when_mode: bool) -> Entity {
+        let mut lhs = Self::resolve_expression_kind_force_value(parser, source, bitwise_or.expressions.get(0).unwrap(), false);
+        for (index, expression) in bitwise_or.expressions.iter().enumerate() {
+            if index == 0 {
+                continue;
+            }
+            let rhs = Self::resolve_expression_kind_force_value(parser, source, expression, false);
+            if when_mode {
+                let lhs_action = Self::value_to_action_option(&lhs);
+                let rhs_action = Self::value_to_action_option(&rhs);
+                lhs = Value::RawOptionChoice(lhs_action.or(rhs_action).to_u32());
+            } else {
+                lhs = lhs | rhs;
+            }
+        }
+        Entity::Value(lhs)
     }
 
     // Unwrap references
@@ -858,10 +1023,10 @@ impl Resolver {
             return entity.as_value().unwrap().clone()
         } else if entity.is_reference() {
             let r = entity.as_reference().unwrap();
-            if r.is_constant_ref() {
-                return Self::constant_with_reference(parser, source, r.as_constant_ref().unwrap());
+            return if r.is_constant_ref() {
+                Self::constant_with_reference(parser, source, r.as_constant_ref().unwrap())
             } else {
-                return Value::RawEnumChoice(r.as_model_ref().unwrap().2.clone());
+                Value::RawEnumChoice(r.as_model_ref().unwrap().2.clone())
             }
         } else {
             panic!("Cannot unwrap accessible into value.")
