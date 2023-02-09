@@ -199,9 +199,7 @@
 - Parser: bitwise `~`, `|`, `^`, `&` **[DONE]**
 - Parser: `+` `-` `*` `/` `%` **[DONE]**
 - Remove redundant teon number types **[DONE]**
-- Finalize item field for collection
-- Finalize fields and properties
-- Add `INTERNAL` to action together with `ENTRY` and `NESTED`
+- Add `INTERNAL_LOCATION` and `INTERNAL_AMOUNT` **[DONE]**
 - Add `@canRead` and `@canMutate`
 - Always record previous id value and support modifying `@id` fields
 - Add before delete and after delete callback to delete
@@ -218,6 +216,7 @@
 - Support code comment parsing in schema parser
 - Database type mapping for `Date`
 - Database type mapping
+- Database type mapping for field, property and collection types' item field
 - Rust entities with documentation
 - Object method for String like `ENV["PORT"].toInt()`
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API

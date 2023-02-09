@@ -17,13 +17,15 @@ pub(crate) const INTENT: u32 = 1 << 13;
 pub(crate) const ACTUAL: u32 = 1 << 14;
 pub(crate) const ENTRY: u32 = 1 << 15;
 pub(crate) const NESTED: u32 = 1 << 16;
-pub(crate) const SINGLE: u32 = 1 << 17;
-pub(crate) const MANY: u32 = 1 << 18;
+pub(crate) const INTERNAL_LOCATION: u32 = 1 << 17;
+pub(crate) const SINGLE: u32 = 1 << 18;
+pub(crate) const MANY: u32 = 1 << 19;
+pub(crate) const INTERNAL_AMOUNT: u32 = 1 << 20;
 
 const ALL_NAMES: u32 = CREATE | UPDATE | UPSERT | DELETE | FIND | CONNECT | CONNECT_OR_CREATE | DISCONNECT | SET | JOIN_CREATE | JOIN_DELETE;
 const INTENT_ACTUAL: u32 = INTENT | ACTUAL;
-const ENTRY_NESTED: u32 = ENTRY | NESTED;
-const SINGLE_MANY: u32 = SINGLE | MANY;
+const ENTRY_NESTED: u32 = ENTRY | NESTED | INTERNAL_LOCATION;
+const SINGLE_MANY: u32 = SINGLE | MANY | INTERNAL_AMOUNT;
 
 const NOT_ALL_NAMES: u32 = !ALL_NAMES;
 const NOT_INTENT_ACTUAL: u32 = !INTENT_ACTUAL;
@@ -65,8 +67,10 @@ impl Action {
                 "actual" => ACTUAL,
                 "entry" => ENTRY,
                 "nested" => NESTED,
+                "internalLocation" => INTERNAL_LOCATION,
                 "single" => SINGLE,
                 "many" => MANY,
+                "internalAmount" => INTERNAL_AMOUNT,
                 "programCode" => PROGRAM_CODE,
                 "identity" => IDENTITY,
                 _ => panic!("Unrecognized action option name '{}'.", name)
