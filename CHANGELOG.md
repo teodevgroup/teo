@@ -200,10 +200,13 @@
 - Parser: `+` `-` `*` `/` `%` **[DONE]**
 - Remove redundant teon number types **[DONE]**
 - Add `INTERNAL_LOCATION` and `INTERNAL_AMOUNT` **[DONE]**
-- Add `@canRead` and `@canMutate`
-- Always record previous id value and support modifying `@id` fields
-- Add before delete and after delete callback to delete
+- Add `$identity(Pipeline)`
+- Fix typo: rename `$isExist` to `$exists`
+- Add `@canRead` and `@canMutate` to models
 - Add `@canMutate` to delete
+- Add `@canRead` and `@canMutate` to fields
+- Add before delete and after delete callback to delete
+- Always record previous id value and support modifying `@id` fields
 - Rust entities for query methods
 - Rust entities for optional numbers
 - Rust entities for optional `Date`s
