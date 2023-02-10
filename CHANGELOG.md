@@ -219,39 +219,62 @@
 - Always record previous id value and support modifying `@id` fields **[DONE]**
 
 #### 0.0.46
+- Error in pipeline
+- Error in pipeline program functions
+- Rename pipeline modifier to pipeline item
+- Custom pipeline function accepts source
+- `@disable`
+- `@action`
+- Pipeline documentation
+- Soft delete support
+- Soft delete documentation
+- random float modifier
+- random int modifier
+- to uppercase modifier
+- to lowercase modifier
+- to word case modifier
+- to sentence case modifier
+- to title case modifier
 - Rust entities with relations
 - Rust entities with properties
 - Rust entities: set method
 - Rust entities: delete method
-- CLI mode: When running generation, ignore custom programming callbacks
-- CLI mode: When running server, panic if custom programming callback is provided
 - Support code comment tags for VSCode
 - Support code comment parsing in schema parser
 - Rust entities with documentation
-- Object method for String like `ENV["PORT"].toInt()`
-- Support regular expression for VSCode plugin
 
 #### 0.0.47
+- Object method for String like `ENV["PORT"].toInt()`
+- Support regular expression for VSCode plugin
 - Relation onUpdate
 - Relation onDelete
 - Object assignment `copy` and `reference`
 - Move field's `copy` decorator to relation
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
 - Remove `unqueryable` and `unsortable` from generated clients
+- CLI mode: When running generation, ignore custom programming callbacks
+- CLI mode: When running server, panic if custom programming callback is provided
+- Revamp server outputs
 
 #### 0.0.48
-- Pipeline allows action error
-- More pipeline modifiers
+- Linting, warnings and errors
+- Relation with read write rules
 
 #### 0.0.49
 - Seed with datasets
 
 #### 0.0.50
+- Error messages for input
+- Error messages for output
+- Reach rust stable
+- Bug fixes
+
+#### 0.0.51
 - Node.js object
 - Node.js entity generation
 - Cross language error handling for node.js
 
-#### 0.0.51
+#### 0.0.52
 - MongoDB: root skip take and distinct bug
 - MongoDB: nested skip take and distinct bug
 - MongoDB: if cursor key is not orderBy key, result is wrong
@@ -260,36 +283,23 @@
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 
-#### 0.0.52
-- SQL: Enum types
-
-#### 0.0.53
-- PostgreSQL: Migration I
-- SQLite: Migration I
-
 #### 0.0.54
 - The copy action
 
-#### 0.0.55 - 0.0.70
-- Setup unit tests
+#### 0.0.55 - 0.0.82
+- Setup new style unit tests
 - Replace buggy sqlx
+- SQL: Enum types
+- PostgreSQL: Enum types
 - Database type mapping for `Date`
 - Database type mapping
 - Database type mapping for field, property and collection types' item field
 - Full support of decimal type
 - Support unsigned types for MySQL
-- MySQL: Enum types
-- Postgres: Enum types
-
-#### 0.0.71 - 0.0.81
-- Fix assign identity
-- Fix broken `connectIdentity` modifier
+- PostgreSQL: Migration
+- SQLite: Migration
 - MongoDB transaction
 - SQL transaction
-
-#### 0.0.82
-- Migration II with MongoDB
-- Migration II with SQL databases
 
 #### 0.0.83
 - Input omissible and output omissible for generated clients
@@ -297,20 +307,7 @@
 #### 0.0.84
 - Correct count with cursor
 
-#### 0.0.85
-- `auth_by_companion`
-
 #### 0.0.86
-- Relation with read write rules
-
-#### 0.0.87
-- random float modifier
-- random int modifier
-- to uppercase modifier
-- to lowercase modifier
-- to word case modifier
-- to sentence case modifier
-- to title case modifier
 
 #### 0.0.88
 - Swift package
@@ -318,12 +315,15 @@
 - Dart client
 
 #### 0.1.0
+- Almost stable
+
+#### 0.2.0
 - Full unit test covering
 
 #### 0.3.0
 - Plugins
 
-#### 0.6.0
+#### 0.4.0
 - Java support
 
 #### 1.0.0
