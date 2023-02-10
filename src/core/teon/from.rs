@@ -125,15 +125,33 @@ impl From<NaiveDate> for Value {
     }
 }
 
-impl From<DateTime<Utc>> for Value {
-    fn from(v: DateTime<Utc>) -> Self {
-        Value::DateTime(v)
-    }
-}
-
 impl From<Value> for NaiveDate {
     fn from(v: Value) -> Self {
         v.as_date().unwrap().to_owned()
+    }
+}
+
+impl From<Option<NaiveDate>> for Value {
+    fn from(n: Option<NaiveDate>) -> Self {
+        match n {
+            Some(n) => Value::Date(n),
+            None => Value::Null,
+        }
+    }
+}
+
+impl From<Value> for Option<NaiveDate> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
+impl From<DateTime<Utc>> for Value {
+    fn from(v: DateTime<Utc>) -> Self {
+        Value::DateTime(v)
     }
 }
 
@@ -142,6 +160,26 @@ impl From<Value> for DateTime<Utc> {
         v.as_datetime().unwrap().to_owned()
     }
 }
+
+impl From<Option<DateTime<Utc>>> for Value {
+    fn from(n: Option<DateTime<Utc>>) -> Self {
+        match n {
+            Some(n) => Value::DateTime(n),
+            None => Value::Null,
+        }
+    }
+}
+
+impl From<Value> for Option<DateTime<Utc>> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Null => None,
+            _ => Some(value.into())
+        }
+    }
+}
+
+// MARK: ObjectID
 
 #[cfg(feature = "data-source-mongodb")]
 impl From<Value> for ObjectId {
@@ -261,6 +299,15 @@ impl From<Option<String>> for Value {
     }
 }
 
+impl From<Option<i32>> for Value {
+    fn from(n: Option<i32>) -> Self {
+        match n {
+            Some(n) => Value::I32(n),
+            None => Value::Null,
+        }
+    }
+}
+
 impl From<Value> for Option<i32> {
     fn from(value: Value) -> Self {
         match value {
@@ -279,6 +326,15 @@ impl From<Value> for Option<i64> {
     }
 }
 
+impl From<Option<i64>> for Value {
+    fn from(n: Option<i64>) -> Self {
+        match n {
+            Some(n) => Value::I64(n),
+            None => Value::Null,
+        }
+    }
+}
+
 impl From<Value> for Option<f32> {
     fn from(value: Value) -> Self {
         match value {
@@ -288,11 +344,29 @@ impl From<Value> for Option<f32> {
     }
 }
 
+impl From<Option<f32>> for Value {
+    fn from(n: Option<f32>) -> Self {
+        match n {
+            Some(n) => Value::F32(n),
+            None => Value::Null,
+        }
+    }
+}
+
 impl From<Value> for Option<f64> {
     fn from(value: Value) -> Self {
         match value {
             Value::Null => None,
             _ => Some(value.into())
+        }
+    }
+}
+
+impl From<Option<f64>> for Value {
+    fn from(n: Option<f64>) -> Self {
+        match n {
+            Some(n) => Value::F64(n),
+            None => Value::Null,
         }
     }
 }

@@ -31,6 +31,8 @@ pub struct ModelBuilder {
     pub(crate) after_save_pipeline: Pipeline,
     pub(crate) before_delete_pipeline: Pipeline,
     pub(crate) after_delete_pipeline: Pipeline,
+    pub(crate) can_read_pipeline: Pipeline,
+    pub(crate) can_mutate_pipeline: Pipeline,
 }
 
 impl ModelBuilder {
@@ -54,6 +56,8 @@ impl ModelBuilder {
             after_save_pipeline: Pipeline::new(),
             before_delete_pipeline: Pipeline::new(),
             after_delete_pipeline: Pipeline::new(),
+            can_read_pipeline: Pipeline::new(),
+            can_mutate_pipeline: Pipeline::new(),
         }
     }
 
@@ -172,7 +176,7 @@ impl ModelBuilder {
         for field in fields_vec.iter() {
             fields_map.insert(field.name.clone(), field.clone());
             if field.primary {
-                primary = Some(ModelIndex::new(ModelIndexType::Primary, "", vec![
+                primary = Some(ModelIndex::new(ModelIndexType::Primary, field.name(), vec![
                     ModelIndexItem::new(field.name(), Sort::Asc, None)
                 ]));
                 indices.push(primary.as_ref().unwrap().clone());
@@ -229,8 +233,8 @@ impl ModelBuilder {
             after_save_pipeline: self.after_save_pipeline.clone(),
             before_delete_pipeline: self.before_delete_pipeline.clone(),
             after_delete_pipeline: self.after_delete_pipeline.clone(),
-            can_read_pipeline: Pipeline::new(),
-            can_mutate_pipeline: Pipeline::new(),
+            can_read_pipeline: self.can_read_pipeline.clone(),
+            can_mutate_pipeline: self.can_mutate_pipeline.clone(),
             all_keys: self.all_keys(),
             input_keys: self.input_keys(),
             save_keys: self.save_keys(),

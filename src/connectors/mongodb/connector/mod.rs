@@ -27,10 +27,10 @@ use crate::core::model::index::{ModelIndex, ModelIndexType};
 use crate::core::connector::SaveSession;
 use crate::core::database::r#type::DatabaseType;
 use crate::core::teon::Value;
-use crate::core::error::ActionError;
+use crate::core::error::Error;
 use crate::core::field::r#type::FieldType;
 use crate::core::input::Input;
-use crate::core::result::ActionResult;
+use crate::core::result::Result;
 use crate::teon;
 
 #[derive(Debug)]
@@ -68,7 +68,7 @@ impl MongoDBConnector {
         }
     }
 
-    fn document_to_object(&self, document: &Document, object: &Object, select: Option<&Value>, include: Option<&Value>) -> ActionResult<()> {
+    fn document_to_object(&self, document: &Document, object: &Object, select: Option<&Value>, include: Option<&Value>) -> Result<()> {
         for key in document.keys() {
             let object_field = object.model().fields().iter().find(|f| f.column_name() == key);
             if object_field.is_some() {
@@ -126,7 +126,7 @@ impl MongoDBConnector {
         Ok(())
     }
 
-    fn _handle_write_error(&self, error_kind: &ErrorKind) -> ActionError {
+    fn _handle_write_error(&self, error_kind: &ErrorKind, object: &Object) -> Error {
         return match error_kind {
             ErrorKind::Write(write) => {
                 match write {
@@ -134,35 +134,36 @@ impl MongoDBConnector {
                         match write_error.code {
                             11000 => {
                                 let regex = Regex::new(r"dup key: \{ (.+?):").unwrap();
-                                let field = regex.captures(write_error.message.as_str()).unwrap().get(1).unwrap().as_str();
-                                ActionError::unique_value_duplicated(field, "''")
+                                let field_column_name = regex.captures(write_error.message.as_str()).unwrap().get(1).unwrap().as_str();
+                                let field_name = object.model().field_with_column_name(field_column_name).unwrap().name();
+                                Error::unique_value_duplicated(field_name)
                             }
                             _ => {
-                                ActionError::unknown_database_write_error()
+                                Error::unknown_database_write_error()
                             }
                         }
                     }
                     _ => {
-                        ActionError::unknown_database_write_error()
+                        Error::unknown_database_write_error()
                     }
                 }
             }
             _ => {
-                ActionError::unknown_database_write_error()
+                Error::unknown_database_write_error()
             }
         }
     }
 
-    async fn aggregate_or_group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Vec<Value>, ActionError> {
+    async fn aggregate_or_group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Vec<Value>> {
         let aggregate_input = Aggregation::build_for_aggregate(model, graph, finder)?;
         let col = &self.collections[model.name()];
         let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
             println!("{:?}", cur);
-            return Err(ActionError::unknown_database_find_error());
+            return Err(Error::unknown_database_find_error());
         }
         let cur = cur.unwrap();
-        let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
+        let results: Vec<std::result::Result<Document, MongoDBError>> = cur.collect().await;
         let mut final_retval: Vec<Value> = vec![];
         for result in results.iter() {
             // there are records
@@ -202,7 +203,7 @@ impl MongoDBConnector {
         Ok(final_retval)
     }
 
-    async fn create_object(&self, object: &Object) -> ActionResult<()> {
+    async fn create_object(&self, object: &Object) -> Result<()> {
         let model = object.model();
         let keys = object.keys_for_save();
         let col = &self.collections[model.name()];
@@ -227,22 +228,23 @@ impl MongoDBConnector {
         let result = col.insert_one(doc, None).await;
         match result {
             Ok(insert_one_result) => {
-                let id = insert_one_result.inserted_id.as_object_id().unwrap();
+                let id = insert_one_result.inserted_id;
                 for key in auto_keys {
                     let field = model.field(key).unwrap();
                     if field.column_name() == "_id" {
-                        object.set_value(field.name(), Value::ObjectId(id))?;
+                        let new_value = BsonDecoder::decode(model, object.graph(), field.field_type(), field.is_optional(), &id, path![]).unwrap();
+                        object.set_value(field.name(), new_value)?;
                     }
                 }
             }
             Err(error) => {
-                return Err(self._handle_write_error(&error.kind));
+                return Err(self._handle_write_error(&error.kind, object));
             }
         }
         Ok(())
     }
 
-    async fn update_object(&self, object: &Object) -> ActionResult<()> {
+    async fn update_object(&self, object: &Object) -> Result<()> {
         let model = object.model();
         let keys = object.keys_for_save();
         let col = &self.collections[model.name()];
@@ -313,7 +315,7 @@ impl MongoDBConnector {
             return match result {
                 Ok(_) => Ok(()),
                 Err(error) => {
-                    Err(self._handle_write_error(&error.kind))
+                    Err(self._handle_write_error(&error.kind, object))
                 }
             }
         } else {
@@ -329,7 +331,7 @@ impl MongoDBConnector {
                     }
                 }
                 Err(error) => {
-                    return Err(self._handle_write_error(&error.kind));
+                    return Err(self._handle_write_error(&error.kind, object));
                 }
             }
         }
@@ -364,7 +366,7 @@ impl Connector for MongoDBConnector {
         self.loaded
     }
 
-    async fn load(&mut self, models: &Vec<Model>) -> ActionResult<()> {
+    async fn load(&mut self, models: &Vec<Model>) -> Result<()> {
         let mut collections: HashMap<String, Collection<Document>> = HashMap::new();
         for model in models {
             let collection: Collection<Document> = self.database.collection(model.table_name());
@@ -374,7 +376,7 @@ impl Connector for MongoDBConnector {
         Ok(())
     }
 
-    async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> ActionResult<()> {
+    async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> Result<()> {
         if reset_database {
             let _ = self.database.drop(None).await;
         }
@@ -423,6 +425,13 @@ impl Connector for MongoDBConnector {
             }
             for index in model.indices() {
                 if !reviewed_names.contains(&index.name().to_string()) {
+                    // ignore primary
+                    if index.keys().len() == 1 {
+                        let field = model.field(index.keys().get(0).unwrap()).unwrap();
+                        if field.column_name() == "_id" {
+                            continue
+                        }
+                    }
                     // create this index
                     let index_options = IndexOptions::builder()
                         .name(index.name().to_owned())
@@ -436,14 +445,17 @@ impl Connector for MongoDBConnector {
                         keys.insert(column_name, if item.sort() == Sort::Asc { 1 } else { -1 });
                     }
                     let index_model = IndexModel::builder().keys(keys).options(index_options).build();
-                    let _result = collection.create_index(index_model, None).await;
+                    let result = collection.create_index(index_model, None).await;
+                    if result.is_err() {
+                        println!("index create error: {:?}", result.err().unwrap());
+                    }
                 }
             }
         }
         Ok(())
     }
 
-    async fn save_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> ActionResult<()> {
+    async fn save_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> Result<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
             self.create_object(object).await
         } else {
@@ -451,9 +463,9 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn delete_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> ActionResult<()> {
+    async fn delete_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> Result<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
-            return Err(ActionError::object_is_not_saved());
+            return Err(Error::object_is_not_saved());
         }
         let model = object.model();
         let col = &self.collections[model.name()];
@@ -463,12 +475,12 @@ impl Connector for MongoDBConnector {
         return match result {
             Ok(_result) => Ok(()),
             Err(_err) => {
-                Err(ActionError::unknown_database_delete_error())
+                Err(Error::unknown_database_delete_error())
             }
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Object, ActionError> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Object> {
         let select = finder.get("select");
         let include = finder.get("include");
 
@@ -476,22 +488,22 @@ impl Connector for MongoDBConnector {
         let col = &self.collections[model.name()];
         let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
-            return Err(ActionError::unknown_database_find_unique_error());
+            return Err(Error::unknown_database_find_unique_error());
         }
         let cur = cur.unwrap();
-        let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
+        let results: Vec<std::result::Result<Document, MongoDBError>> = cur.collect().await;
         if results.is_empty() {
-            return Err(ActionError::object_not_found());
+            return Err(Error::object_not_found());
         }
         for doc in results {
             let obj = graph.new_object(model.name(), action, action_source.clone())?;
             self.document_to_object(&doc.unwrap(), &obj, select, include)?;
             return Ok(obj);
         }
-        Err(ActionError::object_not_found())
+        Err(Error::object_not_found())
     }
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Vec<Object>, ActionError> {
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Vec<Object>> {
         let select = finder.get("select");
         let include = finder.get("include");
         let aggregate_input = Aggregation::build(model, graph, finder)?;
@@ -501,11 +513,11 @@ impl Connector for MongoDBConnector {
         let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
             println!("{:?}", cur);
-            return Err(ActionError::unknown_database_find_error());
+            return Err(Error::unknown_database_find_error());
         }
         let cur = cur.unwrap();
         let mut result: Vec<Object> = vec![];
-        let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
+        let results: Vec<std::result::Result<Document, MongoDBError>> = cur.collect().await;
         for doc in results {
             let obj = graph.new_object(model.name(), action, action_source.clone())?;
             match self.document_to_object(&doc.unwrap(), &obj, select, include) {
@@ -524,16 +536,16 @@ impl Connector for MongoDBConnector {
         Ok(result)
     }
 
-    async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize, ActionError> {
+    async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize> {
         let input = Aggregation::build_for_count(model, graph, finder)?;
         let col = &self.collections[model.name()];
         let cur = col.aggregate(input, None).await;
         if cur.is_err() {
             println!("{:?}", cur);
-            return Err(ActionError::unknown_database_find_error());
+            return Err(Error::unknown_database_find_error());
         }
         let cur = cur.unwrap();
-        let results: Vec<Result<Document, MongoDBError>> = cur.collect().await;
+        let results: Vec<std::result::Result<Document, MongoDBError>> = cur.collect().await;
         if results.is_empty() {
             Ok(0)
         } else {
@@ -547,7 +559,7 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError> {
+    async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value> {
         let results = self.aggregate_or_group_by(graph, model, finder).await?;
         if results.is_empty() {
             // there is no record
@@ -565,7 +577,7 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError> {
+    async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value> {
         Ok(Value::Vec(self.aggregate_or_group_by(graph, model, finder).await?))
     }
 

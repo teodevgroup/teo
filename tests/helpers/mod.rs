@@ -15,7 +15,7 @@ pub async fn request<S, B, E>(app: &S, url: &str, action: &str, body: Value) -> 
     E: std::fmt::Debug,
 {
     let formatted_action = action.to_camel_case().to_kebab_case();
-    let req = TestRequest::post().uri(&format!("/{url}/action/{formatted_action}")).set_tson(body).to_request();
+    let req = TestRequest::post().uri(&format!("/{url}/action/{formatted_action}")).set_teon(body).to_request();
     call_service(&app, req).await
 }
 

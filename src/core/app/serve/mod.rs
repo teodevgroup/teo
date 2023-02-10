@@ -2,7 +2,7 @@ use futures_util::future;
 use std::time::SystemTime;
 use actix_http::body::BoxBody;
 use actix_http::{Method};
-use actix_web::{App, Error, HttpRequest, HttpResponse, HttpServer, web};
+use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::DefaultHeaders;
 use chrono::{DateTime, Duration, Local, Utc};
@@ -23,7 +23,7 @@ use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::pipeline::context::{Context};
-use crate::core::error::ActionError;
+use crate::core::error::Error;
 use crate::core::teon::decoder::Decoder;
 use crate::prelude::Value;
 use crate::teon;
@@ -82,40 +82,40 @@ fn log_request(start: SystemTime, action: &str, model: &str, code: u16) {
     println!("{} {} on {} - {} {}", local_formatted, action.bright_yellow(), model.bright_magenta(), code_string, ms_str);
 }
 
-async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConf) -> Result<Option<Object>, ActionError> {
+async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConf) -> Result<Option<Object>, Error> {
     let header_value = r.headers().get("authorization");
     if let None = header_value {
         return Ok(None);
     }
     let auth_str = header_value.unwrap().to_str().unwrap();
     if auth_str.len() < 7 {
-        return Err(ActionError::invalid_auth_token());
+        return Err(Error::invalid_auth_token());
     }
     let token_str = &auth_str[7..];
     let claims_result = decode_token(&token_str.to_string(), &conf.jwt_secret.as_ref().unwrap());
     if let Err(_) = claims_result {
-        return Err(ActionError::invalid_auth_token());
+        return Err(Error::invalid_auth_token());
     }
     let claims = claims_result.unwrap();
     let json_identifier = claims.id;
     let tson_identifier = Decoder::decode_object(graph.model(&claims.model).unwrap(), graph, &json_identifier)?;
     // Decoder::
     let _model = graph.model(claims.model.as_str()).unwrap();
-    let identity = graph.find_unique(
+    let identity = graph.find_unique_internal(
         graph.model(claims.model.as_str()).unwrap().name(),
         &teon!({
             "where": tson_identifier
         }),
         true, Action::from_u32(IDENTITY | FIND | SINGLE | ENTRY), ActionSource::ProgramCode).await;
     if let Err(_) = identity {
-        return Err(ActionError::invalid_auth_token())
+        return Err(Error::invalid_auth_token())
     }
     return Ok(Some(identity.unwrap()));
 }
 
 async fn handle_find_unique(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
     let action = Action::from_u32(FIND | SINGLE | ENTRY);
-    let result = graph.find_unique(model.name(), input, false, action, source).await;
+    let result = graph.find_unique_internal(model.name(), input, false, action, source).await;
     match result {
         Ok(obj) => {
             let json_data: JsonValue = obj.to_json().await.unwrap().into();
@@ -129,7 +129,7 @@ async fn handle_find_unique(graph: &Graph, input: &Value, model: &Model, source:
 
 async fn handle_find_first(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
     let action = Action::from_u32(FIND | SINGLE | ENTRY);
-    let result = graph.find_first(model.name(), input, false, action, source).await;
+    let result = graph.find_first_internal(model.name(), input, false, action, source).await;
     match result {
         Ok(obj) => {
             let json_data: JsonValue = obj.to_json().await.unwrap().into();
@@ -143,7 +143,7 @@ async fn handle_find_first(graph: &Graph, input: &Value, model: &Model, source: 
 
 async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
     let action = Action::from_u32(FIND | MANY | ENTRY);
-    let result = graph.find_many(model.name(), input, false, action, source).await;
+    let result = graph.find_many_internal(model.name(), input, false, action, source).await;
     match result {
         Ok(results) => {
             let mut count_input = input.clone();
@@ -185,17 +185,17 @@ async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: A
     }
 }
 
-async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: Option<&Value>, select: Option<&Value>, model: &Model, path: &KeyPath<'_>, action: Action, action_source: ActionSource) -> Result<Value, ActionError> {
+async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: Option<&Value>, select: Option<&Value>, model: &Model, path: &KeyPath<'_>, action: Action, action_source: ActionSource) -> Result<Value, Error> {
     let obj = graph.new_object(model.name(), action, action_source)?;
     let set_json_result = match create {
         Some(create) => {
             if !create.is_hashmap() {
-                return Err(ActionError::unexpected_input_type("object", path));
+                return Err(Error::unexpected_input_type("object", path));
             }
-            obj.set_tson_with_path(create, path).await
+            obj.set_teon_with_path(create, path).await
         }
         None => {
-            obj.set_tson_with_path(&teon!({}), path).await
+            obj.set_teon_with_path(&teon!({}), path).await
         }
     };
     if set_json_result.is_err() {
@@ -222,10 +222,10 @@ async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: Acti
     }
 }
 
-async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&Value>, include: Option<&Value>, select: Option<&Value>, _where: Option<&Value>, _model: &Model) -> Result<Value, ActionError> {
+async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&Value>, include: Option<&Value>, select: Option<&Value>, _where: Option<&Value>, _model: &Model) -> Result<Value, Error> {
     let empty = teon!({});
     let updator = if update.is_some() { update.unwrap() } else { &empty };
-    object.set_tson(updator).await?;
+    object.set_teon(updator).await?;
     object.save().await?;
     let refetched = object.refreshed(include, select).await?;
     refetched.to_json().await
@@ -233,7 +233,7 @@ async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&
 
 async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
     let action = Action::from_u32(UPDATE | ENTRY | SINGLE);
-    let result = graph.find_unique(model.name(), input, true, action, source).await;
+    let result = graph.find_unique_internal(model.name(), input, true, action, source).await;
     if result.is_err() {
         return HttpResponse::NotFound().json(json!({"error": result.err()}));
     }
@@ -256,7 +256,7 @@ async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: Acti
 
 async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
     let action = Action::from_u32(UPSERT | UPDATE | ENTRY | SINGLE);
-    let result = graph.find_unique(model.name(), input, true, action, source.clone()).await;
+    let result = graph.find_unique_internal(model.name(), input, true, action, source.clone()).await;
     let include = input.get("include");
     let select = input.get("select");
     return match result {
@@ -265,11 +265,11 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Acti
             let update = input.get("update");
             let set_json_result = match update {
                 Some(update) => {
-                    obj.set_tson(update).await
+                    obj.set_teon(update).await
                 }
                 None => {
                     let empty = teon!({});
-                    obj.set_tson(&empty).await
+                    obj.set_teon(&empty).await
                 }
             };
             match set_json_result {
@@ -297,11 +297,11 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Acti
             let obj = graph.new_object(model.name(), action, source).unwrap();
             let set_json_result = match create {
                 Some(create) => {
-                    obj.set_tson(create).await
+                    obj.set_teon(create).await
                 }
                 None => {
                     let empty = teon!({});
-                    obj.set_tson(&empty).await
+                    obj.set_teon(&empty).await
                 }
             };
             match set_json_result {
@@ -328,7 +328,7 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Acti
 
 async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
     let action = Action::from_u32(DELETE | SINGLE | ENTRY);
-    let result = graph.find_unique(model.name(), input, true, action, source).await;
+    let result = graph.find_unique_internal(model.name(), input, true, action, source).await;
     if result.is_err() {
         return HttpResponse::NotFound().json(json!({"error": result.err()}));
     }
@@ -352,12 +352,12 @@ async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source:
     let include = input.get("include");
     let select = input.get("select");
     if create.is_none() {
-        let err = ActionError::missing_required_input("array", path!["create"]);
+        let err = Error::missing_required_input("array", path!["create"]);
         return HttpResponse::BadRequest().json(json!({"error": err}));
     }
     let create = create.unwrap();
     if !create.is_vec() {
-        let err = ActionError::unexpected_input_type("array", path!["create"]);
+        let err = Error::unexpected_input_type("array", path!["create"]);
         return HttpResponse::BadRequest().json(json!({"error": err}));
     }
     let create = create.as_vec().unwrap();
@@ -384,7 +384,7 @@ async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source:
 
 async fn handle_update_many(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
     let action = Action::from_u32(UPDATE | MANY | ENTRY);
-    let result = graph.find_many(model.name(), input, true, action, source).await;
+    let result = graph.find_many_internal(model.name(), input, true, action, source).await;
     if result.is_err() {
         return HttpResponse::BadRequest().json(json!({"error": result.err()}));
     }
@@ -415,7 +415,7 @@ async fn handle_update_many(graph: &Graph, input: &Value, model: &Model, source:
 
 async fn handle_delete_many(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
     let action = Action::from_u32(DELETE | MANY | ENTRY);
-    let result = graph.find_many(model.name(), input, true, action, source).await;
+    let result = graph.find_many_internal(model.name(), input, true, action, source).await;
     if result.is_err() {
         return HttpResponse::BadRequest().json(json!({"error": result.err()}));
     }
@@ -482,11 +482,11 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     let input = input.as_hashmap().unwrap();
     let credentials = input.get("credentials");
     if let None = credentials {
-        return ActionError::missing_required_input("object", path!["credentials"]).into();
+        return Error::missing_required_input("object", path!["credentials"]).into();
     }
     let credentials = credentials.unwrap();
     if !credentials.is_hashmap() {
-        return ActionError::unexpected_input_type("object", path!["credentials"]).into();
+        return Error::unexpected_input_type("object", path!["credentials"]).into();
     }
     let credentials = credentials.as_hashmap().unwrap();
     let mut identity_key: Option<&String> = None;
@@ -499,32 +499,32 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
                 identity_key = Some(k);
                 identity_value = Some(v);
             } else {
-                return ActionError::unexpected_input_value_with_reason("Multiple auth identity provided", path!["credentials", k]).into();
+                return Error::unexpected_input_value_with_reason("Multiple auth identity provided", path!["credentials", k]).into();
             }
         } else if model.auth_by_keys().contains(k) {
             if by_key == None {
                 by_key = Some(k);
                 by_value = Some(v);
             } else {
-                return ActionError::unexpected_input_value_with_reason("Multiple auth checker provided", path!["credentials", k]).into();
+                return Error::unexpected_input_value_with_reason("Multiple auth checker provided", path!["credentials", k]).into();
             }
         } else {
-            return ActionError::unexpected_input_key(k, path!["credentials", k]).into();
+            return Error::unexpected_input_key(k, path!["credentials", k]).into();
         }
     }
     if identity_key == None {
-        return ActionError::missing_required_input("auth identity", path!["credentials"]).into();
+        return Error::missing_required_input("auth identity", path!["credentials"]).into();
     } else if by_key == None {
-        return ActionError::missing_required_input("auth checker", path!["credentials"]).into();
+        return Error::missing_required_input("auth checker", path!["credentials"]).into();
     }
     let by_field = model.field(by_key.unwrap()).unwrap();
-    let obj_result = graph.find_unique(model.name(), &teon!({
+    let obj_result = graph.find_unique_internal(model.name(), &teon!({
         "where": {
             identity_key.unwrap(): identity_value.unwrap()
         }
     }), true, Action::from_u32(FIND | SINGLE | ENTRY), ActionSource::ProgramCode).await;
     if let Err(_err) = obj_result {
-        return ActionError::unexpected_input_value("This identity is not found.", path!["credentials", identity_key.unwrap()]).into();
+        return Error::unexpected_input_value("This identity is not found.", path!["credentials", identity_key.unwrap()]).into();
     }
     let obj = obj_result.unwrap();
     let auth_by_arg = by_field.identity_checker.as_ref().unwrap();
@@ -534,7 +534,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     let final_ctx = pipeline.process(ctx).await;
     return match final_ctx.invalid_reason() {
         Some(_reason) => {
-            return ActionError::unexpected_input_value_with_reason("Authentication failed.", path!["credentials", by_key.unwrap()]).into();
+            return Error::unexpected_input_value_with_reason("Authentication failed.", path!["credentials", by_key.unwrap()]).into();
         }
         None => {
             let include = input.get("include");
@@ -564,7 +564,7 @@ async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &S
     let identity = source.as_identity();
     if let Some(identity) = identity {
         if identity.model() != model {
-            return HttpResponse::Unauthorized().json(json!({"error": ActionError::wrong_identity_model()}));
+            return HttpResponse::Unauthorized().json(json!({"error": Error::wrong_identity_model()}));
         }
         let select = input.get("select");
         let include = input.get("include");
@@ -585,7 +585,7 @@ pub fn make_app(graph: Graph, conf: ServerConf) ->  App<impl ServiceFactory<
     Response = ServiceResponse<BoxBody>,
     Config = (),
     InitError = (),
-    Error = Error,
+    Error = actix_web::Error,
 > + 'static> {
     let leaked_graph = Box::leak(Box::new(graph));
     let leaked_conf = Box::leak(Box::new(conf));
@@ -598,7 +598,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
     Response = ServiceResponse<BoxBody>,
     Config = (),
     InitError = (),
-    Error = Error,
+    Error = actix_web::Error,
 > + 'static> {
     let app = App::new()
         .wrap(DefaultHeaders::new()
@@ -612,7 +612,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
             if let Some(prefix) = &conf.path_prefix {
                 if !path.starts_with(prefix) {
                     log_unhandled(start, r.method().as_str(), &path, 404);
-                    return ActionError::destination_not_found().into();
+                    return Error::destination_not_found().into();
                 }
                 path = path.strip_prefix(prefix).unwrap().to_string();
             }
@@ -623,13 +623,13 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
             };
             if (r.method() != Method::POST) && (r.method() != Method::OPTIONS) {
                 log_unhandled(start, r.method().as_str(), &path, 404);
-                return ActionError::destination_not_found().into();
+                return Error::destination_not_found().into();
             }
             let path_components = path_components(&path);
             let first_component = path_components.get(1).unwrap();
             if !(path_components.len() == 3 && first_component == &"action") {
                 log_unhandled(start, r.method().as_str(), &path, 404);
-                return ActionError::destination_not_found().into();
+                return Error::destination_not_found().into();
             }
             let model_url_segment_name = path_components[0];
             let action_segment_name = path_components[2];
@@ -638,19 +638,19 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
                 Some(a) => a,
                 None => {
                     log_unhandled(start, r.method().as_str(), &path, 404);
-                    return ActionError::destination_not_found().into();
+                    return Error::destination_not_found().into();
                 }
             };
             let model_def = match graph.model_with_url_segment_name(model_url_segment_name) {
                 Some(name) => name,
                 None => {
                     log_unhandled(start, r.method().as_str(), &path, 404);
-                    return ActionError::destination_not_found().into();
+                    return Error::destination_not_found().into();
                 }
             };
             if !model_def.has_action(action) {
                 log_unhandled(start, r.method().as_str(), &path, 400);
-                return ActionError::destination_not_found().into();
+                return Error::destination_not_found().into();
             }
             if r.method() == Method::OPTIONS {
                 return HttpResponse::Ok().json(json!({}));
@@ -662,7 +662,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
                 // limit max size of in-memory payload
                 if (body.len() + chunk.len()) > 262_144usize {
                     return HttpResponse::InternalServerError()
-                        .json(json!({"error": ActionError::internal_server_error("Memory overflow.".to_string())}));
+                        .json(json!({"error": Error::internal_server_error("Memory overflow.".to_string())}));
                 }
                 body.extend_from_slice(&chunk);
             }
@@ -671,13 +671,13 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
                 Ok(b) => b,
                 Err(_) => {
                     log_unhandled(start, r.method().as_str(), &path, 400);
-                    return HttpResponse::BadRequest().json(json!({"error": ActionError::incorrect_json_format()}));
+                    return HttpResponse::BadRequest().json(json!({"error": Error::incorrect_json_format()}));
                 }
             };
 
             if !parsed_body.is_object() {
                 log_unhandled(start, r.method().as_str(), &path, 400);
-                return HttpResponse::BadRequest().json(json!({"error": ActionError::unexpected_input_root_type("object")}));
+                return HttpResponse::BadRequest().json(json!({"error": Error::unexpected_input_root_type("object")}));
             }
             let identity = match get_identity(&r, &graph, conf).await {
                 Ok(identity) => { identity },

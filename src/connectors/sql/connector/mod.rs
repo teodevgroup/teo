@@ -22,10 +22,10 @@ use crate::core::action::Action;
 use crate::core::action::source::ActionSource;
 use crate::core::connector::{Connector, SaveSession};
 use crate::core::database::r#type::DatabaseType;
-use crate::core::error::ActionError;
+use crate::core::error::Error;
 use crate::core::field::r#type::FieldType;
 use crate::core::input::Input;
-use crate::core::result::ActionResult;
+use crate::core::result::Result;
 use crate::prelude::{Graph, Object, Value};
 use crate::teon;
 
@@ -73,7 +73,7 @@ impl SQLConnector {
         }
     }
 
-    async fn create_object(&self, object: &Object) -> ActionResult<()> {
+    async fn create_object(&self, object: &Object) -> Result<()> {
         let model = object.model();
         let keys = object.keys_for_save();
         let auto_keys = model.auto_keys();
@@ -122,7 +122,7 @@ impl SQLConnector {
         }
     }
 
-    async fn update_object(&self, object: &Object) -> ActionResult<()> {
+    async fn update_object(&self, object: &Object) -> Result<()> {
         let model = object.model();
         let keys = object.keys_for_save();
         let mut values: Vec<(&str, String)> = vec![];
@@ -156,41 +156,40 @@ impl SQLConnector {
             let result = self.pool.execute(stmt.as_str()).await;
             if result.is_err() {
                 println!("{:?}", result.err().unwrap());
-                return Err(ActionError::unknown_database_write_error());
+                return Err(Error::unknown_database_write_error());
             }
         }
         let result = Execution::query(&self.pool, model, object.graph(), &teon!({"where": identifier, "take": 1}), self.dialect).await?;
         if result.is_empty() {
-            Err(ActionError::object_not_found())
+            Err(Error::object_not_found())
         } else {
             object.set_from_database_result_value(result.get(0).unwrap(), None, None);
             Ok(())
         }
     }
 
-    fn handle_err_result(&self, err: sqlx::Error) -> ActionError {
+    fn handle_err_result(&self, err: sqlx::Error) -> Error {
         let message = err.as_database_error().unwrap().message();
         if self.dialect == SQLDialect::MySQL {
             // mysql
             let regex = Regex::new("Duplicate entry (.+) for key '(.+)'").unwrap();
             if let Some(captures) = regex.captures(message) {
-                let value = captures.get(1).unwrap().as_str();
                 let keys = captures.get(2).unwrap().as_str().split(".").collect::<Vec<&str>>();
                 let key = keys.last().unwrap();
-                ActionError::unique_value_duplicated(key, value)
+                Error::unique_value_duplicated(key)
             } else {
-                ActionError::unknown_database_write_error()
+                Error::unknown_database_write_error()
             }
         } else if self.dialect == SQLDialect::PostgreSQL {
             // duplicate key value violates unique constraint \"users_email_key\"
             let regex = Regex::new("^duplicate key value violates unique constraint").unwrap();
             if regex.is_match(message) {
-                ActionError::unique_value_duplicated_reason("", message)
+                Error::unique_value_duplicated_reason("", message)
             } else {
-                ActionError::unknown_database_write_error()
+                Error::unknown_database_write_error()
             }
         } else {
-            ActionError::unknown_database_write_error()
+            Error::unknown_database_write_error()
         }
     }
 }
@@ -205,11 +204,11 @@ impl Connector for SQLConnector {
         self.loaded
     }
 
-    async fn load(&mut self, models: &Vec<Model>) -> ActionResult<()> {
+    async fn load(&mut self, models: &Vec<Model>) -> Result<()> {
         Ok(())
     }
 
-    async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> ActionResult<()> {
+    async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> Result<()> {
         // if self.dialect != SQLDialect::SQLite {
         //     SQLMigration::create_database_if_needed(dialect, &mut pool, &database_name, reset_database).await;
         // }
@@ -217,7 +216,7 @@ impl Connector for SQLConnector {
         Ok(())
     }
 
-    async fn save_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> ActionResult<()> {
+    async fn save_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> Result<()> {
         let is_new = object.inner.is_new.load(Ordering::SeqCst);
         if is_new {
             self.create_object(object).await
@@ -226,9 +225,9 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn delete_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> ActionResult<()> {
+    async fn delete_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> Result<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
-            return Err(ActionError::object_is_not_saved());
+            return Err(Error::object_is_not_saved());
         }
         let model = object.model();
         let r#where = Query::where_from_identifier(object, self.dialect);
@@ -236,37 +235,37 @@ impl Connector for SQLConnector {
         let result = self.pool.execute(stmt.as_str()).await;
         if result.is_err() {
             println!("{:?}", result.err().unwrap());
-            return Err(ActionError::unknown_database_write_error());
+            return Err(Error::unknown_database_write_error());
         } else {
             Ok(())
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Object, ActionError> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Object> {
         let objects = Execution::query_objects(&self.pool, model, graph, finder, self.dialect, action, action_source.clone()).await?;
         if objects.is_empty() {
-            Err(ActionError::object_not_found())
+            Err(Error::object_not_found())
         } else {
             Ok(objects.get(0).unwrap().clone())
         }
     }
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Vec<Object>, ActionError> {
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Vec<Object>> {
         Execution::query_objects(&self.pool, model, graph, finder, self.dialect, action, action_source).await
     }
 
-    async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize, ActionError> {
+    async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize> {
         match Execution::query_count(&self.pool, model, graph, finder, self.dialect).await {
             Ok(c) => Ok(c as usize),
             Err(e) => Err(e),
         }
     }
 
-    async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError> {
+    async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value> {
         Execution::query_aggregate(&self.pool, model, graph, finder, self.dialect).await
     }
 
-    async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError> {
+    async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value> {
         Execution::query_group_by(&self.pool, model, graph, finder, self.dialect).await
     }
 

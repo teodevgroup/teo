@@ -123,16 +123,19 @@ trailing_comment = ${ triple_comment | double_comment }
 // #############
 // operators
 // #############
-ADD_SUB_OPERATOR = { "+" | "-" }
-MUL_DIV_MOD_OPERATOR = { "*" | "/" | "%" }
+ADD = { "+" }
+SUB = { "-" }
+MUL = { "*" }
+DIV = { "/" }
+MOD = { "%" }
+BI_AND = { "&" }
+BI_XOR = { "^" }
+BI_OR = { "|" }
+BINARY_OPERATOR = _{ MUL | DIV | MOD | ADD | SUB | BI_AND | BI_XOR | BI_OR }
 // OPERATORS = { "!" | "&&" | "||" | ">" | "<" | ">>" | "<<" }
 negation = { "-" ~ unit }
 bitwise_negation = { "~" ~ unit }
-mul_div_mod = { mul_div_mod_operand ~ (MUL_DIV_MOD_OPERATOR ~ mul_div_mod_operand)+ }
-add_sub = { add_sub_operand ~ (ADD_SUB_OPERATOR ~ add_sub_operand)+ }
-bitwise_and = { bitwise_and_operand ~ ("&" ~ bitwise_and_operand)+ }
-bitwise_xor = { bitwise_xor_operand ~ ("^" ~ bitwise_xor_operand)+ }
-bitwise_or = { bitwise_or_operand ~ ("|" ~ bitwise_or_operand)+ }
+arith_expr = { operand ~ (BINARY_OPERATOR ~ operand)+ }
 nullish_coalescing = { unit ~ ("??" ~ unit)+ }
 
 // #############
@@ -180,64 +183,18 @@ unit_without_range_literal = {
     ~ (subscript | argument_list | "." ~ identifier)*
 }
 
-add_sub_operand = {
-    negation |
-    bitwise_negation |
-    mul_div_mod |
-    nullish_coalescing |
-    unit |
-    pipeline
-}
-
-mul_div_mod_operand = {
+operand = {
     negation |
     bitwise_negation |
     nullish_coalescing |
     unit |
     pipeline
 }
-
-bitwise_and_operand = {
-    negation |
-    bitwise_negation |
-    add_sub |
-    mul_div_mod |
-    nullish_coalescing |
-    unit |
-    pipeline
-}
-
-bitwise_xor_operand = {
-    negation |
-    bitwise_negation |
-    add_sub |
-    mul_div_mod |
-    bitwise_and |
-    nullish_coalescing |
-    unit |
-    pipeline
-}
-
-bitwise_or_operand = {
-     negation |
-     bitwise_negation |
-     add_sub |
-     mul_div_mod |
-     bitwise_and |
-     bitwise_xor |
-     nullish_coalescing |
-     unit |
-     pipeline
- }
 
 expression = {
     negation |
     bitwise_negation |
-    add_sub |
-    mul_div_mod |
-    bitwise_and |
-    bitwise_xor |
-    bitwise_or |
+    arith_expr |
     nullish_coalescing |
     unit |
     pipeline

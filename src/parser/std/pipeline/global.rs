@@ -12,6 +12,7 @@ use crate::parser::std::pipeline::bcrypt::bcrypt_verify::bcrypt_verify;
 use crate::parser::std::pipeline::custom_function::{custom_callback, custom_compare, custom_transform, custom_validate};
 use crate::parser::std::pipeline::datetime::{now, today};
 use crate::parser::std::pipeline::debug::print;
+use crate::parser::std::pipeline::identity::identity;
 use crate::parser::std::pipeline::intent::when;
 use crate::parser::std::pipeline::logical::{all_modifier, and_modifier, any_modifier, if_modifier, invalid, not_modifier, or_modifier, passed, valid};
 use crate::parser::std::pipeline::math::{abs, add, cbrt, ceil, divide, floor, max, min, modular, multiply, pow, root, round, sqrt, subtract};
@@ -20,7 +21,7 @@ use crate::parser::std::pipeline::object::{get_object, is_a, object_get, object_
 use crate::parser::std::pipeline::string::generation::{cuid, random_digits, slug, uuid};
 use crate::parser::std::pipeline::string::transform::{ellipsis, pad_end, pad_start, regex_replace, split, trim};
 use crate::parser::std::pipeline::string::validation::{has_prefix, has_suffix, is_alphabetic, is_alphanumeric, is_email, is_hex_color, is_numeric, is_prefix_of, is_secure_password, is_suffix_of, regex_match};
-use crate::parser::std::pipeline::value::{eq, gt, gte, is_exist, is_false, is_null, is_true, lt, lte, neq, one_of};
+use crate::parser::std::pipeline::value::{eq, gt, gte, exists, is_false, is_null, is_true, lt, lte, neq, one_of};
 use crate::parser::std::pipeline::vector::{filter, item_at, join, map};
 
 pub(crate) struct GlobalPipelineInstallers {
@@ -115,7 +116,7 @@ impl GlobalPipelineInstallers {
         objects.insert("eq".to_owned(), eq);
         objects.insert("gt".to_owned(), gt);
         objects.insert("gte".to_owned(), gte);
-        objects.insert("isExist".to_owned(), is_exist);
+        objects.insert("exists".to_owned(), exists);
         objects.insert("isFalse".to_owned(), is_false);
         objects.insert("isNull".to_owned(), is_null);
         objects.insert("isTrue".to_owned(), is_true);
@@ -128,6 +129,8 @@ impl GlobalPipelineInstallers {
         objects.insert("itemAt".to_owned(), item_at);
         objects.insert("filter".to_owned(), filter);
         objects.insert("map".to_owned(), map);
+        // identity
+        objects.insert("identity".to_owned(), identity);
         // debug
         objects.insert("print".to_owned(), print);
         Self { objects }

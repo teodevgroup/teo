@@ -1,13 +1,13 @@
 use key_path::KeyPath;
-use crate::core::error::ActionError;
-use crate::core::result::ActionResult;
+use crate::core::error::Error;
+use crate::core::result::Result;
 use crate::prelude::Value;
 
 pub(crate) struct TsonUtils { }
 
 impl TsonUtils {
 
-    pub(crate) fn value_set<'a>(root: &Value, path: KeyPath<'a>, value: &Value) -> ActionResult<Value> {
+    pub(crate) fn value_set<'a>(root: &Value, path: KeyPath<'a>, value: &Value) -> Result<Value> {
         if path.is_empty() {
             return Ok(value.clone());
         }
@@ -39,12 +39,12 @@ impl TsonUtils {
                 Ok(Value::Vec(vec))
             }
             _ => {
-                Err(ActionError::invalid_operation("Invalid key access."))
+                Err(Error::invalid_operation("Invalid key access."))
             }
         }
     }
 
-    pub(crate) fn value_get<'a>(root: &'a Value, path: KeyPath<'a>) -> ActionResult<Value> {
+    pub(crate) fn value_get<'a>(root: &'a Value, path: KeyPath<'a>) -> Result<Value> {
         if path.is_empty() {
             return Ok(root.clone());
         }
@@ -67,12 +67,12 @@ impl TsonUtils {
                 return TsonUtils::value_get(new_root, rest.clone());
             }
             _ => {
-                Err(ActionError::invalid_operation("Invalid key access."))
+                Err(Error::invalid_operation("Invalid key access."))
             }
         }
     }
 
-    pub(crate) fn value_has(root: &Value, path: KeyPath) -> ActionResult<bool> {
+    pub(crate) fn value_has(root: &Value, path: KeyPath) -> Result<bool> {
         let value = Self::value_get(root, path)?;
         Ok(!value.is_null())
     }

@@ -1,3 +1,3 @@
-use crate::core::error::ActionError;
+use crate::core::error::Error;
 
-pub type ActionResult<T> = Result<T, ActionError>;
+pub type Result<T> = std::result::Result<T, Error>;

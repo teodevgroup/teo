@@ -159,6 +159,9 @@ impl AppBuilder {
                     .action(ArgAction::SetTrue)))
             .get_matches_from(match environment_version {
                 EnvironmentVersion::Python(_) | EnvironmentVersion::NodeJS(_) => env::args_os().enumerate().filter(|(i, _x)| *i != 1).map(|(_i, x)| x).collect::<Vec<OsString>>(),
+                EnvironmentVersion::Rust(_) => env::args_os().enumerate().filter(|(i, x)| {
+                    !((*i == 0) && x.to_str().unwrap().ends_with("cargo-teo"))
+                }).map(|(_i, x)| x).collect::<Vec<OsString>>(),
                 _ => env::args_os().collect::<Vec<OsString>>(),
             });
         let schema: Option<&String> = matches.get_one("SCHEMA_FILE");
@@ -292,7 +295,7 @@ impl AppBuilder {
             let source = parser.get_source(entity_generator_ref.0);
             let entity = source.get_entity(entity_generator_ref.1);
             self.entity_generator_confs.push(EntityGeneratorConf {
-                name: Some(entity.identifier.name.clone()),
+                name: entity.identifier.as_ref().map(|i| i.name.clone()),
                 provider: entity.provider.unwrap(),
                 dest: entity.dest.clone().unwrap(),
             })
@@ -302,7 +305,7 @@ impl AppBuilder {
             let source = parser.get_source(client_generator_ref.0);
             let client = source.get_client(client_generator_ref.1);
             self.client_generator_confs.push(ClientGeneratorConf {
-                name: Some(client.identifier.name.clone()),
+                name: client.identifier.as_ref().map(|i| i.name.clone()),
                 provider: client.provider.unwrap(),
                 dest: client.dest.clone().unwrap(),
                 package: client.package.unwrap(),

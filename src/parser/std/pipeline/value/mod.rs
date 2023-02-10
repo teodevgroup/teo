@@ -3,7 +3,7 @@ use crate::core::pipeline::modifier::Modifier;
 use crate::core::pipeline::modifiers::value::eq::EqModifier;
 use crate::core::pipeline::modifiers::value::gt::GtModifier;
 use crate::core::pipeline::modifiers::value::gte::GteModifier;
-use crate::core::pipeline::modifiers::value::is_exist::IsExistModifier;
+use crate::core::pipeline::modifiers::value::exists::ExistsModifier;
 use crate::core::pipeline::modifiers::value::is_false::IsFalseModifier;
 use crate::core::pipeline::modifiers::value::is_null::IsNullModifier;
 use crate::core::pipeline::modifiers::value::is_true::IsTrueModifier;
@@ -28,8 +28,8 @@ pub(crate) fn gte(args: Vec<Argument>) -> Arc<dyn Modifier> {
     Arc::new(GteModifier::new(value))
 }
 
-pub(crate) fn is_exist(_args: Vec<Argument>) -> Arc<dyn Modifier> {
-    Arc::new(IsExistModifier::new())
+pub(crate) fn exists(_args: Vec<Argument>) -> Arc<dyn Modifier> {
+    Arc::new(ExistsModifier::new())
 }
 
 pub(crate) fn is_false(_args: Vec<Argument>) -> Arc<dyn Modifier> {

@@ -9,6 +9,8 @@ pub(crate) mod before_save;
 pub(crate) mod after_save;
 pub(crate) mod before_delete;
 pub(crate) mod after_delete;
+pub(crate) mod can_read;
+pub(crate) mod can_mutate;
 
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};

@@ -7,7 +7,6 @@ use crate::core::field::Field;
 use crate::core::relation::Relation;
 use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
-
 use self::index::ModelIndex;
 
 pub(crate) mod builder;

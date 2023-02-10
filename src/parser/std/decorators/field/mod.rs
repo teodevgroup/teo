@@ -33,22 +33,20 @@ pub(crate) mod auth_identity;
 pub(crate) mod auth_by;
 pub(crate) mod queryable;
 pub(crate) mod unqueryable;
+pub(crate) mod can_read;
+pub(crate) mod can_mutate;
 
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
-
 use crate::core::database::name::DatabaseName;
-
-
-
-
-
 use crate::parser::ast::accessible::Accessible;
 use crate::parser::std::decorators::field::atomic::{atomic_decorator};
 use crate::parser::std::decorators::field::auth_by::auth_by_decorator;
 use crate::parser::std::decorators::field::auth_identity::auth_identity_decorator;
 use crate::parser::std::decorators::field::auto::auto_decorator;
 use crate::parser::std::decorators::field::auto_increment::auto_increment_decorator;
+use crate::parser::std::decorators::field::can_mutate::can_mutate_decorator;
+use crate::parser::std::decorators::field::can_read::can_read_decorator;
 use crate::parser::std::decorators::field::copy::copy_decorator;
 use crate::parser::std::decorators::field::db::db_container;
 use crate::parser::std::decorators::field::default::default_decorator;
@@ -130,6 +128,8 @@ impl GlobalFieldDecorators {
         objects.insert("identityChecker".to_owned(), Accessible::FieldDecorator(auth_by_decorator));
         objects.insert("queryable".to_owned(), Accessible::FieldDecorator(queryable_decorator));
         objects.insert("unqueryable".to_owned(), Accessible::FieldDecorator(unqueryable_decorator));
+        objects.insert("can_mutate".to_owned(), Accessible::FieldDecorator(can_mutate_decorator));
+        objects.insert("can_read".to_owned(), Accessible::FieldDecorator(can_read_decorator));
         Self { objects }
     }
 

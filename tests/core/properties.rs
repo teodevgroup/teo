@@ -2,7 +2,7 @@ use mongodb::options::ClientOptions;
 use tokio::test;
 use teo::core::graph::Graph;
 use teo::core::value::Value;
-use teo::core::error::ActionError;
+use teo::core::error::Error;
 
 
 async fn make_graph() -> &Graph {
@@ -51,7 +51,7 @@ async fn make_graph() -> &Graph {
 async fn optional_field_if_no_input_value_is_none() {
     let graph = make_graph().await;
     let simple = graph.create_object("Optional", teon!({})).unwrap();
-    let _ = simple.set_tson(&teon!({})).await;
+    let _ = simple.set_teon(&teon!({})).await;
     let value = simple.get_value("string").unwrap();
     assert_eq!(value, None);
 }
@@ -60,7 +60,7 @@ async fn optional_field_if_no_input_value_is_none() {
 async fn optional_field_if_input_is_null_value_is_none() {
     let graph = make_graph().await;
     let simple = graph.create_object("Optional", teon!({})).unwrap();
-    let _ = simple.set_tson(&teon!({"string": null})).await;
+    let _ = simple.set_teon(&teon!({"string": null})).await;
     let value = simple.get_value("string").unwrap();
     assert_eq!(value, None);
 }
@@ -69,7 +69,7 @@ async fn optional_field_if_input_is_null_value_is_none() {
 async fn required_field_if_no_input_value_is_none() {
     let graph = make_graph().await;
     let simple = graph.create_object("Required", teon!({})).unwrap();
-    let _ = simple.set_tson(&teon!({})).await;
+    let _ = simple.set_teon(&teon!({})).await;
     let value = simple.get_value("string").unwrap();
     assert_eq!(value, None);
 }
@@ -78,7 +78,7 @@ async fn required_field_if_no_input_value_is_none() {
 async fn required_field_if_input_is_null_returns_none() {
     let graph = make_graph().await;
     let simple = graph.create_object("Required", teon!({})).unwrap();
-    let _ = simple.set_tson(&teon!({"string": null})).await;
+    let _ = simple.set_teon(&teon!({"string": null})).await;
     let value = simple.get_value("string").unwrap();
     assert_eq!(value, None);
 }
@@ -87,8 +87,8 @@ async fn required_field_if_input_is_null_returns_none() {
 async fn readonly_field_cannot_accept_value_through_set_json() {
     let graph = make_graph().await;
     let simple = graph.create_object("Readonly", teon!({})).unwrap();
-    let result = simple.set_tson(&teon!({"readonly": "my_value"})).await;
-    assert_eq!(result.err().unwrap(), ActionError::keys_unallowed());
+    let result = simple.set_teon(&teon!({"readonly": "my_value"})).await;
+    assert_eq!(result.err().unwrap(), Error::keys_unallowed());
 }
 
 #[test]
@@ -104,7 +104,7 @@ async fn readonly_field_can_accept_value_through_set_value() {
 async fn writeonly_field_cannot_output_into_to_json() {
     let graph = make_graph().await;
     let simple = graph.create_object("Writeonly", teon!({})).unwrap();
-    let _ = simple.set_tson(&teon!({"writeonly": "123"})).await;
+    let _ = simple.set_teon(&teon!({"writeonly": "123"})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("writeonly"), None);
 }
@@ -113,7 +113,7 @@ async fn writeonly_field_cannot_output_into_to_json() {
 async fn writeonly_field_value_can_be_get_through_get_value() {
     let graph = make_graph().await;
     let simple = graph.create_object("Writeonly", teon!({})).unwrap();
-    let _ = simple.set_tson(&teon!({"writeonly": "123"})).await;
+    let _ = simple.set_teon(&teon!({"writeonly": "123"})).await;
     let value = simple.get_value("writeonly").unwrap().unwrap();
     assert_eq!(value, Value::String("123".to_string()));
 }
@@ -122,8 +122,8 @@ async fn writeonly_field_value_can_be_get_through_get_value() {
 async fn internal_field_cannot_accept_value_through_set_json() {
     let graph = make_graph().await;
     let simple = graph.create_object("Internal", teon!({})).unwrap();
-    let result = simple.set_tson(&teon!({"internal": "my_value"})).await;
-    assert_eq!(result.err().unwrap(), ActionError::keys_unallowed());
+    let result = simple.set_teon(&teon!({"internal": "my_value"})).await;
+    assert_eq!(result.err().unwrap(), Error::keys_unallowed());
 }
 
 #[test]
@@ -139,7 +139,7 @@ async fn internal_field_can_accept_value_through_set_value() {
 async fn internal_field_cannot_output_into_to_json() {
     let graph = make_graph().await;
     let simple = graph.create_object("Internal", teon!({})).unwrap();
-    let _ = simple.set_tson(&teon!({"internal": "123"})).await;
+    let _ = simple.set_teon(&teon!({"internal": "123"})).await;
     let json_output = simple.to_json();
     assert_eq!(json_output.as_hashmap().unwrap().get("internal"), None);
 }

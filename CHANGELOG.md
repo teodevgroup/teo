@@ -182,7 +182,7 @@
 
 #### 0.0.45
 - More detailed API documentation **[IN PROGRESS]**
-- `print` pipeline item **[DONE]**
+- `$print` pipeline item **[DONE]**
 - Support highlighting `import` and `let` for VSCode plugin **[DONE]**
 - Rename `@authIdentity` and `@authBy` **[DONE]**
 - Remove permission builder and permission **[DONE]**
@@ -200,19 +200,27 @@
 - Parser: `+` `-` `*` `/` `%` **[DONE]**
 - Remove redundant teon number types **[DONE]**
 - Add `INTERNAL_LOCATION` and `INTERNAL_AMOUNT` **[DONE]**
-- Add `$identity(Pipeline)`
-- Fix typo: rename `$isExist` to `$exists`
-- Add `@canRead` and `@canMutate` to models
-- Add `@canMutate` to delete
-- Add `@canRead` and `@canMutate` to fields
-- Add before delete and after delete callback to delete
-- Always record previous id value and support modifying `@id` fields
-- Rust entities for query methods
-- Rust entities for optional numbers
-- Rust entities for optional `Date`s
-- Rust entities for optional `DateTime`s
+- Pratt parser for binary operation **[DONE]**
+- Add `$identity(Pipeline)` **[DONE]**
+- Fix typo: rename `$isExist` to `$exists` **[DONE]**
+- Add `@canRead` and `@canMutate` to models **[DONE]**
+- Add `@canMutate` to delete **[DONE]**
+- Add `@canRead` and `@canMutate` to fields **[DONE]**
+- Add before delete and after delete callback to delete **[DONE]**
+- Rename rust binary to `cargo-teo` **[DONE]**
+- MongoDB bug: @id is not unique if not mapped to `_id` **[DONE]**
+- MongoDB bug: dup key should use field name instead of column name **[DONE]**
+- Rust entities for optional numbers **[DONE]**
+- Rust entities for optional `Date` and `DateTime` **[DONE]**
+- Rust entities for new method with `teon` parameter **[DONE]**
+- Rust entities for query methods **[DONE]**
 - Rust entities with relations
 - Rust entities with properties
+- Rename `ActionError` and `ActionResult` **[DONE]**
+- Improved teon value eq to support across number types **[DONE]**
+- Always record previous id value and support modifying `@id` fields
+
+#### 0.0.46
 - CLI mode: When running generation, ignore custom programming callbacks
 - CLI mode: When running server, panic if custom programming callback is provided
 - Support code comment tags for VSCode
@@ -222,29 +230,29 @@
 - Database type mapping for field, property and collection types' item field
 - Rust entities with documentation
 - Object method for String like `ENV["PORT"].toInt()`
-- Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
-- Remove `unqueryable` and `unsortable` from generated clients
 - Support regular expression for VSCode plugin
 
-#### 0.0.46
+#### 0.0.47
 - Relation onUpdate
 - Relation onDelete
 - Object assignment `copy` and `reference`
 - Move field's `copy` decorator to relation
-
-#### 0.0.47
-- Seed with datasets
+- Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
+- Remove `unqueryable` and `unsortable` from generated clients
 
 #### 0.0.48
 - Pipeline allows action error
 - More pipeline modifiers
 
 #### 0.0.49
+- Seed with datasets
+
+#### 0.0.50
 - Node.js object
 - Node.js entity generation
 - Cross language error handling for node.js
 
-#### 0.0.50
+#### 0.0.51
 - MongoDB: root skip take and distinct bug
 - MongoDB: nested skip take and distinct bug
 - MongoDB: if cursor key is not orderBy key, result is wrong
@@ -253,17 +261,17 @@
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 
-#### 0.0.51
+#### 0.0.52
 - SQL: Enum types
 
-#### 0.0.52
+#### 0.0.53
 - PostgreSQL: Migration I
 - SQLite: Migration I
 
-#### 0.0.53
+#### 0.0.54
 - The copy action
 
-#### 0.0.54 - 0.0.70
+#### 0.0.55 - 0.0.70
 - Setup unit tests
 - Replace buggy sqlx
 - Full support of decimal type

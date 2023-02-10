@@ -39,7 +39,7 @@ async fn make_mysql_graph() -> &Graph {
 //     let object2 = graph.create_object("UniqueIndex", teon!({})).unwrap();
 //     let _ = object2.set_value("unique", Value::String("123".to_string()));
 //     let result = object2.save().await;
-//     assert_eq!(result.err().unwrap(), ActionError::unique_value_duplicated("unique"));
+//     assert_eq!(result.err().unwrap(), Error::unique_value_duplicated("unique"));
 // }
 //
 // #[test]
@@ -53,7 +53,7 @@ async fn make_mysql_graph() -> &Graph {
 //     let _ = object2.save().await;
 //     let _ = object2.set_value("unique", Value::String("123".to_string()));
 //     let result = object2.save().await;
-//     assert_eq!(result.err().unwrap(), ActionError::unique_value_duplicated("unique"));
+//     assert_eq!(result.err().unwrap(), Error::unique_value_duplicated("unique"));
 // }
 //
 // #[test]

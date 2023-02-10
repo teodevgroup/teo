@@ -8,8 +8,7 @@ use crate::core::field::r#type::FieldType;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::object::Object;
-use crate::core::error::ActionError;
-use crate::core::result::ActionResult;
+use crate::core::result::Result;
 use crate::prelude::Value;
 
 #[async_trait]
@@ -26,27 +25,27 @@ pub(crate) trait Connector: Debug + Send + Sync {
 
     async fn is_loaded(&self) -> bool;
 
-    async fn load(&mut self, models: &Vec<Model>) -> ActionResult<()>;
+    async fn load(&mut self, models: &Vec<Model>) -> Result<()>;
 
     // Migration
 
-    async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> ActionResult<()>;
+    async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> Result<()>;
 
     // Object manipulation
 
-    async fn save_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()>;
+    async fn save_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> Result<()>;
 
-    async fn delete_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> ActionResult<()>;
+    async fn delete_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> Result<()>;
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Object, ActionError>;
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Object>;
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Vec<Object>, ActionError>;
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Vec<Object>>;
 
-    async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize, ActionError>;
+    async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize>;
 
-    async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError>;
+    async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value>;
 
-    async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value, ActionError>;
+    async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value>;
 
     // Save session
 

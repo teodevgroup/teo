@@ -66,7 +66,7 @@ impl RustEntityGenerator {
         generator.generate_file(format!("{}.rs", name), Code::new(0, 4, |b| {
             // use lines
             b.line("use std::{collections::HashMap, fmt::{Debug, Display, Formatter}};");
-            b.line("use teo::prelude::{Graph, Object, Value, ActionResult};");
+            b.line("use teo::prelude::{Graph, Object, Value, Result};");
             #[cfg(feature = "data-source-mongodb")]
             if model.fields().iter().find(|f| f.field_type().is_object_id()).is_some() {
                 b.line("use bson::oid::ObjectId;");
@@ -111,9 +111,21 @@ impl RustEntityGenerator {
             b.line("");
             b.block(format!("impl {model_name} {{"), |b| {
                 b.line("");
-                b.line(format!(r#"pub async fn new() -> Self {{
+                b.line(format!(r#"pub async fn find_many(query: &Value) -> Result<Vec<{model_name}>> {{
+        Graph::current().find_many("{model_name}", query).await
+    }}
+
+    pub async fn find_unique(query: &Value) -> Result<{model_name}> {{
+        Graph::current().find_unique("{model_name}", query).await
+    }}
+
+    pub async fn find_first(query: &Value) -> Result<{model_name}> {{
+        Graph::current().find_first("{model_name}", query).await
+    }}"#));
+                b.line("");
+                b.line(format!(r#"pub async fn new(values: Value) -> Self {{
         Self {{
-            inner: Graph::current().create_object("{model_name}", Value::HashMap(HashMap::new())).await.unwrap(),
+            inner: Graph::current().create_object("{model_name}", values).await.unwrap(),
         }}
     }}"#));
                 b.line("");
@@ -131,7 +143,7 @@ impl RustEntityGenerator {
         self.inner.is_modified()
     }}
 
-    pub async fn save(&self) -> ActionResult<()> {{
+    pub async fn save(&self) -> Result<()> {{
         self.inner.save().await
     }}"#));
                 b.line("");
@@ -214,7 +226,7 @@ impl Display for {model_name} {{
         generator.generate_file(format!("{name}.rs"), Code::new(0, 4, |b| {
             // use lines
             b.line("use std::str::FromStr;");
-            b.line("use teo::prelude::{Value, ActionError};");
+            b.line("use teo::prelude::{Value, Error};");
             b.empty_line();
             b.line("#[derive(Eq, PartialEq, Copy, Clone, Debug)]");
             b.block(format!("pub enum {} {{", enum_name), |b| {
@@ -234,14 +246,14 @@ impl Display for {model_name} {{
             }, "}");
             b.empty_line();
             b.block(format!("impl FromStr for {enum_name} {{"), |b| {
-                b.line("type Err = ActionError;");
+                b.line("type Err = Error;");
                 b.empty_line();
                 b.block("fn from_str(s: &str) -> Result<Self, Self::Err> {", |b| {
                     b.block("match s {", |b| {
                         for choice in e.choices() {
                             b.line(format!("\"{}\" => Ok({enum_name}::{}),", choice.name(), choice.name()));
                         }
-                        b.line(format!("_ => Err(ActionError::custom_error(format!(\"Cannot convert value '{{}}' to `{enum_name}'.\", s))),"));
+                        b.line(format!("_ => Err(Error::custom_error(format!(\"Cannot convert value '{{}}' to `{enum_name}'.\", s))),"));
                     }, "}");
                 }, "}");
             }, "}");

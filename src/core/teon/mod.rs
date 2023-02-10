@@ -701,6 +701,12 @@ impl Neg for &Value {
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
         use Value::*;
+        if self.is_i() && other.is_i() {
+            return self.as_i64().unwrap() == other.as_i64().unwrap();
+        }
+        if self.is_number() && other.is_number() {
+            return self.as_f64().unwrap() == other.as_f64().unwrap();
+        }
         match (self, other) {
             (Null, Null) => true,
             #[cfg(feature = "data-source-mongodb")]

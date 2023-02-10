@@ -15,7 +15,7 @@ pub enum ClientLanguage {
 pub struct Client {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
-    pub(crate) identifier: Identifier,
+    pub(crate) identifier: Option<Identifier>,
     pub(crate) items: Vec<Item>,
     pub(crate) span: Span,
     pub(crate) provider: Option<ClientLanguage>,
@@ -26,7 +26,7 @@ pub struct Client {
 }
 
 impl Client {
-    pub(crate) fn new(id: usize, source_id: usize, identifier: Identifier, items: Vec<Item>, span: Span) -> Self {
+    pub(crate) fn new(id: usize, source_id: usize, identifier: Option<Identifier>, items: Vec<Item>, span: Span) -> Self {
         Self {
             id,
             source_id,

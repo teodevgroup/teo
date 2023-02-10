@@ -19,11 +19,11 @@ use crate::core::relation::Relation;
 use crate::core::connector::SaveSession;
 use crate::core::pipeline::context::{Context};
 use crate::core::teon::Value;
-use crate::core::error::{ActionError, ActionErrorType};
+use crate::core::error::{Error, ErrorType};
 use crate::core::field::write_rule::WriteRule;
 use crate::core::relation::delete_rule::DeleteRule;
 use crate::core::relation::delete_rule::DeleteRule::Deny;
-use crate::core::result::ActionResult;
+use crate::core::result::Result;
 use crate::teon;
 
 #[derive(Clone)]
@@ -53,9 +53,9 @@ pub(crate) struct ObjectInner {
     pub(crate) cached_property_map: Arc<Mutex<HashMap<String, Value>>>,
 }
 
-fn check_user_json_keys<'a>(map: &HashMap<String, Value>, allowed: &HashSet<&str>, model: &Model) -> ActionResult<()> {
+fn check_user_json_keys<'a>(map: &HashMap<String, Value>, allowed: &HashSet<&str>, model: &Model) -> Result<()> {
     if let Some(unallowed) = map.keys().find(|k| !allowed.contains(k.as_str())) {
-        return Err(ActionError::invalid_key(unallowed, model));
+        return Err(Error::invalid_key(unallowed, model));
     }
     Ok(())
 }
@@ -89,19 +89,20 @@ impl Object {
     }
 
     #[async_recursion(?Send)]
-    pub async fn set_tson(&self, value: &Value) -> ActionResult<()> {
-        self.set_tson_with_path_and_user_mode(value, &path![], true).await
+    pub async fn set_teon(&self, value: &Value) -> Result<()> {
+        self.set_teon_with_path_and_user_mode(value, &path![], true).await
     }
 
     #[async_recursion(?Send)]
-    pub(crate) async fn set_tson_with_path(&self, json_value: &Value, path: &KeyPath) -> ActionResult<()> {
-        self.set_tson_with_path_and_user_mode(json_value, path, false).await
+    pub(crate) async fn set_teon_with_path(&self, json_value: &Value, path: &KeyPath) -> Result<()> {
+        self.set_teon_with_path_and_user_mode(json_value, path, false).await
     }
 
-    pub(crate) async fn set_tson_with_path_and_user_mode(&self, value: &Value, path: &KeyPath<'_>, user_mode: bool) -> ActionResult<()> {
+    pub(crate) async fn set_teon_with_path_and_user_mode(&self, value: &Value, path: &KeyPath<'_>, user_mode: bool) -> Result<()> {
         let model = self.model();
         // permission
         if !user_mode {
+            // self.trigger_can_mutate_callbacks().await?;
             self.check_model_write_permission().await?;
         }
         // get value map
@@ -158,7 +159,7 @@ impl Object {
                             let result_context = field.on_set_pipeline.process(context).await;
                             let value = result_context.value();
                             match result_context.invalid_reason() {
-                                Some(reason) => return Err(ActionError::unexpected_input_value_with_reason(reason, &path)),
+                                Some(reason) => return Err(Error::unexpected_input_value_with_reason(reason, &path)),
                                 None => {
                                     self.check_write_rule(key, value, &path).await?;
                                     self.set_value_to_value_map(key, value.clone());
@@ -180,12 +181,12 @@ impl Object {
                         let input_result = Input::decode_field(value);
                         let value = match input_result {
                             Input::SetValue(v) => v,
-                            _ => return Err(ActionError::unexpected_input_type("value", &(path + key))),
+                            _ => return Err(Error::unexpected_input_type("value", &(path + key))),
                         };
                         let ctx = Context::initial_state_with_object(self.clone())
                             .alter_value(value);
                         if let Some(reason) = setter.process(ctx).await.invalid_reason() {
-                            return Err(ActionError::unexpected_input_value_with_reason(reason, &(path + key)));
+                            return Err(Error::unexpected_input_value_with_reason(reason, &(path + key)));
                         }
                     }
                 }
@@ -196,38 +197,38 @@ impl Object {
         Ok(())
     }
 
-    async fn check_model_write_permission(&self) -> ActionResult<()> {
+    async fn check_model_write_permission(&self) -> Result<()> {
         let ctx = Context::initial_state_with_null(self.clone());
         let result_ctx = self.model().can_mutate_pipeline().process(ctx).await;
         if !result_ctx.is_valid() {
-            return Err(ActionError::permission_denied("mutate"));
+            return Err(Error::permission_denied("mutate"));
         }
         Ok(())
     }
 
-    async fn check_model_read_permission(&self) -> ActionResult<()> {
+    async fn check_model_read_permission(&self) -> Result<()> {
         let ctx = Context::initial_state_with_null(self.clone());
         let result_ctx = self.model().can_read_pipeline().process(ctx).await;
         if !result_ctx.is_valid() {
-            return Err(ActionError::permission_denied("read"));
+            return Err(Error::permission_denied("read"));
         }
         Ok(())
     }
 
-    async fn check_field_write_permission(&self, field: &Field) -> ActionResult<()> {
+    async fn check_field_write_permission(&self, field: &Field) -> Result<()> {
         let ctx = Context::initial_state_with_object(self.clone()).alter_value(self.get_value(field.name()).unwrap()).alter_key_path(path![field.name()]);
         let result = field.can_mutate_pipeline.process(ctx).await;
         if !result.is_valid() {
-            return Err(ActionError::permission_denied("mutate"));
+            return Err(Error::permission_denied("mutate"));
         }
         Ok(())
     }
 
-    async fn check_field_read_permission(&self, field: &Field) -> ActionResult<()> {
+    async fn check_field_read_permission(&self, field: &Field) -> Result<()> {
         let ctx = Context::initial_state_with_object(self.clone()).alter_value(self.get_value(field.name()).unwrap()).alter_key_path(path![field.name()]);
         let result = field.can_read_pipeline.process(ctx).await;
         if !result.is_valid() {
-            return Err(ActionError::permission_denied("read"));
+            return Err(Error::permission_denied("read"));
         }
         Ok(())
     }
@@ -240,7 +241,7 @@ impl Object {
         }
     }
 
-    async fn check_write_rule(&self, key: impl AsRef<str>, value: &Value, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn check_write_rule(&self, key: impl AsRef<str>, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         let field = self.model().field(key.as_ref()).unwrap();
         let is_new = self.is_new();
         let valid = match &field.write_rule {
@@ -258,7 +259,7 @@ impl Object {
             }
         };
         if !valid {
-            Err(ActionError::unexpected_input_key(key.as_ref(), path))
+            Err(Error::unexpected_input_key(key.as_ref(), path))
         } else {
             Ok(())
         }
@@ -280,20 +281,20 @@ impl Object {
         }
     }
 
-    pub fn set(&self, key: impl AsRef<str>, value: impl Into<Value>) -> ActionResult<()> {
+    pub fn set(&self, key: impl AsRef<str>, value: impl Into<Value>) -> Result<()> {
         self.set_value(key, value.into())
     }
 
-    pub fn set_value(&self, key: impl AsRef<str>, value: Value) -> ActionResult<()> {
+    pub fn set_value(&self, key: impl AsRef<str>, value: Value) -> Result<()> {
         let model_keys = self.model().save_keys();
         if !model_keys.contains(&key.as_ref().to_string()) {
-            return Err(ActionError::invalid_key(key, self.model()));
+            return Err(Error::invalid_key(key, self.model()));
         }
         self.set_value_to_value_map(key.as_ref(), value);
         Ok(())
     }
 
-    pub async fn set_property(&self, key: impl AsRef<str>, value: impl Into<Value>) -> ActionResult<()> {
+    pub async fn set_property(&self, key: impl AsRef<str>, value: impl Into<Value>) -> Result<()> {
         let property = self.model().property(key.as_ref()).unwrap();
         let setter = property.setter.as_ref().unwrap();
         let ctx = Context::initial_state_with_object(self.clone())
@@ -345,11 +346,11 @@ impl Object {
         }
     }
 
-    pub fn get_relation_object(&self, key: impl AsRef<str>) -> ActionResult<Option<Object>> {
+    pub fn get_relation_object(&self, key: impl AsRef<str>) -> Result<Option<Object>> {
         let key = key.as_ref();
         let model_keys = self.model().all_keys();
         if !model_keys.contains(&key.to_string()) {
-            return Err(ActionError::invalid_key(key, self.model()));
+            return Err(Error::invalid_key(key, self.model()));
         }
         match self.inner.relation_query_map.lock().unwrap().get(key) {
             Some(list) => Ok(list.get(0).cloned()),
@@ -361,11 +362,11 @@ impl Object {
         self.inner.relation_query_map.lock().unwrap().contains_key(key.as_ref())
     }
 
-    pub fn get_relation_vec(&self, key: impl AsRef<str>) -> ActionResult<Vec<Object>> {
+    pub fn get_relation_vec(&self, key: impl AsRef<str>) -> Result<Vec<Object>> {
         let key = key.as_ref();
         let model_keys = self.model().all_keys();
         if !model_keys.contains(&key.to_string()) {
-            return Err(ActionError::invalid_key(key, self.model()));
+            return Err(Error::invalid_key(key, self.model()));
         }
         match self.inner.relation_query_map.lock().unwrap().get(key) {
             Some(list) => Ok(list.clone()),
@@ -373,7 +374,7 @@ impl Object {
         }
     }
 
-    pub async fn get_property<T>(&self, key: impl AsRef<str>) -> Result<T, ActionError> where T: From<Value> {
+    pub async fn get_property<T>(&self, key: impl AsRef<str>) -> Result<T> where T: From<Value> {
         let property = self.model().property(key.as_ref()).unwrap();
         if property.cached {
             if let Some(value) = self.inner.cached_property_map.lock().unwrap().get(key.as_ref()) {
@@ -389,7 +390,7 @@ impl Object {
         Ok(value.into())
     }
 
-    pub fn get<T>(&self, key: impl AsRef<str>) -> Result<T, ActionError> where T: From<Value> {
+    pub fn get<T>(&self, key: impl AsRef<str>) -> Result<T> where T: From<Value> {
         match self.get_value(key) {
             Ok(optional_value) => {
                 Ok(optional_value.into())
@@ -400,12 +401,12 @@ impl Object {
         }
     }
 
-    pub(crate) fn get_previous_value(&self, key: impl AsRef<str>) -> Result<Value, ActionError> {
+    pub(crate) fn get_previous_value(&self, key: impl AsRef<str>) -> Result<Value> {
         let key = key.as_ref();
         let model_keys = self.model().all_keys();
         if !model_keys.contains(&key.to_string()) {
             let model = self.model();
-            return Err(ActionError::invalid_key(key, model));
+            return Err(Error::invalid_key(key, model));
         }
         let map = self.inner.previous_value_map.lock().unwrap();
         match map.get(key) {
@@ -421,10 +422,10 @@ impl Object {
         }
     }
 
-    pub fn get_value(&self, key: impl AsRef<str>) -> Result<Value, ActionError> {
+    pub fn get_value(&self, key: impl AsRef<str>) -> Result<Value> {
         let model_keys = self.model().all_keys();
         if !model_keys.contains(&key.as_ref().to_string()) {
-            return Err(ActionError::invalid_key(key, self.model()));
+            return Err(Error::invalid_key(key, self.model()));
         }
         Ok(self.get_value_map_value(key.as_ref()))
     }
@@ -433,7 +434,7 @@ impl Object {
         self.inner.atomic_updator_map.lock().unwrap().get(key).cloned()
     }
 
-    pub fn set_select(&self, select: Option<&Value>) -> ActionResult<()> {
+    pub fn set_select(&self, select: Option<&Value>) -> Result<()> {
         if select.is_none() {
             return Ok(());
         }
@@ -489,7 +490,7 @@ impl Object {
     }
 
     #[async_recursion(?Send)]
-    pub(crate) async fn apply_on_save_pipeline_and_validate_required_fields(&self, path: &KeyPath) -> ActionResult<()> {
+    pub(crate) async fn apply_on_save_pipeline_and_validate_required_fields(&self, path: &KeyPath) -> Result<()> {
         // apply on save pipeline first
         let model_keys = self.model().save_keys();
         for key in model_keys {
@@ -513,7 +514,7 @@ impl Object {
                 let result_ctx = field.perform_on_save_callback(context).await;
                 match result_ctx.invalid_reason() {
                     Some(reason) => {
-                        return Err(ActionError::unexpected_input_value_with_reason(reason, &(path + key)));
+                        return Err(Error::unexpected_input_value_with_reason(reason, &(path + key)));
                     }
                     None => {
                         self.inner.value_map.lock().unwrap().insert(key.to_string(), result_ctx.value);
@@ -536,7 +537,7 @@ impl Object {
                     Optionality::Required => {
                         let value = self.get_value(key).unwrap();
                         if value.is_null() {
-                            return Err(ActionError::missing_required_input(key, path));
+                            return Err(Error::missing_required_input(key, path));
                         }
                     }
                     Optionality::PresentWith(field_names) => {
@@ -549,14 +550,14 @@ impl Object {
                                             let name = name.as_str().unwrap();
                                             let value_at_name = self.get_value(name).unwrap();
                                             if !value_at_name.is_null() {
-                                                return Err(ActionError::missing_required_input(key, path))
+                                                return Err(Error::missing_required_input(key, path))
                                             }
                                         }
                                     }
                                     Value::String(name) => {
                                         let value_at_name = self.get_value(name).unwrap();
                                         if !value_at_name.is_null() {
-                                            return Err(ActionError::missing_required_input(key, path))
+                                            return Err(Error::missing_required_input(key, path))
                                         }
                                     }
                                     _ => unreachable!()
@@ -576,13 +577,13 @@ impl Object {
                                             if !value_at_name.is_null() {
                                                 break;
                                             }
-                                            return Err(ActionError::missing_required_input(key, path));
+                                            return Err(Error::missing_required_input(key, path));
                                         }
                                     }
                                     Value::String(name) => {
                                         let value_at_name = self.get_value(name).unwrap();
                                         if value_at_name.is_null() {
-                                            return Err(ActionError::missing_required_input(key, path))
+                                            return Err(Error::missing_required_input(key, path))
                                         }
                                     }
                                     _ => unreachable!()
@@ -596,7 +597,7 @@ impl Object {
                             let ctx = Context::initial_state_with_object(self.clone());
                             let invalid = pipeline.process(ctx).await.invalid_reason().is_some();
                             if invalid {
-                                return Err(ActionError::missing_required_input(key, path))
+                                return Err(Error::missing_required_input(key, path))
                             }
                         }
                     }
@@ -618,7 +619,7 @@ impl Object {
     }
 
     #[async_recursion(?Send)]
-    pub(crate) async fn delete_from_database(&self, session: Arc<dyn SaveSession>) -> ActionResult<()> {
+    pub(crate) async fn delete_from_database(&self, session: Arc<dyn SaveSession>) -> Result<()> {
         let model = self.model();
         let graph = self.graph();
         // check deny first
@@ -632,7 +633,7 @@ impl Object {
                     let finder = self.intrinsic_where_unique_for_relation(relation);
                     let count = graph.count(opposite_model.name(), &finder).await.unwrap();
                     if count > 0 {
-                        return Err(ActionError::deletion_denied(relation.name()));
+                        return Err(Error::deletion_denied(relation.name()));
                     }
                 }
             }
@@ -677,23 +678,23 @@ impl Object {
     }
 
     #[async_recursion(?Send)]
-    async fn save_to_database(&self, session: Arc<dyn SaveSession>) -> ActionResult<()> {
+    async fn save_to_database(&self, session: Arc<dyn SaveSession>) -> Result<()> {
         let connector = self.graph().connector();
         connector.save_object(self, session).await?;
         self.clear_new_state();
         Ok(())
     }
 
-    fn before_save_callback_check(&self) -> ActionResult<()> {
+    fn before_save_callback_check(&self) -> Result<()> {
         let inside_before_callback = self.inner.inside_before_save_callback.load(Ordering::SeqCst);
         if inside_before_callback {
-            return Err(ActionError::invalid_operation("Save called inside before callback."));
+            return Err(Error::invalid_operation("Save called inside before callback."));
         }
         Ok(())
     }
 
     #[async_recursion(?Send)]
-    pub(crate) async fn save_with_session_and_path(&self, session: Arc<dyn SaveSession>, path: &KeyPath) -> ActionResult<()> {
+    pub(crate) async fn save_with_session_and_path(&self, session: Arc<dyn SaveSession>, path: &KeyPath) -> Result<()> {
         // check if it's inside before callback
         self.before_save_callback_check()?;
         let is_new = self.is_new();
@@ -719,20 +720,73 @@ impl Object {
         Ok(())
     }
 
-    pub async fn save(&self) -> ActionResult<()> {
+    pub async fn save(&self) -> Result<()> {
         let session = self.graph().connector().new_save_session();
         self.save_with_session_and_path(session, &path![]).await
     }
 
-    async fn trigger_before_save_callbacks(&self) -> ActionResult<()> {
+    async fn trigger_can_read_callbacks(&self) -> Result<()> {
+        let model = self.model();
+        let pipeline = model.can_mutate_pipeline();
+        let context = Context::initial_state_with_object(self.clone());
+        let result_context = pipeline.process(context).await;
+        if result_context.invalid_reason().is_some() {
+            Err(Error::permission_denied("Can read callback is not valid."))
+        } else {
+            Ok(())
+        }
+    }
+
+    async fn trigger_can_mutate_callbacks(&self) -> Result<()> {
+        let model = self.model();
+        let pipeline = model.can_mutate_pipeline();
+        let context = Context::initial_state_with_object(self.clone());
+        let result_context = pipeline.process(context).await;
+        if result_context.invalid_reason().is_some() {
+            Err(Error::permission_denied("Can mutate callback is not valid."))
+        } else {
+            Ok(())
+        }
+    }
+
+    async fn trigger_before_delete_callbacks(&self) -> Result<()> {
+        let model = self.model();
+        let pipeline = model.before_delete_pipeline();
+        let context = Context::initial_state_with_object(self.clone());
+        let result_context = pipeline.process(context).await;
+        if result_context.invalid_reason().is_some() {
+            Err(Error::custom_error("Before delete callback is not valid."))
+        } else {
+            Ok(())
+        }
+    }
+
+    async fn trigger_after_delete_callbacks(&self) -> Result<()> {
+        let model = self.model();
+        let pipeline = model.after_delete_pipeline();
+        let context = Context::initial_state_with_object(self.clone());
+        let result_context = pipeline.process(context).await;
+        if result_context.invalid_reason().is_some() {
+            Err(Error::custom_error("Before delete callback is not valid."))
+        } else {
+            Ok(())
+        }
+    }
+
+
+    async fn trigger_before_save_callbacks(&self) -> Result<()> {
         let model = self.model();
         let pipeline = model.before_save_pipeline();
         let context = Context::initial_state_with_object(self.clone());
-        let _result = pipeline.process(context).await;
-        Ok(())
+        let result_context = pipeline.process(context).await;
+        if result_context.invalid_reason().is_some() {
+            Err(Error::custom_error("Before save callback is not valid."))
+        } else {
+            Ok(())
+        }
     }
 
-    async fn trigger_after_save_callbacks(&self) -> ActionResult<()> {
+    async fn trigger_after_save_callbacks(&self) -> Result<()> {
         let inside_after_save_callback = self.inner.inside_after_save_callback.load(Ordering::SeqCst);
         if inside_after_save_callback {
             return Ok(());
@@ -746,12 +800,15 @@ impl Object {
         Ok(())
     }
 
-    pub async fn delete(&self) -> ActionResult<()> {
-        self.delete_from_database(self.graph().connector().new_save_session()).await
+    pub async fn delete(&self) -> Result<()> {
+        self.trigger_can_mutate_callbacks().await?;
+        self.trigger_before_delete_callbacks().await?;
+        self.delete_from_database(self.graph().connector().new_save_session()).await?;
+        self.trigger_after_delete_callbacks().await
     }
 
     #[async_recursion]
-    pub(crate) async fn to_json(&self) -> ActionResult<Value> {
+    pub(crate) async fn to_json(&self) -> Result<Value> {
         // check read permission
         self.check_model_read_permission().await?;
         // output
@@ -782,7 +839,7 @@ impl Object {
             } else if (!select_filter) || (select_filter && select_list.contains(key)) {
                 if let Some(field) = self.model().field(key) {
                     let mut value = self.get_value(key).unwrap();
-                    if self.check_field_read_permission(field).await.is_ok() {
+                    if self.check_field_read_permission(field).await.is_err() {
                         continue
                     }
                     let context = Context::initial_state_with_object(self.clone())
@@ -850,7 +907,7 @@ impl Object {
         Value::HashMap(identifier)
     }
 
-    async fn perform_relation_manipulations<F: Fn(&Relation) -> bool>(&self, f: F, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn perform_relation_manipulations<F: Fn(&Relation) -> bool>(&self, f: F, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         for relation in self.model().relations() {
             if f(relation) {
                 let many = relation.is_vec();
@@ -870,11 +927,11 @@ impl Object {
         Ok(())
     }
 
-    async fn create_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn create_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let join_model = self.graph().model(relation.through().unwrap()).unwrap();
         let action = Action::from_u32(JOIN_CREATE | CREATE | SINGLE);
         let join_object = self.graph().new_object(join_model.name(), action, self.action_source().clone())?;
-        join_object.set_tson(&teon!({})).await?; // initialize
+        join_object.set_teon(&teon!({})).await?; // initialize
         let local = relation.local();
         let foreign = opposite_relation.local();
         let join_local_relation = join_model.relation(local).unwrap();
@@ -883,11 +940,11 @@ impl Object {
         object.assign_linked_values_to_related_object(&join_object, join_foreign_relation);
         match join_object.save_with_session_and_path(session.clone(), path).await {
             Ok(_) => Ok(()),
-            Err(_) => Err(ActionError::unexpected_input_value_with_reason("Can't create join record.", path)),
+            Err(_) => Err(Error::unexpected_input_value_with_reason("Can't create join record.", path)),
         }
     }
 
-    async fn delete_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn delete_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let join_model = self.graph().model(relation.through().unwrap()).unwrap();
         let action = Action::from_u32(JOIN_DELETE | DELETE | SINGLE);
         let local = relation.local();
@@ -902,13 +959,13 @@ impl Object {
         r#where_map.extend(where_local.as_hashmap().cloned().unwrap());
         r#where_map.extend(where_foreign.as_hashmap().cloned().unwrap());
         let r#where = Value::HashMap(r#where_map);
-        let object = match self.graph().find_unique(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
+        let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
             Ok(object) => object,
-            Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Join object is not found.", path)),
+            Err(_) => return Err(Error::unexpected_input_value_with_reason("Join object is not found.", path)),
         };
         match object.delete_from_database(session.clone()).await {
             Ok(_) => Ok(()),
-            Err(_) => Err(ActionError::unexpected_input_value_with_reason("Can't delete join record.", path)),
+            Err(_) => Err(Error::unexpected_input_value_with_reason("Can't delete join record.", path)),
         }
     }
 
@@ -930,7 +987,7 @@ impl Object {
         }
     }
 
-    async fn link_and_save_relation_object(&self, relation: &Relation, object: &Object, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn link_and_save_relation_object(&self, relation: &Relation, object: &Object, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let mut linked = false;
         let (_, opposite_relation) = self.graph().opposite_relation(relation);
         if let Some(opposite_relation) = opposite_relation {
@@ -950,27 +1007,27 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_create_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn nested_create_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let action = Action::from_u32(NESTED | CREATE | SINGLE);
         let object = self.graph().new_object(relation.model(), action, self.action_source().clone())?;
-        object.set_tson_with_path(value, path).await?;
+        object.set_teon_with_path(value, path).await?;
         self.link_and_save_relation_object(relation, &object, session.clone(), path).await
     }
 
-    async fn nested_connect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn nested_connect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let action = Action::from_u32(NESTED | CONNECT | SINGLE);
-        let object = match self.graph().find_unique(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone()).await {
+        let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone()).await {
             Ok(object) => object,
-            Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+            Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
         };
         self.link_and_save_relation_object(relation, &object, session.clone(), path).await
     }
 
-    async fn nested_connect_or_create_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn nested_connect_or_create_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let r#where = value.get("where").unwrap();
         let create = value.get("create").unwrap();
         let action = Action::from_u32(CONNECT_OR_CREATE | CONNECT | NESTED | SINGLE);
-        let object = match self.graph().find_unique(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
+        let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
             Ok(object) => object,
             Err(_) => {
                 self.graph().new_object_with_tson_and_path(relation.model(), create, &(path + "create"), action, self.action_source().clone()).await?
@@ -983,20 +1040,20 @@ impl Object {
         Value::HashMap(relation.iter().map(|(f, r)| (r.to_owned(), self.get_value(f).unwrap())).collect())
     }
 
-    async fn nested_disconnect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn nested_disconnect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let disconnect = value.as_bool().unwrap();
         if !disconnect { return Ok(()) }
         if !relation.is_vec() && relation.is_required() {
-            return Err(ActionError::unexpected_input_value_with_reason("Cannot disconnect required relation.", path));
+            return Err(Error::unexpected_input_value_with_reason("Cannot disconnect required relation.", path));
         }
         if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
         } else {
             let r#where = self.intrinsic_where_unique_for_relation(relation);
             let action = Action::from_u32(NESTED | DISCONNECT | SINGLE);
-            let object = match self.graph().find_unique(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
+            let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
                 Ok(object) => object,
-                Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+                Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
             };
             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
             object.save_with_session_and_path(session.clone(), path).await?;
@@ -1004,16 +1061,16 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_upsert_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn nested_upsert_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let mut r#where = self.intrinsic_where_unique_for_relation(relation);
         r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().cloned().unwrap());
         let create = value.get("create").unwrap();
         let update = value.get("update").unwrap();
         let action = Action::from_u32(NESTED | UPSERT | UPDATE | SINGLE);
-        match self.graph().find_unique(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
+        match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
             Ok(object) => {
                 let path = path + "update";
-                object.set_tson_with_path(update, &path).await?;
+                object.set_teon_with_path(update, &path).await?;
                 object.save_with_session_and_path(session.clone(), &path).await?;
             },
             Err(_) => {
@@ -1025,21 +1082,21 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_many_disconnect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn nested_many_disconnect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         if relation.has_join_table() {
             let action = Action::from_u32(JOIN_DELETE | DELETE | SINGLE);
-            let object = match self.graph().find_unique(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone()).await {
+            let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone()).await {
                 Ok(object) => object,
-                Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+                Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
             };
             self.delete_join_object(&object, relation, self.graph().opposite_relation(relation).1.unwrap(), session.clone(), path).await?;
         } else {
             let mut r#where = self.intrinsic_where_unique_for_relation(relation);
             r#where.as_hashmap_mut().unwrap().extend(value.as_hashmap().cloned().unwrap().into_iter());
             let action = Action::from_u32(DISCONNECT | NESTED | SINGLE);
-            let object = match self.graph().find_unique(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
+            let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
                 Ok(object) => object,
-                Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+                Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
             };
             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
             object.save_with_session_and_path(session.clone(), path).await?;
@@ -1047,55 +1104,55 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_many_update_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn nested_many_update_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let mut r#where = self.intrinsic_where_unique_for_relation(relation);
         r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().cloned().unwrap());
         let action = Action::from_u32(NESTED | UPDATE | SINGLE);
-        let object = match self.graph().find_unique(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
+        let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
             Ok(object) => object,
-            Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", &(path + "where"))),
+            Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", &(path + "where"))),
         };
-        object.set_tson_with_path(value.get("update").unwrap(), &(path + "update")).await?;
+        object.set_teon_with_path(value.get("update").unwrap(), &(path + "update")).await?;
         object.save_with_session_and_path(session.clone(), path).await?;
         Ok(())
     }
 
-    async fn nested_many_update_many_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn nested_many_update_many_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let mut r#where = self.intrinsic_where_unique_for_relation(relation);
         r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().cloned().unwrap());
         let action = Action::from_u32(NESTED | UPDATE | MANY);
         let update = value.get("update").unwrap();
-        let objects = self.graph().find_many(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await.unwrap();
+        let objects = self.graph().find_many_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await.unwrap();
         for object in objects {
-            object.set_tson_with_path(update, path).await?;
+            object.set_teon_with_path(update, path).await?;
             object.save_with_session_and_path(session.clone(), path).await?;
         }
         Ok(())
     }
 
-    async fn nested_update_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn nested_update_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let r#where = self.intrinsic_where_unique_for_relation(relation);
         let action = Action::from_u32(NESTED | UPDATE | SINGLE);
-        let object = match self.graph().find_unique(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
+        let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
             Ok(object) => object,
-            Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+            Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
         };
-        object.set_tson_with_path(value, path).await?;
+        object.set_teon_with_path(value, path).await?;
         object.save_with_session_and_path(session.clone(), path).await?;
         Ok(())
     }
 
-    async fn nested_delete_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn nested_delete_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let delete = value.as_bool().unwrap();
         if !delete { return Ok(()) }
         if !relation.is_vec() && relation.is_required() {
-            return Err(ActionError::unexpected_input_value_with_reason("Cannot delete required relation.", path));
+            return Err(Error::unexpected_input_value_with_reason("Cannot delete required relation.", path));
         }
         let r#where = self.intrinsic_where_unique_for_relation(relation);
         let action = Action::from_u32(NESTED | DELETE | SINGLE);
-        let object = match self.graph().find_unique(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
+        let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
             Ok(object) => object,
-            Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+            Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
         };
         object.delete_from_database(session.clone()).await?;
         if relation.has_join_table() {
@@ -1108,16 +1165,16 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_many_delete_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn nested_many_delete_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
         }
         let mut r#where = self.intrinsic_where_unique_for_relation(relation);
         r#where.as_hashmap_mut().unwrap().extend(value.as_hashmap().cloned().unwrap());
         let action = Action::from_u32(NESTED | DELETE | SINGLE);
-        let object = match self.graph().find_unique(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
+        let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
             Ok(object) => object,
-            Err(_) => return Err(ActionError::unexpected_input_value_with_reason("Object is not found.", path)),
+            Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
         };
         object.delete_from_database(session.clone()).await?;
         if relation.has_join_table() {
@@ -1127,14 +1184,14 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_many_delete_many_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn nested_many_delete_many_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
         }
         let mut r#where = self.intrinsic_where_unique_for_relation(relation);
         r#where.as_hashmap_mut().unwrap().extend(value.as_hashmap().cloned().unwrap());
         let action = Action::from_u32(NESTED | DELETE | MANY);
-        let objects = self.graph().find_many(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await.unwrap();
+        let objects = self.graph().find_many_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await.unwrap();
         for object in objects {
             object.delete_from_database(session.clone()).await?;
             if relation.has_join_table() {
@@ -1145,7 +1202,7 @@ impl Object {
         Ok(())
     }
 
-    async fn perform_relation_manipulation_one(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn perform_relation_manipulation_one(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         for (key, value) in value.as_hashmap().unwrap() {
             let key = key.as_str();
             let path = path + key;
@@ -1162,7 +1219,7 @@ impl Object {
         Ok(())
     }
 
-    async fn perform_relation_manipulation_many(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> ActionResult<()> {
+    async fn perform_relation_manipulation_many(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         for (key, value) in value.as_hashmap().unwrap() {
             let key = key.as_str();
             let path = path + key;
@@ -1272,7 +1329,7 @@ impl Object {
         Ok(())
     }
 
-    pub async fn refreshed(&self, include: Option<&Value>, select: Option<&Value>) -> Result<Object, ActionError> {
+    pub async fn refreshed(&self, include: Option<&Value>, select: Option<&Value>) -> Result<Object> {
         if self.model().r#virtual() {
             self.set_select(select).unwrap();
             return Ok(self.clone())
@@ -1287,10 +1344,10 @@ impl Object {
         if let Some(select) = select {
             finder.as_hashmap_mut().unwrap().insert("select".to_string(), select.clone());
         }
-        graph.find_unique(self.model().name(), &finder, false, self.action(), self.action_source().clone()).await
+        graph.find_unique_internal(self.model().name(), &finder, false, self.action(), self.action_source().clone()).await
     }
 
-    pub async fn fetch_relation_object(&self, key: impl AsRef<str>, find_unique_arg: Option<&Value>) -> Result<Option<Object>, ActionError> {
+    pub async fn fetch_relation_object(&self, key: impl AsRef<str>, find_unique_arg: Option<&Value>) -> Result<Option<Object>> {
         // get relation
         let model = self.model();
         let relation = model.relation(key.as_ref());
@@ -1310,14 +1367,14 @@ impl Object {
         let relation_model_name = relation.model();
         let graph = self.graph();
         let action = Action::from_u32(NESTED | FIND | PROGRAM_CODE | SINGLE);
-        match graph.find_unique(relation_model_name, &finder, false, action, ActionSource::ProgramCode).await {
+        match graph.find_unique_internal(relation_model_name, &finder, false, action, ActionSource::ProgramCode).await {
             Ok(result) => {
                 self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec![result]);
                 let obj = self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().get(0).unwrap().clone();
                 Ok(Some(obj.clone()))
             }
             Err(err) => {
-                if err.r#type == ActionErrorType::ObjectNotFound {
+                if err.r#type == ErrorType::ObjectNotFound {
                     self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec![]);
                     Ok(None)
                 } else {
@@ -1327,7 +1384,7 @@ impl Object {
         }
     }
 
-    pub async fn fetch_relation_objects(&self, key: impl AsRef<str>, find_many_arg: Option<&Value>) -> Result<Vec<Object>, ActionError> {
+    pub async fn fetch_relation_objects(&self, key: impl AsRef<str>, find_many_arg: Option<&Value>) -> Result<Vec<Object>> {
         // get relation
         let model = self.model();
         let relation = model.relation(key.as_ref());
@@ -1344,7 +1401,7 @@ impl Object {
         let action = Action::from_u32(NESTED | FIND | PROGRAM_CODE | MANY);
         if let Some(_join_table) = relation.through() {
             let identifier = self.identifier();
-            let new_self = self.graph().find_unique(model.name(), &teon!({
+            let new_self = self.graph().find_unique_internal(model.name(), &teon!({
                 "where": identifier,
                 "include": {
                     key.as_ref(): include_inside
@@ -1374,7 +1431,7 @@ impl Object {
             }
             let relation_model_name = relation.model();
             let graph = self.graph();
-            let results = graph.find_many(relation_model_name, &finder, false, action, ActionSource::ProgramCode).await?;
+            let results = graph.find_many_internal(relation_model_name, &finder, false, action, ActionSource::ProgramCode).await?;
             self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), results.clone());
             Ok(results)
         }

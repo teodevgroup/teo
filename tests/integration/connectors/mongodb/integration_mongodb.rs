@@ -94,7 +94,7 @@ async fn app() -> App<impl ServiceFactory<
 #[serial]
 async fn create_with_valid_data_creates_entry() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -118,7 +118,7 @@ async fn create_with_valid_data_creates_entry() {
 #[serial]
 async fn create_with_required_field_omitted_cannot_create() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -143,14 +143,14 @@ async fn create_with_required_field_omitted_cannot_create() {
 #[serial]
 async fn create_with_duplicated_unique_value_cannot_create() {
     let app = test::init_service(app().await).await;
-    let req1 = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let req1 = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
             "requiredString": "1"
         }
     })).to_request();
-    let req2 = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let req2 = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -177,7 +177,7 @@ async fn create_with_duplicated_unique_value_cannot_create() {
 #[serial]
 async fn create_with_optional_data_creates_entry() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -203,7 +203,7 @@ async fn create_with_optional_data_creates_entry() {
 #[serial]
 async fn create_with_correct_enum_value_creates_entry() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -229,7 +229,7 @@ async fn create_with_correct_enum_value_creates_entry() {
 #[serial]
 async fn create_with_invalid_enum_choice_value_cannot_create() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -256,7 +256,7 @@ async fn create_with_invalid_enum_choice_value_cannot_create() {
 #[serial]
 async fn create_with_required_omitted_but_default_can_create() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -279,7 +279,7 @@ async fn create_with_required_omitted_but_default_can_create() {
 #[serial]
 async fn create_default_field_use_provided_value_if_exists() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -303,7 +303,7 @@ async fn create_default_field_use_provided_value_if_exists() {
 #[serial]
 async fn create_cannot_accept_readonly_value() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -326,7 +326,7 @@ async fn create_cannot_accept_readonly_value() {
 #[serial]
 async fn wont_output_writeonly_value() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "2",
@@ -348,7 +348,7 @@ async fn wont_output_writeonly_value() {
 #[serial]
 async fn find_unique_can_find_by_primary_key() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let create_req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -358,7 +358,7 @@ async fn find_unique_can_find_by_primary_key() {
     let create_resp: ServiceResponse = test::call_service(&app, create_req).await;
     let create_body_json: Value = test::read_body_json(create_resp).await;
     let id = create_body_json.as_hashmap().unwrap().get("data").unwrap().as_hashmap().unwrap().get("id").unwrap().as_str().unwrap();
-    let find_unique_req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let find_unique_req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "FindUnique",
         "where": {
             "id": id
@@ -381,7 +381,7 @@ async fn find_unique_can_find_by_primary_key() {
 #[serial]
 async fn find_unique_can_find_by_single_unique_key() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let create_req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -389,7 +389,7 @@ async fn find_unique_can_find_by_single_unique_key() {
         }
     })).to_request();
     let _: ServiceResponse = test::call_service(&app, create_req).await;
-    let find_unique_req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let find_unique_req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "FindUnique",
         "where": {
             "uniqueString": "1"
@@ -412,7 +412,7 @@ async fn find_unique_can_find_by_single_unique_key() {
 #[serial]
 async fn find_unique_can_find_by_compound_unique_key() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/compounds/action").set_tson(teon!({
+    let create_req = test::TestRequest::post().uri("/compounds/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "one": "1",
@@ -421,7 +421,7 @@ async fn find_unique_can_find_by_compound_unique_key() {
         }
     })).to_request();
     let _: ServiceResponse = test::call_service(&app, create_req).await;
-    let find_unique_req = test::TestRequest::post().uri("/compounds/action").set_tson(teon!({
+    let find_unique_req = test::TestRequest::post().uri("/compounds/action").set_teon(teon!({
         "action": "FindUnique",
         "where": {
             "one": "1",
@@ -446,7 +446,7 @@ async fn find_unique_can_find_by_compound_unique_key() {
 #[serial]
 async fn find_many_can_find_all() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/compounds/action").set_tson(teon!({
+    let create_req = test::TestRequest::post().uri("/compounds/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "one": "1",
@@ -455,7 +455,7 @@ async fn find_many_can_find_all() {
         }
     })).to_request();
     let _: ServiceResponse = test::call_service(&app, create_req).await;
-    let create_req = test::TestRequest::post().uri("/compounds/action").set_tson(teon!({
+    let create_req = test::TestRequest::post().uri("/compounds/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "one": "one",
@@ -464,7 +464,7 @@ async fn find_many_can_find_all() {
         }
     })).to_request();
     let _: ServiceResponse = test::call_service(&app, create_req).await;
-    let find_many_req = test::TestRequest::post().uri("/compounds/action").set_tson(teon!({
+    let find_many_req = test::TestRequest::post().uri("/compounds/action").set_teon(teon!({
         "action": "FindMany"
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, find_many_req).await;
@@ -490,7 +490,7 @@ async fn find_many_can_find_all() {
 #[serial]
 async fn find_many_can_find_all_filtered_by_where() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/compounds/action").set_tson(teon!({
+    let create_req = test::TestRequest::post().uri("/compounds/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "one": "1",
@@ -499,7 +499,7 @@ async fn find_many_can_find_all_filtered_by_where() {
         }
     })).to_request();
     let _: ServiceResponse = test::call_service(&app, create_req).await;
-    let create_req = test::TestRequest::post().uri("/compounds/action").set_tson(teon!({
+    let create_req = test::TestRequest::post().uri("/compounds/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "one": "one",
@@ -508,7 +508,7 @@ async fn find_many_can_find_all_filtered_by_where() {
         }
     })).to_request();
     let _: ServiceResponse = test::call_service(&app, create_req).await;
-    let find_many_req = test::TestRequest::post().uri("/compounds/action").set_tson(teon!({
+    let find_many_req = test::TestRequest::post().uri("/compounds/action").set_teon(teon!({
         "action": "FindMany",
         "where": {
             "one": {
@@ -534,7 +534,7 @@ async fn find_many_can_find_all_filtered_by_where() {
 #[serial]
 async fn update_can_update_valid_contents() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let create_req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -545,7 +545,7 @@ async fn update_can_update_valid_contents() {
     let create_body_json: Value = test::read_body_json(create_resp).await;
     let create_body_obj = create_body_json.as_hashmap().unwrap();
     let id = create_body_obj.get("data").unwrap().as_hashmap().unwrap().get("id").unwrap().as_str().unwrap();
-    let req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Update",
         "where": {
             "id": id
@@ -572,7 +572,7 @@ async fn update_can_update_valid_contents() {
 #[serial]
 async fn update_can_set_optional_value_back_to_null() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let create_req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -584,7 +584,7 @@ async fn update_can_set_optional_value_back_to_null() {
     let create_body_json: Value = test::read_body_json(create_resp).await;
     let create_body_obj = create_body_json.as_hashmap().unwrap();
     let id = create_body_obj.get("data").unwrap().as_hashmap().unwrap().get("id").unwrap().as_str().unwrap();
-    let req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Update",
         "where": {
             "id": id
@@ -613,7 +613,7 @@ async fn update_can_set_optional_value_back_to_null() {
 #[serial]
 async fn delete_can_delete_record() {
     let app = test::init_service(app().await).await;
-    let create_req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let create_req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "uniqueString": "1",
@@ -624,7 +624,7 @@ async fn delete_can_delete_record() {
     let create_body_json: Value = test::read_body_json(create_resp).await;
     let create_body_obj = create_body_json.as_hashmap().unwrap();
     let id = create_body_obj.get("data").unwrap().as_hashmap().unwrap().get("id").unwrap().as_str().unwrap();
-    let req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "Delete",
         "where": {
             "id": id
@@ -641,7 +641,7 @@ async fn delete_can_delete_record() {
     let id_str = body_data.get("id").unwrap().as_str().unwrap();
     assert!(is_object_id(id_str));
     // now find many
-    let find_many_req = test::TestRequest::post().uri("/simples/action").set_tson(teon!({
+    let find_many_req = test::TestRequest::post().uri("/simples/action").set_teon(teon!({
         "action": "FindMany"
     })).to_request();
     let resp: ServiceResponse = test::call_service(&app, find_many_req).await;
@@ -655,7 +655,7 @@ async fn delete_can_delete_record() {
 #[serial]
 async fn create_vec_works_with_inner_pipeline() {
     let app = test::init_service(app().await).await;
-    let req = test::TestRequest::post().uri("/lists/action").set_tson(teon!({
+    let req = test::TestRequest::post().uri("/lists/action").set_teon(teon!({
         "action": "Create",
         "create": {
             "listOne": ["1", "2"],

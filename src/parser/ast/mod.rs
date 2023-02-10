@@ -26,3 +26,4 @@ pub(crate) mod group;
 pub(crate) mod reference;
 pub(crate) mod constant;
 pub(crate) mod entity;
+pub(crate) mod arith_expr;

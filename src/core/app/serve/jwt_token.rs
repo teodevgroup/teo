@@ -1,7 +1,7 @@
 use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
 use serde::{Serialize, Deserialize};
 use serde_json::{Value as JsonValue};
-use crate::core::error::ActionError;
+use crate::core::error::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -15,14 +15,14 @@ pub fn encode_token(claims: Claims, secret: &str) -> String {
     token.unwrap()
 }
 
-pub fn decode_token(token: &String, secret: &str) -> Result<Claims, ActionError> {
+pub fn decode_token(token: &String, secret: &str) -> Result<Claims, Error> {
     let token = decode::<Claims>(&token, &DecodingKey::from_secret(secret.as_ref()), &Validation::default());
     return match token {
         Ok(token) => {
             Ok(token.claims)
         }
         Err(_) => {
-            Err(ActionError::invalid_auth_token())
+            Err(Error::invalid_auth_token())
         }
     }
 }

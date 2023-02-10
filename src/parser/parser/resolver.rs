@@ -10,7 +10,7 @@ use crate::parser::ast::config::ServerConfig;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::entity::Entity;
-use crate::parser::ast::expression::{AddSub, ArrayLiteral, BitwiseAnd, BitwiseNegation, BitwiseOr, BitwiseXor, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, MulDivMod, Negation, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
+use crate::parser::ast::expression::{ArrayLiteral, BitwiseNegation, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, Negation, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
 use crate::parser::ast::field::{Field, FieldClass};
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::Identifier;
@@ -32,6 +32,7 @@ use crate::prelude::Value;
 use to_mut::ToMut;
 use crate::core::action::Action;
 use crate::core::app::environment::Environment;
+use crate::parser::ast::arith_expr::{ArithExpr, Op};
 use crate::parser::ast::client::{Client, ClientLanguage};
 use crate::parser::ast::generator::Generator;
 use crate::parser::std::pipeline::global::{GlobalFunctionInstallers, GlobalPipelineInstallers};
@@ -573,20 +574,8 @@ impl Resolver {
             ExpressionKind::BitwiseNegation(negation) => {
                 Self::resolve_bitwise_negation(parser, source, negation, when_option)
             }
-            ExpressionKind::AddSub(add_sub) => {
-                Self::resolve_add_sub(parser, source, add_sub)
-            }
-            ExpressionKind::MulDivMod(mul_div_mod) => {
-                Self::resolve_mul_div_mod(parser, source, mul_div_mod)
-            }
-            ExpressionKind::BitwiseAnd(and) => {
-                Self::resolve_bitwise_and(parser, source, and, when_option)
-            }
-            ExpressionKind::BitwiseXor(xor) => {
-                Self::resolve_bitwise_xor(parser, source, xor, when_option)
-            }
-            ExpressionKind::BitwiseOr(or) => {
-                Self::resolve_bitwise_or(parser, source, or, when_option)
+            ExpressionKind::ArithExpr(arith) => {
+                Self::resolve_arith_expr(parser, source, arith, when_option)
             }
             ExpressionKind::NumericLiteral(n) => {
                 Self::resolve_numeric_literal(n)
@@ -857,49 +846,6 @@ impl Resolver {
         })
     }
 
-    fn resolve_add_sub(parser: &Parser, source: &Source, add_sub: &AddSub) -> Entity {
-        let mut lhs = Self::resolve_expression_kind_force_value(parser, source, add_sub.expressions.get(0).unwrap(), false);
-        for (index, expression) in add_sub.expressions.iter().enumerate() {
-            if index == 0 {
-                continue;
-            }
-            let rhs = Self::resolve_expression_kind_force_value(parser, source, expression, false);
-            match *add_sub.operators.get(index - 1).unwrap() {
-                "+" => {
-                    lhs = lhs + rhs;
-                }
-                "-" => {
-                    lhs = lhs - rhs;
-                }
-                _ => unreachable!()
-            }
-        }
-        Entity::Value(lhs)
-    }
-
-    fn resolve_mul_div_mod(parser: &Parser, source: &Source, mul_div_mod: &MulDivMod) -> Entity {
-        let mut lhs = Self::resolve_expression_kind_force_value(parser, source, mul_div_mod.expressions.get(0).unwrap(), false);
-        for (index, expression) in mul_div_mod.expressions.iter().enumerate() {
-            if index == 0 {
-                continue;
-            }
-            let rhs = Self::resolve_expression_kind_force_value(parser, source, expression, false);
-            match *mul_div_mod.operators.get(index - 1).unwrap() {
-                "*" => {
-                    lhs = lhs * rhs;
-                }
-                "/" => {
-                    lhs = lhs / rhs;
-                }
-                "%" => {
-                    lhs = lhs % rhs;
-                }
-                _ => unreachable!()
-            }
-        }
-        Entity::Value(lhs)
-    }
-
     fn resolve_bitwise_negation(parser: &Parser, source: &Source, negation: &BitwiseNegation, when_option: bool) -> Entity {
         let value = Self::resolve_expression_kind_force_value(parser, source, &negation.expression, when_option);
         Entity::Value(match value {
@@ -919,66 +865,89 @@ impl Resolver {
         })
     }
 
+    fn resolve_arith_expr(parser: &Parser, source: &Source, arith_expr: &ArithExpr, when_option: bool) -> Entity {
+        match arith_expr {
+            ArithExpr::Expression(expression) => return Self::resolve_expression_kind(parser, source, &expression, when_option),
+            ArithExpr::UnaryNeg(expression) => {
+                let origin = Self::resolve_expression_kind_force_value(parser, source, &expression, when_option);
+                return Entity::Value(-origin);
+            }
+            ArithExpr::UnaryBitNeg(expression) => {
+                let origin = Self::resolve_expression_kind_force_value(parser, source, &expression, when_option);
+                return Entity::Value(match origin {
+                    Value::I32(v) => Value::I32(!v),
+                    Value::I64(v) => Value::I64(!v),
+                    Value::RawEnumChoice(e) => if when_option {
+                        Value::RawOptionChoice(Action::from_name(&e).neg().to_u32())
+                    } else {
+                        panic!("Unhandled option bitwise operation")
+                    }
+                    Value::RawOptionChoice(o) => if when_option {
+                        Value::RawOptionChoice(Action::from_u32(o).neg().to_u32())
+                    } else {
+                        panic!("Unhandled option bitwise operation")
+                    },
+                    _ => panic!("Cannot negate value {:?}", origin)
+                });
+            }
+            ArithExpr::BinaryOp { lhs, op, rhs } => {
+                let lhs_value = Self::resolve_arith_expr(parser, source, &lhs, when_option).as_value().unwrap().clone();
+                let rhs_value = Self::resolve_arith_expr(parser, source, &rhs, when_option).as_value().unwrap().clone();
+                match op {
+                    Op::Add => {
+                        Entity::Value(lhs_value.clone() + rhs_value.clone())
+                    }
+                    Op::Sub => {
+                        Entity::Value(lhs_value.clone() - rhs_value.clone())
+                    }
+                    Op::Mul => {
+                        Entity::Value(lhs_value.clone() * rhs_value.clone())
+                    }
+                    Op::Div => {
+                        Entity::Value(lhs_value.clone() / rhs_value.clone())
+                    }
+                    Op::Mod => {
+                        Entity::Value(lhs_value.clone() % rhs_value.clone())
+                    }
+                    Op::BitAnd => {
+                        if when_option {
+                            let lhs_action = Self::value_to_action_option(&lhs_value);
+                            let rhs_action = Self::value_to_action_option(&rhs_value);
+                            Entity::Value(Value::RawOptionChoice(lhs_action.and(rhs_action).to_u32()))
+                        } else {
+                            Entity::Value(lhs_value.clone() & rhs_value.clone())
+                        }
+                    }
+                    Op::BitXor => {
+                        if when_option {
+                            let lhs_action = Self::value_to_action_option(&lhs_value);
+                            let rhs_action = Self::value_to_action_option(&rhs_value);
+                            Entity::Value(Value::RawOptionChoice(lhs_action.xor(rhs_action).to_u32()))
+                        } else {
+                            Entity::Value(lhs_value.clone() ^ rhs_value.clone())
+                        }
+                    }
+                    Op::BitOr => {
+                        if when_option {
+                            let lhs_action = Self::value_to_action_option(&lhs_value);
+                            let rhs_action = Self::value_to_action_option(&rhs_value);
+                            Entity::Value(Value::RawOptionChoice(lhs_action.or(rhs_action).to_u32()))
+                        } else {
+                            Entity::Value(lhs_value.clone() | rhs_value.clone())
+                        }
+                    }
+                    _ => unreachable!()
+                }
+            }
+        }
+    }
+
     fn value_to_action_option(v: &Value) -> Action {
         match v {
             Value::RawEnumChoice(e) => Action::from_name(&e),
             Value::RawOptionChoice(u) => Action::from_u32(*u),
             _ => unreachable!()
         }
-    }
-
-    fn resolve_bitwise_and(parser: &Parser, source: &Source, bitwise_and: &BitwiseAnd, when_mode: bool) -> Entity {
-        let mut lhs = Self::resolve_expression_kind_force_value(parser, source, bitwise_and.expressions.get(0).unwrap(), false);
-        for (index, expression) in bitwise_and.expressions.iter().enumerate() {
-            if index == 0 {
-                continue;
-            }
-            let rhs = Self::resolve_expression_kind_force_value(parser, source, expression, false);
-            if when_mode {
-                let lhs_action = Self::value_to_action_option(&lhs);
-                let rhs_action = Self::value_to_action_option(&rhs);
-                lhs = Value::RawOptionChoice(lhs_action.and(rhs_action).to_u32());
-            } else {
-                lhs = lhs & rhs;
-            }
-        }
-        Entity::Value(lhs)
-    }
-
-    fn resolve_bitwise_xor(parser: &Parser, source: &Source, bitwise_xor: &BitwiseXor, when_mode: bool) -> Entity {
-        let mut lhs = Self::resolve_expression_kind_force_value(parser, source, bitwise_xor.expressions.get(0).unwrap(), false);
-        for (index, expression) in bitwise_xor.expressions.iter().enumerate() {
-            if index == 0 {
-                continue;
-            }
-            let rhs = Self::resolve_expression_kind_force_value(parser, source, expression, false);
-            if when_mode {
-                let lhs_action = Self::value_to_action_option(&lhs);
-                let rhs_action = Self::value_to_action_option(&rhs);
-                lhs = Value::RawOptionChoice(lhs_action.xor(rhs_action).to_u32());
-            } else {
-                lhs = lhs ^ rhs;
-            }
-        }
-        Entity::Value(lhs)
-    }
-
-    fn resolve_bitwise_or(parser: &Parser, source: &Source, bitwise_or: &BitwiseOr, when_mode: bool) -> Entity {
-        let mut lhs = Self::resolve_expression_kind_force_value(parser, source, bitwise_or.expressions.get(0).unwrap(), false);
-        for (index, expression) in bitwise_or.expressions.iter().enumerate() {
-            if index == 0 {
-                continue;
-            }
-            let rhs = Self::resolve_expression_kind_force_value(parser, source, expression, false);
-            if when_mode {
-                let lhs_action = Self::value_to_action_option(&lhs);
-                let rhs_action = Self::value_to_action_option(&rhs);
-                lhs = Value::RawOptionChoice(lhs_action.or(rhs_action).to_u32());
-            } else {
-                lhs = lhs | rhs;
-            }
-        }
-        Entity::Value(lhs)
     }
 
     // Unwrap references

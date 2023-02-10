@@ -10,11 +10,11 @@ use crate::connectors::sql::schema::value::decode::RowDecoder;
 use crate::connectors::sql::schema::value::encode::{SQLEscape, ToSQLString, ToWrapped};
 use crate::core::action::Action;
 use crate::core::action::source::ActionSource;
-use crate::core::error::ActionError;
+use crate::core::error::Error;
 use crate::core::field::r#type::FieldType;
 use crate::core::input::Input;
 use crate::core::model::Model;
-use crate::core::result::ActionResult;
+use crate::core::result::Result;
 use crate::prelude::{Graph, Object, Value};
 use crate::teon;
 
@@ -81,7 +81,7 @@ impl Execution {
         Value::HashMap(retval)
     }
 
-    pub(crate) async fn query_objects(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect, action: Action, action_source: ActionSource) -> ActionResult<Vec<Object>> {
+    pub(crate) async fn query_objects(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect, action: Action, action_source: ActionSource) -> Result<Vec<Object>> {
         let values = Self::query(pool, model, graph, finder, dialect).await?;
         let select = finder.as_hashmap().unwrap().get("select");
         let include = finder.as_hashmap().unwrap().get("include");
@@ -95,7 +95,7 @@ impl Execution {
     }
 
     #[async_recursion]
-    async fn query_internal(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect, additional_where: Option<String>, additional_left_join: Option<String>, join_table_results: Option<Vec<String>>, force_negative_take: bool, additional_distinct: Option<Vec<String>>) -> ActionResult<Vec<Value>> {
+    async fn query_internal(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect, additional_where: Option<String>, additional_left_join: Option<String>, join_table_results: Option<Vec<String>>, force_negative_take: bool, additional_distinct: Option<Vec<String>>) -> Result<Vec<Value>> {
         let _select = value.get("select");
         let include = value.get("include");
         let original_distinct = value.get("distinct").map(|v| if v.as_vec().unwrap().is_empty() { None } else { Some(v.as_vec().unwrap()) }).flatten();
@@ -115,7 +115,7 @@ impl Execution {
             Ok(rows) => rows,
             Err(err) => {
                 println!("{:?}", err);
-                return Err(ActionError::unknown_database_find_error());
+                return Err(Error::unknown_database_find_error());
             }
         };
         if rows.is_empty() {
@@ -310,11 +310,11 @@ impl Execution {
         Ok(results)
     }
 
-    pub(crate) async fn query(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<Vec<Value>> {
+    pub(crate) async fn query(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> Result<Vec<Value>> {
        Self::query_internal(pool, model, graph, finder, dialect, None, None, None, false, None).await
     }
 
-    pub(crate) async fn query_aggregate(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<Value> {
+    pub(crate) async fn query_aggregate(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> Result<Value> {
         let stmt = Query::build_for_aggregate(model, graph, finder, dialect);
         match pool.fetch_one(&*stmt).await {
             Ok(result) => {
@@ -322,18 +322,18 @@ impl Execution {
             },
             Err(err) => {
                 println!("{:?}", err);
-                return Err(ActionError::unknown_database_find_error());
+                return Err(Error::unknown_database_find_error());
             }
         }
     }
 
-    pub(crate) async fn query_group_by(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<Value> {
+    pub(crate) async fn query_group_by(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> Result<Value> {
         let stmt = Query::build_for_group_by(model, graph, finder, dialect);
         let rows = match pool.fetch_all(&*stmt).await {
             Ok(rows) => rows,
             Err(err) => {
                 println!("{:?}", err);
-                return Err(ActionError::unknown_database_find_error());
+                return Err(Error::unknown_database_find_error());
             }
         };
         Ok(Value::Vec(rows.iter().map(|r| {
@@ -341,7 +341,7 @@ impl Execution {
         }).collect::<Vec<Value>>()))
     }
 
-    pub(crate) async fn query_count(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> ActionResult<u64> {
+    pub(crate) async fn query_count(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> Result<u64> {
         let stmt = Query::build_for_count(model, graph, finder, dialect, None, None, None, false);
         match pool.fetch_one(&*stmt).await {
             Ok(result) => {
@@ -350,7 +350,7 @@ impl Execution {
             },
             Err(err) => {
                 println!("{:?}", err);
-                return Err(ActionError::unknown_database_find_error());
+                return Err(Error::unknown_database_find_error());
             }
         }
     }

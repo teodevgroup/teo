@@ -7,7 +7,7 @@ use tokio::test;
 use serial_test::serial;
 use teo::core::graph::Graph;
 use teo::core::value::Value;
-use teo::core::error::ActionError;
+use teo::core::error::Error;
 
 
 async fn make_client_options() -> ClientOptions {
@@ -96,7 +96,7 @@ async fn unique_value_cannot_have_duplications_on_create() {
     let object2 = graph.create_object("UniqueIndex", teon!({})).unwrap();
     let _ = object2.set_value("unique", Value::String("123".to_string()));
     let result = object2.save().await;
-    assert_eq!(result.err().unwrap(), ActionError::unique_value_duplicated("unique"));
+    assert_eq!(result.err().unwrap(), Error::unique_value_duplicated("unique"));
 }
 
 #[test]
@@ -109,7 +109,7 @@ async fn unique_sparse_value_cannot_have_duplications_on_create() {
     let object2 = graph.create_object("UniqueSparseIndex", teon!({})).unwrap();
     let _ = object2.set_value("uniqueSparse", Value::String("123".to_string()));
     let result = object2.save().await;
-    assert_eq!(result.err().unwrap(), ActionError::unique_value_duplicated("uniqueSparse"));
+    assert_eq!(result.err().unwrap(), Error::unique_value_duplicated("uniqueSparse"));
 }
 
 #[test]
@@ -124,7 +124,7 @@ async fn unique_value_cannot_have_duplications_on_update() {
     let _ = object2.save().await;
     let _ = object2.set_value("unique", Value::String("123".to_string()));
     let result = object2.save().await;
-    assert_eq!(result.err().unwrap(), ActionError::unique_value_duplicated("unique"));
+    assert_eq!(result.err().unwrap(), Error::unique_value_duplicated("unique"));
 }
 
 #[test]
@@ -139,7 +139,7 @@ async fn unique_sparse_value_cannot_have_duplications_on_update() {
     let _ = object2.save().await;
     let _ = object2.set_value("uniqueSparse", Value::String("123".to_string()));
     let result = object2.save().await;
-    assert_eq!(result.err().unwrap(), ActionError::unique_value_duplicated("uniqueSparse"));
+    assert_eq!(result.err().unwrap(), Error::unique_value_duplicated("uniqueSparse"));
 }
 
 #[test]
@@ -229,5 +229,5 @@ async fn multiple_unique_index_should_not_allow_non_unique_value_on_all_fields()
     let _ = object2.set_value("one", Value::String("one".to_string()));
     let _ = object2.set_value("two", Value::String("two".to_string()));
     let result = object2.save().await;
-    assert_eq!(result.err().unwrap(), ActionError::unique_value_duplicated("one"));
+    assert_eq!(result.err().unwrap(), Error::unique_value_duplicated("one"));
 }
