@@ -227,9 +227,6 @@
 - CLI mode: When running server, panic if custom programming callback is provided
 - Support code comment tags for VSCode
 - Support code comment parsing in schema parser
-- Database type mapping for `Date`
-- Database type mapping
-- Database type mapping for field, property and collection types' item field
 - Rust entities with documentation
 - Object method for String like `ENV["PORT"].toInt()`
 - Support regular expression for VSCode plugin
@@ -276,6 +273,9 @@
 #### 0.0.55 - 0.0.70
 - Setup unit tests
 - Replace buggy sqlx
+- Database type mapping for `Date`
+- Database type mapping
+- Database type mapping for field, property and collection types' item field
 - Full support of decimal type
 - Support unsigned types for MySQL
 - MySQL: Enum types
