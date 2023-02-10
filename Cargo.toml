@@ -65,23 +65,3 @@ data-source-mongodb = ["mongodb", "bson"]
 data-source-mysql = ["sqlx/mysql", "sqlx/any"]
 data-source-postgres = ["sqlx/postgres", "sqlx/any"]
 data-source-sqlite = ["sqlx/sqlite", "sqlx/any"]
-
-[[test]]
-name = "test-core"
-path = "tests/core/tests.rs"
-required-features = ["data-source-mongodb", "data-source-mysql", "data-source-postgres"]
-
-[[test]]
-name = "test-mongodb-connector"
-path = "tests/integration/connectors/mongodb/tests.rs"
-required-features = ["data-source-mongodb"]
-
-[[test]]
-name = "test-mysql-connector"
-path = "tests/integration/connectors/mysql/tests.rs"
-required-features = ["data-source-mysql"]
-
-[[test]]
-name = "test-postgres-connector"
-path = "tests/integration/connectors/postgres/tests.rs"
-required-features = ["data-source-postgres"]

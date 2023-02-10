@@ -1,9 +1,0 @@
-mod many_local_to_many_foreign;
-mod many_local_to_one_optional_foreign;
-mod many_local_to_one_required_foreign;
-mod one_optional_local_to_many_foreign;
-mod one_optional_local_to_one_optional_foreign;
-mod one_optional_local_to_one_required_foreign;
-mod one_required_local_to_many_foreign;
-mod one_required_local_to_one_optional_foreign;
-mod one_required_local_to_one_required_foreign;
