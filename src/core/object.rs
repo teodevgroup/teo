@@ -900,8 +900,13 @@ impl Object {
     pub(crate) fn db_identifier(&self) -> Value {
         let model = self.model();
         let mut identifier: HashMap<String, Value> = HashMap::new();
+        let modified_fields = self.inner.modified_fields.lock().unwrap();
         for item in model.primary_index().items() {
-            let val = self.get_value(item.field_name()).unwrap();
+            let val = if modified_fields.contains(item.field_name()) {
+                self.get_previous_value(item.field_name()).unwrap()
+            } else {
+                self.get_value(item.field_name()).unwrap()
+            };
             identifier.insert(self.model().field(item.field_name()).unwrap().column_name().to_owned(), val.clone());
         }
         Value::HashMap(identifier)

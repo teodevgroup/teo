@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use inflector::Inflector;
+use to_mut::ToMut;
 use crate::core::handler::Handler;
 use crate::core::connector::Connector;
 use crate::core::field::*;
@@ -209,9 +210,12 @@ impl ModelBuilder {
         if primary.is_none() && !self.r#virtual {
             panic!("Model '{}' must has a primary field.", self.name);
         }
-
+        // install recordPrevious for primary
+        for key in primary.as_ref().unwrap().keys() {
+            let field = fields_map.get(key).unwrap();
+            field.as_ref().to_mut().previous_value_rule = PreviousValueRule::Keep;
+        }
         let unique_query_keys = Self::unique_query_keys(self, &indices, primary.as_ref());
-        let _a = if self.url_segment_name == "" { self.name.to_kebab_case().to_plural() } else { self.url_segment_name.to_string() };
         let inner = ModelInner {
             name: self.name.clone(),
             table_name: if self.table_name == "" { self.name.to_lowercase().to_plural() } else { self.table_name.to_string() },

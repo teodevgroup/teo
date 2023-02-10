@@ -5,6 +5,8 @@ pub(crate) mod write_rule;
 
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
+use to_mut_proc_macro::ToMut;
+use to_mut::ToMut;
 use crate::core::connector::Connector;
 use crate::core::database::r#type::DatabaseType;
 use crate::core::field::optionality::Optionality;
@@ -71,7 +73,7 @@ impl FieldIndex {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, ToMut)]
 pub(crate) struct Field {
     pub(crate) name: String,
     pub(crate) localized_name: Option<String>,

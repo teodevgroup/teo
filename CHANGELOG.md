@@ -214,13 +214,15 @@
 - Rust entities for optional `Date` and `DateTime` **[DONE]**
 - Rust entities for new method with `teon` parameter **[DONE]**
 - Rust entities for query methods **[DONE]**
-- Rust entities with relations
-- Rust entities with properties
 - Rename `ActionError` and `ActionResult` **[DONE]**
 - Improved teon value eq to support across number types **[DONE]**
-- Always record previous id value and support modifying `@id` fields
+- Always record previous id value and support modifying `@id` fields **[DONE]**
 
 #### 0.0.46
+- Rust entities with relations
+- Rust entities with properties
+- Rust entities: set method
+- Rust entities: delete method
 - CLI mode: When running generation, ignore custom programming callbacks
 - CLI mode: When running server, panic if custom programming callback is provided
 - Support code comment tags for VSCode
