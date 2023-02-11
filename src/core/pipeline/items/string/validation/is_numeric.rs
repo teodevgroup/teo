@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
-
+use crate::core::result::Result;
 #[derive(Debug, Copy, Clone)]
 pub struct IsNumericModifier {}
 
@@ -13,18 +13,18 @@ impl IsNumericModifier {
 
 #[async_trait]
 impl Item for IsNumericModifier {
-    async fn call<'a>(&self, context: Ctx<'a>) -> Ctx<'a> {
-        match context.value.as_str() {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+        match ctx.value.as_str() {
             Some(s) => {
                 for c in s.chars() {
                     if !c.is_numeric() {
-                        return context.invalid("Value is not numeric.");
+                        return Err(ctx.invalid("value is not numeric"));
                     }
                 }
-                context
+                Ok(ctx)
             }
             None => {
-                context.invalid("Value is not string.")
+                Err(ctx.internal_server_error("isNumeric: value is not string"))
             }
         }
     }

@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::Value;
-
+use crate::core::result::Result;
 #[derive(Debug, Clone)]
 pub struct EqModifier {
     argument: Value
@@ -16,12 +16,12 @@ impl EqModifier {
 
 #[async_trait]
 impl Item for EqModifier {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let rhs = self.argument.resolve(ctx.clone()).await;
         if rhs == ctx.value {
-            ctx
+            Ok(ctx)
         } else {
-            ctx.invalid("Value is not equal to rhs.")
+            Err(ctx.with_invalid("eq: values do not equal"))
         }
     }
 }

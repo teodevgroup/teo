@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::ctx::Ctx;
-
+use crate::core::result::Result;
 #[derive(Debug, Clone)]
 pub struct TransformWithModifier {
     pipeline: Pipeline
@@ -18,7 +18,7 @@ impl TransformWithModifier {
 
 #[async_trait]
 impl Item for TransformWithModifier {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let new_ctx = self.pipeline.process(ctx.clone()).await;
         ctx.with_value(new_ctx.value)
     }

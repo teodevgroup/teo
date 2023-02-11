@@ -3,8 +3,10 @@ pub mod item;
 pub mod items;
 
 use std::sync::Arc;
+use crate::core::result::Result;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
+use crate::prelude::Value;
 
 #[derive(Debug, Clone)]
 pub struct Pipeline {
@@ -21,14 +23,11 @@ impl Pipeline {
         self.items.len() > 0
     }
 
-    pub(crate) async fn process<'a>(&self, mut ctx: Ctx<'a>) -> Ctx<'a> {
+    pub(crate) async fn process(&self, mut ctx: Ctx<'_>) -> Result<Value> {
         for item in &self.items {
-            ctx = item.call(ctx.clone()).await;
-            if !ctx.state.is_value() {
-                break
-            }
+            ctx = item.call(ctx.clone()).await?;
         }
-        return ctx;
+        Ok(ctx.value)
     }
 }
 

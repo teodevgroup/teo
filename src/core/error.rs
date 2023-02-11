@@ -348,6 +348,14 @@ impl Error {
         }
     }
 
+    pub fn internal_server_error_with_path<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
+        Error {
+            r#type: ErrorType::InternalServerError,
+            message: "Internal server error.".to_string(),
+            errors: Some(hashmap!{path.as_ref().to_string() => reason.into()})
+        }
+    }
+
     pub fn permission_error<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
         Error {
             r#type: ErrorType::PermissionError,

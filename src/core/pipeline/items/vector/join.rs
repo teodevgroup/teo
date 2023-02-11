@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;
+use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
 pub struct JoinModifier {
@@ -9,20 +10,20 @@ pub struct JoinModifier {
 }
 
 impl JoinModifier {
-    pub fn new(separator: impl Into<Value>) -> Self {
-        Self { separator: separator.into() }
+    pub fn new(separator: Value) -> Self {
+        Self { separator }
     }
 }
 
 #[async_trait]
 impl Item for JoinModifier {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_vec() {
-            None => ctx.invalid("Value is not vector."),
+            None => Err(ctx.internal_server_error("join: value is not vector")),
             Some(v) => {
                 let arg = self.separator.resolve(ctx.clone()).await;
                 let separator = arg.as_str().unwrap();
-                ctx.with_value(Value::String(v.iter().map(|v| v.as_str().unwrap()).collect::<Vec<&str>>().join(separator)))
+                Ok(ctx.with_value(Value::String(v.iter().map(|v| v.as_str().unwrap()).collect::<Vec<&str>>().join(separator))))
             }
         }
     }

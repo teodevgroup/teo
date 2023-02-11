@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::ctx::Ctx;
+use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
 pub struct AllModifier {
@@ -10,18 +11,16 @@ pub struct AllModifier {
 
 impl AllModifier {
     pub fn new(pipelines: Vec<Pipeline>) -> Self {
-        return Self { pipelines };
+        Self { pipelines }
     }
 }
 
 #[async_trait]
 impl Item for AllModifier {
-    async fn call<'a>(&self, context: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         for pipeline in &self.pipelines {
-            if let Some(reason) = pipeline.process(context.clone()).await.invalid_reason() {
-                return context.invalid(reason);
-            }
+            pipeline.process(ctx.clone()).await?;
         }
-        context
+        Ok(ctx)
     }
 }

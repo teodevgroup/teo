@@ -226,6 +226,7 @@
 - `$alter` item 
 - `@disable`
 - `@action`
+- `$print` item label argument
 - Pipeline documentation
 - Soft delete support
 - Soft delete documentation

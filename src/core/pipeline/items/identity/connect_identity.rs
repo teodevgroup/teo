@@ -1,10 +1,7 @@
 use async_trait::async_trait;
-
 use crate::core::pipeline::item::Item;
-
-
+use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
-
 
 #[derive(Debug, Copy, Clone)]
 pub struct ConnectIdentityModifier {}
@@ -17,8 +14,8 @@ impl ConnectIdentityModifier {
 
 #[async_trait]
 impl Item for ConnectIdentityModifier {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
-        ctx
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+        Ok(ctx)
         // if let Some(identity) = ctx.object.as_ref().unwrap().env().trigger().as_identity() {
         //     let model = ctx.object.as_ref().unwrap().model();
         //     let relation_name = ctx.key_path[0].as_key().unwrap();

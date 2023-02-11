@@ -524,7 +524,7 @@ impl Value {
     // resolve pipeline as value
     pub(crate) async fn resolve(&self, context: Ctx<'_>) -> Result<Value> {
         match self {
-            Value::Pipeline(p) => p.process(context).await.get_value_internal(),
+            Value::Pipeline(p) => p.process(context).await,
             _ => Ok(self.clone()),
         }
     }

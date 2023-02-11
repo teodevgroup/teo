@@ -7,6 +7,7 @@ use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::pipeline::ctx::validity::Validity;
 use crate::core::teon::Value;
+use crate::core::result::Result;
 
 pub trait ValidateArgument<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync>: Send + Sync {
     fn call(&self, args: T) -> BoxFuture<'static, O>;
@@ -48,14 +49,14 @@ impl<T, O> ValidateModifier<T, O> {
 #[async_trait]
 impl<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync> Item for ValidateModifier<T, O> {
 
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let cb = self.callback.clone();
         let value = cb.call((&ctx).value.clone().into()).await;
         let validity = value.into();
         if validity.is_valid() {
-            ctx
+            Ok(ctx)
         } else {
-            ctx.invalid(validity.invalid_reason().unwrap())
+            Err(ctx.internal_server_error(validity.invalid_reason().unwrap()))
         }
     }
 }

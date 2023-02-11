@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use crate::core::teon::Value;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
-
+use crate::core::result::Result;
 #[derive(Debug, Clone)]
 pub struct MinModifier {
     argument: Value
@@ -18,14 +18,14 @@ impl MinModifier {
 #[async_trait]
 impl Item for MinModifier {
 
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
-        let argument = self.argument.resolve(ctx.clone()).await;
-        match ctx.value {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+        let argument = self.argument.resolve(ctx.clone()).await?;
+        Ok(match ctx.get_value() {
             Value::I32(v) => ctx.with_value(Value::I32(max(v, argument.as_i32().unwrap()))),
             Value::I64(v) => ctx.with_value(Value::I64(max(v, argument.as_i64().unwrap()))),
             Value::F32(v) => ctx.with_value(Value::F32(if v >= argument.as_f32().unwrap() { v } else { argument.as_f32().unwrap() })),
             Value::F64(v) => ctx.with_value(Value::F64(if v >= argument.as_f64().unwrap() { v } else { argument.as_f64().unwrap() })),
-            _ => ctx.invalid("Value is not number."),
-        }
+            _ => Err(ctx.internal_server_error("min: value is not number"))?,
+        })
     }
 }

@@ -3,7 +3,7 @@ use crate::core::action::Action;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::ctx::Ctx;
-
+use crate::core::result::Result;
 #[derive(Debug, Clone)]
 pub struct WhenModifier {
     actions: Vec<Action>,
@@ -22,7 +22,7 @@ impl WhenModifier {
 #[async_trait]
 impl Item for WhenModifier {
 
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let object_action = ctx.object.as_ref().unwrap().action();
         if object_action.passes(&self.actions) {
             self.pipeline.process(ctx.clone()).await

@@ -4,6 +4,7 @@ use crate::core::pipeline::item::Item;
 use crate::core::teon::Value;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::pipeline::Pipeline;
+use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
 pub struct IdentityModifier {
@@ -18,16 +19,16 @@ impl IdentityModifier {
 
 #[async_trait]
 impl Item for IdentityModifier {
-    async fn call<'a>(&self, context: Ctx<'a>) -> Ctx<'a> {
-        match context.object.as_ref().unwrap().action_source() {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+        match ctx.get_object()?.action_source() {
             ActionSource::Identity(user) => {
                 let user = match user {
                     Some(u) => Value::Object(u.clone()),
                     None => Value::Null,
                 };
-                self.pipeline.process(context.with_value(user)).await
+                Ok(ctx.with_value(self.pipeline.process(ctx.with_value(user)).await?))
             }
-            _ => context
+            _ => Ok(ctx)
         }
     }
 }

@@ -4,7 +4,7 @@ use crate::core::pipeline::item::Item;
 use crate::core::teon::Value;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::utils::TsonUtils;
-
+use crate::core::result::Result;
 #[derive(Debug, Clone)]
 pub struct TsonGetModifier<'a> {
     path: KeyPath<'a>,
@@ -18,7 +18,7 @@ impl<'a> TsonGetModifier<'a> {
 
 #[async_trait]
 impl Item for TsonGetModifier<'_> {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match &ctx.value {
             Value::HashMap(_) => {
                 ctx.with_value(TsonUtils::value_get(&ctx.value, self.path.clone()).unwrap())
@@ -29,7 +29,7 @@ impl Item for TsonGetModifier<'_> {
             Value::Vec(_) => {
                 ctx.with_value(TsonUtils::value_get(&ctx.value, self.path.clone()).unwrap())
             }
-            _ => ctx.invalid("Value is not collection.")
+            _ => ctx.internal_server_error("Value is not collection.")
         }
     }
 }

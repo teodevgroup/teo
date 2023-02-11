@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::pipeline::item::Item;
 use crate::core::teon::Value;
-
+use crate::core::result::Result;
 #[derive(Debug, Clone)]
 pub struct HasLengthModifier {
     argument: Value
@@ -16,7 +16,7 @@ impl HasLengthModifier {
 
 #[async_trait]
 impl Item for HasLengthModifier {
-    async fn call<'a>(&self, context: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let argument = self.argument.resolve(context.clone()).await;
         let (lower, upper, closed) = if argument.is_number() {
             let n = self.argument.as_usize().unwrap();

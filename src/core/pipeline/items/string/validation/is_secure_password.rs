@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use regex::Regex;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
-
+use crate::core::result::Result;
 #[derive(Debug, Clone)]
 pub struct IsSecurePasswordModifier {
     patterns: Vec<Regex>
@@ -23,17 +23,17 @@ impl IsSecurePasswordModifier {
 
 #[async_trait]
 impl Item for IsSecurePasswordModifier {
-    async fn call<'a>(&self, context: Ctx<'a>) -> Ctx<'a> {
-        match context.value.as_str() {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+        match ctx.value.as_str() {
             Some(s) => {
                 for regex in &self.patterns {
                     if !regex.is_match(&s) {
-                        return context.invalid("Value is not secure password.");
+                        return Err(ctx.invalid("value is not secure password"));
                     }
                 }
-                context
+                Ok(ctx)
             }
-            None => context.invalid("Value is not string.")
+            None => Err(ctx.internal_server_error("isSecurePassword: value is not string"))
         }
     }
 }

@@ -1,8 +1,7 @@
 use async_trait::async_trait;
 use crate::core::pipeline::item::Item;
-
+use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
-use crate::core::pipeline::ctx::validity::Validity;
 use crate::prelude::Value;
 
 
@@ -21,19 +20,14 @@ impl NotModifier {
 
 #[async_trait]
 impl Item for NotModifier {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match &self.value {
-            Value::Bool(b) => if *b {
-                ctx.invalid("Value is invalid")
-            } else {
-                ctx.with_validity(Validity::Valid)
-            }
             Value::Pipeline(p) => if p.process(ctx.clone()).await.is_valid() {
-                ctx.invalid("Value is invalid.")
+                ctx.with_invalid("value is not invalid")
             } else {
                 ctx
             }
-            _ => panic!("Argument to `not` should be null, bool or pipeline.")
+            _ => ctx.internal_server_error("not: argument is not pipeline")
         }
     }
 }

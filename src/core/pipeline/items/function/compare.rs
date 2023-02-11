@@ -7,6 +7,7 @@ use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::{Ctx};
 use crate::core::pipeline::ctx::validity::Validity;
 use crate::core::teon::Value;
+use crate::core::result::Result;
 
 pub trait CompareArgument<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync>: Send + Sync {
     fn call(&self, old: T, new: T) -> BoxFuture<'static, O>;
@@ -48,30 +49,30 @@ impl<T, O> CompareModifier<T, O> {
 #[async_trait]
 impl<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync> Item for CompareModifier<T, O> {
 
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
-        if ctx.object.as_ref().unwrap().is_new() {
-            return ctx;
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+        if ctx.get_object()?.is_new() {
+            return Ok(ctx);
         }
         if ctx.path.len() != 1 {
-            return ctx.invalid("Compare can only be used on first level fields.");
+            return Err(ctx.internal_server_error("compare: used on nested level fields."));
         }
         let key = ctx.path[0].as_key().unwrap();
         let previous_value = ctx.object.as_ref().unwrap().get_previous_value(key);
         if let Ok(previous_value) = previous_value {
             let current_value = (&ctx).value.clone();
             if previous_value == current_value {
-                return ctx.clone();
+                return Ok(ctx.clone());
             }
             let cb = self.callback.clone();
             let value = cb.call(previous_value.into(), current_value.into()).await;
             let validity = value.into();
             if validity.is_valid() {
-                ctx.clone()
+                Ok(ctx.clone())
             } else {
-                ctx.invalid(validity.invalid_reason().unwrap())
+                Err(ctx.internal_server_error(validity.invalid_reason().unwrap()))
             }
         } else {
-            ctx.clone()
+            Ok(ctx.clone())
         }
     }
 }

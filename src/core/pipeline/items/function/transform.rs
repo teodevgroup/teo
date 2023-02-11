@@ -4,7 +4,7 @@ use std::future::Future;
 use std::sync::Arc;
 use async_trait::async_trait;
 use futures_util::future::BoxFuture;
-
+use crate::core::result::Result;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::Value;
@@ -46,10 +46,10 @@ impl<T> TransformModifier<T> {
 
 #[async_trait]
 impl<T: Into<Value> + From<Value> + Send + Sync> Item for TransformModifier<T> {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let cb = self.callback.clone();
         let value = cb.call((&ctx).value.clone().into()).await;
-        ctx.with_value(value.into())
+        Ok(ctx.with_value(value.into()))
     }
 }
 

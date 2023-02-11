@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use bcrypt::verify;
-
+use crate::core::result::Result;
 use crate::core::pipeline::item::Item;
 use crate::core::teon::Value;
 
@@ -22,7 +22,7 @@ impl BcryptVerifyModifier {
 #[async_trait]
 impl Item for BcryptVerifyModifier {
 
-    async fn call<'a>(&self, context: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match context.value.as_str() {
             None => {
                 context.with_validity(Invalid("Value is not string.".to_owned()))

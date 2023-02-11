@@ -1,16 +1,14 @@
-pub mod state;
 pub mod validity;
 
 use key_path::KeyPath;
 use crate::core::object::Object;
-use crate::core::pipeline::ctx::state::State;
 use crate::core::result::Result;
 use crate::core::teon::Value;
 use crate::prelude::Error;
 
 #[derive(Clone)]
 pub struct Ctx<'a> {
-    pub(crate) state: State,
+    pub(crate) value: Value,
     pub(crate) object: Option<Object>,
     pub(crate) path: KeyPath<'a>,
 }
@@ -19,7 +17,7 @@ impl<'a> Ctx<'a> {
 
     pub(crate) fn initial_state_with_value(value: Value) -> Self {
         Self {
-            state: State::Value(value),
+            value,
             object: None,
             path: KeyPath::default(),
         }
@@ -27,7 +25,7 @@ impl<'a> Ctx<'a> {
 
     pub(crate) fn initial_state_with_object(object: Object) -> Self {
         Self {
-            state: State::Value(Value::Null),
+            value: Value::Null,
             object: Some(object),
             path: KeyPath::default(),
         }
@@ -35,7 +33,7 @@ impl<'a> Ctx<'a> {
 
     pub(crate) fn with_path(&self, path: impl AsRef<KeyPath<'a>>) -> Self {
         Self {
-            state: self.state.clone(),
+            value: self.value.clone(),
             object: self.object.clone(),
             path: path.as_ref().clone(),
         }
@@ -43,52 +41,39 @@ impl<'a> Ctx<'a> {
 
     pub(crate) fn with_value(&self, value: Value) -> Self {
         Self {
-            state: State::Value(value),
+            value,
             object: self.object.clone(),
             path: self.path.clone(),
         }
     }
 
-    pub(crate) fn with_value_result(&self, result: Result<Value>) -> Self {
-        Self {
-            state: match result {
-                Ok(value) => State::Value(value),
-                Err(error) => State::Err(error),
-            },
-            object: self.object.clone(),
-            path: self.path.clone(),
+    pub(crate) fn with_value_result(&self, result: Result<Value>) -> Result<Self> {
+        match result {
+            Ok(value) => Ok(Self {
+                value,
+                object: self.object.clone(),
+                path: self.path.clone(),
+            }),
+            Err(err) => Err(err),
         }
     }
 
-    pub(crate) fn with_invalid(&self, reason: impl Into<String>) -> Self {
-        Self {
-            state: State::Invalid(reason.into()),
-            object: self.object.clone(),
-            path: self.path.clone(),
+    pub(crate) fn with_invalid(&self, reason: impl Into<String>) -> Error {
+        Error::validation_error(&self.path, reason.into())
+    }
+
+    pub(crate) fn get_value(&self) -> Value {
+        self.value.clone()
+    }
+
+    pub(crate) fn get_object(&self) -> Result<Object> {
+        match &self.object {
+            Some(object) => Ok(object.clone()),
+            None => Err(Error::internal_server_error_with_path(&self.path, "ctx object is null"))
         }
     }
 
-    pub(crate) fn with_error(&self, error: Error) -> Self {
-        Self {
-            state: State::Err(error),
-            object: self.object.clone(),
-            path: self.path.clone(),
-        }
-    }
-
-    pub(crate) fn get_value<'b>(&self) -> Result<Value> {
-        self.state.get_value(&self.path)
-    }
-
-    pub(crate) fn get_value_internal(&self) -> Result<Value> {
-        self.state.get_value_internal()
-    }
-
-    pub(crate) fn permission<'b>(&self, path: impl AsRef<KeyPath<'b>>) -> Result<()> {
-        self.state.permission(path)
-    }
-
-    pub(crate) fn is_valid(&self) -> Result<bool> {
-        self.state.is_valid()
+    pub(crate) fn internal_server_error(&self, reason: impl Into<String>) -> Error {
+        Error::internal_server_error_with_path(&self.path, reason.into())
     }
 }

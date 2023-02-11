@@ -6,6 +6,7 @@ use futures_util::future::BoxFuture;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::Value;
+use crate::core::result::Result;
 
 pub trait PerformArgument<T: From<Value> + Send + Sync>: Send + Sync {
     fn call(&self, args: T) -> BoxFuture<'static, ()>;
@@ -44,10 +45,10 @@ impl<T> PerformModifier<T> {
 
 #[async_trait]
 impl<T: From<Value> + Send + Sync> Item for PerformModifier<T> {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let cb = self.callback.clone();
         cb.call((&ctx).value.clone().into()).await;
-        ctx
+        Ok(ctx)
     }
 }
 

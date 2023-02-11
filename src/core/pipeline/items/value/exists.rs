@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
-
+use crate::core::result::Result;
 #[derive(Debug, Copy, Clone)]
 pub struct ExistsModifier {}
 
@@ -13,11 +13,11 @@ impl ExistsModifier {
 
 #[async_trait]
 impl Item for ExistsModifier {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         if ctx.value.is_null() {
-            ctx.invalid("Value does not exist.")
+            Err(ctx.with_invalid("exists: value does not exist"))
         } else {
-            ctx
+            Ok(ctx)
         }
     }
 }

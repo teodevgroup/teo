@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-
+use crate::core::result::Result;
 use crate::core::pipeline::item::Item;
 
 use crate::core::pipeline::Pipeline;
@@ -20,13 +20,13 @@ impl AnyModifier {
 
 #[async_trait]
 impl Item for AnyModifier {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         for pipeline in &self.pipelines {
             let result = pipeline.process(ctx.clone()).await;
             if result.is_valid() {
                 return result;
             }
         }
-        ctx.invalid("None of validators are valid.")
+        ctx.internal_server_error("None of validators are valid.")
     }
 }

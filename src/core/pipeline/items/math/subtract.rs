@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use crate::core::pipeline::item::Item;
 use crate::core::teon::Value;
 use crate::core::pipeline::ctx::Ctx;
+use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
 pub struct SubtractModifier {
@@ -16,10 +17,8 @@ impl SubtractModifier {
 
 #[async_trait]
 impl Item for SubtractModifier {
-    async fn call<'a>(&self, context: Ctx<'a>) -> Ctx<'a> {
-        match self.argument.resolve(context.clone()).await {
-            Ok(argument) => context.with_value_result(context.get_value().unwrap() - argument),
-            Err(error) => context.with_error(error),
-        }
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+        let argument = self.argument.resolve(ctx.clone()).await?;
+        Ok(ctx.with_value_result(ctx.get_value().unwrap() - argument)?)
     }
 }

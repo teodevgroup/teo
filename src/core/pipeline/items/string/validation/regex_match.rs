@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-
+use crate::core::result::Result;
 use crate::core::pipeline::item::Item;
 use crate::core::teon::Value;
 use crate::core::pipeline::ctx::Ctx;
@@ -19,7 +19,7 @@ impl RegexMatchModifier {
 
 #[async_trait]
 impl Item for RegexMatchModifier {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let arg_value = self.argument.resolve(ctx.clone()).await;
         let regex = arg_value.as_regexp().unwrap();
         match &ctx.value {
@@ -27,11 +27,11 @@ impl Item for RegexMatchModifier {
                 if regex.is_match(s) {
                     ctx.clone()
                 } else {
-                    ctx.invalid(format!("Value does not match '{regex}'"))
+                    ctx.internal_server_error(format!("Value does not match '{regex}'"))
                 }
             }
             _ => {
-                ctx.invalid("Value is not string.")
+                ctx.internal_server_error("Value is not string.")
             }
         }
     }

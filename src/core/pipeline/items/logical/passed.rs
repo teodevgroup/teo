@@ -1,9 +1,10 @@
 use async_trait::async_trait;
+use crate::core::error::ErrorType;
 use crate::core::pipeline::item::Item;
-
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::Value;
+use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
 pub struct PassedModifier {
@@ -20,11 +21,14 @@ impl PassedModifier {
 
 #[async_trait]
 impl Item for PassedModifier {
-    async fn call<'a>(&self, context: Ctx<'a>) -> Ctx<'a> {
-        if self.pipeline.process(context.clone()).await.is_valid() {
-            context.with_value(Value::Bool(true))
-        } else {
-            context.with_value(Value::Bool(false))
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+        match self.pipeline.process(ctx.clone()).await {
+            Ok(_) => Ok(ctx.with_value(Value::Bool(true))),
+            Err(error) => if error.r#type == ErrorType::InternalServerError {
+                Err(error)
+            } else {
+                Ok(ctx.with_value(Value::Bool(false)))
+            }
         }
     }
 }

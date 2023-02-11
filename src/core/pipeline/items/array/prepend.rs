@@ -3,7 +3,7 @@ use crate::core::pipeline::item::Item;
 use crate::core::teon::Value;
 
 use crate::core::pipeline::ctx::Ctx;
-
+use crate::core::result::Result;
 #[derive(Debug, Clone)]
 pub struct PrependModifier {
     argument: Value
@@ -18,13 +18,13 @@ impl PrependModifier {
 #[async_trait]
 impl Item for PrependModifier {
 
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await;
         match &ctx.value {
             Value::String(s) => {
                 match argument.as_str() {
                     Some(a) => ctx.with_value(Value::String(a.to_string() + s)),
-                    None => ctx.invalid("Argument does not resolve to string.")
+                    None => ctx.internal_server_error("Argument does not resolve to string.")
                 }
             }
             Value::Vec(v) => {
@@ -32,7 +32,7 @@ impl Item for PrependModifier {
                 v.insert(0, argument);
                 ctx.with_value(Value::Vec(v))
             }
-            _ => ctx.invalid("Value is not string or vector.")
+            _ => ctx.internal_server_error("Value is not string or vector.")
         }
     }
 }

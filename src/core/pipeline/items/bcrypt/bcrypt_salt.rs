@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use bcrypt::{DEFAULT_COST, hash};
 use crate::core::pipeline::item::Item;
 use crate::core::teon::Value;
-
+use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::pipeline::ctx::validity::Validity::Invalid;
 
@@ -17,7 +17,7 @@ impl BcryptSaltModifier {
 
 #[async_trait]
 impl Item for BcryptSaltModifier {
-    async fn call<'a>(&self, context: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match context.value.as_str() {
             Some(s) => {
                 context.with_value(Value::String(hash(s, DEFAULT_COST).unwrap()))

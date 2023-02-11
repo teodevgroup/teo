@@ -3,7 +3,7 @@ use crate::core::pipeline::item::Item;
 
 use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;
-
+use crate::core::result::Result;
 #[derive(Debug, Clone)]
 pub struct IfModifier {
     cond: Value,
@@ -21,12 +21,12 @@ impl IfModifier {
 
 #[async_trait]
 impl Item for IfModifier {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let mut valid = false;
         match &self.cond {
             Value::Null => valid = false,
             Value::Bool(b) => valid = *b,
-            Value::Pipeline(p) => valid = p.process(ctx.clone()).await.is_valid(),
+            Value::Pipeline(p) => valid = p.process(ctx.clone()).await.is_valid().unwrap(),
             _ => {
                 panic!("Only null, bool, pipeline can be passed to `if`.")
             }
