@@ -220,8 +220,8 @@
 
 #### 0.0.46
 - Error in pipeline **[DONE]**
-- Error in pipeline program functions
 - Rename pipeline modifier to pipeline item
+- Error in pipeline program functions
 - Custom pipeline function accepts source
 - `$alter` item 
 - `@disable`
