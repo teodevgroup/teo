@@ -16,6 +16,7 @@ use crate::core::field::write_rule::WriteRule;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::Value;
+use crate::core::result::Result;
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum PreviousValueRule {
@@ -210,7 +211,7 @@ impl Field {
         }
     }
 
-    pub(crate) async fn perform_on_save_callback<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    pub(crate) async fn perform_on_save_callback<'a>(&self, ctx: Ctx<'a>) -> Result<Value> {
         let mut new_ctx = ctx.clone();
         match self.field_type() {
             FieldType::Vec(inner) => {

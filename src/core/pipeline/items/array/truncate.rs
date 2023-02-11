@@ -24,7 +24,7 @@ impl Item for TruncateModifier {
         match &ctx.value {
             Value::String(s) => Ok(ctx.with_value(Value::String(s.chars().take(argument).collect()))),
             Value::Vec(v) => Ok(ctx.with_value(Value::Vec(v.iter().take(argument).map(|v| v.clone()).collect()))),
-            _ => ctx.internal_server_error("truncate: value is not vector")
+            _ => Err(ctx.internal_server_error("truncate: value is not vector"))
         }
     }
 }

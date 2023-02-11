@@ -118,7 +118,7 @@ async fn handle_find_unique(graph: &Graph, input: &Value, model: &Model, source:
     let result = graph.find_unique_internal(model.name(), input, false, action, source).await;
     match result {
         Ok(obj) => {
-            let json_data: JsonValue = obj.to_json().await.unwrap().into();
+            let json_data: JsonValue = obj.to_json_internal(path!["data"]).await.unwrap().into();
             HttpResponse::Ok().json(json!({"data": json_data}))
         }
         Err(err) => {
@@ -132,7 +132,7 @@ async fn handle_find_first(graph: &Graph, input: &Value, model: &Model, source: 
     let result = graph.find_first_internal(model.name(), input, false, action, source).await;
     match result {
         Ok(obj) => {
-            let json_data: JsonValue = obj.to_json().await.unwrap().into();
+            let json_data: JsonValue = obj.to_json_internal(path!["data"]).await.unwrap().into();
             HttpResponse::Ok().json(json!({"data": json_data}))
         }
         Err(err) => {
@@ -167,7 +167,7 @@ async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: A
 
             let mut result_json: Vec<JsonValue> = vec![];
             for result in results {
-                match result.to_json().await {
+                match result.to_json_internal().await {
                     Ok(result) => result_json.push(result.into()),
                     Err(_) => ()
                 }
@@ -203,7 +203,7 @@ async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: 
     }
     obj.save().await?;
     let refetched = obj.refreshed(include, select).await?;
-    refetched.to_json().await
+    refetched.to_json_internal().await
 }
 
 async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
@@ -228,7 +228,7 @@ async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&
     object.set_teon(updator).await?;
     object.save().await?;
     let refetched = object.refreshed(include, select).await?;
-    refetched.to_json().await
+    refetched.to_json_internal().await
 }
 
 async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
@@ -278,7 +278,7 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Acti
                         Ok(_) => {
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
-                            let json_val: JsonValue = refetched.to_json().await.unwrap().into();
+                            let json_val: JsonValue = refetched.to_json_internal().await.unwrap().into();
                             HttpResponse::Ok().json(json!({"data": json_val}))
                         }
                         Err(err) => {
@@ -310,7 +310,7 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Acti
                         Ok(_) => {
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
-                            let json_data: JsonValue = refetched.to_json().await.unwrap().into();
+                            let json_data: JsonValue = refetched.to_json_internal().await.unwrap().into();
                             return HttpResponse::Ok().json(json!({"data": json_data}));
                         }
                         Err(err) => {
@@ -336,7 +336,7 @@ async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: Acti
     // find the object here
     return match result.delete_internal(path!["delete"]).await {
         Ok(_) => {
-            let json_data: JsonValue = result.to_json().await.unwrap().into();
+            let json_data: JsonValue = result.to_json_internal().await.unwrap().into();
             HttpResponse::Ok().json(json!({"data": json_data}))
         }
         Err(err) => {
@@ -425,7 +425,7 @@ async fn handle_delete_many(graph: &Graph, input: &Value, model: &Model, source:
     for object in result {
         match object.delete_internal(path!["delete"]).await {
             Ok(_) => {
-                match object.to_json().await {
+                match object.to_json_internal().await {
                     Ok(result) => {
                         retval.push(result);
                         count += 1;
@@ -540,7 +540,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
             let include = input.get("include");
             let select = input.get("select");
             let obj = obj.refreshed(include, select).await.unwrap();
-            let json_data = obj.to_json().await;
+            let json_data = obj.to_json_internal().await;
             let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
             let tson_identifier = obj.identifier();
             let json_identifier: JsonValue = tson_identifier.into();
@@ -569,7 +569,7 @@ async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &S
         let select = input.get("select");
         let include = input.get("include");
         let refreshed = identity.refreshed(include, select).await.unwrap();
-        let json_data = refreshed.to_json().await;
+        let json_data = refreshed.to_json_internal().await;
         HttpResponse::Ok().json(json!({
             "data": j(json_data.unwrap())
         }))

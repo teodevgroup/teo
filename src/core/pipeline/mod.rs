@@ -3,10 +3,11 @@ pub mod item;
 pub mod items;
 
 use std::sync::Arc;
+use crate::core::error::ErrorType::InternalServerError;
 use crate::core::result::Result;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
-use crate::prelude::Value;
+use crate::prelude::{Error, Value};
 
 #[derive(Debug, Clone)]
 pub struct Pipeline {
@@ -28,6 +29,18 @@ impl Pipeline {
             ctx = item.call(ctx.clone()).await?;
         }
         Ok(ctx.value)
+    }
+
+    pub(crate) async fn process_into_permission_result(&self, mut ctx: Ctx<'_>) -> Result<()> {
+        let path = ctx.path.clone();
+        match self.process(ctx).await {
+            Ok(_) => Ok(()),
+            Err(error) => if error.r#type == InternalServerError {
+                Err(error)
+            } else {
+                Err(Error::permission_error(path, "permission denied"))
+            }
+        }
     }
 }
 

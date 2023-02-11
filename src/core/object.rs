@@ -132,8 +132,8 @@ impl Object {
                         match argument {
                             Value::Pipeline(pipeline) => {
                                 let ctx = Ctx::initial_state_with_object(self.clone()).with_path(&path);
-                                let result = pipeline.process(ctx).await;
-                                self.set_value_to_value_map(key, result.get_value()?);
+                                let result = pipeline.process(ctx).await?;
+                                self.set_value_to_value_map(key, result);
                             }
                             _ => {
                                 self.set_value_to_value_map(key, argument.clone());
@@ -155,8 +155,7 @@ impl Object {
                             let context = Ctx::initial_state_with_object(self.clone())
                                 .with_path(path.clone())
                                 .with_value(value);
-                            let result_context = field.on_set_pipeline.process(context).await;
-                            let value = result_context.state.get_value(&path)?;
+                            let value = field.on_set_pipeline.process(context).await?;
                             self.check_write_rule(key, &value, &path).await?;
                             self.set_value_to_value_map(key, value.clone());
                         }
@@ -179,7 +178,7 @@ impl Object {
                         };
                         let ctx = Ctx::initial_state_with_object(self.clone())
                             .with_value(value);
-                        let _ = setter.process(ctx).await.get_value();
+                        let _ = setter.process(ctx).await?;
                     }
                 }
             }
@@ -190,27 +189,23 @@ impl Object {
     }
 
     async fn check_model_write_permission<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
-        let ctx = Ctx::initial_state_with_object(self.clone());
-        let result_ctx = self.model().can_mutate_pipeline().process(ctx).await;
-        result_ctx.permission(path.as_ref())
+        let ctx = Ctx::initial_state_with_object(self.clone()).with_path(path.as_ref());
+        self.model().can_mutate_pipeline().process_into_permission_result(ctx).await
     }
 
     async fn check_model_read_permission<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         let ctx = Ctx::initial_state_with_object(self.clone());
-        let result_ctx = self.model().can_read_pipeline().process(ctx).await;
-        result_ctx.permission(path.as_ref())
+        self.model().can_read_pipeline().process_into_permission_result(ctx).await
     }
 
     async fn check_field_write_permission<'a>(&self, field: &Field, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         let ctx = Ctx::initial_state_with_object(self.clone()).with_value(self.get_value(field.name()).unwrap()).with_path(path![field.name()]);
-        let result = field.can_mutate_pipeline.process(ctx).await;
-        result.permission(path.as_ref())
+        field.can_mutate_pipeline.process_into_permission_result(ctx).await
     }
 
     async fn check_field_read_permission<'a>(&self, field: &Field, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         let ctx = Ctx::initial_state_with_object(self.clone()).with_value(self.get_value(field.name()).unwrap()).with_path(path![field.name()]);
-        let result = field.can_read_pipeline.process(ctx).await;
-        result.permission(path.as_ref())
+        field.can_read_pipeline.process_into_permission_result(ctx).await
     }
 
     fn record_previous_value_for_field_if_needed(&self, field: &Field) {
@@ -234,7 +229,7 @@ impl Object {
                 let ctx = Ctx::initial_state_with_object(self.clone())
                     .with_path(path![key.as_ref()])
                     .with_value(value.clone());
-                pipeline.process(ctx).await.state.is_valid()?
+                pipeline.process(ctx).await.is_ok()
             }
         };
         if !valid {
@@ -362,7 +357,7 @@ impl Object {
         }
         let getter = property.getter.as_ref().unwrap();
         let ctx = Ctx::initial_state_with_object(self.clone());
-        let value = getter.process(ctx).await.get_value()?;
+        let value = getter.process(ctx).await?;
         if property.cached {
             self.inner.cached_property_map.lock().unwrap().insert(key.as_ref().to_string(), value.clone());
         }
@@ -490,13 +485,13 @@ impl Object {
                 let context = Ctx::initial_state_with_object(self.clone())
                     .with_value(initial_value)
                     .with_path(path![field.name.as_str()]);
-                let result_ctx = field.perform_on_save_callback(context).await;
-                match result_ctx.invalid_reason() {
-                    Some(reason) => {
-                        return Err(Error::unexpected_input_value_with_reason(reason, &(path + key)));
+                let result = field.perform_on_save_callback(context).await;
+                match result {
+                    Err(err) => {
+                        return Err(Error::unexpected_input_value_with_reason(err.message, &(path + key)));
                     }
-                    None => {
-                        self.inner.value_map.lock().unwrap().insert(key.to_string(), result_ctx.value);
+                    Ok(value) => {
+                        self.inner.value_map.lock().unwrap().insert(key.to_string(), value);
                         if !self.inner.is_new.load(Ordering::SeqCst) {
                             self.inner.is_modified.store(true, Ordering::SeqCst);
                             self.inner.modified_fields.lock().unwrap().insert(key.to_string());
@@ -574,7 +569,7 @@ impl Object {
                         let value = self.get_value(key).unwrap();
                         if value.is_null() {
                             let ctx = Ctx::initial_state_with_object(self.clone());
-                            let invalid = pipeline.process(ctx).await.invalid_reason().is_some();
+                            let invalid = pipeline.process(ctx).await.is_err();
                             if invalid {
                                 return Err(Error::missing_required_input(key, path))
                             }
@@ -684,7 +679,7 @@ impl Object {
         if is_modified || is_new {
             // apply pipeline
             self.apply_on_save_pipeline_and_validate_required_fields(path).await?;
-            self.trigger_before_save_callbacks().await?;
+            self.trigger_before_save_callbacks(path).await?;
             if !self.model().r#virtual() {
                 self.save_to_database(session.clone()).await?;
             }
@@ -694,7 +689,7 @@ impl Object {
         // clear properties
         self.clear_state();
         if is_modified || is_new {
-            self.trigger_after_save_callbacks().await?;
+            self.trigger_after_save_callbacks(path).await?;
         }
         Ok(())
     }
@@ -708,14 +703,14 @@ impl Object {
         let model = self.model();
         let pipeline = model.before_delete_pipeline();
         let ctx = Ctx::initial_state_with_object(self.clone()).with_path(path.as_ref());
-        pipeline.process(ctx).await.get_value().map(|_| ())
+        pipeline.process_into_permission_result(ctx).await
     }
 
     async fn trigger_after_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         let model = self.model();
         let pipeline = model.after_delete_pipeline();
         let ctx = Ctx::initial_state_with_object(self.clone()).with_path(path.as_ref());
-        pipeline.process(ctx).await.get_value().map(|_| ())
+        pipeline.process_into_permission_result(ctx).await
     }
 
 
@@ -723,7 +718,7 @@ impl Object {
         let model = self.model();
         let pipeline = model.before_save_pipeline();
         let ctx = Ctx::initial_state_with_object(self.clone()).with_path(path.as_ref());
-        pipeline.process(ctx).await.get_value().map(|_| ())
+        pipeline.process_into_permission_result(ctx).await
     }
 
     async fn trigger_after_save_callbacks<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
@@ -735,9 +730,9 @@ impl Object {
         let model = self.model();
         let pipeline = model.after_save_pipeline();
         let ctx = Ctx::initial_state_with_object(self.clone()).with_path(path.as_ref());
-        let result = pipeline.process(ctx).await.get_value().map(|_| ());
+        pipeline.process_into_permission_result(ctx).await?;
         self.inner.inside_after_save_callback.store(false, Ordering::SeqCst);
-        result
+        Ok(())
     }
 
     pub async fn delete(&self) -> Result<()> {
@@ -753,9 +748,9 @@ impl Object {
     }
 
     #[async_recursion]
-    pub(crate) async fn to_json(&self) -> Result<Value> {
+    pub(crate) async fn to_json_internal<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
         // check read permission
-        self.check_model_read_permission().await?;
+        self.check_model_read_permission(path).await?;
         // output
         let select_list = self.inner.selected_fields.lock().unwrap().clone();
         let select_filter = if select_list.is_empty() { false } else { true };
@@ -768,7 +763,7 @@ impl Object {
                         let o = self.get_relation_object(key).unwrap();
                         match o {
                             Some(o) => {
-                                map.insert(key.to_string(), o.to_json().await.unwrap());
+                                map.insert(key.to_string(), o.to_json_internal().await.unwrap());
                             },
                             None => ()
                         };
@@ -776,7 +771,7 @@ impl Object {
                         let mut result_vec = vec![];
                         let vec = self.get_relation_vec(key).unwrap();
                         for o in vec {
-                            result_vec.push(o.to_json().await?);
+                            result_vec.push(o.to_json_internal().await?);
                         }
                         map.insert(key.to_string(), Value::Vec(result_vec));
                     }
