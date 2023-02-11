@@ -78,7 +78,6 @@ impl ErrorType {
             ErrorType::UnexpectedInputRootType => { 400 }
             ErrorType::UnexpectedInputType => { 400 }
             ErrorType::UnexpectedInputKey => { 400 }
-            ErrorType::ValidationError => { 400 }
             ErrorType::MissingRequiredInput => { 400 }
             ErrorType::UnexpectedObjectLength => { 400 }
             ErrorType::InvalidKey => { 500 }
