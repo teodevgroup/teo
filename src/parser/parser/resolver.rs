@@ -870,7 +870,7 @@ impl Resolver {
             ArithExpr::Expression(expression) => return Self::resolve_expression_kind(parser, source, &expression, when_option),
             ArithExpr::UnaryNeg(expression) => {
                 let origin = Self::resolve_expression_kind_force_value(parser, source, &expression, when_option);
-                return Entity::Value(-origin);
+                return Entity::Value((-origin).unwrap());
             }
             ArithExpr::UnaryBitNeg(expression) => {
                 let origin = Self::resolve_expression_kind_force_value(parser, source, &expression, when_option);
@@ -895,19 +895,19 @@ impl Resolver {
                 let rhs_value = Self::resolve_arith_expr(parser, source, &rhs, when_option).as_value().unwrap().clone();
                 match op {
                     Op::Add => {
-                        Entity::Value(lhs_value.clone() + rhs_value.clone())
+                        Entity::Value((lhs_value.clone() + rhs_value.clone()).unwrap())
                     }
                     Op::Sub => {
-                        Entity::Value(lhs_value.clone() - rhs_value.clone())
+                        Entity::Value((lhs_value.clone() - rhs_value.clone()).unwrap())
                     }
                     Op::Mul => {
-                        Entity::Value(lhs_value.clone() * rhs_value.clone())
+                        Entity::Value((lhs_value.clone() * rhs_value.clone()).unwrap())
                     }
                     Op::Div => {
-                        Entity::Value(lhs_value.clone() / rhs_value.clone())
+                        Entity::Value((lhs_value.clone() / rhs_value.clone()).unwrap())
                     }
                     Op::Mod => {
-                        Entity::Value(lhs_value.clone() % rhs_value.clone())
+                        Entity::Value((lhs_value.clone() % rhs_value.clone()).unwrap())
                     }
                     Op::BitAnd => {
                         if when_option {
@@ -915,7 +915,7 @@ impl Resolver {
                             let rhs_action = Self::value_to_action_option(&rhs_value);
                             Entity::Value(Value::RawOptionChoice(lhs_action.and(rhs_action).to_u32()))
                         } else {
-                            Entity::Value(lhs_value.clone() & rhs_value.clone())
+                            Entity::Value((lhs_value.clone() & rhs_value.clone()).unwrap())
                         }
                     }
                     Op::BitXor => {
@@ -924,7 +924,7 @@ impl Resolver {
                             let rhs_action = Self::value_to_action_option(&rhs_value);
                             Entity::Value(Value::RawOptionChoice(lhs_action.xor(rhs_action).to_u32()))
                         } else {
-                            Entity::Value(lhs_value.clone() ^ rhs_value.clone())
+                            Entity::Value((lhs_value.clone() ^ rhs_value.clone()).unwrap())
                         }
                     }
                     Op::BitOr => {
@@ -933,7 +933,7 @@ impl Resolver {
                             let rhs_action = Self::value_to_action_option(&rhs_value);
                             Entity::Value(Value::RawOptionChoice(lhs_action.or(rhs_action).to_u32()))
                         } else {
-                            Entity::Value(lhs_value.clone() | rhs_value.clone())
+                            Entity::Value((lhs_value.clone() | rhs_value.clone()).unwrap())
                         }
                     }
                     _ => unreachable!()

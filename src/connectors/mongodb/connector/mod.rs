@@ -262,7 +262,7 @@ impl MongoDBConnector {
                     let (key, val) = Input::key_value(updator.as_hashmap().unwrap());
                     match key {
                         "increment" => inc.insert(column_name, Bson::from(val)),
-                        "decrement" => inc.insert(column_name, Bson::from(&val.neg())),
+                        "decrement" => inc.insert(column_name, Bson::from(&val.neg().unwrap())),
                         "multiply" => mul.insert(column_name, Bson::from(val)),
                         "divide" => mul.insert(column_name, Bson::Double(val.recip())),
                         "push" => push.insert(column_name, Bson::from(val)),
@@ -465,7 +465,7 @@ impl Connector for MongoDBConnector {
 
     async fn delete_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> Result<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
-            return Err(Error::object_is_not_saved());
+            return Err(Error::object_is_not_saved_thus_cant_be_deleted());
         }
         let model = object.model();
         let col = &self.collections[model.name()];

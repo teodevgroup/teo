@@ -4,8 +4,7 @@ pub mod validity;
 use key_path::KeyPath;
 use crate::core::object::Object;
 use crate::core::pipeline::ctx::state::State;
-use crate::core::pipeline::ctx::validity::Validity;
-use crate::core::pipeline::ctx::validity::Validity::{Invalid, Valid};
+use crate::core::result::Result;
 use crate::core::teon::Value;
 use crate::prelude::Error;
 
@@ -34,11 +33,11 @@ impl<'a> Ctx<'a> {
         }
     }
 
-    pub(crate) fn with_path(&self, path: KeyPath<'a>) -> Self {
+    pub(crate) fn with_path(&self, path: impl AsRef<KeyPath<'a>>) -> Self {
         Self {
             state: self.state.clone(),
             object: self.object.clone(),
-            path,
+            path: path.as_ref().clone(),
         }
     }
 
@@ -50,11 +49,46 @@ impl<'a> Ctx<'a> {
         }
     }
 
+    pub(crate) fn with_value_result(&self, result: Result<Value>) -> Self {
+        Self {
+            state: match result {
+                Ok(value) => State::Value(value),
+                Err(error) => State::Err(error),
+            },
+            object: self.object.clone(),
+            path: self.path.clone(),
+        }
+    }
+
     pub(crate) fn with_invalid(&self, reason: impl Into<String>) -> Self {
         Self {
             state: State::Invalid(reason.into()),
             object: self.object.clone(),
             path: self.path.clone(),
         }
+    }
+
+    pub(crate) fn with_error(&self, error: Error) -> Self {
+        Self {
+            state: State::Err(error),
+            object: self.object.clone(),
+            path: self.path.clone(),
+        }
+    }
+
+    pub(crate) fn get_value<'b>(&self) -> Result<Value> {
+        self.state.get_value(&self.path)
+    }
+
+    pub(crate) fn get_value_internal(&self) -> Result<Value> {
+        self.state.get_value_internal()
+    }
+
+    pub(crate) fn permission<'b>(&self, path: impl AsRef<KeyPath<'b>>) -> Result<()> {
+        self.state.permission(path)
+    }
+
+    pub(crate) fn is_valid(&self) -> Result<bool> {
+        self.state.is_valid()
     }
 }

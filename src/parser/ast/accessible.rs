@@ -48,7 +48,7 @@ impl ASTPipeline {
                 modifiers.push((function_installer)(item.lookup_table.as_ref().unwrap().clone(), item.args.clone()));
             }
         }
-        Pipeline { modifiers }
+        Pipeline { items: modifiers }
     }
 }
 

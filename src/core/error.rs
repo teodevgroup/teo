@@ -5,18 +5,22 @@ use maplit::hashmap;
 use key_path::KeyPath;
 use crate::core::model::Model;
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Serialize, Clone)]
 pub enum ErrorType {
+
+    // server errors
+
+    InternalServerError,
+
     UnknownDatabaseWriteError,
     UnknownDatabaseDeleteError,
     UnknownDatabaseFindError,
     UnknownDatabaseFindUniqueError,
     UnknownDatabaseCountError,
-    InternalServerError,
-    ObjectIsNotSaved,
-    FieldIsNotUnique,
     WrongIdentityModel,
     PropertySetterError,
+
+    // user errors
 
     // request destination
     DestinationNotFound,
@@ -26,7 +30,7 @@ pub enum ErrorType {
     UnexpectedInputRootType,
     UnexpectedInputType,
     UnexpectedInputKey,
-    UnexpectedInputValue,
+    ValidationError,
     MissingRequiredInput,
     UnexpectedObjectLength,
 
@@ -34,7 +38,7 @@ pub enum ErrorType {
     InvalidAuthToken,
 
     // request permission
-    PermissionDenied,
+    PermissionError,
     DeletionDenied,
 
     // response destination
@@ -57,8 +61,8 @@ pub enum ErrorType {
 impl ErrorType {
     pub fn code(&self) -> u16 {
         match self {
+            ErrorType::ValidationError => { 400 }
             ErrorType::IncorrectJSONFormat => { 400 }
-            ErrorType::ObjectIsNotSaved => { 400 }
             ErrorType::UnknownDatabaseWriteError => { 500 }
             ErrorType::UnknownDatabaseDeleteError => { 500 }
             ErrorType::UnknownDatabaseFindError => { 500 }
@@ -67,7 +71,6 @@ impl ErrorType {
             ErrorType::DestinationNotFound => { 404 }
             ErrorType::InternalServerError => { 500 }
             ErrorType::ObjectNotFound => { 404 }
-            ErrorType::FieldIsNotUnique => { 400 }
             ErrorType::InvalidAuthToken => { 401 }
             ErrorType::CustomError => { 500 }
             ErrorType::WrongIdentityModel => { 401 }
@@ -75,12 +78,12 @@ impl ErrorType {
             ErrorType::UnexpectedInputRootType => { 400 }
             ErrorType::UnexpectedInputType => { 400 }
             ErrorType::UnexpectedInputKey => { 400 }
-            ErrorType::UnexpectedInputValue => { 400 }
+            ErrorType::ValidationError => { 400 }
             ErrorType::MissingRequiredInput => { 400 }
             ErrorType::UnexpectedObjectLength => { 400 }
             ErrorType::InvalidKey => { 500 }
             ErrorType::InvalidOperation => { 500 }
-            ErrorType::PermissionDenied => { 401 }
+            ErrorType::PermissionError => { 401 }
             ErrorType::UnexpectedOutputException => { 500 }
             ErrorType::DeletionDenied => { 400 }
             ErrorType::RecordDecodingError => { 500 }
@@ -88,7 +91,7 @@ impl ErrorType {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Serialize, Clone)]
 pub struct Error {
     pub r#type: ErrorType,
     pub message: String,
@@ -101,7 +104,7 @@ impl Error {
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
         errors.insert(field.into(), "Enum value is unexpected.".to_string());
         Error {
-            r#type: ErrorType::UnexpectedInputValue,
+            r#type: ErrorType::ValidationError,
             message: "Enum value is unexpected.".to_string(),
             errors: Some(errors)
         }
@@ -111,7 +114,7 @@ impl Error {
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
         errors.insert(field.as_ref().into(), format!("{}", reason.as_ref()));
         Error {
-            r#type: ErrorType::UnexpectedInputValue,
+            r#type: ErrorType::ValidationError,
             message: "Unique value duplicated.".to_string(),
             errors: Some(errors)
         }
@@ -121,16 +124,16 @@ impl Error {
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
         errors.insert(field.as_ref().into(), "Value is not unique.".into());
         Error {
-            r#type: ErrorType::UnexpectedInputValue,
+            r#type: ErrorType::ValidationError,
             message: "Unique value duplicated.".to_string(),
             errors: Some(errors)
         }
     }
 
-    pub fn internal_server_error(reason: String) -> Self {
+    pub fn internal_server_error(reason: impl Into<String>) -> Self {
         Error {
             r#type: ErrorType::InternalServerError,
-            message: reason,
+            message: reason.into(),
             errors: None
         }
     }
@@ -167,18 +170,10 @@ impl Error {
         }
     }
 
-    pub fn object_is_not_saved() -> Self {
+    pub fn object_is_not_saved_thus_cant_be_deleted() -> Self {
         Error {
-            r#type: ErrorType::ObjectIsNotSaved,
+            r#type: ErrorType::InternalServerError,
             message: "This object is not saved thus can't be deleted.".to_string(),
-            errors: None
-        }
-    }
-
-    pub fn field_is_not_unique() -> Self {
-        Error {
-            r#type: ErrorType::FieldIsNotUnique,
-            message: format!("Unique where input is not unique."),
             errors: None
         }
     }
@@ -283,7 +278,7 @@ impl Error {
 
     pub fn unexpected_input_value<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         Error {
-            r#type: ErrorType::UnexpectedInputValue,
+            r#type: ErrorType::ValidationError,
             message: "Unexpected value found.".to_string(),
             errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expect `{}'.", expected.into())}),
         }
@@ -291,7 +286,7 @@ impl Error {
 
     pub fn unexpected_input_value_with_reason<'a>(reason: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         Error {
-            r#type: ErrorType::UnexpectedInputValue,
+            r#type: ErrorType::ValidationError,
             message: "Unexpected value found.".to_string(),
             errors: Some(hashmap!{key_path.as_ref().to_string() => format!("{}", reason.into())}),
         }
@@ -329,14 +324,6 @@ impl Error {
         }
     }
 
-    pub fn permission_denied(action: impl AsRef<str>) -> Self {
-        Error {
-            r#type: ErrorType::PermissionDenied,
-            message: format!("Permission denied for `{}'.", action.as_ref()),
-            errors: None
-        }
-    }
-
     pub fn unexpected_output_exception<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl AsRef<str>) -> Self {
         Error {
             r#type: ErrorType::UnexpectedOutputException,
@@ -350,6 +337,22 @@ impl Error {
             r#type: ErrorType::DeletionDenied,
             message: format!("Deletion denied by `{}'.", relation_name.as_ref()),
             errors: None
+        }
+    }
+
+    pub fn validation_error<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
+        Error {
+            r#type: ErrorType::ValidationError,
+            message: "Validation failed.".to_string(),
+            errors: Some(hashmap!{path.as_ref().to_string() => reason.into()})
+        }
+    }
+
+    pub fn permission_error<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
+        Error {
+            r#type: ErrorType::PermissionError,
+            message: "Permission denied.".to_string(),
+            errors: Some(hashmap!{path.as_ref().to_string() => reason.into()})
         }
     }
 }

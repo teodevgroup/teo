@@ -334,7 +334,7 @@ async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: Acti
     }
     let result = result.unwrap();
     // find the object here
-    return match result.delete().await {
+    return match result.delete_internal(path!["delete"]).await {
         Ok(_) => {
             let json_data: JsonValue = result.to_json().await.unwrap().into();
             HttpResponse::Ok().json(json!({"data": json_data}))
@@ -423,7 +423,7 @@ async fn handle_delete_many(graph: &Graph, input: &Value, model: &Model, source:
     let mut count = 0;
     let mut retval: Vec<Value> = vec![];
     for object in result {
-        match object.delete().await {
+        match object.delete_internal(path!["delete"]).await {
             Ok(_) => {
                 match object.to_json().await {
                     Ok(result) => {
@@ -532,11 +532,11 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     let _action_by_input = by_value.unwrap();
     let ctx = Ctx::initial_state_with_object(obj.clone());
     let final_ctx = pipeline.process(ctx).await;
-    return match final_ctx.invalid_reason() {
-        Some(_reason) => {
+    return match final_ctx.get_value_internal() {
+        Err(err) => {
             return Error::unexpected_input_value_with_reason("Authentication failed.", path!["credentials", by_key.unwrap()]).into();
         }
-        None => {
+        Ok(_v) => {
             let include = input.get("include");
             let select = input.get("select");
             let obj = obj.refreshed(include, select).await.unwrap();

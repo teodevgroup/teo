@@ -18,7 +18,9 @@ impl MultiplyModifier {
 impl Item for MultiplyModifier {
 
     async fn call<'a>(&self, context: Ctx<'a>) -> Ctx<'a> {
-        let argument = self.argument.resolve(context.clone()).await;
-        context.with_value(context.value.clone() * argument)
+        match self.argument.resolve(context.clone()).await {
+            Ok(argument) => context.with_value_result(context.get_value().unwrap() * argument),
+            Err(error) => context.with_error(error),
+        }
     }
 }

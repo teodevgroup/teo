@@ -8,27 +8,27 @@ use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Clone)]
 pub struct Pipeline {
-    pub modifiers: Vec<Arc<dyn Item>>
+    pub items: Vec<Arc<dyn Item>>
 }
 
 impl Pipeline {
 
     pub(crate) fn new() -> Self {
-        Self { modifiers: vec![] }
+        Self { items: vec![] }
     }
 
-    pub(crate) fn has_any_modifier(&self) -> bool {
-        self.modifiers.len() > 0
+    pub(crate) fn has_any_items(&self) -> bool {
+        self.items.len() > 0
     }
 
-    pub(crate) async fn process<'a>(&self, mut context: Ctx<'a>) -> Ctx<'a> {
-        for modifier in &self.modifiers {
-            context = modifier.call(context.clone()).await;
-            if !context.is_valid() {
+    pub(crate) async fn process<'a>(&self, mut ctx: Ctx<'a>) -> Ctx<'a> {
+        for item in &self.items {
+            ctx = item.call(ctx.clone()).await;
+            if !ctx.state.is_value() {
                 break
             }
         }
-        return context;
+        return ctx;
     }
 }
 

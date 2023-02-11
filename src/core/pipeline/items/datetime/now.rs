@@ -10,7 +10,7 @@ pub struct NowModifier {}
 
 impl NowModifier {
     pub fn new() -> Self {
-        return NowModifier {};
+        NowModifier {}
     }
 }
 

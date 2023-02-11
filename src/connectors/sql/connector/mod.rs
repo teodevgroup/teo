@@ -227,7 +227,7 @@ impl Connector for SQLConnector {
 
     async fn delete_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> Result<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
-            return Err(Error::object_is_not_saved());
+            return Err(Error::object_is_not_saved_thus_cant_be_deleted());
         }
         let model = object.model();
         let r#where = Query::where_from_identifier(object, self.dialect);

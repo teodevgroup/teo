@@ -1,5 +1,5 @@
-use crate::core::pipeline::ctx::validity::Validity;
-use crate::prelude::{Error, Value};
+use key_path::KeyPath;
+use crate::prelude::{Error, Value, Result};
 
 #[derive(Clone)]
 pub(crate) enum State {
@@ -40,6 +40,38 @@ impl State {
         match self {
             State::Err(e) => Some(e),
             _ => None,
+        }
+    }
+
+    pub(crate) fn get_value<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
+        match self {
+            State::Value(value) => Ok(value.clone()),
+            State::Invalid(reason) => Err(Error::validation_error(path, reason)),
+            State::Err(error) => Err(error.clone()),
+        }
+    }
+
+    pub(crate) fn get_value_internal(&self) -> Result<Value> {
+        match self {
+            State::Value(value) => Ok(value.clone()),
+            State::Invalid(reason) => Err(Error::internal_server_error(reason)),
+            State::Err(error) => Err(error.clone()),
+        }
+    }
+
+    pub(crate) fn permission<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
+        match self {
+            State::Value(_) => Ok(()),
+            State::Invalid(reason) => Err(Error::permission_error(path, reason)),
+            State::Err(error) => Err(error.clone()),
+        }
+    }
+
+    pub(crate) fn is_valid(&self) -> Result<bool> {
+        match self {
+            State::Value(_) => Ok(true),
+            State::Invalid(_) => Ok(false),
+            State::Err(error) => Err(error.clone()),
         }
     }
 }

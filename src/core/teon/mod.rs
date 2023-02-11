@@ -10,7 +10,6 @@ use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap};
 use std::mem;
 use std::ops::{Add, Div, Mul, Sub, Rem, Neg, BitAnd, BitXor, BitOr};
-
 use chrono::prelude::{DateTime, Utc};
 use rust_decimal::Decimal;
 use indexmap::IndexMap;
@@ -24,6 +23,8 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::pipeline::Pipeline;
 use crate::core::teon::index::Index;
 use crate::core::teon::range::Range;
+use crate::core::result::Result;
+use crate::prelude::Error;
 
 // Code from this file is inspired from serde json
 // https://github.com/serde-rs/json/blob/master/src/value/mod.rs
@@ -307,6 +308,8 @@ impl Value {
         match *self {
             Value::I32(v) => Some(v),
             Value::I64(v) => Some(v as i32),
+            Value::F32(f) => Some(f as i32),
+            Value::F64(f) => Some(f as i32),
             _ => None
         }
     }
@@ -322,6 +325,8 @@ impl Value {
         match *self {
             Value::I32(v) => Some(v as i64),
             Value::I64(v) => Some(v),
+            Value::F32(f) => Some(f as i64),
+            Value::F64(f) => Some(f as i64),
             _ => None
         }
     }
@@ -334,11 +339,11 @@ impl Value {
     }
 
     pub fn as_f32(&self) -> Option<f32> {
-        match self {
-            Value::I32(v) => Some(*v as f32),
-            Value::I64(v) => Some(*v as f32),
-            Value::F32(v) => Some(*v),
-            Value::F64(v) => Some(*v as f32),
+        match *self {
+            Value::I32(v) => Some(v as f32),
+            Value::I64(v) => Some(v as f32),
+            Value::F32(v) => Some(v),
+            Value::F64(v) => Some(v as f32),
             _ => None
         }
     }
@@ -351,11 +356,11 @@ impl Value {
     }
 
     pub fn as_f64(&self) -> Option<f64> {
-        match self {
-            Value::I32(v) => Some(*v as f64),
-            Value::I64(v) => Some(*v as f64),
-            Value::F32(v) => Some(*v as f64),
-            Value::F64(v) => Some(*v as f64),
+        match *self {
+            Value::I32(v) => Some(v as f64),
+            Value::I64(v) => Some(v as f64),
+            Value::F32(v) => Some(v as f64),
+            Value::F64(v) => Some(v as f64),
             _ => None
         }
     }
@@ -517,10 +522,10 @@ impl Value {
     }
 
     // resolve pipeline as value
-    pub(crate) async fn resolve(&self, context: Ctx<'_>) -> Value {
+    pub(crate) async fn resolve(&self, context: Ctx<'_>) -> Result<Value> {
         match self {
-            Value::Pipeline(p) => p.process(context).await.value,
-            _ => self.clone(),
+            Value::Pipeline(p) => p.process(context).await.get_value_internal(),
+            _ => Ok(self.clone()),
         }
     }
 
@@ -573,125 +578,161 @@ impl PartialOrd for Value {
     }
 }
 
+fn check_operand(lhs: &Value, name: &str) -> Result<()> {
+    if !lhs.is_number() {
+        return Err(Error::internal_server_error(format!("{}: operand is not number", name)));
+    }
+    Ok(())
+}
+
+fn check_operands(lhs: &Value, rhs: &Value, name: &str) -> Result<()> {
+    if !lhs.is_number() {
+        return Err(Error::internal_server_error(format!("{}: lhs is not number", name)));
+    }
+    if !rhs.is_number() {
+        return Err(Error::internal_server_error(format!("{}: rhs is not number", name)));
+    }
+    Ok(())
+}
+
+fn check_operands_int(lhs: &Value, rhs: &Value, name: &str) -> Result<()> {
+    if !lhs.is_i() {
+        return Err(Error::internal_server_error(format!("{}: lhs is not number", name)));
+    }
+    if !rhs.is_i() {
+        return Err(Error::internal_server_error(format!("{}: rhs is not number", name)));
+    }
+    Ok(())
+}
+
 impl Add for Value {
-    type Output = Value;
+    type Output = Result<Value>;
     fn add(self, rhs: Self) -> Self::Output {
-        match self {
+        check_operands(&self, &rhs, "add")?;
+        Ok(match self {
             Value::I32(v) => Value::I32(v + rhs.as_i32().unwrap()),
             Value::I64(v) => Value::I64(v + rhs.as_i64().unwrap()),
             Value::F32(v) => Value::F32(v + rhs.as_f32().unwrap()),
             Value::F64(v) => Value::F64(v + rhs.as_f64().unwrap()),
             Value::Decimal(d) => Value::Decimal(d + rhs.as_decimal().unwrap()),
-            _ => Value::Null,
-        }
+            _ => unreachable!(),
+        })
     }
 }
 
 impl Sub for Value {
-    type Output = Value;
+    type Output = Result<Value>;
     fn sub(self, rhs: Self) -> Self::Output {
-        match self {
+        check_operands(&self, &rhs, "sub")?;
+        Ok(match self {
             Value::I32(v) => Value::I32(v - rhs.as_i32().unwrap()),
             Value::I64(v) => Value::I64(v - rhs.as_i64().unwrap()),
             Value::F32(v) => Value::F32(v - rhs.as_f32().unwrap()),
             Value::F64(v) => Value::F64(v - rhs.as_f64().unwrap()),
             Value::Decimal(d) => Value::Decimal(d - rhs.as_decimal().unwrap()),
-            _ => Value::Null,
-        }
+            _ => unreachable!(),
+        })
     }
 }
 
 impl Mul for Value {
-    type Output = Value;
+    type Output = Result<Value>;
     fn mul(self, rhs: Self) -> Self::Output {
-        match self {
+        check_operands(&self, &rhs, "mul")?;
+        Ok(match self {
             Value::I32(v) => Value::I32(v * rhs.as_i32().unwrap()),
             Value::I64(v) => Value::I64(v * rhs.as_i64().unwrap()),
             Value::F32(v) => Value::F32(v * rhs.as_f32().unwrap()),
             Value::F64(v) => Value::F64(v * rhs.as_f64().unwrap()),
             Value::Decimal(d) => Value::Decimal(d * rhs.as_decimal().unwrap()),
-            _ => Value::Null,
-        }
+            _ => unreachable!(),
+        })
     }
 }
 
 impl Div for Value {
-    type Output = Value;
+    type Output = Result<Value>;
     fn div(self, rhs: Self) -> Self::Output {
-        match self {
+        check_operands(&self, &rhs, "div")?;
+        Ok(match self {
             Value::I32(v) => Value::I32(v / rhs.as_i32().unwrap()),
             Value::I64(v) => Value::I64(v / rhs.as_i64().unwrap()),
             Value::F32(v) => Value::F32(v / rhs.as_f32().unwrap()),
             Value::F64(v) => Value::F64(v / rhs.as_f64().unwrap()),
             Value::Decimal(d) => Value::Decimal(d / rhs.as_decimal().unwrap()),
-            _ => Value::Null,
-        }
+            _ => unreachable!(),
+        })
     }
 }
 
 impl Rem for Value {
-    type Output = Value;
+    type Output = Result<Value>;
     fn rem(self, rhs: Self) -> Self::Output {
-        match self {
+        check_operands(&self, &rhs, "rem")?;
+        Ok(match self {
             Value::I32(v) => Value::I32(v % rhs.as_i32().unwrap()),
             Value::I64(v) => Value::I64(v % rhs.as_i64().unwrap()),
             Value::F32(v) => Value::F32(v % rhs.as_f32().unwrap()),
             Value::F64(v) => Value::F64(v % rhs.as_f64().unwrap()),
             Value::Decimal(d) => Value::Decimal(d % rhs.as_decimal().unwrap()),
-            _ => Value::Null,
-        }
+            _ => unreachable!(),
+        })
     }
 }
 
 impl Neg for Value {
-    type Output = Value;
-    fn neg(self) -> Value {
-        match self {
+    type Output = Result<Value>;
+    fn neg(self) -> Self::Output {
+        check_operand(&self, "neg")?;
+        Ok(match self {
             Value::I32(val) => Value::I32(-val),
             Value::I64(val) => Value::I64(-val),
             Value::F32(val) => Value::F32(-val),
             Value::F64(val) => Value::F64(-val),
             Value::Decimal(val) => Value::Decimal(-val),
-            _ => Value::Null,
-        }
+            _ => unreachable!(),
+        })
     }
 }
 
 impl BitAnd for Value {
-    type Output = Value;
+    type Output = Result<Value>;
     fn bitand(self, rhs: Self) -> Self::Output {
-        match self {
+        check_operands_int(&self, &rhs, "bitand")?;
+        Ok(match self {
             Value::I32(v) => Value::I32(v & rhs.as_i32().unwrap()),
             Value::I64(v) => Value::I64(v & rhs.as_i64().unwrap()),
             _ => Value::Null,
-        }
+        })
     }
 }
 
 impl BitXor for Value {
-    type Output = Value;
+    type Output = Result<Value>;
     fn bitxor(self, rhs: Self) -> Self::Output {
-        match self {
+        check_operands_int(&self, &rhs, "bitxor")?;
+        Ok(match self {
             Value::I32(v) => Value::I32(v ^ rhs.as_i32().unwrap()),
             Value::I64(v) => Value::I64(v ^ rhs.as_i64().unwrap()),
             _ => Value::Null,
-        }
+        })
     }
 }
 
 impl BitOr for Value {
-    type Output = Value;
+    type Output = Result<Value>;
     fn bitor(self, rhs: Self) -> Self::Output {
-        match self {
+        check_operands_int(&self, &rhs, "bitor")?;
+        Ok(match self {
             Value::I32(v) => Value::I32(v | rhs.as_i32().unwrap()),
             Value::I64(v) => Value::I64(v | rhs.as_i64().unwrap()),
             _ => Value::Null,
-        }
+        })
     }
 }
 
 impl Neg for &Value {
-    type Output = Value;
+    type Output = Result<Value>;
 
     fn neg(self) -> Self::Output {
         (self.clone()).neg()
