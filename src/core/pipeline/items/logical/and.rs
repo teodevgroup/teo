@@ -20,11 +20,11 @@ impl AndModifier {
 #[async_trait]
 impl Item for AndModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        if !ctx.value.is_null() {
-            Ok(ctx)
+        if !ctx.get_value().is_null() {
+            Ok(ctx.clone())
         } else {
             match &self.value {
-                Value::Pipeline(p) => Ok(ctx.with_value(p.process(ctx).await?)),
+                Value::Pipeline(p) => Ok(ctx.clone().with_value(p.process(ctx.clone()).await?)),
                 _ => Ok(ctx.with_value(self.value.clone())),
             }
         }

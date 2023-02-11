@@ -219,7 +219,7 @@
 - Always record previous id value and support modifying `@id` fields **[DONE]**
 
 #### 0.0.46
-- Error in pipeline
+- Error in pipeline **[DONE]**
 - Error in pipeline program functions
 - Rename pipeline modifier to pipeline item
 - Custom pipeline function accepts source

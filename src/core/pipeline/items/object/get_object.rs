@@ -18,6 +18,6 @@ impl GetObjectModifier {
 #[async_trait]
 impl Item for GetObjectModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        ctx.with_value(Value::Object(ctx.object.as_ref().unwrap().clone())).with_path(path![])
+        Ok(ctx.with_value(Value::Object(ctx.object.as_ref().unwrap().clone())).with_path(path![]))
     }
 }

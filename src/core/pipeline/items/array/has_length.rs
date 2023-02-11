@@ -23,21 +23,21 @@ impl Item for HasLengthModifier {
             (n, n, true)
         } else if argument.is_range() {
             let r = self.argument.as_range().unwrap();
-            let start = r.start.resolve(ctx.clone()).await.as_usize().unwrap();
-            let end = r.end.resolve(ctx.clone()).await.as_usize().unwrap();
+            let start = r.start.resolve(ctx.clone()).await?.as_usize().unwrap();
+            let end = r.end.resolve(ctx.clone()).await?.as_usize().unwrap();
             (start, end, r.closed)
         } else {
-            panic!()
+            unreachable!()
         };
         let len = match &ctx.value {
             Value::String(s) => s.len(),
             Value::Vec(v) => v.len(),
             _ => {
-                return ctx.with_invalid("Value doesn't have length.");
+                return Err(ctx.with_invalid("Value doesn't have length."));
             }
         };
         if len < lower {
-            return ctx.with_invalid(format!("Value length is less than {lower}."));
+            return Err(ctx.with_invalid(format!("Value length is less than {lower}.")));
         }
         if closed {
             if len > upper {

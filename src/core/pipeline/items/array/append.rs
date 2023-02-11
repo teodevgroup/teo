@@ -20,19 +20,19 @@ impl Item for AppendModifier {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?;
-        match &ctx.value {
+        match &ctx.get_value() {
             Value::String(s) => {
                 match argument.as_str() {
-                    Some(a) => ctx.with_value(Value::String(s.to_owned() + a)),
-                    None => ctx.internal_server_error("Argument does not resolve to string.")
+                    Some(a) => Ok(ctx.with_value(Value::String(s.to_owned() + a))),
+                    None => Err(ctx.internal_server_error("Argument does not resolve to string."))
                 }
             }
             Value::Vec(v) => {
                 let mut v = v.clone();
                 v.push(argument);
-                ctx.with_value(Value::Vec(v))
+                Ok(ctx.with_value(Value::Vec(v)))
             }
-            _ => ctx.internal_server_error("Value is not string or vector.")
+            _ => Err(ctx.internal_server_error("Value is not string or vector."))
         }
     }
 }

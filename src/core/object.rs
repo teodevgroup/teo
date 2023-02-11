@@ -748,9 +748,9 @@ impl Object {
     }
 
     #[async_recursion]
-    pub(crate) async fn to_json_internal<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
+    pub(crate) async fn to_json_internal<'a>(&self, path: &KeyPath<'a>) -> Result<Value> {
         // check read permission
-        self.check_model_read_permission(path).await?;
+        self.check_model_read_permission(path.as_ref()).await?;
         // output
         let select_list = self.inner.selected_fields.lock().unwrap().clone();
         let select_filter = if select_list.is_empty() { false } else { true };
@@ -763,15 +763,15 @@ impl Object {
                         let o = self.get_relation_object(key).unwrap();
                         match o {
                             Some(o) => {
-                                map.insert(key.to_string(), o.to_json_internal().await.unwrap());
+                                map.insert(key.to_string(), o.to_json_internal(&(path.as_ref() + relation.name())).await.unwrap());
                             },
                             None => ()
                         };
                     } else {
                         let mut result_vec = vec![];
                         let vec = self.get_relation_vec(key).unwrap();
-                        for o in vec {
-                            result_vec.push(o.to_json_internal().await?);
+                        for (index, o) in vec.iter().enumerate() {
+                            result_vec.push(o.to_json_internal(&(path.as_ref() + relation.name() + index)).await?);
                         }
                         map.insert(key.to_string(), Value::Vec(result_vec));
                     }
@@ -779,14 +779,13 @@ impl Object {
             } else if (!select_filter) || (select_filter && select_list.contains(key)) {
                 if let Some(field) = self.model().field(key) {
                     let mut value = self.get_value(key).unwrap();
-                    if self.check_field_read_permission(field).await.is_err() {
+                    if self.check_field_read_permission(field, path.as_ref()).await.is_err() {
                         continue
                     }
                     let context = Ctx::initial_state_with_object(self.clone())
                         .with_value(value)
                         .with_path(path![key.as_str()]);
-                    let result_ctx = field.perform_on_output_callback(context).await;
-                    value = result_ctx.value;
+                    let value = field.perform_on_output_callback(context).await?;
                     if !value.is_null() {
                         map.insert(key.to_string(), value);
                     }
@@ -799,7 +798,7 @@ impl Object {
                     } else {
                         if let Some(getter) = &property.getter {
                             let ctx = Ctx::initial_state_with_object(self.clone());
-                            let value = getter.process(ctx).await.value;
+                            let value = getter.process(ctx).await?;
                             if !value.is_null() {
                                 map.insert(key.to_string(), value);
                             }

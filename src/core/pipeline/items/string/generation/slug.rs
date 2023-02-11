@@ -17,6 +17,6 @@ impl SlugModifier {
 #[async_trait]
 impl Item for SlugModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        ctx.with_value(Value::String(slug().unwrap()))
+        Ok(ctx.with_value(Value::String(slug().unwrap())))
     }
 }

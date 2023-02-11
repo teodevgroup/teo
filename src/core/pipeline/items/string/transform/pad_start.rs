@@ -20,12 +20,12 @@ impl PadStartModifier {
 impl Item for PadStartModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
-            None => ctx.internal_server_error("Value is not string."),
+            None => Err(ctx.internal_server_error("padStart: value is not string")),
             Some(s) => {
                 let arg = self.width.resolve(ctx.clone()).await?;
                 let width = arg.as_i64().unwrap() as usize;
                 let char = self.char;
-                ctx.with_value(Value::String(s.pad(width, char, Alignment::Left, false)))
+                Ok(ctx.with_value(Value::String(s.pad(width, char, Alignment::Left, false))))
             }
         }
     }

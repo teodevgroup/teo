@@ -23,16 +23,16 @@ impl Item for PrependModifier {
         match &ctx.value {
             Value::String(s) => {
                 match argument.as_str() {
-                    Some(a) => ctx.with_value(Value::String(a.to_string() + s)),
-                    None => ctx.internal_server_error("Argument does not resolve to string.")
+                    Some(a) => Ok(ctx.with_value(Value::String(a.to_string() + s))),
+                    None => Err(ctx.internal_server_error("Argument does not resolve to string."))
                 }
             }
             Value::Vec(v) => {
                 let mut v = v.clone();
                 v.insert(0, argument);
-                ctx.with_value(Value::Vec(v))
+                Ok(ctx.with_value(Value::Vec(v)))
             }
-            _ => ctx.internal_server_error("Value is not string or vector.")
+            _ => Err(ctx.internal_server_error("Value is not string or vector."))
         }
     }
 }

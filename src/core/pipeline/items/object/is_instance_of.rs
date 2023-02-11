@@ -20,13 +20,13 @@ impl Item for IsObjectOfModifier {
         match ctx.value.as_object() {
             Some(o) => {
                 if o.model().name() == self.model {
-                    ctx
+                    Ok(ctx)
                 } else {
                     let model = &self.model;
-                    ctx.internal_server_error(format!("Value is not object of '{model}'."))
+                    Err(ctx.internal_server_error(format!("value is not object of '{model}'.")))
                 }
             }
-            None => ctx.internal_server_error("Value is not object.")
+            None => Err(ctx.internal_server_error("isObjectOf: value is not object"))
         }
     }
 }

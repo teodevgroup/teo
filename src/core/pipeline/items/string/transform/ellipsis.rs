@@ -19,15 +19,15 @@ impl EllipsisModifier {
 impl Item for EllipsisModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
-            None => ctx.internal_server_error("Value is not string."),
+            None => Err(ctx.internal_server_error("ellipsis: value is not string")),
             Some(s) => {
                 let arg = self.width.resolve(ctx.clone()).await?;
                 let width = arg.as_i64().unwrap() as usize;
                 if s.len() <= width {
-                    ctx
+                    Ok(ctx)
                 } else {
                     let ellipsis = &self.ellipsis;
-                    ctx.with_value(Value::String(s.chars().take(width).collect::<String>() + ellipsis))
+                    Ok(ctx.with_value(Value::String(s.chars().take(width).collect::<String>() + ellipsis)))
                 }
             }
         }

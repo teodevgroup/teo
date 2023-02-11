@@ -25,7 +25,7 @@ impl Item for HasSuffixModifier {
                 if s.ends_with(suffix) {
                     Ok(ctx)
                 } else {
-                    ctx.internal_server_error("value is not correctly suffixed")
+                    Err(ctx.internal_server_error("value is not correctly suffixed"))
                 }
             }
         }
