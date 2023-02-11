@@ -1,8 +1,8 @@
 use std::sync::Arc;
-use crate::core::pipeline::modifier::Modifier;
-use crate::core::pipeline::modifiers::debug::print::PrintModifier;
+use crate::core::pipeline::item::Item;
+use crate::core::pipeline::items::debug::print::PrintModifier;
 use crate::parser::ast::argument::Argument;
 
-pub(crate) fn print(_args: Vec<Argument>) -> Arc<dyn Modifier> {
+pub(crate) fn print(_args: Vec<Argument>) -> Arc<dyn Item> {
     Arc::new(PrintModifier::new())
 }

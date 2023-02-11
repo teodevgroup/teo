@@ -223,6 +223,7 @@
 - Error in pipeline program functions
 - Rename pipeline modifier to pipeline item
 - Custom pipeline function accepts source
+- `$alter` item 
 - `@disable`
 - `@action`
 - Pipeline documentation

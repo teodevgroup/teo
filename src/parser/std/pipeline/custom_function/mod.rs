@@ -1,15 +1,15 @@
 use std::sync::{Arc, Mutex};
 use crate::core::app::builder::CallbackLookupTable;
-use crate::core::pipeline::modifier::Modifier;
+use crate::core::pipeline::item::Item;
 
 
 
-use crate::core::pipeline::modifiers::logical::transform_with::TransformWithModifier;
-use crate::core::pipeline::modifiers::logical::validate_with::ValidateWithModifier;
+use crate::core::pipeline::items::logical::transform_with::TransformWithModifier;
+use crate::core::pipeline::items::logical::validate_with::ValidateWithModifier;
 use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
 
-pub(crate) fn custom_transform(lookup_table: Arc<Mutex<CallbackLookupTable>>, args: Vec<Argument>) -> Arc<dyn Modifier> {
+pub(crate) fn custom_transform(lookup_table: Arc<Mutex<CallbackLookupTable>>, args: Vec<Argument>) -> Arc<dyn Item> {
     let arg_value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
     match arg_value {
         Value::String(s) => {
@@ -29,7 +29,7 @@ pub(crate) fn custom_transform(lookup_table: Arc<Mutex<CallbackLookupTable>>, ar
     }
 }
 
-pub(crate) fn custom_callback(lookup_table: Arc<Mutex<CallbackLookupTable>>, args: Vec<Argument>) -> Arc<dyn Modifier> {
+pub(crate) fn custom_callback(lookup_table: Arc<Mutex<CallbackLookupTable>>, args: Vec<Argument>) -> Arc<dyn Item> {
     let name = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap().as_str().unwrap();
     let lookup_table = lookup_table.lock().unwrap();
     let modifier = lookup_table.callbacks.get(name);
@@ -40,7 +40,7 @@ pub(crate) fn custom_callback(lookup_table: Arc<Mutex<CallbackLookupTable>>, arg
     }
 }
 
-pub(crate) fn custom_validate(lookup_table: Arc<Mutex<CallbackLookupTable>>, args: Vec<Argument>) -> Arc<dyn Modifier> {
+pub(crate) fn custom_validate(lookup_table: Arc<Mutex<CallbackLookupTable>>, args: Vec<Argument>) -> Arc<dyn Item> {
     let arg_value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
     match arg_value {
         Value::String(s) => {
@@ -60,7 +60,7 @@ pub(crate) fn custom_validate(lookup_table: Arc<Mutex<CallbackLookupTable>>, arg
     }
 }
 
-pub(crate) fn custom_compare(lookup_table: Arc<Mutex<CallbackLookupTable>>, args: Vec<Argument>) -> Arc<dyn Modifier> {
+pub(crate) fn custom_compare(lookup_table: Arc<Mutex<CallbackLookupTable>>, args: Vec<Argument>) -> Arc<dyn Item> {
     let name = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap().as_str().unwrap();
     let lookup_table = lookup_table.lock().unwrap();
     let modifier = lookup_table.compares.get(name);

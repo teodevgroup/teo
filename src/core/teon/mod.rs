@@ -20,7 +20,7 @@ use chrono::NaiveDate;
 use regex::Regex;
 use crate::core::field::r#type::FieldType;
 use crate::core::object::Object;
-use crate::core::pipeline::context::Context;
+use crate::core::pipeline::ctx::Ctx;
 use crate::core::pipeline::Pipeline;
 use crate::core::teon::index::Index;
 use crate::core::teon::range::Range;
@@ -517,7 +517,7 @@ impl Value {
     }
 
     // resolve pipeline as value
-    pub(crate) async fn resolve(&self, context: Context<'_>) -> Value {
+    pub(crate) async fn resolve(&self, context: Ctx<'_>) -> Value {
         match self {
             Value::Pipeline(p) => p.process(context).await.value,
             _ => self.clone(),

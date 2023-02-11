@@ -1,14 +1,14 @@
-pub mod context;
-pub mod modifier;
-pub mod modifiers;
+pub mod ctx;
+pub mod item;
+pub mod items;
 
 use std::sync::Arc;
-use crate::core::pipeline::modifier::Modifier;
-use crate::core::pipeline::context::Context;
+use crate::core::pipeline::item::Item;
+use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Clone)]
 pub struct Pipeline {
-    pub modifiers: Vec<Arc<dyn Modifier>>
+    pub modifiers: Vec<Arc<dyn Item>>
 }
 
 impl Pipeline {
@@ -21,7 +21,7 @@ impl Pipeline {
         self.modifiers.len() > 0
     }
 
-    pub(crate) async fn process<'a>(&self, mut context: Context<'a>) -> Context<'a> {
+    pub(crate) async fn process<'a>(&self, mut context: Ctx<'a>) -> Ctx<'a> {
         for modifier in &self.modifiers {
             context = modifier.call(context.clone()).await;
             if !context.is_valid() {

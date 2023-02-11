@@ -17,7 +17,7 @@ use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::relation::Relation;
 use crate::core::connector::SaveSession;
-use crate::core::pipeline::context::{Context};
+use crate::core::pipeline::ctx::{Ctx};
 use crate::core::teon::Value;
 use crate::core::error::{Error, ErrorType};
 use crate::core::field::write_rule::WriteRule;
@@ -131,7 +131,7 @@ impl Object {
                     if let Some(argument) = &field.default {
                         match argument {
                             Value::Pipeline(pipeline) => {
-                                let ctx = Context::initial_state_with_object(self.clone());
+                                let ctx = Ctx::initial_state_with_object(self.clone());
                                 let value = pipeline.process(ctx).await.value;
                                 // todo: default value calculation error here
                                 self.set_value_to_value_map(key, value);
@@ -153,9 +153,9 @@ impl Object {
                             // record previous value if needed
                             self.record_previous_value_for_field_if_needed(field);
                             // on set pipeline
-                            let context = Context::initial_state_with_object(self.clone())
-                                .alter_key_path(path.clone())
-                                .alter_value(value);
+                            let context = Ctx::initial_state_with_object(self.clone())
+                                .with_path(path.clone())
+                                .with_value(value);
                             let result_context = field.on_set_pipeline.process(context).await;
                             let value = result_context.value();
                             match result_context.invalid_reason() {
@@ -183,8 +183,8 @@ impl Object {
                             Input::SetValue(v) => v,
                             _ => return Err(Error::unexpected_input_type("value", &(path + key))),
                         };
-                        let ctx = Context::initial_state_with_object(self.clone())
-                            .alter_value(value);
+                        let ctx = Ctx::initial_state_with_object(self.clone())
+                            .with_value(value);
                         if let Some(reason) = setter.process(ctx).await.invalid_reason() {
                             return Err(Error::unexpected_input_value_with_reason(reason, &(path + key)));
                         }
@@ -198,7 +198,7 @@ impl Object {
     }
 
     async fn check_model_write_permission(&self) -> Result<()> {
-        let ctx = Context::initial_state_with_null(self.clone());
+        let ctx = Ctx::initial_state_with_object(self.clone());
         let result_ctx = self.model().can_mutate_pipeline().process(ctx).await;
         if !result_ctx.is_valid() {
             return Err(Error::permission_denied("mutate"));
@@ -207,7 +207,7 @@ impl Object {
     }
 
     async fn check_model_read_permission(&self) -> Result<()> {
-        let ctx = Context::initial_state_with_null(self.clone());
+        let ctx = Ctx::initial_state_with_object(self.clone());
         let result_ctx = self.model().can_read_pipeline().process(ctx).await;
         if !result_ctx.is_valid() {
             return Err(Error::permission_denied("read"));
@@ -216,7 +216,7 @@ impl Object {
     }
 
     async fn check_field_write_permission(&self, field: &Field) -> Result<()> {
-        let ctx = Context::initial_state_with_object(self.clone()).alter_value(self.get_value(field.name()).unwrap()).alter_key_path(path![field.name()]);
+        let ctx = Ctx::initial_state_with_object(self.clone()).with_value(self.get_value(field.name()).unwrap()).with_path(path![field.name()]);
         let result = field.can_mutate_pipeline.process(ctx).await;
         if !result.is_valid() {
             return Err(Error::permission_denied("mutate"));
@@ -225,7 +225,7 @@ impl Object {
     }
 
     async fn check_field_read_permission(&self, field: &Field) -> Result<()> {
-        let ctx = Context::initial_state_with_object(self.clone()).alter_value(self.get_value(field.name()).unwrap()).alter_key_path(path![field.name()]);
+        let ctx = Ctx::initial_state_with_object(self.clone()).with_value(self.get_value(field.name()).unwrap()).with_path(path![field.name()]);
         let result = field.can_read_pipeline.process(ctx).await;
         if !result.is_valid() {
             return Err(Error::permission_denied("read"));
@@ -251,9 +251,9 @@ impl Object {
             WriteRule::WriteOnce => if is_new { true } else { self.get_value(key.as_ref()).unwrap().is_null() },
             WriteRule::WriteNonNull => if is_new { true } else { !value.is_null() },
             WriteRule::WriteIf(pipeline) => {
-                let context = Context::initial_state_with_object(self.clone())
-                    .alter_key_path(path![key.as_ref()])
-                    .alter_value(value.clone());
+                let context = Ctx::initial_state_with_object(self.clone())
+                    .with_path(path![key.as_ref()])
+                    .with_value(value.clone());
                 let result_context = pipeline.process(context).await;
                 result_context.is_valid()
             }
@@ -297,8 +297,8 @@ impl Object {
     pub async fn set_property(&self, key: impl AsRef<str>, value: impl Into<Value>) -> Result<()> {
         let property = self.model().property(key.as_ref()).unwrap();
         let setter = property.setter.as_ref().unwrap();
-        let ctx = Context::initial_state_with_object(self.clone())
-            .alter_value(value.into());
+        let ctx = Ctx::initial_state_with_object(self.clone())
+            .with_value(value.into());
         let _ = setter.process(ctx).await;
         Ok(())
     }
@@ -382,7 +382,7 @@ impl Object {
             }
         }
         let getter = property.getter.as_ref().unwrap();
-        let ctx = Context::initial_state_with_object(self.clone());
+        let ctx = Ctx::initial_state_with_object(self.clone());
         let value = getter.process(ctx).await.value;
         if property.cached {
             self.inner.cached_property_map.lock().unwrap().insert(key.as_ref().to_string(), value.clone());
@@ -508,9 +508,9 @@ impl Object {
                         Value::Null
                     }
                 };
-                let context = Context::initial_state_with_object(self.clone())
-                    .alter_value(initial_value)
-                    .alter_key_path(path![field.name.as_str()]);
+                let context = Ctx::initial_state_with_object(self.clone())
+                    .with_value(initial_value)
+                    .with_path(path![field.name.as_str()]);
                 let result_ctx = field.perform_on_save_callback(context).await;
                 match result_ctx.invalid_reason() {
                     Some(reason) => {
@@ -594,7 +594,7 @@ impl Object {
                     Optionality::PresentIf(pipeline) => {
                         let value = self.get_value(key).unwrap();
                         if value.is_null() {
-                            let ctx = Context::initial_state_with_object(self.clone());
+                            let ctx = Ctx::initial_state_with_object(self.clone());
                             let invalid = pipeline.process(ctx).await.invalid_reason().is_some();
                             if invalid {
                                 return Err(Error::missing_required_input(key, path))
@@ -728,7 +728,7 @@ impl Object {
     async fn trigger_can_read_callbacks(&self) -> Result<()> {
         let model = self.model();
         let pipeline = model.can_mutate_pipeline();
-        let context = Context::initial_state_with_object(self.clone());
+        let context = Ctx::initial_state_with_object(self.clone());
         let result_context = pipeline.process(context).await;
         if result_context.invalid_reason().is_some() {
             Err(Error::permission_denied("Can read callback is not valid."))
@@ -740,7 +740,7 @@ impl Object {
     async fn trigger_can_mutate_callbacks(&self) -> Result<()> {
         let model = self.model();
         let pipeline = model.can_mutate_pipeline();
-        let context = Context::initial_state_with_object(self.clone());
+        let context = Ctx::initial_state_with_object(self.clone());
         let result_context = pipeline.process(context).await;
         if result_context.invalid_reason().is_some() {
             Err(Error::permission_denied("Can mutate callback is not valid."))
@@ -752,7 +752,7 @@ impl Object {
     async fn trigger_before_delete_callbacks(&self) -> Result<()> {
         let model = self.model();
         let pipeline = model.before_delete_pipeline();
-        let context = Context::initial_state_with_object(self.clone());
+        let context = Ctx::initial_state_with_object(self.clone());
         let result_context = pipeline.process(context).await;
         if result_context.invalid_reason().is_some() {
             Err(Error::custom_error("Before delete callback is not valid."))
@@ -764,7 +764,7 @@ impl Object {
     async fn trigger_after_delete_callbacks(&self) -> Result<()> {
         let model = self.model();
         let pipeline = model.after_delete_pipeline();
-        let context = Context::initial_state_with_object(self.clone());
+        let context = Ctx::initial_state_with_object(self.clone());
         let result_context = pipeline.process(context).await;
         if result_context.invalid_reason().is_some() {
             Err(Error::custom_error("Before delete callback is not valid."))
@@ -777,7 +777,7 @@ impl Object {
     async fn trigger_before_save_callbacks(&self) -> Result<()> {
         let model = self.model();
         let pipeline = model.before_save_pipeline();
-        let context = Context::initial_state_with_object(self.clone());
+        let context = Ctx::initial_state_with_object(self.clone());
         let result_context = pipeline.process(context).await;
         if result_context.invalid_reason().is_some() {
             Err(Error::custom_error("Before save callback is not valid."))
@@ -794,7 +794,7 @@ impl Object {
         self.inner.inside_after_save_callback.store(true, Ordering::SeqCst);
         let model = self.model();
         let pipeline = model.after_save_pipeline();
-        let context = Context::initial_state_with_object(self.clone());
+        let context = Ctx::initial_state_with_object(self.clone());
         let _result = pipeline.process(context).await;
         self.inner.inside_after_save_callback.store(false, Ordering::SeqCst);
         Ok(())
@@ -842,9 +842,9 @@ impl Object {
                     if self.check_field_read_permission(field).await.is_err() {
                         continue
                     }
-                    let context = Context::initial_state_with_object(self.clone())
-                        .alter_value(value)
-                        .alter_key_path(path![key.as_str()]);
+                    let context = Ctx::initial_state_with_object(self.clone())
+                        .with_value(value)
+                        .with_path(path![key.as_str()]);
                     let result_ctx = field.perform_on_output_callback(context).await;
                     value = result_ctx.value;
                     if !value.is_null() {
@@ -858,7 +858,7 @@ impl Object {
                         }
                     } else {
                         if let Some(getter) = &property.getter {
-                            let ctx = Context::initial_state_with_object(self.clone());
+                            let ctx = Ctx::initial_state_with_object(self.clone());
                             let value = getter.process(ctx).await.value;
                             if !value.is_null() {
                                 map.insert(key.to_string(), value);

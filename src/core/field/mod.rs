@@ -14,7 +14,7 @@ use crate::core::field::r#type::FieldType;
 use crate::core::field::read_rule::ReadRule;
 use crate::core::field::write_rule::WriteRule;
 use crate::core::pipeline::Pipeline;
-use crate::core::pipeline::context::Context;
+use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::Value;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -210,7 +210,7 @@ impl Field {
         }
     }
 
-    pub(crate) async fn perform_on_save_callback<'a>(&self, ctx: Context<'a>) -> Context<'a> {
+    pub(crate) async fn perform_on_save_callback<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
         let mut new_ctx = ctx.clone();
         match self.field_type() {
             FieldType::Vec(inner) => {
@@ -220,11 +220,11 @@ impl Field {
                     let arr = arr.unwrap();
                     let mut new_arr: Vec<Value> = Vec::new();
                     for (i, _v) in arr.iter().enumerate() {
-                        let key_path = &ctx.key_path + i;
-                        let arr_item_ctx = ctx.alter_key_path(key_path);
+                        let key_path = &ctx.path + i;
+                        let arr_item_ctx = ctx.with_path(key_path);
                         new_arr.push(inner.on_save_pipeline.process(arr_item_ctx).await.value);
                     }
-                    new_ctx = new_ctx.alter_value(Value::Vec(new_arr));
+                    new_ctx = new_ctx.with_value(Value::Vec(new_arr));
                 }
             }
             _ => {}
@@ -232,7 +232,7 @@ impl Field {
         self.on_save_pipeline.process(new_ctx.clone()).await
     }
 
-    pub(crate) async fn perform_on_output_callback<'a>(&self, ctx: Context<'a>) -> Context<'a> {
+    pub(crate) async fn perform_on_output_callback<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
         let mut new_ctx = ctx.clone();
         match self.field_type() {
             FieldType::Vec(inner) => {
@@ -242,11 +242,11 @@ impl Field {
                     let arr = arr.unwrap();
                     let mut new_arr: Vec<Value> = Vec::new();
                     for (i, _v) in arr.iter().enumerate() {
-                        let key_path = &ctx.key_path + i;
-                        let arr_item_ctx = ctx.alter_key_path(key_path);
+                        let key_path = &ctx.path + i;
+                        let arr_item_ctx = ctx.with_path(key_path);
                         new_arr.push(inner.on_output_pipeline.process(arr_item_ctx).await.value);
                     }
-                    new_ctx = new_ctx.alter_value(Value::Vec(new_arr));
+                    new_ctx = new_ctx.with_value(Value::Vec(new_arr));
                 }
             }
             _ => {}

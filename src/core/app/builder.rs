@@ -21,12 +21,12 @@ use crate::core::field::r#type::FieldType;
 use crate::core::graph::builder::GraphBuilder;
 use crate::parser::ast::field::FieldClass;
 use crate::prelude::{App, Value};
-use crate::core::pipeline::context::validity::Validity;
-use crate::core::pipeline::modifier::Modifier;
-use crate::core::pipeline::modifiers::function::compare::{CompareArgument, CompareModifier};
-use crate::core::pipeline::modifiers::function::perform::{PerformArgument, PerformModifier};
-use crate::core::pipeline::modifiers::function::transform::{TransformArgument, TransformModifier};
-use crate::core::pipeline::modifiers::function::validate::{ValidateArgument, ValidateModifier};
+use crate::core::pipeline::ctx::validity::Validity;
+use crate::core::pipeline::item::Item;
+use crate::core::pipeline::items::function::compare::{CompareArgument, CompareModifier};
+use crate::core::pipeline::items::function::perform::{PerformArgument, PerformModifier};
+use crate::core::pipeline::items::function::transform::{TransformArgument, TransformModifier};
+use crate::core::pipeline::items::function::validate::{ValidateArgument, ValidateModifier};
 use crate::core::property::Property;
 use crate::core::relation::Relation;
 use crate::parser::ast::r#type::Arity;
@@ -34,10 +34,10 @@ use crate::parser::parser::Parser;
 
 #[derive(Debug)]
 pub(crate) struct CallbackLookupTable {
-    pub(crate) transforms: HashMap<String, Arc<dyn Modifier>>,
-    pub(crate) validators: HashMap<String, Arc<dyn Modifier>>,
-    pub(crate) callbacks: HashMap<String, Arc<dyn Modifier>>,
-    pub(crate) compares: HashMap<String, Arc<dyn Modifier>>,
+    pub(crate) transforms: HashMap<String, Arc<dyn Item>>,
+    pub(crate) validators: HashMap<String, Arc<dyn Item>>,
+    pub(crate) callbacks: HashMap<String, Arc<dyn Item>>,
+    pub(crate) compares: HashMap<String, Arc<dyn Item>>,
 }
 
 impl CallbackLookupTable {

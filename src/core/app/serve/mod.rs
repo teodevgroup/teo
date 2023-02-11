@@ -22,7 +22,7 @@ use self::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::object::Object;
-use crate::core::pipeline::context::{Context};
+use crate::core::pipeline::ctx::{Ctx};
 use crate::core::error::Error;
 use crate::core::teon::decoder::Decoder;
 use crate::prelude::Value;
@@ -530,7 +530,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     let auth_by_arg = by_field.identity_checker.as_ref().unwrap();
     let pipeline = auth_by_arg.as_pipeline().unwrap();
     let _action_by_input = by_value.unwrap();
-    let ctx = Context::initial_state_with_object(obj.clone());
+    let ctx = Ctx::initial_state_with_object(obj.clone());
     let final_ctx = pipeline.process(ctx).await;
     return match final_ctx.invalid_reason() {
         Some(_reason) => {

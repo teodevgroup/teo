@@ -5,7 +5,7 @@ use maplit::hashmap;
 use crate::core::app::builder::CallbackLookupTable;
 use crate::core::field::Field;
 use crate::core::model::builder::ModelBuilder;
-use crate::core::pipeline::modifier::Modifier;
+use crate::core::pipeline::item::Item;
 use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
 use crate::core::relation::Relation;
@@ -21,9 +21,9 @@ pub(crate) type PropertyDecorator = fn(args: Vec<Argument>, property: &mut Prope
 
 pub(crate) type ModelDecorator = fn(args: Vec<Argument>, model: &mut ModelBuilder);
 
-pub(crate) type ASTPipelineInstaller = fn(args: Vec<Argument>) -> Arc<dyn Modifier>;
+pub(crate) type ASTPipelineInstaller = fn(args: Vec<Argument>) -> Arc<dyn Item>;
 
-pub(crate) type ASTFunctionInstaller = fn(lookup_table: Arc<Mutex<CallbackLookupTable>>, args: Vec<Argument>) -> Arc<dyn Modifier>;
+pub(crate) type ASTFunctionInstaller = fn(lookup_table: Arc<Mutex<CallbackLookupTable>>, args: Vec<Argument>) -> Arc<dyn Item>;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ASTPipelineItem {
