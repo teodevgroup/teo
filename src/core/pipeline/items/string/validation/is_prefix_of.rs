@@ -20,7 +20,7 @@ impl Item for IsPrefixOfModifier {
         match ctx.value.as_str() {
             None => ctx.internal_server_error("Value is not string."),
             Some(s) => {
-                let arg = self.full.resolve(ctx.clone()).await;
+                let arg = self.full.resolve(ctx.clone()).await?;
                 let full = arg.as_str().unwrap();
                 if full.starts_with(s) {
                     ctx

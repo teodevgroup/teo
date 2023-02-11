@@ -21,7 +21,7 @@ impl Item for JoinModifier {
         match ctx.value.as_vec() {
             None => Err(ctx.internal_server_error("join: value is not vector")),
             Some(v) => {
-                let arg = self.separator.resolve(ctx.clone()).await;
+                let arg = self.separator.resolve(ctx.clone()).await?;
                 let separator = arg.as_str().unwrap();
                 Ok(ctx.with_value(Value::String(v.iter().map(|v| v.as_str().unwrap()).collect::<Vec<&str>>().join(separator))))
             }

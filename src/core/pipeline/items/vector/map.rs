@@ -24,7 +24,7 @@ impl Item for MapModifier {
         let mut retval = Vec::new();
         for (i, val) in ctx.value.as_vec().unwrap().iter().enumerate() {
             let item_ctx = ctx.with_value(val.clone()).with_path(&ctx.path + i);
-            let result_ctx = self.pipeline.process(item_ctx).await;
+            let result_ctx = self.pipeline.process(item_ctx).await?;
             retval.push(result_ctx.value.clone());
         }
         Ok(ctx.with_value(Value::Vec(retval)))

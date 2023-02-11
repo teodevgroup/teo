@@ -23,9 +23,9 @@ impl RegexReplaceModifier {
 #[async_trait]
 impl Item for RegexReplaceModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        let arg = self.format.resolve(ctx.clone()).await;
+        let arg = self.format.resolve(ctx.clone()).await?;
         let regex = arg.as_regexp().unwrap();
-        let s_arg = self.substitute.resolve(ctx.clone()).await;
+        let s_arg = self.substitute.resolve(ctx.clone()).await?;
         let substitute = s_arg.as_str().unwrap();
         match &ctx.value {
             Value::String(s) => ctx.with_value(Value::String(regex.replace(s, substitute).to_string())),

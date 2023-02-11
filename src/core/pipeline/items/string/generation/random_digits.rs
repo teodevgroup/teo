@@ -21,7 +21,7 @@ impl RandomDigitsModifier {
 #[async_trait]
 impl Item for RandomDigitsModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        let len = self.len.resolve(ctx.clone()).await;
+        let len = self.len.resolve(ctx.clone()).await?;
         ctx.with_value(Value::String(generate(len.as_usize().unwrap(), "1234567890")))
     }
 }

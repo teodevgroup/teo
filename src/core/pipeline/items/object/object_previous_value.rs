@@ -18,7 +18,7 @@ impl ObjectPreviousValueModifier {
 #[async_trait]
 impl Item for ObjectPreviousValueModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        let key = self.key.resolve(ctx.clone()).await;
+        let key = self.key.resolve(ctx.clone()).await?;
         let value = ctx.object.as_ref().unwrap().get_previous_value(key.str_from_string_or_raw_enum_choice().unwrap()).unwrap();
         ctx.with_value(value).with_path(path![key.as_str().unwrap().to_string()])
     }

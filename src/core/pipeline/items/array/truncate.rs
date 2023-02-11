@@ -20,11 +20,11 @@ impl TruncateModifier {
 #[async_trait]
 impl Item for TruncateModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        let argument = self.argument.resolve(ctx.clone()).await.as_usize().unwrap();
+        let argument = self.argument.resolve(ctx.clone()).await?.as_usize().unwrap();
         match &ctx.value {
-            Value::String(s) => ctx.with_value(Value::String(s.chars().take(argument).collect())),
-            Value::Vec(v) => ctx.with_value(Value::Vec(v.iter().take(argument).map(|v| v.clone()).collect())),
-            _ => ctx.internal_server_error("Value is not string or vector.")
+            Value::String(s) => Ok(ctx.with_value(Value::String(s.chars().take(argument).collect()))),
+            Value::Vec(v) => Ok(ctx.with_value(Value::Vec(v.iter().take(argument).map(|v| v.clone()).collect()))),
+            _ => ctx.internal_server_error("truncate: value is not vector")
         }
     }
 }

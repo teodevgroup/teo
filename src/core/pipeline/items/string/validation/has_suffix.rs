@@ -20,7 +20,7 @@ impl Item for HasSuffixModifier {
         match ctx.value.as_str() {
             None => ctx.internal_server_error("Value is not string."),
             Some(s) => {
-                let arg = self.suffix.resolve(ctx.clone()).await;
+                let arg = self.suffix.resolve(ctx.clone()).await?;
                 let suffix = arg.as_str().unwrap();
                 if s.ends_with(suffix) {
                     ctx

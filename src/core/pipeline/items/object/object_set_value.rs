@@ -21,8 +21,8 @@ impl ObjectSetValueModifier {
 #[async_trait]
 impl Item for ObjectSetValueModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        let key = self.key.resolve(ctx.clone()).await;
-        let value = self.value.resolve(ctx.clone()).await;
+        let key = self.key.resolve(ctx.clone()).await?;
+        let value = self.value.resolve(ctx.clone()).await?;
         ctx.object.as_ref().unwrap().set_value(key.as_str().unwrap(), value).unwrap();
         ctx
     }

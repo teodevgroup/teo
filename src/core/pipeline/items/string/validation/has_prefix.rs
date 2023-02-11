@@ -20,7 +20,7 @@ impl Item for HasPrefixModifier {
         match ctx.value.as_str() {
             None => ctx.internal_server_error("Value is not string."),
             Some(s) => {
-                let arg = self.prefix.resolve(ctx.clone()).await;
+                let arg = self.prefix.resolve(ctx.clone()).await?;
                 let prefix = arg.as_str().unwrap();
                 if s.starts_with(prefix) {
                     ctx

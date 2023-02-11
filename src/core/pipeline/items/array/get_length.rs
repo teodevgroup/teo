@@ -20,9 +20,9 @@ impl Item for GetLengthModifier {
             Value::String(s) => s.len(),
             Value::Vec(v) => v.len(),
             _ => {
-                return ctx.internal_server_error("Value doesn't have length.");
+                return Err(ctx.internal_server_error("getLength: value is not vector"));
             }
         };
-        ctx.with_value(Value::I64(len as i64))
+        Ok(ctx.with_value(Value::I32(len as i32)))
     }
 }

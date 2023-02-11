@@ -20,7 +20,7 @@ impl Item for SplitModifier {
         match ctx.value.as_str() {
             None => ctx.internal_server_error("Value is not string."),
             Some(s) => {
-                let arg = self.separator.resolve(ctx.clone()).await;
+                let arg = self.separator.resolve(ctx.clone()).await?;
                 let separator = arg.as_str().unwrap();
                 ctx.with_value(Value::Vec(s.split(separator).map(|s| Value::String(s.to_string())).collect::<Vec<Value>>()))
             }

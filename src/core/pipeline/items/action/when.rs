@@ -25,9 +25,9 @@ impl Item for WhenModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let object_action = ctx.object.as_ref().unwrap().action();
         if object_action.passes(&self.actions) {
-            self.pipeline.process(ctx.clone()).await
+            Ok(ctx.with_value(self.pipeline.process(ctx.clone()).await?))
         } else {
-            ctx
+            Ok(ctx)
         }
     }
 }

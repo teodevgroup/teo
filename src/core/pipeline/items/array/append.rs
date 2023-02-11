@@ -19,7 +19,7 @@ impl AppendModifier {
 impl Item for AppendModifier {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        let argument = self.argument.resolve(ctx.clone()).await;
+        let argument = self.argument.resolve(ctx.clone()).await?;
         match &ctx.value {
             Value::String(s) => {
                 match argument.as_str() {

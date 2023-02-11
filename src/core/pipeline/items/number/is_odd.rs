@@ -16,11 +16,11 @@ impl IsOddModifier {
 impl Item for IsOddModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.get_value() {
-            Value::I32(v) => if v % 2 == 1 { ctx } else { ctx.internal_server_error("Value is not odd.") },
-            Value::I64(v) => if v % 2 == 1 { ctx } else { ctx.internal_server_error("Value is not odd.") },
-            Value::F32(v) => if v % 2.0 == 1.0 { ctx } else { ctx.internal_server_error("Value is not odd.") },
-            Value::F64(v) => if v % 2.0 == 1.0 { ctx } else { ctx.internal_server_error("Value is not odd.") },
-            _ => ctx.internal_server_error("Value is not number.")
+            Value::I32(v) => if v % 2 == 1 { Ok(ctx) } else { Err(ctx.with_invalid("value is not odd")) },
+            Value::I64(v) => if v % 2 == 1 { Ok(ctx) } else { Err(ctx.with_invalid("value is not odd")) },
+            Value::F32(v) => if v % 2.0 == 1.0 { Ok(ctx) } else { Err(ctx.with_invalid("value is not odd")) },
+            Value::F64(v) => if v % 2.0 == 1.0 { Ok(ctx) } else { Err(ctx.with_invalid("value is not odd")) },
+            _ => Err(ctx.internal_server_error("isOdd: value is not number"))
         }
     }
 }

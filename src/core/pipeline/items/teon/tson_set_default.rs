@@ -20,7 +20,7 @@ impl<'a> TsonSetDefaultModifier<'a> {
 #[async_trait]
 impl Item for TsonSetDefaultModifier<'_> {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        let argument = self.argument.resolve(ctx.clone()).await;
+        let argument = self.argument.resolve(ctx.clone()).await?;
         match &ctx.value {
             Value::HashMap(_) => {
                 ctx.with_value(TsonUtils::value_set(&ctx.value, self.path.clone(), &argument).unwrap())

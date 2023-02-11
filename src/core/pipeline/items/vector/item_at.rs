@@ -21,7 +21,7 @@ impl Item for ItemAtModifier {
         match ctx.value.as_vec() {
             None => Err(ctx.internal_server_error("itemAt: value is not vector")),
             Some(v) => {
-                let arg = self.index.resolve(ctx.clone()).await;
+                let arg = self.index.resolve(ctx.clone()).await?;
                 let index = arg.as_i32().unwrap() as usize;
                 let new_path = ctx.path.as_ref() + index as usize;
                 Ok(ctx.with_value(v.get(index).unwrap().clone())

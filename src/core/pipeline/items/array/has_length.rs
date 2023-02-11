@@ -17,7 +17,7 @@ impl HasLengthModifier {
 #[async_trait]
 impl Item for HasLengthModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        let argument = self.argument.resolve(ctx.clone()).await;
+        let argument = self.argument.resolve(ctx.clone()).await?;
         let (lower, upper, closed) = if argument.is_number() {
             let n = self.argument.as_usize().unwrap();
             (n, n, true)

@@ -17,7 +17,7 @@ impl EqModifier {
 #[async_trait]
 impl Item for EqModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        let rhs = self.argument.resolve(ctx.clone()).await;
+        let rhs = self.argument.resolve(ctx.clone()).await?;
         if rhs == ctx.value {
             Ok(ctx)
         } else {
