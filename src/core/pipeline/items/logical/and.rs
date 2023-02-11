@@ -21,11 +21,11 @@ impl AndModifier {
 impl Item for AndModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         if !ctx.value.is_null() {
-            ctx
+            Ok(ctx)
         } else {
             match &self.value {
-                Value::Pipeline(p) => p.process(ctx).await,
-                _ => ctx.with_value(self.value.clone()),
+                Value::Pipeline(p) => Ok(ctx.with_value(p.process(ctx).await?)),
+                _ => Ok(ctx.with_value(self.value.clone())),
             }
         }
     }

@@ -17,6 +17,6 @@ impl CUIDModifier {
 #[async_trait]
 impl Item for CUIDModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        context.with_value(Value::String(cuid().unwrap()))
+        Ok(ctx.with_value(Value::String(cuid().unwrap())))
     }
 }

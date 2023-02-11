@@ -531,8 +531,8 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     let pipeline = auth_by_arg.as_pipeline().unwrap();
     let _action_by_input = by_value.unwrap();
     let ctx = Ctx::initial_state_with_object(obj.clone());
-    let final_ctx = pipeline.process(ctx).await;
-    return match final_ctx.get_value_internal() {
+    let final_ctx = pipeline.process(ctx).await?;
+    return match final_ctx.get_value() {
         Err(err) => {
             return Error::unexpected_input_value_with_reason("Authentication failed.", path!["credentials", by_key.unwrap()]).into();
         }

@@ -214,7 +214,7 @@ impl Field {
         let mut new_ctx = ctx.clone();
         match self.field_type() {
             FieldType::Vec(inner) => {
-                let val = &new_ctx.get_value_internal().unwrap();
+                let val = &new_ctx.get_value().unwrap();
                 let arr = val.as_vec();
                 if !arr.is_none() {
                     let arr = arr.unwrap();
@@ -222,7 +222,7 @@ impl Field {
                     for (i, _v) in arr.iter().enumerate() {
                         let key_path = &ctx.path + i;
                         let arr_item_ctx = ctx.with_path(key_path);
-                        new_arr.push(inner.on_save_pipeline.process(arr_item_ctx).await.get_value_internal().unwrap());
+                        new_arr.push(inner.on_save_pipeline.process(arr_item_ctx).await.get_value().unwrap());
                     }
                     new_ctx = new_ctx.with_value(Value::Vec(new_arr));
                 }
@@ -236,7 +236,7 @@ impl Field {
         let mut new_ctx = ctx.clone();
         match self.field_type() {
             FieldType::Vec(inner) => {
-                let val = &new_ctx.get_value_internal().unwrap();
+                let val = &new_ctx.get_value().unwrap();
                 let arr = val.as_vec();
                 if !arr.is_none() {
                     let arr = arr.unwrap();
@@ -244,7 +244,7 @@ impl Field {
                     for (i, _v) in arr.iter().enumerate() {
                         let key_path = &ctx.path + i;
                         let arr_item_ctx = ctx.with_path(key_path);
-                        new_arr.push(inner.on_output_pipeline.process(arr_item_ctx).await.get_value_internal().unwrap());
+                        new_arr.push(inner.on_output_pipeline.process(arr_item_ctx).await.get_value().unwrap());
                     }
                     new_ctx = new_ctx.with_value(Value::Vec(new_arr));
                 }

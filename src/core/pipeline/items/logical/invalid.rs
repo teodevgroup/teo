@@ -15,6 +15,6 @@ impl InvalidModifier {
 #[async_trait]
 impl Item for InvalidModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        ctx.internal_server_error("Value is invalid.")
+        Err(ctx.with_invalid("value is invalid"))
     }
 }

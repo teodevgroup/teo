@@ -18,12 +18,12 @@ impl BcryptSaltModifier {
 #[async_trait]
 impl Item for BcryptSaltModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        match context.value.as_str() {
+        match ctx.value.as_str() {
             Some(s) => {
-                context.with_value(Value::String(hash(s, DEFAULT_COST).unwrap()))
+                Ok(ctx.with_value(Value::String(hash(s, DEFAULT_COST).unwrap())))
             }
             None => {
-                context.with_validity(Invalid("Value is not string.".to_owned()))
+                Err(ctx.internal_server_error("bcryptSalt: value is not string"))
             }
         }
     }

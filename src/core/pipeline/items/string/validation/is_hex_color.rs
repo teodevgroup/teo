@@ -4,6 +4,7 @@ use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::pipeline::ctx::validity::Validity::Invalid;
 use crate::core::result::Result;
+
 #[derive(Debug, Clone)]
 pub struct IsHexColorModifier {
     regex: Regex
@@ -23,13 +24,13 @@ impl Item for IsHexColorModifier {
         match ctx.value.as_str() {
             Some(s) => {
                 if self.regex.is_match(s) {
-                    ctx
+                    Ok(ctx)
                 } else {
-                    ctx.with_validity(Invalid("String is not hex color.".to_owned()))
+                    Err(ctx.with_invalid("String is not hex color."))
                 }
             }
             None => {
-                ctx.with_validity(Invalid("Value is not string.".to_owned()))
+                Err(ctx.internal_server_error("isHexColor: value is not string"))
             }
         }
     }

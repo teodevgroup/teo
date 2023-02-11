@@ -362,7 +362,7 @@ impl Object {
         }
         let getter = property.getter.as_ref().unwrap();
         let ctx = Ctx::initial_state_with_object(self.clone());
-        let value = getter.process(ctx).await.get_value_internal()?;
+        let value = getter.process(ctx).await.get_value()?;
         if property.cached {
             self.inner.cached_property_map.lock().unwrap().insert(key.as_ref().to_string(), value.clone());
         }

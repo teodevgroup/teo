@@ -17,39 +17,39 @@ impl HasLengthModifier {
 #[async_trait]
 impl Item for HasLengthModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        let argument = self.argument.resolve(context.clone()).await;
+        let argument = self.argument.resolve(ctx.clone()).await;
         let (lower, upper, closed) = if argument.is_number() {
             let n = self.argument.as_usize().unwrap();
             (n, n, true)
         } else if argument.is_range() {
             let r = self.argument.as_range().unwrap();
-            let start = r.start.resolve(context.clone()).await.as_usize().unwrap();
-            let end = r.end.resolve(context.clone()).await.as_usize().unwrap();
+            let start = r.start.resolve(ctx.clone()).await.as_usize().unwrap();
+            let end = r.end.resolve(ctx.clone()).await.as_usize().unwrap();
             (start, end, r.closed)
         } else {
             panic!()
         };
-        let len = match &context.value {
+        let len = match &ctx.value {
             Value::String(s) => s.len(),
             Value::Vec(v) => v.len(),
             _ => {
-                return context.invalid("Value doesn't have length.");
+                return ctx.invalid("Value doesn't have length.");
             }
         };
         if len < lower {
-            return context.invalid(format!("Value length is less than {lower}."));
+            return ctx.invalid(format!("Value length is less than {lower}."));
         }
         if closed {
             if len > upper {
-                context.invalid(format!("Value length is greater than {upper}."))
+                Err(ctx.invalid(format!("Value length is greater than {upper}.")))
             } else {
-                context.clone()
+                Ok(ctx.clone())
             }
         } else {
             if len >= upper {
-                context.invalid(format!("Value length is greater than or equal to {upper}."))
+                Err(ctx.invalid(format!("Value length is greater than or equal to {upper}.")))
             } else {
-                context.clone()
+                Ok(ctx.clone())
             }
         }
     }

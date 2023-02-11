@@ -23,23 +23,19 @@ impl BcryptVerifyModifier {
 impl Item for BcryptVerifyModifier {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        match context.value.as_str() {
+        match ctx.value.as_str() {
             None => {
-                context.with_validity(Invalid("Value is not string.".to_owned()))
+                Err(ctx.internal_server_error("bcryptVerify: value is not string"))
             }
-            Some(s) => {
-                let result = self.argument.process(context.clone()).await;
-                if result.invalid_reason().is_some() {
-                    return context.invalid(result.invalid_reason().unwrap());
-                }
-                let hash = result.value;
-                match hash.as_str() {
-                    None => context.with_validity(Invalid("Hash argument is not string.".to_owned())),
-                    Some(h) => {
-                        if verify(s, h).unwrap() {
-                            context.with_value(Value::Null)
+            Some(string) => {
+                let argument = self.argument.process(ctx.clone()).await?;
+                match argument.as_str() {
+                    None => Err(ctx.internal_server_error("bcryptVerify: argument is not string")),
+                    Some(hash) => {
+                        if verify(string, hash).unwrap() {
+                            Ok(ctx.clone())
                         } else {
-                            context.with_validity(Invalid("Value is not correct.".to_owned()))
+                            Err(ctx.with_invalid("value is not correct"))
                         }
                     }
                 }

@@ -17,6 +17,6 @@ impl UUIDModifier {
 #[async_trait]
 impl Item for UUIDModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        context.with_value(Value::String(Uuid::new_v4().to_string()))
+        Ok(ctx.with_value(Value::String(Uuid::new_v4().to_string())))
     }
 }

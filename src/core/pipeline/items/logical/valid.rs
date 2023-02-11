@@ -17,6 +17,6 @@ impl ValidModifier {
 #[async_trait]
 impl Item for ValidModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        ctx
+        Ok(ctx)
     }
 }

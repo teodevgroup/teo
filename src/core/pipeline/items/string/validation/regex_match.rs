@@ -20,18 +20,18 @@ impl RegexMatchModifier {
 #[async_trait]
 impl Item for RegexMatchModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        let arg_value = self.argument.resolve(ctx.clone()).await;
+        let arg_value = self.argument.resolve(ctx.clone()).await?;
         let regex = arg_value.as_regexp().unwrap();
-        match &ctx.value {
+        match ctx.get_value() {
             Value::String(s) => {
-                if regex.is_match(s) {
-                    ctx.clone()
+                if regex.is_match(&s) {
+                    Ok(ctx.clone())
                 } else {
-                    ctx.internal_server_error(format!("Value does not match '{regex}'"))
+                    Err(ctx.internal_server_error("value does not match regex"))
                 }
             }
             _ => {
-                ctx.internal_server_error("Value is not string.")
+                Err(ctx.internal_server_error("regexMatch: value is not string"))
             }
         }
     }
