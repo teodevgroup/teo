@@ -5,16 +5,16 @@ use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Copy, Clone)]
-pub struct RoundModifier {}
+pub struct RoundItem {}
 
-impl RoundModifier {
+impl RoundItem {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Item for RoundModifier {
+impl Item for RoundItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         Ok(match ctx.get_value() {
             Value::F32(v) => ctx.with_value(Value::F32(v.round())),

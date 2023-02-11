@@ -5,11 +5,11 @@ use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Clone)]
-pub struct TruncateModifier {
+pub struct TruncateItem {
     argument: Value,
 }
 
-impl TruncateModifier {
+impl TruncateItem {
     pub fn new(argument: impl Into<Value>) -> Self {
         Self {
             argument: argument.into(),
@@ -18,7 +18,7 @@ impl TruncateModifier {
 }
 
 #[async_trait]
-impl Item for TruncateModifier {
+impl Item for TruncateItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?.as_usize().unwrap();
         match &ctx.value {

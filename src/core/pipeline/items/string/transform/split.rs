@@ -4,18 +4,18 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct SplitModifier {
+pub struct SplitItem {
     separator: Value
 }
 
-impl SplitModifier {
+impl SplitItem {
     pub fn new(separator: impl Into<Value>) -> Self {
         Self { separator: separator.into() }
     }
 }
 
 #[async_trait]
-impl Item for SplitModifier {
+impl Item for SplitItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
             None => Err(ctx.internal_server_error("split: value is not string")),

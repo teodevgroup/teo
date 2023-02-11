@@ -6,19 +6,19 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::utils::TsonUtils;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct TsonSetModifier<'a> {
+pub struct TsonSetItem<'a> {
     path: KeyPath<'a>,
     argument: Value
 }
 
-impl<'a> TsonSetModifier<'a> {
+impl<'a> TsonSetItem<'a> {
     pub fn new(path: KeyPath<'a>, argument: impl Into<Value>) -> Self {
         Self { path, argument: argument.into() }
     }
 }
 
 #[async_trait]
-impl Item for TsonSetModifier<'_> {
+impl Item for TsonSetItem<'_> {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?;
         match &ctx.value {

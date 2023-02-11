@@ -6,20 +6,20 @@ use crate::prelude::Value;
 
 
 #[derive(Debug, Clone)]
-pub struct NotModifier {
+pub struct NotItem {
     value: Value
 }
 
-impl NotModifier {
+impl NotItem {
     pub fn new(value: Value) -> Self {
-        return NotModifier {
+        return NotItem {
             value
         };
     }
 }
 
 #[async_trait]
-impl Item for NotModifier {
+impl Item for NotItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match &self.value {
             Value::Pipeline(p) => if p.process(ctx.clone()).await.is_ok() {

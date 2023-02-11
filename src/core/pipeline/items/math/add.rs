@@ -5,18 +5,18 @@ use crate::prelude::Value;
 use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
-pub struct AddModifier {
+pub struct AddItem {
     argument: Value
 }
 
-impl AddModifier {
+impl AddItem {
     pub fn new(argument: Value) -> Self {
         Self { argument }
     }
 }
 
 #[async_trait]
-impl Item for AddModifier {
+impl Item for AddItem {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?;

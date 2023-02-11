@@ -22,29 +22,29 @@ Fut: Future<Output = ()> + Send + Sync + 'static {
 }
 
 #[derive(Clone)]
-pub struct PerformModifier<T> {
+pub struct PerformItem<T> {
     callback: Arc<dyn PerformArgument<T>>
 }
 
-impl<T> Debug for PerformModifier<T> {
+impl<T> Debug for PerformItem<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut result = f.debug_struct("PerformModifier");
+        let mut result = f.debug_struct("PerformItem");
         result.finish()
     }
 }
 
-impl<T> PerformModifier<T> {
-    pub fn new<F>(f: F) -> PerformModifier<T> where
+impl<T> PerformItem<T> {
+    pub fn new<F>(f: F) -> PerformItem<T> where
         T: From<Value> + Send + Sync,
         F: PerformArgument<T> + 'static {
-        return PerformModifier {
+        return PerformItem {
             callback: Arc::new(f)
         }
     }
 }
 
 #[async_trait]
-impl<T: From<Value> + Send + Sync> Item for PerformModifier<T> {
+impl<T: From<Value> + Send + Sync> Item for PerformItem<T> {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let cb = self.callback.clone();
         cb.call((&ctx).value.clone().into()).await;
@@ -52,5 +52,5 @@ impl<T: From<Value> + Send + Sync> Item for PerformModifier<T> {
     }
 }
 
-unsafe impl<T> Send for PerformModifier<T> {}
-unsafe impl<T> Sync for PerformModifier<T> {}
+unsafe impl<T> Send for PerformItem<T> {}
+unsafe impl<T> Sync for PerformItem<T> {}

@@ -24,30 +24,30 @@ impl<T, O, F, Fut> CompareArgument<T, O> for F where
 }
 
 #[derive(Clone)]
-pub struct CompareModifier<T, O> {
+pub struct CompareItem<T, O> {
     callback: Arc<dyn CompareArgument<T, O>>
 }
 
-impl<T, O> Debug for CompareModifier<T, O> {
+impl<T, O> Debug for CompareItem<T, O> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut result = f.debug_struct("CompareModifier");
+        let mut result = f.debug_struct("CompareItem");
         result.finish()
     }
 }
 
-impl<T, O> CompareModifier<T, O> {
-    pub fn new<F>(f: F) -> CompareModifier<T, O> where
+impl<T, O> CompareItem<T, O> {
+    pub fn new<F>(f: F) -> CompareItem<T, O> where
         T: From<Value> + Send + Sync,
         O: Into<Validity> + Send + Sync,
         F: CompareArgument<T, O> + 'static {
-        return CompareModifier {
+        return CompareItem {
             callback: Arc::new(f)
         }
     }
 }
 
 #[async_trait]
-impl<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync> Item for CompareModifier<T, O> {
+impl<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync> Item for CompareItem<T, O> {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         if ctx.get_object()?.is_new() {
@@ -77,5 +77,5 @@ impl<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync> Item for Com
     }
 }
 
-unsafe impl<T, O> Send for CompareModifier<T, O> {}
-unsafe impl<T, O> Sync for CompareModifier<T, O> {}
+unsafe impl<T, O> Send for CompareItem<T, O> {}
+unsafe impl<T, O> Sync for CompareItem<T, O> {}

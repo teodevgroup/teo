@@ -3,16 +3,16 @@ use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 #[derive(Debug, Copy, Clone)]
-pub struct IsAlphanumericModifier {}
+pub struct IsAlphanumericItem {}
 
-impl IsAlphanumericModifier {
+impl IsAlphanumericItem {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Item for IsAlphanumericModifier {
+impl Item for IsAlphanumericItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
             Some(s) => {

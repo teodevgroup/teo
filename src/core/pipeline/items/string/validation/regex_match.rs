@@ -5,11 +5,11 @@ use crate::core::teon::Value;
 use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Clone)]
-pub struct RegexMatchModifier {
+pub struct RegexMatchItem {
     argument: Value
 }
 
-impl RegexMatchModifier {
+impl RegexMatchItem {
     pub fn new(format: impl Into<Value>) -> Self {
         Self {
             argument: format.into()
@@ -18,7 +18,7 @@ impl RegexMatchModifier {
 }
 
 #[async_trait]
-impl Item for RegexMatchModifier {
+impl Item for RegexMatchItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let arg_value = self.argument.resolve(ctx.clone()).await?;
         let regex = arg_value.as_regexp().unwrap();

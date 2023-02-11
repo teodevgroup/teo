@@ -4,16 +4,16 @@ use crate::core::teon::Value;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 #[derive(Debug, Copy, Clone)]
-pub struct ReverseModifier {}
+pub struct ReverseItem {}
 
-impl ReverseModifier {
+impl ReverseItem {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Item for ReverseModifier {
+impl Item for ReverseItem {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match &ctx.value {

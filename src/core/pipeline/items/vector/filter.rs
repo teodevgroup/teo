@@ -6,20 +6,20 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct FilterModifier {
+pub struct FilterItem {
     pipeline: Pipeline
 }
 
-impl FilterModifier {
+impl FilterItem {
     pub fn new(pipeline: Pipeline) -> Self {
-        return FilterModifier {
+        return FilterItem {
             pipeline
         };
     }
 }
 
 #[async_trait]
-impl Item for FilterModifier {
+impl Item for FilterItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let mut retval = Vec::new();
         for (i, val) in ctx.value.as_vec().unwrap().iter().enumerate() {

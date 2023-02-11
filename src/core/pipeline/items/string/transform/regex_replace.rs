@@ -6,14 +6,14 @@ use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Clone)]
-pub struct RegexReplaceModifier {
+pub struct RegexReplaceItem {
     format: Value,
     substitute: Value,
 }
 
-impl RegexReplaceModifier {
+impl RegexReplaceItem {
     pub fn new(format: impl Into<Value>, substitute: impl Into<Value>) -> Self {
-        return RegexReplaceModifier {
+        return RegexReplaceItem {
             format: format.into(),
             substitute: substitute.into(),
         };
@@ -21,7 +21,7 @@ impl RegexReplaceModifier {
 }
 
 #[async_trait]
-impl Item for RegexReplaceModifier {
+impl Item for RegexReplaceItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let arg = self.format.resolve(ctx.clone()).await?;
         let regex = arg.as_regexp().unwrap();

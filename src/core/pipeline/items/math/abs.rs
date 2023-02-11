@@ -5,16 +5,16 @@ use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Copy, Clone)]
-pub struct AbsModifier {}
+pub struct AbsItem {}
 
-impl AbsModifier {
+impl AbsItem {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Item for AbsModifier {
+impl Item for AbsItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         Ok(match ctx.get_value() {
             Value::I32(v) => ctx.with_value(Value::I32(v.abs())),

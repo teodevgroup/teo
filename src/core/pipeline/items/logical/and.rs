@@ -7,18 +7,18 @@ use crate::prelude::Value;
 
 
 #[derive(Debug, Clone)]
-pub struct AndModifier {
+pub struct AndItem {
     value: Value
 }
 
-impl AndModifier {
+impl AndItem {
     pub fn new(value: Value) -> Self {
         Self { value }
     }
 }
 
 #[async_trait]
-impl Item for AndModifier {
+impl Item for AndItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         if !ctx.get_value().is_null() {
             Ok(ctx.clone())

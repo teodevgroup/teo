@@ -4,18 +4,18 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct PowModifier {
+pub struct PowItem {
     argument: Value
 }
 
-impl PowModifier {
+impl PowItem {
     pub fn new(argument: impl Into<Value>) -> Self {
         Self { argument: argument.into() }
     }
 }
 
 #[async_trait]
-impl Item for PowModifier {
+impl Item for PowItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?;
         let exp = argument.as_i32().unwrap() as u32;

@@ -5,16 +5,16 @@ use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Copy, Clone)]
-pub struct CeilModifier {}
+pub struct CeilItem {}
 
-impl CeilModifier {
+impl CeilItem {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Item for CeilModifier {
+impl Item for CeilItem {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         Ok(match ctx.get_value() {

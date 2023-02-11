@@ -4,16 +4,16 @@ use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Copy, Clone)]
-pub struct ConnectIdentityModifier {}
+pub struct ConnectIdentityItem {}
 
-impl ConnectIdentityModifier {
+impl ConnectIdentityItem {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Item for ConnectIdentityModifier {
+impl Item for ConnectIdentityItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         Ok(ctx)
         // if let Some(identity) = ctx.object.as_ref().unwrap().env().trigger().as_identity() {

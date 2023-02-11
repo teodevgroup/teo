@@ -5,18 +5,18 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct RootModifier {
+pub struct RootItem {
     argument: Value
 }
 
-impl RootModifier {
+impl RootItem {
     pub fn new(argument: impl Into<Value>) -> Self {
         Self { argument: argument.into() }
     }
 }
 
 #[async_trait]
-impl Item for RootModifier {
+impl Item for RootItem {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?;

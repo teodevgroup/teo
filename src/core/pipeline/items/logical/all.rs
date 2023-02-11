@@ -5,18 +5,18 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
-pub struct AllModifier {
+pub struct AllItem {
     pipelines: Vec<Pipeline>
 }
 
-impl AllModifier {
+impl AllItem {
     pub fn new(pipelines: Vec<Pipeline>) -> Self {
         Self { pipelines }
     }
 }
 
 #[async_trait]
-impl Item for AllModifier {
+impl Item for AllItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         for pipeline in &self.pipelines {
             pipeline.process(ctx.clone()).await?;

@@ -7,20 +7,20 @@ use crate::core::teon::Value;
 use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
-pub struct PassedModifier {
+pub struct PassedItem {
     pipeline: Pipeline
 }
 
-impl PassedModifier {
+impl PassedItem {
     pub fn new(pipeline: Pipeline) -> Self {
-        return PassedModifier {
+        return PassedItem {
             pipeline
         };
     }
 }
 
 #[async_trait]
-impl Item for PassedModifier {
+impl Item for PassedItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match self.pipeline.process(ctx.clone()).await {
             Ok(_) => Ok(ctx.with_value(Value::Bool(true))),

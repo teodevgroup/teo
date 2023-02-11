@@ -4,16 +4,16 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;
 use crate::core::result::Result;
 #[derive(Debug, Copy, Clone)]
-pub struct IsOddModifier {}
+pub struct IsOddItem {}
 
-impl IsOddModifier {
+impl IsOddItem {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Item for IsOddModifier {
+impl Item for IsOddItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.get_value() {
             Value::I32(v) => if v % 2 == 1 { Ok(ctx) } else { Err(ctx.with_invalid("value is not odd")) },

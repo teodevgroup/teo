@@ -4,18 +4,18 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct LtModifier {
+pub struct LtItem {
     argument: Value
 }
 
-impl LtModifier {
+impl LtItem {
     pub fn new(argument: impl Into<Value>) -> Self {
         Self { argument: argument.into() }
     }
 }
 
 #[async_trait]
-impl Item for LtModifier {
+impl Item for LtItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let rhs = self.argument.resolve(ctx.clone()).await?;
         if ctx.value < rhs {

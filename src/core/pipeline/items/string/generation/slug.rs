@@ -6,16 +6,16 @@ use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Copy, Clone)]
-pub struct SlugModifier {}
+pub struct SlugItem {}
 
-impl SlugModifier {
+impl SlugItem {
     pub fn new() -> Self {
-        SlugModifier {}
+        SlugItem {}
     }
 }
 
 #[async_trait]
-impl Item for SlugModifier {
+impl Item for SlugItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         Ok(ctx.with_value(Value::String(slug().unwrap())))
     }

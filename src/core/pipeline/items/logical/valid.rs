@@ -6,16 +6,16 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 
 #[derive(Debug, Copy, Clone)]
-pub struct ValidModifier { }
+pub struct ValidItem { }
 
-impl ValidModifier {
+impl ValidItem {
     pub fn new() -> Self {
         Self { }
     }
 }
 
 #[async_trait]
-impl Item for ValidModifier {
+impl Item for ValidItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         Ok(ctx)
     }

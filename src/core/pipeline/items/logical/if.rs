@@ -6,22 +6,22 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct IfModifier {
+pub struct IfItem {
     cond: Value,
     then: Option<Value>,
     r#else: Option<Value>,
 }
 
-impl IfModifier {
+impl IfItem {
     pub fn new(cond: Value, then: Option<Value>, r#else: Option<Value>) -> Self {
-        return IfModifier {
+        return IfItem {
             cond, then, r#else,
         };
     }
 }
 
 #[async_trait]
-impl Item for IfModifier {
+impl Item for IfItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let mut valid = false;
         match &self.cond {

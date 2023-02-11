@@ -5,19 +5,19 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct PadEndModifier {
+pub struct PadEndItem {
     char: char,
     width: Value,
 }
 
-impl PadEndModifier {
+impl PadEndItem {
     pub fn new(char: char, width: impl Into<Value>) -> Self {
         Self { char, width: width.into() }
     }
 }
 
 #[async_trait]
-impl Item for PadEndModifier {
+impl Item for PadEndItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
             None => Err(ctx.internal_server_error("padEnd: value is not string")),

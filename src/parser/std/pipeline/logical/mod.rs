@@ -1,22 +1,22 @@
 use std::sync::Arc;
 use crate::core::pipeline::item::Item;
-use crate::core::pipeline::items::logical::all::AllModifier;
-use crate::core::pipeline::items::logical::and::AndModifier;
-use crate::core::pipeline::items::logical::any::AnyModifier;
-use crate::core::pipeline::items::logical::valid::ValidModifier;
-use crate::core::pipeline::items::logical::invalid::InvalidModifier;
-use crate::core::pipeline::items::logical::not::NotModifier;
-use crate::core::pipeline::items::logical::or::OrModifier;
-use crate::core::pipeline::items::logical::passed::PassedModifier;
-use crate::core::pipeline::items::logical::r#if::IfModifier;
+use crate::core::pipeline::items::logical::all::AllItem;
+use crate::core::pipeline::items::logical::and::AndItem;
+use crate::core::pipeline::items::logical::any::AnyItem;
+use crate::core::pipeline::items::logical::valid::ValidItem;
+use crate::core::pipeline::items::logical::invalid::InvalidItem;
+use crate::core::pipeline::items::logical::not::NotItem;
+use crate::core::pipeline::items::logical::or::OrItem;
+use crate::core::pipeline::items::logical::passed::PassedItem;
+use crate::core::pipeline::items::logical::r#if::IfItem;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn valid(_args: Vec<Argument>) -> Arc<dyn Item> {
-    Arc::new(ValidModifier::new())
+    Arc::new(ValidItem::new())
 }
 
 pub(crate) fn invalid(_args: Vec<Argument>) -> Arc<dyn Item> {
-    Arc::new(InvalidModifier::new())
+    Arc::new(InvalidItem::new())
 }
 
 pub(crate) fn if_modifier(args: Vec<Argument>) -> Arc<dyn Item> {
@@ -46,7 +46,7 @@ pub(crate) fn if_modifier(args: Vec<Argument>) -> Arc<dyn Item> {
             }
         }
     }
-    Arc::new(IfModifier::new(cond.clone(), then, r#else))
+    Arc::new(IfItem::new(cond.clone(), then, r#else))
 }
 
 
@@ -58,7 +58,7 @@ pub(crate) fn all_modifier(args: Vec<Argument>) -> Arc<dyn Item> {
     for arg in args.iter() {
         pipelines.push(arg.resolved.as_ref().unwrap().as_value().unwrap().as_pipeline().unwrap().clone());
     }
-    Arc::new(AllModifier::new(pipelines))
+    Arc::new(AllItem::new(pipelines))
 }
 
 
@@ -70,7 +70,7 @@ pub(crate) fn any_modifier(args: Vec<Argument>) -> Arc<dyn Item> {
     for arg in args.iter() {
         pipelines.push(arg.resolved.as_ref().unwrap().as_value().unwrap().as_pipeline().unwrap().clone());
     }
-    Arc::new(AnyModifier::new(pipelines))
+    Arc::new(AnyItem::new(pipelines))
 }
 
 pub(crate) fn not_modifier(args: Vec<Argument>) -> Arc<dyn Item> {
@@ -78,7 +78,7 @@ pub(crate) fn not_modifier(args: Vec<Argument>) -> Arc<dyn Item> {
         panic!("`not` takes exactly 1 argument.")
     }
     let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap().clone();
-    Arc::new(NotModifier::new(value))
+    Arc::new(NotItem::new(value))
 }
 
 pub(crate) fn passed(args: Vec<Argument>) -> Arc<dyn Item> {
@@ -86,7 +86,7 @@ pub(crate) fn passed(args: Vec<Argument>) -> Arc<dyn Item> {
         panic!("`passed` takes exactly 1 argument.")
     }
     let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap().as_pipeline().unwrap().clone();
-    Arc::new(PassedModifier::new(value))
+    Arc::new(PassedItem::new(value))
 }
 
 pub(crate) fn and_modifier(args: Vec<Argument>) -> Arc<dyn Item> {
@@ -94,7 +94,7 @@ pub(crate) fn and_modifier(args: Vec<Argument>) -> Arc<dyn Item> {
         panic!("`and` takes exactly 1 argument.")
     }
     let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap().clone();
-    Arc::new(AndModifier::new(value))
+    Arc::new(AndItem::new(value))
 }
 
 pub(crate) fn or_modifier(args: Vec<Argument>) -> Arc<dyn Item> {
@@ -102,5 +102,5 @@ pub(crate) fn or_modifier(args: Vec<Argument>) -> Arc<dyn Item> {
         panic!("`or` takes exactly 1 argument.")
     }
     let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap().clone();
-    Arc::new(OrModifier::new(value))
+    Arc::new(OrItem::new(value))
 }

@@ -4,18 +4,18 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct EqModifier {
+pub struct EqItem {
     argument: Value
 }
 
-impl EqModifier {
+impl EqItem {
     pub fn new(argument: impl Into<Value>) -> Self {
         Self { argument: argument.into() }
     }
 }
 
 #[async_trait]
-impl Item for EqModifier {
+impl Item for EqItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let rhs = self.argument.resolve(ctx.clone()).await?;
         if rhs == ctx.value {

@@ -5,18 +5,18 @@ use crate::core::teon::Value;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct AppendModifier {
+pub struct AppendItem {
     argument: Value
 }
 
-impl AppendModifier {
+impl AppendItem {
     pub fn new(argument: impl Into<Value>) -> Self {
         Self { argument: argument.into() }
     }
 }
 
 #[async_trait]
-impl Item for AppendModifier {
+impl Item for AppendItem {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?;

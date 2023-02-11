@@ -4,18 +4,18 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct HasSuffixModifier {
+pub struct HasSuffixItem {
     suffix: Value
 }
 
-impl HasSuffixModifier {
+impl HasSuffixItem {
     pub fn new(suffix: impl Into<Value>) -> Self {
         Self { suffix: suffix.into() }
     }
 }
 
 #[async_trait]
-impl Item for HasSuffixModifier {
+impl Item for HasSuffixItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
             None => Err(ctx.with_invalid("hasSuffix: value is not string")),

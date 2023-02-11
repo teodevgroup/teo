@@ -6,20 +6,20 @@ use crate::prelude::Value;
 use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
-pub struct MapModifier {
+pub struct MapItem {
     pipeline: Pipeline
 }
 
-impl MapModifier {
+impl MapItem {
     pub fn new(pipeline: Pipeline) -> Self {
-        return MapModifier {
+        return MapItem {
             pipeline
         };
     }
 }
 
 #[async_trait]
-impl Item for MapModifier {
+impl Item for MapItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let mut retval = Vec::new();
         for (i, val) in ctx.value.as_vec().unwrap().iter().enumerate() {

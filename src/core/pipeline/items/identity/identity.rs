@@ -7,18 +7,18 @@ use crate::core::pipeline::Pipeline;
 use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
-pub struct IdentityModifier {
+pub struct IdentityItem {
     pipeline: Pipeline
 }
 
-impl IdentityModifier {
+impl IdentityItem {
     pub fn new(pipeline: Pipeline) -> Self {
         Self { pipeline }
     }
 }
 
 #[async_trait]
-impl Item for IdentityModifier {
+impl Item for IdentityItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.get_object()?.action_source() {
             ActionSource::Identity(user) => {

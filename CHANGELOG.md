@@ -220,7 +220,7 @@
 
 #### 0.0.46
 - Error in pipeline **[DONE]**
-- Rename pipeline modifier to pipeline item
+- Rename pipeline modifier to pipeline item **[DONE]**
 - Error in pipeline program functions
 - Custom pipeline function accepts source
 - `$alter` item 

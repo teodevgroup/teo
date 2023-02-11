@@ -4,18 +4,18 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct NeqModifier {
+pub struct NeqItem {
     argument: Value
 }
 
-impl NeqModifier {
+impl NeqItem {
     pub fn new(argument: impl Into<Value>) -> Self {
         Self { argument: argument.into() }
     }
 }
 
 #[async_trait]
-impl Item for NeqModifier {
+impl Item for NeqItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let rhs = self.argument.resolve(ctx.clone()).await?;
         if rhs != ctx.value {

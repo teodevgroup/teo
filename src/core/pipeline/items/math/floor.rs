@@ -5,16 +5,16 @@ use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Copy, Clone)]
-pub struct FloorModifier {}
+pub struct FloorItem {}
 
-impl FloorModifier {
+impl FloorItem {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Item for FloorModifier {
+impl Item for FloorItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.get_value() {
             Value::F32(v) => Ok(ctx.with_value(Value::F32(v.floor()))),

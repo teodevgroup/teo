@@ -4,16 +4,16 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 
 #[derive(Debug, Copy, Clone)]
-pub struct PrintModifier { }
+pub struct PrintItem { }
 
-impl PrintModifier {
+impl PrintItem {
     pub fn new() -> Self {
-        return PrintModifier {};
+        return PrintItem {};
     }
 }
 
 #[async_trait]
-impl Item for PrintModifier {
+impl Item for PrintItem {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         println!("{:?}", ctx.value);

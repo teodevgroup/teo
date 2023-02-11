@@ -7,16 +7,16 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;
 
 #[derive(Debug, Copy, Clone)]
-pub struct GetObjectModifier { }
+pub struct GetObjectItem { }
 
-impl GetObjectModifier {
+impl GetObjectItem {
     pub fn new() -> Self {
         Self { }
     }
 }
 
 #[async_trait]
-impl Item for GetObjectModifier {
+impl Item for GetObjectItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         Ok(ctx.with_value(Value::Object(ctx.object.as_ref().unwrap().clone())).with_path(path![]))
     }

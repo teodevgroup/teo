@@ -5,18 +5,18 @@ use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct MinModifier {
+pub struct MinItem {
     argument: Value
 }
 
-impl MinModifier {
+impl MinItem {
     pub fn new(argument: impl Into<Value>) -> Self {
         Self { argument: argument.into() }
     }
 }
 
 #[async_trait]
-impl Item for MinModifier {
+impl Item for MinItem {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?;

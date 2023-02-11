@@ -5,20 +5,20 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
-pub struct IsEmailModifier {
+pub struct IsEmailItem {
     regex: Regex
 }
 
-impl IsEmailModifier {
+impl IsEmailItem {
     pub fn new() -> Self {
-        return IsEmailModifier {
+        return IsEmailItem {
             regex: Regex::new(r"^\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b$").unwrap()
         };
     }
 }
 
 #[async_trait]
-impl Item for IsEmailModifier {
+impl Item for IsEmailItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
             Some(s) => {

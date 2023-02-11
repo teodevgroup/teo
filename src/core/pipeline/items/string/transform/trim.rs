@@ -6,16 +6,16 @@ use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Copy, Clone)]
-pub struct TrimModifier {}
+pub struct TrimItem {}
 
-impl TrimModifier {
+impl TrimItem {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Item for TrimModifier {
+impl Item for TrimItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.get_value() {
             Value::String(ref s) => Ok(ctx.with_value(Value::String(s.trim().to_owned()))),

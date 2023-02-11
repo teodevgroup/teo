@@ -5,14 +5,14 @@ use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct WhenModifier {
+pub struct WhenItem {
     actions: Vec<Action>,
     pipeline: Pipeline
 }
 
-impl WhenModifier {
+impl WhenItem {
     pub(crate) fn new(actions: Vec<Action>, pipeline: Pipeline) -> Self {
-        return WhenModifier {
+        return WhenItem {
             actions,
             pipeline
         };
@@ -20,7 +20,7 @@ impl WhenModifier {
 }
 
 #[async_trait]
-impl Item for WhenModifier {
+impl Item for WhenItem {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let object_action = ctx.object.as_ref().unwrap().action();

@@ -23,10 +23,10 @@ use crate::parser::ast::field::FieldClass;
 use crate::prelude::{App, Value};
 use crate::core::pipeline::ctx::validity::Validity;
 use crate::core::pipeline::item::Item;
-use crate::core::pipeline::items::function::compare::{CompareArgument, CompareModifier};
-use crate::core::pipeline::items::function::perform::{PerformArgument, PerformModifier};
-use crate::core::pipeline::items::function::transform::{TransformArgument, TransformModifier};
-use crate::core::pipeline::items::function::validate::{ValidateArgument, ValidateModifier};
+use crate::core::pipeline::items::function::compare::{CompareArgument, CompareItem};
+use crate::core::pipeline::items::function::perform::{PerformArgument, PerformItem};
+use crate::core::pipeline::items::function::transform::{TransformArgument, TransformItem};
+use crate::core::pipeline::items::function::validate::{ValidateArgument, ValidateItem};
 use crate::core::property::Property;
 use crate::core::relation::Relation;
 use crate::parser::ast::r#type::Arity;
@@ -197,14 +197,14 @@ impl AppBuilder {
     pub fn transform<T, F>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
         T: From<Value> + Into<Value> + Send + Sync + 'static,
         F: TransformArgument<T> + 'static {
-        self.callback_lookup_table.lock().unwrap().transforms.insert(name.into(), Arc::new(TransformModifier::new(f)));
+        self.callback_lookup_table.lock().unwrap().transforms.insert(name.into(), Arc::new(TransformItem::new(f)));
         self
     }
 
     pub fn callback<T, F>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
         T: From<Value> + Send + Sync + 'static,
         F: PerformArgument<T> + 'static {
-        self.callback_lookup_table.lock().unwrap().callbacks.insert(name.into(), Arc::new(PerformModifier::new(f)));
+        self.callback_lookup_table.lock().unwrap().callbacks.insert(name.into(), Arc::new(PerformItem::new(f)));
         self
     }
 
@@ -212,7 +212,7 @@ impl AppBuilder {
         T: From<Value> + Send + Sync + 'static,
         O: Into<Validity> + Send + Sync + 'static,
         F: ValidateArgument<T, O> + 'static {
-        self.callback_lookup_table.lock().unwrap().validators.insert(name.into(), Arc::new(ValidateModifier::new(f)));
+        self.callback_lookup_table.lock().unwrap().validators.insert(name.into(), Arc::new(ValidateItem::new(f)));
         self
     }
 
@@ -220,7 +220,7 @@ impl AppBuilder {
         T: From<Value> + Send + Sync + 'static,
         O: Into<Validity> + Send + Sync + 'static,
         F: CompareArgument<T, O> + 'static {
-        self.callback_lookup_table.lock().unwrap().compares.insert(name.into(), Arc::new(CompareModifier::new(f)));
+        self.callback_lookup_table.lock().unwrap().compares.insert(name.into(), Arc::new(CompareItem::new(f)));
         self
     }
 

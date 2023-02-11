@@ -4,18 +4,18 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct IsSuffixOfModifier {
+pub struct IsSuffixOfItem {
     full: Value
 }
 
-impl IsSuffixOfModifier {
+impl IsSuffixOfItem {
     pub fn new(full: impl Into<Value>) -> Self {
         Self { full: full.into() }
     }
 }
 
 #[async_trait]
-impl Item for IsSuffixOfModifier {
+impl Item for IsSuffixOfItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
             None => Err(ctx.with_invalid("isSuffixOf: value is not string")),

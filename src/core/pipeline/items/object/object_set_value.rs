@@ -4,12 +4,12 @@ use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct ObjectSetValueModifier {
+pub struct ObjectSetValueItem {
     key: Value,
     value: Value,
 }
 
-impl ObjectSetValueModifier {
+impl ObjectSetValueItem {
     pub fn new(key: impl Into<Value>, value: impl Into<Value>) -> Self {
         Self {
             key: key.into(),
@@ -19,7 +19,7 @@ impl ObjectSetValueModifier {
 }
 
 #[async_trait]
-impl Item for ObjectSetValueModifier {
+impl Item for ObjectSetValueItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let key = self.key.resolve(ctx.clone()).await?;
         let value = self.value.resolve(ctx.clone()).await?;

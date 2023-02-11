@@ -5,19 +5,19 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct PadStartModifier {
+pub struct PadStartItem {
     char: char,
     width: Value,
 }
 
-impl PadStartModifier {
+impl PadStartItem {
     pub fn new(char: char, width: impl Into<Value>) -> Self {
         Self { char, width: width.into() }
     }
 }
 
 #[async_trait]
-impl Item for PadStartModifier {
+impl Item for PadStartItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
             None => Err(ctx.internal_server_error("padStart: value is not string")),

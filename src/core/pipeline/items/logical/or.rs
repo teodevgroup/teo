@@ -7,18 +7,18 @@ use crate::prelude::Value;
 
 
 #[derive(Debug, Clone)]
-pub struct OrModifier {
+pub struct OrItem {
     value: Value
 }
 
-impl OrModifier {
+impl OrItem {
     pub fn new(value: Value) -> Self {
         Self { value }
     }
 }
 
 #[async_trait]
-impl Item for OrModifier {
+impl Item for OrItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         if ctx.value.is_null() {
             Ok(ctx.clone())

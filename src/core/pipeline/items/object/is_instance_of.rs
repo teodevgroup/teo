@@ -4,18 +4,18 @@ use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct IsObjectOfModifier {
+pub struct IsObjectOfItem {
     model: String
 }
 
-impl IsObjectOfModifier {
+impl IsObjectOfItem {
     pub fn new(model: impl Into<String>) -> Self {
-        IsObjectOfModifier { model: model.into() }
+        IsObjectOfItem { model: model.into() }
     }
 }
 
 #[async_trait]
-impl Item for IsObjectOfModifier {
+impl Item for IsObjectOfItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_object() {
             Some(o) => {

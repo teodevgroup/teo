@@ -4,19 +4,19 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct EllipsisModifier {
+pub struct EllipsisItem {
     ellipsis: String,
     width: Value,
 }
 
-impl EllipsisModifier {
+impl EllipsisItem {
     pub fn new(ellipsis: impl Into<String>, width: impl Into<Value>) -> Self {
         Self { ellipsis: ellipsis.into(), width: width.into() }
     }
 }
 
 #[async_trait]
-impl Item for EllipsisModifier {
+impl Item for EllipsisItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
             None => Err(ctx.internal_server_error("ellipsis: value is not string")),

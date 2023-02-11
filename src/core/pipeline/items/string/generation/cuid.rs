@@ -6,16 +6,16 @@ use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Copy, Clone)]
-pub struct CUIDModifier {}
+pub struct CUIDItem {}
 
-impl CUIDModifier {
+impl CUIDItem {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Item for CUIDModifier {
+impl Item for CUIDItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         Ok(ctx.with_value(Value::String(cuid().unwrap())))
     }

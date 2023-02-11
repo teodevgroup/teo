@@ -6,16 +6,16 @@ use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Copy, Clone)]
-pub struct TodayModifier {}
+pub struct TodayItem {}
 
-impl TodayModifier {
+impl TodayItem {
     pub fn new() -> Self {
-        return TodayModifier {};
+        return TodayItem {};
     }
 }
 
 #[async_trait]
-impl Item for TodayModifier {
+impl Item for TodayItem {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         Ok(ctx.with_value(Value::Date(Utc::now().date_naive())))

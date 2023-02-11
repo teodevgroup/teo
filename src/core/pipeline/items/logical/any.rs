@@ -7,11 +7,11 @@ use crate::core::pipeline::ctx::Ctx;
 
 
 #[derive(Debug, Clone)]
-pub struct AnyModifier {
+pub struct AnyItem {
     pipelines: Vec<Pipeline>
 }
 
-impl AnyModifier {
+impl AnyItem {
     pub fn new(pipelines: Vec<Pipeline>) -> Self {
         return Self { pipelines };
     }
@@ -19,7 +19,7 @@ impl AnyModifier {
 
 
 #[async_trait]
-impl Item for AnyModifier {
+impl Item for AnyItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         for pipeline in &self.pipelines {
             let result = pipeline.process(ctx.clone()).await;

@@ -4,18 +4,18 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct GtModifier {
+pub struct GtItem {
     argument: Value
 }
 
-impl GtModifier {
+impl GtItem {
     pub fn new(argument: impl Into<Value>) -> Self {
         Self { argument: argument.into() }
     }
 }
 
 #[async_trait]
-impl Item for GtModifier {
+impl Item for GtItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let rhs = self.argument.resolve(ctx.clone()).await?;
         if ctx.value > rhs {

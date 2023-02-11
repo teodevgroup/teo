@@ -4,18 +4,18 @@ use crate::core::pipeline::item::Item;
 use crate::core::teon::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct HasLengthModifier {
+pub struct HasLengthItem {
     argument: Value
 }
 
-impl HasLengthModifier {
+impl HasLengthItem {
     pub fn new(argument: Value) -> Self {
         Self { argument: argument.into() }
     }
 }
 
 #[async_trait]
-impl Item for HasLengthModifier {
+impl Item for HasLengthItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?;
         let (lower, upper, closed) = if argument.is_number() {

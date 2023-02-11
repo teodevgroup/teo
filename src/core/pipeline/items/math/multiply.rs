@@ -5,18 +5,18 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
-pub struct MultiplyModifier {
+pub struct MultiplyItem {
     argument: Value
 }
 
-impl MultiplyModifier {
+impl MultiplyItem {
     pub fn new(argument: impl Into<Value>) -> Self {
         Self { argument: argument.into() }
     }
 }
 
 #[async_trait]
-impl Item for MultiplyModifier {
+impl Item for MultiplyItem {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?;

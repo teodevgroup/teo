@@ -5,18 +5,18 @@ use crate::core::teon::Value;
 use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
-pub struct OneOfModifier {
+pub struct OneOfItem {
     argument: Value
 }
 
-impl OneOfModifier {
+impl OneOfItem {
     pub fn new(argument: Value) -> Self {
         Self { argument }
     }
 }
 
 #[async_trait]
-impl Item for OneOfModifier {
+impl Item for OneOfItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let arg = self.argument.resolve(ctx.clone()).await?;
         let list = arg.as_vec().unwrap();

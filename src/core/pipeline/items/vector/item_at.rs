@@ -5,18 +5,18 @@ use crate::core::teon::Value;
 use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
-pub struct ItemAtModifier {
+pub struct ItemAtItem {
     index: Value
 }
 
-impl ItemAtModifier {
+impl ItemAtItem {
     pub fn new(index: impl Into<Value>) -> Self {
         Self { index: index.into() }
     }
 }
 
 #[async_trait]
-impl Item for ItemAtModifier {
+impl Item for ItemAtItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_vec() {
             None => Err(ctx.internal_server_error("itemAt: value is not vector")),

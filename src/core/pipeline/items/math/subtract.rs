@@ -5,18 +5,18 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
-pub struct SubtractModifier {
+pub struct SubtractItem {
     argument: Value
 }
 
-impl SubtractModifier {
+impl SubtractItem {
     pub fn new(argument: impl Into<Value>) -> Self {
         Self { argument: argument.into() }
     }
 }
 
 #[async_trait]
-impl Item for SubtractModifier {
+impl Item for SubtractItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?;
         Ok(ctx.with_value_result(ctx.get_value() - argument)?)

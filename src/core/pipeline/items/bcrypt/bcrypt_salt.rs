@@ -6,16 +6,16 @@ use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Copy, Clone)]
-pub struct BcryptSaltModifier {}
+pub struct BcryptSaltItem {}
 
-impl BcryptSaltModifier {
+impl BcryptSaltItem {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Item for BcryptSaltModifier {
+impl Item for BcryptSaltItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
             Some(s) => {

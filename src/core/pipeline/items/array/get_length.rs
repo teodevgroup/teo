@@ -4,16 +4,16 @@ use crate::core::teon::Value;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 #[derive(Debug, Copy, Clone)]
-pub struct GetLengthModifier {}
+pub struct GetLengthItem {}
 
-impl GetLengthModifier {
+impl GetLengthItem {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Item for GetLengthModifier {
+impl Item for GetLengthItem {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let len = match &ctx.value {

@@ -24,30 +24,30 @@ impl<T, O, F, Fut> ValidateArgument<T, O> for F where
 }
 
 #[derive(Clone)]
-pub struct ValidateModifier<T, O> {
+pub struct ValidateItem<T, O> {
     callback: Arc<dyn ValidateArgument<T, O>>
 }
 
-impl<T, O> Debug for ValidateModifier<T, O> {
+impl<T, O> Debug for ValidateItem<T, O> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut result = f.debug_struct("ValidateModifier");
+        let mut result = f.debug_struct("ValidateItem");
         result.finish()
     }
 }
 
-impl<T, O> ValidateModifier<T, O> {
-    pub fn new<F>(f: F) -> ValidateModifier<T, O> where
+impl<T, O> ValidateItem<T, O> {
+    pub fn new<F>(f: F) -> ValidateItem<T, O> where
         T: From<Value> + Send + Sync,
         O: Into<Validity> + Send + Sync,
         F: ValidateArgument<T, O> + 'static {
-        return ValidateModifier {
+        return ValidateItem {
             callback: Arc::new(f)
         }
     }
 }
 
 #[async_trait]
-impl<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync> Item for ValidateModifier<T, O> {
+impl<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync> Item for ValidateItem<T, O> {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let cb = self.callback.clone();
@@ -61,5 +61,5 @@ impl<T: From<Value> + Send + Sync, O: Into<Validity> + Send + Sync> Item for Val
     }
 }
 
-unsafe impl<T, O> Send for ValidateModifier<T, O> {}
-unsafe impl<T, O> Sync for ValidateModifier<T, O> {}
+unsafe impl<T, O> Send for ValidateItem<T, O> {}
+unsafe impl<T, O> Sync for ValidateItem<T, O> {}

@@ -4,13 +4,13 @@ use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct IsSecurePasswordModifier {
+pub struct IsSecurePasswordItem {
     patterns: Vec<Regex>
 }
 
-impl IsSecurePasswordModifier {
+impl IsSecurePasswordItem {
     pub fn new() -> Self {
-        return IsSecurePasswordModifier {
+        return IsSecurePasswordItem {
             patterns: vec![
                 Regex::new(r#"[A-Z]"#).unwrap(),
                 Regex::new(r#"[a-z]"#).unwrap(),
@@ -22,7 +22,7 @@ impl IsSecurePasswordModifier {
 }
 
 #[async_trait]
-impl Item for IsSecurePasswordModifier {
+impl Item for IsSecurePasswordItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
             Some(s) => {

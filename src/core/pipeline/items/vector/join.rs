@@ -5,18 +5,18 @@ use crate::prelude::Value;
 use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
-pub struct JoinModifier {
+pub struct JoinItem {
     separator: Value
 }
 
-impl JoinModifier {
+impl JoinItem {
     pub fn new(separator: Value) -> Self {
         Self { separator }
     }
 }
 
 #[async_trait]
-impl Item for JoinModifier {
+impl Item for JoinItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_vec() {
             None => Err(ctx.internal_server_error("join: value is not vector")),

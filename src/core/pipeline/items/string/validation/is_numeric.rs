@@ -4,16 +4,16 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 
 #[derive(Debug, Copy, Clone)]
-pub struct IsNumericModifier {}
+pub struct IsNumericItem {}
 
-impl IsNumericModifier {
+impl IsNumericItem {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Item for IsNumericModifier {
+impl Item for IsNumericItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
             Some(s) => {

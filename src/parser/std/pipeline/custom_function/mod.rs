@@ -4,8 +4,8 @@ use crate::core::pipeline::item::Item;
 
 
 
-use crate::core::pipeline::items::logical::transform_with::TransformWithModifier;
-use crate::core::pipeline::items::logical::validate_with::ValidateWithModifier;
+use crate::core::pipeline::items::logical::transform_with::TransformWithItem;
+use crate::core::pipeline::items::logical::validate_with::ValidateWithItem;
 use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
 
@@ -23,7 +23,7 @@ pub(crate) fn custom_transform(lookup_table: Arc<Mutex<CallbackLookupTable>>, ar
             }
         }
         Value::Pipeline(p) => {
-            Arc::new(TransformWithModifier::new(p.clone()))
+            Arc::new(TransformWithItem::new(p.clone()))
         }
         _ => panic!("Argument to `transform` should be string or pipeline.")
     }
@@ -54,7 +54,7 @@ pub(crate) fn custom_validate(lookup_table: Arc<Mutex<CallbackLookupTable>>, arg
             }
         }
         Value::Pipeline(p) => {
-            Arc::new(ValidateWithModifier::new(p.clone()))
+            Arc::new(ValidateWithItem::new(p.clone()))
         }
         _ => panic!("Argument to `validate` should be string or pipeline.")
     }

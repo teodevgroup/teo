@@ -6,18 +6,18 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::utils::TsonUtils;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct TsonGetModifier<'a> {
+pub struct TsonGetItem<'a> {
     path: KeyPath<'a>,
 }
 
-impl<'a> TsonGetModifier<'a> {
+impl<'a> TsonGetItem<'a> {
     pub fn new(path: KeyPath<'a>) -> Self {
         Self { path }
     }
 }
 
 #[async_trait]
-impl Item for TsonGetModifier<'_> {
+impl Item for TsonGetItem<'_> {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match &ctx.value {
             Value::HashMap(_) => {

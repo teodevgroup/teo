@@ -6,16 +6,16 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;
 
 #[derive(Debug, Copy, Clone)]
-pub struct CbrtModifier { }
+pub struct CbrtItem { }
 
-impl CbrtModifier {
+impl CbrtItem {
     pub fn new() -> Self {
         Self { }
     }
 }
 
 #[async_trait]
-impl Item for CbrtModifier {
+impl Item for CbrtItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         Ok(match ctx.get_value() {
             Value::I32(v) => ctx.with_value(Value::I32(v.cbrt())),

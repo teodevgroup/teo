@@ -23,29 +23,29 @@ impl<T, F, Fut> TransformArgument<T> for F where
 }
 
 #[derive(Clone)]
-pub struct TransformModifier<T> {
+pub struct TransformItem<T> {
     callback: Arc<dyn TransformArgument<T>>
 }
 
-impl<T> Debug for TransformModifier<T> {
+impl<T> Debug for TransformItem<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut result = f.debug_struct("TransformModifier");
+        let mut result = f.debug_struct("TransformItem");
         result.finish()
     }
 }
 
-impl<T> TransformModifier<T> {
-    pub fn new<F>(f: F) -> TransformModifier<T> where
+impl<T> TransformItem<T> {
+    pub fn new<F>(f: F) -> TransformItem<T> where
         T: From<Value> + Send + Sync,
         F: TransformArgument<T> + 'static {
-        return TransformModifier {
+        return TransformItem {
             callback: Arc::new(f)
         }
     }
 }
 
 #[async_trait]
-impl<T: Into<Value> + From<Value> + Send + Sync> Item for TransformModifier<T> {
+impl<T: Into<Value> + From<Value> + Send + Sync> Item for TransformItem<T> {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let cb = self.callback.clone();
         let value = cb.call((&ctx).value.clone().into()).await;
@@ -53,5 +53,5 @@ impl<T: Into<Value> + From<Value> + Send + Sync> Item for TransformModifier<T> {
     }
 }
 
-unsafe impl<T> Send for TransformModifier<T> {}
-unsafe impl<T> Sync for TransformModifier<T> {}
+unsafe impl<T> Send for TransformItem<T> {}
+unsafe impl<T> Sync for TransformItem<T> {}

@@ -4,18 +4,18 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
-pub struct HasPrefixModifier {
+pub struct HasPrefixItem {
     prefix: Value
 }
 
-impl HasPrefixModifier {
+impl HasPrefixItem {
     pub fn new(prefix: impl Into<Value>) -> Self {
         Self { prefix: prefix.into() }
     }
 }
 
 #[async_trait]
-impl Item for HasPrefixModifier {
+impl Item for HasPrefixItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
             None => Err(ctx.internal_server_error("hasPrefix: value is not string")),

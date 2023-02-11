@@ -6,18 +6,18 @@ use crate::core::pipeline::ctx::Ctx;
 use crate::core::pipeline::Pipeline;
 
 #[derive(Debug, Clone)]
-pub struct BcryptVerifyModifier {
+pub struct BcryptVerifyItem {
     argument: Pipeline
 }
 
-impl BcryptVerifyModifier {
+impl BcryptVerifyItem {
     pub fn new(argument: Pipeline) -> Self {
         Self { argument }
     }
 }
 
 #[async_trait]
-impl Item for BcryptVerifyModifier {
+impl Item for BcryptVerifyItem {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
