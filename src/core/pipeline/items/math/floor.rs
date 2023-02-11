@@ -19,7 +19,7 @@ impl Item for FloorModifier {
         match ctx.get_value() {
             Value::F32(v) => Ok(ctx.with_value(Value::F32(v.floor()))),
             Value::F64(v) => Ok(ctx.with_value(Value::F64(v.floor()))),
-            Value::I32(_) | Value::I64(_) => ctx.clone(),
+            Value::I32(_) | Value::I64(_) => Ok(ctx.clone()),
             _ => Err(ctx.internal_server_error("floor: value is not number"))?
         }
     }

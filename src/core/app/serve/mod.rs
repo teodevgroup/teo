@@ -166,8 +166,8 @@ async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: A
             }
 
             let mut result_json: Vec<JsonValue> = vec![];
-            for result in results {
-                match result.to_json_internal().await {
+            for (index, result) in results.iter().enumerate() {
+                match result.to_json_internal(path!["data", index]).await {
                     Ok(result) => result_json.push(result.into()),
                     Err(_) => ()
                 }

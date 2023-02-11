@@ -18,8 +18,8 @@ impl TrimModifier {
 impl Item for TrimModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.get_value() {
-            Value::String(ref s) => ctx.with_value(Value::String(s.trim().to_owned())),
-            _ => ctx.internal_server_error("Value is not string.")
+            Value::String(ref s) => Ok(ctx.with_value(Value::String(s.trim().to_owned()))),
+            _ => Err(ctx.internal_server_error("trim: value is not string"))
         }
     }
 }

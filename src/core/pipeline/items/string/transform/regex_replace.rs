@@ -27,9 +27,9 @@ impl Item for RegexReplaceModifier {
         let regex = arg.as_regexp().unwrap();
         let s_arg = self.substitute.resolve(ctx.clone()).await?;
         let substitute = s_arg.as_str().unwrap();
-        match &ctx.value {
-            Value::String(s) => ctx.with_value(Value::String(regex.replace(s, substitute).to_string())),
-            _ => ctx.internal_server_error("Value is not string.")
+        match &ctx.get_value() {
+            Value::String(s) => Ok(ctx.with_value(Value::String(regex.replace(s, substitute).to_string()))),
+            _ => Err(ctx.internal_server_error("regexReplace: value is not string"))
         }
     }
 }

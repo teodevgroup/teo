@@ -18,14 +18,14 @@ impl IsSuffixOfModifier {
 impl Item for IsSuffixOfModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
-            None => ctx.internal_server_error("Value is not string."),
+            None => Err(ctx.with_invalid("isSuffixOf: value is not string")),
             Some(s) => {
                 let arg = self.full.resolve(ctx.clone()).await?;
                 let full = arg.as_str().unwrap();
                 if full.ends_with(s) {
-                    ctx
+                    Ok(ctx)
                 } else {
-                    ctx.internal_server_error(format!("Value is not suffix of '{full}'."))
+                    Err(ctx.internal_server_error("value is not suffix"))
                 }
             }
         }

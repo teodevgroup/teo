@@ -31,7 +31,7 @@ impl Pipeline {
         Ok(ctx.value)
     }
 
-    pub(crate) async fn process_into_permission_result(&self, mut ctx: Ctx<'_>) -> Result<()> {
+    pub(crate) async fn process_into_permission_result(&self, ctx: Ctx<'_>) -> Result<()> {
         let path = ctx.path.clone();
         match self.process(ctx).await {
             Ok(_) => Ok(()),

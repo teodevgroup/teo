@@ -211,7 +211,7 @@ impl Field {
         }
     }
 
-    pub(crate) async fn perform_on_save_callback(&self, ctx: Ctx) -> Result<Value> {
+    pub(crate) async fn perform_on_save_callback(&self, ctx: Ctx<'_>) -> Result<Value> {
         let mut new_ctx = ctx.clone();
         match self.field_type() {
             FieldType::Vec(inner) => {

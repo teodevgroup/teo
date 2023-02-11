@@ -18,14 +18,14 @@ impl HasPrefixModifier {
 impl Item for HasPrefixModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
-            None => ctx.internal_server_error("Value is not string."),
+            None => Err(ctx.internal_server_error("hasPrefix: value is not string")),
             Some(s) => {
                 let arg = self.prefix.resolve(ctx.clone()).await?;
                 let prefix = arg.as_str().unwrap();
                 if s.starts_with(prefix) {
-                    ctx
+                    Ok(ctx)
                 } else {
-                    ctx.internal_server_error(format!("Value is not prefixed by '{prefix}'."))
+                    Err(ctx.with_invalid("value is not correctly prefixed"))
                 }
             }
         }

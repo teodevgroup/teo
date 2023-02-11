@@ -18,14 +18,14 @@ impl HasSuffixModifier {
 impl Item for HasSuffixModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_str() {
-            None => ctx.internal_server_error("Value is not string."),
+            None => Err(ctx.with_invalid("hasSuffix: value is not string")),
             Some(s) => {
                 let arg = self.suffix.resolve(ctx.clone()).await?;
                 let suffix = arg.as_str().unwrap();
                 if s.ends_with(suffix) {
-                    ctx
+                    Ok(ctx)
                 } else {
-                    ctx.internal_server_error(format!("Value is not suffixed by '{suffix}'."))
+                    ctx.internal_server_error("value is not correctly suffixed")
                 }
             }
         }

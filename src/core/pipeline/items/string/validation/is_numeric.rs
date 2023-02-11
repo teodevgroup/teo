@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
+
 #[derive(Debug, Copy, Clone)]
 pub struct IsNumericModifier {}
 

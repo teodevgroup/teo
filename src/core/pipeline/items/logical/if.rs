@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use crate::core::error::ErrorType::InternalServerError;
 use crate::core::pipeline::item::Item;
 
 use crate::core::pipeline::ctx::Ctx;
@@ -26,7 +27,14 @@ impl Item for IfModifier {
         match &self.cond {
             Value::Null => valid = false,
             Value::Bool(b) => valid = *b,
-            Value::Pipeline(p) => valid = p.process(ctx.clone()).await.is_valid().unwrap(),
+            Value::Pipeline(p) => match p.process(ctx.clone()).await {
+                Ok(_) => valid = true,
+                Err(error) => if error.r#type == InternalServerError {
+                    return Err(error)
+                } else {
+                    valid = false;
+                }
+            },
             _ => {
                 panic!("Only null, bool, pipeline can be passed to `if`.")
             }
