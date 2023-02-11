@@ -24,8 +24,8 @@ impl Item for OrModifier {
             Ok(ctx)
         } else {
             match &self.value {
-                Value::Pipeline(p) => ctx.with_value(p.process(ctx).await?),
-                _ => ctx.with_value(self.value.clone()),
+                Value::Pipeline(p) => Ok(ctx.with_value(p.process(ctx).await?)),
+                _ => Ok(ctx.with_value(self.value.clone())),
             }
         }
     }

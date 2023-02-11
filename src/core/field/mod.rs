@@ -211,11 +211,11 @@ impl Field {
         }
     }
 
-    pub(crate) async fn perform_on_save_callback<'a>(&self, ctx: Ctx<'a>) -> Result<Value> {
+    pub(crate) async fn perform_on_save_callback(&self, ctx: Ctx) -> Result<Value> {
         let mut new_ctx = ctx.clone();
         match self.field_type() {
             FieldType::Vec(inner) => {
-                let val = &new_ctx.get_value().unwrap();
+                let val = &new_ctx.get_value();
                 let arr = val.as_vec();
                 if !arr.is_none() {
                     let arr = arr.unwrap();
@@ -223,7 +223,7 @@ impl Field {
                     for (i, _v) in arr.iter().enumerate() {
                         let key_path = &ctx.path + i;
                         let arr_item_ctx = ctx.with_path(key_path);
-                        new_arr.push(inner.on_save_pipeline.process(arr_item_ctx).await.get_value().unwrap());
+                        new_arr.push(inner.on_save_pipeline.process(arr_item_ctx).await?);
                     }
                     new_ctx = new_ctx.with_value(Value::Vec(new_arr));
                 }
@@ -233,11 +233,11 @@ impl Field {
         self.on_save_pipeline.process(new_ctx.clone()).await
     }
 
-    pub(crate) async fn perform_on_output_callback<'a>(&self, ctx: Ctx<'a>) -> Ctx<'a> {
+    pub(crate) async fn perform_on_output_callback<'a>(&self, ctx: Ctx<'a>) -> Result<Value> {
         let mut new_ctx = ctx.clone();
         match self.field_type() {
             FieldType::Vec(inner) => {
-                let val = &new_ctx.get_value().unwrap();
+                let val = &new_ctx.get_value();
                 let arr = val.as_vec();
                 if !arr.is_none() {
                     let arr = arr.unwrap();
@@ -245,7 +245,7 @@ impl Field {
                     for (i, _v) in arr.iter().enumerate() {
                         let key_path = &ctx.path + i;
                         let arr_item_ctx = ctx.with_path(key_path);
-                        new_arr.push(inner.on_output_pipeline.process(arr_item_ctx).await.get_value().unwrap());
+                        new_arr.push(inner.on_output_pipeline.process(arr_item_ctx).await?);
                     }
                     new_ctx = new_ctx.with_value(Value::Vec(new_arr));
                 }

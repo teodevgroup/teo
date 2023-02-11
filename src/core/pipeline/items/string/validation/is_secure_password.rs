@@ -28,7 +28,7 @@ impl Item for IsSecurePasswordModifier {
             Some(s) => {
                 for regex in &self.patterns {
                     if !regex.is_match(&s) {
-                        return Err(ctx.invalid("value is not secure password"));
+                        return Err(ctx.with_invalid("value is not secure password"));
                     }
                 }
                 Ok(ctx)

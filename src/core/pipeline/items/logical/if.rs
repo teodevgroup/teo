@@ -34,20 +34,20 @@ impl Item for IfModifier {
         return if valid {
             if let Some(then) = &self.then {
                 match then {
-                    Value::Pipeline(p) => p.process(ctx.clone()).await,
-                    _ => ctx.with_value(then.clone())
+                    Value::Pipeline(p) => Ok(ctx.with_value(p.process(ctx.clone()).await?)),
+                    _ => Ok(ctx.with_value(then.clone()))
                 }
             } else {
-                ctx.clone()
+                Ok(ctx.clone())
             }
         } else {
             if let Some(r#else) = &self.r#else {
                 match r#else {
-                    Value::Pipeline(p) => p.process(ctx.clone()).await,
-                    _ => ctx.with_value(r#else.clone())
+                    Value::Pipeline(p) => Ok(ctx.with_value(p.process(ctx.clone()).await?)),
+                    _ => Ok(ctx.with_value(r#else.clone()))
                 }
             } else {
-                ctx.clone()
+                Ok(ctx.clone())
             }
         }
     }

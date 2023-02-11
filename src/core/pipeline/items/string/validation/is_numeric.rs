@@ -18,7 +18,7 @@ impl Item for IsNumericModifier {
             Some(s) => {
                 for c in s.chars() {
                     if !c.is_numeric() {
-                        return Err(ctx.invalid("value is not numeric"));
+                        return Err(ctx.with_invalid("value is not numeric"));
                     }
                 }
                 Ok(ctx)

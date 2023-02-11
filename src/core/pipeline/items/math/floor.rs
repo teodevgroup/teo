@@ -16,11 +16,11 @@ impl FloorModifier {
 #[async_trait]
 impl Item for FloorModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        Ok(match ctx.get_value() {
-            Value::F32(v) => ctx.with_value(Value::F32(v.floor())),
-            Value::F64(v) => ctx.with_value(Value::F64(v.floor())),
+        match ctx.get_value() {
+            Value::F32(v) => Ok(ctx.with_value(Value::F32(v.floor()))),
+            Value::F64(v) => Ok(ctx.with_value(Value::F64(v.floor()))),
             Value::I32(_) | Value::I64(_) => ctx.clone(),
-            _ => ctx.internal_server_error("floor: value is not number")
-        })
+            _ => Err(ctx.internal_server_error("floor: value is not number"))?
+        }
     }
 }

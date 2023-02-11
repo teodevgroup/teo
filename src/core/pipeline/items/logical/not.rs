@@ -22,12 +22,12 @@ impl NotModifier {
 impl Item for NotModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match &self.value {
-            Value::Pipeline(p) => if p.process(ctx.clone()).await.is_valid() {
-                ctx.with_invalid("value is not invalid")
+            Value::Pipeline(p) => if p.process(ctx.clone()).await.is_ok() {
+                Err(ctx.with_invalid("value is not invalid"))
             } else {
-                ctx
+                Ok(ctx)
             }
-            _ => ctx.internal_server_error("not: argument is not pipeline")
+            _ => Err(ctx.internal_server_error("not: argument is not pipeline"))
         }
     }
 }

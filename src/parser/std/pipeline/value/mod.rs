@@ -61,5 +61,5 @@ pub(crate) fn neq(args: Vec<Argument>) -> Arc<dyn Item> {
 
 pub(crate) fn one_of(args: Vec<Argument>) -> Arc<dyn Item> {
     let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
-    Arc::new(OneOfModifier::new(value))
+    Arc::new(OneOfModifier::new(value.clone()))
 }

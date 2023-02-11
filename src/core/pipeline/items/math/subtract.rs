@@ -19,6 +19,6 @@ impl SubtractModifier {
 impl Item for SubtractModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?;
-        Ok(ctx.with_value_result(ctx.get_value().unwrap() - argument)?)
+        Ok(ctx.with_value_result(ctx.get_value() - argument)?)
     }
 }

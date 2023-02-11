@@ -18,7 +18,7 @@ impl Item for IsAlphanumericModifier {
             Some(s) => {
                 for c in s.chars() {
                     if !c.is_alphanumeric() {
-                        return Err(ctx.invalid("value is not alphanumeric"));
+                        return Err(ctx.with_invalid("value is not alphanumeric"));
                     }
                 }
                 Ok(ctx)

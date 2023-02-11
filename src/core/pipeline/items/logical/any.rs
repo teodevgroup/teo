@@ -23,10 +23,10 @@ impl Item for AnyModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         for pipeline in &self.pipelines {
             let result = pipeline.process(ctx.clone()).await;
-            if result.is_valid() {
-                return result;
+            if result.is_ok() {
+                return Ok(ctx.clone())
             }
         }
-        ctx.internal_server_error("None of validators are valid.")
+        Err(ctx.with_invalid("any of validators are invalid"))
     }
 }

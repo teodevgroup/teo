@@ -19,7 +19,7 @@ impl Item for IsAlphabeticModifier {
             Some(s) => {
                 for c in s.chars() {
                     if !c.is_alphabetic() {
-                        return Err(ctx.invalid("value is not alphabetic"));
+                        return Err(ctx.with_invalid("value is not alphabetic"));
                     }
                 }
                 Ok(ctx)

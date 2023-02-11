@@ -9,7 +9,7 @@ use crate::parser::ast::argument::Argument;
 
 pub(crate) fn join(args: Vec<Argument>) -> Arc<dyn Item> {
     let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
-    Arc::new(JoinModifier::new(value))
+    Arc::new(JoinModifier::new(value.clone()))
 }
 
 pub(crate) fn item_at(args: Vec<Argument>) -> Arc<dyn Item> {

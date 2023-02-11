@@ -19,11 +19,7 @@ impl ValidateWithModifier {
 #[async_trait]
 impl Item for ValidateWithModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        let new_ctx = self.pipeline.process(ctx.clone()).await;
-        if new_ctx.is_valid() {
-            ctx
-        } else {
-            ctx.internal_server_error(new_ctx.invalid_reason().unwrap())
-        }
+        let _ = self.pipeline.process(ctx.clone()).await?;
+        Ok(ctx)
     }
 }

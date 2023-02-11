@@ -33,21 +33,21 @@ impl Item for HasLengthModifier {
             Value::String(s) => s.len(),
             Value::Vec(v) => v.len(),
             _ => {
-                return ctx.invalid("Value doesn't have length.");
+                return ctx.with_invalid("Value doesn't have length.");
             }
         };
         if len < lower {
-            return ctx.invalid(format!("Value length is less than {lower}."));
+            return ctx.with_invalid(format!("Value length is less than {lower}."));
         }
         if closed {
             if len > upper {
-                Err(ctx.invalid(format!("Value length is greater than {upper}.")))
+                Err(ctx.with_invalid(format!("Value length is greater than {upper}.")))
             } else {
                 Ok(ctx.clone())
             }
         } else {
             if len >= upper {
-                Err(ctx.invalid(format!("Value length is greater than or equal to {upper}.")))
+                Err(ctx.with_invalid(format!("Value length is greater than or equal to {upper}.")))
             } else {
                 Ok(ctx.clone())
             }

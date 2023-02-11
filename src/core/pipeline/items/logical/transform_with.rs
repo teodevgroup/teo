@@ -19,7 +19,6 @@ impl TransformWithModifier {
 #[async_trait]
 impl Item for TransformWithModifier {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        let new_ctx = self.pipeline.process(ctx.clone()).await;
-        ctx.with_value(new_ctx.value)
+        Ok(ctx.with_value(self.pipeline.process(ctx.clone()).await?))
     }
 }

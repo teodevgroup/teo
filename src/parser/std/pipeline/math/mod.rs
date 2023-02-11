@@ -23,7 +23,7 @@ pub(crate) fn abs(_args: Vec<Argument>) -> Arc<dyn Item> {
 
 pub(crate) fn add(args: Vec<Argument>) -> Arc<dyn Item> {
     let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
-    Arc::new(AddModifier::new(value))
+    Arc::new(AddModifier::new(value.clone()))
 }
 
 pub(crate) fn subtract(args: Vec<Argument>) -> Arc<dyn Item> {
