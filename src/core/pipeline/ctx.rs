@@ -1,4 +1,5 @@
 use key_path::KeyPath;
+use crate::core::action::Action;
 use crate::core::object::Object;
 use crate::core::result::Result;
 use crate::core::teon::Value;
@@ -9,6 +10,7 @@ pub struct Ctx<'a> {
     pub(crate) value: Value,
     pub(crate) object: Option<Object>,
     pub(crate) path: KeyPath<'a>,
+    pub(crate) redirect: Action,
 }
 
 impl<'a> Ctx<'a> {
@@ -18,6 +20,7 @@ impl<'a> Ctx<'a> {
             value,
             object: None,
             path: KeyPath::default(),
+            redirect: Action::empty(),
         }
     }
 
@@ -26,6 +29,7 @@ impl<'a> Ctx<'a> {
             value: Value::Null,
             object: Some(object),
             path: KeyPath::default(),
+            redirect: Action::empty(),
         }
     }
 
@@ -34,6 +38,7 @@ impl<'a> Ctx<'a> {
             value: self.value.clone(),
             object: self.object.clone(),
             path: path.as_ref().clone(),
+            redirect: Action::empty(),
         }
     }
 
@@ -42,6 +47,7 @@ impl<'a> Ctx<'a> {
             value,
             object: self.object.clone(),
             path: self.path.clone(),
+            redirect: Action::empty(),
         }
     }
 
@@ -51,6 +57,7 @@ impl<'a> Ctx<'a> {
                 value,
                 object: self.object.clone(),
                 path: self.path.clone(),
+                redirect: Action::empty(),
             }),
             Err(err) => Err(err),
         }

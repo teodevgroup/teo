@@ -67,6 +67,14 @@ pub(crate) struct Action {
 
 impl Action {
 
+    pub(crate) fn empty() -> Self {
+        Self { value: 0 }
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.value == 0
+    }
+
     pub(crate) fn handler_from_name(name: &str) -> Option<Self> {
         Some(Action {
             value: match name {

@@ -224,6 +224,7 @@
 - Error in pipeline program functions **[DONE]**
 - `$alter` item **[DONE]**
 - `@disable`
+- `@canAccess`
 - `@action`
 - `$print` item label argument
 - Pipeline documentation
