@@ -257,7 +257,7 @@ impl ModelBuilder {
             local_output_keys: self.output_field_keys_and_property_keys(),
             relation_output_keys: self.output_relation_keys(),
             field_property_map: self.get_field_property_map(),
-            disabled_actions: self.disabled_actions,
+            disabled_actions: self.disabled_actions.clone(),
         };
         Model::new_with_inner(Arc::new(inner))
     }

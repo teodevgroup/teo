@@ -176,7 +176,8 @@ impl Resolver {
                 }
                 decorator.accessible = Some(accessible.clone());
                 for argument in arg_list.as_mut().unwrap().arguments.iter_mut() {
-                    let result = Self::resolve_expression_kind(parser, source, &argument.value, false);
+                    let when_option = identifier.name.as_str() == "disable";
+                    let result = Self::resolve_expression_kind(parser, source, &argument.value, when_option);
                     let value = Self::unwrap_into_value_if_needed(parser, source, &result);
                     argument.resolved = Some(Entity::Value(value));
                 }

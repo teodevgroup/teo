@@ -25,7 +25,7 @@ use crate::core::pipeline::item::Item;
 use crate::core::pipeline::items::function::compare::{CompareArgument, CompareItem};
 use crate::core::pipeline::items::function::perform::{PerformArgument, PerformItem, PerformResult};
 use crate::core::pipeline::items::function::transform::{TransformResult, TransformArgument, TransformItem};
-use crate::core::pipeline::items::function::validate::{ValidateArgument, ValidateItem, ValidateResult, Validity};
+use crate::core::pipeline::items::function::validate::{ValidateArgument, ValidateItem, ValidateResult};
 use crate::core::property::Property;
 use crate::core::relation::Relation;
 use crate::parser::ast::r#type::Arity;
