@@ -4,7 +4,7 @@ use std::sync::Arc;
 use key_path::KeyPath;
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
-use crate::core::action::{Action, INTERNAL_AMOUNT, INTERNAL_LOCATION, PROGRAM_CODE};
+use crate::core::action::{Action, CREATE, INTERNAL_AMOUNT, INTERNAL_LOCATION, PROGRAM_CODE, SINGLE};
 use crate::core::action::source::ActionSource;
 use crate::core::connector::Connector;
 use crate::core::model::Model;
@@ -151,7 +151,7 @@ impl Graph {
     }
 
     pub async fn create_object(&self, model: &str, initial: Value) -> Result<Object> {
-        let obj = self.new_object(model, Action::program_code_create(), ActionSource::ProgramCode)?;
+        let obj = self.new_object(model, Action::from_u32(PROGRAM_CODE | CREATE | SINGLE | INTERNAL_LOCATION), ActionSource::ProgramCode)?;
         obj.set_teon(&initial).await?;
         Ok(obj)
     }

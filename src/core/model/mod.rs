@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::ops::BitOr;
 use std::sync::Arc;
 use maplit::hashset;
-use crate::core::action::Action;
+use crate::core::action::{Action, IDENTITY, SIGN_IN};
 use crate::core::handler::Handler;
 use crate::core::field::Field;
 use crate::core::relation::Relation;
@@ -206,8 +206,16 @@ impl Model {
         &self.inner.field_property_map
     }
 
-    pub(crate) fn has_action(&self, action: Handler) -> bool {
-        self.inner.actions.contains(&action)
+    pub(crate) fn has_action(&self, action: Action) -> bool {
+        if let Some(disabled_actions) = self.disabled_actions() {
+            if action.passes(disabled_actions) {
+                return false;
+            }
+        }
+        if ((action & IDENTITY) != 0) || ((action & SIGN_IN) != 0) {
+            return self.inner.identity;
+        }
+        true
     }
 
     pub(crate) fn has_field(&self, name: &str) -> bool {

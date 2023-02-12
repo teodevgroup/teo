@@ -5,24 +5,29 @@ pub(crate) const UPDATE: u32 = 1 << 1;
 pub(crate) const UPSERT: u32 = 1 << 2;
 pub(crate) const DELETE: u32 = 1 << 3;
 pub(crate) const FIND: u32 = 1 << 4;
-pub(crate) const CONNECT: u32 = 1 << 5;
-pub(crate) const CONNECT_OR_CREATE: u32 = 1 << 6;
-pub(crate) const DISCONNECT: u32 = 1 << 7;
-pub(crate) const SET: u32 = 1 << 8;
-pub(crate) const JOIN_CREATE: u32 = 1 << 9;
-pub(crate) const JOIN_DELETE: u32 = 1 << 10;
-pub(crate) const IDENTITY: u32 = 1 << 11;
-pub(crate) const PROGRAM_CODE: u32 = 1 << 12;
-pub(crate) const INTENT: u32 = 1 << 13;
-pub(crate) const ACTUAL: u32 = 1 << 14;
-pub(crate) const ENTRY: u32 = 1 << 15;
-pub(crate) const NESTED: u32 = 1 << 16;
-pub(crate) const INTERNAL_LOCATION: u32 = 1 << 17;
-pub(crate) const SINGLE: u32 = 1 << 18;
-pub(crate) const MANY: u32 = 1 << 19;
-pub(crate) const INTERNAL_AMOUNT: u32 = 1 << 20;
+pub(crate) const FIND_FIRST: u32 = 1 << 5;
+pub(crate) const CONNECT: u32 = 1 << 6;
+pub(crate) const CONNECT_OR_CREATE: u32 = 1 << 7;
+pub(crate) const DISCONNECT: u32 = 1 << 8;
+pub(crate) const SET: u32 = 1 << 9;
+pub(crate) const JOIN_CREATE: u32 = 1 << 10;
+pub(crate) const JOIN_DELETE: u32 = 1 << 11;
+pub(crate) const SIGN_IN: u32 = 1 << 12;
+pub(crate) const IDENTITY: u32 = 1 << 13;
+pub(crate) const COUNT: u32 = 1 << 14;
+pub(crate) const AGGREGATE: u32 = 1 << 15;
+pub(crate) const GROUP_BY: u32 = 1 << 16;
+pub(crate) const PROGRAM_CODE: u32 = 1 << 17;
+pub(crate) const INTENT: u32 = 1 << 18;
+pub(crate) const ACTUAL: u32 = 1 << 19;
+pub(crate) const ENTRY: u32 = 1 << 20;
+pub(crate) const NESTED: u32 = 1 << 21;
+pub(crate) const INTERNAL_LOCATION: u32 = 1 << 22;
+pub(crate) const SINGLE: u32 = 1 << 23;
+pub(crate) const MANY: u32 = 1 << 24;
+pub(crate) const INTERNAL_AMOUNT: u32 = 1 << 25;
 
-const ALL_NAMES: u32 = CREATE | UPDATE | UPSERT | DELETE | FIND | CONNECT | CONNECT_OR_CREATE | DISCONNECT | SET | JOIN_CREATE | JOIN_DELETE;
+const ALL_NAMES: u32 = CREATE | UPDATE | UPSERT | DELETE | FIND | FIND_FIRST | CONNECT | CONNECT_OR_CREATE | DISCONNECT | SET | JOIN_CREATE | JOIN_DELETE | IDENTITY | SIGN_IN | COUNT | AGGREGATE | GROUP_BY;
 const INTENT_ACTUAL: u32 = INTENT | ACTUAL;
 const ENTRY_NESTED: u32 = ENTRY | NESTED | INTERNAL_LOCATION;
 const SINGLE_MANY: u32 = SINGLE | MANY | INTERNAL_AMOUNT;
@@ -33,10 +38,27 @@ const NOT_ENTRY_NESTED: u32 = !ENTRY_NESTED;
 const NOT_SINGLE_MANY: u32 = !SINGLE_MANY;
 
 const DISABLE_INTENT: u32 = !(UPSERT | CONNECT_OR_CREATE | JOIN_CREATE | JOIN_DELETE);
+const DISABLE_FIND: u32 = !FIND;
 const DISABLE_CREATE_UPDATE: u32 = !(CREATE | UPDATE);
 const DISABLE_CONNECT_CREATE: u32 = !(CONNECT | CREATE);
 const DISABLE_CREATE: u32 = !CREATE;
 const DISABLE_DELETE: u32 = !DELETE;
+
+pub(crate) const FIND_UNIQUE_HANDLER: u32 = FIND | ENTRY | SINGLE | INTENT;
+pub(crate) const FIND_FIRST_HANDLER: u32 = FIND_FIRST | ENTRY | SINGLE | INTENT;
+pub(crate) const FIND_MANY_HANDLER: u32 = FIND | ENTRY | MANY | INTENT;
+pub(crate) const CREATE_HANDLER: u32 = CREATE | ENTRY | SINGLE | INTENT;
+pub(crate) const UPDATE_HANDLER: u32 = UPDATE | ENTRY | SINGLE | INTENT;
+pub(crate) const UPSERT_HANDLER: u32 = UPSERT | ENTRY | SINGLE | INTENT;
+pub(crate) const DELETE_HANDLER: u32 = DELETE | ENTRY | SINGLE | INTENT;
+pub(crate) const CREATE_MANY_HANDLER: u32 = CREATE | ENTRY | MANY | INTENT;
+pub(crate) const UPDATE_MANY_HANDLER: u32 = UPDATE | ENTRY | MANY | INTENT;
+pub(crate) const DELETE_MANY_HANDLER: u32 = DELETE | ENTRY | MANY | INTENT;
+pub(crate) const COUNT_HANDLER: u32 = COUNT | ENTRY | INTENT;
+pub(crate) const AGGREGATE_HANDLER: u32 = AGGREGATE | ENTRY | INTENT;
+pub(crate) const GROUP_BY_HANDLER: u32 = GROUP_BY | ENTRY | INTENT;
+pub(crate) const SIGN_IN_HANDLER: u32 = SIGN_IN | ENTRY | INTENT;
+pub(crate) const IDENTITY_HANDLER: u32 = IDENTITY | ENTRY | INTENT;
 
 #[derive(Copy, Clone, Debug)]
 pub(crate) struct Action {
@@ -45,8 +67,27 @@ pub(crate) struct Action {
 
 impl Action {
 
-    pub(crate) fn program_code_create() -> Self {
-        Self { value: PROGRAM_CODE | CREATE | SINGLE | ENTRY }
+    pub(crate) fn handler_from_name(name: &str) -> Option<Self> {
+        Some(Action {
+            value: match name {
+                "findUnique" => FIND_UNIQUE_HANDLER,
+                "findFirst" => FIND_FIRST_HANDLER,
+                "findMany" => FIND_MANY_HANDLER,
+                "create" => CREATE_HANDLER,
+                "update" => UPDATE_HANDLER,
+                "upsert" => UPSERT_HANDLER,
+                "delete" => DELETE_HANDLER,
+                "createMany" => CREATE_MANY_HANDLER,
+                "updateMany" => UPDATE_MANY_HANDLER,
+                "deleteMany" => DELETE_MANY_HANDLER,
+                "count" => COUNT_HANDLER,
+                "aggregate" => AGGREGATE_HANDLER,
+                "groupBy" => GROUP_BY_HANDLER,
+                "signIn" => SIGN_IN_HANDLER,
+                "identity" => IDENTITY_HANDLER,
+                _ => None?
+            }
+        })
     }
 
     pub(crate) fn from_name(name: &str) -> Self {
@@ -63,6 +104,9 @@ impl Action {
                 "set" => SET,
                 "joinCreate" => JOIN_CREATE,
                 "joinDelete" => JOIN_DELETE,
+                "count" => COUNT,
+                "aggregate" => AGGREGATE,
+                "groupBy" => GROUP_BY,
                 "intent" => INTENT,
                 "actual" => ACTUAL,
                 "entry" => ENTRY,
@@ -172,6 +216,9 @@ impl Action {
         }
         if (self.value & JOIN_DELETE) != 0 {
             self.value = self.value & DISABLE_DELETE;
+        }
+        if (self.value & FIND_FIRST) != 0 {
+            self.value = self.value & DISABLE_FIND;
         }
     }
 

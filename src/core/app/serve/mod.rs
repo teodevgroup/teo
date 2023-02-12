@@ -633,7 +633,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
             }
             let model_url_segment_name = path_components[0];
             let action_segment_name = path_components[2];
-            let action = Handler::from_str(action_segment_name);
+            let action = Action::handler_from_name(action_segment_name);
             let action = match action {
                 Some(a) => a,
                 None => {
