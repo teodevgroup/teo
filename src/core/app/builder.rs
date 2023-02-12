@@ -23,7 +23,7 @@ use crate::parser::ast::field::FieldClass;
 use crate::prelude::{App, Value};
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::items::function::compare::{CompareArgument, CompareItem};
-use crate::core::pipeline::items::function::perform::{PerformArgument, PerformItem};
+use crate::core::pipeline::items::function::perform::{PerformArgument, PerformItem, PerformResult};
 use crate::core::pipeline::items::function::transform::{TransformResult, TransformArgument, TransformItem};
 use crate::core::pipeline::items::function::validate::{ValidateArgument, ValidateItem, ValidateResult, Validity};
 use crate::core::property::Property;
@@ -201,9 +201,10 @@ impl AppBuilder {
         self
     }
 
-    pub fn callback<T, F>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
+    pub fn callback<T, F, O>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
         T: From<Value> + Send + Sync + 'static,
-        F: PerformArgument<T> + 'static {
+        F: PerformArgument<T, O> + 'static,
+        O: Into<PerformResult> + Send + Sync + 'static {
         self.callback_lookup_table.lock().unwrap().callbacks.insert(name.into(), Arc::new(PerformItem::new(f)));
         self
     }
