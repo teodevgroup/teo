@@ -193,17 +193,17 @@ impl Object {
         self.model().can_mutate_pipeline().process_into_permission_result(ctx).await
     }
 
-    async fn check_model_read_permission<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
+    async fn check_model_read_permission<'a>(&self, _path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         let ctx = Ctx::initial_state_with_object(self.clone());
         self.model().can_read_pipeline().process_into_permission_result(ctx).await
     }
 
-    async fn check_field_write_permission<'a>(&self, field: &Field, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
+    async fn check_field_write_permission<'a>(&self, field: &Field, _path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         let ctx = Ctx::initial_state_with_object(self.clone()).with_value(self.get_value(field.name()).unwrap()).with_path(path![field.name()]);
         field.can_mutate_pipeline.process_into_permission_result(ctx).await
     }
 
-    async fn check_field_read_permission<'a>(&self, field: &Field, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
+    async fn check_field_read_permission<'a>(&self, field: &Field, _path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         let ctx = Ctx::initial_state_with_object(self.clone()).with_value(self.get_value(field.name()).unwrap()).with_path(path![field.name()]);
         field.can_read_pipeline.process_into_permission_result(ctx).await
     }
@@ -778,7 +778,7 @@ impl Object {
                 }
             } else if (!select_filter) || (select_filter && select_list.contains(key)) {
                 if let Some(field) = self.model().field(key) {
-                    let mut value = self.get_value(key).unwrap();
+                    let value = self.get_value(key).unwrap();
                     if self.check_field_read_permission(field, path.as_ref()).await.is_err() {
                         continue
                     }

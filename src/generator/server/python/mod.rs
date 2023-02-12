@@ -14,7 +14,7 @@ impl PythonEntityGenerator {
 
 #[async_trait]
 impl EntityGenerator for PythonEntityGenerator {
-    async fn generate_entity_files(&self, graph: &Graph, conf: &EntityGeneratorConf, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_entity_files(&self, _graph: &Graph, _conf: &EntityGeneratorConf, _generator: &Generator) -> std::io::Result<()> {
         Ok(())
     }
 }

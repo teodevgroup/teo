@@ -204,11 +204,11 @@ impl Connector for SQLConnector {
         self.loaded
     }
 
-    async fn load(&mut self, models: &Vec<Model>) -> Result<()> {
+    async fn load(&mut self, _models: &Vec<Model>) -> Result<()> {
         Ok(())
     }
 
-    async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> Result<()> {
+    async fn migrate(&mut self, models: &Vec<Model>, _reset_database: bool) -> Result<()> {
         // if self.dialect != SQLDialect::SQLite {
         //     SQLMigration::create_database_if_needed(dialect, &mut pool, &database_name, reset_database).await;
         // }

@@ -533,7 +533,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     let ctx = Ctx::initial_state_with_object(obj.clone());
     let result = pipeline.process(ctx).await;
     return match result {
-        Err(err) => {
+        Err(_err) => {
             return Error::unexpected_input_value_with_reason("Authentication failed.", path!["credentials", by_key.unwrap()]).into();
         }
         Ok(_v) => {
