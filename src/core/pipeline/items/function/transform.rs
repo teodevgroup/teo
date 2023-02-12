@@ -20,29 +20,12 @@ impl<T> From<T> for TransformResult<T> where T: Into<Value> {
     }
 }
 
-impl<T> From<Result<T>> for TransformResult<T> where T: Into<Value> {
-    fn from(result: Result<T>) -> Self {
-        TransformResult::Result(result)
-    }
-}
-
-impl<T> From<std::result::Result<T, String>> for TransformResult<T> where T: Into<Value> {
-    fn from(value: std::result::Result<T, String>) -> Self {
-        match value {
-            Ok(val) => TransformResult::Result(Ok(val)),
-            Err(s) => TransformResult::Result(Err(Error::custom_internal_server_error(s)))
+impl<T, U> From<std::result::Result<T, U>> for TransformResult<T> where T: Into<Value>, U: Into<Error> {
+    fn from(result: std::result::Result<T, U>) -> Self {
+        match result {
+            Ok(t) => TransformResult::Result(Ok(t)),
+            Err(err) => TransformResult::Result(Err(err.into())),
         }
-
-    }
-}
-
-impl<T> From<std::result::Result<T, &str>> for TransformResult<T> where T: Into<Value> {
-    fn from(value: std::result::Result<T, &str>) -> Self {
-        match value {
-            Ok(val) => TransformResult::Result(Ok(val)),
-            Err(s) => TransformResult::Result(Err(Error::custom_internal_server_error(s)))
-        }
-
     }
 }
 
