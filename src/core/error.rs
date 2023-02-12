@@ -6,7 +6,7 @@ use key_path::KeyPath;
 use crate::core::model::Model;
 
 #[derive(Debug, PartialEq, Serialize, Clone)]
-pub enum ErrorType {
+pub(crate) enum ErrorType {
 
     // server errors
 
@@ -60,7 +60,7 @@ pub enum ErrorType {
 }
 
 impl ErrorType {
-    pub fn code(&self) -> u16 {
+    pub(crate) fn code(&self) -> u16 {
         match self {
             ErrorType::ValidationError => { 400 }
             ErrorType::IncorrectJSONFormat => { 400 }
@@ -101,7 +101,7 @@ pub struct Error {
 
 impl Error {
 
-    pub fn unexpected_enum_value(field: impl Into<String>) -> Self {
+    pub(crate) fn unexpected_enum_value(field: impl Into<String>) -> Self {
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
         errors.insert(field.into(), "Enum value is unexpected.".to_string());
         Error {
@@ -111,7 +111,7 @@ impl Error {
         }
     }
 
-    pub fn unique_value_duplicated_reason(field: impl AsRef<str>, reason: impl AsRef<str>) -> Self {
+    pub(crate) fn unique_value_duplicated_reason(field: impl AsRef<str>, reason: impl AsRef<str>) -> Self {
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
         errors.insert(field.as_ref().into(), format!("{}", reason.as_ref()));
         Error {
@@ -121,7 +121,7 @@ impl Error {
         }
     }
 
-    pub fn unique_value_duplicated(field: impl AsRef<str>) -> Self {
+    pub(crate) fn unique_value_duplicated(field: impl AsRef<str>) -> Self {
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
         errors.insert(field.as_ref().into(), "Value is not unique.".into());
         Error {
@@ -131,7 +131,7 @@ impl Error {
         }
     }
 
-    pub fn internal_server_error(reason: impl Into<String>) -> Self {
+    pub(crate) fn internal_server_error(reason: impl Into<String>) -> Self {
         Error {
             r#type: ErrorType::InternalServerError,
             message: reason.into(),
@@ -139,7 +139,7 @@ impl Error {
         }
     }
 
-    pub fn unknown_database_write_error() -> Self {
+    pub(crate) fn unknown_database_write_error() -> Self {
         Error {
             r#type: ErrorType::UnknownDatabaseWriteError,
             message: "An unknown database write error occurred.".to_string(),
@@ -147,7 +147,7 @@ impl Error {
         }
     }
 
-    pub fn unknown_database_delete_error() -> Self {
+    pub(crate) fn unknown_database_delete_error() -> Self {
         Error {
             r#type: ErrorType::UnknownDatabaseDeleteError,
             message: "An unknown database delete error occurred.".to_string(),
@@ -155,7 +155,7 @@ impl Error {
         }
     }
 
-    pub fn destination_not_found() -> Self {
+    pub(crate) fn destination_not_found() -> Self {
         Error {
             r#type: ErrorType::DestinationNotFound,
             message: "The request destination is not found.".to_string(),
@@ -163,7 +163,7 @@ impl Error {
         }
     }
 
-    pub fn object_not_found() -> Self {
+    pub(crate) fn object_not_found() -> Self {
         Error {
             r#type: ErrorType::ObjectNotFound,
             message: "The requested object is not exist.".to_string(),
@@ -171,7 +171,7 @@ impl Error {
         }
     }
 
-    pub fn object_is_not_saved_thus_cant_be_deleted() -> Self {
+    pub(crate) fn object_is_not_saved_thus_cant_be_deleted() -> Self {
         Error {
             r#type: ErrorType::InternalServerError,
             message: "This object is not saved thus can't be deleted.".to_string(),
@@ -179,7 +179,7 @@ impl Error {
         }
     }
 
-    pub fn unknown_database_find_error() -> Self {
+    pub(crate) fn unknown_database_find_error() -> Self {
         Error {
             r#type: ErrorType::UnknownDatabaseFindError,
             message: "An unknown query error occurred.".to_string(),
@@ -187,7 +187,7 @@ impl Error {
         }
     }
 
-    pub fn unknown_database_find_unique_error() -> Self {
+    pub(crate) fn unknown_database_find_unique_error() -> Self {
         Error {
             r#type: ErrorType::UnknownDatabaseFindUniqueError,
             message: "An unknown query unique error occurred.".to_string(),
@@ -195,7 +195,7 @@ impl Error {
         }
     }
 
-    pub fn unknown_database_count_error() -> Self {
+    pub(crate) fn unknown_database_count_error() -> Self {
         Error {
             r#type: ErrorType::UnknownDatabaseCountError,
             message: "An unknown count error occurred.".to_string(),
@@ -203,7 +203,7 @@ impl Error {
         }
     }
 
-    pub fn record_decoding_error<'a>(model: &str, path: impl AsRef<KeyPath<'a>>, expected: impl AsRef<str>) -> Self {
+    pub(crate) fn record_decoding_error<'a>(model: &str, path: impl AsRef<KeyPath<'a>>, expected: impl AsRef<str>) -> Self {
         Error {
             r#type: ErrorType::RecordDecodingError,
             message: format!("Expect `{}' for value at path `{}' of model `{model}'.", expected.as_ref(), path.as_ref()),
@@ -211,7 +211,7 @@ impl Error {
         }
     }
 
-    pub fn invalid_auth_token() -> Self {
+    pub(crate) fn invalid_auth_token() -> Self {
         Error {
             r#type: ErrorType::InvalidAuthToken,
             message: "This auth token is invalid.".to_string(),
@@ -235,7 +235,7 @@ impl Error {
         }
     }
 
-    pub fn wrong_identity_model() -> Self {
+    pub(crate) fn wrong_identity_model() -> Self {
         Error {
             r#type: ErrorType::WrongIdentityModel,
             message: format!("This identity is valid but is not of this model."),
@@ -243,7 +243,7 @@ impl Error {
         }
     }
 
-    pub fn property_setter_error(reason: impl Into<String>) -> Self {
+    pub(crate) fn property_setter_error(reason: impl Into<String>) -> Self {
         Error {
             r#type: ErrorType::PropertySetterError,
             message: reason.into(),
@@ -253,7 +253,7 @@ impl Error {
 
     // new error types which should be used across the project
 
-    pub fn incorrect_json_format() -> Self {
+    pub(crate) fn incorrect_json_format() -> Self {
         Error {
             r#type: ErrorType::IncorrectJSONFormat,
             message: "Incorrect JSON format.".to_string(),
@@ -261,7 +261,7 @@ impl Error {
         }
     }
 
-    pub fn unexpected_input_root_type<'a>(expected: impl AsRef<str>) -> Self {
+    pub(crate) fn unexpected_input_root_type<'a>(expected: impl AsRef<str>) -> Self {
         Error {
             r#type: ErrorType::UnexpectedInputRootType,
             message: format!("Unexpected root input type. Expect {}.", expected.as_ref()),
@@ -269,7 +269,7 @@ impl Error {
         }
     }
 
-    pub fn unexpected_input_type<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
+    pub(crate) fn unexpected_input_type<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         Error {
             r#type: ErrorType::UnexpectedInputType,
             message: "Unexpected input type found.".to_string(),
@@ -277,7 +277,7 @@ impl Error {
         }
     }
 
-    pub fn unexpected_input_key<'a>(unexpected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
+    pub(crate) fn unexpected_input_key<'a>(unexpected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         Error {
             r#type: ErrorType::UnexpectedInputKey,
             message: "Unexpected key found.".to_string(),
@@ -285,7 +285,7 @@ impl Error {
         }
     }
 
-    pub fn unexpected_input_value<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
+    pub(crate) fn unexpected_input_value<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         Error {
             r#type: ErrorType::ValidationError,
             message: "Unexpected value found.".to_string(),
@@ -293,7 +293,7 @@ impl Error {
         }
     }
 
-    pub fn unexpected_input_value_with_reason<'a>(reason: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
+    pub(crate) fn unexpected_input_value_with_reason<'a>(reason: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         Error {
             r#type: ErrorType::ValidationError,
             message: "Unexpected value found.".to_string(),
@@ -301,7 +301,7 @@ impl Error {
         }
     }
 
-    pub fn missing_required_input<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
+    pub(crate) fn missing_required_input<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         Error {
             r#type: ErrorType::MissingRequiredInput,
             message: "Missing required input.".to_string(),
@@ -309,7 +309,7 @@ impl Error {
         }
     }
 
-    pub fn unexpected_object_length<'a>(expected: usize, key_path: impl AsRef<KeyPath<'a>>) -> Self {
+    pub(crate) fn unexpected_object_length<'a>(expected: usize, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         Error {
             r#type: ErrorType::UnexpectedObjectLength,
             message: "Unexpected object length.".to_string(),
@@ -317,7 +317,7 @@ impl Error {
         }
     }
 
-    pub fn invalid_key(unexpected_key: impl AsRef<str>, model: &Model) -> Self {
+    pub(crate) fn invalid_key(unexpected_key: impl AsRef<str>, model: &Model) -> Self {
         Error {
             r#type: ErrorType::InvalidKey,
             message: format!("Invalid key '{}' accessed on model `{}'", unexpected_key.as_ref(), model.name()),
@@ -325,7 +325,7 @@ impl Error {
         }
     }
 
-    pub fn invalid_operation(reason: impl AsRef<str>) -> Self {
+    pub(crate) fn invalid_operation(reason: impl AsRef<str>) -> Self {
         Error {
             r#type: ErrorType::InvalidOperation,
             message: reason.as_ref().to_string(),
@@ -333,7 +333,7 @@ impl Error {
         }
     }
 
-    pub fn unexpected_output_exception<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl AsRef<str>) -> Self {
+    pub(crate) fn unexpected_output_exception<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl AsRef<str>) -> Self {
         Error {
             r#type: ErrorType::UnexpectedOutputException,
             message: format!("Unexpected output exception."),
@@ -341,7 +341,7 @@ impl Error {
         }
     }
 
-    pub fn deletion_denied(relation_name: impl AsRef<str>) -> Self {
+    pub(crate) fn deletion_denied(relation_name: impl AsRef<str>) -> Self {
         Error {
             r#type: ErrorType::DeletionDenied,
             message: format!("Deletion denied by `{}'.", relation_name.as_ref()),
@@ -349,7 +349,7 @@ impl Error {
         }
     }
 
-    pub fn validation_error<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
+    pub(crate) fn validation_error<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
         Error {
             r#type: ErrorType::ValidationError,
             message: "Validation failed.".to_string(),
@@ -357,7 +357,7 @@ impl Error {
         }
     }
 
-    pub fn internal_server_error_with_path<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
+    pub(crate) fn internal_server_error_with_path<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
         Error {
             r#type: ErrorType::InternalServerError,
             message: "Internal server error.".to_string(),
@@ -365,7 +365,7 @@ impl Error {
         }
     }
 
-    pub fn permission_error<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
+    pub(crate) fn permission_error<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
         Error {
             r#type: ErrorType::PermissionError,
             message: "Permission denied.".to_string(),
