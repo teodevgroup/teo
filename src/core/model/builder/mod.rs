@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use inflector::Inflector;
 use to_mut::ToMut;
+use crate::core::action::Action;
 use crate::core::handler::Handler;
 use crate::core::connector::Connector;
 use crate::core::field::*;
@@ -34,6 +35,7 @@ pub struct ModelBuilder {
     pub(crate) after_delete_pipeline: Pipeline,
     pub(crate) can_read_pipeline: Pipeline,
     pub(crate) can_mutate_pipeline: Pipeline,
+    pub(crate) disabled_actions: Option<Vec<Action>>,
 }
 
 impl ModelBuilder {
@@ -59,6 +61,7 @@ impl ModelBuilder {
             after_delete_pipeline: Pipeline::new(),
             can_read_pipeline: Pipeline::new(),
             can_mutate_pipeline: Pipeline::new(),
+            disabled_actions: None,
         }
     }
 
@@ -254,6 +257,7 @@ impl ModelBuilder {
             local_output_keys: self.output_field_keys_and_property_keys(),
             relation_output_keys: self.output_relation_keys(),
             field_property_map: self.get_field_property_map(),
+            disabled_actions: self.disabled_actions,
         };
         Model::new_with_inner(Arc::new(inner))
     }

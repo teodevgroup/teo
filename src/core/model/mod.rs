@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::ops::BitOr;
 use std::sync::Arc;
 use maplit::hashset;
+use crate::core::action::Action;
 use crate::core::handler::Handler;
 use crate::core::field::Field;
 use crate::core::relation::Relation;
@@ -49,7 +50,8 @@ pub struct ModelInner {
     pub(crate) scalar_number_keys: Vec<String>,
     pub(crate) local_output_keys: Vec<String>,
     pub(crate) relation_output_keys: Vec<String>,
-    pub(crate) field_property_map: HashMap<String, Vec<String>>
+    pub(crate) field_property_map: HashMap<String, Vec<String>>,
+    pub(crate) disabled_actions: Option<Vec<Action>>,
 }
 
 #[derive(Clone)]
@@ -243,6 +245,10 @@ impl Model {
     pub(crate) fn can_mutate_pipeline(&self) -> &Pipeline { &self.inner.can_mutate_pipeline }
 
     pub(crate) fn can_read_pipeline(&self) -> &Pipeline { &self.inner.can_read_pipeline }
+
+    pub(crate) fn disabled_actions(&self) -> Option<Action> {
+        self.inner.disabled_actions
+    }
 }
 
 impl PartialEq for Model {

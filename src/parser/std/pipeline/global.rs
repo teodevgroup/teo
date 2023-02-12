@@ -21,7 +21,7 @@ use crate::parser::std::pipeline::object::{get_object, is_a, object_get, object_
 use crate::parser::std::pipeline::string::generation::{cuid, random_digits, slug, uuid};
 use crate::parser::std::pipeline::string::transform::{ellipsis, pad_end, pad_start, regex_replace, split, trim};
 use crate::parser::std::pipeline::string::validation::{has_prefix, has_suffix, is_alphabetic, is_alphanumeric, is_email, is_hex_color, is_numeric, is_prefix_of, is_secure_password, is_suffix_of, regex_match};
-use crate::parser::std::pipeline::value::{eq, gt, gte, exists, is_false, is_null, is_true, lt, lte, neq, one_of};
+use crate::parser::std::pipeline::value::{eq, gt, gte, exists, is_false, is_null, is_true, lt, lte, neq, one_of, alter};
 use crate::parser::std::pipeline::vector::{filter, item_at, join, map};
 
 pub(crate) struct GlobalPipelineInstallers {
@@ -124,6 +124,7 @@ impl GlobalPipelineInstallers {
         objects.insert("lte".to_owned(), lte);
         objects.insert("neq".to_owned(), neq);
         objects.insert("oneOf".to_owned(), one_of);
+        objects.insert("alter".to_owned(), alter);
         // vector
         objects.insert("join".to_owned(), join);
         objects.insert("itemAt".to_owned(), item_at);

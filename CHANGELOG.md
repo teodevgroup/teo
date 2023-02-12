@@ -222,7 +222,7 @@
 - Error in pipeline **[DONE]**
 - Rename pipeline modifier to pipeline item **[DONE]**
 - Error in pipeline program functions **[DONE]**
-- `$alter` item 
+- `$alter` item **[DONE]**
 - `@disable`
 - `@action`
 - `$print` item label argument

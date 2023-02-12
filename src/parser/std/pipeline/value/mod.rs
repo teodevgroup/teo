@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use crate::core::pipeline::item::Item;
+use crate::core::pipeline::items::value::alter::AlterItem;
 use crate::core::pipeline::items::value::eq::EqItem;
 use crate::core::pipeline::items::value::gt::GtItem;
 use crate::core::pipeline::items::value::gte::GteItem;
@@ -62,4 +63,9 @@ pub(crate) fn neq(args: Vec<Argument>) -> Arc<dyn Item> {
 pub(crate) fn one_of(args: Vec<Argument>) -> Arc<dyn Item> {
     let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
     Arc::new(OneOfItem::new(value.clone()))
+}
+
+pub(crate) fn alter(args: Vec<Argument>) -> Arc<dyn Item> {
+    let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
+    Arc::new(AlterItem::new(value.clone()))
 }

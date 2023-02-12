@@ -3,6 +3,7 @@ use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::Value;
 use crate::core::result::Result;
+
 #[derive(Debug, Clone)]
 pub struct EqItem {
     argument: Value
