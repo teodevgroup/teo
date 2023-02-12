@@ -76,4 +76,14 @@ impl<'a> Ctx<'a> {
     pub(crate) fn internal_server_error(&self, reason: impl Into<String>) -> Error {
         Error::internal_server_error_with_path(&self.path, reason.into())
     }
+
+    pub(crate) fn unwrap_custom_error(&self, error: Error) -> Error {
+        if error.is_custom_validation_error() {
+            Error::validation_error(&self.path, error.message)
+        } else if error.is_custom_internal_server_error() {
+            Error::internal_server_error_with_path(&self.path, error.message)
+        } else {
+            error
+        }
+    }
 }

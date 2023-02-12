@@ -52,7 +52,8 @@ pub enum ErrorType {
     InvalidOperation,
 
     // user defined
-    CustomError,
+    CustomInternalServerError,
+    CustomValidationError,
 
     // database
     RecordDecodingError,
@@ -72,7 +73,8 @@ impl ErrorType {
             ErrorType::InternalServerError => { 500 }
             ErrorType::ObjectNotFound => { 404 }
             ErrorType::InvalidAuthToken => { 401 }
-            ErrorType::CustomError => { 500 }
+            ErrorType::CustomInternalServerError => { 500 }
+            ErrorType::CustomValidationError => { 400 }
             ErrorType::WrongIdentityModel => { 401 }
             ErrorType::PropertySetterError => { 400 }
             ErrorType::UnexpectedInputRootType => { 400 }
@@ -217,9 +219,17 @@ impl Error {
         }
     }
 
-    pub fn custom_error(message: impl Into<String>) -> Self {
+    pub fn custom_internal_server_error(message: impl Into<String>) -> Self {
         Error {
-            r#type: ErrorType::CustomError,
+            r#type: ErrorType::CustomInternalServerError,
+            message: message.into(),
+            errors: None
+        }
+    }
+
+    pub fn custom_validation_error(message: impl Into<String>) -> Self {
+        Error {
+            r#type: ErrorType::CustomValidationError,
             message: message.into(),
             errors: None
         }
@@ -361,6 +371,14 @@ impl Error {
             message: "Permission denied.".to_string(),
             errors: Some(hashmap!{path.as_ref().to_string() => reason.into()})
         }
+    }
+
+    pub(crate) fn is_custom_internal_server_error(&self) -> bool {
+        self.r#type == ErrorType::CustomInternalServerError
+    }
+
+    pub(crate) fn is_custom_validation_error(&self) -> bool {
+        self.r#type == ErrorType::CustomValidationError
     }
 }
 

@@ -25,7 +25,7 @@ use crate::core::pipeline::ctx::validity::Validity;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::items::function::compare::{CompareArgument, CompareItem};
 use crate::core::pipeline::items::function::perform::{PerformArgument, PerformItem};
-use crate::core::pipeline::items::function::transform::{TransformArgument, TransformItem};
+use crate::core::pipeline::items::function::transform::{TransformResult, TransformArgument, TransformItem};
 use crate::core::pipeline::items::function::validate::{ValidateArgument, ValidateItem};
 use crate::core::property::Property;
 use crate::core::relation::Relation;
@@ -194,9 +194,10 @@ impl AppBuilder {
         EnvironmentVersion::Rust(env!("TEO_RUSTC_VERSION").to_string())
     }
 
-    pub fn transform<T, F>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
+    pub fn transform<T, F, R>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
         T: From<Value> + Into<Value> + Send + Sync + 'static,
-        F: TransformArgument<T> + 'static {
+        R: Into<TransformResult<T>> + Send + Sync + 'static,
+        F: TransformArgument<T, R> + 'static {
         self.callback_lookup_table.lock().unwrap().transforms.insert(name.into(), Arc::new(TransformItem::new(f)));
         self
     }
