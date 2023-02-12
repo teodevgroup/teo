@@ -219,7 +219,7 @@ impl AppBuilder {
 
     pub fn compare<T, O, F>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
         T: From<Value> + Send + Sync + 'static,
-        O: Into<Validity> + Send + Sync + 'static,
+        O: Into<ValidateResult> + Send + Sync + 'static,
         F: CompareArgument<T, O> + 'static {
         self.callback_lookup_table.lock().unwrap().compares.insert(name.into(), Arc::new(CompareItem::new(f)));
         self
