@@ -21,12 +21,11 @@ use crate::core::field::r#type::FieldType;
 use crate::core::graph::builder::GraphBuilder;
 use crate::parser::ast::field::FieldClass;
 use crate::prelude::{App, Value};
-use crate::core::pipeline::ctx::validity::Validity;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::items::function::compare::{CompareArgument, CompareItem};
 use crate::core::pipeline::items::function::perform::{PerformArgument, PerformItem};
 use crate::core::pipeline::items::function::transform::{TransformResult, TransformArgument, TransformItem};
-use crate::core::pipeline::items::function::validate::{ValidateArgument, ValidateItem};
+use crate::core::pipeline::items::function::validate::{ValidateArgument, ValidateItem, ValidateResult, Validity};
 use crate::core::property::Property;
 use crate::core::relation::Relation;
 use crate::parser::ast::r#type::Arity;
@@ -211,7 +210,7 @@ impl AppBuilder {
 
     pub fn validate<T, O, F>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
         T: From<Value> + Send + Sync + 'static,
-        O: Into<Validity> + Send + Sync + 'static,
+        O: Into<ValidateResult> + Send + Sync + 'static,
         F: ValidateArgument<T, O> + 'static {
         self.callback_lookup_table.lock().unwrap().validators.insert(name.into(), Arc::new(ValidateItem::new(f)));
         self

@@ -94,9 +94,9 @@ impl ErrorType {
 
 #[derive(Debug, PartialEq, Serialize, Clone)]
 pub struct Error {
-    pub r#type: ErrorType,
-    pub message: String,
-    pub errors: Option<HashMap<String, String>>
+    pub(crate) r#type: ErrorType,
+    pub(crate) message: String,
+    pub(crate) errors: Option<HashMap<String, String>>
 }
 
 impl Error {
