@@ -70,11 +70,11 @@ impl<T> From<T> for ValidateResult where T: Into<Validity> {
     }
 }
 
-impl<T> From<Result<T>> for ValidateResult where T: Into<Validity> {
-    fn from(value: Result<T>) -> Self {
+impl<T, U> From<std::result::Result<T, U>> for ValidateResult where T: Into<Validity>, U: Into<Error> {
+    fn from(value: std::result::Result<T, U>) -> Self {
         match value {
             Ok(t) => ValidateResult::Result(Ok(t.into())),
-            Err(e) => ValidateResult::Result(Err(e)),
+            Err(e) => ValidateResult::Result(Err(e.into())),
         }
     }
 }

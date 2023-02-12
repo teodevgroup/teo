@@ -390,5 +390,17 @@ impl Display for Error {
 
 impl std::error::Error for Error { }
 
+impl From<&str> for Error {
+    fn from(value: &str) -> Self {
+        Error::custom_internal_server_error(value)
+    }
+}
+
+impl From<String> for Error {
+    fn from(value: String) -> Self {
+        Error::custom_internal_server_error(value)
+    }
+}
+
 unsafe impl Sync for Error {}
 unsafe impl Send for Error {}
