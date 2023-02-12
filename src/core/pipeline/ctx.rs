@@ -1,5 +1,3 @@
-pub mod validity;
-
 use key_path::KeyPath;
 use crate::core::object::Object;
 use crate::core::result::Result;
