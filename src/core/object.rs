@@ -7,7 +7,7 @@ use key_path::{KeyPath, path};
 use async_recursion::async_recursion;
 use maplit::hashmap;
 use indexmap::IndexMap;
-use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, PROGRAM_CODE, DELETE, DISCONNECT, FIND, JOIN_CREATE, JOIN_DELETE, MANY, NESTED, SINGLE, UPDATE, UPSERT};
+use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, PROGRAM_CODE, DELETE, DISCONNECT, FIND, JOIN_CREATE, JOIN_DELETE, MANY, NESTED, SINGLE, UPDATE, UPSERT, NESTED_CREATE_ACTION, NESTED_DISCONNECT_ACTION, NESTED_SET_ACTION, NESTED_CONNECT_ACTION, NESTED_DELETE_MANY_ACTION, NESTED_UPDATE_MANY_ACTION, NESTED_UPDATE_ACTION, NESTED_DELETE_ACTION, NESTED_CREATE_MANY_ACTION, NESTED_CONNECT_OR_CREATE_ACTION, NESTED_UPSERT_ACTION};
 use crate::core::action::source::ActionSource;
 use crate::core::field::{Field, PreviousValueRule};
 use crate::core::field::optionality::Optionality;
@@ -1163,93 +1163,38 @@ impl Object {
         Ok(())
     }
 
+    async fn perform_relation_manipulation_many_inner(&self, relation: &Relation, action: Action, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+        match action.to_u32() {
+            NESTED_CREATE_ACTION => self.nested_create_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_CONNECT_ACTION => self.nested_connect_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_SET_ACTION => self.nested_connect_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_CONNECT_OR_CREATE_ACTION => self.nested_connect_or_create_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_DISCONNECT_ACTION => self.nested_many_disconnect_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_UPSERT_ACTION => self.nested_upsert_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_UPDATE_ACTION => self.nested_many_update_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_UPDATE_MANY_ACTION => self.nested_many_update_many_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_DELETE_ACTION => self.nested_many_delete_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_DELETE_MANY_ACTION => self.nested_many_delete_many_relation_object(relation, value, session.clone(), &path).await,
+            _ => unreachable!(),
+        }
+    }
+
     async fn perform_relation_manipulation_many(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         for (key, value) in value.as_hashmap().unwrap() {
             let key = key.as_str();
             let path = path + key;
-            match key {
-                "create" | "createMany" => {
-                    if let Some(_) = value.as_hashmap() {
-                        self.nested_create_relation_object(relation, value, session.clone(), &path).await?;
-                    } else if let Some(vec) = value.as_vec() {
-                        for (i, v) in vec.iter().enumerate() {
-                            self.nested_create_relation_object(relation, v, session.clone(), &(&path + i)).await?;
-                        }
-                    }
-                },
-                "connect" | "set" => {
-                    if let Some(_) = value.as_hashmap() {
-                        self.nested_connect_relation_object(relation, value, session.clone(), &path).await?;
-                    } else if let Some(vec) = value.as_vec() {
-                        for (i, v) in vec.iter().enumerate() {
-                            self.nested_connect_relation_object(relation, v, session.clone(), &(&path + i)).await?;
-                        }
-                    }
-                },
-                "connectOrCreate" => {
-                    if let Some(_) = value.as_hashmap() {
-                        self.nested_connect_or_create_relation_object(relation, value, session.clone(), &path).await?;
-                    } else if let Some(vec) = value.as_vec() {
-                        for (i, v) in vec.iter().enumerate() {
-                            self.nested_connect_or_create_relation_object(relation, v, session.clone(), &(&path + i)).await?;
-                        }
-                    }
-                },
-                "disconnect" => {
-                    if let Some(_) = value.as_hashmap() {
-                        self.nested_many_disconnect_relation_object(relation, value, session.clone(), &path).await?;
-                    } else if let Some(vec) = value.as_vec() {
-                        for (i, v) in vec.iter().enumerate() {
-                            self.nested_many_disconnect_relation_object(relation, v, session.clone(), &(&path + i)).await?;
-                        }
-                    }
-                },
-                "upsert" => {
-                    if let Some(_) = value.as_hashmap() {
-                        self.nested_upsert_relation_object(relation, value, session.clone(), &path).await?;
-                    } else if let Some(vec) = value.as_vec() {
-                        for (i, v) in vec.iter().enumerate() {
-                            self.nested_upsert_relation_object(relation, v, session.clone(), &(&path + i)).await?;
-                        }
-                    }
-                },
-                "update" => {
-                    if let Some(_) = value.as_hashmap() {
-                        self.nested_many_update_relation_object(relation, value, session.clone(), &path).await?;
-                    } else if let Some(vec) = value.as_vec() {
-                        for (i, v) in vec.iter().enumerate() {
-                            self.nested_many_update_relation_object(relation, v, session.clone(), &(&path + i)).await?;
-                        }
-                    }
-                },
-                "updateMany" => {
-                    if let Some(_) = value.as_hashmap() {
-                        self.nested_many_update_many_relation_object(relation, value, session.clone(), &path).await?;
-                    } else if let Some(vec) = value.as_vec() {
-                        for (i, v) in vec.iter().enumerate() {
-                            self.nested_many_update_many_relation_object(relation, v, session.clone(), &(&path + i)).await?;
-                        }
-                    }
-                },
-                "delete" => {
-                    if let Some(_) = value.as_hashmap() {
-                        self.nested_many_delete_relation_object(relation, value, session.clone(), &path).await?;
-                    } else if let Some(vec) = value.as_vec() {
-                        for (i, v) in vec.iter().enumerate() {
-                            self.nested_many_delete_relation_object(relation, v, session.clone(), &(&path + i)).await?;
-                        }
-                    }
-                },
-                "deleteMany" => {
-                    if let Some(_) = value.as_hashmap() {
-                        self.nested_many_delete_many_relation_object(relation, value, session.clone(), &path).await?;
-                    } else if let Some(vec) = value.as_vec() {
-                        for (i, v) in vec.iter().enumerate() {
-                            self.nested_many_delete_many_relation_object(relation, v, session.clone(), &(&path + i)).await?;
-                        }
-                    }
-                },
-                _ => unreachable!(),
+            let action = Action::nested_action_from_name(key).unwrap();
+            let other_model = self.graph().opposite_relation(relation).0;
+            if value.is_hashmap() {
+                let ctx = Ctx::initial_state_with_value(value.clone()).with_path(path).with_action(action);
+                let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
+                self.perform_relation_manipulation_many_inner(relation, new_action, &transformed_value, session.clone(), &path).await?;
+            } else {
+                for (index, value) in value.as_vec().unwrap().iter().enumerate() {
+                    let ctx = Ctx::initial_state_with_value(value.clone()).with_path(&(path.clone() + index)).with_action(action);
+                    let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
+                    self.perform_relation_manipulation_many_inner(relation, new_action, &transformed_value, session.clone(), &path).await?;
+                }
             }
         }
         Ok(())
