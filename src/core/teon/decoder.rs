@@ -9,7 +9,7 @@ use maplit::{hashmap, hashset};
 use once_cell::sync::Lazy;
 use rust_decimal::Decimal;
 use serde_json::{Value as JsonValue, Map as JsonMap};
-use crate::core::handler::Handler;
+use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, CREATE_MANY_HANDLER, DELETE, DISCONNECT, FIND_MANY_HANDLER, FIND_UNIQUE_HANDLER, MANY, NESTED, SET, SINGLE, UPDATE, UPSERT};
 use crate::core::error::Error;
 use crate::core::field::r#type::FieldType;
 use crate::core::model::Model;
@@ -18,7 +18,7 @@ use crate::core::graph::Graph;
 use crate::core::relation::Relation;
 use crate::core::teon::Value;
 
-pub(crate) struct Decoder {}
+pub(crate) struct Decoder { }
 
 impl Decoder {
 
@@ -26,7 +26,7 @@ impl Decoder {
         Self::decode_object_at_path(model, graph, json_value, path![])
     }
 
-    pub(crate) fn decode_action_arg(model: &Model, graph: &Graph, action: Handler, json_value: &JsonValue) -> Result<Value> {
+    pub(crate) fn decode_action_arg(model: &Model, graph: &Graph, action: Action, json_value: &JsonValue) -> Result<Value> {
         Self::decode_action_arg_at_path(model, graph, action, json_value, path![])
     }
 
@@ -51,27 +51,27 @@ impl Decoder {
             } else if let Some(property) = model.property(k) {
                 Ok((k.to_owned(), Self::decode_value_for_field_type(graph, property.r#type(), property.is_optional(), v, path)?))
             } else {
-                panic!("Unhandled key.")
+                unreachable!()
             }
         }).collect::<Result<HashMap<String, Value>>>()?))
     }
 
-    fn decode_action_arg_at_path<'a>(model: &Model, graph: &Graph, action: Handler, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
+    fn decode_action_arg_at_path<'a>(model: &Model, graph: &Graph, action: Action, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
         let path = path.as_ref();
         let json_map = if let Some(json_map) = json_value.as_object() {
             json_map
         } else {
             return Err(Error::unexpected_input_root_type("object"));
         };
-        Self::check_json_keys(json_map, action.allowed_input_json_keys(), path)?;
+        Self::check_json_keys(json_map, action.handler_allowed_input_json_keys(), path)?;
         let mut retval: HashMap<String, Value> = hashmap!{};
         for (key, value) in json_map {
             let key = key.as_str();
             let path = path + key;
             match key {
-                "where" => if action.requires_where() {
+                "where" => if action.handler_requires_where() {
                     retval.insert(key.to_owned(), Self::decode_where(model, graph, value, path)?);
-                } else if action.requires_where_unique() {
+                } else if action.handler_requires_where_unique() {
                     retval.insert(key.to_owned(), Self::decode_where_unique(model, graph, value, path)?);
                 },
                 "orderBy" => { retval.insert(key.to_owned(), Self::decode_order_by(model, value, path)?); }
@@ -84,10 +84,10 @@ impl Decoder {
                 "_avg" | "_sum" | "_min" | "_max" | "_count" => { retval.insert(key.to_owned(), Self::decode_aggregate(model, key, value, path)?); }
                 "by" => { retval.insert(key.to_owned(), Self::decode_by(model, value, path)?); }
                 "having" => { retval.insert(key.to_owned(), Self::decode_having(model, graph, value, path)?); }
-                "create" => { retval.insert(key.to_owned(), if action == Handler::CreateMany { Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_create(model, graph, v, p))? } else { Self::decode_create(model, graph, value, path)? } ); }
+                "create" => { retval.insert(key.to_owned(), if action.to_u32() == CREATE_MANY_HANDLER { Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_create(model, graph, v, p))? } else { Self::decode_create(model, graph, value, path)? } ); }
                 "update" => { retval.insert(key.to_owned(), Self::decode_update(model, graph, value, path)?); }
                 "credentials" => { retval.insert(key.to_owned(), Self::decode_credentials(model, graph, value, path)?); }
-                _ => panic!("Unhandled key.")
+                _ => unreachable!()
             }
         }
         if retval.contains_key("skip") || retval.contains_key("take") {
@@ -171,10 +171,28 @@ impl Decoder {
             let path = path + k;
             let (model, relation) = graph.opposite_relation(relation);
             match k {
-                "create" | "createMany" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_create_input(model, graph, relation, v, p))?)),
-                "connect" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_where_unique(model, graph, v, p))?)),
-                "connectOrCreate" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_connect_or_create_input(model, graph, relation, v, p))?)),
-                _ => panic!("Unhandled key")
+                "create" | "createMany" => {
+                    if model.has_action(Action::from_u32(NESTED | CREATE | MANY)) {
+                        Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_create_input(model, graph, relation, v, p))?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                }
+                "connect" => {
+                    if model.has_action(Action::from_u32(NESTED | CONNECT | SINGLE)) {
+                        Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_where_unique(model, graph, v, p))?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                }
+                "connectOrCreate" => {
+                    if model.has_action(Action::from_u32(NESTED | CONNECT_OR_CREATE | SINGLE)) {
+                        Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_connect_or_create_input(model, graph, relation, v, p))?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                }
+                _ => unreachable!()
             }
         }).collect::<Result<HashMap<String, Value>>>()?))
     }
@@ -192,14 +210,77 @@ impl Decoder {
             let path = path + k;
             let (model, relation) = graph.opposite_relation(relation);
             match k {
-                "create" | "createMany" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_create_input(model, graph, relation, v, p))?)),
-                "connect" | "set" | "disconnect" | "delete" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_where_unique(model, graph, v, p))?)),
-                "connectOrCreate" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_connect_or_create_input(model, graph, relation, v, p))?)),
-                "update" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_update_input(model, graph, relation, v, p))?)),
-                "updateMany" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_update_many_input(model, graph, relation, v, p))?)),
-                "deleteMany" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_where(model, graph, v, p))?)),
-                "upsert" => Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_upsert_input(model, graph, relation, v, p))?)),
-                _ => panic!("Unhandled key.")
+                "create" | "createMany" => {
+                    if model.has_action(Action::from_u32(NESTED | CREATE | MANY)) {
+                        Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_create_input(model, graph, relation, v, p))?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                },
+                "connect" => {
+                    if model.has_action(Action::from_u32(NESTED | CONNECT | SINGLE)) {
+                        Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_where_unique(model, graph, v, p))?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                },
+                "set" => {
+                    if model.has_action(Action::from_u32(NESTED | SET | SINGLE)) {
+                        Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_where_unique(model, graph, v, p))?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                }
+                "disconnect" => {
+                    if model.has_action(Action::from_u32(NESTED | DISCONNECT | SINGLE)) {
+                        Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_where_unique(model, graph, v, p))?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                }
+                "delete" => {
+                    if model.has_action(Action::from_u32(NESTED | DELETE | SINGLE)) {
+                        Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_where_unique(model, graph, v, p))?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                }
+                "connectOrCreate" => {
+                    if model.has_action(Action::from_u32(NESTED | CONNECT_OR_CREATE | SINGLE)) {
+                        Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_connect_or_create_input(model, graph, relation, v, p))?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                }
+                "update" => {
+                    if model.has_action(Action::from_u32(NESTED | UPDATE | SINGLE)) {
+                        Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_update_input(model, graph, relation, v, p))?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                }
+                "updateMany" => {
+                    if model.has_action(Action::from_u32(NESTED | UPDATE | MANY)) {
+                        Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_update_many_input(model, graph, relation, v, p))?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                }
+                "deleteMany" => {
+                    if model.has_action(Action::from_u32(NESTED | DELETE | MANY)) {
+                        Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_where(model, graph, v, p))?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                }
+                "upsert" => {
+                    if model.has_action(Action::from_u32(NESTED | UPSERT | SINGLE)) {
+                        Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_upsert_input(model, graph, relation, v, p))?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                }
+                _ => unreachable!()
             }
         }).collect::<Result<HashMap<String, Value>>>()?))
     }
@@ -230,10 +311,28 @@ impl Decoder {
             let path = path + k;
             let (model, relation) = graph.opposite_relation(relation);
             match k {
-                "create" => Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?)),
-                "connect" => Ok((k.to_owned(), Self::decode_where_unique(model, graph, v, path)?)),
-                "connectOrCreate" => Ok((k.to_owned(), Self::decode_nested_connect_or_create_input(model, graph, relation, v, path)?)),
-                _ => panic!("Unhandled key.")
+                "create" => {
+                    if model.has_action(Action::from_u32(NESTED | CREATE | SINGLE)) {
+                        Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                },
+                "connect" => {
+                    if model.has_action(Action::from_u32(NESTED | CONNECT | SINGLE)) {
+                        Ok((k.to_owned(), Self::decode_where_unique(model, graph, v, path)?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                },
+                "connectOrCreate" => {
+                    if model.has_action(Action::from_u32(NESTED | CONNECT_OR_CREATE | SINGLE)) {
+                        Ok((k.to_owned(), Self::decode_nested_connect_or_create_input(model, graph, relation, v, path)?))
+                    } else {
+                        Err(Error::unexpected_input_key(k, &path))?
+                    }
+                },
+                _ => unreachable!()
             }
         }).collect::<Result<HashMap<String, Value>>>()?))
     }
@@ -251,12 +350,42 @@ impl Decoder {
             let path = path + k;
             let (model, relation) = graph.opposite_relation(relation);
             match k {
-                "create" => Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?)),
-                "connect" | "set" => Ok((k.to_owned(), Self::decode_where_unique(model, graph, v, path)?)),
-                "connectOrCreate" => Ok((k.to_owned(), Self::decode_nested_connect_or_create_input(model, graph, relation, v, path)?)),
-                "disconnect" | "delete" => Ok((k.to_owned(), Self::decode_bool(v, path)?)),
-                "update" => Ok((k.to_owned(), Self::decode_nested_inner_update_input(model, graph, relation, v, path)?)),
-                _ => panic!("Unhandled key.")
+                "create" => if model.has_action(Action::from_u32(CREATE | NESTED | SINGLE)) {
+                    Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?))
+                } else {
+                    Err(Error::unexpected_input_key(k, &path))?
+                },
+                "connect" => if model.has_action(Action::from_u32(CONNECT | NESTED | SINGLE)) {
+                    Ok((k.to_owned(), Self::decode_where_unique(model, graph, v, path)?))
+                } else {
+                    Err(Error::unexpected_input_key(k, &path))?
+                },
+                "set" => if model.has_action(Action::from_u32(SET | NESTED | SINGLE)) {
+                    Ok((k.to_owned(), Self::decode_where_unique(model, graph, v, path)?))
+                } else {
+                    Err(Error::unexpected_input_key(k, &path))?
+                },
+                "connectOrCreate" => if model.has_action(Action::from_u32(CONNECT_OR_CREATE | NESTED | SINGLE)) {
+                    Ok((k.to_owned(), Self::decode_nested_connect_or_create_input(model, graph, relation, v, path)?))
+                } else {
+                    Err(Error::unexpected_input_key(k, &path))?
+                },
+                "disconnect" => if model.has_action(Action::from_u32(DISCONNECT | NESTED | SINGLE)) {
+                    Ok((k.to_owned(), Self::decode_bool(v, path)?))
+                } else {
+                    Err(Error::unexpected_input_key(k, &path))?
+                },
+                "delete" => if model.has_action(Action::from_u32(DELETE | NESTED | SINGLE)) {
+                    Ok((k.to_owned(), Self::decode_bool(v, path)?))
+                } else {
+                    Err(Error::unexpected_input_key(k, &path))?
+                },
+                "update" => if model.has_action(Action::from_u32(UPDATE | NESTED | SINGLE)) {
+                    Ok((k.to_owned(), Self::decode_nested_inner_update_input(model, graph, relation, v, path)?))
+                } else {
+                    Err(Error::unexpected_input_key(k, &path))?
+                },
+                _ => unreachable!()
             }
         }).collect::<Result<HashMap<String, Value>>>()?))
     }
@@ -362,7 +491,9 @@ impl Decoder {
         };
         let without: Vec<&str> = if let Some(relation) = relation {
             let mut without = vec![relation.name()];
-            without.extend(relation.fields().iter().map(|k| k.as_str()));
+            if relation.has_foreign_key() {
+                without.extend(relation.fields().iter().map(|k| k.as_str()));
+            }
             without
         } else {
             vec![]
@@ -469,9 +600,9 @@ impl Decoder {
             let relation = model.relation(name).unwrap();
             let model = graph.model(relation.model()).unwrap();
             if relation.is_vec() {
-                Ok(Self::decode_action_arg_at_path(model, graph, Handler::FindMany, json_value, path)?)
+                Ok(Self::decode_action_arg_at_path(model, graph, Action::from_u32(FIND_MANY_HANDLER), json_value, path)?)
             } else {
-                Ok(Self::decode_action_arg_at_path(model, graph, Handler::FindUnique, json_value, path)?)
+                Ok(Self::decode_action_arg_at_path(model, graph, Action::from_u32(FIND_UNIQUE_HANDLER), json_value, path)?)
             }
         } else {
             Err(Error::unexpected_input_type("bool or object", path))

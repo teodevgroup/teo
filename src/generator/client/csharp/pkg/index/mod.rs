@@ -1,5 +1,5 @@
 use inflector::Inflector;
-use crate::core::handler::{ResData, ResMeta, Handler};
+use crate::core::action::{Action, CREATE_HANDLER, FIND_FIRST_HANDLER, ResData, ResMeta, UPDATE_HANDLER, UPDATE_MANY_HANDLER, UPSERT_HANDLER};
 use crate::core::app::conf::ClientGeneratorConf;
 use crate::generator::client::csharp::pkg::index::doc::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, nested_connect_doc, nested_create_doc, nested_create_or_connect_doc, nested_delete_doc, nested_disconnect_doc, nested_set_doc, nested_update_doc, nested_upsert_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_connect_create_doc, unique_connect_doc, unique_where_doc, where_doc, where_doc_first};
 use crate::generator::client::csharp::r#type::ToCSharpType;
@@ -263,14 +263,14 @@ fn generate_model_upsert_with_where_unique_input(model: &Model, without: Option<
         n: "Update".to_string(),
         t: format!("{model_name}Update{without_title}Input"),
         o: false,
-        d: Some(create_or_update_doc(model, Handler::Update)),
+        d: Some(create_or_update_doc(model, Action::from_u32(UPDATE_HANDLER))),
         j: None
     });
     class_fields.push(CSharpClassField {
         n: "Create".to_string(),
         t: format!("{model_name}Create{without_title}Input"),
         o: false,
-        d: Some(create_or_update_doc(model, Handler::Create)),
+        d: Some(create_or_update_doc(model, Action::from_u32(CREATE_HANDLER))),
         j: None
     });
     let builder = CSharpClassBuilder {
@@ -302,7 +302,7 @@ fn generate_model_update_with_where_unique_input(model: &Model, without: Option<
         n: "Update".to_string(),
         t: format!("{model_name}Update{without_title}Input"),
         o: false,
-        d: Some(create_or_update_doc(model, Handler::Update)),
+        d: Some(create_or_update_doc(model, Action::from_u32(UPDATE_HANDLER))),
         j: None
     });
     let builder = CSharpClassBuilder {
@@ -336,7 +336,7 @@ fn generate_model_update_many_with_where_input(model: &Model, without: Option<&s
                 n: "Update".to_string(),
                 t: format!("{model_name}Update{without_title}Input"),
                 o: false,
-                d: Some(create_or_update_doc(model, Handler::UpdateMany)),
+                d: Some(create_or_update_doc(model, Action::from_u32(UPDATE_MANY_HANDLER))),
                 j: None
             }
         ],
@@ -866,20 +866,20 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _client: &ClientGeneratorCo
                     indent_level: 0
                 };
                 c.indented(builder.build());
-                Handler::iter().for_each(|a| {
-                    if !m.actions().contains(a) { return }
-                    let action_name = a.as_str();
+                Action::handlers_iter().for_each(|a| {
+                    if !m.has_action(*a) { return }
+                    let action_name = a.as_handler_str();
                     let mut fields = Vec::<CSharpClassField>::new();
-                    if a.requires_where() {
+                    if a.handler_requires_where() {
                         fields.push(CSharpClassField {
                             n: "Where".to_owned(),
                             t: format!("{model_name}WhereInput"),
                             o: true,
-                            d: Some(if a == &Handler::FindFirst { where_doc_first(m) } else { where_doc(m) }),
+                            d: Some(if *a == Action::from_u32(FIND_FIRST_HANDLER) { where_doc_first(m) } else { where_doc(m) }),
                             j: None,
                         });
                     }
-                    if a.requires_where_unique() {
+                    if a.handler_requires_where_unique() {
                         fields.push(CSharpClassField {
                             n: "Where".to_owned(),
                             t: format!("{model_name}WhereUniqueInput"),
@@ -902,7 +902,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _client: &ClientGeneratorCo
                         d: Some(include_doc(m)),
                         j: None,
                     });
-                    if a.requires_where() {
+                    if a.handler_requires_where() {
                         fields.push(CSharpClassField {
                             n: "OrderBy".to_owned(),
                             t: format!("Enumerable<{model_name}OrderByInput>"),
@@ -946,25 +946,25 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _client: &ClientGeneratorCo
                             j: None,
                         });
                     }
-                    if a.requires_create() {
+                    if a.handler_requires_create() {
                         fields.push(CSharpClassField {
                             n: "Create".to_owned(),
                             t: format!("{model_name}CreateInput"),
                             o: true,
-                            d: Some(create_or_update_doc(m, if a == &Handler::Upsert { Handler::Create } else { a.clone() })),
+                            d: Some(create_or_update_doc(m, if a == &Action::from_u32(UPSERT_HANDLER) { Action::from_u32(CREATE_HANDLER) } else { a.clone() })),
                             j: None,
                         });
                     }
-                    if a.requires_update() {
+                    if a.handler_requires_update() {
                         fields.push(CSharpClassField {
                             n: "Update".to_owned(),
                             t: format!("{model_name}UpdateInput"),
                             o: true,
-                            d: Some(create_or_update_doc(m, if a == &Handler::Upsert { Handler::Update } else { a.clone() })),
+                            d: Some(create_or_update_doc(m, if a == &Action::from_u32(UPSERT_HANDLER) { Action::from_u32(UPDATE_HANDLER) } else { a.clone() })),
                             j: None,
                         });
                     }
-                    if a.requires_credentials() {
+                    if a.handler_requires_credentials() {
                         fields.push(CSharpClassField {
                             n: "Credentials".to_owned(),
                             t: format!("{model_name}CredentialsInput"),
@@ -998,18 +998,18 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _client: &ClientGeneratorCo
                         b.block(format!("protected internal {model_class_name}Delegate(string? token = null) {{"), |b| {
                             b.line("_Token = token;");
                         }, "}");
-                        Handler::iter().for_each(|a| {
-                            if m.actions().contains(a) {
-                                let action_name = a.as_str();
-                                let action_var_name = a.as_str().to_pascal_case();
-                                let action_url_name = a.as_str();
-                                let res_meta = match a.res_meta() {
+                        Action::handlers_iter().for_each(|a| {
+                            if m.has_action(*a) {
+                                let action_name = a.as_handler_str();
+                                let action_var_name = a.as_handler_str().to_pascal_case();
+                                let action_url_name = a.as_handler_str();
+                                let res_meta = match a.handler_res_meta() {
                                     ResMeta::PagingInfo => "PagingInfo, ",
                                     ResMeta::TokenInfo => "TokenInfo, ",
                                     ResMeta::NoMeta => "",
                                     ResMeta::Other => "",
                                 };
-                                let res_data = match a.res_data() {
+                                let res_data = match a.handler_res_data() {
                                     ResData::Single => model_name.to_string(),
                                     ResData::Vec => model_name.to_string() + "[]",
                                     ResData::Other => "short".to_string(),

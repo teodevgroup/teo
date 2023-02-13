@@ -222,13 +222,18 @@
 - Error in pipeline **[DONE]**
 - Rename pipeline modifier to pipeline item **[DONE]**
 - Error in pipeline program functions **[DONE]**
-- `$alter` item **[DONE]**
-- `@disable`
-- `@canAccess`
-- `@action`
-- `$print` item label argument
-- Pipeline documentation
+- Entry level `@disable` **[DONE]**
+- Nested level `@disable` **[DONE]**
+- `@redirect` item to redirect action **[DONE]**
+- `@set` and `@get` works for object, vec and map **[DONE]**
+- Entry level `@action` **[DONE]**
+- Nested level `@action`
 - Soft delete support
+- `$print` item label argument
+- Manually test pipeline modifiers
+- Pipeline documentation
+- Property decorator documentation
+- Relation decorator documentation
 - Soft delete documentation
 - random float modifier
 - random int modifier
@@ -259,6 +264,7 @@
 - Revamp server outputs
 
 #### 0.0.48
+- `@canAccess`
 - Linting, warnings and errors
 - Relation with read write rules
 

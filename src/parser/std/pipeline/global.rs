@@ -13,15 +13,15 @@ use crate::parser::std::pipeline::custom_function::{custom_callback, custom_comp
 use crate::parser::std::pipeline::datetime::{now, today};
 use crate::parser::std::pipeline::debug::print;
 use crate::parser::std::pipeline::identity::identity;
-use crate::parser::std::pipeline::intent::when;
+use crate::parser::std::pipeline::action::when;
 use crate::parser::std::pipeline::logical::{all_modifier, and_modifier, any_modifier, if_modifier, invalid, not_modifier, or_modifier, passed, valid};
 use crate::parser::std::pipeline::math::{abs, add, cbrt, ceil, divide, floor, max, min, modular, multiply, pow, root, round, sqrt, subtract};
 use crate::parser::std::pipeline::number::{is_even, is_odd};
-use crate::parser::std::pipeline::object::{get_object, is_a, object_get, object_previous_value, object_set};
+use crate::parser::std::pipeline::object::{ctx_self, is_a, object_get, object_previous_value, object_set};
 use crate::parser::std::pipeline::string::generation::{cuid, random_digits, slug, uuid};
 use crate::parser::std::pipeline::string::transform::{ellipsis, pad_end, pad_start, regex_replace, split, trim};
 use crate::parser::std::pipeline::string::validation::{has_prefix, has_suffix, is_alphabetic, is_alphanumeric, is_email, is_hex_color, is_numeric, is_prefix_of, is_secure_password, is_suffix_of, regex_match};
-use crate::parser::std::pipeline::value::{eq, gt, gte, exists, is_false, is_null, is_true, lt, lte, neq, one_of, alter};
+use crate::parser::std::pipeline::value::{eq, gt, gte, exists, is_false, is_null, is_true, lt, lte, neq, one_of};
 use crate::parser::std::pipeline::vector::{filter, item_at, join, map};
 
 pub(crate) struct GlobalPipelineInstallers {
@@ -83,7 +83,7 @@ impl GlobalPipelineInstallers {
         objects.insert("isEven".to_owned(), is_even);
         objects.insert("isOdd".to_owned(), is_odd);
         // object
-        objects.insert("self".to_owned(), get_object);
+        objects.insert("self".to_owned(), ctx_self);
         objects.insert("get".to_owned(), object_get);
         objects.insert("set".to_owned(), object_set);
         objects.insert("previous".to_owned(), object_previous_value);
@@ -124,7 +124,6 @@ impl GlobalPipelineInstallers {
         objects.insert("lte".to_owned(), lte);
         objects.insert("neq".to_owned(), neq);
         objects.insert("oneOf".to_owned(), one_of);
-        objects.insert("alter".to_owned(), alter);
         // vector
         objects.insert("join".to_owned(), join);
         objects.insert("itemAt".to_owned(), item_at);

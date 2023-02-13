@@ -12,10 +12,12 @@ pub(crate) mod after_delete;
 pub(crate) mod can_read;
 pub(crate) mod can_mutate;
 pub(crate) mod disable;
+pub(crate) mod action;
 
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use crate::parser::ast::accessible::Accessible;
+use crate::parser::std::decorators::model::action::action_decorator;
 use crate::parser::std::decorators::model::after_delete::after_delete_decorator;
 use crate::parser::std::decorators::model::after_save::after_save_decorator;
 use crate::parser::std::decorators::model::before_delete::before_delete_decorator;
@@ -55,6 +57,7 @@ impl GlobalModelDecorators {
         objects.insert("beforeDelete".to_owned(), Accessible::ModelDecorator(before_delete_decorator));
         objects.insert("afterDelete".to_owned(), Accessible::ModelDecorator(after_delete_decorator));
         objects.insert("disable".to_owned(), Accessible::ModelDecorator(disable_decorator));
+        objects.insert("action".to_owned(), Accessible::ModelDecorator(action_decorator));
         Self { objects }
     }
 

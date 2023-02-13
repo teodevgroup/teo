@@ -1157,7 +1157,7 @@ impl Object {
                 "disconnect" => self.nested_disconnect_relation_object(relation, value, session.clone(), &path).await?,
                 "update" => self.nested_update_relation_object(relation, value, session.clone(), &path).await?,
                 "delete" => self.nested_delete_relation_object(relation, value, session.clone(), &path).await?,
-                _ => panic!("Unhandled key.")
+                _ => unreachable!()
             }
         }
         Ok(())
@@ -1175,8 +1175,6 @@ impl Object {
                         for (i, v) in vec.iter().enumerate() {
                             self.nested_create_relation_object(relation, v, session.clone(), &(&path + i)).await?;
                         }
-                    } else {
-                        panic!("Unhandled type.")
                     }
                 },
                 "connect" | "set" => {
@@ -1186,8 +1184,6 @@ impl Object {
                         for (i, v) in vec.iter().enumerate() {
                             self.nested_connect_relation_object(relation, v, session.clone(), &(&path + i)).await?;
                         }
-                    } else {
-                        panic!("Unhandled type.")
                     }
                 },
                 "connectOrCreate" => {
@@ -1197,8 +1193,6 @@ impl Object {
                         for (i, v) in vec.iter().enumerate() {
                             self.nested_connect_or_create_relation_object(relation, v, session.clone(), &(&path + i)).await?;
                         }
-                    } else {
-                        panic!("Unhandled type.")
                     }
                 },
                 "disconnect" => {
@@ -1208,8 +1202,6 @@ impl Object {
                         for (i, v) in vec.iter().enumerate() {
                             self.nested_many_disconnect_relation_object(relation, v, session.clone(), &(&path + i)).await?;
                         }
-                    } else {
-                        panic!("Unhandled type.")
                     }
                 },
                 "upsert" => {
@@ -1219,8 +1211,6 @@ impl Object {
                         for (i, v) in vec.iter().enumerate() {
                             self.nested_upsert_relation_object(relation, v, session.clone(), &(&path + i)).await?;
                         }
-                    } else {
-                        panic!("Unhandled type.")
                     }
                 },
                 "update" => {
@@ -1230,8 +1220,6 @@ impl Object {
                         for (i, v) in vec.iter().enumerate() {
                             self.nested_many_update_relation_object(relation, v, session.clone(), &(&path + i)).await?;
                         }
-                    } else {
-                        panic!("Unhandled type.")
                     }
                 },
                 "updateMany" => {
@@ -1241,8 +1229,6 @@ impl Object {
                         for (i, v) in vec.iter().enumerate() {
                             self.nested_many_update_many_relation_object(relation, v, session.clone(), &(&path + i)).await?;
                         }
-                    } else {
-                        panic!("Unhandled type.")
                     }
                 },
                 "delete" => {
@@ -1252,8 +1238,6 @@ impl Object {
                         for (i, v) in vec.iter().enumerate() {
                             self.nested_many_delete_relation_object(relation, v, session.clone(), &(&path + i)).await?;
                         }
-                    } else {
-                        panic!("Unhandled type.")
                     }
                 },
                 "deleteMany" => {
@@ -1263,11 +1247,9 @@ impl Object {
                         for (i, v) in vec.iter().enumerate() {
                             self.nested_many_delete_many_relation_object(relation, v, session.clone(), &(&path + i)).await?;
                         }
-                    } else {
-                        panic!("Unhandled type.")
                     }
                 },
-                _ => panic!("Unhandled key."),
+                _ => unreachable!(),
             }
         }
         Ok(())

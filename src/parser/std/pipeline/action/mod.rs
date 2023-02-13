@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use crate::core::action::Action;
 use crate::core::pipeline::item::Item;
+use crate::core::pipeline::items::action::redirect::RedirectItem;
 use crate::core::pipeline::items::action::when::WhenItem;
 use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
@@ -15,6 +16,22 @@ pub(crate) fn when(args: Vec<Argument>) -> Arc<dyn Item> {
         Value::RawEnumChoice(enum_member) => {
             let action = Action::from_name(enum_member);
             Arc::new(WhenItem::new(vec![action], pipeline.clone()))
+        }
+        _ => {
+            panic!()
+        }
+    }
+}
+
+pub(crate) fn redirect(args: Vec<Argument>) -> Arc<dyn Item> {
+    let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
+    match value {
+        Value::RawOptionChoice(action_value) => {
+            Arc::new(RedirectItem::new(Action::from_u32(*action_value)))
+        }
+        Value::RawEnumChoice(enum_member) => {
+            let action = Action::from_name(enum_member);
+            Arc::new(RedirectItem::new(action))
         }
         _ => {
             panic!()

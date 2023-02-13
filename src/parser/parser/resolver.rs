@@ -355,7 +355,7 @@ impl Resolver {
                         ExpressionKind::ArgumentList(argument_list) => {
                             let mut args = argument_list.clone();
                             for (index, arg) in &mut args.arguments.iter_mut().enumerate() {
-                                let value = if &previous_identifier.unwrap().name == "when" && index == 0 {
+                                let value = if ((&previous_identifier.unwrap().name == "when") || (&previous_identifier.unwrap().name == "redirect")) && index == 0 {
                                     Self::resolve_expression_kind_force_value(parser, source, &arg.value, true)
                                 } else {
                                     Self::resolve_expression_kind_force_value(parser, source, &arg.value, false)

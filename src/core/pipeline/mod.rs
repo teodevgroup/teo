@@ -24,11 +24,20 @@ impl Pipeline {
         self.items.len() > 0
     }
 
-    pub(crate) async fn process(&self, mut ctx: Ctx<'_>) -> Result<Value> {
+    pub(crate) async fn process(&self, ctx: Ctx<'_>) -> Result<Value> {
+        let mut ctx = ctx;
         for item in &self.items {
             ctx = item.call(ctx.clone()).await?;
         }
         Ok(ctx.value)
+    }
+
+    pub(crate) async fn process_with_ctx_result<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+        let mut ctx = ctx;
+        for item in &self.items {
+            ctx = item.call(ctx.clone()).await?;
+        }
+        Ok(ctx)
     }
 
     pub(crate) async fn process_into_permission_result(&self, ctx: Ctx<'_>) -> Result<()> {

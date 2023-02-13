@@ -2,8 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use inflector::Inflector;
 use to_mut::ToMut;
-use crate::core::action::Action;
-use crate::core::handler::Handler;
+use crate::core::action::{Action, CREATE_HANDLER, CREATE_MANY_HANDLER, IDENTITY_HANDLER, SIGN_IN_HANDLER};
 use crate::core::connector::Connector;
 use crate::core::field::*;
 use crate::core::field::Field;
@@ -36,6 +35,7 @@ pub struct ModelBuilder {
     pub(crate) can_read_pipeline: Pipeline,
     pub(crate) can_mutate_pipeline: Pipeline,
     pub(crate) disabled_actions: Option<Vec<Action>>,
+    pub(crate) action_transformers: Vec<Pipeline>,
 }
 
 impl ModelBuilder {
@@ -62,6 +62,7 @@ impl ModelBuilder {
             can_read_pipeline: Pipeline::new(),
             can_mutate_pipeline: Pipeline::new(),
             disabled_actions: None,
+            action_transformers: vec![],
         }
     }
 
@@ -202,7 +203,10 @@ impl ModelBuilder {
             }
         }
         let mut relations_map: HashMap<String, Arc<Relation>> = HashMap::new();
-        let relations_vec: Vec<Arc<Relation>> = self.relations.iter().map(|rb| { Arc::new(rb.clone()) }).collect();
+        let relations_vec: Vec<Arc<Relation>> = self.relations.clone().iter_mut().map(|rb| {
+            rb.finalize(&fields_map);
+            Arc::new(rb.clone())
+        }).collect();
         for relation in relations_vec.iter() {
             relations_map.insert(relation.name().to_owned(), relation.clone());
         }
@@ -227,7 +231,6 @@ impl ModelBuilder {
             description: self.description.clone(),
             identity: self.identity,
             r#virtual: self.r#virtual,
-            actions: self.figure_out_actions(),
             fields_vec,
             fields_map,
             relations_map,
@@ -257,7 +260,9 @@ impl ModelBuilder {
             local_output_keys: self.output_field_keys_and_property_keys(),
             relation_output_keys: self.output_relation_keys(),
             field_property_map: self.get_field_property_map(),
+            handler_actions: self.figure_out_actions(),
             disabled_actions: self.disabled_actions.clone(),
+            action_transformers: self.action_transformers.clone(),
         };
         Model::new_with_inner(Arc::new(inner))
     }
@@ -419,21 +424,29 @@ impl ModelBuilder {
             .collect()
     }
 
-    pub(crate) fn figure_out_actions(&self) -> HashSet<Handler> {
+    pub(crate) fn add_action_transformer(&mut self, pipeline: Pipeline) {
+        self.action_transformers.push(pipeline);
+    }
+
+    pub(crate) fn figure_out_actions(&self) -> HashSet<Action> {
         let mut default = if self.internal {
             HashSet::new()
         } else if self.r#virtual {
-            HashSet::from([Handler::Create, Handler::CreateMany])
+            HashSet::from([Action::from_u32(CREATE_HANDLER), Action::from_u32(CREATE_MANY_HANDLER)])
         } else {
-            Handler::default()
+            Action::handlers_default()
         };
         if self.identity {
-            default.insert(Handler::SignIn);
-            default.insert(Handler::Identity);
+            default.insert(Action::from_u32(SIGN_IN_HANDLER));
+            default.insert(Action::from_u32(IDENTITY_HANDLER));
         }
-        default
-        // let disabled = self.actions_builder.get_disabled_list();
-        // HashSet::from_iter(default.difference(disabled).map(|x| *x))
+        if let Some(disabled) = &self.disabled_actions {
+            default.iter().filter(|a| {
+                !a.passes(disabled)
+            }).cloned().collect()
+        } else {
+            default
+        }
     }
 
     fn get_field_property_map(&self) -> HashMap<String, Vec<String>> {

@@ -3,7 +3,7 @@ pub(crate) mod bcrypt;
 pub(crate) mod datetime;
 pub(crate) mod custom_function;
 pub(crate) mod identity;
-pub(crate) mod intent;
+pub(crate) mod action;
 pub(crate) mod logical;
 pub(crate) mod math;
 pub(crate) mod number;

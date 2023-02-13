@@ -1,13 +1,13 @@
 use inflector::Inflector;
+use crate::core::action::{Action, FIND_MANY_HANDLER, FIND_FIRST_HANDLER, FIND_UNIQUE_HANDLER, ResData, UPSERT_HANDLER, AGGREGATE_HANDLER, CREATE_HANDLER, UPDATE_HANDLER};
 use crate::generator::lib::cases::{field_description, field_localized_name, model_api_object_description, model_localized_name, model_localized_name_word_case, relation_description, relation_localized_name};
-use crate::core::handler::{ResData, Handler};
 use crate::core::field::Field;
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::relation::Relation;
 
 pub(crate) fn simple_model_example(name: &str, model: &Model) -> String {
-    if model.actions().contains(&Handler::FindMany) {
+    if model.has_action(Action::from_u32(FIND_MANY_HANDLER)) {
         let singular_var = model.name().to_camel_case();
         let plural_var = &singular_var.to_plural();
         let plural_word = &plural_var.to_word_case();
@@ -24,7 +24,7 @@ pub(crate) fn simple_model_example(name: &str, model: &Model) -> String {
 
 pub(crate) fn main_object_doc(name: &str, graph: &Graph) -> String {
     let pascal_name = name.to_pascal_case();
-    let example = if let Some(model) = graph.models().iter().find(|m| { m.actions().contains(&Handler::FindMany)}) {
+    let example = if let Some(model) = graph.models().iter().find(|m| { m.has_action(Action::from_u32(FIND_MANY_HANDLER))}) {
         simple_model_example(name, model)
     } else {
         "".to_owned()
@@ -53,21 +53,21 @@ pub(crate) fn action_group_doc(name: &str, model: &Model) -> String {
 "#)
 }
 
-pub(crate) fn action_and_model(r#type: Handler, model: &Model) -> String {
+pub(crate) fn action_and_model(r#type: Action, model: &Model) -> String {
     let _model_name = model.name();
-    let _action_name = r#type.as_str();
+    let _action_name = r#type.as_handler_str();
     let localized_name = model_localized_name_word_case(model);
-    let verb = match r#type {
-        Handler::FindFirst | Handler::FindUnique => "find".to_owned(),
-        Handler::Upsert => "create or update".to_owned(),
-        Handler::Aggregate => "aggregate on".to_owned(),
-        _ => r#type.as_str().to_word_case(),
+    let verb = match r#type.to_u32() {
+        FIND_FIRST_HANDLER | FIND_UNIQUE_HANDLER => "find".to_owned(),
+        UPSERT_HANDLER => "create or update".to_owned(),
+        AGGREGATE_HANDLER => "aggregate on".to_owned(),
+        _ => r#type.as_handler_str().to_word_case(),
     };
-    let object = match r#type.res_data() {
+    let object = match r#type.handler_res_data() {
         ResData::Vec | ResData::Number | ResData::Other => localized_name.to_plural(),
         ResData::Single => {
-            match r#type {
-                Handler::FindUnique => format!("a unique {localized_name}"),
+            match r#type.to_u32() {
+                FIND_UNIQUE_HANDLER => format!("a unique {localized_name}"),
                 _ => localized_name.articlize()
             }
         },
@@ -75,10 +75,10 @@ pub(crate) fn action_and_model(r#type: Handler, model: &Model) -> String {
     format!("{verb} {object}")
 }
 
-pub(crate) fn action_doc(name: &str, r#type: Handler, model: &Model) -> String {
+pub(crate) fn action_doc(name: &str, r#type: Action, model: &Model) -> String {
     let model_name = model.name();
     let model_name_camel_case = model_name.to_camel_case();
-    let action_name = r#type.as_str();
+    let action_name = r#type.as_handler_str();
     let action_name_camel_case = action_name.to_camel_case();
     let lower_case_main_doc = action_and_model(r#type, model);
     let main_doc = lower_case_main_doc.to_sentence_case();
@@ -108,14 +108,14 @@ pub(crate) fn include_doc(model: &Model) -> String {
  */"#)
 }
 
-pub(crate) fn create_or_update_doc(model: &Model, action: Handler) -> String {
+pub(crate) fn create_or_update_doc(model: &Model, action: Action) -> String {
     let verb_and_object = action_and_model(action, model);
     format!(r#"/**
  * Data needed to {verb_and_object}.
  */"#)
 }
 
-pub(crate) fn credentials_doc(model: &Model, action: Handler) -> String {
+pub(crate) fn credentials_doc(model: &Model, action: Action) -> String {
     let verb_and_object = action_and_model(action, model);
     format!(r#"/**
  * Credential data needed to {verb_and_object}.

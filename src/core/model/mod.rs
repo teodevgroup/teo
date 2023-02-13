@@ -3,11 +3,13 @@ use std::ops::BitOr;
 use std::sync::Arc;
 use maplit::hashset;
 use crate::core::action::{Action, IDENTITY, SIGN_IN};
-use crate::core::handler::Handler;
 use crate::core::field::Field;
+use crate::core::pipeline::ctx::Ctx;
 use crate::core::relation::Relation;
 use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
+use crate::prelude::Value;
+use crate::core::result::Result;
 use self::index::ModelIndex;
 
 pub(crate) mod builder;
@@ -21,7 +23,6 @@ pub struct ModelInner {
     pub(crate) description: String,
     pub(crate) identity: bool,
     pub(crate) r#virtual: bool,
-    pub(crate) actions: HashSet<Handler>,
     pub(crate) fields_vec: Vec<Arc<Field>>,
     pub(crate) fields_map: HashMap<String, Arc<Field>>,
     pub(crate) relations_vec: Vec<Arc<Relation>>,
@@ -51,7 +52,9 @@ pub struct ModelInner {
     pub(crate) local_output_keys: Vec<String>,
     pub(crate) relation_output_keys: Vec<String>,
     pub(crate) field_property_map: HashMap<String, Vec<String>>,
+    pub(crate) handler_actions: HashSet<Action>,
     pub(crate) disabled_actions: Option<Vec<Action>>,
+    pub(crate) action_transformers: Vec<Pipeline>,
 }
 
 #[derive(Clone)]
@@ -93,8 +96,8 @@ impl Model {
         self.inner.r#virtual
     }
 
-    pub(crate) fn actions(&self) -> &HashSet<Handler> {
-        &self.inner.actions
+    pub(crate) fn actions(&self) -> &HashSet<Action> {
+        &self.inner.handler_actions
     }
 
     pub(crate) fn fields(&self) -> &Vec<Arc<Field>> {
@@ -212,7 +215,7 @@ impl Model {
                 return false;
             }
         }
-        if ((action & IDENTITY) != 0) || ((action & SIGN_IN) != 0) {
+        if ((action.to_u32() & IDENTITY) != 0) || ((action.to_u32() & SIGN_IN) != 0) {
             return self.inner.identity;
         }
         true
@@ -256,6 +259,18 @@ impl Model {
 
     pub(crate) fn disabled_actions(&self) -> Option<&Vec<Action>> {
         self.inner.disabled_actions.as_ref()
+    }
+
+    pub(crate) fn has_action_transformers(&self) -> bool {
+        self.inner.action_transformers.len() > 0
+    }
+
+    pub(crate) async fn transformed_action(&self, ctx: Ctx<'_>) -> Result<(Value, Action)> {
+        let mut ctx = ctx;
+        for transformer in self.inner.action_transformers.iter() {
+            ctx = transformer.process_with_ctx_result(ctx).await?;
+        }
+        Ok((ctx.value, ctx.action))
     }
 }
 

@@ -11,9 +11,13 @@ use futures_util::StreamExt;
 use key_path::{KeyPath, path};
 use serde_json::{json, Value as JsonValue};
 use to_mut::ToMut;
-use crate::core::action::{Action, CREATE, DELETE, ENTRY, FIND, IDENTITY, MANY, SINGLE, UPDATE, UPSERT};
+use crate::core::action::{
+    Action, CREATE, DELETE, ENTRY, FIND, IDENTITY, MANY, SINGLE, UPDATE, UPSERT,
+    FIND_UNIQUE_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, CREATE_HANDLER, UPDATE_HANDLER,
+    UPSERT_HANDLER, DELETE_HANDLER, CREATE_MANY_HANDLER, UPDATE_MANY_HANDLER, DELETE_MANY_HANDLER,
+    COUNT_HANDLER, AGGREGATE_HANDLER, GROUP_BY_HANDLER, SIGN_IN_HANDLER, IDENTITY_HANDLER,
+};
 use crate::core::action::source::ActionSource;
-use crate::core::handler::Handler;
 use crate::core::app::conf::ServerConf;
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
@@ -683,93 +687,98 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
                 Ok(identity) => { identity },
                 Err(err) => return HttpResponse::Unauthorized().json(json!({"error": err }))
             };
-            // let _action_def = model_def.get_action_def(action);
-            let transformed_body = match Decoder::decode_action_arg(model_def, graph, action, &parsed_body) {
+
+            let parsed_body = match Decoder::decode_action_arg(model_def, graph, action, &parsed_body) {
                 Ok(body) => body,
                 Err(err) => return err.into()
             };
-            // let transformed_body = if let Some(action_def) = action_def {
-            //     action_def.transform(&parsed_body, identity.clone()).await
-            // } else {
-            //     parsed_body
-            // };
+            let (transformed_body, action) = if model_def.has_action_transformers() {
+                let ctx = Ctx::initial_state_with_value(parsed_body).with_action(action);
+                match model_def.transformed_action(ctx).await {
+                    Ok(result) => result,
+                    Err(err) => return err.into(),
+                }
+            } else {
+                (parsed_body, action)
+            };
             let source = ActionSource::Identity(identity);
-            match action {
-                Handler::FindUnique => {
+            match action.to_u32() {
+                FIND_UNIQUE_HANDLER => {
                     let result = handle_find_unique(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "FindUnique", model_def.name(), result.status().as_u16());
                     return result;
                 }
-                Handler::FindFirst => {
+                FIND_FIRST_HANDLER => {
                     let result = handle_find_first(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "FindFirst", model_def.name(), result.status().as_u16());
                     result
                 }
-                Handler::FindMany => {
+                FIND_MANY_HANDLER => {
                     let result = handle_find_many(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "FindMany", model_def.name(), result.status().as_u16());
                     result
                 }
-                Handler::Create => {
+                CREATE_HANDLER => {
                     let result = handle_create(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "Create", model_def.name(), result.status().as_u16());
                     result
                 }
-                Handler::Update => {
+                UPDATE_HANDLER => {
                     let result = handle_update(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "Update", model_def.name(), result.status().as_u16());
                     result
                 }
-                Handler::Upsert => {
+                UPSERT_HANDLER => {
                     let result = handle_upsert(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "Upsert", model_def.name(), result.status().as_u16());
                     result
                 }
-                Handler::Delete => {
+                DELETE_HANDLER => {
                     let result = handle_delete(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "Delete", model_def.name(), result.status().as_u16());
                     result
                 }
-                Handler::CreateMany => {
+                CREATE_MANY_HANDLER => {
                     let result = handle_create_many(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "CreateMany", model_def.name(), result.status().as_u16());
                     result
                 }
-                Handler::UpdateMany => {
+                UPDATE_MANY_HANDLER => {
                     let result = handle_update_many(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "UpdateMany", model_def.name(), result.status().as_u16());
                     result
                 }
-                Handler::DeleteMany => {
+                DELETE_MANY_HANDLER => {
                     let result = handle_delete_many(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "DeleteMany", model_def.name(), result.status().as_u16());
                     result
                 }
-                Handler::Count => {
+                COUNT_HANDLER => {
                     let result = handle_count(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "Count", model_def.name(), result.status().as_u16());
                     result
                 }
-                Handler::Aggregate => {
+                AGGREGATE_HANDLER => {
                     let result = handle_aggregate(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "Aggregate", model_def.name(), result.status().as_u16());
                     result
                 }
-                Handler::GroupBy => {
+                GROUP_BY_HANDLER => {
                     let result = handle_group_by(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, "GroupBy", model_def.name(), result.status().as_u16());
                     result
                 }
-                Handler::SignIn => {
+                SIGN_IN_HANDLER => {
                     let result = handle_sign_in(&graph, &transformed_body, model_def, conf).await;
                     log_request(start, "SignIn", model_def.name(), result.status().as_u16());
                     result
                 }
-                Handler::Identity => {
+                IDENTITY_HANDLER => {
                     let result = handle_identity(&graph, &transformed_body, model_def, conf, source.clone()).await;
                     log_request(start, "Identity", model_def.name(), result.status().as_u16());
                     result
                 }
+                _ => unreachable!()
             }
         }));
     app

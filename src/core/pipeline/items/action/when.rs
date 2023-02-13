@@ -4,6 +4,7 @@ use crate::core::pipeline::item::Item;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
+
 #[derive(Debug, Clone)]
 pub struct WhenItem {
     actions: Vec<Action>,

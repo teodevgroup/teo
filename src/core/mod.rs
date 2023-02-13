@@ -13,5 +13,4 @@ pub(crate) mod field;
 pub(crate) mod relation;
 pub(crate) mod property;
 pub(crate) mod input;
-pub(crate) mod handler;
 pub(crate) mod action;

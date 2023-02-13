@@ -123,7 +123,7 @@ impl Error {
 
     pub(crate) fn unique_value_duplicated(field: impl AsRef<str>) -> Self {
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
-        errors.insert(field.as_ref().into(), "Value is not unique.".into());
+        errors.insert(field.as_ref().into(), "value is not unique".into());
         Error {
             r#type: ErrorType::ValidationError,
             message: "Unique value duplicated.".to_string(),

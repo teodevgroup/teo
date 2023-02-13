@@ -1,7 +1,10 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 use maplit::hashset;
 use once_cell::sync::Lazy;
+use crate::core::field::Field;
 use crate::core::field::optionality::Optionality;
+use crate::core::model::Model;
 use crate::core::relation::delete_rule::DeleteRule;
 
 pub mod update_rule;
@@ -154,6 +157,14 @@ impl Relation {
     pub(crate) fn set_model(&mut self, model: String) {
         self.model = model;
     }
+
+    pub(crate) fn finalize(&mut self, fields: &HashMap<String, Arc<Field>>) {
+        self.has_foreign_key = if self.through.is_some() {
+            false
+        } else {
+            self.fields.iter().find(|name| fields.get(name.as_str()).unwrap().foreign_key).is_some()
+        }
+    }
 }
 
 pub(crate) struct RelationIter<'a> {
@@ -181,7 +192,3 @@ static VEC_FILTERS: Lazy<HashSet<&str>> = Lazy::new(|| {
 static OBJECT_FILTERS: Lazy<HashSet<&str>> = Lazy::new(|| {
     hashset!{"is", "isNot"}
 });
-
-// has_foreign_key: if self.through.is_some() { false } else {
-// self.fields.iter().find(|name| fields.get(name.as_str()).unwrap().foreign_key).is_some()
-// }

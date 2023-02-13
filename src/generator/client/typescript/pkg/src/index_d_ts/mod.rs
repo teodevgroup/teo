@@ -1,5 +1,5 @@
 use inflector::Inflector;
-use crate::core::handler::{ResMeta, ResData, Handler};
+use crate::core::action::{ResMeta, ResData, Action, UPDATE_HANDLER, CREATE_HANDLER, FIND_FIRST_HANDLER, UPSERT_HANDLER, UPDATE_MANY_HANDLER};
 use crate::core::app::conf::ClientGeneratorConf;
 use crate::generator::client::typescript::pkg::src::index_d_ts::docs::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, main_object_doc, nested_connect_doc, nested_create_doc, nested_create_or_connect_doc, nested_delete_doc, nested_disconnect_doc, nested_set_doc, nested_update_doc, nested_upsert_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_connect_create_doc, unique_connect_doc, unique_where_doc, where_doc, where_doc_first, with_token_doc};
 use crate::generator::client::typescript::r#type::ToTypeScriptType;
@@ -136,9 +136,9 @@ fn generate_model_upsert_with_where_unique_input(model: &Model, without: Option<
         c.block(format!("export type {model_name}UpsertWithWhereUnique{without_title}Input = {{"), |b| {
             b.doc(unique_where_doc(model));
             b.line(format!("where: {model_name}WhereUniqueInput"));
-            b.doc(create_or_update_doc(model, Handler::Update));
+            b.doc(create_or_update_doc(model, Action::from_u32(UPDATE_HANDLER)));
             b.line(format!("update: {model_name}Update{without_title}Input"));
-            b.doc(create_or_update_doc(model, Handler::Create));
+            b.doc(create_or_update_doc(model, Action::from_u32(CREATE_HANDLER)));
             b.line(format!("create: {model_name}Create{without_title}Input"));
         }, "}")
     }).to_string()
@@ -156,7 +156,7 @@ fn generate_model_update_with_where_unique_input(model: &Model, without: Option<
         c.block(format!("export type {model_name}UpdateWithWhereUnique{without_title}Input = {{"), |b| {
             b.doc(unique_where_doc(model));
             b.line(format!("where: {model_name}WhereUniqueInput"));
-            b.doc(create_or_update_doc(model, Handler::Update));
+            b.doc(create_or_update_doc(model, Action::from_u32(UPDATE_HANDLER)));
             b.line(format!("update: {model_name}Update{without_title}Input"));
         }, "}")
     }).to_string()
@@ -174,7 +174,7 @@ fn generate_model_update_many_with_where_input(model: &Model, without: Option<&s
         c.block(format!("export type {model_name}UpdateManyWithWhere{without_title}Input = {{"), |b| {
             b.doc(where_doc(model));
             b.line(format!("where: {model_name}WhereInput"));
-            b.doc(create_or_update_doc(model, Handler::UpdateMany));
+            b.doc(create_or_update_doc(model, Action::from_u32(UPDATE_MANY_HANDLER)));
             b.line(format!("update: {model_name}Update{without_title}Input"));
         }, "}")
     }).to_string()
@@ -494,19 +494,19 @@ export declare class TeoError extends Error {{
                 b.doc(include_doc(m));
                 b.line(format!(r#"include?: {model_name}Include"#));
             }, "}");
-            Handler::iter().for_each(|a| {
-                if !m.actions().contains(a) { return }
-                let action_name = a.as_str();
+            Action::handlers_iter().for_each(|a| {
+                if !m.has_action(*a) { return }
+                let action_name = a.as_handler_str();
                 c.block(format!(r#"export type {model_name}{action_name}Args = {{"#), |b| {
-                    if a.requires_where() {
-                        if a == &Handler::FindFirst {
+                    if a.handler_requires_where() {
+                        if a == &Action::from_u32(FIND_FIRST_HANDLER) {
                             b.doc(where_doc_first(m));
                         } else {
                             b.doc(where_doc(m));
                         }
                         b.line(format!(r#"where?: {model_name}WhereInput"#));
                     }
-                    if a.requires_where_unique() {
+                    if a.handler_requires_where_unique() {
                         b.doc(unique_where_doc(m));
                         b.line(format!(r#"where?: {model_name}WhereUniqueInput"#));
                     }
@@ -514,7 +514,7 @@ export declare class TeoError extends Error {{
                     b.line(format!(r#"select?: {model_name}Select"#));
                     b.doc(include_doc(m));
                     b.line(format!(r#"include?: {model_name}Include"#));
-                    if a.requires_where() {
+                    if a.handler_requires_where() {
                         b.doc(order_by_doc(m));
                         b.line(format!(r#"orderBy?: Enumerable<{model_name}OrderByInput>"#));
                         b.doc(cursor_doc(m));
@@ -529,15 +529,15 @@ export declare class TeoError extends Error {{
                         b.line(format!(r#"pageNumber?: number"#));
                         //b.line(format!{r#"distinct? {model_name}ScalarFieldEnum"#})
                     }
-                    if a.requires_create() {
-                        b.doc(create_or_update_doc(m, if a == &Handler::Upsert { Handler::Create } else { a.clone() }));
+                    if a.handler_requires_create() {
+                        b.doc(create_or_update_doc(m, if a == &Action::from_u32(UPSERT_HANDLER) { Action::from_u32(CREATE_HANDLER) } else { a.clone() }));
                         b.line(format!(r#"create: {model_name}CreateInput"#));
                     }
-                    if a.requires_update() {
-                        b.doc(create_or_update_doc(m, if a == &Handler::Upsert { Handler::Update } else { a.clone() }));
+                    if a.handler_requires_update() {
+                        b.doc(create_or_update_doc(m, if a == &Action::from_u32(UPSERT_HANDLER) { Action::from_u32(UPDATE_HANDLER) } else { a.clone() }));
                         b.line(format!(r#"update: {model_name}UpdateInput"#));
                     }
-                    if a.requires_credentials() {
+                    if a.handler_requires_credentials() {
                         b.doc(credentials_doc(m, *a));
                         b.line(format!(r#"credentials: {model_name}CredentialsInput"#))
                     }
@@ -579,23 +579,23 @@ export declare class TeoError extends Error {{
                 let model_var_name = model_name.to_camel_case();
                 let model_class_name = model_var_name.to_pascal_case();
                 c.block(format!("declare class {model_class_name}Delegate {{"), |b| {
-                    Handler::iter().for_each(|a| {
-                        if m.actions().contains(a) {
-                            let action_name = a.as_str();
-                            let action_var_name = a.as_str().to_camel_case();
-                            let res_meta = match a.res_meta() {
+                    Action::handlers_iter().for_each(|a| {
+                        if m.has_action(*a) {
+                            let action_name = a.as_handler_str();
+                            let action_var_name = a.as_handler_str().to_camel_case();
+                            let res_meta = match a.handler_res_meta() {
                                 ResMeta::PagingInfo => "PagingInfo",
                                 ResMeta::TokenInfo => "TokenInfo",
                                 ResMeta::NoMeta => "undefined",
                                 ResMeta::Other => "undefined",
                             };
-                            let res_data = match a.res_data() {
+                            let res_data = match a.handler_res_data() {
                                 ResData::Single => model_name.to_string(),
                                 ResData::Vec => model_name.to_string() + "[]",
                                 ResData::Other => "never".to_string(),
                                 ResData::Number => "number".to_string(),
                             };
-                            let payload_array = match a.res_data() {
+                            let payload_array = match a.handler_res_data() {
                                 ResData::Vec => "[]",
                                 _ => ""
                             };

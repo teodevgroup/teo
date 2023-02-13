@@ -10,7 +10,7 @@ pub struct Ctx<'a> {
     pub(crate) value: Value,
     pub(crate) object: Option<Object>,
     pub(crate) path: KeyPath<'a>,
-    pub(crate) redirect: Action,
+    pub(crate) action: Action,
 }
 
 impl<'a> Ctx<'a> {
@@ -20,7 +20,7 @@ impl<'a> Ctx<'a> {
             value,
             object: None,
             path: KeyPath::default(),
-            redirect: Action::empty(),
+            action: Action::empty(),
         }
     }
 
@@ -29,7 +29,7 @@ impl<'a> Ctx<'a> {
             value: Value::Null,
             object: Some(object),
             path: KeyPath::default(),
-            redirect: Action::empty(),
+            action: Action::empty(),
         }
     }
 
@@ -38,7 +38,7 @@ impl<'a> Ctx<'a> {
             value: self.value.clone(),
             object: self.object.clone(),
             path: path.as_ref().clone(),
-            redirect: Action::empty(),
+            action: Action::empty(),
         }
     }
 
@@ -47,7 +47,7 @@ impl<'a> Ctx<'a> {
             value,
             object: self.object.clone(),
             path: self.path.clone(),
-            redirect: Action::empty(),
+            action: Action::empty(),
         }
     }
 
@@ -57,7 +57,7 @@ impl<'a> Ctx<'a> {
                 value,
                 object: self.object.clone(),
                 path: self.path.clone(),
-                redirect: Action::empty(),
+                action: Action::empty(),
             }),
             Err(err) => Err(err),
         }
@@ -65,6 +65,15 @@ impl<'a> Ctx<'a> {
 
     pub(crate) fn with_invalid(&self, reason: impl Into<String>) -> Error {
         Error::validation_error(&self.path, reason.into())
+    }
+
+    pub(crate) fn with_action(&self, action: Action) -> Self {
+        Self {
+            value: self.value.clone(),
+            object: self.object.clone(),
+            path: self.path.clone(),
+            action,
+        }
     }
 
     pub(crate) fn get_value(&self) -> Value {
@@ -89,6 +98,15 @@ impl<'a> Ctx<'a> {
             Error::internal_server_error_with_path(&self.path, error.message)
         } else {
             error
+        }
+    }
+
+    pub(crate) fn redirect(&self, action: Action) -> Self {
+        Self {
+            value: self.value.clone(),
+            object: self.object.clone(),
+            path: self.path.clone(),
+            action: self.action.redirect(action),
         }
     }
 }

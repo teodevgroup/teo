@@ -4,20 +4,23 @@ use key_path::path;
 use crate::core::pipeline::item::Item;
 use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
-use crate::prelude::Value;
+use crate::prelude::{Object, Value};
 
 #[derive(Debug, Copy, Clone)]
-pub struct GetObjectItem { }
+pub struct SelfItem { }
 
-impl GetObjectItem {
+impl SelfItem {
     pub fn new() -> Self {
         Self { }
     }
 }
 
 #[async_trait]
-impl Item for GetObjectItem {
+impl Item for SelfItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        Ok(ctx.with_value(Value::Object(ctx.object.as_ref().unwrap().clone())).with_path(path![]))
+        match ctx.object.as_ref() {
+            Some(obj) => Ok(ctx.with_value(Value::Object(obj.clone()))),
+            None => Err(ctx.internal_server_error("self: ctx object does not exist"))
+        }
     }
 }
