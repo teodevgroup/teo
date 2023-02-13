@@ -4,7 +4,7 @@ use std::sync::Arc;
 use key_path::KeyPath;
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
-use crate::core::action::{Action, CREATE, INTERNAL_AMOUNT, INTERNAL_LOCATION, PROGRAM_CODE, SINGLE};
+use crate::core::action::{Action, CREATE, INTERNAL_AMOUNT, INTERNAL_POSITION, PROGRAM_CODE, SINGLE};
 use crate::core::action::source::ActionSource;
 use crate::core::connector::Connector;
 use crate::core::model::Model;
@@ -52,21 +52,21 @@ impl Graph {
     // MARK: - Queries
 
     pub async fn find_unique<T: From<Object>>(&self, model: &str, finder: &Value) -> Result<T> {
-        match self.find_unique_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_LOCATION), ActionSource::ProgramCode).await {
+        match self.find_unique_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), ActionSource::ProgramCode).await {
             Ok(result) => Ok(result.into()),
             Err(err) => Err(err),
         }
     }
 
     pub async fn find_first<T: From<Object>>(&self, model: &str, finder: &Value) -> Result<T> {
-        match self.find_first_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_LOCATION), ActionSource::ProgramCode).await {
+        match self.find_first_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), ActionSource::ProgramCode).await {
             Ok(result) => Ok(result.into()),
             Err(err) => Err(err),
         }
     }
 
     pub async fn find_many<T: From<Object>>(&self, model: &str, finder: &Value) -> Result<Vec<T>> {
-        match self.find_many_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_LOCATION), ActionSource::ProgramCode).await {
+        match self.find_many_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), ActionSource::ProgramCode).await {
             Ok(results) => Ok(results.iter().map(|item| item.clone().into()).collect()),
             Err(err) => Err(err),
         }
@@ -151,7 +151,7 @@ impl Graph {
     }
 
     pub async fn create_object(&self, model: &str, initial: Value) -> Result<Object> {
-        let obj = self.new_object(model, Action::from_u32(PROGRAM_CODE | CREATE | SINGLE | INTERNAL_LOCATION), ActionSource::ProgramCode)?;
+        let obj = self.new_object(model, Action::from_u32(PROGRAM_CODE | CREATE | SINGLE | INTERNAL_POSITION), ActionSource::ProgramCode)?;
         obj.set_teon(&initial).await?;
         Ok(obj)
     }

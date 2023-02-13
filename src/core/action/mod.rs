@@ -28,19 +28,22 @@ pub(crate) const JOIN_DELETE: u32 = JOIN | DELETE;
 pub(crate) const FIND_FIRST: u32 = FIND | FIRST;
 
 pub(crate) const ENTRY: u32 = 1 << 15;
-pub(crate) const NESTED: u32 = 1 << 16;
-pub(crate) const INTERNAL_LOCATION: u32 = 1 << 17;
-pub(crate) const SINGLE: u32 = 1 << 18;
-pub(crate) const MANY: u32 = 1 << 19;
-pub(crate) const INTERNAL_AMOUNT: u32 = 1 << 20;
+pub(crate) const SINGLE_NESTED: u32 = 1 << 16;
+pub(crate) const MANY_NESTED: u32 = 1 << 17;
+pub(crate) const NESTED: u32 = SINGLE_NESTED | MANY_NESTED;
+pub(crate) const INTERNAL_POSITION: u32 = 1 << 18;
+
+pub(crate) const SINGLE: u32 = 1 << 19;
+pub(crate) const MANY: u32 = 1 << 20;
+pub(crate) const INTERNAL_AMOUNT: u32 = 1 << 21;
 
 const ALL_NAMES: u32 = CREATE | UPDATE | UPSERT | DELETE | FIND | FIND_FIRST | CONNECT | CONNECT_OR_CREATE | DISCONNECT | SET | JOIN_CREATE | JOIN_DELETE | IDENTITY | SIGN_IN | COUNT | AGGREGATE | GROUP_BY;
-const ENTRY_NESTED: u32 = ENTRY | NESTED | INTERNAL_LOCATION;
-const SINGLE_MANY: u32 = SINGLE | MANY | INTERNAL_AMOUNT;
+const ALL_POSITIONS: u32 = ENTRY | NESTED | INTERNAL_POSITION;
+const ALL_AMOUNTS: u32 = SINGLE | MANY | INTERNAL_AMOUNT;
 
 const NOT_ALL_NAMES: u32 = !ALL_NAMES;
-const NOT_ENTRY_NESTED: u32 = !ENTRY_NESTED;
-const NOT_SINGLE_MANY: u32 = !SINGLE_MANY;
+const NOT_ENTRY_NESTED: u32 = !ALL_POSITIONS;
+const NOT_SINGLE_MANY: u32 = !ALL_AMOUNTS;
 
 pub(crate) const FIND_UNIQUE_HANDLER: u32 = FIND | ENTRY | SINGLE;
 pub(crate) const FIND_FIRST_HANDLER: u32 = FIND_FIRST | ENTRY | SINGLE;
@@ -102,7 +105,7 @@ impl Action {
                 "groupBy" => GROUP_BY,
                 "entry" => ENTRY,
                 "nested" => NESTED,
-                "internalLocation" => INTERNAL_LOCATION,
+                "internalLocation" => INTERNAL_POSITION,
                 "single" => SINGLE,
                 "many" => MANY,
                 "internalAmount" => INTERNAL_AMOUNT,
@@ -127,10 +130,10 @@ impl Action {
             value = value | ALL_NAMES;
         }
         if !self.contains_entry_nested_bits() {
-            value = value | ENTRY_NESTED;
+            value = value | ALL_POSITIONS;
         }
         if !self.contains_single_many_bits() {
-            value = value | SINGLE_MANY;
+            value = value | ALL_AMOUNTS;
         }
         Self { value }
     }
@@ -141,13 +144,13 @@ impl Action {
         if new_names_bits != 0 {
             result = (result & !ALL_NAMES) | new_names_bits;
         }
-        let new_position_bits = action.value & ENTRY_NESTED;
+        let new_position_bits = action.value & ALL_POSITIONS;
         if new_position_bits != 0 {
-            result = (result & !ENTRY_NESTED) | new_position_bits;
+            result = (result & !ALL_POSITIONS) | new_position_bits;
         }
-        let new_amount_bits = action.value & SINGLE_MANY;
+        let new_amount_bits = action.value & ALL_AMOUNTS;
         if new_amount_bits != 0 {
-            result = (result & !SINGLE_MANY) | new_amount_bits;
+            result = (result & !ALL_AMOUNTS) | new_amount_bits;
         }
         Self { value: result }
     }
@@ -159,12 +162,12 @@ impl Action {
 
     #[inline(always)]
     fn contains_entry_nested_bits(&self) -> bool {
-        self.value & ENTRY_NESTED != 0
+        self.value & ALL_POSITIONS != 0
     }
 
     #[inline(always)]
     fn contains_single_many_bits(&self) -> bool {
-        self.value & SINGLE_MANY != 0
+        self.value & ALL_AMOUNTS != 0
     }
 
     pub(crate) fn neg(&self) -> Self {
@@ -202,8 +205,8 @@ impl Action {
             let finalized_matcher = matcher.finalized().value;
             let result = finalized_matcher & copy.value;
             return ((result & ALL_NAMES) != 0) &&
-                ((result & ENTRY_NESTED) != 0) &&
-                ((result & SINGLE_MANY) != 0)
+                ((result & ALL_POSITIONS) != 0) &&
+                ((result & ALL_AMOUNTS) != 0)
         }
         false
     }
