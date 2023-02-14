@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use key_path::path;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::teon::Value;
@@ -56,7 +55,9 @@ impl Item for GetItem {
                 Value::HashMap(hashmap) => {
                     match hashmap.get(&s) {
                         Some(val) => Ok(ctx.with_value(val.clone())),
-                        None => Err(ctx.internal_server_error("get: value at key does not exist"))
+                        None => {
+                            Err(ctx.internal_server_error("get: value at key does not exist"))
+                        }
                     }
                 }
                 Value::BTreeMap(btreemap) => {

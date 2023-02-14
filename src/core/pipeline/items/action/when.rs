@@ -4,6 +4,7 @@ use crate::core::pipeline::item::Item;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
+use crate::core::error::Error;
 
 #[derive(Debug, Clone)]
 pub struct WhenItem {
@@ -24,8 +25,15 @@ impl WhenItem {
 impl Item for WhenItem {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        let object_action = ctx.object.as_ref().unwrap().action();
-        if object_action.passes(&self.actions) {
+        let action = if ctx.action.is_empty() {
+            match ctx.object.as_ref() {
+                Some(object) => object.action(),
+                None => Err(Error::internal_server_error("when: action not found"))?
+            }
+        } else {
+            ctx.action
+        };
+        if action.passes(&self.actions) {
             Ok(ctx.with_value(self.pipeline.process(ctx.clone()).await?))
         } else {
             Ok(ctx)

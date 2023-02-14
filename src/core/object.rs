@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+use std::borrow::Cow::{Borrowed, Owned};
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::Deref;
@@ -7,7 +9,7 @@ use key_path::{KeyPath, path};
 use async_recursion::async_recursion;
 use maplit::hashmap;
 use indexmap::IndexMap;
-use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, PROGRAM_CODE, DELETE, DISCONNECT, FIND, JOIN_CREATE, JOIN_DELETE, MANY, NESTED, SINGLE, UPDATE, UPSERT, NESTED_CREATE_ACTION, NESTED_DISCONNECT_ACTION, NESTED_SET_ACTION, NESTED_CONNECT_ACTION, NESTED_DELETE_MANY_ACTION, NESTED_UPDATE_MANY_ACTION, NESTED_UPDATE_ACTION, NESTED_DELETE_ACTION, NESTED_CREATE_MANY_ACTION, NESTED_CONNECT_OR_CREATE_ACTION, NESTED_UPSERT_ACTION};
+use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, PROGRAM_CODE, DELETE, DISCONNECT, FIND, JOIN_CREATE, JOIN_DELETE, MANY, NESTED, SINGLE, UPDATE, UPSERT, NESTED_CREATE_ACTION, NESTED_DISCONNECT_ACTION, NESTED_SET_ACTION, NESTED_CONNECT_ACTION, NESTED_DELETE_MANY_ACTION, NESTED_UPDATE_MANY_ACTION, NESTED_UPDATE_ACTION, NESTED_DELETE_ACTION, NESTED_CONNECT_OR_CREATE_ACTION, NESTED_UPSERT_ACTION};
 use crate::core::action::source::ActionSource;
 use crate::core::field::{Field, PreviousValueRule};
 use crate::core::field::optionality::Optionality;
@@ -511,7 +513,7 @@ impl Object {
                     Optionality::Required => {
                         let value = self.get_value(key).unwrap();
                         if value.is_null() {
-                            return Err(Error::missing_required_input(key, path));
+                            return Err(Error::missing_required_input(path + key));
                         }
                     }
                     Optionality::PresentWith(field_names) => {
@@ -524,14 +526,14 @@ impl Object {
                                             let name = name.as_str().unwrap();
                                             let value_at_name = self.get_value(name).unwrap();
                                             if !value_at_name.is_null() {
-                                                return Err(Error::missing_required_input(key, path))
+                                                return Err(Error::missing_required_input_with_type(key, path))
                                             }
                                         }
                                     }
                                     Value::String(name) => {
                                         let value_at_name = self.get_value(name).unwrap();
                                         if !value_at_name.is_null() {
-                                            return Err(Error::missing_required_input(key, path))
+                                            return Err(Error::missing_required_input_with_type(key, path))
                                         }
                                     }
                                     _ => unreachable!()
@@ -551,13 +553,13 @@ impl Object {
                                             if !value_at_name.is_null() {
                                                 break;
                                             }
-                                            return Err(Error::missing_required_input(key, path));
+                                            return Err(Error::missing_required_input_with_type(key, path));
                                         }
                                     }
                                     Value::String(name) => {
                                         let value_at_name = self.get_value(name).unwrap();
                                         if value_at_name.is_null() {
-                                            return Err(Error::missing_required_input(key, path))
+                                            return Err(Error::missing_required_input_with_type(key, path))
                                         }
                                     }
                                     _ => unreachable!()
@@ -571,7 +573,7 @@ impl Object {
                             let ctx = Ctx::initial_state_with_object(self.clone());
                             let invalid = pipeline.process(ctx).await.is_err();
                             if invalid {
-                                return Err(Error::missing_required_input(key, path))
+                                return Err(Error::missing_required_input_with_type(key, path))
                             }
                         }
                     }
@@ -954,7 +956,7 @@ impl Object {
     async fn nested_create_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let action = Action::from_u32(NESTED | CREATE | SINGLE);
         let object = self.graph().new_object(relation.model(), action, self.action_source().clone())?;
-        object.set_teon_with_path(value, path).await?;
+        object.set_teon_with_path(value.get("create").unwrap(), path).await?;
         self.link_and_save_relation_object(relation, &object, session.clone(), path).await
     }
 
@@ -985,19 +987,17 @@ impl Object {
     }
 
     async fn nested_disconnect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
-        let disconnect = value.as_bool().unwrap();
-        if !disconnect { return Ok(()) }
         if !relation.is_vec() && relation.is_required() {
             return Err(Error::unexpected_input_value_with_reason("Cannot disconnect required relation.", path));
         }
         if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
         } else {
-            let r#where = self.intrinsic_where_unique_for_relation(relation);
+            let r#where = value;
             let action = Action::from_u32(NESTED | DISCONNECT | SINGLE);
             let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
                 Ok(object) => object,
-                Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
+                Err(_) => return Err(Error::unexpected_input_value_with_reason("object is not found", path)),
             };
             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
             object.save_with_session_and_path(session.clone(), path).await?;
@@ -1075,28 +1075,26 @@ impl Object {
     }
 
     async fn nested_update_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
-        let r#where = self.intrinsic_where_unique_for_relation(relation);
+        let r#where = value.get("where").unwrap();
         let action = Action::from_u32(NESTED | UPDATE | SINGLE);
         let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
             Ok(object) => object,
-            Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
+            Err(_) => return Err(Error::unexpected_input_value_with_reason("update: object not found", path)),
         };
-        object.set_teon_with_path(value, path).await?;
+        object.set_teon_with_path(value.get("update").unwrap(), path).await?;
         object.save_with_session_and_path(session.clone(), path).await?;
         Ok(())
     }
 
     async fn nested_delete_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
-        let delete = value.as_bool().unwrap();
-        if !delete { return Ok(()) }
         if !relation.is_vec() && relation.is_required() {
             return Err(Error::unexpected_input_value_with_reason("Cannot delete required relation.", path));
         }
-        let r#where = self.intrinsic_where_unique_for_relation(relation);
+        let r#where = value.get("where").unwrap();
         let action = Action::from_u32(NESTED | DELETE | SINGLE);
         let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
             Ok(object) => object,
-            Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
+            Err(_) => return Err(Error::unexpected_input_value_with_reason("delete: object not found", path)),
         };
         object.delete_from_database(session.clone()).await?;
         if relation.has_join_table() {
@@ -1146,21 +1144,48 @@ impl Object {
         Ok(())
     }
 
+    async fn perform_relation_manipulation_one_inner(&self, relation: &Relation, action: Action, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+        match action.to_u32() {
+            NESTED_CREATE_ACTION => self.nested_create_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_CONNECT_ACTION => self.nested_connect_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_SET_ACTION => self.nested_connect_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_CONNECT_OR_CREATE_ACTION => self.nested_connect_or_create_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_DISCONNECT_ACTION => self.nested_disconnect_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_UPDATE_ACTION => self.nested_update_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_DELETE_ACTION => self.nested_delete_relation_object(relation, value, session.clone(), &path).await,
+            _ => unreachable!(),
+        }
+    }
+
+    fn normalize_relation_one_value<'a>(&'a self, relation: &Relation, action: Action, value: &'a Value) -> Cow<Value> {
+        match action.to_u32() {
+            NESTED_CREATE_ACTION => Owned(Value::HashMap(hashmap! {"create".to_owned() => value.clone()})),
+            NESTED_UPDATE_ACTION => Owned(Value::HashMap(hashmap! {"update".to_owned() => value.clone(), "where".to_owned() => self.intrinsic_where_unique_for_relation(relation)})),
+            NESTED_DELETE_ACTION => Owned(Value::HashMap(hashmap! {"where".to_owned() => self.intrinsic_where_unique_for_relation(relation)})),
+            NESTED_DISCONNECT_ACTION => Owned(self.intrinsic_where_unique_for_relation(relation)),
+            _ => Borrowed(value)
+        }
+    }
+
     async fn perform_relation_manipulation_one(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         for (key, value) in value.as_hashmap().unwrap() {
             let key = key.as_str();
             let path = path + key;
-            match key {
-                "create" => self.nested_create_relation_object(relation, value, session.clone(), &path).await?,
-                "connect" | "set" => self.nested_connect_relation_object(relation, value, session.clone(), &path).await?,
-                "connectOrCreate" => self.nested_connect_or_create_relation_object(relation, value, session.clone(), &path).await?,
-                "disconnect" => self.nested_disconnect_relation_object(relation, value, session.clone(), &path).await?,
-                "update" => self.nested_update_relation_object(relation, value, session.clone(), &path).await?,
-                "delete" => self.nested_delete_relation_object(relation, value, session.clone(), &path).await?,
-                _ => unreachable!()
-            }
+            let action = Action::nested_action_from_name(key).unwrap();
+            let other_model = self.graph().opposite_relation(relation).0;
+            let normalized_value = self.normalize_relation_one_value(relation, action, value);
+            let ctx = Ctx::initial_state_with_value(normalized_value.as_ref().clone()).with_path(path.clone()).with_action(action);
+            let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
+            self.perform_relation_manipulation_one_inner(relation, new_action, &transformed_value, session.clone(), &path).await?;
         }
         Ok(())
+    }
+
+    fn normalize_relation_many_value<'a>(&'a self, action: Action, value: &'a Value) -> Cow<Value> {
+        match action.to_u32() {
+            NESTED_CREATE_ACTION => Owned(Value::HashMap(hashmap! {"create".to_owned() => value.clone()})),
+            _ => Borrowed(value)
+        }
     }
 
     async fn perform_relation_manipulation_many_inner(&self, relation: &Relation, action: Action, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
@@ -1186,12 +1211,14 @@ impl Object {
             let action = Action::nested_action_from_name(key).unwrap();
             let other_model = self.graph().opposite_relation(relation).0;
             if value.is_hashmap() {
-                let ctx = Ctx::initial_state_with_value(value.clone()).with_path(path).with_action(action);
+                let normalized_value = self.normalize_relation_many_value(action, value);
+                let ctx = Ctx::initial_state_with_value(normalized_value.as_ref().clone()).with_path(path.clone()).with_action(action);
                 let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
                 self.perform_relation_manipulation_many_inner(relation, new_action, &transformed_value, session.clone(), &path).await?;
             } else {
                 for (index, value) in value.as_vec().unwrap().iter().enumerate() {
-                    let ctx = Ctx::initial_state_with_value(value.clone()).with_path(&(path.clone() + index)).with_action(action);
+                    let normalized_value = self.normalize_relation_many_value(action, value);
+                    let ctx = Ctx::initial_state_with_value(normalized_value.as_ref().clone()).with_path(&(path.clone() + index)).with_action(action);
                     let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
                     self.perform_relation_manipulation_many_inner(relation, new_action, &transformed_value, session.clone(), &path).await?;
                 }

@@ -301,11 +301,19 @@ impl Error {
         }
     }
 
-    pub(crate) fn missing_required_input<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
+    pub(crate) fn missing_required_input<'a>(key_path: impl AsRef<KeyPath<'a>>) -> Self {
         Error {
             r#type: ErrorType::MissingRequiredInput,
             message: "Missing required input.".to_string(),
-            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expect `{}'.", expected.into())})
+            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("value is required")})
+        }
+    }
+
+    pub(crate) fn missing_required_input_with_type<'a>(expected: impl AsRef<str>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
+        Error {
+            r#type: ErrorType::MissingRequiredInput,
+            message: "Missing required input.".to_string(),
+            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("{} value is required", expected.as_ref())})
         }
     }
 

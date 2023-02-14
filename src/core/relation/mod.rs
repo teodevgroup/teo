@@ -4,7 +4,6 @@ use maplit::hashset;
 use once_cell::sync::Lazy;
 use crate::core::field::Field;
 use crate::core::field::optionality::Optionality;
-use crate::core::model::Model;
 use crate::core::relation::delete_rule::DeleteRule;
 
 pub mod update_rule;

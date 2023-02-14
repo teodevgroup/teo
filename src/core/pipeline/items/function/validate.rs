@@ -59,6 +59,24 @@ impl From<()> for Validity {
     }
 }
 
+impl From<Option<String>> for Validity {
+    fn from(value: Option<String>) -> Self {
+        match value {
+            Some(v) => Validity::Invalid(v),
+            None => Validity::Valid,
+        }
+    }
+}
+
+impl From<Option<&str>> for Validity {
+    fn from(value: Option<&str>) -> Self {
+        match value {
+            Some(v) => Validity::Invalid(v.to_owned()),
+            None => Validity::Valid,
+        }
+    }
+}
+
 pub enum ValidateResult {
     Validity(Validity),
     Result(Result<Validity>),

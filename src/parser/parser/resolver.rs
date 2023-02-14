@@ -1,3 +1,4 @@
+use std::i64;
 use std::str::FromStr;
 use indexmap::map::IndexMap;
 use regex::Regex;
@@ -748,6 +749,10 @@ impl Resolver {
     // literals and operators
 
     fn resolve_numeric_literal(n: &NumericLiteral) -> Entity {
+        let i = i32::from_str(&n.value);
+        if i.is_ok() {
+            return Entity::Value(Value::I32(i.unwrap()));
+        }
         let i = i64::from_str(&n.value);
         if i.is_ok() {
             return Entity::Value(Value::I64(i.unwrap()));

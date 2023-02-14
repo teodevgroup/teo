@@ -30,6 +30,8 @@ impl Item for SetItem {
                 match key {
                     Value::Vec(keys) => {
                         if keys.len() == 0 {
+                            Err(ctx.internal_server_error("set: empty key path received"))
+                        } else if keys.len() == 1 {
                             Ok(SetItem::new(Some(keys.get(0).unwrap().clone()), self.value.clone()).call(ctx).await?)
                         } else {
                             let current_key = keys.get(0).unwrap();

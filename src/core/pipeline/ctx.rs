@@ -38,7 +38,7 @@ impl<'a> Ctx<'a> {
             value: self.value.clone(),
             object: self.object.clone(),
             path: path.as_ref().clone(),
-            action: Action::empty(),
+            action: self.action.clone(),
         }
     }
 
@@ -47,7 +47,7 @@ impl<'a> Ctx<'a> {
             value,
             object: self.object.clone(),
             path: self.path.clone(),
-            action: Action::empty(),
+            action: self.action.clone(),
         }
     }
 
@@ -57,7 +57,7 @@ impl<'a> Ctx<'a> {
                 value,
                 object: self.object.clone(),
                 path: self.path.clone(),
-                action: Action::empty(),
+                action: self.action.clone(),
             }),
             Err(err) => Err(err),
         }

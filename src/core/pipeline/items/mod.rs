@@ -11,5 +11,4 @@ pub mod value;
 pub mod identity;
 pub mod vector;
 pub mod action;
-pub mod teon;
 pub mod debug;

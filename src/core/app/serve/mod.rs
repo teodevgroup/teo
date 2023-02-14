@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use futures_util::future;
 use std::time::SystemTime;
 use actix_http::body::BoxBody;
@@ -22,6 +23,7 @@ use crate::core::app::conf::ServerConf;
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use crate::core::app::migrate::migrate;
+use crate::core::connector::SaveSession;
 use self::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::graph::Graph;
 use crate::core::model::Model;
@@ -189,7 +191,7 @@ async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: A
     }
 }
 
-async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: Option<&Value>, select: Option<&Value>, model: &Model, path: &KeyPath<'_>, action: Action, action_source: ActionSource) -> Result<Value, Error> {
+async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: Option<&Value>, select: Option<&Value>, model: &Model, path: &KeyPath<'_>, action: Action, action_source: ActionSource, session: Arc<dyn SaveSession>) -> Result<Value, Error> {
     let obj = graph.new_object(model.name(), action, action_source)?;
     let set_json_result = match create {
         Some(create) => {
@@ -205,7 +207,7 @@ async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: 
     if set_json_result.is_err() {
         return Err(set_json_result.err().unwrap());
     }
-    obj.save().await?;
+    obj.save_with_session_and_path(session.clone(), path).await?;
     let refetched = obj.refreshed(include, select).await?;
     refetched.to_json_internal(&path!["data"]).await
 }
@@ -216,7 +218,8 @@ async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: Acti
     let create = input.get("create");
     let include = input.get("include");
     let select = input.get("select");
-    let result = handle_create_internal(graph, create, include, select, model, &path!["create"], action, source).await;
+    let session = graph.connector().new_save_session();
+    let result = handle_create_internal(graph, create, include, select, model, &path!["create"], action, source, session).await;
     match result {
         Ok(val) => {
             let json_val: JsonValue = val.into();
@@ -356,7 +359,7 @@ async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source:
     let include = input.get("include");
     let select = input.get("select");
     if create.is_none() {
-        let err = Error::missing_required_input("array", path!["create"]);
+        let err = Error::missing_required_input_with_type("array", path!["create"]);
         return HttpResponse::BadRequest().json(json!({"error": err}));
     }
     let create = create.unwrap();
@@ -367,8 +370,9 @@ async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source:
     let create = create.as_vec().unwrap();
     let mut count = 0;
     let mut ret_data: Vec<Value> = vec![];
+    let session = graph.connector().new_save_session();
     for (index, val) in create.iter().enumerate() {
-        let result = handle_create_internal(graph, Some(val), include, select, model, &path!["create", index], action, source.clone()).await;
+        let result = handle_create_internal(graph, Some(val), include, select, model, &path!["create", index], action, source.clone(), session.clone()).await;
         match result {
             Err(err) => {
                 println!("{:?}", err.errors);
@@ -486,7 +490,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     let input = input.as_hashmap().unwrap();
     let credentials = input.get("credentials");
     if let None = credentials {
-        return Error::missing_required_input("object", path!["credentials"]).into();
+        return Error::missing_required_input_with_type("object", path!["credentials"]).into();
     }
     let credentials = credentials.unwrap();
     if !credentials.is_hashmap() {
@@ -517,9 +521,9 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
         }
     }
     if identity_key == None {
-        return Error::missing_required_input("auth identity", path!["credentials"]).into();
+        return Error::missing_required_input_with_type("auth identity", path!["credentials"]).into();
     } else if by_key == None {
-        return Error::missing_required_input("auth checker", path!["credentials"]).into();
+        return Error::missing_required_input_with_type("auth checker", path!["credentials"]).into();
     }
     let by_field = model.field(by_key.unwrap()).unwrap();
     let obj_result = graph.find_unique_internal(model.name(), &teon!({
@@ -693,10 +697,30 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
                 Err(err) => return err.into()
             };
             let (transformed_body, action) = if model_def.has_action_transformers() {
-                let ctx = Ctx::initial_state_with_value(parsed_body).with_action(action);
-                match model_def.transformed_action(ctx).await {
-                    Ok(result) => result,
-                    Err(err) => return err.into(),
+                if ((action.to_u32() == CREATE_MANY_HANDLER) || (action.to_u32() == CREATE_HANDLER)) && (parsed_body.get("create").unwrap().is_vec()) {
+                    // create with many items
+                    let entries = parsed_body.get("create").unwrap().as_vec().unwrap();
+                    let mut transformed_entries: Vec<Value> = vec![];
+                    let mut new_action = action;
+                    for (index, entry) in entries.iter().enumerate() {
+                        let ctx = Ctx::initial_state_with_value(teon!({"create": entry})).with_action(action);
+                        match model_def.transformed_action(ctx).await {
+                            Ok(result) => {
+                                transformed_entries.push(result.0.get("create").unwrap().clone());
+                                new_action = result.1;
+                            },
+                            Err(err) => return err.into(),
+                        }
+                    }
+                    let mut new_val = parsed_body.clone();
+                    new_val.as_hashmap_mut().unwrap().insert("create".to_owned(), Value::Vec(transformed_entries));
+                    (new_val, new_action)
+                } else {
+                    let ctx = Ctx::initial_state_with_value(parsed_body).with_action(action);
+                    match model_def.transformed_action(ctx).await {
+                        Ok(result) => result,
+                        Err(err) => return err.into(),
+                    }
                 }
             } else {
                 (parsed_body, action)

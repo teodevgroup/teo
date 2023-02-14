@@ -28,14 +28,12 @@ pub(crate) const JOIN_DELETE: u32 = JOIN | DELETE;
 pub(crate) const FIND_FIRST: u32 = FIND | FIRST;
 
 pub(crate) const ENTRY: u32 = 1 << 15;
-pub(crate) const SINGLE_NESTED: u32 = 1 << 16;
-pub(crate) const MANY_NESTED: u32 = 1 << 17;
-pub(crate) const NESTED: u32 = SINGLE_NESTED | MANY_NESTED;
-pub(crate) const INTERNAL_POSITION: u32 = 1 << 18;
+pub(crate) const NESTED: u32 = 1 << 16;
+pub(crate) const INTERNAL_POSITION: u32 = 1 << 17;
 
-pub(crate) const SINGLE: u32 = 1 << 19;
-pub(crate) const MANY: u32 = 1 << 20;
-pub(crate) const INTERNAL_AMOUNT: u32 = 1 << 21;
+pub(crate) const SINGLE: u32 = 1 << 18;
+pub(crate) const MANY: u32 = 1 << 19;
+pub(crate) const INTERNAL_AMOUNT: u32 = 1 << 20;
 
 const ALL_NAMES: u32 = CREATE | UPDATE | UPSERT | DELETE | FIND | FIND_FIRST | CONNECT | CONNECT_OR_CREATE | DISCONNECT | SET | JOIN_CREATE | JOIN_DELETE | IDENTITY | SIGN_IN | COUNT | AGGREGATE | GROUP_BY;
 const ALL_POSITIONS: u32 = ENTRY | NESTED | INTERNAL_POSITION;
@@ -129,10 +127,10 @@ impl Action {
         if !self.contains_name_bits() {
             value = value | ALL_NAMES;
         }
-        if !self.contains_entry_nested_bits() {
+        if !self.contains_position_bits() {
             value = value | ALL_POSITIONS;
         }
-        if !self.contains_single_many_bits() {
+        if !self.contains_amount_bits() {
             value = value | ALL_AMOUNTS;
         }
         Self { value }
@@ -161,19 +159,19 @@ impl Action {
     }
 
     #[inline(always)]
-    fn contains_entry_nested_bits(&self) -> bool {
+    fn contains_position_bits(&self) -> bool {
         self.value & ALL_POSITIONS != 0
     }
 
     #[inline(always)]
-    fn contains_single_many_bits(&self) -> bool {
+    fn contains_amount_bits(&self) -> bool {
         self.value & ALL_AMOUNTS != 0
     }
 
     pub(crate) fn neg(&self) -> Self {
         let restore_name_bits = !self.contains_name_bits();
-        let restore_entry_nested_bits = !self.contains_entry_nested_bits();
-        let restore_single_many_bits = !self.contains_single_many_bits();
+        let restore_entry_nested_bits = !self.contains_position_bits();
+        let restore_single_many_bits = !self.contains_amount_bits();
         let mut value = !self.value;
         if restore_name_bits {
             value = value & NOT_ALL_NAMES;

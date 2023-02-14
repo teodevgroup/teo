@@ -227,30 +227,30 @@
 - `@redirect` item to redirect action **[DONE]**
 - `@set` and `@get` works for object, vec and map **[DONE]**
 - Entry level `@action` **[DONE]**
-- Nested level `@action`
+- Nested level `@action` **[DONE]**
+- Fix value required entry level error message bug **[DONE]**
+- Fix pipeline set value, int 64 and int 32 issue for mongodb
+- `$print` item label argument **[DONE]**
+- `$assign` decorator **[DONE]**
+- Property decorator documentation **[DONE]**
+- Relation decorator documentation **[DONE]**
+- Rust `validate` accepts `Option<String>` **[DONE]**
+- `@disable` documentation
+- `@action` documentation
 - Soft delete support
-- `$print` item label argument
-- Manually test pipeline modifiers
-- Pipeline documentation
-- Property decorator documentation
-- Relation decorator documentation
+- `find` action transform when including
 - Soft delete documentation
-- random float modifier
-- random int modifier
-- to uppercase modifier
-- to lowercase modifier
-- to word case modifier
-- to sentence case modifier
-- to title case modifier
 - Rust entities with relations
 - Rust entities with properties
 - Rust entities: set method
 - Rust entities: delete method
+- Rust server API documentation
 - Support code comment tags for VSCode
 - Support code comment parsing in schema parser
 - Rust entities with documentation
 
 #### 0.0.47
+- Pipeline documentation
 - Object method for String like `ENV["PORT"].toInt()`
 - Support regular expression for VSCode plugin
 - Relation onUpdate
@@ -272,6 +272,7 @@
 - Seed with datasets
 
 #### 0.0.50
+- `plugin name(arg1, arg2, arg3) { on model {} on field {}}`
 - Error messages for input
 - Error messages for output
 - Reach rust stable
@@ -293,6 +294,13 @@
 
 #### 0.0.54
 - The copy action
+- random float modifier
+- random int modifier
+- to uppercase modifier
+- to lowercase modifier
+- to word case modifier
+- to sentence case modifier
+- to title case modifier
 
 #### 0.0.55 - 0.0.82
 - Setup new style unit tests
