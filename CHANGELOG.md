@@ -264,7 +264,6 @@
 - Revamp server outputs
 
 #### 0.0.48
-- `@canAccess`
 - Linting, warnings and errors
 - Relation with read write rules
 
@@ -273,8 +272,6 @@
 
 #### 0.0.50
 - `plugin name(arg1, arg2, arg3) { on model {} on field {}}`
-- Error messages for input
-- Error messages for output
 - Reach rust stable
 - Bug fixes
 
@@ -329,6 +326,7 @@
 - Dart client
 
 #### 0.1.0
+- `@canAccess`
 - Almost stable
 
 #### 0.2.0
