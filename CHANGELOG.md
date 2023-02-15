@@ -225,7 +225,7 @@
 - Entry level `@disable` **[DONE]**
 - Nested level `@disable` **[DONE]**
 - `@redirect` item to redirect action **[DONE]**
-- `@set` and `@get` works for object, vec and map **[DONE]**
+- `$set` and `$get` works for object, vec and map **[DONE]**
 - Entry level `@action` **[DONE]**
 - Nested level `@action` **[DONE]**
 - Fix value required entry level error message bug **[DONE]**
@@ -235,24 +235,25 @@
 - Property decorator documentation **[DONE]**
 - Relation decorator documentation **[DONE]**
 - Rust `validate` accepts `Option<String>` **[DONE]**
-- `@disable` documentation
-- `@action` documentation
-- Soft delete support
-- `find` action transform when including
-- Soft delete documentation
+- `@disable` documentation **[DONE]**
+- `@action` documentation **[DONE]**
+- Support regular expression for VSCode plugin **[DONE]**
 - Rust entities with relations
 - Rust entities with properties
 - Rust entities: set method
 - Rust entities: delete method
 - Rust server API documentation
+- `find` action transform when including
+- Test soft delete support
+- Soft delete documentation
 - Support code comment tags for VSCode
 - Support code comment parsing in schema parser
 - Rust entities with documentation
+- TypeScript client: package files
 
 #### 0.0.47
 - Pipeline documentation
 - Object method for String like `ENV["PORT"].toInt()`
-- Support regular expression for VSCode plugin
 - Relation onUpdate
 - Relation onDelete
 - Object assignment `copy` and `reference`
