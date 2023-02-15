@@ -256,8 +256,7 @@
 - Object method for String like `ENV["PORT"].toInt()`
 - Relation onUpdate
 - Relation onDelete
-- Object assignment `copy` and `reference`
-- Move field's `copy` decorator to relation
+- Remove field's `copy` decorator
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
 - Remove `unqueryable` and `unsortable` from generated clients
 - CLI mode: When running generation, ignore custom programming callbacks
@@ -293,7 +292,7 @@
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 
-#### 0.0.54
+#### 0.0.53
 - The copy action
 - random float modifier
 - random int modifier
@@ -323,8 +322,6 @@
 
 #### 0.0.84
 - Correct count with cursor
-
-#### 0.0.86
 
 #### 0.0.88
 - Swift package
