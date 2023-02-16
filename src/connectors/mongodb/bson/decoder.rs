@@ -3,7 +3,7 @@ use bson::Bson;
 use key_path::KeyPath;
 
 use crate::core::error::Error;
-use crate::core::field::r#type::FieldType;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::Model;
 use crate::core::result::Result;
 use crate::prelude::{Graph, Value};
@@ -68,7 +68,7 @@ impl BsonDecoder {
                 match bson_value.as_array() {
                     Some(arr) => Ok(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
                         let path = path + i;
-                        Self::decode(model, graph, inner_field.r#type(), inner_field.is_optional(), v, path)
+                        Self::decode(model, graph, inner_field.field_type(), inner_field.is_optional(), v, path)
                     }).collect::<Result<Vec<Value>>>()?)),
                     None => Err(Error::record_decoding_error(model.name(), path, "array")),
                 }
@@ -77,7 +77,7 @@ impl BsonDecoder {
                 match bson_value.as_document() {
                     Some(doc) => Ok(Value::HashMap(doc.iter().map(|(k, v)| {
                         let path = path + k;
-                        Ok((k.to_owned(), Self::decode(model, graph, inner_field.r#type(), inner_field.is_optional(), v, path)?))
+                        Ok((k.to_owned(), Self::decode(model, graph, inner_field.field_type(), inner_field.is_optional(), v, path)?))
                     }).collect::<Result<HashMap<String, Value>>>()?)),
                     None => Err(Error::record_decoding_error(model.name(), path, "document")),
                 }
@@ -86,7 +86,7 @@ impl BsonDecoder {
                 match bson_value.as_document() {
                     Some(doc) => Ok(Value::BTreeMap(doc.iter().map(|(k, v)| {
                         let path = path + k;
-                        Ok((k.to_owned(), Self::decode(model, graph, inner_field.r#type(), inner_field.is_optional(), v, path)?))
+                        Ok((k.to_owned(), Self::decode(model, graph, inner_field.field_type(), inner_field.is_optional(), v, path)?))
                     }).collect::<Result<BTreeMap<String, Value>>>()?)),
                     None => Err(Error::record_decoding_error(model.name(), path, "document")),
                 }

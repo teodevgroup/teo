@@ -6,6 +6,7 @@ use crate::core::action::{Action, CREATE_HANDLER, CREATE_MANY_HANDLER, IDENTITY_
 use crate::core::connector::Connector;
 use crate::core::field::*;
 use crate::core::field::Field;
+use crate::core::field::r#type::FieldTypeOwner;
 use crate::core::relation::Relation;
 use crate::core::property::Property;
 use crate::core::relation::delete_rule::DeleteRule;

@@ -1,6 +1,6 @@
 use chrono::{NaiveDate, Utc, DateTime, SecondsFormat};
 use crate::connectors::sql::schema::dialect::SQLDialect;
-use crate::core::field::r#type::FieldType;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::prelude::{Graph, Value};
 
 pub trait ToSQLString {
@@ -46,7 +46,7 @@ impl ValueToSQLString for Value {
                 let val = self.as_vec().unwrap();
                 let mut result: Vec<String> = vec![];
                 for (_i, v) in val.iter().enumerate() {
-                    result.push(v.to_sql_string(element_field.r#type(), element_field.is_optional(), graph));
+                    result.push(v.to_sql_string(element_field.field_type(), element_field.is_optional(), graph));
                 }
                 result.join(", ").wrap_in_array()
             }

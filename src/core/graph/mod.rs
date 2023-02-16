@@ -150,9 +150,9 @@ impl Graph {
         Ok(object)
     }
 
-    pub async fn create_object(&self, model: &str, initial: Value) -> Result<Object> {
+    pub async fn create_object(&self, model: &str, initial: impl AsRef<Value>) -> Result<Object> {
         let obj = self.new_object(model, Action::from_u32(PROGRAM_CODE | CREATE | SINGLE | INTERNAL_POSITION), ActionSource::ProgramCode)?;
-        obj.set_teon(&initial).await?;
+        obj.set_teon(initial.as_ref()).await?;
         Ok(obj)
     }
 

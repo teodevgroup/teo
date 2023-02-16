@@ -1,5 +1,5 @@
 
-use crate::core::field::r#type::FieldType;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 
 pub(crate) trait ToCSharpType {
     fn to_csharp_type(&self, optional: bool) -> String;

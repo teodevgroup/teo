@@ -766,3 +766,9 @@ impl PartialEq for Value {
         }
     }
 }
+
+impl AsRef<Value> for Value {
+    fn as_ref(&self) -> &Value {
+        &self
+    }
+}

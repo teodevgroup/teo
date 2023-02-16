@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::fs::{File};
 use std::io::Write;
 use std::fs::create_dir_all;
@@ -56,5 +56,21 @@ impl Generator {
         println!("{:?}", filename);
         let mut output_file = File::create(filename)?;
         write!(output_file, "{}", content.into())
+    }
+
+    pub(crate) fn find_file_upwards(&self, name: impl AsRef<str>) -> Option<PathBuf> {
+        let mut path: PathBuf = self.base_dir.clone();
+        let file = Path::new(name.as_ref());
+        loop {
+            path.push(file);
+
+            if path.is_file() {
+                break Some(path);
+            }
+
+            if !(path.pop() && path.pop()) { // remove file && remove parent
+                break None;
+            }
+        }
     }
 }

@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use bson::{Bson, doc, Document, Regex as BsonRegex};
 
 use maplit::hashmap;
-use crate::core::field::r#type::FieldType;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::input::Input;
 use crate::core::model::Model;
 use crate::core::relation::Relation;
@@ -367,7 +367,7 @@ impl Aggregation {
                 _ => {
                     if let Some(field) = model.field(key) {
                         let column_name = field.column_name();
-                        retval.insert(column_name, Self::build_where_item(model, graph, field.r#type(), field.is_optional(), value)?);
+                        retval.insert(column_name, Self::build_where_item(model, graph, field.field_type(), field.is_optional(), value)?);
                     } else if let Some(relation) = model.relation(key) {
                         let relation_model = graph.model(relation.model()).unwrap();
                         let (command, inner_where) = Input::key_value(value.as_hashmap().unwrap());

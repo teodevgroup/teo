@@ -40,6 +40,13 @@ impl FieldType {
         }
     }
 
+    pub(crate) fn enum_name(&self) -> &str {
+        match self {
+            FieldType::Enum(n) => n,
+            _ => panic!(),
+        }
+    }
+
     pub(crate) fn is_int(&self) -> bool {
         match self {
             FieldType::I32 | FieldType::I64 => true,
@@ -157,6 +164,11 @@ impl FieldType {
             FieldType::Object(_) => panic!("Object filter is not implemented.")
         }
     }
+}
+
+pub(crate) trait FieldTypeOwner {
+    fn field_type(&self) -> &FieldType;
+    fn is_optional(&self) -> bool;
 }
 
 static DEFAULT_UPDATORS: Lazy<HashSet<&str>> = Lazy::new(|| {

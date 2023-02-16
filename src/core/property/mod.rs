@@ -2,7 +2,7 @@ use std::sync::Arc;
 use crate::core::connector::Connector;
 use crate::core::database::r#type::DatabaseType;
 use crate::core::field::optionality::Optionality;
-use crate::core::field::r#type::FieldType;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::pipeline::Pipeline;
 
 #[derive(Clone)]
@@ -42,10 +42,6 @@ impl Property {
         &self.name
     }
 
-    pub(crate) fn r#type(&self) -> &FieldType {
-        self.field_type.as_ref().unwrap()
-    }
-
     pub(crate) fn database_type(&self) -> &DatabaseType {
         self.database_type.as_ref().unwrap()
     }
@@ -54,12 +50,8 @@ impl Property {
         self.optionality.is_required()
     }
 
-    pub(crate) fn is_optional(&self) -> bool {
-        self.optionality.is_optional()
-    }
-
     pub(crate) fn finalize(&mut self, connector: Arc<dyn Connector>) {
-        self.database_type = Some(connector.default_database_type(self.r#type()));
+        self.database_type = Some(connector.default_database_type(self.field_type()));
     }
 
     pub(crate) fn set_required(&mut self) {
@@ -68,5 +60,15 @@ impl Property {
 
     pub(crate) fn set_optional(&mut self) {
         self.optionality = Optionality::Optional;
+    }
+}
+
+impl FieldTypeOwner for Property {
+    fn field_type(&self) -> &FieldType {
+        self.field_type.as_ref().unwrap()
+    }
+
+    fn is_optional(&self) -> bool {
+        self.optionality.is_optional()
     }
 }

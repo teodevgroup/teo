@@ -229,7 +229,6 @@
 - Entry level `@action` **[DONE]**
 - Nested level `@action` **[DONE]**
 - Fix value required entry level error message bug **[DONE]**
-- Fix pipeline set value, int 64 and int 32 issue for mongodb
 - `$print` item label argument **[DONE]**
 - `$assign` decorator **[DONE]**
 - Property decorator documentation **[DONE]**
@@ -238,13 +237,16 @@
 - `@disable` documentation **[DONE]**
 - `@action` documentation **[DONE]**
 - Support regular expression for VSCode plugin **[DONE]**
+- Rust entities: `chrono` and `bson` automatically included **[DONE]**
+- Rust entities: properties **[DONE]**
+- Rust entities: `set`, `update` and `delete` method **[DONE]**
+- New designed object relation APIs
 - Rust entities with relations
-- Rust entities with properties
-- Rust entities: set method
-- Rust entities: delete method
+- Rust entities: auto create dir
 - Rust server API documentation
 - `find` action transform when including
 - Test soft delete support
+- Fix pipeline set value, int 64 and int 32 issue for mongodb
 - Soft delete documentation
 - Support code comment tags for VSCode
 - Support code comment parsing in schema parser
@@ -252,6 +254,7 @@
 - TypeScript client: package files
 
 #### 0.0.47
+- Bug: required relationship can be created without it 
 - Pipeline documentation
 - Object method for String like `ENV["PORT"].toInt()`
 - Relation onUpdate

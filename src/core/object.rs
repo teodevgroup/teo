@@ -9,7 +9,7 @@ use key_path::{KeyPath, path};
 use async_recursion::async_recursion;
 use maplit::hashmap;
 use indexmap::IndexMap;
-use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, PROGRAM_CODE, DELETE, DISCONNECT, FIND, JOIN_CREATE, JOIN_DELETE, MANY, NESTED, SINGLE, UPDATE, UPSERT, NESTED_CREATE_ACTION, NESTED_DISCONNECT_ACTION, NESTED_SET_ACTION, NESTED_CONNECT_ACTION, NESTED_DELETE_MANY_ACTION, NESTED_UPDATE_MANY_ACTION, NESTED_UPDATE_ACTION, NESTED_DELETE_ACTION, NESTED_CONNECT_OR_CREATE_ACTION, NESTED_UPSERT_ACTION};
+use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, PROGRAM_CODE, DELETE, DISCONNECT, FIND, JOIN_CREATE, JOIN_DELETE, MANY, NESTED, SINGLE, UPDATE, UPSERT, NESTED_CREATE_ACTION, NESTED_DISCONNECT_ACTION, NESTED_SET_ACTION, NESTED_CONNECT_ACTION, NESTED_DELETE_MANY_ACTION, NESTED_UPDATE_MANY_ACTION, NESTED_UPDATE_ACTION, NESTED_DELETE_ACTION, NESTED_CONNECT_OR_CREATE_ACTION, NESTED_UPSERT_ACTION, INTERNAL_POSITION};
 use crate::core::action::source::ActionSource;
 use crate::core::field::{Field, PreviousValueRule};
 use crate::core::field::optionality::Optionality;
@@ -53,6 +53,11 @@ pub(crate) struct ObjectInner {
     pub(crate) relation_mutation_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) relation_query_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
     pub(crate) cached_property_map: Arc<Mutex<HashMap<String, Value>>>,
+    pub(crate) object_mutation_cache_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
+    pub(crate) object_set_map: Arc<Mutex<HashMap<String, Option<Object>>>>,
+    pub(crate) object_set_many_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
+    pub(crate) object_connect_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
+    pub(crate) object_disconnect_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
 }
 
 fn check_user_json_keys<'a>(map: &HashMap<String, Value>, allowed: &HashSet<&str>, model: &Model) -> Result<()> {
@@ -86,6 +91,11 @@ impl Object {
                 relation_query_map: Arc::new(Mutex::new(HashMap::new())),
                 relation_mutation_map: Arc::new(Mutex::new(HashMap::new())),
                 cached_property_map: Arc::new(Mutex::new(HashMap::new())),
+                object_mutation_cache_map: Arc::new(Mutex::new(HashMap::new())),
+                object_set_map: Arc::new(Mutex::new(HashMap::new())),
+                object_set_many_map: Arc::new(Mutex::new(HashMap::new())),
+                object_connect_map: Arc::new(Mutex::new(HashMap::new())),
+                object_disconnect_map: Arc::new(Mutex::new(HashMap::new())),
             })
         }
     }
@@ -93,6 +103,18 @@ impl Object {
     #[async_recursion(?Send)]
     pub async fn set_teon(&self, value: &Value) -> Result<()> {
         self.set_teon_with_path_and_user_mode(value, &path![], true).await
+    }
+
+    pub async fn update_teon(&self, value: &Value) -> Result<()> {
+        check_user_json_keys(value.as_hashmap().unwrap(), &self.model().input_keys().iter().map(|k| k.as_str()).collect(), self.model())?;
+        for (key, value) in value.as_hashmap().unwrap() {
+            if self.model().field(key).is_some() {
+                self.set_value(key, value.clone())?;
+            } else if self.model().property(key).is_some() {
+                self.set_property(key, value).await?;
+            }
+        }
+        Ok(())
     }
 
     #[async_recursion(?Send)]
@@ -322,7 +344,7 @@ impl Object {
         }
     }
 
-    pub fn get_relation_object(&self, key: impl AsRef<str>) -> Result<Option<Object>> {
+    pub fn get_query_relation_object(&self, key: impl AsRef<str>) -> Result<Option<Object>> {
         let key = key.as_ref();
         let model_keys = self.model().all_keys();
         if !model_keys.contains(&key.to_string()) {
@@ -334,8 +356,24 @@ impl Object {
         }
     }
 
-    pub fn has_relation_fetched(&self, key: impl AsRef<str>) -> bool {
+    pub fn get_mutation_relation_object(&self, key: impl AsRef<str>) -> Result<Option<Object>> {
+        let key = key.as_ref();
+        let model_keys = self.model().all_keys();
+        if !model_keys.contains(&key.to_string()) {
+            return Err(Error::invalid_key(key, self.model()));
+        }
+        match self.inner.object_mutation_cache_map.lock().unwrap().get(key) {
+            Some(list) => Ok(list.get(0).cloned()),
+            None => Ok(None)
+        }
+    }
+
+    pub fn has_query_relation_fetched(&self, key: impl AsRef<str>) -> bool {
         self.inner.relation_query_map.lock().unwrap().contains_key(key.as_ref())
+    }
+
+    pub fn has_mutation_relation_fetched(&self, key: impl AsRef<str>) -> bool {
+        self.inner.object_mutation_cache_map.lock().unwrap().contains_key(key.as_ref())
     }
 
     pub fn get_relation_vec(&self, key: impl AsRef<str>) -> Result<Vec<Object>> {
@@ -760,9 +798,9 @@ impl Object {
         let keys = self.model().output_keys();
         for key in keys {
             if let Some(relation) = self.model().relation(key) {
-                if self.has_relation_fetched(relation.name()) {
+                if self.has_query_relation_fetched(relation.name()) {
                     if !relation.is_vec() {
-                        let o = self.get_relation_object(key).unwrap();
+                        let o = self.get_query_relation_object(key).unwrap();
                         match o {
                             Some(o) => {
                                 map.insert(key.to_string(), o.to_json_internal(&(path.as_ref() + relation.name())).await.unwrap());
@@ -1245,6 +1283,34 @@ impl Object {
         graph.find_unique_internal(self.model().name(), &finder, false, self.action(), self.action_source().clone()).await
     }
 
+    pub fn force_add_relation_objects(&self, key: impl AsRef<str>, objects: Vec<Object>) -> () {
+        self.inner.object_connect_map.lock().unwrap().insert(key.as_ref().to_owned(), objects);
+    }
+
+    pub fn force_remove_relation_objects(&self, key: impl AsRef<str>, objects: Vec<Object>) -> () {
+        self.inner.object_disconnect_map.lock().unwrap().insert(key.as_ref().to_owned(), objects);
+    }
+
+    pub fn force_set_relation_objects(&self, key: impl AsRef<str>, objects: Vec<Object>) -> () {
+        self.inner.object_set_many_map.lock().unwrap().insert(key.as_ref().to_owned(), objects);
+    }
+
+    pub async fn force_get_relation_objects(&self, key: impl AsRef<str>, find_many_args: impl AsRef<Value>) -> Result<Vec<Object>> {
+        self.fetch_relation_objects(key.as_ref(), Some(find_many_args.as_ref())).await
+    }
+
+    pub fn force_set_relation_object(&self, key: impl AsRef<str>, object: Option<Object>) -> () {
+        self.inner.object_set_map.lock().unwrap().insert(key.as_ref().to_owned(), object);
+    }
+
+    pub async fn force_get_relation_object(&self, key: impl AsRef<str>) -> Result<Option<Object>> {
+        if self.has_mutation_relation_fetched(key.as_ref()) {
+            self.get_mutation_relation_object(key.as_ref())
+        } else {
+            self.fetch_relation_object(key.as_ref(), None).await
+        }
+    }
+
     pub async fn fetch_relation_object(&self, key: impl AsRef<str>, find_unique_arg: Option<&Value>) -> Result<Option<Object>> {
         // get relation
         let model = self.model();
@@ -1267,13 +1333,13 @@ impl Object {
         let action = Action::from_u32(NESTED | FIND | PROGRAM_CODE | SINGLE);
         match graph.find_unique_internal(relation_model_name, &finder, false, action, ActionSource::ProgramCode).await {
             Ok(result) => {
-                self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec![result]);
-                let obj = self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().get(0).unwrap().clone();
+                self.inner.object_mutation_cache_map.lock().unwrap().insert(key.as_ref().to_string(), vec![result]);
+                let obj = self.inner.object_mutation_cache_map.lock().unwrap().get(key.as_ref()).unwrap().get(0).unwrap().clone();
                 Ok(Some(obj.clone()))
             }
             Err(err) => {
                 if err.r#type == ErrorType::ObjectNotFound {
-                    self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec![]);
+                    self.inner.object_mutation_cache_map.lock().unwrap().insert(key.as_ref().to_string(), vec![]);
                     Ok(None)
                 } else {
                     Err(err)
@@ -1296,7 +1362,7 @@ impl Object {
         } else {
             &empty
         };
-        let action = Action::from_u32(NESTED | FIND | PROGRAM_CODE | MANY);
+        let action = Action::from_u32(INTERNAL_POSITION | FIND | PROGRAM_CODE | MANY);
         if let Some(_join_table) = relation.through() {
             let identifier = self.identifier();
             let new_self = self.graph().find_unique_internal(model.name(), &teon!({
@@ -1306,8 +1372,7 @@ impl Object {
                 }
             }), false, action, ActionSource::ProgramCode).await?;
             let vec = new_self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().clone();
-            self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec);
-            Ok(self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().clone())
+            Ok(vec)
         } else {
             let mut finder = teon!({});
             if let Some(find_many_arg) = find_many_arg {
@@ -1330,7 +1395,6 @@ impl Object {
             let relation_model_name = relation.model();
             let graph = self.graph();
             let results = graph.find_many_internal(relation_model_name, &finder, false, action, ActionSource::ProgramCode).await?;
-            self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), results.clone());
             Ok(results)
         }
     }

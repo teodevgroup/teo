@@ -7,7 +7,7 @@ use crate::connectors::sql::schema::value::encode::{IfIMode, SQLEscape, ToLike, 
 use crate::connectors::sql::stmts::select::r#where::{ToWrappedSQLString, WhereClause};
 use crate::connectors::sql::stmts::select::r#where::WhereClause::{And, Not};
 use crate::connectors::sql::stmts::SQL;
-use crate::core::field::r#type::FieldType;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::input::Input;
 use crate::core::model::Model;
 use crate::prelude::{Graph, Object, Value};
@@ -96,7 +96,7 @@ impl Query {
                     "mode" => { }
                     "has" => {
                         let element_type = r#type.element_field().unwrap();
-                        result.push(Self::where_item(&column_name, "@>", &value.to_sql_string(element_type.r#type(), element_type.is_optional(), graph).wrap_in_array()));
+                        result.push(Self::where_item(&column_name, "@>", &value.to_sql_string(element_type.field_type(), element_type.is_optional(), graph).wrap_in_array()));
                     }
                     "hasEvery" => {
                         result.push(Self::where_item(&column_name, "@>", &value.to_sql_string(r#type, false, graph)));

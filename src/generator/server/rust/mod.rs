@@ -1,10 +1,16 @@
+use std::collections::HashSet;
+use std::sync::Arc;
 use async_trait::async_trait;
 use inflector::Inflector;
+use itertools::Itertools;
+use maplit::hashset;
+use tokio::fs;
+use toml_edit::{Document, value};
 use crate::core::app::conf::EntityGeneratorConf;
-use crate::core::field::Field;
-use crate::core::field::r#type::FieldType;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::Model;
 use crate::core::r#enum::Enum;
+use crate::core::relation::Relation;
 use crate::generator::lib::code::Code;
 use crate::generator::lib::generator::Generator;
 use crate::generator::server::EntityGenerator;
@@ -15,10 +21,21 @@ pub(crate) struct RustEntityGenerator {}
 impl RustEntityGenerator {
 
     pub fn new() -> Self {
-        Self {}
+        Self { }
     }
 
-    fn setter_type_for_field(&self, field: &Field) -> String {
+    fn relation_getter_type(&self, relation: &Arc<Relation>) -> String {
+        let model = relation.model();
+        if relation.is_vec() {
+            format!("Vec<{}>", model)
+        } else if relation.is_optional() {
+            format!("Option<{}>", model)
+        } else {
+            model.to_owned()
+        }
+    }
+
+    fn setter_type_for_field<T: FieldTypeOwner>(&self, field: &T) -> String {
         if field.is_optional() && !field.field_type().is_string() {
             format!("Option<{}>", self.setter_type_for_field_type(field.field_type(), false))
         } else {
@@ -26,7 +43,7 @@ impl RustEntityGenerator {
         }
     }
 
-    fn getter_type_for_field(&self, field: &Field) -> String {
+    fn getter_type_for_field<T: FieldTypeOwner>(&self, field: &T) -> String {
         if field.is_optional() {
             format!("Option<{}>", self.getter_type_for_field_type(field.field_type()))
         } else {
@@ -61,7 +78,8 @@ impl RustEntityGenerator {
         }
     }
 
-    async fn generate_file_for_model(&self, name: String, model: &Model, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_file_for_model(&self, name: String, model: &Model, generator: &Generator) -> std::io::Result<HashSet<&str>> {
+        let mut package_requirements = hashset![];
         let model_name = model.name();
         generator.generate_file(format!("{}.rs", name), Code::new(0, 4, |b| {
             // use lines
@@ -70,14 +88,17 @@ impl RustEntityGenerator {
             #[cfg(feature = "data-source-mongodb")]
             if model.fields().iter().find(|f| f.field_type().is_object_id()).is_some() {
                 b.line("use bson::oid::ObjectId;");
+                package_requirements.insert("bson");
             }
             let mut chrono_requirements = vec![];
             if model.fields().iter().find(|f| f.field_type().is_date()).is_some() {
                 chrono_requirements.push("NaiveDate");
+                package_requirements.insert("chrono");
             }
             if model.fields().iter().find(|f| f.field_type().is_datetime()).is_some() {
                 chrono_requirements.push("DateTime");
                 chrono_requirements.push("Utc");
+                package_requirements.insert("chrono");
             }
             match chrono_requirements.len() {
                 0 => (),
@@ -103,10 +124,16 @@ impl RustEntityGenerator {
             for enum_name in enum_names {
                 b.line(format!("use super::{}::{};", enum_name.to_snake_case(), enum_name));
             }
+            let relation_uses: Vec<&str> = model.relations().iter().map(|relation| {
+                relation.model()
+            }).collect();
+            for model_name in relation_uses {
+                b.line(format!("use super::{}::{};", model_name.to_snake_case(), model_name));
+            }
             b.line("");
             // struct and impl
             b.block(format!("pub struct {model_name} {{"), |b| {
-                b.line("inner: Object");
+                b.line("pub(super) inner: Object");
             }, "}");
             b.line("");
             b.block(format!("impl {model_name} {{"), |b| {
@@ -123,7 +150,7 @@ impl RustEntityGenerator {
         Graph::current().find_first("{model_name}", query).await
     }}"#));
                 b.line("");
-                b.line(format!(r#"pub async fn new(values: Value) -> Self {{
+                b.line(format!(r#"pub async fn new(values: impl AsRef<Value>) -> Self {{
         Self {{
             inner: Graph::current().create_object("{model_name}", values).await.unwrap(),
         }}
@@ -143,8 +170,20 @@ impl RustEntityGenerator {
         self.inner.is_modified()
     }}
 
+    pub async fn set(&self, values: impl AsRef<Value>) -> Result<()> {{
+        self.inner.set_teon(values.as_ref()).await
+    }}
+
+    pub async fn update(&self, values: impl AsRef<Value>) -> Result<()> {{
+        self.inner.update_teon(values.as_ref()).await
+    }}
+
     pub async fn save(&self) -> Result<()> {{
         self.inner.save().await
+    }}
+
+    pub async fn delete(&self) -> Result<()> {{
+        self.inner.delete().await
     }}"#));
                 b.line("");
                 // field getters and setters
@@ -152,9 +191,10 @@ impl RustEntityGenerator {
                     let field_method_name = field.name.to_snake_case();
                     b.block(format!("pub fn {}(&self) -> {} {{", &field_method_name, self.getter_type_for_field(field.as_ref())), |b| {
                         if field.field_type().is_enum() && field.is_optional() {
+                            let enum_name = field.field_type().enum_name();
                             b.block(format!("match self.inner.get(\"{}\").unwrap() {{", field.name()), |b| {
                                 b.line("Value::Null => None,");
-                                b.line("Value::String(s) => Some(Sex::from_str(&s).unwrap()),");
+                                b.line(format!("Value::String(s) => Some({}::from_str(&s).unwrap()),", enum_name));
                                 b.line("_ => panic!(),");
                             }, "}");
                         } else {
@@ -177,7 +217,89 @@ impl RustEntityGenerator {
                     b.line("");
                 }
                 // relations
+                for relation in model.relations() {
+                    let relation_name = relation.name();
+                    let relation_method_name = relation_name.to_snake_case();
+                    let model_name = relation.model();
+                    if relation.is_vec() {
+                        b.block(format!("pub async fn {}(&self, find_many_input: impl AsRef<Value>) -> {} {{", &relation_method_name, self.relation_getter_type(relation)), |b| {
+                            b.line(format!("let objects = self.inner.force_get_relation_objects(\"{}\", find_many_input.as_ref()).await.unwrap();", relation_name));
+                            b.line(format!("objects.iter().map(|o| {} {{ inner: o.clone() }}).collect()", model_name));
+                        }, "}");
+                        b.empty_line();
+                        b.block(format!("pub fn set_{}(&self, {}: {}) {{", &relation_method_name, &relation_method_name, self.relation_getter_type(relation)), |b| {
+                            b.line(format!("let objects = {}.iter().map(|o| o.inner.clone()).collect();", &relation_method_name));
+                            b.line(format!("self.inner.force_set_relation_objects(\"{}\", objects)", relation_name));
+                        }, "}");
+                        b.empty_line();
+                        b.block(format!("pub fn add_to_{}(&self, {}: {}) {{", &relation_method_name, &relation_method_name, self.relation_getter_type(relation)), |b| {
+                            b.line(format!("let objects = {}.iter().map(|o| o.inner.clone()).collect();", &relation_method_name));
+                            b.line(format!("self.inner.force_add_relation_objects(\"{}\", objects)", relation_name));
+                        }, "}");
+                        b.empty_line();
+                        b.block(format!("pub fn remove_from_{}(&self, {}: {}) {{", &relation_method_name, &relation_method_name, self.relation_getter_type(relation)), |b| {
+                            b.line(format!("let objects = {}.iter().map(|o| o.inner.clone()).collect();", &relation_method_name));
+                            b.line(format!("self.inner.force_remove_relation_objects(\"{}\", objects)", relation_name));
+                        }, "}");
+                        b.empty_line();
+                    } else {
+                        b.block(format!("pub async fn {}(&self) -> {} {{", &relation_method_name, self.relation_getter_type(relation)), |b| {
+                            b.line(format!("let object = self.inner.force_get_relation_object(\"{}\").await.unwrap();", relation_name));
+                            if relation.is_optional() {
+                                b.block("match object {", |b| {
+                                    b.line(format!("Some(object) => Some({} {{ inner: object }}),", model_name));
+                                    b.line(format!("None => None,"));
+                                }, "}");
+                            } else {
+                                b.line(format!("{} {{ inner: object.unwrap() }}", model_name));
+                            }
+                        }, "}");
+                        b.empty_line();
+                        b.block(format!("pub fn set_{}(&self, {}: {}) {{", &relation_method_name, &relation_method_name, self.relation_getter_type(relation)), |b| {
+                            b.line(format!("self.inner.force_set_relation_object(\"{}\", {})", relation_name, if relation.is_optional() {
+                                format!("{}.map(|o| o.inner.clone())", relation_method_name)
+                            } else {
+                                format!("Some({}.inner.clone())", &relation_method_name)
+                            }));
+                        }, "}");
+                        b.empty_line();
+                    }
+                }
                 // properties
+                for property in model.properties() {
+                    let property_name = property.name();
+                    let property_method_name = property.name.to_snake_case();
+                    if property.getter.is_some() {
+                        b.block(format!("pub async fn {}(&self) -> {} {{", &property_method_name, self.getter_type_for_field(property.as_ref())), |b| {
+                            if property.field_type().is_enum() && property.is_optional() {
+                                let enum_name = property.field_type().enum_name();
+                                b.block(format!("match self.inner.get_property(\"{}\").await.unwrap() {{", property.name()), |b| {
+                                    b.line("Value::Null => None,");
+                                    b.line(format!("Value::String(s) => Some({}::from_str(&s).unwrap()),", enum_name));
+                                    b.line("_ => panic!(),");
+                                }, "}");
+                            } else {
+                                b.line(format!("self.inner.get_property(\"{}\").await.unwrap()", property.name()));
+                            }
+                        }, "}");
+                        b.line("");
+                    }
+                    if property.setter.is_some() {
+                        b.block(format!("pub async fn set_{}(&self, new_value: {}) {{", &property_method_name, self.setter_type_for_field(property.as_ref())), |b| {
+                            if property.field_type().is_enum() && property.is_optional() {
+                                b.block(format!("self.inner.set_property(\"{}\", match new_value {{", property.name()), |b| {
+                                    b.line("Some(v) => v.into(),");
+                                    b.line("None => Value::Null,");
+                                }, "}).await.unwrap();");
+                            } else if property.field_type().is_string() {
+                                b.line(format!("self.inner.set_property(\"{}\", new_value.into()).await.unwrap();", property_name));
+                            } else {
+                                b.line(format!("self.inner.set_property(\"{}\", new_value).await.unwrap();", property_name));
+                            }
+                        }, "}");
+                        b.line("");
+                    }
+                }
             }, "}");
             // shared traits
             b.line(format!(r#"
@@ -218,7 +340,7 @@ impl Display for {model_name} {{
 }}
 "#));
         }).to_string()).await?;
-        Ok(())
+        Ok(package_requirements)
     }
 
     async fn generate_file_for_enum(&self, name: String, e: &Enum, generator: &Generator) -> std::io::Result<()> {
@@ -281,6 +403,23 @@ impl From<Value> for {enum_name} {{
         }).to_string()).await?;
         Ok(())
     }
+
+    async fn find_and_update_cargo_toml(&self, package_requirements: Vec<&str>, generator: &Generator) {
+        let cargo_toml = match generator.find_file_upwards("Cargo.toml") {
+            Some(path) => path,
+            None => return,
+        };
+        let toml = fs::read_to_string(&cargo_toml).await.unwrap();
+        let mut doc = toml.parse::<Document>().expect("`Cargo.toml' has invalid content");
+        let deps = doc.get_mut("dependencies").unwrap();
+        if package_requirements.contains(&"chrono") {
+            deps["chrono"]["version"] = value("0.4.23");
+        }
+        if package_requirements.contains(&"bson") {
+            deps["bson"]["version"] = value("2.3.0");
+        }
+        fs::write(cargo_toml, doc.to_string()).await.unwrap();
+    }
 }
 
 #[async_trait]
@@ -292,12 +431,21 @@ impl EntityGenerator for RustEntityGenerator {
             names.push(name.clone());
             self.generate_file_for_enum(name, e, generator).await?;
         }
+        let mut package_requirements = vec![];
         for model in graph.models() {
             let name = model.name().to_snake_case();
             names.push(name.clone());
-            self.generate_file_for_model(name, model, generator).await?;
+            let result = self.generate_file_for_model(name, model, generator).await?;
+            for item in result {
+                if !package_requirements.contains(&item) {
+                    package_requirements.push(item);
+                }
+            }
         }
         self.generate_mod_rs(names, generator).await?;
+        if package_requirements.len() > 0 {
+            self.find_and_update_cargo_toml(package_requirements, generator).await;
+        }
         Ok(())
     }
 }

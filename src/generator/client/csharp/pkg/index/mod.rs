@@ -1,6 +1,7 @@
 use inflector::Inflector;
 use crate::core::action::{Action, CREATE_HANDLER, FIND_FIRST_HANDLER, ResData, ResMeta, UPDATE_HANDLER, UPDATE_MANY_HANDLER, UPSERT_HANDLER};
 use crate::core::app::conf::ClientGeneratorConf;
+use crate::core::field::r#type::FieldTypeOwner;
 use crate::generator::client::csharp::pkg::index::doc::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, nested_connect_doc, nested_create_doc, nested_create_or_connect_doc, nested_delete_doc, nested_disconnect_doc, nested_set_doc, nested_update_doc, nested_upsert_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_connect_create_doc, unique_connect_doc, unique_where_doc, where_doc, where_doc_first};
 use crate::generator::client::csharp::r#type::ToCSharpType;
 

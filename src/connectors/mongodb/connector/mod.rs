@@ -28,7 +28,7 @@ use crate::core::connector::SaveSession;
 use crate::core::database::r#type::DatabaseType;
 use crate::core::teon::Value;
 use crate::core::error::Error;
-use crate::core::field::r#type::FieldType;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::input::Input;
 use crate::core::result::Result;
 use crate::teon;
@@ -192,7 +192,7 @@ impl MongoDBConnector {
                     // group by field
                     let field = model.field(g).unwrap();
                     let val = if o.as_null().is_some() { Value::Null } else {
-                        BsonDecoder::decode(model, graph, field.r#type(), true, o, path![])?
+                        BsonDecoder::decode(model, graph, field.field_type(), true, o, path![])?
                     };
                     let json_val = val;
                     retval.as_hashmap_mut().unwrap().insert(g.to_string(), json_val);
@@ -326,7 +326,7 @@ impl MongoDBConnector {
                     for key in object.inner.atomic_updator_map.lock().unwrap().keys() {
                         let bson_new_val = updated_document.as_ref().unwrap().get(key).unwrap();
                         let field = object.model().field(key).unwrap();
-                        let field_value = BsonDecoder::decode(model, object.graph(), field.r#type(), field.is_optional(), bson_new_val, path![])?;
+                        let field_value = BsonDecoder::decode(model, object.graph(), field.field_type(), field.is_optional(), bson_new_val, path![])?;
                         object.inner.value_map.lock().unwrap().insert(key.to_string(), field_value);
                     }
                 }

@@ -5,7 +5,7 @@ pub(crate) struct Code {
 }
 
 impl Code {
-    pub(crate) fn new<F: Fn(&mut Code)>(indent_level: u8, indent_space: u8, build: F) -> Self {
+    pub(crate) fn new<F: FnMut(&mut Code)>(indent_level: u8, indent_space: u8, mut build: F) -> Self {
         let mut code = Code { indent_level, indent_space, content: String::new() };
         build(&mut code);
         code

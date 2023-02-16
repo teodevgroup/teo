@@ -10,7 +10,7 @@ use to_mut::ToMut;
 use crate::core::connector::Connector;
 use crate::core::database::r#type::DatabaseType;
 use crate::core::field::optionality::Optionality;
-use crate::core::field::r#type::FieldType;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::field::read_rule::ReadRule;
 use crate::core::field::write_rule::WriteRule;
 use crate::core::pipeline::Pipeline;
@@ -164,14 +164,6 @@ impl Field {
         }
     }
 
-    pub(crate) fn r#type(&self) -> &FieldType {
-        self.field_type.as_ref().unwrap()
-    }
-
-    pub(crate) fn is_optional(&self) -> bool {
-        self.optionality.is_optional()
-    }
-
     pub(crate) fn is_required(&self) -> bool {
         self.optionality.is_required()
     }
@@ -191,10 +183,6 @@ impl Field {
             FieldType::Vec(inner) => inner.needs_on_save_callback(),
             _ => false
         }
-    }
-
-    pub(crate) fn field_type(&self) -> &FieldType {
-        self.field_type.as_ref().unwrap()
     }
 
     pub(crate) fn database_type(&self) -> &DatabaseType {
@@ -267,6 +255,16 @@ impl Field {
         self.optionality = Optionality::Optional;
         self.input_omissible = true;
         self.output_omissible = true;
+    }
+}
+
+impl FieldTypeOwner for Field {
+    fn field_type(&self) -> &FieldType {
+        self.field_type.as_ref().unwrap()
+    }
+
+    fn is_optional(&self) -> bool {
+        self.optionality.is_optional()
     }
 }
 

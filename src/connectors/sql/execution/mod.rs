@@ -11,7 +11,7 @@ use crate::connectors::sql::schema::value::encode::{SQLEscape, ToSQLString, ToWr
 use crate::core::action::Action;
 use crate::core::action::source::ActionSource;
 use crate::core::error::Error;
-use crate::core::field::r#type::FieldType;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::input::Input;
 use crate::core::model::Model;
 use crate::core::result::Result;
@@ -29,10 +29,10 @@ impl Execution {
                 if field.auto_increment && dialect == SQLDialect::PostgreSQL {
                     Some((field.name().to_owned(), RowDecoder::decode_serial(field.is_optional(), row, column_name)))
                 } else {
-                    Some((field.name().to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, column_name, dialect)))
+                    Some((field.name().to_owned(), RowDecoder::decode(field.field_type(), field.is_optional(), row, column_name, dialect)))
                 }
             } else if let Some(property) = model.property(column_name) {
-                Some((property.name().to_owned(), RowDecoder::decode(property.r#type(), property.is_optional(), row, column_name, dialect)))
+                Some((property.name().to_owned(), RowDecoder::decode(property.field_type(), property.is_optional(), row, column_name, dialect)))
             } else if column_name.contains(".") {
                 let names: Vec<&str> = column_name.split(".").collect();
                 let relation_name = names[0];
@@ -42,7 +42,7 @@ impl Execution {
                 } else {
                     let opposite_model = graph.model(model.relation(relation_name).unwrap().model()).unwrap();
                     let field = opposite_model.field(field_name).unwrap();
-                    Some((column_name.to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, column_name, dialect)))
+                    Some((column_name.to_owned(), RowDecoder::decode(field.field_type(), field.is_optional(), row, column_name, dialect)))
                 }
             } else {
                 panic!("Unhandled key {}.", column_name);
@@ -69,13 +69,13 @@ impl Execution {
                     retval.get_mut(group).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), v);
                 } else { // field type
                     let field = model.field(field_name).unwrap();
-                    let v = RowDecoder::decode(field.r#type(), true, &row, result_key, dialect);
+                    let v = RowDecoder::decode(field.field_type(), true, &row, result_key, dialect);
                     retval.get_mut(group).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), v);
                 }
             } else if let Some(field) = model.field_with_column_name(result_key) {
-                retval.insert(field.name().to_owned(), RowDecoder::decode(field.r#type(), field.is_optional(), row, result_key, dialect));
+                retval.insert(field.name().to_owned(), RowDecoder::decode(field.field_type(), field.is_optional(), row, result_key, dialect));
             } else if let Some(property) = model.property(result_key) {
-                retval.insert(property.name().to_owned(), RowDecoder::decode(property.r#type(), property.is_optional(), row, result_key, dialect));
+                retval.insert(property.name().to_owned(), RowDecoder::decode(property.field_type(), property.is_optional(), row, result_key, dialect));
             }
         }
         Value::HashMap(retval)

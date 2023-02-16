@@ -11,7 +11,7 @@ use rust_decimal::Decimal;
 use serde_json::{Value as JsonValue, Map as JsonMap};
 use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, CREATE_MANY_HANDLER, DELETE, DISCONNECT, FIND_MANY_HANDLER, FIND_UNIQUE_HANDLER, MANY, NESTED, SET, SINGLE, UPDATE, UPSERT};
 use crate::core::error::Error;
-use crate::core::field::r#type::FieldType;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::Model;
 use crate::core::result::Result;
 use crate::core::graph::Graph;
@@ -41,7 +41,7 @@ impl Decoder {
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
             let path = path + k;
             if let Some(field) = model.field(k) {
-                Ok((k.to_owned(), Self::decode_value_for_field_type(graph, field.r#type(), field.is_optional(), v, path)?))
+                Ok((k.to_owned(), Self::decode_value_for_field_type(graph, field.field_type(), field.is_optional(), v, path)?))
             } else if let Some(relation) = model.relation(k) {
                 if relation.is_vec() {
                     Ok((k.to_owned(), Self::decode_nested_many_create_arg(graph, relation, v, path)?))
@@ -49,7 +49,7 @@ impl Decoder {
                     Ok((k.to_owned(), Self::decode_nested_one_create_arg(graph, relation, v, path)?))
                 }
             } else if let Some(property) = model.property(k) {
-                Ok((k.to_owned(), Self::decode_value_for_field_type(graph, property.r#type(), property.is_optional(), v, path)?))
+                Ok((k.to_owned(), Self::decode_value_for_field_type(graph, property.field_type(), property.is_optional(), v, path)?))
             } else {
                 unreachable!()
             }
@@ -143,7 +143,7 @@ impl Decoder {
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
             let path = path + k;
             if let Some(field) = model.field(k) {
-                Ok((k.to_owned(), Self::decode_value_for_field_type(graph, field.r#type(), field.is_optional(), v, path)?))
+                Ok((k.to_owned(), Self::decode_value_for_field_type(graph, field.field_type(), field.is_optional(), v, path)?))
             } else if let Some(relation) = model.relation(k) {
                 if relation.is_vec() {
                     Ok((k.to_owned(), Self::decode_nested_many_create_arg(graph, relation, v, path)?))
@@ -151,7 +151,7 @@ impl Decoder {
                     Ok((k.to_owned(), Self::decode_nested_one_create_arg(graph, relation, v, path)?))
                 }
             } else if let Some(property) = model.property(k) {
-                Ok((k.to_owned(), Self::decode_value_for_field_type(graph, property.r#type(), property.is_optional(), v, path)?))
+                Ok((k.to_owned(), Self::decode_value_for_field_type(graph, property.field_type(), property.is_optional(), v, path)?))
             } else {
                 panic!("Unhandled key.")
             }
@@ -516,7 +516,7 @@ impl Decoder {
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
             let path = path + k;
             if let Some(field) = model.field(k) {
-                Ok((k.to_owned(), Self::decode_value_or_updator_for_field_type(graph, field.r#type(), field.is_optional(), v, path, false)?))
+                Ok((k.to_owned(), Self::decode_value_or_updator_for_field_type(graph, field.field_type(), field.is_optional(), v, path, false)?))
             } else if let Some(relation) = model.relation(k) {
                 if relation.is_vec() {
                     Ok((k.to_owned(), Self::decode_nested_many_update_arg(graph, relation, v, path)?))
@@ -524,7 +524,7 @@ impl Decoder {
                     Ok((k.to_owned(), Self::decode_nested_one_update_arg(graph, relation, v, path)?))
                 }
             } else if let Some(property) = model.property(k) {
-                Ok((k.to_owned(), Self::decode_value_or_updator_for_field_type(graph, property.r#type(), property.is_optional(), v, path, true)?))
+                Ok((k.to_owned(), Self::decode_value_or_updator_for_field_type(graph, property.field_type(), property.is_optional(), v, path, true)?))
             } else {
                 panic!("Unhandled key.")
             }
@@ -538,7 +538,7 @@ impl Decoder {
             Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
                 let path = path + k;
                 let field = model.field(k).unwrap();
-                Ok((k.clone(), Self::decode_where_with_aggregates_for_field(graph, field.r#type(), field.is_optional(), v, &path)?))
+                Ok((k.clone(), Self::decode_where_with_aggregates_for_field(graph, field.field_type(), field.is_optional(), v, &path)?))
             }).collect::<Result<HashMap<String, Value>>>()?))
         } else {
             Err(Error::unexpected_input_type("object", path))
@@ -751,7 +751,7 @@ impl Decoder {
                     }
                     if let Some(field) = model.field(key) {
                         let optional = field.optionality.is_optional();
-                        retval.insert(key.to_owned(), Self::decode_where_for_field(graph, field.r#type(), optional, value, path)?);
+                        retval.insert(key.to_owned(), Self::decode_where_for_field(graph, field.field_type(), optional, value, path)?);
                     } else if let Some(relation) = model.relation(key) {
                         retval.insert(key.to_owned(), Self::decode_where_for_relation(graph, relation, value, path)?);
                     }
@@ -777,7 +777,7 @@ impl Decoder {
                 for (key, value) in json_map {
                     let field = model.field(key).unwrap();
                     let path = path + key;
-                    retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, field.r#type(), field.is_optional(), value, path)?);
+                    retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, field.field_type(), field.is_optional(), value, path)?);
                     return Ok(Value::HashMap(retval));
                 }
             }
@@ -817,11 +817,11 @@ impl Decoder {
                     }
                     "has" => {
                         let element_field = r#type.element_field().unwrap();
-                        retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, element_field.r#type(), element_field.is_optional(), value, path)?);
+                        retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, element_field.field_type(), element_field.is_optional(), value, path)?);
                     }
                     "hasEvery" | "hasSome" => {
                         let element_field = r#type.element_field().unwrap();
-                        retval.insert(key.to_owned(), Self::decode_value_array_for_field_type(graph, element_field.r#type(), element_field.is_optional(), value, path)?);
+                        retval.insert(key.to_owned(), Self::decode_value_array_for_field_type(graph, element_field.field_type(), element_field.is_optional(), value, path)?);
                     }
                     "isEmpty" => {
                         retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, &FieldType::Bool, false, value, path)?);
@@ -896,7 +896,7 @@ impl Decoder {
                     "increment" | "decrement" | "multiply" | "divide" => Self::decode_value_for_field_type(graph, r#type, false, v, path)?,
                     "push" => {
                         let element_field = r#type.element_field().unwrap();
-                        Self::decode_value_for_field_type(graph, element_field.r#type(), element_field.is_optional(), v, path)?
+                        Self::decode_value_for_field_type(graph, element_field.field_type(), element_field.is_optional(), v, path)?
                     }
                     _ => panic!("Unknown updator name.")
                 }))
@@ -979,7 +979,7 @@ impl Decoder {
             FieldType::Vec(inner_field) => match json_value.as_array() {
                 Some(a) => {
                     Ok(Value::Vec(a.iter().enumerate().map(|(i, v)| {
-                        Self::decode_value_for_field_type(graph, inner_field.r#type(), inner_field.is_optional(), v, path + i)
+                        Self::decode_value_for_field_type(graph, inner_field.field_type(), inner_field.is_optional(), v, path + i)
                     }).collect::<Result<Vec<Value>>>()?))
                 },
                 None => Err(Error::unexpected_input_type("array", path))
@@ -987,7 +987,7 @@ impl Decoder {
             FieldType::HashMap(inner_field) => match json_value.as_object() {
                 Some(a) => {
                     Ok(Value::HashMap(a.iter().map(|(i, v)| {
-                        Ok((i.to_string(), Self::decode_value_for_field_type(graph, inner_field.r#type(), inner_field.is_optional(), v, path + i)?))
+                        Ok((i.to_string(), Self::decode_value_for_field_type(graph, inner_field.field_type(), inner_field.is_optional(), v, path + i)?))
                     }).collect::<Result<HashMap<String, Value>>>()?))
                 },
                 None => Err(Error::unexpected_input_type("object", path))
@@ -995,7 +995,7 @@ impl Decoder {
             FieldType::BTreeMap(inner_field) => match json_value.as_object() {
                 Some(a) => {
                     Ok(Value::BTreeMap(a.iter().map(|(i, v)| {
-                        Ok((i.to_string(), Self::decode_value_for_field_type(graph, inner_field.r#type(), inner_field.is_optional(), v, path + i)?))
+                        Ok((i.to_string(), Self::decode_value_for_field_type(graph, inner_field.field_type(), inner_field.is_optional(), v, path + i)?))
                     }).collect::<Result<BTreeMap<String, Value>>>()?))
                 },
                 None => Err(Error::unexpected_input_type("object", path))
