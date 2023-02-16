@@ -241,7 +241,7 @@
 - Rust entities: properties **[DONE]**
 - Rust entities: `set`, `update` and `delete` method **[DONE]**
 - New designed object relation APIs
-- Rust entities with relations
+- Rust entities with relations **[DONE]**
 - Rust entities: auto create dir
 - Rust server API documentation
 - `find` action transform when including
