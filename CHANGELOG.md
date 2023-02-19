@@ -242,7 +242,7 @@
 - Rust entities: `set`, `update` and `delete` method **[DONE]**
 - New designed object relation APIs
 - Rust entities with relations **[DONE]**
-- Rust entities: auto create dir
+- Entities: auto create dir **[DONE]**
 - Rust server API documentation
 - `find` action transform when including
 - Test soft delete support
