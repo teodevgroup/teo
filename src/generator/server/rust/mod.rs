@@ -228,11 +228,6 @@ impl RustEntityGenerator {
                             b.line(format!("objects.iter().map(|o| {} {{ inner: o.clone() }}).collect()", model_name));
                         }, "}");
                         b.empty_line();
-                        b.block(format!("pub async fn set_{}(&self, {}: {}) {{", &relation_method_name, &relation_method_name, self.relation_getter_type(relation)), |b| {
-                            b.line(format!("let objects = {}.iter().map(|o| o.inner.clone()).collect();", &relation_method_name));
-                            b.line(format!("self.inner.force_set_relation_objects(\"{}\", objects).await", relation_name));
-                        }, "}");
-                        b.empty_line();
                         b.block(format!("pub async fn add_to_{}(&self, {}: {}) {{", &relation_method_name, &relation_method_name, self.relation_getter_type(relation)), |b| {
                             b.line(format!("let objects = {}.iter().map(|o| o.inner.clone()).collect();", &relation_method_name));
                             b.line(format!("self.inner.force_add_relation_objects(\"{}\", objects).await", relation_name));
