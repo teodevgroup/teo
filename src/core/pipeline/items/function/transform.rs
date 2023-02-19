@@ -37,7 +37,7 @@ impl<T, F, R, Fut> TransformArgument<T, R> for F where
     T: From<Value> + Send + Sync + Into<Value>,
     F: Fn(T) -> Fut + Sync + Send,
     R: Into<TransformResult<T>> + Send + Sync,
-    Fut: Future<Output = R> + Send + Sync + 'static {
+    Fut: Future<Output = R> + Send + 'static {
     fn call(&self, args: T) -> BoxFuture<'static, R> {
         Box::pin(self(args))
     }
