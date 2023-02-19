@@ -250,6 +250,7 @@
 - Soft delete documentation
 - Support code comment tags for VSCode
 - Support code comment parsing in schema parser
+- Support code comment tags for IntelliJ IDEA
 - Rust entities with documentation
 - TypeScript client: package files
 
