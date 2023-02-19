@@ -32,7 +32,7 @@ impl<T, F, O, Fut> PerformArgument<T, O> for F where
 T: From<Value> + Send + Sync,
 F: Fn(T) -> Fut + Sync + Send,
 O: Into<PerformResult> + Send + Sync,
-Fut: Future<Output = O> + Send + Sync + 'static {
+Fut: Future<Output = O> + Send + 'static {
     fn call(&self, args: T) -> BoxFuture<'static, O> {
         Box::pin(self(args))
     }

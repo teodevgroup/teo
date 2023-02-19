@@ -4,6 +4,7 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
+use tokio::sync::Mutex as TokioMutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 use key_path::{KeyPath, path};
 use async_recursion::async_recursion;
@@ -50,14 +51,14 @@ pub(crate) struct ObjectInner {
     pub(crate) value_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) previous_value_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) atomic_updator_map: Arc<Mutex<HashMap<String, Value>>>,
-    pub(crate) relation_mutation_map: Arc<Mutex<HashMap<String, Value>>>,
+    pub(crate) relation_mutation_map: Arc<TokioMutex<HashMap<String, Value>>>,
     pub(crate) relation_query_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
     pub(crate) cached_property_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) object_mutation_cache_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
-    pub(crate) object_set_map: Arc<Mutex<HashMap<String, Option<Object>>>>,
-    pub(crate) object_set_many_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
-    pub(crate) object_connect_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
-    pub(crate) object_disconnect_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
+    pub(crate) object_set_map: Arc<TokioMutex<HashMap<String, Option<Object>>>>,
+    pub(crate) object_set_many_map: Arc<TokioMutex<HashMap<String, Vec<Object>>>>,
+    pub(crate) object_connect_map: Arc<TokioMutex<HashMap<String, Vec<Object>>>>,
+    pub(crate) object_disconnect_map: Arc<TokioMutex<HashMap<String, Vec<Object>>>>,
 }
 
 fn check_user_json_keys<'a>(map: &HashMap<String, Value>, allowed: &HashSet<&str>, model: &Model) -> Result<()> {
@@ -89,18 +90,17 @@ impl Object {
                 value_map: Arc::new(Mutex::new(HashMap::new())),
                 atomic_updator_map: Arc::new(Mutex::new(HashMap::new())),
                 relation_query_map: Arc::new(Mutex::new(HashMap::new())),
-                relation_mutation_map: Arc::new(Mutex::new(HashMap::new())),
+                relation_mutation_map: Arc::new(TokioMutex::new(HashMap::new())),
                 cached_property_map: Arc::new(Mutex::new(HashMap::new())),
                 object_mutation_cache_map: Arc::new(Mutex::new(HashMap::new())),
-                object_set_map: Arc::new(Mutex::new(HashMap::new())),
-                object_set_many_map: Arc::new(Mutex::new(HashMap::new())),
-                object_connect_map: Arc::new(Mutex::new(HashMap::new())),
-                object_disconnect_map: Arc::new(Mutex::new(HashMap::new())),
+                object_set_map: Arc::new(TokioMutex::new(HashMap::new())),
+                object_set_many_map: Arc::new(TokioMutex::new(HashMap::new())),
+                object_connect_map: Arc::new(TokioMutex::new(HashMap::new())),
+                object_disconnect_map: Arc::new(TokioMutex::new(HashMap::new())),
             })
         }
     }
 
-    #[async_recursion(?Send)]
     pub async fn set_teon(&self, value: &Value) -> Result<()> {
         self.set_teon_with_path_and_user_mode(value, &path![], true).await
     }
@@ -117,8 +117,7 @@ impl Object {
         Ok(())
     }
 
-    #[async_recursion(?Send)]
-    pub(crate) async fn set_teon_with_path(&self, json_value: &Value, path: &KeyPath) -> Result<()> {
+    pub(crate) async fn set_teon_with_path(&self, json_value: &Value, path: &KeyPath<'_>) -> Result<()> {
         self.set_teon_with_path_and_user_mode(json_value, path, false).await
     }
 
@@ -190,7 +189,7 @@ impl Object {
                     Some(value) => value,
                     None => continue,
                 };
-                self.set_value_to_relation_manipulation_map(key, manipulation);
+                self.set_value_to_relation_manipulation_map(key, manipulation).await;
             } else if let Some(property) = self.model().property(key) {
                 if value_map_keys.contains(&key) {
                     if let Some(setter) = property.setter.as_ref() {
@@ -271,8 +270,8 @@ impl Object {
         }
     }
 
-    fn set_value_to_relation_manipulation_map(&self, key: &str, value: &Value) {
-        self.inner.relation_mutation_map.lock().unwrap().insert(key.to_string(), value.clone());
+    async fn set_value_to_relation_manipulation_map(&self, key: &str, value: &Value) {
+        self.inner.relation_mutation_map.lock().await.insert(key.to_string(), value.clone());
         if !self.is_new() {
             self.inner.is_modified.store(true, Ordering::SeqCst);
             self.inner.modified_fields.lock().unwrap().insert(key.to_string());
@@ -503,7 +502,7 @@ impl Object {
         }
     }
 
-    #[async_recursion(?Send)]
+    #[async_recursion]
     pub(crate) async fn apply_on_save_pipeline_and_validate_required_fields(&self, path: &KeyPath) -> Result<()> {
         // apply on save pipeline first
         let model_keys = self.model().save_keys();
@@ -632,7 +631,7 @@ impl Object {
         *self.inner.modified_fields.lock().unwrap() = HashSet::new();
     }
 
-    #[async_recursion(?Send)]
+    #[async_recursion]
     pub(crate) async fn delete_from_database(&self, session: Arc<dyn SaveSession>) -> Result<()> {
         let model = self.model();
         let graph = self.graph();
@@ -691,7 +690,7 @@ impl Object {
         Ok(())
     }
 
-    #[async_recursion(?Send)]
+    #[async_recursion]
     async fn save_to_database(&self, session: Arc<dyn SaveSession>) -> Result<()> {
         let connector = self.graph().connector();
         connector.save_object(self, session).await?;
@@ -707,7 +706,7 @@ impl Object {
         Ok(())
     }
 
-    #[async_recursion(?Send)]
+    #[async_recursion]
     pub(crate) async fn save_with_session_and_path(&self, session: Arc<dyn SaveSession>, path: &KeyPath) -> Result<()> {
         // check if it's inside before callback
         self.before_save_callback_check()?;
@@ -896,14 +895,14 @@ impl Object {
             if f(relation) {
                 let many = relation.is_vec();
                 // programming code connections
-                let object_connect_map = self.inner.object_connect_map.lock().unwrap();
+                let object_connect_map = self.inner.object_connect_map.lock().await;
                 if let Some(objects_to_connect) = object_connect_map.get(relation.name()) {
                     for object in objects_to_connect {
                         self.link_and_save_relation_object(relation.as_ref(), object, session.clone(), path).await?;
                     }
                 }
                 // programming code disconnections
-                let object_disconnect_map = self.inner.object_disconnect_map.lock().unwrap();
+                let object_disconnect_map = self.inner.object_disconnect_map.lock().await;
                 if let Some(objects_to_disconnect) = object_disconnect_map.get(relation.name()) {
                     for object in objects_to_disconnect {
                         if relation.has_join_table() {
@@ -917,7 +916,7 @@ impl Object {
                     }
                 }
                 // value mutation
-                let relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
+                let relation_mutation_map = self.inner.relation_mutation_map.lock().await;
                 if let Some(manipulation) = relation_mutation_map.get(relation.name()) {
                     if many {
                         self.perform_relation_manipulation_many(relation, manipulation, session.clone(), path).await?;
@@ -1302,24 +1301,24 @@ impl Object {
         graph.find_unique_internal(self.model().name(), &finder, false, self.action(), self.action_source().clone()).await
     }
 
-    pub fn force_add_relation_objects(&self, key: impl AsRef<str>, objects: Vec<Object>) -> () {
-        self.inner.object_connect_map.lock().unwrap().insert(key.as_ref().to_owned(), objects);
+    pub async fn force_add_relation_objects(&self, key: impl AsRef<str>, objects: Vec<Object>) -> () {
+        self.inner.object_connect_map.lock().await.insert(key.as_ref().to_owned(), objects);
     }
 
-    pub fn force_remove_relation_objects(&self, key: impl AsRef<str>, objects: Vec<Object>) -> () {
-        self.inner.object_disconnect_map.lock().unwrap().insert(key.as_ref().to_owned(), objects);
+    pub async fn force_remove_relation_objects(&self, key: impl AsRef<str>, objects: Vec<Object>) -> () {
+        self.inner.object_disconnect_map.lock().await.insert(key.as_ref().to_owned(), objects);
     }
 
-    pub fn force_set_relation_objects(&self, key: impl AsRef<str>, objects: Vec<Object>) -> () {
-        self.inner.object_set_many_map.lock().unwrap().insert(key.as_ref().to_owned(), objects);
+    pub async fn force_set_relation_objects(&self, key: impl AsRef<str>, objects: Vec<Object>) -> () {
+        self.inner.object_set_many_map.lock().await.insert(key.as_ref().to_owned(), objects);
     }
 
     pub async fn force_get_relation_objects(&self, key: impl AsRef<str>, find_many_args: impl AsRef<Value>) -> Result<Vec<Object>> {
         self.fetch_relation_objects(key.as_ref(), Some(find_many_args.as_ref())).await
     }
 
-    pub fn force_set_relation_object(&self, key: impl AsRef<str>, object: Option<Object>) -> () {
-        self.inner.object_set_map.lock().unwrap().insert(key.as_ref().to_owned(), object);
+    pub async fn force_set_relation_object(&self, key: impl AsRef<str>, object: Option<Object>) -> () {
+        self.inner.object_set_map.lock().await.insert(key.as_ref().to_owned(), object);
     }
 
     pub async fn force_get_relation_object(&self, key: impl AsRef<str>) -> Result<Option<Object>> {

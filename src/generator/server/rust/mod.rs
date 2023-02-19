@@ -227,19 +227,19 @@ impl RustEntityGenerator {
                             b.line(format!("objects.iter().map(|o| {} {{ inner: o.clone() }}).collect()", model_name));
                         }, "}");
                         b.empty_line();
-                        b.block(format!("pub fn set_{}(&self, {}: {}) {{", &relation_method_name, &relation_method_name, self.relation_getter_type(relation)), |b| {
+                        b.block(format!("pub async fn set_{}(&self, {}: {}) {{", &relation_method_name, &relation_method_name, self.relation_getter_type(relation)), |b| {
                             b.line(format!("let objects = {}.iter().map(|o| o.inner.clone()).collect();", &relation_method_name));
-                            b.line(format!("self.inner.force_set_relation_objects(\"{}\", objects)", relation_name));
+                            b.line(format!("self.inner.force_set_relation_objects(\"{}\", objects).await", relation_name));
                         }, "}");
                         b.empty_line();
-                        b.block(format!("pub fn add_to_{}(&self, {}: {}) {{", &relation_method_name, &relation_method_name, self.relation_getter_type(relation)), |b| {
+                        b.block(format!("pub async fn add_to_{}(&self, {}: {}) {{", &relation_method_name, &relation_method_name, self.relation_getter_type(relation)), |b| {
                             b.line(format!("let objects = {}.iter().map(|o| o.inner.clone()).collect();", &relation_method_name));
-                            b.line(format!("self.inner.force_add_relation_objects(\"{}\", objects)", relation_name));
+                            b.line(format!("self.inner.force_add_relation_objects(\"{}\", objects).await", relation_name));
                         }, "}");
                         b.empty_line();
-                        b.block(format!("pub fn remove_from_{}(&self, {}: {}) {{", &relation_method_name, &relation_method_name, self.relation_getter_type(relation)), |b| {
+                        b.block(format!("pub async fn remove_from_{}(&self, {}: {}) {{", &relation_method_name, &relation_method_name, self.relation_getter_type(relation)), |b| {
                             b.line(format!("let objects = {}.iter().map(|o| o.inner.clone()).collect();", &relation_method_name));
-                            b.line(format!("self.inner.force_remove_relation_objects(\"{}\", objects)", relation_name));
+                            b.line(format!("self.inner.force_remove_relation_objects(\"{}\", objects).await", relation_name));
                         }, "}");
                         b.empty_line();
                     } else {
@@ -255,8 +255,8 @@ impl RustEntityGenerator {
                             }
                         }, "}");
                         b.empty_line();
-                        b.block(format!("pub fn set_{}(&self, {}: {}) {{", &relation_method_name, &relation_method_name, self.relation_getter_type(relation)), |b| {
-                            b.line(format!("self.inner.force_set_relation_object(\"{}\", {})", relation_name, if relation.is_optional() {
+                        b.block(format!("pub async fn set_{}(&self, {}: {}) {{", &relation_method_name, &relation_method_name, self.relation_getter_type(relation)), |b| {
+                            b.line(format!("self.inner.force_set_relation_object(\"{}\", {}).await", relation_name, if relation.is_optional() {
                                 format!("{}.map(|o| o.inner.clone())", relation_method_name)
                             } else {
                                 format!("Some({}.inner.clone())", &relation_method_name)
