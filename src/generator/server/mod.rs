@@ -30,7 +30,7 @@ pub(crate) async fn generate_entity(graph: &Graph, conf: &EntityGeneratorConf) -
 pub(crate) async fn generate_entity_typed<T: EntityGenerator>(entity_generator: T, graph: &Graph, conf: &EntityGeneratorConf) -> std::io::Result<()> {
     let dest = relative_to_absolute(&conf.dest);
     let generator = Generator::new(&dest);
-    generator.ensure_directory(dest).await?;
+    generator.ensure_directory(dest.to_str().unwrap().to_string()).await?;
     entity_generator.generate_entity_files(graph, conf, &generator).await?;
     Ok(())
 }
