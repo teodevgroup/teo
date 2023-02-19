@@ -55,6 +55,7 @@ pub(crate) struct ObjectInner {
     pub(crate) relation_query_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
     pub(crate) cached_property_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) object_set_map: Arc<TokioMutex<HashMap<String, Option<Object>>>>,
+    pub(crate) object_set_many_map: Arc<TokioMutex<HashMap<String, Vec<Object>>>>,
     pub(crate) object_connect_map: Arc<TokioMutex<HashMap<String, Vec<Object>>>>,
     pub(crate) object_disconnect_map: Arc<TokioMutex<HashMap<String, Vec<Object>>>>,
 }
@@ -91,6 +92,7 @@ impl Object {
                 relation_mutation_map: Arc::new(TokioMutex::new(HashMap::new())),
                 cached_property_map: Arc::new(Mutex::new(HashMap::new())),
                 object_set_map: Arc::new(TokioMutex::new(HashMap::new())),
+                object_set_many_map: Arc::new(TokioMutex::new(HashMap::new())),
                 object_connect_map: Arc::new(TokioMutex::new(HashMap::new())),
                 object_disconnect_map: Arc::new(TokioMutex::new(HashMap::new())),
             })
