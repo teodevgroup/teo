@@ -240,13 +240,13 @@
 - Rust entities: `chrono` and `bson` automatically included **[DONE]**
 - Rust entities: properties **[DONE]**
 - Rust entities: `set`, `update` and `delete` method **[DONE]**
-- New designed object relation APIs
+- New designed object relation APIs **[DONE]**
 - Rust entities with relations **[DONE]**
 - Entities: auto create dir **[DONE]**
 - Rust server API documentation
 - `find` action transform when including
 - Test soft delete support
-- Fix pipeline set value, int 64 and int 32 issue for mongodb
+- MongoDB bug: fix pipeline set value, int 64 and int 32 issue
 - Soft delete documentation
 - Support code comment tags for VSCode
 - Support code comment parsing in schema parser
