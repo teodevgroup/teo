@@ -895,15 +895,34 @@ impl Object {
         for relation in self.model().relations() {
             if f(relation) {
                 let many = relation.is_vec();
-                let map = self.inner.relation_mutation_map.lock().unwrap();
-                match map.get(relation.name()) {
-                    None => {},
-                    Some(manipulation) => {
-                        if many {
-                            self.perform_relation_manipulation_many(relation, manipulation, session.clone(), path).await?;
+                // programming code connections
+                let object_connect_map = self.inner.object_connect_map.lock().unwrap();
+                if let Some(objects_to_connect) = object_connect_map.get(relation.name()) {
+                    for object in objects_to_connect {
+                        self.link_and_save_relation_object(relation.as_ref(), object, session.clone(), path).await?;
+                    }
+                }
+                // programming code disconnections
+                let object_disconnect_map = self.inner.object_disconnect_map.lock().unwrap();
+                if let Some(objects_to_disconnect) = object_disconnect_map.get(relation.name()) {
+                    for object in objects_to_disconnect {
+                        if relation.has_join_table() {
+                            self.delete_join_object(object, relation.as_ref(), self.graph().opposite_relation(relation).1.unwrap(), session.clone(), path).await?;
+                        } else if relation.has_foreign_key() {
+                            self.remove_linked_values_from_related_relation(relation);
                         } else {
-                            self.perform_relation_manipulation_one(relation, manipulation, session.clone(), path).await?;
+                            object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
+                            object.save_with_session_and_path(session.clone(), path).await?;
                         }
+                    }
+                }
+                // value mutation
+                let relation_mutation_map = self.inner.relation_mutation_map.lock().unwrap();
+                if let Some(manipulation) = relation_mutation_map.get(relation.name()) {
+                    if many {
+                        self.perform_relation_manipulation_many(relation, manipulation, session.clone(), path).await?;
+                    } else {
+                        self.perform_relation_manipulation_one(relation, manipulation, session.clone(), path).await?;
                     }
                 }
             }
