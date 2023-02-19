@@ -357,6 +357,7 @@ impl Object {
         if !model_keys.contains(&key.to_string()) {
             return Err(Error::invalid_key(key, self.model()));
         }
+        match self.inner.relation_query_map.lock().unwrap().get(key) {
             Some(list) => Ok(list.get(0).cloned()),
             None => Ok(None)
         }
@@ -367,6 +368,7 @@ impl Object {
     }
 
     pub fn has_mutation_relation_fetched(&self, key: impl AsRef<str>) -> bool {
+        self.inner.relation_query_map.lock().unwrap().contains_key(key.as_ref())
     }
 
     pub fn get_relation_vec(&self, key: impl AsRef<str>) -> Result<Vec<Object>> {
@@ -1341,10 +1343,13 @@ impl Object {
         let action = Action::from_u32(NESTED | FIND | PROGRAM_CODE | SINGLE);
         match graph.find_unique_internal(relation_model_name, &finder, false, action, ActionSource::ProgramCode).await {
             Ok(result) => {
+                self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec![result]);
+                let obj = self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().get(0).unwrap().clone();
                 Ok(Some(obj.clone()))
             }
             Err(err) => {
                 if err.r#type == ErrorType::ObjectNotFound {
+                    self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec![]);
                     Ok(None)
                 } else {
                     Err(err)
