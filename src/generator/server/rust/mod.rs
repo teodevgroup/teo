@@ -132,6 +132,7 @@ impl RustEntityGenerator {
             }
             b.line("");
             // struct and impl
+            b.line("#[derive(Clone)]");
             b.block(format!("pub struct {model_name} {{"), |b| {
                 b.line("pub(super) inner: Object");
             }, "}");
