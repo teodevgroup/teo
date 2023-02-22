@@ -1014,6 +1014,20 @@ impl Object {
         self.link_and_save_relation_object(relation, &object, session.clone(), path).await
     }
 
+    async fn nested_set_many_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+        // disconnect previous
+        let records = self.fetch_relation_objects(relation.name(), None).await?;
+        for record in records.iter() {
+            self.nested_disconnect_relation_object_object(relation, record, session.clone(), path).await?;
+        }
+        // connect new
+        let value_vec = value.as_vec().unwrap();
+        for value in value_vec {
+            self.nested_connect_relation_object(relation, value, session.clone(), path).await?;
+        }
+        Ok(())
+    }
+
     async fn nested_set_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         // disconnect old
         let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
@@ -1052,6 +1066,20 @@ impl Object {
     fn intrinsic_where_unique_for_relation(&self, relation: &Relation) -> Value {
         Value::HashMap(relation.iter().map(|(f, r)| (r.to_owned(), self.get_value(f).unwrap())).collect())
     }
+
+    async fn nested_disconnect_relation_object_object(&self, relation: &Relation, object: &Object, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+        if !relation.is_vec() && relation.is_required() {
+            return Err(Error::unexpected_input_value_with_reason("Cannot disconnect required relation.", path));
+        }
+        if relation.has_foreign_key() {
+            self.remove_linked_values_from_related_relation(relation);
+        } else {
+            object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
+            object.save_with_session_and_path(session.clone(), path).await?;
+        }
+        Ok(())
+    }
+
 
     async fn nested_disconnect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         if !relation.is_vec() && relation.is_required() {
@@ -1259,7 +1287,7 @@ impl Object {
         match action.to_u32() {
             NESTED_CREATE_ACTION => self.nested_create_relation_object(relation, value, session.clone(), &path).await,
             NESTED_CONNECT_ACTION => self.nested_connect_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_SET_ACTION => self.nested_connect_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_SET_ACTION => self.nested_set_many_relation_object(relation, value, session.clone(), &path).await,
             NESTED_CONNECT_OR_CREATE_ACTION => self.nested_connect_or_create_relation_object(relation, value, session.clone(), &path).await,
             NESTED_DISCONNECT_ACTION => self.nested_many_disconnect_relation_object(relation, value, session.clone(), &path).await,
             NESTED_UPSERT_ACTION => self.nested_upsert_relation_object(relation, value, session.clone(), &path).await,
