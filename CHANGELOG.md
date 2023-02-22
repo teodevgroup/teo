@@ -243,7 +243,7 @@
 - New designed object relation APIs **[DONE]**
 - Rust entities with relations **[DONE]**
 - Entities: auto create dir **[DONE]**
-- Rust server API documentation
+- Rust server API documentation **[DONE]**
 - Object API: correct nested `set` usage for request
 - Object API: correct nested `set` usage for programming
 - `find` action transform when including

@@ -10,7 +10,7 @@ use key_path::{KeyPath, path};
 use async_recursion::async_recursion;
 use maplit::hashmap;
 use indexmap::IndexMap;
-use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, PROGRAM_CODE, DELETE, DISCONNECT, FIND, JOIN_CREATE, JOIN_DELETE, MANY, NESTED, SINGLE, UPDATE, UPSERT, NESTED_CREATE_ACTION, NESTED_DISCONNECT_ACTION, NESTED_SET_ACTION, NESTED_CONNECT_ACTION, NESTED_DELETE_MANY_ACTION, NESTED_UPDATE_MANY_ACTION, NESTED_UPDATE_ACTION, NESTED_DELETE_ACTION, NESTED_CONNECT_OR_CREATE_ACTION, NESTED_UPSERT_ACTION, INTERNAL_POSITION};
+use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, PROGRAM_CODE, DELETE, DISCONNECT, FIND, JOIN_CREATE, JOIN_DELETE, MANY, NESTED, SINGLE, UPDATE, UPSERT, NESTED_CREATE_ACTION, NESTED_DISCONNECT_ACTION, NESTED_SET_ACTION, NESTED_CONNECT_ACTION, NESTED_DELETE_MANY_ACTION, NESTED_UPDATE_MANY_ACTION, NESTED_UPDATE_ACTION, NESTED_DELETE_ACTION, NESTED_CONNECT_OR_CREATE_ACTION, NESTED_UPSERT_ACTION, INTERNAL_POSITION, SET};
 use crate::core::action::source::ActionSource;
 use crate::core::field::{Field, PreviousValueRule};
 use crate::core::field::optionality::Optionality;
@@ -1014,6 +1014,19 @@ impl Object {
         self.link_and_save_relation_object(relation, &object, session.clone(), path).await
     }
 
+    async fn nested_set_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+        // disconnect old
+        let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
+        self.nested_disconnect_relation_object(relation, &disconnect_value, session.clone(), path).await?;
+        // connect new
+        let action = Action::from_u32(NESTED | SET | SINGLE);
+        let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone()).await {
+            Ok(object) => object,
+            Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
+        };
+        self.link_and_save_relation_object(relation, &object, session.clone(), path).await
+    }
+
     async fn nested_connect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let action = Action::from_u32(NESTED | CONNECT | SINGLE);
         let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone()).await {
@@ -1202,7 +1215,7 @@ impl Object {
         match action.to_u32() {
             NESTED_CREATE_ACTION => self.nested_create_relation_object(relation, value, session.clone(), &path).await,
             NESTED_CONNECT_ACTION => self.nested_connect_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_SET_ACTION => self.nested_connect_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_SET_ACTION => self.nested_set_relation_object(relation, value, session.clone(), &path).await,
             NESTED_CONNECT_OR_CREATE_ACTION => self.nested_connect_or_create_relation_object(relation, value, session.clone(), &path).await,
             NESTED_DISCONNECT_ACTION => self.nested_disconnect_relation_object(relation, value, session.clone(), &path).await,
             NESTED_UPDATE_ACTION => self.nested_update_relation_object(relation, value, session.clone(), &path).await,
@@ -1297,6 +1310,10 @@ impl Object {
             finder.as_hashmap_mut().unwrap().insert("select".to_string(), select.clone());
         }
         graph.find_unique_internal(self.model().name(), &finder, false, self.action(), self.action_source().clone()).await
+    }
+
+    pub async fn force_set_relation_objects(&self, key: impl AsRef<str>, objects: Vec<Object>) -> () {
+        self.inner.object_set_many_map.lock().await.insert(key.as_ref().to_owned(), objects);
     }
 
     pub async fn force_add_relation_objects(&self, key: impl AsRef<str>, objects: Vec<Object>) -> () {
