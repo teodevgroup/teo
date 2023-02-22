@@ -250,13 +250,13 @@
 - Test soft delete support
 - MongoDB bug: fix pipeline set value, int 64 and int 32 issue
 - Soft delete documentation
-- Support code comment tags for VSCode
-- Support code comment parsing in schema parser
-- Support code comment tags for IntelliJ IDEA
+- Code comment parsing in schema parser
 - Rust entities with documentation
 - TypeScript client: package files
 
 #### 0.0.47
+- Support code comment tags for VSCode
+- Support code comment tags for IntelliJ IDEA
 - Bug: required relationship can be created without it 
 - Pipeline documentation
 - Object method for String like `ENV["PORT"].toInt()`
