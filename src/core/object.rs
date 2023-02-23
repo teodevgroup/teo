@@ -892,6 +892,24 @@ impl Object {
         for relation in self.model().relations() {
             if f(relation) {
                 let many = relation.is_vec();
+                // programming code set
+                if many {
+                    let object_set_many_map = self.inner.object_set_many_map.lock().await;
+                    if let Some(objects_to_set) = object_set_many_map.get(relation.name()) {
+                        self.nested_set_many_relation_object_object(relation, objects_to_set, session.clone(), path).await?;
+                    }
+                } else {
+                    let object_set_map = self.inner.object_set_map.lock().await;
+                    if let Some(option) = object_set_map.get(relation.name()) {
+                        // disconnect current
+                        let value = self.intrinsic_where_unique_for_relation(relation);
+                        self.nested_disconnect_relation_object(relation, &value, session.clone(), path).await?;
+                        if let Some(new_object) = option {
+                            // connect new
+                            self.link_and_save_relation_object(relation, new_object, session.clone(), path).await?;
+                        }
+                    }
+                }
                 // programming code connections
                 let object_connect_map = self.inner.object_connect_map.lock().await;
                 if let Some(objects_to_connect) = object_connect_map.get(relation.name()) {
@@ -1012,6 +1030,19 @@ impl Object {
         let object = self.graph().new_object(relation.model(), action, self.action_source().clone())?;
         object.set_teon_with_path(value.get("create").unwrap(), path).await?;
         self.link_and_save_relation_object(relation, &object, session.clone(), path).await
+    }
+
+    async fn nested_set_many_relation_object_object(&self, relation: &Relation, objects: &Vec<Object>, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+        // disconnect previous
+        let records = self.fetch_relation_objects(relation.name(), None).await?;
+        for record in records.iter() {
+            self.nested_disconnect_relation_object_object(relation, record, session.clone(), path).await?;
+        }
+        // connect new
+        for object in objects {
+            self.link_and_save_relation_object(relation, &object, session.clone(), path).await?;
+        }
+        Ok(())
     }
 
     async fn nested_set_many_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
@@ -1305,18 +1336,18 @@ impl Object {
             let path = path + key;
             let action = Action::nested_action_from_name(key).unwrap();
             let other_model = self.graph().opposite_relation(relation).0;
-            if value.is_hashmap() {
-                let normalized_value = self.normalize_relation_many_value(action, value);
-                let ctx = Ctx::initial_state_with_value(normalized_value.as_ref().clone()).with_path(path.clone()).with_action(action);
-                let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
-                self.perform_relation_manipulation_many_inner(relation, new_action, &transformed_value, session.clone(), &path).await?;
-            } else {
+            if value.is_vec() && action.to_u32() != NESTED_SET_ACTION {
                 for (index, value) in value.as_vec().unwrap().iter().enumerate() {
                     let normalized_value = self.normalize_relation_many_value(action, value);
                     let ctx = Ctx::initial_state_with_value(normalized_value.as_ref().clone()).with_path(&(path.clone() + index)).with_action(action);
                     let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
                     self.perform_relation_manipulation_many_inner(relation, new_action, &transformed_value, session.clone(), &path).await?;
                 }
+            }  else {
+                let normalized_value = self.normalize_relation_many_value(action, value);
+                let ctx = Ctx::initial_state_with_value(normalized_value.as_ref().clone()).with_path(path.clone()).with_action(action);
+                let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
+                self.perform_relation_manipulation_many_inner(relation, new_action, &transformed_value, session.clone(), &path).await?;
             }
         }
         Ok(())

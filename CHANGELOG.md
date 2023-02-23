@@ -245,7 +245,7 @@
 - Entities: auto create dir **[DONE]**
 - Rust server API documentation **[DONE]**
 - Object API: correct nested `set` usage for request **[DONE]**
-- Object API: correct nested `set` usage for programming
+- Object API: correct nested `set` usage for programming **[DONE]**
 - `find` action transform when including
 - Test soft delete support
 - MongoDB bug: fix pipeline set value, int 64 and int 32 issue
