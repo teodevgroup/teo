@@ -80,6 +80,10 @@ impl RustEntityGenerator {
     async fn generate_file_for_model(&self, name: String, model: &Model, generator: &Generator) -> std::io::Result<HashSet<&str>> {
         let mut package_requirements = hashset![];
         let model_name = model.name();
+        let localized_name_title_case = model.localized_name();
+        let localized_name_word_case = localized_name_title_case.to_word_case();
+        let localized_name_word_case_plural = localized_name_word_case.to_plural();
+        let description = model.description();
         generator.generate_file(format!("{}.rs", name), Code::new(0, 4, |b| {
             // use lines
             b.line("use std::{collections::HashMap, fmt::{Debug, Display, Formatter}};");
@@ -131,6 +135,11 @@ impl RustEntityGenerator {
             }
             b.line("");
             // struct and impl
+            b.line(format!("/// {}", localized_name_title_case));
+            if !description.is_empty() {
+                b.line("///");
+                b.line(format!("/// {}", description));
+            }
             b.line("#[derive(Clone)]");
             b.block(format!("pub struct {model_name} {{"), |b| {
                 b.line("pub(super) inner: Object");
@@ -138,14 +147,17 @@ impl RustEntityGenerator {
             b.line("");
             b.block(format!("impl {model_name} {{"), |b| {
                 b.line("");
-                b.line(format!(r#"pub async fn find_many(query: &Value) -> Result<Vec<{model_name}>> {{
+                b.line(format!(r#"/// Find many {localized_name_word_case_plural}.
+    pub async fn find_many(query: &Value) -> Result<Vec<{model_name}>> {{
         Graph::current().find_many("{model_name}", query).await
     }}
 
+    /// Find a unique {localized_name_word_case}.
     pub async fn find_unique(query: &Value) -> Result<{model_name}> {{
         Graph::current().find_unique("{model_name}", query).await
     }}
 
+    /// Find a non unique {localized_name_word_case}.
     pub async fn find_first(query: &Value) -> Result<{model_name}> {{
         Graph::current().find_first("{model_name}", query).await
     }}"#));
@@ -162,26 +174,34 @@ impl RustEntityGenerator {
         }}
     }}
 
+    /// Whether this {localized_name_word_case} is new.
     pub fn is_new(&self) -> bool {{
         self.inner.is_new()
     }}
 
+    /// Whether this {localized_name_word_case} is modified.
     pub fn is_modified(&self) -> bool {{
         self.inner.is_modified()
     }}
 
+    /// Set new values to a {localized_name_word_case}. Validations and transformations are
+    /// triggered.
     pub async fn set(&self, values: impl AsRef<Value>) -> Result<()> {{
         self.inner.set_teon(values.as_ref()).await
     }}
 
+    /// Update new values to a {localized_name_word_case}. Validations and transformations are
+    /// not triggered.
     pub async fn update(&self, values: impl AsRef<Value>) -> Result<()> {{
         self.inner.update_teon(values.as_ref()).await
     }}
 
+    /// Save this {localized_name_word_case}.
     pub async fn save(&self) -> Result<()> {{
         self.inner.save().await
     }}
 
+    /// Delete this {localized_name_word_case}.
     pub async fn delete(&self) -> Result<()> {{
         self.inner.delete().await
     }}"#));

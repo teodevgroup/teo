@@ -1,7 +1,9 @@
+use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::ops::BitOr;
 use std::sync::Arc;
 use async_recursion::async_recursion;
+use inflector::Inflector;
 use maplit::hashset;
 use crate::core::action::{Action, FIND, IDENTITY, MANY, NESTED, SIGN_IN, SINGLE};
 use crate::core::field::Field;
@@ -82,8 +84,12 @@ impl Model {
         &self.inner.url_segment_name
     }
 
-    pub(crate) fn localized_name(&self) -> &str {
-        &self.inner.localized_name
+    pub(crate) fn localized_name(&self) -> String {
+        if self.inner.localized_name.is_empty() {
+            self.inner.name.to_title_case()
+        } else {
+            self.inner.localized_name.clone()
+        }
     }
 
     pub(crate) fn description(&self) -> &str {

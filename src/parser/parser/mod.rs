@@ -315,11 +315,11 @@ impl Parser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::COLON => {},
-                Rule::comment_block => comment_block = Some(Self::parse_comment_block(current)),
+                Rule::triple_comment_block => comment_block = Some(Self::parse_comment_block(current)),
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::field_type => r#type = Some(Self::parse_type(current)),
                 Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
-                _ => panic!("error."),
+                _ => unreachable!(),
             }
         }
         Field::new(
