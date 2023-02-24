@@ -34,7 +34,8 @@ impl Item for WhenItem {
             ctx.action
         };
         if action.passes(&self.actions) {
-            Ok(ctx.with_value(self.pipeline.process(ctx.clone()).await?))
+            let result = self.pipeline.process_with_ctx_result(ctx.clone()).await?;
+            Ok(ctx.with_value(result.value.clone()).with_action(result.action))
         } else {
             Ok(ctx)
         }

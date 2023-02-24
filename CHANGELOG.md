@@ -249,14 +249,15 @@
 - Object API: correct nested `set` usage for programming **[DONE]**
 - Fix parsing chained calls with new line **[DONE]**
 - `find` action transform when including **[DONE]**
-- Test soft delete support
 - MongoDB bug: fix pipeline set value, int 64 and int 32 issue
+- Test soft delete support
 - Soft delete documentation
 - Code comment parsing in schema parser
 - Rust entities with documentation
 - TypeScript client: package files
 
 #### 0.0.47
+- Request logging: log original handler instead of redirected and transformed
 - Support code comment tags for VSCode
 - Support code comment tags for IntelliJ IDEA
 - Bug: required relationship can be created without it 
