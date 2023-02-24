@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use inflector::Inflector;
 use crate::core::connector::Connector;
 use crate::core::database::r#type::DatabaseType;
 use crate::core::field::optionality::Optionality;
@@ -35,6 +36,14 @@ impl Property {
             getter: None,
             cached: false,
             input_omissible: false,
+        }
+    }
+
+    pub(crate) fn localized_name(&self) -> String {
+        if let Some(ln) = &self.localized_name {
+            return ln.clone()
+        } else {
+            self.name.to_title_case()
         }
     }
 

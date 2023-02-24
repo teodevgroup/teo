@@ -211,7 +211,13 @@ impl RustEntityGenerator {
                 // field getters and setters
                 for field in model.fields() {
                     let field_method_name = field.name.to_snake_case();
-                    let field_localized_name = field.localized_name();
+                    let field_localized_name_title_case = field.localized_name();
+                    let field_localized_name_word_case = field_localized_name_title_case.to_word_case();
+                    b.line(format!("/// {}", field_localized_name_title_case));
+                    if let Some(desc) = field.description() {
+                        b.line("///");
+                        b.line(format!("/// {}", desc));
+                    }
                     b.block(format!("pub fn {}(&self) -> {} {{", &field_method_name, self.getter_type_for_field(field.as_ref())), |b| {
                         if field.field_type().is_enum() && field.is_optional() {
                             let enum_name = field.field_type().enum_name();
@@ -241,6 +247,13 @@ impl RustEntityGenerator {
                 }
                 // relations
                 for relation in model.relations() {
+                    let field_localized_name_title_case = relation.localized_name();
+                    let field_localized_name_word_case = field_localized_name_title_case.to_word_case();
+                    b.line(format!("/// {}", field_localized_name_title_case));
+                    if !relation.description().is_empty() {
+                        b.line("///");
+                        b.line(format!("/// {}", relation.description()));
+                    }
                     let relation_name = relation.name();
                     let relation_method_name = relation_name.to_snake_case();
                     let model_name = relation.model();
@@ -290,6 +303,11 @@ impl RustEntityGenerator {
                 }
                 // properties
                 for property in model.properties() {
+                    b.line(format!("/// {}", property.localized_name()));
+                    if let Some(desc) = &property.description {
+                        b.line("///");
+                        b.line(format!("/// {}", desc));
+                    }
                     let property_name = property.name();
                     let property_method_name = property.name.to_snake_case();
                     if property.getter.is_some() {
