@@ -682,8 +682,13 @@ impl Resolver {
                 Self::resolve_subscript(parser, source, subscript, entity)
             }
             ExpressionKind::ArgumentList(argument_list) => {
+                let mut args = argument_list.clone();
+                for arg in &mut args.arguments.iter_mut() {
+                    let value = Self::resolve_expression_kind_force_value(parser, source, &arg.value, false);
+                    arg.resolved = Some(Entity::Value(value));
+                }
                 match entity.as_accessible().unwrap() {
-                    Accessible::Callable(callable) => Entity::Value(callable(argument_list.arguments.clone())),
+                    Accessible::Callable(callable) => Entity::Value(callable(args.arguments.clone())),
                     _ => unreachable!(),
                 }
             }
