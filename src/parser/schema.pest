@@ -165,7 +165,7 @@ unit = {
 
 identifier_unit = {
     identifier
-    ~ (subscript | argument_list | "." ~ identifier)*
+    ~ (subscript | argument_list | (NEWLINE | WHITESPACE)* ~ "." ~ (NEWLINE | WHITESPACE)* ~ identifier)*
 }
 
 unit_without_range_literal = {

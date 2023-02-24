@@ -753,7 +753,6 @@ impl Object {
         pipeline.process_into_permission_result(ctx).await
     }
 
-
     async fn trigger_before_save_callbacks<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         let model = self.model();
         let pipeline = model.before_save_pipeline();

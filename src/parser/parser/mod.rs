@@ -481,7 +481,7 @@ impl Parser {
                 Rule::identifier => unit.expressions.push(ExpressionKind::Identifier(Self::parse_identifier(&current))),
                 Rule::subscript => unit.expressions.push(ExpressionKind::Subscript(Self::parse_subscript(current))),
                 Rule::argument_list => unit.expressions.push(ExpressionKind::ArgumentList(Self::parse_argument_list(current))),
-                _ => panic!(),
+                _ => println!("here: {}", current.as_str()),
             }
         }
         if unit.expressions.len() == 1 {
