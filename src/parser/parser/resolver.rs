@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::i64;
 use std::str::FromStr;
-use indexmap::map::IndexMap;
 use regex::Regex;
 use snailquote::unescape;
 use crate::core::database::name::DatabaseName;
@@ -682,9 +681,11 @@ impl Resolver {
             ExpressionKind::Subscript(subscript) => {
                 Self::resolve_subscript(parser, source, subscript, entity)
             }
-            ExpressionKind::ArgumentList(_argument_list) => {
-                // currently don't handle argument list yet
-                panic!()
+            ExpressionKind::ArgumentList(argument_list) => {
+                match entity.as_accessible().unwrap() {
+                    Accessible::Callable(callable) => Entity::Value(callable(argument_list.arguments.clone())),
+                    _ => unreachable!(),
+                }
             }
             ExpressionKind::Identifier(identifier) => {
                 Self::resolve_identifier(parser, source, identifier, Some(entity))

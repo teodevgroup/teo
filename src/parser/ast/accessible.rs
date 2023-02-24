@@ -11,7 +11,12 @@ use crate::core::property::Property;
 use crate::core::relation::Relation;
 use crate::parser::ast::argument::Argument;
 use crate::parser::ast::entity::Entity;
+#[cfg(feature = "data-source-mongodb")]
+use crate::parser::std::callables::object_id_constructor::object_id_constructor;
 use crate::parser::std::constants::EnvObject;
+use crate::prelude::Value;
+
+pub(crate) type Callable = fn(args: Vec<Argument>) -> Value;
 
 pub(crate) type FieldDecorator = fn(args: Vec<Argument>, field: &mut Field);
 
@@ -61,13 +66,14 @@ impl Container {
     pub(crate) fn std_global_constants() -> Self {
         Self {
             objects: hashmap!{
-                "ENV".to_owned() => Entity::Accessible(Accessible::Env(EnvObject {}))
+                "ENV".to_owned() => Entity::Accessible(Accessible::Env(EnvObject {})),
+                #[cfg(feature = "data-source-mongodb")]
+                "ObjectId".to_owned() => Entity::Accessible(Accessible::Callable(object_id_constructor)),
             }
         }
     }
 
     pub(crate) fn access_property(&self, name: &str) -> &Entity {
-        println!("see name: {}", name);
         self.objects.get(name).unwrap()
     }
 }
@@ -80,6 +86,7 @@ pub(crate) enum Accessible {
     ModelDecorator(ModelDecorator),
     Container(Container),
     Env(EnvObject),
+    Callable(Callable),
 }
 
 impl Debug for Accessible {

@@ -696,7 +696,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
                 Ok(body) => body,
                 Err(err) => return err.into()
             };
-            let (transformed_body, action) = if model_def.has_action_transformers() {
+            let (transformed_body, action) = if model_def.has_action_transformers() || parsed_body.as_hashmap().unwrap().get("include").is_some() {
                 if ((action.to_u32() == CREATE_MANY_HANDLER) || (action.to_u32() == CREATE_HANDLER)) && (parsed_body.get("create").unwrap().is_vec()) {
                     // create with many items
                     let entries = parsed_body.get("create").unwrap().as_vec().unwrap();
