@@ -4,6 +4,7 @@ pub mod disconnect_rule;
 
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
+use inflector::Inflector;
 use maplit::hashset;
 use once_cell::sync::Lazy;
 use crate::core::field::Field;
@@ -47,12 +48,16 @@ impl Relation {
         &self.name
     }
 
-    pub(crate) fn localized_name(&self) -> &str {
-        self.localized_name.as_ref().unwrap()
+    pub(crate) fn localized_name(&self) -> String {
+        if let Some(ln) = &self.localized_name {
+            ln.clone()
+        } else {
+            self.name.to_title_case()
+        }
     }
 
-    pub(crate) fn description(&self) -> &str {
-        self.description.as_ref().unwrap()
+    pub(crate) fn description(&self) -> Option<&String> {
+        self.description.as_ref()
     }
 
     pub(crate) fn optionality(&self) -> &Optionality { &self.optionality }

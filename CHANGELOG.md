@@ -269,6 +269,7 @@
 - Pipeline documentation
 
 #### 0.0.48
+- Rust entities: setter documentation
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
 - Remove `unqueryable` and `unsortable` fields from generated clients
 - Linting, warnings and errors

@@ -61,9 +61,9 @@ pub(crate) fn relation_localized_name_word_case(relation: &Relation) -> String {
 }
 
 pub(crate) fn relation_description(relation: &Relation) -> String {
-    if relation.description().is_empty() {
+    if relation.description().is_none() {
         "This field doesn't have a description.".to_owned()
     } else {
-        relation.description().to_owned()
+        relation.description().unwrap().to_owned()
     }
 }
