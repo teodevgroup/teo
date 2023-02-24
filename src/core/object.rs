@@ -903,7 +903,6 @@ impl Object {
                     }
                 } else {
                     let object_set_map = self.inner.object_set_map.lock().await;
-                    println!("SEE OBJECT SET MAP: {:?}", object_set_map);
                     if let Some(option) = object_set_map.get(relation.name()) {
                         // disconnect current
                         let value = self.intrinsic_where_unique_for_relation(relation);
@@ -1397,7 +1396,6 @@ impl Object {
     }
 
     pub async fn force_set_relation_object(&self, key: impl AsRef<str>, object: Option<Object>) -> () {
-        println!("FORCE SET");
         self.inner.object_set_map.lock().await.insert(key.as_ref().to_owned(), object);
     }
 
