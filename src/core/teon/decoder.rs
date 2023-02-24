@@ -275,7 +275,7 @@ impl Decoder {
                 }
                 "upsert" => {
                     if model.has_action(Action::from_u32(NESTED | UPSERT | SINGLE)) {
-                        Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_upsert_input(model, graph, relation, v, p))?))
+                        Ok((k.to_owned(), Self::decode_enumerate(value, path, |v, p: &KeyPath| Self::decode_nested_upsert_input(model, graph, relation, v, p, false))?))
                     } else {
                         Err(Error::unexpected_input_key(k, &path))?
                     }
@@ -385,18 +385,23 @@ impl Decoder {
                 } else {
                     Err(Error::unexpected_input_key(k, &path))?
                 },
+                "upsert" => if model.has_action(Action::from_u32(UPSERT | NESTED | SINGLE)) {
+                    Ok((k.to_owned(), Self::decode_nested_upsert_input(model, graph, relation, v, path, true)?))
+                } else {
+                    Err(Error::unexpected_input_key(k, &path))?
+                },
                 _ => unreachable!()
             }
         }).collect::<Result<HashMap<String, Value>>>()?))
     }
 
-    fn decode_nested_upsert_input<'a>(model: &Model, graph: &Graph, relation: Option<&Relation>, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
+    fn decode_nested_upsert_input<'a>(model: &Model, graph: &Graph, relation: Option<&Relation>, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>, no_where: bool) -> Result<Value> {
         let path = path.as_ref();
         let json_map = match json_value.as_object() {
             Some(json_map) => json_map,
             None => return Err(Error::unexpected_input_type("object", path))
         };
-        Self::check_json_keys(json_map, &NESTED_UPSERT_INPUT_KEYS, path)?;
+        Self::check_json_keys(json_map, if no_where { &NESTED_UPSERT_INPUT_KEYS_WITHOUT_WHERE } else { &NESTED_UPSERT_INPUT_KEYS }, path)?;
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
             let k = k.as_str();
             let path = path + k;
@@ -1017,6 +1022,10 @@ static NESTED_UPSERT_INPUT_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
     hashset!{"where", "create", "update"}
 });
 
+static NESTED_UPSERT_INPUT_KEYS_WITHOUT_WHERE: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"create", "update"}
+});
+
 static NESTED_CREATE_ONE_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
     hashset!{"create", "connect", "connectOrCreate"}
 });
@@ -1026,7 +1035,7 @@ static NESTED_CREATE_MANY_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
 });
 
 static NESTED_UPDATE_ONE_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
-    hashset!{"create", "connect", "connectOrCreate", "set", "disconnect", "update", "delete"}
+    hashset!{"create", "connect", "connectOrCreate", "set", "disconnect", "update", "delete", "upsert"}
 });
 
 static NESTED_UPDATE_MANY_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {

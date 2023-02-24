@@ -2,7 +2,6 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use async_trait::async_trait;
 use inflector::Inflector;
-use itertools::Itertools;
 use maplit::hashset;
 use tokio::fs;
 use toml_edit::{Document, value};

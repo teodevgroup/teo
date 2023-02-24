@@ -1279,6 +1279,7 @@ impl Object {
             NESTED_DISCONNECT_ACTION => self.nested_disconnect_relation_object(relation, value, session.clone(), &path).await,
             NESTED_UPDATE_ACTION => self.nested_update_relation_object(relation, value, session.clone(), &path).await,
             NESTED_DELETE_ACTION => self.nested_delete_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_UPSERT_ACTION => self.nested_upsert_relation_object(relation, value, session.clone(), &path).await,
             _ => unreachable!(),
         }
     }
@@ -1289,6 +1290,11 @@ impl Object {
             NESTED_UPDATE_ACTION => Owned(Value::HashMap(hashmap! {"update".to_owned() => value.clone(), "where".to_owned() => self.intrinsic_where_unique_for_relation(relation)})),
             NESTED_DELETE_ACTION => Owned(Value::HashMap(hashmap! {"where".to_owned() => self.intrinsic_where_unique_for_relation(relation)})),
             NESTED_DISCONNECT_ACTION => Owned(self.intrinsic_where_unique_for_relation(relation)),
+            NESTED_UPSERT_ACTION => {
+                let mut value = value.clone();
+                value.as_hashmap_mut().unwrap().insert("where".to_owned(), self.intrinsic_where_unique_for_relation(relation));
+                Owned(value)
+            }
             _ => Borrowed(value)
         }
     }
