@@ -1,6 +1,6 @@
 schema = {
     SOI
-    ~ (import_statement | config_declaration | enum_declaration | model_declaration | comment_block | let_declaration | EMPTY_LINES | CATCH_ALL)*
+    ~ (import_statement | config_declaration | enum_declaration | model_declaration | let_declaration | comment_block | EMPTY_LINES | CATCH_ALL)*
     ~ EOI
 }
 
@@ -114,10 +114,13 @@ subscript = { "[" ~ expression ~ "]" }
 // #############
 // comments
 // #############
+comment_token = { "@" ~ (!(WHITESPACE | NEWLINE) ~ ANY)+ }
 doc_content = @{ (!NEWLINE ~ ANY)* }
-triple_comment = { WHITESPACE* ~ "///" ~ doc_content }
+triple_comment = { WHITESPACE* ~ "///" ~ comment_token? ~ doc_content }
 double_comment = { WHITESPACE* ~ (!"///") ~ "//" ~ doc_content }
-comment_block = ${ ((triple_comment | double_comment) ~ NEWLINE?)+ }
+triple_comment_block = { ((triple_comment) ~ NEWLINE?)+ }
+double_comment_block = { ((double_comment) ~ NEWLINE?)+ }
+comment_block = { triple_comment_block | double_comment_block }
 trailing_comment = ${ triple_comment | double_comment }
 
 // #############
@@ -243,6 +246,7 @@ config_item = {
 // enum
 // #############
 enum_declaration = {
+    triple_comment_block? ~
     (item_decorator ~ (NEWLINE | WHITESPACE)*)*
     ~ ENUM_KEYWORD
     ~ identifier
@@ -257,6 +261,7 @@ enum_value_declaration = { item_decorator* ~ identifier ~ trailing_comment? ~ NE
 // model
 // #############
 model_declaration = {
+    triple_comment_block? ~
     (item_decorator ~ (NEWLINE | WHITESPACE)*)*
     ~ MODEL_KEYWORD
     ~ identifier
@@ -269,6 +274,7 @@ model_declaration = {
 // field
 // #############
 field_declaration = {
+    triple_comment_block? ~
     (item_decorator ~ (NEWLINE | WHITESPACE)*)*
     ~ identifier
     ~ COLON

@@ -1,3 +1,4 @@
+use crate::parser::ast::comment_block::CommentBlock;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::r#type::Type;
@@ -13,6 +14,7 @@ pub(crate) enum FieldClass {
 
 #[derive(Debug)]
 pub(crate) struct Field {
+    pub(crate) comment_block: Option<CommentBlock>,
     pub(crate) identifier: Identifier,
     pub(crate) r#type: Type,
     pub(crate) decorators: Vec<Decorator>,
@@ -22,9 +24,9 @@ pub(crate) struct Field {
 }
 
 impl Field {
-    pub(crate) fn new(identifier: Identifier, r#type: Type, decorators: Vec<Decorator>, span: Span) -> Self {
+    pub(crate) fn new(comment_block: Option<CommentBlock>, identifier: Identifier, r#type: Type, decorators: Vec<Decorator>, span: Span) -> Self {
         Self {
-            identifier, r#type, decorators, span, resolved: false, field_class: FieldClass::Unresolved,
+            comment_block, identifier, r#type, decorators, span, resolved: false, field_class: FieldClass::Unresolved,
         }
     }
 

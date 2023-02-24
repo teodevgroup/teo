@@ -16,6 +16,7 @@ use crate::core::app::builder::CallbackLookupTable;
 use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::arith_expr::{ArithExpr, Op};
 use crate::parser::ast::client::Client;
+use crate::parser::ast::comment_block::CommentBlock;
 use crate::parser::ast::config::ServerConfig;
 use crate::parser::ast::connector::Connector;
 use crate::parser::ast::constant::Constant;
@@ -229,7 +230,56 @@ impl Parser {
         Top::Import(Import::new(item_id, source_id, identifiers, source.unwrap(), absolute, span))
     }
 
+    fn parse_comment_block(pair: Pair<'_>) -> CommentBlock {
+        let mut name = "".to_owned();
+        let mut desc = "".to_owned();
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::triple_comment => {
+                    let (token, doc) = Self::parse_comment_line(current);
+                    if let Some(token) = token {
+                        if &token == "@name" {
+                            name = doc;
+                        } else if &token == "@description" {
+                            desc = Self::append_doc_desc(desc, doc)
+                        }
+                    } else {
+                        desc = Self::append_doc_desc(desc, doc)
+                    }
+
+                },
+                _ => panic!("error."),
+            }
+        }
+        CommentBlock {
+            name: if name.is_empty() { None } else { Some(name) },
+            desc: if desc.is_empty() { None } else { Some(desc) },
+        }
+    }
+
+    fn append_doc_desc(desc: String, doc: String) -> String {
+        if desc.is_empty() {
+            doc.trim().to_owned()
+        } else {
+            desc + " " + doc.trim()
+        }
+    }
+
+    fn parse_comment_line(pair: Pair<'_>) -> (Option<String>, String) {
+        let mut token = None;
+        let mut content = "".to_owned();
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::comment_token => token = Some(current.as_str().to_string()),
+                Rule::doc_content => content = current.as_str().to_string(),
+                _ => unreachable!(),
+            }
+        }
+        (token, content)
+    }
+
     fn parse_model(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
+        let mut comment_block = None;
         let mut identifier: Option<Identifier> = None;
         let mut fields: Vec<Field> = vec![];
         let mut decorators: Vec<Decorator> = vec![];
@@ -241,7 +291,7 @@ impl Parser {
                 Rule::field_declaration => fields.push(Self::parse_field(current)),
                 Rule::block_decorator => decorators.push(Self::parse_decorator(current)),
                 Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
-                Rule::comment_block => (),
+                Rule::triple_comment_block => comment_block = Some(Self::parse_comment_block(current)),
                 _ => panic!("error. {:?}", current),
             }
         }
@@ -249,6 +299,7 @@ impl Parser {
             item_id,
             source_id,
             identifier.unwrap(),
+            comment_block,
             fields,
             decorators,
             span,
@@ -256,6 +307,7 @@ impl Parser {
     }
 
     fn parse_field(pair: Pair<'_>) -> Field {
+        let mut comment_block = None;
         let mut identifier: Option<Identifier> = None;
         let mut r#type: Option<Type> = None;
         let mut decorators: Vec<Decorator> = vec![];
@@ -263,6 +315,7 @@ impl Parser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::COLON => {},
+                Rule::comment_block => comment_block = Some(Self::parse_comment_block(current)),
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::field_type => r#type = Some(Self::parse_type(current)),
                 Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
@@ -270,6 +323,7 @@ impl Parser {
             }
         }
         Field::new(
+            comment_block,
             identifier.unwrap(),
             r#type.unwrap(),
             decorators,
@@ -278,13 +332,15 @@ impl Parser {
     }
 
     fn parse_enum(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
+        let mut comment_block = None;
         let mut identifier: Option<Identifier> = None;
         let mut choices: Vec<EnumChoice> = vec![];
         let mut decorators: Vec<Decorator> = vec![];
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::ENUM_KEYWORD | Rule::COLON | Rule::EMPTY_LINES | Rule::comment_block | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => {},
+                Rule::ENUM_KEYWORD | Rule::COLON | Rule::EMPTY_LINES | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => {},
+                Rule::comment_block => comment_block = Some(Self::parse_comment_block(current)),
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::enum_value_declaration => choices.push(self.parse_enum_value(current)),
                 Rule::block_decorator => decorators.push(Self::parse_decorator(current)),
@@ -294,6 +350,7 @@ impl Parser {
         Top::Enum(Enum::new(
             item_id,
             source_id,
+            comment_block,
             identifier.unwrap(),
             decorators,
             choices,

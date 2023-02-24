@@ -253,7 +253,7 @@
 - Fix soft delete bugs **[DONE]**
 
 #### 0.0.47
-- Code comment parsing in schema parser
+- Code comment parsing in schema parser **[DONE]**
 - Rust entities with documentation
 - TypeScript client: package files
 - Soft delete documentation
@@ -280,7 +280,6 @@
 - Seed with datasets
 
 #### 0.0.50
-- `plugin name(arg1, arg2, arg3) { on model {} on field {}}`
 - Reach rust stable
 - Bug fixes
 

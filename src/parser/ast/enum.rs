@@ -1,3 +1,4 @@
+use crate::parser::ast::comment_block::CommentBlock;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::span::Span;
@@ -6,6 +7,7 @@ use crate::parser::ast::span::Span;
 pub(crate) struct Enum {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
+    pub(crate) comment_block: Option<CommentBlock>,
     pub(crate) identifier: Identifier,
     pub(crate) decorators: Vec<Decorator>,
     pub(crate) choices: Vec<EnumChoice>,
@@ -14,10 +16,11 @@ pub(crate) struct Enum {
 }
 
 impl Enum {
-    pub(crate) fn new(item_id: usize, source_id: usize, identifier: Identifier, decorators: Vec<Decorator>, choices: Vec<EnumChoice>, span: Span) -> Self {
+    pub(crate) fn new(item_id: usize, source_id: usize, comment_block: Option<CommentBlock>, identifier: Identifier, decorators: Vec<Decorator>, choices: Vec<EnumChoice>, span: Span) -> Self {
         Self {
             id: item_id,
             source_id,
+            comment_block,
             identifier,
             decorators,
             choices,
