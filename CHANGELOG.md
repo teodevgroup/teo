@@ -251,12 +251,12 @@
 - `find` action transform when including **[DONE]**
 - MongoDB bug: fix pipeline set value, int 64 and int 32 issue **[DONE]**
 - Fix soft delete bugs **[DONE]**
-- Soft delete documentation
 - Code comment parsing in schema parser
 - Rust entities with documentation
 - TypeScript client: package files
 
 #### 0.0.47
+- Soft delete documentation
 - Request logging: log original handler instead of redirected and transformed
 - Support code comment tags for VSCode
 - Support code comment tags for IntelliJ IDEA
