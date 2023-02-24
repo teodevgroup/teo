@@ -16,6 +16,7 @@ use indexmap::IndexMap;
 #[cfg(feature = "data-source-mongodb")]
 use bson::oid::ObjectId;
 use chrono::NaiveDate;
+use maplit::hashmap;
 use regex::Regex;
 use crate::core::field::r#type::FieldType;
 use crate::core::object::Object;
@@ -525,6 +526,28 @@ impl Value {
     pub(crate) async fn resolve(&self, context: Ctx<'_>) -> Result<Value> {
         match self {
             Value::Pipeline(p) => p.process(context).await,
+            Value::HashMap(map) => {
+                let mut new_map = hashmap!{};
+                for (key, value) in map {
+                    if let Some(p) = value.as_pipeline() {
+                        new_map.insert(key.clone(), p.process(context.clone()).await?);
+                    } else {
+                        new_map.insert(key.clone(), value.clone());
+                    }
+                }
+                Ok(Value::HashMap(new_map))
+            }
+            Value::Vec(vec) => {
+                let mut new_vec = vec![];
+                for val in vec {
+                    if let Some(p) = val.as_pipeline() {
+                        new_vec.push(p.process(context.clone()).await?);
+                    } else {
+                        new_vec.push(val.clone());
+                    }
+                }
+                Ok(Value::Vec(new_vec))
+            }
             _ => Ok(self.clone()),
         }
     }
