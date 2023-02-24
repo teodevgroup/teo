@@ -709,17 +709,20 @@ impl Object {
         // check if it's inside before callback
         self.before_save_callback_check()?;
         let is_new = self.is_new();
-        // perform relation manipulations (has foreign key)
-        self.perform_relation_manipulations(|r| r.has_foreign_key(), session.clone(), path).await?;
         // validate and save
         let is_modified = self.is_modified();
         if is_modified || is_new {
             // apply pipeline
             self.apply_on_save_pipeline_and_validate_required_fields(path).await?;
             self.trigger_before_save_callbacks(path).await?;
+            // perform relation manipulations (has foreign key)
+            self.perform_relation_manipulations(|r| r.has_foreign_key(), session.clone(), path).await?;
             if !self.model().r#virtual() {
                 self.save_to_database(session.clone()).await?;
             }
+        } else {
+            // perform relation manipulations (has foreign key)
+            self.perform_relation_manipulations(|r| r.has_foreign_key(), session.clone(), path).await?;
         }
         // perform relation manipulations (doesn't have foreign key)
         self.perform_relation_manipulations(|r| !r.has_foreign_key(), session.clone(), path).await?;
@@ -900,6 +903,7 @@ impl Object {
                     }
                 } else {
                     let object_set_map = self.inner.object_set_map.lock().await;
+                    println!("SEE OBJECT SET MAP: {:?}", object_set_map);
                     if let Some(option) = object_set_map.get(relation.name()) {
                         // disconnect current
                         let value = self.intrinsic_where_unique_for_relation(relation);
@@ -1110,7 +1114,6 @@ impl Object {
         }
         Ok(())
     }
-
 
     async fn nested_disconnect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         if !relation.is_vec() && relation.is_required() {
@@ -1394,6 +1397,7 @@ impl Object {
     }
 
     pub async fn force_set_relation_object(&self, key: impl AsRef<str>, object: Option<Object>) -> () {
+        println!("FORCE SET");
         self.inner.object_set_map.lock().await.insert(key.as_ref().to_owned(), object);
     }
 
