@@ -14,7 +14,7 @@ use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
 use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use regex::Regex;
 use crate::connectors::mongodb::aggregation::Aggregation;
-use crate::connectors::mongodb::bson::decoder::BsonDecoder;
+use crate::connectors::mongodb::bson::coder::BsonCoder;
 use crate::connectors::mongodb::connector::save_session::MongoDBSaveSession;
 use crate::core::action::{Action, FIND, MANY, NESTED, SINGLE};
 use crate::core::action::source::ActionSource;
@@ -77,7 +77,7 @@ impl MongoDBConnector {
                 let object_key = &object_field.name;
                 let field_type = object_field.field_type();
                 let bson_value = document.get(key).unwrap();
-                let value_result = BsonDecoder::decode(object.model(), object.graph(), field_type, object_field.is_optional(), bson_value, path![]);
+                let value_result = BsonCoder::decode(object.model(), object.graph(), field_type, object_field.is_optional(), bson_value, path![]);
                 match value_result {
                     Ok(value) => {
                         object.inner.value_map.lock().unwrap().insert(object_key.to_string(), value);
@@ -192,7 +192,7 @@ impl MongoDBConnector {
                     // group by field
                     let field = model.field(g).unwrap();
                     let val = if o.as_null().is_some() { Value::Null } else {
-                        BsonDecoder::decode(model, graph, field.field_type(), true, o, path![])?
+                        BsonCoder::decode(model, graph, field.field_type(), true, o, path![])?
                     };
                     let json_val = val;
                     retval.as_hashmap_mut().unwrap().insert(g.to_string(), json_val);
@@ -213,13 +213,12 @@ impl MongoDBConnector {
         for key in keys {
             if let Some(field) = model.field(key) {
                 let column_name = field.column_name();
-                let val: Bson = object.get_value(&key).unwrap().into();
+                let val: Bson = BsonCoder::encode(field.field_type(), object.get_value(&key).unwrap())?;
                 if val != Bson::Null {
                     doc.insert(column_name, val);
                 }
-            } else if let Some(_property) = model.property(key) {
-                let val: Value = object.get_property(key).await.unwrap();
-                let val: Bson = val.into();
+            } else if let Some(property) = model.property(key) {
+                let val: Bson = BsonCoder::encode(property.field_type(), object.get_property(&key).await.unwrap())?;
                 if val != Bson::Null {
                     doc.insert(key, val);
                 }
@@ -232,7 +231,7 @@ impl MongoDBConnector {
                 for key in auto_keys {
                     let field = model.field(key).unwrap();
                     if field.column_name() == "_id" {
-                        let new_value = BsonDecoder::decode(model, object.graph(), field.field_type(), field.is_optional(), &id, path![]).unwrap();
+                        let new_value = BsonCoder::decode(model, object.graph(), field.field_type(), field.is_optional(), &id, path![]).unwrap();
                         object.set_value(field.name(), new_value)?;
                     }
                 }
@@ -269,17 +268,15 @@ impl MongoDBConnector {
                         _ => panic!("Unhandled key."),
                     };
                 } else {
-                    let val = object.get_value(key).unwrap();
-                    let bson_val: Bson = val.into();
+                    let bson_val: Bson = BsonCoder::encode(field.field_type(), object.get_value(&key).unwrap())?;
                     if bson_val == Bson::Null {
                         unset.insert(key, bson_val);
                     } else {
                         set.insert(key, bson_val);
                     }
                 }
-            } else if let Some(_) = model.property(key) {
-                let val: Value = object.get_property(key).await.unwrap();
-                let bson_val: Bson = val.into();
+            } else if let Some(property) = model.property(key) {
+                let bson_val: Bson = BsonCoder::encode(property.field_type(), object.get_property(&key).await.unwrap())?;
                 if bson_val != Bson::Null {
                     set.insert(key, bson_val);
                 } else {
@@ -326,7 +323,7 @@ impl MongoDBConnector {
                     for key in object.inner.atomic_updator_map.lock().unwrap().keys() {
                         let bson_new_val = updated_document.as_ref().unwrap().get(key).unwrap();
                         let field = object.model().field(key).unwrap();
-                        let field_value = BsonDecoder::decode(model, object.graph(), field.field_type(), field.is_optional(), bson_new_val, path![])?;
+                        let field_value = BsonCoder::decode(model, object.graph(), field.field_type(), field.is_optional(), bson_new_val, path![])?;
                         object.inner.value_map.lock().unwrap().insert(key.to_string(), field_value);
                     }
                 }

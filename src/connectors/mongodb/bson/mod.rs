@@ -2,7 +2,7 @@ use bson::Bson;
 use bson::datetime::{DateTime as BsonDateTime};
 use crate::prelude::Value;
 
-pub(crate) mod decoder;
+pub(crate) mod coder;
 
 impl Into<Bson> for Value {
     fn into(self) -> Bson {

@@ -8,9 +8,18 @@ use crate::core::model::Model;
 use crate::core::result::Result;
 use crate::prelude::{Graph, Value};
 
-pub(crate) struct BsonDecoder { }
+pub(crate) struct BsonCoder { }
 
-impl BsonDecoder {
+impl BsonCoder {
+
+    pub(crate) fn encode<'a>(r#type: &FieldType, value: Value) -> Result<Bson> {
+        match r#type {
+            FieldType::I32 => Ok(Bson::Int32(value.as_i32().unwrap())),
+            FieldType::I64 => Ok(Bson::Int64(value.as_i64().unwrap())),
+            _ => Ok(value.into()),
+        }
+    }
+
     pub(crate) fn decode<'a>(model: &Model, graph: &Graph, r#type: &FieldType, optional: bool, bson_value: &Bson, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
         if bson_value.as_null().is_some() && optional {
             return Ok(Value::Null);

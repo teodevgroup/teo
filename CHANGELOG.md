@@ -249,7 +249,7 @@
 - Object API: correct nested `set` usage for programming **[DONE]**
 - Fix parsing chained calls with new line **[DONE]**
 - `find` action transform when including **[DONE]**
-- MongoDB bug: fix pipeline set value, int 64 and int 32 issue
+- MongoDB bug: fix pipeline set value, int 64 and int 32 issue **[DONE]**
 - Fix soft delete bugs **[DONE]**
 - Soft delete documentation
 - Code comment parsing in schema parser
