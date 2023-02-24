@@ -1,3 +1,7 @@
+pub mod update_rule;
+pub mod delete_rule;
+pub mod disconnect_rule;
+
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use maplit::hashset;
@@ -5,10 +9,6 @@ use once_cell::sync::Lazy;
 use crate::core::field::Field;
 use crate::core::field::optionality::Optionality;
 use crate::core::relation::delete_rule::DeleteRule;
-
-pub mod update_rule;
-pub mod delete_rule;
-pub mod disconnect_rule;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Relation {
