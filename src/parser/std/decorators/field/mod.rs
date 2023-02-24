@@ -21,7 +21,6 @@ pub(crate) mod r#virtual;
 pub(crate) mod record_previous;
 pub(crate) mod input_omissible;
 pub(crate) mod output_omissible;
-pub(crate) mod copy;
 pub(crate) mod auto;
 pub(crate) mod auto_increment;
 pub(crate) mod default;
