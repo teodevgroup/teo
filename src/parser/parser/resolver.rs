@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::i64;
 use std::str::FromStr;
 use indexmap::map::IndexMap;
@@ -819,7 +820,7 @@ impl Resolver {
     }
 
     fn resolve_dictionary_literal(parser: &Parser, source: &Source, dic: &DictionaryLiteral) -> Entity {
-        let mut resolved: IndexMap<String, Value> = IndexMap::new();
+        let mut resolved: HashMap<String, Value> = HashMap::new();
         for (key, value) in dic.expressions.iter() {
             let k = Self::resolve_expression_kind(parser, source, key, false);
             let k = Self::unwrap_into_value_if_needed(parser, source, &k);
@@ -827,7 +828,7 @@ impl Resolver {
             let v = Self::unwrap_into_value_if_needed(parser, source, &v);
             resolved.insert(k.as_str().unwrap().to_string(), v);
         }
-        Entity::Value(Value::IndexMap(resolved))
+        Entity::Value(Value::HashMap(resolved))
     }
 
     fn resolve_nullish_coalescing(parser: &Parser, source: &Source, nullish_coalescing: &NullishCoalescing) -> Entity {

@@ -247,7 +247,8 @@
 - Object API: correct nested `set` usage for request **[DONE]**
 - Object API: add nested `upsert` for single relation **[DONE]**
 - Object API: correct nested `set` usage for programming **[DONE]**
-- `find` action transform when including
+- Fix parsing chained calls with new line **[DONE]**
+- `find` action transform when including **[DONE]**
 - Test soft delete support
 - MongoDB bug: fix pipeline set value, int 64 and int 32 issue
 - Soft delete documentation

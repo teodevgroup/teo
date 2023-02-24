@@ -481,7 +481,7 @@ impl Parser {
                 Rule::identifier => unit.expressions.push(ExpressionKind::Identifier(Self::parse_identifier(&current))),
                 Rule::subscript => unit.expressions.push(ExpressionKind::Subscript(Self::parse_subscript(current))),
                 Rule::argument_list => unit.expressions.push(ExpressionKind::ArgumentList(Self::parse_argument_list(current))),
-                _ => println!("here: {}", current.as_str()),
+                _ => unreachable!(),
             }
         }
         if unit.expressions.len() == 1 {
@@ -637,8 +637,32 @@ impl Parser {
         ArrayLiteral { expressions, span }
     }
 
-    fn parse_dictionary_literal(_pair: Pair<'_>) -> DictionaryLiteral {
-        panic!()
+    fn parse_dictionary_literal(pair: Pair<'_>) -> DictionaryLiteral {
+        let span = Self::parse_span(&pair);
+        let mut expressions: Vec<(ExpressionKind, ExpressionKind)> = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::named_expression => expressions.push(Self::parse_named_expression(current)),
+                _ => unreachable!()
+            }
+        }
+        DictionaryLiteral { expressions, span }
+    }
+
+    fn parse_named_expression(pair: Pair<'_>) -> (ExpressionKind, ExpressionKind) {
+        let mut key = None;
+        let mut value = None;
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::expression => if key.is_none() {
+                    key = Some(Self::parse_expression(current).kind);
+                } else {
+                    value = Some(Self::parse_expression(current).kind);
+                }
+                _ => unreachable!()
+            }
+        }
+        return (key.unwrap(), value.unwrap())
     }
     
     fn parse_type(pair: Pair<'_>) -> Type {

@@ -1,15 +1,17 @@
 use std::collections::{HashMap, HashSet};
 use std::ops::BitOr;
 use std::sync::Arc;
+use async_recursion::async_recursion;
 use maplit::hashset;
-use crate::core::action::{Action, IDENTITY, SIGN_IN};
+use crate::core::action::{Action, FIND, IDENTITY, MANY, NESTED, SIGN_IN, SINGLE};
 use crate::core::field::Field;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::relation::Relation;
 use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
-use crate::prelude::Value;
+use crate::prelude::{Graph, Value};
 use crate::core::result::Result;
+use crate::teon;
 use self::index::ModelIndex;
 
 pub(crate) mod builder;
@@ -265,12 +267,32 @@ impl Model {
         self.inner.action_transformers.len() > 0
     }
 
-    pub(crate) async fn transformed_action(&self, ctx: Ctx<'_>) -> Result<(Value, Action)> {
+    #[async_recursion]
+    pub(crate) async fn transformed_action<'a: 'async_recursion>(&self, ctx: Ctx<'a>) -> Result<(Value, Action)> {
         let mut ctx = ctx;
         for transformer in self.inner.action_transformers.iter() {
             ctx = transformer.process_with_ctx_result(ctx).await?;
         }
-        Ok((ctx.value, ctx.action))
+        let mut surface_value = ctx.value;
+        if let Some(surface_map) = surface_value.as_hashmap_mut() {
+            if let Some(include) = surface_map.get("include") {
+                let mut transformed_include = teon!({});
+                for (key, included_value) in include.as_hashmap().unwrap() {
+                    let relation = self.relation(key).unwrap();
+                    let (opposite_model, opposite_relation) = Graph::current().opposite_relation(relation);
+                    let find_action = if relation.is_vec() {
+                        Action::from_u32(NESTED | FIND | MANY)
+                    } else {
+                        Action::from_u32(NESTED | FIND | SINGLE)
+                    };
+                    let inner = Ctx::initial_state_with_value(if included_value.is_bool() { teon!({}) } else {included_value.clone()}).with_action(find_action);
+                    let result = opposite_model.transformed_action(inner).await?.0;
+                    transformed_include.as_hashmap_mut().unwrap().insert(key.clone(), result);
+                }
+                surface_value.as_hashmap_mut().unwrap().insert("include".to_owned(), transformed_include);
+            }
+        }
+        Ok((surface_value, ctx.action))
     }
 }
 
