@@ -329,6 +329,14 @@ impl AppBuilder {
             let source = parser.get_source(model_ref.0);
             let model = source.get_model(model_ref.1);
             self.graph_builder.model(&model.identifier.name, |model_builder| {
+                if let Some(comment) = &model.comment_block {
+                    if let Some(name) = comment.name.as_ref() {
+                        model_builder.localized_name(name);
+                    }
+                    if let Some(desc) = comment.desc.as_ref() {
+                        model_builder.description(desc);
+                    }
+                }
                 for decorator in model.decorators.iter() {
                    let model_decorator = decorator.accessible.as_ref().unwrap().as_model_decorator().unwrap();
                     model_decorator(decorator.get_argument_list(), model_builder);
@@ -337,6 +345,14 @@ impl AppBuilder {
                     match &field.field_class {
                         FieldClass::Field => {
                             let mut model_field = Field::new(field.identifier.name.as_str().to_owned());
+                            if let Some(comment) = &field.comment_block {
+                                if let Some(name) = comment.name.as_ref() {
+                                    model_field.localized_name = Some(name.to_owned());
+                                }
+                                if let Some(desc) = comment.desc.as_ref() {
+                                    model_field.description = Some(desc.to_owned());
+                                }
+                            }
                             // type
                             match field.r#type.arity {
                                 Arity::Scalar => {
@@ -391,6 +407,14 @@ impl AppBuilder {
                         }
                         FieldClass::Relation => {
                             let mut model_relation = Relation::new(field.identifier.name.as_str().to_owned());
+                            if let Some(comment) = &field.comment_block {
+                                if let Some(name) = comment.name.as_ref() {
+                                    model_relation.localized_name = Some(name.to_owned());
+                                }
+                                if let Some(desc) = comment.desc.as_ref() {
+                                    model_relation.description = Some(desc.to_owned());
+                                }
+                            }
                             match field.r#type.arity {
                                 Arity::Scalar => {
                                     if field.r#type.item_required {
@@ -419,6 +443,14 @@ impl AppBuilder {
                         }
                         FieldClass::Property => {
                             let mut model_property = Property::new(field.identifier.name.clone());
+                            if let Some(comment) = &field.comment_block {
+                                if let Some(name) = comment.name.as_ref() {
+                                    model_property.localized_name = Some(name.to_owned());
+                                }
+                                if let Some(desc) = comment.desc.as_ref() {
+                                    model_property.description = Some(desc.to_owned());
+                                }
+                            }
                             // type
                             match field.r#type.arity {
                                 Arity::Scalar => {

@@ -13,8 +13,8 @@ pub mod disconnect_rule;
 #[derive(Debug, Clone)]
 pub(crate) struct Relation {
     pub(self) name: String,
-    pub(self) localized_name: Option<String>,
-    pub(self) description: Option<String>,
+    pub(crate) localized_name: Option<String>,
+    pub(crate) description: Option<String>,
     pub(self) optionality: Optionality,
     pub(self) model: String,
     pub(self) through: Option<String>,
