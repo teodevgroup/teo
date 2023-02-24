@@ -250,7 +250,7 @@
 - Fix parsing chained calls with new line **[DONE]**
 - `find` action transform when including **[DONE]**
 - MongoDB bug: fix pipeline set value, int 64 and int 32 issue
-- Test soft delete support
+- Fix soft delete bugs **[DONE]**
 - Soft delete documentation
 - Code comment parsing in schema parser
 - Rust entities with documentation
