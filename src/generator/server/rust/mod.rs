@@ -162,13 +162,15 @@ impl RustEntityGenerator {
         Graph::current().find_first("{model_name}", query).await
     }}"#));
                 b.line("");
-                b.line(format!(r#"pub async fn new(values: impl AsRef<Value>) -> Self {{
+                b.line(format!(r#"/// Create a new {localized_name_word_case}.
+    pub async fn new(values: impl AsRef<Value>) -> Self {{
         Self {{
             inner: Graph::current().create_object("{model_name}", values).await.unwrap(),
         }}
     }}"#));
                 b.line("");
-                b.line(format!(r#"pub async fn default() -> Self {{
+                b.line(format!(r#"/// Create an empty {localized_name_word_case}.
+    pub async fn default() -> Self {{
         Self {{
             inner: Graph::current().create_object("{model_name}", Value::HashMap(HashMap::new())).await.unwrap(),
         }}
@@ -209,6 +211,7 @@ impl RustEntityGenerator {
                 // field getters and setters
                 for field in model.fields() {
                     let field_method_name = field.name.to_snake_case();
+                    let field_localized_name = field.localized_name();
                     b.block(format!("pub fn {}(&self) -> {} {{", &field_method_name, self.getter_type_for_field(field.as_ref())), |b| {
                         if field.field_type().is_enum() && field.is_optional() {
                             let enum_name = field.field_type().enum_name();

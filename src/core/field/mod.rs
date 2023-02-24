@@ -5,6 +5,7 @@ pub(crate) mod write_rule;
 
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
+use inflector::Inflector;
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
 use crate::core::connector::Connector;
@@ -153,8 +154,12 @@ impl Field {
         &self.name
     }
 
-    pub(crate) fn localized_name(&self) -> &str {
-        &self.localized_name.as_ref().unwrap()
+    pub(crate) fn localized_name(&self) -> String {
+        if self.localized_name.is_some() {
+            self.localized_name.clone().unwrap()
+        } else {
+            self.name.to_title_case()
+        }
     }
 
     pub(crate) fn description(&self) -> Option<&str> {

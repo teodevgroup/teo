@@ -46,7 +46,6 @@ use crate::parser::std::decorators::field::auto::auto_decorator;
 use crate::parser::std::decorators::field::auto_increment::auto_increment_decorator;
 use crate::parser::std::decorators::field::can_mutate::can_mutate_decorator;
 use crate::parser::std::decorators::field::can_read::can_read_decorator;
-use crate::parser::std::decorators::field::copy::copy_decorator;
 use crate::parser::std::decorators::field::db::db_container;
 use crate::parser::std::decorators::field::default::default_decorator;
 use crate::parser::std::decorators::field::foreign_key::foreign_key_decorator;
@@ -115,7 +114,6 @@ impl GlobalFieldDecorators {
         objects.insert("recordPrevious".to_owned(), Accessible::FieldDecorator(record_previous_decorator));
         objects.insert("inputOmissible".to_owned(), Accessible::FieldDecorator(input_omissible_decorator));
         objects.insert("outputOmissible".to_owned(), Accessible::FieldDecorator(output_omissible_decorator));
-        objects.insert("copy".to_owned(), Accessible::FieldDecorator(copy_decorator));
         objects.insert("auto".to_owned(), Accessible::FieldDecorator(auto_decorator));
         objects.insert("autoIncrement".to_owned(), Accessible::FieldDecorator(auto_increment_decorator));
         objects.insert("default".to_owned(), Accessible::FieldDecorator(default_decorator));

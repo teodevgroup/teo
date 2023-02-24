@@ -256,25 +256,25 @@
 - Code comment parsing in schema parser **[DONE]**
 - Rust entities with documentation **[DONE]**
 - TypeScript client: package files
+- Revamp server outputs
 - Request logging: log original handler instead of redirected and transformed
-- Support code comment tags for VSCode
-- Support code comment tags for IntelliJ IDEA
-- Soft delete documentation
-- Pipeline documentation
 - Bug: required relationship can be created without it 
 - Object method for String like `ENV["PORT"].toInt()`
 - Relation onUpdate
 - Relation onDelete
 - Remove unused `copy` decorator **[DONE]**
-- Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
-- Remove `unqueryable` and `unsortable` from generated clients
 - CLI mode: When running generation, ignore custom programming callbacks
 - CLI mode: When running server, panic if custom programming callback is provided
-- Revamp server outputs
+- Soft delete documentation
+- Pipeline documentation
 
 #### 0.0.48
+- Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
+- Remove `unqueryable` and `unsortable` fields from generated clients
 - Linting, warnings and errors
 - Relation with read write rules
+- Support code comment tags for VSCode
+- Support code comment tags for IntelliJ IDEA
 
 #### 0.0.49
 - Seed with datasets
