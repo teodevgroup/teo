@@ -58,6 +58,14 @@ impl Generator {
         write!(output_file, "{}", content.into())
     }
 
+    pub(crate) async fn generate_file_if_not_exist<F: AsRef<str>, S: AsRef<str>>(&self, file_name: F, content: S) -> std::io::Result<()> {
+        let filename = self.base_dir.join(PathBuf::from(file_name.as_ref()));
+        if !filename.exists() {
+            self.generate_file(file_name.as_ref().to_owned(), content.as_ref().to_owned()).await?;
+        }
+        Ok(())
+    }
+
     pub(crate) fn find_file_upwards(&self, name: impl AsRef<str>) -> Option<PathBuf> {
         let mut path: PathBuf = self.base_dir.clone();
         let file = Path::new(name.as_ref());
