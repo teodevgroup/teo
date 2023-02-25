@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use crate::core::app::environment::Environment;
 use crate::parser::ast::span::Span;
 use crate::parser::ast::item::Item;
@@ -11,7 +12,7 @@ pub struct Generator {
     pub(crate) items: Vec<Item>,
     pub(crate) span: Span,
     pub(crate) provider: Option<Environment>,
-    pub(crate) dest: Option<String>,
+    pub(crate) dest: Option<PathBuf>,
 }
 
 impl Generator {

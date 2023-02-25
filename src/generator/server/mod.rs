@@ -8,7 +8,6 @@ use async_trait::async_trait;
 use crate::core::app::conf::EntityGeneratorConf;
 use crate::core::app::environment::Environment;
 use crate::generator::lib::generator::Generator;
-use crate::generator::lib::path::relative_to_absolute;
 use crate::generator::server::go::GoEntityGenerator;
 use crate::generator::server::java::JavaEntityGenerator;
 use crate::generator::server::nodejs::NodeJSEntityGenerator;
@@ -28,7 +27,7 @@ pub(crate) async fn generate_entity(graph: &Graph, conf: &EntityGeneratorConf) -
 }
 
 pub(crate) async fn generate_entity_typed<T: EntityGenerator>(entity_generator: T, graph: &Graph, conf: &EntityGeneratorConf) -> std::io::Result<()> {
-    let dest = relative_to_absolute(&conf.dest);
+    let dest = &conf.dest;
     let generator = Generator::new(&dest);
     generator.ensure_directory(dest.to_str().unwrap().to_string()).await?;
     entity_generator.generate_entity_files(graph, conf, &generator).await?;

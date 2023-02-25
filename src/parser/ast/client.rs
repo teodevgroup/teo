@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use crate::parser::ast::span::Span;
 use crate::parser::ast::item::Item;
 use crate::parser::ast::identifier::Identifier;
@@ -19,7 +20,7 @@ pub struct Client {
     pub(crate) items: Vec<Item>,
     pub(crate) span: Span,
     pub(crate) provider: Option<ClientLanguage>,
-    pub(crate) dest: Option<String>,
+    pub(crate) dest: Option<PathBuf>,
     pub(crate) package: Option<bool>,
     pub(crate) host: Option<String>,
     pub(crate) object_name: Option<String>,

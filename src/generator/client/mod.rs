@@ -15,7 +15,6 @@ use crate::generator::client::dart::DartClientGenerator;
 use crate::generator::client::kotlin::KotlinClientGenerator;
 use crate::generator::client::swift::SwiftClientGenerator;
 use crate::generator::client::typescript::TypeScriptClientGenerator;
-use crate::generator::lib::path::relative_to_absolute;
 use crate::parser::ast::client::{ClientLanguage};
 
 #[async_trait]
@@ -37,7 +36,7 @@ pub(crate) async fn generate_client(graph: &Graph, client: &ClientGeneratorConf)
 }
 
 async fn generate_client_typed<T: ClientGenerator>(client_generator: T, graph: &Graph, client: &ClientGeneratorConf) -> std::io::Result<()> {
-    let dest = relative_to_absolute(&client.dest);
+    let dest = &client.dest;
     let package = client.package;
     let mut module_dest = dest.clone();
     if package {

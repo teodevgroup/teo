@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::i64;
+use std::path::PathBuf;
 use std::str::FromStr;
 use regex::Regex;
 use snailquote::unescape;
@@ -464,7 +465,8 @@ impl Resolver {
                     Self::resolve_expression(parser, source, &mut item.expression);
                     let dest_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let dest_str = dest_value.as_str().unwrap();
-                    client.dest = Some(dest_str.to_owned());
+                    let dest = source.path.clone().join(PathBuf::from(dest_str));
+                    client.dest = Some(dest);
                 },
                 "package" => {
                     Self::resolve_expression(parser, source, &mut item.expression);
@@ -508,8 +510,9 @@ impl Resolver {
                 "dest" => {
                     Self::resolve_expression(parser, source, &mut item.expression);
                     let dest_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
-                    let dest_str = dest_value.as_str().unwrap();
-                    generator.dest = Some(dest_str.to_owned());
+                    let mut dest = source.path.clone();
+                    dest.push(PathBuf::from(dest_value.as_str().unwrap()));
+                    generator.dest = Some(dest);
                 },
                 _ => { panic!("Undefined name '{}' in entity generator block.", item.identifier.name.as_str())}
             }
