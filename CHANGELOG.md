@@ -256,19 +256,23 @@
 - Code comment parsing in schema parser **[DONE]**
 - Rust entities with documentation **[DONE]**
 - TypeScript client: package files
+- Import without extension and index **[DONE]**
+- `dest` relative to file instead of cwd
 - Revamp server outputs
 - Request logging: log original handler instead of redirected and transformed
 - Bug: required relationship can be created without it 
 - Object method for String like `ENV["PORT"].toInt()`
+- Remove unused `copy` decorator **[DONE]**
+
+#### 0.0.48
 - Relation onUpdate
 - Relation onDelete
-- Remove unused `copy` decorator **[DONE]**
 - CLI mode: When running generation, ignore custom programming callbacks
 - CLI mode: When running server, panic if custom programming callback is provided
 - Soft delete documentation
 - Pipeline documentation
 
-#### 0.0.48
+#### 0.0.49
 - Rust entities: setter documentation
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
 - Remove `unqueryable` and `unsortable` fields from generated clients
@@ -277,19 +281,19 @@
 - Support code comment tags for VSCode
 - Support code comment tags for IntelliJ IDEA
 
-#### 0.0.49
+#### 0.0.50
 - Seed with datasets
 
-#### 0.0.50
+#### 0.0.51
 - Reach rust stable
 - Bug fixes
 
-#### 0.0.51
+#### 0.0.52
 - Node.js object
 - Node.js entity generation
 - Cross language error handling for node.js
 
-#### 0.0.52
+#### 0.0.53
 - MongoDB: root skip take and distinct bug
 - MongoDB: nested skip take and distinct bug
 - MongoDB: if cursor key is not orderBy key, result is wrong
@@ -298,7 +302,7 @@
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 
-#### 0.0.53
+#### 0.0.54
 - The copy action
 - random float modifier
 - random int modifier

@@ -34,9 +34,10 @@ impl<'a> Iterator for SourceImportIter<'a> {
     type Item = &'a Import;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.source.imports.get(&self.index) {
+        match self.source.imports.iter().skip(self.index).next() {
             Some(index) => {
                 let top = self.source.tops.get(index).unwrap();
+                self.index += 1;
                 Some(top.as_import().unwrap())
             }
             None => None,

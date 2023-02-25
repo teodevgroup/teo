@@ -165,7 +165,7 @@ impl Parser {
             match current.as_rule() {
                 Rule::import_statement => {
                     let import = self.parse_import(current, source_id, item_id, path.clone());
-                    tops.insert(source_id, import);
+                    tops.insert(item_id, import);
                     imports.insert(item_id);
                 },
                 Rule::let_declaration => {
@@ -215,7 +215,7 @@ impl Parser {
             match current.as_rule() {
                 Rule::string_literal => source = Some(StringLiteral { value: current.as_str().to_string(), span }),
                 Rule::import_identifier_list => identifiers = Self::parse_import_identifier_list(current),
-                _ => panic!("error."),
+                _ => unreachable!(),
             }
         }
         let unescaped = unescape(source.as_ref().unwrap().value.as_str()).unwrap();
@@ -223,11 +223,40 @@ impl Parser {
         let mut dir = path.clone();
         dir.pop();
         let new = dir.join(&relative);
-        let absolute = match fs::canonicalize(&new) {
-            Ok(path) => path,
-            Err(_) => panic!("Schema file '{}' is not found.", relative.to_str().unwrap()),
+        let absolute = match Self::canonicalize(&new) {
+            Some(path) => path,
+            None => panic!("Schema file '{}' is not found.", relative.to_str().unwrap()),
         };
         Top::Import(Import::new(item_id, source_id, identifiers, source.unwrap(), absolute, span))
+    }
+
+    fn canonicalize(path_buf: &PathBuf) -> Option<PathBuf> {
+        if let Ok(found) = fs::canonicalize(&path_buf) {
+            return Some(found);
+        }
+        let mut with_extension = path_buf.clone();
+        Self::add_extension(&mut with_extension, "teo");
+        if let Ok(found) = fs::canonicalize(&with_extension) {
+            return Some(found);
+        }
+        let mut folder_index = path_buf.clone();
+        folder_index.push("index.teo");
+        if let Ok(found) = fs::canonicalize(&folder_index) {
+            return Some(found);
+        }
+        None
+    }
+
+    fn add_extension(path: &mut PathBuf, extension: impl AsRef<std::path::Path>) {
+        match path.extension() {
+            Some(ext) => {
+                let mut ext = ext.to_os_string();
+                ext.push(".");
+                ext.push(extension.as_ref());
+                path.set_extension(ext)
+            }
+            None => path.set_extension(extension.as_ref()),
+        };
     }
 
     fn parse_comment_block(pair: Pair<'_>) -> CommentBlock {

@@ -93,8 +93,8 @@ impl Resolver {
     }
 
     pub(crate) fn resolve_import(parser: &Parser, _source: &Source, import: &mut Import) {
-        let from_source = parser.sources.iter().find(|(_source_id, source)| {
-            &source.path == &import.path
+        let from_source = parser.sources.iter().find(|(source_id, source)| {
+            &import.path == &source.path
         }).unwrap().1;
         import.from_id = Some(from_source.id);
         for (item_id, top) in from_source.tops.iter() {
