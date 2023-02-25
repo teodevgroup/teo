@@ -15,18 +15,7 @@ pub(crate) async fn generate_index_js(graph: &Graph, client: &ClientGeneratorCon
             name_map += &format!("  '{}': '{}',\n", model.name().to_camel_case(), model.url_segment_name());
         }
     }
-    format!(r#"const actionMap = {{
-  'findUnique': 'find-unique',
-  'findFirst': 'find-first',
-  'findMany': 'find-many',
-  'createMany': 'create-many',
-  'updateMany': 'update-many',
-  'deleteMany': 'delete-many',
-  'groupBy': 'group-by',
-  'signIn': 'sign-in',
-}}
-
-const nameMap = {{
+    format!(r#"const nameMap = {{
 {name_map}}}
 
 let bearerToken = undefined
@@ -130,7 +119,7 @@ class Delegate {{
         return function (args) {{
           return request(
             target._urlSegmentName,
-            actionMap[name] ?? name,
+            name,
             args ?? {{}},
             target._token)
         }}

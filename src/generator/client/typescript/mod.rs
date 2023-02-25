@@ -12,7 +12,6 @@ use crate::generator::client::ClientGenerator;
 use crate::generator::client::typescript::pkg::src::index_js::generate_index_js;
 use crate::generator::lib::generator::Generator;
 
-
 pub(crate) struct TypeScriptClientGenerator { }
 
 impl TypeScriptClientGenerator {
@@ -34,6 +33,9 @@ impl ClientGenerator for TypeScriptClientGenerator {
     }
 
     async fn generate_package_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, _generator: &Generator) -> std::io::Result<()> {
+        // gitignore
+        // package.json
+        // tslint.json
         Ok(())
     }
 
