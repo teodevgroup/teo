@@ -1,4 +1,3 @@
-
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 
 pub(crate) trait ToTypeScriptType {

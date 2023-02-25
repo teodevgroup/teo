@@ -199,7 +199,7 @@ impl Action {
 
     pub(crate) fn passes(&self, matchers: &Vec<Action>) -> bool {
         for matcher in matchers {
-            let mut copy = self.finalized();
+            let copy = self.finalized();
             let finalized_matcher = matcher.finalized().value;
             let result = finalized_matcher & copy.value;
             return ((result & ALL_NAMES) != 0) &&

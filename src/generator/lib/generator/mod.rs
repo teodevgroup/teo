@@ -58,12 +58,14 @@ impl Generator {
         write!(output_file, "{}", content.into())
     }
 
-    pub(crate) async fn generate_file_if_not_exist<F: AsRef<str>, S: AsRef<str>>(&self, file_name: F, content: S) -> std::io::Result<()> {
+    pub(crate) async fn generate_file_if_not_exist<F: AsRef<str>, S: AsRef<str>>(&self, file_name: F, content: S) -> std::io::Result<bool> {
         let filename = self.base_dir.join(PathBuf::from(file_name.as_ref()));
         if !filename.exists() {
             self.generate_file(file_name.as_ref().to_owned(), content.as_ref().to_owned()).await?;
+            Ok(false)
+        } else {
+            Ok(true)
         }
-        Ok(())
     }
 
     pub(crate) fn find_file_upwards(&self, name: impl AsRef<str>) -> Option<PathBuf> {
@@ -80,5 +82,13 @@ impl Generator {
                 break None;
             }
         }
+    }
+
+    pub(crate) fn get_base_dir(&self) -> &Path {
+        &self.base_dir
+    }
+
+    pub(crate) fn get_file_path(&self, name: impl AsRef<str>) -> PathBuf {
+        self.base_dir.join(name.as_ref())
     }
 }
