@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::i64;
 use std::path::PathBuf;
 use std::str::FromStr;
+use path_absolutize::Absolutize;
 use regex::Regex;
 use snailquote::unescape;
 use crate::core::database::name::DatabaseName;
@@ -465,8 +466,11 @@ impl Resolver {
                     Self::resolve_expression(parser, source, &mut item.expression);
                     let dest_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let dest_str = dest_value.as_str().unwrap();
-                    let dest = source.path.clone().join(PathBuf::from(dest_str));
-                    client.dest = Some(dest);
+                    let mut dest_path = source.path.clone();
+                    dest_path.pop();
+                    let dest = dest_path.join(PathBuf::from(dest_str));
+                    let absolute = dest.absolutize().unwrap();
+                    client.dest = Some(absolute.as_ref().to_owned());
                 },
                 "package" => {
                     Self::resolve_expression(parser, source, &mut item.expression);
@@ -511,8 +515,10 @@ impl Resolver {
                     Self::resolve_expression(parser, source, &mut item.expression);
                     let dest_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let mut dest = source.path.clone();
+                    dest.pop();
                     dest.push(PathBuf::from(dest_value.as_str().unwrap()));
-                    generator.dest = Some(dest);
+                    let absolute = dest.absolutize().unwrap();
+                    generator.dest = Some(absolute.as_ref().to_owned());
                 },
                 _ => { panic!("Undefined name '{}' in entity generator block.", item.identifier.name.as_str())}
             }

@@ -257,7 +257,7 @@
 - Rust entities with documentation **[DONE]**
 - TypeScript client: package files
 - Import without extension and index **[DONE]**
-- `dest` relative to file instead of cwd
+- `dest` relative to file instead of cwd **[DONE]**
 - Revamp server outputs
 - Request logging: log original handler instead of redirected and transformed
 - Bug: required relationship can be created without it 

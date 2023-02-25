@@ -53,7 +53,7 @@ impl Generator {
 
     pub(crate) async fn generate_file<F: Into<String>, S: Into<String>>(&self, file_name: F, content: S) -> std::io::Result<()> {
         let filename = self.base_dir.join(file_name.into());
-        println!("{:?}", filename);
+        println!("{}", filename.as_os_str().to_str().unwrap());
         let mut output_file = File::create(filename)?;
         write!(output_file, "{}", content.into())
     }

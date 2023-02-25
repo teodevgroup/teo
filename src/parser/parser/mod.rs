@@ -232,7 +232,9 @@ impl Parser {
 
     fn canonicalize(path_buf: &PathBuf) -> Option<PathBuf> {
         if let Ok(found) = fs::canonicalize(&path_buf) {
-            return Some(found);
+            if !fs::metadata(&found).unwrap().is_dir() {
+                return Some(found);
+            }
         }
         let mut with_extension = path_buf.clone();
         Self::add_extension(&mut with_extension, "teo");
