@@ -257,6 +257,8 @@
 - Rust entities with documentation **[DONE]**
 - TypeScript client: package files **[DONE]**
 - Client: gitCommit option: default false
+- Decimal type
+- TypeScript client: fetch result: DateTime and Decimal should be decoded correctly
 - Import without extension and index **[DONE]**
 - `dest` relative to file instead of cwd **[DONE]**
 - Revamp server outputs
@@ -321,7 +323,6 @@
 - Database type mapping for `Date`
 - Database type mapping
 - Database type mapping for field, property and collection types' item field
-- Full support of decimal type
 - Support unsigned types for MySQL
 - PostgreSQL: Migration
 - SQLite: Migration
