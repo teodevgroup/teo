@@ -519,6 +519,7 @@ impl AppBuilder {
             "Float" | "Float64" => field.field_type = Some(FieldType::F64),
             "Date" => field.field_type = Some(FieldType::Date),
             "DateTime" => field.field_type = Some(FieldType::DateTime),
+            "Decimal" => field.field_type = Some(FieldType::Decimal),
             #[cfg(feature = "data-source-mongodb")]
             "ObjectId" => field.field_type = Some(FieldType::ObjectId),
             // _ => panic!("Unrecognized type: '{}'.", name)
@@ -536,6 +537,7 @@ impl AppBuilder {
             "Float" | "Float64" =>  property.field_type = Some(FieldType::F64),
             "Date" =>  property.field_type = Some(FieldType::Date),
             "DateTime" =>  property.field_type = Some(FieldType::DateTime),
+            "Decimal" => property.field_type = Some(FieldType::Decimal),
             #[cfg(feature = "data-source-mongodb")]
             "ObjectId" =>  property.field_type = Some(FieldType::ObjectId),
             _ => property.field_type = Some(FieldType::Enum(name.to_string())),

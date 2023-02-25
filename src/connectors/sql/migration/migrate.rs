@@ -50,7 +50,7 @@ impl SQLMigration {
             if result.is_err() {
                 // table not exist, create table
                 let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
-                println!("EXECUTE SQL for create table: {}", &stmt);
+                // println!("EXECUTE SQL for create table: {}", &stmt);
                 pool.execute(&*stmt).await.unwrap();
             } else {
                 // table exist, migrate
@@ -64,7 +64,7 @@ impl SQLMigration {
                     if schema_field.is_none() {
                         // remove this column
                         let stmt = SQL::alter_table(table_name).drop_column(db_column.name()).to_string(dialect);
-                        println!("EXECUTE SQL for remove column: {}", &stmt);
+                        // println!("EXECUTE SQL for remove column: {}", &stmt);
                         pool.execute(&*stmt).await.unwrap();
                     } else {
                         // compare column definition
@@ -72,7 +72,7 @@ impl SQLMigration {
                         if schema_column != db_column {
                             // this column is different, alter it
                             let alter = SQL::alter_table(table_name).modify(schema_column).to_string(dialect);
-                            println!("EXECUTE SQL for alter column: {}", &alter);
+                            // println!("EXECUTE SQL for alter column: {}", &alter);
                             pool.execute(&*alter).await.unwrap();
                         }
                         reviewed_columns.push(db_column.name().to_owned());
@@ -83,7 +83,7 @@ impl SQLMigration {
                         let sql_column_def: SQLColumn = field.into();
                         // add this column
                         let add = SQL::alter_table(table_name).add(sql_column_def).to_string(dialect);
-                        println!("EXECUTE SQL for add column: {}", &add);
+                        // println!("EXECUTE SQL for add column: {}", &add);
                         pool.execute(&*add).await.unwrap();
                     }
                 }
