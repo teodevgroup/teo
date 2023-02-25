@@ -255,7 +255,7 @@
 #### 0.0.47
 - Code comment parsing in schema parser **[DONE]**
 - Rust entities with documentation **[DONE]**
-- TypeScript client: package files
+- TypeScript client: package files **[DONE]**
 - Client: gitCommit option: default false
 - Import without extension and index **[DONE]**
 - `dest` relative to file instead of cwd **[DONE]**
