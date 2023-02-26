@@ -696,7 +696,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
                 Ok(body) => body,
                 Err(err) => return err.into()
             };
-            let (transformed_body, action) = if model_def.has_action_transformers() || parsed_body.as_hashmap().unwrap().get("include").is_some() {
+            let (transformed_body, transformed_action) = if model_def.has_action_transformers() || parsed_body.as_hashmap().unwrap().get("include").is_some() {
                 if ((action.to_u32() == CREATE_MANY_HANDLER) || (action.to_u32() == CREATE_HANDLER)) && (parsed_body.get("create").unwrap().is_vec()) {
                     // create with many items
                     let entries = parsed_body.get("create").unwrap().as_vec().unwrap();
@@ -726,80 +726,80 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
                 (parsed_body, action)
             };
             let source = ActionSource::Identity(identity);
-            match action.to_u32() {
+            match transformed_action.to_u32() {
                 FIND_UNIQUE_HANDLER => {
                     let result = handle_find_unique(&graph, &transformed_body, model_def, source.clone()).await;
-                    log_request(start, "FindUnique", model_def.name(), result.status().as_u16());
+                    log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     return result;
                 }
                 FIND_FIRST_HANDLER => {
                     let result = handle_find_first(&graph, &transformed_body, model_def, source.clone()).await;
-                    log_request(start, "FindFirst", model_def.name(), result.status().as_u16());
+                    log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     result
                 }
                 FIND_MANY_HANDLER => {
                     let result = handle_find_many(&graph, &transformed_body, model_def, source.clone()).await;
-                    log_request(start, "FindMany", model_def.name(), result.status().as_u16());
+                    log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     result
                 }
                 CREATE_HANDLER => {
                     let result = handle_create(&graph, &transformed_body, model_def, source.clone()).await;
-                    log_request(start, "Create", model_def.name(), result.status().as_u16());
+                    log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     result
                 }
                 UPDATE_HANDLER => {
                     let result = handle_update(&graph, &transformed_body, model_def, source.clone()).await;
-                    log_request(start, "Update", model_def.name(), result.status().as_u16());
+                    log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     result
                 }
                 UPSERT_HANDLER => {
                     let result = handle_upsert(&graph, &transformed_body, model_def, source.clone()).await;
-                    log_request(start, "Upsert", model_def.name(), result.status().as_u16());
+                    log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     result
                 }
                 DELETE_HANDLER => {
                     let result = handle_delete(&graph, &transformed_body, model_def, source.clone()).await;
-                    log_request(start, "Delete", model_def.name(), result.status().as_u16());
+                    log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     result
                 }
                 CREATE_MANY_HANDLER => {
                     let result = handle_create_many(&graph, &transformed_body, model_def, source.clone()).await;
-                    log_request(start, "CreateMany", model_def.name(), result.status().as_u16());
+                    log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     result
                 }
                 UPDATE_MANY_HANDLER => {
                     let result = handle_update_many(&graph, &transformed_body, model_def, source.clone()).await;
-                    log_request(start, "UpdateMany", model_def.name(), result.status().as_u16());
+                    log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     result
                 }
                 DELETE_MANY_HANDLER => {
                     let result = handle_delete_many(&graph, &transformed_body, model_def, source.clone()).await;
-                    log_request(start, "DeleteMany", model_def.name(), result.status().as_u16());
+                    log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     result
                 }
                 COUNT_HANDLER => {
                     let result = handle_count(&graph, &transformed_body, model_def, source.clone()).await;
-                    log_request(start, "Count", model_def.name(), result.status().as_u16());
+                    log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     result
                 }
                 AGGREGATE_HANDLER => {
                     let result = handle_aggregate(&graph, &transformed_body, model_def, source.clone()).await;
-                    log_request(start, "Aggregate", model_def.name(), result.status().as_u16());
+                    log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     result
                 }
                 GROUP_BY_HANDLER => {
                     let result = handle_group_by(&graph, &transformed_body, model_def, source.clone()).await;
-                    log_request(start, "GroupBy", model_def.name(), result.status().as_u16());
+                    log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     result
                 }
                 SIGN_IN_HANDLER => {
                     let result = handle_sign_in(&graph, &transformed_body, model_def, conf).await;
-                    log_request(start, "SignIn", model_def.name(), result.status().as_u16());
+                    log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     result
                 }
                 IDENTITY_HANDLER => {
                     let result = handle_identity(&graph, &transformed_body, model_def, conf, source.clone()).await;
-                    log_request(start, "Identity", model_def.name(), result.status().as_u16());
+                    log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     result
                 }
                 _ => unreachable!()
