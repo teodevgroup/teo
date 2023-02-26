@@ -34,8 +34,8 @@ cuid = "1.2.0"
 sqlx = { version = "0.6.2", features = ["runtime-tokio-native-tls", "chrono", "decimal"], optional = true }
 mongodb = { version = "2.3.1", optional = true }
 bson = { version = "2.2", features = ["chrono-0_4", "serde_with"], optional = true }
-rust_decimal = "1.26.1"
-rust_decimal_macros = "1.26.1"
+rust_decimal = "1.28.1"
+rust_decimal_macros = "1.28.1"
 async-recursion = "1.0.0"
 colored = "2.0.0"
 num-integer = "0.1.45"

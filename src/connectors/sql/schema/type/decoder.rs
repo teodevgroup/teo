@@ -39,6 +39,14 @@ fn mysql_type_to_database_type(r#type: &str) -> DatabaseType {
                 "varchar" => DatabaseType::VarChar { m: arg.map(|a| u16::from_str(a).unwrap()).unwrap(), n: None, c: None },
                 "date" => DatabaseType::Date,
                 "datetime" => DatabaseType::DateTime(u8::from_str(arg.unwrap()).unwrap()),
+                "decimal" => {
+                    if let Some(args) = arg {
+                        let args = args.split(",").into_iter().collect::<Vec<&str>>();
+                        DatabaseType::Decimal { m: Some(args.get(0).unwrap().parse().unwrap()), d: Some(args.get(1).unwrap().parse().unwrap()) }
+                    } else {
+                        DatabaseType::Decimal { m: None, d: None }
+                    }
+                }
                 _ => panic!("Unhandled type '{}' '{:?}' '{:?}'.", name, trailing1, arg)
             }
         }

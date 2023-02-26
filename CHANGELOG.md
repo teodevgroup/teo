@@ -256,8 +256,8 @@
 - Code comment parsing in schema parser **[DONE]**
 - Rust entities with documentation **[DONE]**
 - TypeScript client: package files **[DONE]**
+- Fixed MySQL name quote bug **[DONE]**
 - Client: gitCommit option: default false
-- Decimal type
 - TypeScript client: fetch result: DateTime and Decimal should be decoded correctly
 - Import without extension and index **[DONE]**
 - `dest` relative to file instead of cwd **[DONE]**
@@ -268,6 +268,8 @@
 - Remove unused `copy` decorator **[DONE]**
 
 #### 0.0.48
+- Replace buggy sqlx
+- Decimal type
 - Transaction
 
 #### 0.0.49

@@ -427,6 +427,7 @@ impl Resolver {
                     let provider_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let provider_str = provider_value.as_raw_enum_choice().unwrap();
                     match provider_str {
+                        #[cfg(feature = "data-source-sqlite")]
                         "sqlite" => connector.provider = Some(DatabaseName::SQLite),
                         "mongo" => connector.provider = Some(DatabaseName::MongoDB),
                         "mysql" => connector.provider = Some(DatabaseName::MySQL),

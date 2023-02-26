@@ -2,6 +2,7 @@
 pub enum DatabaseName {
     MySQL,
     PostgreSQL,
+    #[cfg(feature = "data-source-sqlite")]
     SQLite,
     MongoDB,
 }

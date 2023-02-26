@@ -10,6 +10,7 @@ pub(crate) fn db_container(database_name: DatabaseName) -> Container {
         DatabaseName::PostgreSQL => {
             Container { objects: hashmap!{} }
         }
+        #[cfg(feature = "data-source-sqlite")]
         DatabaseName::SQLite => {
             Container { objects: hashmap!{} }
         }

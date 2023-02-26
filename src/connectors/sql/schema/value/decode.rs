@@ -1,9 +1,10 @@
 use sqlx::any::{AnyRow, AnyValueRef};
-use sqlx::{Row, ValueRef};
+use sqlx::{Row, Value as SqlxValue, ValueRef};
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::field::r#type::FieldType;
 use crate::core::teon::Value;
 use chrono::{NaiveDateTime, NaiveDate, DateTime, Utc};
+use rust_decimal::Decimal;
 
 pub(crate) struct RowDecoder { }
 
@@ -49,7 +50,6 @@ impl RowDecoder {
         if r#type.is_float() {
             return Value::number_from_f64(row.get(column_name), r#type);
         }
-        #[cfg(not(feature = "data-source-mssql"))]
         if r#type.is_date() {
             if dialect == SQLDialect::PostgreSQL {
                 let timestamp: NaiveDateTime = row.get(column_name);
@@ -64,7 +64,6 @@ impl RowDecoder {
                 return Value::Date(naive_date);
             }
         }
-        #[cfg(not(feature = "data-source-mssql"))]
         if r#type.is_datetime() {
             if dialect == SQLDialect::PostgreSQL {
                 let timestamp: NaiveDateTime = row.get(column_name);
@@ -78,6 +77,7 @@ impl RowDecoder {
                 return Value::DateTime(datetime);
             }
         }
+
         panic!("Unhandled database when decoding type.")
     }
 }

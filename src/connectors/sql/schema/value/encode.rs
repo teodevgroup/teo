@@ -73,6 +73,7 @@ impl ToSQLString for Value {
             Value::Bool(b) => b.to_sql_input(),
             Value::Date(d) => d.to_sql_input(dialect),
             Value::DateTime(d) => d.to_sql_input(dialect),
+            Value::Decimal(d) => d.to_string().to_sql_input(),
             _ => panic!("unhandled"),
         }
     }

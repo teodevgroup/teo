@@ -263,6 +263,7 @@ impl AppBuilder {
                 #[cfg(feature = "data-source-postgres")]
                 Arc::new(SQLConnector::new(SQLDialect::PostgreSQL, url.clone(), false).await)
             },
+            #[cfg(feature = "data-source-sqlite")]
             DatabaseName::SQLite => {
                 #[cfg(feature = "data-source-sqlite")]
                 Arc::new(SQLConnector::new(SQLDialect::SQLite, url.clone(), false).await)
