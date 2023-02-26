@@ -257,7 +257,7 @@
 - Rust entities with documentation **[DONE]**
 - TypeScript client: package files **[DONE]**
 - Fixed MySQL name quote bug **[DONE]**
-- Client: gitCommit option: default false
+- Client: gitCommit option: default false **[DONE]**
 - TypeScript client: fetch result: DateTime and Decimal should be decoded correctly
 - Import without extension and index **[DONE]**
 - `dest` relative to file instead of cwd **[DONE]**
