@@ -625,7 +625,7 @@ impl Object {
             if let Some(relation) = self.model().relation(key) {
                 if let Some(ignore) = &self.inner.ignore_relation {
                     if ignore.as_str() == relation.name() {
-                        //continue
+                        continue
                     }
                 }
                 if self.is_new() && relation.is_required() && !relation.is_vec() {
@@ -965,9 +965,9 @@ impl Object {
                 let relation_mutation_map = self.inner.relation_mutation_map.lock().await;
                 if let Some(manipulation) = relation_mutation_map.get(relation.name()) {
                     if many {
-                        self.perform_relation_manipulation_many(relation, manipulation, session.clone(), path).await?;
+                        self.perform_relation_manipulation_many(relation, manipulation, session.clone(), &(path + relation.name())).await?;
                     } else {
-                        self.perform_relation_manipulation_one(relation, manipulation, session.clone(), path).await?;
+                        self.perform_relation_manipulation_one(relation, manipulation, session.clone(), &(path + relation.name())).await?;
                     }
                 }
             }
