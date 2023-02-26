@@ -540,7 +540,7 @@ impl Object {
         // validate required fields
         for key in model_keys {
             if let Some(field) = self.model().field(key) {
-                if field.auto || field.auto_increment {
+                if field.auto || field.auto_increment || field.foreign_key {
                     continue
                 }
                 match &field.optionality {
@@ -612,6 +612,24 @@ impl Object {
                             }
                         }
                     }
+                }
+            }
+        }
+        // validate required relations
+        for key in self.model().relation_output_keys() {
+            if let Some(relation) = self.model().relation(key) {
+                if self.is_new() && relation.is_required() && !relation.is_vec() {
+                    // check whether foreign key is received or a value is provided
+                    let map = self.inner.relation_mutation_map.lock().await;
+                    if map.get(key).is_some() {
+                        continue
+                    }
+                    for field_name in relation.fields() {
+                        if self.get_value(field_name).unwrap().is_null() {
+                            return Err(Error::missing_required_input(&(path + key)));
+                        }
+                    }
+                    continue
                 }
             }
         }
