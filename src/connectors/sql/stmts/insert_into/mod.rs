@@ -39,7 +39,7 @@ impl<'a> ToSQLString for SQLInsertIntoStatement<'a> {
                 "  RETURNING ".to_owned() + &self.returning.join(",")
             })
         } else {
-            format!("INSERT INTO `{}`({}) VALUES({});", self.table, keys.join(","), values.join(","))
+            format!("INSERT INTO `{}`({}) VALUES({});", self.table, keys.iter().map(|k| format!("`{k}`")).collect::<Vec<String>>().join(","), values.join(","))
         }
     }
 }

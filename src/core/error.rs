@@ -166,7 +166,7 @@ impl Error {
     pub(crate) fn object_not_found() -> Self {
         Error {
             r#type: ErrorType::ObjectNotFound,
-            message: "The requested object is not exist.".to_string(),
+            message: "The requested object does not exist.".to_string(),
             errors: None
         }
     }

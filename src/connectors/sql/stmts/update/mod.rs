@@ -31,7 +31,7 @@ impl<'a> ToSQLString for SQLUpdateStatement<'a> {
             if dialect == SQLDialect::PostgreSQL {
                 exprs.push(format!("\"{}\" = {}", k, v));
             } else {
-                exprs.push(format!("{} = {}", k, v));
+                exprs.push(format!("`{}` = {}", k, v));
             }
         }
         let r#where = if self.r#where.is_empty() {

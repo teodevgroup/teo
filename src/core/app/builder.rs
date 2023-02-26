@@ -73,7 +73,7 @@ impl AppBuilder {
     }
 
     pub fn new_with_environment_version_and_entrance(environment_version: EnvironmentVersion, entrance: Entrance) -> Self {
-        let _ = dotenv(); // load dotenv file if exist. If the file is not exist, do nothing.
+        let _ = dotenv(); // load dotenv file if exist. If the file does not exist, do nothing.
         Self {
             connector: None,
             graph_builder: GraphBuilder::new(),
