@@ -284,7 +284,7 @@ impl Model {
                 let mut transformed_include = teon!({});
                 for (key, included_value) in include.as_hashmap().unwrap() {
                     let relation = self.relation(key).unwrap();
-                    let (opposite_model, opposite_relation) = Graph::current().opposite_relation(relation);
+                    let (opposite_model, _opposite_relation) = Graph::current().opposite_relation(relation);
                     let find_action = if relation.is_vec() {
                         Action::from_u32(NESTED | FIND | MANY)
                     } else {

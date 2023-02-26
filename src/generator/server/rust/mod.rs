@@ -212,7 +212,7 @@ impl RustEntityGenerator {
                 for field in model.fields() {
                     let field_method_name = field.name.to_snake_case();
                     let field_localized_name_title_case = field.localized_name();
-                    let field_localized_name_word_case = field_localized_name_title_case.to_word_case();
+                    let _field_localized_name_word_case = field_localized_name_title_case.to_word_case();
                     b.line(format!("/// {}", field_localized_name_title_case));
                     if let Some(desc) = field.description() {
                         b.line("///");
@@ -248,7 +248,7 @@ impl RustEntityGenerator {
                 // relations
                 for relation in model.relations() {
                     let field_localized_name_title_case = relation.localized_name();
-                    let field_localized_name_word_case = field_localized_name_title_case.to_word_case();
+                    let _field_localized_name_word_case = field_localized_name_title_case.to_word_case();
                     b.line(format!("/// {}", field_localized_name_title_case));
                     if let Some(desc) = relation.description() {
                         b.line("///");

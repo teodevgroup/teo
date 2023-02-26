@@ -702,7 +702,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
                     let entries = parsed_body.get("create").unwrap().as_vec().unwrap();
                     let mut transformed_entries: Vec<Value> = vec![];
                     let mut new_action = action;
-                    for (index, entry) in entries.iter().enumerate() {
+                    for (_index, entry) in entries.iter().enumerate() {
                         let ctx = Ctx::initial_state_with_value(teon!({"create": entry})).with_action(action);
                         match model_def.transformed_action(ctx).await {
                             Ok(result) => {
