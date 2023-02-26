@@ -66,10 +66,10 @@ fn log_unhandled(start: SystemTime, method: &str, path: &str, code: u16) {
     };
     let elapsed = now.duration_since(start).unwrap();
     let ms = elapsed.as_millis();
-    let ms_str = format!("{ms}ms").normal().clear();
-    let local_formatted = format!("{local}").cyan();
+    let ms_str = format!("{ms}ms").dimmed();
+    let local_formatted = format!("{local}").dimmed();
     let unhandled = "Unhandled".red();
-    println!("{} {} {} on {} - {} {}", local_formatted, unhandled, method.bright_yellow(), path.bright_magenta(), code_string, ms_str);
+    println!("{} {} {} on {} - {} {}", local_formatted, unhandled, method.bold(), path, code_string, ms_str);
 }
 
 fn log_request(start: SystemTime, action: &str, model: &str, code: u16) {
@@ -84,8 +84,8 @@ fn log_request(start: SystemTime, action: &str, model: &str, code: u16) {
     let elapsed = now.duration_since(start).unwrap();
     let ms = elapsed.as_millis();
     let ms_str = format!("{ms}ms").normal().clear();
-    let local_formatted = format!("{local}").cyan();
-    println!("{} {} on {} - {} {}", local_formatted, action.bright_yellow(), model.bright_magenta(), code_string, ms_str);
+    let local_formatted = format!("{local}").dimmed();
+    println!("{} {} on {} - {} {}", local_formatted, action.bold(), model, code_string, ms_str.dimmed());
 }
 
 async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConf) -> Result<Option<Object>, Error> {
@@ -811,16 +811,16 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
 async fn server_start_message(port: u16, environment_version: EnvironmentVersion, entrance: Entrance) -> Result<(), std::io::Error> {
     // Introducing
     let now: DateTime<Local> = Local::now();
-    let now_formatted = format!("{now}").cyan();
+    let now_formatted = format!("{now}").dimmed();
     let teo_version = env!("CARGO_PKG_VERSION");
-    let teo = format!("Teo {}", teo_version).bright_purple().bold();
-    println!("{} {} ({}) [{}]", now_formatted, teo, environment_version.to_string().bright_blue().bold(), entrance.to_str().bright_green().bold());
+    let teo = format!("Teo {}", teo_version);
+    println!("{} {} ({}, {})", now_formatted, teo, environment_version.to_string(), entrance.to_str());
     // Listening
     let now: DateTime<Local> = Local::now();
-    let now_formatted = format!("{now}").cyan();
-    let port_str = format!("{port}").bold().bright_magenta();
-    let text = "Listening".bright_yellow();
-    println!("{} {} on {}", now_formatted, text, port_str);
+    let now_formatted = format!("{now}").dimmed();
+    let port_str = format!("{port}").bold();
+    let text = "Listening";
+    println!("{} {} on port {}", now_formatted, text, port_str);
     Ok(())
 }
 
