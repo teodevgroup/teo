@@ -491,7 +491,13 @@ impl Resolver {
                     let object_name_str = object_name_value.as_str().unwrap();
                     client.object_name = Some(object_name_str.to_owned());
                 },
-                _ => { panic!("Undefined name '{}' in entity generator block.", item.identifier.name.as_str())}
+                "gitCommit" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let git_commit_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    let git_commit_bool = git_commit_value.as_bool().unwrap();
+                    client.git_commit = git_commit_bool;
+                }
+                _ => { panic!("Undefined name '{}' in client generator block.", item.identifier.name.as_str())}
             }
         }
     }

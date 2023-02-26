@@ -1,10 +1,9 @@
 use sqlx::any::{AnyRow, AnyValueRef};
-use sqlx::{Row, Value as SqlxValue, ValueRef};
+use sqlx::{Row, ValueRef};
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::field::r#type::FieldType;
 use crate::core::teon::Value;
 use chrono::{NaiveDateTime, NaiveDate, DateTime, Utc};
-use rust_decimal::Decimal;
 
 pub(crate) struct RowDecoder { }
 

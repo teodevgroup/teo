@@ -313,6 +313,7 @@ impl AppBuilder {
                 package: client.package.unwrap(),
                 host: client.host.clone().unwrap(),
                 object_name: client.object_name.clone(),
+                git_commit: client.git_commit,
             })
         }
         // load enums

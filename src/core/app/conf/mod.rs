@@ -24,4 +24,5 @@ pub struct ClientGeneratorConf {
     pub(crate) package: bool,
     pub(crate) host: String,
     pub(crate) object_name: Option<String>,
+    pub(crate) git_commit: bool,
 }
