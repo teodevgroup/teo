@@ -10,6 +10,8 @@ use key_path::{KeyPath, path};
 use async_recursion::async_recursion;
 use maplit::hashmap;
 use indexmap::IndexMap;
+use to_mut::ToMut;
+use to_mut_proc_macro::ToMut;
 use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, PROGRAM_CODE, DELETE, DISCONNECT, FIND, JOIN_CREATE, JOIN_DELETE, MANY, NESTED, SINGLE, UPDATE, UPSERT, NESTED_CREATE_ACTION, NESTED_DISCONNECT_ACTION, NESTED_SET_ACTION, NESTED_CONNECT_ACTION, NESTED_DELETE_MANY_ACTION, NESTED_UPDATE_MANY_ACTION, NESTED_UPDATE_ACTION, NESTED_DELETE_ACTION, NESTED_CONNECT_OR_CREATE_ACTION, NESTED_UPSERT_ACTION, INTERNAL_POSITION, SET};
 use crate::core::action::source::ActionSource;
 use crate::core::field::{Field, PreviousValueRule};
@@ -34,6 +36,7 @@ pub struct Object {
     pub(crate) inner: Arc<ObjectInner>
 }
 
+#[derive(ToMut)]
 pub(crate) struct ObjectInner {
     pub(crate) model: Model,
     pub(crate) graph: Graph,
@@ -58,6 +61,7 @@ pub(crate) struct ObjectInner {
     pub(crate) object_set_many_map: Arc<TokioMutex<HashMap<String, Vec<Object>>>>,
     pub(crate) object_connect_map: Arc<TokioMutex<HashMap<String, Vec<Object>>>>,
     pub(crate) object_disconnect_map: Arc<TokioMutex<HashMap<String, Vec<Object>>>>,
+    pub(crate) ignore_relation: Option<String>,
 }
 
 fn check_user_json_keys<'a>(map: &HashMap<String, Value>, allowed: &HashSet<&str>, model: &Model) -> Result<()> {
@@ -95,6 +99,7 @@ impl Object {
                 object_set_many_map: Arc::new(TokioMutex::new(HashMap::new())),
                 object_connect_map: Arc::new(TokioMutex::new(HashMap::new())),
                 object_disconnect_map: Arc::new(TokioMutex::new(HashMap::new())),
+                ignore_relation: None,
             })
         }
     }
@@ -618,6 +623,11 @@ impl Object {
         // validate required relations
         for key in self.model().relation_output_keys() {
             if let Some(relation) = self.model().relation(key) {
+                if let Some(ignore) = &self.inner.ignore_relation {
+                    if ignore.as_str() == relation.name() {
+                        //continue
+                    }
+                }
                 if self.is_new() && relation.is_required() && !relation.is_vec() {
                     // check whether foreign key is received or a value is provided
                     let map = self.inner.relation_mutation_map.lock().await;
@@ -1049,6 +1059,9 @@ impl Object {
         let action = Action::from_u32(NESTED | CREATE | SINGLE);
         let object = self.graph().new_object(relation.model(), action, self.action_source().clone())?;
         object.set_teon_with_path(value.get("create").unwrap(), path).await?;
+        if let Some(opposite) = self.graph().opposite_relation(relation).1 {
+            object.ignore_relation(opposite.name());
+        }
         self.link_and_save_relation_object(relation, &object, session.clone(), path).await
     }
 
@@ -1529,6 +1542,10 @@ impl Object {
 
     pub(crate) fn action_source(&self) -> &ActionSource {
         &self.inner.action_source
+    }
+
+    pub(crate) fn ignore_relation(&self, name: &str) {
+        self.inner.as_ref().to_mut().ignore_relation = Some(name.to_owned());
     }
 }
 

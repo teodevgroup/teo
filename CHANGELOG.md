@@ -266,6 +266,7 @@
 - Bug: required relationship can be created without it **[DONE]**
 - Primitive type constructors **[DONE]**
 - Remove unused `copy` decorator **[DONE]**
+- Fixed nested create key bug **[DONE]**
 
 #### 0.0.48
 - Replace buggy sqlx
