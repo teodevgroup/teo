@@ -1,5 +1,5 @@
 use chrono::SecondsFormat;
-use serde_json::{Value as JsonValue, Number as JsonNumber, Map as JsonMap};
+use serde_json::{Value as JsonValue, Number as JsonNumber, Map as JsonMap, json};
 use crate::core::teon::Value;
 
 impl Into<JsonValue> for Value {
@@ -28,7 +28,7 @@ impl Into<JsonValue> for Value {
                 JsonValue::Number(JsonNumber::from_f64(val).unwrap())
             }
             Value::Decimal(val) => {
-                JsonValue::String(val.to_string())
+                json!({"$decimal": val.to_string()})
             }
             Value::String(val) => {
                 JsonValue::String(val.clone())
@@ -37,7 +37,7 @@ impl Into<JsonValue> for Value {
                 JsonValue::String(val.format("%Y-%m-%d").to_string())
             }
             Value::DateTime(val) => {
-                JsonValue::String(val.to_rfc3339_opts(SecondsFormat::Millis, true))
+                json!({"$date": val.to_rfc3339_opts(SecondsFormat::Millis, true)})
             }
             Value::Vec(val) => {
                 JsonValue::Array(val.iter().map(|v| v.into()).collect())

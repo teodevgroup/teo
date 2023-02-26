@@ -258,7 +258,7 @@
 - TypeScript client: package files **[DONE]**
 - Fixed MySQL name quote bug **[DONE]**
 - Client: gitCommit option: default false **[DONE]**
-- TypeScript client: fetch result: DateTime and Decimal should be decoded correctly
+- TypeScript client: fetch result: DateTime should be decoded correctly **[DONE]**
 - Import without extension and index **[DONE]**
 - `dest` relative to file instead of cwd **[DONE]**
 - Revamp server outputs

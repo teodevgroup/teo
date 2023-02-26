@@ -13,7 +13,8 @@ impl ToTypeScriptType for FieldType {
         let base: String = match self {
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => "string".to_string(),
-            FieldType::String | FieldType::Date | FieldType::DateTime => "string".to_string(),
+            FieldType::String | FieldType::Date => "string".to_string(),
+            FieldType::DateTime => "Date".to_string(),
             FieldType::Bool => "boolean".to_string(),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number".to_string(),
             FieldType::Decimal => "string".to_string(),
