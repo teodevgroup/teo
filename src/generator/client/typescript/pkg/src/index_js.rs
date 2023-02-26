@@ -87,7 +87,18 @@ async function request(urlSegmentName, action, args, token = getBearerToken()) {
       headers: token ? {{ "Authorization": `Bearer ${{token}}` }} : undefined,
       body: JSON.stringify(args)
   }})
-  let response_json = await response.json()
+  let response_text = await response.text()
+  let response_json = JSON.parse(response_text, (key, value) => {{
+    if (typeof value === 'object') {{
+      if (value['$date']) {{
+        return new Date(value['$date'])
+      }} else {{
+        return value
+      }}
+    }} else {{
+      return value
+    }}
+  }})
   if (400 <= response.status) {{
       throw new TeoError(response_json.error)
   }}

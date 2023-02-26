@@ -263,7 +263,7 @@
 - `dest` relative to file instead of cwd **[DONE]**
 - Revamp server outputs **[DONE]**
 - Request logging: log original handler instead of redirected and transformed **[DONE]**
-- Bug: required relationship can be created without it 
+- Bug: required relationship can be created without it **[DONE]**
 - Primitive type constructors **[DONE]**
 - Remove unused `copy` decorator **[DONE]**
 
