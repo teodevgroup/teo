@@ -11,8 +11,13 @@ use crate::core::property::Property;
 use crate::core::relation::Relation;
 use crate::parser::ast::argument::Argument;
 use crate::parser::ast::entity::Entity;
+use crate::parser::std::callables::date_constructor::date_constructor;
+use crate::parser::std::callables::datetime_constructor::datetime_constructor;
+use crate::parser::std::callables::float_constructor::float_constructor;
+use crate::parser::std::callables::int_constructor::int_constructor;
 #[cfg(feature = "data-source-mongodb")]
 use crate::parser::std::callables::object_id_constructor::object_id_constructor;
+use crate::parser::std::callables::string_constructor::string_constructor;
 use crate::parser::std::constants::EnvObject;
 use crate::prelude::Value;
 
@@ -69,6 +74,11 @@ impl Container {
                 "ENV".to_owned() => Entity::Accessible(Accessible::Env(EnvObject {})),
                 #[cfg(feature = "data-source-mongodb")]
                 "ObjectId".to_owned() => Entity::Accessible(Accessible::Callable(object_id_constructor)),
+                "Int".to_owned() => Entity::Accessible(Accessible::Callable(int_constructor)),
+                "Float".to_owned() => Entity::Accessible(Accessible::Callable(float_constructor)),
+                "Date".to_owned() => Entity::Accessible(Accessible::Callable(date_constructor)),
+                "DateTime".to_owned() => Entity::Accessible(Accessible::Callable(datetime_constructor)),
+                "String".to_owned() => Entity::Accessible(Accessible::Callable(string_constructor)),
             }
         }
     }

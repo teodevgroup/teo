@@ -264,7 +264,7 @@
 - Revamp server outputs **[DONE]**
 - Request logging: log original handler instead of redirected and transformed **[DONE]**
 - Bug: required relationship can be created without it 
-- Object method for String like `ENV["PORT"].toInt()`
+- Int constructor like `Int(ENV["PORT"])`
 - Remove unused `copy` decorator **[DONE]**
 
 #### 0.0.48
