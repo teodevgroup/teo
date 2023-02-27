@@ -232,7 +232,7 @@ async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: Acti
 async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&Value>, include: Option<&Value>, select: Option<&Value>, _where: Option<&Value>, _model: &Model) -> Result<Value, Error> {
     let empty = teon!({});
     let updator = if update.is_some() { update.unwrap() } else { &empty };
-    object.set_teon(updator).await?;
+    object.set_teon_with_path(updator, &path!["update"]).await?;
     object.save().await?;
     let refetched = object.refreshed(include, select).await?;
     refetched.to_json_internal(&path!["data"]).await
@@ -272,11 +272,11 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Acti
             let update = input.get("update");
             let set_json_result = match update {
                 Some(update) => {
-                    obj.set_teon(update).await
+                    obj.set_teon_with_path(update, &path!["update"]).await
                 }
                 None => {
                     let empty = teon!({});
-                    obj.set_teon(&empty).await
+                    obj.set_teon_with_path(&empty, &path!["update"]).await
                 }
             };
             match set_json_result {
@@ -304,11 +304,11 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Acti
             let obj = graph.new_object(model.name(), action, source).unwrap();
             let set_json_result = match create {
                 Some(create) => {
-                    obj.set_teon(create).await
+                    obj.set_teon_with_path(create, &path!["create"]).await
                 }
                 None => {
                     let empty = teon!({});
-                    obj.set_teon(&empty).await
+                    obj.set_teon_with_path(&empty, &path!["create"]).await
                 }
             };
             match set_json_result {

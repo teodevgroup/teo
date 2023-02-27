@@ -125,8 +125,8 @@ impl GlobalFieldDecorators {
         objects.insert("identityChecker".to_owned(), Accessible::FieldDecorator(auth_by_decorator));
         objects.insert("queryable".to_owned(), Accessible::FieldDecorator(queryable_decorator));
         objects.insert("unqueryable".to_owned(), Accessible::FieldDecorator(unqueryable_decorator));
-        objects.insert("can_mutate".to_owned(), Accessible::FieldDecorator(can_mutate_decorator));
-        objects.insert("can_read".to_owned(), Accessible::FieldDecorator(can_read_decorator));
+        objects.insert("canMutate".to_owned(), Accessible::FieldDecorator(can_mutate_decorator));
+        objects.insert("canRead".to_owned(), Accessible::FieldDecorator(can_read_decorator));
         Self { objects }
     }
 

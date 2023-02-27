@@ -278,6 +278,7 @@
 - Teon value: hashmap can compare equality **[DONE]**
 - Find many handler: errors if any of items is denied to access **[DONE]**
 - `$isA` throws correct error message if value is null **[DONE]**
+- Fixed upsert and update handler has wrong user mode bug **[DONE]**
 
 #### 0.0.49
 - Replace buggy sqlx
