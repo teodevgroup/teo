@@ -22,6 +22,8 @@ use crate::parser::std::decorators::model::after_delete::after_delete_decorator;
 use crate::parser::std::decorators::model::after_save::after_save_decorator;
 use crate::parser::std::decorators::model::before_delete::before_delete_decorator;
 use crate::parser::std::decorators::model::before_save::before_save_decorator;
+use crate::parser::std::decorators::model::can_mutate::can_mutate_decorator;
+use crate::parser::std::decorators::model::can_read::can_read_decorator;
 use crate::parser::std::decorators::model::disable::disable_decorator;
 use crate::parser::std::decorators::model::id::id_decorator;
 use crate::parser::std::decorators::model::identity::identity_decorator;
@@ -58,6 +60,8 @@ impl GlobalModelDecorators {
         objects.insert("afterDelete".to_owned(), Accessible::ModelDecorator(after_delete_decorator));
         objects.insert("disable".to_owned(), Accessible::ModelDecorator(disable_decorator));
         objects.insert("action".to_owned(), Accessible::ModelDecorator(action_decorator));
+        objects.insert("canRead".to_owned(), Accessible::ModelDecorator(can_read_decorator));
+        objects.insert("canMutate".to_owned(), Accessible::ModelDecorator(can_mutate_decorator));
         Self { objects }
     }
 

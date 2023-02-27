@@ -2,10 +2,11 @@ use std::sync::Arc;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::items::object::assign::AssignItem;
 use crate::core::pipeline::items::object::ctx_self::SelfItem;
-use crate::core::pipeline::items::object::is_instance_of::IsObjectOfItem;
+use crate::core::pipeline::items::object::is_object_of::IsObjectOfItem;
 use crate::core::pipeline::items::object::get_previous::GetPreviousItem;
 use crate::core::pipeline::items::object::set::SetItem;
 use crate::core::pipeline::items::object::get::GetItem;
+use crate::core::pipeline::items::object::is::IsItem;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn ctx_self(_args: Vec<Argument>) -> Arc<dyn Item> {
@@ -40,6 +41,11 @@ pub(crate) fn object_previous_value(args: Vec<Argument>) -> Arc<dyn Item> {
 pub(crate) fn is_a(args: Vec<Argument>) -> Arc<dyn Item> {
     let key = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
     Arc::new( IsObjectOfItem::new(key.as_raw_enum_choice().unwrap()))
+}
+
+pub(crate) fn is(args: Vec<Argument>) -> Arc<dyn Item> {
+    let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
+    Arc::new( IsItem::new(value.clone()))
 }
 
 pub(crate) fn assign(args: Vec<Argument>) -> Arc<dyn Item> {

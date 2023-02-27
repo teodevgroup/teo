@@ -17,7 +17,7 @@ use crate::parser::std::pipeline::action::{redirect, when};
 use crate::parser::std::pipeline::logical::{all_modifier, and_modifier, any_modifier, if_modifier, invalid, not_modifier, or_modifier, passed, valid};
 use crate::parser::std::pipeline::math::{abs, add, cbrt, ceil, divide, floor, max, min, modular, multiply, pow, root, round, sqrt, subtract};
 use crate::parser::std::pipeline::number::{is_even, is_odd};
-use crate::parser::std::pipeline::object::{assign, ctx_self, is_a, object_get, object_previous_value, object_set};
+use crate::parser::std::pipeline::object::{assign, ctx_self, is, is_a, object_get, object_previous_value, object_set};
 use crate::parser::std::pipeline::string::generation::{cuid, random_digits, slug, uuid};
 use crate::parser::std::pipeline::string::transform::{ellipsis, pad_end, pad_start, regex_replace, split, trim};
 use crate::parser::std::pipeline::string::validation::{has_prefix, has_suffix, is_alphabetic, is_alphanumeric, is_email, is_hex_color, is_numeric, is_prefix_of, is_secure_password, is_suffix_of, regex_match};
@@ -93,7 +93,8 @@ impl GlobalPipelineInstallers {
         objects.insert("set".to_owned(), object_set);
         objects.insert("assign".to_owned(), assign);
         objects.insert("previous".to_owned(), object_previous_value);
-        objects.insert("isInstanceOf".to_owned(), is_a);
+        objects.insert("isA".to_owned(), is_a);
+        objects.insert("is".to_owned(), is);
         // string generation
         objects.insert("cuid".to_owned(), cuid);
         objects.insert("randomDigits".to_owned(), random_digits);

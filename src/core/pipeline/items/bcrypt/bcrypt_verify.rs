@@ -20,19 +20,15 @@ impl BcryptVerifyItem {
 impl Item for BcryptVerifyItem {
 
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        println!("HERE INTO?");
         match ctx.value.as_str() {
             None => {
-                println!("HERE MAYBE?");
                 Err(ctx.internal_server_error("bcryptVerify: value is not string"))
             }
             Some(string) => {
-                println!("HERE FIND>?");
                 let argument = self.argument.process(ctx.clone()).await?;
                 match argument.as_str() {
                     None => Err(ctx.internal_server_error("bcryptVerify: argument is not string")),
                     Some(hash) => {
-                        println!("see hash {}; see ctx value {}", hash, string);
                         if verify(string, hash).unwrap() {
                             Ok(ctx.clone())
                         } else {

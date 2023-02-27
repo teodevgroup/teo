@@ -431,7 +431,7 @@ impl Parser {
                 Rule::config_item => items.push(Self::parse_config_item(current)),
                 Rule::comment_block => (),
                 _ => {
-                    panic!("see current {} error.", current)
+                    unreachable!()
                 },
             }
         }
