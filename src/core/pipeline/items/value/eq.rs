@@ -18,7 +18,6 @@ impl EqItem {
 #[async_trait]
 impl Item for EqItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        println!("call eq item");
         let rhs = self.argument.resolve(ctx.clone()).await?;
         if rhs == ctx.value {
             Ok(ctx)
