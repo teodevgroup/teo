@@ -656,7 +656,7 @@ impl Object {
         self.inner.is_new.store(false, Ordering::SeqCst);
         self.inner.is_modified.store(false, Ordering::SeqCst);
         *self.inner.modified_fields.lock().unwrap() = HashSet::new();
-        if self.model().identity() && self.action_source().is_identity() && self.action_source().as_identity().is_none() {
+        if self.is_new() && self.model().identity() && self.action_source().is_identity() && self.action_source().as_identity().is_none() {
             let mut_inner = self.inner.as_ref().to_mut();
             mut_inner.action_source = ActionSource::Identity(Some(self.clone()));
         }
