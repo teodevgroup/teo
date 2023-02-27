@@ -231,7 +231,6 @@ impl Object {
     }
 
     async fn check_field_read_permission<'a>(&self, field: &Field, _path: impl AsRef<KeyPath<'a>>) -> Result<()> {
-        println!("check field read permission: {}", field.name());
         let ctx = Ctx::initial_state_with_object(self.clone()).with_value(self.get_value(field.name()).unwrap()).with_path(path![field.name()]);
         field.can_read_pipeline.process_into_permission_result(ctx).await
     }
