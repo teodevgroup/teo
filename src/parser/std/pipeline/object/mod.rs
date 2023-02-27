@@ -45,7 +45,11 @@ pub(crate) fn is_a(args: Vec<Argument>) -> Arc<dyn Item> {
 
 pub(crate) fn is(args: Vec<Argument>) -> Arc<dyn Item> {
     let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
-    Arc::new( IsItem::new(value.clone()))
+    let relation_name = match args.get(1) {
+        Some(arg) => Some(arg.resolved.as_ref().unwrap().as_value().unwrap().as_raw_enum_choice().unwrap().to_string()),
+        None => None,
+    };
+    Arc::new( IsItem::new(value.clone(), relation_name))
 }
 
 pub(crate) fn assign(args: Vec<Argument>) -> Arc<dyn Item> {
