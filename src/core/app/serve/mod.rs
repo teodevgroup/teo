@@ -537,8 +537,8 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     let obj = obj_result.unwrap();
     let auth_by_arg = by_field.identity_checker.as_ref().unwrap();
     let pipeline = auth_by_arg.as_pipeline().unwrap();
-    let _action_by_input = by_value.unwrap();
-    let ctx = Ctx::initial_state_with_object(obj.clone());
+    let action_by_input = by_value.unwrap();
+    let ctx = Ctx::initial_state_with_object(obj.clone()).with_value(action_by_input.clone());
     let result = pipeline.process(ctx).await;
     return match result {
         Err(_err) => {
@@ -557,6 +557,9 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
                 model: obj.model().name().to_string(),
                 exp
             };
+            if conf.jwt_secret.as_ref().is_none() {
+                return super::super::error::Error::internal_server_error("Missing JWT secret.").into();
+            }
             let token = encode_token(claims, &conf.jwt_secret.as_ref().unwrap());
             HttpResponse::Ok().json(json!({
             "meta": {

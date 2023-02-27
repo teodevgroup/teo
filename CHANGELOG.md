@@ -270,6 +270,8 @@
 
 #### 0.0.48
 - Fixed a pipeline parsing bug **[DONE]**
+- Fixed a bug which causes checker value being not passed into pipeline **[DONE]**
+- Added a HTTP error message when JWT token is not defined **[DONE]**
 
 #### 0.0.49
 - Replace buggy sqlx
