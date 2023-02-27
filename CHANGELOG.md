@@ -269,14 +269,17 @@
 - Fixed nested create key bug **[DONE]**
 
 #### 0.0.48
+- Fixed a pipeline parsing bug **[DONE]**
+
+#### 0.0.49
 - Replace buggy sqlx
 - Decimal type
 - PostgreSQL array type
 
-#### 0.0.49
+#### 0.0.50
 - Transaction
 
-#### 0.0.50
+#### 0.0.51
 - Relation onUpdate
 - Relation onDelete
 - CLI mode: When running generation, ignore custom programming callbacks
@@ -284,7 +287,7 @@
 - Soft delete documentation
 - Pipeline documentation
 
-#### 0.0.51
+#### 0.0.52
 - Rust entities: setter documentation
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
 - Remove `unqueryable` and `unsortable` fields from generated clients
@@ -293,19 +296,19 @@
 - Support code comment tags for VSCode
 - Support code comment tags for IntelliJ IDEA
 
-#### 0.0.52
+#### 0.0.53
 - Seed with datasets
 
-#### 0.0.53
+#### 0.0.54
 - Reach rust stable
 - Bug fixes
 
-#### 0.0.54
+#### 0.0.55
 - Node.js object
 - Node.js entity generation
 - Cross language error handling for node.js
 
-#### 0.0.55
+#### 0.0.56
 - MongoDB: root skip take and distinct bug
 - MongoDB: nested skip take and distinct bug
 - MongoDB: if cursor key is not orderBy key, result is wrong
@@ -314,7 +317,7 @@
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 
-#### 0.0.56
+#### 0.0.57
 - The copy action
 - random float modifier
 - random int modifier
@@ -324,7 +327,7 @@
 - to sentence case modifier
 - to title case modifier
 
-#### 0.0.57 - 0.0.80
+#### 0.0.58 - 0.0.80
 - Setup new style unit tests
 - Replace buggy sqlx
 - SQL: Enum types

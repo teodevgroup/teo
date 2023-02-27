@@ -381,6 +381,14 @@ impl Resolver {
                         _ => panic!()
                     }
                 }
+                if let Some(previous_identifier) = previous_identifier {
+                    let installer = parser.global_pipeline_installers().get(&previous_identifier.name);
+                    if let Some(installer) = installer {
+                        items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: None, args: vec![]});
+                    } else {
+                        panic!("Cannot find pipeline item named '{}'.", previous_identifier.name);
+                    }
+                }
             }
             _ => panic!()
         }

@@ -6,11 +6,11 @@ use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
 
 #[derive(Debug, Copy, Clone)]
-pub struct BcryptSaltItem {}
+pub struct BcryptSaltItem { }
 
 impl BcryptSaltItem {
     pub fn new() -> Self {
-        Self {}
+        Self { }
     }
 }
 
