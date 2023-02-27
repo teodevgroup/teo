@@ -221,7 +221,8 @@ impl Object {
 
     async fn check_model_read_permission<'a>(&self, _path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         let ctx = Ctx::initial_state_with_object(self.clone());
-        self.model().can_read_pipeline().process_into_permission_result(ctx).await
+        let result = self.model().can_read_pipeline().process_into_permission_result(ctx).await;
+        return result
     }
 
     async fn check_field_write_permission<'a>(&self, field: &Field, _path: impl AsRef<KeyPath<'a>>) -> Result<()> {
@@ -655,6 +656,10 @@ impl Object {
         self.inner.is_new.store(false, Ordering::SeqCst);
         self.inner.is_modified.store(false, Ordering::SeqCst);
         *self.inner.modified_fields.lock().unwrap() = HashSet::new();
+        if self.model().identity() && self.action_source().is_identity() && self.action_source().as_identity().is_none() {
+            let mut_inner = self.inner.as_ref().to_mut();
+            mut_inner.action_source = ActionSource::Identity(Some(self.clone()));
+        }
     }
 
     #[async_recursion]

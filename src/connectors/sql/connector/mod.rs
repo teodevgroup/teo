@@ -23,7 +23,7 @@ use crate::core::action::source::ActionSource;
 use crate::core::connector::{Connector, SaveSession};
 use crate::core::database::r#type::DatabaseType;
 use crate::core::error::Error;
-use crate::core::field::r#type::FieldType;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::input::Input;
 use crate::core::result::Result;
 use crate::prelude::{Graph, Object, Value};
@@ -110,7 +110,11 @@ impl SQLConnector {
             match self.pool.execute(&*stmt).await {
                 Ok(result) => {
                     for key in auto_keys {
-                        object.set_value(key, Value::I64(result.last_insert_id().unwrap()))?;
+                        if model.field(key).unwrap().field_type().is_int32() {
+                            object.set_value(key, Value::I32(result.last_insert_id().unwrap() as i32))?;
+                        } else {
+                            object.set_value(key, Value::I64(result.last_insert_id().unwrap()))?;
+                        }
                     }
                     Ok(())
                 }

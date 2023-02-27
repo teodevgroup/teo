@@ -785,6 +785,9 @@ impl PartialEq for Value {
             (Date(s), Date(o)) => s == o,
             (DateTime(s), DateTime(o)) => s == o,
             (Vec(s), Vec(o)) => s == o,
+            (HashMap(s), HashMap(o)) => s == o,
+            (IndexMap(s), IndexMap(o)) => s == o,
+            (BTreeMap(s), BTreeMap(o)) => s == o,
             _ => false,
         }
     }

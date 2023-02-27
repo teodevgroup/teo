@@ -54,6 +54,20 @@ impl FieldType {
         }
     }
 
+    pub(crate) fn is_int32(&self) -> bool {
+        match self {
+            FieldType::I32 => true,
+            _ => false
+        }
+    }
+
+    pub(crate) fn is_int64(&self) -> bool {
+        match self {
+            FieldType::I64 => true,
+            _ => false
+        }
+    }
+
     pub(crate) fn is_float(&self) -> bool {
         match self {
             FieldType::F32 | FieldType::F64 => true,

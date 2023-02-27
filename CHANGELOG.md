@@ -273,6 +273,9 @@
 - Fixed a bug which causes checker value being not passed into pipeline **[DONE]**
 - Added an HTTP error message when JWT token is not defined **[DONE]**
 - Added `$is` item for object checking **[DONE]**
+- When identity object is created and identity is null, set itself as identity **[DONE]**
+- MySQL and SQLite: when object is created, use correct int type for inserted ID **[DONE]**
+- Teon value: hashmap can compare equality **[DONE]**
 
 #### 0.0.49
 - Replace buggy sqlx
