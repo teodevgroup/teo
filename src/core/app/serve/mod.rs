@@ -175,7 +175,7 @@ async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: A
             for (index, result) in results.iter().enumerate() {
                 match result.to_json_internal(&path!["data", index]).await {
                     Ok(result) => result_json.push(result.into()),
-                    Err(_) => ()
+                    Err(_) => return Error::permission_error(path!["data"], "not allowed to read").into(),
                 }
             }
             HttpResponse::Ok().json(json!({
