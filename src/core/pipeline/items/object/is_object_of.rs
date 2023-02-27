@@ -19,14 +19,20 @@ impl Item for IsObjectOfItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.value.as_object() {
             Some(o) => {
-                if o.model().name() == self.model {
+                if o.model().name() == &self.model {
                     Ok(ctx)
                 } else {
                     let model = &self.model;
-                    Err(ctx.internal_server_error(format!("value is not object of '{model}'.")))
+                    Err(ctx.with_invalid(format!("value is not object of {model}")))
                 }
             }
-            None => Err(ctx.internal_server_error("isObjectOf: value is not object"))
+            None => {
+                if ctx.value.is_null() {
+                    Err(ctx.with_invalid(format!("value is null")))
+                } else {
+                    Err(ctx.internal_server_error("isA: value is not object"))
+                }
+            }
         }
     }
 }

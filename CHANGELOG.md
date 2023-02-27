@@ -276,6 +276,8 @@
 - When identity object is created and identity is null, set itself as identity **[DONE]**
 - MySQL and SQLite: when object is created, use correct int type for inserted ID **[DONE]**
 - Teon value: hashmap can compare equality **[DONE]**
+- Find many handler: errors if any of items is denied to access **[DONE]**
+- `$isA` throws correct error message if value is null **[DONE]**
 
 #### 0.0.49
 - Replace buggy sqlx
