@@ -89,7 +89,7 @@ async function request(urlSegmentName, action, args, token = getBearerToken()) {
   }})
   let response_text = await response.text()
   let response_json = JSON.parse(response_text, (key, value) => {{
-    if (typeof value === 'object') {{
+    if (typeof value === 'object' && value != null) {{
       if (value['$date']) {{
         return new Date(value['$date'])
       }} else {{
@@ -151,16 +151,19 @@ class Teo {{
     this._token = undefined
     return new Proxy(this, {{
       get(target, name, receiver) {{
-        return new Delegate(nameMap[name] || name, target._token)
+        if (name === '$withToken') {{
+          return (token) => {{
+            let retval = new Teo()
+            retval._token = token
+            return retval
+          }}
+        }} else {{
+          return new Delegate(nameMap[name] || name, target._token)
+        }}
       }},
     }})
   }}
 
-  $withToken(token) {{
-    const retval = new Teo()
-    retval._token = token
-    return retval
-  }}
 }}
 
 const {object_name} = new {class_name}()

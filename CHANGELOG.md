@@ -281,8 +281,10 @@
 - Fixed upsert and update handler has wrong user mode bug **[DONE]**
 
 #### 0.0.49
-- Fixed TypeScript client `$withToken` return value bug **[DONE]**
 - Fixed SQLite connector create a strange file when `:memory:` **[DONE]**
+- Fixed TypeScript client `$withToken` is not called correctly bug **[DONE]**
+- Fixed TypeScript client date parsing bug when encountered null **[DONE]**
+- Fixed `$ellipsis` argument passing bug **[DONE]**
 
 #### 0.0.50
 - Replace buggy sqlx

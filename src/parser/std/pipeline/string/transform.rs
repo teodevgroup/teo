@@ -37,6 +37,6 @@ pub(crate) fn pad_end(args: Vec<Argument>) -> Arc<dyn Item> {
 
 pub(crate) fn ellipsis(args: Vec<Argument>) -> Arc<dyn Item> {
     let arg1 = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
-    let arg2 = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
+    let arg2 = args.get(1).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
     Arc::new(EllipsisItem::new(arg1.clone(), arg2))
 }
