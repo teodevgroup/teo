@@ -40,17 +40,19 @@ impl SQLConnector {
     pub(crate) async fn new(dialect: SQLDialect, url: String, reset_database: bool) -> Self {
         if dialect == SQLDialect::SQLite {
             let filename = &url[7..];
-            let loc = PathBuf::from(filename);
-            let absolute_location = if loc.is_absolute() {
-                loc
-            } else {
-                env::current_dir().unwrap().join(loc)
-            };
-            if !absolute_location.exists() {
-                fs::File::create(absolute_location).expect("SQLite database create failed.");
-            } else if reset_database {
-                let _ = fs::remove_file(absolute_location.clone());
-                fs::File::create(absolute_location).expect("SQLite database create failed.");
+            if !filename.starts_with(":") {
+                let loc = PathBuf::from(filename);
+                let absolute_location = if loc.is_absolute() {
+                    loc
+                } else {
+                    env::current_dir().unwrap().join(loc)
+                };
+                if !absolute_location.exists() {
+                    fs::File::create(absolute_location).expect("SQLite database create failed.");
+                } else if reset_database {
+                    let _ = fs::remove_file(absolute_location.clone());
+                    fs::File::create(absolute_location).expect("SQLite database create failed.");
+                }
             }
             let pool: AnyPool = AnyPool::connect(url.as_str()).await.unwrap();
             Self { loaded: false, dialect, pool }

@@ -622,7 +622,7 @@ export declare class TeoError extends Error {{
             });
             b.line("constructor(token?: string)");
             b.doc(with_token_doc());
-            b.line("$withToken(token?: string)");
+            b.line(format!("$withToken(token?: string): {}", object_class_name));
         }, "}");
         c.empty_line();
         c.line(main_object_doc(object_name, graph));

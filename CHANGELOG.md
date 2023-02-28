@@ -281,14 +281,16 @@
 - Fixed upsert and update handler has wrong user mode bug **[DONE]**
 
 #### 0.0.49
+- Fixed TypeScript client `$withToken` return value bug **[DONE]**
+- Fixed SQLite connector create a strange file when `:memory:` **[DONE]**
+
+#### 0.0.50
 - Replace buggy sqlx
 - Decimal type
 - PostgreSQL array type
 
-#### 0.0.50
-- Transaction
-
 #### 0.0.51
+- Transaction
 - Relation onUpdate
 - Relation onDelete
 - CLI mode: When running generation, ignore custom programming callbacks
