@@ -113,13 +113,14 @@ impl SQLConnector {
                 }
             }
         } else {
-            match conn.execute(QuaintQuery::from(stmt)).await {
+            match conn.query(QuaintQuery::from(stmt)).await {
                 Ok(result) => {
+                    let id = result.last_insert_id().unwrap();
                     for key in auto_keys {
                         if model.field(key).unwrap().field_type().is_int32() {
-                            object.set_value(key, Value::I32(result as i32))?;
+                            object.set_value(key, Value::I32(id as i32))?;
                         } else {
-                            object.set_value(key, Value::I64(result as i64))?;
+                            object.set_value(key, Value::I64(id as i64))?;
                         }
                     }
                     Ok(())

@@ -38,7 +38,7 @@ impl SQLMigration {
             conn.execute(Query::from(stmt)).await.unwrap();
         } else {
             let stmt = SQL::r#use().database(db_name).to_string(dialect);
-            conn.execute(Query::from(stmt)).await.unwrap();
+            conn.raw_cmd(&stmt).await.unwrap();
         }
     }
 
@@ -50,8 +50,8 @@ impl SQLMigration {
                 continue
             }
             let show_table = SQL::show().tables().like(model.table_name()).to_string(dialect);
-            let result = conn.query(Query::from(show_table)).await;
-            if result.is_err() {
+            let result = conn.query(Query::from(show_table)).await.unwrap();
+            if result.is_empty() {
                 // table not exist, create table
                 let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
                 // println!("EXECUTE SQL for create table: {}", &stmt);
