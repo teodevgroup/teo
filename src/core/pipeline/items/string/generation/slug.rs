@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use cuid::slug;
+use cuid2::create_id;
 use crate::core::pipeline::item::Item;
 use crate::core::teon::Value;
 use crate::core::result::Result;
@@ -17,6 +17,6 @@ impl SlugItem {
 #[async_trait]
 impl Item for SlugItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        Ok(ctx.with_value(Value::String(slug().unwrap())))
+        Ok(ctx.with_value(Value::String(create_id())))
     }
 }
