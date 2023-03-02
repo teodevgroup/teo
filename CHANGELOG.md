@@ -287,7 +287,8 @@
 - Fixed `$ellipsis` argument passing bug **[DONE]**
 
 #### 0.0.50
-- Replace buggy sqlx
+- Replace buggy sqlx with quaint which powers Prisma
+- Support MSSQL
 - Decimal type
 - PostgreSQL array type
 

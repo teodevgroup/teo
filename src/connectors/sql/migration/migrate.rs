@@ -1,4 +1,6 @@
-use sqlx::{AnyPool, Executor};
+use quaint::pooled::Quaint;
+use quaint::prelude::Queryable;
+use quaint::prelude::TableType::Query;
 use crate::connectors::sql::schema::column::decoder::ColumnDecoder;
 use crate::connectors::sql::stmts::create::table::SQLCreateTableStatement;
 use crate::connectors::sql::stmts::SQL;
@@ -11,35 +13,37 @@ pub(crate) struct SQLMigration { }
 
 impl SQLMigration {
 
-    pub(crate) async fn create_database_if_needed(dialect: SQLDialect, pool: &mut AnyPool, db_name: &str, reset_database: bool) {
+    pub(crate) async fn create_database_if_needed(dialect: SQLDialect, pool: &Quaint, db_name: &str, reset_database: bool) {
+        let conn = pool.check_out().await.unwrap();
         // drop database if needed
         if reset_database {
             let stmt = SQL::drop().database(db_name).if_exists().to_string(dialect);
-            pool.execute(&*stmt).await.unwrap();
+            conn.execute(Query::from(stmt)).await.unwrap();
         }
         // create database if needed
         if dialect == SQLDialect::PostgreSQL {
             let stmt = format!("select from pg_database where datname = '{}'", db_name);
-            let result = pool.fetch_one(&*stmt).await;
+            let result = conn.query(Query::from(stmt)).await;
             if result.is_err() {
                 let stmt = SQL::create().database(db_name).to_string(dialect);
-                pool.execute(&*stmt).await.unwrap();
+                conn.execute(Query::from(stmt)).await.unwrap();
             }
         } else {
             let stmt = SQL::create().database(db_name).if_not_exists().to_string(dialect);
-            pool.execute(&*stmt).await.unwrap();
+            conn.execute(Query::from(stmt)).await.unwrap();
         }
         // use database
         if dialect == SQLDialect::PostgreSQL {
             let stmt = format!("SET search_path TO {db_name}");
-            pool.execute(&*stmt).await.unwrap();
+            conn.execute(stmt.into()).await.unwrap();
         } else {
             let stmt = SQL::r#use().database(db_name).to_string(dialect);
-            pool.execute(&*stmt).await.unwrap();
+            conn.execute(stmt.into()).await.unwrap();
         }
     }
 
-    pub(crate) async fn migrate(dialect: SQLDialect, pool: &mut AnyPool, models: &Vec<Model>) {
+    pub(crate) async fn migrate(dialect: SQLDialect, pool: &Quaint, models: &Vec<Model>) {
+        let conn = pool.check_out().await.unwrap();
         // compare each table and do migration
         for model in models {
             if model.r#virtual() {
@@ -51,7 +55,7 @@ impl SQLMigration {
                 // table not exist, create table
                 let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
                 // println!("EXECUTE SQL for create table: {}", &stmt);
-                pool.execute(&*stmt).await.unwrap();
+                conn.execute(stmt.into()).await.unwrap();
             } else {
                 // table exist, migrate
                 let table_name = model.table_name();
@@ -65,7 +69,7 @@ impl SQLMigration {
                         // remove this column
                         let stmt = SQL::alter_table(table_name).drop_column(db_column.name()).to_string(dialect);
                         // println!("EXECUTE SQL for remove column: {}", &stmt);
-                        pool.execute(&*stmt).await.unwrap();
+                        conn.execute(stmt.into()).await.unwrap();
                     } else {
                         // compare column definition
                         let schema_column: SQLColumn = schema_field.unwrap().into();
@@ -73,7 +77,7 @@ impl SQLMigration {
                             // this column is different, alter it
                             let alter = SQL::alter_table(table_name).modify(schema_column).to_string(dialect);
                             // println!("EXECUTE SQL for alter column: {}", &alter);
-                            pool.execute(&*alter).await.unwrap();
+                            conn.execute(stmt.into()).await.unwrap();
                         }
                         reviewed_columns.push(db_column.name().to_owned());
                     }
@@ -84,7 +88,7 @@ impl SQLMigration {
                         // add this column
                         let add = SQL::alter_table(table_name).add(sql_column_def).to_string(dialect);
                         // println!("EXECUTE SQL for add column: {}", &add);
-                        pool.execute(&*add).await.unwrap();
+                        conn.execute(stmt.into()).await.unwrap();
                     }
                 }
             }

@@ -7,7 +7,7 @@ use std::env;
 use std::sync::atomic::Ordering;
 use async_trait::async_trait;
 use regex::Regex;
-use sqlx::{AnyPool, Executor};
+use quaint::{prelude::*, pooled::Quaint};
 use crate::core::model::Model;
 use url::Url;
 use crate::connectors::sql::schema::r#type::field::ToDatabaseType;
@@ -33,7 +33,7 @@ use crate::teon;
 pub(crate) struct SQLConnector {
     loaded: bool,
     dialect: SQLDialect,
-    pool: AnyPool,
+    pool: Quaint,
 }
 
 impl SQLConnector {
@@ -54,7 +54,7 @@ impl SQLConnector {
                     fs::File::create(absolute_location).expect("SQLite database create failed.");
                 }
             }
-            let pool: AnyPool = AnyPool::connect(url.as_str()).await.unwrap();
+            let pool = Quaint::builder(url.as_str()).unwrap().build();
             Self { loaded: false, dialect, pool }
         } else {
             let url_result = Url::parse(&url);
@@ -68,9 +68,11 @@ impl SQLConnector {
             } else {
                 url_without_db.set_path("/");
             }
-            let mut pool: AnyPool = AnyPool::connect(url_without_db.as_str()).await.unwrap();
-            SQLMigration::create_database_if_needed(dialect, &mut pool, &database_name, reset_database).await;
-            let pool: AnyPool = AnyPool::connect(url.as_str()).await.unwrap();
+            let pool = Quaint::builder(url_without_db.as_str()).unwrap().build();
+
+            let pool: AnyPool = AnyPool::connect(url_without_db.as_str()).await.unwrap();
+            SQLMigration::create_database_if_needed(dialect, &pool, &database_name, reset_database).await;
+            let pool = Quaint::builder(url.as_str()).unwrap().build();
             Self { loaded: false, dialect, pool }
         }
     }

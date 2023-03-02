@@ -1,6 +1,5 @@
 use std::sync::Arc;
-use sqlx::any::AnyRow;
-use sqlx::Row;
+use quaint::prelude::ResultRow;
 use crate::connectors::sql::schema::column::SQLColumn;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::r#type::decoder::SQLTypeDecoder;
@@ -10,13 +9,13 @@ use crate::core::property::Property;
 pub(crate) struct ColumnDecoder { }
 
 impl ColumnDecoder {
-    pub(crate) fn decode(row: AnyRow, dialect: SQLDialect) -> SQLColumn {
-        let field: String = row.get("Field");
-        let field_type_in_string: String = row.get("Type");
-        let null_in_string: String = row.get("Null");
+    pub(crate) fn decode(row: ResultRow, dialect: SQLDialect) -> SQLColumn {
+        let field: String = row.get("Field").unwrap().to_string().unwrap();
+        let field_type_in_string: String = row.get("Type").unwrap().to_string().unwrap();
+        let null_in_string: String = row.get("Null").unwrap().to_string().unwrap();
         let null = &null_in_string == "YES";
-        let key: String = row.get("Key");
-        let extra: String = row.get("Extra");
+        let key: String = row.get("Key").unwrap().to_string().unwrap();
+        let extra: String = row.get("Extra").unwrap().to_string().unwrap();
         let auto_increment = extra.contains("auto_increment");
         let primary = &key == "PRI";
         let unique = &key == "UNI";

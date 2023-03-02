@@ -31,11 +31,10 @@ url = "2.2.2"
 bcrypt = "0.14.0"
 uuid = { version = "1.1.1", features = ["v4", "fast-rng"] }
 cuid = "1.2.0"
-sqlx = { version = "0.6.2", features = ["runtime-tokio-native-tls", "chrono", "decimal"], optional = true }
 mongodb = { version = "2.3.1", optional = true }
 bson = { version = "2.2", features = ["chrono-0_4", "serde_with"], optional = true }
-rust_decimal = "1.28.1"
-rust_decimal_macros = "1.28.1"
+rust_decimal = "1.6"
+rust_decimal_macros = "1.6"
 async-recursion = "1.0.0"
 colored = "2.0.0"
 num-integer = "0.1.45"
@@ -53,6 +52,7 @@ clap = { version = "4.1.4", features = ["derive"] }
 path-absolutize = "3.0.14"
 dotenvy = "0.15.6"
 toml_edit = "0.19.3"
+quaint = { path = "../quaint", features = [ "all" ] }
 
 [dev-dependencies]
 serial_test = "1.0.0"
@@ -61,8 +61,9 @@ serial_test = "1.0.0"
 rustc_version = "0.4.0"
 
 [features]
-default = ["data-source-mongodb", "data-source-mysql", "data-source-postgres", "data-source-sqlite"]
+default = ["data-source-mongodb", "data-source-mysql", "data-source-postgres", "data-source-sqlite", "data-source-mssql"]
 data-source-mongodb = ["mongodb", "bson"]
-data-source-mysql = ["sqlx/mysql", "sqlx/any"]
-data-source-postgres = ["sqlx/postgres", "sqlx/any"]
-data-source-sqlite = ["sqlx/sqlite", "sqlx/any"]
+data-source-mysql = []
+data-source-postgres = []
+data-source-sqlite = []
+data-source-mssql = []
