@@ -181,7 +181,7 @@
 - Rename config keyword to server **[DONE]**
 
 #### 0.0.45
-- More detailed API documentation **[IN PROGRESS]**
+- More detailed API documentation **[DONE]**
 - `$print` pipeline item **[DONE]**
 - Support highlighting `import` and `let` for VSCode plugin **[DONE]**
 - Rename `@authIdentity` and `@authBy` **[DONE]**
@@ -287,10 +287,15 @@
 - Fixed `$ellipsis` argument passing bug **[DONE]**
 
 #### 0.0.50
-- Replace buggy sqlx with quaint which powers Prisma
-- Support MSSQL
+- Replace buggy sqlx with quaint which powers Prisma **[DONE]**
+- SQLite: unique constraint error **[DONE]**
+- SQLite: fix in memory connection
+- MySQL: auto insert `root:` to connection URL **[DONE]**
+- Rewrite SQL migrations
 - Decimal type
 - PostgreSQL array type
+- Connector bug: unique constraint violating: error message should have key path
+- Support MSSQL
 
 #### 0.0.51
 - Transaction
@@ -299,7 +304,6 @@
 - CLI mode: When running generation, ignore custom programming callbacks
 - CLI mode: When running server, panic if custom programming callback is provided
 - Soft delete documentation
-- Pipeline documentation
 
 #### 0.0.52
 - Rust entities: setter documentation
@@ -309,6 +313,7 @@
 - Relation with read write rules
 - Support code comment tags for VSCode
 - Support code comment tags for IntelliJ IDEA
+- Pipeline documentation
 
 #### 0.0.53
 - Seed with datasets

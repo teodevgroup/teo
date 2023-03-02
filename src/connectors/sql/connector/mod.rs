@@ -8,6 +8,8 @@ use std::sync::atomic::Ordering;
 use async_trait::async_trait;
 use regex::Regex;
 use quaint::{prelude::*, pooled::Quaint, ast::Query as QuaintQuery};
+use quaint::error::DatabaseConstraint;
+use quaint::error::ErrorKind::UniqueConstraintViolation;
 use crate::core::model::Model;
 use url::Url;
 use crate::connectors::sql::schema::r#type::field::ToDatabaseType;
@@ -60,16 +62,26 @@ impl SQLConnector {
             if url_result.is_err() {
                 panic!("Data source URL is invalid.");
             }
-            let mut url_without_db = url_result.unwrap();
+            let mut updated_url = url_result.unwrap();
+            if dialect == SQLDialect::MySQL {
+                if updated_url.username() == "" {
+                    updated_url.set_username("root").unwrap();
+                    if updated_url.password().is_none() {
+                        updated_url.set_password(Some("")).unwrap();
+                    }
+                }
+            }
+            let mut url_without_db = updated_url.clone();
             let database_name = url_without_db.path()[1..].to_string();
             if dialect == SQLDialect::PostgreSQL {
                 url_without_db.set_path("/postgres");
             } else {
                 url_without_db.set_path("/");
             }
+
             let pool = Quaint::builder(url_without_db.as_str()).unwrap().build();
             SQLMigration::create_database_if_needed(dialect, &pool, &database_name, reset_database).await;
-            let pool = Quaint::builder(url.as_str()).unwrap().build();
+            let pool = Quaint::builder(updated_url.as_str()).unwrap().build();
             Self { loaded: false, dialect, pool }
         }
     }
@@ -181,27 +193,23 @@ impl SQLConnector {
     }
 
     fn handle_err_result(&self, err: quaint::error::Error) -> Error {
-        let message = err.original_message().unwrap();
-        if self.dialect == SQLDialect::MySQL {
-            // mysql
-            let regex = Regex::new("Duplicate entry (.+) for key '(.+)'").unwrap();
-            if let Some(captures) = regex.captures(message) {
-                let keys = captures.get(2).unwrap().as_str().split(".").collect::<Vec<&str>>();
-                let key = keys.last().unwrap();
-                Error::unique_value_duplicated(key)
-            } else {
+        match err.kind() {
+            UniqueConstraintViolation { constraint } => {
+                match constraint {
+                    DatabaseConstraint::Fields(fields) => {
+                        Error::unique_value_duplicated(fields.get(0).unwrap())
+                    }
+                    DatabaseConstraint::Index(index) => {
+                        Error::unique_value_duplicated(index.clone())
+                    }
+                    _ => {
+                        Error::unknown_database_write_error()
+                    }
+                }
+            }
+            _ => {
                 Error::unknown_database_write_error()
             }
-        } else if self.dialect == SQLDialect::PostgreSQL {
-            // duplicate key value violates unique constraint \"users_email_key\"
-            let regex = Regex::new("^duplicate key value violates unique constraint").unwrap();
-            if regex.is_match(message) {
-                Error::unique_value_duplicated_reason("", message)
-            } else {
-                Error::unknown_database_write_error()
-            }
-        } else {
-            Error::unknown_database_write_error()
         }
     }
 }

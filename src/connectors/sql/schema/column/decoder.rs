@@ -10,23 +10,39 @@ pub(crate) struct ColumnDecoder { }
 
 impl ColumnDecoder {
     pub(crate) fn decode(row: ResultRow, dialect: SQLDialect) -> SQLColumn {
-        let field: String = row.get("Field").unwrap().to_string().unwrap();
-        let field_type_in_string: String = row.get("Type").unwrap().to_string().unwrap();
-        let null_in_string: String = row.get("Null").unwrap().to_string().unwrap();
-        let null = &null_in_string == "YES";
-        let key: String = row.get("Key").unwrap().to_string().unwrap();
-        let extra: String = row.get("Extra").unwrap().to_string().unwrap();
-        let auto_increment = extra.contains("auto_increment");
-        let primary = &key == "PRI";
-        let unique = &key == "UNI";
-        SQLColumn {
-            name: field,
-            r#type: SQLTypeDecoder::decode(&field_type_in_string, dialect),
-            not_null: !null,
-            auto_increment,
-            default: None,
-            primary_key: primary,
-            unique_key: unique,
+        if dialect == SQLDialect::SQLite {
+            let name = row.get("name").unwrap().as_str().unwrap();
+            let r#type = row.get("type").unwrap().as_str().unwrap();
+            let not_null = row.get("notnull").unwrap().as_bool().unwrap();
+            let pk = row.get("pk").unwrap().as_bool().unwrap();
+            SQLColumn {
+                name: name.to_string(),
+                r#type: SQLTypeDecoder::decode(&r#type, dialect),
+                not_null: not_null,
+                auto_increment: false,
+                default: None,
+                primary_key: pk,
+                unique_key: false,
+            }
+        } else {
+            let field: String = row.get("Field").unwrap().to_string().unwrap();
+            let field_type_in_string: String = row.get("Type").unwrap().to_string().unwrap();
+            let null_in_string: String = row.get("Null").unwrap().to_string().unwrap();
+            let null = &null_in_string == "YES";
+            let key: String = row.get("Key").unwrap().to_string().unwrap();
+            let extra: String = row.get("Extra").unwrap().to_string().unwrap();
+            let auto_increment = extra.contains("auto_increment");
+            let primary = &key == "PRI";
+            let unique = &key == "UNI";
+            SQLColumn {
+                name: field,
+                r#type: SQLTypeDecoder::decode(&field_type_in_string, dialect),
+                not_null: !null,
+                auto_increment,
+                default: None,
+                primary_key: primary,
+                unique_key: unique,
+            }
         }
     }
 }

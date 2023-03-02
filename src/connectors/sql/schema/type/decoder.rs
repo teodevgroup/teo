@@ -60,8 +60,34 @@ fn postgresql_type_to_database_type(r#type: &str) -> DatabaseType {
 }
 
 fn sqlite_type_to_database_type(r#type: &str) -> DatabaseType {
-    match r#type.to_lowercase().as_str() {
-        _ => panic!("Unhandled database type.")
+    let r#type_string = r#type.to_lowercase();
+    let r#type: &str = r#type_string.as_str();
+    let regex = Regex::new("([^ \\(\\)]+)( (.+))?(\\((.+)\\))?").unwrap();
+    match regex.captures(r#type) {
+        None => panic!("Unhandled database type '{}' '{}'.", r#type, regex),
+        Some(captures) => {
+            let name = captures.get(1).unwrap().as_str();
+            let trailing1 = captures.get(3).map(|m| m.as_str());
+            let arg = captures.get(5).map(|m| m.as_str());
+            match name {
+                "integer" => DatabaseType::Int { m: None, u: false },
+                "float" => DatabaseType::Float { m: None, d: None },
+                "double" => DatabaseType::Double { m: None, d: None },
+                "char" => DatabaseType::Char { m: arg.map(|a| u8::from_str(a).unwrap()), n: None, c: None },
+                "varchar" => DatabaseType::VarChar { m: arg.map(|a| u16::from_str(a).unwrap()).unwrap(), n: None, c: None },
+                "date" => DatabaseType::Date,
+                "datetime" => DatabaseType::DateTime(u8::from_str(arg.unwrap()).unwrap()),
+                "decimal" => {
+                    if let Some(args) = arg {
+                        let args = args.split(",").into_iter().collect::<Vec<&str>>();
+                        DatabaseType::Decimal { m: Some(args.get(0).unwrap().parse().unwrap()), d: Some(args.get(1).unwrap().parse().unwrap()) }
+                    } else {
+                        DatabaseType::Decimal { m: None, d: None }
+                    }
+                }
+                _ => panic!("Unhandled type '{}' '{:?}' '{:?}'.", name, trailing1, arg)
+            }
+        }
     }
 }
 
