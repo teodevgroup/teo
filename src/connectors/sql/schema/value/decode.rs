@@ -1,27 +1,35 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::field::r#type::FieldType;
 use crate::core::teon::Value;
-use chrono::{NaiveDateTime, NaiveDate, DateTime, Utc};
+use chrono::{NaiveDate, DateTime, Utc};
 use quaint::prelude::ResultRow;
 
 pub(crate) struct RowDecoder { }
 
 impl RowDecoder {
 
-    pub(crate) fn decode_serial(optional: bool, row: &AnyRow, column_name: &str) -> Value {
-        if optional {
-            let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
-            if any_value.is_null() {
-                return Value::Null;
+    pub(crate) fn decode_serial(optional: bool, row: &ResultRow, column_name: &str) -> Value {
+        let try_value = row.get(column_name);
+        if try_value.is_none() && optional {
+            Value::Null
+        } else {
+            if try_value.is_none() {
+                Value::Null
+            } else {
+                let val = try_value.unwrap();
+                if val.is_i32() {
+                    Value::I32(val.as_i32().unwrap())
+                } else {
+                    Value::I64(val.as_i64().unwrap())
+                }
             }
         }
-        Value::I32(row.get(column_name))
     }
 
     pub(crate) fn decode(r#type: &FieldType, optional: bool, row: &ResultRow, column_name: &str, dialect: SQLDialect) -> Value {
+        let result = row.get(column_name);
         if optional {
-            let any_value: AnyValueRef = row.try_get_raw(column_name).unwrap();
-            if any_value.is_null() {
+            if result.is_none() {
                 return Value::Null;
             }
         }

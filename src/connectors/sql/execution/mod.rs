@@ -2,8 +2,9 @@ use std::borrow::Cow;
 use array_tool::vec::Uniq;
 use std::collections::HashMap;
 use async_recursion::async_recursion;
-use sqlx::{AnyPool, Column, Executor, Row};
-use sqlx::any::AnyRow;
+use quaint::pooled::Quaint;
+use quaint::prelude::{Queryable, ResultRow};
+use quaint::ast::{Query as QuaintQuery};
 use crate::connectors::sql::query::Query;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::decode::RowDecoder;
@@ -22,9 +23,9 @@ pub(crate) struct Execution { }
 
 impl Execution {
 
-    pub(crate) fn row_to_value(model: &Model, graph: &Graph, row: &AnyRow, dialect: SQLDialect) -> Value {
-        Value::HashMap(row.columns().iter().filter_map(|column| {
-            let column_name = column.name();
+    pub(crate) fn row_to_value(model: &Model, graph: &Graph, row: &ResultRow, columns: &Vec<String>, dialect: SQLDialect) -> Value {
+
+        Value::HashMap(columns.iter().filter_map(|column_name| {
             if let Some(field) = model.field_with_column_name(column_name) {
                 if field.auto_increment && dialect == SQLDialect::PostgreSQL {
                     Some((field.name().to_owned(), RowDecoder::decode_serial(field.is_optional(), row, column_name)))
@@ -50,10 +51,10 @@ impl Execution {
         }).collect())
     }
 
-    fn row_to_aggregate_value(model: &Model, _graph: &Graph, row: &AnyRow, dialect: SQLDialect) -> Value {
+    fn row_to_aggregate_value(model: &Model, _graph: &Graph, row: &ResultRow, columns: &Vec<String>, dialect: SQLDialect) -> Value {
         let mut retval: HashMap<String, Value> = HashMap::new();
-        for column in row.columns() {
-            let result_key = column.name();
+        for column in columns {
+            let result_key = column.as_str();
             if result_key.contains(".") {
                 let splitted = result_key.split(".").collect::<Vec<&str>>();
                 let group = *splitted.get(0).unwrap();
@@ -62,7 +63,7 @@ impl Execution {
                     retval.insert(group.to_string(), Value::HashMap(HashMap::new()));
                 }
                 if group == "_count" { // force i64
-                    let count: i64 = row.get(result_key);
+                    let count: i64 = row.get(result_key).unwrap().as_i64().unwrap();
                     retval.get_mut(group).unwrap().as_hashmap_mut().unwrap().insert(field_name.to_string(), teon!(count));
                 } else if group == "_avg" || group == "_sum" { // force f64
                     let v = RowDecoder::decode(&FieldType::F64, true, &row, result_key, dialect);
@@ -81,7 +82,7 @@ impl Execution {
         Value::HashMap(retval)
     }
 
-    pub(crate) async fn query_objects(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect, action: Action, action_source: ActionSource) -> Result<Vec<Object>> {
+    pub(crate) async fn query_objects(pool: &Quaint, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect, action: Action, action_source: ActionSource) -> Result<Vec<Object>> {
         let values = Self::query(pool, model, graph, finder, dialect).await?;
         let select = finder.as_hashmap().unwrap().get("select");
         let include = finder.as_hashmap().unwrap().get("include");
@@ -95,7 +96,8 @@ impl Execution {
     }
 
     #[async_recursion]
-    async fn query_internal(pool: &AnyPool, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect, additional_where: Option<String>, additional_left_join: Option<String>, join_table_results: Option<Vec<String>>, force_negative_take: bool, additional_distinct: Option<Vec<String>>) -> Result<Vec<Value>> {
+    async fn query_internal(pool: &Quaint, model: &Model, graph: &Graph, value: &Value, dialect: SQLDialect, additional_where: Option<String>, additional_left_join: Option<String>, join_table_results: Option<Vec<String>>, force_negative_take: bool, additional_distinct: Option<Vec<String>>) -> Result<Vec<Value>> {
+        let conn = pool.check_out().await.unwrap();
         let _select = value.get("select");
         let include = value.get("include");
         let original_distinct = value.get("distinct").map(|v| if v.as_vec().unwrap().is_empty() { None } else { Some(v.as_vec().unwrap()) }).flatten();
@@ -111,7 +113,7 @@ impl Execution {
         let stmt = Query::build(model, graph, value_for_build.as_ref(), dialect, additional_where, additional_left_join, join_table_results, force_negative_take);
         // println!("sql stmt: {}", &stmt);
         let reverse = Input::has_negative_take(value);
-        let rows = match pool.fetch_all(&*stmt).await {
+        let rows = match conn.query(QuaintQuery::from(stmt)).await {
             Ok(rows) => rows,
             Err(err) => {
                 println!("{:?}", err);
@@ -121,7 +123,8 @@ impl Execution {
         if rows.is_empty() {
             return Ok(vec![])
         }
-        let mut results = rows.iter().map(|row| Self::row_to_value(model, graph, row, dialect)).collect::<Vec<Value>>();
+        let columns = rows.columns().clone();
+        let mut results = rows.into_iter().map(|row| Self::row_to_value(model, graph, &row, &columns, dialect)).collect::<Vec<Value>>();
         if reverse {
             results.reverse();
         }
@@ -310,15 +313,18 @@ impl Execution {
         Ok(results)
     }
 
-    pub(crate) async fn query(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> Result<Vec<Value>> {
+    pub(crate) async fn query(pool: &Quaint, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> Result<Vec<Value>> {
        Self::query_internal(pool, model, graph, finder, dialect, None, None, None, false, None).await
     }
 
-    pub(crate) async fn query_aggregate(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> Result<Value> {
+    pub(crate) async fn query_aggregate(pool: &Quaint, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> Result<Value> {
+        let conn = pool.check_out().await.unwrap();
         let stmt = Query::build_for_aggregate(model, graph, finder, dialect);
-        match pool.fetch_one(&*stmt).await {
-            Ok(result) => {
-                Ok(Self::row_to_aggregate_value(model, graph, &result, dialect))
+        match conn.query(QuaintQuery::from(&*stmt)).await {
+            Ok(result_set) => {
+                let columns = result_set.columns().clone();
+                let result = result_set.into_iter().next().unwrap();
+                Ok(Self::row_to_aggregate_value(model, graph, &result, &columns, dialect))
             },
             Err(err) => {
                 println!("{:?}", err);
@@ -327,25 +333,29 @@ impl Execution {
         }
     }
 
-    pub(crate) async fn query_group_by(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> Result<Value> {
+    pub(crate) async fn query_group_by(pool: &Quaint, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> Result<Value> {
+        let conn = pool.check_out().await.unwrap();
         let stmt = Query::build_for_group_by(model, graph, finder, dialect);
-        let rows = match pool.fetch_all(&*stmt).await {
+        let rows = match conn.query(QuaintQuery::from(stmt)).await {
             Ok(rows) => rows,
             Err(err) => {
                 println!("{:?}", err);
                 return Err(Error::unknown_database_find_error());
             }
         };
-        Ok(Value::Vec(rows.iter().map(|r| {
-            Self::row_to_aggregate_value(model, graph, r, dialect)
+        let columns = rows.columns().clone();
+        Ok(Value::Vec(rows.into_iter().map(|r| {
+            Self::row_to_aggregate_value(model, graph, &r, &columns, dialect)
         }).collect::<Vec<Value>>()))
     }
 
-    pub(crate) async fn query_count(pool: &AnyPool, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> Result<u64> {
+    pub(crate) async fn query_count(pool: &Quaint, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect) -> Result<u64> {
+        let conn = pool.check_out().await.unwrap();
         let stmt = Query::build_for_count(model, graph, finder, dialect, None, None, None, false);
-        match pool.fetch_one(&*stmt).await {
+        match conn.query(QuaintQuery::from(stmt)).await {
             Ok(result) => {
-                let count: i64 = result.get(0);
+                let result = result.into_iter().next().unwrap();
+                let count: i64 = result.into_iter().next().unwrap().as_i64().unwrap();
                 Ok(count as u64)
             },
             Err(err) => {

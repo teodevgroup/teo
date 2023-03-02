@@ -17,9 +17,9 @@ impl IndexDecoder {
         for row in result_set.into_iter() {
             let index_name: &str = row.get("Key_name").unwrap().as_str().unwrap();
             let non_unique: i32 = row.get("Non_unique").unwrap().as_i32().unwrap();
-            if !items.contains_key(&index_name) {
+            if !items.contains_key(index_name) {
                 items.insert(index_name.to_string(), hashmap!{});
-                let r#type = if &index_name == "PRIMARY" {
+                let r#type = if index_name == "PRIMARY" {
                     ModelIndexType::Primary
                 } else if non_unique == 0 {
                     ModelIndexType::Unique
@@ -31,9 +31,9 @@ impl IndexDecoder {
             let column_name: &str = row.get("Column_name").unwrap().as_str().unwrap();
             let field_name = model.field_with_column_name(&column_name).unwrap().name();
             let collation: &str = row.get("Collation").unwrap().as_str().unwrap();
-            let sort = if &collation == "A" { Sort::Asc } else { Sort::Desc };
+            let sort = if collation == "A" { Sort::Asc } else { Sort::Desc };
             let seq: i32 = row.get("Seq_in_index").unwrap().as_i32().unwrap();
-            items.get_mut(&index_name).unwrap().insert(seq, ModelIndexItem::new(field_name.to_string(), sort, None));
+            items.get_mut(index_name).unwrap().insert(seq, ModelIndexItem::new(field_name.to_string(), sort, None));
         }
         let mut retval: Vec<ModelIndex> = vec![];
         for index in indices.iter() {

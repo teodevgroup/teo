@@ -7,7 +7,7 @@ use std::env;
 use std::sync::atomic::Ordering;
 use async_trait::async_trait;
 use regex::Regex;
-use quaint::{prelude::*, pooled::Quaint};
+use quaint::{prelude::*, pooled::Quaint, ast::Query as QuaintQuery};
 use crate::core::model::Model;
 use url::Url;
 use crate::connectors::sql::schema::r#type::field::ToDatabaseType;
@@ -29,7 +29,6 @@ use crate::core::result::Result;
 use crate::prelude::{Graph, Object, Value};
 use crate::teon;
 
-#[derive(Debug)]
 pub(crate) struct SQLConnector {
     loaded: bool,
     dialect: SQLDialect,
@@ -69,8 +68,6 @@ impl SQLConnector {
                 url_without_db.set_path("/");
             }
             let pool = Quaint::builder(url_without_db.as_str()).unwrap().build();
-
-            let pool: AnyPool = AnyPool::connect(url_without_db.as_str()).await.unwrap();
             SQLMigration::create_database_if_needed(dialect, &pool, &database_name, reset_database).await;
             let pool = Quaint::builder(url.as_str()).unwrap().build();
             Self { loaded: false, dialect, pool }
@@ -78,6 +75,7 @@ impl SQLConnector {
     }
 
     async fn create_object(&self, object: &Object) -> Result<()> {
+        let conn = self.pool.check_out().await.unwrap();
         let model = object.model();
         let keys = object.keys_for_save();
         let auto_keys = model.auto_keys();
@@ -97,11 +95,15 @@ impl SQLConnector {
         let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();
         let stmt = SQL::insert_into(model.table_name()).values(value_refs).returning(auto_keys).to_string(self.dialect);
         if self.dialect == SQLDialect::PostgreSQL {
-            match self.pool.fetch_one(&*stmt).await {
-                Ok(result) => {
-                    let value = Execution::row_to_value(model, object.graph(), &result, self.dialect);
-                    for (k, v) in value.as_hashmap().unwrap() {
-                        object.set_value(k, v.clone())?;
+            match conn.query(QuaintQuery::from(stmt)).await {
+                Ok(result_set) => {
+                    let columns = result_set.columns().clone();
+                    let result = result_set.into_iter().next();
+                    if result.is_some() {
+                        let value = Execution::row_to_value(model, object.graph(), &result.unwrap(), &columns, self.dialect);
+                        for (k, v) in value.as_hashmap().unwrap() {
+                            object.set_value(k, v.clone())?;
+                        }
                     }
                     Ok(())
                 }
@@ -111,13 +113,13 @@ impl SQLConnector {
                 }
             }
         } else {
-            match self.pool.execute(&*stmt).await {
+            match conn.execute(QuaintQuery::from(stmt)).await {
                 Ok(result) => {
                     for key in auto_keys {
                         if model.field(key).unwrap().field_type().is_int32() {
-                            object.set_value(key, Value::I32(result.last_insert_id().unwrap() as i32))?;
+                            object.set_value(key, Value::I32(result as i32))?;
                         } else {
-                            object.set_value(key, Value::I64(result.last_insert_id().unwrap()))?;
+                            object.set_value(key, Value::I64(result as i64))?;
                         }
                     }
                     Ok(())
@@ -131,6 +133,7 @@ impl SQLConnector {
     }
 
     async fn update_object(&self, object: &Object) -> Result<()> {
+        let conn = self.pool.check_out().await.unwrap();
         let model = object.model();
         let keys = object.keys_for_save();
         let mut values: Vec<(&str, String)> = vec![];
@@ -161,7 +164,7 @@ impl SQLConnector {
         let r#where = Query::where_from_identifier(object, self.dialect);
         if !value_refs.is_empty() {
             let stmt = SQL::update(model.table_name()).values(value_refs).r#where(&r#where).to_string(self.dialect);
-            let result = self.pool.execute(stmt.as_str()).await;
+            let result = conn.execute(QuaintQuery::from(stmt)).await;
             if result.is_err() {
                 println!("{:?}", result.err().unwrap());
                 return Err(Error::unknown_database_write_error());
@@ -176,8 +179,8 @@ impl SQLConnector {
         }
     }
 
-    fn handle_err_result(&self, err: sqlx::Error) -> Error {
-        let message = err.as_database_error().unwrap().message();
+    fn handle_err_result(&self, err: quaint::error::Error) -> Error {
+        let message = err.original_message().unwrap();
         if self.dialect == SQLDialect::MySQL {
             // mysql
             let regex = Regex::new("Duplicate entry (.+) for key '(.+)'").unwrap();
@@ -234,13 +237,14 @@ impl Connector for SQLConnector {
     }
 
     async fn delete_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> Result<()> {
+        let conn = self.pool.check_out().await.unwrap();
         if object.inner.is_new.load(Ordering::SeqCst) {
             return Err(Error::object_is_not_saved_thus_cant_be_deleted());
         }
         let model = object.model();
         let r#where = Query::where_from_identifier(object, self.dialect);
         let stmt = SQL::delete_from(model.table_name()).r#where(r#where).to_string(self.dialect);
-        let result = self.pool.execute(stmt.as_str()).await;
+        let result = conn.execute(QuaintQuery::from(stmt)).await;
         if result.is_err() {
             println!("{:?}", result.err().unwrap());
             return Err(Error::unknown_database_write_error());

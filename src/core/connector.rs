@@ -15,7 +15,7 @@ use crate::prelude::Value;
 pub(crate) trait SaveSession: Debug + Send + Sync { }
 
 #[async_trait]
-pub(crate) trait Connector: Debug + Send + Sync {
+pub(crate) trait Connector: Send + Sync {
 
     // Query database types
 
