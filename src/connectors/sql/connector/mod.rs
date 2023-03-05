@@ -20,6 +20,7 @@ use crate::connectors::sql::query::Query;
 use crate::connectors::sql::stmts::SQL;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
+use crate::connectors::sql::url::url_utils;
 use crate::core::action::Action;
 use crate::core::action::source::ActionSource;
 use crate::core::connector::{Connector, SaveSession};
@@ -32,58 +33,17 @@ use crate::prelude::{Graph, Object, Value};
 use crate::teon;
 
 pub(crate) struct SQLConnector {
-    loaded: bool,
     dialect: SQLDialect,
     pool: Quaint,
 }
 
 impl SQLConnector {
-    pub(crate) async fn new(dialect: SQLDialect, url: String, reset_database: bool) -> Self {
-        if dialect == SQLDialect::SQLite {
-            let filename = &url[7..];
-            if !filename.starts_with(":") {
-                let loc = PathBuf::from(filename);
-                let absolute_location = if loc.is_absolute() {
-                    loc
-                } else {
-                    env::current_dir().unwrap().join(loc)
-                };
-                if !absolute_location.exists() {
-                    fs::File::create(absolute_location).expect("SQLite database create failed.");
-                } else if reset_database {
-                    let _ = fs::remove_file(absolute_location.clone());
-                    fs::File::create(absolute_location).expect("SQLite database create failed.");
-                }
-            }
-            let pool = Quaint::builder(url.as_str()).unwrap().build();
-            Self { loaded: false, dialect, pool }
-        } else {
-            let url_result = Url::parse(&url);
-            if url_result.is_err() {
-                panic!("Data source URL is invalid.");
-            }
-            let mut updated_url = url_result.unwrap();
-            if dialect == SQLDialect::MySQL {
-                if updated_url.username() == "" {
-                    updated_url.set_username("root").unwrap();
-                    if updated_url.password().is_none() {
-                        updated_url.set_password(Some("")).unwrap();
-                    }
-                }
-            }
-            let mut url_without_db = updated_url.clone();
-            let database_name = url_without_db.path()[1..].to_string();
-            if dialect == SQLDialect::PostgreSQL {
-                url_without_db.set_path("/postgres");
-            } else {
-                url_without_db.set_path("/");
-            }
 
-            let pool = Quaint::builder(url_without_db.as_str()).unwrap().build();
-            SQLMigration::create_database_if_needed(dialect, &pool, &database_name, reset_database).await;
-            let pool = Quaint::builder(updated_url.as_str()).unwrap().build();
-            Self { loaded: false, dialect, pool }
-        }
+    pub(crate) async fn new(dialect: SQLDialect, url: &str, reset: bool) -> Self {
+        SQLMigration::create_database_if_needed(dialect, url, reset).await;
+        let url = url_utils::normalized_url(dialect, url);
+        let pool = Quaint::builder(url.as_str()).unwrap().build();
+        Self { dialect, pool }
     }
 
     async fn create_object(&self, object: &Object) -> Result<()> {
@@ -220,18 +180,11 @@ impl Connector for SQLConnector {
         field_type.to_database_type(self.dialect)
     }
 
-    async fn is_loaded(&self) -> bool {
-        self.loaded
-    }
-
     async fn load(&mut self, _models: &Vec<Model>) -> Result<()> {
         Ok(())
     }
 
     async fn migrate(&mut self, models: &Vec<Model>, _reset_database: bool) -> Result<()> {
-        // if self.dialect != SQLDialect::SQLite {
-        //     SQLMigration::create_database_if_needed(dialect, &mut pool, &database_name, reset_database).await;
-        // }
         SQLMigration::migrate(self.dialect, &mut self.pool, models).await;
         Ok(())
     }

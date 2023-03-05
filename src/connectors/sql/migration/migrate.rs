@@ -1,8 +1,11 @@
+use std::fs;
 use quaint::pooled::Quaint;
 use quaint::prelude::Queryable;
 use quaint::ast::Query;
 use quaint::ast::Query::Select;
 use quaint::ast::Comparable;
+use url::Url;
+use super::super::url::url_utils;
 use crate::connectors::sql::schema::column::decoder::ColumnDecoder;
 use crate::connectors::sql::stmts::create::table::SQLCreateTableStatement;
 use crate::connectors::sql::stmts::SQL;
@@ -15,10 +18,39 @@ pub(crate) struct SQLMigration { }
 
 impl SQLMigration {
 
-    pub(crate) async fn create_database_if_needed(dialect: SQLDialect, pool: &Quaint, db_name: &str, reset_database: bool) {
+    // Create database
+
+    pub(crate) async fn create_database_if_needed(dialect: SQLDialect, url: &str, reset: bool) {
+        match dialect {
+            SQLDialect::SQLite => Self::create_sqlite_database_if_needed(url, reset).await,
+            _ => Self::create_server_database_if_needed(dialect, url, reset).await,
+        }
+    }
+
+    pub(crate) async fn create_sqlite_database_if_needed(url: &str, reset: bool) {
+        let url = url_utils::remove_scheme(url);
+        if url_utils::is_memory_url(url) {
+            return
+        }
+        let absolutized_url = url_utils::absolutized(url);
+        if absolutized_url.exists() && reset {
+            // delete the old one
+            let _ = fs::remove_file(&absolutized_url);
+        }
+        if !absolutized_url.exists() || reset {
+            // create a new one
+            fs::File::create(absolutized_url).expect("SQLite database file create failed.");
+        }
+    }
+
+    pub(crate) async fn create_server_database_if_needed(dialect: SQLDialect, url: &str, reset: bool) {
+        let url = url_utils::normalized_url(dialect, url);
+        let db_name = &url.path()[1..];
+        let url_without_db = url_utils::remove_db_path(dialect, &url);
+        let pool = Quaint::builder(url_without_db.as_str()).unwrap().build();
         let conn = pool.check_out().await.unwrap();
         // drop database if needed
-        if reset_database {
+        if reset {
             let stmt = SQL::drop().database(db_name).if_exists().to_string(dialect);
             conn.execute(Query::from(stmt)).await.unwrap();
         }

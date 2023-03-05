@@ -257,16 +257,16 @@ impl AppBuilder {
         let connector: Arc<dyn Connector> = match connector_declaration.provider.unwrap() {
             DatabaseName::MySQL => {
                 #[cfg(feature = "data-source-mysql")]
-                Arc::new(SQLConnector::new(SQLDialect::MySQL, url.clone(), false).await)
+                Arc::new(SQLConnector::new(SQLDialect::MySQL, url, false).await)
             },
             DatabaseName::PostgreSQL => {
                 #[cfg(feature = "data-source-postgres")]
-                Arc::new(SQLConnector::new(SQLDialect::PostgreSQL, url.clone(), false).await)
+                Arc::new(SQLConnector::new(SQLDialect::PostgreSQL, url, false).await)
             },
             #[cfg(feature = "data-source-sqlite")]
             DatabaseName::SQLite => {
                 #[cfg(feature = "data-source-sqlite")]
-                Arc::new(SQLConnector::new(SQLDialect::SQLite, url.clone(), false).await)
+                Arc::new(SQLConnector::new(SQLDialect::SQLite, url, false).await)
             },
             DatabaseName::MongoDB => {
                 #[cfg(feature = "data-source-mongodb")]

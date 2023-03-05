@@ -359,10 +359,6 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn is_loaded(&self) -> bool {
-        self.loaded
-    }
-
     async fn load(&mut self, models: &Vec<Model>) -> Result<()> {
         let mut collections: HashMap<String, Collection<Document>> = HashMap::new();
         for model in models {
