@@ -185,7 +185,7 @@ impl Connector for SQLConnector {
     }
 
     async fn migrate(&mut self, models: &Vec<Model>, _reset_database: bool) -> Result<()> {
-        SQLMigration::migrate(self.dialect, &mut self.pool, models).await;
+        SQLMigration::migrate(self.dialect, &self.pool, models).await;
         Ok(())
     }
 

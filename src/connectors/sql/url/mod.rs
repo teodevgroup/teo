@@ -10,6 +10,10 @@ pub(crate) mod url_utils {
             &url[7..]
         } else if url.starts_with("sqlite://") {
             &url[9..]
+        } else if url.starts_with("file:") {
+            &url[5..]
+        } else if url.starts_with("sqlite:") {
+            &url[7..]
         } else if url.starts_with("mysql://") {
             &url[8..]
         } else if url.starts_with("postgres://") {

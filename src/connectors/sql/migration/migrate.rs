@@ -39,6 +39,7 @@ impl SQLMigration {
         }
         if !absolutized_url.exists() || reset {
             // create a new one
+            println!("see url: {:?}", absolutized_url);
             fs::File::create(absolutized_url).expect("SQLite database file create failed.");
         }
     }
@@ -77,24 +78,47 @@ impl SQLMigration {
     }
 
     pub(crate) async fn migrate(dialect: SQLDialect, pool: &Quaint, models: &Vec<Model>) {
+        match dialect {
+            SQLDialect::SQLite => Self::migrate_sqlite_database(pool, models).await,
+            _ => Self::migrate_server_database(dialect, pool, models).await,
+        }
+    }
+
+    pub(crate) async fn migrate_sqlite_database(pool: &Quaint, models: &Vec<Model>) {
+        let dialect = SQLDialect::SQLite;
         let conn = pool.check_out().await.unwrap();
         // compare each table and do migration
         for model in models {
             if model.r#virtual() {
                 continue
             }
-            let result = if dialect == SQLDialect::SQLite {
-                let clause = quaint::ast::Select::from_table("sqlite_master").column("name").and_where("type".equals("table")).and_where("name".equals(model.table_name()));
-                conn.query(Query::from(clause)).await.unwrap()
-            } else {
-                let show_table = SQL::show().tables().like(model.table_name()).to_string(dialect);
-                conn.query(Query::from(show_table)).await.unwrap()
-            };
-            if result.is_empty() {
-                println!("here result is empty");
+            let table_name = model.table_name();
+            let show_table = quaint::ast::Select::from_table("sqlite_master").column("name").and_where("type".equals("table")).and_where("name".equals(model.table_name()));
+            let table_result = conn.query(Query::from(show_table)).await.unwrap();
+            if table_result.is_empty() {
                 // table not exist, create table
                 let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
-                println!("EXECUTE SQL for create table: {}", &stmt);
+                // println!("EXECUTE SQL for create table: {}", &stmt);
+                conn.execute(Query::from(stmt)).await.unwrap();
+            } else {
+                let db_columns = conn.query(Query::from(format!("pragma table_info('{}')", table_name))).await.unwrap();
+
+            }
+        }
+    }
+
+    pub(crate) async fn migrate_server_database(dialect: SQLDialect, pool: &Quaint, models: &Vec<Model>) {
+        let conn = pool.check_out().await.unwrap();
+        for model in models {
+            if model.r#virtual() {
+                continue
+            }
+            let show_table = SQL::show().tables().like(model.table_name()).to_string(dialect);
+            let table_result = conn.query(Query::from(show_table)).await.unwrap();
+            if table_result.is_empty() {
+                // table not exist, create table
+                let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
+                // println!("EXECUTE SQL for create table: {}", &stmt);
                 conn.execute(Query::from(stmt)).await.unwrap();
             } else {
                 // table exist, migrate
@@ -103,14 +127,12 @@ impl SQLMigration {
                 let db_table_columns = conn.query(if dialect == SQLDialect::MySQL {
                     let desc = SQL::describe(table_name).to_string(dialect);
                     Query::from(desc)
-                } else if dialect == SQLDialect::PostgreSQL {
+                } else {
                     let desc = SQL::describe(table_name).to_string(dialect);
                     Query::from(desc)
-                } else {
-                    Query::from(format!("pragma table_info('{}')", table_name))
                 }).await.unwrap();
                 for db_table_column in db_table_columns {
-                    println!("table column {:?}", db_table_column);
+                    // println!("table column {:?}", db_table_column);
                     let db_column = ColumnDecoder::decode(db_table_column, dialect);
                     let schema_field = model.field_with_column_name(db_column.name());
                     if schema_field.is_none() {
@@ -124,7 +146,7 @@ impl SQLMigration {
                         if schema_column != db_column {
                             // this column is different, alter it
                             let alter = SQL::alter_table(table_name).modify(schema_column).to_string(dialect);
-                            println!("EXECUTE SQL for alter column: {}", &alter);
+                            // println!("EXECUTE SQL for alter column: {}", &alter);
                             conn.execute(Query::from(alter)).await.unwrap();
                         }
                         reviewed_columns.push(db_column.name().to_owned());
