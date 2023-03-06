@@ -1,6 +1,6 @@
 /// This enum represents the field type in the actual database. This enum is designed to support
 /// all SQL databases and MongoDB.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub enum DatabaseType {
 
     /// ObjectId
@@ -171,10 +171,13 @@ pub enum DatabaseType {
 
     /// Text
     /// Represents a text.
+    ///
     /// Arguments:
+    ///
     ///     n: charset name
     ///     c: collate
     /// Note: In PostgreSQL, arguments are ingored.
+    ///
     /// Availability: MySQL, PostgreSQL
     Text { m: Option<u16>, n: Option<String>, c: Option<String> },
 

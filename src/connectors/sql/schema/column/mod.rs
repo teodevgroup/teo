@@ -3,9 +3,8 @@ use crate::connectors::sql::schema::value::encode::ToSQLString;
 use crate::core::database::r#type::DatabaseType;
 
 pub(crate) mod decoder;
-pub(crate) mod builder;
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub(crate) struct SQLColumn {
     pub(self) name: String,
     pub(self) r#type: DatabaseType,

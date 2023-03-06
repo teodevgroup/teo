@@ -5,6 +5,7 @@ use quaint::ast::Query;
 use quaint::ast::Query::Select;
 use quaint::ast::Comparable;
 use url::Url;
+use crate::connectors::sql::migration::sql::{sqlite_auto_increment_query, sqlite_list_indices_query};
 use super::super::url::url_utils;
 use crate::connectors::sql::schema::column::decoder::ColumnDecoder;
 use crate::connectors::sql::stmts::create::table::SQLCreateTableStatement;
@@ -101,8 +102,11 @@ impl SQLMigration {
                 // println!("EXECUTE SQL for create table: {}", &stmt);
                 conn.execute(Query::from(stmt)).await.unwrap();
             } else {
-                let db_columns = conn.query(Query::from(format!("pragma table_info('{}')", table_name))).await.unwrap();
-
+                let columns_result = conn.query(Query::from(format!("pragma table_info('{}')", table_name))).await.unwrap();
+                let indices_result = conn.query(Query::from(sqlite_list_indices_query(table_name))).await.unwrap();
+                let auto_increment_result = conn.query(Query::from(sqlite_auto_increment_query(table_name))).await.unwrap();
+                let db_columns = ColumnDecoder::decode_sqlite_columns(columns_result, indices_result, auto_increment_result);
+                let model_columns = ColumnDecoder::decode_model_columns(model);
             }
         }
     }
