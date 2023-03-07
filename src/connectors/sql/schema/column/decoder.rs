@@ -1,4 +1,5 @@
 use std::collections::{BTreeSet, HashSet};
+use std::ops::Index;
 use std::sync::Arc;
 use maplit::{btreeset, hashset};
 use quaint::prelude::{ResultRow, ResultSet};
@@ -17,11 +18,12 @@ impl ColumnDecoder {
         let mut to_add: Vec<&SQLColumn> = def.iter().collect();
         let mut to_remove: Vec<&SQLColumn> = vec![];
         for c in db {
-            if !defs.contains(&c) {
+            if !def.contains(&c) {
                 to_remove.push(c);
             } else {
                 // remove from to add
-                // to_add.in
+                let index = to_add.iter().position(|x| *x == c).unwrap();
+                to_add.remove(index);
             }
         }
         (to_add, to_remove)

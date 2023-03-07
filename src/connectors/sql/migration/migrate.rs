@@ -113,6 +113,17 @@ impl SQLMigration {
                     unreachable!()
                 } else {
                     let (columns_to_add, columns_to_remove) = ColumnDecoder::sqlite_add_and_remove(&db_columns, &model_columns);
+                    // update indices here
+                    for column in columns_to_add {
+                        // add column
+                        let stmt = SQL::alter_table(table_name).add(column.clone()).to_string(SQLDialect::SQLite);
+                        conn.execute(Query::from(stmt)).await.unwrap();
+                    }
+                    for column in columns_to_remove {
+                        // remove column
+                        let stmt = SQL::alter_table(table_name).drop_column(column.name()).to_string(SQLDialect::SQLite);
+                        conn.execute(Query::from(stmt)).await.unwrap();
+                    }
                 }
             }
         }
