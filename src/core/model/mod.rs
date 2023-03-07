@@ -6,6 +6,7 @@ use inflector::Inflector;
 use maplit::hashset;
 use crate::core::action::{Action, FIND, IDENTITY, MANY, NESTED, SIGN_IN, SINGLE};
 use crate::core::field::Field;
+use crate::core::model::migration::ModelMigration;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::relation::Relation;
 use crate::core::pipeline::Pipeline;
@@ -17,6 +18,7 @@ use self::index::ModelIndex;
 
 pub(crate) mod builder;
 pub(crate) mod index;
+pub(crate) mod migration;
 
 pub struct ModelInner {
     pub(crate) name: String,
@@ -58,6 +60,7 @@ pub struct ModelInner {
     pub(crate) handler_actions: HashSet<Action>,
     pub(crate) disabled_actions: Option<Vec<Action>>,
     pub(crate) action_transformers: Vec<Pipeline>,
+    pub(crate) migration: Option<ModelMigration>,
 }
 
 #[derive(Clone)]

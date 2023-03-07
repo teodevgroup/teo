@@ -1,7 +1,6 @@
-use std::collections::{BTreeSet, HashSet};
-use std::ops::Index;
+use std::collections::{HashSet};
 use std::sync::Arc;
-use maplit::{btreeset, hashset};
+use maplit::{hashset};
 use quaint::prelude::{ResultRow, ResultSet};
 use crate::connectors::sql::schema::column::SQLColumn;
 use crate::connectors::sql::schema::dialect::SQLDialect;
@@ -56,7 +55,7 @@ impl ColumnDecoder {
     }
 
     pub(crate) fn decode_sqlite_columns(columns: ResultSet, indices: ResultSet, auto_increment: ResultSet) -> HashSet<SQLColumn> {
-        let mut indices_iter: Vec<ResultRow> = indices.into_iter().collect();
+        let indices_iter: Vec<ResultRow> = indices.into_iter().collect();
         let mut result = hashset!{};
         for column in columns {
             let name = column.get("name").unwrap().as_str().unwrap();

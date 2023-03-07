@@ -13,6 +13,7 @@ use crate::core::relation::delete_rule::DeleteRule;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::model::index::builder::{ModelIndexBuilder};
 use crate::core::model::{Model, ModelInner};
+use crate::core::model::migration::ModelMigration;
 use crate::core::pipeline::Pipeline;
 
 pub struct ModelBuilder {
@@ -37,6 +38,7 @@ pub struct ModelBuilder {
     pub(crate) can_mutate_pipeline: Pipeline,
     pub(crate) disabled_actions: Option<Vec<Action>>,
     pub(crate) action_transformers: Vec<Pipeline>,
+    pub(crate) migration: Option<ModelMigration>,
 }
 
 impl ModelBuilder {
@@ -64,6 +66,7 @@ impl ModelBuilder {
             can_mutate_pipeline: Pipeline::new(),
             disabled_actions: None,
             action_transformers: vec![],
+            migration: None,
         }
     }
 
@@ -264,6 +267,7 @@ impl ModelBuilder {
             handler_actions: self.figure_out_actions(),
             disabled_actions: self.disabled_actions.clone(),
             action_transformers: self.action_transformers.clone(),
+            migration: self.migration.clone(),
         };
         Model::new_with_inner(Arc::new(inner))
     }
