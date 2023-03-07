@@ -13,6 +13,7 @@ pub(crate) mod can_read;
 pub(crate) mod can_mutate;
 pub(crate) mod disable;
 pub(crate) mod action;
+pub(crate) mod migration;
 
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
@@ -29,6 +30,7 @@ use crate::parser::std::decorators::model::id::id_decorator;
 use crate::parser::std::decorators::model::identity::identity_decorator;
 use crate::parser::std::decorators::model::index::index_decorator;
 use crate::parser::std::decorators::model::map::map_decorator;
+use crate::parser::std::decorators::model::migration::migration_decorator;
 use crate::parser::std::decorators::model::r#virtual::virtual_decorator;
 use crate::parser::std::decorators::model::unique::unique_decorator;
 use crate::parser::std::decorators::model::url::url_decorator;
@@ -62,6 +64,7 @@ impl GlobalModelDecorators {
         objects.insert("action".to_owned(), Accessible::ModelDecorator(action_decorator));
         objects.insert("canRead".to_owned(), Accessible::ModelDecorator(can_read_decorator));
         objects.insert("canMutate".to_owned(), Accessible::ModelDecorator(can_mutate_decorator));
+        objects.insert("migration".to_owned(), Accessible::ModelDecorator(migration_decorator));
         Self { objects }
     }
 
