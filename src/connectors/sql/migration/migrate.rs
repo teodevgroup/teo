@@ -107,6 +107,13 @@ impl SQLMigration {
                 let auto_increment_result = conn.query(Query::from(sqlite_auto_increment_query(table_name))).await.unwrap();
                 let db_columns = ColumnDecoder::decode_sqlite_columns(columns_result, indices_result, auto_increment_result);
                 let model_columns = ColumnDecoder::decode_model_columns(model);
+                let need_to_alter_any_column = ColumnDecoder::need_to_alter_any_columns(&db_columns, &model_columns);
+                if need_to_alter_any_column {
+                    println!("need to alter any column");
+                    unreachable!()
+                } else {
+                    let (columns_to_add, columns_to_remove) = ColumnDecoder::sqlite_add_and_remove(&db_columns, &model_columns);
+                }
             }
         }
     }

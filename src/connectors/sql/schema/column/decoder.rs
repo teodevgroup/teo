@@ -13,6 +13,31 @@ pub(crate) struct ColumnDecoder { }
 
 impl ColumnDecoder {
 
+    pub(crate) fn sqlite_add_and_remove<'a>(db: &'a HashSet<SQLColumn>, def: &'a HashSet<SQLColumn>) -> (Vec<&'a SQLColumn>, Vec<&'a SQLColumn>) {
+        let mut to_add: Vec<&SQLColumn> = def.iter().collect();
+        let mut to_remove: Vec<&SQLColumn> = vec![];
+        for c in db {
+            if !defs.contains(&c) {
+                to_remove.push(c);
+            } else {
+                // remove from to add
+                // to_add.in
+            }
+        }
+        (to_add, to_remove)
+    }
+
+    pub(crate) fn need_to_alter_any_columns(db: &HashSet<SQLColumn>, def: &HashSet<SQLColumn>) -> bool {
+        for column in db {
+            if let Some(def_column) = def.iter().find(|c| { &c.name == &column.name}) {
+                if def_column != column {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
     pub(crate) fn decode_model_columns(model: &Model) -> HashSet<SQLColumn> {
         let mut result = hashset!{};
         for field in model.fields() {
