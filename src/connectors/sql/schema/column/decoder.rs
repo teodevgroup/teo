@@ -33,6 +33,8 @@ impl ColumnDecoder {
         for column in db {
             if let Some(def_column) = def.iter().find(|c| { &c.name == &column.name}) {
                 if def_column != column {
+                    println!("db: {:?}", column);
+                    println!("def: {:?}", def_column);
                     return true;
                 }
             }
@@ -54,14 +56,16 @@ impl ColumnDecoder {
     }
 
     pub(crate) fn decode_sqlite_columns(columns: ResultSet, indices: ResultSet, auto_increment: ResultSet) -> HashSet<SQLColumn> {
-        let mut indices_iter = indices.into_iter();
+        let mut indices_iter: Vec<ResultRow> = indices.into_iter().collect();
         let mut result = hashset!{};
         for column in columns {
             let name = column.get("name").unwrap().as_str().unwrap();
             let r#type = column.get("type").unwrap().as_str().unwrap();
             let not_null = column.get("notnull").unwrap().as_bool().unwrap();
             let pk = column.get("pk").unwrap().as_bool().unwrap();
-            let unique_row = indices_iter.find(|i| i.get("column_name").unwrap().as_str().unwrap() == name);
+            let unique_row = indices_iter.iter().find(|i| {
+                i.get("column_name").unwrap().as_str().unwrap() == name
+            });
             let unique_key = if unique_row.is_some() {
                 unique_row.unwrap().get("unique").unwrap().as_bool().unwrap()
             } else {

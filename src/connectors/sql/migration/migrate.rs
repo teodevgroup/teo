@@ -40,7 +40,6 @@ impl SQLMigration {
         }
         if !absolutized_url.exists() || reset {
             // create a new one
-            println!("see url: {:?}", absolutized_url);
             fs::File::create(absolutized_url).expect("SQLite database file create failed.");
         }
     }

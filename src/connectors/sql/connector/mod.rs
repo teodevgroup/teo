@@ -1,17 +1,12 @@
 pub mod save_session;
 
-use std::fs;
-use std::path::PathBuf;
 use std::sync::Arc;
-use std::env;
 use std::sync::atomic::Ordering;
 use async_trait::async_trait;
-use regex::Regex;
 use quaint::{prelude::*, pooled::Quaint, ast::Query as QuaintQuery};
 use quaint::error::DatabaseConstraint;
 use quaint::error::ErrorKind::UniqueConstraintViolation;
 use crate::core::model::Model;
-use url::Url;
 use crate::connectors::sql::schema::r#type::field::ToDatabaseType;
 use crate::connectors::sql::connector::save_session::SQLSaveSession;
 use crate::connectors::sql::execution::Execution;

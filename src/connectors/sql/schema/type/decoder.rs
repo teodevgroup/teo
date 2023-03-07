@@ -71,12 +71,9 @@ fn sqlite_type_to_database_type(r#type: &str) -> DatabaseType {
             let arg = captures.get(5).map(|m| m.as_str());
             match name {
                 "integer" => DatabaseType::Int { m: None, u: false },
-                "float" => DatabaseType::Float { m: None, d: None },
+                "text" => DatabaseType::Text { m: None, n: None, c: None },
+                "real" => DatabaseType::Double { m: None, d: None },
                 "double" => DatabaseType::Double { m: None, d: None },
-                "char" => DatabaseType::Char { m: arg.map(|a| u8::from_str(a).unwrap()), n: None, c: None },
-                "varchar" => DatabaseType::VarChar { m: arg.map(|a| u16::from_str(a).unwrap()).unwrap(), n: None, c: None },
-                "date" => DatabaseType::Date,
-                "datetime" => DatabaseType::DateTime(u8::from_str(arg.unwrap()).unwrap()),
                 "decimal" => {
                     if let Some(args) = arg {
                         let args = args.split(",").into_iter().collect::<Vec<&str>>();
