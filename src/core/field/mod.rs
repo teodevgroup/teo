@@ -11,6 +11,7 @@ use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
 use crate::core::connector::Connector;
 use crate::core::database::r#type::DatabaseType;
+use crate::core::field::migration::FieldMigration;
 use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::field::read_rule::ReadRule;
@@ -106,7 +107,8 @@ pub(crate) struct Field {
     pub(crate) can_read_pipeline: Pipeline,
     pub(crate) column_name: Option<String>,
     pub(crate) foreign_key: bool,
-    pub(crate) migration: FieldMigration,
+    pub(crate) migration: Option<FieldMigration>,
+    pub(crate) dropped: bool,
 }
 
 impl Debug for Field {
@@ -149,6 +151,8 @@ impl Field {
             input_omissible: false,
             output_omissible: false,
             foreign_key: false,
+            migration: None,
+            dropped: false,
         }
     }
 

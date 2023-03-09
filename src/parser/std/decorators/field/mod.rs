@@ -35,6 +35,7 @@ pub(crate) mod unqueryable;
 pub(crate) mod can_read;
 pub(crate) mod can_mutate;
 pub(crate) mod migration_decorator;
+pub(crate) mod dropped;
 
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
@@ -49,6 +50,7 @@ use crate::parser::std::decorators::field::can_mutate::can_mutate_decorator;
 use crate::parser::std::decorators::field::can_read::can_read_decorator;
 use crate::parser::std::decorators::field::db::db_container;
 use crate::parser::std::decorators::field::default::default_decorator;
+use crate::parser::std::decorators::field::dropped::dropped_decorator;
 use crate::parser::std::decorators::field::foreign_key::foreign_key_decorator;
 use crate::parser::std::decorators::field::id::{id_decorator};
 use crate::parser::std::decorators::field::index::index_decorator;
@@ -130,6 +132,7 @@ impl GlobalFieldDecorators {
         objects.insert("canMutate".to_owned(), Accessible::FieldDecorator(can_mutate_decorator));
         objects.insert("canRead".to_owned(), Accessible::FieldDecorator(can_read_decorator));
         objects.insert("migration".to_owned(), Accessible::FieldDecorator(migration_decorator));
+        objects.insert("dropped".to_owned(), Accessible::FieldDecorator(dropped_decorator));
         Self { objects }
     }
 
