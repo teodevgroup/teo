@@ -1,6 +1,5 @@
 pub(crate) mod url_utils {
-    use std::borrow::Cow;
-    use std::path::{Path, PathBuf};
+    use std::path::PathBuf;
     use path_absolutize::Absolutize;
     use url::Url;
     use crate::connectors::sql::schema::dialect::SQLDialect;

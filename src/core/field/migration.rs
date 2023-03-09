@@ -3,9 +3,9 @@ use crate::prelude::Value;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FieldMigration {
-    renamed: Vec<String>,
-    version: Option<String>,
-    default: Option<Value>,
-    action: Option<Pipeline>,
-    priority: Option<usize>,
+    pub(crate) renamed: Vec<String>,
+    pub(crate) version: Option<String>,
+    pub(crate) default: Option<Value>,
+    pub(crate) action: Option<Pipeline>,
+    pub(crate) priority: Option<usize>,
 }
