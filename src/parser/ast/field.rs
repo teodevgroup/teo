@@ -8,6 +8,7 @@ use crate::parser::ast::span::Span;
 pub(crate) enum FieldClass {
     Unresolved,
     Field,
+    DroppedField,
     Relation,
     Property,
 }
@@ -40,12 +41,12 @@ impl Field {
                             self.field_class = FieldClass::Relation;
                             return;
                         }
-                        "getter" => {
+                        "getter" | "setter" => {
                             self.field_class = FieldClass::Property;
                             return;
                         }
-                        "setter" => {
-                            self.field_class = FieldClass::Property;
+                        "dropped" => {
+                            self.field_class = FieldClass::DroppedField;
                             return;
                         }
                         _ => {}

@@ -345,7 +345,7 @@ impl AppBuilder {
                 }
                 for field in model.fields.iter() {
                     match &field.field_class {
-                        FieldClass::Field => {
+                        FieldClass::Field | FieldClass::DroppedField => {
                             let mut model_field = Field::new(field.identifier.name.as_str().to_owned());
                             if let Some(comment) = &field.comment_block {
                                 if let Some(name) = comment.name.as_ref() {
@@ -405,7 +405,14 @@ impl AppBuilder {
                                 let field_decorator = decorator.accessible.as_ref().unwrap().as_field_decorator().unwrap();
                                 field_decorator(decorator.get_argument_list(), &mut model_field);
                             }
-                            model_builder.field(model_field);
+                            match &field.field_class {
+                                FieldClass::DroppedField => {
+                                    model_builder.dropped_field(model_field);
+                                }
+                                _ => {
+                                    model_builder.field(model_field);
+                                }
+                            }
                         }
                         FieldClass::Relation => {
                             let mut model_relation = Relation::new(field.identifier.name.as_str().to_owned());
