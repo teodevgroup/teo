@@ -2,6 +2,7 @@ pub(crate) mod r#type;
 pub(crate) mod optionality;
 pub(crate) mod read_rule;
 pub(crate) mod write_rule;
+pub(crate) mod migration;
 
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
@@ -105,6 +106,7 @@ pub(crate) struct Field {
     pub(crate) can_read_pipeline: Pipeline,
     pub(crate) column_name: Option<String>,
     pub(crate) foreign_key: bool,
+    pub(crate) migration: FieldMigration,
 }
 
 impl Debug for Field {

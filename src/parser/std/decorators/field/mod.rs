@@ -34,6 +34,7 @@ pub(crate) mod queryable;
 pub(crate) mod unqueryable;
 pub(crate) mod can_read;
 pub(crate) mod can_mutate;
+pub(crate) mod migration_decorator;
 
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
@@ -54,6 +55,7 @@ use crate::parser::std::decorators::field::index::index_decorator;
 use crate::parser::std::decorators::field::input_omissible::input_omissible_decorator;
 use crate::parser::std::decorators::field::internal::{internal_decorator};
 use crate::parser::std::decorators::field::map::map_decorator;
+use crate::parser::std::decorators::field::migration_decorator::migration_decorator;
 use crate::parser::std::decorators::field::nonatomic::{nonatomic_decorator};
 use crate::parser::std::decorators::field::on_output::on_output_decorator;
 use crate::parser::std::decorators::field::on_save::on_save_decorator;
@@ -127,6 +129,7 @@ impl GlobalFieldDecorators {
         objects.insert("unqueryable".to_owned(), Accessible::FieldDecorator(unqueryable_decorator));
         objects.insert("canMutate".to_owned(), Accessible::FieldDecorator(can_mutate_decorator));
         objects.insert("canRead".to_owned(), Accessible::FieldDecorator(can_read_decorator));
+        objects.insert("migration".to_owned(), Accessible::FieldDecorator(migration_decorator));
         Self { objects }
     }
 
