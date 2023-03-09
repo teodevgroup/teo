@@ -1,6 +1,7 @@
 use crate::core::pipeline::Pipeline;
 use crate::prelude::Value;
 
+#[derive(Clone, Debug)]
 pub(crate) struct FieldMigration {
     renamed: Vec<String>,
     version: Option<String>,

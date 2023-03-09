@@ -30,6 +30,7 @@ pub struct ModelInner {
     pub(crate) r#virtual: bool,
     pub(crate) fields_vec: Vec<Arc<Field>>,
     pub(crate) fields_map: HashMap<String, Arc<Field>>,
+    pub(crate) dropped_fields: Vec<Arc<Field>>,
     pub(crate) relations_vec: Vec<Arc<Relation>>,
     pub(crate) relations_map: HashMap<String, Arc<Relation>>,
     pub(crate) properties_vec: Vec<Arc<Property>>,

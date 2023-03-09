@@ -26,6 +26,7 @@ pub struct ModelBuilder {
     pub(crate) internal: bool,
     pub(crate) r#virtual: bool,
     pub(crate) fields: Vec<Field>,
+    pub(crate) dropped_fields: Vec<Field>,
     pub(crate) relations: Vec<Relation>,
     pub(crate) properties: Vec<Property>,
     pub(crate) primary: Option<ModelIndex>,
@@ -54,6 +55,7 @@ impl ModelBuilder {
             internal: false,
             r#virtual: false,
             fields: vec![],
+            dropped_fields: vec![],
             relations: vec![],
             properties: vec![],
             primary: None,
@@ -97,6 +99,11 @@ impl ModelBuilder {
 
     pub(crate) fn field(&mut self, field: Field) -> &mut Self {
         self.fields.push(field);
+        self
+    }
+
+    pub(crate) fn dropped_field(&mut self, field: Field) -> &mut Self {
+        self.dropped_fields.push(field);
         self
     }
 
@@ -177,6 +184,7 @@ impl ModelBuilder {
 
     pub(crate) fn build(&self, connector: Arc<dyn Connector>) -> Model {
         let fields_vec: Vec<Arc<Field>> = self.fields.clone().iter_mut().map(|fb| { Arc::new({ fb.finalize(connector.clone()); fb.clone()}) }).collect();
+        let dropped_fields_vec: Vec<Arc<Field>> = self.dropped_fields.clone().iter_mut().map(|fb| { Arc::new({ fb.finalize(connector.clone()); fb.clone()}) }).collect();
         let properties_vec: Vec<Arc<Property>> = self.properties.clone().iter_mut().map(|pb| { Arc::new({ pb.finalize(connector.clone()); pb.clone() }) }).collect();
         let mut fields_map: HashMap<String, Arc<Field>> = HashMap::new();
         let mut properties_map: HashMap<String, Arc<Property>> = HashMap::new();
@@ -237,6 +245,7 @@ impl ModelBuilder {
             r#virtual: self.r#virtual,
             fields_vec,
             fields_map,
+            dropped_fields: dropped_fields_vec,
             relations_map,
             relations_vec,
             properties_vec,
