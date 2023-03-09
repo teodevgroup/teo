@@ -2,6 +2,7 @@ pub(crate) mod url_utils {
     use std::path::PathBuf;
     use path_absolutize::Absolutize;
     use url::Url;
+    use whoami::Platform;
     use crate::connectors::sql::schema::dialect::SQLDialect;
 
     pub(crate) fn remove_scheme(url: &str) -> &str {
@@ -35,13 +36,29 @@ pub(crate) mod url_utils {
 
     pub(crate) fn normalized_url(dialect: SQLDialect, url: &str) -> Url {
         let mut url = Url::parse(url).unwrap();
-        if dialect == SQLDialect::MySQL {
-            if url.username() == "" {
-                url.set_username("root").unwrap();
-                if url.password().is_none() {
-                    url.set_password(Some("")).unwrap();
+        match dialect {
+            SQLDialect::MySQL => {
+                if url.username() == "" {
+                    url.set_username("root").unwrap();
+                    if url.password().is_none() {
+                        url.set_password(Some("")).unwrap();
+                    }
                 }
             }
+            SQLDialect::PostgreSQL => {
+                if url.username() == "" {
+                    if whoami::platform() == Platform::MacOS {
+                        let username = whoami::username();
+                        url.set_username(username.as_str()).unwrap();
+                    } else {
+                        url.set_username("postgres").unwrap();
+                    }
+                    if url.password().is_none() {
+                        url.set_password(Some("")).unwrap();
+                    }
+                }
+            }
+            _ => (),
         }
         url
     }

@@ -56,8 +56,8 @@ impl SQLMigration {
         // create database if needed
         if dialect == SQLDialect::PostgreSQL {
             let stmt = format!("select from pg_database where datname = '{}'", db_name);
-            let result = conn.query(Query::from(stmt)).await;
-            if result.is_err() {
+            let result = conn.query(Query::from(stmt)).await.unwrap();
+            if result.is_empty() {
                 let stmt = SQL::create().database(db_name).to_string(dialect);
                 conn.execute(Query::from(stmt)).await.unwrap();
             }
@@ -132,7 +132,11 @@ impl SQLMigration {
             if model.r#virtual() {
                 continue
             }
-            let show_table = SQL::show().tables().like(model.table_name()).to_string(dialect);
+            let show_table = if dialect == SQLDialect::PostgreSQL {
+                format!("SELECT table_name FROM information_schema.tables WHERE table_schema = '{}'", model.table_name())
+            } else {
+                SQL::show().tables().like(model.table_name()).to_string(dialect)
+            };
             let table_result = conn.query(Query::from(show_table)).await.unwrap();
             if table_result.is_empty() {
                 // table not exist, create table

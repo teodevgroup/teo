@@ -290,20 +290,24 @@
 - Replace buggy sqlx with quaint which powers Prisma **[DONE]**
 - SQLite: unique constraint error **[DONE]**
 - MySQL: auto insert `root:` to connection URL **[DONE]**
+- PostgreSQL: auto insert `postgres:` to connection URL **[DONE]**
 - Rewrite SQL migrations for SQLite **[DONE]**
 - Rewrite SQL migrations for PostgreSQL
+- Migration decorator **[DONE]**
 - SQL migration: delete tables
 - SQL migration: rename tables
 - SQL migration: rename fields
 - SQL migration: add column: default value
 - SQL migration: actions
-- Model: dropped columns
+- Model: dropped columns **[DONE]**
 - Decimal type
 - PostgreSQL array type
 - Connector bug: unique constraint violating: error message should have key path
 - SQLite: fix in memory connection
 
 #### 0.0.51
+- Migration decorator docs
+- Dropped decorator docs
 - Support MSSQL
 - Transaction
 - Relation onUpdate
