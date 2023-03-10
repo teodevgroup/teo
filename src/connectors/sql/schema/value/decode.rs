@@ -45,7 +45,10 @@ impl RowDecoder {
         if r#type.is_int64() {
             return Value::I64(row.get(column_name).unwrap().as_i64().unwrap().to_owned())
         }
-        if r#type.is_float() {
+        if r#type.is_float32() {
+            return Value::number_from_f32(row.get(column_name).unwrap().as_f32().unwrap(), r#type);
+        }
+        if r#type.is_float64() {
             return Value::number_from_f64(row.get(column_name).unwrap().as_f64().unwrap(), r#type);
         }
         if r#type.is_date() {

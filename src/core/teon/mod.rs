@@ -172,6 +172,13 @@ impl Value {
             _ => panic!()
         }
     }
+    pub(crate) fn number_from_f32(num: f32, r#type: &FieldType) -> Value {
+        match r#type {
+            FieldType::F32 => Value::F32(num),
+            FieldType::F64 => Value::F64(num as f64),
+            _ => panic!()
+        }
+    }
 
     pub(crate) fn number_from_i64(num: i64, r#type: &FieldType) -> Value {
         match r#type {

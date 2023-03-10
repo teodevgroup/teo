@@ -60,6 +60,9 @@ fn postgresql_type_to_database_type(r#type: &str) -> DatabaseType {
         "timestamp without time zone" => DatabaseType::Timestamp { p: 3, z: false },
         "boolean" => DatabaseType::Bool,
         "bigint" => DatabaseType::BigInt { m: None, u: false },
+        "double precision" => DatabaseType::Double { m: None, d: None },
+        "real" => DatabaseType::Real,
+        "date" => DatabaseType::Date,
         _ => panic!("Unhandled type '{}'.", r#type)
     }
 }
