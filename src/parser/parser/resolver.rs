@@ -449,6 +449,12 @@ impl Resolver {
                     let url_str = url_value.as_str().unwrap();
                     connector.url = Some(url_str.to_owned());
                 },
+                "debug" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let bool_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    let bool = bool_value.as_bool().unwrap();
+                    connector.debug = bool;
+                }
                 _ => { panic!("Undefined name '{}' in connector block.", item.identifier.name.as_str())}
             }
         }

@@ -300,6 +300,7 @@
 - SQL migration: add column: default value **[DONE]**
 - SQL migration: actions **[DONE]**
 - Model: dropped columns **[DONE]**
+- Connector config: debug **[DONE]**
 - SQLite: fix in memory connection
 
 #### 0.0.51

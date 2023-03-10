@@ -90,9 +90,11 @@ impl SQLMigration {
                     quaint::ast::Select::from_table("sqlite_master").column("name").and_where("type".equals("table")).and_where("name".equals(table_name))
                 )
             ).await.unwrap().is_empty(),
-            SQLDialect::PostgreSQL => !conn.query(
-                Query::from(format!("SELECT table_name FROM information_schema.tables WHERE table_schema = '{}'", table_name))
-            ).await.unwrap().is_empty(),
+            SQLDialect::PostgreSQL => {
+                !conn.query(
+                    Query::from(format!("SELECT table_name FROM information_schema.tables WHERE table_name = '{}'", table_name))
+                ).await.unwrap().is_empty()
+            },
             _ => !conn.query(
                 Query::from(SQL::show().tables().like(table_name).to_string(dialect))
             ).await.unwrap().is_empty()
@@ -110,7 +112,7 @@ impl SQLMigration {
             }
             _ => {
                 let mut results = hashset! {};
-                let db_table_columns = conn.query(if dialect == SQLDialect::MySQL {
+                let db_table_columns = conn.query(if dialect == SQLDialect::PostgreSQL {
                     let desc = SQL::describe(table_name).to_string(dialect);
                     Query::from(desc)
                 } else {
