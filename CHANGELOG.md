@@ -298,7 +298,7 @@
 - SQL migration: rename fields **[DONE]**
 - Model: dropped columns **[DONE]**
 - Connector config: debug **[DONE]**
-- SQLite: fix in memory connection
+- SQLite: fix in memory connection **[DONE]**
 - SQL migration: add column: default value **[DONE]**
 
 #### 0.0.51
