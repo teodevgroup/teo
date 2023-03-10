@@ -292,20 +292,22 @@
 - MySQL: auto insert `root:` to connection URL **[DONE]**
 - PostgreSQL: auto insert `postgres:` to connection URL **[DONE]**
 - Rewrite SQL migrations for SQLite **[DONE]**
-- Rewrite SQL migrations for PostgreSQL
+- Rewrite SQL migrations for PostgreSQL **[DONE]**
 - Migration decorator **[DONE]**
-- SQL migration: delete tables
-- SQL migration: rename tables
-- SQL migration: rename fields
-- SQL migration: add column: default value
-- SQL migration: actions
+- SQL migration: delete tables **[DONE]**
+- SQL migration: rename tables **[DONE]**
+- SQL migration: rename fields **[DONE]**
+- SQL migration: add column: default value **[DONE]**
+- SQL migration: actions **[DONE]**
 - Model: dropped columns **[DONE]**
-- Decimal type
-- PostgreSQL array type
-- Connector bug: unique constraint violating: error message should have key path
 - SQLite: fix in memory connection
 
 #### 0.0.51
+- Decimal type
+- PostgreSQL array type
+- Connector bug: unique constraint violating: error message should have key path
+
+#### 0.0.52
 - Migration decorator docs
 - Dropped decorator docs
 - Support MSSQL
@@ -316,7 +318,7 @@
 - CLI mode: When running server, panic if custom programming callback is provided
 - Soft delete documentation
 
-#### 0.0.52
+#### 0.0.53
 - Rust entities: setter documentation
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
 - Remove `unqueryable` and `unsortable` fields from generated clients
@@ -326,19 +328,19 @@
 - Support code comment tags for IntelliJ IDEA
 - Pipeline documentation
 
-#### 0.0.53
+#### 0.0.54
 - Seed with datasets
 
-#### 0.0.54
+#### 0.0.55
 - Reach rust stable
 - Bug fixes
 
-#### 0.0.55
+#### 0.0.56
 - Node.js object
 - Node.js entity generation
 - Cross language error handling for node.js
 
-#### 0.0.56
+#### 0.0.57
 - MongoDB: root skip take and distinct bug
 - MongoDB: nested skip take and distinct bug
 - MongoDB: if cursor key is not orderBy key, result is wrong
@@ -347,7 +349,7 @@
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 
-#### 0.0.57
+#### 0.0.58
 - The copy action
 - random float modifier
 - random int modifier
@@ -357,7 +359,7 @@
 - to sentence case modifier
 - to title case modifier
 
-#### 0.0.58 - 0.0.80
+#### 0.0.59 - 0.0.80
 - Setup new style unit tests
 - Replace buggy sqlx
 - SQL: Enum types
