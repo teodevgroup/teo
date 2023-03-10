@@ -187,9 +187,13 @@ impl ModelBuilder {
         let dropped_fields_vec: Vec<Arc<Field>> = self.dropped_fields.clone().iter_mut().map(|fb| { Arc::new({ fb.finalize(connector.clone()); fb.clone()}) }).collect();
         let properties_vec: Vec<Arc<Property>> = self.properties.clone().iter_mut().map(|pb| { Arc::new({ pb.finalize(connector.clone()); pb.clone() }) }).collect();
         let mut fields_map: HashMap<String, Arc<Field>> = HashMap::new();
+        let mut dropped_fields_map: HashMap<String, Arc<Field>> = HashMap::new();
         let mut properties_map: HashMap<String, Arc<Property>> = HashMap::new();
         let mut primary = self.primary.clone();
         let mut indices = self.indices.clone();
+        for field in dropped_fields_vec.iter() {
+            dropped_fields_map.insert(field.name.clone(), field.clone());
+        }
         for field in fields_vec.iter() {
             fields_map.insert(field.name.clone(), field.clone());
             if field.primary {
@@ -246,6 +250,7 @@ impl ModelBuilder {
             fields_vec,
             fields_map,
             dropped_fields: dropped_fields_vec,
+            dropped_fields_map,
             relations_map,
             relations_vec,
             properties_vec,

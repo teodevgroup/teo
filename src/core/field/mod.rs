@@ -267,6 +267,10 @@ impl Field {
         self.input_omissible = true;
         self.output_omissible = true;
     }
+
+    pub(crate) fn migration(&self) -> Option<&FieldMigration> {
+        self.migration.as_ref()
+    }
 }
 
 impl FieldTypeOwner for Field {

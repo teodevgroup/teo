@@ -1,5 +1,6 @@
 use std::collections::{HashSet};
 use std::sync::Arc;
+use itertools::Itertools;
 use maplit::{hashset};
 use quaint::prelude::{ResultRow, ResultSet};
 use crate::connectors::sql::schema::column::SQLColumn;
@@ -7,15 +8,24 @@ use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::r#type::decoder::SQLTypeDecoder;
 use crate::core::field::Field;
 use crate::core::model::Model;
+use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
+
+pub(crate) enum ColumnManipulation<'a> {
+    AddColumn(&'a SQLColumn, Option<Pipeline>),
+    RemoveColumn(String, Option<Pipeline>),
+    RenameColumn{ old: String, new: String },
+}
 
 pub(crate) struct ColumnDecoder { }
 
 impl ColumnDecoder {
 
-    pub(crate) fn sqlite_add_and_remove<'a>(db: &'a HashSet<SQLColumn>, def: &'a HashSet<SQLColumn>) -> (Vec<&'a SQLColumn>, Vec<&'a SQLColumn>) {
+    pub(crate) fn manipulations<'a>(db: &'a HashSet<SQLColumn>, def: &'a HashSet<SQLColumn>, model: &Model) -> Vec<ColumnManipulation<'a>> {
         let mut to_add: Vec<&SQLColumn> = def.iter().collect();
         let mut to_remove: Vec<&SQLColumn> = vec![];
+        let mut to_rename: Vec<(String, String)> = vec![];
+        // analyse add and remove
         for c in db {
             if !def.contains(&c) {
                 to_remove.push(c);
@@ -25,15 +35,49 @@ impl ColumnDecoder {
                 to_add.remove(index);
             }
         }
-        (to_add, to_remove)
+        // analyse rename
+        for c in to_add.clone() {
+            if let Some(field) = model.field(c.name()) {
+                if let Some(migration) = field.migration() {
+                    for name in &migration.renamed {
+                        if let Some((remove_index, remove_column)) = to_remove.iter().find_position(|c| c.name() == name.as_str()) {
+                            to_remove.remove(remove_index);
+                            to_rename.push((remove_column.name().to_owned(), c.name().to_owned()));
+                            let to_add_index = to_add.iter().position(|i| i == c).unwrap();
+                            to_add.remove(to_add_index);
+                        }
+
+                    }
+                }
+            }
+            // TODO: for cached property, too
+        }
+        // collect
+        let mut result = vec![];
+        for c in to_add {
+            let action = if let Some(field) = model.field(c.name()) {
+                field.migration().map(|m| m.action.clone()).flatten()
+            } else { None };
+            result.push(ColumnManipulation::AddColumn(c, action));
+        }
+        for c in to_remove {
+            let action = if let Some(field) = model.dropped_field(c.name()) {
+                field.migration().map(|m| m.action.clone()).flatten()
+            } else { None };
+            result.push(ColumnManipulation::RemoveColumn(c.name().to_owned(), action));
+        }
+        for c in to_rename {
+            result.push(ColumnManipulation::RenameColumn { old: c.0, new: c.1 })
+        }
+        // sort
+
+        result
     }
 
     pub(crate) fn need_to_alter_any_columns(db: &HashSet<SQLColumn>, def: &HashSet<SQLColumn>) -> bool {
         for column in db {
             if let Some(def_column) = def.iter().find(|c| { &c.name == &column.name}) {
                 if def_column != column {
-                    println!("db: {:?}", column);
-                    println!("def: {:?}", def_column);
                     return true;
                 }
             }

@@ -31,6 +31,7 @@ pub struct ModelInner {
     pub(crate) fields_vec: Vec<Arc<Field>>,
     pub(crate) fields_map: HashMap<String, Arc<Field>>,
     pub(crate) dropped_fields: Vec<Arc<Field>>,
+    pub(crate) dropped_fields_map: HashMap<String, Arc<Field>>,
     pub(crate) relations_vec: Vec<Arc<Relation>>,
     pub(crate) relations_map: HashMap<String, Arc<Relation>>,
     pub(crate) properties_vec: Vec<Arc<Property>>,
@@ -125,6 +126,13 @@ impl Model {
 
     pub(crate) fn deny_relation_keys(&self) -> &Vec<String> {
         return &self.inner.deny_relation_keys
+    }
+
+    pub(crate) fn dropped_field(&self, name: &str) -> Option<&Field> {
+        match self.inner.dropped_fields_map.get(name) {
+            Some(f) => Some(f.as_ref()),
+            None => None
+        }
     }
 
     pub(crate) fn field(&self, name: &str) -> Option<&Field> {

@@ -1,5 +1,7 @@
+use std::collections::HashSet;
 use std::fs;
-use quaint::pooled::Quaint;
+use maplit::hashset;
+use quaint::pooled::{PooledConnection, Quaint};
 use quaint::prelude::Queryable;
 use quaint::ast::Query;
 use quaint::ast::Comparable;
@@ -75,53 +77,87 @@ impl SQLMigration {
         }
     }
 
+    // Migrate
+
     pub(crate) async fn migrate(dialect: SQLDialect, pool: &Quaint, models: &Vec<Model>) {
+        Self::migrate_database(dialect, pool, models).await
+    }
+
+    pub(crate) async fn is_table_exist(conn: &PooledConnection, dialect: SQLDialect, table_name: &str) -> bool {
         match dialect {
-            SQLDialect::SQLite => Self::migrate_sqlite_database(pool, models).await,
-            _ => Self::migrate_server_database(dialect, pool, models).await,
+            SQLDialect::SQLite => !conn.query(
+                Query::from(
+                    quaint::ast::Select::from_table("sqlite_master").column("name").and_where("type".equals("table")).and_where("name".equals(table_name))
+                )
+            ).await.unwrap().is_empty(),
+            SQLDialect::PostgreSQL => !conn.query(
+                Query::from(format!("SELECT table_name FROM information_schema.tables WHERE table_schema = '{}'", table_name))
+            ).await.unwrap().is_empty(),
+            _ => !conn.query(
+                Query::from(SQL::show().tables().like(table_name).to_string(dialect))
+            ).await.unwrap().is_empty()
         }
     }
 
-    pub(crate) async fn migrate_sqlite_database(pool: &Quaint, models: &Vec<Model>) {
-        let dialect = SQLDialect::SQLite;
-        let conn = pool.check_out().await.unwrap();
-        // compare each table and do migration
-        for model in models {
-            if model.r#virtual() {
-                continue
-            }
-            let table_name = model.table_name();
-            let show_table = quaint::ast::Select::from_table("sqlite_master").column("name").and_where("type".equals("table")).and_where("name".equals(model.table_name()));
-            let table_result = conn.query(Query::from(show_table)).await.unwrap();
-            if table_result.is_empty() {
-                // table not exist, create table
-                let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
-                // println!("EXECUTE SQL for create table: {}", &stmt);
-                conn.execute(Query::from(stmt)).await.unwrap();
-            } else {
+    pub(crate) async fn db_columns(conn: &PooledConnection, dialect: SQLDialect, table_name: &str) -> HashSet<SQLColumn> {
+        match dialect {
+            SQLDialect::SQLite => {
                 let columns_result = conn.query(Query::from(format!("pragma table_info('{}')", table_name))).await.unwrap();
                 let indices_result = conn.query(Query::from(sqlite_list_indices_query(table_name))).await.unwrap();
                 let auto_increment_result = conn.query(Query::from(sqlite_auto_increment_query(table_name))).await.unwrap();
                 let db_columns = ColumnDecoder::decode_sqlite_columns(columns_result, indices_result, auto_increment_result);
+                db_columns
+            }
+            _ => {
+                let mut results = hashset! {};
+                let db_table_columns = conn.query(if dialect == SQLDialect::MySQL {
+                    let desc = SQL::describe(table_name).to_string(dialect);
+                    Query::from(desc)
+                } else {
+                    let desc = SQL::describe(table_name).to_string(dialect);
+                    Query::from(desc)
+                }).await.unwrap();
+                for db_table_column in db_table_columns {
+                    let db_column = ColumnDecoder::decode(db_table_column, dialect);
+                    results.insert(db_column);
+                }
+                results
+            }
+        }
+    }
+
+    pub(crate) async fn migrate_database(dialect: SQLDialect, pool: &Quaint, models: &Vec<Model>) {
+        let conn = pool.check_out().await.unwrap();
+        // compare each table and do migration
+        for model in models {
+            if model.r#virtual() { continue }
+            let table_name = model.table_name();
+            let is_table_exist = Self::is_table_exist(&conn, dialect, table_name).await;
+            if !is_table_exist {
+                // table not exist, create table
+                let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
+                conn.execute(Query::from(stmt)).await.unwrap();
+            } else {
                 let model_columns = ColumnDecoder::decode_model_columns(model);
+                let db_columns = Self::db_columns(&conn, dialect, table_name).await;
                 let need_to_alter_any_column = ColumnDecoder::need_to_alter_any_columns(&db_columns, &model_columns);
                 if need_to_alter_any_column {
                     println!("need to alter any column");
                     unreachable!()
-                } else {
-                    let (columns_to_add, columns_to_remove) = ColumnDecoder::sqlite_add_and_remove(&db_columns, &model_columns);
-                    // update indices here
-                    for column in columns_to_add {
-                        // add column
-                        let stmt = SQL::alter_table(table_name).add(column.clone()).to_string(SQLDialect::SQLite);
-                        conn.execute(Query::from(stmt)).await.unwrap();
-                    }
-                    for column in columns_to_remove {
-                        // remove column
-                        let stmt = SQL::alter_table(table_name).drop_column(column.name()).to_string(SQLDialect::SQLite);
-                        conn.execute(Query::from(stmt)).await.unwrap();
-                    }
                 }
+                let (columns_to_add, columns_to_remove) = ColumnDecoder::manipulations(&db_columns, &model_columns, model);
+                // update indices here
+                for column in columns_to_add {
+                    // add column
+                    let stmt = SQL::alter_table(table_name).add(column.clone()).to_string(SQLDialect::SQLite);
+                    conn.execute(Query::from(stmt)).await.unwrap();
+                }
+                for column in columns_to_remove {
+                    // remove column
+                    let stmt = SQL::alter_table(table_name).drop_column(column.name()).to_string(SQLDialect::SQLite);
+                    conn.execute(Query::from(stmt)).await.unwrap();
+                }
+
             }
         }
     }
