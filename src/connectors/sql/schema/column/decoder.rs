@@ -49,7 +49,7 @@ impl ColumnDecoder {
         for c in db {
             if let Some(dc) = def.iter().find(|dc| dc.name() == c.name()) {
                 // remove from to add
-                let index = to_add.iter().position(|x| *x == c).unwrap();
+                let index = to_add.iter().position(|x| x.name() == c.name()).unwrap();
                 to_add.remove(index);
                 // maybe alter
                 if c != dc {

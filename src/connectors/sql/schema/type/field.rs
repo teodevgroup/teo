@@ -28,7 +28,7 @@ fn default_database_type_mysql(field_type: &FieldType) -> DatabaseType {
         FieldType::Bool => DatabaseType::TinyInt { m: Some(1), u: false },
         FieldType::I32 => DatabaseType::Int { m: None, u: false },
         FieldType::I64 => DatabaseType::BigInt { m: None, u: false },
-        FieldType::F32 => DatabaseType::Real,
+        FieldType::F32 => DatabaseType::Float { m: None, d: None },
         FieldType::F64 => DatabaseType::Double { m: None, d: None },
         FieldType::String => DatabaseType::VarChar { m: 191, n: None, c: None },
         FieldType::Date => DatabaseType::Date,

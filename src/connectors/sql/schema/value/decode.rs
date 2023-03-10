@@ -46,7 +46,14 @@ impl RowDecoder {
             return Value::I64(row.get(column_name).unwrap().as_i64().unwrap().to_owned())
         }
         if r#type.is_float32() {
-            return Value::number_from_f32(row.get(column_name).unwrap().as_f32().unwrap(), r#type);
+            let value = row.get(column_name).unwrap();
+            if let Some(f64_val) = row.get(column_name).unwrap().as_f64() {
+                return Value::number_from_f64(f64_val, r#type);
+            } else if let Some(f32_val) = row.get(column_name).unwrap().as_f32() {
+                return Value::number_from_f32(f32_val, r#type);
+            } else {
+                unreachable!()
+            }
         }
         if r#type.is_float64() {
             return Value::number_from_f64(row.get(column_name).unwrap().as_f64().unwrap(), r#type);
@@ -58,6 +65,10 @@ impl RowDecoder {
             } else if dialect == SQLDialect::SQLite {
                 let timestamp: String = row.get(column_name).unwrap().as_str().unwrap().to_owned();
                 let naive_date = NaiveDate::parse_from_str(&timestamp, "%Y-%m-%d").unwrap();
+                return Value::Date(naive_date);
+            } else if dialect == SQLDialect::MySQL {
+                let datetime = row.get(column_name).unwrap().as_datetime().unwrap();
+                let naive_date = datetime.date_naive();
                 return Value::Date(naive_date);
             } else {
                 let naive_date = row.get(column_name).unwrap().as_date().unwrap();

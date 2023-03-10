@@ -80,7 +80,7 @@ fn sqlite_type_to_database_type(r#type: &str) -> DatabaseType {
             match name {
                 "integer" => DatabaseType::Int { m: None, u: false },
                 "text" => DatabaseType::Text { m: None, n: None, c: None },
-                "real" => DatabaseType::Double { m: None, d: None },
+                "real" => DatabaseType::Real,
                 "double" => DatabaseType::Double { m: None, d: None },
                 "decimal" => {
                     if let Some(args) = arg {
