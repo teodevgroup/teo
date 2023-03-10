@@ -55,7 +55,11 @@ fn mysql_type_to_database_type(r#type: &str) -> DatabaseType {
 
 fn postgresql_type_to_database_type(r#type: &str) -> DatabaseType {
     match r#type.to_lowercase().as_str() {
-        _ => panic!("Unhandled database type.")
+        "integer" => DatabaseType::Int { m: None, u: false },
+        "text" => DatabaseType::Text { m: None, n: None, c: None },
+        "timestamp without time zone" => DatabaseType::Timestamp { p: 3, z: false },
+        "boolean" => DatabaseType::Bool,
+        _ => panic!("Unhandled type '{}'.", name)
     }
 }
 
