@@ -20,7 +20,7 @@ pub(crate) enum ColumnManipulation<'a> {
 
 impl<'a> ColumnManipulation<'a> {
 
-    pub(crate) fn get_field(&self, model: &Model) -> Option<&Field> {
+    pub(crate) fn get_field(&'a self, model: &'a Model) -> Option<&Field> {
         match self {
             ColumnManipulation::AddColumn(c, _) => model.field(c.name()),
             ColumnManipulation::RemoveColumn(c, _) => model.dropped_field(c.as_str()),
@@ -30,7 +30,7 @@ impl<'a> ColumnManipulation<'a> {
     }
 
     pub(crate) fn priority(&self, model: &Model) -> usize {
-        self.get_field(model).map(|f| f.migration().map(|m| m.priority.unwrap_or(0))).unwrap_or(0)
+        self.get_field(model).map(|f| f.migration().map(|m| m.priority.unwrap_or(0))).unwrap_or(Some(0)).unwrap_or(0)
     }
 }
 
@@ -62,10 +62,10 @@ impl ColumnDecoder {
             if let Some(field) = model.field(c.name()) {
                 if let Some(migration) = field.migration() {
                     for name in &migration.renamed {
-                        if let Some((remove_index, remove_column)) = to_remove.iter().find_position(|c| c.name() == name.as_str()) {
+                        if let Some((remove_index, remove_column)) = to_remove.clone().iter().find_position(|c| c.name() == name.as_str()) {
                             to_remove.remove(remove_index);
                             to_rename.push((remove_column.name().to_owned(), c.name().to_owned()));
-                            let to_add_index = to_add.iter().position(|i| i == c).unwrap();
+                            let to_add_index = to_add.iter().position(|i| *i == c).unwrap();
                             to_add.remove(to_add_index);
                         }
 

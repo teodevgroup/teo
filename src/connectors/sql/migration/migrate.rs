@@ -118,7 +118,7 @@ impl SQLMigration {
                     Query::from(desc)
                 }).await.unwrap();
                 for db_table_column in db_table_columns {
-                    let db_column = ColumnDecoder::decode(db_table_column, dialect, model);
+                    let db_column = ColumnDecoder::decode(db_table_column, dialect);
                     results.insert(db_column);
                 }
                 results
@@ -150,22 +150,24 @@ impl SQLMigration {
                 for m in manipulations.iter() {
                     match m {
                         ColumnManipulation::AddColumn(column, action) => {
-                            // add column
                             let stmt = SQL::alter_table(table_name).add(column.clone().clone()).to_string(dialect);
                             conn.execute(Query::from(stmt)).await.unwrap();
                         }
                         ColumnManipulation::AlterColumn(column, action) => {
-                            // this column is different, alter it
                             let alter = SQL::alter_table(table_name).modify(column.clone().clone()).to_string(dialect);
                             conn.execute(Query::from(alter)).await.unwrap();
                         }
                         ColumnManipulation::RemoveColumn(name, action) => {
-                            // remove column
                             let stmt = SQL::alter_table(table_name).drop_column(name).to_string(dialect);
                             conn.execute(Query::from(stmt)).await.unwrap();
                         }
                         ColumnManipulation::RenameColumn { old, new } => {
-
+                            let stmt = if dialect == SQLDialect::PostgreSQL {
+                                format!("ALTER TABLE {} RENAME COLUMN '{}' TO '{}'", table_name, old, new)
+                            } else {
+                                format!("ALTER TABLE {} RENAME COLUMN `{}` TO `{}`", table_name, old, new)
+                            };
+                            conn.execute(Query::from(stmt)).await.unwrap();
                         }
                     }
                 }
