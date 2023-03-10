@@ -18,3 +18,7 @@ ORDER BY table_name, key_name, ii.seqno", table_name)
 pub(crate) fn sqlite_auto_increment_query(table_name: &str) -> String {
     format!("SELECT \"is-autoincrement\" FROM sqlite_master WHERE tbl_name=\"{}\" AND sql LIKE \"%AUTOINCREMENT%\"", table_name)
 }
+
+pub(crate) fn psql_is_auto_increment(table_name: &str, column_name: &str) -> String {
+    format!("select relname from pg_class where relname = '{}_{}_seq'", table_name, column_name)
+}

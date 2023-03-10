@@ -2,7 +2,10 @@ use std::collections::{HashSet};
 use std::sync::Arc;
 use itertools::Itertools;
 use maplit::{hashset};
-use quaint::prelude::{ResultRow, ResultSet};
+use quaint::pooled::PooledConnection;
+use quaint::prelude::{Query, Queryable, ResultRow, ResultSet};
+use toml_edit::table;
+use crate::connectors::sql::migration::sql::psql_is_auto_increment;
 use crate::connectors::sql::schema::column::SQLColumn;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::r#type::decoder::SQLTypeDecoder;
@@ -157,7 +160,37 @@ impl ColumnDecoder {
         result
     }
 
-    pub(crate) fn decode(row: ResultRow, dialect: SQLDialect) -> SQLColumn {
+    async fn psql_primary_field_name(conn: &PooledConnection, table_name: &str) -> Vec<String> {
+        let sql = format!("SELECT a.attname
+FROM   pg_index i
+JOIN   pg_attribute a ON a.attrelid = i.indrelid
+                     AND a.attnum = ANY(i.indkey)
+WHERE  i.indrelid = '{}'::regclass
+AND    i.indisprimary", table_name);
+        let result = conn.query(Query::from(psql_is_auto_increment(table_name, column_name))).await.unwrap();
+        result.into_iter().map(|r| {
+            r.get("attname").unwrap().to_string().unwrap()
+        }).collect()
+    }
+
+    async fn psql_is_unique(conn: &PooledConnection, table_name: &str, column_name: &str) -> bool {
+        let sql = format!("SELECT *
+            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+        inner join INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE cu
+        on cu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+        where
+        tc.CONSTRAINT_TYPE = 'UNIQUE'
+        and tc.TABLE_NAME = '{}'
+        and cu.COLUMN_NAME = '{}'", table_name, column_name);
+        !conn.query(Query::from(sql)).await.unwrap().is_empty()
+    }
+
+    async fn psql_is_auto_increment(conn: &PooledConnection, table_name: &str, column_name: &str) -> bool {
+        !conn.query(Query::from(psql_is_auto_increment(table_name, column_name))).await.unwrap().is_empty()
+    }
+
+    pub(crate) async fn decode(row: ResultRow, dialect: SQLDialect, conn: &PooledConnection, table_name: &str) -> SQLColumn {
+        if dialect == SQLDialect::MySQL {
             let field: String = row.get("Field").unwrap().to_string().unwrap();
             let field_type_in_string: String = row.get("Type").unwrap().to_string().unwrap();
             let null_in_string: String = row.get("Null").unwrap().to_string().unwrap();
@@ -176,7 +209,24 @@ impl ColumnDecoder {
                 primary_key: primary,
                 unique_key: unique,
             }
+        } else if dialect == SQLDialect::PostgreSQL { // postgres
+            let primary_names = Self::psql_primary_field_name(conn, table_name).await;
+            let column_name: String = row.get("column_name").unwrap().to_string().unwrap();
+            let nullable: bool = row.get("is_nullable").unwrap().as_bool().unwrap();
+            let data_type: String = row.get("data_type").unwrap().to_string().unwrap();
+            SQLColumn {
+                name: column_name,
+                r#type: SQLTypeDecoder::decode(&data_type, dialect),
+                not_null: !nullable,
+                default: None,
+                primary_key: primary_names.contains(&column_name),
+                unique_key: Self::psql_is_unique(conn, table_name, &column_name).await,
+                auto_increment: Self::psql_is_auto_increment(conn, table_name, &column_name).await,
+            }
+        } else {
+            unreachable!()
         }
+    }
 }
 
 impl From<&Field> for SQLColumn {

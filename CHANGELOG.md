@@ -294,11 +294,13 @@
 - Rewrite SQL migrations for SQLite **[DONE]**
 - Rewrite SQL migrations for PostgreSQL **[DONE]**
 - Migration decorator **[DONE]**
-- SQL migration: delete tables **[DONE]**
-- SQL migration: rename tables **[DONE]**
+- PostgreSQL: list columns
+- SQL migration: Separate index and columns
+- SQL migration: delete tables
+- SQL migration: rename tables
 - SQL migration: rename fields **[DONE]**
 - SQL migration: add column: default value **[DONE]**
-- SQL migration: actions **[DONE]**
+- SQL migration: actions
 - Model: dropped columns **[DONE]**
 - Connector config: debug **[DONE]**
 - SQLite: fix in memory connection

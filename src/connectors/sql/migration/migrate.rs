@@ -113,7 +113,7 @@ impl SQLMigration {
             _ => {
                 let mut results = hashset! {};
                 let db_table_columns = conn.query(if dialect == SQLDialect::PostgreSQL {
-                    let desc = SQL::describe(table_name).to_string(dialect);
+                    let desc = format!("SELECT * FROM information_schema.columns where table_name = '{}'", table_name);
                     Query::from(desc)
                 } else {
                     let desc = SQL::describe(table_name).to_string(dialect);

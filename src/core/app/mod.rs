@@ -18,7 +18,6 @@ use crate::core::graph::Graph;
 use crate::generator::client::generate_client;
 use crate::generator::server::generate_entity;
 
-
 pub struct App {
     graph: Graph,
     server_conf: ServerConf,
