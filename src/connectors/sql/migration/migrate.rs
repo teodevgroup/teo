@@ -120,7 +120,7 @@ impl SQLMigration {
                     Query::from(desc)
                 }).await.unwrap();
                 for db_table_column in db_table_columns {
-                    let db_column = ColumnDecoder::decode(db_table_column, dialect);
+                    let db_column = ColumnDecoder::decode(db_table_column, dialect, conn, table_name).await;
                     results.insert(db_column);
                 }
                 results

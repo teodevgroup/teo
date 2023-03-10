@@ -4,7 +4,6 @@ use itertools::Itertools;
 use maplit::{hashset};
 use quaint::pooled::PooledConnection;
 use quaint::prelude::{Query, Queryable, ResultRow, ResultSet};
-use toml_edit::table;
 use crate::connectors::sql::migration::sql::psql_is_auto_increment;
 use crate::connectors::sql::schema::column::SQLColumn;
 use crate::connectors::sql::schema::dialect::SQLDialect;
@@ -167,7 +166,7 @@ JOIN   pg_attribute a ON a.attrelid = i.indrelid
                      AND a.attnum = ANY(i.indkey)
 WHERE  i.indrelid = '{}'::regclass
 AND    i.indisprimary", table_name);
-        let result = conn.query(Query::from(psql_is_auto_increment(table_name, column_name))).await.unwrap();
+        let result = conn.query(Query::from(sql)).await.unwrap();
         result.into_iter().map(|r| {
             r.get("attname").unwrap().to_string().unwrap()
         }).collect()
@@ -212,10 +211,11 @@ AND    i.indisprimary", table_name);
         } else if dialect == SQLDialect::PostgreSQL { // postgres
             let primary_names = Self::psql_primary_field_name(conn, table_name).await;
             let column_name: String = row.get("column_name").unwrap().to_string().unwrap();
-            let nullable: bool = row.get("is_nullable").unwrap().as_bool().unwrap();
+            let nullable_text: String = row.get("is_nullable").unwrap().to_string().unwrap();
+            let nullable: bool = nullable_text == "YES";
             let data_type: String = row.get("data_type").unwrap().to_string().unwrap();
             SQLColumn {
-                name: column_name,
+                name: column_name.clone(),
                 r#type: SQLTypeDecoder::decode(&data_type, dialect),
                 not_null: !nullable,
                 default: None,

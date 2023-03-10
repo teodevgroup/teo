@@ -294,18 +294,18 @@
 - Rewrite SQL migrations for SQLite **[DONE]**
 - Rewrite SQL migrations for PostgreSQL **[DONE]**
 - Migration decorator **[DONE]**
-- PostgreSQL: list columns
-- SQL migration: Separate index and columns
-- SQL migration: delete tables
-- SQL migration: rename tables
+- PostgreSQL migration: list columns **[DONE]**
 - SQL migration: rename fields **[DONE]**
-- SQL migration: add column: default value **[DONE]**
-- SQL migration: actions
 - Model: dropped columns **[DONE]**
 - Connector config: debug **[DONE]**
 - SQLite: fix in memory connection
 
 #### 0.0.51
+- SQL migration: Separate index and columns
+- SQL migration: delete tables
+- SQL migration: rename tables
+- SQL migration: add column: default value
+- SQL migration: actions
 - Decimal type
 - PostgreSQL array type
 - Connector bug: unique constraint violating: error message should have key path
