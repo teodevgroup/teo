@@ -15,6 +15,23 @@ pub(crate) enum ColumnManipulation<'a> {
     AddColumn(&'a SQLColumn, Option<Pipeline>),
     RemoveColumn(String, Option<Pipeline>),
     RenameColumn{ old: String, new: String },
+    AlterColumn(&'a SQLColumn, Option<Pipeline>),
+}
+
+impl<'a> ColumnManipulation<'a> {
+
+    pub(crate) fn get_field(&self, model: &Model) -> Option<&Field> {
+        match self {
+            ColumnManipulation::AddColumn(c, _) => model.field(c.name()),
+            ColumnManipulation::RemoveColumn(c, _) => model.dropped_field(c.as_str()),
+            ColumnManipulation::RenameColumn {old: _, new} => model.field(new.as_str()),
+            ColumnManipulation::AlterColumn(c, _) => model.field(c.name()),
+        }
+    }
+
+    pub(crate) fn priority(&self, model: &Model) -> usize {
+        self.get_field(model).map(|f| f.migration().map(|m| m.priority.unwrap_or(0))).unwrap_or(0)
+    }
 }
 
 pub(crate) struct ColumnDecoder { }
@@ -25,14 +42,19 @@ impl ColumnDecoder {
         let mut to_add: Vec<&SQLColumn> = def.iter().collect();
         let mut to_remove: Vec<&SQLColumn> = vec![];
         let mut to_rename: Vec<(String, String)> = vec![];
+        let mut to_alter: Vec<&SQLColumn> = vec![];
         // analyse add and remove
         for c in db {
-            if !def.contains(&c) {
-                to_remove.push(c);
-            } else {
+            if let Some(dc) = def.iter().find(|dc| dc.name() == c.name()) {
                 // remove from to add
                 let index = to_add.iter().position(|x| *x == c).unwrap();
                 to_add.remove(index);
+                // maybe alter
+                if c != dc {
+                    to_alter.push(dc);
+                }
+            } else {
+                to_remove.push(c);
             }
         }
         // analyse rename
@@ -66,11 +88,19 @@ impl ColumnDecoder {
             } else { None };
             result.push(ColumnManipulation::RemoveColumn(c.name().to_owned(), action));
         }
+        for c in to_alter {
+            let action = if let Some(field) = model.field(c.name()) {
+                field.migration().map(|m| m.action.clone()).flatten()
+            } else { None };
+            result.push(ColumnManipulation::AlterColumn(c, action));
+        }
         for c in to_rename {
             result.push(ColumnManipulation::RenameColumn { old: c.0, new: c.1 })
         }
         // sort
-
+        result.sort_by(|a, b| {
+            a.priority(model).cmp(&b.priority(model))
+        });
         result
     }
 
@@ -147,7 +177,6 @@ impl ColumnDecoder {
                 unique_key: unique,
             }
         }
-
 }
 
 impl From<&Field> for SQLColumn {

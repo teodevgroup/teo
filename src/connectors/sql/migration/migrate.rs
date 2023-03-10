@@ -7,7 +7,7 @@ use quaint::ast::Query;
 use quaint::ast::Comparable;
 use crate::connectors::sql::migration::sql::{sqlite_auto_increment_query, sqlite_list_indices_query};
 use super::super::url::url_utils;
-use crate::connectors::sql::schema::column::decoder::ColumnDecoder;
+use crate::connectors::sql::schema::column::decoder::{ColumnDecoder, ColumnManipulation};
 use crate::connectors::sql::stmts::create::table::SQLCreateTableStatement;
 use crate::connectors::sql::stmts::SQL;
 use crate::connectors::sql::schema::column::SQLColumn;
@@ -118,7 +118,7 @@ impl SQLMigration {
                     Query::from(desc)
                 }).await.unwrap();
                 for db_table_column in db_table_columns {
-                    let db_column = ColumnDecoder::decode(db_table_column, dialect);
+                    let db_column = ColumnDecoder::decode(db_table_column, dialect, model);
                     results.insert(db_column);
                 }
                 results
@@ -141,83 +141,32 @@ impl SQLMigration {
                 let model_columns = ColumnDecoder::decode_model_columns(model);
                 let db_columns = Self::db_columns(&conn, dialect, table_name).await;
                 let need_to_alter_any_column = ColumnDecoder::need_to_alter_any_columns(&db_columns, &model_columns);
-                if need_to_alter_any_column {
-                    println!("need to alter any column");
-                    unreachable!()
+                if need_to_alter_any_column && dialect == SQLDialect::SQLite {
+                    panic!("SQLite doesn't support column altering");
                 }
-                let (columns_to_add, columns_to_remove) = ColumnDecoder::manipulations(&db_columns, &model_columns, model);
-                // update indices here
-                for column in columns_to_add {
-                    // add column
-                    let stmt = SQL::alter_table(table_name).add(column.clone()).to_string(SQLDialect::SQLite);
-                    conn.execute(Query::from(stmt)).await.unwrap();
-                }
-                for column in columns_to_remove {
-                    // remove column
-                    let stmt = SQL::alter_table(table_name).drop_column(column.name()).to_string(SQLDialect::SQLite);
-                    conn.execute(Query::from(stmt)).await.unwrap();
-                }
-
-            }
-        }
-    }
-
-    pub(crate) async fn migrate_server_database(dialect: SQLDialect, pool: &Quaint, models: &Vec<Model>) {
-        let conn = pool.check_out().await.unwrap();
-        for model in models {
-            if model.r#virtual() {
-                continue
-            }
-            let show_table = if dialect == SQLDialect::PostgreSQL {
-                format!("SELECT table_name FROM information_schema.tables WHERE table_schema = '{}'", model.table_name())
-            } else {
-                SQL::show().tables().like(model.table_name()).to_string(dialect)
-            };
-            let table_result = conn.query(Query::from(show_table)).await.unwrap();
-            if table_result.is_empty() {
-                // table not exist, create table
-                let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
-                // println!("EXECUTE SQL for create table: {}", &stmt);
-                conn.execute(Query::from(stmt)).await.unwrap();
-            } else {
-                // table exist, migrate
-                let table_name = model.table_name();
-                let mut reviewed_columns: Vec<String> = Vec::new();
-                let db_table_columns = conn.query(if dialect == SQLDialect::MySQL {
-                    let desc = SQL::describe(table_name).to_string(dialect);
-                    Query::from(desc)
-                } else {
-                    let desc = SQL::describe(table_name).to_string(dialect);
-                    Query::from(desc)
-                }).await.unwrap();
-                for db_table_column in db_table_columns {
-                    // println!("table column {:?}", db_table_column);
-                    let db_column = ColumnDecoder::decode(db_table_column, dialect);
-                    let schema_field = model.field_with_column_name(db_column.name());
-                    if schema_field.is_none() {
-                        // remove this column
-                        let stmt = SQL::alter_table(table_name).drop_column(db_column.name()).to_string(dialect);
-                        // println!("EXECUTE SQL for remove column: {}", &stmt);
-                        conn.execute(Query::from(stmt)).await.unwrap();
-                    } else {
-                        // compare column definition
-                        let schema_column: SQLColumn = schema_field.unwrap().into();
-                        if schema_column != db_column {
+                // here update indices
+                // here update columns
+                let manipulations = ColumnDecoder::manipulations(&db_columns, &model_columns, model);
+                for m in manipulations.iter() {
+                    match m {
+                        ColumnManipulation::AddColumn(column, action) => {
+                            // add column
+                            let stmt = SQL::alter_table(table_name).add(column.clone().clone()).to_string(dialect);
+                            conn.execute(Query::from(stmt)).await.unwrap();
+                        }
+                        ColumnManipulation::AlterColumn(column, action) => {
                             // this column is different, alter it
-                            let alter = SQL::alter_table(table_name).modify(schema_column).to_string(dialect);
-                            // println!("EXECUTE SQL for alter column: {}", &alter);
+                            let alter = SQL::alter_table(table_name).modify(column.clone().clone()).to_string(dialect);
                             conn.execute(Query::from(alter)).await.unwrap();
                         }
-                        reviewed_columns.push(db_column.name().to_owned());
-                    }
-                }
-                for field in model.fields() {
-                    if !reviewed_columns.contains(&field.column_name().to_string()) {
-                        let sql_column_def: SQLColumn = field.into();
-                        // add this column
-                        let add = SQL::alter_table(table_name).add(sql_column_def).to_string(dialect);
-                        // println!("EXECUTE SQL for add column: {}", &add);
-                        conn.execute(Query::from(add)).await.unwrap();
+                        ColumnManipulation::RemoveColumn(name, action) => {
+                            // remove column
+                            let stmt = SQL::alter_table(table_name).drop_column(name).to_string(dialect);
+                            conn.execute(Query::from(stmt)).await.unwrap();
+                        }
+                        ColumnManipulation::RenameColumn { old, new } => {
+
+                        }
                     }
                 }
             }
