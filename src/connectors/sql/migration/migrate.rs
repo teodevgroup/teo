@@ -151,8 +151,12 @@ impl SQLMigration {
                 let manipulations = ColumnDecoder::manipulations(&db_columns, &model_columns, model);
                 for m in manipulations.iter() {
                     match m {
-                        ColumnManipulation::AddColumn(column, action) => {
-                            let stmt = SQL::alter_table(table_name).add(column.clone().clone()).to_string(dialect);
+                        ColumnManipulation::AddColumn(column, action, default) => {
+                            let mut c = column.clone().clone();
+                            if default.is_some() {
+                                c.set_default(Some(default.as_ref().unwrap().to_string(dialect)));
+                            }
+                            let stmt = SQL::alter_table(table_name).add(c).to_string(dialect);
                             conn.execute(Query::from(stmt)).await.unwrap();
                         }
                         ColumnManipulation::AlterColumn(column, action) => {

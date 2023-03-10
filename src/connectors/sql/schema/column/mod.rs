@@ -54,6 +54,10 @@ impl SQLColumn {
     pub(crate) fn unique_key(&self) -> bool {
         self.unique_key
     }
+
+    pub(crate) fn set_default(&mut self, default: Option<String>) {
+        self.default = default;
+    }
 }
 
 impl ToSQLString for SQLColumn {
@@ -62,6 +66,7 @@ impl ToSQLString for SQLColumn {
         let t = self.r#type.to_string(dialect.clone());
         let not_null = if self.not_null { " NOT NULL" } else { " NULL" };
         let primary = if self.primary_key { " PRIMARY KEY" } else { "" };
+        let default = if self.default.is_some() { " DEFAULT ".to_owned() + self.default.as_ref().unwrap().as_str() } else { "".to_owned() };
         let auto_inc = if self.auto_increment {
             if dialect == SQLDialect::MySQL {
                 " AUTO_INCREMENT"
@@ -82,9 +87,9 @@ impl ToSQLString for SQLColumn {
             } else {
                 t
             };
-            format!("\"{name}\" {t_with_auto_inc}{not_null}{primary}{unique}")
+            format!("\"{name}\" {t_with_auto_inc}{default}{not_null}{primary}{unique}")
         } else {
-            format!("`{name}` {t}{not_null}{primary}{unique}{auto_inc}")
+            format!("`{name}` {t}{default}{not_null}{primary}{unique}{auto_inc}")
         }
     }
 }

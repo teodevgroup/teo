@@ -22,7 +22,6 @@ impl Item for EllipsisItem {
             None => Err(ctx.internal_server_error("ellipsis: value is not string")),
             Some(s) => {
                 let arg = self.width.resolve(ctx.clone()).await?;
-                println!("arg {:?}", arg);
                 let width = arg.as_i64().unwrap() as usize;
                 if s.len() <= width {
                     Ok(ctx)

@@ -299,12 +299,13 @@
 - Model: dropped columns **[DONE]**
 - Connector config: debug **[DONE]**
 - SQLite: fix in memory connection
+- SQL migration: add column: default value **[DONE]**
 
 #### 0.0.51
+- SQL migration: when adding required column without @migration(default:), throws  
 - SQL migration: Separate index and columns
 - SQL migration: delete tables
 - SQL migration: rename tables
-- SQL migration: add column: default value
 - SQL migration: actions
 - Decimal type
 - PostgreSQL array type

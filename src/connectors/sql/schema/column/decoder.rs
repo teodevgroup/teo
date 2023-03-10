@@ -12,9 +12,10 @@ use crate::core::field::Field;
 use crate::core::model::Model;
 use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
+use crate::prelude::Value;
 
 pub(crate) enum ColumnManipulation<'a> {
-    AddColumn(&'a SQLColumn, Option<Pipeline>),
+    AddColumn(&'a SQLColumn, Option<Pipeline>, Option<Value>),
     RemoveColumn(String, Option<Pipeline>),
     RenameColumn{ old: String, new: String },
     AlterColumn(&'a SQLColumn, Option<Pipeline>),
@@ -24,7 +25,7 @@ impl<'a> ColumnManipulation<'a> {
 
     pub(crate) fn get_field(&'a self, model: &'a Model) -> Option<&Field> {
         match self {
-            ColumnManipulation::AddColumn(c, _) => model.field(c.name()),
+            ColumnManipulation::AddColumn(c, _, __) => model.field(c.name()),
             ColumnManipulation::RemoveColumn(c, _) => model.dropped_field(c.as_str()),
             ColumnManipulation::RenameColumn {old: _, new} => model.field(new.as_str()),
             ColumnManipulation::AlterColumn(c, _) => model.field(c.name()),
@@ -82,7 +83,11 @@ impl ColumnDecoder {
             let action = if let Some(field) = model.field(c.name()) {
                 field.migration().map(|m| m.action.clone()).flatten()
             } else { None };
-            result.push(ColumnManipulation::AddColumn(c, action));
+            let default = if let Some(field) = model.field(c.name()) {
+                field.migration().map(|m| m.default.clone()).flatten()
+            } else { None };
+
+            result.push(ColumnManipulation::AddColumn(c, action, default));
         }
         for c in to_remove {
             let action = if let Some(field) = model.dropped_field(c.name()) {
