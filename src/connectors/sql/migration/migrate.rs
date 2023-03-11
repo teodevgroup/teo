@@ -15,6 +15,8 @@ use crate::connectors::sql::schema::column::SQLColumn;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::model::Model;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
+use crate::core::pipeline::ctx::Ctx;
+use crate::prelude::Value;
 
 pub(crate) struct SQLMigration { }
 
@@ -183,12 +185,20 @@ impl SQLMigration {
                             }
                             let stmt = SQL::alter_table(table_name).add(c).to_string(dialect);
                             conn.execute(Query::from(stmt)).await.unwrap();
+                            if let Some(action)= action {
+                                let ctx = Ctx::initial_state_with_value(Value::Null);
+                                action.process(ctx).await.unwrap();
+                            }
                         }
                         ColumnManipulation::AlterColumn(column, action) => {
                             let alter = SQL::alter_table(table_name).modify(column.clone().clone()).to_string(dialect);
                             conn.execute(Query::from(alter)).await.unwrap();
                         }
                         ColumnManipulation::RemoveColumn(name, action) => {
+                            if let Some(action)= action {
+                                let ctx = Ctx::initial_state_with_value(Value::Null);
+                                action.process(ctx).await.unwrap();
+                            }
                             let stmt = SQL::alter_table(table_name).drop_column(name).to_string(dialect);
                             conn.execute(Query::from(stmt)).await.unwrap();
                         }

@@ -307,7 +307,7 @@
 - `$queryRaw` item for SQL **[DONE]**
 - SQL migration: delete tables **[DONE]**
 - SQL migration: rename tables **[DONE]**
-- SQL migration: actions
+- SQL migration: actions **[DONE]**
 - Decimal type
 - PostgreSQL array type
 - Connector bug: unique constraint violating: error message should have key path
