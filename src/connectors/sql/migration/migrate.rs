@@ -136,6 +136,12 @@ impl SQLMigration {
         conn.execute(Query::from(sql)).await.unwrap();
     }
 
+    pub(crate) async fn table_has_records(dialect: SQLDialect, conn: &PooledConnection, table_name: &str) -> bool {
+        let escape = dialect.escape();
+        let sql = format!("select * from {escape}{table_name}{escape} limit 1");
+        !conn.query(Query::from(sql)).await.unwrap().is_empty()
+    }
+
     pub(crate) async fn migrate(dialect: SQLDialect, pool: &Quaint, models: &Vec<Model>) {
         let conn = pool.check_out().await.unwrap();
         let mut db_tables = Self::get_db_user_tables(dialect, &conn).await;
@@ -164,21 +170,30 @@ impl SQLMigration {
                 let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
                 conn.execute(Query::from(stmt)).await.unwrap();
             } else {
+                // remove from list
                 let index = db_tables.clone().iter().find_position(|x| *x == table_name).unwrap().0;
                 db_tables.remove(index);
-
+                // start migrate for this table
                 let model_columns = ColumnDecoder::decode_model_columns(model);
                 let db_columns = Self::db_columns(&conn, dialect, table_name).await;
                 let need_to_alter_any_column = ColumnDecoder::need_to_alter_any_columns(&db_columns, &model_columns);
                 if need_to_alter_any_column && dialect == SQLDialect::SQLite {
                     panic!("SQLite doesn't support column altering");
                 }
+                let table_has_records = Self::table_has_records(dialect, &conn, table_name);
                 // here update indices
                 // here update columns
                 let manipulations = ColumnDecoder::manipulations(&db_columns, &model_columns, model);
                 for m in manipulations.iter() {
                     match m {
                         ColumnManipulation::AddColumn(column, action, default) => {
+                            if column.not_null() && default.is_none() {
+                                // if any records, just raise here
+                                let has_records = Self::table_has_records(dialect, &conn, table_name).await;
+                                if has_records {
+                                    panic!("Cannot add new non null column `{}', table `{}' has records. Consider add a default value or drop the table.", column.name(), table_name)
+                                }
+                            }
                             let mut c = column.clone().clone();
                             if default.is_some() {
                                 c.set_default(Some(default.as_ref().unwrap().to_string(dialect)));
