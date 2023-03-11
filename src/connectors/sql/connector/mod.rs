@@ -3,9 +3,9 @@ pub mod save_session;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use async_trait::async_trait;
-use quaint::{prelude::*, pooled::Quaint, ast::Query as QuaintQuery};
-use quaint::error::DatabaseConstraint;
-use quaint::error::ErrorKind::UniqueConstraintViolation;
+use quaint_forked::{prelude::*, pooled::Quaint, ast::Query as QuaintQuery};
+use quaint_forked::error::DatabaseConstraint;
+use quaint_forked::error::ErrorKind::UniqueConstraintViolation;
 use crate::core::model::Model;
 use crate::connectors::sql::schema::r#type::field::ToDatabaseType;
 use crate::connectors::sql::connector::save_session::SQLSaveSession;
@@ -147,7 +147,7 @@ impl SQLConnector {
         }
     }
 
-    fn handle_err_result(&self, err: quaint::error::Error) -> Error {
+    fn handle_err_result(&self, err: quaint_forked::error::Error) -> Error {
         match err.kind() {
             UniqueConstraintViolation { constraint } => {
                 match constraint {

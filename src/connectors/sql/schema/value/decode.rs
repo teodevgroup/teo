@@ -2,7 +2,7 @@ use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::field::r#type::FieldType;
 use crate::core::teon::Value;
 use chrono::{NaiveDate, DateTime, Utc};
-use quaint::prelude::ResultRow;
+use quaint_forked::prelude::ResultRow;
 
 pub(crate) struct RowDecoder { }
 

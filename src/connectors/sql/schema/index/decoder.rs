@@ -1,7 +1,7 @@
 
 use std::collections::HashMap;
 use maplit::hashmap;
-use quaint::prelude::ResultSet;
+use quaint_forked::prelude::ResultSet;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::field::Sort;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};

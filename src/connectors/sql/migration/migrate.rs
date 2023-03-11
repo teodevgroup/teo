@@ -1,10 +1,10 @@
 use std::collections::HashSet;
 use std::fs;
 use maplit::hashset;
-use quaint::pooled::{PooledConnection, Quaint};
-use quaint::prelude::Queryable;
-use quaint::ast::Query;
-use quaint::ast::Comparable;
+use quaint_forked::pooled::{PooledConnection, Quaint};
+use quaint_forked::prelude::Queryable;
+use quaint_forked::ast::Query;
+use quaint_forked::ast::Comparable;
 use crate::connectors::sql::migration::sql::{sqlite_auto_increment_query, sqlite_list_indices_query};
 use super::super::url::url_utils;
 use crate::connectors::sql::schema::column::decoder::{ColumnDecoder, ColumnManipulation};
@@ -87,7 +87,7 @@ impl SQLMigration {
         match dialect {
             SQLDialect::SQLite => !conn.query(
                 Query::from(
-                    quaint::ast::Select::from_table("sqlite_master").column("name").and_where("type".equals("table")).and_where("name".equals(table_name))
+                    quaint_forked::ast::Select::from_table("sqlite_master").column("name").and_where("type".equals("table")).and_where("name".equals(table_name))
                 )
             ).await.unwrap().is_empty(),
             SQLDialect::PostgreSQL => {
