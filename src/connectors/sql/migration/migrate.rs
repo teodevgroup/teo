@@ -80,24 +80,6 @@ impl SQLMigration {
 
     // Migrate
 
-    pub(crate) async fn is_table_exist(conn: &PooledConnection, dialect: SQLDialect, table_name: &str) -> bool {
-        match dialect {
-            SQLDialect::SQLite => !conn.query(
-                Query::from(
-                    quaint_forked::ast::Select::from_table("sqlite_master").column("name").and_where("type".equals("table")).and_where("name".equals(table_name))
-                )
-            ).await.unwrap().is_empty(),
-            SQLDialect::PostgreSQL => {
-                !conn.query(
-                    Query::from(format!("SELECT table_name FROM information_schema.tables WHERE table_name = '{}'", table_name))
-                ).await.unwrap().is_empty()
-            },
-            _ => !conn.query(
-                Query::from(SQL::show().tables().like(table_name).to_string(dialect))
-            ).await.unwrap().is_empty()
-        }
-    }
-
     pub(crate) async fn db_columns(conn: &PooledConnection, dialect: SQLDialect, table_name: &str) -> HashSet<SQLColumn> {
         match dialect {
             SQLDialect::SQLite => {
