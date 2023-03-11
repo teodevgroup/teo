@@ -315,7 +315,8 @@
 #### 0.0.52
 - Migration decorator docs
 - Dropped decorator docs
-- Support MSSQL
+- MongoDB migration
+- MongoDB `$queryRaw`
 - Transaction
 - Relation onUpdate
 - Relation onDelete
@@ -337,8 +338,7 @@
 - Seed with datasets
 
 #### 0.0.55
-- Reach rust stable
-- Bug fixes
+- Support MSSQL
 
 #### 0.0.56
 - Node.js object
@@ -366,15 +366,11 @@
 
 #### 0.0.59 - 0.0.80
 - Setup new style unit tests
-- Replace buggy sqlx
 - SQL: Enum types
 - PostgreSQL: Enum types
 - Database type mapping for `Date`
 - Database type mapping
 - Database type mapping for field, property and collection types' item field
-- Support unsigned types for MySQL
-- PostgreSQL: Migration
-- SQLite: Migration
 
 #### 0.0.81
 - Input omissible and output omissible for generated clients
