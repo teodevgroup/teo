@@ -13,4 +13,5 @@ pub(crate) mod teon;
 pub(crate) mod value;
 pub(crate) mod vector;
 pub(crate) mod debug;
+pub(crate) mod query;
 pub(crate) mod global;

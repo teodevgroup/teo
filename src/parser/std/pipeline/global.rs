@@ -18,6 +18,7 @@ use crate::parser::std::pipeline::logical::{all_modifier, and_modifier, any_modi
 use crate::parser::std::pipeline::math::{abs, add, cbrt, ceil, divide, floor, max, min, modular, multiply, pow, root, round, sqrt, subtract};
 use crate::parser::std::pipeline::number::{is_even, is_odd};
 use crate::parser::std::pipeline::object::{assign, ctx_self, is, is_a, object_get, object_previous_value, object_set};
+use crate::parser::std::pipeline::query::query_raw;
 use crate::parser::std::pipeline::string::generation::{cuid, random_digits, slug, uuid};
 use crate::parser::std::pipeline::string::transform::{ellipsis, pad_end, pad_start, regex_replace, split, trim};
 use crate::parser::std::pipeline::string::validation::{has_prefix, has_suffix, is_alphabetic, is_alphanumeric, is_email, is_hex_color, is_numeric, is_prefix_of, is_secure_password, is_suffix_of, regex_match};
@@ -136,6 +137,8 @@ impl GlobalPipelineInstallers {
         objects.insert("at".to_owned(), item_at);
         objects.insert("filter".to_owned(), filter);
         objects.insert("map".to_owned(), map);
+        // query
+        objects.insert("queryRaw".to_owned(), query_raw);
         Self { objects }
     }
 

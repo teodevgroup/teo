@@ -448,6 +448,15 @@ impl Connector for MongoDBConnector {
         Ok(())
     }
 
+    async fn query_raw(&self, query: &Value, table: Option<&str>) -> Result<Value> {
+        unreachable!()
+        // let collection = self.collections.get(table.unwrap()).unwrap();
+        // let result = collection.aggregate(BsonCoder::encode_without_default_type(query), None).await;
+        // if result.is_err() {
+        //
+        // }
+    }
+    
     async fn save_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> Result<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
             self.create_object(object).await

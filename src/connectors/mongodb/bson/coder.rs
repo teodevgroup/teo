@@ -12,6 +12,10 @@ pub(crate) struct BsonCoder { }
 
 impl BsonCoder {
 
+    pub(crate) fn encode_without_default_type(value: &Value) -> Bson {
+        value.clone().into()
+    }
+
     pub(crate) fn encode<'a>(r#type: &FieldType, value: Value) -> Result<Bson> {
         match r#type {
             FieldType::I32 => Ok(Bson::Int32(value.as_i32().unwrap())),

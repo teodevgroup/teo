@@ -27,6 +27,10 @@ pub(crate) trait Connector: Send + Sync {
 
     async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> Result<()>;
 
+    // Raw query
+
+    async fn query_raw(&self, query: &Value) -> Result<Value>;
+
     // Object manipulation
 
     async fn save_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> Result<()>;

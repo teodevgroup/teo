@@ -12,3 +12,4 @@ pub mod identity;
 pub mod vector;
 pub mod action;
 pub mod debug;
+pub mod query;
