@@ -448,7 +448,7 @@ impl Connector for MongoDBConnector {
         Ok(())
     }
 
-    async fn query_raw(&self, query: &Value, table: Option<&str>) -> Result<Value> {
+    async fn query_raw(&self, query: &Value) -> Result<Value> {
         unreachable!()
         // let collection = self.collections.get(table.unwrap()).unwrap();
         // let result = collection.aggregate(BsonCoder::encode_without_default_type(query), None).await;

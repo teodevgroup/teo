@@ -14,6 +14,7 @@ use crate::connectors::sql::migration::migrate::SQLMigration;
 use crate::connectors::sql::query::Query;
 use crate::connectors::sql::stmts::SQL;
 use crate::connectors::sql::schema::dialect::SQLDialect;
+use crate::connectors::sql::schema::value::decode::RowDecoder;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
 use crate::connectors::sql::url::url_utils;
 use crate::core::action::Action;
@@ -182,6 +183,23 @@ impl Connector for SQLConnector {
     async fn migrate(&mut self, models: &Vec<Model>, _reset_database: bool) -> Result<()> {
         SQLMigration::migrate(self.dialect, &self.pool, models).await;
         Ok(())
+    }
+
+    async fn query_raw(&self, query: &Value) -> Result<Value> {
+        let conn = self.pool.check_out().await.unwrap();
+        let result = conn.query(QuaintQuery::from(query.as_str().unwrap())).await;
+        if result.is_err() {
+            let err = result.unwrap_err();
+            let msg = err.original_message();
+            return Err(Error::internal_server_error(msg.unwrap()));
+        } else {
+            let result = result.unwrap();
+            if result.is_empty() {
+                return Ok(Value::Null);
+            } else {
+                result.into_iter().map(|row| RowDecoder)
+            }
+        }
     }
 
     async fn save_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> Result<()> {

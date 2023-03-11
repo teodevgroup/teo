@@ -2,11 +2,54 @@ use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::field::r#type::FieldType;
 use crate::core::teon::Value;
 use chrono::{NaiveDate, DateTime, Utc};
-use quaint_forked::prelude::ResultRow;
+use indexmap::IndexMap;
+use quaint_forked::prelude::{ResultRow, ResultSet};
 
 pub(crate) struct RowDecoder { }
 
 impl RowDecoder {
+
+    pub(crate) fn decode_raw(value: &quaint_forked::Value) -> Value {
+        match value {
+            quaint_forked::Value::Float(f) => {
+
+            }
+            quaint_forked::Value::Double(d) => {
+
+            }
+            quaint_forked::Value::Text(t) => {
+
+            }
+            quaint_forked::Value::Boolean(b) => {
+
+            }
+            quaint_forked::Value::Date(d) => {
+
+            }
+            quaint_forked::Value::DateTime(d) => {
+
+            }
+            quaint_forked::Value::Int32(i) => {
+
+            }
+            quaint_forked::Value::Int64(i) => {
+
+            }
+        }
+    }
+
+    pub(crate) fn decode_raw_result_set(set: &ResultSet) -> Value {
+        let columns = set.columns().clone();
+        let results: Vec<Value> = set.into_iter().map(|row| {
+            let mut map: IndexMap<String, Value> = IndexMap::new();
+            for column in columns.iter() {
+                let val = row.get(column).unwrap();
+                map.insert(column.to_owned(), Self::decode_raw(val));
+            }
+            Value::IndexMap(map)
+        }).collect();
+        Value::Vec(results)
+    }
 
     pub(crate) fn decode_serial(optional: bool, row: &ResultRow, column_name: &str) -> Value {
         let try_value = row.get(column_name);
