@@ -1,7 +1,7 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
 
-pub struct SQLDropDatabaseStatement {
+pub(crate) struct SQLDropDatabaseStatement {
     pub(crate) database: String,
     pub(crate) if_exists: bool,
 }

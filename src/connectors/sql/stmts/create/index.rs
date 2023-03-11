@@ -2,7 +2,7 @@ use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
 use crate::core::model::index::ModelIndexItem;
 
-pub struct SQLCreateIndexOnStatement {
+pub(crate) struct SQLCreateIndexOnStatement {
     unique: bool,
     index: String,
     table: String,
@@ -31,7 +31,7 @@ impl ToSQLString for SQLCreateIndexOnStatement {
     }
 }
 
-pub struct SQLCreateIndexStatement {
+pub(crate) struct SQLCreateIndexStatement {
     pub(crate) unique: bool,
     pub(crate) index: String,
 }

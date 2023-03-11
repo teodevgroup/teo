@@ -5,3 +5,12 @@ pub enum SQLDialect {
     SQLite,
     MSSQL,
 }
+
+impl SQLDialect {
+    pub(crate) fn escape(&self) -> &str {
+        match self {
+            SQLDialect::PostgreSQL => "`",
+            _ => "\"",
+        }
+    }
+}

@@ -1,7 +1,7 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
 
-pub struct SQLDropIndexOnStatement {
+pub(crate) struct SQLDropIndexOnStatement {
     pub(crate) index: String,
     pub(crate) table: String,
 }
@@ -14,7 +14,7 @@ impl ToSQLString for SQLDropIndexOnStatement {
     }
 }
 
-pub struct SQLDropIndexStatement {
+pub(crate) struct SQLDropIndexStatement {
     pub(crate) index: String
 }
 

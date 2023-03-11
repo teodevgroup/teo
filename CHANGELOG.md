@@ -304,8 +304,8 @@
 #### 0.0.51
 - SQL migration: when adding required column without @migration(default:), throws  
 - SQL migration: Separate index and columns
-- SQL migration: delete tables
-- SQL migration: rename tables
+- SQL migration: delete tables **[DONE]**
+- SQL migration: rename tables **[DONE]**
 - SQL migration: actions
 - Decimal type
 - PostgreSQL array type

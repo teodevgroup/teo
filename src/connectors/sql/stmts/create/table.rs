@@ -3,7 +3,7 @@ use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
 
 
-pub struct SQLCreateTableStatement {
+pub(crate) struct SQLCreateTableStatement {
     pub(crate) table: String,
     pub(crate) if_not_exists: bool,
     pub(crate) columns: Vec<SQLColumn>

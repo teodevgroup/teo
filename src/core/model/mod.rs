@@ -276,6 +276,10 @@ impl Model {
 
     pub(crate) fn can_read_pipeline(&self) -> &Pipeline { &self.inner.can_read_pipeline }
 
+    pub(crate) fn migration(&self) -> Option<&ModelMigration> {
+        self.inner.migration.as_ref()
+    }
+
     pub(crate) fn disabled_actions(&self) -> Option<&Vec<Action>> {
         self.inner.disabled_actions.as_ref()
     }

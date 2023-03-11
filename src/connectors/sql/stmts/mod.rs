@@ -20,46 +20,46 @@ pub mod select;
 pub mod update;
 pub mod delete_from;
 
-pub struct SQL { }
+pub(crate) struct SQL { }
 
 impl SQL {
-    pub fn create() -> SQLCreateStatement {
+    pub(crate) fn create() -> SQLCreateStatement {
         SQLCreateStatement { }
     }
 
-    pub fn drop() -> SQLDropStatement {
+    pub(crate) fn drop() -> SQLDropStatement {
         SQLDropStatement { }
     }
 
-    pub fn r#use() -> SQLUseStatement {
+    pub(crate) fn r#use() -> SQLUseStatement {
         SQLUseStatement { }
     }
 
-    pub fn show() -> SQLShowStatement {
+    pub(crate) fn show() -> SQLShowStatement {
         SQLShowStatement { }
     }
 
-    pub fn describe(table: impl Into<String>) -> SQLDescribeStatement {
+    pub(crate) fn describe(table: impl Into<String>) -> SQLDescribeStatement {
         SQLDescribeStatement { table: table.into() }
     }
 
-    pub fn alter_table(table: impl Into<String>) -> SQLAlterTableStatement {
+    pub(crate) fn alter_table(table: impl Into<String>) -> SQLAlterTableStatement {
         SQLAlterTableStatement { table: table.into() }
     }
 
-    pub fn insert_into(table: &str) -> SQLInsertIntoStatement {
+    pub(crate) fn insert_into(table: &str) -> SQLInsertIntoStatement {
         SQLInsertIntoStatement { table, values: vec![], returning: vec![] }
     }
 
-    pub fn update(table: &str) -> SQLUpdateStatement {
+    pub(crate) fn update(table: &str) -> SQLUpdateStatement {
         SQLUpdateStatement { table, values: vec![], r#where: "" }
     }
 
-    pub fn delete_from(from: &str) -> SQLDeleteFromStatement {
+    pub(crate) fn delete_from(from: &str) -> SQLDeleteFromStatement {
         SQLDeleteFromStatement { from, r#where: None }
     }
 
-    pub fn select<'a>(columns: Option<&'a Vec<&'a str>>, from: &'a str) -> SQLSelectStatement<'a> {
+    pub(crate) fn select<'a>(columns: Option<&'a Vec<&'a str>>, from: &'a str) -> SQLSelectStatement<'a> {
         SQLSelectStatement { columns, from, r#where: None, order_by: None, limit: None, left_join: None, inner_join: None }
     }
 }

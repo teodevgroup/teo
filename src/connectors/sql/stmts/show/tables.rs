@@ -1,12 +1,12 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
 
-pub struct SQLShowTablesStatement {
+pub(crate) struct SQLShowTablesStatement {
     pub(crate) like: Option<String>
 }
 
 impl SQLShowTablesStatement {
-    pub fn like(&mut self, name: impl Into<String>) -> &mut Self {
+    pub(crate) fn like(&mut self, name: impl Into<String>) -> &mut Self {
         self.like = Some(name.into());
         self
     }

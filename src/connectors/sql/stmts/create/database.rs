@@ -1,13 +1,13 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
 
-pub struct SQLCreateDatabaseStatement {
+pub(crate) struct SQLCreateDatabaseStatement {
     pub(crate) database: String,
     pub(crate) if_not_exists: bool,
 }
 
 impl SQLCreateDatabaseStatement {
-    pub fn if_not_exists(&mut self) -> &mut Self {
+    pub(crate) fn if_not_exists(&mut self) -> &mut Self {
         self.if_not_exists = true;
         self
     }

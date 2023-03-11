@@ -1,7 +1,7 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
 
-pub struct SQLShowIndexFromStatement {
+pub(crate) struct SQLShowIndexFromStatement {
     pub(crate) table: String
 }
 

@@ -2,7 +2,7 @@ use crate::connectors::sql::stmts::r#use::database::SQLUseDatabaseStatement;
 
 pub mod database;
 
-pub struct SQLUseStatement { }
+pub(crate) struct SQLUseStatement { }
 
 impl SQLUseStatement {
     pub fn database(&self, database: impl Into<String>) -> SQLUseDatabaseStatement {

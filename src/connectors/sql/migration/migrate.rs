@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::fs;
+use itertools::Itertools;
 use maplit::hashset;
 use quaint_forked::pooled::{PooledConnection, Quaint};
 use quaint_forked::prelude::Queryable;
@@ -79,10 +80,6 @@ impl SQLMigration {
 
     // Migrate
 
-    pub(crate) async fn migrate(dialect: SQLDialect, pool: &Quaint, models: &Vec<Model>) {
-        Self::migrate_database(dialect, pool, models).await
-    }
-
     pub(crate) async fn is_table_exist(conn: &PooledConnection, dialect: SQLDialect, table_name: &str) -> bool {
         match dialect {
             SQLDialect::SQLite => !conn.query(
@@ -128,13 +125,58 @@ impl SQLMigration {
         }
     }
 
-    pub(crate) async fn migrate_database(dialect: SQLDialect, pool: &Quaint, models: &Vec<Model>) {
+    pub(crate) async fn get_db_user_tables(dialect: SQLDialect, conn: &PooledConnection) -> Vec<String> {
+        match dialect {
+            SQLDialect::MySQL => {
+                let sql = "SHOW TABLES";
+                let db_result = conn.query(Query::from(sql)).await.unwrap();
+                db_result.into_iter().map(|result| { result.into_single().unwrap().to_string().unwrap() }).collect()
+            }
+            SQLDialect::PostgreSQL => {
+                let sql = "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema'";
+                let db_result = conn.query(Query::from(sql)).await.unwrap();
+                db_result.into_iter().map(|result| { result.into_single().unwrap().to_string().unwrap() }).collect()
+            }
+            SQLDialect::SQLite => {
+                let sql = "SELECT name FROM sqlite_master WHERE type in ('table') AND name not like 'sqlite?_%' escape '?'";
+                let db_result = conn.query(Query::from(sql)).await.unwrap();
+                db_result.into_iter().map(|result| { result.into_single().unwrap().to_string().unwrap() }).collect()
+            }
+            _ => unreachable!()
+        }
+    }
+
+    pub(crate) async fn rename_table(dialect: SQLDialect, conn: &PooledConnection, old_name: &str, new_name: &str) {
+        let escape = dialect.escape();
+        let sql = format!("ALTER TABLE {escape}{old_name}{escape} RENAME TO {escape}{new_name}{escape}");
+        conn.execute(Query::from(sql)).await.unwrap();
+    }
+
+    pub(crate) async fn migrate(dialect: SQLDialect, pool: &Quaint, models: &Vec<Model>) {
         let conn = pool.check_out().await.unwrap();
+        let mut db_tables = Self::get_db_user_tables(dialect, &conn).await;
         // compare each table and do migration
         for model in models {
             if model.r#virtual() { continue }
             let table_name = model.table_name();
-            let is_table_exist = Self::is_table_exist(&conn, dialect, table_name).await;
+            if let Some(migration) = model.migration() {
+                if !db_tables.iter().any(|x| x == table_name) {
+                    for old_name in &migration.renamed {
+                        if db_tables.contains(old_name) {
+                            // rename
+                            Self::rename_table(dialect, &conn, old_name.as_str(), table_name).await;
+                            let index = db_tables.clone().iter().find_position(|v| *v == old_name).unwrap().0;
+                            db_tables.remove(index);
+                            db_tables.push(table_name.to_string());
+                            break;
+                        }
+                    }
+                }
+
+            }
+            let is_table_exist = db_tables.iter().any(|x| x == table_name);
+            let index = db_tables.clone().iter().find_position(|x| *x == table_name).unwrap().0;
+            db_tables.remove(index);
             if !is_table_exist {
                 // table not exist, create table
                 let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
@@ -178,6 +220,12 @@ impl SQLMigration {
                     }
                 }
             }
+        }
+        // drop tables
+        for table in db_tables {
+            let escape = if dialect == SQLDialect::PostgreSQL { "\"" } else { "`" };
+            let sql = format!("DROP TABLE {escape}{table}{escape}");
+            conn.execute(Query::from(sql)).await.unwrap();
         }
     }
 }
