@@ -175,13 +175,14 @@ impl SQLMigration {
 
             }
             let is_table_exist = db_tables.iter().any(|x| x == table_name);
-            let index = db_tables.clone().iter().find_position(|x| *x == table_name).unwrap().0;
-            db_tables.remove(index);
             if !is_table_exist {
                 // table not exist, create table
                 let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
                 conn.execute(Query::from(stmt)).await.unwrap();
             } else {
+                let index = db_tables.clone().iter().find_position(|x| *x == table_name).unwrap().0;
+                db_tables.remove(index);
+
                 let model_columns = ColumnDecoder::decode_model_columns(model);
                 let db_columns = Self::db_columns(&conn, dialect, table_name).await;
                 let need_to_alter_any_column = ColumnDecoder::need_to_alter_any_columns(&db_columns, &model_columns);

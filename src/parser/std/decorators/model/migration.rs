@@ -9,7 +9,7 @@ pub(crate) fn migration_decorator(args: Vec<Argument>, model: &mut ModelBuilder)
         if arg.name.is_none() {
             panic!("@migration requires argument name.");
         }
-        if (arg.name.as_ref().unwrap().name.as_str() != "renamed") || (arg.name.as_ref().unwrap().name.as_str() != "version") {
+        if (arg.name.as_ref().unwrap().name.as_str() != "renamed") && (arg.name.as_ref().unwrap().name.as_str() != "version") {
             panic!("Unknown argument name: {}", arg.name.as_ref().unwrap().name.as_str());
         }
         match arg.name.as_ref().unwrap().name.as_str() {

@@ -9,8 +9,8 @@ pub enum SQLDialect {
 impl SQLDialect {
     pub(crate) fn escape(&self) -> &str {
         match self {
-            SQLDialect::PostgreSQL => "`",
-            _ => "\"",
+            SQLDialect::PostgreSQL => "\"",
+            _ => "`",
         }
     }
 }
