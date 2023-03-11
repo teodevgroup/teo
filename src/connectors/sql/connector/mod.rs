@@ -197,7 +197,7 @@ impl Connector for SQLConnector {
             if result.is_empty() {
                 return Ok(Value::Null);
             } else {
-                result.into_iter().map(|row| RowDecoder)
+                return Ok(RowDecoder::decode_raw_result_set(result));
             }
         }
     }

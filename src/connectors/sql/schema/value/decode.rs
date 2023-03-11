@@ -12,33 +12,64 @@ impl RowDecoder {
     pub(crate) fn decode_raw(value: &quaint_forked::Value) -> Value {
         match value {
             quaint_forked::Value::Float(f) => {
-
+                match f {
+                    Some(f) => Value::F32(*f),
+                    None => Value::Null,
+                }
             }
             quaint_forked::Value::Double(d) => {
-
+                match d {
+                    Some(d) => Value::F64(*d),
+                    None => Value::Null,
+                }
             }
             quaint_forked::Value::Text(t) => {
-
+                match t {
+                    Some(d) => Value::String(d.as_ref().to_owned()),
+                    None => Value::Null,
+                }
             }
             quaint_forked::Value::Boolean(b) => {
-
+                match b {
+                    Some(d) => Value::Bool(*d),
+                    None => Value::Null,
+                }
             }
             quaint_forked::Value::Date(d) => {
-
+                match d {
+                    Some(d) => Value::Date(d.clone()),
+                    None => Value::Null,
+                }
             }
             quaint_forked::Value::DateTime(d) => {
-
+                match d {
+                    Some(d) => Value::DateTime(d.clone()),
+                    None => Value::Null,
+                }
             }
             quaint_forked::Value::Int32(i) => {
-
+                match i {
+                    Some(i) => Value::I32(*i),
+                    None => Value::Null,
+                }
             }
             quaint_forked::Value::Int64(i) => {
-
+                match i {
+                    Some(i) => Value::I64(*i),
+                    None => Value::Null,
+                }
             }
+            quaint_forked::Value::Numeric(d) => {
+                match d {
+                    Some(i) => Value::Decimal(i.clone()),
+                    None => Value::Null,
+                }
+            }
+            _ => unreachable!()
         }
     }
 
-    pub(crate) fn decode_raw_result_set(set: &ResultSet) -> Value {
+    pub(crate) fn decode_raw_result_set(set: ResultSet) -> Value {
         let columns = set.columns().clone();
         let results: Vec<Value> = set.into_iter().map(|row| {
             let mut map: IndexMap<String, Value> = IndexMap::new();

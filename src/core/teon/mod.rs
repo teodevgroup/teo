@@ -11,13 +11,13 @@ use std::collections::{BTreeMap, HashMap};
 use std::mem;
 use std::ops::{Add, Div, Mul, Sub, Rem, Neg, BitAnd, BitXor, BitOr};
 use chrono::prelude::{DateTime, Utc};
-use rust_decimal::Decimal;
 use indexmap::IndexMap;
 #[cfg(feature = "data-source-mongodb")]
 use bson::oid::ObjectId;
 use chrono::NaiveDate;
 use maplit::hashmap;
 use regex::Regex;
+use bigdecimal::BigDecimal;
 use crate::core::field::r#type::FieldType;
 use crate::core::object::Object;
 use crate::core::pipeline::ctx::Ctx;
@@ -92,7 +92,7 @@ pub enum Value {
 
     /// Represents a Tson decimal.
     ///
-    Decimal(Decimal),
+    Decimal(BigDecimal),
 
     /// Represents a Tson object id.
     ///
@@ -380,9 +380,9 @@ impl Value {
         }
     }
 
-    pub fn as_decimal(&self) -> Option<Decimal> {
-        match *self {
-            Value::Decimal(v) => Some(v),
+    pub fn as_decimal(&self) -> Option<BigDecimal> {
+        match self {
+            Value::Decimal(v) => Some(v.clone()),
             _ => None
         }
     }

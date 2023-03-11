@@ -1,13 +1,13 @@
 use std::collections::{HashSet, HashMap, BTreeMap};
 use std::ops::BitOr;
 use std::str::FromStr;
+use bigdecimal::{BigDecimal, FromPrimitive};
 #[cfg(feature = "data-source-mongodb")]
 use bson::oid::ObjectId;
 use chrono::{DateTime, NaiveDate, Utc};
 use key_path::{KeyPath, path};
 use maplit::{hashmap, hashset};
 use once_cell::sync::Lazy;
-use rust_decimal::Decimal;
 use serde_json::{Value as JsonValue, Map as JsonMap};
 use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, CREATE_MANY_HANDLER, DELETE, DISCONNECT, FIND_MANY_HANDLER, FIND_UNIQUE_HANDLER, MANY, NESTED, SET, SINGLE, UPDATE, UPSERT};
 use crate::core::error::Error;
@@ -946,12 +946,12 @@ impl Decoder {
                 None => Err(Error::unexpected_input_type("64 bit float", path))
             }
             FieldType::Decimal => match json_value.as_str() {
-                Some(s) => match Decimal::from_str(s) {
+                Some(s) => match BigDecimal::from_str(s) {
                     Ok(d) => Ok(Value::Decimal(d)),
                     Err(_) => Err(Error::unexpected_input_value("decimal string or float", path))
                 }
                 None => match json_value.as_f64() {
-                    Some(f) => Ok(Value::Decimal(Decimal::from_f64_retain(f).unwrap())),
+                    Some(f) => Ok(Value::Decimal(BigDecimal::from_f64(f).unwrap())),
                     None => Err(Error::unexpected_input_value("decimal string or float", path))
                 }
             }

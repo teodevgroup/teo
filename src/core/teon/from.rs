@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 use bson::oid::ObjectId;
 use chrono::{NaiveDate, DateTime, Utc};
-use rust_decimal::Decimal;
+use bigdecimal::BigDecimal;
 use crate::core::teon::Value;
 use crate::prelude::Object;
 
@@ -78,8 +78,8 @@ impl From<f64> for Value {
     }
 }
 
-impl From<Decimal> for Value {
-    fn from(v: Decimal) -> Self { Value::Decimal(v) }
+impl From<BigDecimal> for Value {
+    fn from(v: BigDecimal) -> Self { Value::Decimal(v) }
 }
 
 impl From<usize> for Value {
@@ -111,7 +111,7 @@ impl From<Value> for f64 {
     }
 }
 
-impl From<Value> for Decimal {
+impl From<Value> for BigDecimal {
     fn from(v: Value) -> Self {
         v.as_decimal().unwrap()
     }
