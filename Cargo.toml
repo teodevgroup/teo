@@ -1,9 +1,9 @@
 [package]
 name = "teo"
-version = "0.0.50"
+version = "0.0.51"
 edition = "2021"
 description = "REDEFINED HTTP server framework."
-license = "MIT"
+license = "Apache-2.0"
 build = "build.rs"
 homepage = "https://teocloud.io"
 documentation = "https://teocloud.io/docs"

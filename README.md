@@ -29,7 +29,7 @@ Welcome to submit issues in this repo.
 
 ## License
 
-TEO is under MIT license.
+TEO is under Apache 2.0 license.
 
 [license-image]: https://img.shields.io/github/license/teocloud/teo.svg?style=flat-square
 [license-url]: https://github.com/teocloud/teo/blob/master/LICENSE
