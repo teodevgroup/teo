@@ -302,8 +302,9 @@
 - SQL migration: add column: default value **[DONE]**
 
 #### 0.0.51
-- SQL migration: when adding required column without @migration(default:), throws  
+- SQL migration: when adding required column without `default: ..` or `drop: true`, throws  
 - SQL migration: Separate index and columns
+- `$queryRaw` item for SQL **[DONE]**
 - SQL migration: delete tables **[DONE]**
 - SQL migration: rename tables **[DONE]**
 - SQL migration: actions
