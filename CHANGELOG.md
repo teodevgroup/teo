@@ -315,6 +315,7 @@
 - PostgreSQL array type: TypeScript client
 - Fix optional type decoding **[DONE]**
 - PostgreSQL: fix alter column with multiple clauses **[DONE]**
+- Fix query bug for date, datetime and decimal **[DONE]**
 
 #### 0.0.52
 - SQL migration: Separate index and columns
