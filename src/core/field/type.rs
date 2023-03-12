@@ -203,7 +203,7 @@ static DEFAULT_UPDATORS: Lazy<HashSet<&str>> = Lazy::new(|| {
     hashset!{"set"}
 });
 static NUMBER_UPDATORS: Lazy<HashSet<&str>> = Lazy::new(|| {
-    hashset!{"set", "add", "sub", "mul", "div"}
+    hashset!{"set", "increment", "decrement", "multiply", "divide"}
 });
 static VEC_UPDATORS: Lazy<HashSet<&str>> = Lazy::new(|| {
     hashset!{"set", "push"}
