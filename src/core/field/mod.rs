@@ -201,57 +201,15 @@ impl Field {
     }
 
     pub(crate) fn needs_on_output_callback(&self) -> bool {
-        if self.on_output_pipeline.has_any_items() {
-            return true;
-        }
-        return match self.field_type() {
-            FieldType::Vec(inner) => inner.needs_on_output_callback(),
-            _ => false
-        }
+        self.on_output_pipeline.has_any_items()
     }
 
     pub(crate) async fn perform_on_save_callback(&self, ctx: Ctx<'_>) -> Result<Value> {
-        let mut new_ctx = ctx.clone();
-        match self.field_type() {
-            FieldType::Vec(inner) => {
-                let val = &new_ctx.get_value();
-                let arr = val.as_vec();
-                if !arr.is_none() {
-                    let arr = arr.unwrap();
-                    let mut new_arr: Vec<Value> = Vec::new();
-                    for (i, _v) in arr.iter().enumerate() {
-                        let key_path = &ctx.path + i;
-                        let arr_item_ctx = ctx.with_path(key_path);
-                        new_arr.push(inner.on_save_pipeline.process(arr_item_ctx).await?);
-                    }
-                    new_ctx = new_ctx.with_value(Value::Vec(new_arr));
-                }
-            }
-            _ => {}
-        }
-        self.on_save_pipeline.process(new_ctx.clone()).await
+        self.on_save_pipeline.process(ctx).await
     }
 
-    pub(crate) async fn perform_on_output_callback<'a>(&self, ctx: Ctx<'a>) -> Result<Value> {
-        let mut new_ctx = ctx.clone();
-        match self.field_type() {
-            FieldType::Vec(inner) => {
-                let val = &new_ctx.get_value();
-                let arr = val.as_vec();
-                if !arr.is_none() {
-                    let arr = arr.unwrap();
-                    let mut new_arr: Vec<Value> = Vec::new();
-                    for (i, _v) in arr.iter().enumerate() {
-                        let key_path = &ctx.path + i;
-                        let arr_item_ctx = ctx.with_path(key_path);
-                        new_arr.push(inner.on_output_pipeline.process(arr_item_ctx).await?);
-                    }
-                    new_ctx = new_ctx.with_value(Value::Vec(new_arr));
-                }
-            }
-            _ => {}
-        }
-        self.on_output_pipeline.process(new_ctx.clone()).await
+    pub(crate) async fn perform_on_output_callback(&self, ctx: Ctx<'_>) -> Result<Value> {
+        self.on_output_pipeline.process(ctx).await
     }
 
     pub(crate) fn finalize(&mut self, connector: Arc<dyn Connector>) {
