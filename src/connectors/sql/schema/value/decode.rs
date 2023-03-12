@@ -165,8 +165,11 @@ impl RowDecoder {
             }
         }
         if r#type.is_decimal() {
-            let val = value.as_numeric().unwrap();
-            return Value::Decimal(val.clone());
+            if let Some(val) = value.as_numeric() {
+                return Value::Decimal(val.clone());
+            } else {
+                return Value::Null;
+            }
         }
         if r#type.is_vec() {
             if let Some(vals) = value.as_array() {

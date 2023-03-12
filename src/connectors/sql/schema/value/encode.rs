@@ -1,3 +1,4 @@
+use bigdecimal::BigDecimal;
 use chrono::{NaiveDate, Utc, DateTime, SecondsFormat};
 use itertools::Itertools;
 use crate::connectors::sql::schema::dialect::SQLDialect;
@@ -74,7 +75,7 @@ impl ToSQLString for Value {
             Value::Bool(b) => b.to_sql_input(),
             Value::Date(d) => d.to_sql_input(dialect),
             Value::DateTime(d) => d.to_sql_input(dialect),
-            Value::Decimal(d) => d.to_string().to_sql_input(),
+            Value::Decimal(d) => d.to_sql_input(dialect),
             Value::Vec(values) => format!("array[{}]", values.iter().map(|v| v.to_string(dialect)).join(",")),
             _ => panic!("unhandled"),
         }
@@ -164,6 +165,17 @@ impl ToSQLInput for &str {
 impl ToSQLInput for bool {
     fn to_sql_input(&self) -> String {
         if *self { "TRUE".to_owned() } else { "FALSE".to_owned() }
+    }
+}
+
+impl ToSQLInputDialect for BigDecimal {
+    fn to_sql_input(&self, dialect: SQLDialect) -> String {
+        let result = self.normalized().to_string();
+        if dialect == SQLDialect::PostgreSQL {
+            result + "::numeric"
+        } else {
+            result
+        }
     }
 }
 

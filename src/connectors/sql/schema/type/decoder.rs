@@ -62,8 +62,8 @@ fn postgresql_type_to_database_type(r#type: &str) -> DatabaseType {
         "timestamp without time zone" | "timestamp" => DatabaseType::Timestamp { p: 3, z: false },
         "boolean" | "bool" => DatabaseType::Bool,
         "bigint" | "int8" => DatabaseType::BigInt { m: None, u: false },
-        "double precision" => DatabaseType::Double { m: None, d: None },
-        "real" => DatabaseType::Real,
+        "double precision" | "float8" => DatabaseType::Double { m: None, d: None },
+        "real" | "float4" => DatabaseType::Real,
         "date" => DatabaseType::Date,
         "numeric" => DatabaseType::Decimal { m: Some(65), d: Some(30) },
         _ => if lower_str.starts_with("array|") {
