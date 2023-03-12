@@ -11,10 +11,11 @@ impl ToSQLString for SQLAlterTableModifyStatement {
     fn to_string(&self, dialect: SQLDialect) -> String {
         let table = &self.table;
         let def = self.column.to_string(dialect);
+        let escape = dialect.escape();
         if dialect == SQLDialect::SQLite {
-            format!("ALTER TABLE `{table}` ({def})")
+            format!("ALTER TABLE {escape}{table}{escape} ({def})")
         } else {
-            format!("ALTER TABLE `{table}` MODIFY {def}")
+            format!("ALTER TABLE {escape}{table}{escape} MODIFY {def}")
         }
     }
 }

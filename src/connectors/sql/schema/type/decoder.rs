@@ -57,11 +57,11 @@ fn postgresql_type_to_database_type(r#type: &str) -> DatabaseType {
     let lower = r#type.to_lowercase();
     let lower_str = lower.as_str();
     match lower_str {
-        "integer" => DatabaseType::Int { m: None, u: false },
+        "integer" | "int4" => DatabaseType::Int { m: None, u: false },
         "text" => DatabaseType::Text { m: None, n: None, c: None },
         "timestamp without time zone" => DatabaseType::Timestamp { p: 3, z: false },
-        "boolean" => DatabaseType::Bool,
-        "bigint" => DatabaseType::BigInt { m: None, u: false },
+        "boolean" | "bool" => DatabaseType::Bool,
+        "bigint" | "int8" => DatabaseType::BigInt { m: None, u: false },
         "double precision" => DatabaseType::Double { m: None, d: None },
         "real" => DatabaseType::Real,
         "date" => DatabaseType::Date,
