@@ -154,21 +154,21 @@ export type DateTimeNullableFilter = {{
 }}
 
 export type EnumFilter<T> = {{
-    equals: T
+    equals?: T
     in?: T[]
     notIn?: T[]
     not?: EnumFilter<T>
 }}
 
 export type EnumNullableFilter<T> = {{
-    equals: T | null
+    equals?: T | null
     in?: (T | null)[]
     notIn?: (T | null)[]
     not?: EnumNullableFilter<T> | T | null
 }}
 
 export type ArrayFilter<T> = {{
-    equals: T[]
+    equals?: T[]
     has?: T
     hasSome?: T[]
     hasEvery?: T[]
@@ -177,7 +177,7 @@ export type ArrayFilter<T> = {{
 }}
 
 export type ArrayNullableFilter<T> = {{
-    equals: T[] | null
+    equals?: T[] | null
     has?: T
     hasSome?: T[]
     hasEvery?: T[]
