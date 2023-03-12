@@ -41,7 +41,7 @@ impl ToTypeScriptType for FieldType {
             FieldType::DateTime => "string | Date | DateTime".to_string(),
             FieldType::Bool => "boolean | Bool".to_string(),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number | Number".to_string(),
-            FieldType::Decimal => "string | Decimal | DecimalFilter".to_string(),
+            FieldType::Decimal => "string | Decimal | Decimal".to_string(),
             FieldType::Enum(name) => {
                 with_generic = true;
                 if optional {

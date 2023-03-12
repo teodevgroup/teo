@@ -587,6 +587,7 @@ export declare class TeoError extends Error {
                         if m.has_action(*a) {
                             let action_name = a.as_handler_str();
                             let action_var_name = a.as_handler_str().to_camel_case();
+                            let action_capitalized_name = action_var_name.to_pascal_case();
                             let res_meta = match a.handler_res_meta() {
                                 ResMeta::PagingInfo => "PagingInfo",
                                 ResMeta::TokenInfo => "TokenInfo",
@@ -605,7 +606,7 @@ export declare class TeoError extends Error {
                             };
                             b.empty_line();
                             b.doc(action_doc(object_name, a.clone(), m));
-                            b.line(format!("async {action_var_name}<T extends {model_name}{action_name}Args>(args?: T): Promise<Response<{res_meta}, CheckSelectInclude<T, {res_data}, {model_name}GetPayload<T>{payload_array}>>>"));
+                            b.line(format!("{action_var_name}<T extends {model_name}{action_capitalized_name}Args>(args?: T): Promise<Response<{res_meta}, CheckSelectInclude<T, {res_data}, {model_name}GetPayload<T>{payload_array}>>>"));
                         }
                     });
                 }, "}");
@@ -629,6 +630,6 @@ export declare class TeoError extends Error {
         }, "}");
         c.empty_line();
         c.line(main_object_doc(object_name, graph));
-        c.line(format!("declare export const {object_name} = new {object_class_name}()"));
+        c.line(format!("declare export const {object_name}: {object_class_name}"));
     }).to_string()
 }
