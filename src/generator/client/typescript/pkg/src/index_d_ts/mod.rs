@@ -320,7 +320,7 @@ fn generate_model_credentials_input(model: &Model) -> String {
 
 pub(crate) async fn generate_index_d_ts(graph: &Graph, client: &ClientGeneratorConf) -> String {
     Code::new(0, 4, |c| {
-        c.line(r#"import { Response, PagingInfo, TokenInfo, SortOrder, Enumerable, CheckSelectInclude, SelectSubset, ExistKeys } from "./runtime""#);
+        c.line(r#"import { Response, PagingInfo, TokenInfo, SortOrder, Enumerable, CheckSelectInclude, SelectSubset, ExistKeys, ResponseError } from "./runtime""#);
         c.block("import {", |b| {
             b.line("ObjectIdFilter, ObjectIdNullableFilter, StringFilter, StringNullableFilter, NumberFilter,");
             b.line("NumberNullableFilter, BoolFilter, BoolNullableFilter, DateFilter, DateNullableFilter,");
@@ -335,21 +335,22 @@ pub(crate) async fn generate_index_d_ts(graph: &Graph, client: &ClientGeneratorC
             b.line("EnumFieldUpdateOperationsInput, NullableEnumFieldUpdateOperationsInput,");
             b.line("ArrayFieldUpdateOperationsInput, NullableArrayFieldUpdateOperationsInput,");
         }, "} from \"./operation\"");
+        c.line(r#"import Decimal from "./decimal""#);
         c.line(r#"
 
 export declare function setBearerToken(token: string | undefined)
 
 export declare function getBearerToken(): string | undefined
 
-export declare class TeoError extends Error {{
+export declare class TeoError extends Error {
 
     type: string
-    errors: {{[key: string]: string}} | null
+    errors: {[key: string]: string} | null
 
-    declare constructor(responseError: ResponseError)
+    constructor(responseError: ResponseError)
 
-    declare get name(): string
-}}"#);
+    get name(): string
+}"#);
         c.empty_line();
         // enum definitions
         graph.enums().iter().for_each(|e| {
@@ -498,7 +499,8 @@ export declare class TeoError extends Error {{
             Action::handlers_iter().for_each(|a| {
                 if !m.has_action(*a) { return }
                 let action_name = a.as_handler_str();
-                c.block(format!(r#"export type {model_name}{action_name}Args = {{"#), |b| {
+                let capitalized_action_name = action_name.to_pascal_case();
+                c.block(format!(r#"export type {model_name}{capitalized_action_name}Args = {{"#), |b| {
                     if a.handler_requires_where() {
                         if a == &Action::from_u32(FIND_FIRST_HANDLER) {
                             b.doc(where_doc_first(m));

@@ -17,7 +17,7 @@ impl ToTypeScriptType for FieldType {
             FieldType::DateTime => "Date".to_string(),
             FieldType::Bool => "boolean".to_string(),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number".to_string(),
-            FieldType::Decimal => "string".to_string(),
+            FieldType::Decimal => "Decimal".to_string(),
             FieldType::Enum(name) => name.to_string(),
             FieldType::Vec(internal) => internal.field_type().to_typescript_type(internal.optionality.is_optional()) + "[]",
             FieldType::HashMap(_) => panic!(),
@@ -41,7 +41,7 @@ impl ToTypeScriptType for FieldType {
             FieldType::DateTime => "string | Date | DateTime".to_string(),
             FieldType::Bool => "boolean | Bool".to_string(),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number | Number".to_string(),
-            FieldType::Decimal => "string | DecimalFilter".to_string(),
+            FieldType::Decimal => "string | Decimal | DecimalFilter".to_string(),
             FieldType::Enum(name) => {
                 with_generic = true;
                 if optional {
@@ -78,7 +78,8 @@ impl ToTypeScriptType for FieldType {
         let base: String = match self {
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => "string".to_string(),
-            FieldType::String | FieldType::Decimal => "string".to_string(),
+            FieldType::String => "string".to_string(),
+            FieldType::Decimal => "string | Decimal".to_string(),
             FieldType::Date | FieldType::DateTime => "Date | string".to_string(),
             FieldType::Bool => "boolean".to_string(),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number".to_string(),

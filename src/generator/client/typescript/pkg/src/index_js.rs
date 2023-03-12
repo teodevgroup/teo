@@ -173,6 +173,7 @@ class Teo {{
 const {object_name} = new {class_name}()
 
 module.exports = {{
+  Decimal,
   setBearerToken,
   getBearerToken,
   TeoError,

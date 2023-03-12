@@ -51,11 +51,11 @@ impl Generator {
         }
     }
 
-    pub(crate) async fn generate_file<F: Into<String>, S: Into<String>>(&self, file_name: F, content: S) -> std::io::Result<()> {
+    pub(crate) async fn generate_file<F: Into<String>, S: AsRef<str>>(&self, file_name: F, content: S) -> std::io::Result<()> {
         let filename = self.base_dir.join(file_name.into());
         println!("{}", filename.as_os_str().to_str().unwrap());
         let mut output_file = File::create(filename)?;
-        write!(output_file, "{}", content.into())
+        write!(output_file, "{}", content.as_ref())
     }
 
     pub(crate) async fn generate_file_if_not_exist<F: AsRef<str>, S: AsRef<str>>(&self, file_name: F, content: S) -> std::io::Result<bool> {

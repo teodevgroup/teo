@@ -1,3 +1,3 @@
-pub(crate) async fn generate_decimal_js() -> String {
-    include!("decimal.js")
+pub(crate) async fn generate_decimal_js() -> &'static str {
+    include_str!("decimal.js")
 }
