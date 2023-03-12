@@ -167,8 +167,7 @@ impl SQLMigration {
             let is_table_exist = db_tables.iter().any(|x| x == table_name);
             if !is_table_exist {
                 // table not exist, create table
-                let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
-                conn.execute(Query::from(stmt)).await.unwrap();
+                Self::create_table(dialect, &conn, model).await;
             } else {
                 // remove from list
                 let index = db_tables.clone().iter().find_position(|x| *x == table_name).unwrap().0;
@@ -180,50 +179,55 @@ impl SQLMigration {
                 if need_to_alter_any_column && dialect == SQLDialect::SQLite {
                     panic!("SQLite doesn't support column altering");
                 }
-                let table_has_records = Self::table_has_records(dialect, &conn, table_name);
+                let table_has_records = Self::table_has_records(dialect, &conn, table_name).await;
                 // here update indices
                 // here update columns
                 let manipulations = ColumnDecoder::manipulations(&db_columns, &model_columns, model);
-                for m in manipulations.iter() {
-                    match m {
-                        ColumnManipulation::AddColumn(column, action, default) => {
-                            if column.not_null() && default.is_none() {
-                                // if any records, just raise here
-                                let has_records = Self::table_has_records(dialect, &conn, table_name).await;
-                                if has_records {
-                                    panic!("Cannot add new non null column `{}', table `{}' has records. Consider add a default value or drop the table.", column.name(), table_name)
+                if table_has_records && manipulations.iter().find(|m| m.is_add_column_non_null()).is_some() {
+                    Self::drop_table(dialect, &conn, table_name).await;
+                    Self::create_table(dialect, &conn, model).await;
+                } else {
+                    for m in manipulations.iter() {
+                        match m {
+                            ColumnManipulation::AddColumn(column, action, default) => {
+                                if column.not_null() && default.is_none() {
+                                    // if any records, just raise here
+                                    let has_records = Self::table_has_records(dialect, &conn, table_name).await;
+                                    if has_records {
+                                        panic!("Cannot add new non null column `{}', table `{}' has records. Consider add a default value or drop the table.", column.name(), table_name)
+                                    }
+                                }
+                                let mut c = column.clone().clone();
+                                if default.is_some() {
+                                    c.set_default(Some(default.as_ref().unwrap().to_string(dialect)));
+                                }
+                                let stmt = SQL::alter_table(table_name).add(c).to_string(dialect);
+                                conn.execute(Query::from(stmt)).await.unwrap();
+                                if let Some(action)= action {
+                                    let ctx = Ctx::initial_state_with_value(Value::Null);
+                                    action.process(ctx).await.unwrap();
                                 }
                             }
-                            let mut c = column.clone().clone();
-                            if default.is_some() {
-                                c.set_default(Some(default.as_ref().unwrap().to_string(dialect)));
+                            ColumnManipulation::AlterColumn(column, action) => {
+                                let alter = SQL::alter_table(table_name).modify(column.clone().clone()).to_string(dialect);
+                                conn.execute(Query::from(alter)).await.unwrap();
                             }
-                            let stmt = SQL::alter_table(table_name).add(c).to_string(dialect);
-                            conn.execute(Query::from(stmt)).await.unwrap();
-                            if let Some(action)= action {
-                                let ctx = Ctx::initial_state_with_value(Value::Null);
-                                action.process(ctx).await.unwrap();
+                            ColumnManipulation::RemoveColumn(name, action) => {
+                                if let Some(action)= action {
+                                    let ctx = Ctx::initial_state_with_value(Value::Null);
+                                    action.process(ctx).await.unwrap();
+                                }
+                                let stmt = SQL::alter_table(table_name).drop_column(name).to_string(dialect);
+                                conn.execute(Query::from(stmt)).await.unwrap();
                             }
-                        }
-                        ColumnManipulation::AlterColumn(column, action) => {
-                            let alter = SQL::alter_table(table_name).modify(column.clone().clone()).to_string(dialect);
-                            conn.execute(Query::from(alter)).await.unwrap();
-                        }
-                        ColumnManipulation::RemoveColumn(name, action) => {
-                            if let Some(action)= action {
-                                let ctx = Ctx::initial_state_with_value(Value::Null);
-                                action.process(ctx).await.unwrap();
+                            ColumnManipulation::RenameColumn { old, new } => {
+                                let stmt = if dialect == SQLDialect::PostgreSQL {
+                                    format!("ALTER TABLE {} RENAME COLUMN '{}' TO '{}'", table_name, old, new)
+                                } else {
+                                    format!("ALTER TABLE {} RENAME COLUMN `{}` TO `{}`", table_name, old, new)
+                                };
+                                conn.execute(Query::from(stmt)).await.unwrap();
                             }
-                            let stmt = SQL::alter_table(table_name).drop_column(name).to_string(dialect);
-                            conn.execute(Query::from(stmt)).await.unwrap();
-                        }
-                        ColumnManipulation::RenameColumn { old, new } => {
-                            let stmt = if dialect == SQLDialect::PostgreSQL {
-                                format!("ALTER TABLE {} RENAME COLUMN '{}' TO '{}'", table_name, old, new)
-                            } else {
-                                format!("ALTER TABLE {} RENAME COLUMN `{}` TO `{}`", table_name, old, new)
-                            };
-                            conn.execute(Query::from(stmt)).await.unwrap();
                         }
                     }
                 }
@@ -231,9 +235,18 @@ impl SQLMigration {
         }
         // drop tables
         for table in db_tables {
-            let escape = if dialect == SQLDialect::PostgreSQL { "\"" } else { "`" };
-            let sql = format!("DROP TABLE {escape}{table}{escape}");
-            conn.execute(Query::from(sql)).await.unwrap();
+            Self::drop_table(dialect, &conn, &table).await;
         }
+    }
+
+    async fn drop_table(dialect: SQLDialect, conn: &PooledConnection, table: &str) {
+        let escape = dialect.escape();
+        let sql = format!("DROP TABLE {escape}{table}{escape}");
+        conn.execute(Query::from(sql)).await.unwrap();
+    }
+
+    async fn create_table(dialect: SQLDialect, conn: &PooledConnection, model: &Model) {
+        let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
+        conn.execute(Query::from(stmt)).await.unwrap();
     }
 }

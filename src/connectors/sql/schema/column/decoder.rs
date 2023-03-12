@@ -35,6 +35,13 @@ impl<'a> ColumnManipulation<'a> {
     pub(crate) fn priority(&self, model: &Model) -> usize {
         self.get_field(model).map(|f| f.migration().map(|m| m.priority.unwrap_or(0))).unwrap_or(Some(0)).unwrap_or(0)
     }
+
+    pub(crate) fn is_add_column_non_null(&self) -> bool {
+        match self {
+            ColumnManipulation::AddColumn(c, _, __) => c.not_null,
+            _ => false,
+        }
+    }
 }
 
 pub(crate) struct ColumnDecoder { }
