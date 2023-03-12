@@ -206,7 +206,7 @@ impl ToSQLInput for &str {
 }
 
 impl ToSQLInputDialect for &str {
-    fn to_sql_input(&self, dialect: SQLDialect) -> String {
+    fn to_sql_input(&self, _dialect: SQLDialect) -> String {
         let mut result = String::with_capacity(self.len() + 2);
         result.push('\"');
         for ch in self.chars() {

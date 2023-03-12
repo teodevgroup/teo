@@ -207,7 +207,7 @@ impl SQLMigration {
                                     action.process(ctx).await.unwrap();
                                 }
                             }
-                            ColumnManipulation::AlterColumn(old_column, new_column, action) => {
+                            ColumnManipulation::AlterColumn(old_column, new_column, _action) => {
                                 if dialect != SQLDialect::PostgreSQL {
                                     let alter = SQL::alter_table(table_name).modify(new_column.clone().clone()).to_string(dialect);
                                     conn.execute(Query::from(alter)).await.unwrap();
