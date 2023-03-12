@@ -337,6 +337,7 @@ pub(crate) async fn generate_index_d_ts(graph: &Graph, client: &ClientGeneratorC
         }, "} from \"./operation\"");
         c.line(r#"import Decimal from "./decimal""#);
         c.line(r#"
+export * from "./decimal"
 
 export declare function setBearerToken(token: string | undefined)
 
