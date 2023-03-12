@@ -16,6 +16,7 @@ use crate::connectors::sql::stmts::SQL;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::decode::RowDecoder;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
+use crate::connectors::sql::schema::value::encode::PSQLArrayToSQLString;
 use crate::connectors::sql::url::url_utils;
 use crate::core::action::Action;
 use crate::core::action::source::ActionSource;
@@ -25,6 +26,7 @@ use crate::core::error::Error;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::input::Input;
 use crate::core::result::Result;
+use crate::parser::std::pipeline::debug::print;
 use crate::prelude::{Graph, Object, Value};
 use crate::teon;
 
@@ -53,11 +55,11 @@ impl SQLConnector {
                 let column_name = field.column_name();
                 let val = object.get_value(key).unwrap();
                 if !(field.auto_increment && val.is_null()) {
-                    values.push((column_name, val.to_string(self.dialect)));
+                    values.push((column_name, PSQLArrayToSQLString::to_string_with_ft(&val, self.dialect, field.field_type())));
                 }
-            } else if let Some(_property) = model.property(key) {
+            } else if let Some(property) = model.property(key) {
                 let val: Value = object.get_property(key).await.unwrap();
-                values.push((key, val.to_string(self.dialect)));
+                values.push((key, PSQLArrayToSQLString::to_string_with_ft(&val, self.dialect, property.field_type())));
             }
         }
         let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();
@@ -121,11 +123,11 @@ impl SQLConnector {
                     }
                 } else {
                     let val = object.get_value(key).unwrap();
-                    values.push((column_name, val.to_string(self.dialect)));
+                    values.push((column_name, PSQLArrayToSQLString::to_string_with_ft(&val, self.dialect, field.field_type())));
                 }
-            } else if let Some(_property) = model.property(key) {
+            } else if let Some(property) = model.property(key) {
                 let val: Value = object.get_property(key).await.unwrap();
-                values.push((key, val.to_string(self.dialect)));
+                values.push((key, PSQLArrayToSQLString::to_string_with_ft(&val, self.dialect, property.field_type())));
             }
         }
         let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();

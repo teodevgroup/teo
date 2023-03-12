@@ -586,7 +586,6 @@ export declare class TeoError extends Error {
                 c.block(format!("declare class {model_class_name}Delegate {{"), |b| {
                     Action::handlers_iter().for_each(|a| {
                         if m.has_action(*a) {
-                            let action_name = a.as_handler_str();
                             let action_var_name = a.as_handler_str().to_camel_case();
                             let action_capitalized_name = action_var_name.to_pascal_case();
                             let res_meta = match a.handler_res_meta() {

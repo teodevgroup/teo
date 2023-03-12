@@ -81,6 +81,38 @@ impl ToSQLString for Value {
     }
 }
 
+pub(crate) trait PSQLArrayToSQLString {
+    fn to_string_with_ft(&self, dialect: SQLDialect, field_type: &FieldType) -> String;
+}
+
+fn field_type_to_psql(field_type: &FieldType) -> &'static str {
+    match field_type {
+        FieldType::Decimal => "decimal",
+        FieldType::I32 | FieldType::I64 => "integer",
+        FieldType::F32 | FieldType::F64 => "double precision",
+        FieldType::String => "text",
+        FieldType::Bool => "boolean",
+        FieldType::Date => "date",
+        FieldType::DateTime => "timestamp",
+        _ => unreachable!(),
+    }
+}
+
+impl PSQLArrayToSQLString for Value {
+    fn to_string_with_ft(&self, dialect: SQLDialect, field_type: &FieldType) -> String {
+        match self {
+            Value::Vec(values) => if values.is_empty() {
+                format!("array[]::{}[]", field_type_to_psql(field_type.element_field().unwrap().field_type()))
+            } else {
+                format!("array[{}]", values.iter().map(|v| {
+                    v.to_string(dialect)
+                }).join(","))
+            },
+            _ => self.to_string(dialect),
+        }
+    }
+}
+
 pub trait ToWrapped {
     fn to_wrapped(&self) -> String;
 }
@@ -136,8 +168,13 @@ impl ToSQLInput for bool {
 }
 
 impl ToSQLInputDialect for NaiveDate {
-    fn to_sql_input(&self, _dialect: SQLDialect) -> String {
-        self.format("%Y-%m-%d").to_string().to_sql_input()
+    fn to_sql_input(&self, dialect: SQLDialect) -> String {
+        let result = self.format("%Y-%m-%d").to_string().to_sql_input();
+        if dialect == SQLDialect::PostgreSQL {
+            result + "::date"
+        } else {
+            result
+        }
     }
 }
 
@@ -146,7 +183,12 @@ impl ToSQLInputDialect for DateTime<Utc> {
         if dialect == SQLDialect::SQLite {
             self.to_rfc3339_opts(SecondsFormat::Millis, true).to_sql_input()
         } else {
-            self.format("%Y-%m-%d %H:%M:%S.%3f").to_string().to_sql_input()
+            let result = self.format("%Y-%m-%d %H:%M:%S.%3f").to_string().to_sql_input();
+            if dialect == SQLDialect::PostgreSQL {
+                result + "::timestamp"
+            } else {
+                result
+            }
         }
     }
 }

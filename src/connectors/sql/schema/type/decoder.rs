@@ -59,7 +59,7 @@ fn postgresql_type_to_database_type(r#type: &str) -> DatabaseType {
     match lower_str {
         "integer" | "int4" => DatabaseType::Int { m: None, u: false },
         "text" => DatabaseType::Text { m: None, n: None, c: None },
-        "timestamp without time zone" => DatabaseType::Timestamp { p: 3, z: false },
+        "timestamp without time zone" | "timestamp" => DatabaseType::Timestamp { p: 3, z: false },
         "boolean" | "bool" => DatabaseType::Bool,
         "bigint" | "int8" => DatabaseType::BigInt { m: None, u: false },
         "double precision" => DatabaseType::Double { m: None, d: None },

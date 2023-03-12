@@ -151,8 +151,11 @@ impl RowDecoder {
         }
         if r#type.is_datetime() {
             if dialect == SQLDialect::PostgreSQL {
-                let datetime: DateTime<Utc> = value.as_datetime().unwrap();
-                return Value::DateTime(datetime);
+                if let Some(datetime) = value.as_datetime() {
+                    return Value::DateTime(datetime);
+                } else {
+                    return Value::Null;
+                }
             } else if dialect == SQLDialect::SQLite {
                 let timestamp: String = value.as_str().unwrap().to_owned();
                 return Value::DateTime(DateTime::parse_from_rfc3339(&timestamp).unwrap().with_timezone(&Utc));

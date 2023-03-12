@@ -5,7 +5,6 @@ use maplit::hashset;
 use quaint_forked::pooled::{PooledConnection, Quaint};
 use quaint_forked::prelude::Queryable;
 use quaint_forked::ast::Query;
-use quaint_forked::ast::Comparable;
 use crate::connectors::sql::migration::sql::{sqlite_auto_increment_query, sqlite_list_indices_query};
 use super::super::url::url_utils;
 use crate::connectors::sql::schema::column::decoder::{ColumnDecoder, ColumnManipulation};
