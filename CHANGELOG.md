@@ -320,6 +320,8 @@
 #### 0.0.52
 - SQL migration: Separate index and columns
 - Connector bug: unique constraint violating: error message should have key path
+- Log SQL queries
+- Migration dry run
 
 #### 0.0.53
 - Migration decorator docs
