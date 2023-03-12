@@ -108,45 +108,69 @@ impl RowDecoder {
         }
         let value = value.unwrap();
         if r#type.is_bool() {
-            return Value::Bool(value.as_bool().unwrap())
+            if let Some(v) = value.as_bool() {
+                return Value::Bool(v)
+            } else {
+                return Value::Null;
+            }
         }
         if r#type.is_string() {
-            return Value::String(value.as_str().unwrap().to_owned())
+            if let Some(v) = value.as_str() {
+                return Value::String(v.to_owned())
+            } else {
+                return Value::Null;
+            }
         }
         if r#type.is_int32() {
-            return Value::I32(value.as_i32().unwrap().to_owned())
+            if let Some(v) = value.as_i32() {
+                return Value::I32(v);
+            } else {
+                return Value::Null;
+            }
         }
         if r#type.is_int64() {
-            return Value::I64(value.as_i64().unwrap().to_owned())
+            if let Some(v) = value.as_i64() {
+                return Value::I64(v);
+            } else {
+                return Value::Null;
+            }
         }
-        if r#type.is_float32() {
-            let value = value;
+        if r#type.is_float32() || r#type.is_float64() {
             if let Some(f64_val) = value.as_f64() {
                 return Value::number_from_f64(f64_val, r#type);
             } else if let Some(f32_val) = value.as_f32() {
                 return Value::number_from_f32(f32_val, r#type);
             } else {
-                unreachable!()
+                return Value::Null;
             }
-        }
-        if r#type.is_float64() {
-            return Value::number_from_f64(value.as_f64().unwrap(), r#type);
         }
         if r#type.is_date() {
             if dialect == SQLDialect::PostgreSQL {
-                let naive_date = value.as_date().unwrap();
-                return Value::Date(naive_date);
+                if let Some(naive_date) = value.as_date() {
+                    return Value::Date(naive_date);
+                } else {
+                    return Value::Null;
+                }
             } else if dialect == SQLDialect::SQLite {
-                let timestamp: String = value.as_str().unwrap().to_owned();
-                let naive_date = NaiveDate::parse_from_str(&timestamp, "%Y-%m-%d").unwrap();
-                return Value::Date(naive_date);
+                if let Some(timestamp) = value.as_str() {
+                    let naive_date = NaiveDate::parse_from_str(timestamp, "%Y-%m-%d").unwrap();
+                    return Value::Date(naive_date);
+                } else {
+                    return Value::Null;
+                }
             } else if dialect == SQLDialect::MySQL {
-                let datetime = value.as_datetime().unwrap();
-                let naive_date = datetime.date_naive();
-                return Value::Date(naive_date);
+                if let Some(datetime) = value.as_datetime() {
+                    let naive_date = datetime.date_naive();
+                    return Value::Date(naive_date);
+                } else {
+                    return Value::Null;
+                }
             } else {
-                let naive_date = value.as_date().unwrap();
-                return Value::Date(naive_date);
+                if let Some(naive_date) = value.as_date() {
+                    return Value::Date(naive_date);
+                } else {
+                    return Value::Null;
+                }
             }
         }
         if r#type.is_datetime() {
@@ -157,11 +181,17 @@ impl RowDecoder {
                     return Value::Null;
                 }
             } else if dialect == SQLDialect::SQLite {
-                let timestamp: String = value.as_str().unwrap().to_owned();
-                return Value::DateTime(DateTime::parse_from_rfc3339(&timestamp).unwrap().with_timezone(&Utc));
+                if let Some(timestamp) = value.as_str() {
+                    return Value::DateTime(DateTime::parse_from_rfc3339(timestamp).unwrap().with_timezone(&Utc));
+                } else {
+                    return Value::Null;
+                }
             } else {
-                let datetime: DateTime<Utc> = value.as_datetime().unwrap();
-                return Value::DateTime(datetime);
+                if let Some(datetime) = value.as_datetime() {
+                    return Value::DateTime(datetime);
+                } else {
+                    return Value::Null;
+                }
             }
         }
         if r#type.is_decimal() {

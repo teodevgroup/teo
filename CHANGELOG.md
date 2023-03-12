@@ -313,7 +313,7 @@
 - Fix number updator bug **[DONE]**
 - PostgreSQL array type: server side **[DONE]**
 - PostgreSQL array type: TypeScript client
-- Fix optional type decoding
+- Fix optional type decoding **[DONE]**
 - PostgreSQL: fix alter column with multiple clauses **[DONE]**
 
 #### 0.0.52
