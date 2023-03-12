@@ -14,6 +14,9 @@ impl ToSQLString for SQLAlterTableModifyStatement {
         let escape = dialect.escape();
         if dialect == SQLDialect::SQLite {
             format!("ALTER TABLE {escape}{table}{escape} ({def})")
+        } else if dialect == SQLDialect::PostgreSQL {
+            let c_name = self.column.name();
+            format!("ALTER TABLE {escape}{table}{escape} ALTER COLUMN {escape}{c_name}{escape} TYPE column_definition;")
         } else {
             format!("ALTER TABLE {escape}{table}{escape} MODIFY {def}")
         }

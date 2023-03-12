@@ -208,9 +208,16 @@ impl SQLMigration {
                                     action.process(ctx).await.unwrap();
                                 }
                             }
-                            ColumnManipulation::AlterColumn(column, action) => {
-                                let alter = SQL::alter_table(table_name).modify(column.clone().clone()).to_string(dialect);
-                                conn.execute(Query::from(alter)).await.unwrap();
+                            ColumnManipulation::AlterColumn(old_column, new_column, action) => {
+                                if dialect != SQLDialect::PostgreSQL {
+                                    let alter = SQL::alter_table(table_name).modify(new_column.clone().clone()).to_string(dialect);
+                                    conn.execute(Query::from(alter)).await.unwrap();
+                                } else {
+                                    let clauses = Self::psql_alter_clauses(table_name, *old_column, *new_column);
+                                    for clause in clauses {
+                                        conn.execute(Query::from(clause)).await.unwrap();
+                                    }
+                                }
                             }
                             ColumnManipulation::RemoveColumn(name, action) => {
                                 if let Some(action)= action {
@@ -248,5 +255,24 @@ impl SQLMigration {
     async fn create_table(dialect: SQLDialect, conn: &PooledConnection, model: &Model) {
         let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
         conn.execute(Query::from(stmt)).await.unwrap();
+    }
+
+    fn psql_alter_clauses(table: &str, old_column: &SQLColumn, new_column: &SQLColumn) -> Vec<String> {
+        let mut result = vec![];
+        let name = new_column.name();
+        let escape = SQLDialect::PostgreSQL.escape();
+        if old_column.r#type() != new_column.r#type() {
+            result.push(format!("ALTER TABLE {escape}{table}{escape} ALTER COLUMN {escape}{name}{escape} TYPE {}", new_column.r#type().to_string(SQLDialect::PostgreSQL)));
+        }
+        if old_column.default().is_none() && new_column.default().is_some() {
+            result.push(format!("ALTER TABLE {escape}{table}{escape} ALTER COLUMN {escape}{name}{escape} SET DEFAULT {}", new_column.default().unwrap()));
+        } else if old_column.default().is_some() && new_column.default().is_none() {
+            result.push(format!("ALTER TABLE {escape}{table}{escape} ALTER COLUMN {escape}{name}{escape} DROP DEFAULT"));
+        } else if old_column.default().is_some() && new_column.default().is_some() {
+            if old_column.default() == new_column.default() {
+                result.push(format!("ALTER TABLE {escape}{table}{escape} ALTER COLUMN {escape}{name}{escape} SET DEFAULT {}", new_column.default().unwrap()));
+            }
+        }
+        result
     }
 }

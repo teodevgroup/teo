@@ -312,7 +312,9 @@
 - Server: decimal type **[DONE]**
 - TypeScript client: decimal type **[DONE]**
 - Fix number updator bug **[DONE]**
-- PostgreSQL array type
+- PostgreSQL array type: server side **[DONE]**
+- PostgreSQL array type: TypeScript client
+- PostgreSQL: fix alter column with multiple clauses **[DONE]**
 - Connector bug: unique constraint violating: error message should have key path
 
 #### 0.0.52

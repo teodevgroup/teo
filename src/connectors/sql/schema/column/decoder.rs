@@ -18,7 +18,7 @@ pub(crate) enum ColumnManipulation<'a> {
     AddColumn(&'a SQLColumn, Option<Pipeline>, Option<Value>),
     RemoveColumn(String, Option<Pipeline>),
     RenameColumn{ old: String, new: String },
-    AlterColumn(&'a SQLColumn, Option<Pipeline>),
+    AlterColumn(&'a SQLColumn, &'a SQLColumn, Option<Pipeline>),
 }
 
 impl<'a> ColumnManipulation<'a> {
@@ -28,7 +28,7 @@ impl<'a> ColumnManipulation<'a> {
             ColumnManipulation::AddColumn(c, _, __) => model.field(c.name()),
             ColumnManipulation::RemoveColumn(c, _) => model.dropped_field(c.as_str()),
             ColumnManipulation::RenameColumn {old: _, new} => model.field(new.as_str()),
-            ColumnManipulation::AlterColumn(c, _) => model.field(c.name()),
+            ColumnManipulation::AlterColumn(__, c, _) => model.field(c.name()),
         }
     }
 
@@ -106,7 +106,8 @@ impl ColumnDecoder {
             let action = if let Some(field) = model.field(c.name()) {
                 field.migration().map(|m| m.action.clone()).flatten()
             } else { None };
-            result.push(ColumnManipulation::AlterColumn(c, action));
+            let old = db.iter().find(|dbc| dbc.name() == c.name()).unwrap();
+            result.push(ColumnManipulation::AlterColumn(old, c, action));
         }
         for c in to_rename {
             result.push(ColumnManipulation::RenameColumn { old: c.0, new: c.1 })
