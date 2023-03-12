@@ -8,5 +8,4 @@ pub(crate) struct FieldMigration {
     pub(crate) default: Option<Value>,
     pub(crate) action: Option<Pipeline>,
     pub(crate) priority: Option<usize>,
-    pub(crate) drop: bool,
 }

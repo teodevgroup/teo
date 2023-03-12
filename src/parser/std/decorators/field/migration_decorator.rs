@@ -3,10 +3,10 @@ use crate::core::field::migration::FieldMigration;
 use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
 
-static VALID_NAMES: [&str; 6] = ["renamed", "default", "version", "action", "priority", "drop"];
+static VALID_NAMES: [&str; 5] = ["renamed", "default", "version", "action", "priority"];
 
 pub(crate) fn migration_decorator(args: Vec<Argument>, field: &mut Field) {
-    let mut migration = FieldMigration { renamed: vec![], default: None, version: None, action: None, priority: None, drop: false };
+    let mut migration = FieldMigration { renamed: vec![], default: None, version: None, action: None, priority: None };
     for arg in args {
         if arg.name.is_none() {
             panic!("@migration requires argument name.");
@@ -45,11 +45,6 @@ pub(crate) fn migration_decorator(args: Vec<Argument>, field: &mut Field) {
                 let value = arg.resolved.as_ref().unwrap().as_value().unwrap();
                 let u = value.as_usize().unwrap();
                 migration.priority = Some(u);
-            }
-            "drop" => {
-                let value = arg.resolved.as_ref().unwrap().as_value().unwrap();
-                let b = value.as_bool().unwrap();
-                migration.drop = b;
             }
             _ => unreachable!()
         }

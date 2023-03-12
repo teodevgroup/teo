@@ -315,6 +315,14 @@ impl Model {
         }
         Ok((surface_value, ctx.action))
     }
+
+    pub(crate) fn allows_drop_when_migrate(&self) -> bool {
+        if let Some(m) = self.migration() {
+            m.drop
+        } else {
+            false
+        }
+    }
 }
 
 impl PartialEq for Model {

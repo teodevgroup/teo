@@ -182,7 +182,7 @@ impl SQLMigration {
                 // here update indices
                 // here update columns
                 let manipulations = ColumnDecoder::manipulations(&db_columns, &model_columns, model);
-                if table_has_records && manipulations.iter().find(|m| m.is_add_column_non_null()).is_some() {
+                if table_has_records && manipulations.iter().find(|m| m.is_add_column_non_null()).is_some() && model.allows_drop_when_migrate() {
                     Self::drop_table(dialect, &conn, table_name).await;
                     Self::create_table(dialect, &conn, model).await;
                 } else {
