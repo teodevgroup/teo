@@ -63,6 +63,7 @@ fn postgresql_type_to_database_type(r#type: &str) -> DatabaseType {
         "double precision" => DatabaseType::Double { m: None, d: None },
         "real" => DatabaseType::Real,
         "date" => DatabaseType::Date,
+        "numeric" => DatabaseType::Decimal { m: Some(65), d: Some(30) },
         _ => panic!("Unhandled type '{}'.", r#type)
     }
 }

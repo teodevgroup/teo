@@ -28,7 +28,7 @@ impl Into<JsonValue> for Value {
                 JsonValue::Number(JsonNumber::from_f64(val).unwrap())
             }
             Value::Decimal(val) => {
-                json!({"$decimal": val.to_string()})
+                json!({"$decimal": val.normalized().to_string() })
             }
             Value::String(val) => {
                 JsonValue::String(val.clone())
