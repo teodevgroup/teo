@@ -323,7 +323,7 @@ pub(crate) async fn generate_index_d_ts(graph: &Graph, client: &ClientGeneratorC
         c.line(r#"import { Response, PagingInfo, TokenInfo, SortOrder, Enumerable, CheckSelectInclude, SelectSubset, ExistKeys, ResponseError } from "./runtime""#);
         c.block("import {", |b| {
             b.line("ObjectIdFilter, ObjectIdNullableFilter, StringFilter, StringNullableFilter, NumberFilter,");
-            b.line("NumberNullableFilter, BoolFilter, BoolNullableFilter, DateFilter, DateNullableFilter,");
+            b.line("NumberNullableFilter, DecimalFilter, DecimalNullableFilter, BoolFilter, BoolNullableFilter, DateFilter, DateNullableFilter,");
             b.line("DateTimeFilter, DateTimeNullableFilter, EnumFilter, EnumNullableFilter,");
             b.line("ArrayFilter, ArrayNullableFilter,");
         }, "} from \"./filter\"");

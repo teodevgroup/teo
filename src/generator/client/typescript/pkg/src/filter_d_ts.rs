@@ -1,7 +1,9 @@
 use crate::core::graph::Graph;
 
 pub(crate) async fn generate_filter_d_ts(_graph: &Graph) -> String {
-    format!(r#"export type ObjectIdFilter = {{
+    format!(r#"import Decimal from "./decimal"
+
+export type ObjectIdFilter = {{
     equals?: string
     in?: string[]
     notIn?: string[]
@@ -53,6 +55,28 @@ export type NumberNullableFilter = {{
     gt?: number
     gte?: number
     not?: NumberNullableFilter | number | null
+}}
+
+export type DecimalFilter = {{
+    equals?: Decimal | string
+    in?: (Decimal | string)[]
+    notIn?: (Decimal | string)[]
+    lt?: Decimal | string
+    lte?: Decimal | string
+    gt?: Decimal | string
+    gte?: Decimal | string
+    not?: DecimalFilter | Decimal | string
+}}
+
+export type DecimalNullableFilter = {{
+    equals?: Decimal | string | null
+    in?: (Decimal | string | null)[]
+    notIn?: (Decimal | string | null)[]
+    lt?: Decimal | string
+    lte?: Decimal | string
+    gt?: Decimal | string
+    gte?: Decimal | string
+    not?: DecimalNullableFilter | Decimal | string | null
 }}
 
 export type StringFilter = {{
