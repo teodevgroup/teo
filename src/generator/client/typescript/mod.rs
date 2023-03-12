@@ -12,6 +12,8 @@ use crate::generator::client::ClientGenerator;
 use crate::generator::client::typescript::pkg::gitignore::generate_gitignore_ts;
 use crate::generator::client::typescript::pkg::package_json::{generate_package_json, update_package_json};
 use crate::generator::client::typescript::pkg::readme::generate_readme_ts;
+use crate::generator::client::typescript::pkg::src::decimal_d_ts::generate_decimal_d_ts;
+use crate::generator::client::typescript::pkg::src::decimal_js::generate_decimal_js;
 use crate::generator::client::typescript::pkg::src::index_js::generate_index_js;
 use crate::generator::lib::generator::Generator;
 
@@ -32,7 +34,9 @@ impl ClientGenerator for TypeScriptClientGenerator {
         generator.clear_root_directory().await?;
         generator.generate_file("filter.d.ts", generate_filter_d_ts(graph).await).await?;
         generator.generate_file("operation.d.ts", generate_operation_d_ts(graph).await).await?;
-        generator.generate_file("runtime.d.ts", generate_runtime_d_ts(graph, client).await).await
+        generator.generate_file("runtime.d.ts", generate_runtime_d_ts(graph, client).await).await?;
+        generator.generate_file("decimal.js", generate_decimal_js().await).await?;
+        generator.generate_file("decimal.d.ts", generate_decimal_d_ts().await).await
     }
 
     async fn generate_package_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {

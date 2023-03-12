@@ -15,7 +15,9 @@ pub(crate) async fn generate_index_js(graph: &Graph, client: &ClientGeneratorCon
             name_map += &format!("  '{}': '{}',\n", model.name().to_camel_case(), model.url_segment_name());
         }
     }
-    format!(r#"const nameMap = {{
+    format!(r#"const Decimal = require('./decimal')
+
+const nameMap = {{
 {name_map}}}
 
 let bearerToken = undefined
@@ -92,7 +94,9 @@ async function request(urlSegmentName, action, args, token = getBearerToken()) {
     if (typeof value === 'object' && value != null) {{
       if (value['$date']) {{
         return new Date(value['$date'])
-      }} else {{
+      }} else if (value['$decimal']) {{
+        return new Decimal(value['$decimal'])
+      }}  else {{
         return value
       }}
     }} else {{
