@@ -310,7 +310,7 @@
 - SQL migration: rename tables **[DONE]**
 - SQL migration: actions **[DONE]**
 - Server: decimal type **[DONE]**
-- TypeScript client: decimal type
+- TypeScript client: decimal type **[DONE]**
 - PostgreSQL array type
 - Connector bug: unique constraint violating: error message should have key path
 
