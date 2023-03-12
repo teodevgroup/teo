@@ -1,5 +1,5 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
-use crate::core::field::r#type::FieldType;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::teon::Value;
 use chrono::{NaiveDate, DateTime, Utc};
 use indexmap::IndexMap;
@@ -100,71 +100,84 @@ impl RowDecoder {
         }
     }
 
-    pub(crate) fn decode(r#type: &FieldType, optional: bool, row: &ResultRow, column_name: &str, dialect: SQLDialect) -> Value {
-        let result = row.get(column_name);
+    pub(crate) fn decode_value(r#type: &FieldType, optional: bool, value: Option<&quaint_forked::Value>, dialect: SQLDialect) -> Value {
         if optional {
-            if result.is_none() {
+            if value.is_none() {
                 return Value::Null;
             }
         }
+        let value = value.unwrap();
         if r#type.is_bool() {
-            return Value::Bool(row.get(column_name).unwrap().as_bool().unwrap())
+            return Value::Bool(value.as_bool().unwrap())
         }
         if r#type.is_string() {
-            return Value::String(row.get(column_name).unwrap().as_str().unwrap().to_owned())
+            return Value::String(value.as_str().unwrap().to_owned())
         }
         if r#type.is_int32() {
-            return Value::I32(row.get(column_name).unwrap().as_i32().unwrap().to_owned())
+            return Value::I32(value.as_i32().unwrap().to_owned())
         }
         if r#type.is_int64() {
-            return Value::I64(row.get(column_name).unwrap().as_i64().unwrap().to_owned())
+            return Value::I64(value.as_i64().unwrap().to_owned())
         }
         if r#type.is_float32() {
-            let value = row.get(column_name).unwrap();
-            if let Some(f64_val) = row.get(column_name).unwrap().as_f64() {
+            let value = value;
+            if let Some(f64_val) = value.as_f64() {
                 return Value::number_from_f64(f64_val, r#type);
-            } else if let Some(f32_val) = row.get(column_name).unwrap().as_f32() {
+            } else if let Some(f32_val) = value.as_f32() {
                 return Value::number_from_f32(f32_val, r#type);
             } else {
                 unreachable!()
             }
         }
         if r#type.is_float64() {
-            return Value::number_from_f64(row.get(column_name).unwrap().as_f64().unwrap(), r#type);
+            return Value::number_from_f64(value.as_f64().unwrap(), r#type);
         }
         if r#type.is_date() {
             if dialect == SQLDialect::PostgreSQL {
-                let naive_date = row.get(column_name).unwrap().as_date().unwrap();
+                let naive_date = value.as_date().unwrap();
                 return Value::Date(naive_date);
             } else if dialect == SQLDialect::SQLite {
-                let timestamp: String = row.get(column_name).unwrap().as_str().unwrap().to_owned();
+                let timestamp: String = value.as_str().unwrap().to_owned();
                 let naive_date = NaiveDate::parse_from_str(&timestamp, "%Y-%m-%d").unwrap();
                 return Value::Date(naive_date);
             } else if dialect == SQLDialect::MySQL {
-                let datetime = row.get(column_name).unwrap().as_datetime().unwrap();
+                let datetime = value.as_datetime().unwrap();
                 let naive_date = datetime.date_naive();
                 return Value::Date(naive_date);
             } else {
-                let naive_date = row.get(column_name).unwrap().as_date().unwrap();
+                let naive_date = value.as_date().unwrap();
                 return Value::Date(naive_date);
             }
         }
         if r#type.is_datetime() {
             if dialect == SQLDialect::PostgreSQL {
-                let datetime: DateTime<Utc> = row.get(column_name).unwrap().as_datetime().unwrap();
+                let datetime: DateTime<Utc> = value.as_datetime().unwrap();
                 return Value::DateTime(datetime);
             } else if dialect == SQLDialect::SQLite {
-                let timestamp: String = row.get(column_name).unwrap().as_str().unwrap().to_owned();
+                let timestamp: String = value.as_str().unwrap().to_owned();
                 return Value::DateTime(DateTime::parse_from_rfc3339(&timestamp).unwrap().with_timezone(&Utc));
             } else {
-                let datetime: DateTime<Utc> = row.get(column_name).unwrap().as_datetime().unwrap();
+                let datetime: DateTime<Utc> = value.as_datetime().unwrap();
                 return Value::DateTime(datetime);
             }
         }
         if r#type.is_decimal() {
-            let val = row.get(column_name).unwrap().as_numeric().unwrap();
+            let val = value.as_numeric().unwrap();
             return Value::Decimal(val.clone());
         }
+        if r#type.is_vec() {
+            if let Some(vals) = value.as_array() {
+                let inner = r#type.element_field().unwrap();
+                return Value::Vec(vals.iter().map(|v| Self::decode_value(inner.field_type(), inner.is_optional(), Some(v), dialect)).collect());
+            } else {
+                return Value::Null;
+            }
+        }
         panic!("Unhandled database when decoding type.")
+    }
+
+    pub(crate) fn decode(r#type: &FieldType, optional: bool, row: &ResultRow, column_name: &str, dialect: SQLDialect) -> Value {
+        let result = row.get(column_name);
+        Self::decode_value(r#type, optional, result.clone(), dialect)
     }
 }
