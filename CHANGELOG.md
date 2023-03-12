@@ -304,7 +304,6 @@
 #### 0.0.51
 - SQL migration: when adding required column without `default: ..` or `drop: true`, throws **[DONE]**
 - SQL migration: drop table if needed when adding required column **[DONE]**
-- SQL migration: Separate index and columns
 - `$queryRaw` item for SQL **[DONE]**
 - SQL migration: delete tables **[DONE]**
 - SQL migration: rename tables **[DONE]**
@@ -314,10 +313,14 @@
 - Fix number updator bug **[DONE]**
 - PostgreSQL array type: server side **[DONE]**
 - PostgreSQL array type: TypeScript client
+- Fix optional type decoding
 - PostgreSQL: fix alter column with multiple clauses **[DONE]**
-- Connector bug: unique constraint violating: error message should have key path
 
 #### 0.0.52
+- SQL migration: Separate index and columns
+- Connector bug: unique constraint violating: error message should have key path
+
+#### 0.0.53
 - Migration decorator docs
 - Dropped decorator docs
 - MongoDB migration
@@ -329,7 +332,7 @@
 - CLI mode: When running server, panic if custom programming callback is provided
 - Soft delete documentation
 
-#### 0.0.53
+#### 0.0.54
 - Rust entities: setter documentation
 - Rust entities: optional string array
 - Rust entities: required string array
@@ -340,14 +343,11 @@
 - Support code comment tags for IntelliJ IDEA
 - Pipeline documentation
 
-#### 0.0.54
+#### 0.0.55
 - Linting, warnings and errors
 
-#### 0.0.55
-- Seed with datasets
-
 #### 0.0.56
-- Support MSSQL
+- Seed with datasets
 
 #### 0.0.57
 - Node.js object
@@ -380,6 +380,7 @@
 - Database type mapping for `Date`
 - Database type mapping
 - Database type mapping for field, property and collection types' item field
+- Support MSSQL
 
 #### 0.0.81
 - Input omissible and output omissible for generated clients
