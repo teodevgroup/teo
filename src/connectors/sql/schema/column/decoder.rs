@@ -225,7 +225,12 @@ AND    i.indisprimary", table_name);
             let column_name: String = row.get("column_name").unwrap().to_string().unwrap();
             let nullable_text: String = row.get("is_nullable").unwrap().to_string().unwrap();
             let nullable: bool = nullable_text == "YES";
-            let data_type: String = row.get("data_type").unwrap().to_string().unwrap();
+            let mut data_type: String = row.get("data_type").unwrap().to_string().unwrap();
+            let mut udt_name: String = row.get("udt_name").unwrap().to_string().unwrap();
+            if data_type.as_str() == "ARRAY" {
+                udt_name.remove(0);
+                data_type = data_type + "|" + udt_name.as_str()
+            }
             SQLColumn {
                 name: column_name.clone(),
                 r#type: SQLTypeDecoder::decode(&data_type, dialect),

@@ -1,6 +1,6 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::database::r#type::DatabaseType;
-use crate::core::field::r#type::FieldType;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 
 pub trait ToDatabaseType {
     fn to_database_type(&self, dialect: SQLDialect) -> DatabaseType;
@@ -54,8 +54,8 @@ fn default_database_type_postgresql(field_type: &FieldType) -> DatabaseType {
         FieldType::Date => DatabaseType::Date,
         FieldType::DateTime => DatabaseType::Timestamp { p: 3, z: false },
         FieldType::Decimal => DatabaseType::Decimal { m: Some(65), d: Some(30) },
-        FieldType::Enum(_) => panic!(),
-        FieldType::Vec(_) => panic!(),
+        FieldType::Enum(_) => DatabaseType::String,
+        FieldType::Vec(inner) => DatabaseType::Vec(Box::new(default_database_type_postgresql(inner.field_type()))),
         FieldType::HashMap(_) => panic!(),
         FieldType::BTreeMap(_) => panic!(),
         FieldType::Object(_) => panic!(),
@@ -74,7 +74,7 @@ fn default_database_type_sqlite(field_type: &FieldType) -> DatabaseType {
         FieldType::Date => DatabaseType::Text { m: None, n: None, c: None },
         FieldType::DateTime => DatabaseType::Text { m: None, n: None, c: None },
         FieldType::Decimal => DatabaseType::Decimal { m: None, d: None },
-        FieldType::Enum(_) => panic!(),
+        FieldType::Enum(_) => DatabaseType::String,
         FieldType::Vec(_) => panic!(),
         FieldType::HashMap(_) => panic!(),
         FieldType::BTreeMap(_) => panic!(),

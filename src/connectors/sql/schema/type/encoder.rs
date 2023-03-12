@@ -154,6 +154,11 @@ impl ToSQLString for DatabaseType {
             DatabaseType::Int32 => panic!("SQL databases don't support Int32."),
             DatabaseType::Int64 => panic!("SQL databases don't support Int64."),
             DatabaseType::String => panic!("SQL databases don't support String."),
+            DatabaseType::Vec(inner) => if dialect == SQLDialect::PostgreSQL {
+                inner.to_string(dialect) + "[]"
+            } else {
+                panic!("Array is only supported for PostgreSQL.")
+            }
         }
     }
 }

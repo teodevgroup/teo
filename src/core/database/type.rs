@@ -207,4 +207,6 @@ pub enum DatabaseType {
     // ByteA type
     // PostgreSQL only
     ByteA,
+
+    Vec(Box<DatabaseType>),
 }

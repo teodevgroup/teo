@@ -1,4 +1,5 @@
 use chrono::{NaiveDate, Utc, DateTime, SecondsFormat};
+use itertools::Itertools;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::prelude::{Graph, Value};
@@ -74,6 +75,7 @@ impl ToSQLString for Value {
             Value::Date(d) => d.to_sql_input(dialect),
             Value::DateTime(d) => d.to_sql_input(dialect),
             Value::Decimal(d) => d.to_string().to_sql_input(),
+            Value::Vec(values) => format!("array[{}]", values.iter().map(|v| v.to_string(dialect)).join(",")),
             _ => panic!("unhandled"),
         }
     }
