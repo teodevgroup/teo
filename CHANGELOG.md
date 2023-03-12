@@ -311,6 +311,7 @@
 - SQL migration: actions **[DONE]**
 - Server: decimal type **[DONE]**
 - TypeScript client: decimal type **[DONE]**
+- Fix number updator bug **[DONE]**
 - PostgreSQL array type
 - Connector bug: unique constraint violating: error message should have key path
 

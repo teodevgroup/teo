@@ -9,17 +9,17 @@ pub(crate) enum Input {
 }
 
 impl Input {
-    pub(crate) fn decode_field(value: &Value) -> Input {
-        if let Some(value) = value.as_hashmap() {
-            let key = value.keys().next().unwrap();
-            let value = value.values().next().unwrap();
+    pub(crate) fn decode_field(updator: &Value) -> Input {
+        if let Some(updator_map) = updator.as_hashmap() {
+            let key = updator_map.keys().next().unwrap();
+            let value = updator_map.values().next().unwrap();
             if key.as_str() == "set" {
                 SetValue(value.clone())
             } else {
-                AtomicUpdator(value.clone())
+                AtomicUpdator(updator.clone())
             }
         } else {
-            SetValue(value.clone())
+            SetValue(updator.clone())
         }
     }
 
