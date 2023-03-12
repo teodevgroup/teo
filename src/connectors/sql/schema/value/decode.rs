@@ -161,7 +161,10 @@ impl RowDecoder {
                 return Value::DateTime(datetime);
             }
         }
-
+        if r#type.is_decimal() {
+            let val = row.get(column_name).unwrap().as_numeric().unwrap();
+            return Value::Decimal(val.clone());
+        }
         panic!("Unhandled database when decoding type.")
     }
 }
