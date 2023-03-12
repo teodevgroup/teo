@@ -96,13 +96,13 @@ impl Query {
                     "mode" => { }
                     "has" => {
                         let element_type = r#type.element_field().unwrap();
-                        result.push(Self::where_item(&column_name, "@>", &value.to_sql_string(element_type.field_type(), element_type.is_optional(), graph).wrap_in_array()));
+                        result.push(Self::where_item(&column_name, "@>", &value.to_sql_string_array_arg(element_type.field_type(), element_type.is_optional(), graph).wrap_in_array()));
                     }
                     "hasEvery" => {
-                        result.push(Self::where_item(&column_name, "@>", &value.to_sql_string(r#type, false, graph)));
+                        result.push(Self::where_item(&column_name, "@>", &value.to_sql_string_array_arg(r#type, false, graph)));
                     }
                     "hasSome" => {
-                        result.push(Self::where_item(&column_name, "&&", &value.to_sql_string(r#type, false, graph)));
+                        result.push(Self::where_item(&column_name, "&&", &value.to_sql_string_array_arg(r#type, false, graph)));
                     }
                     "isEmpty" => {
                         result.push(Self::where_item(&format!("ARRAY_LENGTH({})", &column_name), "=", "0"));
@@ -469,7 +469,9 @@ impl Query {
                 stmt.limit(limit, skip);
             }
         }
-        stmt.to_string(dialect)
+        let result = stmt.to_string(dialect);
+        println!("see result: {}", result);
+        result
     }
 
     fn default_desc_order(model: &Model) -> Value {
