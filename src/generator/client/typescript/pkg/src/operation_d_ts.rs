@@ -2,7 +2,9 @@ use crate::core::graph::Graph;
 
 
 pub(crate) async fn generate_operation_d_ts(_graph: &Graph) -> String {
-    format!(r#"export type ObjectIdFieldUpdateOperationsInput = {{
+    format!(r#"import Decimal from "./decimal"
+
+export type ObjectIdFieldUpdateOperationsInput = {{
     set?: string
 }}
 
@@ -32,6 +34,22 @@ export type NullableNumberFieldUpdateOperationsInput = {{
     decrement?: number
     multiply?: number
     divide?: number
+}}
+
+export type DecimalFieldUpdateOperationsInput = {{
+    set?: string | Decimal
+    increment?: string | Decimal
+    decrement?: string | Decimal
+    multiply?: string | Decimal
+    divide?: string | Decimal
+}}
+
+export type NullableDecimalFieldUpdateOperationsInput = {{
+    set?: string | Decimal | null
+    increment?: string | Decimal
+    decrement?: string | Decimal
+    multiply?: string | Decimal
+    divide?: string | Decimal
 }}
 
 export type BoolFieldUpdateOperationsInput = {{

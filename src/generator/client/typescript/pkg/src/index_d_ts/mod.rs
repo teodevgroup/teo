@@ -330,6 +330,7 @@ pub(crate) async fn generate_index_d_ts(graph: &Graph, client: &ClientGeneratorC
         c.block("import {", |b| {
             b.line("ObjectIdFieldUpdateOperationsInput, NullableObjectIdFieldUpdateOperationsInput, StringFieldUpdateOperationsInput,");
             b.line("NullableStringFieldUpdateOperationsInput, NumberFieldUpdateOperationsInput, NullableNumberFieldUpdateOperationsInput,");
+            b.line("DecimalFieldUpdateOperationsInput, NullableDecimalFieldUpdateOperationsInput,");
             b.line("BoolFieldUpdateOperationsInput, NullableBoolFieldUpdateOperationsInput, DateFieldUpdateOperationsInput,");
             b.line("NullableDateFieldUpdateOperationsInput, DateTimeFieldUpdateOperationsInput, NullableDateTimeFieldUpdateOperationsInput,");
             b.line("EnumFieldUpdateOperationsInput, NullableEnumFieldUpdateOperationsInput,");
@@ -630,6 +631,6 @@ export declare class TeoError extends Error {
         }, "}");
         c.empty_line();
         c.line(main_object_doc(object_name, graph));
-        c.line(format!("declare export const {object_name}: {object_class_name}"));
+        c.line(format!("export const {object_name}: {object_class_name}"));
     }).to_string()
 }
