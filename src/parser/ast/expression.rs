@@ -120,12 +120,17 @@ impl Display for NullLiteral {
 pub(crate) struct EnumChoiceLiteral {
     pub(crate) value: String,
     pub(crate) span: Span,
+    pub(crate) argument_list: Option<ArgumentList>,
 }
 
 impl Display for EnumChoiceLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str(".")?;
-        f.write_str(&self.value)
+        f.write_str(&self.value)?;
+        if let Some(argument_list) = &self.argument_list {
+            Display::fmt(argument_list, f)?;
+        }
+        Ok(())
     }
 }
 

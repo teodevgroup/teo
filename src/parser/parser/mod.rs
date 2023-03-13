@@ -561,7 +561,7 @@ impl Parser {
                 Rule::numeric_literal => unit.expressions.push(ExpressionKind::NumericLiteral(NumericLiteral { value: current.as_str().to_string(), span })),
                 Rule::string_literal => unit.expressions.push(ExpressionKind::StringLiteral(StringLiteral { value: current.as_str().to_string(), span })),
                 Rule::regexp_literal => unit.expressions.push(ExpressionKind::RegExpLiteral(RegExpLiteral { value: current.as_str().to_string(), span })),
-                Rule::enum_choice_literal => unit.expressions.push(ExpressionKind::EnumChoiceLiteral(EnumChoiceLiteral { value: current.as_str().to_string(), span })),
+                Rule::enum_choice_literal => unit.expressions.push(ExpressionKind::EnumChoiceLiteral(Self::parse_enum_choice_literal(current))),
                 Rule::tuple_literal => unit.expressions.push(ExpressionKind::TupleLiteral(Self::parse_tuple_literal(current))),
                 Rule::array_literal => unit.expressions.push(ExpressionKind::ArrayLiteral(Self::parse_array_literal(current))),
                 Rule::dictionary_literal => unit.expressions.push(ExpressionKind::DictionaryLiteral(Self::parse_dictionary_literal(current))),
@@ -578,6 +578,21 @@ impl Parser {
             return ExpressionKind::Unit(unit);
         }
     }
+
+    fn parse_enum_choice_literal(pair: Pair<'_>) -> EnumChoiceLiteral {
+        let span = Self::parse_span(&pair);
+        let mut arg_list: Option<ArgumentList> = None;
+        let mut value: Option<String> = None;
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::identifier => value = Some(current.as_str().to_owned()),
+                Rule::argument_list => arg_list = Some(Self::parse_argument_list(current)),
+                _ => panic!()
+            }
+        }
+        EnumChoiceLiteral { value: value.unwrap(), span, argument_list: arg_list }
+    }
+
 
     fn parse_nullish_coalescing(pair: Pair<'_>) -> NullishCoalescing {
         let span = Self::parse_span(&pair);

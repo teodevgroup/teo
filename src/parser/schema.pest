@@ -82,7 +82,7 @@ null_literal = { "null" }
 // #############
 // enum choice literals
 // #############
-enum_choice_literal = @{ "." ~ identifier }
+enum_choice_literal = @{ "." ~ identifier ~ argument_list? }
 
 // #############
 // range literals
