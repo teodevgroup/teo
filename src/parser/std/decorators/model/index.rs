@@ -1,7 +1,6 @@
 use crate::core::field::Sort;
 use crate::core::model::builder::ModelBuilder;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
-
 use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
 
