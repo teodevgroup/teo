@@ -385,7 +385,7 @@ impl Connector for MongoDBConnector {
                         continue
                     }
                     let name = (&index).options.as_ref().unwrap().name.as_ref().unwrap();
-                    let result = model.indices().iter().find(|i| i.name() == name);
+                    let result = model.indices().iter().find(|i| &i.mongodb_name() == name);
                     if result.is_none() {
                         // not in our model definition, but in the database
                         // drop this index
@@ -399,7 +399,7 @@ impl Connector for MongoDBConnector {
                             let _ = collection.drop_index(name, None).await.unwrap();
                             // create index
                             let index_options = IndexOptions::builder()
-                                .name(result.name().to_owned())
+                                .name(result.mongodb_name())
                                 .unique(result.r#type() == ModelIndexType::Unique || result.r#type() == ModelIndexType::Primary)
                                 .sparse(true)
                                 .build();
@@ -417,7 +417,7 @@ impl Connector for MongoDBConnector {
                 }
             }
             for index in model.indices() {
-                if !reviewed_names.contains(&index.name().to_string()) {
+                if !reviewed_names.contains(&index.mongodb_name()) {
                     // ignore primary
                     if index.keys().len() == 1 {
                         let field = model.field(index.keys().get(0).unwrap()).unwrap();
@@ -427,7 +427,7 @@ impl Connector for MongoDBConnector {
                     }
                     // create this index
                     let index_options = IndexOptions::builder()
-                        .name(index.name().to_owned())
+                        .name(index.mongodb_name())
                         .unique(index.r#type() == ModelIndexType::Unique || index.r#type() == ModelIndexType::Primary)
                         .sparse(true)
                         .build();

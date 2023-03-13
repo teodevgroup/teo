@@ -66,6 +66,7 @@ impl Default for IndexSettings {
 pub enum FieldIndex {
     Index(IndexSettings),
     Unique(IndexSettings),
+    Primary(IndexSettings),
 }
 
 impl FieldIndex {

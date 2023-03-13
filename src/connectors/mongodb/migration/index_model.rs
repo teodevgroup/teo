@@ -14,6 +14,6 @@ impl From<&IndexModel> for ModelIndex {
             let item = ModelIndexItem::new(k, if v.as_i32().unwrap() == 1 { Sort::Asc } else { Sort::Desc }, None);
             items.push(item);
         }
-        ModelIndex::new(if unique { ModelIndexType::Unique } else { ModelIndexType::Index }, index_model.options.as_ref().unwrap().name.as_ref().unwrap().to_string(), items)
+        ModelIndex::new(if unique { ModelIndexType::Unique } else { ModelIndexType::Index }, Some(index_model.options.as_ref().unwrap().name.as_ref().unwrap().to_string()), items)
     }
 }

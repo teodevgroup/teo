@@ -133,7 +133,7 @@ impl ModelBuilder {
         let items: Vec<ModelIndexItem> = string_keys.iter().map(|k| {
             ModelIndexItem::new(k, Sort::Asc, None)
         }).collect();
-        let primary_index = ModelIndex::new(ModelIndexType::Primary, name, items);
+        let primary_index = ModelIndex::new(ModelIndexType::Primary, Some(name), items);
         self.indices.push(primary_index.clone());
         self.primary = Some(primary_index);
         self
@@ -152,7 +152,7 @@ impl ModelBuilder {
         let items: Vec<ModelIndexItem> = string_keys.iter().map(|k| {
             ModelIndexItem::new(k, Sort::Asc, None)
         }).collect();
-        let index = ModelIndex::new(ModelIndexType::Index, name, items);
+        let index = ModelIndex::new(ModelIndexType::Index, Some(name), items);
         self.indices.push(index);
         self
     }
@@ -170,7 +170,7 @@ impl ModelBuilder {
         let items: Vec<ModelIndexItem> = string_keys.iter().map(|k| {
             ModelIndexItem::new(k, Sort::Asc, None)
         }).collect();
-        let index = ModelIndex::new(ModelIndexType::Unique, name, items);
+        let index = ModelIndex::new(ModelIndexType::Unique, Some(name), items);
         self.indices.push(index);
         self
     }
@@ -196,24 +196,24 @@ impl ModelBuilder {
         }
         for field in fields_vec.iter() {
             fields_map.insert(field.name.clone(), field.clone());
-            if field.primary {
-                primary = Some(ModelIndex::new(ModelIndexType::Primary, field.name(), vec![
-                    ModelIndexItem::new(field.name(), Sort::Asc, None)
-                ]));
-                indices.push(primary.as_ref().unwrap().clone());
-            }
             if field.index.is_some() {
                 match &field.index.as_ref().unwrap() {
                     FieldIndex::Index(settings) => {
-                        indices.push(ModelIndex::new(ModelIndexType::Index, if settings.name.is_some() { settings.name.as_ref().unwrap().clone() } else { field.name.clone() }, vec![
+                        indices.push(ModelIndex::new(ModelIndexType::Index, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
                             ModelIndexItem::new(field.name(), settings.sort, settings.length)
                         ]));
 
                     }
                     FieldIndex::Unique(settings) => {
-                        indices.push(ModelIndex::new(ModelIndexType::Unique, if settings.name.is_some() { settings.name.as_ref().unwrap().clone() } else { field.name.clone() }, vec![
+                        indices.push(ModelIndex::new(ModelIndexType::Unique, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
                             ModelIndexItem::new(field.name(), settings.sort, settings.length)
                         ]));
+                    }
+                    FieldIndex::Primary(settings) => {
+                        primary = Some(ModelIndex::new(ModelIndexType::Primary, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                            ModelIndexItem::new(field.name(), settings.sort, settings.length)
+                        ]));
+                        indices.push(primary.as_ref().unwrap().clone());
                     }
                 }
             }

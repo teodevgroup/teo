@@ -48,7 +48,7 @@ impl ModelIndexBuilder {
     pub(crate) fn build(&mut self) -> ModelIndex {
         ModelIndex {
             index_type: self.index_type,
-            name: self.name.clone().unwrap(),
+            name: Some(self.name.clone().unwrap()),
             items: self.items.clone(),
             keys: self.items.iter().map(|i| i.field_name.to_owned()).collect(),
         }
