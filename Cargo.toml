@@ -10,8 +10,6 @@ documentation = "https://teocloud.io/docs"
 repository = "https://github.com/teocloud/teo"
 
 [dependencies]
-to-mut = { version = "0.1.0" }
-to-mut-proc-macro = { version = "0.1.0" }
 actix-web = "4.3.1"
 actix-http = "3.3.1"
 serde = { version = "1.0", features = ["derive"] }
@@ -25,7 +23,7 @@ regex = "1.5.5"
 tokio = { version = "1.26.0", features = ["macros"] }
 async-trait = "0.1.66"
 inflector-plus = "0.11.7"
-url = "2.2.2"
+url = "2.3.1"
 bcrypt = "0.14.0"
 uuid = { version = "1.1.1", features = ["v4", "fast-rng"] }
 cuid2 = "0.1.0"
@@ -52,6 +50,8 @@ dotenvy = "0.15.6"
 toml_edit = "0.19.3"
 quaint-forked = { version = "0.1.1", features = [ "all" ] }
 whoami = { version = "1.3.0" }
+to-mut = "0.1.0"
+to-mut-proc-macro = "0.1.0"
 
 [dev-dependencies]
 serial_test = "1.0.0"
