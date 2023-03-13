@@ -46,7 +46,7 @@ pub enum Sort {
 }
 
 impl Sort {
-    pub(crate) fn to_str(&self) -> &str {
+    pub(crate) fn to_str(&self) -> &'static str {
         match self {
             Sort::Asc => "ASC",
             Sort::Desc => "DESC",

@@ -116,7 +116,8 @@ impl ModelIndex {
 
     pub(crate) fn to_sql_create(&self, dialect: SQLDialect, table_name: &str) -> String {
         let escape = dialect.escape();
-        let index_name = self.sql_name(table_name).as_ref();
+        let index_name_cow = self.sql_name(table_name);
+        let index_name = index_name_cow.as_ref();
         let unique = if self.r#type().is_unique() { "UNIQUE " } else { "" };
         let fields: Vec<String> = self.items.iter().map(|item| {
             Self::sql_format_item(dialect, item)

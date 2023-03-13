@@ -37,7 +37,7 @@ impl IndexDecoder {
         }
         let mut retval: Vec<ModelIndex> = vec![];
         for index in indices.iter() {
-            let mut items = items.get(index.sql_name()).unwrap().iter().collect::<Vec<(&i32, &ModelIndexItem)>>();
+            let mut items = items.get(index.sql_name(model.table_name()).as_ref()).unwrap().iter().collect::<Vec<(&i32, &ModelIndexItem)>>();
             items.sort_by(|(k1, _), (k2, _)| {
                 k1.cmp(k2)
             });
