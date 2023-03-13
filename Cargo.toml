@@ -12,30 +12,28 @@ repository = "https://github.com/teocloud/teo"
 [dependencies]
 to-mut = { version = "0.1.0" }
 to-mut-proc-macro = { version = "0.1.0" }
-actix-web = "4.3.0"
+actix-web = "4.3.1"
+actix-http = "3.3.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
 chrono = { version = "0.4.23", features = ["serde"] }
-env_logger = "0.10.0"
-log = "0.4"
 random-string = "1.0"
 jsonwebtoken = "8.2.0"
-futures = "0.3.26"
-futures-util = "0.3.26"
-actix-http = "3.3.0"
+futures = "0.3.27"
+futures-util = "0.3.27"
 regex = "1.5.5"
-tokio = { version = "1.21.0", features = ["macros"] }
-async-trait = "0.1.53"
+tokio = { version = "1.26.0", features = ["macros"] }
+async-trait = "0.1.66"
 inflector-plus = "0.11.7"
 url = "2.2.2"
 bcrypt = "0.14.0"
 uuid = { version = "1.1.1", features = ["v4", "fast-rng"] }
 cuid2 = "0.1.0"
 cuid = "=1.2.0"
-mongodb = { version = "2.3.1", optional = true }
-bson = { version = "2.2", features = ["chrono-0_4", "serde_with"], optional = true }
+mongodb = { version = "2.4.0", optional = true }
+bson = { version = "2.5.0", features = ["chrono-0_4", "serde_with"], optional = true }
 bigdecimal = "0.3.0"
-async-recursion = "1.0.0"
+async-recursion = "1.0.2"
 colored = "2.0.0"
 num-integer = "0.1.45"
 pad = "0.1.6"
