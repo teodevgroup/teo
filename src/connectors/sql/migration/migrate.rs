@@ -256,6 +256,12 @@ impl SQLMigration {
         let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
         conn.execute(Query::from(stmt)).await.unwrap();
         // create indices
+        for index in model.indices() {
+            // primary is created when creating table
+            if index.r#type().is_primary() { continue }
+            let stmt = index.to_sql_create(dialect, model.table_name());
+            conn.execute(Query::from(stmt)).await.unwrap();
+        }
     }
 
     fn psql_alter_clauses(table: &str, old_column: &SQLColumn, new_column: &SQLColumn) -> Vec<String> {

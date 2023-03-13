@@ -45,6 +45,15 @@ pub enum Sort {
     Desc
 }
 
+impl Sort {
+    pub(crate) fn to_str(&self) -> &str {
+        match self {
+            Sort::Asc => "ASC",
+            Sort::Desc => "DESC",
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct IndexSettings {
     pub(crate) name: Option<String>,
