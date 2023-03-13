@@ -370,13 +370,13 @@
 - CLI mode: When running server, panic if custom programming callback is provided
 - Soft delete documentation
 
-#### 0.0.60
+#### 0.1.0
 - Linting, warnings and errors
 
-#### 0.0.61
+#### 0.1.1
 - Seed with datasets
 
-#### 0.0.62
+#### 0.1.2
 - The copy action
 - random float modifier
 - random int modifier
@@ -386,49 +386,49 @@
 - to sentence case modifier
 - to title case modifier
 
-#### 0.0.63
+#### 0.1.3
 - Setup new style unit tests
 
-#### 0.0.64
+#### 0.1.4
 - SQL: Enum types
 
-#### 0.0.65
+#### 0.1.5
 - PostgreSQL: Enum types
 - 
-#### 0.0.66
+#### 0.1.6
 - Database type mapping for field, property and collection types' item field
 
-#### 0.0.67
+#### 0.2.0
 - Support MSSQL
 
-#### 0.0.68
+#### 0.2.1
 - Input omissible and output omissible for generated clients
 
-#### 0.0.69
+#### 0.2.2
 - Correct count with cursor
 
-#### 0.0.70
+#### 0.3.0
 - Swift package
 
-#### 0.0.71
+#### 0.4.0
 - Kotlin package
 
-#### 0.0.72
+#### 0.5.0
 - Dart client
 
-#### 0.0.73
+#### 0.5.1
 - `@canAccess`
 
-#### 0.0.74
+#### 0.6.0
 - Plugins
 
-#### 0.0.75
+#### 0.7.0
 - Python server
 
-#### 0.0.76
+#### 0.8.0
 - Java server
 
-#### 0.0.77
+#### 0.9.0
 - Go server
 
 #### 1.0.0
