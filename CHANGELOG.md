@@ -323,45 +323,31 @@
 - SQL migration: Separate index and columns
 - Schema language: Enum member literal with argument **[DONE]**
 - named arguments for index decorators **[DONE]**
+
+#### 0.0.53
 - Connector bug: unique constraint violating: error message should have key path
 - Log SQL queries
 - Migration dry run
 
-#### 0.0.53
-- Migration decorator docs
-- Dropped decorator docs
-- MongoDB migration
-- MongoDB `$queryRaw`
-- Transaction
-- Relation onUpdate
-- Relation onDelete
-- CLI mode: When running generation, ignore custom programming callbacks
-- CLI mode: When running server, panic if custom programming callback is provided
-- Soft delete documentation
-
 #### 0.0.54
-- Rust entities: setter documentation
-- Rust entities: optional string array
-- Rust entities: required string array
-- Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
-- Remove `unqueryable` and `unsortable` fields from generated clients
-- Relation with read write rules
-- Support code comment tags for VSCode
-- Support code comment tags for IntelliJ IDEA
-- Pipeline documentation
-
-#### 0.0.55
-- Linting, warnings and errors
-
-#### 0.0.56
-- Seed with datasets
-
-#### 0.0.57
 - Node.js object
 - Node.js entity generation
 - Cross language error handling for node.js
 
+#### 0.0.55
+- SQL Transaction
+
+#### 0.0.56
+- Relation onUpdate
+
+#### 0.0.57
+- Relation onDelete
+
 #### 0.0.58
+- Migration decorator docs
+- Dropped decorator docs
+- MongoDB migration
+- MongoDB `$queryRaw`
 - MongoDB: root skip take and distinct bug
 - MongoDB: nested skip take and distinct bug
 - MongoDB: if cursor key is not orderBy key, result is wrong
@@ -371,6 +357,26 @@
 - All many actions should throw errors
 
 #### 0.0.59
+- Rust entities: setter documentation
+- Rust entities: optional string array
+- Rust entities: required string array
+- Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
+- Remove `unqueryable` and `unsortable` fields from generated clients
+- Relation with read write rules
+- Support code comment tags for VSCode
+- Support code comment tags for IntelliJ IDEA
+- Pipeline documentation
+- CLI mode: When running generation, ignore custom programming callbacks
+- CLI mode: When running server, panic if custom programming callback is provided
+- Soft delete documentation
+
+#### 0.0.60
+- Linting, warnings and errors
+
+#### 0.0.61
+- Seed with datasets
+
+#### 0.0.62
 - The copy action
 - random float modifier
 - random int modifier
@@ -380,38 +386,50 @@
 - to sentence case modifier
 - to title case modifier
 
-#### 0.0.60 - 0.0.80
+#### 0.0.63
 - Setup new style unit tests
+
+#### 0.0.64
 - SQL: Enum types
+
+#### 0.0.65
 - PostgreSQL: Enum types
-- Database type mapping for `Date`
-- Database type mapping
+- 
+#### 0.0.66
 - Database type mapping for field, property and collection types' item field
+
+#### 0.0.67
 - Support MSSQL
 
-#### 0.0.81
+#### 0.0.68
 - Input omissible and output omissible for generated clients
 
-#### 0.0.82
+#### 0.0.69
 - Correct count with cursor
 
-#### 0.0.83
+#### 0.0.70
 - Swift package
+
+#### 0.0.71
 - Kotlin package
+
+#### 0.0.72
 - Dart client
 
-#### 0.1.0
+#### 0.0.73
 - `@canAccess`
-- Almost stable
 
-#### 0.2.0
-- Full unit test covering
-
-#### 0.3.0
+#### 0.0.74
 - Plugins
 
-#### 0.4.0
-- Java support
+#### 0.0.75
+- Python server
+
+#### 0.0.76
+- Java server
+
+#### 0.0.77
+- Go server
 
 #### 1.0.0
 - First stable version
