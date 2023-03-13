@@ -27,7 +27,7 @@ impl Item for GetItem {
                 }
                 Ok(new_ctx)
             },
-            Value::RawEnumChoice(e) => match ctx.value.as_object() {
+            Value::RawEnumChoice(e, _) => match ctx.value.as_object() {
                 Some(object) => {
                     Ok(ctx.with_value(object.get_value(e.as_str()).unwrap()))
                 }

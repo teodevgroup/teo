@@ -13,7 +13,7 @@ pub(crate) fn when(args: Vec<Argument>) -> Arc<dyn Item> {
         Value::RawOptionChoice(action_value) => {
             Arc::new(WhenItem::new(vec![Action::from_u32(*action_value)], pipeline.clone()))
         }
-        Value::RawEnumChoice(enum_member) => {
+        Value::RawEnumChoice(enum_member, _) => {
             let action = Action::from_name(enum_member);
             Arc::new(WhenItem::new(vec![action], pipeline.clone()))
         }
@@ -29,7 +29,7 @@ pub(crate) fn redirect(args: Vec<Argument>) -> Arc<dyn Item> {
         Value::RawOptionChoice(action_value) => {
             Arc::new(RedirectItem::new(Action::from_u32(*action_value)))
         }
-        Value::RawEnumChoice(enum_member) => {
+        Value::RawEnumChoice(enum_member, _) => {
             let action = Action::from_name(enum_member);
             Arc::new(RedirectItem::new(action))
         }

@@ -321,6 +321,7 @@
 - Fix slug and cuid format **[DONE]**
 - Add cuid2 modifier **[DONE]**
 - SQL migration: Separate index and columns
+- Schema language: Enum member literal with argument **[DONE]**
 - Connector bug: unique constraint violating: error message should have key path
 - Log SQL queries
 - Migration dry run

@@ -43,7 +43,7 @@ impl Item for SetItem {
                             }).call(ctx).await?)
                         }
                     },
-                    Value::RawEnumChoice(e) => match ctx.value.as_object() {
+                    Value::RawEnumChoice(e, _) => match ctx.value.as_object() {
                         Some(object) => {
                             let value = self.value.resolve(ctx.clone()).await?;
                             object.set_value(e.as_str(), value).unwrap();

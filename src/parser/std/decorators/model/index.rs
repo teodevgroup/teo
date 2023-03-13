@@ -28,7 +28,7 @@ pub(crate) fn id_decorator(args: Vec<Argument>, model: &mut ModelBuilder) {
 pub(crate) fn index_decorator(args: Vec<Argument>, model: &mut ModelBuilder) {
     let arg_value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
     match arg_value {
-        Value::RawEnumChoice(str_value) => {
+        Value::RawEnumChoice(str_value, _) => {
             model.index(vec![str_value]);
         }
         Value::Vec(vec_value) => {
@@ -44,7 +44,7 @@ pub(crate) fn index_decorator(args: Vec<Argument>, model: &mut ModelBuilder) {
 pub(crate) fn unique_decorator(args: Vec<Argument>, model: &mut ModelBuilder) {
     let arg_value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
     match arg_value {
-        Value::RawEnumChoice(str_value) => {
+        Value::RawEnumChoice(str_value, _) => {
             model.unique(vec![str_value]);
         }
         Value::Vec(vec_value) => {

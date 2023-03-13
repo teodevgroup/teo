@@ -7,8 +7,8 @@ pub(crate) fn present_without_decorator(args: Vec<Argument>, field: &mut Field) 
     let mut result: Vec<Value> = vec![];
     for arg in args.iter() {
         match arg.resolved.as_ref().unwrap().as_value().unwrap() {
-            Value::RawEnumChoice(enum_choice) => {
-                result.push(Value::RawEnumChoice(enum_choice.clone()))
+            Value::RawEnumChoice(enum_choice, _) => {
+                result.push(Value::RawEnumChoice(enum_choice.clone(), None))
             }
             Value::Vec(vec) => {
                 result.push(Value::Vec(vec.clone()));

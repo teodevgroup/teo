@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::i64;
 use std::path::PathBuf;
 use std::str::FromStr;
+use indexmap::IndexMap;
 use path_absolutize::Absolutize;
 use regex::Regex;
 use snailquote::unescape;
@@ -625,7 +626,7 @@ impl Resolver {
                 Self::resolve_null_literal(n)
             }
             ExpressionKind::EnumChoiceLiteral(e) => {
-                Self::resolve_enum_choice_literal(e)
+                Self::resolve_enum_choice_literal(parser, source, e)
             }
             ExpressionKind::RangeLiteral(range_literal) => {
                 Self::resolve_range_literal(parser, source, range_literal)
@@ -821,8 +822,16 @@ impl Resolver {
         Entity::Value(Value::Null)
     }
 
-    fn resolve_enum_choice_literal(e: &EnumChoiceLiteral) -> Entity {
-        Entity::Value(Value::RawEnumChoice(e.value.chars().skip(1).take(e.value.len() - 1).collect()))
+    fn resolve_enum_choice_literal(parser: &Parser, source: &Source, e: &EnumChoiceLiteral) -> Entity {
+        if e.argument_list.is_some() {
+            Entity::Value(Value::RawEnumChoice(e.value.clone(), Some(Self::resolve_argument_list_as_index_map(parser, source, e.argument_list.as_ref().unwrap()))))
+        } else {
+            Entity::Value(Value::RawEnumChoice(e.value.clone(), None))
+        }
+    }
+
+    fn resolve_argument_list_as_index_map(parser: &Parser, source: &Source, arg_list: &ArgumentList) -> IndexMap<String, Value> {
+        unreachable!()
     }
 
     fn resolve_range_literal(parser: &Parser, source: &Source, range_literal: &RangeLiteral) -> Entity {
@@ -894,7 +903,7 @@ impl Resolver {
         Entity::Value(match value {
             Value::I32(v) => Value::I32(!v),
             Value::I64(v) => Value::I64(!v),
-            Value::RawEnumChoice(e) => if when_option {
+            Value::RawEnumChoice(e, _) => if when_option {
                 Value::RawOptionChoice(Action::from_name(&e).neg().to_u32())
             } else {
                 panic!("Unhandled option bitwise operation")
@@ -920,7 +929,7 @@ impl Resolver {
                 return Entity::Value(match origin {
                     Value::I32(v) => Value::I32(!v),
                     Value::I64(v) => Value::I64(!v),
-                    Value::RawEnumChoice(e) => if when_option {
+                    Value::RawEnumChoice(e, _) => if when_option {
                         Value::RawOptionChoice(Action::from_name(&e).neg().to_u32())
                     } else {
                         panic!("Unhandled option bitwise operation")
@@ -987,7 +996,7 @@ impl Resolver {
 
     fn value_to_action_option(v: &Value) -> Action {
         match v {
-            Value::RawEnumChoice(e) => Action::from_name(&e),
+            Value::RawEnumChoice(e, _) => Action::from_name(&e),
             Value::RawOptionChoice(u) => Action::from_u32(*u),
             _ => unreachable!()
         }
@@ -1038,7 +1047,7 @@ impl Resolver {
             return if r.is_constant_ref() {
                 Self::constant_with_reference(parser, source, r.as_constant_ref().unwrap())
             } else {
-                Value::RawEnumChoice(r.as_model_ref().unwrap().2.clone())
+                Value::RawEnumChoice(r.as_model_ref().unwrap().2.clone(), None)
             }
         } else {
             panic!("Cannot unwrap accessible into value.")

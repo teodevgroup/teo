@@ -141,7 +141,7 @@ pub enum Value {
 
     /// Raw enum choice.
     ///
-    RawEnumChoice(String),
+    RawEnumChoice(String, Option<IndexMap<String, Value>>),
 
     /// Raw option choice
     ///
@@ -282,7 +282,7 @@ impl Value {
     pub fn str_from_string_or_raw_enum_choice(&self) -> Option<&str> {
         match self {
             Value::String(s) => Some(s),
-            Value::RawEnumChoice(s) => Some(s),
+            Value::RawEnumChoice(s, _) => Some(s),
             _ => None,
         }
     }
@@ -469,7 +469,7 @@ impl Value {
 
     pub fn as_raw_enum_choice(&self) -> Option<&str> {
         match self {
-            Value::RawEnumChoice(s) => Some(s.as_str()),
+            Value::RawEnumChoice(s, _) => Some(s.as_str()),
             _ => None,
         }
     }

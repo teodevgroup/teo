@@ -9,7 +9,7 @@ pub(crate) fn disable_decorator(args: Vec<Argument>, model: &mut ModelBuilder) {
         Value::RawOptionChoice(action_value) => {
             vec![Action::from_u32(*action_value)]
         }
-        Value::RawEnumChoice(enum_member) => {
+        Value::RawEnumChoice(enum_member, _) => {
             let action = Action::from_name(enum_member);
             vec![action]
         }

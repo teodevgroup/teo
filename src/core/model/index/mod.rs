@@ -1,5 +1,4 @@
 use array_tool::vec::Join;
-use itertools::Itertools;
 use crate::core::field::Sort;
 
 pub mod builder;
