@@ -252,8 +252,10 @@ impl SQLMigration {
     }
 
     async fn create_table(dialect: SQLDialect, conn: &PooledConnection, model: &Model) {
+        // create table
         let stmt = SQLCreateTableStatement::from(model).to_string(dialect);
         conn.execute(Query::from(stmt)).await.unwrap();
+        // create indices
     }
 
     fn psql_alter_clauses(table: &str, old_column: &SQLColumn, new_column: &SQLColumn) -> Vec<String> {

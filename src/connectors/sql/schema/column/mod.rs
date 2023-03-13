@@ -12,14 +12,13 @@ pub(crate) struct SQLColumn {
     pub(self) auto_increment: bool,
     pub(self) default: Option<String>,
     pub(self) primary_key: bool,
-    pub(self) unique_key: bool,
 }
 
 impl SQLColumn {
 
-    pub(crate) fn new(name: String, r#type: DatabaseType, not_null: bool, auto_increment: bool, default: Option<String>, primary_key: bool, unique_key: bool) -> Self {
+    pub(crate) fn new(name: String, r#type: DatabaseType, not_null: bool, auto_increment: bool, default: Option<String>, primary_key: bool) -> Self {
         Self {
-            name, r#type, not_null, auto_increment, default, primary_key, unique_key
+            name, r#type, not_null, auto_increment, default, primary_key
         }
     }
 
@@ -51,10 +50,6 @@ impl SQLColumn {
         self.primary_key
     }
 
-    pub(crate) fn unique_key(&self) -> bool {
-        self.unique_key
-    }
-
     pub(crate) fn set_default(&mut self, default: Option<String>) {
         self.default = default;
     }
@@ -74,22 +69,15 @@ impl ToSQLString for SQLColumn {
                 " AUTOINCREMENT"
             }
         } else { "" };
-        let unique = if self.unique_key {
-            if dialect == SQLDialect::MySQL {
-                " UNIQUE KEY"
-            } else {
-                " UNIQUE"
-            }
-        } else { "" };
         if dialect == SQLDialect::PostgreSQL {
             let t_with_auto_inc = if self.auto_increment {
                 "SERIAL".to_owned()
             } else {
                 t
             };
-            format!("\"{name}\" {t_with_auto_inc}{default}{not_null}{primary}{unique}")
+            format!("\"{name}\" {t_with_auto_inc}{default}{not_null}{primary}")
         } else {
-            format!("`{name}` {t}{default}{not_null}{primary}{unique}{auto_inc}")
+            format!("`{name}` {t}{default}{not_null}{primary}{auto_inc}")
         }
     }
 }
