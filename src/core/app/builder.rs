@@ -5,7 +5,6 @@ use std::fmt::{Debug};
 use std::sync::{Arc, Mutex};
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
-use tracing_subscriber;
 use clap::{Arg, ArgAction, Command as ClapCommand};
 use dotenvy::dotenv;
 use crate::connectors::mongodb::connector::MongoDBConnector;
@@ -256,11 +255,7 @@ impl AppBuilder {
         let connector_declaration = source.get_connector(connector_ref.1);
         let url = connector_declaration.url.as_ref().unwrap();
         if connector_declaration.debug {
-            env::set_var("FMT_SQL", "true");
-            // set tracing
-            // install global collector configured based on RUST_LOG env var.
-            env::set_var("RUST_LOG", "none,quaint=debug");
-            tracing_subscriber::fmt::init();
+            env::set_var("_TEO_LOG_DB_OPERATION", "true");
         }
         let connector: Arc<dyn Connector> = match connector_declaration.provider.unwrap() {
             DatabaseName::MySQL => {
