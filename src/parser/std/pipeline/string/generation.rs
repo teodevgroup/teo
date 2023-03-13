@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use crate::core::pipeline::item::Item;
+use crate::core::pipeline::items::string::generation::cuid2::CUID2Item;
 use crate::core::pipeline::items::string::generation::cuid::CUIDItem;
 use crate::core::pipeline::items::string::generation::random_digits::RandomDigitsItem;
 use crate::core::pipeline::items::string::generation::slug::SlugItem;
@@ -8,6 +9,10 @@ use crate::parser::ast::argument::Argument;
 
 pub(crate) fn cuid(_args: Vec<Argument>) -> Arc<dyn Item> {
     Arc::new(CUIDItem::new())
+}
+
+pub(crate) fn cuid2(_args: Vec<Argument>) -> Arc<dyn Item> {
+    Arc::new(CUID2Item::new())
 }
 
 pub(crate) fn random_digits(args: Vec<Argument>) -> Arc<dyn Item> {

@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use cuid2::create_id;
+use cuid::cuid;
 use crate::core::pipeline::item::Item;
 use crate::core::teon::Value;
 use crate::core::result::Result;
@@ -17,6 +17,6 @@ impl CUIDItem {
 #[async_trait]
 impl Item for CUIDItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        Ok(ctx.with_value(Value::String(create_id())))
+        Ok(ctx.with_value(Value::String(cuid().unwrap())))
     }
 }

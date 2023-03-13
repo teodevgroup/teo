@@ -318,6 +318,8 @@
 - Fix query bug for date, datetime and decimal **[DONE]**
 
 #### 0.0.52
+- Fix slug and cuid format **[DONE]**
+- Add cuid2 modifier **[DONE]**
 - SQL migration: Separate index and columns
 - Connector bug: unique constraint violating: error message should have key path
 - Log SQL queries
