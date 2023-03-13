@@ -4,8 +4,6 @@ use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
 
-static VALID_NAMES: [&str; 1] = ["map"];
-
 static MODEL_INDEX_PRIMARY: u8 = 0;
 static MODEL_INDEX_INDEX: u8 = 1;
 static MODEL_INDEX_UNIQUE: u8 = 2;
@@ -91,5 +89,5 @@ fn model_index_item(name: &String, args: &Option<Vec<(Option<String>, Value)>>) 
             }
         }
     }
-    ModelIndexItem::new(name, Sort::Asc, None)
+    ModelIndexItem::new(name, sort, len)
 }

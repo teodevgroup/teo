@@ -166,7 +166,6 @@ impl ColumnDecoder {
                 auto_increment: pk && !auto_increment.is_empty(),
                 default: None,
                 primary_key: pk,
-                unique_key,
             });
         }
         result
@@ -211,7 +210,6 @@ AND    i.indisprimary", table_name);
             let extra: String = row.get("Extra").unwrap().to_string().unwrap();
             let auto_increment = extra.contains("auto_increment");
             let primary = &key == "PRI";
-            let unique = &key == "UNI";
             SQLColumn {
                 name: field,
                 r#type: SQLTypeDecoder::decode(&field_type_in_string, dialect),
@@ -219,7 +217,6 @@ AND    i.indisprimary", table_name);
                 auto_increment,
                 default: None,
                 primary_key: primary,
-                unique_key: unique,
             }
         } else if dialect == SQLDialect::PostgreSQL { // postgres
             let primary_names = Self::psql_primary_field_name(conn, table_name).await;
@@ -238,7 +235,6 @@ AND    i.indisprimary", table_name);
                 not_null: !nullable,
                 default: None,
                 primary_key: primary_names.contains(&column_name),
-                unique_key: Self::psql_is_unique(conn, table_name, &column_name).await,
                 auto_increment: Self::psql_is_auto_increment(conn, table_name, &column_name).await,
             }
         } else {
@@ -249,7 +245,7 @@ AND    i.indisprimary", table_name);
 
 impl From<&Field> for SQLColumn {
     fn from(field: &Field) -> Self {
-        SQLColumn::new(field.column_name().to_owned(), field.database_type().clone(), field.is_required(), field.auto_increment, None, field.primary, field.index.is_some() && field.index.as_ref().unwrap().is_unique())
+        SQLColumn::new(field.column_name().to_owned(), field.database_type().clone(), field.is_required(), field.auto_increment, None, field.primary)
     }
 }
 
@@ -261,7 +257,7 @@ impl From<&Arc<Field>> for SQLColumn {
 
 impl From<&Property> for SQLColumn {
     fn from(property: &Property) -> Self {
-        SQLColumn::new(property.name.clone(), property.database_type().clone(), property.is_required(), false, None, false, false)
+        SQLColumn::new(property.name.clone(), property.database_type().clone(), property.is_required(), false, None, false)
     }
 }
 
