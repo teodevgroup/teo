@@ -1,7 +1,5 @@
 pub(crate) mod map;
-pub(crate) mod id;
 pub(crate) mod index;
-pub(crate) mod unique;
 pub(crate) mod url;
 pub(crate) mod identity;
 pub(crate) mod r#virtual;
@@ -26,13 +24,11 @@ use crate::parser::std::decorators::model::before_save::before_save_decorator;
 use crate::parser::std::decorators::model::can_mutate::can_mutate_decorator;
 use crate::parser::std::decorators::model::can_read::can_read_decorator;
 use crate::parser::std::decorators::model::disable::disable_decorator;
-use crate::parser::std::decorators::model::id::id_decorator;
 use crate::parser::std::decorators::model::identity::identity_decorator;
-use crate::parser::std::decorators::model::index::index_decorator;
+use crate::parser::std::decorators::model::index::{index_decorator, id_decorator, unique_decorator};
 use crate::parser::std::decorators::model::map::map_decorator;
 use crate::parser::std::decorators::model::migration::migration_decorator;
 use crate::parser::std::decorators::model::r#virtual::virtual_decorator;
-use crate::parser::std::decorators::model::unique::unique_decorator;
 use crate::parser::std::decorators::model::url::url_decorator;
 
 pub(crate) struct GlobalModelDecorators {
