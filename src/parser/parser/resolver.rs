@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::i64;
 use std::path::PathBuf;
 use std::str::FromStr;
-use indexmap::IndexMap;
 use path_absolutize::Absolutize;
 use regex::Regex;
 use snailquote::unescape;
@@ -824,16 +823,19 @@ impl Resolver {
 
     fn resolve_enum_choice_literal(parser: &Parser, source: &Source, e: &EnumChoiceLiteral) -> Entity {
         if e.argument_list.is_some() {
-            Entity::Value(Value::RawEnumChoice(e.value.clone(), Some(Self::resolve_argument_list_as_index_map(parser, source, e.argument_list.as_ref().unwrap()))))
+            Entity::Value(Value::RawEnumChoice(e.value.clone(), Some(Self::resolve_argument_list_as_tuple_vec(parser, source, e.argument_list.as_ref().unwrap()))))
         } else {
             Entity::Value(Value::RawEnumChoice(e.value.clone(), None))
         }
     }
 
-    fn resolve_argument_list_as_index_map(parser: &Parser, source: &Source, arg_list: &ArgumentList) -> IndexMap<String, Value> {
-        let mut result = IndexMap::new();
+    fn resolve_argument_list_as_tuple_vec(parser: &Parser, source: &Source, arg_list: &ArgumentList) -> Vec<(Option<String>, Value)> {
+        let mut result = vec![];
         for arg in arg_list.arguments.iter() {
-
+            let name = arg.name.as_ref().map(|i| i.name.clone());
+            let resolve_result = Self::resolve_expression_kind(parser, source, &arg.value, false);
+            let value = Self::unwrap_into_value_if_needed(parser, source, &resolve_result);
+            result.push((name, value));
         }
         result
     }

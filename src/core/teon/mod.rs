@@ -141,7 +141,7 @@ pub enum Value {
 
     /// Raw enum choice.
     ///
-    RawEnumChoice(String, Option<IndexMap<String, Value>>),
+    RawEnumChoice(String, Option<Vec<(Option<String>, Value)>>),
 
     /// Raw option choice
     ///
