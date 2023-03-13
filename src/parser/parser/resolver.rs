@@ -831,7 +831,11 @@ impl Resolver {
     }
 
     fn resolve_argument_list_as_index_map(parser: &Parser, source: &Source, arg_list: &ArgumentList) -> IndexMap<String, Value> {
-        unreachable!()
+        let mut result = IndexMap::new();
+        for arg in arg_list.arguments.iter() {
+
+        }
+        result
     }
 
     fn resolve_range_literal(parser: &Parser, source: &Source, range_literal: &RangeLiteral) -> Entity {
