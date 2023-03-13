@@ -14,6 +14,7 @@ use crate::connectors::sql::schema::column::SQLColumn;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::model::Model;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
+use crate::core::model::index::ModelIndex;
 use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;
 
@@ -179,8 +180,9 @@ impl SQLMigration {
                     panic!("SQLite doesn't support column altering");
                 }
                 let table_has_records = Self::table_has_records(dialect, &conn, table_name).await;
-                // here update indices
-                // here update columns
+                let db_indices = Self::db_indices(dialect, model).await;
+                let model_indices = Self::normalize_model_indices(model.indices(), dialect);
+                // here update columns and indices
                 let manipulations = ColumnDecoder::manipulations(&db_columns, &model_columns, model);
                 if table_has_records && manipulations.iter().find(|m| m.is_add_column_non_null()).is_some() && model.allows_drop_when_migrate() {
                     Self::drop_table(dialect, &conn, table_name).await;
@@ -281,5 +283,49 @@ impl SQLMigration {
             }
         }
         result
+    }
+
+    async fn db_indices(dialect: SQLDialect, conn: &PooledConnection, model: &Model) -> Vec<ModelIndex> {
+
+    }
+
+    async fn psql_db_indices(conn: &PooledConnection, model: &Model) -> HashSet<ModelIndex> {
+        let table_name = model.table_name();
+        let sql = format!(r#"SELECT     irel.relname                           AS index_name,
+           a.attname                              AS column_name,
+           i.indisunique                          AS is_unique,
+           i.indisprimary                         AS primary,
+           1 + Array_position(i.indkey, a.attnum) AS column_position,
+           CASE o.OPTION
+                                 & 1
+                      WHEN 1 THEN 'DESC'
+                      ELSE 'ASC'
+           END      AS order
+FROM       pg_index AS i
+join       pg_class AS trel
+ON         trel.oid = i.indrelid
+join       pg_namespace AS tnsp
+ON         trel.relnamespace = tnsp.oid
+join       pg_class AS irel
+ON         irel.oid = i.indexrelid
+cross join lateral unnest (i.indkey) WITH ordinality    AS c (colnum, ordinality)
+left join  lateral unnest (i.indoption) WITH ordinality AS o (OPTION, ordinality)
+ON         c.ordinality = o.ordinality
+join       pg_attribute AS a
+ON         trel.oid = a.attrelid
+AND        a.attnum = c.colnum
+WHERE      tnsp.nspname='public'
+AND        trel.relname='{table_name}'
+GROUP BY   tnsp.nspname,
+           trel.relname,
+           irel.relname,
+           i.indisunique,
+           i.indisprimary,
+           a.attname,
+           array_position(i.indkey, a.attnum),
+           o.OPTION ORDER BY column_position
+"#);
+        let result_set = conn.query(Query::from(sql)).await.unwrap();
+        let
     }
 }

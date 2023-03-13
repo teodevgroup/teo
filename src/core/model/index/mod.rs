@@ -5,7 +5,7 @@ use crate::core::field::Sort;
 
 pub mod builder;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ModelIndexType {
     Primary,
     Index,
@@ -28,7 +28,7 @@ impl ModelIndexType {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Hash, Eq)]
 pub(crate) struct ModelIndexItem {
     pub(self) field_name: String,
     pub(self) sort: Sort,
@@ -58,7 +58,7 @@ impl ModelIndexItem {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub(crate) struct ModelIndex {
     pub(self) index_type: ModelIndexType,
     pub(self) name: Option<String>,

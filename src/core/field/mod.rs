@@ -39,7 +39,7 @@ pub enum ObjectAssignment {
     Copy,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Sort {
     Asc,
     Desc
