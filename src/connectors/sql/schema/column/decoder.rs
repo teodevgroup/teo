@@ -20,6 +20,8 @@ pub(crate) enum ColumnManipulation<'a> {
     RemoveColumn(String, Option<Pipeline>),
     RenameColumn{ old: String, new: String },
     AlterColumn(&'a SQLColumn, &'a SQLColumn, Option<Pipeline>),
+    CreateIndex(&'a ModelIndex),
+    DropIndex(&'a ModelIndex),
 }
 
 impl<'a> ColumnManipulation<'a> {
@@ -30,11 +32,17 @@ impl<'a> ColumnManipulation<'a> {
             ColumnManipulation::RemoveColumn(c, _) => model.dropped_field(c.as_str()),
             ColumnManipulation::RenameColumn {old: _, new} => model.field(new.as_str()),
             ColumnManipulation::AlterColumn(__, c, _) => model.field(c.name()),
+            ColumnManipulation::CreateIndex(_) => None,
+            ColumnManipulation::DropIndex(_) => None,
         }
     }
 
-    pub(crate) fn priority(&self, model: &Model) -> usize {
-        self.get_field(model).map(|f| f.migration().map(|m| m.priority.unwrap_or(0))).unwrap_or(Some(0)).unwrap_or(0)
+    pub(crate) fn priority(&self, model: &Model) -> i64 {
+        match self {
+            ColumnManipulation::CreateIndex(_) => -100,
+            ColumnManipulation::DropIndex(_) => -100,
+            _ => self.get_field(model).map(|f| f.migration().map(|m| m.priority.unwrap_or(0))).unwrap_or(Some(0)).unwrap_or(0)
+        }
     }
 
     pub(crate) fn is_add_column_non_null(&self) -> bool {

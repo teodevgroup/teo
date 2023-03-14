@@ -191,6 +191,12 @@ impl SQLMigration {
                 } else {
                     for m in manipulations.iter() {
                         match m {
+                            ColumnManipulation::CreateIndex(index) => {
+
+                            }
+                            ColumnManipulation::DropIndex(index) => {
+
+                            }
                             ColumnManipulation::AddColumn(column, action, default) => {
                                 if column.not_null() && default.is_none() {
                                     // if any records, just raise here
@@ -299,8 +305,35 @@ impl SQLMigration {
     async fn db_indices(dialect: SQLDialect, conn: &PooledConnection, model: &Model) -> HashSet<ModelIndex> {
         match dialect {
             SQLDialect::PostgreSQL => Self::psql_db_indices(conn, model).await,
+            SQLDialect::MySQL => Self::mysql_db_indices(conn, model).await,
             _ => unreachable!(),
         }
+    }
+
+    async fn mysql_db_indices(conn: &PooledConnection, model: &Model) -> HashSet<ModelIndex> {
+        let table_name = model.table_name();
+        let sql = format!("SHOW INDEX FROM `{}`", table_name);
+        let result_set = conn.query(Query::from(sql)).await.unwrap();
+        let mut indices = vec![];
+        for row in result_set {
+            let index_name = row.get("Key_name").unwrap().as_str().unwrap();
+            let column_name = row.get("Column_name").unwrap().as_str().unwrap();
+            let order = Sort::from_mysql_str(row.get("Collation").unwrap().as_str().unwrap()).unwrap();
+            if let Some(position) = indices.iter().position(|m: &ModelIndex| m.name().unwrap() == index_name) {
+                let model_index = indices.get_mut(position).unwrap();
+                let item = ModelIndexItem::new(column_name, order, None);
+                model_index.append_item(item);
+            } else {
+                let is_unique = !row.get("Non_unique").unwrap().as_bool().unwrap();
+                let item = ModelIndexItem::new(column_name, order, None);
+                indices.push(ModelIndex::new(
+                    if index_name == "PRIMARY" { ModelIndexType::Primary } else if is_unique { ModelIndexType::Unique } else { ModelIndexType::Index },
+                    Some(index_name),
+                    vec![item],
+                ))
+            }
+        }
+        indices.into_iter().collect()
     }
 
     async fn psql_db_indices(conn: &PooledConnection, model: &Model) -> HashSet<ModelIndex> {
