@@ -47,6 +47,13 @@ pub enum Sort {
 
 impl Sort {
 
+    pub(crate) fn from_desc_bool(desc: bool) -> Sort {
+        match desc {
+            true => Sort::Desc,
+            false => Sort::Asc,
+        }
+    }
+
     pub(crate) fn from_mysql_str(s: &str) -> Option<Sort> {
         match s {
             "A" => Some(Sort::Asc),

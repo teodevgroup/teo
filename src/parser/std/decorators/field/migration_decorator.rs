@@ -44,7 +44,7 @@ pub(crate) fn migration_decorator(args: Vec<Argument>, field: &mut Field) {
             "priority" => {
                 let value = arg.resolved.as_ref().unwrap().as_value().unwrap();
                 let u = value.as_usize().unwrap();
-                migration.priority = Some(u);
+                migration.priority = Some(u as i64);
             }
             _ => unreachable!()
         }
