@@ -323,6 +323,7 @@
 - SQL migration: Separate index and columns **[DONE]**
 - Schema language: Enum member literal with argument **[DONE]**
 - named arguments for index decorators **[DONE]**
+- Fix SQLite memory bug: A HTTP connection should use single pooled connection
 
 #### 0.0.53
 - Connector bug: unique constraint violating: error message should have key path
