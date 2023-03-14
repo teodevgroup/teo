@@ -158,4 +158,10 @@ impl ModelIndex {
         keys.sort();
         keys.join("_")
     }
+
+    pub(crate) fn append_item(&mut self, item: ModelIndexItem) {
+        let key = item.field_name().to_owned();
+        self.items.push(item);
+        self.keys.push(key);
+    }
 }

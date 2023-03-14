@@ -14,7 +14,8 @@ use crate::connectors::sql::schema::column::SQLColumn;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::model::Model;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
-use crate::core::model::index::ModelIndex;
+use crate::core::field::Sort;
+use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;
 
@@ -180,7 +181,7 @@ impl SQLMigration {
                     panic!("SQLite doesn't support column altering");
                 }
                 let table_has_records = Self::table_has_records(dialect, &conn, table_name).await;
-                let db_indices = Self::db_indices(dialect, model).await;
+                let db_indices = Self::db_indices(dialect, &conn, model).await;
                 let model_indices = Self::normalize_model_indices(model.indices(), dialect);
                 // here update columns and indices
                 let manipulations = ColumnDecoder::manipulations(&db_columns, &model_columns, model);
@@ -294,7 +295,7 @@ impl SQLMigration {
         let sql = format!(r#"SELECT     irel.relname                           AS index_name,
            a.attname                              AS column_name,
            i.indisunique                          AS is_unique,
-           i.indisprimary                         AS primary,
+           i.indisprimary                         AS is_primary,
            1 + Array_position(i.indkey, a.attnum) AS column_position,
            CASE o.OPTION
                                  & 1
@@ -326,10 +327,26 @@ GROUP BY   tnsp.nspname,
            o.OPTION ORDER BY column_position
 "#);
         let result_set = conn.query(Query::from(sql)).await.unwrap();
-        let mut indices = hashset!{};
+        let mut indices = vec![];
         for row in result_set {
-
+            let index_name = row.get("index_name").unwrap().as_str().unwrap();
+            let column_name = row.get("column_name").unwrap().as_str().unwrap();
+            let order = Sort::from_str(row.get("order").unwrap().as_str().unwrap()).unwrap();
+            if let Some(position) = indices.iter().position(|m| m.name().unwrap() == index_name) {
+                let mut model_index = indices.get_mut(position).unwrap();
+                let item = ModelIndexItem::new(column_name, order, None);
+                model_index.append_item(item);
+            } else {
+                let is_unique = row.get("is_unique").unwrap().as_bool().unwrap();
+                let is_primary = row.get("is_primary").unwrap().as_bool().unwrap();
+                let item = ModelIndexItem::new(column_name, order, None);
+                indices.push(ModelIndex::new(
+                    if is_primary { ModelIndexType::Primary } else if is_unique { ModelIndexType::Unique} else { ModelIndexType::Index },
+                    Some(index_name),
+                    vec![item],
+                ))
+            }
         }
-        indices
+        indices.into_iter().collect()
     }
 }

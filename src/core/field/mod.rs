@@ -46,6 +46,14 @@ pub enum Sort {
 }
 
 impl Sort {
+
+    pub(crate) fn from_str(s: &str) -> Option<Sort> {
+        match s {
+            "ASC" => Some(Sort::Asc),
+            "DESC" => Some(Sort::Desc),
+            _ => None,
+        }
+    }
     pub(crate) fn to_str(&self) -> &'static str {
         match self {
             Sort::Asc => "ASC",
