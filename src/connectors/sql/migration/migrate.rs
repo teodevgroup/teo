@@ -184,7 +184,7 @@ impl SQLMigration {
                 let db_indices = Self::db_indices(dialect, &conn, model).await;
                 let model_indices = Self::normalized_model_indices(model.indices(), dialect, table_name);
                 // here update columns and indices
-                let manipulations = ColumnDecoder::manipulations(&db_columns, &model_columns, model);
+                let manipulations = ColumnDecoder::manipulations(&db_columns, &model_columns, &db_indices, &model_indices, model);
                 if table_has_records && manipulations.iter().find(|m| m.is_add_column_non_null()).is_some() && model.allows_drop_when_migrate() {
                     Self::drop_table(dialect, &conn, table_name).await;
                     Self::create_table(dialect, &conn, model).await;

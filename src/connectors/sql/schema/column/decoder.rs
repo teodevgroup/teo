@@ -9,6 +9,7 @@ use crate::connectors::sql::schema::column::SQLColumn;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::r#type::decoder::SQLTypeDecoder;
 use crate::core::field::Field;
+use crate::core::model::index::ModelIndex;
 use crate::core::model::Model;
 use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
@@ -48,14 +49,14 @@ pub(crate) struct ColumnDecoder { }
 
 impl ColumnDecoder {
 
-    pub(crate) fn manipulations<'a>(db: &'a HashSet<SQLColumn>, def: &'a HashSet<SQLColumn>, model: &Model) -> Vec<ColumnManipulation<'a>> {
-        let mut to_add: Vec<&SQLColumn> = def.iter().collect();
+    pub(crate) fn manipulations<'a>(db_columns: &'a HashSet<SQLColumn>, model_columns: &'a HashSet<SQLColumn>, db_indices: &'a HashSet<ModelIndex>, model_indices: &'a HashSet<ModelIndex>, model: &Model) -> Vec<ColumnManipulation<'a>> {
+        let mut to_add: Vec<&SQLColumn> = model_columns.iter().collect();
         let mut to_remove: Vec<&SQLColumn> = vec![];
         let mut to_rename: Vec<(String, String)> = vec![];
         let mut to_alter: Vec<&SQLColumn> = vec![];
         // analyse add and remove
-        for c in db {
-            if let Some(dc) = def.iter().find(|dc| dc.name() == c.name()) {
+        for c in db_columns {
+            if let Some(dc) = model_columns.iter().find(|dc| dc.name() == c.name()) {
                 // remove from to add
                 let index = to_add.iter().position(|x| x.name() == c.name()).unwrap();
                 to_add.remove(index);
@@ -106,7 +107,7 @@ impl ColumnDecoder {
             let action = if let Some(field) = model.field(c.name()) {
                 field.migration().map(|m| m.action.clone()).flatten()
             } else { None };
-            let old = db.iter().find(|dbc| dbc.name() == c.name()).unwrap();
+            let old = db_columns.iter().find(|dbc| dbc.name() == c.name()).unwrap();
             result.push(ColumnManipulation::AlterColumn(old, c, action));
         }
         for c in to_rename {
