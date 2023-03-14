@@ -100,9 +100,7 @@ impl ModelIndex {
         if self.name.is_some() {
             self.name().unwrap().to_owned()
         } else {
-            let mut keys = self.keys.clone();
-            keys.sort();
-            keys.join("_")
+            self.keys.join("_")
         }
     }
 
