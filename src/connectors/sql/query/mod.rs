@@ -470,7 +470,6 @@ impl Query {
             }
         }
         let result = stmt.to_string(dialect);
-        println!("see result: {}", result);
         result
     }
 
