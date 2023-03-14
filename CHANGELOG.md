@@ -312,7 +312,7 @@
 - TypeScript client: decimal type **[DONE]**
 - Fix number updator bug **[DONE]**
 - PostgreSQL array type: server side **[DONE]**
-- PostgreSQL array type: TypeScript client
+- PostgreSQL array type: TypeScript client **[DONE]**
 - Fix optional type decoding **[DONE]**
 - PostgreSQL: fix alter column with multiple clauses **[DONE]**
 - Fix query bug for date, datetime and decimal **[DONE]**
@@ -320,7 +320,7 @@
 #### 0.0.52
 - Fix slug and cuid format **[DONE]**
 - Add cuid2 modifier **[DONE]**
-- SQL migration: Separate index and columns
+- SQL migration: Separate index and columns **[DONE]**
 - Schema language: Enum member literal with argument **[DONE]**
 - named arguments for index decorators **[DONE]**
 

@@ -192,10 +192,12 @@ impl SQLMigration {
                     for m in manipulations.iter() {
                         match m {
                             ColumnManipulation::CreateIndex(index) => {
-
+                                let create = index.to_sql_create(dialect, table_name);
+                                conn.execute(Query::from(create)).await.unwrap();
                             }
                             ColumnManipulation::DropIndex(index) => {
-
+                                let drop = index.to_sql_drop(dialect, table_name);
+                                conn.execute(Query::from(drop)).await.unwrap();
                             }
                             ColumnManipulation::AddColumn(column, action, default) => {
                                 if column.not_null() && default.is_none() {

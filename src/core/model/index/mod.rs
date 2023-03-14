@@ -116,6 +116,13 @@ impl ModelIndex {
         &self.keys
     }
 
+    pub(crate) fn to_sql_drop(&self, dialect: SQLDialect, table_name: &str) -> String {
+        let escape = dialect.escape();
+        let index_name_cow = self.sql_name(table_name, dialect);
+        let index_name = index_name_cow.as_ref();
+        format!("DROP INDEX {escape}{index_name}{escape} ON {escape}{table_name}{escape}")
+    }
+
     pub(crate) fn to_sql_create(&self, dialect: SQLDialect, table_name: &str) -> String {
         let escape = dialect.escape();
         let index_name_cow = self.sql_name(table_name, dialect);
