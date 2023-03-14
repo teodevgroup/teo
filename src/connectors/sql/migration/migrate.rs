@@ -295,7 +295,7 @@ impl SQLMigration {
     fn normalized_model_indices(indices: &Vec<ModelIndex>, dialect: SQLDialect, table_name: &str) -> HashSet<ModelIndex> {
         indices.iter().map(|index| {
             let mut index = index.clone();
-            let sql_name_cow = index.sql_name(table_name);
+            let sql_name_cow = index.sql_name(table_name, dialect);
             let sql_name = sql_name_cow.as_ref().to_owned();
             index.set_name(sql_name);
             index

@@ -88,11 +88,11 @@ impl ModelIndex {
         }
     }
 
-    pub(crate) fn sql_name(&self, table_name: &str) -> Cow<str> {
+    pub(crate) fn sql_name(&self, table_name: &str, dialect: SQLDialect) -> Cow<str> {
         if self.name.is_some() {
             Cow::Borrowed(self.name.as_ref().unwrap().as_str())
         } else {
-            Cow::Owned(self.normalize_name(table_name))
+            Cow::Owned(self.normalize_name(table_name, dialect))
         }
     }
 
@@ -120,7 +120,7 @@ impl ModelIndex {
 
     pub(crate) fn to_sql_create(&self, dialect: SQLDialect, table_name: &str) -> String {
         let escape = dialect.escape();
-        let index_name_cow = self.sql_name(table_name);
+        let index_name_cow = self.sql_name(table_name, dialect);
         let index_name = index_name_cow.as_ref();
         let unique = if self.r#type().is_unique() { "UNIQUE " } else { "" };
         let fields: Vec<String> = self.items.iter().map(|item| {
@@ -145,8 +145,27 @@ impl ModelIndex {
         format!("{escape}{name}{escape}{len} {sort}")
     }
 
-    pub(crate) fn normalize_name(&self, table_name: &str) -> String {
-        format!("{table_name}_{}_{}", self.ordered_names(), self.psql_suffix())
+    pub(crate) fn normalize_name(&self, table_name: &str, dialect: SQLDialect) -> String {
+        match self.index_type {
+            ModelIndexType::Primary => match dialect {
+                SQLDialect::MySQL => "PRIMARY".to_owned(),
+                SQLDialect::SQLite => format!("sqlite_autoindex_{}_1", table_name),
+                SQLDialect::PostgreSQL => self.normalize_name_psql(table_name),
+                _ => unreachable!()
+            },
+            _ => match dialect {
+                SQLDialect::PostgreSQL => self.normalize_name_psql(table_name),
+                _ => self.normalize_name_normal(table_name),
+            }
+        }
+    }
+
+    fn normalize_name_normal(&self, table_name: &str) -> String {
+        format!("{table_name}_{}", self.joined_names())
+    }
+
+    fn normalize_name_psql(&self, table_name: &str) -> String {
+        format!("{table_name}_{}_{}", self.joined_names(), self.psql_suffix())
     }
 
     fn psql_suffix(&self) -> &str {
@@ -157,10 +176,8 @@ impl ModelIndex {
         }
     }
 
-    fn ordered_names(&self) -> String {
-        let mut keys = self.keys.clone();
-        keys.sort();
-        keys.join("_")
+    fn joined_names(&self) -> String {
+        self.keys.join("_")
     }
 
     pub(crate) fn append_item(&mut self, item: ModelIndexItem) {
