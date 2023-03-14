@@ -131,7 +131,7 @@ impl ModelIndex {
         let fields: Vec<String> = self.items.iter().map(|item| {
             Self::sql_format_item(dialect, item)
         }).collect();
-        format!("CREATE {unique}INDEX {escape}{index_name}{escape} {escape}{table_name}{escape}({})", fields.join(","))
+        format!("CREATE {unique}INDEX {escape}{index_name}{escape} ON {escape}{table_name}{escape}({})", fields.join(","))
     }
 
     pub(crate) fn sql_format_item(dialect: SQLDialect, item: &ModelIndexItem) -> String {

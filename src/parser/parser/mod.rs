@@ -767,7 +767,7 @@ impl Parser {
         }
         return (key.unwrap(), value.unwrap())
     }
-    
+
     fn parse_type(pair: Pair<'_>) -> Type {
         let mut identifier = None;
         let mut arity = Arity::Scalar;
