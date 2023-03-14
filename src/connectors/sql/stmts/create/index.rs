@@ -1,6 +1,6 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
-use crate::core::model::index::ModelIndexItem;
+use crate::core::model::index::{ModelIndex, ModelIndexItem};
 
 pub(crate) struct SQLCreateIndexOnStatement {
     unique: bool,
@@ -26,7 +26,7 @@ impl ToSQLString for SQLCreateIndexOnStatement {
         let unique = if self.unique { " UNIQUE" } else { "" };
         let index = &self.index;
         let table = &self.table;
-        let def = self.columns.iter().map(|c| c.to_string(dialect)).collect::<Vec<String>>().join(", ");
+        let def = self.columns.iter().map(|c| ModelIndex::sql_format_item(dialect, c)).collect::<Vec<String>>().join(", ");
         format!("CREATE{unique} INDEX `{index}` ON `{table}`({def})")
     }
 }

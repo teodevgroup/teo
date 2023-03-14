@@ -106,6 +106,10 @@ impl ModelIndex {
         }
     }
 
+    pub(crate) fn set_name(&mut self, new_name: String) {
+        self.name = Some(new_name);
+    }
+
     pub(crate) fn items(&self) -> &Vec<ModelIndexItem> {
         &self.items
     }

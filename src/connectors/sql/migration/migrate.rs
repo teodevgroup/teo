@@ -182,7 +182,7 @@ impl SQLMigration {
                 }
                 let table_has_records = Self::table_has_records(dialect, &conn, table_name).await;
                 let db_indices = Self::db_indices(dialect, &conn, model).await;
-                let model_indices = Self::normalize_model_indices(model.indices(), dialect);
+                let model_indices = Self::normalized_model_indices(model.indices(), dialect, table_name);
                 // here update columns and indices
                 let manipulations = ColumnDecoder::manipulations(&db_columns, &model_columns, model);
                 if table_has_records && manipulations.iter().find(|m| m.is_add_column_non_null()).is_some() && model.allows_drop_when_migrate() {
@@ -286,8 +286,21 @@ impl SQLMigration {
         result
     }
 
-    async fn db_indices(dialect: SQLDialect, conn: &PooledConnection, model: &Model) -> Vec<ModelIndex> {
+    fn normalized_model_indices(indices: &Vec<ModelIndex>, dialect: SQLDialect, table_name: &str) -> HashSet<ModelIndex> {
+        indices.iter().map(|index| {
+            let mut index = index.clone();
+            let sql_name_cow = index.sql_name(table_name);
+            let sql_name = sql_name_cow.as_ref().to_owned();
+            index.set_name(sql_name);
+            index
+        }).collect()
+    }
 
+    async fn db_indices(dialect: SQLDialect, conn: &PooledConnection, model: &Model) -> HashSet<ModelIndex> {
+        match dialect {
+            SQLDialect::PostgreSQL => Self::psql_db_indices(conn, model).await,
+            _ => unreachable!(),
+        }
     }
 
     async fn psql_db_indices(conn: &PooledConnection, model: &Model) -> HashSet<ModelIndex> {
@@ -332,8 +345,8 @@ GROUP BY   tnsp.nspname,
             let index_name = row.get("index_name").unwrap().as_str().unwrap();
             let column_name = row.get("column_name").unwrap().as_str().unwrap();
             let order = Sort::from_str(row.get("order").unwrap().as_str().unwrap()).unwrap();
-            if let Some(position) = indices.iter().position(|m| m.name().unwrap() == index_name) {
-                let mut model_index = indices.get_mut(position).unwrap();
+            if let Some(position) = indices.iter().position(|m: &ModelIndex| m.name().unwrap() == index_name) {
+                let model_index = indices.get_mut(position).unwrap();
                 let item = ModelIndexItem::new(column_name, order, None);
                 model_index.append_item(item);
             } else {
