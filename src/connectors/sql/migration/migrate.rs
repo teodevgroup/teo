@@ -326,6 +326,10 @@ GROUP BY   tnsp.nspname,
            o.OPTION ORDER BY column_position
 "#);
         let result_set = conn.query(Query::from(sql)).await.unwrap();
-        let
+        let mut indices = hashset!{};
+        for row in result_set {
+
+        }
+        indices
     }
 }
