@@ -20,7 +20,7 @@ jsonwebtoken = "8.2.0"
 futures = "0.3.27"
 futures-util = "0.3.27"
 regex = "1.5.5"
-tokio = { version = "1.26.0", features = ["macros"] }
+tokio = { version = "1.0", features = ["macros"] }
 async-trait = "0.1.66"
 inflector-plus = "0.11.7"
 url = "2.3.1"
