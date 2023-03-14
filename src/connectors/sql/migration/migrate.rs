@@ -306,6 +306,7 @@ impl SQLMigration {
         match dialect {
             SQLDialect::PostgreSQL => Self::psql_db_indices(conn, model).await,
             SQLDialect::MySQL => Self::mysql_db_indices(conn, model).await,
+            SQLDialect::SQLite => Self::sqlite_db_indices(conn, model).await,
             _ => unreachable!(),
         }
     }
@@ -392,6 +393,42 @@ GROUP BY   tnsp.nspname,
                     vec![item],
                 ))
             }
+        }
+        indices.into_iter().collect()
+    }
+
+    async fn sqlite_db_indices(conn: &PooledConnection, model: &Model) -> HashSet<ModelIndex> {
+        let table_name = model.table_name();
+        let sql = format!(r#"SELECT
+    m.tbl_name as table_name,
+    il.name as index_name,
+    ii.name as column_name,
+    CASE il.origin when 'pk' then 1 else 0 END as is_primary_key,
+    CASE il.[unique] when 1 then 0 else 1 END as non_unique,
+    il.[unique] as is_unique,
+    il.partial,
+    il.seq as seq,
+    ii.desc as `desc`
+FROM sqlite_master AS m,
+    pragma_index_list(m.name) AS il,
+    pragma_index_xinfo(il.name) AS ii
+WHERE
+    m.type = 'table'
+    and m.tbl_name = '{}'
+    and ii.name is not null
+GROUP BY
+    m.tbl_name,
+    il.name,
+    ii.name,
+    il.origin,
+    il.partial,
+    il.seq,
+    ii.`desc`
+ORDER BY 1,6"#, table_name);
+        let result_set = conn.query(Query::from(sql)).await.unwrap();
+        let mut indices = vec![];
+        for row in result_set {
+
         }
         indices.into_iter().collect()
     }
