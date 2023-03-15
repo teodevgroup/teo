@@ -69,13 +69,14 @@ impl GraphBuilder {
         }
         graph.models_map = models_map;
         graph.url_segment_name_map = url_segment_name_map;
-        let c = connector.as_ref();
-        let connector_mut = unsafe {
-            let d: * const dyn Connector = c;
-            let e: * mut dyn Connector = d as *mut dyn Connector;
-            &mut *e
-        };
-        let _ = connector_mut.load(&graph.models_vec).await;
+        // TODO: disabled for Node.js, enable for MongoDB in the future
+        // let c = connector.as_ref();
+        // let connector_mut = unsafe {
+        //     let d: * const dyn Connector = c;
+        //     let e: * mut dyn Connector = d as *mut dyn Connector;
+        //     &mut *e
+        // };
+        // let _ = connector_mut.load(&graph.models_vec).await;
         graph.connector = Some(connector.clone());
         Graph { inner: Arc::new(graph) }
     }
