@@ -330,6 +330,7 @@
 - Pipeline: to word case modifier
 - Pipeline: to sentence case modifier
 - Pipeline: to title case modifier
+- Setup code style guide
 
 #### 0.0.53
 - Node.js object @victorteokw
