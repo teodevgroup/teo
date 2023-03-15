@@ -1,4 +1,4 @@
-# Changelog & Feature List
+# Feature Planning
 
 #### 0.0.20
 - `on_output` pipeline is called in save function **[DONE]**
@@ -322,21 +322,29 @@
 - Add cuid2 modifier **[DONE]**
 - SQL migration: Separate index and columns **[DONE]**
 - Schema language: Enum member literal with argument **[DONE]**
-- named arguments for index decorators **[DONE]**
-- Fix SQLite memory bug: A HTTP connection should use single pooled connection
+- Named arguments for index decorators **[DONE]**
+- Pipeline: random float modifier
+- Pipeline: random int modifier
+- Pipeline: to uppercase modifier
+- Pipeline: to lowercase modifier
+- Pipeline: to word case modifier
+- Pipeline: to sentence case modifier
+- Pipeline: to title case modifier
 
 #### 0.0.53
+- Node.js object @victorteokw
+- Node.js entity generation @victorteokw
+- Cross language error handling for node.js @victorteokw
+
+#### 0.0.54
+- Fix SQLite memory bug: A HTTP connection should use single pooled connection @victorteokw
+- Rewrite connector to support pooled connections @victorteokw
+- SQL Transaction @victorteokw
+
+#### 0.0.55
 - Connector bug: unique constraint violating: error message should have key path
 - Log SQL queries
 - Migration dry run
-
-#### 0.0.54
-- Node.js object
-- Node.js entity generation
-- Cross language error handling for node.js
-
-#### 0.0.55
-- SQL Transaction
 
 #### 0.0.56
 - Relation onUpdate
@@ -379,13 +387,6 @@
 
 #### 0.1.2
 - The copy action
-- random float modifier
-- random int modifier
-- to uppercase modifier
-- to lowercase modifier
-- to word case modifier
-- to sentence case modifier
-- to title case modifier
 
 #### 0.1.3
 - Setup new style unit tests
