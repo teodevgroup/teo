@@ -58,6 +58,18 @@ pub(crate) struct ColumnDecoder { }
 impl ColumnDecoder {
 
     pub(crate) fn manipulations<'a>(db_columns: &'a HashSet<SQLColumn>, model_columns: &'a HashSet<SQLColumn>, db_indices: &'a HashSet<ModelIndex>, model_indices: &'a HashSet<ModelIndex>, model: &Model) -> Vec<ColumnManipulation<'a>> {
+        let mut to_create: Vec<&ModelIndex> = vec![];
+        let mut to_drop: Vec<&ModelIndex> = vec![];
+        for index in db_indices {
+            if !model_indices.contains(index) {
+                to_drop.push(index);
+            }
+        }
+        for index in model_indices {
+            if !db_indices.contains(index) {
+                to_create.push(index);
+            }
+        }
         let mut to_add: Vec<&SQLColumn> = model_columns.iter().collect();
         let mut to_remove: Vec<&SQLColumn> = vec![];
         let mut to_rename: Vec<(String, String)> = vec![];
@@ -104,6 +116,12 @@ impl ColumnDecoder {
             } else { None };
 
             result.push(ColumnManipulation::AddColumn(c, action, default));
+        }
+        for i in to_create {
+            result.push(ColumnManipulation::CreateIndex(i));
+        }
+        for i in to_drop {
+            result.push(ColumnManipulation::DropIndex(i));
         }
         for c in to_remove {
             let action = if let Some(field) = model.dropped_field(c.name()) {

@@ -26,7 +26,6 @@ use crate::core::error::Error;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::input::Input;
 use crate::core::result::Result;
-
 use crate::prelude::{Graph, Object, Value};
 use crate::teon;
 
@@ -174,6 +173,7 @@ impl SQLConnector {
 
 #[async_trait]
 impl Connector for SQLConnector {
+
     fn default_database_type(&self, field_type: &FieldType) -> DatabaseType {
         field_type.to_database_type(self.dialect)
     }
