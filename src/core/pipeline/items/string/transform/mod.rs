@@ -4,4 +4,4 @@ pub mod split;
 pub mod pad_start;
 pub mod pad_end;
 pub mod ellipsis;
-pub mod word_case;
+pub mod to_word_case;

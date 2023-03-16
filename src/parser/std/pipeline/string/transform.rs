@@ -6,7 +6,7 @@ use crate::core::pipeline::items::string::transform::pad_start::PadStartItem;
 use crate::core::pipeline::items::string::transform::regex_replace::RegexReplaceItem;
 use crate::core::pipeline::items::string::transform::split::SplitItem;
 use crate::core::pipeline::items::string::transform::trim::TrimItem;
-use crate::core::pipeline::items::string::transform::word_case::WordCaseItem;
+use crate::core::pipeline::items::string::transform::to_word_case::ToWordCaseItem;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn regex_replace(args: Vec<Argument>) -> Arc<dyn Item> {
@@ -42,6 +42,6 @@ pub(crate) fn ellipsis(args: Vec<Argument>) -> Arc<dyn Item> {
     Arc::new(EllipsisItem::new(arg1.clone(), arg2))
 }
 
-pub(crate) fn word_case(_args: Vec<Argument>) -> Arc<dyn Item> {
-    Arc::new(WordCaseItem::new())
+pub(crate) fn to_word_case(_args: Vec<Argument>) -> Arc<dyn Item> {
+    Arc::new(ToWordCaseItem::new())
 }

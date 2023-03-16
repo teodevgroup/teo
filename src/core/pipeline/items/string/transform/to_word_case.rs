@@ -7,16 +7,16 @@ use crate::core::pipeline::ctx::Ctx;
 use inflector::cases::wordcase::to_word_case;
 
 #[derive(Debug, Copy, Clone)]
-pub struct WordCaseItem {}
+pub struct ToWordCaseItem {}
 
-impl WordCaseItem {
+impl ToWordCaseItem {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl Item for WordCaseItem {
+impl Item for ToWordCaseItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.get_value() {
             Value::String(ref s) => Ok(ctx.with_value(Value::String(to_word_case(s)))),
