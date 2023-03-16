@@ -327,7 +327,7 @@
 - Pipeline: random int modifier
 - Pipeline: to uppercase modifier
 - Pipeline: to lowercase modifier
-- Pipeline: to word case modifier
+- Pipeline: to word case modifier **[DONE]**
 - Pipeline: to sentence case modifier
 - Pipeline: to title case modifier
 - Setup code style guide
