@@ -22,7 +22,7 @@ use crate::parser::std::pipeline::math::{
     abs, add, cbrt, ceil, divide, floor, max, min, modular, multiply, pow, root, round, sqrt,
     subtract,
 };
-use crate::parser::std::pipeline::number::generation::random_int;
+use crate::parser::std::pipeline::number::generation::{random_float, random_int};
 use crate::parser::std::pipeline::number::{is_even, is_odd};
 use crate::parser::std::pipeline::object::{
     assign, ctx_self, is, is_a, object_get, object_previous_value, object_set,
@@ -44,7 +44,7 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 
 pub(crate) struct GlobalPipelineInstallers {
-    objects: HashMap<String, ASTPipelineInstaller>,
+    objects: HashMap<String, ASTPipelineInstaller>
 }
 
 impl Debug for GlobalPipelineInstallers {
@@ -168,7 +168,7 @@ impl GlobalPipelineInstallers {
 }
 
 pub(crate) struct GlobalFunctionInstallers {
-    objects: HashMap<String, ASTFunctionInstaller>,
+    objects: HashMap<String, ASTFunctionInstaller>
 }
 
 impl Debug for GlobalFunctionInstallers {
