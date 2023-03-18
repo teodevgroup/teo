@@ -1,6 +1,8 @@
 use std::sync::Arc;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::items::string::transform::ellipsis::EllipsisItem;
+use crate::core::pipeline::items::string::transform::uppercase::UpperCaseItem;
+use crate::core::pipeline::items::string::transform::lowercase::LowerCaseItem;
 use crate::core::pipeline::items::string::transform::pad_end::PadEndItem;
 use crate::core::pipeline::items::string::transform::pad_start::PadStartItem;
 use crate::core::pipeline::items::string::transform::regex_replace::RegexReplaceItem;
@@ -44,4 +46,12 @@ pub(crate) fn ellipsis(args: Vec<Argument>) -> Arc<dyn Item> {
 
 pub(crate) fn to_word_case(_args: Vec<Argument>) -> Arc<dyn Item> {
     Arc::new(ToWordCaseItem::new())
+}
+
+pub(crate) fn lowercase(args: Vec<Argument>) -> Arc<dyn Item> {
+    Arc::new(LowerCaseItem::new())
+}
+
+pub(crate) fn uppercase(args: Vec<Argument>) -> Arc<dyn Item> {
+    Arc::new(UpperCaseItem::new())
 }
