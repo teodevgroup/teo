@@ -4,7 +4,7 @@ use crate::core::pipeline::item::Item;
 use crate::core::teon::Value;
 use crate::core::result::Result;
 use crate::core::pipeline::ctx::Ctx;
-use inflector::cases::titlecase::to_title_case;
+use inflector::Inflector;
 
 #[derive(Debug, Copy, Clone)]
 pub struct ToTitleCaseItem {}
@@ -19,7 +19,7 @@ impl ToTitleCaseItem {
 impl Item for ToTitleCaseItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.get_value() {
-            Value::String(ref s) => Ok(ctx.with_value(Value::String(to_title_case(s)))),
+            Value::String(s) => Ok(ctx.with_value(Value::String(s.to_title_case()))),
             _ => Err(ctx.internal_server_error("value is not string"))
         }
     }
