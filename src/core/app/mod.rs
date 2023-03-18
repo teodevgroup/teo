@@ -29,6 +29,11 @@ pub struct App {
 }
 
 impl App {
+
+    pub fn graph(&self) -> &Graph {
+        &self.graph
+    }
+
     pub async fn run(&self) -> Result<(), std::io::Error> {
         match &self.args.command {
             CLICommand::Serve(serve_command) => {

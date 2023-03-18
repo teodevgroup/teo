@@ -55,7 +55,11 @@ fn decorator(args: Vec<Argument>, model: &mut ModelBuilder, index_kind: u8) {
         map = Some(arg1.resolved.as_ref().unwrap().as_value().unwrap().as_str().unwrap().to_owned());
     }
     match index_kind {
-        0 => model.indices.push(ModelIndex::new(ModelIndexType::Primary, map, items)),
+        0 => {
+            let index = ModelIndex::new(ModelIndexType::Primary, map, items);
+            model.indices.push(index.clone());
+            model.primary = Some(index);
+        },
         1 => model.indices.push(ModelIndex::new(ModelIndexType::Index, map, items)),
         2 => model.indices.push(ModelIndex::new(ModelIndexType::Unique, map, items)),
         _ => unreachable!(),

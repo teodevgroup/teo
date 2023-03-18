@@ -76,7 +76,19 @@ impl Model {
         Model { inner }
     }
 
-    pub(crate) fn name(&self) -> &str {
+    pub fn fields(&self) -> &Vec<Arc<Field>> {
+        return &self.inner.fields_vec
+    }
+
+    pub fn properties(&self) -> &Vec<Arc<Property>> {
+        return &self.inner.properties_vec
+    }
+
+    pub fn relations(&self) -> &Vec<Arc<Relation>> {
+        return &self.inner.relations_vec
+    }
+
+    pub fn name(&self) -> &str {
         &self.inner.name
     }
 
@@ -110,18 +122,6 @@ impl Model {
 
     pub(crate) fn actions(&self) -> &HashSet<Action> {
         &self.inner.handler_actions
-    }
-
-    pub(crate) fn fields(&self) -> &Vec<Arc<Field>> {
-        return &self.inner.fields_vec
-    }
-
-    pub(crate) fn properties(&self) -> &Vec<Arc<Property>> {
-        return &self.inner.properties_vec
-    }
-
-    pub(crate) fn relations(&self) -> &Vec<Arc<Relation>> {
-        return &self.inner.relations_vec
     }
 
     pub(crate) fn deny_relation_keys(&self) -> &Vec<String> {
