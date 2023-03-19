@@ -1,6 +1,5 @@
 pub mod save_session;
 
-use std::collections::{HashMap};
 use std::fmt::{Debug};
 use std::ops::Neg;
 use std::sync::Arc;
@@ -38,7 +37,6 @@ pub struct MongoDBConnector {
     loaded: bool,
     client: Client,
     database: Database,
-    collections: HashMap<String, Collection<Document>>
 }
 
 impl MongoDBConnector {
@@ -64,8 +62,11 @@ impl MongoDBConnector {
             loaded: false,
             client,
             database,
-            collections: HashMap::new()
         }
+    }
+
+    pub(crate) fn get_collection(&self, name: &str) -> Collection<Document> {
+        self.database.collection(name)
     }
 
     fn document_to_object(&self, document: &Document, object: &Object, select: Option<&Value>, include: Option<&Value>) -> Result<()> {
@@ -156,7 +157,7 @@ impl MongoDBConnector {
 
     async fn aggregate_or_group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Vec<Value>> {
         let aggregate_input = Aggregation::build_for_aggregate(model, graph, finder)?;
-        let col = &self.collections[model.name()];
+        let col = self.get_collection(model.name());
         let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
             println!("{:?}", cur);
@@ -206,7 +207,7 @@ impl MongoDBConnector {
     async fn create_object(&self, object: &Object) -> Result<()> {
         let model = object.model();
         let keys = object.keys_for_save();
-        let col = &self.collections[model.name()];
+        let col = self.get_collection(model.name());
         let auto_keys = model.auto_keys();
         // create
         let mut doc = doc!{};
@@ -246,7 +247,7 @@ impl MongoDBConnector {
     async fn update_object(&self, object: &Object) -> Result<()> {
         let model = object.model();
         let keys = object.keys_for_save();
-        let col = &self.collections[model.name()];
+        let col = self.get_collection(model.name());
         let identifier: Bson = object.db_identifier().into();
         let identifier = identifier.as_document().unwrap();
         let mut set = doc!{};
@@ -359,23 +360,13 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn load(&mut self, models: &Vec<Model>) -> Result<()> {
-        let mut collections: HashMap<String, Collection<Document>> = HashMap::new();
-        for model in models {
-            let collection: Collection<Document> = self.database.collection(model.table_name());
-            collections.insert(model.name().to_owned(), collection);
-        }
-        self.collections = collections;
-        Ok(())
-    }
-
     async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> Result<()> {
         if reset_database {
             let _ = self.database.drop(None).await;
         }
         for model in models {
             let name = model.name();
-            let collection = self.collections.get(name).unwrap();
+            let collection = self.get_collection(name);
             let mut reviewed_names: Vec<String> = Vec::new();
             let cursor_result = collection.list_indexes(None).await;
             if cursor_result.is_ok() {
@@ -470,7 +461,7 @@ impl Connector for MongoDBConnector {
             return Err(Error::object_is_not_saved_thus_cant_be_deleted());
         }
         let model = object.model();
-        let col = &self.collections[model.name()];
+        let col = self.get_collection(model.name());
         let bson_identifier: Bson = object.db_identifier().into();
         let document_identifier = bson_identifier.as_document().unwrap();
         let result = col.delete_one(document_identifier.clone(), None).await;
@@ -487,7 +478,7 @@ impl Connector for MongoDBConnector {
         let include = finder.get("include");
 
         let aggregate_input = Aggregation::build(model, graph, finder)?;
-        let col = &self.collections[model.name()];
+        let col = self.get_collection(model.name());
         let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
             return Err(Error::unknown_database_find_unique_error());
@@ -510,7 +501,7 @@ impl Connector for MongoDBConnector {
         let include = finder.get("include");
         let aggregate_input = Aggregation::build(model, graph, finder)?;
         let reverse = Input::has_negative_take(finder);
-        let col = &self.collections[model.name()];
+        let col = self.get_collection(model.name());
         // println!("see aggregate input: {:?}", aggregate_input);
         let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
@@ -540,7 +531,7 @@ impl Connector for MongoDBConnector {
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize> {
         let input = Aggregation::build_for_count(model, graph, finder)?;
-        let col = &self.collections[model.name()];
+        let col = self.get_collection(model.name());
         let cur = col.aggregate(input, None).await;
         if cur.is_err() {
             println!("{:?}", cur);

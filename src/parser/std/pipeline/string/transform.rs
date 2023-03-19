@@ -9,6 +9,8 @@ use crate::core::pipeline::items::string::transform::regex_replace::RegexReplace
 use crate::core::pipeline::items::string::transform::split::SplitItem;
 use crate::core::pipeline::items::string::transform::trim::TrimItem;
 use crate::core::pipeline::items::string::transform::to_word_case::ToWordCaseItem;
+use crate::core::pipeline::items::string::transform::to_sentence_case::ToSentenceCaseItem;
+use crate::core::pipeline::items::string::transform::to_title_case::ToTitleCaseItem;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn regex_replace(args: Vec<Argument>) -> Arc<dyn Item> {
@@ -54,4 +56,12 @@ pub(crate) fn to_lower_case(args: Vec<Argument>) -> Arc<dyn Item> {
 
 pub(crate) fn to_upper_case(args: Vec<Argument>) -> Arc<dyn Item> {
     Arc::new(UpperCaseItem::new())
+}
+
+pub(crate) fn to_sentence_case(_args: Vec<Argument>) -> Arc<dyn Item> {
+    Arc::new(ToSentenceCaseItem::new())
+}
+
+pub(crate) fn to_title_case(_args: Vec<Argument>) -> Arc<dyn Item> {
+    Arc::new(ToTitleCaseItem::new())
 }
