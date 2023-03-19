@@ -101,6 +101,10 @@ pub struct Error {
 
 impl Error {
 
+    pub fn message(&self) -> &str {
+        &self.message
+    }
+
     pub(crate) fn unexpected_enum_value(field: impl Into<String>) -> Self {
         let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
         errors.insert(field.into(), "Enum value is unexpected.".to_string());
