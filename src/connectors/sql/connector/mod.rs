@@ -178,10 +178,6 @@ impl Connector for SQLConnector {
         field_type.to_database_type(self.dialect)
     }
 
-    async fn load(&mut self, _models: &Vec<Model>) -> Result<()> {
-        Ok(())
-    }
-
     async fn migrate(&mut self, models: &Vec<Model>, _reset_database: bool) -> Result<()> {
         SQLMigration::migrate(self.dialect, &self.pool, models).await;
         Ok(())
