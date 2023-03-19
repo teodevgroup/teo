@@ -34,6 +34,10 @@ static mut CURRENT: Option<&'static Graph> = None;
 
 impl Graph {
 
+    pub fn models(&self) -> &Vec<Model> {
+        self.inner.models_vec.as_ref()
+    }
+
     pub fn current() -> &'static Self {
         unsafe {
             if CURRENT.is_none() {
@@ -190,8 +194,6 @@ impl Graph {
             None => None
         }
     }
-
-    pub(crate) fn models(&self) -> &Vec<Model> { &self.inner.models_vec }
 
     pub(crate) fn r#enum(&self, name: &str) -> Option<&Enum> {
         self.inner.enums.get(name)

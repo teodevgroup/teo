@@ -111,7 +111,7 @@ impl FieldIndex {
 }
 
 #[derive(Clone, ToMut)]
-pub(crate) struct Field {
+pub struct Field {
     pub(crate) name: String,
     pub(crate) localized_name: Option<String>,
     pub(crate) description: Option<String>,
@@ -189,7 +189,7 @@ impl Field {
         }
     }
 
-    pub(crate) fn name(&self) -> &str {
+    pub fn name(&self) -> &str {
         &self.name
     }
 

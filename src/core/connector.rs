@@ -21,8 +21,6 @@ pub(crate) trait Connector: Send + Sync {
 
     fn default_database_type(&self, field_type: &FieldType) -> DatabaseType;
 
-    async fn load(&mut self, models: &Vec<Model>) -> Result<()>;
-
     // Migration
 
     async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> Result<()>;

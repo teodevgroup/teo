@@ -331,6 +331,7 @@
 - Pipeline: to sentence case modifier
 - Pipeline: to title case modifier
 - Setup code style guide
+- Export graph, model, fields, relations and properties from app for Node.js binding **[DONE]**
 
 #### 0.0.53
 - Node.js object @victorteokw
