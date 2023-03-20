@@ -390,6 +390,7 @@ impl Parser {
     }
 
     fn parse_enum_value(&mut self, pair: Pair<'_>) -> EnumChoice {
+        let mut comment_block = None;
         let mut identifier: Option<Identifier> = None;
         let mut decorators: Vec<Decorator> = vec![];
         let span = Self::parse_span(&pair);
@@ -398,11 +399,11 @@ impl Parser {
                 Rule::COLON | Rule::EMPTY_LINES | Rule::comment_block => {},
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
-                Rule::triple_comment_block => (),
+                Rule::triple_comment_block => comment_block = Some(Self::parse_comment_block(current)),
                 _ => panic!("error."),
             }
         }
-        EnumChoice::new(identifier.unwrap(), decorators, span)
+        EnumChoice::new(identifier.unwrap(),comment_block,decorators, span)
     }
 
     fn parse_let_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {

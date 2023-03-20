@@ -44,7 +44,7 @@ mod tests {
     #[tokio::test]
     async fn should_check_ctx_value() {
         let ctx = Ctx::initial_state_with_value(Value::Null);
-        let r = UpperCaseItem::new().call(ctx.clone()).await;
+        let r = ToUpperCaseItem::new().call(ctx.clone()).await;
         assert!(r.is_err());
     }
 }
