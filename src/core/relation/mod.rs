@@ -82,7 +82,7 @@ impl Relation {
         self.through.as_deref()
     }
 
-    pub(crate) fn is_vec(&self) -> bool {
+    pub fn is_vec(&self) -> bool {
         self.is_vec
     }
 
