@@ -22,10 +22,7 @@ impl RandomFloatItem {
 impl Item for RandomFloatItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?;
-        let (start, end, closed) = if argument.is_number() {
-            let n = self.argument.as_f64().unwrap();
-            (n, n, true)
-        } else if argument.is_range() {
+        let (start, end, closed) = if argument.is_range() {
             let r = self.argument.as_range().unwrap();
             let start = r.start.resolve(ctx.clone()).await?.as_f64().unwrap();
             let end = r.end.resolve(ctx.clone()).await?.as_f64().unwrap();
