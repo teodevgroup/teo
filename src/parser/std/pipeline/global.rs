@@ -29,16 +29,9 @@ use crate::parser::std::pipeline::object::{
 };
 use crate::parser::std::pipeline::query::query_raw;
 use crate::parser::std::pipeline::string::generation::{cuid, random_digits, slug, uuid};
-use crate::parser::std::pipeline::string::transform::{
-    ellipsis, pad_end, pad_start, regex_replace, split, trim,
-};
-use crate::parser::std::pipeline::string::validation::{
-    has_prefix, has_suffix, is_alphabetic, is_alphanumeric, is_email, is_hex_color, is_numeric,
-    is_prefix_of, is_secure_password, is_suffix_of, regex_match,
-};
-use crate::parser::std::pipeline::value::{
-    eq, exists, gt, gte, is_false, is_null, is_true, lt, lte, neq, one_of,
-};
+use crate::parser::std::pipeline::string::transform::{ellipsis, to_lower_case, to_upper_case, pad_end, pad_start, regex_replace, split, trim, to_word_case, to_sentence_case, to_title_case};
+use crate::parser::std::pipeline::string::validation::{has_prefix, has_suffix, is_alphabetic, is_alphanumeric, is_email, is_hex_color, is_numeric, is_prefix_of, is_secure_password, is_suffix_of, regex_match};
+use crate::parser::std::pipeline::value::{eq, gt, gte, exists, is_false, is_null, is_true, lt, lte, neq, one_of};
 use crate::parser::std::pipeline::vector::{filter, item_at, join, map};
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
@@ -128,6 +121,11 @@ impl GlobalPipelineInstallers {
         objects.insert("regexReplace".to_owned(), regex_replace);
         objects.insert("split".to_owned(), split);
         objects.insert("trim".to_owned(), trim);
+        objects.insert("toWordCase".to_owned(), to_word_case);
+        objects.insert("toLowerCase".to_owned(), to_lower_case);
+        objects.insert("toUpperCase".to_owned(), to_upper_case);
+        objects.insert("toSentenceCase".to_owned(), to_sentence_case);
+        objects.insert("toTitleCase".to_owned(), to_title_case);
         // string validation
         objects.insert("hasPrefix".to_owned(), has_prefix);
         objects.insert("hasSuffix".to_owned(), has_suffix);

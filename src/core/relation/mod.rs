@@ -12,7 +12,7 @@ use crate::core::field::optionality::Optionality;
 use crate::core::relation::delete_rule::DeleteRule;
 
 #[derive(Debug, Clone)]
-pub(crate) struct Relation {
+pub struct Relation {
     pub(self) name: String,
     pub(crate) localized_name: Option<String>,
     pub(crate) description: Option<String>,
@@ -44,7 +44,7 @@ impl Relation {
         }
     }
     
-    pub(crate) fn name(&self) -> &str {
+    pub fn name(&self) -> &str {
         &self.name
     }
 
@@ -82,7 +82,7 @@ impl Relation {
         self.through.as_deref()
     }
 
-    pub(crate) fn is_vec(&self) -> bool {
+    pub fn is_vec(&self) -> bool {
         self.is_vec
     }
 

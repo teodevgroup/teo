@@ -5,7 +5,7 @@ use once_cell::sync::Lazy;
 use crate::core::field::Field;
 
 #[derive(Debug, Clone)]
-pub(crate) enum FieldType {
+pub enum FieldType {
     #[cfg(feature = "data-source-mongodb")]
     ObjectId,
     Bool,
@@ -26,81 +26,81 @@ pub(crate) enum FieldType {
 
 impl FieldType {
 
-    pub(crate) fn is_string(&self) -> bool {
+    pub fn is_string(&self) -> bool {
         match self {
             FieldType::String => true,
             _ => false
         }
     }
 
-    pub(crate) fn is_enum(&self) -> bool {
+    pub fn is_enum(&self) -> bool {
         match self {
             FieldType::Enum(_) => true,
             _ => false,
         }
     }
 
-    pub(crate) fn enum_name(&self) -> &str {
+    pub fn enum_name(&self) -> &str {
         match self {
             FieldType::Enum(n) => n,
             _ => panic!(),
         }
     }
 
-    pub(crate) fn is_int(&self) -> bool {
+    pub fn is_int(&self) -> bool {
         match self {
             FieldType::I32 | FieldType::I64 => true,
             _ => false
         }
     }
 
-    pub(crate) fn is_int32(&self) -> bool {
+    pub fn is_int32(&self) -> bool {
         match self {
             FieldType::I32 => true,
             _ => false
         }
     }
 
-    pub(crate) fn is_int64(&self) -> bool {
+    pub fn is_int64(&self) -> bool {
         match self {
             FieldType::I64 => true,
             _ => false
         }
     }
 
-    pub(crate) fn is_float32(&self) -> bool {
+    pub fn is_float32(&self) -> bool {
         match self {
             FieldType::F32 => true,
             _ => false
         }
     }
 
-    pub(crate) fn is_float64(&self) -> bool {
+    pub fn is_float64(&self) -> bool {
         match self {
             FieldType::F64 => true,
             _ => false
         }
     }
 
-    pub(crate) fn is_float(&self) -> bool {
+    pub fn is_float(&self) -> bool {
         match self {
             FieldType::F32 | FieldType::F64 => true,
             _ => false
         }
     }
 
-    pub(crate) fn is_decimal(&self) -> bool {
+    pub fn is_decimal(&self) -> bool {
         match self {
             FieldType::Decimal => true,
             _ => false,
         }
     }
 
-    pub(crate) fn is_number(&self) -> bool {
+    pub fn is_number(&self) -> bool {
         self.is_int() || self.is_float() || self.is_decimal()
     }
 
-    pub(crate) fn is_bool(&self) -> bool {
+    pub fn is_bool(&self) -> bool {
         match self {
             FieldType::Bool => true,
             _ => false
@@ -108,35 +108,35 @@ impl FieldType {
     }
 
     #[cfg(feature = "data-source-mongodb")]
-    pub(crate) fn is_object_id(&self) -> bool {
+    pub fn is_object_id(&self) -> bool {
         match self {
             FieldType::ObjectId => true,
             _ => false,
         }
     }
 
-    pub(crate) fn is_date(&self) -> bool {
+    pub fn is_date(&self) -> bool {
         match self {
             FieldType::Date => true,
             _ => false
         }
     }
 
-    pub(crate) fn is_datetime(&self) -> bool {
+    pub fn is_datetime(&self) -> bool {
         match self {
             FieldType::DateTime => true,
             _ => false
         }
     }
 
-    pub(crate) fn is_vec(&self) -> bool {
+    pub fn is_vec(&self) -> bool {
         match self {
             FieldType::Vec(_) => true,
             _ => false,
         }
     }
 
-    pub(crate) fn element_field(&self) -> Option<&Field> {
+    pub fn element_field(&self) -> Option<&Field> {
         match self {
             FieldType::Vec(inner) => Some(inner.as_ref()),
             FieldType::HashMap(inner) => Some(inner.as_ref()),
@@ -194,7 +194,7 @@ impl FieldType {
     }
 }
 
-pub(crate) trait FieldTypeOwner {
+pub trait FieldTypeOwner {
     fn field_type(&self) -> &FieldType;
     fn is_optional(&self) -> bool;
 }
