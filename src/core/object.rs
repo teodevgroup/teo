@@ -295,8 +295,8 @@ impl Object {
         Ok(())
     }
 
-    pub async fn set_property(&self, key: impl AsRef<str>, value: impl Into<Value>) -> Result<()> {
-        let property = self.model().property(key.as_ref()).unwrap();
+    pub async fn set_property(&self, key: &str, value: impl Into<Value>) -> Result<()> {
+        let property = self.model().property(key).unwrap();
         let setter = property.setter.as_ref().unwrap();
         let ctx = Ctx::initial_state_with_object(self.clone())
             .with_value(value.into());
@@ -391,10 +391,10 @@ impl Object {
         }
     }
 
-    pub async fn get_property<T>(&self, key: impl AsRef<str>) -> Result<T> where T: From<Value> {
+    pub async fn get_property<T>(&self, key: &str) -> Result<T> where T: From<Value> {
         let property = self.model().property(key.as_ref()).unwrap();
         if property.cached {
-            if let Some(value) = self.inner.cached_property_map.lock().unwrap().get(key.as_ref()) {
+            if let Some(value) = self.inner.cached_property_map.lock().unwrap().get(key) {
                 return Ok(value.clone().into());
             }
         }
@@ -402,7 +402,7 @@ impl Object {
         let ctx = Ctx::initial_state_with_object(self.clone());
         let value = getter.process(ctx).await?;
         if property.cached {
-            self.inner.cached_property_map.lock().unwrap().insert(key.as_ref().to_string(), value.clone());
+            self.inner.cached_property_map.lock().unwrap().insert(key.to_string(), value.clone());
         }
         Ok(value.into())
     }
@@ -1415,31 +1415,31 @@ impl Object {
         graph.find_unique_internal(self.model().name(), &finder, false, self.action(), self.action_source().clone()).await
     }
 
-    pub async fn force_set_relation_objects(&self, key: impl AsRef<str>, objects: Vec<Object>) -> () {
-        self.inner.object_set_many_map.lock().await.insert(key.as_ref().to_owned(), objects);
+    pub async fn force_set_relation_objects(&self, key: &str, objects: Vec<Object>) -> () {
+        self.inner.object_set_many_map.lock().await.insert(key.to_owned(), objects);
     }
 
-    pub async fn force_add_relation_objects(&self, key: impl AsRef<str>, objects: Vec<Object>) -> () {
-        self.inner.object_connect_map.lock().await.insert(key.as_ref().to_owned(), objects);
+    pub async fn force_add_relation_objects(&self, key: &str, objects: Vec<Object>) -> () {
+        self.inner.object_connect_map.lock().await.insert(key.to_owned(), objects);
     }
 
-    pub async fn force_remove_relation_objects(&self, key: impl AsRef<str>, objects: Vec<Object>) -> () {
-        self.inner.object_disconnect_map.lock().await.insert(key.as_ref().to_owned(), objects);
+    pub async fn force_remove_relation_objects(&self, key: &str, objects: Vec<Object>) -> () {
+        self.inner.object_disconnect_map.lock().await.insert(key.to_owned(), objects);
     }
 
-    pub async fn force_get_relation_objects(&self, key: impl AsRef<str>, find_many_args: impl AsRef<Value>) -> Result<Vec<Object>> {
-        self.fetch_relation_objects(key.as_ref(), Some(find_many_args.as_ref())).await
+    pub async fn force_get_relation_objects(&self, key: &str, find_many_args: impl AsRef<Value>) -> Result<Vec<Object>> {
+        self.fetch_relation_objects(key, Some(find_many_args.as_ref())).await
     }
 
-    pub async fn force_set_relation_object(&self, key: impl AsRef<str>, object: Option<Object>) -> () {
-        self.inner.object_set_map.lock().await.insert(key.as_ref().to_owned(), object);
+    pub async fn force_set_relation_object(&self, key: &str, object: Option<Object>) -> () {
+        self.inner.object_set_map.lock().await.insert(key.to_owned(), object);
     }
 
-    pub async fn force_get_relation_object(&self, key: impl AsRef<str>) -> Result<Option<Object>> {
-        if self.has_mutation_relation_fetched(key.as_ref()) {
-            self.get_mutation_relation_object(key.as_ref())
+    pub async fn force_get_relation_object(&self, key: &str) -> Result<Option<Object>> {
+        if self.has_mutation_relation_fetched(key) {
+            self.get_mutation_relation_object(key)
         } else {
-            self.fetch_relation_object(key.as_ref(), None).await
+            self.fetch_relation_object(key, None).await
         }
     }
 

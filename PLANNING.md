@@ -325,35 +325,36 @@
 - Named arguments for index decorators **[DONE]**
 - Pipeline: random float modifier **[DONE]**
 - Pipeline: random int modifier **[DONE]**
-- Pipeline: to uppercase modifier
-- Pipeline: to lowercase modifier
-- Pipeline: to word case modifier
-- Pipeline: to sentence case modifier
-- Pipeline: to title case modifier
-- Setup code style guide
+- Pipeline: to uppercase modifier **[DONE]**
+- Pipeline: to lowercase modifier **[DONE]**
+- Pipeline: to word case modifier **[DONE]**
+- Pipeline: to sentence case modifier **[DONE]**
+- Pipeline: to title case modifier **[DONE]**
+- Export graph, model, fields, relations and properties from app for Node.js binding **[DONE]**
+- Node.js object **[DONE]**
+- Node.js entity generation @victorteokw
 
 #### 0.0.53
-- Node.js object @victorteokw
-- Node.js entity generation @victorteokw
+- Pipeline: random float modifier
+- Pipeline: random int modifier
 - Cross language error handling for node.js @victorteokw
-
-#### 0.0.54
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection @victorteokw
 - Rewrite connector to support pooled connections @victorteokw
 - SQL Transaction @victorteokw
 
-#### 0.0.55
+#### 0.0.54
 - Connector bug: unique constraint violating: error message should have key path
 - Log SQL queries
 - Migration dry run
 
-#### 0.0.56
+#### 0.0.55
 - Relation onUpdate
+- Setup code style guide
 
-#### 0.0.57
+#### 0.0.56
 - Relation onDelete
 
-#### 0.0.58
+#### 0.0.57
 - Migration decorator docs
 - Dropped decorator docs
 - MongoDB migration
@@ -366,7 +367,7 @@
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 
-#### 0.0.59
+#### 0.0.58
 - Rust entities: setter documentation
 - Rust entities: optional string array
 - Rust entities: required string array
