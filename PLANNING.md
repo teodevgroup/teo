@@ -323,6 +323,8 @@
 - SQL migration: Separate index and columns **[DONE]**
 - Schema language: Enum member literal with argument **[DONE]**
 - Named arguments for index decorators **[DONE]**
+- Pipeline: random float modifier **[DONE]**
+- Pipeline: random int modifier **[DONE]**
 - Pipeline: to uppercase modifier **[DONE]**
 - Pipeline: to lowercase modifier **[DONE]**
 - Pipeline: to word case modifier **[DONE]**
@@ -396,7 +398,7 @@
 
 #### 0.1.5
 - PostgreSQL: Enum types
-- 
+-
 #### 0.1.6
 - Database type mapping for field, property and collection types' item field
 

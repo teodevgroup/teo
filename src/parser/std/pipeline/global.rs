@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-use std::fmt::{Debug, Formatter};
 use crate::parser::ast::accessible::{ASTFunctionInstaller, ASTPipelineInstaller};
+use crate::parser::std::pipeline::action::{redirect, when};
 use crate::parser::std::pipeline::array::append::append;
 use crate::parser::std::pipeline::array::get_length::get_length;
 use crate::parser::std::pipeline::array::has_length::has_length;
@@ -9,21 +8,33 @@ use crate::parser::std::pipeline::array::reverse::reverse;
 use crate::parser::std::pipeline::array::truncate::truncate;
 use crate::parser::std::pipeline::bcrypt::bcrypt_salt::bcrypt_salt;
 use crate::parser::std::pipeline::bcrypt::bcrypt_verify::bcrypt_verify;
-use crate::parser::std::pipeline::custom_function::{custom_callback, custom_compare, custom_transform, custom_validate};
+use crate::parser::std::pipeline::custom_function::{
+    custom_callback, custom_compare, custom_transform, custom_validate,
+};
 use crate::parser::std::pipeline::datetime::{now, today};
 use crate::parser::std::pipeline::debug::print;
 use crate::parser::std::pipeline::identity::identity;
-use crate::parser::std::pipeline::action::{redirect, when};
-use crate::parser::std::pipeline::logical::{all_modifier, and_modifier, any_modifier, if_modifier, invalid, not_modifier, or_modifier, passed, valid};
-use crate::parser::std::pipeline::math::{abs, add, cbrt, ceil, divide, floor, max, min, modular, multiply, pow, root, round, sqrt, subtract};
+use crate::parser::std::pipeline::logical::{
+    all_modifier, and_modifier, any_modifier, if_modifier, invalid, not_modifier, or_modifier,
+    passed, valid,
+};
+use crate::parser::std::pipeline::math::{
+    abs, add, cbrt, ceil, divide, floor, max, min, modular, multiply, pow, root, round, sqrt,
+    subtract,
+};
+use crate::parser::std::pipeline::number::generation::{random_float, random_int};
 use crate::parser::std::pipeline::number::{is_even, is_odd};
-use crate::parser::std::pipeline::object::{assign, ctx_self, is, is_a, object_get, object_previous_value, object_set};
+use crate::parser::std::pipeline::object::{
+    assign, ctx_self, is, is_a, object_get, object_previous_value, object_set,
+};
 use crate::parser::std::pipeline::query::query_raw;
 use crate::parser::std::pipeline::string::generation::{cuid, random_digits, slug, uuid};
 use crate::parser::std::pipeline::string::transform::{ellipsis, to_lower_case, to_upper_case, pad_end, pad_start, regex_replace, split, trim, to_word_case, to_sentence_case, to_title_case};
 use crate::parser::std::pipeline::string::validation::{has_prefix, has_suffix, is_alphabetic, is_alphanumeric, is_email, is_hex_color, is_numeric, is_prefix_of, is_secure_password, is_suffix_of, regex_match};
 use crate::parser::std::pipeline::value::{eq, gt, gte, exists, is_false, is_null, is_true, lt, lte, neq, one_of};
 use crate::parser::std::pipeline::vector::{filter, item_at, join, map};
+use std::collections::HashMap;
+use std::fmt::{Debug, Formatter};
 
 pub(crate) struct GlobalPipelineInstallers {
     objects: HashMap<String, ASTPipelineInstaller>
@@ -36,7 +47,6 @@ impl Debug for GlobalPipelineInstallers {
 }
 
 impl GlobalPipelineInstallers {
-
     pub(crate) fn new() -> Self {
         let mut objects: HashMap<String, ASTPipelineInstaller> = HashMap::new();
         // action
@@ -88,6 +98,9 @@ impl GlobalPipelineInstallers {
         // number
         objects.insert("isEven".to_owned(), is_even);
         objects.insert("isOdd".to_owned(), is_odd);
+        // number generation
+        objects.insert("randomInt".to_owned(), random_int);
+        objects.insert("randomFloat".to_owned(), random_float);
         // object
         objects.insert("self".to_owned(), ctx_self);
         objects.insert("get".to_owned(), object_get);
@@ -163,7 +176,6 @@ impl Debug for GlobalFunctionInstallers {
 }
 
 impl GlobalFunctionInstallers {
-
     pub(crate) fn new() -> Self {
         let mut objects: HashMap<String, ASTFunctionInstaller> = HashMap::new();
         // array

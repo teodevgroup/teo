@@ -1,2 +1,3 @@
-pub mod is_odd;
+pub mod generation;
 pub mod is_even;
+pub mod is_odd;
