@@ -255,7 +255,7 @@ enum_declaration = {
     ~ BLOCK_CLOSE
 }
 
-enum_value_declaration = { item_decorator* ~ identifier ~ trailing_comment? ~ NEWLINE }
+enum_value_declaration = { triple_comment_block? ~ item_decorator* ~ identifier ~ trailing_comment? ~ NEWLINE }
 
 // #############
 // model

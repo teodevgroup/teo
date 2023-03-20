@@ -116,7 +116,7 @@ impl Parser {
     pub(crate) fn parse(&mut self, main: Option<&str>) -> () {
         let main = if main.is_some() { main.unwrap() } else {
             let mut result: Option<&str> = None;
-            for name in ["schema.teo", "src/schema.teo"] {
+            for name in ["schema.teo", "src/schema.teo", "index.teo", "src/index.teo"] {
                 let relative = PathBuf::from(name);
                 let absolute = match fs::canonicalize(&relative) {
                     Ok(_path) => Some(name),
@@ -398,6 +398,7 @@ impl Parser {
                 Rule::COLON | Rule::EMPTY_LINES | Rule::comment_block => {},
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
+                Rule::triple_comment_block => (),
                 _ => panic!("error."),
             }
         }

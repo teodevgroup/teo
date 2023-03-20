@@ -2,7 +2,6 @@ pub mod parser;
 pub mod core;
 pub mod connectors;
 pub mod generator;
-pub mod interface;
 
 pub mod prelude {
     pub use crate::core::app::App;
