@@ -325,8 +325,8 @@
 - Named arguments for index decorators **[DONE]**
 - Pipeline: random float modifier
 - Pipeline: random int modifier
-- Pipeline: to uppercase modifier
-- Pipeline: to lowercase modifier
+- Pipeline: to uppercase modifier **[DONE]**
+- Pipeline: to lowercase modifier **[DONE]**
 - Pipeline: to word case modifier **[DONE]**
 - Pipeline: to sentence case modifier
 - Pipeline: to title case modifier

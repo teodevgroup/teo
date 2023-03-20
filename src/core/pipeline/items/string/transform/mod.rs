@@ -5,5 +5,7 @@ pub mod pad_start;
 pub mod pad_end;
 pub mod ellipsis;
 pub mod to_word_case;
+pub mod to_lower_case;
+pub mod to_upper_case;
 pub mod to_sentence_case;
 pub mod to_title_case;
