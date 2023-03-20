@@ -33,13 +33,14 @@ impl Enum {
 #[derive(Debug)]
 pub(crate) struct EnumChoice {
     pub(crate) identifier: Identifier,
+    pub(crate) comment_block: Option<CommentBlock>,
     pub(crate) decorators: Vec<Decorator>,
     pub(crate) span: Span,
     pub(crate) resolved: bool,
 }
 
 impl EnumChoice {
-    pub(crate) fn new(identifier: Identifier, decorators: Vec<Decorator>, span: Span) -> Self {
-        Self { identifier, decorators, span, resolved: false }
+    pub(crate) fn new(identifier: Identifier, comment_block: Option<CommentBlock>, decorators: Vec<Decorator>, span: Span) -> Self {
+        Self { identifier, decorators, span, comment_block, resolved: false }
     }
 }
