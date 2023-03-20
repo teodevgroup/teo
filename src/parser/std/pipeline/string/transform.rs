@@ -1,8 +1,8 @@
 use std::sync::Arc;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::items::string::transform::ellipsis::EllipsisItem;
-use crate::core::pipeline::items::string::transform::to_upper_case::UpperCaseItem;
-use crate::core::pipeline::items::string::transform::to_lower_case::LowerCaseItem;
+use crate::core::pipeline::items::string::transform::to_upper_case::ToUpperCaseItem;
+use crate::core::pipeline::items::string::transform::to_lower_case::ToLowerCaseItem;
 use crate::core::pipeline::items::string::transform::pad_end::PadEndItem;
 use crate::core::pipeline::items::string::transform::pad_start::PadStartItem;
 use crate::core::pipeline::items::string::transform::regex_replace::RegexReplaceItem;
@@ -51,11 +51,11 @@ pub(crate) fn to_word_case(_args: Vec<Argument>) -> Arc<dyn Item> {
 }
 
 pub(crate) fn to_lower_case(args: Vec<Argument>) -> Arc<dyn Item> {
-    Arc::new(LowerCaseItem::new())
+    Arc::new(ToLowerCaseItem::new())
 }
 
 pub(crate) fn to_upper_case(args: Vec<Argument>) -> Arc<dyn Item> {
-    Arc::new(UpperCaseItem::new())
+    Arc::new(ToUpperCaseItem::new())
 }
 
 pub(crate) fn to_sentence_case(_args: Vec<Argument>) -> Arc<dyn Item> {
