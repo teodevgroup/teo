@@ -47,7 +47,7 @@ impl Property {
         }
     }
 
-    pub(crate) fn name(&self) -> &str {
+    pub fn name(&self) -> &str {
         &self.name
     }
 
@@ -69,6 +69,14 @@ impl Property {
 
     pub(crate) fn set_optional(&mut self) {
         self.optionality = Optionality::Optional;
+    }
+
+    pub fn has_setter(&self) -> bool {
+        self.setter.is_some()
+    }
+
+    pub fn has_getter(&self) -> bool {
+        self.getter.is_some()
     }
 }
 
