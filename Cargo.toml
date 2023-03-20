@@ -1,6 +1,6 @@
 [package]
 name = "teo"
-version = "0.0.52"
+version = "0.0.52-beta.0"
 edition = "2021"
 description = "REDEFINED HTTP server framework."
 license = "Apache-2.0"
