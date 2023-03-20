@@ -335,8 +335,6 @@
 - Node.js entity generation @victorteokw
 
 #### 0.0.53
-- Pipeline: random float modifier
-- Pipeline: random int modifier
 - Cross language error handling for node.js @victorteokw
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection @victorteokw
 - Rewrite connector to support pooled connections @victorteokw
