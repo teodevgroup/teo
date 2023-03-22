@@ -332,7 +332,11 @@
 - Pipeline: to title case modifier **[DONE]**
 - Export graph, model, fields, relations and properties from app for Node.js binding **[DONE]**
 - Node.js object **[DONE]**
-- Node.js entity generation @victorteokw
+- Node.js entity generation **[DONE]**
+- Node.js package **[DONE]**
+- Fix PostgreSQL drop index **[DONE]**
+- Generate decimal in rust entities **[DONE]**
+- Generate decimal imports in rust entities
 
 #### 0.0.53
 - Cross language error handling for node.js @victorteokw

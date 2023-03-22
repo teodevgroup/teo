@@ -58,7 +58,7 @@ impl RustEntityGenerator {
             FieldType::I64 => "i64".to_owned(),
             FieldType::F32 => "f32".to_owned(),
             FieldType::F64 => "f64".to_owned(),
-            FieldType::Decimal => panic!("Decimal is not supported yet."),
+            FieldType::Decimal => "BigDecimal".to_owned(),
             FieldType::String => "String".to_owned(),
             FieldType::Date => "NaiveDate".to_owned(),
             FieldType::DateTime => "DateTime<Utc>".to_owned(),

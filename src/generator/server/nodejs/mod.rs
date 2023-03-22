@@ -36,6 +36,7 @@ impl NodeJSEntityGenerator {
             for model in graph.models() {
                 let name = model.name();
                 b.block(format!("export class {} {{", name), |b| {
+                    b.line("private constructor(): never");
                     // create doc
                     b.line(format!("static create(input?: {}CreateInput): Promise<{}>", name, name));
                     // find many doc

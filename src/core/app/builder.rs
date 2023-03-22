@@ -174,9 +174,11 @@ impl AppBuilder {
                     .help("Dry run")
                     .action(ArgAction::SetTrue)))
             .get_matches_from(match environment_version {
-                EnvironmentVersion::Python(_) | EnvironmentVersion::NodeJS(_) => env::args_os().enumerate().filter(|(i, _x)| *i != 1).map(|(_i, x)| x).collect::<Vec<OsString>>(),
+                EnvironmentVersion::Python(_) | EnvironmentVersion::NodeJS(_) => {
+                    env::args_os().enumerate().filter(|(i, x)| (*i != 1) && (!x.to_str().unwrap().ends_with("ts-node") && !x.to_str().unwrap().ends_with(".ts"))).map(|(_i, x)| x).collect::<Vec<OsString>>()
+                },
                 EnvironmentVersion::Rust(_) => env::args_os().enumerate().filter(|(i, x)| {
-                    !((*i == 0) && x.to_str().unwrap().ends_with("cargo-teo"))
+                    !((*i == 0) && (x.to_str().unwrap().ends_with("cargo-teo") || x.to_str().unwrap().ends_with("cargo-teo.exe")))
                 }).map(|(_i, x)| x).collect::<Vec<OsString>>(),
                 _ => env::args_os().collect::<Vec<OsString>>(),
             });
