@@ -53,7 +53,7 @@ impl NodeJSEntityGenerator {
                     b.line("delete(): Promise<void>");
                     for field in model.fields() {
                         let field_name = field.name();
-                        let field_type = field_to_nodejs_api_type(field);
+                        let field_type = field_to_nodejs_api_type(field.as_ref());
                         // set doc
                         b.line(format!("set {field_name}(newValue: {field_type}): void"));
                         // get doc
@@ -81,7 +81,7 @@ impl NodeJSEntityGenerator {
                     }
                     for property in model.properties() {
                         let property_name = property.name();
-                        let field_type = field_to_nodejs_api_type(property);
+                        let field_type = field_to_nodejs_api_type(property.as_ref());
                         if property.has_getter() {
                             // get doc
                             b.line(format!("get {property_name}(): Promise<{field_type}>"))
@@ -92,7 +92,7 @@ impl NodeJSEntityGenerator {
                             b.line(format!("set{pascal_name}(newValue: {field_type}): Promise<void>"))
                         }
                     }
-                }, "}\n\n");
+                }, "}\n");
             }
         }).to_string();
         generator.generate_file("index.d.ts", content).await?;
