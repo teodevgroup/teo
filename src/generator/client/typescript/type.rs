@@ -2,10 +2,11 @@ use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 
 pub(crate) trait ToTypeScriptType {
     fn to_typescript_type(&self, optional: bool) -> String;
-    fn to_typescript_filter_type(&self, optional: bool) -> String;
-    fn to_typescript_create_input_type(&self, optional: bool) -> String;
-    fn to_typescript_update_input_type(&self, optional: bool) -> String;
-    fn to_typescript_update_operation_input(&self, optional: bool) -> String;
+    fn to_typescript_filter_type(&self, optional: bool, server_mode: bool) -> String;
+    fn to_typescript_create_input_type(&self, optional: bool, server_mode: bool) -> String;
+    fn to_typescript_update_input_type(&self, optional: bool, server_mode: bool) -> String;
+    fn to_typescript_update_operation_input(&self, optional: bool, server_mode: bool) -> String;
+    fn to_typescript_scalar_update_input_type(&self, optional: bool) -> String;
 }
 
 impl ToTypeScriptType for FieldType {
@@ -31,17 +32,17 @@ impl ToTypeScriptType for FieldType {
         }
     }
 
-    fn to_typescript_filter_type(&self, optional: bool) -> String {
+    fn to_typescript_filter_type(&self, optional: bool, server_mode: bool) -> String {
         let mut with_generic = false;
         let base: String = match self {
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => "string | ObjectId".to_string(),
             FieldType::String => "string | String".to_string(),
-            FieldType::Date => "string | Date | Date".to_string(),
+            FieldType::Date => "string | Date".to_string(),
             FieldType::DateTime => "string | Date | DateTime".to_string(),
             FieldType::Bool => "boolean | Bool".to_string(),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number | Number".to_string(),
-            FieldType::Decimal => "string | Decimal | Decimal".to_string(),
+            FieldType::Decimal => if server_mode { "Decimal | Decimal" } else { "string | Decimal | Decimal" }.to_string(),
             FieldType::Enum(name) => {
                 with_generic = true;
                 if optional {
@@ -52,7 +53,7 @@ impl ToTypeScriptType for FieldType {
             },
             FieldType::Vec(internal) => {
                 with_generic = true;
-                let create_type = internal.field_type().to_typescript_create_input_type(false);
+                let create_type = internal.field_type().to_typescript_create_input_type(false, server_mode);
                 if optional {
                     format!("{create_type}[] | ArrayNullableFilter<{create_type}> | null")
                 } else {
@@ -74,13 +75,13 @@ impl ToTypeScriptType for FieldType {
         }
     }
 
-    fn to_typescript_create_input_type(&self, optional: bool) -> String {
+    fn to_typescript_create_input_type(&self, optional: bool, server_mode: bool) -> String {
         let base: String = match self {
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => "string".to_string(),
             FieldType::String => "string".to_string(),
-            FieldType::Decimal => "string | Decimal".to_string(),
-            FieldType::Date | FieldType::DateTime => "Date | string".to_string(),
+            FieldType::Decimal => if server_mode { "Decimal" } else { "string | Decimal" }.to_string(),
+            FieldType::Date | FieldType::DateTime => "string".to_string(),
             FieldType::Bool => "boolean".to_string(),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number".to_string(),
             FieldType::Enum(name) => name.to_string(),
@@ -96,13 +97,18 @@ impl ToTypeScriptType for FieldType {
         }
     }
 
-    fn to_typescript_update_input_type(&self, optional: bool) -> String {
-        let update_operation = self.to_typescript_update_operation_input(optional);
-        let create_input = self.to_typescript_create_input_type(optional);
+    fn to_typescript_update_input_type(&self, optional: bool, server_mode: bool) -> String {
+        let update_operation = self.to_typescript_update_operation_input(optional, server_mode);
+        let create_input = self.to_typescript_create_input_type(optional, server_mode);
         return format!("{update_operation} | {create_input}");
     }
 
-    fn to_typescript_update_operation_input(&self, optional: bool) -> String {
+    fn to_typescript_scalar_update_input_type(&self, optional: bool) -> String {
+        let create_input = self.to_typescript_create_input_type(optional, true);
+        return format!("{create_input}");
+    }
+
+    fn to_typescript_update_operation_input(&self, optional: bool, server_mode: bool) -> String {
         let mut generic = "".to_owned();
         let base: &str = match self {
             #[cfg(feature = "data-source-mongodb")]
@@ -118,7 +124,7 @@ impl ToTypeScriptType for FieldType {
                 "Enum"
             },
             FieldType::Vec(inner) => {
-                let create_type = inner.field_type().to_typescript_create_input_type(false);
+                let create_type = inner.field_type().to_typescript_create_input_type(false, server_mode);
                 generic = format!("<{create_type}>");
                 "Array"
             },
