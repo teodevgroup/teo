@@ -181,7 +181,7 @@ impl ColumnDecoder {
             let unique_row = indices_iter.iter().find(|i| {
                 i.get("column_name").unwrap().as_str().unwrap() == name
             });
-            let unique_key = if unique_row.is_some() {
+            let _unique_key = if unique_row.is_some() {
                 unique_row.unwrap().get("unique").unwrap().as_bool().unwrap()
             } else {
                 false

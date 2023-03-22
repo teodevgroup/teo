@@ -50,11 +50,11 @@ pub(crate) fn to_word_case(_args: Vec<Argument>) -> Arc<dyn Item> {
     Arc::new(ToWordCaseItem::new())
 }
 
-pub(crate) fn to_lower_case(args: Vec<Argument>) -> Arc<dyn Item> {
+pub(crate) fn to_lower_case(_args: Vec<Argument>) -> Arc<dyn Item> {
     Arc::new(ToLowerCaseItem::new())
 }
 
-pub(crate) fn to_upper_case(args: Vec<Argument>) -> Arc<dyn Item> {
+pub(crate) fn to_upper_case(_args: Vec<Argument>) -> Arc<dyn Item> {
     Arc::new(ToUpperCaseItem::new())
 }
 

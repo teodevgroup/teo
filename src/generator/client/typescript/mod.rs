@@ -26,7 +26,7 @@ impl ClientGenerator for TypeScriptClientGenerator {
         return "src".to_owned();
     }
 
-    async fn generate_module_files(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_module_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
         generator.clear_root_directory().await?;
         generator.generate_file("decimal.js", generate_decimal_js().await).await?;

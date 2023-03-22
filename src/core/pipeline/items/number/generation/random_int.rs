@@ -42,7 +42,7 @@ impl Item for RandomIntItem {
         match res {
            Ok((start, end, closed)) => {
                 let mut rng = thread_rng();
-                let mut random_number;
+                let random_number;
                 if closed {
                     random_number = rng.gen_range(start..=end);
                 } else {
