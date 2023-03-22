@@ -1,8 +1,13 @@
 use crate::core::graph::Graph;
 
 
-pub(crate) async fn generate_operation_d_ts(_graph: &Graph) -> String {
-    format!(r#"import Decimal from "./decimal"
+pub(crate) async fn generate_operation_d_ts(_graph: &Graph, use_local_decimal: bool) -> String {
+    let decimal = if use_local_decimal {
+        "./decimal"
+    } else {
+        "decimal.js"
+    };
+    format!(r#"import Decimal from "{decimal}"
 
 export type ObjectIdFieldUpdateOperationsInput = {{
     set?: string
