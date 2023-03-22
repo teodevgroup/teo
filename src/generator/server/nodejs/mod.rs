@@ -43,7 +43,7 @@ impl NodeJSEntityGenerator {
                     // find first doc
                     b.line(format!("static findFirst(input?: {}FindManyArgs): Promise<{} | null>", name, name));
                     // find unique doc
-                    b.line(format!("static findFirst(input?: {}FindUniqueArgs): Promise<{} | null>", name, name));
+                    b.line(format!("static findUnique(input?: {}FindUniqueArgs): Promise<{} | null>", name, name));
                     // get isNew doc
                     b.line("get isNew(): boolean");
                     // get isModified doc

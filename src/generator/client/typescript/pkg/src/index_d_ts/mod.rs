@@ -293,6 +293,20 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
     }).to_string()
 }
 
+fn generate_model_scalar_update_input(_graph: &Graph, model: &Model) -> String {
+    let model_name = model.name();
+    Code::new(0, 4, |c| {
+        c.block(format!("export type {model_name}ScalarUpdateInput = {{"), |b| {
+            model.fields().iter().for_each(|field| {
+                let field_name = &field.name;
+                let field_ts_type = field.field_type().to_typescript_update_input_type(field.optionality.is_optional());
+                b.doc(field_doc(field));
+                b.line(format!("{field_name}?: {field_ts_type}"));
+            });
+        }, "}")
+    }).to_string()
+}
+
 fn generate_model_credentials_input(model: &Model) -> String {
     let model_name = model.name();
     Code::new(0, 4, |c| {
@@ -491,6 +505,9 @@ export declare class TeoError extends Error {
             });
             if m.identity() {
                 c.line(generate_model_credentials_input(m));
+            }
+            if server_mode {
+                c.line(generate_model_scalar_update_input(graph, m));
             }
             // action args
             c.block(format!(r#"export type {model_name}Args = {{"#), |b| {
