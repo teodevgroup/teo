@@ -338,13 +338,14 @@
 - Generate decimal in rust entities **[DONE]**
 
 #### 0.0.53
+- Fix Node.js run loop bug **[DONE]**
+
+#### 0.0.54
 - Generate decimal imports in rust entities
 - Cross language error handling for node.js @victorteokw
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection @victorteokw
 - Rewrite connector to support pooled connections @victorteokw
 - SQL Transaction @victorteokw
-
-#### 0.0.54
 - Connector bug: unique constraint violating: error message should have key path
 - Log SQL queries
 - Migration dry run
