@@ -336,9 +336,9 @@
 - Node.js package **[DONE]**
 - Fix PostgreSQL drop index **[DONE]**
 - Generate decimal in rust entities **[DONE]**
-- Generate decimal imports in rust entities
 
 #### 0.0.53
+- Generate decimal imports in rust entities
 - Cross language error handling for node.js @victorteokw
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection @victorteokw
 - Rewrite connector to support pooled connections @victorteokw
