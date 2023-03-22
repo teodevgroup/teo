@@ -335,6 +335,24 @@ impl From<Option<i64>> for Value {
     }
 }
 
+impl From<Option<BigDecimal>> for Value {
+    fn from(n: Option<BigDecimal>) -> Self {
+        match n {
+            Some(n) => Value::Decimal(n),
+            None => Value::Null,
+        }
+    }
+}
+
+impl From<Value> for Option<BigDecimal> {
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Decimal(n) => Some(n),
+            _ => None,
+        }
+    }
+}
+
 impl From<Value> for Option<f32> {
     fn from(value: Value) -> Self {
         match value {
