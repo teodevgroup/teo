@@ -7,6 +7,9 @@ use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
 use clap::{Arg, ArgAction, Command as ClapCommand};
 use dotenvy::dotenv;
+use futures_util::future::BoxFuture;
+use std::future::Future;
+use crate::core::result::Result;
 use crate::connectors::mongodb::connector::MongoDBConnector;
 use crate::connectors::sql::connector::SQLConnector;
 use crate::connectors::sql::schema::dialect::SQLDialect;
@@ -45,6 +48,18 @@ impl CallbackLookupTable {
     }
 }
 
+pub trait AsyncCallbackWithoutArgs: Send + Sync {
+    fn call(&self) -> BoxFuture<'static, Result<()>>;
+}
+
+impl<F, Fut> AsyncCallbackWithoutArgs for F where
+    F: Fn() -> Fut + Sync + Send,
+    Fut: Future<Output = Result<()>> + Send + 'static {
+    fn call(&self) -> BoxFuture<'static, Result<()>> {
+        Box::pin(self())
+    }
+}
+
 #[derive(ToMut)]
 pub struct AppBuilder {
     pub(crate) connector: Option<Arc<dyn Connector>>,
@@ -53,6 +68,7 @@ pub struct AppBuilder {
     pub(crate) entity_generator_confs: Vec<EntityGeneratorConf>,
     pub(crate) client_generator_confs: Vec<ClientGeneratorConf>,
     pub(crate) callback_lookup_table: Arc<Mutex<CallbackLookupTable>>,
+    pub(crate) before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
     pub(crate) environment_version: EnvironmentVersion,
     pub(crate) entrance: Entrance,
     pub(crate) args: Arc<CLI>,
@@ -81,6 +97,7 @@ impl AppBuilder {
             entity_generator_confs: vec![],
             client_generator_confs: vec![],
             callback_lookup_table: Arc::new(Mutex::new(CallbackLookupTable::new())),
+            before_server_start: None,
             environment_version: environment_version.clone(),
             entrance,
             args: Arc::new(Self::parse_cli_args(environment_version.clone(), entrance.clone())),
@@ -225,6 +242,11 @@ impl AppBuilder {
         self
     }
 
+    pub fn before_server_start<F>(&mut self, f: F) -> &mut Self where F: AsyncCallbackWithoutArgs + 'static {
+        self.before_server_start = Some(Arc::new(f));
+        self
+    }
+
     async fn load(&mut self) {
         let mut parser = Parser::new(self.callback_lookup_table.clone());
         let main = match self.args.schema.as_ref() {
@@ -245,6 +267,7 @@ impl AppBuilder {
             environment_version: self.environment_version.clone(),
             entrance: self.entrance.clone(),
             args: self.args.clone(),
+            before_server_start: self.before_server_start.clone(),
         }
     }
 
