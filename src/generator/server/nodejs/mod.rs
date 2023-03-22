@@ -51,7 +51,7 @@ impl NodeJSEntityGenerator {
                     // set doc
                     b.line(format!("set(input?: {}UpdateInput): Promise<void>", name));
                     // update doc
-                    b.line(format!("set(input?: {}ScalarUpdateInput): Promise<void>", name));
+                    b.line(format!("update(input?: {}ScalarUpdateInput): Promise<void>", name));
                     // save doc
                     b.line("save(): Promise<void>");
                     // delete doc

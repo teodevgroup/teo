@@ -62,7 +62,7 @@ fn generate_model_create_or_connect_input(model: &Model, without: Option<&str>) 
     }).to_string()
 }
 
-fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&str>) -> String {
+fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&str>, server_mode: bool) -> String {
     let model_name = model.name();
     let without_title = if let Some(title) = without {
         let title = title.to_pascal_case();
@@ -80,7 +80,7 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
             model.input_keys().iter().for_each(|k| {
                 if let Some(field) = model.field(k) {
                     let field_name = &field.name;
-                    let field_ts_type = field.field_type().to_typescript_create_input_type(field.optionality.is_optional());
+                    let field_ts_type = field.field_type().to_typescript_create_input_type(field.optionality.is_optional(), server_mode);
                     if let Some(without_relation) = without_relation {
                         if !without_relation.fields().contains(k) {
                             b.doc(field_doc(field));
@@ -236,7 +236,7 @@ fn generate_model_update_nested_input(_graph: &Graph, model: &Model, without: Op
     }).to_string()
 }
 
-fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&str>) -> String {
+fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&str>, server_mode: bool) -> String {
     let model_name = model.name();
     let without_title = if let Some(title) = without {
         let title = title.to_pascal_case();
@@ -254,7 +254,7 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
             model.input_keys().iter().for_each(|k| {
                 if let Some(field) = model.field(k) {
                     let field_name = &field.name;
-                    let field_ts_type = field.field_type().to_typescript_update_input_type(field.optionality.is_optional());
+                    let field_ts_type = field.field_type().to_typescript_update_input_type(field.optionality.is_optional(), server_mode);
                     b.doc(field_doc(field));
                     b.line(format!("{field_name}?: {field_ts_type}"));
                 } else if let Some(relation) = model.relation(k) {
@@ -299,7 +299,7 @@ fn generate_model_scalar_update_input(_graph: &Graph, model: &Model) -> String {
         c.block(format!("export type {model_name}ScalarUpdateInput = {{"), |b| {
             model.fields().iter().for_each(|field| {
                 let field_name = &field.name;
-                let field_ts_type = field.field_type().to_typescript_update_input_type(field.optionality.is_optional());
+                let field_ts_type = field.field_type().to_typescript_update_input_type(field.optionality.is_optional(), true);
                 b.doc(field_doc(field));
                 b.line(format!("{field_name}?: {field_ts_type}"));
             });
@@ -422,7 +422,7 @@ export declare class TeoError extends Error {
                 m.query_keys().iter().for_each(|k| {
                     if let Some(field) = m.field(k) {
                         let field_name = &field.name;
-                        let field_filter = field.field_type().to_typescript_filter_type(field.optionality.is_optional());
+                        let field_filter = field.field_type().to_typescript_filter_type(field.optionality.is_optional(), server_mode);
                         b.doc(field_doc(field));
                         b.line(format!("{field_name}?: {field_filter}"));
                     } else if let Some(relation) = m.relation(k) {
@@ -479,24 +479,24 @@ export declare class TeoError extends Error {
                 })
             }, "}");
             // create and update inputs without anything
-            c.line(generate_model_create_input(graph, m, None));
+            c.line(generate_model_create_input(graph, m, None, server_mode));
             c.line(generate_model_create_nested_input(graph, m, None, true));
             c.line(generate_model_create_nested_input(graph, m, None, false));
             c.line(generate_model_create_or_connect_input(m, None));
             m.relations().iter().for_each(|r| {
-                c.line(generate_model_create_input(graph, m, Some(r.name())));
+                c.line(generate_model_create_input(graph, m, Some(r.name()), server_mode));
                 c.line(generate_model_create_nested_input(graph, m, Some(r.name()), true));
                 c.line(generate_model_create_nested_input(graph, m, Some(r.name()), false));
                 c.line(generate_model_create_or_connect_input(m, Some(r.name())));
             });
-            c.line(generate_model_update_input(graph, m, None));
+            c.line(generate_model_update_input(graph, m, None, server_mode));
             c.line(generate_model_update_nested_input(graph, m, None, true));
             c.line(generate_model_update_nested_input(graph, m, None, false));
             c.line(generate_model_upsert_with_where_unique_input(m, None));
             c.line(generate_model_update_with_where_unique_input(m, None));
             c.line(generate_model_update_many_with_where_input(m, None));
             m.relations().iter().for_each(|r| {
-                c.line(generate_model_update_input(graph, m, Some(r.name())));
+                c.line(generate_model_update_input(graph, m, Some(r.name()), server_mode));
                 c.line(generate_model_update_nested_input(graph, m, Some(r.name()), true));
                 c.line(generate_model_update_nested_input(graph, m, Some(r.name()), false));
                 c.line(generate_model_upsert_with_where_unique_input(m, Some(r.name())));
