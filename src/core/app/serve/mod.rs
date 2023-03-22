@@ -1,3 +1,4 @@
+use std::io::ErrorKind;
 use std::sync::Arc;
 use futures_util::future;
 use std::time::SystemTime;
@@ -19,6 +20,7 @@ use crate::core::action::{
     COUNT_HANDLER, AGGREGATE_HANDLER, GROUP_BY_HANDLER, SIGN_IN_HANDLER, IDENTITY_HANDLER,
 };
 use crate::core::action::source::ActionSource;
+use crate::core::app::builder::AsyncCallbackWithoutArgs;
 use crate::core::app::conf::ServerConf;
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
@@ -833,9 +835,18 @@ pub(crate) async fn serve(
     environment_version: EnvironmentVersion,
     entrance: Entrance,
     no_migration: bool,
+    before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
 ) -> Result<(), std::io::Error> {
     if !no_migration {
         migrate(graph.to_mut(), false).await;
+    }
+    let leaked_graph = Box::leak(Box::new(graph.clone()));
+    Graph::set_current(leaked_graph);
+    if let Some(cb) = before_server_start {
+        match cb.call().await {
+            Ok(()) => (),
+            Err(err) => return Err(std::io::Error::new(ErrorKind::Other, err.message())),
+        }
     }
     let bind = conf.bind.clone();
     let port = bind.1;

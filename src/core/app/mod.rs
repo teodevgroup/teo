@@ -8,6 +8,7 @@ pub(crate) mod migrate;
 
 use std::sync::Arc;
 use to_mut::ToMut;
+use crate::core::app::builder::AsyncCallbackWithoutArgs;
 use crate::core::app::command::{CLI, CLICommand, GenerateCommand};
 use crate::core::app::conf::{ClientGeneratorConf, EntityGeneratorConf, ServerConf};
 use crate::core::app::entrance::Entrance;
@@ -26,6 +27,7 @@ pub struct App {
     environment_version: EnvironmentVersion,
     entrance: Entrance,
     args: Arc<CLI>,
+    before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
 }
 
 impl App {
@@ -43,6 +45,7 @@ impl App {
                     self.environment_version.clone(),
                     self.entrance.clone(),
                     serve_command.no_migration,
+                    self.before_server_start.clone(),
                 ).await?
             }
             CLICommand::Generate(cmd) => {
