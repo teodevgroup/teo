@@ -3,10 +3,7 @@ pub mod r#type;
 
 use async_trait::async_trait;
 use crate::core::app::conf::ClientGeneratorConf;
-use crate::generator::client::typescript::pkg::src::filter_d_ts::generate_filter_d_ts;
 use crate::generator::client::typescript::pkg::src::index_d_ts::generate_index_d_ts;
-use crate::generator::client::typescript::pkg::src::operation_d_ts::generate_operation_d_ts;
-use crate::generator::client::typescript::pkg::src::runtime_d_ts::generate_runtime_d_ts;
 use crate::core::graph::Graph;
 use crate::generator::client::ClientGenerator;
 use crate::generator::client::typescript::pkg::gitignore::generate_gitignore_ts;
@@ -32,9 +29,6 @@ impl ClientGenerator for TypeScriptClientGenerator {
     async fn generate_module_files(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
         generator.clear_root_directory().await?;
-        generator.generate_file("filter.d.ts", generate_filter_d_ts(graph, true).await).await?;
-        generator.generate_file("operation.d.ts", generate_operation_d_ts(graph, true).await).await?;
-        generator.generate_file("runtime.d.ts", generate_runtime_d_ts(graph, client).await).await?;
         generator.generate_file("decimal.js", generate_decimal_js().await).await?;
         generator.generate_file("decimal.d.ts", generate_decimal_d_ts().await).await
     }

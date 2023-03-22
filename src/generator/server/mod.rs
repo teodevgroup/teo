@@ -1,8 +1,8 @@
-mod rust;
-mod go;
-mod java;
-mod nodejs;
-mod python;
+pub(crate) mod rust;
+pub(crate) mod go;
+pub(crate) mod java;
+pub(crate) mod nodejs;
+pub(crate) mod python;
 
 use async_trait::async_trait;
 use crate::core::app::conf::EntityGeneratorConf;
