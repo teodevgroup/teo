@@ -1,15 +1,18 @@
 use crate::core::graph::Graph;
 
 
-pub(crate) async fn generate_operation_d_ts(_graph: &Graph, use_local_decimal: bool) -> String {
-    let decimal = if use_local_decimal {
-        "./decimal"
+pub(crate) fn generate_operation_types(server_mode: bool) -> String {
+    let decimal_base = if server_mode {
+        "Decimal"
     } else {
-        "decimal.js"
+        "Decimal | string"
     };
-    format!(r#"import Decimal from "{decimal}"
-
-export type ObjectIdFieldUpdateOperationsInput = {{
+    let datetime_base = if server_mode {
+        "Date"
+    } else {
+        "Date | string"
+    };
+    format!(r#"export type ObjectIdFieldUpdateOperationsInput = {{
     set?: string
 }}
 
@@ -42,19 +45,19 @@ export type NullableNumberFieldUpdateOperationsInput = {{
 }}
 
 export type DecimalFieldUpdateOperationsInput = {{
-    set?: string | Decimal
-    increment?: string | Decimal
-    decrement?: string | Decimal
-    multiply?: string | Decimal
-    divide?: string | Decimal
+    set?: {decimal_base}
+    increment?: {decimal_base}
+    decrement?: {decimal_base}
+    multiply?: {decimal_base}
+    divide?: {decimal_base}
 }}
 
 export type NullableDecimalFieldUpdateOperationsInput = {{
-    set?: string | Decimal | null
-    increment?: string | Decimal
-    decrement?: string | Decimal
-    multiply?: string | Decimal
-    divide?: string | Decimal
+    set?: {decimal_base} | null
+    increment?: {decimal_base}
+    decrement?: {decimal_base}
+    multiply?: {decimal_base}
+    divide?: {decimal_base}
 }}
 
 export type BoolFieldUpdateOperationsInput = {{
@@ -66,19 +69,19 @@ export type NullableBoolFieldUpdateOperationsInput = {{
 }}
 
 export type DateFieldUpdateOperationsInput = {{
-    set?: string | Date
+    set?: string
 }}
 
 export type NullableDateFieldUpdateOperationsInput = {{
-    set?: string | Date | null
+    set?: string | null
 }}
 
 export type DateTimeFieldUpdateOperationsInput = {{
-    set?: string | Date
+    set?: {datetime_base}
 }}
 
 export type NullableDateTimeFieldUpdateOperationsInput = {{
-    set?: string | Date | null
+    set?: {datetime_base} | null
 }}
 
 export type EnumFieldUpdateOperationsInput<T> = {{

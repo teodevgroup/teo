@@ -8,7 +8,11 @@ use crate::generator::client::typescript::r#type::ToTypeScriptType;
 use crate::core::graph::Graph;
 use crate::core::model::{Model};
 use crate::core::model::index::ModelIndexType::{Primary, Unique};
+use crate::generator::client::typescript::pkg::src::filter_d_ts::generate_filter_types;
+use crate::generator::client::typescript::pkg::src::operation_d_ts::generate_operation_types;
+use crate::generator::client::typescript::pkg::src::runtime_d_ts::generate_client_runtime_types;
 use crate::generator::lib::code::Code;
+use crate::generator::server::nodejs::runtime_d_ts::generate_server_runtime_types;
 
 fn generate_model_create_nested_input(_graph: &Graph, model: &Model, without: Option<&str>, many: bool) -> String {
     let model_name = model.name();
@@ -322,10 +326,14 @@ pub(crate) fn generate_index_d_ts(graph: &Graph, client_obj_name: Option<String>
         "decimal.js"
     };
     Code::new(0, 4, |c| {
-        c.line(r#"import * from "./runtime""#);
-        c.line("import * from \"./filter\"");
-        c.line("import * from \"./operation\"");
         c.line(format!(r#"import Decimal from "{decimal}""#));
+        c.line(if server_mode {
+            generate_server_runtime_types()
+        } else {
+            generate_client_runtime_types()
+        });
+        c.line(generate_filter_types(server_mode));
+        c.line(generate_operation_types(server_mode));
         if !server_mode {
             c.line(r#"
 export * from "./decimal"

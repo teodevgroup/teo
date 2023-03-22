@@ -1,9 +1,4 @@
-use crate::core::action::Action;
-use crate::core::app::conf::ClientGeneratorConf;
-use crate::core::graph::Graph;
-
-
-pub(crate) fn generate_runtime_d_ts() -> String {
+pub(crate) fn generate_server_runtime_types() -> String {
     format!(r#"
 export type ExistKeys<T> = {{
     [key in keyof T]: T[key] extends false | undefined | null ? never : key
