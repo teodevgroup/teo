@@ -32,8 +32,8 @@ impl ClientGenerator for TypeScriptClientGenerator {
     async fn generate_module_files(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
         generator.clear_root_directory().await?;
-        generator.generate_file("filter.d.ts", generate_filter_d_ts(graph).await).await?;
-        generator.generate_file("operation.d.ts", generate_operation_d_ts(graph).await).await?;
+        generator.generate_file("filter.d.ts", generate_filter_d_ts(graph, true).await).await?;
+        generator.generate_file("operation.d.ts", generate_operation_d_ts(graph, true).await).await?;
         generator.generate_file("runtime.d.ts", generate_runtime_d_ts(graph, client).await).await?;
         generator.generate_file("decimal.js", generate_decimal_js().await).await?;
         generator.generate_file("decimal.d.ts", generate_decimal_d_ts().await).await
@@ -53,7 +53,7 @@ impl ClientGenerator for TypeScriptClientGenerator {
     }
 
     async fn generate_main(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
-        generator.generate_file("index.d.ts", generate_index_d_ts(graph, client).await).await?;
+        generator.generate_file("index.d.ts", generate_index_d_ts(graph, client.object_name.clone(), false)).await?;
         generator.generate_file("index.js", generate_index_js(graph, client).await).await?;
         Ok(())
     }

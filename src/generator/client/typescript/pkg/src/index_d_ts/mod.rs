@@ -1,17 +1,14 @@
+mod docs;
+
 use inflector::Inflector;
 use crate::core::action::{ResMeta, ResData, Action, UPDATE_HANDLER, CREATE_HANDLER, FIND_FIRST_HANDLER, UPSERT_HANDLER, UPDATE_MANY_HANDLER};
-use crate::core::app::conf::ClientGeneratorConf;
 use crate::core::field::r#type::FieldTypeOwner;
 use crate::generator::client::typescript::pkg::src::index_d_ts::docs::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, main_object_doc, nested_connect_doc, nested_create_doc, nested_create_or_connect_doc, nested_delete_doc, nested_disconnect_doc, nested_set_doc, nested_update_doc, nested_upsert_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_connect_create_doc, unique_connect_doc, unique_where_doc, where_doc, where_doc_first, with_token_doc};
 use crate::generator::client::typescript::r#type::ToTypeScriptType;
-
 use crate::core::graph::Graph;
 use crate::core::model::{Model};
 use crate::core::model::index::ModelIndexType::{Primary, Unique};
 use crate::generator::lib::code::Code;
-
-
-mod docs;
 
 fn generate_model_create_nested_input(_graph: &Graph, model: &Model, without: Option<&str>, many: bool) -> String {
     let model_name = model.name();
@@ -318,26 +315,19 @@ fn generate_model_credentials_input(model: &Model) -> String {
     }).to_string()
 }
 
-pub(crate) async fn generate_index_d_ts(graph: &Graph, client: &ClientGeneratorConf) -> String {
+pub(crate) fn generate_index_d_ts(graph: &Graph, client_obj_name: Option<String>, server_mode: bool) -> String {
+    let decimal = if !server_mode {
+        "./decimal"
+    } else {
+        "decimal.js"
+    };
     Code::new(0, 4, |c| {
-        c.line(r#"import { Response, PagingInfo, TokenInfo, SortOrder, Enumerable, CheckSelectInclude, SelectSubset, ExistKeys, ResponseError } from "./runtime""#);
-        c.block("import {", |b| {
-            b.line("ObjectIdFilter, ObjectIdNullableFilter, StringFilter, StringNullableFilter, NumberFilter,");
-            b.line("NumberNullableFilter, DecimalFilter, DecimalNullableFilter, BoolFilter, BoolNullableFilter, DateFilter, DateNullableFilter,");
-            b.line("DateTimeFilter, DateTimeNullableFilter, EnumFilter, EnumNullableFilter,");
-            b.line("ArrayFilter, ArrayNullableFilter,");
-        }, "} from \"./filter\"");
-        c.block("import {", |b| {
-            b.line("ObjectIdFieldUpdateOperationsInput, NullableObjectIdFieldUpdateOperationsInput, StringFieldUpdateOperationsInput,");
-            b.line("NullableStringFieldUpdateOperationsInput, NumberFieldUpdateOperationsInput, NullableNumberFieldUpdateOperationsInput,");
-            b.line("DecimalFieldUpdateOperationsInput, NullableDecimalFieldUpdateOperationsInput,");
-            b.line("BoolFieldUpdateOperationsInput, NullableBoolFieldUpdateOperationsInput, DateFieldUpdateOperationsInput,");
-            b.line("NullableDateFieldUpdateOperationsInput, DateTimeFieldUpdateOperationsInput, NullableDateTimeFieldUpdateOperationsInput,");
-            b.line("EnumFieldUpdateOperationsInput, NullableEnumFieldUpdateOperationsInput,");
-            b.line("ArrayFieldUpdateOperationsInput, NullableArrayFieldUpdateOperationsInput,");
-        }, "} from \"./operation\"");
-        c.line(r#"import Decimal from "./decimal""#);
-        c.line(r#"
+        c.line(r#"import * from "./runtime""#);
+        c.line("import * from \"./filter\"");
+        c.line("import * from \"./operation\"");
+        c.line(format!(r#"import Decimal from "{decimal}""#));
+        if !server_mode {
+            c.line(r#"
 export * from "./decimal"
 
 export declare function setBearerToken(token: string | undefined)
@@ -353,6 +343,7 @@ export declare class TeoError extends Error {
 
     get name(): string
 }"#);
+        }
         c.empty_line();
         // enum definitions
         graph.enums().iter().for_each(|e| {
@@ -361,20 +352,22 @@ export declare class TeoError extends Error {
             c.line(format!("export type {name} = {choices}"));
             c.empty_line();
         });
-        // model definitions
-        graph.models().iter().for_each(|m| {
-            let model_name = m.name();
-            c.block(format!("export type {model_name} = {{"), |b| {
-                m.output_keys().iter().for_each(|k| {
-                    if let Some(field) = m.field(k) {
-                        let field_name = &field.name;
-                        let field_type = field.field_type().to_typescript_type(field.optionality.is_optional());
-                        b.line(format!("{field_name}: {field_type}"));
-                    }
-                });
-            }, "}");
-            c.empty_line();
-        });
+        if !server_mode {
+            // model definitions
+            graph.models().iter().for_each(|m| {
+                let model_name = m.name();
+                c.block(format!("export type {model_name} = {{"), |b| {
+                    m.output_keys().iter().for_each(|k| {
+                        if let Some(field) = m.field(k) {
+                            let field_name = &field.name;
+                            let field_type = field.field_type().to_typescript_type(field.optionality.is_optional());
+                            b.line(format!("{field_name}: {field_type}"));
+                        }
+                    });
+                }, "}");
+                c.empty_line();
+            });
+        }
         // model input arguments
         graph.models().iter().for_each(|m| {
             let model_name = m.name();
@@ -575,61 +568,63 @@ export declare class TeoError extends Error {
                 }, "");
             }, "")
         });
-        // delegates
-        let object_name = client.object_name.as_ref().unwrap();
-        let object_class_name = object_name.to_pascal_case();
-        graph.models().iter().for_each(|m| {
-            if m.actions().len() > 0 {
-                let model_name = m.name();
-                let model_var_name = model_name.to_camel_case();
-                let model_class_name = model_var_name.to_pascal_case();
-                c.block(format!("declare class {model_class_name}Delegate {{"), |b| {
-                    Action::handlers_iter().for_each(|a| {
-                        if m.has_action(*a) {
-                            let action_var_name = a.as_handler_str().to_camel_case();
-                            let action_capitalized_name = action_var_name.to_pascal_case();
-                            let res_meta = match a.handler_res_meta() {
-                                ResMeta::PagingInfo => "PagingInfo",
-                                ResMeta::TokenInfo => "TokenInfo",
-                                ResMeta::NoMeta => "undefined",
-                                ResMeta::Other => "undefined",
-                            };
-                            let res_data = match a.handler_res_data() {
-                                ResData::Single => model_name.to_string(),
-                                ResData::Vec => model_name.to_string() + "[]",
-                                ResData::Other => "never".to_string(),
-                                ResData::Number => "number".to_string(),
-                            };
-                            let payload_array = match a.handler_res_data() {
-                                ResData::Vec => "[]",
-                                _ => ""
-                            };
-                            b.empty_line();
-                            b.doc(action_doc(object_name, a.clone(), m));
-                            b.line(format!("{action_var_name}<T extends {model_name}{action_capitalized_name}Args>(args?: T): Promise<Response<{res_meta}, CheckSelectInclude<T, {res_data}, {model_name}GetPayload<T>{payload_array}>>>"));
-                        }
-                    });
-                }, "}");
-                c.empty_line();
-            }
-        });
-        // main interface
-        c.block(format!("declare class {object_class_name} {{"), |b| {
+        if !server_mode {
+            // delegates
+            let object_name = client_obj_name.clone().unwrap_or("teo".to_string());
+            let object_class_name = object_name.to_pascal_case();
             graph.models().iter().for_each(|m| {
                 if m.actions().len() > 0 {
                     let model_name = m.name();
                     let model_var_name = model_name.to_camel_case();
                     let model_class_name = model_var_name.to_pascal_case();
-                    b.doc(action_group_doc(object_name, m));
-                    b.line(format!("{model_var_name}: {model_class_name}Delegate"));
+                    c.block(format!("declare class {model_class_name}Delegate {{"), |b| {
+                        Action::handlers_iter().for_each(|a| {
+                            if m.has_action(*a) {
+                                let action_var_name = a.as_handler_str().to_camel_case();
+                                let action_capitalized_name = action_var_name.to_pascal_case();
+                                let res_meta = match a.handler_res_meta() {
+                                    ResMeta::PagingInfo => "PagingInfo",
+                                    ResMeta::TokenInfo => "TokenInfo",
+                                    ResMeta::NoMeta => "undefined",
+                                    ResMeta::Other => "undefined",
+                                };
+                                let res_data = match a.handler_res_data() {
+                                    ResData::Single => model_name.to_string(),
+                                    ResData::Vec => model_name.to_string() + "[]",
+                                    ResData::Other => "never".to_string(),
+                                    ResData::Number => "number".to_string(),
+                                };
+                                let payload_array = match a.handler_res_data() {
+                                    ResData::Vec => "[]",
+                                    _ => ""
+                                };
+                                b.empty_line();
+                                b.doc(action_doc(&object_name, a.clone(), m));
+                                b.line(format!("{action_var_name}<T extends {model_name}{action_capitalized_name}Args>(args?: T): Promise<Response<{res_meta}, CheckSelectInclude<T, {res_data}, {model_name}GetPayload<T>{payload_array}>>>"));
+                            }
+                        });
+                    }, "}");
+                    c.empty_line();
                 }
             });
-            b.line("constructor(token?: string)");
-            b.doc(with_token_doc());
-            b.line(format!("$withToken(token?: string): {}", object_class_name));
-        }, "}");
-        c.empty_line();
-        c.line(main_object_doc(object_name, graph));
-        c.line(format!("export const {object_name}: {object_class_name}"));
+            // main interface
+            c.block(format!("declare class {object_class_name} {{"), |b| {
+                graph.models().iter().for_each(|m| {
+                    if m.actions().len() > 0 {
+                        let model_name = m.name();
+                        let model_var_name = model_name.to_camel_case();
+                        let model_class_name = model_var_name.to_pascal_case();
+                        b.doc(action_group_doc(&object_name, m));
+                        b.line(format!("{model_var_name}: {model_class_name}Delegate"));
+                    }
+                });
+                b.line("constructor(token?: string)");
+                b.doc(with_token_doc());
+                b.line(format!("$withToken(token?: string): {}", object_class_name));
+            }, "}");
+            c.empty_line();
+            c.line(main_object_doc(&object_name, graph));
+            c.line(format!("export const {object_name}: {object_class_name}"));
+        }
     }).to_string()
 }

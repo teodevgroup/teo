@@ -1,4 +1,5 @@
 pub(crate) mod utils;
+pub(crate) mod runtime_d_ts;
 
 use array_tool::vec::Join;
 use crate::core::app::conf::EntityGeneratorConf;
@@ -7,7 +8,11 @@ use crate::generator::server::EntityGenerator;
 use crate::prelude::Graph;
 use async_trait::async_trait;
 use inflector::Inflector;
+use crate::generator::client::typescript::pkg::src::filter_d_ts::generate_filter_d_ts;
+use crate::generator::client::typescript::pkg::src::index_d_ts::generate_index_d_ts;
+use crate::generator::client::typescript::pkg::src::operation_d_ts::generate_operation_d_ts;
 use crate::generator::lib::code::Code;
+use crate::generator::server::nodejs::runtime_d_ts::generate_runtime_d_ts;
 use crate::generator::server::nodejs::utils::{field_to_nodejs_api_type, relation_to_nodejs_api_type};
 
 pub(crate) struct NodeJSEntityGenerator { }
@@ -26,8 +31,9 @@ impl NodeJSEntityGenerator {
         generator.generate_file("index.js", format!("{import}\n\n{body}\n\n{export}\n")).await
     }
 
-    async fn generate_index_d_ts(&self, graph: &Graph, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_index_d_ts(&self, graph: &Graph, generator: &Generator, shared: String) -> std::io::Result<()> {
         let content = Code::new(0, 4, |b| {
+            b.line(shared + "\n");
             for model in graph.models() {
                 let name = model.name();
                 b.block(format!("export class {} {{", name), |b| {
@@ -103,8 +109,12 @@ impl NodeJSEntityGenerator {
 #[async_trait]
 impl EntityGenerator for NodeJSEntityGenerator {
     async fn generate_entity_files(&self, graph: &Graph, _conf: &EntityGeneratorConf, generator: &Generator) -> std::io::Result<()> {
+        generator.generate_file("filter.d.ts", generate_filter_d_ts(graph, false).await).await?;
+        generator.generate_file("operation.d.ts", generate_operation_d_ts(graph, false).await).await?;
+        generator.generate_file("runtime.d.ts", generate_runtime_d_ts()).await?;
         self.generate_index_js(graph, generator).await?;
-        self.generate_index_d_ts(graph, generator).await?;
+        let content = generate_index_d_ts(graph,None, true);
+        self.generate_index_d_ts(graph, generator, content).await?;
         Ok(())
     }
 }
