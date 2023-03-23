@@ -178,7 +178,7 @@ impl AppBuilder {
                     env::args_os().enumerate().filter(|(i, x)| (*i != 1) && (!x.to_str().unwrap().ends_with("ts-node") && !x.to_str().unwrap().ends_with(".ts"))).map(|(_i, x)| x).collect::<Vec<OsString>>()
                 },
                 EnvironmentVersion::Rust(_) => env::args_os().enumerate().filter(|(i, x)| {
-                    !((*i == 0) && (x.to_str().unwrap().ends_with("cargo-teo") || x.to_str().unwrap().ends_with("cargo-teo.exe")))
+                    !((*i == 1) && x.to_str().unwrap() == "teo")
                 }).map(|(_i, x)| x).collect::<Vec<OsString>>(),
                 _ => env::args_os().collect::<Vec<OsString>>(),
             });

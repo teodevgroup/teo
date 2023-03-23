@@ -173,7 +173,7 @@ pub enum DatabaseType {
     /// Represents a text.
     ///
     /// Arguments:
-    ///
+    ///     m: m
     ///     n: charset name
     ///     c: collate
     /// Note: In PostgreSQL, arguments are ingored.

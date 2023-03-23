@@ -341,6 +341,8 @@
 - Fix Node.js run loop bug **[DONE]**
 
 #### 0.0.54
+- Setup integration tests
+- Fix rust command line arguments **[DONE]**
 - Generate decimal imports in rust entities
 - Cross language error handling for node.js @victorteokw
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection @victorteokw
@@ -392,9 +394,6 @@
 
 #### 0.1.2
 - The copy action
-
-#### 0.1.3
-- Setup new style unit tests
 
 #### 0.1.4
 - SQL: Enum types
