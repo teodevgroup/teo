@@ -1,0 +1,31 @@
+connector {
+  provider .mongo
+  url "mongodb://127.0.0.1:27017/test-connectors-mongodb-types"
+}
+
+server {
+  bind ("0.0.0.0", 4010)
+}
+
+model Support {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  int32: Int32?
+  int64: Int64?
+  float32: Float32?
+  float64: Float64?
+  bool: Bool?
+  string: String?
+  date: Date?
+  dateTime: DateTime?
+  objectId: ObjectId?
+  int32Array: Int32[]?
+  int64Array: Int64[]?
+  float32Array: Float32[]?
+  float64Array: Float64[]?
+  boolArray: Bool[]?
+  stringArray: String[]?
+  dateArray: Date[]?
+  dateTimeArray: DateTime[]?
+  objectIdArray: ObjectId[]?
+}
