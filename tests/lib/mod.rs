@@ -4,6 +4,7 @@ use std::process::{Child, Command};
 use std::{env, thread};
 use std::borrow::Borrow;
 use std::collections::HashSet;
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::ptr::null_mut;
 use inflector::Inflector;
@@ -17,16 +18,22 @@ static ORIGIN_CWD: Lazy<PathBuf> = Lazy::new(|| {
     path_buf
 });
 
-fn set_cwd_from_file(file: &str) {
-    let rel_file_path = Path::new(file);
-    let abs_file_path = ORIGIN_CWD.join(rel_file_path);
-    env::set_current_dir(abs_file_path.parent().unwrap()).unwrap();
+// fn set_cwd_from_file(file: &str) {
+//     let rel_file_path = Path::new(file);
+//     let abs_file_path = ORIGIN_CWD.join(rel_file_path);
+//     env::set_current_dir(abs_file_path.parent().unwrap()).unwrap();
+// }
+
+fn schema_from_file(file: &str) -> PathBuf {
+    let file_path = Path::new(file);
+    let parent = file_path.parent().unwrap();
+    parent.join("schema.teo")
 }
 
 fn teo_exe_path_buf() -> PathBuf {
     let mut current_dir = env::current_dir().unwrap();
     while current_dir != PathBuf::from("/") {
-        let exe_path = current_dir.join("./target/debug/cargo-teo");
+        let exe_path = current_dir.join("target/debug/cargo-teo");
         if exe_path.is_file() {
             return exe_path;
         }
@@ -44,13 +51,12 @@ pub struct ExecutionHandle {
 }
 
 impl ExecutionHandle {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self { child: None }
     }
 
     pub fn execute(&mut self, file: &str, args: &str) {
-        set_cwd_from_file(file);
-        self.child = Some(Command::new(teo_exe_path()).arg(args).spawn().unwrap());
+        self.child = Some(Command::new(teo_exe_path()).arg("-s").arg(schema_from_file(file)).arg(args).spawn().unwrap());
         thread::sleep(std::time::Duration::from_secs(2))
     }
 
