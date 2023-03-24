@@ -1,6 +1,6 @@
 schema = {
     SOI
-    ~ (import_statement | config_declaration | enum_declaration | model_declaration | let_declaration | comment_block | EMPTY_LINES | CATCH_ALL)*
+    ~ (import_statement | config_declaration | enum_declaration | model_declaration | let_declaration | dataset_declaration | comment_block | EMPTY_LINES | CATCH_ALL)*
     ~ EOI
 }
 
@@ -19,6 +19,10 @@ CLIENT_KEYWORD = { "client" }
 ENTITY_KEYWORD = { "entity" }
 IMPORT_KEYWORD = _{ "import" }
 FROM_KEYWORD = _{ "from" }
+DATASET_KEYWORD = _{ "dataset" }
+AUTOSEED_KEYWORD = { "autoseed" }
+GROUP_KEYWORD = _{ "group" }
+RECORD_KEYWORD = _{ "record" }
 COLON = { ":" }
 TRAILING_COMMA = @{ "," }
 RANGE_OPEN = { ".." }
@@ -281,4 +285,17 @@ field_declaration = {
     ~ field_type
     ~ trailing_comment?
     ~ NEWLINE
+}
+
+// #############
+// dataset
+// #############
+dataset_declaration = {
+    AUTOSEED_KEYWORD? ~ DATASET_KEYWORD ~ identifier ~ BLOCK_OPEN ~ (dataset_group_declaration | comment_block)* ~ BLOCK_CLOSE
+}
+dataset_group_declaration = {
+    GROUP_KEYWORD ~ identifier ~ BLOCK_OPEN ~ (dataset_group_record_declaration | comment_block)* ~ BLOCK_CLOSE
+}
+dataset_group_record_declaration = {
+    RECORD_KEYWORD ~ identifier ~ dictionary_literal
 }
