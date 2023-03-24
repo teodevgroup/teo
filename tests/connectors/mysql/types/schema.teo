@@ -7,6 +7,11 @@ server {
   bind ("0.0.0.0", 4012)
 }
 
+enum Sex {
+  MALE
+  FEMALE
+}
+
 model Support {
   @id @autoIncrement @readonly
   id: Int
@@ -19,4 +24,5 @@ model Support {
   date: Date?
   dateTime: DateTime?
   decimal: Decimal?
+  sex: Sex?
 }

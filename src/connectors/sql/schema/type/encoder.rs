@@ -159,6 +159,11 @@ impl ToSQLString for DatabaseType {
             } else {
                 panic!("Array is only supported for PostgreSQL.")
             }
+            DatabaseType::Enum(db_enum) => {
+                let choices_vec: Vec<String> = db_enum.choices.iter().map(|c| format!("'{c}'")).collect();
+                let choices = choices_vec.join(",");
+                format!("ENUM ({choices})")
+            }
         }
     }
 }

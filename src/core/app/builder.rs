@@ -30,6 +30,7 @@ use crate::core::pipeline::items::function::perform::{PerformArgument, PerformIt
 use crate::core::pipeline::items::function::transform::{TransformResult, TransformArgument, TransformItem};
 use crate::core::pipeline::items::function::validate::{ValidateArgument, ValidateItem, ValidateResult};
 use crate::core::property::Property;
+use crate::core::r#enum::{Enum, EnumChoice};
 use crate::core::relation::Relation;
 use crate::parser::ast::r#type::Arity;
 use crate::parser::parser::Parser;
@@ -347,13 +348,18 @@ impl AppBuilder {
         // load enums
         for enum_ref in parser.enums.clone() {
             let source = parser.get_source(enum_ref.0);
-            let r#enum = source.get_enum(enum_ref.1);
-            self.graph_builder.r#enum(&r#enum.identifier.name, |enum_builder| {
-               for choice in r#enum.choices.iter() {
-                    enum_builder.choice(&choice.identifier.name, |_| {});
-               }
-            });
+            let ast_enum = source.get_enum(enum_ref.1);
+            let enum_def = Enum::new(
+                ast_enum.identifier.name.clone(),
+                None,
+                None,
+                ast_enum.choices.iter().map(|ast_choice| {
+                    EnumChoice::new(ast_choice.identifier.name.clone(), None, None)
+                }).collect()
+            );
+            self.graph_builder.r#enum(enum_def);
         }
+        let enums = self.graph_builder.clone_enums();
         // load models
         for model_ref in parser.models.clone() {
             let source = parser.get_source(model_ref.0);
@@ -391,7 +397,7 @@ impl AppBuilder {
                                     } else {
                                         model_field.set_optional();
                                     }
-                                    Self::install_types_to_field_builder(&field.r#type.identifier.name, &mut model_field);
+                                    Self::install_types_to_field_builder(&field.r#type.identifier.name, &mut model_field, &enums);
                                 }
                                 Arity::Array => {
                                     if field.r#type.collection_required {
@@ -406,7 +412,7 @@ impl AppBuilder {
                                         } else {
                                             inner.set_optional();
                                         }
-                                        Self::install_types_to_field_builder(&field.r#type.identifier.name, &mut inner);
+                                        Self::install_types_to_field_builder(&field.r#type.identifier.name, &mut inner, &enums);
                                         inner
                                     })));
                                 }
@@ -423,7 +429,7 @@ impl AppBuilder {
                                         } else {
                                             inner.set_optional();
                                         }
-                                        Self::install_types_to_field_builder(&field.r#type.identifier.name, &mut inner);
+                                        Self::install_types_to_field_builder(&field.r#type.identifier.name, &mut inner, &enums);
                                         inner
                                     })));
                                 }
@@ -496,7 +502,7 @@ impl AppBuilder {
                                     } else {
                                         model_property.set_optional();
                                     }
-                                    Self::install_types_to_property_builder(&field.r#type.identifier.name, &mut model_property);
+                                    Self::install_types_to_property_builder(&field.r#type.identifier.name, &mut model_property, &enums);
                                 }
                                 Arity::Array => {
                                     if field.r#type.collection_required {
@@ -511,7 +517,7 @@ impl AppBuilder {
                                         } else {
                                             inner.set_optional();
                                         }
-                                        Self::install_types_to_field_builder(&field.r#type.identifier.name, &mut inner);
+                                        Self::install_types_to_field_builder(&field.r#type.identifier.name, &mut inner, &enums);
                                         inner
                                     })));
                                 }
@@ -528,7 +534,7 @@ impl AppBuilder {
                                         } else {
                                             inner.set_optional();
                                         }
-                                        Self::install_types_to_field_builder(&field.r#type.identifier.name, &mut inner);
+                                        Self::install_types_to_field_builder(&field.r#type.identifier.name, &mut inner, &enums);
                                         inner
                                     })));
                                 }
@@ -546,7 +552,7 @@ impl AppBuilder {
         }
     }
 
-    fn install_types_to_field_builder(name: &str, field: &mut Field) {
+    fn install_types_to_field_builder(name: &str, field: &mut Field, enums: &HashMap<String, Enum>) {
         match name {
             "String" => field.field_type = Some(FieldType::String),
             "Bool" => field.field_type = Some(FieldType::Bool),
@@ -560,11 +566,11 @@ impl AppBuilder {
             #[cfg(feature = "data-source-mongodb")]
             "ObjectId" => field.field_type = Some(FieldType::ObjectId),
             // _ => panic!("Unrecognized type: '{}'.", name)
-            _ => field.field_type = Some(FieldType::Enum(name.to_string())),
+            _ => field.field_type = Some(FieldType::Enum(enums.get(name).unwrap().clone())),
         };
     }
 
-    fn install_types_to_property_builder(name: &str, property: &mut Property) {
+    fn install_types_to_property_builder(name: &str, property: &mut Property, enums: &HashMap<String, Enum>) {
         match name {
             "String" => property.field_type = Some(FieldType::String),
             "Bool" => property.field_type = Some(FieldType::Bool),
@@ -577,7 +583,7 @@ impl AppBuilder {
             "Decimal" => property.field_type = Some(FieldType::Decimal),
             #[cfg(feature = "data-source-mongodb")]
             "ObjectId" =>  property.field_type = Some(FieldType::ObjectId),
-            _ => property.field_type = Some(FieldType::Enum(name.to_string())),
+            _ => property.field_type = Some(FieldType::Enum(enums.get(name).unwrap().clone())),
             // _ => panic!("Unrecognized type: '{}'.", name)
         };
     }

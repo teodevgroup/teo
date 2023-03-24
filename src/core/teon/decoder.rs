@@ -973,13 +973,16 @@ impl Decoder {
                 }
                 None => Err(Error::unexpected_input_type("datetime string", path))
             }
-            FieldType::Enum(enum_name) => match json_value.as_str() {
-                Some(s) => if graph.enum_values(enum_name.as_str()).unwrap().contains(&s.to_string()) {
-                    Ok(Value::String(s.to_string()))
-                } else {
-                    Err(Error::unexpected_input_type(format!("string represents enum {enum_name}"), path))
-                },
-                None => Err(Error::unexpected_input_type(format!("string represents enum {enum_name}"), path))
+            FieldType::Enum(enum_def) => {
+                let enum_name = enum_def.name();
+                match json_value.as_str() {
+                    Some(s) => if graph.enum_values(enum_name).unwrap().contains(&s.to_string()) {
+                        Ok(Value::String(s.to_string()))
+                    } else {
+                        Err(Error::unexpected_input_type(format!("string represents enum {enum_name}"), path))
+                    },
+                    None => Err(Error::unexpected_input_type(format!("string represents enum {enum_name}"), path))
+                }
             }
             FieldType::Vec(inner_field) => match json_value.as_array() {
                 Some(a) => {

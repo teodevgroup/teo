@@ -1,3 +1,5 @@
+use crate::core::r#enum::DbEnum;
+
 /// This enum represents the field type in the actual database. This enum is designed to support
 /// all SQL databases and MongoDB.
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
@@ -209,4 +211,6 @@ pub enum DatabaseType {
     ByteA,
 
     Vec(Box<DatabaseType>),
+
+    Enum(DbEnum),
 }

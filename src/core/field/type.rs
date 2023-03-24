@@ -3,6 +3,7 @@ use std::ops::BitOr;
 use maplit::hashset;
 use once_cell::sync::Lazy;
 use crate::core::field::Field;
+use crate::core::r#enum::Enum;
 
 #[derive(Debug, Clone)]
 pub enum FieldType {
@@ -17,7 +18,7 @@ pub enum FieldType {
     String,
     Date,
     DateTime,
-    Enum(String),
+    Enum(Enum),
     Vec(Box<Field>),
     HashMap(Box<Field>),
     BTreeMap(Box<Field>),
@@ -42,7 +43,7 @@ impl FieldType {
 
     pub fn enum_name(&self) -> &str {
         match self {
-            FieldType::Enum(n) => n,
+            FieldType::Enum(n) => n.name(),
             _ => panic!(),
         }
     }

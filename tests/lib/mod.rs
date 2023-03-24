@@ -1,4 +1,5 @@
 pub mod matcher;
+pub mod matcher_functions;
 
 use std::process::{Child, Command};
 use std::{env, thread};
