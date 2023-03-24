@@ -182,9 +182,12 @@ impl SQLMigration {
                 }
                 let table_has_records = Self::table_has_records(dialect, &conn, table_name).await;
                 let db_indices = Self::db_indices(dialect, &conn, model).await;
+                println!("see db indices: {:?}", db_indices);
                 let model_indices = Self::normalized_model_indices(model.indices(), dialect, table_name);
+                println!("see model indices: {:?}", model_indices);
                 // here update columns and indices
                 let manipulations = ColumnDecoder::manipulations(&db_columns, &model_columns, &db_indices, &model_indices, model);
+                println!("see manipulations: {:?}", manipulations);
                 if table_has_records && manipulations.iter().find(|m| m.is_add_column_non_null()).is_some() && model.allows_drop_when_migrate() {
                     Self::drop_table(dialect, &conn, table_name).await;
                     Self::create_table(dialect, &conn, model).await;
@@ -447,6 +450,20 @@ ORDER BY 1,6"#, table_name);
                 ))
             }
         }
-        indices.into_iter().collect()
+        let mut results: Vec<ModelIndex> = indices.into_iter().collect();
+        let includes_primary = results.iter().find(|r| {
+            r.r#type() == ModelIndexType::Primary
+        }).is_some();
+        if !includes_primary {
+            let sql = format!("SELECT * FROM pragma_table_info(\"{table_name}\") WHERE pk = 1");
+            let result_set = conn.query(Query::from(sql)).await.unwrap();
+            let row = result_set.into_single().unwrap();
+            let column_name = row.get("name").unwrap().as_str().unwrap();
+            let index = ModelIndex::new(ModelIndexType::Primary, Some(format!("sqlite_autoindex_{table_name}_1")), vec![
+                ModelIndexItem::new(column_name.to_owned(), Sort::Asc, None)
+            ]);
+            results.push(index);
+        }
+        results.into_iter().collect()
     }
 }

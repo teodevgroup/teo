@@ -1,6 +1,6 @@
 connector {
   provider .sqlite
-  url "sqlite:test-connectors-sqlite-types.sqlite"
+  url "sqlite:test_connectors_sqlite_types.sqlite"
 }
 
 server {

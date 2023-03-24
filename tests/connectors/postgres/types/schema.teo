@@ -1,0 +1,38 @@
+connector {
+  provider .postgres
+  url "postgres://127.0.0.1:5433/test_connectors_postgres_types"
+}
+
+server {
+  bind ("0.0.0.0", 4013)
+}
+
+enum Sex {
+  MALE
+  FEMALE
+}
+
+model Support {
+  @id @autoIncrement @readonly
+  id: Int
+  int32: Int32?
+  int64: Int64?
+  float32: Float32?
+  float64: Float64?
+  bool: Bool?
+  string: String?
+  date: Date?
+  dateTime: DateTime?
+  decimal: Decimal?
+  sex: Sex?
+  int32Array: Int32[]?
+  int64Array: Int64[]?
+  float32Array: Float32[]?
+  float64Array: Float64[]?
+  boolArray: Bool[]?
+  stringArray: String[]?
+  dateArray: Date[]?
+  dateTimeArray: DateTime[]?
+  decimalArray: Decimal[]?
+  sexesArray: Sex[]?
+}

@@ -15,6 +15,7 @@ use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
 use crate::prelude::Value;
 
+#[derive(Debug)]
 pub(crate) enum ColumnManipulation<'a> {
     AddColumn(&'a SQLColumn, Option<Pipeline>, Option<Value>),
     RemoveColumn(String, Option<Pipeline>),
