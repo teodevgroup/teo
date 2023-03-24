@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use crate::core::connector::Connector;
-use crate::core::r#enum::builder::EnumBuilder;
 use crate::core::graph::GraphInner;
 use crate::core::model::builder::ModelBuilder;
 use crate::core::model::Model;
@@ -9,7 +8,7 @@ use crate::core::r#enum::Enum;
 use crate::prelude::Graph;
 
 pub struct GraphBuilder {
-    pub(crate) enum_builders: HashMap<String, EnumBuilder>,
+    pub(crate) enums: HashMap<String, Enum>,
     pub(crate) model_builders: Vec<ModelBuilder>,
     pub(crate) reset_database: bool,
 }
@@ -18,17 +17,15 @@ impl GraphBuilder {
 
     pub(crate) fn new() -> Self {
         GraphBuilder {
-            enum_builders: HashMap::new(),
+            enums: HashMap::new(),
             model_builders: Vec::new(),
             reset_database: false,
         }
     }
 
-    pub fn r#enum<F: Fn(&mut EnumBuilder)>(&mut self, name: impl Into<String>, build: F) -> &mut Self {
-        let name = name.into();
-        let mut enum_builder = EnumBuilder::new(name.clone());
-        build(&mut enum_builder);
-        self.enum_builders.insert(name.clone(), enum_builder);
+    pub fn r#enum(&mut self, enum_def: Enum) -> &mut Self {
+        let name = enum_def.name().to_owned();
+        self.enums.insert(name, enum_def);
         self
     }
 
@@ -44,17 +41,13 @@ impl GraphBuilder {
         self
     }
 
-    pub(crate) fn build_enums(&self) -> HashMap<String, Enum> {
-        let mut retval: HashMap<String, Enum> = HashMap::new();
-        for (k, v) in &self.enum_builders {
-            retval.insert(k.clone(), v.into());
-        }
-        retval
+    pub(crate) fn clone_enums(&self) -> HashMap<String, Enum> {
+        self.enums.clone()
     }
 
     pub(crate) async fn build(&self, connector: Arc<dyn Connector>) -> Graph {
         let mut graph = GraphInner {
-            enums: self.build_enums(),
+            enums: self.clone_enums(),
             models_vec: Vec::new(),
             models_map: HashMap::new(),
             url_segment_name_map: HashMap::new(),

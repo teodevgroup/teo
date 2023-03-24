@@ -55,7 +55,7 @@ impl ToCSharpType for FieldType {
             FieldType::Decimal => "decimal".to_string(),
             FieldType::Date => "DateOnly".to_string(),
             FieldType::DateTime => "DateTime".to_string(),
-            FieldType::Enum(name) => name.to_string(),
+            FieldType::Enum(enum_def) => enum_def.name().to_string(),
             FieldType::Vec(internal) => internal.field_type().to_csharp_type(internal.optionality.is_optional()) + "[]",
             FieldType::HashMap(_) => panic!(),
             FieldType::BTreeMap(_) => panic!(),

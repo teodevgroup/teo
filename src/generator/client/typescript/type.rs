@@ -19,7 +19,7 @@ impl ToTypeScriptType for FieldType {
             FieldType::Bool => "boolean".to_string(),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number".to_string(),
             FieldType::Decimal => "Decimal".to_string(),
-            FieldType::Enum(name) => name.to_string(),
+            FieldType::Enum(enum_def) => enum_def.name().to_string(),
             FieldType::Vec(internal) => internal.field_type().to_typescript_type(internal.optionality.is_optional()) + "[]",
             FieldType::HashMap(_) => panic!(),
             FieldType::BTreeMap(_) => panic!(),
@@ -43,7 +43,8 @@ impl ToTypeScriptType for FieldType {
             FieldType::Bool => "boolean | Bool".to_string(),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number | Number".to_string(),
             FieldType::Decimal => if server_mode { "Decimal | Decimal" } else { "string | Decimal | Decimal" }.to_string(),
-            FieldType::Enum(name) => {
+            FieldType::Enum(enum_def) => {
+                let name = enum_def.name();
                 with_generic = true;
                 if optional {
                     format!(r#"{name} | EnumNullableFilter<{name}> | null"#)
@@ -84,7 +85,7 @@ impl ToTypeScriptType for FieldType {
             FieldType::Date | FieldType::DateTime => "string".to_string(),
             FieldType::Bool => "boolean".to_string(),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number".to_string(),
-            FieldType::Enum(name) => name.to_string(),
+            FieldType::Enum(enum_def) => enum_def.name().to_string(),
             FieldType::Vec(internal) => internal.field_type().to_typescript_type(internal.optionality.is_optional()) + "[]",
             FieldType::HashMap(_) => panic!(),
             FieldType::BTreeMap(_) => panic!(),
@@ -119,7 +120,8 @@ impl ToTypeScriptType for FieldType {
             FieldType::Decimal => "Decimal",
             FieldType::Bool => "Bool",
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "Number",
-            FieldType::Enum(name) => {
+            FieldType::Enum(enum_def) => {
+                let name = enum_def.name();
                 generic = format!("<{name}>");
                 "Enum"
             },

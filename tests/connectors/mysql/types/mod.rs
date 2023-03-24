@@ -6,6 +6,7 @@ mod test {
     use std::sync::Mutex;
     use serde_json::{json, Value};
     use crate::lib::{ExecutionHandle, req};
+    use crate::lib::matcher_functions::{date_time_value, decimal_value};
     use crate::{assert_json, matcher};
     use once_cell::sync::Lazy;
 
@@ -108,6 +109,66 @@ mod test {
             "data": {
                 "id": ignore,
                 "string": "KOF XV",
+            }
+        }))
+    }
+
+    #[test]
+    fn date() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "date": "2005-12-25",
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "date": "2005-12-25",
+            }
+        }))
+    }
+
+    #[test]
+    fn date_time() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "dateTime": "2003-04-17T08:12:34.567Z",
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "dateTime": date_time_value("2003-04-17T08:12:34.567Z"),
+            }
+        }))
+    }
+
+    #[test]
+    fn decimal() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "decimal": "5.78",
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "decimal": decimal_value("5.78"),
+            }
+        }))
+    }
+
+    #[test]
+    fn r#enum() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "sex": "FEMALE",
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "sex": "FEMALE",
             }
         }))
     }

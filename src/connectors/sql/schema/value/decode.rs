@@ -3,7 +3,7 @@ use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::teon::Value;
 use chrono::{NaiveDate, DateTime, Utc};
 use indexmap::IndexMap;
-use quaint_forked::prelude::{ResultRow, ResultSet};
+use quaint_forked::prelude::{ResultRow, ResultSet, Value as QuaintValue};
 
 pub(crate) struct RowDecoder { }
 
@@ -207,6 +207,18 @@ impl RowDecoder {
                 return Value::Vec(vals.iter().map(|v| Self::decode_value(inner.field_type(), inner.is_optional(), Some(v), dialect)).collect());
             } else {
                 return Value::Null;
+            }
+        }
+        if r#type.is_enum() {
+            match value {
+                QuaintValue::Enum(v) => {
+                    if let Some(v) = v {
+                        return Value::String(v.as_ref().to_owned());
+                    } else {
+                        return Value::Null;
+                    }
+                }
+                _ => panic!("unhandled enum variant"),
             }
         }
         panic!("Unhandled database when decoding type.")

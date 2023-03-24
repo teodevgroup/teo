@@ -1,7 +1,9 @@
 use std::str::FromStr;
 use regex::Regex;
+use snailquote::unescape;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::database::r#type::DatabaseType;
+use crate::core::r#enum::DbEnum;
 
 pub(crate) struct SQLTypeDecoder { }
 
@@ -46,6 +48,12 @@ fn mysql_type_to_database_type(r#type: &str) -> DatabaseType {
                     } else {
                         DatabaseType::Decimal { m: None, d: None }
                     }
+                }
+                "enum" => {
+                    let choices = arg.unwrap();
+                    let choices_vec = choices.split(",");
+                    let unescaped: Vec<String> = choices_vec.map(|s| unescape(s).unwrap()).collect();
+                    DatabaseType::Enum(DbEnum { choices: unescaped })
                 }
                 _ => panic!("Unhandled type '{}' '{:?}' '{:?}'.", name, trailing1, arg)
             }

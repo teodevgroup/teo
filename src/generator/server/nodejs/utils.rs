@@ -11,7 +11,7 @@ pub(crate) fn field_to_nodejs_api_type<T>(field: &T) -> String where T: FieldTyp
         FieldType::Decimal => "Decimal".to_string(),
         FieldType::Vec(inner) => field_to_nodejs_api_type(inner.as_ref()) + "[]",
         FieldType::Object(name) => name.to_string(),
-        FieldType::Enum(name) => name.to_string(),
+        FieldType::Enum(enum_def) => enum_def.name().to_string(),
         _ => unreachable!(),
     };
     return if field.is_optional() {

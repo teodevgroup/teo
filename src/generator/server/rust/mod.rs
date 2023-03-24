@@ -62,7 +62,7 @@ impl RustEntityGenerator {
             FieldType::String => "String".to_owned(),
             FieldType::Date => "NaiveDate".to_owned(),
             FieldType::DateTime => "DateTime<Utc>".to_owned(),
-            FieldType::Enum(name) => name.clone(),
+            FieldType::Enum(enum_def) => enum_def.name().to_owned(),
             FieldType::Vec(inner) => format!("Vec<{}>", self.getter_type_for_field(inner.as_ref())),
             FieldType::HashMap(inner) => format!("HashMap<String, {}>", self.getter_type_for_field(inner.as_ref())),
             FieldType::BTreeMap(inner) => format!("BTreemap<String, {}>", self.getter_type_for_field(inner.as_ref())),
@@ -124,7 +124,8 @@ impl RustEntityGenerator {
             if has_optional_enum {
                 b.line("use std::str::FromStr;");
             }
-            for enum_name in enum_names {
+            for enum_def in enum_names {
+                let enum_name = enum_def.name();
                 b.line(format!("use super::{}::{};", enum_name.to_snake_case(), enum_name));
             }
             let relation_uses: Vec<&str> = model.relations().iter().map(|relation| {

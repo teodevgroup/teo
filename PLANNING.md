@@ -345,6 +345,7 @@
 - Setup integration tests: reset database
 - Setup integration tests: docker
 - Fix rust command line arguments **[DONE]**
+- MySQL native enum **[DONE]**
 - Generate decimal imports in rust entities
 - Cross language error handling for node.js @victorteokw
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection @victorteokw
@@ -396,9 +397,6 @@
 
 #### 0.1.2
 - The copy action
-
-#### 0.1.4
-- SQL: Enum types
 
 #### 0.1.5
 - PostgreSQL: Enum types
