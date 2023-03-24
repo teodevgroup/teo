@@ -356,7 +356,9 @@
 #### 0.0.55
 - Remove URL segment name **[DONE]**
 - Setup integration tests: reset database
-- Generate decimal imports in rust entities
+- Schema lang: dataset
+- Parser: parse dataset
+- Generate decimal imports in rust entities **[DONE]**
 - Cross language error handling for node.js @victorteokw
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection @victorteokw
 - Rewrite connector to support pooled connections @victorteokw
@@ -367,7 +369,6 @@
 
 #### 0.0.56
 - Relation onUpdate
-- Setup code style guide
 
 #### 0.0.57
 - Relation onDelete
@@ -403,15 +404,12 @@
 - Linting, warnings and errors
 
 #### 0.1.1
-- Seed with datasets
-
-#### 0.1.2
 - The copy action
 
-#### 0.1.5
+#### 0.1.2
 - PostgreSQL: Enum types
 
-#### 0.1.6
+#### 0.1.3
 - Database type mapping for field, property and collection types' item field
 
 #### 0.2.0

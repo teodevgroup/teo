@@ -93,6 +93,10 @@ impl RustEntityGenerator {
                 b.line("use bson::oid::ObjectId;");
                 package_requirements.insert("bson");
             }
+            if model.fields().iter().find(|f| f.field_type().is_decimal()).is_some() {
+                b.line("use bigdecimal::BigDecimal;");
+                package_requirements.insert("bigdecimal");
+            }
             let mut chrono_requirements = vec![];
             if model.fields().iter().find(|f| f.field_type().is_date()).is_some() {
                 chrono_requirements.push("NaiveDate");
@@ -459,6 +463,9 @@ impl From<Value> for {enum_name} {{
         }
         if package_requirements.contains(&"bson") {
             deps["bson"]["version"] = value("2.3.0");
+        }
+        if package_requirements.contains(&"bigdecimal") {
+            deps["bigdecimal"]["version"] = value("0.3.0");
         }
         fs::write(cargo_toml, doc.to_string()).await.unwrap();
     }
