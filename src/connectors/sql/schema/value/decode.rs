@@ -131,6 +131,8 @@ impl RowDecoder {
         if r#type.is_int64() {
             if let Some(v) = value.as_i64() {
                 return Value::I64(v);
+            } else if let Some(v) = value.as_i32() {
+                return Value::I32(v);
             } else {
                 return Value::Null;
             }
@@ -212,6 +214,13 @@ impl RowDecoder {
         if r#type.is_enum() {
             match value {
                 QuaintValue::Enum(v) => {
+                    if let Some(v) = v {
+                        return Value::String(v.as_ref().to_owned());
+                    } else {
+                        return Value::Null;
+                    }
+                }
+                QuaintValue::Text(v) => {
                     if let Some(v) = v {
                         return Value::String(v.as_ref().to_owned());
                     } else {

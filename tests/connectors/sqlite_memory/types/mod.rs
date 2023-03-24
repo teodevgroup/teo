@@ -13,7 +13,7 @@ mod test {
     static HANDLE: Lazy<Mutex<ExecutionHandle>> = Lazy::new(|| {
         Mutex::new(ExecutionHandle::new())
     });
-    static PORT: i32 = 4014;
+    static PORT: i32 = 4015;
 
     fn before_all() {
         HANDLE.lock().unwrap().execute(file!(), "serve");

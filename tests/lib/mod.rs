@@ -90,45 +90,45 @@ fn json_match_null(matcher: &Matcher, path: &KeyPath<'_>) -> Result<(), String> 
     if matcher.is_null() {
         return Ok(());
     }
-    json_match_error(path)
+    json_match_error(&Value::Null, path)
 }
 
 fn json_match_string(value: &Value, string: &String, matcher: &Matcher, path: &KeyPath<'_>) -> Result<(), String> {
     match matcher {
-        Matcher::String(s) => json_match_error_if_not(s == string, path),
-        Matcher::ValueMatcher(m) => json_match_error_if_not(m(value), path),
-        _ => json_match_error(path),
+        Matcher::String(s) => json_match_error_if_not(s == string, value, path),
+        Matcher::ValueMatcher(m) => json_match_error_if_not(m(value), value, path),
+        _ => json_match_error(value, path),
     }
 }
 
 fn json_match_bool(value: &Value, bool: &bool, matcher: &Matcher, path: &KeyPath<'_>) -> Result<(), String> {
     match matcher {
-        Matcher::Bool(b) => json_match_error_if_not(b == bool, path),
-        Matcher::ValueMatcher(m) => json_match_error_if_not(m(value), path),
-        _ => json_match_error(path),
+        Matcher::Bool(b) => json_match_error_if_not(b == bool, value, path),
+        Matcher::ValueMatcher(m) => json_match_error_if_not(m(value), value, path),
+        _ => json_match_error(value, path),
     }
 }
 
 fn json_match_number(value: &Value, number: &Number, matcher: &Matcher, path: &KeyPath<'_>) -> Result<(), String> {
     match matcher {
-        Matcher::Number(n) => json_match_error_if_not(n == number, path),
-        Matcher::ValueMatcher(m) => json_match_error_if_not(m(value), path),
-        _ => json_match_error(path),
+        Matcher::Number(n) => json_match_error_if_not(n == number, value, path),
+        Matcher::ValueMatcher(m) => json_match_error_if_not(m(value), value, path),
+        _ => json_match_error(value, path),
     }
 }
 
 fn json_match_array(value: &Value, array: &Vec<Value>, matcher: &Matcher, path: &KeyPath<'_>) -> Result<(), String> {
     match matcher {
         Matcher::Array(a) => {
-            json_match_error_if_not(a.len() == array.len(), path)?;
+            json_match_error_if_not(a.len() == array.len(), value, path)?;
             for (index, matcher) in a.iter().enumerate() {
                 let array_value = array.get(index).unwrap();
                 json_match_internal(array_value, matcher, &(path + index))?;
             }
             Ok(())
         },
-        Matcher::ValueMatcher(m) => json_match_error_if_not(m(value), path),
-        _ => json_match_error(path),
+        Matcher::ValueMatcher(m) => json_match_error_if_not(m(value), value, path),
+        _ => json_match_error(value, path),
     }
 }
 
@@ -136,28 +136,28 @@ fn json_match_object(value: &Value, map: &Map<String, Value>, matcher: &Matcher,
     match matcher {
         Matcher::Object(m) => {
             // compare keys
-            json_match_error_if_not(m.len() == map.len(), path)?;
+            json_match_error_if_not(m.len() == map.len(), value, path)?;
             let m_keys: HashSet<&str> = m.keys().into_iter().map(|k| k.as_str()).collect();
             let map_keys: HashSet<&str> = map.keys().into_iter().map(|k| k.as_str()).collect();
-            json_match_error_if_not(m_keys == map_keys, path)?;
+            json_match_error_if_not(m_keys == map_keys, value, path)?;
             for (key, matcher) in m.iter() {
                 let map_value = map.get(key).unwrap();
                 json_match_internal(map_value, matcher, &(path + key))?;
             }
             Ok(())
         },
-        Matcher::ValueMatcher(m) => json_match_error_if_not(m(value), path),
-        _ => json_match_error(path),
+        Matcher::ValueMatcher(m) => json_match_error_if_not(m(value), value, path),
+        _ => json_match_error(value, path),
     }
 }
 
-fn json_match_error(path: &KeyPath<'_>) -> Result<(), String> {
-    Err(format!("value at `{}` does not match matcher.", path.to_string()))
+fn json_match_error(value: &Value, path: &KeyPath<'_>) -> Result<(), String> {
+    Err(format!("value `{}` at `{}` does not match matcher.", value.to_string(), path.to_string()))
 }
 
-fn json_match_error_if_not(result: bool, path: &KeyPath<'_>) -> Result<(), String> {
+fn json_match_error_if_not(result: bool, value: &Value, path: &KeyPath<'_>) -> Result<(), String> {
     if !result {
-        json_match_error(path)
+        json_match_error(value, path)
     } else {
         Ok(())
     }
