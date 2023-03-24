@@ -60,7 +60,6 @@ impl ExecutionHandle {
 unsafe impl Sync for ExecutionHandle { }
 
 pub fn req<J: Borrow<Value>>(port: i32, action: &str, model: &str, data: J) -> Value {
-    let model = model.to_camel_case().to_kebab_case().to_plural();
     let url = format!("http://127.0.0.1:{}/{}/action/{}", port, model, action);
     let client = reqwest::blocking::Client::new();
     let res = client.post(url).json(data.borrow()).send().unwrap();

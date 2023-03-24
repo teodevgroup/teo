@@ -654,7 +654,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
                     return Error::destination_not_found().into();
                 }
             };
-            let model_def = match graph.model_with_url_segment_name(model_url_segment_name) {
+            let model_def = match graph.model(model_url_segment_name) {
                 Some(name) => name,
                 None => {
                     log_unhandled(start, r.method().as_str(), &path, 404);

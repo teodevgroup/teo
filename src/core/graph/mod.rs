@@ -26,7 +26,6 @@ pub(crate) struct GraphInner {
     pub(crate) enums: HashMap<String, Enum>,
     pub(crate) models_vec: Vec<Model>,
     pub(crate) models_map: HashMap<String, Model>,
-    pub(crate) url_segment_name_map: HashMap<String, String>,
     pub(crate) connector: Option<Arc<dyn Connector>>,
 }
 
@@ -186,13 +185,6 @@ impl Graph {
 
     pub(crate) fn model(&self, name: &str) -> Option<&Model> {
         self.inner.models_map.get(name)
-    }
-
-    pub(crate) fn model_with_url_segment_name(&self, segment_name: &str) -> Option<&Model> {
-        match self.inner.url_segment_name_map.get(segment_name) {
-            Some(val) => self.model(val),
-            None => None
-        }
     }
 
     pub(crate) fn r#enum(&self, name: &str) -> Option<&Enum> {

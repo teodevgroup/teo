@@ -354,6 +354,7 @@
 - Fixed PostgreSQL migration primary key bug **[DONE]**
 
 #### 0.0.55
+- Remove URL segment name **[DONE]**
 - Setup integration tests: reset database
 - Generate decimal imports in rust entities
 - Cross language error handling for node.js @victorteokw

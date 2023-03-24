@@ -19,7 +19,6 @@ use crate::core::pipeline::Pipeline;
 pub struct ModelBuilder {
     pub(crate) name: String,
     pub(crate) table_name: String,
-    pub(crate) url_segment_name: String,
     pub(crate) localized_name: String,
     pub(crate) description: String,
     pub(crate) identity: bool,
@@ -48,7 +47,6 @@ impl ModelBuilder {
         Self {
             name: name.into(),
             table_name: "".to_string(),
-            url_segment_name: "".to_string(),
             localized_name: "".to_string(),
             description: "".to_string(),
             identity: false,
@@ -74,11 +72,6 @@ impl ModelBuilder {
 
     pub fn table_name(&mut self, table_name: impl Into<String>) -> &mut Self {
         self.table_name = table_name.into();
-        self
-    }
-
-    pub fn url_segment_name(&mut self, url_segment_name: impl Into<String>) -> &mut Self {
-        self.url_segment_name = url_segment_name.into();
         self
     }
 
@@ -242,7 +235,6 @@ impl ModelBuilder {
         let inner = ModelInner {
             name: self.name.clone(),
             table_name: if self.table_name == "" { self.name.to_lowercase().to_plural() } else { self.table_name.to_string() },
-            url_segment_name: if self.url_segment_name == "" { self.name.to_kebab_case().to_plural() } else { self.url_segment_name.to_string() },
             localized_name: self.localized_name.clone(),
             description: self.description.clone(),
             identity: self.identity,
