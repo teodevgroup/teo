@@ -349,6 +349,8 @@
 - Fix MongoDB integer encode bug **[DONE]**
 - Support MongoDB arrays **[DONE]**
 - Fixed MongoDB date encoding bug **[DONE]**
+- Removed enum builder **[DONE]**
+- Fixed SQLite Int64 is not decoded bug **[DONE]**
 - Generate decimal imports in rust entities
 - Cross language error handling for node.js @victorteokw
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection @victorteokw
