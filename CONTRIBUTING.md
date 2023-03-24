@@ -70,6 +70,16 @@ We structure our messages like this:
 * client: Client generators
 * entity: Entity generators
 
+## Testing
+
+### Before testing
+
+Run this command to startup testing databases:
+
+```sh
+docker-compose -f databases.yml up -d
+```
+
 ## Legal
 
 Pull Request authors must sign the [TEO Cloud CLA](https://cla-assistant.io/teocloud/teo), it will show up in an 
