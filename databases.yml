@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:latest
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+    ports:
+      - '3307:3306'
+  mongo:
+    image: mongo:latest
+    ports:
+      - '27018:27017'

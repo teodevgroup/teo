@@ -1,5 +1,6 @@
 use bson::Bson;
 use bson::datetime::{DateTime as BsonDateTime};
+use chrono::{NaiveDateTime, NaiveTime, TimeZone, Utc};
 use crate::prelude::Value;
 
 pub(crate) mod coder;
@@ -16,7 +17,7 @@ impl Into<Bson> for Value {
             Value::F64(f) => Bson::Double(f as f64),
             Value::Decimal(_d) => panic!("Decimal is not implemented by MongoDB."),
             Value::String(s) => Bson::String(s),
-            Value::Date(val) => Bson::DateTime(BsonDateTime::parse_rfc3339_str(val.format("%Y-%m-%d").to_string()).unwrap()),
+            Value::Date(val) => Bson::DateTime(BsonDateTime::from(Utc.from_utc_datetime(&NaiveDateTime::new(val, NaiveTime::default())))),
             Value::DateTime(val) => Bson::DateTime(BsonDateTime::from(val)),
             Value::Vec(val) => Bson::Array(val.iter().map(|i| { i.into() }).collect()),
             Value::HashMap(val) => Bson::Document(val.iter().map(|(k, v)| (k.clone(), v.into())).collect()),

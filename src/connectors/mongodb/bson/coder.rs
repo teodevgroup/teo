@@ -18,8 +18,16 @@ impl BsonCoder {
 
     pub(crate) fn encode<'a>(r#type: &FieldType, value: Value) -> Result<Bson> {
         match r#type {
-            FieldType::I32 => Ok(Bson::Int32(value.as_i32().unwrap())),
-            FieldType::I64 => Ok(Bson::Int64(value.as_i64().unwrap())),
+            FieldType::I32 => if let Some(i) = value.as_i32() {
+                Ok(Bson::Int32(i))
+            } else {
+                Ok(Bson::Null)
+            },
+            FieldType::I64 => if let Some(i) = value.as_i64() {
+                Ok(Bson::Int64(i))
+            } else {
+                Ok(Bson::Null)
+            },
             _ => Ok(value.into()),
         }
     }

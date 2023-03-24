@@ -1,6 +1,6 @@
 connector {
   provider .mysql
-  url "mysql://127.0.0.1:3306/testconnectorsmysqltypes"
+  url "mysql://127.0.0.1:3307/testconnectorsmysqltypes"
 }
 
 server {

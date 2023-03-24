@@ -346,6 +346,9 @@
 - Setup integration tests: docker
 - Fix rust command line arguments **[DONE]**
 - MySQL native enum **[DONE]**
+- Fix MongoDB integer encode bug **[DONE]**
+- Support MongoDB arrays **[DONE]**
+- Fixed MongoDB date encoding bug **[DONE]**
 - Generate decimal imports in rust entities
 - Cross language error handling for node.js @victorteokw
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection @victorteokw
@@ -400,7 +403,7 @@
 
 #### 0.1.5
 - PostgreSQL: Enum types
--
+
 #### 0.1.6
 - Database type mapping for field, property and collection types' item field
 

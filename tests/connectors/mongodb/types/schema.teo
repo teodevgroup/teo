@@ -1,10 +1,15 @@
 connector {
   provider .mongo
-  url "mongodb://127.0.0.1:27017/test-connectors-mongodb-types"
+  url "mongodb://127.0.0.1:27018/test-connectors-mongodb-types"
 }
 
 server {
   bind ("0.0.0.0", 4010)
+}
+
+enum Sex {
+  MALE
+  FEMALE
 }
 
 model Support {
@@ -19,6 +24,7 @@ model Support {
   date: Date?
   dateTime: DateTime?
   objectId: ObjectId?
+  sex: Sex?
   int32Array: Int32[]?
   int64Array: Int64[]?
   float32Array: Float32[]?
@@ -28,4 +34,5 @@ model Support {
   dateArray: Date[]?
   dateTimeArray: DateTime[]?
   objectIdArray: ObjectId[]?
+  sexesArray: Sex[]?
 }

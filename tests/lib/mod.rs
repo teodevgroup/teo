@@ -14,17 +14,6 @@ use once_cell::sync::Lazy;
 use serde_json::{Map, Number, Value};
 use crate::lib::matcher::Matcher;
 
-static ORIGIN_CWD: Lazy<PathBuf> = Lazy::new(|| {
-   let path_buf = env::current_dir().unwrap();
-    path_buf
-});
-
-// fn set_cwd_from_file(file: &str) {
-//     let rel_file_path = Path::new(file);
-//     let abs_file_path = ORIGIN_CWD.join(rel_file_path);
-//     env::set_current_dir(abs_file_path.parent().unwrap()).unwrap();
-// }
-
 fn schema_from_file(file: &str) -> PathBuf {
     let file_path = Path::new(file);
     let parent = file_path.parent().unwrap();

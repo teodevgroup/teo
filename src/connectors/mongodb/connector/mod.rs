@@ -353,7 +353,7 @@ impl Connector for MongoDBConnector {
             FieldType::Date => DatabaseType::DateTime(3),
             FieldType::DateTime => DatabaseType::DateTime(3),
             FieldType::Enum(_) => DatabaseType::String,
-            FieldType::Vec(_) => panic!(""),
+            FieldType::Vec(inner) => DatabaseType::Vec(Box::new(self.default_database_type(inner.field_type()))),
             FieldType::HashMap(_) => panic!(""),
             FieldType::BTreeMap(_) => panic!(""),
             FieldType::Object(_) => panic!(""),
