@@ -2,7 +2,6 @@ use crate::connectors::sql::schema::column::SQLColumn;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
 
-
 pub(crate) struct SQLCreateTableStatement {
     pub(crate) table: String,
     pub(crate) if_not_exists: bool,

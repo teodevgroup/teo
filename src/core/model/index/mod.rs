@@ -77,6 +77,18 @@ impl ModelIndex {
             keys,
         }
     }
+
+    pub(crate) fn psql_primary_to_unique(&self, table_name: &str) -> Self {
+        let mut result = Self {
+            index_type: ModelIndexType::Unique,
+            name: None,
+            items: self.items.clone(),
+            keys: self.keys.clone(),
+        };
+        result.name = Some(format!("{table_name}_{}_pkey", self.joined_names()));
+        result
+    }
+
     pub(crate) fn r#type(&self) -> ModelIndexType {
         self.index_type
     }
@@ -174,7 +186,11 @@ impl ModelIndex {
     }
 
     fn normalize_name_psql(&self, table_name: &str) -> String {
-        format!("{table_name}_{}_{}", self.joined_names(), self.psql_suffix())
+        if self.index_type.is_primary() {
+            format!("{table_name}_{}", self.psql_suffix())
+        } else {
+            format!("{table_name}_{}_{}", self.joined_names(), self.psql_suffix())
+        }
     }
 
     fn psql_suffix(&self) -> &str {

@@ -1,12 +1,32 @@
 # Changelog
 
-## 0.0.53
+## 0.0.54 (Mar. 24th, 2023)
+
+### Tests
+
+* Setup integration tests [@victorteokw](https://github.com/victorteokw)
+
+### Database
+
+* MySQL native enum [@victorteokw](https://github.com/victorteokw)
+* MongoDB arrays [@victorteokw](https://github.com/victorteokw)
+
+### Migration
+
+* Fixed PostgreSQL primary key bug [@victorteokw](https://github.com/victorteokw)
+* Fixed SQLite primary key bug [@victorteokw](https://github.com/victorteokw)
+
+### CLI
+
+* Fixed Rust command line argument bug [@victorteokw](https://github.com/victorteokw)
+
+## 0.0.53 (Mar. 22nd, 2023)
 
 ### Bindings
 
 * Fixed Node.js run loop bug [@victorteokw](https://github.com/victorteokw)
 
-## 0.0.52
+## 0.0.52 (Mar. 22nd, 2023)
 
 ### Schema Language
 
