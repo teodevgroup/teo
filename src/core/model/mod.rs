@@ -23,7 +23,6 @@ pub(crate) mod migration;
 pub struct ModelInner {
     pub(crate) name: String,
     pub(crate) table_name: String,
-    pub(crate) url_segment_name: String,
     pub(crate) localized_name: String,
     pub(crate) description: String,
     pub(crate) identity: bool,
@@ -94,10 +93,6 @@ impl Model {
 
     pub(crate) fn table_name(&self) -> &str {
         &self.inner.table_name
-    }
-
-    pub(crate) fn url_segment_name(&self) -> &str {
-        &self.inner.url_segment_name
     }
 
     pub(crate) fn localized_name(&self) -> String {

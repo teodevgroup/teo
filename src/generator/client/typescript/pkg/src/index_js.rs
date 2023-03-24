@@ -11,8 +11,8 @@ pub(crate) async fn generate_index_js(graph: &Graph, client: &ClientGeneratorCon
         class_name = class_name + "Class";
     }
     for model in graph.models() {
-        if model.url_segment_name() != &model.name().to_camel_case() {
-            name_map += &format!("  '{}': '{}',\n", model.name().to_camel_case(), model.url_segment_name());
+        if model.name() != &model.name().to_camel_case() {
+            name_map += &format!("  '{}': '{}',\n", model.name().to_camel_case(), model.name());
         }
     }
     format!(r#"const Decimal = require('./decimal')

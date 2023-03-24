@@ -991,7 +991,7 @@ pub(crate) async fn generate_index_cs(graph: &Graph, _client: &ClientGeneratorCo
                     let model_name = m.name();
                     let model_var_name = model_name.to_camel_case();
                     let model_class_name = model_var_name.to_pascal_case();
-                    let model_url_segment_name = m.url_segment_name();
+                    let model_url_segment_name = m.name();
                     c.block(format!("public class {model_class_name}Delegate : Delegate {{"), |b| {
                         b.empty_line();
                         b.line("readonly string? _Token;");

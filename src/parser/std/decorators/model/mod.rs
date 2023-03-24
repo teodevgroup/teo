@@ -1,6 +1,5 @@
 pub(crate) mod map;
 pub(crate) mod index;
-pub(crate) mod url;
 pub(crate) mod identity;
 pub(crate) mod r#virtual;
 pub(crate) mod before_save;
@@ -29,7 +28,6 @@ use crate::parser::std::decorators::model::index::{index_decorator, id_decorator
 use crate::parser::std::decorators::model::map::map_decorator;
 use crate::parser::std::decorators::model::migration::migration_decorator;
 use crate::parser::std::decorators::model::r#virtual::virtual_decorator;
-use crate::parser::std::decorators::model::url::url_decorator;
 
 pub(crate) struct GlobalModelDecorators {
     objects: HashMap<String, Accessible>
@@ -46,7 +44,6 @@ impl GlobalModelDecorators {
     pub(crate) fn new() -> Self {
         let mut objects: HashMap<String, Accessible> = HashMap::new();
         objects.insert("map".to_owned(), Accessible::ModelDecorator(map_decorator));
-        objects.insert("url".to_owned(), Accessible::ModelDecorator(url_decorator));
         objects.insert("identity".to_owned(), Accessible::ModelDecorator(identity_decorator));
         objects.insert("id".to_owned(), Accessible::ModelDecorator(id_decorator));
         objects.insert("unique".to_owned(), Accessible::ModelDecorator(unique_decorator));

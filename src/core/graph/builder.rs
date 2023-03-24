@@ -50,18 +50,14 @@ impl GraphBuilder {
             enums: self.clone_enums(),
             models_vec: Vec::new(),
             models_map: HashMap::new(),
-            url_segment_name_map: HashMap::new(),
             connector: None,
         };
         graph.models_vec = self.model_builders.iter().map(|mb| { mb.build(connector.clone()) }).collect();
         let mut models_map: HashMap<String, Model> = HashMap::new();
-        let mut url_segment_name_map: HashMap<String, String> = HashMap::new();
         for model in graph.models_vec.iter() {
             models_map.insert(model.name().to_owned(), model.clone());
-            url_segment_name_map.insert(model.url_segment_name().to_owned(), model.name().to_owned());
         }
         graph.models_map = models_map;
-        graph.url_segment_name_map = url_segment_name_map;
         graph.connector = Some(connector.clone());
         Graph { inner: Arc::new(graph) }
     }
