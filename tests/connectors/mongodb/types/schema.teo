@@ -1,6 +1,6 @@
 connector {
   provider .mongo
-  url "mongodb://127.0.0.1:27018/test-connectors-mongodb-types"
+  url "mongodb://127.0.0.1:27018/test_connectors_mongodb_types"
 }
 
 server {

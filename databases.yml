@@ -6,6 +6,12 @@ services:
       - MYSQL_ALLOW_EMPTY_PASSWORD=true
     ports:
       - '3307:3306'
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    ports:
+      - '5433:5432'
   mongo:
     image: mongo:latest
     ports:
