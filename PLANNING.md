@@ -342,8 +342,7 @@
 
 #### 0.0.54
 - Setup integration tests: test lib **[DONE]**
-- Setup integration tests: reset database
-- Setup integration tests: docker
+- Setup integration tests: docker **[DONE]**
 - Fix rust command line arguments **[DONE]**
 - MySQL native enum **[DONE]**
 - Fix MongoDB integer encode bug **[DONE]**
@@ -352,7 +351,10 @@
 - Removed enum builder **[DONE]**
 - Fixed SQLite Int64 is not decoded bug **[DONE]**
 - Fixed SQLite migration primary key bug **[DONE]**
-- Fixed PostgreSQL migration primary key bug
+- Fixed PostgreSQL migration primary key bug **[DONE]**
+
+#### 0.0.55
+- Setup integration tests: reset database
 - Generate decimal imports in rust entities
 - Cross language error handling for node.js @victorteokw
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection @victorteokw
@@ -362,14 +364,14 @@
 - Log SQL queries
 - Migration dry run
 
-#### 0.0.55
+#### 0.0.56
 - Relation onUpdate
 - Setup code style guide
 
-#### 0.0.56
+#### 0.0.57
 - Relation onDelete
 
-#### 0.0.57
+#### 0.0.58
 - Migration decorator docs
 - Dropped decorator docs
 - MongoDB migration
@@ -382,7 +384,7 @@
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 
-#### 0.0.58
+#### 0.0.59
 - Rust entities: setter documentation
 - Rust entities: optional string array
 - Rust entities: required string array

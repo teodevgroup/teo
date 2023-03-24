@@ -182,12 +182,9 @@ impl SQLMigration {
                 }
                 let table_has_records = Self::table_has_records(dialect, &conn, table_name).await;
                 let db_indices = Self::db_indices(dialect, &conn, model).await;
-                println!("see db indices: {:?}", db_indices);
                 let model_indices = Self::normalized_model_indices(model.indices(), dialect, table_name);
-                println!("see model indices: {:?}", model_indices);
                 // here update columns and indices
                 let manipulations = ColumnDecoder::manipulations(&db_columns, &model_columns, &db_indices, &model_indices, model);
-                println!("see manipulations: {:?}", manipulations);
                 if table_has_records && manipulations.iter().find(|m| m.is_add_column_non_null()).is_some() && model.allows_drop_when_migrate() {
                     Self::drop_table(dialect, &conn, table_name).await;
                     Self::create_table(dialect, &conn, model).await;
@@ -298,13 +295,19 @@ impl SQLMigration {
     }
 
     fn normalized_model_indices(indices: &Vec<ModelIndex>, dialect: SQLDialect, table_name: &str) -> HashSet<ModelIndex> {
-        indices.iter().map(|index| {
+        let mut results: Vec<ModelIndex> = indices.iter().map(|index| {
             let mut index = index.clone();
             let sql_name_cow = index.sql_name(table_name, dialect);
             let sql_name = sql_name_cow.as_ref().to_owned();
             index.set_name(sql_name);
             index
-        }).collect()
+        }).collect();
+        if dialect == SQLDialect::PostgreSQL {
+            let primary = results.iter().find(|r| r.r#type().is_primary()).unwrap();
+            let unique_for_primary = primary.psql_primary_to_unique(table_name);
+            results.push(unique_for_primary);
+        }
+        results.into_iter().collect()
     }
 
     async fn db_indices(dialect: SQLDialect, conn: &PooledConnection, model: &Model) -> HashSet<ModelIndex> {
