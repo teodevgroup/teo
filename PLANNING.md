@@ -341,7 +341,9 @@
 - Fix Node.js run loop bug **[DONE]**
 
 #### 0.0.54
-- Setup integration tests
+- Setup integration tests: test lib **[DONE]**
+- Setup integration tests: reset database
+- Setup integration tests: docker
 - Fix rust command line arguments **[DONE]**
 - Generate decimal imports in rust entities
 - Cross language error handling for node.js @victorteokw
