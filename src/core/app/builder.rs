@@ -30,7 +30,7 @@ use crate::core::pipeline::items::function::perform::{PerformArgument, PerformIt
 use crate::core::pipeline::items::function::transform::{TransformResult, TransformArgument, TransformItem};
 use crate::core::pipeline::items::function::validate::{ValidateArgument, ValidateItem, ValidateResult};
 use crate::core::property::Property;
-use crate::core::r#enum::{Enum, EnumChoice};
+use crate::core::r#enum::{Enum, EnumVariant};
 use crate::core::relation::Relation;
 use crate::parser::ast::r#type::Arity;
 use crate::parser::parser::Parser;
@@ -340,6 +340,7 @@ impl AppBuilder {
                 provider: client.provider.unwrap(),
                 dest: client.dest.clone().unwrap(),
                 package: client.package.unwrap(),
+                package_name: client.package_name.clone(),
                 host: client.host.clone().unwrap(),
                 object_name: client.object_name.clone(),
                 git_commit: client.git_commit,
@@ -354,7 +355,7 @@ impl AppBuilder {
                 None,
                 None,
                 ast_enum.choices.iter().map(|ast_choice| {
-                    EnumChoice::new(ast_choice.identifier.name.clone(), None, None)
+                    EnumVariant::new(ast_choice.identifier.name.clone(), None, None)
                 }).collect()
             );
             self.graph_builder.r#enum(enum_def);

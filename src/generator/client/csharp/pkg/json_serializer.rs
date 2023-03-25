@@ -7,7 +7,7 @@ fn enum_read_cases(e: &Enum) -> String {
     let mut retval = "".to_owned();
     let spaces_string = " ".repeat(16);
     let spaces = &spaces_string;
-    for c in e.choices() {
+    for c in e.variants() {
         let c_value = c.name();
         let pascal = c_value.to_pascal_case();
         retval += format!(r#"{spaces}case "{c_value}": {{"#).as_str();
@@ -23,7 +23,7 @@ fn enum_write_cases(e: &Enum) -> String {
     let mut retval = "".to_owned();
     let spaces_string = " ".repeat(16);
     let spaces = &spaces_string;
-    for c in e.choices() {
+    for c in e.variants() {
         let c_value = c.name();
         let pascal = c_value.to_pascal_case();
         retval += format!(r#"{spaces}case {enum_name}.{pascal}: {{"#).as_str();
