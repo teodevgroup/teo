@@ -1,11 +1,11 @@
 #[derive(Debug, Clone)]
-pub struct EnumChoice {
-    pub(self) name: String,
-    pub(self) localized_name: Option<String>,
-    pub(self) description: Option<String>,
+pub struct EnumVariant {
+    pub(crate) name: String,
+    pub(crate) localized_name: Option<String>,
+    pub(crate) description: Option<String>,
 }
 
-impl EnumChoice {
+impl EnumVariant {
 
     pub(crate) fn new(name: String, localized_name: Option<String>, description: Option<String>) -> Self {
         Self { name, localized_name, description }
@@ -34,22 +34,22 @@ impl EnumChoice {
 
 #[derive(Debug, Clone)]
 pub struct Enum {
-    pub(self) name: String,
-    pub(self) localized_name: Option<String>,
-    pub(self) description: Option<String>,
-    pub(self) choices: Vec<EnumChoice>,
-    pub(self) values: Vec<String>,
+    pub(crate) name: String,
+    pub(crate) localized_name: Option<String>,
+    pub(crate) description: Option<String>,
+    pub(crate) variants: Vec<EnumVariant>,
+    pub(crate) values: Vec<String>,
 }
 
 impl Enum {
 
-    pub(crate) fn new(name: String, localized_name: Option<String>, description: Option<String>, choices: Vec<EnumChoice>) -> Self {
+    pub(crate) fn new(name: String, localized_name: Option<String>, description: Option<String>, choices: Vec<EnumVariant>) -> Self {
         let values = choices.iter().map(|c| c.name.clone()).collect();
         Self {
             name,
             localized_name,
             description,
-            choices,
+            variants: choices,
             values,
         }
     }
@@ -74,8 +74,8 @@ impl Enum {
         }
     }
 
-    pub(crate) fn choices(&self) -> &Vec<EnumChoice> {
-        &self.choices
+    pub(crate) fn variants(&self) -> &Vec<EnumVariant> {
+        &self.variants
     }
 
     pub(crate) fn values(&self) -> &Vec<String> {

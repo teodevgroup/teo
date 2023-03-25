@@ -398,7 +398,7 @@ impl Display for {model_name} {{
             b.empty_line();
             b.line("#[derive(Eq, PartialEq, Copy, Clone, Debug)]");
             b.block(format!("pub enum {} {{", enum_name), |b| {
-                for choice in e.choices() {
+                for choice in e.variants() {
                     b.line(format!("{},", choice.name()));
                 }
             }, "}");
@@ -406,7 +406,7 @@ impl Display for {model_name} {{
             b.block(format!("impl ToString for {enum_name} {{"), |b| {
                 b.block("fn to_string(&self) -> String {", |b| {
                     b.block("match self {", |b| {
-                        for choice in e.choices() {
+                        for choice in e.variants() {
                             b.line(format!("{enum_name}::{} => \"{}\".to_string(),", choice.name(), choice.name()));
                         }
                     }, "}");
@@ -418,7 +418,7 @@ impl Display for {model_name} {{
                 b.empty_line();
                 b.block("fn from_str(s: &str) -> Result<Self, Self::Err> {", |b| {
                     b.block("match s {", |b| {
-                        for choice in e.choices() {
+                        for choice in e.variants() {
                             b.line(format!("\"{}\" => Ok({enum_name}::{}),", choice.name(), choice.name()));
                         }
                         b.line(format!("_ => Err(Error::custom_error(format!(\"Cannot convert value '{{}}' to `{enum_name}'.\", s))),"));
