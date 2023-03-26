@@ -807,3 +807,51 @@ public class EnumNullableFilter<T: Encodable>: Encodable {
         self.not = not
     }
 }
+
+public class ArrayFilter<T: Encodable>: Encodable {
+    public let equals: [T]?
+    public let has: T?
+    public let hasSome: [T]?
+    public let hasEvery: [T]?
+    public let isEmpty: Bool?
+    public let length: Int?
+    public init(
+        equals: [T]? = nil,
+        has: T? = nil,
+        hasSome: [T]? = nil,
+        hasEvery: [T]? = nil,
+        isEmpty: Bool? = nil,
+        length: Int? = nil
+    ) {
+        self.equals = equals
+        self.has = has
+        self.hasSome = hasSome
+        self.hasEvery = hasEvery
+        self.isEmpty = isEmpty
+        self.length = length
+    }
+}
+
+public class ArrayNullableFilter<T: Encodable>: Encodable {
+    public let equals: NullOr<[T]>?
+    public let has: T?
+    public let hasSome: [T]?
+    public let hasEvery: [T]?
+    public let isEmpty: Bool?
+    public let length: Int?
+    public init(
+        equals: NullOr<[T]>? = nil,
+        has: T? = nil,
+        hasSome: [T]? = nil,
+        hasEvery: [T]? = nil,
+        isEmpty: Bool? = nil,
+        length: Int? = nil
+    ) {
+        self.equals = equals
+        self.has = has
+        self.hasSome = hasSome
+        self.hasEvery = hasEvery
+        self.isEmpty = isEmpty
+        self.length = length
+    }
+}
