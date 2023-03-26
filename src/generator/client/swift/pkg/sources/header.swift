@@ -225,6 +225,7 @@ public class BoolNullableFilter: Encodable, ExpressibleByBooleanLiteral {
         self.equals = NullOr(booleanLiteral: value)
         self.not = nil
     }
+    public static var null = BoolNullableFilter(equals: .null)
 }
 
 public class IntFilter<T>: Encodable, ExpressibleByIntegerLiteral where T: SignedInteger & Encodable & ExpressibleByIntegerLiteral {
@@ -853,5 +854,100 @@ public class ArrayNullableFilter<T: Encodable>: Encodable {
         self.hasEvery = hasEvery
         self.isEmpty = isEmpty
         self.length = length
+    }
+}
+
+public class IntFieldUpdateOperationsInput<T>: Encodable, ExpressibleByIntegerLiteral where T: SignedInteger & Encodable & ExpressibleByIntegerLiteral {
+    public typealias IntegerLiteralType = T.IntegerLiteralType
+    public let set: T?
+    public let increment: T?
+    public let decrement: T?
+    public let multiply: T?
+    public let divide: T?
+    public init(
+        set: T? = nil,
+        increment: T? = nil,
+        decrement: T? = nil,
+        multiply: T? = nil,
+        divide: T? = nil
+    ) {
+        self.set = set
+        self.increment = increment
+        self.decrement = decrement
+        self.multiply = multiply
+        self.divide = divide
+    }
+    public required init(integerLiteral value: T.IntegerLiteralType) {
+        self.set = T(integerLiteral: value)
+        self.increment = nil
+        self.decrement = nil
+        self.multiply = nil
+        self.divide = nil
+    }
+}
+
+public class FloatFieldUpdateOperationsInput<T>: Encodable, ExpressibleByIntegerLiteral where T: FloatingPoint & Encodable & ExpressibleByIntegerLiteral & ExpressibleByFloatLiteral {
+    public typealias IntegerLiteralType = T.IntegerLiteralType
+    public typealias FloatLiteralType = T.FloatLiteralType
+    public let set: T?
+    public let increment: T?
+    public let decrement: T?
+    public let multiply: T?
+    public let divide: T?
+    public init(
+        set: T? = nil,
+        increment: T? = nil,
+        decrement: T? = nil,
+        multiply: T? = nil,
+        divide: T? = nil
+    ) {
+        self.set = set
+        self.increment = increment
+        self.decrement = decrement
+        self.multiply = multiply
+        self.divide = divide
+    }
+    public required init(integerLiteral value: T.IntegerLiteralType) {
+        self.set = T(integerLiteral: value)
+        self.increment = nil
+        self.decrement = nil
+        self.multiply = nil
+        self.divide = nil
+    }
+    public required init(floatLiteral value: T.FloatLiteralType) {
+        self.set = T(floatLiteral: value)
+        self.increment = nil
+        self.decrement = nil
+        self.multiply = nil
+        self.divide = nil
+    }
+}
+
+public class DecimalFieldUpdateOperationsInput: Encodable, ExpressibleByStringLiteral {
+    public typealias StringLiteralType = String
+    public let set: Decimal?
+    public let increment: Decimal?
+    public let decrement: Decimal?
+    public let multiply: Decimal?
+    public let divide: Decimal?
+    public init(
+        set: Decimal? = nil,
+        increment: Decimal? = nil,
+        decrement: Decimal? = nil,
+        multiply: Decimal? = nil,
+        divide: Decimal? = nil
+    ) {
+        self.set = set
+        self.increment = increment
+        self.decrement = decrement
+        self.multiply = multiply
+        self.divide = divide
+    }
+    public required init(stringLiteral value: String) {
+        self.set = Decimal(string: value)
+        self.increment = nil
+        self.decrement = nil
+        self.multiply = nil
+        self.divide = nil
     }
 }
