@@ -12,7 +12,7 @@ public struct Response<Meta, Data> where Meta: Decodable, Data: Decodable {
 
 public struct PagingInfo {
     public let count: Int
-    public let nunmberOfPages: Int?
+    public let numberOfPages: Int?
 }
 
 public struct TokenInfo {
@@ -463,7 +463,7 @@ public class DecimalNullableFilter: Encodable, ExpressibleByStringLiteral {
     public let lte: Decimal?
     public let gt: Decimal?
     public let gte: Decimal?
-    public let not: DecimalFilter?
+    public let not: DecimalNullableFilter?
     public init(
         equals: NullOr<Decimal>? = nil,
         `in`: [Decimal]? = nil,
@@ -472,7 +472,7 @@ public class DecimalNullableFilter: Encodable, ExpressibleByStringLiteral {
         lte: Decimal? = nil,
         gt: Decimal? = nil,
         gte: Decimal? = nil,
-        not: DecimalFilter? = nil
+        not: DecimalNullableFilter? = nil
     ) {
         self.equals = equals
         self.in = `in`
@@ -485,6 +485,283 @@ public class DecimalNullableFilter: Encodable, ExpressibleByStringLiteral {
     }
     public required init(stringLiteral value: String) {
         self.equals = .nonnull(Decimal(string: value)!)
+        self.in = nil
+        self.notIn = nil
+        self.lt = nil
+        self.lte = nil
+        self.gt = nil
+        self.gte = nil
+        self.not = nil
+    }
+}
+
+public class StringFilter: Encodable, ExpressibleByStringLiteral {
+    public typealias StringLiteralType = String
+    public let equals: String?
+    public let `in`: [String]?
+    public let notIn: [String]?
+    public let lt: String?
+    public let lte: String?
+    public let gt: String?
+    public let gte: String?
+    public let contains: String?
+    public let startsWith: String?
+    public let endsWith: String?
+    public let matches: String?
+    public let not: StringFilter?
+    public init(
+        equals: String? = nil,
+        `in`: [String]? = nil,
+        notIn: [String]? = nil,
+        lt: String? = nil,
+        lte: String? = nil,
+        gt: String? = nil,
+        gte: String? = nil,
+        contains: String? = nil,
+        startsWith: String? = nil,
+        endsWith: String? = nil,
+        matches: String? = nil,
+        not: StringFilter? = nil
+    ) {
+        self.equals = equals
+        self.in = `in`
+        self.notIn = notIn
+        self.lt = lt
+        self.lte = lte
+        self.gt = gt
+        self.gte = gte
+        self.contains = contains
+        self.startsWith = startsWith
+        self.endsWith = endsWith
+        self.matches = matches
+        self.not = not
+    }
+    public required init(stringLiteral value: String) {
+        self.equals = value
+        self.in = nil
+        self.notIn = nil
+        self.lt = nil
+        self.lte = nil
+        self.gt = nil
+        self.gte = nil
+        self.contains = nil
+        self.startsWith = nil
+        self.endsWith = nil
+        self.matches = nil
+        self.not = nil
+    }
+}
+
+public class StringNullableFilter: Encodable, ExpressibleByStringLiteral {
+    public typealias StringLiteralType = String
+    public let equals: NullOr<String>?
+    public let `in`: [String?]?
+    public let notIn: [String?]?
+    public let lt: String?
+    public let lte: String?
+    public let gt: String?
+    public let gte: String?
+    public let contains: String?
+    public let startsWith: String?
+    public let endsWith: String?
+    public let matches: String?
+    public let not: StringNullableFilter?
+    public init(
+        equals: NullOr<String>? = nil,
+        `in`: [String?]? = nil,
+        notIn: [String?]? = nil,
+        lt: String? = nil,
+        lte: String? = nil,
+        gt: String? = nil,
+        gte: String? = nil,
+        contains: String? = nil,
+        startsWith: String? = nil,
+        endsWith: String? = nil,
+        matches: String? = nil,
+        not: StringNullableFilter? = nil
+    ) {
+        self.equals = equals
+        self.in = `in`
+        self.notIn = notIn
+        self.lt = lt
+        self.lte = lte
+        self.gt = gt
+        self.gte = gte
+        self.contains = contains
+        self.startsWith = startsWith
+        self.endsWith = endsWith
+        self.matches = matches
+        self.not = not
+    }
+    public required init(stringLiteral value: String) {
+        self.equals = .nonnull(value)
+        self.in = nil
+        self.notIn = nil
+        self.lt = nil
+        self.lte = nil
+        self.gt = nil
+        self.gte = nil
+        self.contains = nil
+        self.startsWith = nil
+        self.endsWith = nil
+        self.matches = nil
+        self.not = nil
+    }
+}
+
+public class DateFilter: Encodable, ExpressibleByStringLiteral {
+    public typealias StringLiteralType = String
+    public let equals: String?
+    public let `in`: [String]?
+    public let notIn: [String]?
+    public let lt: String?
+    public let lte: String?
+    public let gt: String?
+    public let gte: String?
+    public let not: DateFilter?
+    public init(
+        equals: String? = nil,
+        `in`: [String]? = nil,
+        notIn: [String]? = nil,
+        lt: String? = nil,
+        lte: String? = nil,
+        gt: String? = nil,
+        gte: String? = nil,
+        not: DateFilter? = nil
+    ) {
+        self.equals = equals
+        self.in = `in`
+        self.notIn = notIn
+        self.lt = lt
+        self.lte = lte
+        self.gt = gt
+        self.gte = gte
+        self.not = not
+    }
+    public required init(stringLiteral value: String) {
+        self.equals = value
+        self.in = nil
+        self.notIn = nil
+        self.lt = nil
+        self.lte = nil
+        self.gt = nil
+        self.gte = nil
+        self.not = nil
+    }
+}
+
+public class DateNullableFilter: Encodable, ExpressibleByStringLiteral {
+    public typealias StringLiteralType = String
+    public let equals: NullOr<String>?
+    public let `in`: [String?]?
+    public let notIn: [String?]?
+    public let lt: String?
+    public let lte: String?
+    public let gt: String?
+    public let gte: String?
+    public let not: DateNullableFilter?
+    public init(
+        equals: NullOr<String>? = nil,
+        `in`: [String?]? = nil,
+        notIn: [String?]? = nil,
+        lt: String? = nil,
+        lte: String? = nil,
+        gt: String? = nil,
+        gte: String? = nil,
+        not: DateNullableFilter? = nil
+    ) {
+        self.equals = equals
+        self.in = `in`
+        self.notIn = notIn
+        self.lt = lt
+        self.lte = lte
+        self.gt = gt
+        self.gte = gte
+        self.not = not
+    }
+    public required init(stringLiteral value: String) {
+        self.equals = .nonnull(value)
+        self.in = nil
+        self.notIn = nil
+        self.lt = nil
+        self.lte = nil
+        self.gt = nil
+        self.gte = nil
+        self.not = nil
+    }
+}
+
+public class DateTimeFilter: Encodable, ExpressibleByStringLiteral {
+    public let equals: Date?
+    public let `in`: [Date]?
+    public let notIn: [Date]?
+    public let lt: Date?
+    public let lte: Date?
+    public let gt: Date?
+    public let gte: Date?
+    public let not: DateTimeFilter?
+    public init(
+        equals: Date? = nil,
+        `in`: [Date]? = nil,
+        notIn: [Date]? = nil,
+        lt: Date? = nil,
+        lte: Date? = nil,
+        gt: Date? = nil,
+        gte: Date? = nil,
+        not: DateTimeFilter? = nil
+    ) {
+        self.equals = equals
+        self.in = `in`
+        self.notIn = notIn
+        self.lt = lt
+        self.lte = lte
+        self.gt = gt
+        self.gte = gte
+        self.not = not
+    }
+    public required init(stringLiteral value: String) {
+        self.equals = try! Date(value, strategy: .iso8601)
+        self.in = nil
+        self.notIn = nil
+        self.lt = nil
+        self.lte = nil
+        self.gt = nil
+        self.gte = nil
+        self.not = nil
+    }
+}
+
+public class DateTimeNullableFilter: Encodable, ExpressibleByStringLiteral {
+    public typealias StringLiteralType = String
+    public let equals: NullOr<Date>?
+    public let `in`: [Date?]?
+    public let notIn: [Date?]?
+    public let lt: Date?
+    public let lte: Date?
+    public let gt: Date?
+    public let gte: Date?
+    public let not: DateTimeNullableFilter?
+    public init(
+        equals: NullOr<Date>? = nil,
+        `in`: [Date?]? = nil,
+        notIn: [Date?]? = nil,
+        lt: Date? = nil,
+        lte: Date? = nil,
+        gt: Date? = nil,
+        gte: Date? = nil,
+        not: DateTimeNullableFilter? = nil
+    ) {
+        self.equals = equals
+        self.in = `in`
+        self.notIn = notIn
+        self.lt = lt
+        self.lte = lte
+        self.gt = gt
+        self.gte = gte
+        self.not = not
+    }
+    public required init(stringLiteral value: String) {
+        self.equals = .nonnull(try! Date(value, strategy: .iso8601))
         self.in = nil
         self.notIn = nil
         self.lt = nil
