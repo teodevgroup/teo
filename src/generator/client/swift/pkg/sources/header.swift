@@ -412,3 +412,85 @@ public class FloatNullableFilter<T>: Encodable, ExpressibleByIntegerLiteral wher
         self.not = nil
     }
 }
+
+public class DecimalFilter: Encodable, ExpressibleByStringLiteral {
+    public typealias StringLiteralType = String
+    public let equals: Decimal?
+    public let `in`: [Decimal]?
+    public let notIn: [Decimal]?
+    public let lt: Decimal?
+    public let lte: Decimal?
+    public let gt: Decimal?
+    public let gte: Decimal?
+    public let not: DecimalFilter?
+    public init(
+        equals: Decimal? = nil,
+        `in`: [Decimal]? = nil,
+        notIn: [Decimal]? = nil,
+        lt: Decimal? = nil,
+        lte: Decimal? = nil,
+        gt: Decimal? = nil,
+        gte: Decimal? = nil,
+        not: DecimalFilter? = nil
+    ) {
+        self.equals = equals
+        self.in = `in`
+        self.notIn = notIn
+        self.lt = lt
+        self.lte = lte
+        self.gt = gt
+        self.gte = gte
+        self.not = not
+    }
+    public required init(stringLiteral value: String) {
+        self.equals = Decimal(string: value)!
+        self.in = nil
+        self.notIn = nil
+        self.lt = nil
+        self.lte = nil
+        self.gt = nil
+        self.gte = nil
+        self.not = nil
+    }
+}
+
+public class DecimalNullableFilter: Encodable, ExpressibleByStringLiteral {
+    public typealias StringLiteralType = String
+    public let equals: NullOr<Decimal>?
+    public let `in`: [Decimal?]?
+    public let notIn: [Decimal?]?
+    public let lt: Decimal?
+    public let lte: Decimal?
+    public let gt: Decimal?
+    public let gte: Decimal?
+    public let not: DecimalFilter?
+    public init(
+        equals: NullOr<Decimal>? = nil,
+        `in`: [Decimal]? = nil,
+        notIn: [Decimal]? = nil,
+        lt: Decimal? = nil,
+        lte: Decimal? = nil,
+        gt: Decimal? = nil,
+        gte: Decimal? = nil,
+        not: DecimalFilter? = nil
+    ) {
+        self.equals = equals
+        self.in = `in`
+        self.notIn = notIn
+        self.lt = lt
+        self.lte = lte
+        self.gt = gt
+        self.gte = gte
+        self.not = not
+    }
+    public required init(stringLiteral value: String) {
+        self.equals = .nonnull(Decimal(string: value)!)
+        self.in = nil
+        self.notIn = nil
+        self.lt = nil
+        self.lte = nil
+        self.gt = nil
+        self.gte = nil
+        self.not = nil
+    }
+}
