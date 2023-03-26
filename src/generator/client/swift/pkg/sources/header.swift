@@ -771,3 +771,39 @@ public class DateTimeNullableFilter: Encodable, ExpressibleByStringLiteral {
         self.not = nil
     }
 }
+
+public class EnumFilter<T: Encodable>: Encodable {
+    public let equals: T?
+    public let `in`: [T]?
+    public let notIn: [T]?
+    public let not: EnumFilter<T>?
+    public init(
+        equals: T? = nil,
+        `in`: [T]? = nil,
+        notIn: [T]? = nil,
+        not: EnumFilter<T>? = nil
+    ) {
+        self.equals = equals
+        self.in = `in`
+        self.notIn = notIn
+        self.not = not
+    }
+}
+
+public class EnumNullableFilter<T: Encodable>: Encodable {
+    public let equals: NullOr<T>?
+    public let `in`: [T?]?
+    public let notIn: [T?]?
+    public let not: EnumNullableFilter<T>?
+    public init(
+        equals: NullOr<T>? = nil,
+        `in`: [T]? = nil,
+        notIn: [T]? = nil,
+        not: EnumNullableFilter<T>? = nil
+    ) {
+        self.equals = equals
+        self.in = `in`
+        self.notIn = notIn
+        self.not = not
+    }
+}
