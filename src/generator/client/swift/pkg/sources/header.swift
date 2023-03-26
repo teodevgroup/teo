@@ -91,6 +91,13 @@ extension NullOr: ExpressibleByStringLiteral where T: ExpressibleByStringLiteral
     }
 }
 
+extension NullOr: ExpressibleByBooleanLiteral where T: ExpressibleByBooleanLiteral {
+    public typealias BooleanLiteralType = T.BooleanLiteralType
+    public init(booleanLiteral value: T.BooleanLiteralType) {
+        self = .nonnull(T(booleanLiteral: value))
+    }
+}
+
 public class ObjectIdFilter: Encodable, ExpressibleByStringLiteral {
     public typealias StringLiteralType = String
     public let equals: String?
@@ -141,7 +148,7 @@ public class ObjectIdNullableFilter: Encodable, ExpressibleByStringLiteral {
     public let lte: String?
     public let gt: String?
     public let gte: String?
-    public let not: ObjectIdNullableFilter?
+    public let not: NullOr<ObjectIdNullableFilter>?
     public init(
         equals: NullOr<String>? = nil,
         `in`: [String?]? = nil,
@@ -150,7 +157,7 @@ public class ObjectIdNullableFilter: Encodable, ExpressibleByStringLiteral {
         lte: String? = nil,
         gt: String? = nil,
         gte: String? = nil,
-        not: ObjectIdNullableFilter? = nil
+        not: NullOr<ObjectIdNullableFilter>? = nil
     ) {
         self.equals = equals
         self.in = `in`
@@ -172,4 +179,36 @@ public class ObjectIdNullableFilter: Encodable, ExpressibleByStringLiteral {
         self.not = nil
     }
     public static var null = ObjectIdNullableFilter(equals: .null)
+}
+
+public class BoolFilter: Encodable, ExpressibleByBooleanLiteral {
+    public let equals: Bool?
+    public let not: BoolFilter?
+    public init(
+        equals: Bool? = nil,
+        not: BoolFilter? = nil
+    ) {
+        self.equals = equals
+        self.not = not
+    }
+    public required init(booleanLiteral value: Bool) {
+        self.equals = value
+        self.not = nil
+    }
+}
+
+public class BoolNullableFilter: Encodable, ExpressibleByBooleanLiteral {
+    public let equals: NullOr<Bool>?
+    public let not: BoolNullableFilter?
+    public init(
+        equals: NullOr<Bool>? = nil,
+        not: BoolNullableFilter? = nil
+    ) {
+        self.equals = equals
+        self.not = not
+    }
+    public required init(booleanLiteral value: Bool) {
+        self.equals = NullOr(booleanLiteral: value)
+        self.not = nil
+    }
 }
