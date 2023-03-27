@@ -190,16 +190,16 @@ mod test {
     }
 
     #[test]
-    fn date_time_array() {
+    fn int64_array() {
         let res = req(PORT, "create", "Support", json!({
             "create": {
-                "dateTimeArray": ["2003-04-17T08:12:34.567Z", "1997-10-19T08:12:34.567Z"],
+                "int64Array": [1, 2, 3],
             },
         }));
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
-                "dateTimeArray": [date_time_value("2003-04-17T08:12:34.567Z"), date_time_value("1997-10-19T08:12:34.567Z")],
+                "int64Array": [1, 2, 3],
             }
         }))
     }
@@ -265,6 +265,36 @@ mod test {
     }
 
     #[test]
+    fn date_array() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "dateArray": ["2005-12-25", "2023-03-27"],
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "dateArray": ["2005-12-25", "2023-03-27"],
+            }
+        }))
+    }
+
+    #[test]
+    fn date_time_array() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "dateTimeArray": ["2003-04-17T08:12:34.567Z", "1997-10-19T08:12:34.567Z"],
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "dateTimeArray": [date_time_value("2003-04-17T08:12:34.567Z"), date_time_value("1997-10-19T08:12:34.567Z")],
+            }
+        }))
+    }
+
+    #[test]
     fn decimal_array() {
         let res = req(PORT, "create", "Support", json!({
             "create": {
@@ -290,21 +320,6 @@ mod test {
             "data": {
                 "id": ignore,
                 "sexesArray": ["FEMALE", "MALE"],
-            }
-        }))
-    }
-
-    #[test]
-    fn date_array() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "dateArray": ["2005-12-25", "2023-03-27"],
-            },
-        }));
-        assert_json!(res, matcher!({
-            "data": {
-                "id": ignore,
-                "dateArray": ["2005-12-25", "2023-03-27"],
             }
         }))
     }
