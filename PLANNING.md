@@ -370,6 +370,7 @@
 - Migration dry run
 
 #### 0.0.56
+- Python server
 - Relation onUpdate
 
 #### 0.0.57
@@ -424,27 +425,21 @@
 - Correct count with cursor
 
 #### 0.3.0
-- Swift package
-
-#### 0.4.0
 - Kotlin package
 
-#### 0.5.0
+#### 0.4.0
 - Dart client
 
-#### 0.5.1
+#### 0.4.1
 - `@canAccess`
 
-#### 0.6.0
+#### 0.5.0
 - Plugins
 
-#### 0.7.0
-- Python server
-
-#### 0.8.0
+#### 0.6.0
 - Java server
 
-#### 0.9.0
+#### 0.7.0
 - Go server
 
 #### 1.0.0

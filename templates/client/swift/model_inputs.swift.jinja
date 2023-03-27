@@ -13,4 +13,18 @@ public class {{ model.name }}Select: Encodable {
 {%- endfor %}
     }
 }
+public class {{ model.name }}Include: Encodable {
+{%- for include in model.includes %}
+    public let {{ include.relation_name }}: {{ include.model_name }}{%- if include.many -%}FindMany{%- endif -%}Args?
+{% endfor %}
+    public init(
+{%- for include in model.includes %}
+        {{ include.relation_name }}: {{ include.model_name }}{%- if include.many -%}FindMany{%- endif -%}Args? = nil{% if !loop.last %},{% endif %}
+{% endfor %}
+    ) {
+{%- for include in model.includes %}
+        self.{{ include.relation_name }} = {{ include.relation_name }}
+{% endfor %}
+    }
+}
 {%- endfor %}
