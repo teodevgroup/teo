@@ -56,6 +56,16 @@ struct AnyEncodable: Encodable {
     }
 }
 
+public struct Null: Encodable {
+    fileprivate init() { }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encodeNil()
+    }
+}
+
+public let null = Null()
+
 public enum NullOr<T>: Encodable where T: Encodable {
     case null
     case nonnull(T)
@@ -857,97 +867,50 @@ public class ArrayNullableFilter<T: Encodable>: Encodable {
     }
 }
 
-public class IntFieldUpdateOperationsInput<T>: Encodable, ExpressibleByIntegerLiteral where T: SignedInteger & Encodable & ExpressibleByIntegerLiteral {
-    public typealias IntegerLiteralType = T.IntegerLiteralType
-    public let set: T?
-    public let increment: T?
-    public let decrement: T?
-    public let multiply: T?
-    public let divide: T?
-    public init(
-        set: T? = nil,
-        increment: T? = nil,
-        decrement: T? = nil,
-        multiply: T? = nil,
-        divide: T? = nil
-    ) {
-        self.set = set
-        self.increment = increment
-        self.decrement = decrement
-        self.multiply = multiply
-        self.divide = divide
+public enum NumberFieldUpdateOperation<T: Encodable>: Encodable {
+    case set(T)
+    case increment(T)
+    case decrement(T)
+    case multiply(T)
+    case divide(T)
+    enum CodingKeys: CodingKey {
+        case set
+        case increment
+        case decrement
+        case multiply
+        case divide
     }
-    public required init(integerLiteral value: T.IntegerLiteralType) {
-        self.set = T(integerLiteral: value)
-        self.increment = nil
-        self.decrement = nil
-        self.multiply = nil
-        self.divide = nil
-    }
-}
-
-public class FloatFieldUpdateOperationsInput<T>: Encodable, ExpressibleByIntegerLiteral where T: FloatingPoint & Encodable & ExpressibleByIntegerLiteral & ExpressibleByFloatLiteral {
-    public typealias IntegerLiteralType = T.IntegerLiteralType
-    public typealias FloatLiteralType = T.FloatLiteralType
-    public let set: T?
-    public let increment: T?
-    public let decrement: T?
-    public let multiply: T?
-    public let divide: T?
-    public init(
-        set: T? = nil,
-        increment: T? = nil,
-        decrement: T? = nil,
-        multiply: T? = nil,
-        divide: T? = nil
-    ) {
-        self.set = set
-        self.increment = increment
-        self.decrement = decrement
-        self.multiply = multiply
-        self.divide = divide
-    }
-    public required init(integerLiteral value: T.IntegerLiteralType) {
-        self.set = T(integerLiteral: value)
-        self.increment = nil
-        self.decrement = nil
-        self.multiply = nil
-        self.divide = nil
-    }
-    public required init(floatLiteral value: T.FloatLiteralType) {
-        self.set = T(floatLiteral: value)
-        self.increment = nil
-        self.decrement = nil
-        self.multiply = nil
-        self.divide = nil
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: NumberFieldUpdateOperation<T>.CodingKeys.self)
+        switch self {
+        case .set(let a0):
+            try container.encode(a0, forKey: .set)
+        case .increment(let a0):
+            try container.encode(a0, forKey: .increment)
+        case .decrement(let a0):
+            try container.encode(a0, forKey: .decrement)
+        case .multiply(let a0):
+            try container.encode(a0, forKey: .multiply)
+        case .divide(let a0):
+            try container.encode(a0, forKey: .divide)
+        }
     }
 }
 
-public class DecimalFieldUpdateOperationsInput: Encodable, ExpressibleByStringLiteral {
-    public typealias StringLiteralType = String
-    public let set: Decimal?
-    public let increment: Decimal?
-    public let decrement: Decimal?
-    public let multiply: Decimal?
-    public let divide: Decimal?
-    public init(
-        set: Decimal? = nil,
-        increment: Decimal? = nil,
-        decrement: Decimal? = nil,
-        multiply: Decimal? = nil,
-        divide: Decimal? = nil
-    ) {
-        self.set = set
-        self.increment = increment
-        self.decrement = decrement
-        self.multiply = multiply
-        self.divide = divide
+public enum ArrayFieldUpdateOperation<T: Encodable>: Encodable {
+    case set([T])
+    case push(T)
+    enum CodingKeys: CodingKey {
+        case set
+        case push
     }
-    public required init(stringLiteral value: String) {
-        self.set = Decimal(string: value)
-        self.increment = nil
-        self.decrement = nil
-        self.multiply = nil
-        self.divide = nil
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: ArrayFieldUpdateOperation<T>.CodingKeys.self)
+        switch self {
+        case .set(let a0):
+            try container.encode(a0, forKey: .set)
+        case .push(let a0):
+            try container.encode(a0, forKey: .push)
+        }
     }
 }

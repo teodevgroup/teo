@@ -1,3 +1,6 @@
+pub(crate) mod pkg;
+pub(crate) mod types;
+
 use async_trait::async_trait;
 use crate::core::app::conf::ClientGeneratorConf;
 use crate::generator::client::swift::pkg::gitignore::generate_gitignore;
@@ -7,9 +10,6 @@ use crate::core::graph::Graph;
 use crate::generator::client::ClientGenerator;
 use crate::generator::client::swift::pkg::sources::teo::generate_teo_swift;
 use crate::generator::lib::generator::Generator;
-
-
-pub(crate) mod pkg;
 
 pub(crate) struct SwiftClientGenerator { }
 

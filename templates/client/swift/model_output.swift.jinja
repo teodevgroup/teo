@@ -1,0 +1,7 @@
+{% for model in models %}
+public class {{ model.name }}: Decodable {
+{% for field in model.fields %}
+    public let {{ field.name }}: {{ field.field_type }}?
+{% endfor %}
+}
+{% endfor %}
