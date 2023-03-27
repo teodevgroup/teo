@@ -2,7 +2,8 @@ use inflector::Inflector;
 use askama::Template;
 use crate::core::app::conf::ClientGeneratorConf;
 use crate::core::r#enum::Enum;
-use crate::generator::client::swift::types::{field_type_to_swift_output_type, field_type_to_swift_vec};
+use crate::generator::client::swift::types::{field_type_to_swift_output_type, field_type_to_swift_vec, swift_action_result};
+use crate::generator::lib::shared::delegate::{Delegate, delegates};
 use crate::generator::lib::shared::model_output::{model_outputs_with_relations, ModelOutput};
 use crate::prelude::Graph;
 
@@ -39,7 +40,7 @@ fn generate_enums(graph: &Graph) -> String {
 }
 
 #[derive(Template)]
-#[template(path = "client/swift/model_output.swift.jinja")]
+#[template(path = "client/swift/model_outputs.swift.jinja")]
 pub(crate) struct ModelOutputsTemplate<'a> {
     pub(crate) models: Vec<ModelOutput<'a>>,
 }
@@ -49,10 +50,22 @@ fn generate_model_output_types(graph: &Graph) -> String {
     }.render().unwrap()
 }
 
+#[derive(Template)]
+#[template(path = "client/swift/delegates.swift.jinja")]
+pub(crate) struct DelegatesTemplate<'a> {
+    pub(crate) delegates: Vec<Delegate<'a>>,
+}
+fn generate_delegate_classes(graph: &Graph) -> String {
+    DelegatesTemplate {
+        delegates: delegates(graph, swift_action_result),
+    }.render().unwrap()
+}
+
 pub(crate) fn generate_teo_swift(graph: &Graph, client: &ClientGeneratorConf) -> String {
     let header = include_str!("header.swift");
     let enums = generate_enums(graph);
     let output_types = generate_model_output_types(graph);
+    let delegate_classes = generate_delegate_classes(graph);
     let footer = generate_footer(graph, client);
-    format!("{header}\n{enums}\n{output_types}\n{footer}")
+    format!("{header}\n{enums}\n{output_types}\n{delegate_classes}\n{footer}")
 }
