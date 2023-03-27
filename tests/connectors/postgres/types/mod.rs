@@ -203,4 +203,109 @@ mod test {
             }
         }))
     }
+
+    #[test]
+    fn float32_array() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "float32Array": [1.5, -1.5],
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "float32Array": [1.5, -1.5],
+            }
+        }))
+    }
+
+    #[test]
+    fn float64_array() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "float64Array": [1.2, -1.2],
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "float64Array": [1.2, -1.2],
+            }
+        }))
+    }
+
+    #[test]
+    fn bool_array() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "boolArray": [true, false],
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "boolArray": [true, false],
+            }
+        }))
+    }
+
+    #[test]
+    fn string_array() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "stringArray": ["foo", "bar"],
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "stringArray": ["foo", "bar"],
+            }
+        }))
+    }
+
+    #[test]
+    fn decimal_array() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "decimalArray": ["5.78", "-5.78"],
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "decimalArray": [decimal_value("5.78"),decimal_value("-5.78")],
+            }
+        }))
+    }
+
+    #[test]
+    fn enum_array() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "sexesArray": ["FEMALE", "MALE"],
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "sexesArray": ["FEMALE", "MALE"],
+            }
+        }))
+    }
+
+    #[test]
+    fn date_array() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "dateArray": ["2005-12-25", "2023-03-27"],
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "dateArray": ["2005-12-25", "2023-03-27"],
+            }
+        }))
+    }
 }
