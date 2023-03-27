@@ -13,6 +13,7 @@ use key_path::{KeyPath, path};
 use once_cell::sync::Lazy;
 use serde_json::{Map, Number, Value};
 use crate::lib::matcher::Matcher;
+use whoami::Platform;
 
 fn schema_from_file(file: &str) -> PathBuf {
     let file_path = Path::new(file);
@@ -23,7 +24,11 @@ fn schema_from_file(file: &str) -> PathBuf {
 fn teo_exe_path_buf() -> PathBuf {
     let mut current_dir = env::current_dir().unwrap();
     while current_dir != PathBuf::from("/") {
-        let exe_path = current_dir.join("target/debug/cargo-teo");
+        let exe_path = current_dir.join(if whoami::platform() == Platform::Windows {
+            "target/debug/cargo-teo.exe"
+        } else {
+            "target/debug/cargo-teo"
+        });
         if exe_path.is_file() {
             return exe_path;
         }
