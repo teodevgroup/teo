@@ -1,4 +1,3 @@
-use array_tool::vec::Join;
 use inflector::Inflector;
 use askama::Template;
 use crate::core::app::conf::ClientGeneratorConf;

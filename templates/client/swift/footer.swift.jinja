@@ -2,9 +2,9 @@ public struct {{ object_name|capitalize }} {
     private let token: String?
     fileprivate init(_ token: String? = nil) { self.token = nil }
     public func withToken(token: String?) -> Self { Teo(token) }
-{% for name in model_names %}
+{%- for name in model_names %}
     lazy var {{ name }} = { {{ name|capitalize }}Delegate(token) }()
-{% endfor %}
+{%- endfor %}
 }
 
 public let {{ object_name }} = {{ object_name|capitalize }}()
