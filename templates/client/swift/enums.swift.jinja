@@ -1,7 +1,7 @@
-{% for enum_def in enums %}
+{%- for enum_def in enums %}
 public enum {{ enum_def.name }}: String, Codable {
-{% for variant in enum_def.variants %}
+{%- for variant in enum_def.variants %}
     case {{ variant.name|camelcase }} = "{{ variant.name }}"
-{% endfor %}
+{%- endfor %}
 }
-{% endfor %}
+{%- endfor %}

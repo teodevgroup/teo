@@ -1,11 +1,11 @@
-{% for delegate in delegates %}
+{%- for delegate in delegates %}
 public struct {{ delegate.model_name }}Delegate {
     private let token: String?
     fileprivate init(_ token: String?) { self.token = token }
-{% for action in delegate.actions %}
+{%- for action in delegate.actions %}
     public func {{ action.name }}(args: {{ delegate.model_name }}{{ action.name|capitalize }}Args? = nil) async throws -> {{ action.response }} {
         await request(model: "{{ delegate.model_name }}", action: "{{ action.name }}", input: args ?? {{ delegate.model_name }}{{ action.name|capitalize }}Args())
     }
-{% endfor %}
+{%- endfor %}
 }
-{% endfor %}
+{%- endfor %}

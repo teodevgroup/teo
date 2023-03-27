@@ -1,16 +1,16 @@
-{% for model in models %}
+{%- for model in models %}
 public class {{ model.name }}Select: Encodable {
-{% for field in model.select %}
+{%- for field in model.select %}
     public let {{ field }}: Bool?
-{% endfor %}
+{%- endfor %}
     public init(
-{% for field in model.select %}
+{%- for field in model.select %}
         {{ field }}: Bool? = nil{% if !loop.last %},{% endif %}
-{% endfor %}
+{%- endfor %}
     ) {
-{% for field in model.select %}
+{%- for field in model.select %}
         self.{{ field }} = {{ field }}
-{% endfor %}
+{%- endfor %}
     }
 }
-{% endfor %}
+{%- endfor %}
