@@ -355,6 +355,8 @@
 
 #### 0.0.55
 - Remove URL segment name **[DONE]**
+- Swift client
+- TypeScript client: correct return types for `aggregate` and `groupBy`
 - Setup integration tests: reset database
 - Schema lang: dataset
 - Parser: parse dataset
