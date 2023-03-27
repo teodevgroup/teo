@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use crate::core::action::{Action, AGGREGATE_HANDLER, COUNT_HANDLER, CREATE_HANDLER, CREATE_MANY_HANDLER, DELETE_HANDLER, DELETE_MANY_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, FIND_UNIQUE_HANDLER, GROUP_BY_HANDLER, IDENTITY_HANDLER, SIGN_IN_HANDLER, UPDATE_HANDLER, UPDATE_MANY_HANDLER};
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 
 pub(crate) fn field_type_to_swift_output_type(field_type: &FieldType) -> Cow<str> {
@@ -23,4 +24,24 @@ pub(crate) fn field_type_to_swift_output_type(field_type: &FieldType) -> Cow<str
 
 pub(crate) fn field_type_to_swift_vec(field_type: &str) -> Cow<str> {
     Cow::Owned("[".to_owned() + field_type + "]")
+}
+
+pub(crate) fn swift_action_result(action: Action, model: &str) -> Cow<str> {
+    Cow::Owned(match action.to_u32() {
+        FIND_UNIQUE_HANDLER => format!("Response<{model}>?"),
+        FIND_FIRST_HANDLER => format!("Response<{model}>?"),
+        FIND_MANY_HANDLER => format!("ResponseWithMeta<PagingInfo, [{model}]>"),
+        CREATE_HANDLER => format!("Response<{model}>"),
+        UPDATE_HANDLER => format!("Response<{model}>"),
+        DELETE_HANDLER => format!("Response<{model}>"),
+        CREATE_MANY_HANDLER => format!("ResponseWithMeta<PagingInfo, [{model}]>"),
+        UPDATE_MANY_HANDLER => format!("ResponseWithMeta<PagingInfo, [{model}]>"),
+        DELETE_MANY_HANDLER => format!("ResponseWithMeta<PagingInfo, [{model}]>"),
+        COUNT_HANDLER => format!("Response<Int64>"),
+        AGGREGATE_HANDLER => format!("Response<{model}>"),
+        GROUP_BY_HANDLER => format!("Response<{model}>"),
+        SIGN_IN_HANDLER => format!("ResponseWithMeta<TokenInfo, {model}>"),
+        IDENTITY_HANDLER => format!("Response<{model}>"),
+        _ => unreachable!()
+    })
 }

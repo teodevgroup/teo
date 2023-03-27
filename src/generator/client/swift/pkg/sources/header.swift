@@ -5,7 +5,11 @@ public enum SortOrder: String, Encodable {
     case desc = "desc"
 }
 
-public struct Response<Meta, Data> where Meta: Decodable, Data: Decodable {
+public struct Response<Data>: Decodable where Data: Decodable {
+    public let data: Data
+}
+
+public struct ResponseWithMeta<Meta, Data>: Decodable where Meta: Decodable, Data: Decodable {
     public let meta: Meta
     public let data: Data
 }
