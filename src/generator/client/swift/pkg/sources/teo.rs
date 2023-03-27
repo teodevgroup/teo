@@ -18,7 +18,7 @@ mod filters {
 }
 
 #[derive(Template)]
-#[template(path = "client/swift/footer.swift.jinja")]
+#[template(path = "client/swift/footer.swift.jinja", escape = "none")]
 pub(crate) struct FooterTemplate<'a> {
     pub(crate) object_name: &'a str,
     pub(crate) model_names: Vec<String>
@@ -31,7 +31,7 @@ fn generate_footer(graph: &Graph, client: &ClientGeneratorConf) -> String {
 }
 
 #[derive(Template)]
-#[template(path = "client/swift/enums.swift.jinja")]
+#[template(path = "client/swift/enums.swift.jinja", escape = "none")]
 pub(crate) struct EnumsTemplate {
     pub(crate) enums: Vec<Enum>,
 }
@@ -42,7 +42,7 @@ fn generate_enums(graph: &Graph) -> String {
 }
 
 #[derive(Template)]
-#[template(path = "client/swift/model_outputs.swift.jinja")]
+#[template(path = "client/swift/model_outputs.swift.jinja", escape = "none")]
 pub(crate) struct ModelOutputsTemplate<'a> {
     pub(crate) models: Vec<ModelOutput<'a>>,
 }
@@ -53,7 +53,7 @@ fn generate_model_output_types(graph: &Graph) -> String {
 }
 
 #[derive(Template)]
-#[template(path = "client/swift/model_inputs.swift.jinja")]
+#[template(path = "client/swift/model_inputs.swift.jinja", escape = "none")]
 pub(crate) struct ModelInputsTemplate<'a> {
     pub(crate) models: Vec<ModelInput<'a>>,
 }
@@ -64,7 +64,7 @@ fn generate_input_types(graph: &Graph) -> String {
 }
 
 #[derive(Template)]
-#[template(path = "client/swift/delegates.swift.jinja")]
+#[template(path = "client/swift/delegates.swift.jinja", escape = "none")]
 pub(crate) struct DelegatesTemplate<'a> {
     pub(crate) delegates: Vec<Delegate<'a>>,
 }
