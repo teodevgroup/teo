@@ -24,11 +24,11 @@ fn schema_from_file(file: &str) -> PathBuf {
 fn teo_exe_path_buf() -> PathBuf {
     let mut current_dir = env::current_dir().unwrap();
     while current_dir != PathBuf::from("/") {
-        let exe_path = if whoami::platform() == Platform::Windows {
-            current_dir.join("target/debug/cargo-teo.exe")
+        let exe_path = current_dir.join(if whoami::platform() == Platform::Windows {
+            "target/debug/cargo-teo.exe"
         } else {
-            current_dir.join("target/debug/cargo-teo")
-        };
+            "target/debug/cargo-teo"
+        });
         if exe_path.is_file() {
             return exe_path;
         }
