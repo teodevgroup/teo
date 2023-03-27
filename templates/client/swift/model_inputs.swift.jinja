@@ -28,10 +28,16 @@ public class {{ model.name }}Include: Encodable {
     }
 }
 public class {{ model.name }}WhereInput: Encodable {
+    public let AND: [{{ model.name }}WhereInput]?
+    public let OR: [{{ model.name }}WhereInput]?
+    public let NOT: {{ model.name }}WhereInput?
 {%- for field in model.where_fields %}
     public let {{ field.name }}: {{ field.filter_type }}?
 {%- endfor %}
     public init(
+        AND: [{{ model.name }}WhereInput]? = nil,
+        OR: [{{ model.name }}WhereInput]? = nil,
+        NOT: {{ model.name }}WhereInput? = nil,
 {%- for field in model.where_fields %}
         {{ field.name }}: {{ field.filter_type }}? = nil{% if !loop.last %},{% endif %}
 {%- endfor %}
@@ -53,6 +59,31 @@ public class {{ model.name }}WhereUniqueInput: Encodable {
 {%- for field in model.where_unique_fields %}
         self.{{ field.name }} = {{ field.name }}
 {%- endfor %}
+    }
+}
+public class {{ model.name }}RelationFilter: Encodable {
+    public let `is`: {{ model.name }}WhereInput?
+    public let isNot: {{ model.name }}WhereInput?
+    public init(
+        `is`: {{ model.name }}WhereInput? = nil,
+        isNot: {{ model.name }}WhereInput? = nil
+    ) {
+        self.is = `is`
+        self.isNot = isNot
+    }
+}
+public class {{ model.name }}ListRelationFilter: Encodable {
+    public let every: {{ model.name }}WhereInput?
+    public let some: {{ model.name }}WhereInput?
+    public let none: {{ model.name }}WhereInput?
+    public init(
+        every: {{ model.name }}WhereInput? = nil,
+        some: {{ model.name }}WhereInput? = nil,
+        none: {{ model.name }}WhereInput? = nil
+    ) {
+        self.every = every
+        self.some = some
+        self.none = none
     }
 }
 {%- endfor %}
