@@ -16,15 +16,43 @@ public class {{ model.name }}Select: Encodable {
 public class {{ model.name }}Include: Encodable {
 {%- for include in model.includes %}
     public let {{ include.relation_name }}: {{ include.model_name }}{%- if include.many -%}FindMany{%- endif -%}Args?
-{% endfor %}
+{%- endfor %}
     public init(
 {%- for include in model.includes %}
         {{ include.relation_name }}: {{ include.model_name }}{%- if include.many -%}FindMany{%- endif -%}Args? = nil{% if !loop.last %},{% endif %}
-{% endfor %}
+{%- endfor %}
     ) {
 {%- for include in model.includes %}
         self.{{ include.relation_name }} = {{ include.relation_name }}
-{% endfor %}
+{%- endfor %}
+    }
+}
+public class {{ model.name }}WhereInput: Encodable {
+{%- for field in model.where_fields %}
+    public let {{ field.name }}: {{ field.filter_type }}?
+{%- endfor %}
+    public init(
+{%- for field in model.where_fields %}
+        {{ field.name }}: {{ field.filter_type }}? = nil{% if !loop.last %},{% endif %}
+{%- endfor %}
+    ) {
+{%- for field in model.where_fields %}
+        self.{{ field.name }} = {{ field.name }}
+{%- endfor %}
+    }
+}
+public class {{ model.name }}WhereUniqueInput: Encodable {
+{%- for field in model.where_unique_fields %}
+    public let {{ field.name }}: {{ field.create_type }}?
+{%- endfor %}
+    public init(
+{%- for field in model.where_unique_fields %}
+        {{ field.name }}: {{ field.create_type }}? = nil{% if !loop.last %},{% endif %}
+{%- endfor %}
+    ) {
+{%- for field in model.where_unique_fields %}
+        self.{{ field.name }} = {{ field.name }}
+{%- endfor %}
     }
 }
 {%- endfor %}
