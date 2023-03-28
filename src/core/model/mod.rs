@@ -49,6 +49,7 @@ pub struct ModelInner {
     pub(crate) output_keys: Vec<String>,
     pub(crate) query_keys: Vec<String>,
     pub(crate) unique_query_keys: Vec<HashSet<String>>,
+    pub(crate) sort_keys: Vec<String>,
     pub(crate) auth_identity_keys: Vec<String>,
     pub(crate) auth_by_keys: Vec<String>,
     pub(crate) auto_keys: Vec<String>,

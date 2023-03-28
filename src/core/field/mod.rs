@@ -27,18 +27,6 @@ pub(crate) enum PreviousValueRule {
     Keep,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum QueryAbility {
-    Queryable,
-    Unqueryable,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum ObjectAssignment {
-    Reference,
-    Copy,
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Sort {
     Asc,
@@ -127,7 +115,8 @@ pub struct Field {
     pub(crate) input_omissible: bool,
     pub(crate) output_omissible: bool,
     pub(crate) index: Option<FieldIndex>,
-    pub(crate) query_ability: QueryAbility,
+    pub(crate) queryable: bool,
+    pub(crate) sortable: bool,
     pub(crate) auto: bool,
     pub(crate) auto_increment: bool,
     pub(crate) identity: bool,
@@ -168,7 +157,8 @@ impl Field {
             read_rule: ReadRule::Read,
             write_rule: WriteRule::Write,
             index: None,
-            query_ability: QueryAbility::Queryable,
+            queryable: true,
+            sortable: true,
             auto: false,
             auto_increment: false,
             identity: false,
