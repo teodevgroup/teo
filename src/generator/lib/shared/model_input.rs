@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use itertools::Itertools;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
+use crate::generator::lib::shared::type_lookup::TypeLookup;
 use crate::prelude::Graph;
 
 pub(crate) struct ModelInclude<'a> {
@@ -39,6 +40,7 @@ pub(crate) struct ModelInput<'a> {
     pub(crate) create_fields: Vec<ModelCreateField<'a>>,
     pub(crate) update_fields: Vec<ModelUpdateField<'a>>,
     pub(crate) without: Vec<Cow<'a, str>>,
+
 }
 
 impl<'a> ModelInput<'a> {
@@ -51,7 +53,7 @@ impl<'a> ModelInput<'a> {
     }
 }
 
-pub(crate) fn model_inputs<F, G, H>(graph: &Graph, field_type_to_filter_type: F, field_type_to_create_type: G, field_type_to_update_type: H) -> Vec<ModelInput> where F: Fn(&FieldType, bool) -> Cow<str>, G: Fn(&FieldType, bool) -> Cow<str>, H: Fn(&FieldType, bool) -> Cow<str> {
+pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput> where T: TypeLookup + 'a {
     graph.models().iter().map(|m| {
         ModelInput {
             name: Cow::Borrowed(m.name()),
@@ -60,7 +62,7 @@ pub(crate) fn model_inputs<F, G, H>(graph: &Graph, field_type_to_filter_type: F,
             where_fields: m.query_keys().iter().map(|k| if let Some(field) = m.field(k) {
                 ModelWhereField {
                     name: Cow::Borrowed(field.name()),
-                    filter_type: field_type_to_filter_type(field.field_type(), field.is_optional()),
+                    filter_type: lookup.field_type_to_filter_type(field.field_type(), field.is_optional()),
                 }
             } else if let Some(relation) = m.relation(k) {
                 ModelWhereField {
@@ -70,18 +72,18 @@ pub(crate) fn model_inputs<F, G, H>(graph: &Graph, field_type_to_filter_type: F,
             } else { unreachable!() }).collect(),
             where_unique_fields: m.indices().iter().filter(|i| i.r#type().is_unique()).map(|i| i.keys().iter().map(|k| m.field(k).unwrap()).map(|f| ModelWhereUniqueField {
                 name: Cow::Borrowed(f.name()),
-                create_type: field_type_to_create_type(f.field_type(), f.is_optional()),
+                create_type: lookup.field_type_to_create_type(f.field_type(), f.is_optional()),
             })).flatten().dedup_by(|f1, f2| f1.name == f2.name).collect(),
             order_by_fields: m.sort_keys().iter().map(|k| Cow::Borrowed(k.as_str())).collect(),
             create_fields: m.input_keys().iter().map(|k| if let Some(field) = m.field(k) {
                 ModelCreateField {
                     name: Cow::Borrowed(field.name()),
-                    create_type: field_type_to_create_type(field.field_type(), field.is_optional()),
+                    create_type: lookup.field_type_to_create_type(field.field_type(), field.is_optional()),
                 }
             } else if let Some(property) = m.property(k) {
                 ModelCreateField {
                     name: Cow::Borrowed(property.name()),
-                    create_type: field_type_to_create_type(property.field_type(), property.is_optional()),
+                    create_type: lookup.field_type_to_create_type(property.field_type(), property.is_optional()),
                 }
             } else if let Some(relation) = m.relation(k) {
                 ModelCreateField {
@@ -92,12 +94,12 @@ pub(crate) fn model_inputs<F, G, H>(graph: &Graph, field_type_to_filter_type: F,
             update_fields: m.input_keys().iter().map(|k| if let Some(field) = m.field(k) {
                 ModelUpdateField {
                     name: Cow::Borrowed(field.name()),
-                    update_type: field_type_to_update_type(field.field_type(), field.is_optional()),
+                    update_type: lookup.field_type_to_update_type(field.field_type(), field.is_optional()),
                 }
             } else if let Some(property) = m.property(k) {
                 ModelUpdateField {
                     name: Cow::Borrowed(property.name()),
-                    update_type: field_type_to_update_type(property.field_type(), property.is_optional()),
+                    update_type: lookup.field_type_to_update_type(property.field_type(), property.is_optional()),
                 }
             } else if let Some(relation) = m.relation(k) {
                 ModelUpdateField {
