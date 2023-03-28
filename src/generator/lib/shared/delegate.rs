@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use crate::core::action::Action;
+use crate::generator::lib::shared::type_lookup::TypeLookup;
 use crate::prelude::Graph;
 
 pub(crate) struct DelegateAction<'a> {
@@ -13,13 +14,13 @@ pub(crate) struct Delegate<'a> {
     pub(crate) actions: Vec<DelegateAction<'a>>,
 }
 
-pub(crate) fn delegates<'a, F>(graph: &'a Graph, action_result: F) -> Vec<Delegate> where F: Fn(Action, &'a str) -> Cow<'a, str> {
+pub(crate) fn delegates<T>(graph: &Graph, lookup: T) -> Vec<Delegate> where T: TypeLookup {
     graph.models().iter().map(|m| {
         Delegate {
             model_name: Cow::Borrowed(m.name()),
             actions: m.actions().iter().map(|a| DelegateAction {
                 name: Cow::Borrowed(a.as_handler_str()),
-                response: action_result(*a, m.name()),
+                response: lookup.action_result_type(*a, m.name()),
                 docs: None,
             }).collect(),
         }

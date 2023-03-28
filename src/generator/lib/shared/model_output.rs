@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
+use crate::generator::lib::shared::type_lookup::TypeLookup;
 use crate::prelude::Graph;
 
 pub(crate) struct ModelOutputField<'a> {
@@ -15,22 +16,22 @@ pub(crate) struct ModelOutput<'a> {
     pub(crate) fields: Vec<ModelOutputField<'a>>,
 }
 
-pub(crate) fn model_outputs_without_relations<F>(graph: &Graph, type_to_string: F) -> Vec<ModelOutput> where F: Fn(&FieldType) -> Cow<str> {
-    model_outputs(graph, false, type_to_string, |v| Cow::Borrowed(v))
+pub(crate) fn model_outputs_without_relations<T>(graph: &Graph, lookup: T) -> Vec<ModelOutput> where T: TypeLookup {
+    model_outputs(graph, false, lookup)
 }
 
-pub(crate) fn model_outputs_with_relations<F, G>(graph: &Graph, type_to_string: F, type_to_vec: G) -> Vec<ModelOutput> where F: Fn(&FieldType) -> Cow<str>, G: Fn(&str) -> Cow<str> {
-    model_outputs(graph, false, type_to_string, type_to_vec)
+pub(crate) fn model_outputs_with_relations<T>(graph: &Graph, lookup: T) -> Vec<ModelOutput> where T: TypeLookup {
+    model_outputs(graph, false, lookup)
 }
 
-fn model_outputs<F, G>(graph: &Graph, include_relations: bool, type_to_string: F, type_to_vec: G) -> Vec<ModelOutput> where F: Fn(&FieldType) -> Cow<str>, G: Fn(&str) -> Cow<str> {
+fn model_outputs<T>(graph: &Graph, include_relations: bool, lookup: T) -> Vec<ModelOutput> where T: TypeLookup {
     graph.models().iter().map(|m| {
         let mut fields = vec![];
         for key in m.output_keys() {
             if let Some(field) = m.field(key) {
                 fields.push(ModelOutputField {
                     name: Cow::Borrowed(field.name()),
-                    field_type: type_to_string(field.field_type()),
+                    field_type: lookup.field_type_to_result_type(field.field_type(), field.is_optional()),
                     optional: field.is_optional(),
                     localized_name: Cow::Owned(field.localized_name()),
                     desc: field.description().map(|d| Cow::Borrowed(d)),
@@ -38,7 +39,7 @@ fn model_outputs<F, G>(graph: &Graph, include_relations: bool, type_to_string: F
             } else if let Some(property) = m.property(key) {
                 fields.push(ModelOutputField {
                     name: Cow::Borrowed(property.name()),
-                    field_type: type_to_string(property.field_type()),
+                    field_type: lookup.field_type_to_result_type(property.field_type(), property.is_optional()),
                     optional: property.is_optional(),
                     localized_name: Cow::Owned(property.localized_name()),
                     desc: property.description.as_ref().map(|s| Cow::Borrowed(s.as_str())),
@@ -50,7 +51,7 @@ fn model_outputs<F, G>(graph: &Graph, include_relations: bool, type_to_string: F
                 fields.push(ModelOutputField {
                     name: Cow::Borrowed(relation.name()),
                     field_type: if relation.is_vec() {
-                        type_to_vec(relation.model())
+                        lookup.generated_type_to_vec(relation.model())
                     } else {
                         Cow::Borrowed(relation.name())
                     },

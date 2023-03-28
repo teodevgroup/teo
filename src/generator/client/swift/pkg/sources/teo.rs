@@ -2,7 +2,7 @@ use inflector::Inflector;
 use askama::Template;
 use crate::core::app::conf::ClientGeneratorConf;
 use crate::core::r#enum::Enum;
-use crate::generator::client::swift::types::{field_type_to_swift_create_type, field_type_to_swift_filter_type, field_type_to_swift_output_type, field_type_to_swift_vec, swift_action_result};
+use crate::generator::client::swift::types::SwiftTypes;
 use crate::generator::lib::shared::delegate::{Delegate, delegates};
 use crate::generator::lib::shared::model_input::{model_inputs, ModelInput};
 use crate::generator::lib::shared::model_output::{model_outputs_with_relations, ModelOutput};
@@ -47,7 +47,7 @@ pub(crate) struct ModelOutputsTemplate<'a> {
 }
 fn generate_model_output_types(graph: &Graph) -> String {
     ModelOutputsTemplate {
-        models: model_outputs_with_relations(graph, field_type_to_swift_output_type, field_type_to_swift_vec)
+        models: model_outputs_with_relations(graph, SwiftTypes::new()),
     }.render().unwrap()
 }
 
@@ -58,7 +58,7 @@ pub(crate) struct ModelInputsTemplate<'a> {
 }
 fn generate_input_types(graph: &Graph) -> String {
     ModelInputsTemplate {
-        models: model_inputs(graph, field_type_to_swift_filter_type, field_type_to_swift_create_type, field_type_to_swift_create_type),
+        models: model_inputs(graph, SwiftTypes::new()),
     }.render().unwrap()
 }
 
@@ -69,7 +69,7 @@ pub(crate) struct DelegatesTemplate<'a> {
 }
 fn generate_delegate_classes(graph: &Graph) -> String {
     DelegatesTemplate {
-        delegates: delegates(graph, swift_action_result),
+        delegates: delegates(graph, SwiftTypes::new()),
     }.render().unwrap()
 }
 
