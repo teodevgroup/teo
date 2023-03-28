@@ -105,4 +105,20 @@ public enum {{ model.name }}OrderByInput: Encodable {
         }
     }
 }
+{%- for without in model.without %}
+public class {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input {
+{%- for field in model.create_fields %}
+    {% if without.as_ref() != field.name.as_ref() %}public let {{ field.name }}: {{ field.create_type }}?{%- endif %}
+{%- endfor %}
+    public init(
+{%- for field in model.create_fields_without(without.as_ref()) %}
+        {{ field.name }}: {{ field.create_type }}? = nil{% if !loop.last %},{% endif %}
+{%- endfor %}
+    ) {
+{%- for field in model.create_fields_without(without.as_ref()) %}
+        self.{{ field.name }} = {{ field.name }}
+{%- endfor %}
+    }
+}
+{%- endfor %}
 {%- endfor %}

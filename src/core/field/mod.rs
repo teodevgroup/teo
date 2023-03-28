@@ -138,7 +138,6 @@ impl Debug for Field {
         let mut result = f.debug_struct("Field");
         result.finish()
     }
-
 }
 
 impl Field {

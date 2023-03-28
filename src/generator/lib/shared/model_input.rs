@@ -19,6 +19,11 @@ pub(crate) struct ModelWhereUniqueField<'a> {
     pub(crate) create_type: Cow<'a, str>,
 }
 
+pub(crate) struct ModelCreateField<'a> {
+    pub(crate) name: Cow<'a, str>,
+    pub(crate) create_type: Cow<'a, str>,
+}
+
 pub(crate) struct ModelInput<'a> {
     pub(crate) name: Cow<'a, str>,
     pub(crate) select: Vec<Cow<'a, str>>,
@@ -26,6 +31,14 @@ pub(crate) struct ModelInput<'a> {
     pub(crate) where_fields: Vec<ModelWhereField<'a>>,
     pub(crate) where_unique_fields: Vec<ModelWhereUniqueField<'a>>,
     pub(crate) order_by_fields: Vec<Cow<'a, str>>,
+    pub(crate) create_fields: Vec<ModelCreateField<'a>>,
+    pub(crate) without: Vec<Cow<'a, str>>,
+}
+
+impl<'a> ModelInput<'a> {
+    pub(crate) fn create_fields_without(&'a self, without: &'a str) -> Vec<&'a ModelCreateField<'a>> {
+        self.create_fields.iter().filter(|f| f.name.as_ref() != without).collect()
+    }
 }
 
 pub(crate) fn model_inputs<F, G>(graph: &Graph, field_type_to_filter_type: F, field_type_to_create_type: G) -> Vec<ModelInput> where F: Fn(&FieldType, bool) -> Cow<str>, G: Fn(&FieldType, bool) -> Cow<str> {
@@ -50,6 +63,27 @@ pub(crate) fn model_inputs<F, G>(graph: &Graph, field_type_to_filter_type: F, fi
                 create_type: field_type_to_create_type(f.field_type(), f.is_optional()),
             })).flatten().dedup_by(|f1, f2| f1.name == f2.name).collect(),
             order_by_fields: m.sort_keys().iter().map(|k| Cow::Borrowed(k.as_str())).collect(),
+            create_fields: m.input_keys().iter().map(|k| if let Some(field) = m.field(k) {
+                ModelCreateField {
+                    name: Cow::Borrowed(field.name()),
+                    create_type: field_type_to_create_type(field.field_type(), field.is_optional()),
+                }
+            } else if let Some(property) = m.property(k) {
+                ModelCreateField {
+                    name: Cow::Borrowed(property.name()),
+                    create_type: field_type_to_create_type(property.field_type(), property.is_optional()),
+                }
+            } else if let Some(relation) = m.relation(k) {
+                ModelCreateField {
+                    name: Cow::Borrowed(relation.name()),
+                    create_type: Cow::Owned(relation.model().to_owned() + "CreateNested" + if relation.is_vec() { "Many" } else { "One" } + "Without" + m.name() + "Input"),
+                }
+            } else { unreachable!() }).collect(),
+            without: {
+                let mut without = vec![Cow::Borrowed("")];
+                without.append(&mut m.relations().iter().map(|r| Cow::Borrowed(r.name())).collect());
+                without
+            }
         }
     }).collect()
 }
