@@ -228,9 +228,9 @@ fn generate_model_update_nested_input(_graph: &Graph, model: &Model, without: Op
                 b.doc(nested_upsert_doc(model, many));
                 b.line(format!("upsert?: {model_name}UpsertWithWhereUnique{without_title}Input"));
                 b.doc(nested_disconnect_doc(model, many));
-                b.line(format!("disconnect?: {model_name}WhereUniqueInput"));
+                b.line(format!("disconnect?: boolean"));
                 b.doc(nested_delete_doc(model, many));
-                b.line(format!("delete?: {model_name}WhereUniqueInput"));
+                b.line(format!("delete?: boolean"));
             }
         }, "}")
     }).to_string()

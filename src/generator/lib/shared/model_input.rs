@@ -24,6 +24,11 @@ pub(crate) struct ModelCreateField<'a> {
     pub(crate) create_type: Cow<'a, str>,
 }
 
+pub(crate) struct ModelUpdateField<'a> {
+    pub(crate) name: Cow<'a, str>,
+    pub(crate) update_type: Cow<'a, str>,
+}
+
 pub(crate) struct ModelInput<'a> {
     pub(crate) name: Cow<'a, str>,
     pub(crate) select: Vec<Cow<'a, str>>,
@@ -32,6 +37,7 @@ pub(crate) struct ModelInput<'a> {
     pub(crate) where_unique_fields: Vec<ModelWhereUniqueField<'a>>,
     pub(crate) order_by_fields: Vec<Cow<'a, str>>,
     pub(crate) create_fields: Vec<ModelCreateField<'a>>,
+    pub(crate) update_fields: Vec<ModelUpdateField<'a>>,
     pub(crate) without: Vec<Cow<'a, str>>,
 }
 
@@ -39,9 +45,13 @@ impl<'a> ModelInput<'a> {
     pub(crate) fn create_fields_without(&'a self, without: &'a str) -> Vec<&'a ModelCreateField<'a>> {
         self.create_fields.iter().filter(|f| f.name.as_ref() != without).collect()
     }
+
+    pub(crate) fn update_fields_without(&'a self, without: &'a str) -> Vec<&'a ModelUpdateField<'a>> {
+        self.update_fields.iter().filter(|f| f.name.as_ref() != without).collect()
+    }
 }
 
-pub(crate) fn model_inputs<F, G>(graph: &Graph, field_type_to_filter_type: F, field_type_to_create_type: G) -> Vec<ModelInput> where F: Fn(&FieldType, bool) -> Cow<str>, G: Fn(&FieldType, bool) -> Cow<str> {
+pub(crate) fn model_inputs<F, G, H>(graph: &Graph, field_type_to_filter_type: F, field_type_to_create_type: G, field_type_to_update_type: H) -> Vec<ModelInput> where F: Fn(&FieldType, bool) -> Cow<str>, G: Fn(&FieldType, bool) -> Cow<str>, H: Fn(&FieldType, bool) -> Cow<str> {
     graph.models().iter().map(|m| {
         ModelInput {
             name: Cow::Borrowed(m.name()),
@@ -57,7 +67,7 @@ pub(crate) fn model_inputs<F, G>(graph: &Graph, field_type_to_filter_type: F, fi
                     name: Cow::Borrowed(relation.name()),
                     filter_type: if relation.is_vec() { Cow::Owned(relation.model().to_owned() + "ListRelationFilter") } else { Cow::Owned(relation.model().to_owned() + "RelationFilter") }
                 }
-            } else { unreachable!()}).collect(),
+            } else { unreachable!() }).collect(),
             where_unique_fields: m.indices().iter().filter(|i| i.r#type().is_unique()).map(|i| i.keys().iter().map(|k| m.field(k).unwrap()).map(|f| ModelWhereUniqueField {
                 name: Cow::Borrowed(f.name()),
                 create_type: field_type_to_create_type(f.field_type(), f.is_optional()),
@@ -77,6 +87,22 @@ pub(crate) fn model_inputs<F, G>(graph: &Graph, field_type_to_filter_type: F, fi
                 ModelCreateField {
                     name: Cow::Borrowed(relation.name()),
                     create_type: Cow::Owned(relation.model().to_owned() + "CreateNested" + if relation.is_vec() { "Many" } else { "One" } + "Without" + m.name() + "Input"),
+                }
+            } else { unreachable!() }).collect(),
+            update_fields: m.input_keys().iter().map(|k| if let Some(field) = m.field(k) {
+                ModelUpdateField {
+                    name: Cow::Borrowed(field.name()),
+                    update_type: field_type_to_update_type(field.field_type(), field.is_optional()),
+                }
+            } else if let Some(property) = m.property(k) {
+                ModelUpdateField {
+                    name: Cow::Borrowed(property.name()),
+                    update_type: field_type_to_update_type(property.field_type(), property.is_optional()),
+                }
+            } else if let Some(relation) = m.relation(k) {
+                ModelUpdateField {
+                    name: Cow::Borrowed(relation.name()),
+                    update_type: Cow::Owned(relation.model().to_owned() + "UpdateNested" + if relation.is_vec() { "Many" } else { "One" } + "Without" + m.name() + "Input"),
                 }
             } else { unreachable!() }).collect(),
             without: {
