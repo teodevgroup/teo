@@ -120,5 +120,44 @@ public class {{ model.name }}Create{%- if !without.is_empty() %}Without{{ withou
 {%- endfor %}
     }
 }
+public class {{ model.name }}CreateNestedMany{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input {
+    public let create: [{{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]?
+    public let connectOrCreate: [{{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]?
+    public let connect: [{{ model.name }}WhereUniqueInput]?
+    public init(
+        create: [{{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]? = nil,
+        connectOrCreate: [{{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]? = nil,
+        connect: [{{ model.name }}WhereUniqueInput]? = nil
+    ) {
+        self.create = create
+        self.connectOrCreate = connectOrCreate
+        self.connect = connect
+    }
+}
+public class {{ model.name }}CreateNestedOne{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input {
+    public let create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
+    public let connectOrCreate: {{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
+    public let connect: {{ model.name }}WhereUniqueInput?
+    public init(
+        create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil,
+        connectOrCreate: {{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil,
+        connect: {{ model.name }}WhereUniqueInput? = nil
+    ) {
+        self.create = create
+        self.connectOrCreate = connectOrCreate
+        self.connect = connect
+    }
+}
+public class {{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input {
+    public let where: {{ model.name }}WhereUniqueInput?
+    public let create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
+    public init(
+        where: {{ model.name }}WhereUniqueInput? = nil,
+        create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil,
+    ) {
+        self.where = where
+        self.create = create
+    }
+}
 {%- endfor %}
 {%- endfor %}
