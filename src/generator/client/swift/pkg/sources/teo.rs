@@ -58,7 +58,7 @@ pub(crate) struct ModelInputsTemplate<'a> {
 }
 fn generate_input_types(graph: &Graph) -> String {
     ModelInputsTemplate {
-        models: model_inputs(graph, field_type_to_swift_filter_type, field_type_to_swift_create_type),
+        models: model_inputs(graph, field_type_to_swift_filter_type, field_type_to_swift_create_type, field_type_to_swift_create_type),
     }.render().unwrap()
 }
 
