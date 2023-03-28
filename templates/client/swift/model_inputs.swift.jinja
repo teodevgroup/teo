@@ -86,4 +86,23 @@ public class {{ model.name }}ListRelationFilter: Encodable {
         self.none = none
     }
 }
+public enum {{ model.name }}OrderByInput: Encodable {
+{%- for field in model.order_by_fields %}
+    case {{ field }}(SortOrder)
+{%- endfor %}
+    enum CodingKeys: CodingKey {
+{%- for field in model.order_by_fields %}
+        case {{ field }}
+{%- endfor %}
+    }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: {{ model.name }}OrderByInput.CodingKeys.self)
+        switch self {
+{%- for field in model.order_by_fields %}
+        case .{{ field }}(let a0):
+            try container.encode(a0, forKey: .{{ field }})
+{%- endfor %}
+        }
+    }
+}
 {%- endfor %}
