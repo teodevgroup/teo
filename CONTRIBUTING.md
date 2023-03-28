@@ -61,8 +61,7 @@ We structure our messages like this:
 
 #### List of features in the monorepo:
 
-* sql: The SQL connector
-* mongodb: The MongoDB connector
+* connector: The database connectors
 * server: The server integration
 * core: The core
 * pipeline: The pipeline items

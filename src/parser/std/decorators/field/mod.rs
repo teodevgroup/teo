@@ -30,6 +30,8 @@ pub(crate) mod auth_identity;
 pub(crate) mod auth_by;
 pub(crate) mod queryable;
 pub(crate) mod unqueryable;
+pub(crate) mod sortable;
+pub(crate) mod unsortable;
 pub(crate) mod can_read;
 pub(crate) mod can_mutate;
 pub(crate) mod migration_decorator;
@@ -74,8 +76,9 @@ use crate::parser::std::decorators::field::write_once::write_once_decorator;
 use crate::parser::std::decorators::field::writeonly::{writeonly_decorator};
 use crate::parser::std::decorators::field::r#virtual::virtual_decorator;
 use crate::parser::std::decorators::field::record_previous::record_previous_decorator;
+use crate::parser::std::decorators::field::sortable::sortable_decorator;
 use crate::parser::std::decorators::field::unqueryable::unqueryable_decorator;
-
+use crate::parser::std::decorators::field::unsortable::unsortable_decorator;
 
 pub(crate) struct GlobalFieldDecorators {
     objects: HashMap<String, Accessible>
@@ -125,6 +128,8 @@ impl GlobalFieldDecorators {
         objects.insert("identityChecker".to_owned(), Accessible::FieldDecorator(auth_by_decorator));
         objects.insert("queryable".to_owned(), Accessible::FieldDecorator(queryable_decorator));
         objects.insert("unqueryable".to_owned(), Accessible::FieldDecorator(unqueryable_decorator));
+        objects.insert("sortable".to_owned(), Accessible::FieldDecorator(sortable_decorator));
+        objects.insert("unsortable".to_owned(), Accessible::FieldDecorator(unsortable_decorator));
         objects.insert("canMutate".to_owned(), Accessible::FieldDecorator(can_mutate_decorator));
         objects.insert("canRead".to_owned(), Accessible::FieldDecorator(can_read_decorator));
         objects.insert("migration".to_owned(), Accessible::FieldDecorator(migration_decorator));

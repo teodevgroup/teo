@@ -261,6 +261,7 @@ impl ModelBuilder {
             output_keys: self.output_keys(),
             query_keys: self.query_keys(),
             unique_query_keys,
+            sort_keys: self.sort_keys(),
             auth_identity_keys: self.get_auth_identity_keys(),
             auth_by_keys: self.get_auth_by_keys(),
             auto_keys: self.get_auto_keys(),
@@ -367,10 +368,14 @@ impl ModelBuilder {
         fields
     }
 
+    pub(crate) fn sort_keys(&self) -> Vec<String> {
+        self.fields.iter().filter(|f| f.sortable).map(|f| f.name().to_owned()).collect()
+    }
+
     pub(crate) fn query_keys(&self) -> Vec<String> {
         let mut fields: Vec<String> = self.fields.iter()
-            .filter(|&f| { f.query_ability == QueryAbility::Queryable })
-            .map(|f| { f.name.clone() })
+            .filter(|f| f.queryable)
+            .map(|f| f.name.clone())
             .collect();
         fields.extend(self.all_relation_keys());
         fields
