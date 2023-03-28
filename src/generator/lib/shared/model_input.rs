@@ -25,6 +25,7 @@ pub(crate) struct ModelInput<'a> {
     pub(crate) includes: Vec<ModelInclude<'a>>,
     pub(crate) where_fields: Vec<ModelWhereField<'a>>,
     pub(crate) where_unique_fields: Vec<ModelWhereUniqueField<'a>>,
+    pub(crate) order_by_fields: Vec<Cow<'a, str>>,
 }
 
 pub(crate) fn model_inputs<F, G>(graph: &Graph, field_type_to_filter_type: F, field_type_to_create_type: G) -> Vec<ModelInput> where F: Fn(&FieldType, bool) -> Cow<str>, G: Fn(&FieldType, bool) -> Cow<str> {
@@ -47,7 +48,8 @@ pub(crate) fn model_inputs<F, G>(graph: &Graph, field_type_to_filter_type: F, fi
             where_unique_fields: m.indices().iter().filter(|i| i.r#type().is_unique()).map(|i| i.keys().iter().map(|k| m.field(k).unwrap()).map(|f| ModelWhereUniqueField {
                 name: Cow::Borrowed(f.name()),
                 create_type: field_type_to_create_type(f.field_type(), f.is_optional()),
-            })).flatten().dedup_by(|f1, f2| f1.name == f2.name).collect()
+            })).flatten().dedup_by(|f1, f2| f1.name == f2.name).collect(),
+            order_by_fields: m.sort_keys().iter().map(|k| Cow::Borrowed(k.as_str())).collect(),
         }
     }).collect()
 }

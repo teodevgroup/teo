@@ -194,6 +194,10 @@ impl Model {
         &self.inner.unique_query_keys
     }
 
+    pub(crate) fn sort_keys(&self) -> &Vec<String> {
+        &self.inner.sort_keys
+    }
+
     pub(crate) fn auth_identity_keys(&self) -> &Vec<String> { &self.inner.auth_identity_keys }
 
     pub(crate) fn auth_by_keys(&self) -> &Vec<String> { &self.inner.auth_by_keys }
