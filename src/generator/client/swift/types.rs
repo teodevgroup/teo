@@ -10,9 +10,6 @@ impl SwiftTypes {
 }
 
 impl TypeLookup for SwiftTypes {
-    fn number_type(&self) -> &'static str {
-        "Int"
-    }
     fn field_type_to_filter_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
         match field_type {
             FieldType::ObjectId => if optional { Cow::Borrowed("ObjectIdNullableFilter") } else { Cow::Borrowed("ObjectIdFilter") },
@@ -32,7 +29,6 @@ impl TypeLookup for SwiftTypes {
             FieldType::Object(_) => unreachable!(),
         }
     }
-
     fn field_type_to_create_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
         match field_type {
             FieldType::ObjectId => if optional { Cow::Borrowed("NullOr<String>") } else { Cow::Borrowed("String") },
@@ -120,5 +116,9 @@ impl TypeLookup for SwiftTypes {
             IDENTITY_HANDLER => format!("Response<{model_name}>"),
             _ => unreachable!()
         })
+    }
+
+    fn number_type(&self) -> &'static str {
+        "Int"
     }
 }

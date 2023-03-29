@@ -34,7 +34,7 @@ pub(crate) struct ModelUpdateField<'a> {
 }
 
 pub(crate) struct ActionArg<'a> {
-    pub(crate) name: String,
+    pub(crate) name: &'static str,
     pub(crate) docs: Option<Cow<'a, str>>,
     pub(crate) fields: Vec<ActionArgField<'a>>,
 }
@@ -340,7 +340,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
             action_args: {
                 let mut args = vec![
                     ActionArg {
-                        name: format!("{}Args", m.name()),
+                        name: "Args",
                         docs: None,
                         fields: vec![
                             args_select_field(m.name(), true),
@@ -348,7 +348,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                         ]
                     },
                     ActionArg {
-                        name: format!("{}FindUniqueArgs", m.name()),
+                        name: "FindUniqueArgs",
                         docs: None,
                         fields: vec![
                             args_where_unique_field(m.name(), false),
@@ -357,7 +357,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                         ]
                     },
                     ActionArg {
-                        name: format!("{}FindFirstArgs", m.name()),
+                        name: "FindFirstArgs",
                         docs: None,
                         fields: vec![
                             args_where_field(m.name(), true, true),
@@ -372,7 +372,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                         ]
                     },
                     ActionArg {
-                        name: format!("{}FindManyArgs", m.name()),
+                        name: "FindManyArgs",
                         docs: None,
                         fields: vec![
                             args_where_field(m.name(), false, true),
@@ -387,7 +387,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                         ]
                     },
                     ActionArg {
-                        name: format!("{}CreateArgs", m.name()),
+                        name: "CreateArgs",
                         docs: None,
                         fields: vec![
                             args_select_field(m.name(), true),
@@ -396,7 +396,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                         ]
                     },
                     ActionArg {
-                        name: format!("{}UpdateArgs", m.name()),
+                        name: "UpdateArgs",
                         docs: None,
                         fields: vec![
                             args_where_unique_field(m.name(), false),
@@ -406,7 +406,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                         ]
                     },
                     ActionArg {
-                        name: format!("{}UpsertArgs", m.name()),
+                        name: "UpsertArgs",
                         docs: None,
                         fields: vec![
                             args_where_unique_field(m.name(), false),
@@ -417,7 +417,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                         ]
                     },
                     ActionArg {
-                        name: format!("{}DeleteArgs", m.name()),
+                        name: "DeleteArgs",
                         docs: None,
                         fields: vec![
                             args_where_unique_field(m.name(), false),
@@ -425,7 +425,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                         ]
                     },
                     ActionArg {
-                        name: format!("{}CreateManyArgs", m.name()),
+                        name: "CreateManyArgs",
                         docs: None,
                         fields: vec![
                             args_select_field(m.name(), true),
@@ -434,7 +434,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                         ]
                     },
                     ActionArg {
-                        name: format!("{}UpdateManyArgs", m.name()),
+                        name: "UpdateManyArgs",
                         docs: None,
                         fields: vec![
                             args_where_field(m.name(), false, true),
@@ -444,7 +444,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                         ]
                     },
                     ActionArg {
-                        name: format!("{}DeleteManyArgs", m.name()),
+                        name: "DeleteManyArgs",
                         docs: None,
                         fields: vec![
                             args_where_field(m.name(), false, true),
@@ -452,7 +452,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                         ]
                     },
                     ActionArg {
-                        name: format!("{}CountArgs", m.name()),
+                        name: "CountArgs",
                         docs: None,
                         fields: vec![
                             args_where_field(m.name(), false, true),
@@ -464,7 +464,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                         ]
                     },
                     ActionArg {
-                        name: format!("{}AggregateArgs", m.name()),
+                        name: "AggregateArgs",
                         docs: None,
                         fields: vec![
                             args_where_field(m.name(), false, true),
@@ -483,7 +483,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                         ]
                     },
                     ActionArg {
-                        name: format!("{}GroupByArgs", m.name()),
+                        name: "GroupByArgs",
                         docs: None,
                         fields: vec![
                             args_where_field(m.name(), false, true),
@@ -506,7 +506,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                 ];
                 if m.has_action(Action::from_u32(SIGN_IN_HANDLER)) {
                     args.push(ActionArg {
-                        name: format!("{}SignInArgs", m.name()),
+                        name: "SignInArgs",
                         docs: None,
                         fields: vec![
                             args_credentials_field(m.name(), false),
@@ -517,7 +517,7 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                 }
                 if m.has_action(Action::from_u32(IDENTITY_HANDLER)) {
                     args.push(ActionArg {
-                        name: format!("{}IdentityArgs", m.name()),
+                        name: "IdentityArgs",
                         docs: None,
                         fields: vec![
                             args_select_field(m.name(), false),

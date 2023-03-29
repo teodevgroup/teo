@@ -126,25 +126,24 @@ extension NullOr: ExpressibleByFloatLiteral where T: ExpressibleByFloatLiteral {
     }
 }
 
-public class ObjectIdFilter: Encodable, ExpressibleByStringLiteral {
-    public typealias StringLiteralType = String
-    public let equals: String?
-    public let `in`: [String]?
-    public let notIn: [String]?
-    public let lt: String?
-    public let lte: String?
-    public let gt: String?
-    public let gte: String?
-    public let not: ObjectIdFilter?
+public class NumberFilter<T: Encodable>: Encodable {
+    public let equals: T?
+    public let `in`: [T]?
+    public let notIn: [T]?
+    public let lt: T?
+    public let lte: T?
+    public let gt: T?
+    public let gte: T?
+    public let not: NumberFilter<T>?
     public init(
-        equals: String? = nil,
-        `in`: [String]? = nil,
-        notIn: [String]? = nil,
-        lt: String? = nil,
-        lte: String? = nil,
-        gt: String? = nil,
-        gte: String? = nil,
-        not: ObjectIdFilter? = nil
+        equals: T? = nil,
+        `in`: [T]? = nil,
+        notIn: [T]? = nil,
+        lt: T? = nil,
+        lte: T? = nil,
+        gt: T? = nil,
+        gte: T? = nil,
+        not: NumberFilter<T>? = nil
     ) {
         self.equals = equals
         self.in = `in`
@@ -154,38 +153,36 @@ public class ObjectIdFilter: Encodable, ExpressibleByStringLiteral {
         self.gt = gt
         self.gte = gte
         self.not = not
-    }
-    public required init(stringLiteral value: String) {
-        self.equals = value
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
-        self.not = nil
     }
 }
 
-public class ObjectIdNullableFilter: Encodable, ExpressibleByStringLiteral {
-    public typealias StringLiteralType = String
-    public var equals: NullOr<String>?
-    public let `in`: [String?]?
-    public let notIn: [String?]?
-    public let lt: String?
-    public let lte: String?
-    public let gt: String?
-    public let gte: String?
-    public let not: NullOr<ObjectIdNullableFilter>?
+public typealias ObjectIdFilter = NumberFilter<String>
+public typealias Int32Filter = NumberFilter<Int32>
+public typealias Int64Filter = NumberFilter<Int64>
+public typealias FloatFilter = NumberFilter<Float>
+public typealias DoubleFilter = NumberFilter<Double>
+public typealias DecimalFilter = NumberFilter<Decimal>
+public typealias DateFilter = NumberFilter<String>
+public typealias DateTimeFilter = NumberFilter<Date>
+
+public class NumberNullableFilter<T: Encodable>: Encodable {
+    public let equals: NullOr<T>?
+    public let `in`: [T]?
+    public let notIn: [T]?
+    public let lt: T?
+    public let lte: T?
+    public let gt: T?
+    public let gte: T?
+    public let not: NullOr<NumberFilter<T>>?
     public init(
-        equals: NullOr<String>? = nil,
-        `in`: [String?]? = nil,
-        notIn: [String?]? = nil,
-        lt: String? = nil,
-        lte: String? = nil,
-        gt: String? = nil,
-        gte: String? = nil,
-        not: NullOr<ObjectIdNullableFilter>? = nil
+        equals: NullOr<T>? = nil,
+        `in`: [T]? = nil,
+        notIn: [T]? = nil,
+        lt: T? = nil,
+        lte: T? = nil,
+        gt: T? = nil,
+        gte: T? = nil,
+        not: NullOr<NumberNullableFilter<T>>? = nil
     ) {
         self.equals = equals
         self.in = `in`
@@ -196,18 +193,17 @@ public class ObjectIdNullableFilter: Encodable, ExpressibleByStringLiteral {
         self.gte = gte
         self.not = not
     }
-    public required init(stringLiteral value: String) {
-        self.equals = .nonnull(value)
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
-        self.not = nil
-    }
-    public static var null = ObjectIdNullableFilter(equals: .null)
 }
+
+public typealias ObjectIdNullableFilter = NumberNullableFilter<String>
+public typealias Int32NullableFilter = NumberNullableFilter<Int32>
+public typealias Int64NullableFilter = NumberNullableFilter<Int64>
+public typealias FloatNullableFilter = NumberNullableFilter<Float>
+public typealias DoubleNullableFilter = NumbeNumberNullableFilterrFilter<Double>
+public typealias DecimalNullableFilter = NumberNullableFilter<Decimal>
+public typealias DateNullableFilter = NumberNullableFilter<String>
+public typealias DateTimeNullableFilter = NumberNullableFilter<Date>
+
 
 public class BoolFilter: Encodable, ExpressibleByBooleanLiteral {
     public let equals: Bool?
@@ -240,274 +236,6 @@ public class BoolNullableFilter: Encodable, ExpressibleByBooleanLiteral {
         self.not = nil
     }
     public static var null = BoolNullableFilter(equals: .null)
-}
-
-public class IntFilter<T>: Encodable, ExpressibleByIntegerLiteral where T: SignedInteger & Encodable & ExpressibleByIntegerLiteral {
-    public typealias IntegerLiteralType = T.IntegerLiteralType
-    public let equals: T?
-    public let `in`: [T]?
-    public let notIn: [T]?
-    public let lt: T?
-    public let lte: T?
-    public let gt: T?
-    public let gte: T?
-    public let not: IntFilter<T>?
-    public init(
-        equals: T? = nil,
-        `in`: [T]? = nil,
-        notIn: [T]? = nil,
-        lt: T? = nil,
-        lte: T? = nil,
-        gt: T? = nil,
-        gte: T? = nil,
-        not: IntFilter<T>? = nil
-    ) {
-        self.equals = equals
-        self.in = `in`
-        self.notIn = notIn
-        self.lt = lt
-        self.lte = lte
-        self.gt = gt
-        self.gte = gte
-        self.not = not
-    }
-    public required init(integerLiteral value: T.IntegerLiteralType) {
-        self.equals = T(integerLiteral: value)
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
-        self.not = nil
-    }
-}
-
-public class IntNullableFilter<T>: Encodable, ExpressibleByIntegerLiteral where T: SignedInteger & Encodable & ExpressibleByIntegerLiteral {
-    public typealias IntegerLiteralType = T.IntegerLiteralType
-    public let equals: NullOr<T>?
-    public let `in`: [T?]?
-    public let notIn: [T?]?
-    public let lt: T?
-    public let lte: T?
-    public let gt: T?
-    public let gte: T?
-    public let not: IntNullableFilter<T>?
-    public init(
-        equals: NullOr<T>? = nil,
-        `in`: [T]? = nil,
-        notIn: [T]? = nil,
-        lt: T? = nil,
-        lte: T? = nil,
-        gt: T? = nil,
-        gte: T? = nil,
-        not: IntNullableFilter<T>? = nil
-    ) {
-        self.equals = equals
-        self.in = `in`
-        self.notIn = notIn
-        self.lt = lt
-        self.lte = lte
-        self.gt = gt
-        self.gte = gte
-        self.not = not
-    }
-    public required init(integerLiteral value: T.IntegerLiteralType) {
-        self.equals = .nonnull(T(integerLiteral: value))
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
-        self.not = nil
-    }
-}
-
-public class FloatFilter<T>: Encodable, ExpressibleByIntegerLiteral where T: FloatingPoint & Encodable & ExpressibleByIntegerLiteral & ExpressibleByFloatLiteral {
-    public typealias IntegerLiteralType = T.IntegerLiteralType
-    public typealias FloatLiteralType = T.FloatLiteralType
-    public let equals: T?
-    public let `in`: [T]?
-    public let notIn: [T]?
-    public let lt: T?
-    public let lte: T?
-    public let gt: T?
-    public let gte: T?
-    public let not: FloatFilter<T>?
-    public init(
-        equals: T? = nil,
-        `in`: [T]? = nil,
-        notIn: [T]? = nil,
-        lt: T? = nil,
-        lte: T? = nil,
-        gt: T? = nil,
-        gte: T? = nil,
-        not: FloatFilter<T>? = nil
-    ) {
-        self.equals = equals
-        self.in = `in`
-        self.notIn = notIn
-        self.lt = lt
-        self.lte = lte
-        self.gt = gt
-        self.gte = gte
-        self.not = not
-    }
-    public required init(integerLiteral value: T.IntegerLiteralType) {
-        self.equals = T(integerLiteral: value)
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
-        self.not = nil
-    }
-    public required init(floatLiteral value: T.FloatLiteralType) {
-        self.equals = T(floatLiteral: value)
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
-        self.not = nil
-    }
-}
-
-public class FloatNullableFilter<T>: Encodable, ExpressibleByIntegerLiteral where T: FloatingPoint & Encodable & ExpressibleByIntegerLiteral & ExpressibleByFloatLiteral {
-    public typealias IntegerLiteralType = T.IntegerLiteralType
-    public typealias FloatLiteralType = T.FloatLiteralType
-    public let equals: NullOr<T>?
-    public let `in`: [T?]?
-    public let notIn: [T?]?
-    public let lt: T?
-    public let lte: T?
-    public let gt: T?
-    public let gte: T?
-    public let not: FloatNullableFilter<T>?
-    public init(
-        equals: NullOr<T>? = nil,
-        `in`: [T]? = nil,
-        notIn: [T]? = nil,
-        lt: T? = nil,
-        lte: T? = nil,
-        gt: T? = nil,
-        gte: T? = nil,
-        not: FloatNullableFilter<T>? = nil
-    ) {
-        self.equals = equals
-        self.in = `in`
-        self.notIn = notIn
-        self.lt = lt
-        self.lte = lte
-        self.gt = gt
-        self.gte = gte
-        self.not = not
-    }
-    public required init(integerLiteral value: T.IntegerLiteralType) {
-        self.equals = .nonnull(T(integerLiteral: value))
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
-        self.not = nil
-    }
-    public required init(floatLiteral value: T.FloatLiteralType) {
-        self.equals = .nonnull(T(floatLiteral: value))
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
-        self.not = nil
-    }
-}
-
-public class DecimalFilter: Encodable, ExpressibleByStringLiteral {
-    public typealias StringLiteralType = String
-    public let equals: Decimal?
-    public let `in`: [Decimal]?
-    public let notIn: [Decimal]?
-    public let lt: Decimal?
-    public let lte: Decimal?
-    public let gt: Decimal?
-    public let gte: Decimal?
-    public let not: DecimalFilter?
-    public init(
-        equals: Decimal? = nil,
-        `in`: [Decimal]? = nil,
-        notIn: [Decimal]? = nil,
-        lt: Decimal? = nil,
-        lte: Decimal? = nil,
-        gt: Decimal? = nil,
-        gte: Decimal? = nil,
-        not: DecimalFilter? = nil
-    ) {
-        self.equals = equals
-        self.in = `in`
-        self.notIn = notIn
-        self.lt = lt
-        self.lte = lte
-        self.gt = gt
-        self.gte = gte
-        self.not = not
-    }
-    public required init(stringLiteral value: String) {
-        self.equals = Decimal(string: value)!
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
-        self.not = nil
-    }
-}
-
-public class DecimalNullableFilter: Encodable, ExpressibleByStringLiteral {
-    public typealias StringLiteralType = String
-    public let equals: NullOr<Decimal>?
-    public let `in`: [Decimal?]?
-    public let notIn: [Decimal?]?
-    public let lt: Decimal?
-    public let lte: Decimal?
-    public let gt: Decimal?
-    public let gte: Decimal?
-    public let not: DecimalNullableFilter?
-    public init(
-        equals: NullOr<Decimal>? = nil,
-        `in`: [Decimal]? = nil,
-        notIn: [Decimal]? = nil,
-        lt: Decimal? = nil,
-        lte: Decimal? = nil,
-        gt: Decimal? = nil,
-        gte: Decimal? = nil,
-        not: DecimalNullableFilter? = nil
-    ) {
-        self.equals = equals
-        self.in = `in`
-        self.notIn = notIn
-        self.lt = lt
-        self.lte = lte
-        self.gt = gt
-        self.gte = gte
-        self.not = not
-    }
-    public required init(stringLiteral value: String) {
-        self.equals = .nonnull(Decimal(string: value)!)
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
-        self.not = nil
-    }
 }
 
 public class StringFilter: Encodable, ExpressibleByStringLiteral {
@@ -620,169 +348,6 @@ public class StringNullableFilter: Encodable, ExpressibleByStringLiteral {
         self.startsWith = nil
         self.endsWith = nil
         self.matches = nil
-        self.not = nil
-    }
-}
-
-public class DateFilter: Encodable, ExpressibleByStringLiteral {
-    public typealias StringLiteralType = String
-    public let equals: String?
-    public let `in`: [String]?
-    public let notIn: [String]?
-    public let lt: String?
-    public let lte: String?
-    public let gt: String?
-    public let gte: String?
-    public let not: DateFilter?
-    public init(
-        equals: String? = nil,
-        `in`: [String]? = nil,
-        notIn: [String]? = nil,
-        lt: String? = nil,
-        lte: String? = nil,
-        gt: String? = nil,
-        gte: String? = nil,
-        not: DateFilter? = nil
-    ) {
-        self.equals = equals
-        self.in = `in`
-        self.notIn = notIn
-        self.lt = lt
-        self.lte = lte
-        self.gt = gt
-        self.gte = gte
-        self.not = not
-    }
-    public required init(stringLiteral value: String) {
-        self.equals = value
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
-        self.not = nil
-    }
-}
-
-public class DateNullableFilter: Encodable, ExpressibleByStringLiteral {
-    public typealias StringLiteralType = String
-    public let equals: NullOr<String>?
-    public let `in`: [String?]?
-    public let notIn: [String?]?
-    public let lt: String?
-    public let lte: String?
-    public let gt: String?
-    public let gte: String?
-    public let not: DateNullableFilter?
-    public init(
-        equals: NullOr<String>? = nil,
-        `in`: [String?]? = nil,
-        notIn: [String?]? = nil,
-        lt: String? = nil,
-        lte: String? = nil,
-        gt: String? = nil,
-        gte: String? = nil,
-        not: DateNullableFilter? = nil
-    ) {
-        self.equals = equals
-        self.in = `in`
-        self.notIn = notIn
-        self.lt = lt
-        self.lte = lte
-        self.gt = gt
-        self.gte = gte
-        self.not = not
-    }
-    public required init(stringLiteral value: String) {
-        self.equals = .nonnull(value)
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
-        self.not = nil
-    }
-}
-
-public class DateTimeFilter: Encodable, ExpressibleByStringLiteral {
-    public let equals: Date?
-    public let `in`: [Date]?
-    public let notIn: [Date]?
-    public let lt: Date?
-    public let lte: Date?
-    public let gt: Date?
-    public let gte: Date?
-    public let not: DateTimeFilter?
-    public init(
-        equals: Date? = nil,
-        `in`: [Date]? = nil,
-        notIn: [Date]? = nil,
-        lt: Date? = nil,
-        lte: Date? = nil,
-        gt: Date? = nil,
-        gte: Date? = nil,
-        not: DateTimeFilter? = nil
-    ) {
-        self.equals = equals
-        self.in = `in`
-        self.notIn = notIn
-        self.lt = lt
-        self.lte = lte
-        self.gt = gt
-        self.gte = gte
-        self.not = not
-    }
-    public required init(stringLiteral value: String) {
-        self.equals = try! Date(value, strategy: .iso8601)
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
-        self.not = nil
-    }
-}
-
-public class DateTimeNullableFilter: Encodable, ExpressibleByStringLiteral {
-    public typealias StringLiteralType = String
-    public let equals: NullOr<Date>?
-    public let `in`: [Date?]?
-    public let notIn: [Date?]?
-    public let lt: Date?
-    public let lte: Date?
-    public let gt: Date?
-    public let gte: Date?
-    public let not: DateTimeNullableFilter?
-    public init(
-        equals: NullOr<Date>? = nil,
-        `in`: [Date?]? = nil,
-        notIn: [Date?]? = nil,
-        lt: Date? = nil,
-        lte: Date? = nil,
-        gt: Date? = nil,
-        gte: Date? = nil,
-        not: DateTimeNullableFilter? = nil
-    ) {
-        self.equals = equals
-        self.in = `in`
-        self.notIn = notIn
-        self.lt = lt
-        self.lte = lte
-        self.gt = gt
-        self.gte = gte
-        self.not = not
-    }
-    public required init(stringLiteral value: String) {
-        self.equals = .nonnull(try! Date(value, strategy: .iso8601))
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
         self.not = nil
     }
 }
