@@ -1,6 +1,8 @@
 use std::borrow::Cow;
+use std::cmp::Ordering;
 use inflector::Inflector;
 use itertools::Itertools;
+use crate::core::action::{Action, IDENTITY_HANDLER, SIGN_IN_HANDLER};
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::generator::lib::shared::type_lookup::TypeLookup;
 use crate::prelude::Graph;
@@ -35,6 +37,12 @@ pub(crate) struct ActionArg<'a> {
     pub(crate) name: String,
     pub(crate) docs: Option<Cow<'a, str>>,
     pub(crate) fields: Vec<ActionArgField<'a>>,
+}
+
+impl<'a> ActionArg<'a> {
+    pub(crate) fn sorted_fields(&'a self) -> Vec<&'a ActionArgField<'a>> {
+        self.fields.iter().sorted_by(|a, b| if a.optional { Ordering::Greater } else { Ordering::Less }).collect()
+    }
 }
 
 pub(crate) struct ActionArgField<'a> {
@@ -261,6 +269,15 @@ fn args__max_field(model: &str, optional: bool) -> ActionArgField {
     }
 }
 
+fn args_credentials_field(model: &str, optional: bool) -> ActionArgField {
+    ActionArgField {
+        name: "credentials",
+        docs: Cow::Owned(format!("Credential data needed to sign in {}.", model.to_word_case().articlize())),
+        field_type: Cow::Owned(format!("{}CredentialsInput", model)),
+        optional,
+    }
+}
+
 pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput> where T: TypeLookup + 'a {
     graph.models().iter().map(|m| {
         ModelInput {
@@ -320,176 +337,196 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                 without.append(&mut m.relations().iter().map(|r| Cow::Borrowed(r.name())).collect());
                 without
             },
-            action_args: vec![
-                ActionArg {
-                    name: format!("{}Args", m.name()),
-                    docs: None,
-                    fields: vec![
-                        args_select_field(m.name(), true),
-                        args_include_field(m.name(), true),
-                    ]
-                },
-                ActionArg {
-                    name: format!("{}FindUniqueArgs", m.name()),
-                    docs: None,
-                    fields: vec![
-                        args_where_unique_field(m.name(), false),
-                        args_select_field(m.name(), true),
-                        args_include_field(m.name(), true),
-                    ]
-                },
-                ActionArg {
-                    name: format!("{}FindFirstArgs", m.name()),
-                    docs: None,
-                    fields: vec![
-                        args_where_field(m.name(), true, true),
-                        args_select_field(m.name(), true),
-                        args_include_field(m.name(), true),
-                        args_order_by_field(m.name(), &lookup, true),
-                        args_cursor_field(m.name(), true),
-                        args_take_field(m.name(), lookup.number_type(), true),
-                        args_skip_field(m.name(), lookup.number_type(), true),
-                        args_page_size_field(m.name(), lookup.number_type(), true),
-                        args_page_number_field(m.name(), lookup.number_type(), true),
-                    ]
-                },
-                ActionArg {
-                    name: format!("{}FindManyArgs", m.name()),
-                    docs: None,
-                    fields: vec![
-                        args_where_field(m.name(), false, true),
-                        args_select_field(m.name(), true),
-                        args_include_field(m.name(), true),
-                        args_order_by_field(m.name(), &lookup, true),
-                        args_cursor_field(m.name(), true),
-                        args_take_field(m.name(), lookup.number_type(), true),
-                        args_skip_field(m.name(), lookup.number_type(), true),
-                        args_page_size_field(m.name(), lookup.number_type(), true),
-                        args_page_number_field(m.name(), lookup.number_type(), true),
-                    ]
-                },
-                ActionArg {
-                    name: format!("{}CreateArgs", m.name()),
-                    docs: None,
-                    fields: vec![
-                        args_select_field(m.name(), true),
-                        args_include_field(m.name(), true),
-                        args_create_input(m.name(), false),
-                    ]
-                },
-                ActionArg {
-                    name: format!("{}UpdateArgs", m.name()),
-                    docs: None,
-                    fields: vec![
-                        args_where_unique_field(m.name(), false),
-                        args_select_field(m.name(), true),
-                        args_include_field(m.name(), true),
-                        args_update_input(m.name(), false),
-                    ]
-                },
-                ActionArg {
-                    name: format!("{}UpsertArgs", m.name()),
-                    docs: None,
-                    fields: vec![
-                        args_where_unique_field(m.name(), false),
-                        args_select_field(m.name(), true),
-                        args_include_field(m.name(), true),
-                        args_create_input(m.name(), false),
-                        args_update_input(m.name(), false),
-                    ]
-                },
-                ActionArg {
-                    name: format!("{}DeleteArgs", m.name()),
-                    docs: None,
-                    fields: vec![
-                        args_where_unique_field(m.name(), false),
-                        args_select_field(m.name(), true),
-                    ]
-                },
-                ActionArg {
-                    name: format!("{}CreateManyArgs", m.name()),
-                    docs: None,
-                    fields: vec![
-                        args_select_field(m.name(), true),
-                        args_include_field(m.name(), true),
-                        args_create_many_input(m.name(), &lookup, false),
-                    ]
-                },
-                ActionArg {
-                    name: format!("{}UpdateManyArgs", m.name()),
-                    docs: None,
-                    fields: vec![
-                        args_where_field(m.name(), false, true),
-                        args_select_field(m.name(), true),
-                        args_include_field(m.name(), true),
-                        args_update_input(m.name(), false),
-                    ]
-                },
-                ActionArg {
-                    name: format!("{}DeleteManyArgs", m.name()),
-                    docs: None,
-                    fields: vec![
-                        args_where_field(m.name(), false, true),
-                        args_select_field(m.name(), true),
-                    ]
-                },
-                ActionArg {
-                    name: format!("{}CountArgs", m.name()),
-                    docs: None,
-                    fields: vec![
-                        args_where_field(m.name(), false, true),
-                        args_cursor_field(m.name(), true),
-                        args_skip_field(m.name(), lookup.number_type(), true),
-                        args_take_field(m.name(), lookup.number_type(), true),
-                        args_order_by_field(m.name(), &lookup, true),
-                        args_count_select_field(m.name(), true),
-                    ]
-                },
-                ActionArg {
-                    name: format!("{}AggregateArgs", m.name()),
-                    docs: None,
-                    fields: vec![
-                        args_where_field(m.name(), false, true),
-                        args_cursor_field(m.name(), true),
-                        args_skip_field(m.name(), lookup.number_type(), true),
-                        args_take_field(m.name(), lookup.number_type(), true),
-                        args_page_size_field(m.name(), lookup.number_type(), true),
-                        args_page_number_field(m.name(), lookup.number_type(), true),
-                        args_order_by_field(m.name(), &lookup, true),
-                        args_distinct_field(m.name(), &lookup, true),
-                        args__count_field(m.name(), true),
-                        args__avg_field(m.name(), true),
-                        args__sum_field(m.name(), true),
-                        args__min_field(m.name(), true),
-                        args__max_field(m.name(), true),
-                    ]
-                },
-                ActionArg {
-                    name: format!("{}GroupByArgs", m.name()),
-                    docs: None,
-                    fields: vec![
-                        args_where_field(m.name(), false, true),
-                        args_by_field(m.name(), false, &lookup),
-                        args_having_field(m.name(), &lookup, true),
-                        args_cursor_field(m.name(), true),
-                        args_skip_field(m.name(), lookup.number_type(), true),
-                        args_take_field(m.name(), lookup.number_type(), true),
-                        args_page_size_field(m.name(), lookup.number_type(), true),
-                        args_page_number_field(m.name(), lookup.number_type(), true),
-                        args_order_by_field(m.name(), &lookup, true),
-                        args_distinct_field(m.name(), &lookup, true),
-                        args__count_field(m.name(), true),
-                        args__avg_field(m.name(), true),
-                        args__sum_field(m.name(), true),
-                        args__min_field(m.name(), true),
-                        args__max_field(m.name(), true),
-                    ]
+            action_args: {
+                let mut args = vec![
+                    ActionArg {
+                        name: format!("{}Args", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_select_field(m.name(), true),
+                            args_include_field(m.name(), true),
+                        ]
+                    },
+                    ActionArg {
+                        name: format!("{}FindUniqueArgs", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_where_unique_field(m.name(), false),
+                            args_select_field(m.name(), true),
+                            args_include_field(m.name(), true),
+                        ]
+                    },
+                    ActionArg {
+                        name: format!("{}FindFirstArgs", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_where_field(m.name(), true, true),
+                            args_select_field(m.name(), true),
+                            args_include_field(m.name(), true),
+                            args_order_by_field(m.name(), &lookup, true),
+                            args_cursor_field(m.name(), true),
+                            args_take_field(m.name(), lookup.number_type(), true),
+                            args_skip_field(m.name(), lookup.number_type(), true),
+                            args_page_size_field(m.name(), lookup.number_type(), true),
+                            args_page_number_field(m.name(), lookup.number_type(), true),
+                        ]
+                    },
+                    ActionArg {
+                        name: format!("{}FindManyArgs", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_where_field(m.name(), false, true),
+                            args_select_field(m.name(), true),
+                            args_include_field(m.name(), true),
+                            args_order_by_field(m.name(), &lookup, true),
+                            args_cursor_field(m.name(), true),
+                            args_take_field(m.name(), lookup.number_type(), true),
+                            args_skip_field(m.name(), lookup.number_type(), true),
+                            args_page_size_field(m.name(), lookup.number_type(), true),
+                            args_page_number_field(m.name(), lookup.number_type(), true),
+                        ]
+                    },
+                    ActionArg {
+                        name: format!("{}CreateArgs", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_select_field(m.name(), true),
+                            args_include_field(m.name(), true),
+                            args_create_input(m.name(), false),
+                        ]
+                    },
+                    ActionArg {
+                        name: format!("{}UpdateArgs", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_where_unique_field(m.name(), false),
+                            args_select_field(m.name(), true),
+                            args_include_field(m.name(), true),
+                            args_update_input(m.name(), false),
+                        ]
+                    },
+                    ActionArg {
+                        name: format!("{}UpsertArgs", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_where_unique_field(m.name(), false),
+                            args_select_field(m.name(), true),
+                            args_include_field(m.name(), true),
+                            args_create_input(m.name(), false),
+                            args_update_input(m.name(), false),
+                        ]
+                    },
+                    ActionArg {
+                        name: format!("{}DeleteArgs", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_where_unique_field(m.name(), false),
+                            args_select_field(m.name(), true),
+                        ]
+                    },
+                    ActionArg {
+                        name: format!("{}CreateManyArgs", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_select_field(m.name(), true),
+                            args_include_field(m.name(), true),
+                            args_create_many_input(m.name(), &lookup, false),
+                        ]
+                    },
+                    ActionArg {
+                        name: format!("{}UpdateManyArgs", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_where_field(m.name(), false, true),
+                            args_select_field(m.name(), true),
+                            args_include_field(m.name(), true),
+                            args_update_input(m.name(), false),
+                        ]
+                    },
+                    ActionArg {
+                        name: format!("{}DeleteManyArgs", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_where_field(m.name(), false, true),
+                            args_select_field(m.name(), true),
+                        ]
+                    },
+                    ActionArg {
+                        name: format!("{}CountArgs", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_where_field(m.name(), false, true),
+                            args_cursor_field(m.name(), true),
+                            args_skip_field(m.name(), lookup.number_type(), true),
+                            args_take_field(m.name(), lookup.number_type(), true),
+                            args_order_by_field(m.name(), &lookup, true),
+                            args_count_select_field(m.name(), true),
+                        ]
+                    },
+                    ActionArg {
+                        name: format!("{}AggregateArgs", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_where_field(m.name(), false, true),
+                            args_cursor_field(m.name(), true),
+                            args_skip_field(m.name(), lookup.number_type(), true),
+                            args_take_field(m.name(), lookup.number_type(), true),
+                            args_page_size_field(m.name(), lookup.number_type(), true),
+                            args_page_number_field(m.name(), lookup.number_type(), true),
+                            args_order_by_field(m.name(), &lookup, true),
+                            args_distinct_field(m.name(), &lookup, true),
+                            args__count_field(m.name(), true),
+                            args__avg_field(m.name(), true),
+                            args__sum_field(m.name(), true),
+                            args__min_field(m.name(), true),
+                            args__max_field(m.name(), true),
+                        ]
+                    },
+                    ActionArg {
+                        name: format!("{}GroupByArgs", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_where_field(m.name(), false, true),
+                            args_by_field(m.name(), false, &lookup),
+                            args_having_field(m.name(), &lookup, true),
+                            args_cursor_field(m.name(), true),
+                            args_skip_field(m.name(), lookup.number_type(), true),
+                            args_take_field(m.name(), lookup.number_type(), true),
+                            args_page_size_field(m.name(), lookup.number_type(), true),
+                            args_page_number_field(m.name(), lookup.number_type(), true),
+                            args_order_by_field(m.name(), &lookup, true),
+                            args_distinct_field(m.name(), &lookup, true),
+                            args__count_field(m.name(), true),
+                            args__avg_field(m.name(), true),
+                            args__sum_field(m.name(), true),
+                            args__min_field(m.name(), true),
+                            args__max_field(m.name(), true),
+                        ]
+                    }
+                ];
+                if m.has_action(Action::from_u32(SIGN_IN_HANDLER)) {
+                    args.push(ActionArg {
+                        name: format!("{}SignInArgs", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_credentials_field(m.name(), false),
+                            args_select_field(m.name(), false),
+                            args_include_field(m.name(), false),
+                        ]
+                    })
                 }
-            ],
+                if m.has_action(Action::from_u32(IDENTITY_HANDLER)) {
+                    args.push(ActionArg {
+                        name: format!("{}IdentityArgs", m.name()),
+                        docs: None,
+                        fields: vec![
+                            args_select_field(m.name(), false),
+                            args_include_field(m.name(), false),
+                        ]
+                    })
+                }
+                args
+            }
         }
     }).collect()
 }
-
-// ActionArg {
-// name: format!("{}SignInArgs", m.name()),
-// }
