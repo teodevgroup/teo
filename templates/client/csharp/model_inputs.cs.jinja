@@ -7,11 +7,11 @@ namespace Teo {
 {%- endfor %}
         public {{ model.name }}Select(
 {%- for field in model.select %}
-            bool? {{ field|csharp_escape }} = null{% if !loop.last %},{% endif %}
+            bool? {{ field|escape_csharp }} = null{% if !loop.last %},{% endif %}
 {%- endfor %}
         ) {
 {%- for field in model.select %}
-            {{ field|pascalcase }} = {{ field|csharp_escape }};
+            {{ field|pascalcase }} = {{ field|escape_csharp }};
 {%- endfor %}
         }
     }

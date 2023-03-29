@@ -4,7 +4,6 @@ pub(crate) mod types;
 
 use async_trait::async_trait;
 use crate::core::app::conf::ClientGeneratorConf;
-use crate::generator::client::csharp::pkg::index::generate_index_cs;
 use crate::generator::client::csharp::pkg::runtime::generate_runtime_cs;
 use crate::core::graph::Graph;
 use crate::generator::client::ClientGenerator;
@@ -33,6 +32,7 @@ impl ClientGenerator for CSharpClientGenerator {
     }
 
     async fn generate_main(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
-        generator.generate_file("Index.cs", generate_index_cs(graph, client).await).await
+        Ok(())
+        //generator.generate_file("Index.cs", generate_index_cs(graph, client).await).await
     }
 }
