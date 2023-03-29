@@ -27,4 +27,8 @@ model Support {
   toTitleCase: String?
   @onSet($trim)
   trim: String?
+  @onSet($padEnd(5, "_"))
+  padEnd: String?
+  @onSet($padStart(5, "_"))
+  padStart: String?
 }

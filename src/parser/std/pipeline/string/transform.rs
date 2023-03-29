@@ -30,14 +30,14 @@ pub(crate) fn split(args: Vec<Argument>) -> Arc<dyn Item> {
 
 pub(crate) fn pad_start(args: Vec<Argument>) -> Arc<dyn Item> {
     let arg1 = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
-    let arg2 = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
-    Arc::new(PadStartItem::new(arg1.as_str().unwrap().chars().nth(0).unwrap(), arg2))
+    let arg2 = args.get(1).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
+    Arc::new(PadStartItem::new(arg1, arg2.as_str().unwrap().chars().nth(0).unwrap()))
 }
 
 pub(crate) fn pad_end(args: Vec<Argument>) -> Arc<dyn Item> {
     let arg1 = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
-    let arg2 = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
-    Arc::new(PadEndItem::new(arg1.as_str().unwrap().chars().nth(0).unwrap(), arg2))
+    let arg2 = args.get(1).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
+    Arc::new(PadEndItem::new(arg1, arg2.as_str().unwrap().chars().nth(0).unwrap()))
 }
 
 pub(crate) fn ellipsis(args: Vec<Argument>) -> Arc<dyn Item> {

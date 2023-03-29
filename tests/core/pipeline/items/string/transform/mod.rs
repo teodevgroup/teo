@@ -112,4 +112,34 @@ mod test {
             }
         }))
     }
+
+    #[test]
+    fn pad_end() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "padEnd": "123",
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "padEnd": "123__",
+            }
+        }))
+    }
+
+    #[test]
+    fn pad_start() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "padStart": "123",
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "padStart": "__123",
+            }
+        }))
+    }
 }
