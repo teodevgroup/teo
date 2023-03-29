@@ -14,7 +14,7 @@ use crate::generator::lib::generator::Generator;
 pub(crate) struct SwiftClientGenerator { }
 
 impl SwiftClientGenerator {
-    pub(crate) fn new() -> Self { Self {} }
+    pub(crate) fn new() -> Self { Self { } }
 }
 
 #[async_trait]

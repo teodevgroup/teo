@@ -10,6 +10,9 @@ impl SwiftTypes {
 }
 
 impl TypeLookup for SwiftTypes {
+    fn number_type(&self) -> &'static str {
+        "Int"
+    }
     fn field_type_to_filter_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
         match field_type {
             FieldType::ObjectId => if optional { Cow::Borrowed("ObjectIdNullableFilter") } else { Cow::Borrowed("ObjectIdFilter") },
@@ -90,8 +93,12 @@ impl TypeLookup for SwiftTypes {
         }
     }
 
-    fn generated_type_to_vec<'a>(&self, generated_type: &'a str) -> Cow<'a, str> {
-        Cow::Owned("[".to_owned() + generated_type + "]")
+    fn generated_type_to_vec<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
+        Cow::Owned("[".to_owned() + generated_type.as_ref() + "]")
+    }
+
+    fn generated_type_to_enumerate<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
+        Cow::Owned("[".to_owned() + generated_type.as_ref() + "]")
     }
 
     fn action_result_type<'a>(&self, action: Action, model_name: &'a str) -> Cow<'a, str> {

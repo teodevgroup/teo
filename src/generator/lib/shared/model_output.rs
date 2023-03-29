@@ -51,7 +51,7 @@ fn model_outputs<T>(graph: &Graph, include_relations: bool, lookup: T) -> Vec<Mo
                 fields.push(ModelOutputField {
                     name: Cow::Borrowed(relation.name()),
                     field_type: if relation.is_vec() {
-                        lookup.generated_type_to_vec(relation.model())
+                        lookup.generated_type_to_vec(Cow::Borrowed(relation.model()))
                     } else {
                         Cow::Borrowed(relation.name())
                     },
