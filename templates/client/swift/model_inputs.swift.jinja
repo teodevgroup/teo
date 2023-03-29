@@ -275,4 +275,21 @@ public class {{ model.name }}UpsertWithWhereUnique{%- if !without.is_empty() %}W
     }
 }
 {%- endfor %}
+{%- for action_arg in model.action_args %}
+public class {{ model.name }}{{ action_arg.name }}: Encodable {
+{%- for field in action_arg.sorted_fields() %}
+    /// {{ field.docs }}
+    public let {{ field.name }}: {{ field.field_type }}{%- if field.optional %}?{%- endif %}
+{%- endfor %}
+    public init(
+{%- for field in action_arg.sorted_fields() %}
+        {{ field.name }}: {{ field.field_type }}{%- if field.optional %}?{%- endif %} = nil{% if !loop.last %},{% endif %}
+{%- endfor %}
+    ) {
+{%- for field in action_arg.sorted_fields() %}
+        self.{{ field.name }} = {{ field.name }}
+{%- endfor %}
+    }
+}
+{%- endfor %}
 {%- endfor %}
