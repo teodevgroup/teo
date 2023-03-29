@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use inflector::Inflector;
 use itertools::Itertools;
 use crate::core::action::{Action, IDENTITY_HANDLER, SIGN_IN_HANDLER};
-use crate::core::field::r#type::{FieldType, FieldTypeOwner};
+use crate::core::field::r#type::FieldTypeOwner;
 use crate::generator::lib::shared::type_lookup::TypeLookup;
 use crate::prelude::Graph;
 
