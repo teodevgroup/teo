@@ -67,7 +67,7 @@ fn generate_delegate_classes(graph: &Graph) -> String {
 }
 
 pub(crate) fn generate_teo_swift(graph: &Graph, client: &ClientGeneratorConf) -> String {
-    let header = include_str!("header.swift");
+    let header = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/swift/header.swift"));
     let enums = generate_enums(graph);
     let output_types = generate_model_output_types(graph);
     let input_types = generate_input_types(graph);

@@ -1,5 +1,5 @@
-pub(crate) mod pkg;
 pub(crate) mod types;
+pub(crate) mod teo;
 
 use async_trait::async_trait;
 use crate::core::app::conf::ClientGeneratorConf;
