@@ -1,0 +1,19 @@
+#nullable enable
+namespace Teo {
+{%- for model in models %}
+    public class {{ model.name }}Select {
+{%- for field in model.select %}
+        public bool? {{ field|pascalcase }} { get; set; }
+{%- endfor %}
+        public {{ model.name }}Select(
+{%- for field in model.select %}
+            bool? {{ field|csharp_escape }} = null{% if !loop.last %},{% endif %}
+{%- endfor %}
+        ) {
+{%- for field in model.select %}
+            {{ field|pascalcase }} = {{ field|csharp_escape }};
+{%- endfor %}
+        }
+    }
+{%- endfor %}
+}

@@ -1,0 +1,20 @@
+// Enums
+#nullable enable
+namespace Teo {
+{%- for model in models %}
+    public class {{ model.name }} {
+{%- for field in model.fields %}
+        public {{ field.field_type }}? {{ field.name|capitalize }} { get; set; }
+{%- endfor %}
+        public {{ model.name }}(
+{%- for field in model.fields %}
+        {{ field.field_type }}? {{ field.name|escape_csharp }} = null{% if !loop.last %},{% endif %}
+{%- endfor %}
+        ) {
+{%- for field in model.fields %}
+            {{ field.name|capitalize }} = {{ field.name|escape_csharp }};
+{%- endfor %}
+        }
+    }
+{%- endfor %}
+}
