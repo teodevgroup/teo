@@ -1,0 +1,11 @@
+// Enums
+#nullable enable
+namespace Teo {
+{%- for enum_def in enums %}
+    public enum {{ enum_def.name }} {
+{%- for variant in enum_def.variants %}
+        {{ variant.name|pascalcase }} = {{ loop.index }},
+{%- endfor %}
+    }
+{%- endfor %}
+}

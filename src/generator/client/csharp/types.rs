@@ -140,11 +140,11 @@ impl TypeLookup for CSharpTypes {
     }
 
     fn generated_type_to_vec<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
-        Cow::Owned("[".to_owned() + generated_type.as_ref() + "]")
+        Cow::Owned(generated_type.as_ref().to_owned() + "[]")
     }
 
     fn generated_type_to_enumerate<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
-        Cow::Owned("[".to_owned() + generated_type.as_ref() + "]")
+        Cow::Owned("Enumerate<".to_owned() + generated_type.as_ref() + ">")
     }
 
     fn action_result_type<'a>(&self, action: Action, model_name: &'a str) -> Cow<'a, str> {
