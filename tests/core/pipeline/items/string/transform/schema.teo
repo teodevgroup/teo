@@ -1,0 +1,30 @@
+connector {
+  provider .sqlite
+  url "sqlite::memory:"
+}
+
+server {
+  bind ("0.0.0.0", 4015)
+}
+
+enum Sex {
+  MALE
+  FEMALE
+}
+
+model Support {
+  @id @autoIncrement @readonly
+  id: Int
+  @onSet($toWordCase)
+  toWordCase: String?
+  @onSet($toLowerCase)
+  toLowerCase: String?
+  @onSet($toUpperCase)
+  toUpperCase: String?
+  @onSet($toSentenceCase)
+  toSentenceCase: String?
+  @onSet($toTitleCase)
+  toTitleCase: String?
+  @onSet($trim)
+  trim: String?
+}
