@@ -14,12 +14,12 @@ public struct ResponseWithMeta<Meta, Data>: Decodable where Meta: Decodable, Dat
     public let data: Data
 }
 
-public struct PagingInfo {
+public struct PagingInfo: Decodable {
     public let count: Int
     public let numberOfPages: Int?
 }
 
-public struct TokenInfo {
+public struct TokenInfo: Decodable {
     public let token: String
 }
 

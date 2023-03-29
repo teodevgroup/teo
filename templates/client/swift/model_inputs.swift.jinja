@@ -106,7 +106,7 @@ public enum {{ model.name }}OrderByInput: Encodable {
     }
 }
 {%- for without in model.without %}
-public class {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input: Encodable {
+public class {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input: Encodable {
 {%- for field in model.create_fields %}
     {% if without.as_ref() != field.name.as_ref() %}public let {{ field.name|escape_swift }}: {{ field.create_type }}?{%- endif %}
 {%- endfor %}
@@ -120,13 +120,13 @@ public class {{ model.name }}Create{%- if !without.is_empty() %}Without{{ withou
 {%- endfor %}
     }
 }
-public class {{ model.name }}CreateNestedMany{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input: Encodable {
-    public let create: [{{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]?
-    public let connectOrCreate: [{{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]?
+public class {{ model.name }}CreateNestedMany{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input: Encodable {
+    public let create: [{{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input]?
+    public let connectOrCreate: [{{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input]?
     public let connect: [{{ model.name }}WhereUniqueInput]?
     public init(
-        create: [{{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]? = nil,
-        connectOrCreate: [{{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]? = nil,
+        create: [{{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input]? = nil,
+        connectOrCreate: [{{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input]? = nil,
         connect: [{{ model.name }}WhereUniqueInput]? = nil
     ) {
         self.create = create
@@ -134,13 +134,13 @@ public class {{ model.name }}CreateNestedMany{%- if !without.is_empty() %}Withou
         self.connect = connect
     }
 }
-public class {{ model.name }}CreateNestedOne{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input: Encodable {
-    public let create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
-    public let connectOrCreate: {{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
+public class {{ model.name }}CreateNestedOne{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input: Encodable {
+    public let create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input?
+    public let connectOrCreate: {{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input?
     public let connect: {{ model.name }}WhereUniqueInput?
     public init(
-        create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil,
-        connectOrCreate: {{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil,
+        create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input? = nil,
+        connectOrCreate: {{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input? = nil,
         connect: {{ model.name }}WhereUniqueInput? = nil
     ) {
         self.create = create
@@ -148,18 +148,18 @@ public class {{ model.name }}CreateNestedOne{%- if !without.is_empty() %}Without
         self.connect = connect
     }
 }
-public class {{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input: Encodable {
+public class {{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input: Encodable {
     public let `where`: {{ model.name }}WhereUniqueInput?
-    public let create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
+    public let create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input?
     public init(
         `where`: {{ model.name }}WhereUniqueInput? = nil,
-        create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil
+        create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input? = nil
     ) {
         self.where = `where`
         self.create = create
     }
 }
-public class {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input: Encodable {
+public class {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input: Encodable {
 {%- for field in model.update_fields %}
     {% if without.as_ref() != field.name.as_ref() %}public let {{ field.name|escape_swift }}: {{ field.update_type }}?{%- endif %}
 {%- endfor %}
@@ -173,27 +173,27 @@ public class {{ model.name }}Update{%- if !without.is_empty() %}Without{{ withou
 {%- endfor %}
     }
 }
-public class {{ model.name }}UpdateNestedMany{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input: Encodable {
-    public let create: [{{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]?
-    public let connectOrCreate: [{{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]?
+public class {{ model.name }}UpdateNestedMany{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input: Encodable {
+    public let create: [{{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input]?
+    public let connectOrCreate: [{{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input]?
     public let connect: [{{ model.name }}WhereUniqueInput]?
     public let `set`: [{{ model.name }}WhereUniqueInput]?
-    public let update: [{{ model.name }}UpdateWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]?
-    public let upsert: [{{ model.name }}UpsertWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]?
+    public let update: [{{ model.name }}UpdateWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input]?
+    public let upsert: [{{ model.name }}UpsertWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input]?
     public let disconnect: [{{ model.name }}WhereUniqueInput]?
     public let delete: [{{ model.name }}WhereUniqueInput]?
-    public let updateMany: [{{ model.name }}UpdateManyWithWhere{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]?
+    public let updateMany: [{{ model.name }}UpdateManyWithWhere{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input]?
     public let deleteMany: [{{ model.name }}WhereInput]?
     public init(
-        create: [{{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]? = nil,
-        connectOrCreate: [{{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]? = nil,
+        create: [{{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input]? = nil,
+        connectOrCreate: [{{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input]? = nil,
         connect: [{{ model.name }}WhereUniqueInput]? = nil,
         `set`: [{{ model.name }}WhereUniqueInput]? = nil,
-        update: [{{ model.name }}UpdateWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]? = nil,
-        upsert: [{{ model.name }}UpsertWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]? = nil,
+        update: [{{ model.name }}UpdateWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input]? = nil,
+        upsert: [{{ model.name }}UpsertWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input]? = nil,
         disconnect: [{{ model.name }}WhereUniqueInput]? = nil,
         delete: [{{ model.name }}WhereUniqueInput]? = nil,
-        updateMany: [{{ model.name }}UpdateManyWithWhere{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input]? = nil,
+        updateMany: [{{ model.name }}UpdateManyWithWhere{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input]? = nil,
         deleteMany: [{{ model.name }}WhereInput]? = nil
     ) {
         self.create = create
@@ -208,22 +208,22 @@ public class {{ model.name }}UpdateNestedMany{%- if !without.is_empty() %}Withou
         self.deleteMany = deleteMany
     }
 }
-public class {{ model.name }}UpdateNestedOne{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input: Encodable {
-    public let create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
-    public let connectOrCreate: {{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
+public class {{ model.name }}UpdateNestedOne{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input: Encodable {
+    public let create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input?
+    public let connectOrCreate: {{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input?
     public let connect: {{ model.name }}WhereUniqueInput?
     public let `set`: {{ model.name }}WhereUniqueInput?
-    public let update: {{ model.name }}UpdateWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
-    public let upsert: {{ model.name }}UpsertWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
+    public let update: {{ model.name }}UpdateWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input?
+    public let upsert: {{ model.name }}UpsertWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input?
     public let disconnect: Bool?
     public let delete: Bool?
     public init(
-        create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil,
-        connectOrCreate: {{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil,
+        create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input? = nil,
+        connectOrCreate: {{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input? = nil,
         connect: {{ model.name }}WhereUniqueInput? = nil,
         `set`: {{ model.name }}WhereUniqueInput? = nil,
-        update: {{ model.name }}UpdateWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil,
-        upsert: {{ model.name }}UpsertWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil,
+        update: {{ model.name }}UpdateWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input? = nil,
+        upsert: {{ model.name }}UpsertWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input? = nil,
         disconnect: Bool? = nil,
         delete: Bool? = nil
     ) {
@@ -237,36 +237,36 @@ public class {{ model.name }}UpdateNestedOne{%- if !without.is_empty() %}Without
         self.delete = delete
     }
 }
-public class {{ model.name }}UpdateWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input: Encodable {
+public class {{ model.name }}UpdateWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input: Encodable {
     public let `where`: {{ model.name }}WhereUniqueInput?
-    public let update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
+    public let update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input?
     public init(
         `where`: {{ model.name }}WhereUniqueInput? = nil,
-        update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil
+        update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input? = nil
     ) {
         self.where = `where`
         self.update = update
     }
 }
-public class {{ model.name }}UpdateManyWithWhere{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input: Encodable {
+public class {{ model.name }}UpdateManyWithWhere{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input: Encodable {
     public let `where`: {{ model.name }}WhereInput?
-    public let update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
+    public let update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input?
     public init(
         `where`: {{ model.name }}WhereInput? = nil,
-        update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil
+        update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input? = nil
     ) {
         self.where = `where`
         self.update = update
     }
 }
-public class {{ model.name }}UpsertWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input: Decodable {
+public class {{ model.name }}UpsertWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input: Decodable {
     public let `where`: {{ model.name }}WhereUniqueInput?
-    public let update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
-    public let create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
+    public let update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input?
+    public let create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input?
     public init(
         `where`: {{ model.name }}WhereUniqueInput? = nil,
-        update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil,
-        create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil
+        update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input? = nil,
+        create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize_first }}{%- endif %}Input? = nil
     ) {
         self.where = `where`
         self.update = update

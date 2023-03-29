@@ -3,8 +3,8 @@ public struct {{ delegate.model_name }}Delegate {
     private let token: String?
     fileprivate init(_ token: String?) { self.token = token }
 {%- for action in delegate.actions %}
-    public func {{ action.name }}(args: {{ delegate.model_name }}{{ action.name|capitalize }}Args? = nil) async throws -> {{ action.response }} {
-        await request(model: "{{ delegate.model_name }}", action: "{{ action.name }}", input: args ?? {{ delegate.model_name }}{{ action.name|capitalize }}Args())
+    public func {{ action.name }}(args: {{ delegate.model_name }}{{ action.name|capitalize_first }}Args) async throws -> {{ action.response }} {
+        await request(model: "{{ delegate.model_name }}", action: "{{ action.name }}", input: args)
     }
 {%- endfor %}
 }
