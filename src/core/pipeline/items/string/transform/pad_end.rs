@@ -6,13 +6,13 @@ use crate::prelude::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
 pub struct PadEndItem {
-    char: char,
     width: Value,
+    char: char,
 }
 
 impl PadEndItem {
-    pub fn new(char: char, width: impl Into<Value>) -> Self {
-        Self { char, width: width.into() }
+    pub fn new(width: impl Into<Value>, char: char) -> Self {
+        Self { width: width.into(), char }
     }
 }
 
@@ -25,7 +25,7 @@ impl Item for PadEndItem {
                 let arg = self.width.resolve(ctx.clone()).await?;
                 let width = arg.as_i64().unwrap() as usize;
                 let char = self.char;
-                Ok(ctx.with_value(Value::String(s.pad(width, char, Alignment::Right, false))))
+                Ok(ctx.with_value(Value::String(s.pad(width, char, Alignment::Left, false))))
             }
         }
     }
