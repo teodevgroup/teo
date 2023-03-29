@@ -1,29 +1,29 @@
 {%- for model in models %}
 public class {{ model.name }}Select: Encodable {
 {%- for field in model.select %}
-    public let {{ field }}: Bool?
+    public let {{ field|escape_swift }}: Bool?
 {%- endfor %}
     public init(
 {%- for field in model.select %}
-        {{ field }}: Bool? = nil{% if !loop.last %},{% endif %}
+        {{ field|escape_swift }}: Bool? = nil{% if !loop.last %},{% endif %}
 {%- endfor %}
     ) {
 {%- for field in model.select %}
-        self.{{ field }} = {{ field }}
+        self.{{ field }} = {{ field|escape_swift }}
 {%- endfor %}
     }
 }
 public class {{ model.name }}Include: Encodable {
 {%- for include in model.includes %}
-    public let {{ include.relation_name }}: {{ include.model_name }}{%- if include.many -%}FindMany{%- endif -%}Args?
+    public let {{ include.relation_name|escape_swift }}: {{ include.model_name }}{%- if include.many -%}FindMany{%- endif -%}Args?
 {%- endfor %}
     public init(
 {%- for include in model.includes %}
-        {{ include.relation_name }}: {{ include.model_name }}{%- if include.many -%}FindMany{%- endif -%}Args? = nil{% if !loop.last %},{% endif %}
+        {{ include.relation_name|escape_swift }}: {{ include.model_name }}{%- if include.many -%}FindMany{%- endif -%}Args? = nil{% if !loop.last %},{% endif %}
 {%- endfor %}
     ) {
 {%- for include in model.includes %}
-        self.{{ include.relation_name }} = {{ include.relation_name }}
+        self.{{ include.relation_name }} = {{ include.relation_name|escape_swift }}
 {%- endfor %}
     }
 }
@@ -32,32 +32,32 @@ public class {{ model.name }}WhereInput: Encodable {
     public let OR: [{{ model.name }}WhereInput]?
     public let NOT: {{ model.name }}WhereInput?
 {%- for field in model.where_fields %}
-    public let {{ field.name }}: {{ field.filter_type }}?
+    public let {{ field.name|escape_swift }}: {{ field.filter_type }}?
 {%- endfor %}
     public init(
         AND: [{{ model.name }}WhereInput]? = nil,
         OR: [{{ model.name }}WhereInput]? = nil,
         NOT: {{ model.name }}WhereInput? = nil,
 {%- for field in model.where_fields %}
-        {{ field.name }}: {{ field.filter_type }}? = nil{% if !loop.last %},{% endif %}
+        {{ field.name|escape_swift }}: {{ field.filter_type }}? = nil{% if !loop.last %},{% endif %}
 {%- endfor %}
     ) {
 {%- for field in model.where_fields %}
-        self.{{ field.name }} = {{ field.name }}
+        self.{{ field.name }} = {{ field.name|escape_swift }}
 {%- endfor %}
     }
 }
 public class {{ model.name }}WhereUniqueInput: Encodable {
 {%- for field in model.where_unique_fields %}
-    public let {{ field.name }}: {{ field.create_type }}?
+    public let {{ field.name|escape_swift }}: {{ field.create_type }}?
 {%- endfor %}
     public init(
 {%- for field in model.where_unique_fields %}
-        {{ field.name }}: {{ field.create_type }}? = nil{% if !loop.last %},{% endif %}
+        {{ field.name|escape_swift }}: {{ field.create_type }}? = nil{% if !loop.last %},{% endif %}
 {%- endfor %}
     ) {
 {%- for field in model.where_unique_fields %}
-        self.{{ field.name }} = {{ field.name }}
+        self.{{ field.name }} = {{ field.name|escape_swift }}
 {%- endfor %}
     }
 }
@@ -88,11 +88,11 @@ public class {{ model.name }}ListRelationFilter: Encodable {
 }
 public enum {{ model.name }}OrderByInput: Encodable {
 {%- for field in model.order_by_fields %}
-    case {{ field }}(SortOrder)
+    case {{ field|escape_swift }}(SortOrder)
 {%- endfor %}
     enum CodingKeys: CodingKey {
 {%- for field in model.order_by_fields %}
-        case {{ field }}
+        case {{ field|escape_swift }}
 {%- endfor %}
     }
     public func encode(to encoder: Encoder) throws {
@@ -108,15 +108,15 @@ public enum {{ model.name }}OrderByInput: Encodable {
 {%- for without in model.without %}
 public class {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input {
 {%- for field in model.create_fields %}
-    {% if without.as_ref() != field.name.as_ref() %}public let {{ field.name }}: {{ field.create_type }}?{%- endif %}
+    {% if without.as_ref() != field.name.as_ref() %}public let {{ field.name|escape_swift }}: {{ field.create_type }}?{%- endif %}
 {%- endfor %}
     public init(
 {%- for field in model.create_fields_without(without.as_ref()) %}
-        {{ field.name }}: {{ field.create_type }}? = nil{% if !loop.last %},{% endif %}
+        {{ field.name|escape_swift }}: {{ field.create_type }}? = nil{% if !loop.last %},{% endif %}
 {%- endfor %}
     ) {
 {%- for field in model.create_fields_without(without.as_ref()) %}
-        self.{{ field.name }} = {{ field.name }}
+        self.{{ field.name }} = {{ field.name|escape_swift }}
 {%- endfor %}
     }
 }
@@ -161,15 +161,15 @@ public class {{ model.name }}ConnectOrCreate{%- if !without.is_empty() %}Without
 }
 public class {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input {
 {%- for field in model.update_fields %}
-    {% if without.as_ref() != field.name.as_ref() %}public let {{ field.name }}: {{ field.update_type }}?{%- endif %}
+    {% if without.as_ref() != field.name.as_ref() %}public let {{ field.name|escape_swift }}: {{ field.update_type }}?{%- endif %}
 {%- endfor %}
     public init(
 {%- for field in model.update_fields_without(without.as_ref()) %}
-        {{ field.name }}: {{ field.update_type }}? = nil{% if !loop.last %},{% endif %}
+        {{ field.name|escape_swift }}: {{ field.update_type }}? = nil{% if !loop.last %},{% endif %}
 {%- endfor %}
     ) {
 {%- for field in model.update_fields_without(without.as_ref()) %}
-        self.{{ field.name }} = {{ field.name }}
+        self.{{ field.name }} = {{ field.name|escape_swift }}
 {%- endfor %}
     }
 }
@@ -238,37 +238,37 @@ public class {{ model.name }}UpdateNestedOne{%- if !without.is_empty() %}Without
     }
 }
 public class {{ model.name }}UpdateWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input: Encodable {
-    public let where: {{ model.name }}WhereUniqueInput?
+    public let `where`: {{ model.name }}WhereUniqueInput?
     public let update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
     public init(
-        where: {{ model.name }}WhereUniqueInput? = nil,
+        `where`: {{ model.name }}WhereUniqueInput? = nil,
         update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil,
     ) {
-        self.where = where
+        self.where = `where`
         self.update = update
     }
 }
 public class {{ model.name }}UpdateManyWithWhere{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input: Encodable {
-    public let where: {{ model.name }}WhereInput?
+    public let `where`: {{ model.name }}WhereInput?
     public let update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
     public init(
-        where: {{ model.name }}WhereUniqueInput? = nil,
+        `where`: {{ model.name }}WhereUniqueInput? = nil,
         update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil,
     ) {
-        self.where = where
+        self.where = `where`
         self.update = update
     }
 }
 public class {{ model.name }}UpsertWithWhereUnique{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input: Decodable {
-    public let where: {{ model.name }}WhereUniqueInput?
+    public let `where`: {{ model.name }}WhereUniqueInput?
     public let update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
     public let create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input?
     public init(
-            where: {{ model.name }}WhereUniqueInput? = nil,
+            `where`: {{ model.name }}WhereUniqueInput? = nil,
             update: {{ model.name }}Update{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil,
             create: {{ model.name }}Create{%- if !without.is_empty() %}Without{{ without.as_ref()|capitalize }}{%- endif %}Input? = nil
         ) {
-            self.where = where
+            self.where = `where`
             self.update = update
             self.create = create
         }
@@ -279,15 +279,15 @@ public class {{ model.name }}UpsertWithWhereUnique{%- if !without.is_empty() %}W
 public class {{ model.name }}{{ action_arg.name }}: Encodable {
 {%- for field in action_arg.sorted_fields() %}
     /// {{ field.docs }}
-    public let {{ field.name }}: {{ field.field_type }}{%- if field.optional %}?{%- endif %}
+    public let {{ field.name|escape_swift }}: {{ field.field_type }}{%- if field.optional %}?{%- endif %}
 {%- endfor %}
     public init(
 {%- for field in action_arg.sorted_fields() %}
-        {{ field.name }}: {{ field.field_type }}{%- if field.optional %}?{%- endif %} = nil{% if !loop.last %},{% endif %}
+        {{ field.name|escape_swift }}: {{ field.field_type }}{%- if field.optional %}? = nil{%- endif %}{% if !loop.last %},{% endif %}
 {%- endfor %}
     ) {
 {%- for field in action_arg.sorted_fields() %}
-        self.{{ field.name }} = {{ field.name }}
+        self.{{ field.name }} = {{ field.name|escape_swift }}
 {%- endfor %}
     }
 }
