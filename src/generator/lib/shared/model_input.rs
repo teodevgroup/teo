@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use inflector::Inflector;
 use itertools::Itertools;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::generator::lib::shared::type_lookup::TypeLookup;
@@ -30,6 +31,19 @@ pub(crate) struct ModelUpdateField<'a> {
     pub(crate) update_type: Cow<'a, str>,
 }
 
+pub(crate) struct ActionArg<'a> {
+    pub(crate) name: String,
+    pub(crate) docs: Option<Cow<'a, str>>,
+    pub(crate) fields: Vec<ActionArgField<'a>>,
+}
+
+pub(crate) struct ActionArgField<'a> {
+    pub(crate) name: &'static str,
+    pub(crate) docs: Cow<'a, str>,
+    pub(crate) field_type: Cow<'a, str>,
+    pub(crate) optional: bool,
+}
+
 pub(crate) struct ModelInput<'a> {
     pub(crate) name: Cow<'a, str>,
     pub(crate) select: Vec<Cow<'a, str>>,
@@ -40,7 +54,7 @@ pub(crate) struct ModelInput<'a> {
     pub(crate) create_fields: Vec<ModelCreateField<'a>>,
     pub(crate) update_fields: Vec<ModelUpdateField<'a>>,
     pub(crate) without: Vec<Cow<'a, str>>,
-
+    pub(crate) action_args: Vec<ActionArg<'a>>,
 }
 
 impl<'a> ModelInput<'a> {
@@ -50,6 +64,200 @@ impl<'a> ModelInput<'a> {
 
     pub(crate) fn update_fields_without(&'a self, without: &'a str) -> Vec<&'a ModelUpdateField<'a>> {
         self.update_fields.iter().filter(|f| f.name.as_ref() != without).collect()
+    }
+}
+
+fn args_where_field(model: &str, doc_singular: bool, optional: bool) -> ActionArgField {
+    ActionArgField {
+        name: "where",
+        docs: Cow::Owned(format!("The filter to find {}.", if doc_singular { model.to_word_case().articlize() } else { model.to_word_case().to_plural() })),
+        field_type: Cow::Owned(format!("{}WhereInput", model)),
+        optional,
+    }
+}
+
+fn args_by_field<'a, T>(model: &str, optional: bool, lookup: &T) -> ActionArgField<'a> where T: TypeLookup {
+    ActionArgField {
+        name: "by",
+        docs: Cow::Borrowed("Select which fields to group by."),
+        field_type: lookup.generated_type_to_vec(Cow::Owned(format!("{}ScalarFieldEnum", model))),
+        optional,
+    }
+}
+
+fn args_having_field<'a, T>(model: &str, lookup: &T, optional: bool) -> ActionArgField<'a> where T: TypeLookup {
+    ActionArgField {
+        name: "having",
+        docs: Cow::Borrowed("Filter after aggregation."),
+        field_type: lookup.generated_type_to_vec(Cow::Owned(format!("{}ScalarWhereWithAggregatesInput", model))),
+        optional,
+    }
+}
+
+fn args_where_unique_field(model: &str, optional: bool) -> ActionArgField {
+    ActionArgField {
+        name: "where",
+        docs: Cow::Owned(format!("The unique filter to find the {}.", model)),
+        field_type: Cow::Owned(format!("{}WhereUniqueInput", model)),
+        optional,
+    }
+}
+
+fn args_select_field(model: &str, optional: bool) -> ActionArgField {
+    ActionArgField {
+        name: "select",
+        docs: Cow::Owned(format!("Select scalar fields to fetch from the {} model.", model.to_word_case())),
+        field_type: Cow::Owned(format!("{}Select", model)),
+        optional,
+    }
+}
+
+fn args_count_select_field(model: &str, optional: bool) -> ActionArgField {
+    ActionArgField {
+        name: "select",
+        docs: Cow::Owned(format!("Select countable scalar fields to count from the {} model.", model.to_word_case())),
+        field_type: Cow::Owned(format!("{}CountAggregateInputType", model)),
+        optional,
+    }
+}
+
+fn args_include_field(model: &str, optional: bool) -> ActionArgField {
+    ActionArgField {
+        name: "include",
+        docs: Cow::Owned(format!("Include relations to fetch from the {} model.", model.to_word_case())),
+        field_type: Cow::Owned(format!("{}Include", model)),
+        optional,
+    }
+}
+
+fn args_order_by_field<'a, T>(model: &str, lookup: &T, optional: bool) -> ActionArgField<'a> where T: TypeLookup {
+    ActionArgField {
+        name: "orderBy",
+        docs: Cow::Owned(format!("Determine the order of {} to fetch.", model.to_word_case().to_plural())),
+        field_type: lookup.generated_type_to_enumerate(Cow::Owned(format!("{}OrderByInput", model))),
+        optional,
+    }
+}
+
+fn args_distinct_field<'a, T>(model: &str, lookup: &T, optional: bool) -> ActionArgField<'a> where T: TypeLookup {
+    ActionArgField {
+        name: "distinct",
+        docs: Cow::Borrowed("Select distinct records by fields."),
+        field_type: lookup.generated_type_to_enumerate(Cow::Owned(format!("{}DistinctFieldEnum", model))),
+        optional,
+    }
+}
+
+fn args_cursor_field(model: &str, optional: bool) -> ActionArgField {
+    ActionArgField {
+        name: "cursor",
+        docs: Cow::Owned(format!("Sets the position for searching for {}.", model.to_word_case().to_plural())),
+        field_type: Cow::Owned(format!("{}WhereUniqueInput", model)),
+        optional,
+    }
+}
+
+fn args_take_field<'a>(model: &'a str, number_type: &'static str, optional: bool) -> ActionArgField<'a> {
+    ActionArgField {
+        name: "take",
+        docs: Cow::Owned(format!("How many {} to take. If cursor is set and this value is negative, take from the other direction.", model.to_word_case().to_plural())),
+        field_type: Cow::Borrowed(number_type),
+        optional,
+    }
+}
+
+fn args_skip_field<'a>(model: &'a str, number_type: &'static str, optional: bool) -> ActionArgField<'a> {
+    ActionArgField {
+        name: "skip",
+        docs: Cow::Owned(format!("Skip the first `n` {}.", model.to_word_case().to_plural())),
+        field_type: Cow::Borrowed(number_type),
+        optional,
+    }
+}
+
+fn args_page_size_field<'a>(model: &'a str, number_type: &'static str, optional: bool) -> ActionArgField<'a> {
+    ActionArgField {
+        name: "pageSize",
+        docs: Cow::Owned(format!("Sets the page size for the returned {} data.", model.to_word_case().to_plural())),
+        field_type: Cow::Borrowed(number_type),
+        optional,
+    }
+}
+
+fn args_page_number_field<'a>(model: &'a str, number_type: &'static str, optional: bool) -> ActionArgField<'a> {
+    ActionArgField {
+        name: "pageNumber",
+        docs: Cow::Owned(format!("Sets the page number of {} data.", model.to_word_case().to_plural())),
+        field_type: Cow::Borrowed(number_type),
+        optional,
+    }
+}
+
+fn args_create_input(model: &str, optional: bool) -> ActionArgField {
+    ActionArgField {
+        name: "create",
+        docs: Cow::Owned(format!("Data needed to create {}.", model.to_word_case().articlize())),
+        field_type: Cow::Owned(format!("{}CreateInput", model)),
+        optional,
+    }
+}
+
+fn args_create_many_input<'a, T>(model: &str, lookup: &T, optional: bool) -> ActionArgField<'a> where T: TypeLookup {
+    ActionArgField {
+        name: "createMany",
+        docs: Cow::Owned(format!("Data needed to create {}.", model.to_word_case().to_plural())),
+        field_type: lookup.generated_type_to_enumerate(Cow::Owned(format!("{}CreateManyInput", model))),
+        optional,
+    }
+}
+
+fn args_update_input(model: &str, optional: bool) -> ActionArgField {
+    ActionArgField {
+        name: "update",
+        docs: Cow::Owned(format!("Data needed to update {}.", model.to_word_case().articlize())),
+        field_type: Cow::Owned(format!("{}UpdateInput", model)),
+        optional,
+    }
+}
+
+fn args__count_field(model: &str, optional: bool) -> ActionArgField {
+    ActionArgField {
+        name: "_count",
+        docs: Cow::Borrowed("Select which field to count."),
+        field_type: Cow::Owned(format!("{}CountAggregateInputType", model)),
+        optional,
+    }
+}
+fn args__avg_field(model: &str, optional: bool) -> ActionArgField {
+    ActionArgField {
+        name: "_count",
+        docs: Cow::Borrowed("Select which field to calculate average with."),
+        field_type: Cow::Owned(format!("{}AvgAggregateInputType", model)),
+        optional,
+    }
+}
+fn args__sum_field(model: &str, optional: bool) -> ActionArgField {
+    ActionArgField {
+        name: "_sum",
+        docs: Cow::Borrowed("Select which field to calculate sum with."),
+        field_type: Cow::Owned(format!("{}SumAggregateInputType", model)),
+        optional,
+    }
+}
+fn args__min_field(model: &str, optional: bool) -> ActionArgField {
+    ActionArgField {
+        name: "_min",
+        docs: Cow::Borrowed("Select which field to calculate min with."),
+        field_type: Cow::Owned(format!("{}MinAggregateInputType", model)),
+        optional,
+    }
+}
+fn args__max_field(model: &str, optional: bool) -> ActionArgField {
+    ActionArgField {
+        name: "_max",
+        docs: Cow::Borrowed("Select which field to calculate max with."),
+        field_type: Cow::Owned(format!("{}MaxAggregateInputType", model)),
+        optional,
     }
 }
 
@@ -111,7 +319,177 @@ pub(crate) fn model_inputs<'a, T>(graph: &'a Graph, lookup: T) -> Vec<ModelInput
                 let mut without = vec![Cow::Borrowed("")];
                 without.append(&mut m.relations().iter().map(|r| Cow::Borrowed(r.name())).collect());
                 without
-            }
+            },
+            action_args: vec![
+                ActionArg {
+                    name: format!("{}Args", m.name()),
+                    docs: None,
+                    fields: vec![
+                        args_select_field(m.name(), true),
+                        args_include_field(m.name(), true),
+                    ]
+                },
+                ActionArg {
+                    name: format!("{}FindUniqueArgs", m.name()),
+                    docs: None,
+                    fields: vec![
+                        args_where_unique_field(m.name(), false),
+                        args_select_field(m.name(), true),
+                        args_include_field(m.name(), true),
+                    ]
+                },
+                ActionArg {
+                    name: format!("{}FindFirstArgs", m.name()),
+                    docs: None,
+                    fields: vec![
+                        args_where_field(m.name(), true, true),
+                        args_select_field(m.name(), true),
+                        args_include_field(m.name(), true),
+                        args_order_by_field(m.name(), &lookup, true),
+                        args_cursor_field(m.name(), true),
+                        args_take_field(m.name(), lookup.number_type(), true),
+                        args_skip_field(m.name(), lookup.number_type(), true),
+                        args_page_size_field(m.name(), lookup.number_type(), true),
+                        args_page_number_field(m.name(), lookup.number_type(), true),
+                    ]
+                },
+                ActionArg {
+                    name: format!("{}FindManyArgs", m.name()),
+                    docs: None,
+                    fields: vec![
+                        args_where_field(m.name(), false, true),
+                        args_select_field(m.name(), true),
+                        args_include_field(m.name(), true),
+                        args_order_by_field(m.name(), &lookup, true),
+                        args_cursor_field(m.name(), true),
+                        args_take_field(m.name(), lookup.number_type(), true),
+                        args_skip_field(m.name(), lookup.number_type(), true),
+                        args_page_size_field(m.name(), lookup.number_type(), true),
+                        args_page_number_field(m.name(), lookup.number_type(), true),
+                    ]
+                },
+                ActionArg {
+                    name: format!("{}CreateArgs", m.name()),
+                    docs: None,
+                    fields: vec![
+                        args_select_field(m.name(), true),
+                        args_include_field(m.name(), true),
+                        args_create_input(m.name(), false),
+                    ]
+                },
+                ActionArg {
+                    name: format!("{}UpdateArgs", m.name()),
+                    docs: None,
+                    fields: vec![
+                        args_where_unique_field(m.name(), false),
+                        args_select_field(m.name(), true),
+                        args_include_field(m.name(), true),
+                        args_update_input(m.name(), false),
+                    ]
+                },
+                ActionArg {
+                    name: format!("{}UpsertArgs", m.name()),
+                    docs: None,
+                    fields: vec![
+                        args_where_unique_field(m.name(), false),
+                        args_select_field(m.name(), true),
+                        args_include_field(m.name(), true),
+                        args_create_input(m.name(), false),
+                        args_update_input(m.name(), false),
+                    ]
+                },
+                ActionArg {
+                    name: format!("{}DeleteArgs", m.name()),
+                    docs: None,
+                    fields: vec![
+                        args_where_unique_field(m.name(), false),
+                        args_select_field(m.name(), true),
+                    ]
+                },
+                ActionArg {
+                    name: format!("{}CreateManyArgs", m.name()),
+                    docs: None,
+                    fields: vec![
+                        args_select_field(m.name(), true),
+                        args_include_field(m.name(), true),
+                        args_create_many_input(m.name(), &lookup, false),
+                    ]
+                },
+                ActionArg {
+                    name: format!("{}UpdateManyArgs", m.name()),
+                    docs: None,
+                    fields: vec![
+                        args_where_field(m.name(), false, true),
+                        args_select_field(m.name(), true),
+                        args_include_field(m.name(), true),
+                        args_update_input(m.name(), false),
+                    ]
+                },
+                ActionArg {
+                    name: format!("{}DeleteManyArgs", m.name()),
+                    docs: None,
+                    fields: vec![
+                        args_where_field(m.name(), false, true),
+                        args_select_field(m.name(), true),
+                    ]
+                },
+                ActionArg {
+                    name: format!("{}CountArgs", m.name()),
+                    docs: None,
+                    fields: vec![
+                        args_where_field(m.name(), false, true),
+                        args_cursor_field(m.name(), true),
+                        args_skip_field(m.name(), lookup.number_type(), true),
+                        args_take_field(m.name(), lookup.number_type(), true),
+                        args_order_by_field(m.name(), &lookup, true),
+                        args_count_select_field(m.name(), true),
+                    ]
+                },
+                ActionArg {
+                    name: format!("{}AggregateArgs", m.name()),
+                    docs: None,
+                    fields: vec![
+                        args_where_field(m.name(), false, true),
+                        args_cursor_field(m.name(), true),
+                        args_skip_field(m.name(), lookup.number_type(), true),
+                        args_take_field(m.name(), lookup.number_type(), true),
+                        args_page_size_field(m.name(), lookup.number_type(), true),
+                        args_page_number_field(m.name(), lookup.number_type(), true),
+                        args_order_by_field(m.name(), &lookup, true),
+                        args_distinct_field(m.name(), &lookup, true),
+                        args__count_field(m.name(), true),
+                        args__avg_field(m.name(), true),
+                        args__sum_field(m.name(), true),
+                        args__min_field(m.name(), true),
+                        args__max_field(m.name(), true),
+                    ]
+                },
+                ActionArg {
+                    name: format!("{}GroupByArgs", m.name()),
+                    docs: None,
+                    fields: vec![
+                        args_where_field(m.name(), false, true),
+                        args_by_field(m.name(), false, &lookup),
+                        args_having_field(m.name(), &lookup, true),
+                        args_cursor_field(m.name(), true),
+                        args_skip_field(m.name(), lookup.number_type(), true),
+                        args_take_field(m.name(), lookup.number_type(), true),
+                        args_page_size_field(m.name(), lookup.number_type(), true),
+                        args_page_number_field(m.name(), lookup.number_type(), true),
+                        args_order_by_field(m.name(), &lookup, true),
+                        args_distinct_field(m.name(), &lookup, true),
+                        args__count_field(m.name(), true),
+                        args__avg_field(m.name(), true),
+                        args__sum_field(m.name(), true),
+                        args__min_field(m.name(), true),
+                        args__max_field(m.name(), true),
+                    ]
+                }
+            ],
         }
     }).collect()
 }
+
+// ActionArg {
+// name: format!("{}SignInArgs", m.name()),
+// }
