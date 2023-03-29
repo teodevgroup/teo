@@ -1,3 +1,7 @@
+pub(crate) mod pkg;
+pub(crate) mod teo;
+pub(crate) mod types;
+
 use async_trait::async_trait;
 use crate::core::app::conf::ClientGeneratorConf;
 use crate::generator::client::csharp::pkg::enumerable::generate_enumerable_cs;
@@ -12,10 +16,6 @@ use crate::generator::client::csharp::pkg::sort_order::generate_sort_order_cs;
 use crate::core::graph::Graph;
 use crate::generator::client::ClientGenerator;
 use crate::generator::lib::generator::Generator;
-
-
-pub mod r#type;
-pub mod pkg;
 
 pub(crate) struct CSharpClientGenerator { }
 
