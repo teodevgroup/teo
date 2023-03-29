@@ -173,7 +173,7 @@ public class NumberNullableFilter<T: Encodable>: Encodable {
     public let lte: T?
     public let gt: T?
     public let gte: T?
-    public let not: NullOr<NumberFilter<T>>?
+    public let not: NullOr<NumberNullableFilter<T>>?
     public init(
         equals: NullOr<T>? = nil,
         `in`: [T]? = nil,
@@ -199,7 +199,7 @@ public typealias ObjectIdNullableFilter = NumberNullableFilter<String>
 public typealias Int32NullableFilter = NumberNullableFilter<Int32>
 public typealias Int64NullableFilter = NumberNullableFilter<Int64>
 public typealias FloatNullableFilter = NumberNullableFilter<Float>
-public typealias DoubleNullableFilter = NumbeNumberNullableFilterrFilter<Double>
+public typealias DoubleNullableFilter = NumberNullableFilter<Double>
 public typealias DecimalNullableFilter = NumberNullableFilter<Decimal>
 public typealias DateNullableFilter = NumberNullableFilter<String>
 public typealias DateTimeNullableFilter = NumberNullableFilter<Date>
