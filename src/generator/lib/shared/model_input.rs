@@ -214,7 +214,7 @@ fn args_create_many_input<'a, T>(model: &str, lookup: &T, optional: bool) -> Act
     ActionArgField {
         name: "createMany",
         docs: Cow::Owned(format!("Data needed to create {}.", model.to_word_case().to_plural())),
-        field_type: lookup.generated_type_to_enumerate(Cow::Owned(format!("{}CreateManyInput", model))),
+        field_type: lookup.generated_type_to_enumerate(Cow::Owned(format!("{}CreateInput", model))),
         optional,
     }
 }
