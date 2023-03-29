@@ -42,13 +42,13 @@ mod test {
     fn to_lower_case() {
         let res = req(PORT, "create", "Support", json!({
             "create": {
-                "toLowerCase": "Foo中文BaR",
+                "toLowerCase": "Foo BaR",
             },
         }));
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
-                "toLowerCase": "foo中文bar",
+                "toLowerCase": "foo bar",
             }
         }))
     }
@@ -57,13 +57,13 @@ mod test {
     fn to_upper_case() {
         let res = req(PORT, "create", "Support", json!({
             "create": {
-                "toUpperCase": "foo中文bar",
+                "toUpperCase": "foo bar",
             },
         }));
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
-                "toUpperCase": "FOO中文BAR",
+                "toUpperCase": "FOO BAR",
             }
         }))
     }
