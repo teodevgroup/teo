@@ -13,7 +13,7 @@ pub(in crate::gen) struct Outline<'a> {
     pub(in crate::gen) classes: Vec<Class<'a>>,
 }
 
-impl Outline {
+impl Outline<'_> {
     pub(in crate::gen) fn new<L>(graph: &Graph, lookup: L) -> Self where L: TypeLookup {
         Self {
             classes: {
@@ -66,21 +66,19 @@ impl Outline {
                                         })
                                     }
                                 }
-                                if include_relations {
-                                    for relation in m.relations() {
-                                        fields.push(Field {
-                                            name: relation.name(),
-                                            field_type: if relation.is_vec() {
-                                                lookup.generated_type_to_vec(Cow::Borrowed(relation.model()))
-                                            } else {
-                                                Cow::Borrowed(relation.name())
-                                            },
-                                            optional: relation.is_optional(),
-                                            localized_name: Cow::Owned(relation.localized_name()),
-                                            docs: relation.description().map(|d| Cow::Borrowed(d.as_str())).unwrap_or(Cow::Borrowed("")),
-                                            kind: FieldKind::Relation,
-                                        })
-                                    }
+                                for relation in m.relations() {
+                                    fields.push(Field {
+                                        name: relation.name(),
+                                        field_type: if relation.is_vec() {
+                                            lookup.generated_type_to_vec(Cow::Borrowed(relation.model()))
+                                        } else {
+                                            Cow::Borrowed(relation.name())
+                                        },
+                                        optional: relation.is_optional(),
+                                        localized_name: Cow::Owned(relation.localized_name()),
+                                        docs: relation.description().map(|d| Cow::Borrowed(d)).unwrap_or(Cow::Borrowed("")),
+                                        kind: FieldKind::Relation,
+                                    })
                                 }
                                 fields
                             },
@@ -180,7 +178,7 @@ impl Outline {
                                     optional: true,
                                     kind: FieldKind::Field,
                                 }
-                            }).flatten().dedup_by(|f1, f2| f1.name == f2.name).collect(),
+                            }).collect(),
                             kind: ClassKind::OrderByInput,
                         }),
                     ];
@@ -217,7 +215,7 @@ impl Outline {
                                     kind: FieldKind::Property,
                                 })
                             } else if let Some(relation) = m.relation(k) {
-                                if relation.name() == w {
+                                if relation.name() == *w {
                                     None
                                 } else {
                                     Some(Field {
@@ -248,7 +246,7 @@ impl Outline {
                                 Field {
                                     name: "create",
                                     localized_name: Cow::Borrowed(""),
-                                    docs: create_doc(m.name()),
+                                    docs: helper::create_doc(m.name()),
                                     field_type: lookup.generated_type_to_enumerate((helper::without_infix(m.name(), "Create", w, "Input"))),
                                     optional: true,
                                     kind: FieldKind::Predefined,
@@ -256,7 +254,7 @@ impl Outline {
                                 Field {
                                     name: "connectOrCreate",
                                     localized_name: Cow::Borrowed(""),
-                                    docs: connect_or_create_doc(m.name()),
+                                    docs: helper::connect_or_create_doc(m.name()),
                                     field_type: lookup.generated_type_to_enumerate((helper::without_infix(m.name(), "ConnectOrCreate", w, "Input"))),
                                     optional: true,
                                     kind: FieldKind::Predefined,
@@ -264,7 +262,7 @@ impl Outline {
                                 Field {
                                     name: "connect",
                                     localized_name: Cow::Borrowed(""),
-                                    docs: connect_doc(m.name()),
+                                    docs: helper::connect_doc(m.name()),
                                     field_type: lookup.generated_type_to_enumerate(Cow::Owned(format!("{}WhereUniqueInput", m.name()))),
                                     optional: true,
                                     kind: FieldKind::Predefined,
@@ -282,7 +280,7 @@ impl Outline {
                                 Field {
                                     name: "create",
                                     localized_name: Cow::Borrowed(""),
-                                    docs: create_doc(m.name()),
+                                    docs: helper::create_doc(m.name()),
                                     field_type: helper::without_infix(m.name(), "Create", w, "Input"),
                                     optional: true,
                                     kind: FieldKind::Predefined,
@@ -290,7 +288,7 @@ impl Outline {
                                 Field {
                                     name: "connectOrCreate",
                                     localized_name: Cow::Borrowed(""),
-                                    docs: connect_or_create_doc(m.name()),
+                                    docs: helper::connect_or_create_doc(m.name()),
                                     field_type: helper::without_infix(m.name(), "ConnectOrCreate", w, "Input"),
                                     optional: true,
                                     kind: FieldKind::Predefined,
@@ -298,7 +296,7 @@ impl Outline {
                                 Field {
                                     name: "connect",
                                     localized_name: Cow::Borrowed(""),
-                                    docs: connect_doc(m.name()),
+                                    docs: helper::connect_doc(m.name()),
                                     field_type: Cow::Owned(format!("{}WhereUniqueInput", m.name())),
                                     optional: true,
                                     kind: FieldKind::Predefined,
@@ -316,7 +314,7 @@ impl Outline {
                                 Field {
                                     name: "where",
                                     localized_name: Cow::Borrowed(""),
-                                    docs: where_unique_doc(m.name()),
+                                    docs: helper::where_unique_doc(m.name()),
                                     field_type: Cow::Owned(format!("{}WhereUniqueInput", m.name())),
                                     optional: false,
                                     kind: FieldKind::Predefined,
@@ -324,7 +322,7 @@ impl Outline {
                                 Field {
                                     name: "create",
                                     localized_name: Cow::Borrowed(""),
-                                    docs: create_doc(m.name()),
+                                    docs: helper::create_doc(m.name()),
                                     field_type: helper::without_infix(m.name(), "Create", w, "Input"),
                                     optional: false,
                                     kind: FieldKind::Predefined,
@@ -362,5 +360,21 @@ mod helper {
         } else {
             Cow::Owned(before.to_owned() + "Without" + without.to_pascal_case().as_str() + after)
         }
+    }
+
+    pub(super) fn create_doc<'a>(model: &str) -> Cow<'a, str> {
+        Cow::Borrowed("")
+    }
+
+    pub(super) fn connect_doc<'a>(model: &str) -> Cow<'a, str> {
+        Cow::Borrowed("")
+    }
+
+    pub(super) fn connect_or_create_doc<'a>(model: &str) -> Cow<'a, str> {
+        Cow::Borrowed("")
+    }
+
+    pub(super) fn where_unique_doc<'a>(model: &str) -> Cow<'a, str> {
+        Cow::Borrowed("")
     }
 }
