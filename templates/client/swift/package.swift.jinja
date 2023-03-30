@@ -3,15 +3,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "Teo",
+    name: "{{ conf.inferred_package_name() }}",
     platforms: [
         .macOS(.v13),
         .iOS(.v16)
     ],
     products: [
         .library(
-            name: "Teo",
-            targets: ["Teo"]),
+            name: "{{ conf.inferred_package_name() }}",
+            targets: ["{{ conf.inferred_package_name() }}"]),
     ],
     targets: [
         .target(

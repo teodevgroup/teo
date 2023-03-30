@@ -494,12 +494,6 @@ impl Resolver {
                     let package_bool = package_value.as_bool().unwrap();
                     client.package = Some(package_bool);
                 },
-                "packageName" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
-                    let package_name_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
-                    let package_name = package_name_value.as_str().unwrap();
-                    client.package_name = Some(package_name.to_owned());
-                },
                 "host" => {
                     Self::resolve_expression(parser, source, &mut item.expression);
                     let host_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());

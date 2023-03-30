@@ -1,5 +1,4 @@
 use std::borrow::Cow;
-use futures_util::FutureExt;
 use inflector::Inflector;
 use itertools::Itertools;
 use crate::core::action::{Action, IDENTITY_HANDLER, SIGN_IN_HANDLER};
