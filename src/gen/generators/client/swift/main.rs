@@ -4,9 +4,11 @@ use crate::core::r#enum::Enum;
 use crate::gen::generators::client::swift::types::SwiftTypes;
 use crate::gen::interface::client::conf::Conf;
 use crate::gen::internal::client::ctx::Ctx;
-use crate::gen::internal::shared::delegate::{Delegate, delegates};
 use crate::prelude::Graph;
 use crate::gen::internal::filters;
+
+// #[derive(Template)]
+
 //
 // #[derive(Template)]
 // #[template(path = "client/swift/footer.swift.jinja", escape = "none")]
