@@ -4,6 +4,7 @@ pub(in crate::gen) enum FieldKind {
     Relation,
     Field,
     Predefined,
+    EnumVariant,
 }
 
 impl FieldKind {
@@ -31,6 +32,13 @@ impl FieldKind {
     pub(in crate::gen) fn is_predefined(&self) -> bool {
         match self {
             FieldKind::Predefined => true,
+            _ => false,
+        }
+    }
+
+    pub(in crate::gen) fn is_enum_variant(&self) -> bool {
+        match self {
+            FieldKind::EnumVariant => true,
             _ => false,
         }
     }
