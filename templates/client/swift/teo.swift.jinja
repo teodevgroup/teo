@@ -521,3 +521,14 @@ public struct {{ delegate.model_name }}Delegate {
 {%- endfor %}
 }
 {%- endfor %}
+
+public struct {{ conf.object_name|capitalize_first }} {
+    private let token: String?
+    fileprivate init(_ token: String? = nil) { self.token = nil }
+    public func withToken(token: String?) -> Self { Teo(token) }
+{%- for delegate in outline.delegates %}
+    lazy var {{ delegate.model_name }} = { {{ delegate.model_name|capitalize_first }}Delegate(token) }()
+{%- endfor %}
+}
+
+public let {{ conf.object_name }} = {{ conf.object_name|capitalize_first }}()
