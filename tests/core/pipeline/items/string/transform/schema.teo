@@ -31,4 +31,6 @@ model Support {
   padEnd: String?
   @onSet($padStart(5, "_"))
   padStart: String?
+  @onSet($regexReplace(/_/, "-"))
+  regexReplace: String?
 }
