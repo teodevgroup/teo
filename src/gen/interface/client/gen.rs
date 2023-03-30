@@ -3,7 +3,7 @@ use std::process::Command;
 use crate::gen::generators::client::csharp::CSharpClientGenerator;
 use crate::gen::generators::client::dart::DartClientGenerator;
 use crate::gen::generators::client::kotlin::KotlinClientGenerator;
-use crate::gen::generators::client::swift::SwiftClientGenerator;
+use crate::gen::generators::client::swift::gen::SwiftClientGenerator;
 use crate::gen::generators::client::typescript::TypeScriptClientGenerator;
 use crate::gen::interface::client::conf::Conf;
 use crate::gen::interface::client::kind::Kind;
