@@ -11,7 +11,7 @@ use crate::core::model::Model;
 use crate::core::r#enum::Enum;
 use crate::core::relation::Relation;
 use crate::gen::lib::code::Code;
-use crate::gen::lib::generator::Generator;
+use crate::gen::lib::file_util::FileUtil;
 use crate::gen::generators::server::EntityGenerator;
 use crate::prelude::Graph;
 
@@ -77,7 +77,7 @@ impl RustEntityGenerator {
         }
     }
 
-    async fn generate_file_for_model(&self, name: String, model: &Model, generator: &Generator) -> std::io::Result<HashSet<&str>> {
+    async fn generate_file_for_model(&self, name: String, model: &Model, generator: &FileUtil) -> std::io::Result<HashSet<&str>> {
         let mut package_requirements = hashset![];
         let model_name = model.name();
         let localized_name_title_case = model.localized_name();
@@ -389,7 +389,7 @@ impl Display for {model_name} {{
         Ok(package_requirements)
     }
 
-    async fn generate_file_for_enum(&self, name: String, e: &Enum, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_file_for_enum(&self, name: String, e: &Enum, generator: &FileUtil) -> std::io::Result<()> {
         let enum_name = e.name();
         generator.generate_file(format!("{name}.rs"), Code::new(0, 4, |b| {
             // use lines
@@ -441,7 +441,7 @@ impl From<Value> for {enum_name} {{
         Ok(())
     }
 
-    async fn generate_mod_rs(&self, names: Vec<String>, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_mod_rs(&self, names: Vec<String>, generator: &FileUtil) -> std::io::Result<()> {
         generator.generate_file("mod.rs", Code::new(0, 4, |b| {
             for name in names.iter() {
                 b.line(format!("pub mod {};", name));
@@ -450,7 +450,7 @@ impl From<Value> for {enum_name} {{
         Ok(())
     }
 
-    async fn find_and_update_cargo_toml(&self, package_requirements: Vec<&str>, generator: &Generator) {
+    async fn find_and_update_cargo_toml(&self, package_requirements: Vec<&str>, generator: &FileUtil) {
         let cargo_toml = match generator.find_file_upwards("Cargo.toml") {
             Some(path) => path,
             None => return,
@@ -473,7 +473,7 @@ impl From<Value> for {enum_name} {{
 
 #[async_trait]
 impl EntityGenerator for RustEntityGenerator {
-    async fn generate_entity_files(&self, graph: &Graph, _conf: &EntityGeneratorConf, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_entity_files(&self, graph: &Graph, _conf: &EntityGeneratorConf, generator: &FileUtil) -> std::io::Result<()> {
         let mut names: Vec<String> = vec![];
         for (name, e) in graph.enums() {
             let name = name.to_snake_case();

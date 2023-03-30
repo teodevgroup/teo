@@ -7,7 +7,7 @@ pub(crate) mod python;
 use async_trait::async_trait;
 use crate::core::app::conf::EntityGeneratorConf;
 use crate::core::app::environment::Environment;
-use crate::gen::lib::generator::Generator;
+use crate::gen::lib::file_util::FileUtil;
 use crate::gen::generators::server::go::GoEntityGenerator;
 use crate::gen::generators::server::java::JavaEntityGenerator;
 use crate::gen::generators::server::nodejs::NodeJSEntityGenerator;
@@ -28,7 +28,7 @@ pub(crate) async fn generate_entity(graph: &Graph, conf: &EntityGeneratorConf) -
 
 pub(crate) async fn generate_entity_typed<T: EntityGenerator>(entity_generator: T, graph: &Graph, conf: &EntityGeneratorConf) -> std::io::Result<()> {
     let dest = &conf.dest;
-    let generator = Generator::new(&dest);
+    let generator = FileUtil::new(&dest);
     generator.ensure_root_directory().await?;
     entity_generator.generate_entity_files(graph, conf, &generator).await?;
     Ok(())
@@ -36,5 +36,5 @@ pub(crate) async fn generate_entity_typed<T: EntityGenerator>(entity_generator: 
 
 #[async_trait]
 pub(crate) trait EntityGenerator {
-    async fn generate_entity_files(&self, graph: &Graph, conf: &EntityGeneratorConf, generator: &Generator) -> std::io::Result<()>;
+    async fn generate_entity_files(&self, graph: &Graph, conf: &EntityGeneratorConf, generator: &FileUtil) -> std::io::Result<()>;
 }

@@ -10,7 +10,7 @@ use crate::gen::generators::client::typescript::pkg::gitignore::generate_gitigno
 use crate::gen::generators::client::typescript::pkg::package_json::{generate_package_json, update_package_json};
 use crate::gen::generators::client::typescript::pkg::readme::generate_readme_ts;
 use crate::gen::generators::client::typescript::pkg::src::index_js::generate_index_js;
-use crate::gen::lib::generator::Generator;
+use crate::gen::lib::file_util::FileUtil;
 
 pub(crate) struct TypeScriptClientGenerator { }
 
@@ -24,14 +24,14 @@ impl ClientGenerator for TypeScriptClientGenerator {
         return "src".to_owned();
     }
 
-    async fn generate_module_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_module_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, generator: &FileUtil) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
         generator.clear_root_directory().await?;
         generator.generate_file("decimal.js", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/ts/src/decimal.js"))).await?;
         generator.generate_file("decimal.d.ts", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/ts/src/decimal.d.ts"))).await
     }
 
-    async fn generate_package_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_package_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, generator: &FileUtil) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
         generator.generate_file_if_not_exist(".gitignore", generate_gitignore_ts()).await?;
         generator.generate_file_if_not_exist("README.md", generate_readme_ts(generator.get_base_dir())).await?;
@@ -44,7 +44,7 @@ impl ClientGenerator for TypeScriptClientGenerator {
         Ok(())
     }
 
-    async fn generate_main(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
+    async fn generate_main(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &FileUtil) -> std::io::Result<()> {
         generator.generate_file("index.d.ts", generate_index_d_ts(graph, client.object_name.clone(), false)).await?;
         generator.generate_file("index.js", generate_index_js(graph, client).await).await?;
         Ok(())

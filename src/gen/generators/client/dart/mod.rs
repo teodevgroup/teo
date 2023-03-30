@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use crate::core::app::conf::ClientGeneratorConf;
 use crate::gen::generators::client::ClientGenerator;
-use crate::gen::lib::generator::Generator;
+use crate::gen::lib::file_util::FileUtil;
 
 use crate::prelude::Graph;
 
@@ -17,15 +17,15 @@ impl ClientGenerator for DartClientGenerator {
         todo!()
     }
 
-    async fn generate_module_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, _generator: &Generator) -> std::io::Result<()> {
+    async fn generate_module_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, _generator: &FileUtil) -> std::io::Result<()> {
         todo!()
     }
 
-    async fn generate_package_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, _generator: &Generator) -> std::io::Result<()> {
+    async fn generate_package_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, _generator: &FileUtil) -> std::io::Result<()> {
         todo!()
     }
 
-    async fn generate_main(&self, _graph: &Graph, _client: &ClientGeneratorConf, _generator: &Generator) -> std::io::Result<()> {
+    async fn generate_main(&self, _graph: &Graph, _client: &ClientGeneratorConf, _generator: &FileUtil) -> std::io::Result<()> {
         todo!()
     }
 }
