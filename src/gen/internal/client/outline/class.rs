@@ -1,4 +1,6 @@
 use std::borrow::Cow;
+use std::cmp::Ordering;
+use itertools::Itertools;
 use crate::gen::internal::client::outline::field::Field;
 use crate::gen::internal::client::outline::class_kind::ClassKind;
 
@@ -16,4 +18,10 @@ pub(in crate::gen) struct Class<'a> {
     pub(in crate::gen) docs: Cow<'a, str>,
     pub(in crate::gen) kind: ClassKind,
     pub(in crate::gen) fields: Vec<Field<'a>>,
+}
+
+impl<'a> Class<'a> {
+    pub(in crate::gen) fn fields_optional_at_last(&'a self) -> Vec<&'a Field<'a>> {
+        self.fields.iter().sorted_by(|a, b| if a.optional { Ordering::Greater } else { Ordering::Less }).collect()
+    }
 }

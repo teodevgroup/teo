@@ -485,7 +485,39 @@ public enum ArrayFieldUpdateOperation<T: Encodable>: Encodable {
 }
 
 {%- for class in outline.classes %}
-{%- if class.kind.is_enum() || class.kind.is_order_by_input() %}
-{%- else %}
-{%- endif %}
+    {%- if class.kind.is_enum() || class.kind.is_order_by_input() %}
+public enum {{ class.model_name }}{{ class.name_suffix }}: String, Codable {
+        {%- for field in class.fields %}
+    case {{ field.name|camelcase }} = "{{ field.name }}"
+        {%- endfor %}
+}
+    {%- else %}
+public class {{ class.model_name }}{{ class.name_suffix }}: Encodable {
+        {%- for field in class.fields_optional_at_last() %}
+    {%- if !field.docs.is_empty() %}/// {{ field.docs }}{%- endif %}
+    public let {{ field.name|escape_swift }}: {{ field.field_type }}{%- if field.optional %}?{%- endif %}
+        {%- endfor %}
+    public init(
+        {%- for field in class.fields_optional_at_last() %}
+        {{ field.name|escape_swift }}: {{ field.field_type }}{%- if field.optional %}? = nil{%- endif %}{% if !loop.last %},{% endif %}
+        {%- endfor %}
+    ) {
+        {%- for field in class.fields_optional_at_last() %}
+        self.{{ field.name }} = {{ field.name|escape_swift }}
+        {%- endfor %}
+    }
+}
+    {%- endif %}
+{%- endfor %}
+
+{%- for delegate in outline.delegates %}
+public struct {{ delegate.model_name }}Delegate {
+    private let token: String?
+    fileprivate init(_ token: String?) { self.token = token }
+{%- for action in delegate.actions %}
+    public func {{ action.name }}(args: {{ delegate.model_name }}{{ action.name|capitalize_first }}Args) async throws -> {{ action.response }} {
+        await request(model: "{{ delegate.model_name }}", action: "{{ action.name }}", input: args)
+    }
+{%- endfor %}
+}
 {%- endfor %}
