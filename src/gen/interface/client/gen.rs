@@ -8,6 +8,7 @@ use crate::gen::generators::client::typescript::TypeScriptClientGenerator;
 use crate::gen::interface::client::conf::Conf;
 use crate::gen::interface::client::kind::Kind;
 use crate::gen::internal::client::ctx::Ctx;
+use crate::gen::internal::client::generator::Generator;
 use crate::gen::internal::client::outline::outline::Outline;
 use crate::gen::internal::file_util::FileUtil;
 use crate::prelude::Graph;
@@ -24,7 +25,7 @@ pub(crate) async fn gen(graph: &Graph, conf: &Conf) -> std::io::Result<()> {
     }
 }
 
-async fn generate_client_typed<T: ClientGenerator>(client_generator: T, ctx: &Ctx<'_>) -> std::io::Result<()> {
+async fn generate_client_typed<T: Generator>(client_generator: T, ctx: &Ctx<'_>) -> std::io::Result<()> {
     let dest = &ctx.conf.dest;
     let package = ctx.conf.package;
     let git_commit = ctx.conf.git_commit;
@@ -33,7 +34,7 @@ async fn generate_client_typed<T: ClientGenerator>(client_generator: T, ctx: &Ct
     if package {
         let package_generator = FileUtil::new(dest);
         client_generator.generate_package_files(ctx, &package_generator).await?;
-        module_dest.push(Path::new(client_generator.module_directory_in_package(client).as_str()));
+        module_dest.push(Path::new(client_generator.module_directory_in_package(ctx.conf).as_str()));
     }
     let module_generator = FileUtil::new(module_dest);
     client_generator.generate_module_files(ctx, &module_generator).await?;

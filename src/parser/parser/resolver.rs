@@ -35,8 +35,9 @@ use crate::prelude::Value;
 use to_mut::ToMut;
 use crate::core::action::Action;
 use crate::core::app::environment::Environment;
+use crate::gen::interface::client::kind::Kind;
 use crate::parser::ast::arith_expr::{ArithExpr, Op};
-use crate::parser::ast::client::{Client, ClientLanguage};
+use crate::parser::ast::client::{Client};
 use crate::parser::ast::generator::Generator;
 use crate::parser::std::pipeline::global::{GlobalFunctionInstallers, GlobalPipelineInstallers};
 
@@ -469,11 +470,11 @@ impl Resolver {
                     let provider_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let provider_str = provider_value.as_raw_enum_choice().unwrap();
                     match provider_str {
-                        "javaScript" | "typeScript" => client.provider = Some(ClientLanguage::TypeScript),
-                        "swift" => client.provider = Some(ClientLanguage::Swift),
-                        "kotlin" => client.provider = Some(ClientLanguage::Kotlin),
-                        "cSharp" => client.provider = Some(ClientLanguage::CSharp),
-                        "dart" => client.provider = Some(ClientLanguage::Dart),
+                        "javaScript" | "typeScript" => client.provider = Some(Kind::TypeScript),
+                        "swift" => client.provider = Some(Kind::Swift),
+                        "kotlin" => client.provider = Some(Kind::Kotlin),
+                        "cSharp" => client.provider = Some(Kind::CSharp),
+                        "dart" => client.provider = Some(Kind::Dart),
                         _ => panic!("Unrecognized client generator provider. {}", provider_str)
                     }
                 },

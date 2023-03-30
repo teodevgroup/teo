@@ -22,17 +22,17 @@ impl Generator for CSharpClientGenerator {
         return "src".to_owned();
     }
 
-    async fn generate_module_files(&self, ctx: Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_module_files(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
         generator.clear_root_directory().await?;
         generator.generate_file("Runtime.cs", generate_runtime_cs(ctx.graph, ctx.conf).await).await
     }
 
-    async fn generate_package_files(&self, _ctx: Ctx, _generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_package_files(&self, _ctx: &Ctx, _generator: &FileUtil) -> std::io::Result<()> {
         Ok(())
     }
 
-    async fn generate_main(&self, _ctx: Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_main(&self, _ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
         Ok(())
         //generator.generate_file("Index.cs", generate_index_cs(graph, client).await).await
     }

@@ -25,14 +25,14 @@ impl Generator for TypeScriptClientGenerator {
         return "src".to_owned();
     }
 
-    async fn generate_module_files(&self, _ctx: Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_module_files(&self, _ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
         generator.clear_root_directory().await?;
         generator.generate_file("decimal.js", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/ts/src/decimal.js"))).await?;
         generator.generate_file("decimal.d.ts", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/ts/src/decimal.d.ts"))).await
     }
 
-    async fn generate_package_files(&self, _ctx: Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_package_files(&self, _ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
         generator.generate_file_if_not_exist(".gitignore", generate_gitignore_ts()).await?;
         generator.generate_file_if_not_exist("README.md", generate_readme_ts(generator.get_base_dir())).await?;
@@ -45,9 +45,9 @@ impl Generator for TypeScriptClientGenerator {
         Ok(())
     }
 
-    async fn generate_main(&self, _ctx: Ctx, generator: &FileUtil) -> std::io::Result<()> {
-        generator.generate_file("index.d.ts", generate_index_d_ts(graph, client.object_name.clone(), false)).await?;
-        generator.generate_file("index.js", generate_index_js(graph, client).await).await?;
+    async fn generate_main(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
+        generator.generate_file("index.d.ts", generate_index_d_ts(ctx.graph, ctx.conf.object_name.clone(), false)).await?;
+        generator.generate_file("index.js", generate_index_js(ctx.graph, ctx.conf).await).await?;
         Ok(())
     }
 }

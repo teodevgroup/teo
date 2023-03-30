@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 use crate::core::app::environment::Environment;
-use crate::parser::ast::client::ClientLanguage;
 
 #[derive(Clone)]
 pub struct ServerConf {

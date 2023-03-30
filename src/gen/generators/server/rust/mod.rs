@@ -10,16 +10,16 @@ use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::Model;
 use crate::core::r#enum::Enum;
 use crate::core::relation::Relation;
+use crate::gen::interface::server::EntityGenerator;
 use crate::gen::internal::code::Code;
 use crate::gen::internal::file_util::FileUtil;
-use crate::gen::generators::server::EntityGenerator;
 use crate::prelude::Graph;
 
-pub(crate) struct RustEntityGenerator {}
+pub(in crate::gen) struct RustEntityGenerator {}
 
 impl RustEntityGenerator {
 
-    pub fn new() -> Self {
+    pub(in crate::gen) fn new() -> Self {
         Self { }
     }
 

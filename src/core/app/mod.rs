@@ -18,6 +18,7 @@ use crate::core::app::serve::serve;
 use crate::core::graph::Graph;
 use crate::gen::interface::client::conf::Conf as ClientConf;
 use crate::gen::interface::client::gen::gen as gen_client;
+use crate::gen::interface::server::gen as gen_entity;
 
 pub struct App {
     graph: Graph,
@@ -55,7 +56,7 @@ impl App {
                             0 => println!("Cannot find an entity generator declaration."),
                             1 => {
                                 let conf = self.entity_generator_confs.get(0).unwrap();
-                                generate_entity(&self.graph, conf).await?;
+                                gen_entity(&self.graph, conf).await?;
                             },
                             _ => {
                                 let mut names = entity_command.names.clone().unwrap_or(vec![]);
@@ -64,7 +65,7 @@ impl App {
                                 }
                                 for name in names.iter() {
                                     let conf = self.entity_generator_confs.iter().find(|c| c.name.as_ref().unwrap() == name).unwrap();
-                                    generate_entity(&self.graph, conf).await?;
+                                    gen_entity(&self.graph, conf).await?;
                                 }
                             }
                         }
@@ -83,7 +84,7 @@ impl App {
                                 }
                                 for name in names.iter() {
                                     let conf = self.client_generator_confs.iter().find(|c| c.name.as_ref().unwrap() == name).unwrap();
-                                    generate_client(&self.graph, conf).await?;
+                                    gen_client(&self.graph, conf).await?;
                                 }
                             }
                         }
