@@ -494,7 +494,7 @@ public enum {{ class.model_name }}{{ class.name_suffix }}: String, Codable {
     {%- else %}
 public class {{ class.model_name }}{{ class.name_suffix }}: Encodable {
         {%- for field in class.fields_optional_at_last() %}
-    {%- if !field.docs.is_empty() %}/// {{ field.docs }}{%- endif %}
+    {% if !field.docs.is_empty() %}/// {{ field.docs }}{% endif %}
     public let {{ field.name|escape_swift }}: {{ field.field_type }}{%- if field.optional %}?{%- endif %}
         {%- endfor %}
     public init(
