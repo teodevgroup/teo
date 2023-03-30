@@ -10,10 +10,10 @@ use crate::gen::internal::client::outline::class_kind::ClassKind;
 ///
 /// Use this in the template engine to generate correct classes or types for the client or server.
 pub(in crate::gen) struct Class<'a> {
-    pub(super) model_name: &'a str,
-    pub(super) localized_name: Cow<'a, str>,
-    pub(super) name_suffix: Cow<'a, str>,
-    pub(super) docs: Cow<'a, str>,
-    pub(super) kind: ClassKind,
-    pub(super) fields: Vec<Field<'a>>,
+    pub(in crate::gen) model_name: &'a str,
+    pub(in crate::gen) localized_name: Cow<'a, str>,
+    pub(in crate::gen) name_suffix: Cow<'a, str>,
+    pub(in crate::gen) docs: Cow<'a, str>,
+    pub(in crate::gen) kind: ClassKind,
+    pub(in crate::gen) fields: Vec<Field<'a>>,
 }

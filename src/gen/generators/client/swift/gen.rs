@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use crate::core::graph::Graph;
-use crate::gen::generators::client::swift::main::generate_teo_swift;
+use crate::gen::generators::client::swift::main::generate_swift_main;
 use crate::gen::interface::client::conf::Conf;
 use crate::gen::internal::client::ctx::Ctx;
 use crate::gen::internal::client::generator::Generator;
@@ -34,7 +34,6 @@ impl Generator for SwiftClientGenerator {
     }
 
     async fn generate_main(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
-        generator.generate_file("Teo.swift", generate_teo_swift(ctx)).await?;
-        Ok(())
+        generate_swift_main(ctx, generator).await
     }
 }
