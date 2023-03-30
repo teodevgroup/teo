@@ -2,7 +2,7 @@
 name = "teo"
 version = "0.0.55-alpha.0"
 edition = "2021"
-description = "REDEFINED HTTP server framework."
+description = "Next-generation web framework for Rust, Node.js and Python."
 license = "Apache-2.0"
 build = "build.rs"
 homepage = "https://teocloud.io"
