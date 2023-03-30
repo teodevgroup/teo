@@ -1,11 +1,11 @@
 #[derive(Copy, Clone)]
 pub(in crate::gen) enum ClassKind {
+    DataOutput,
     WhereInput,
     WhereUniqueInput,
     CreateInput,
     UpdateInput,
-    DataOutput,
-    SortOrderInput,
+    OrderByInput,
     SelectInput,
     IncludeInput,
     ActionArgs,
