@@ -510,7 +510,7 @@ impl Resolver {
                     Self::resolve_expression(parser, source, &mut item.expression);
                     let object_name_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let object_name_str = object_name_value.as_str().unwrap();
-                    client.object_name = Some(object_name_str.to_owned());
+                    client.object_name = object_name_str.to_owned();
                 },
                 "gitCommit" => {
                     Self::resolve_expression(parser, source, &mut item.expression);

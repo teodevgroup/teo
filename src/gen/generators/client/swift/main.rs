@@ -13,9 +13,11 @@ use crate::gen::internal::filters;
 #[template(path = "client/swift/teo.swift.jinja", escape = "none")]
 pub(self) struct SwiftMainTemplate<'a> {
     pub(self) outline: &'a Outline<'a>,
+    pub(self) conf: &'a Conf,
 }
 pub(super) async fn generate_swift_main<'a>(ctx: &'a Ctx<'a>, file_util: &FileUtil) -> std::io::Result<()> {
     file_util.generate_file("Teo.swift", SwiftMainTemplate {
         outline: &ctx.outline,
+        conf: ctx.conf,
     }.render().unwrap()).await
 }

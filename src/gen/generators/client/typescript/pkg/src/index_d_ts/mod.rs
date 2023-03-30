@@ -333,7 +333,7 @@ fn generate_model_credentials_input(model: &Model) -> String {
     }).to_string()
 }
 
-pub(crate) fn generate_index_d_ts(graph: &Graph, client_obj_name: Option<String>, server_mode: bool) -> String {
+pub(crate) fn generate_index_d_ts(graph: &Graph, client_obj_name: String, server_mode: bool) -> String {
     let decimal = if !server_mode {
         "./decimal"
     } else {
@@ -595,7 +595,7 @@ export declare class TeoError extends Error {
         });
         if !server_mode {
             // delegates
-            let object_name = client_obj_name.clone().unwrap_or("teo".to_string());
+            let object_name = client_obj_name.clone();
             let object_class_name = object_name.to_pascal_case();
             graph.models().iter().for_each(|m| {
                 if m.actions().len() > 0 {

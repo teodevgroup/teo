@@ -16,7 +16,7 @@ pub struct Client {
     pub(crate) package: Option<bool>,
     pub(crate) package_name: Option<String>,
     pub(crate) host: Option<String>,
-    pub(crate) object_name: Option<String>,
+    pub(crate) object_name: String,
     pub(crate) git_commit: bool,
 }
 
@@ -33,7 +33,7 @@ impl Client {
             package: Some(true),
             package_name: None,
             host: None,
-            object_name: Some("teo".to_owned()),
+            object_name: "teo".to_owned(),
             git_commit: false,
         }
     }
