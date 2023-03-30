@@ -341,7 +341,6 @@ impl AppBuilder {
                 kind: client.provider.unwrap(),
                 dest: client.dest.clone().unwrap(),
                 package: client.package.unwrap(),
-                package_name: client.package_name.clone(),
                 host: client.host.clone().unwrap(),
                 object_name: client.object_name.clone(),
                 git_commit: client.git_commit,
