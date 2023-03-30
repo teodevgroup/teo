@@ -1,8 +1,8 @@
-use crate::core::app::conf::ClientGeneratorConf;
 use crate::core::graph::Graph;
+use crate::gen::interface::client::conf::Conf;
 
-pub(crate) async fn generate_runtime_cs(_graph: &Graph, client: &ClientGeneratorConf) -> String {
-    let url = &client.host;
+pub(crate) async fn generate_runtime_cs(_graph: &Graph, conf: &Conf) -> String {
+    let url = &conf.host;
     format!(r#"
     public class Delegate {{
 
