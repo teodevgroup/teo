@@ -562,7 +562,7 @@ impl Parser {
                 Rule::bool_literal => unit.expressions.push(ExpressionKind::BoolLiteral(BoolLiteral { value: current.as_str().to_string(), span })),
                 Rule::numeric_literal => unit.expressions.push(ExpressionKind::NumericLiteral(NumericLiteral { value: current.as_str().to_string(), span })),
                 Rule::string_literal => unit.expressions.push(ExpressionKind::StringLiteral(StringLiteral { value: current.as_str().to_string(), span })),
-                Rule::regexp_literal => unit.expressions.push(ExpressionKind::RegExpLiteral(RegExpLiteral { value: current.as_str().to_string(), span })),
+                Rule::regexp_literal => unit.expressions.push(ExpressionKind::RegExpLiteral(Self::parse_regexp_literal(current))),
                 Rule::enum_choice_literal => unit.expressions.push(ExpressionKind::EnumChoiceLiteral(Self::parse_enum_choice_literal(current))),
                 Rule::tuple_literal => unit.expressions.push(ExpressionKind::TupleLiteral(Self::parse_tuple_literal(current))),
                 Rule::array_literal => unit.expressions.push(ExpressionKind::ArrayLiteral(Self::parse_array_literal(current))),
@@ -662,6 +662,17 @@ impl Parser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::expression => return Subscript { expression: Box::new(Self::parse_expression(current).kind), span },
+                _ => panic!(),
+            }
+        }
+        panic!()
+    }
+
+    fn parse_regexp_literal(pair: Pair<'_>) -> RegExpLiteral {
+        let span = Self::parse_span(&pair);
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::regexp_content => return RegExpLiteral { value: current.as_str().to_string(), span },
                 _ => panic!(),
             }
         }
