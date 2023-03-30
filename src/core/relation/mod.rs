@@ -56,7 +56,7 @@ impl Relation {
         }
     }
 
-    pub(crate) fn description(&self) -> Option<&String> {
+    pub(crate) fn description(&self) -> Option<&str> {
         self.description.as_ref()
     }
 
