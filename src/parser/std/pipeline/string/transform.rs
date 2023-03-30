@@ -15,7 +15,7 @@ use crate::parser::ast::argument::Argument;
 
 pub(crate) fn regex_replace(args: Vec<Argument>) -> Arc<dyn Item> {
     let arg1 = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
-    let arg2 = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
+    let arg2 = args.get(1).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
     Arc::new(RegexReplaceItem::new(arg1, arg2))
 }
 
