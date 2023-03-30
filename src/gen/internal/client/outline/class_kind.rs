@@ -14,6 +14,10 @@ pub(in crate::gen) enum ClassKind {
     ConnectOrCreateInput,
     CreateNestedOneInput,
     CreateNestedManyInput,
+    UpdateNestedOneInput,
+    UpdateNestedManyInput,
+    UpdateWithWhereUniqueInput,
+    UpdateManyWithWhereInput,
 }
 
 impl ClassKind {

@@ -384,7 +384,7 @@ impl<'a> Outline<'a> {
                             localized_name: Cow::Borrowed(""),
                             name_suffix: helper::without_infix_no_model_name("UpdateNestedMany", w, "Input"),
                             docs: Cow::Owned(format!("{} update nested many input.", m.name())),
-                            kind: ClassKind::CreateNestedManyInput,
+                            kind: ClassKind::UpdateNestedManyInput,
                             fields: vec![
                                 Field {
                                     name: "create",
@@ -474,7 +474,7 @@ impl<'a> Outline<'a> {
                             localized_name: Cow::Borrowed(""),
                             name_suffix: helper::without_infix_no_model_name("UpdateNestedOne", w, "Input"),
                             docs: Cow::Owned(format!("{} update nested one input.", m.name())),
-                            kind: ClassKind::CreateNestedManyInput,
+                            kind: ClassKind::UpdateNestedOneInput,
                             fields: vec![
                                 Field {
                                     name: "create",
@@ -543,8 +543,91 @@ impl<'a> Outline<'a> {
                             ],
                         },
                         // update with where unique input
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: helper::without_infix_no_model_name("UpdateWithWhereUnique", w, "Input"),
+                            docs: Cow::Owned(format!("{} update with where unique input.", m.name())),
+                            kind: ClassKind::UpdateWithWhereUniqueInput,
+                            fields: vec![
+                                Field {
+                                    name: "where",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: helper::where_unique_doc(m.name()),
+                                    field_type: Cow::Owned(format!("{}WhereUniqueInput", model)),
+                                    optional: false,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "update",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: helper::update_doc(m.name()),
+                                    field_type: helper::without_infix(m.name(), "Update", w, "Input"),
+                                    optional: false,
+                                    kind: FieldKind::Predefined,
+                                },
+                            ]
+                        },
                         // update many with where input
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: helper::without_infix_no_model_name("UpdateManyWithWhere", w, "Input"),
+                            docs: Cow::Owned(format!("{} update many with where input.", m.name())),
+                            kind: ClassKind::UpdateWithWhereUniqueInput,
+                            fields: vec![
+                                Field {
+                                    name: "where",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: helper::where_doc(m.name()),
+                                    field_type: Cow::Owned(format!("{}WhereInput", model)),
+                                    optional: false,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "update",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: helper::update_doc(m.name()),
+                                    field_type: helper::without_infix(m.name(), "Update", w, "Input"),
+                                    optional: false,
+                                    kind: FieldKind::Predefined,
+                                },
+                            ]
+                        },
                         // upsert with where unique input
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: helper::without_infix_no_model_name("UpsertWithWhereUnique", w, "Input"),
+                            docs: Cow::Owned(format!("{} upsert with where unique input.", m.name())),
+                            kind: ClassKind::UpdateWithWhereUniqueInput,
+                            fields: vec![
+                                Field {
+                                    name: "where",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: helper::where_unique_doc(m.name()),
+                                    field_type: Cow::Owned(format!("{}WhereUniqueInput", model)),
+                                    optional: false,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "update",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: helper::update_doc(m.name()),
+                                    field_type: helper::without_infix(m.name(), "Update", w, "Input"),
+                                    optional: false,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "create",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: helper::create_doc(m.name()),
+                                    field_type: helper::without_infix(m.name(), "Create", w, "Input"),
+                                    optional: false,
+                                    kind: FieldKind::Predefined,
+                                },
+                            ]
+                        },
                     ]).flatten().collect::<Vec<Class>>());
                     classes
                 }).flatten().collect::<Vec<Class>>());
