@@ -4,11 +4,11 @@ use std::io::Write;
 use std::fs::create_dir_all;
 use std::fs::remove_dir_all;
 
-pub(crate) struct Generator {
+pub(crate) struct FileUtil {
     base_dir: PathBuf,
 }
 
-impl Generator {
+impl FileUtil {
 
     pub(crate) fn new(base_dir: impl Into<PathBuf>) -> Self {
         Self {

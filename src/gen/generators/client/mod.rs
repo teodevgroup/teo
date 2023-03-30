@@ -6,10 +6,9 @@ pub mod csharp;
 
 use std::path::{Path};
 use std::process::Command;
-
 use async_trait::async_trait;
 use crate::core::app::conf::ClientGeneratorConf;
-use crate::gen::lib::generator::Generator;
+use crate::gen::lib::file_util::FileUtil;
 use crate::core::graph::Graph;
 use crate::gen::generators::client::csharp::CSharpClientGenerator;
 use crate::gen::generators::client::dart::DartClientGenerator;
@@ -21,9 +20,9 @@ use crate::parser::ast::client::{ClientLanguage};
 #[async_trait]
 pub(crate) trait ClientGenerator {
     fn module_directory_in_package(&self, client: &ClientGeneratorConf) -> String;
-    async fn generate_module_files(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()>;
-    async fn generate_package_files(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()>;
-    async fn generate_main(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()>;
+    async fn generate_module_files(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &FileUtil) -> std::io::Result<()>;
+    async fn generate_package_files(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &FileUtil) -> std::io::Result<()>;
+    async fn generate_main(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &FileUtil) -> std::io::Result<()>;
 }
 
 pub(crate) async fn generate_client(graph: &Graph, client: &ClientGeneratorConf) -> std::io::Result<()> {
@@ -43,11 +42,11 @@ async fn generate_client_typed<T: ClientGenerator>(client_generator: T, graph: &
     let mut module_dest = dest.clone();
     let should_git_init = !dest.exists();
     if package {
-        let package_generator = Generator::new(dest);
+        let package_generator = FileUtil::new(dest);
         client_generator.generate_package_files(graph, client, &package_generator).await?;
         module_dest.push(Path::new(client_generator.module_directory_in_package(client).as_str()));
     }
-    let module_generator = Generator::new(module_dest);
+    let module_generator = FileUtil::new(module_dest);
     client_generator.generate_module_files(graph, client, &module_generator).await?;
     client_generator.generate_main(graph, client, &module_generator).await?;
     if git_commit && package {
