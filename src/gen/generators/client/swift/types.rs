@@ -97,6 +97,14 @@ impl TypeLookup for SwiftTypes {
         Cow::Owned("[".to_owned() + generated_type.as_ref() + "]")
     }
 
+    fn generated_type_to_optional<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
+        Cow::Owned(generated_type.as_ref().to_owned() + "?")
+    }
+
+    fn generated_type_to_or_null<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
+        Cow::Owned("NullOr<".to_owned() + generated_type.as_ref() + ">")
+    }
+
     fn action_result_type<'a>(&self, action: Action, model_name: &'a str) -> Cow<'a, str> {
         Cow::Owned(match action.to_u32() {
             FIND_UNIQUE_HANDLER => format!("Response<{model_name}>?"),
@@ -120,5 +128,9 @@ impl TypeLookup for SwiftTypes {
 
     fn number_type(&self) -> &'static str {
         "Int"
+    }
+
+    fn bool_type(&self) -> &'static str {
+        "Bool"
     }
 }
