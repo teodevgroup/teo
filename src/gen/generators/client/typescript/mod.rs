@@ -29,8 +29,8 @@ impl ClientGenerator for TypeScriptClientGenerator {
     async fn generate_module_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
         generator.clear_root_directory().await?;
-        generator.generate_file("decimal.js", generate_decimal_js().await).await?;
-        generator.generate_file("decimal.d.ts", generate_decimal_d_ts().await).await
+        generator.generate_file("decimal.js", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/ts/src/decimal.js"))).await?;
+        generator.generate_file("decimal.d.ts", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/ts/src/decimal.d.ts"))).await
     }
 
     async fn generate_package_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, generator: &Generator) -> std::io::Result<()> {
