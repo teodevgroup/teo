@@ -12,7 +12,7 @@ use crate::gen::internal::client::outline::class_kind::ClassKind;
 pub(in crate::gen) struct Class<'a> {
     pub(super) model_name: &'a str,
     pub(super) localized_name: Cow<'a, str>,
-    pub(super) name_suffix: &'a str,
+    pub(super) name_suffix: Cow<'a, str>,
     pub(super) docs: Cow<'a, str>,
     pub(super) kind: ClassKind,
     pub(super) fields: Vec<Field<'a>>,
