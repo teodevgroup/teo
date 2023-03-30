@@ -3,10 +3,11 @@ pub(crate) mod teo;
 pub(crate) mod types;
 
 use async_trait::async_trait;
-use crate::core::app::conf::ClientGeneratorConf;
 use crate::gen::generators::client::csharp::pkg::runtime::generate_runtime_cs;
 use crate::core::graph::Graph;
-use crate::gen::generators::client::ClientGenerator;
+use crate::gen::interface::client::conf::Conf;
+use crate::gen::internal::client::ctx::Ctx;
+use crate::gen::internal::client::generator::Generator;
 use crate::gen::internal::file_util::FileUtil;
 
 pub(crate) struct CSharpClientGenerator { }
@@ -16,22 +17,22 @@ impl CSharpClientGenerator {
 }
 
 #[async_trait]
-impl ClientGenerator for CSharpClientGenerator {
-    fn module_directory_in_package(&self, _client: &ClientGeneratorConf) -> String {
+impl Generator for CSharpClientGenerator {
+    fn module_directory_in_package(&self, _conf: &Conf) -> String {
         return "src".to_owned();
     }
 
-    async fn generate_module_files(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_module_files(&self, ctx: Ctx, generator: &FileUtil) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
         generator.clear_root_directory().await?;
-        generator.generate_file("Runtime.cs", generate_runtime_cs(graph, client).await).await
+        generator.generate_file("Runtime.cs", generate_runtime_cs(ctx.graph, ctx.conf).await).await
     }
 
-    async fn generate_package_files(&self, _graph: &Graph, _client: &ClientGeneratorConf, _generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_package_files(&self, _ctx: Ctx, _generator: &FileUtil) -> std::io::Result<()> {
         Ok(())
     }
 
-    async fn generate_main(&self, graph: &Graph, client: &ClientGeneratorConf, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_main(&self, _ctx: Ctx, generator: &FileUtil) -> std::io::Result<()> {
         Ok(())
         //generator.generate_file("Index.cs", generate_index_cs(graph, client).await).await
     }

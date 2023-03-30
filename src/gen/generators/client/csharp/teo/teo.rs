@@ -1,12 +1,12 @@
 use askama::Template;
-use crate::core::app::conf::ClientGeneratorConf;
 use crate::core::r#enum::Enum;
 use crate::gen::generators::client::csharp::types::CSharpTypes;
+use crate::gen::interface::client::conf::Conf;
 use crate::gen::internal::shared::delegate::{Delegate, delegates};
 use crate::gen::internal::shared::model_input::{model_inputs, ModelInput};
 use crate::gen::internal::shared::model_output::{model_outputs_with_relations, ModelOutput};
 use crate::prelude::Graph;
-use crate::gen::internal::shared::filters;
+use crate::gen::internal::filters;
 
 #[derive(Template)]
 #[template(path = "client/csharp/enums.cs.jinja", escape = "none")]
@@ -52,7 +52,7 @@ fn generate_delegate_classes(graph: &Graph) -> String {
     }.render().unwrap()
 }
 
-pub(crate) fn generate_teo_cs(graph: &Graph, client: &ClientGeneratorConf) -> String {
+pub(crate) fn generate_teo_cs(graph: &Graph, conf: &Conf) -> String {
     let header = include_str!("header.cs");
     let enums = generate_enums(graph);
     let output_types = generate_model_output_types(graph);

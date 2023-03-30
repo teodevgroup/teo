@@ -1,31 +1,43 @@
+use std::path::Path;
+use std::process::Command;
+use crate::gen::generators::client::csharp::CSharpClientGenerator;
+use crate::gen::generators::client::dart::DartClientGenerator;
+use crate::gen::generators::client::kotlin::KotlinClientGenerator;
+use crate::gen::generators::client::swift::SwiftClientGenerator;
+use crate::gen::generators::client::typescript::TypeScriptClientGenerator;
 use crate::gen::interface::client::conf::Conf;
 use crate::gen::interface::client::kind::Kind;
+use crate::gen::internal::client::ctx::Ctx;
+use crate::gen::internal::client::outline::outline::Outline;
+use crate::gen::internal::file_util::FileUtil;
 use crate::prelude::Graph;
 
 pub(crate) async fn gen(graph: &Graph, conf: &Conf) -> std::io::Result<()> {
+    let outline = Outline::new(graph);
+    let ctx = Ctx { graph, conf, outline: &outline };
     match conf.kind {
-        Kind::TypeScript => generate_client_typed(TypeScriptClientGenerator::new(), graph, client).await,
-        Kind::Swift => generate_client_typed(SwiftClientGenerator::new(), graph, client).await,
-        Kind::Kotlin => generate_client_typed(KotlinClientGenerator::new(), graph, client).await,
-        Kind::CSharp => generate_client_typed(CSharpClientGenerator::new(), graph, client).await,
-        Kind::Dart => generate_client_typed(DartClientGenerator::new(), graph, client).await,
+        Kind::TypeScript => generate_client_typed(TypeScriptClientGenerator::new(), &ctx).await,
+        Kind::Swift => generate_client_typed(SwiftClientGenerator::new(), &ctx).await,
+        Kind::Kotlin => generate_client_typed(KotlinClientGenerator::new(), &ctx).await,
+        Kind::CSharp => generate_client_typed(CSharpClientGenerator::new(), &ctx).await,
+        Kind::Dart => generate_client_typed(DartClientGenerator::new(), &ctx).await,
     }
 }
 
-async fn generate_client_typed<T: ClientGenerator>(client_generator: T, graph: &Graph, client: &ClientGeneratorConf) -> std::io::Result<()> {
-    let dest = &client.dest;
-    let package = client.package;
-    let git_commit = client.git_commit;
+async fn generate_client_typed<T: ClientGenerator>(client_generator: T, ctx: &Ctx<'_>) -> std::io::Result<()> {
+    let dest = &ctx.conf.dest;
+    let package = ctx.conf.package;
+    let git_commit = ctx.conf.git_commit;
     let mut module_dest = dest.clone();
     let should_git_init = !dest.exists();
     if package {
         let package_generator = FileUtil::new(dest);
-        client_generator.generate_package_files(graph, client, &package_generator).await?;
+        client_generator.generate_package_files(ctx, &package_generator).await?;
         module_dest.push(Path::new(client_generator.module_directory_in_package(client).as_str()));
     }
     let module_generator = FileUtil::new(module_dest);
-    client_generator.generate_module_files(graph, client, &module_generator).await?;
-    client_generator.generate_main(graph, client, &module_generator).await?;
+    client_generator.generate_module_files(ctx, &module_generator).await?;
+    client_generator.generate_main(ctx, &module_generator).await?;
     if git_commit && package {
         std::env::set_current_dir(dest).unwrap();
         if should_git_init {

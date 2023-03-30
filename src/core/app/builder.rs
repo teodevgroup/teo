@@ -14,7 +14,7 @@ use crate::connectors::mongodb::connector::MongoDBConnector;
 use crate::connectors::sql::connector::SQLConnector;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::app::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, MigrateCommand, ServeCommand};
-use crate::core::app::conf::{ClientGeneratorConf, EntityGeneratorConf, ServerConf};
+use crate::core::app::conf::{EntityGeneratorConf, ServerConf};
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use crate::core::connector::Connector;
@@ -32,6 +32,7 @@ use crate::core::pipeline::items::function::validate::{ValidateArgument, Validat
 use crate::core::property::Property;
 use crate::core::r#enum::{Enum, EnumVariant};
 use crate::core::relation::Relation;
+use crate::gen::interface::client::conf::{Conf as ClientConf};
 use crate::parser::ast::r#type::Arity;
 use crate::parser::parser::Parser;
 
@@ -67,7 +68,7 @@ pub struct AppBuilder {
     pub(crate) graph_builder: GraphBuilder,
     pub(crate) server_conf: Option<ServerConf>,
     pub(crate) entity_generator_confs: Vec<EntityGeneratorConf>,
-    pub(crate) client_generator_confs: Vec<ClientGeneratorConf>,
+    pub(crate) client_generator_confs: Vec<ClientConf>,
     pub(crate) callback_lookup_table: Arc<Mutex<CallbackLookupTable>>,
     pub(crate) before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
     pub(crate) environment_version: EnvironmentVersion,
@@ -335,9 +336,9 @@ impl AppBuilder {
         for client_generator_ref in parser.clients.iter() {
             let source = parser.get_source(client_generator_ref.0);
             let client = source.get_client(client_generator_ref.1);
-            self.client_generator_confs.push(ClientGeneratorConf {
+            self.client_generator_confs.push(ClientConf {
                 name: client.identifier.as_ref().map(|i| i.name.clone()),
-                provider: client.provider.unwrap(),
+                kind: client.provider.unwrap(),
                 dest: client.dest.clone().unwrap(),
                 package: client.package.unwrap(),
                 package_name: client.package_name.clone(),

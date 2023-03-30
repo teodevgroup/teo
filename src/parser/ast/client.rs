@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use crate::gen::interface::client::kind::Kind as ClientKind;
 use crate::parser::ast::span::Span;
 use crate::parser::ast::item::Item;
 use crate::parser::ast::identifier::Identifier;
@@ -19,7 +20,7 @@ pub struct Client {
     pub(crate) identifier: Option<Identifier>,
     pub(crate) items: Vec<Item>,
     pub(crate) span: Span,
-    pub(crate) provider: Option<ClientLanguage>,
+    pub(crate) provider: Option<ClientKind>,
     pub(crate) dest: Option<PathBuf>,
     pub(crate) package: Option<bool>,
     pub(crate) package_name: Option<String>,

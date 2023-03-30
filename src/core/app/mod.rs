@@ -10,20 +10,20 @@ use std::sync::Arc;
 use to_mut::ToMut;
 use crate::core::app::builder::AsyncCallbackWithoutArgs;
 use crate::core::app::command::{CLI, CLICommand, GenerateCommand};
-use crate::core::app::conf::{ClientGeneratorConf, EntityGeneratorConf, ServerConf};
+use crate::core::app::conf::{EntityGeneratorConf, ServerConf};
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use crate::core::app::migrate::migrate;
 use crate::core::app::serve::serve;
 use crate::core::graph::Graph;
-use crate::gen::generators::client::generate_client;
-use crate::gen::generators::server::generate_entity;
+use crate::gen::interface::client::conf::Conf as ClientConf;
+use crate::gen::interface::client::gen::gen as gen_client;
 
 pub struct App {
     graph: Graph,
     server_conf: ServerConf,
     entity_generator_confs: Vec<EntityGeneratorConf>,
-    client_generator_confs: Vec<ClientGeneratorConf>,
+    client_generator_confs: Vec<ClientConf>,
     environment_version: EnvironmentVersion,
     entrance: Entrance,
     args: Arc<CLI>,
@@ -74,7 +74,7 @@ impl App {
                             0 => println!("Cannot find a client generator declaration."),
                             1 => {
                                 let conf = self.client_generator_confs.get(0).unwrap();
-                                generate_client(&self.graph, conf).await?;
+                                gen_client(&self.graph, conf).await?;
                             },
                             _ => {
                                 let mut names = client_command.names.clone().unwrap_or(vec![]);

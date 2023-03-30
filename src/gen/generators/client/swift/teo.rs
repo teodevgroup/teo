@@ -1,13 +1,14 @@
 use inflector::Inflector;
 use askama::Template;
-use crate::core::app::conf::ClientGeneratorConf;
 use crate::core::r#enum::Enum;
 use crate::gen::generators::client::swift::types::SwiftTypes;
+use crate::gen::interface::client::conf::Conf;
+use crate::gen::internal::client::ctx::Ctx;
 use crate::gen::internal::shared::delegate::{Delegate, delegates};
 use crate::gen::internal::shared::model_input::{model_inputs, ModelInput};
 use crate::gen::internal::shared::model_output::{model_outputs_with_relations, ModelOutput};
 use crate::prelude::Graph;
-use crate::gen::internal::shared::filters;
+use crate::gen::internal::filters;
 
 #[derive(Template)]
 #[template(path = "client/swift/footer.swift.jinja", escape = "none")]
@@ -15,7 +16,7 @@ pub(crate) struct FooterTemplate<'a> {
     pub(crate) object_name: &'a str,
     pub(crate) model_names: Vec<String>
 }
-fn generate_footer(graph: &Graph, client: &ClientGeneratorConf) -> String {
+fn generate_footer(graph: &Graph, client: &Conf) -> String {
     FooterTemplate {
         object_name: client.object_name.as_ref().map_or("teo", |n| n.as_str()),
         model_names: graph.models().iter().map(|m| m.name().to_camel_case()).collect(),
@@ -66,12 +67,12 @@ fn generate_delegate_classes(graph: &Graph) -> String {
     }.render().unwrap()
 }
 
-pub(crate) fn generate_teo_swift(graph: &Graph, client: &ClientGeneratorConf) -> String {
+pub(crate) fn generate_teo_swift(ctx: &Ctx) -> String {
     let header = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/swift/header.swift"));
-    let enums = generate_enums(graph);
-    let output_types = generate_model_output_types(graph);
-    let input_types = generate_input_types(graph);
-    let delegate_classes = generate_delegate_classes(graph);
-    let footer = generate_footer(graph, client);
+    let enums = generate_enums(ctx.graph);
+    let output_types = generate_model_output_types(ctx.graph);
+    let input_types = generate_input_types(ctx.graph);
+    let delegate_classes = generate_delegate_classes(ctx.graph);
+    let footer = generate_footer(ctx.graph, ctx.conf);
     format!("{header}\n{enums}\n{output_types}\n{input_types}\n{delegate_classes}\n{footer}")
 }

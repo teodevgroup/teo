@@ -1,11 +1,11 @@
 use inflector::Inflector;
-use crate::core::app::conf::ClientGeneratorConf;
+use crate::gen::interface::client::conf::Conf;
 use crate::prelude::Graph;
 
-pub(crate) async fn generate_index_js(graph: &Graph, client: &ClientGeneratorConf) -> String {
+pub(crate) async fn generate_index_js(graph: &Graph, conf: &Conf) -> String {
     let mut name_map = "".to_owned();
-    let host = &client.host;
-    let object_name = client.object_name.clone().unwrap_or("teo".to_owned());
+    let host = &conf.host;
+    let object_name = conf.object_name.clone().unwrap_or("teo".to_owned());
     let mut class_name = object_name.to_pascal_case();
     if object_name == class_name { // in case of object name is capitalized
         class_name = class_name + "Class";
