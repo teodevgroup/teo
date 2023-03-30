@@ -3,11 +3,11 @@ use askama::Template;
 use crate::core::app::conf::ClientGeneratorConf;
 use crate::core::r#enum::Enum;
 use crate::gen::generators::client::swift::types::SwiftTypes;
-use crate::gen::lib::shared::delegate::{Delegate, delegates};
-use crate::gen::lib::shared::model_input::{model_inputs, ModelInput};
-use crate::gen::lib::shared::model_output::{model_outputs_with_relations, ModelOutput};
+use crate::gen::internal::shared::delegate::{Delegate, delegates};
+use crate::gen::internal::shared::model_input::{model_inputs, ModelInput};
+use crate::gen::internal::shared::model_output::{model_outputs_with_relations, ModelOutput};
 use crate::prelude::Graph;
-use crate::gen::lib::shared::filters;
+use crate::gen::internal::shared::filters;
 
 #[derive(Template)]
 #[template(path = "client/swift/footer.swift.jinja", escape = "none")]

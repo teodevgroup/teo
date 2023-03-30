@@ -6,7 +6,7 @@ use crate::core::app::conf::ClientGeneratorConf;
 use crate::core::graph::Graph;
 use crate::gen::generators::client::ClientGenerator;
 use crate::gen::generators::client::swift::teo::generate_teo_swift;
-use crate::gen::lib::file_util::FileUtil;
+use crate::gen::internal::file_util::FileUtil;
 
 pub(crate) struct SwiftClientGenerator { }
 

@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 use crate::core::field::r#type::FieldTypeOwner;
-use crate::gen::lib::shared::type_lookup::TypeLookup;
+use crate::gen::internal::shared::type_lookup::TypeLookup;
 use crate::prelude::Graph;
 
 pub(crate) struct ModelOutputField<'a> {

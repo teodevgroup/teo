@@ -11,7 +11,7 @@ use crate::core::model::index::ModelIndexType::{Primary, Unique};
 use crate::gen::generators::client::typescript::pkg::src::filter_d_ts::generate_filter_types;
 use crate::gen::generators::client::typescript::pkg::src::operation_d_ts::generate_operation_types;
 use crate::gen::generators::client::typescript::pkg::src::runtime_d_ts::generate_client_runtime_types;
-use crate::gen::lib::code::Code;
+use crate::gen::internal::code::Code;
 use crate::gen::generators::server::nodejs::runtime_d_ts::generate_server_runtime_types;
 
 fn generate_model_create_nested_input(_graph: &Graph, model: &Model, without: Option<&str>, many: bool) -> String {

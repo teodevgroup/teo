@@ -10,7 +10,7 @@ use crate::gen::generators::client::typescript::pkg::gitignore::generate_gitigno
 use crate::gen::generators::client::typescript::pkg::package_json::{generate_package_json, update_package_json};
 use crate::gen::generators::client::typescript::pkg::readme::generate_readme_ts;
 use crate::gen::generators::client::typescript::pkg::src::index_js::generate_index_js;
-use crate::gen::lib::file_util::FileUtil;
+use crate::gen::internal::file_util::FileUtil;
 
 pub(crate) struct TypeScriptClientGenerator { }
 
