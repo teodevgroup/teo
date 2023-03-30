@@ -16,8 +16,8 @@ use crate::core::app::environment::EnvironmentVersion;
 use crate::core::app::migrate::migrate;
 use crate::core::app::serve::serve;
 use crate::core::graph::Graph;
-use crate::generator::client::generate_client;
-use crate::generator::server::generate_entity;
+use crate::gen::client::generate_client;
+use crate::gen::server::generate_entity;
 
 pub struct App {
     graph: Graph,
