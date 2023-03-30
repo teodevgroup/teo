@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use crate::gen::internal::shared::type_lookup::TypeLookup;
+use crate::gen::internal::type_lookup::TypeLookup;
 use crate::prelude::Graph;
 
 pub(crate) struct DelegateAction<'a> {

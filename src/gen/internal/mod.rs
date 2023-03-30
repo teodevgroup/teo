@@ -5,3 +5,4 @@ pub(in crate::gen) mod shared;
 pub(in crate::gen) mod client;
 pub(in crate::gen) mod server;
 pub(in crate::gen) mod filters;
+pub(in crate::gen) mod type_lookup;
