@@ -1,7 +1,7 @@
-pub mod parser;
 pub mod core;
-pub mod connectors;
-pub mod gen;
+pub(crate) mod parser;
+pub(crate) mod connectors;
+pub(crate) mod gen;
 
 pub mod prelude {
     pub use crate::core::app::App;
