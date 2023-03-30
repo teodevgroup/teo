@@ -21,7 +21,7 @@ impl Outline {
                     Class {
                         model_name: enum_def.name(),
                         localized_name: Cow::Borrowed(enum_def.localized_name()),
-                        name_suffix: "",
+                        name_suffix: Cow::Borrowed(""),
                         docs: Cow::Borrowed(enum_def.description().unwrap_or("")),
                         kind: ClassKind::Enum,
                         fields: enum_def.variants.iter().map(|v| Field {
@@ -40,7 +40,7 @@ impl Outline {
                         Some(Class {
                             model_name: m.name(),
                             localized_name: Cow::Owned(m.localized_name()),
-                            name_suffix: "",
+                            name_suffix: Cow::Borrowed(""),
                             docs: Cow::Borrowed(m.description()),
                             kind: ClassKind::DataOutput,
                             fields: {
@@ -89,7 +89,7 @@ impl Outline {
                         Some(Class {
                             model_name: m.name(),
                             localized_name: Cow::Borrowed(""),
-                            name_suffix: "Select",
+                            name_suffix: Cow::Borrowed("Select"),
                             docs: Cow::Owned(format!("Select fields from the {} model.", m.name().to_word_case())),
                             fields: m.output_keys().iter().filter_map(|k| m.field(k)).map(|f| Field {
                                 name: f.name(),
@@ -108,7 +108,7 @@ impl Outline {
                             Some(Class {
                                 model_name: m.name(),
                                 localized_name: Cow::Borrowed(""),
-                                name_suffix: "Include",
+                                name_suffix: Cow::Borrowed("Include"),
                                 docs: Cow::Owned(format!("Include relations of the {} model.", m.name().to_word_case())),
                                 fields: m.relations().iter().map(|r| Field {
                                     name: r.name(),
@@ -125,7 +125,7 @@ impl Outline {
                         Some(Class {
                             model_name: m.name(),
                             localized_name: Cow::Borrowed(""),
-                            name_suffix: "WhereInput",
+                            name_suffix: Cow::Borrowed("WhereInput"),
                             docs: Cow::Owned(format!("{} filter.", m.name())),
                             fields: m.query_keys().iter().map(|k| if let Some(field) = m.field(k) {
                                 Field {
@@ -152,7 +152,7 @@ impl Outline {
                         Some(Class {
                             model_name: m.name(),
                             localized_name: Cow::Borrowed(""),
-                            name_suffix: "WhereUniqueInput",
+                            name_suffix: Cow::Borrowed("WhereUniqueInput"),
                             docs: Cow::Owned(format!("{} unique filter.", m.name())),
                             fields: m.indices().iter().filter(|i| i.r#type().is_unique()).map(|i| i.keys().iter().map(|k| m.field(k).unwrap()).map(|f| Field {
                                 name: f.name(),
@@ -168,7 +168,7 @@ impl Outline {
                         Some(Class {
                             model_name: m.name(),
                             localized_name: Cow::Borrowed(""),
-                            name_suffix: "OrderByInput",
+                            name_suffix: Cow::Borrowed("OrderByInput"),
                             docs: Cow::Owned(format!("{} order by input.", m.name())),
                             fields: m.sort_keys().iter().map(|k| {
                                 let f = m.field(k).unwrap();
@@ -191,7 +191,146 @@ impl Outline {
                     };
                     // create input
                     classes.extend(without.iter().map(|w| vec![
-
+                        // create input
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: helper::without_infix_no_model_name("Create", w, "Input"),
+                            docs: Cow::Owned(format!("{} create input.", m.name())),
+                            kind: ClassKind::CreateInput,
+                            fields: m.input_keys().iter().filter_map(|k| if let Some(field) = m.field(k) {
+                                Some(Field {
+                                    name: field.name(),
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: Cow::Borrowed(field.description().unwrap_or("")),
+                                    field_type: lookup.field_type_to_create_type(field.field_type(), false),
+                                    optional: field.input_omissible,
+                                    kind: FieldKind::Field,
+                                })
+                            } else if let Some(property) = m.property(k) {
+                                Some(Field {
+                                    name: property.name(),
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: Cow::Borrowed(property.description.as_ref().map(|v| v.as_str()).unwrap_or("")),
+                                    field_type: lookup.field_type_to_create_type(property.field_type(), false),
+                                    optional: property.input_omissible,
+                                    kind: FieldKind::Property,
+                                })
+                            } else if let Some(relation) = m.relation(k) {
+                                if relation.name() == w {
+                                    None
+                                } else {
+                                    Some(Field {
+                                        name: relation.name(),
+                                        localized_name: Cow::Borrowed(""),
+                                        docs: Cow::Borrowed(relation.description().unwrap_or("")),
+                                        field_type: {
+                                            if let Some(opposite) = graph.opposite_relation(relation).1 {
+                                                helper::without_infix(relation.model(), "Create", opposite.name(), "Input")
+                                            } else {
+                                                Cow::Owned(format!("{}CreateInput", relation.model()))
+                                            }
+                                        },
+                                        optional: relation.is_optional(),
+                                        kind: FieldKind::Relation,
+                                    })
+                                }
+                            } else { unreachable!() }).collect(),
+                        },
+                        // create nested many input
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: helper::without_infix_no_model_name("CreateNestedMany", w, "Input"),
+                            docs: Cow::Owned(format!("{} create nested many input.", m.name())),
+                            kind: ClassKind::CreateNestedManyInput,
+                            fields: vec![
+                                Field {
+                                    name: "create",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: create_doc(m.name()),
+                                    field_type: lookup.generated_type_to_enumerate((helper::without_infix(m.name(), "Create", w, "Input"))),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "connectOrCreate",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: connect_or_create_doc(m.name()),
+                                    field_type: lookup.generated_type_to_enumerate((helper::without_infix(m.name(), "ConnectOrCreate", w, "Input"))),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "connect",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: connect_doc(m.name()),
+                                    field_type: lookup.generated_type_to_enumerate(Cow::Owned(format!("{}WhereUniqueInput", m.name()))),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                            ]
+                        },
+                        // create nested one input
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: helper::without_infix_no_model_name("CreateNestedOne", w, "Input"),
+                            docs: Cow::Owned(format!("{} create nested one input.", m.name())),
+                            kind: ClassKind::CreateNestedOneInput,
+                            fields: vec![
+                                Field {
+                                    name: "create",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: create_doc(m.name()),
+                                    field_type: helper::without_infix(m.name(), "Create", w, "Input"),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "connectOrCreate",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: connect_or_create_doc(m.name()),
+                                    field_type: helper::without_infix(m.name(), "ConnectOrCreate", w, "Input"),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "connect",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: connect_doc(m.name()),
+                                    field_type: Cow::Owned(format!("{}WhereUniqueInput", m.name())),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                            ],
+                        },
+                        // connect or create input
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: helper::without_infix_no_model_name("ConnectOrCreate", w, "Input"),
+                            docs: Cow::Owned(format!("{} connect or create input.", m.name())),
+                            kind: ClassKind::ConnectOrCreateInput,
+                            fields: vec![
+                                Field {
+                                    name: "where",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: where_unique_doc(m.name()),
+                                    field_type: Cow::Owned(format!("{}WhereUniqueInput", m.name())),
+                                    optional: false,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "create",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: create_doc(m.name()),
+                                    field_type: helper::without_infix(m.name(), "Create", w, "Input"),
+                                    optional: false,
+                                    kind: FieldKind::Predefined,
+                                },
+                            ],
+                        },
                     ]).flatten().collect());
                     // update input
                     classes.extend(without.iter().map(|w| vec![
@@ -201,6 +340,27 @@ impl Outline {
                 }).flatten().collect());
                 results
             }
+        }
+    }
+}
+
+mod helper {
+    use std::borrow::Cow;
+    use inflector::Inflector;
+
+    pub(super) fn without_infix<'a>(model_name: &'a str, before: &'a str, without: &'a str, after: &'a str) -> Cow<'a, str> {
+        if without.is_empty() {
+            Cow::Owned(model_name.to_owned() + before + after)
+        } else {
+            Cow::Owned(model_name.to_owned() + before + "Without" + without.to_pascal_case().as_str() + after)
+        }
+    }
+
+    pub(super) fn without_infix_no_model_name<'a>(before: &'a str, without: &'a str, after: &'a str) -> Cow<'a, str> {
+        if without.is_empty() {
+            Cow::Owned(before.to_owned() + after)
+        } else {
+            Cow::Owned(before.to_owned() + "Without" + without.to_pascal_case().as_str() + after)
         }
     }
 }

@@ -11,6 +11,9 @@ pub(in crate::gen) enum ClassKind {
     ActionArgs,
     Other,
     Enum,
+    ConnectOrCreateInput,
+    CreateNestedOneInput,
+    CreateNestedManyInput,
 }
 
 impl ClassKind {
