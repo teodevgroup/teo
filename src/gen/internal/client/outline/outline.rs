@@ -13,8 +13,8 @@ pub(in crate::gen) struct Outline<'a> {
     pub(in crate::gen) classes: Vec<Class<'a>>,
 }
 
-impl Outline<'_> {
-    pub(in crate::gen) fn new<L>(graph: &Graph, lookup: L) -> Self where L: TypeLookup {
+impl<'a> Outline<'a> {
+    pub(in crate::gen) fn new<L>(graph: &'a Graph, lookup: L) -> Self where L: TypeLookup {
         Self {
             classes: {
                 let mut results = graph.enums().iter().map(|(name, enum_def)| {
@@ -35,7 +35,7 @@ impl Outline<'_> {
                     }
                 }).collect::<Vec<Class>>();
                 results.extend(graph.models().iter().map(|m| {
-                    let mut classes = vec![
+                    let mut classes: Vec<Class> = vec![
                         // data output
                         Some(Class {
                             model_name: m.name(),
@@ -181,7 +181,7 @@ impl Outline<'_> {
                             }).collect(),
                             kind: ClassKind::OrderByInput,
                         }),
-                    ];
+                    ].into_iter().flatten().collect();
                     let without = {
                         let mut without = vec![""];
                         without.append(&mut m.relations().iter().map(|r| r.name()).collect());
@@ -329,13 +329,13 @@ impl Outline<'_> {
                                 },
                             ],
                         },
-                    ]).flatten().collect());
+                    ]).flatten().collect::<Vec<Class>>());
                     // update input
                     classes.extend(without.iter().map(|w| vec![
 
-                    ]).flatten().collect());
+                    ]).flatten().collect::<Vec<Class>>());
                     classes
-                }).flatten().collect());
+                }).flatten().collect::<Vec<Class>>());
                 results
             }
         }

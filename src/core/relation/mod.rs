@@ -57,7 +57,7 @@ impl Relation {
     }
 
     pub(crate) fn description(&self) -> Option<&str> {
-        self.description.map(|d| d.as_str())
+        self.description.as_ref().map(|d| d.as_str())
     }
 
     pub(crate) fn optionality(&self) -> &Optionality { &self.optionality }
