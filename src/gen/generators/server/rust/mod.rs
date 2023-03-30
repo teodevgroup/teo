@@ -10,8 +10,8 @@ use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::Model;
 use crate::core::r#enum::Enum;
 use crate::core::relation::Relation;
-use crate::gen::lib::code::Code;
-use crate::gen::lib::file_util::FileUtil;
+use crate::gen::internal::code::Code;
+use crate::gen::internal::file_util::FileUtil;
 use crate::gen::generators::server::EntityGenerator;
 use crate::prelude::Graph;
 

@@ -4,7 +4,7 @@ use inflector::Inflector;
 use itertools::Itertools;
 use crate::core::action::{Action, IDENTITY_HANDLER, SIGN_IN_HANDLER};
 use crate::core::field::r#type::FieldTypeOwner;
-use crate::gen::lib::shared::type_lookup::TypeLookup;
+use crate::gen::internal::shared::type_lookup::TypeLookup;
 use crate::prelude::Graph;
 
 pub(crate) struct ModelInclude<'a> {

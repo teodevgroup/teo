@@ -3,13 +3,13 @@ pub(crate) mod runtime_d_ts;
 
 use array_tool::vec::Join;
 use crate::core::app::conf::EntityGeneratorConf;
-use crate::gen::lib::file_util::FileUtil;
+use crate::gen::internal::file_util::FileUtil;
 use crate::gen::generators::server::EntityGenerator;
 use crate::prelude::Graph;
 use async_trait::async_trait;
 use inflector::Inflector;
 use crate::gen::generators::client::typescript::pkg::src::index_d_ts::generate_index_d_ts;
-use crate::gen::lib::code::Code;
+use crate::gen::internal::code::Code;
 use crate::gen::generators::server::nodejs::utils::{field_to_nodejs_api_type, relation_to_nodejs_api_type};
 
 pub(crate) struct NodeJSEntityGenerator { }

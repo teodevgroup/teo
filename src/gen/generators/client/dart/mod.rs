@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use crate::core::app::conf::ClientGeneratorConf;
 use crate::gen::generators::client::ClientGenerator;
-use crate::gen::lib::file_util::FileUtil;
+use crate::gen::internal::file_util::FileUtil;
 
 use crate::prelude::Graph;
 

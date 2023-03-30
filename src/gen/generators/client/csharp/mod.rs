@@ -7,7 +7,7 @@ use crate::core::app::conf::ClientGeneratorConf;
 use crate::gen::generators::client::csharp::pkg::runtime::generate_runtime_cs;
 use crate::core::graph::Graph;
 use crate::gen::generators::client::ClientGenerator;
-use crate::gen::lib::file_util::FileUtil;
+use crate::gen::internal::file_util::FileUtil;
 
 pub(crate) struct CSharpClientGenerator { }
 

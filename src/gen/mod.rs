@@ -1,2 +1,3 @@
-pub(crate) mod lib;
-pub(crate) mod generators;
+pub(in crate::gen) mod internal;
+pub(in crate::gen) mod generators;
+pub(crate) mod interface;
