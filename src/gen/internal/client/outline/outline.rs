@@ -469,6 +469,79 @@ impl<'a> Outline<'a> {
                             ]
                         },
                         // update nested one input
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: helper::without_infix_no_model_name("UpdateNestedOne", w, "Input"),
+                            docs: Cow::Owned(format!("{} update nested one input.", m.name())),
+                            kind: ClassKind::CreateNestedManyInput,
+                            fields: vec![
+                                Field {
+                                    name: "create",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: helper::create_doc(m.name()),
+                                    field_type: helper::without_infix(m.name(), "Create", w, "Input"),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "connectOrCreate",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: helper::connect_or_create_doc(m.name()),
+                                    field_type: helper::without_infix(m.name(), "ConnectOrCreate", w, "Input"),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "connect",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: helper::connect_doc(m.name()),
+                                    field_type: Cow::Owned(format!("{}WhereUniqueInput", m.name())),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "set",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: helper::set_doc(m.name()),
+                                    field_type: Cow::Owned(format!("{}WhereUniqueInput", m.name())),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "update",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: helper::update_doc(m.name()),
+                                    field_type: helper::without_infix(m.name(), "UpdateWithWhereUnique", w, "Input"),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "upsert",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: helper::upsert_doc(m.name()),
+                                    field_type: helper::without_infix(m.name(), "UpsertWithWhereUnique", w, "Input"),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "disconnect",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: helper::disconnect_doc(m.name()),
+                                    field_type: Cow::Borrowed(lookup.bool_type()),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "delete",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: helper::delete_doc(m.name()),
+                                    field_type: Cow::Borrowed(lookup.bool_type()),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                            ],
+                        },
                         // update with where unique input
                         // update many with where input
                         // upsert with where unique input
