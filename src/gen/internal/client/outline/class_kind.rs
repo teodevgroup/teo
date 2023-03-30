@@ -34,4 +34,11 @@ impl ClassKind {
             _ => false,
         }
     }
+
+    pub(in crate::gen) fn is_order_by_input(&self) -> bool {
+        match self {
+            ClassKind::OrderByInput => true,
+            _ => false,
+        }
+    }
 }

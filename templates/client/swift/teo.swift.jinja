@@ -483,3 +483,9 @@ public enum ArrayFieldUpdateOperation<T: Encodable>: Encodable {
         }
     }
 }
+
+{%- for class in outline.classes %}
+{%- if class.kind.is_enum() || class.kind.is_order_by_input() %}
+{%- else %}
+{%- endif %}
+{%- endfor %}

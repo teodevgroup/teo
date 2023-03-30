@@ -9,10 +9,10 @@ use crate::gen::internal::client::outline::field_kind::FieldKind;
 ///
 /// An empty kind is always used inside enum type classes.
 pub(in crate::gen) struct Field<'a> {
-    pub(super) name: &'a str,
-    pub(super) localized_name: Cow<'a, str>,
-    pub(super) docs: Cow<'a, str>,
-    pub(super) field_type: Cow<'a, str>,
-    pub(super) optional: bool,
-    pub(super) kind: FieldKind,
+    pub(in crate::gen) name: &'a str,
+    pub(in crate::gen) localized_name: Cow<'a, str>,
+    pub(in crate::gen) docs: Cow<'a, str>,
+    pub(in crate::gen) field_type: Cow<'a, str>,
+    pub(in crate::gen) optional: bool,
+    pub(in crate::gen) kind: FieldKind,
 }
