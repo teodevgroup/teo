@@ -10,7 +10,7 @@ pub(in crate::gen) struct Ctx<'a> {
 }
 
 impl<'a> Ctx<'a> {
-    pub(in crate::gen) fn build<L>(graph: &Graph, conf: &Conf, lookup: L) -> Self where L: TypeLookup {
+    pub(in crate::gen) fn build<L>(graph: &'a Graph, conf: &'a Conf, lookup: L) -> Self where L: TypeLookup {
         Self { conf, graph, outline: Outline::new(graph, lookup) }
     }
 }
