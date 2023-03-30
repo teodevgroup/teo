@@ -1,9 +1,12 @@
 use std::borrow::Cow;
+use futures_util::FutureExt;
 use inflector::Inflector;
 use itertools::Itertools;
+use crate::core::action::{Action, IDENTITY_HANDLER, SIGN_IN_HANDLER};
 use crate::core::field::r#type::FieldTypeOwner;
 use crate::gen::internal::client::outline::class::Class;
 use crate::gen::internal::client::outline::class_kind::ClassKind;
+use crate::gen::internal::client::outline::delegate::{Delegate, DelegateAction};
 use crate::gen::internal::client::outline::field::Field;
 use crate::gen::internal::client::outline::field_kind::FieldKind;
 use crate::gen::internal::type_lookup::TypeLookup;
@@ -11,6 +14,7 @@ use crate::prelude::Graph;
 
 pub(in crate::gen) struct Outline<'a> {
     pub(in crate::gen) classes: Vec<Class<'a>>,
+    pub(in crate::gen) delegates: Vec<Delegate<'a>>,
 }
 
 impl<'a> Outline<'a> {
@@ -224,7 +228,8 @@ impl<'a> Outline<'a> {
                                         docs: Cow::Borrowed(relation.description().unwrap_or("")),
                                         field_type: {
                                             if let Some(opposite) = graph.opposite_relation(relation).1 {
-                                                helper::without_infix(relation.model(), &("CreateNested".to_owned() + if relation.is_vec() { "Many" } else { "One" }), opposite.name(), "Input")
+                                                let before = "CreateNested".to_owned() + if relation.is_vec() { "Many" } else { "One" };
+                                                helper::without_infix(relation.model(), before.as_str(), opposite.name(), "Input")
                                             } else {
                                                 Cow::Owned(format!("{}CreateNested{}Input", relation.model(), if relation.is_vec() { "Many" } else { "One" }))
                                             }
@@ -339,24 +344,24 @@ impl<'a> Outline<'a> {
                             name_suffix: helper::without_infix_no_model_name("Update", w, "Input"),
                             docs: Cow::Owned(format!("{} update input.", m.name())),
                             kind: ClassKind::UpdateInput,
-                            fields: m.input_keys().iter().map_filter(|k| if let Some(field) = m.field(k) {
-                                Field {
+                            fields: m.input_keys().iter().filter_map(|k| if let Some(field) = m.field(k) {
+                                Some(Field {
                                     name: field.name(),
                                     localized_name: Cow::Borrowed(""),
                                     docs: Cow::Borrowed(field.description().unwrap_or("")),
                                     field_type: lookup.field_type_to_update_type(field.field_type(), field.is_optional()),
                                     optional: true,
                                     kind: FieldKind::Field,
-                                }
+                                })
                             } else if let Some(property) = m.property(k) {
-                                Field {
+                                Some(Field {
                                     name: property.name(),
                                     localized_name: Cow::Borrowed(""),
                                     docs: Cow::Borrowed(property.description.as_ref().map(|v| v.as_str()).unwrap_or("")),
                                     field_type: lookup.field_type_to_update_type(property.field_type(), property.is_optional()),
                                     optional: true,
                                     kind: FieldKind::Property,
-                                }
+                                })
                             } else if let Some(relation) = m.relation(k) {
                                 if relation.name() == *w {
                                     None
@@ -554,7 +559,7 @@ impl<'a> Outline<'a> {
                                     name: "where",
                                     localized_name: Cow::Borrowed(""),
                                     docs: helper::where_unique_doc(m.name()),
-                                    field_type: Cow::Owned(format!("{}WhereUniqueInput", model)),
+                                    field_type: Cow::Owned(format!("{}WhereUniqueInput", m.name())),
                                     optional: false,
                                     kind: FieldKind::Predefined,
                                 },
@@ -580,7 +585,7 @@ impl<'a> Outline<'a> {
                                     name: "where",
                                     localized_name: Cow::Borrowed(""),
                                     docs: helper::where_doc(m.name()),
-                                    field_type: Cow::Owned(format!("{}WhereInput", model)),
+                                    field_type: Cow::Owned(format!("{}WhereInput", m.name())),
                                     optional: false,
                                     kind: FieldKind::Predefined,
                                 },
@@ -606,7 +611,7 @@ impl<'a> Outline<'a> {
                                     name: "where",
                                     localized_name: Cow::Borrowed(""),
                                     docs: helper::where_unique_doc(m.name()),
-                                    field_type: Cow::Owned(format!("{}WhereUniqueInput", model)),
+                                    field_type: Cow::Owned(format!("{}WhereUniqueInput", m.name())),
                                     optional: false,
                                     kind: FieldKind::Predefined,
                                 },
@@ -629,10 +634,255 @@ impl<'a> Outline<'a> {
                             ]
                         },
                     ]).flatten().collect::<Vec<Class>>());
+                    classes.extend(vec![
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("Args"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_select_field(m.name(), true),
+                                helper::args_include_field(m.name(), true),
+                            ],
+                        },
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("FindUniqueArgs"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_where_unique_field(m.name(), false),
+                                helper::args_select_field(m.name(), true),
+                                helper::args_include_field(m.name(), true),
+                            ]
+                        },
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("FindFirstArgs"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_where_field(m.name(), true, true),
+                                helper::args_select_field(m.name(), true),
+                                helper::args_include_field(m.name(), true),
+                                helper::args_order_by_field(m.name(), &lookup, true),
+                                helper::args_cursor_field(m.name(), true),
+                                helper::args_take_field(m.name(), lookup.number_type(), true),
+                                helper::args_skip_field(m.name(), lookup.number_type(), true),
+                                helper::args_page_size_field(m.name(), lookup.number_type(), true),
+                                helper::args_page_number_field(m.name(), lookup.number_type(), true),
+                            ]
+                        },
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("FindManyArgs"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_where_field(m.name(), false, true),
+                                helper::args_select_field(m.name(), true),
+                                helper::args_include_field(m.name(), true),
+                                helper::args_order_by_field(m.name(), &lookup, true),
+                                helper::args_cursor_field(m.name(), true),
+                                helper::args_take_field(m.name(), lookup.number_type(), true),
+                                helper::args_skip_field(m.name(), lookup.number_type(), true),
+                                helper::args_page_size_field(m.name(), lookup.number_type(), true),
+                                helper::args_page_number_field(m.name(), lookup.number_type(), true),
+                            ]
+                        },
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("CreateArgs"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_select_field(m.name(), true),
+                                helper::args_include_field(m.name(), true),
+                                helper::args_create_input(m.name(), false),
+                            ]
+                        },
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("UpdateArgs"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_where_unique_field(m.name(), false),
+                                helper::args_select_field(m.name(), true),
+                                helper::args_include_field(m.name(), true),
+                                helper::args_update_input(m.name(), false),
+                            ]
+                        },
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("UpsertArgs"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_where_unique_field(m.name(), false),
+                                helper::args_select_field(m.name(), true),
+                                helper::args_include_field(m.name(), true),
+                                helper::args_create_input(m.name(), false),
+                                helper::args_update_input(m.name(), false),
+                            ]
+                        },
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("DeleteArgs"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_where_unique_field(m.name(), false),
+                                helper::args_select_field(m.name(), true),
+                            ]
+                        },
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("CreateManyArgs"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_select_field(m.name(), true),
+                                helper::args_include_field(m.name(), true),
+                                helper::args_create_many_input(m.name(), &lookup, false),
+                            ]
+                        },
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("UpdateManyArgs"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_where_field(m.name(), false, true),
+                                helper::args_select_field(m.name(), true),
+                                helper::args_include_field(m.name(), true),
+                                helper::args_update_input(m.name(), false),
+                            ]
+                        },
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("DeleteManyArgs"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_where_field(m.name(), false, true),
+                                helper::args_select_field(m.name(), true),
+                            ]
+                        },
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("CountArgs"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_where_field(m.name(), false, true),
+                                helper::args_cursor_field(m.name(), true),
+                                helper::args_skip_field(m.name(), lookup.number_type(), true),
+                                helper::args_take_field(m.name(), lookup.number_type(), true),
+                                helper::args_order_by_field(m.name(), &lookup, true),
+                                helper::args_count_select_field(m.name(), true),
+                            ]
+                        },
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("AggregateArgs"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_where_field(m.name(), false, true),
+                                helper::args_cursor_field(m.name(), true),
+                                helper::args_skip_field(m.name(), lookup.number_type(), true),
+                                helper::args_take_field(m.name(), lookup.number_type(), true),
+                                helper::args_page_size_field(m.name(), lookup.number_type(), true),
+                                helper::args_page_number_field(m.name(), lookup.number_type(), true),
+                                helper::args_order_by_field(m.name(), &lookup, true),
+                                helper::args_distinct_field(m.name(), &lookup, true),
+                                helper::args__count_field(m.name(), true),
+                                helper::args__avg_field(m.name(), true),
+                                helper::args__sum_field(m.name(), true),
+                                helper::args__min_field(m.name(), true),
+                                helper::args__max_field(m.name(), true),
+                            ]
+                        },
+                        Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("GroupByArgs"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_where_field(m.name(), false, true),
+                                helper::args_by_field(m.name(), false, &lookup),
+                                helper::args_having_field(m.name(), &lookup, true),
+                                helper::args_cursor_field(m.name(), true),
+                                helper::args_skip_field(m.name(), lookup.number_type(), true),
+                                helper::args_take_field(m.name(), lookup.number_type(), true),
+                                helper::args_page_size_field(m.name(), lookup.number_type(), true),
+                                helper::args_page_number_field(m.name(), lookup.number_type(), true),
+                                helper::args_order_by_field(m.name(), &lookup, true),
+                                helper::args_distinct_field(m.name(), &lookup, true),
+                                helper::args__count_field(m.name(), true),
+                                helper::args__avg_field(m.name(), true),
+                                helper::args__sum_field(m.name(), true),
+                                helper::args__min_field(m.name(), true),
+                                helper::args__max_field(m.name(), true),
+                            ]
+                        }
+                    ]);
+                    if m.has_action(Action::from_u32(SIGN_IN_HANDLER)) {
+                        classes.push(Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("SignInArgs"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_credentials_field(m.name(), false),
+                                helper::args_select_field(m.name(), false),
+                                helper::args_include_field(m.name(), false),
+                            ],
+                        });
+                    }
+                    if m.has_action(Action::from_u32(IDENTITY_HANDLER)) {
+                        classes.push(Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("IdentityArgs"),
+                            docs: Cow::Borrowed(""),
+                            kind: ClassKind::ActionArgs,
+                            fields: vec![
+                                helper::args_select_field(m.name(), false),
+                                helper::args_include_field(m.name(), false),
+                            ],
+                        });
+                    }
                     classes
                 }).flatten().collect::<Vec<Class>>());
                 results
-            }
+            },
+            delegates: graph.models().iter().map(|m| {
+                Delegate {
+                    model_name: Cow::Borrowed(m.name()),
+                    actions: m.actions().iter().map(|a| DelegateAction {
+                        name: Cow::Borrowed(a.as_handler_str()),
+                        response: lookup.action_result_type(*a, m.name()),
+                        docs: None,
+                    }).collect(),
+                }
+            }).collect()
         }
     }
 }
@@ -644,7 +894,7 @@ mod helper {
     use crate::gen::internal::client::outline::field_kind::FieldKind;
     use crate::gen::internal::type_lookup::TypeLookup;
 
-    pub(super) fn without_infix<'a>(model_name: &'a str, before: &'a str, without: &'a str, after: &'a str) -> Cow<'a, str> {
+    pub(super) fn without_infix<'a>(model_name: &str, before: &str, without: &str, after: &str) -> Cow<'a, str> {
         if without.is_empty() {
             Cow::Owned(model_name.to_owned() + before + after)
         } else {
@@ -700,13 +950,17 @@ mod helper {
         Cow::Borrowed("")
     }
 
-    pub(crate) fn set_doc<'a>(model: &str) -> Cow<'a, str> {
+    pub(super) fn where_doc<'a>(model: &str) -> Cow<'a, str> {
+        Cow::Borrowed("")
+    }
+
+    pub(super) fn set_doc<'a>(model: &str) -> Cow<'a, str> {
         Cow::Borrowed("")
     }
 
     // fields
 
-    fn args_where_field(model: &str, doc_singular: bool, optional: bool) -> Field {
+    pub(super) fn args_where_field(model: &str, doc_singular: bool, optional: bool) -> Field {
         Field {
             name: "where",
             localized_name: Cow::Borrowed(""),
@@ -717,7 +971,7 @@ mod helper {
         }
     }
 
-    fn args_by_field<'a, T>(model: &str, optional: bool, lookup: &T) -> Field<'a> where T: TypeLookup {
+    pub(super) fn args_by_field<'a, T>(model: &str, optional: bool, lookup: &T) -> Field<'a> where T: TypeLookup {
         Field {
             name: "by",
             localized_name: Cow::Borrowed(""),
@@ -728,7 +982,7 @@ mod helper {
         }
     }
 
-    fn args_having_field<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: TypeLookup {
+    pub(super) fn args_having_field<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: TypeLookup {
         Field {
             name: "having",
             localized_name: Cow::Borrowed(""),
@@ -739,7 +993,7 @@ mod helper {
         }
     }
 
-    fn args_where_unique_field(model: &str, optional: bool) -> Field {
+    pub(super) fn args_where_unique_field(model: &str, optional: bool) -> Field {
         Field {
             name: "where",
             localized_name: Cow::Borrowed(""),
@@ -750,7 +1004,7 @@ mod helper {
         }
     }
 
-    fn args_select_field(model: &str, optional: bool) -> Field {
+    pub(super) fn args_select_field(model: &str, optional: bool) -> Field {
         Field {
             name: "select",
             localized_name: Cow::Borrowed(""),
@@ -761,7 +1015,7 @@ mod helper {
         }
     }
 
-    fn args_count_select_field(model: &str, optional: bool) -> Field {
+    pub(super) fn args_count_select_field(model: &str, optional: bool) -> Field {
         Field {
             name: "select",
             localized_name: Cow::Borrowed(""),
@@ -772,7 +1026,7 @@ mod helper {
         }
     }
 
-    fn args_include_field(model: &str, optional: bool) -> Field {
+    pub(super) fn args_include_field(model: &str, optional: bool) -> Field {
         Field {
             name: "include",
             localized_name: Cow::Borrowed(""),
@@ -783,7 +1037,7 @@ mod helper {
         }
     }
 
-    fn args_order_by_field<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: TypeLookup {
+    pub(super) fn args_order_by_field<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: TypeLookup {
         Field {
             name: "orderBy",
             localized_name: Cow::Borrowed(""),
@@ -794,7 +1048,7 @@ mod helper {
         }
     }
 
-    fn args_distinct_field<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: TypeLookup {
+    pub(super) fn args_distinct_field<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: TypeLookup {
         Field {
             name: "distinct",
             localized_name: Cow::Borrowed(""),
@@ -805,7 +1059,7 @@ mod helper {
         }
     }
 
-    fn args_cursor_field(model: &str, optional: bool) -> Field {
+    pub(super) fn args_cursor_field(model: &str, optional: bool) -> Field {
         Field {
             name: "cursor",
             localized_name: Cow::Borrowed(""),
@@ -816,7 +1070,7 @@ mod helper {
         }
     }
 
-    fn args_take_field<'a>(model: &'a str, number_type: &'static str, optional: bool) -> Field<'a> {
+    pub(super) fn args_take_field<'a>(model: &'a str, number_type: &'static str, optional: bool) -> Field<'a> {
         Field {
             name: "take",
             localized_name: Cow::Borrowed(""),
@@ -827,7 +1081,7 @@ mod helper {
         }
     }
 
-    fn args_skip_field<'a>(model: &'a str, number_type: &'static str, optional: bool) -> Field<'a> {
+    pub(super) fn args_skip_field<'a>(model: &'a str, number_type: &'static str, optional: bool) -> Field<'a> {
         Field {
             name: "skip",
             localized_name: Cow::Borrowed(""),
@@ -838,7 +1092,7 @@ mod helper {
         }
     }
 
-    fn args_page_size_field<'a>(model: &'a str, number_type: &'static str, optional: bool) -> Field<'a> {
+    pub(super) fn args_page_size_field<'a>(model: &'a str, number_type: &'static str, optional: bool) -> Field<'a> {
         Field {
             name: "pageSize",
             localized_name: Cow::Borrowed(""),
@@ -849,7 +1103,7 @@ mod helper {
         }
     }
 
-    fn args_page_number_field<'a>(model: &'a str, number_type: &'static str, optional: bool) -> Field<'a> {
+    pub(super) fn args_page_number_field<'a>(model: &'a str, number_type: &'static str, optional: bool) -> Field<'a> {
         Field {
             name: "pageNumber",
             localized_name: Cow::Borrowed(""),
@@ -860,7 +1114,7 @@ mod helper {
         }
     }
 
-    fn args_create_input(model: &str, optional: bool) -> Field {
+    pub(super) fn args_create_input(model: &str, optional: bool) -> Field {
         Field {
             name: "create",
             localized_name: Cow::Borrowed(""),
@@ -871,7 +1125,7 @@ mod helper {
         }
     }
 
-    fn args_create_many_input<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: TypeLookup {
+    pub(super) fn args_create_many_input<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: TypeLookup {
         Field {
             name: "createMany",
             localized_name: Cow::Borrowed(""),
@@ -882,7 +1136,7 @@ mod helper {
         }
     }
 
-    fn args_update_input(model: &str, optional: bool) -> Field {
+    pub(super) fn args_update_input(model: &str, optional: bool) -> Field {
         Field {
             name: "update",
             localized_name: Cow::Borrowed(""),
@@ -893,7 +1147,7 @@ mod helper {
         }
     }
 
-    fn args__count_field(model: &str, optional: bool) -> Field {
+    pub(super) fn args__count_field(model: &str, optional: bool) -> Field {
         Field {
             name: "_count",
             localized_name: Cow::Borrowed(""),
@@ -903,7 +1157,7 @@ mod helper {
             kind: FieldKind::Predefined,
         }
     }
-    fn args__avg_field(model: &str, optional: bool) -> Field {
+    pub(super) fn args__avg_field(model: &str, optional: bool) -> Field {
         Field {
             name: "_count",
             localized_name: Cow::Borrowed(""),
@@ -913,7 +1167,7 @@ mod helper {
             kind: FieldKind::Predefined,
         }
     }
-    fn args__sum_field(model: &str, optional: bool) -> Field {
+    pub(super) fn args__sum_field(model: &str, optional: bool) -> Field {
         Field {
             name: "_sum",
             localized_name: Cow::Borrowed(""),
@@ -923,7 +1177,7 @@ mod helper {
             kind: FieldKind::Predefined,
         }
     }
-    fn args__min_field(model: &str, optional: bool) -> Field {
+    pub(super) fn args__min_field(model: &str, optional: bool) -> Field {
         Field {
             name: "_min",
             localized_name: Cow::Borrowed(""),
@@ -933,7 +1187,7 @@ mod helper {
             kind: FieldKind::Predefined,
         }
     }
-    fn args__max_field(model: &str, optional: bool) -> Field {
+    pub(super) fn args__max_field(model: &str, optional: bool) -> Field {
         Field {
             name: "_max",
             localized_name: Cow::Borrowed(""),
@@ -944,7 +1198,7 @@ mod helper {
         }
     }
 
-    fn args_credentials_field(model: &str, optional: bool) -> Field {
+    pub(super) fn args_credentials_field(model: &str, optional: bool) -> Field {
         Field {
             name: "credentials",
             localized_name: Cow::Borrowed(""),

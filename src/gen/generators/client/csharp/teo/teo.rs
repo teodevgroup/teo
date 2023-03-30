@@ -2,8 +2,6 @@ use askama::Template;
 use crate::core::r#enum::Enum;
 use crate::gen::generators::client::csharp::types::CSharpTypes;
 use crate::gen::interface::client::conf::Conf;
-use crate::gen::internal::shared::delegate::{Delegate, delegates};
-use crate::gen::internal::shared::model_input::{model_inputs, ModelInput};
 use crate::prelude::Graph;
 use crate::gen::internal::filters;
 
