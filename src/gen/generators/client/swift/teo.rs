@@ -12,9 +12,9 @@ use crate::gen::internal::filters;
 
 #[derive(Template)]
 #[template(path = "client/swift/footer.swift.jinja", escape = "none")]
-pub(crate) struct FooterTemplate<'a> {
-    pub(crate) object_name: &'a str,
-    pub(crate) model_names: Vec<String>
+pub(in crate::gen) struct FooterTemplate<'a> {
+    pub(in crate::gen) object_name: &'a str,
+    pub(in crate::gen) model_names: Vec<String>
 }
 fn generate_footer(graph: &Graph, client: &Conf) -> String {
     FooterTemplate {
@@ -25,8 +25,8 @@ fn generate_footer(graph: &Graph, client: &Conf) -> String {
 
 #[derive(Template)]
 #[template(path = "client/swift/enums.swift.jinja", escape = "none")]
-pub(crate) struct EnumsTemplate {
-    pub(crate) enums: Vec<Enum>,
+pub(in crate::gen) struct EnumsTemplate {
+    pub(in crate::gen) enums: Vec<Enum>,
 }
 fn generate_enums(graph: &Graph) -> String {
     EnumsTemplate {
@@ -36,8 +36,8 @@ fn generate_enums(graph: &Graph) -> String {
 
 #[derive(Template)]
 #[template(path = "client/swift/model_outputs.swift.jinja", escape = "none")]
-pub(crate) struct ModelOutputsTemplate<'a> {
-    pub(crate) models: Vec<ModelOutput<'a>>,
+pub(in crate::gen) struct ModelOutputsTemplate<'a> {
+    pub(in crate::gen) models: Vec<ModelOutput<'a>>,
 }
 fn generate_model_output_types(graph: &Graph) -> String {
     ModelOutputsTemplate {
@@ -47,8 +47,8 @@ fn generate_model_output_types(graph: &Graph) -> String {
 
 #[derive(Template)]
 #[template(path = "client/swift/model_inputs.swift.jinja", escape = "none")]
-pub(crate) struct ModelInputsTemplate<'a> {
-    pub(crate) models: Vec<ModelInput<'a>>,
+pub(in crate::gen) struct ModelInputsTemplate<'a> {
+    pub(in crate::gen) models: Vec<ModelInput<'a>>,
 }
 fn generate_input_types(graph: &Graph) -> String {
     ModelInputsTemplate {
@@ -58,8 +58,8 @@ fn generate_input_types(graph: &Graph) -> String {
 
 #[derive(Template)]
 #[template(path = "client/swift/delegates.swift.jinja", escape = "none")]
-pub(crate) struct DelegatesTemplate<'a> {
-    pub(crate) delegates: Vec<Delegate<'a>>,
+pub(in crate::gen) struct DelegatesTemplate<'a> {
+    pub(in crate::gen) delegates: Vec<Delegate<'a>>,
 }
 fn generate_delegate_classes(graph: &Graph) -> String {
     DelegatesTemplate {
@@ -67,7 +67,7 @@ fn generate_delegate_classes(graph: &Graph) -> String {
     }.render().unwrap()
 }
 
-pub(crate) fn generate_teo_swift(ctx: &Ctx) -> String {
+pub(in crate::gen) fn generate_teo_swift(ctx: &Ctx) -> String {
     let header = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/swift/header.swift"));
     let enums = generate_enums(ctx.graph);
     let output_types = generate_model_output_types(ctx.graph);

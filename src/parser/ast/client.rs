@@ -4,15 +4,6 @@ use crate::parser::ast::span::Span;
 use crate::parser::ast::item::Item;
 use crate::parser::ast::identifier::Identifier;
 
-#[derive(Debug, Copy, Clone)]
-pub enum ClientLanguage {
-    TypeScript,
-    Swift,
-    Kotlin,
-    CSharp,
-    Dart,
-}
-
 #[derive(Debug, Clone)]
 pub struct Client {
     pub(crate) id: usize,

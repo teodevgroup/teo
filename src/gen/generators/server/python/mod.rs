@@ -1,6 +1,6 @@
 use crate::core::app::conf::EntityGeneratorConf;
 use crate::gen::internal::file_util::FileUtil;
-use crate::gen::generators::server::EntityGenerator;
+use crate::gen::interface::server::EntityGenerator;
 use crate::prelude::Graph;
 use async_trait::async_trait;
 
