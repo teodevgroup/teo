@@ -1,0 +1,82 @@
+library {{ conf.inferred_package_name_snake_case() }};
+
+import 'dart:convert';
+import 'package:json_annotation/json_annotation.dart';
+import 'package:http/http.dart' as http;
+
+part '{{ conf.inferred_package_name_snake_case() }}.g.dart';
+
+@JsonSerializable(explicitToJson: true, includeIfNull: true, createFactory: false)
+class ExplicitNull {
+  dynamic set;
+  ExplicitNull();
+  Map<String, dynamic> toJson() => _$ExplicitNullToJson(this);
+}
+
+enum SortOrder {
+  @JsonValue("asc") asc,
+  @JsonValue("desc") desc,
+}
+
+class Response<D> {
+  D data;
+  Response({ required this.data });
+}
+
+class ResponseWithMeta<D, M> {
+  D data;
+  M meta;
+  ResponseWithMeta({ required this.data, required this.meta });
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false)
+class PagingInfo {
+  int count;
+  int numberOfPages;
+  PagingInfo({ required this.count, required this.numberOfPages });
+  factory PagingInfo.fromJson(Map<String, dynamic> json) =>
+      _$PagingInfoFromJson(json);
+  Map<String, dynamic> toJson() => _$PagingInfoToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false)
+class TokenInfo {
+  String token;
+  TokenInfo({ required this.token });
+  factory TokenInfo.fromJson(Map<String, dynamic> json) =>
+      _$TokenInfoFromJson(json);
+  Map<String, dynamic> toJson() => _$TokenInfoToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false)
+class TeoError {
+  String type;
+  String message;
+  Map<String, String>? errors;
+  TeoError({ required this.type, required this.message, this.errors });
+  factory TeoError.fromJson(Map<String, dynamic> json) => _$TeoErrorFromJson(json);
+  Map<String, dynamic> toJson() => _$TeoErrorToJson(this);
+}
+
+Future<dynamic> request(
+    String action, String model, dynamic args, String? token,
+    dynamic Function(dynamic) data, dynamic Function(dynamic)? meta
+    ) async {
+  final res = await http.post(
+    Uri.parse('{{ conf.host }}/$model/action/$action'),
+    headers: token != null ? {
+      "Authorization": "Bearer $token"
+    } : { },
+    body: jsonEncode(args),
+  );
+  final Map<String, dynamic> jsonData = jsonDecode(res.body);
+  if (jsonData.containsKey("error")) {
+    throw TeoError.fromJson(jsonData["error"]);
+  } else {
+    if (meta == null) {
+      return Response(data: data(jsonData["data"]));
+    } else {
+      return ResponseWithMeta(data: data(jsonData["data"]), meta: meta(jsonData["meta"]));
+    }
+  }
+}

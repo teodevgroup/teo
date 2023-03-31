@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use inflector::Inflector;
 use crate::gen::interface::client::kind::Kind;
 
 /// # Client conf
@@ -21,5 +22,9 @@ impl Conf {
     /// Infer the package name from last path component
     pub(crate) fn inferred_package_name(&self) -> &str {
         self.dest.file_name().map(|s| s.to_str().unwrap()).unwrap_or("untitled")
+    }
+
+    pub(crate) fn inferred_package_name_snake_case(&self) -> String {
+        self.inferred_package_name().to_snake_case()
     }
 }
