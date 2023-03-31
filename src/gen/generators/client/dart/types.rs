@@ -1,6 +1,6 @@
 use std::borrow::Cow;
-use crate::core::action::{Action, AGGREGATE_HANDLER, COUNT_HANDLER, CREATE_HANDLER, CREATE_MANY_HANDLER, DELETE_HANDLER, DELETE_MANY_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, FIND_UNIQUE_HANDLER, GROUP_BY_HANDLER, IDENTITY_HANDLER, SIGN_IN_HANDLER, UPDATE_HANDLER, UPDATE_MANY_HANDLER, UPSERT_HANDLER};
-use crate::core::field::r#type::{FieldType, FieldTypeOwner};
+use crate::core::action::{Action};
+use crate::core::field::r#type::{FieldType};
 use crate::gen::internal::type_lookup::TypeLookup;
 
 pub(crate) struct DartTypes { }
@@ -10,39 +10,39 @@ impl DartTypes {
 }
 
 impl TypeLookup for DartTypes {
-    fn field_type_to_filter_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
+    fn field_type_to_filter_type<'a>(&self, _field_type: &'a FieldType, _optional: bool) -> Cow<'a, str> {
         todo!()
     }
 
-    fn field_type_to_create_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
+    fn field_type_to_create_type<'a>(&self, _field_type: &'a FieldType, _optional: bool) -> Cow<'a, str> {
         todo!()
     }
 
-    fn field_type_to_update_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
+    fn field_type_to_update_type<'a>(&self, _field_type: &'a FieldType, _optional: bool) -> Cow<'a, str> {
         todo!()
     }
 
-    fn field_type_to_result_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
+    fn field_type_to_result_type<'a>(&self, _field_type: &'a FieldType, _optional: bool) -> Cow<'a, str> {
         todo!()
     }
 
-    fn generated_type_to_vec<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
+    fn generated_type_to_vec<'a>(&self, _generated_type: Cow<'a, str>) -> Cow<'a, str> {
         todo!()
     }
 
-    fn generated_type_to_enumerate<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
+    fn generated_type_to_enumerate<'a>(&self, _generated_type: Cow<'a, str>) -> Cow<'a, str> {
         todo!()
     }
 
-    fn generated_type_to_optional<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
+    fn generated_type_to_optional<'a>(&self, _generated_type: Cow<'a, str>) -> Cow<'a, str> {
         todo!()
     }
 
-    fn generated_type_to_or_null<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
+    fn generated_type_to_or_null<'a>(&self, _generated_type: Cow<'a, str>) -> Cow<'a, str> {
         todo!()
     }
 
-    fn action_result_type<'a>(&self, action: Action, model_name: &'a str) -> Cow<'a, str> {
+    fn action_result_type<'a>(&self, _action: Action, _model_name: &'a str) -> Cow<'a, str> {
         todo!()
     }
 

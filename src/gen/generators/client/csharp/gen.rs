@@ -1,6 +1,6 @@
 use askama::Template;
 use async_trait::async_trait;
-use crate::core::graph::Graph;
+
 use crate::gen::interface::client::conf::Conf;
 use crate::gen::internal::client::ctx::Ctx;
 use crate::gen::internal::client::generator::Generator;
@@ -39,7 +39,7 @@ impl Generator for CSharpClientGenerator {
         return "src".to_owned();
     }
 
-    async fn generate_module_files(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_module_files(&self, _ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
         generator.clear_root_directory().await?;
         Ok(())

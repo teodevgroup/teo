@@ -20,7 +20,7 @@ impl<'a> Outline<'a> {
     pub(in crate::gen) fn new<L>(graph: &'a Graph, lookup: L) -> Self where L: TypeLookup {
         Self {
             classes: {
-                let mut results = graph.enums().iter().map(|(name, enum_def)| {
+                let mut results = graph.enums().iter().map(|(_name, enum_def)| {
                     Class {
                         model_name: enum_def.name(),
                         localized_name: Cow::Borrowed(enum_def.localized_name()),
@@ -259,7 +259,7 @@ impl<'a> Outline<'a> {
                                     name: "connectOrCreate",
                                     localized_name: Cow::Borrowed(""),
                                     docs: helper::connect_or_create_doc(m.name()),
-                                    field_type: lookup.generated_type_to_enumerate((helper::without_infix(m.name(), "ConnectOrCreate", w, "Input"))),
+                                    field_type: lookup.generated_type_to_enumerate(helper::without_infix(m.name(), "ConnectOrCreate", w, "Input")),
                                     optional: true,
                                     kind: FieldKind::Predefined,
                                 },
@@ -394,7 +394,7 @@ impl<'a> Outline<'a> {
                                     name: "create",
                                     localized_name: Cow::Borrowed(""),
                                     docs: helper::create_doc(m.name()),
-                                    field_type: lookup.generated_type_to_enumerate((helper::without_infix(m.name(), "Create", w, "Input"))),
+                                    field_type: lookup.generated_type_to_enumerate(helper::without_infix(m.name(), "Create", w, "Input")),
                                     optional: true,
                                     kind: FieldKind::Predefined,
                                 },
@@ -402,7 +402,7 @@ impl<'a> Outline<'a> {
                                     name: "connectOrCreate",
                                     localized_name: Cow::Borrowed(""),
                                     docs: helper::connect_or_create_doc(m.name()),
-                                    field_type: lookup.generated_type_to_enumerate((helper::without_infix(m.name(), "ConnectOrCreate", w, "Input"))),
+                                    field_type: lookup.generated_type_to_enumerate(helper::without_infix(m.name(), "ConnectOrCreate", w, "Input")),
                                     optional: true,
                                     kind: FieldKind::Predefined,
                                 },
@@ -426,7 +426,7 @@ impl<'a> Outline<'a> {
                                     name: "update",
                                     localized_name: Cow::Borrowed(""),
                                     docs: helper::update_doc(m.name()),
-                                    field_type: lookup.generated_type_to_enumerate((helper::without_infix(m.name(), "UpdateWithWhereUnique", w, "Input"))),
+                                    field_type: lookup.generated_type_to_enumerate(helper::without_infix(m.name(), "UpdateWithWhereUnique", w, "Input")),
                                     optional: true,
                                     kind: FieldKind::Predefined,
                                 },
@@ -434,7 +434,7 @@ impl<'a> Outline<'a> {
                                     name: "upsert",
                                     localized_name: Cow::Borrowed(""),
                                     docs: helper::upsert_doc(m.name()),
-                                    field_type: lookup.generated_type_to_enumerate((helper::without_infix(m.name(), "UpsertWithWhereUnique", w, "Input"))),
+                                    field_type: lookup.generated_type_to_enumerate(helper::without_infix(m.name(), "UpsertWithWhereUnique", w, "Input")),
                                     optional: true,
                                     kind: FieldKind::Predefined,
                                 },
@@ -458,7 +458,7 @@ impl<'a> Outline<'a> {
                                     name: "updateMany",
                                     localized_name: Cow::Borrowed(""),
                                     docs: helper::update_many_doc(m.name()),
-                                    field_type: lookup.generated_type_to_enumerate((helper::without_infix(m.name(), "UpdateManyWithWhere", w, "Input"))),
+                                    field_type: lookup.generated_type_to_enumerate(helper::without_infix(m.name(), "UpdateManyWithWhere", w, "Input")),
                                     optional: true,
                                     kind: FieldKind::Predefined,
                                 },
@@ -909,51 +909,51 @@ mod helper {
         }
     }
 
-    pub(super) fn create_doc<'a>(model: &str) -> Cow<'a, str> {
+    pub(super) fn create_doc<'a>(_model: &str) -> Cow<'a, str> {
         Cow::Borrowed("")
     }
 
-    pub(super) fn update_doc<'a>(model: &str) -> Cow<'a, str> {
+    pub(super) fn update_doc<'a>(_model: &str) -> Cow<'a, str> {
         Cow::Borrowed("")
     }
 
-    pub(super) fn upsert_doc<'a>(model: &str) -> Cow<'a, str> {
+    pub(super) fn upsert_doc<'a>(_model: &str) -> Cow<'a, str> {
         Cow::Borrowed("")
     }
 
-    pub(super) fn delete_doc<'a>(model: &str) -> Cow<'a, str> {
+    pub(super) fn delete_doc<'a>(_model: &str) -> Cow<'a, str> {
         Cow::Borrowed("")
     }
 
-    pub(super) fn delete_many_doc<'a>(model: &str) -> Cow<'a, str> {
+    pub(super) fn delete_many_doc<'a>(_model: &str) -> Cow<'a, str> {
         Cow::Borrowed("")
     }
 
-    pub(super) fn update_many_doc<'a>(model: &str) -> Cow<'a, str> {
+    pub(super) fn update_many_doc<'a>(_model: &str) -> Cow<'a, str> {
         Cow::Borrowed("")
     }
 
-    pub(super) fn disconnect_doc<'a>(model: &str) -> Cow<'a, str> {
+    pub(super) fn disconnect_doc<'a>(_model: &str) -> Cow<'a, str> {
         Cow::Borrowed("")
     }
 
-    pub(super) fn connect_doc<'a>(model: &str) -> Cow<'a, str> {
+    pub(super) fn connect_doc<'a>(_model: &str) -> Cow<'a, str> {
         Cow::Borrowed("")
     }
 
-    pub(super) fn connect_or_create_doc<'a>(model: &str) -> Cow<'a, str> {
+    pub(super) fn connect_or_create_doc<'a>(_model: &str) -> Cow<'a, str> {
         Cow::Borrowed("")
     }
 
-    pub(super) fn where_unique_doc<'a>(model: &str) -> Cow<'a, str> {
+    pub(super) fn where_unique_doc<'a>(_model: &str) -> Cow<'a, str> {
         Cow::Borrowed("")
     }
 
-    pub(super) fn where_doc<'a>(model: &str) -> Cow<'a, str> {
+    pub(super) fn where_doc<'a>(_model: &str) -> Cow<'a, str> {
         Cow::Borrowed("")
     }
 
-    pub(super) fn set_doc<'a>(model: &str) -> Cow<'a, str> {
+    pub(super) fn set_doc<'a>(_model: &str) -> Cow<'a, str> {
         Cow::Borrowed("")
     }
 

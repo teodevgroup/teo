@@ -22,6 +22,6 @@ pub(in crate::gen) struct Class<'a> {
 
 impl<'a> Class<'a> {
     pub(in crate::gen) fn fields_optional_at_last(&'a self) -> Vec<&'a Field<'a>> {
-        self.fields.iter().sorted_by(|a, b| if a.optional { Ordering::Greater } else { Ordering::Less }).collect()
+        self.fields.iter().sorted_by(|a, _b| if a.optional { Ordering::Greater } else { Ordering::Less }).collect()
     }
 }
