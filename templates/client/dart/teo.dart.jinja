@@ -3,6 +3,7 @@ library {{ conf.inferred_package_name_snake_case() }};
 import 'dart:convert';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:http/http.dart' as http;
+import 'package:decimal/decimal.dart';
 
 part '{{ conf.inferred_package_name_snake_case() }}.g.dart';
 
@@ -79,4 +80,378 @@ Future<dynamic> request(
       return ResponseWithMeta(data: data(jsonData["data"]), meta: meta(jsonData["meta"]));
     }
   }
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class ObjectIdFilter {
+  String? equals;
+  @JsonKey(name: 'in')
+  List<String>? isOneOf;
+  List<String>? notIn;
+  String? lt;
+  String? lte;
+  String? gt;
+  String? gte;
+  dynamic not;
+  ObjectIdFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$ObjectIdFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class ObjectIdNullableFilter {
+  dynamic equals;
+  @JsonKey(name: 'in')
+  List<String>? isOneOf;
+  List<String>? notIn;
+  String? lt;
+  String? lte;
+  String? gt;
+  String? gte;
+  dynamic not;
+  ObjectIdNullableFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$ObjectIdNullableFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class StringFilter {
+  String? equals;
+  @JsonKey(name: 'in')
+  List<String>? isOneOf;
+  List<String>? notIn;
+  String? lt;
+  String? lte;
+  String? gt;
+  String? gte;
+  String? contains;
+  String? startsWith;
+  String? endsWith;
+  String? matches;
+  dynamic not;
+  StringFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.contains,
+    this.startsWith,
+    this.endsWith,
+    this.matches,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$StringFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class StringNullableFilter {
+  dynamic equals;
+  @JsonKey(name: 'in')
+  List<String>? isOneOf;
+  List<String>? notIn;
+  String? lt;
+  String? lte;
+  String? gt;
+  String? gte;
+  String? contains;
+  String? startsWith;
+  String? endsWith;
+  String? matches;
+  dynamic not;
+  StringNullableFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.contains,
+    this.startsWith,
+    this.endsWith,
+    this.matches,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$StringNullableFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class BoolFilter {
+  bool? equals;
+  dynamic not;
+  BoolFilter({
+    this.equals,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$BoolFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class BoolNullableFilter {
+  dynamic equals;
+  dynamic not;
+  BoolNullableFilter({
+    this.equals,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$BoolNullableFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class IntFilter {
+  int? equals;
+  @JsonKey(name: 'in')
+  List<int>? isOneOf;
+  List<int>? notIn;
+  int? lt;
+  int? lte;
+  int? gt;
+  int? gte;
+  dynamic not;
+  IntFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$IntFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class IntNullableFilter {
+  dynamic equals;
+  @JsonKey(name: 'in')
+  List<int>? isOneOf;
+  List<int>? notIn;
+  int? lt;
+  int? lte;
+  int? gt;
+  int? gte;
+  dynamic not;
+  IntNullableFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$IntNullableFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class DoubleFilter {
+  double? equals;
+  @JsonKey(name: 'in')
+  List<double>? isOneOf;
+  List<double>? notIn;
+  double? lt;
+  double? lte;
+  double? gt;
+  double? gte;
+  dynamic not;
+  DoubleFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$DoubleFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class DoubleNullableFilter {
+  dynamic equals;
+  @JsonKey(name: 'in')
+  List<double>? isOneOf;
+  List<double>? notIn;
+  double? lt;
+  double? lte;
+  double? gt;
+  double? gte;
+  dynamic not;
+  DoubleNullableFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$DoubleNullableFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class DecimalFilter {
+  Decimal? equals;
+  @JsonKey(name: 'in')
+  List<Decimal>? isOneOf;
+  List<Decimal>? notIn;
+  Decimal? lt;
+  Decimal? lte;
+  Decimal? gt;
+  Decimal? gte;
+  dynamic not;
+  DecimalFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$DecimalFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class DecimalNullableFilter {
+  dynamic equals;
+  @JsonKey(name: 'in')
+  List<Decimal>? isOneOf;
+  List<Decimal>? notIn;
+  Decimal? lt;
+  Decimal? lte;
+  Decimal? gt;
+  Decimal? gte;
+  dynamic not;
+  DecimalNullableFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$DecimalNullableFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class DateFilter {
+  String? equals;
+  @JsonKey(name: 'in')
+  List<String>? isOneOf;
+  List<String>? notIn;
+  String? lt;
+  String? lte;
+  String? gt;
+  String? gte;
+  dynamic not;
+  DateFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$DateFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class DateNullableFilter {
+  dynamic equals;
+  @JsonKey(name: 'in')
+  List<String>? isOneOf;
+  List<String>? notIn;
+  String? lt;
+  String? lte;
+  String? gt;
+  String? gte;
+  dynamic not;
+  DateNullableFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$DateNullableFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class DateTimeFilter {
+  DateTime? equals;
+  @JsonKey(name: 'in')
+  List<DateTime>? isOneOf;
+  List<DateTime>? notIn;
+  DateTime? lt;
+  DateTime? lte;
+  DateTime? gt;
+  DateTime? gte;
+  dynamic not;
+  DateTimeFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$DateTimeFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class DateTimeNullableFilter {
+  dynamic equals;
+  @JsonKey(name: 'in')
+  List<DateTime>? isOneOf;
+  List<DateTime>? notIn;
+  DateTime? lt;
+  DateTime? lte;
+  DateTime? gt;
+  DateTime? gte;
+  dynamic not;
+  DateTimeNullableFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+  });
+  Map<String, dynamic> toJson() => _$DateTimeNullableFilterToJson(this);
 }
