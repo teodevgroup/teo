@@ -107,8 +107,8 @@ impl TypeLookup for SwiftTypes {
 
     fn action_result_type<'a>(&self, action: Action, model_name: &'a str) -> Cow<'a, str> {
         Cow::Owned(match action.to_u32() {
-            FIND_UNIQUE_HANDLER => format!("Response<{model_name}>?"),
-            FIND_FIRST_HANDLER => format!("Response<{model_name}>?"),
+            FIND_UNIQUE_HANDLER => format!("Response<{model_name}>"),
+            FIND_FIRST_HANDLER => format!("Response<{model_name}>"),
             FIND_MANY_HANDLER => format!("ResponseWithMeta<PagingInfo, [{model_name}]>"),
             CREATE_HANDLER => format!("Response<{model_name}>"),
             UPDATE_HANDLER => format!("Response<{model_name}>"),

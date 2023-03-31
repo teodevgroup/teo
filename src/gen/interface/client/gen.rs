@@ -1,9 +1,11 @@
 use std::path::Path;
 use std::process::Command;
-use crate::gen::generators::client::csharp::CSharpClientGenerator;
+use crate::gen::generators::client::csharp::gen::CSharpClientGenerator;
 use crate::gen::generators::client::csharp::types::CSharpTypes;
-use crate::gen::generators::client::dart::DartClientGenerator;
-use crate::gen::generators::client::kotlin::KotlinClientGenerator;
+use crate::gen::generators::client::dart::gen::DartClientGenerator;
+use crate::gen::generators::client::dart::types::DartTypes;
+use crate::gen::generators::client::kotlin::gen::KotlinClientGenerator;
+use crate::gen::generators::client::kotlin::types::KotlinTypes;
 use crate::gen::generators::client::swift::gen::SwiftClientGenerator;
 use crate::gen::generators::client::swift::types::SwiftTypes;
 use crate::gen::generators::client::typescript::TypeScriptClientGenerator;
@@ -19,9 +21,9 @@ pub(crate) async fn gen(graph: &Graph, conf: &Conf) -> std::io::Result<()> {
     match conf.kind {
         Kind::TypeScript => generate_client_typed(TypeScriptClientGenerator::new(), &Ctx::build(graph, conf, SwiftTypes::new())).await,
         Kind::Swift => generate_client_typed(SwiftClientGenerator::new(), &Ctx::build(graph, conf, SwiftTypes::new())).await,
-        Kind::Kotlin => generate_client_typed(KotlinClientGenerator::new(), &Ctx::build(graph, conf, SwiftTypes::new())).await,
+        Kind::Kotlin => generate_client_typed(KotlinClientGenerator::new(), &Ctx::build(graph, conf, KotlinTypes::new())).await,
         Kind::CSharp => generate_client_typed(CSharpClientGenerator::new(), &Ctx::build(graph, conf, CSharpTypes::new())).await,
-        Kind::Dart => generate_client_typed(DartClientGenerator::new(), &Ctx::build(graph, conf, SwiftTypes::new())).await,
+        Kind::Dart => generate_client_typed(DartClientGenerator::new(), &Ctx::build(graph, conf, DartTypes::new())).await,
     }
 }
 
