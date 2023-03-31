@@ -1128,7 +1128,7 @@ namespace Teo {
         }
         public override void Write(Utf8JsonWriter writer, Sex value, JsonSerializerOptions options) {
             switch (value) {
-        {%- for field in field.name %}
+        {%- for field in class.fields %}
                 case {{ class.model_name }}.{{ field.name|pascalcase}}: {
                     writer.WriteStringValue("{{ field.name }}");
                     return;
@@ -1196,7 +1196,7 @@ namespace Teo {
             var content = JSJsonSerializer.Serialize(args)!;
             var response = await client.PostAsync(uri, new HttpStringContent(content));
             var httpResponseBody = await response.Content.ReadAsStringAsync();
-            if (((int)response.StatusCode) >= 400) {{
+            if (((int)response.StatusCode) >= 400) {
                 throw new TeoException(JSJsonSerializer.Deserialize<ResponseError>(httpResponseBody)!);
             }
             return JSJsonSerializer.Deserialize<T>(httpResponseBody)!;
