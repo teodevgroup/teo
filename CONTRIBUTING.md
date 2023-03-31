@@ -43,7 +43,7 @@ Please do not write code in languages other than English.
 We structure our messages like this:
 
 ```
-<type>(<feature>): <subject>
+<type>[(<feature>[/<subfeature>]?)]?: <subject>
 <BLANK LINE>
 <body>
 ```
@@ -62,12 +62,25 @@ We structure our messages like this:
 #### List of features in the monorepo:
 
 * connector: The database connectors
+  * sql: SQL database connectors
+  * mysql: MySQL database connector
+  * postgres: PostgreSQL database connector
+  * sqlite: SQLite database connector
+  * mongo: MongoDB database connector
 * server: The server integration
 * core: The core
 * pipeline: The pipeline items
 * lang: The schema language
 * client: Client generators
+  * ts: TypeScript client generator 
+  * swift: Swift client generator
+  * kotlin: Kotlin client generator
+  * csharp: C# client generator
+  * dart: Dart client generator
 * entity: Entity generators
+  * rust: Rust entity generator
+  * node: Node.js entity generator
+  * python: Python entity generator
 
 ## Testing
 
