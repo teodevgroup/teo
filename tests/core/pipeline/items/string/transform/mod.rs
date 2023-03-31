@@ -142,4 +142,19 @@ mod test {
             }
         }))
     }
+
+    #[test]
+    fn regex_replace() {
+        let res = req(PORT, "create", "Support", json!({
+            "create": {
+                "regexReplace": "foo_bar",
+            },
+        }));
+        assert_json!(res, matcher!({
+            "data": {
+                "id": ignore,
+                "regexReplace": "foo-bar",
+            }
+        }))
+    }
 }
