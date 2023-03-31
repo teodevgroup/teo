@@ -71,7 +71,7 @@ string_literal = ${ "\"" ~ string_content ~ "\"" }
 // regexp literals
 // #############
 regexp_content = @{ (string_escape | !("/") ~ ANY)+ }
-regexp_literal = ${ "/" ~ string_content ~ "/" }
+regexp_literal = ${ "/" ~ regexp_content ~ "/" }
 
 // #############
 // bool literals
