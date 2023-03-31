@@ -485,10 +485,16 @@ public enum ArrayFieldUpdateOperation<T: Encodable>: Encodable {
 }
 
 {%- for class in outline.classes %}
-    {%- if class.kind.is_enum() || class.kind.is_order_by_input() %}
+    {%- if class.kind.is_enum() %}
 public enum {{ class.model_name }}{{ class.name_suffix }}: String, Codable {
         {%- for field in class.fields %}
     case {{ field.name|camelcase }} = "{{ field.name }}"
+        {%- endfor %}
+}
+    {%- else if class.kind.is_order_by_input() %}
+public enum {{ class.model_name }}{{ class.name_suffix }}: Encodable {
+        {%- for field in class.fields %}
+    case {{ field.name|camelcase }}(SortOrder)
         {%- endfor %}
 }
     {%- else %}
