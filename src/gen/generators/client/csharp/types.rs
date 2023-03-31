@@ -157,20 +157,20 @@ impl TypeLookup for CSharpTypes {
 
     fn action_result_type<'a>(&self, action: Action, model_name: &'a str) -> Cow<'a, str> {
         Cow::Owned(match action.to_u32() {
-            FIND_UNIQUE_HANDLER => format!("Response<{model_name}>?"),
-            FIND_FIRST_HANDLER => format!("Response<{model_name}>?"),
-            FIND_MANY_HANDLER => format!("ResponseWithMeta<PagingInfo, [{model_name}]>"),
+            FIND_UNIQUE_HANDLER => format!("Response<{model_name}>"),
+            FIND_FIRST_HANDLER => format!("Response<{model_name}>"),
+            FIND_MANY_HANDLER => format!("Response<PagingInfo, [{model_name}]>"),
             CREATE_HANDLER => format!("Response<{model_name}>"),
             UPDATE_HANDLER => format!("Response<{model_name}>"),
             UPSERT_HANDLER => format!("Response<{model_name}>"),
             DELETE_HANDLER => format!("Response<{model_name}>"),
-            CREATE_MANY_HANDLER => format!("ResponseWithMeta<PagingInfo, [{model_name}]>"),
-            UPDATE_MANY_HANDLER => format!("ResponseWithMeta<PagingInfo, [{model_name}]>"),
-            DELETE_MANY_HANDLER => format!("ResponseWithMeta<PagingInfo, [{model_name}]>"),
-            COUNT_HANDLER => format!("Response<Int64>"),
+            CREATE_MANY_HANDLER => format!("Response<PagingInfo, RefArray<{model_name}>>"),
+            UPDATE_MANY_HANDLER => format!("Response<PagingInfo, RefArray<{model_name}>>"),
+            DELETE_MANY_HANDLER => format!("Response<PagingInfo, RefArray<{model_name}>>"),
+            COUNT_HANDLER => format!("Response<long>"),
             AGGREGATE_HANDLER => format!("Response<{model_name}>"),
             GROUP_BY_HANDLER => format!("Response<{model_name}>"),
-            SIGN_IN_HANDLER => format!("ResponseWithMeta<TokenInfo, {model_name}>"),
+            SIGN_IN_HANDLER => format!("Response<TokenInfo, {model_name}>"),
             IDENTITY_HANDLER => format!("Response<{model_name}>"),
             _ => unreachable!()
         })
