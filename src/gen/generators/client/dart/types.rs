@@ -29,8 +29,8 @@ impl TypeLookup for DartTypes {
             FieldType::String => Cow::Borrowed("String"),
             FieldType::Bool => Cow::Borrowed("bool"),
             FieldType::I32 => Cow::Borrowed("int"),
-            FieldType::I64 => Cow::Borrowed("long"),
-            FieldType::F32 => Cow::Borrowed("float"),
+            FieldType::I64 => Cow::Borrowed("int"),
+            FieldType::F32 => Cow::Borrowed("double"),
             FieldType::F64 => Cow::Borrowed("double"),
             FieldType::Decimal => Cow::Borrowed("decimal"),
             FieldType::Date => Cow::Borrowed("DateOnly"),
@@ -48,20 +48,20 @@ impl TypeLookup for DartTypes {
         }
     }
 
-    fn generated_type_to_vec<'a>(&self, _generated_type: Cow<'a, str>) -> Cow<'a, str> {
-        todo!()
+    fn generated_type_to_vec<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
+        Cow::Owned("List<".to_owned() + generated_type.as_ref() + ">")
     }
 
-    fn generated_type_to_enumerate<'a>(&self, _generated_type: Cow<'a, str>) -> Cow<'a, str> {
-        todo!()
+    fn generated_type_to_enumerate<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
+        Cow::Owned("List<".to_owned() + generated_type.as_ref() + ">")
     }
 
-    fn generated_type_to_optional<'a>(&self, _generated_type: Cow<'a, str>) -> Cow<'a, str> {
-        todo!()
+    fn generated_type_to_optional<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
+        Cow::Owned(generated_type.as_ref().to_owned() + "?")
     }
 
     fn generated_type_to_or_null<'a>(&self, _generated_type: Cow<'a, str>) -> Cow<'a, str> {
-        todo!()
+        Cow::Borrowed("dynamic")
     }
 
     fn action_result_type<'a>(&self, _action: Action, _model_name: &'a str) -> Cow<'a, str> {
@@ -69,10 +69,10 @@ impl TypeLookup for DartTypes {
     }
 
     fn number_type(&self) -> &'static str {
-        todo!()
+        "int"
     }
 
     fn bool_type(&self) -> &'static str {
-        todo!()
+        "bool"
     }
 }
