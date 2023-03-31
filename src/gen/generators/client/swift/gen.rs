@@ -1,13 +1,13 @@
 use askama::Template;
 use async_trait::async_trait;
-use crate::core::graph::Graph;
+
 use crate::gen::interface::client::conf::Conf;
 use crate::gen::internal::client::ctx::Ctx;
 use crate::gen::internal::client::generator::Generator;
 use crate::gen::internal::client::outline::outline::Outline;
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::internal::filters;
-use inflector::Inflector;
+
 
 #[derive(Template)]
 #[template(path = "client/swift/readme.md.jinja", escape = "none")]

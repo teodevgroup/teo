@@ -5,12 +5,12 @@ use std::process::{Child, Command};
 use std::{env, thread};
 use std::borrow::Borrow;
 use std::collections::HashSet;
-use std::io::Read;
+
 use std::path::{Path, PathBuf};
-use std::ptr::null_mut;
-use inflector::Inflector;
+
+
 use key_path::{KeyPath, path};
-use once_cell::sync::Lazy;
+
 use serde_json::{Map, Number, Value};
 use crate::lib::matcher::Matcher;
 use whoami::Platform;

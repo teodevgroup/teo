@@ -13,7 +13,7 @@ use crate::gen::interface::client::conf::Conf;
 use crate::gen::interface::client::kind::Kind;
 use crate::gen::internal::client::ctx::Ctx;
 use crate::gen::internal::client::generator::Generator;
-use crate::gen::internal::client::outline::outline::Outline;
+
 use crate::gen::internal::file_util::FileUtil;
 use crate::prelude::Graph;
 

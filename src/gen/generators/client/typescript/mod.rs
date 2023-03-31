@@ -3,7 +3,7 @@ pub mod r#type;
 
 use async_trait::async_trait;
 use crate::gen::generators::client::typescript::pkg::src::index_d_ts::generate_index_d_ts;
-use crate::core::graph::Graph;
+
 use crate::gen::generators::client::typescript::pkg::gitignore::generate_gitignore_ts;
 use crate::gen::generators::client::typescript::pkg::package_json::{generate_package_json, update_package_json};
 use crate::gen::generators::client::typescript::pkg::readme::generate_readme_ts;

@@ -108,7 +108,7 @@ impl NodeJSEntityGenerator {
 
 #[async_trait]
 impl EntityGenerator for NodeJSEntityGenerator {
-    async fn generate_entity_files(&self, graph: &Graph, conf: &EntityGeneratorConf, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_entity_files(&self, graph: &Graph, _conf: &EntityGeneratorConf, generator: &FileUtil) -> std::io::Result<()> {
         self.generate_index_js(graph, generator).await?;
         let content = generate_index_d_ts(graph,"teo".to_owned(), true);
         self.generate_index_d_ts(graph, generator, content).await?;

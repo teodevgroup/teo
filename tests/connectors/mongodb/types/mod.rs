@@ -4,7 +4,7 @@ use test_helpers::*;
 #[after_all]
 mod test {
     use std::sync::Mutex;
-    use serde_json::{json, Value};
+    use serde_json::{json};
     use crate::lib::{ExecutionHandle, req};
     use crate::{assert_json, matcher};
     use crate::lib::matcher_functions::date_time_value;
