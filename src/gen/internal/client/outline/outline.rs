@@ -251,7 +251,7 @@ impl<'a> Outline<'a> {
                                     name: "create",
                                     localized_name: Cow::Borrowed(""),
                                     docs: helper::create_doc(m.name()),
-                                    field_type: lookup.generated_type_to_enumerate((helper::without_infix(m.name(), "Create", w, "Input"))),
+                                    field_type: lookup.generated_type_to_enumerate(helper::without_infix(m.name(), "Create", w, "Input")),
                                     optional: true,
                                     kind: FieldKind::Predefined,
                                 },
