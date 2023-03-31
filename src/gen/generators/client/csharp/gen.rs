@@ -1,6 +1,5 @@
 use askama::Template;
 use async_trait::async_trait;
-
 use crate::gen::interface::client::conf::Conf;
 use crate::gen::internal::client::ctx::Ctx;
 use crate::gen::internal::client::generator::Generator;
@@ -22,7 +21,7 @@ pub(self) struct CSharpSlnTemplate<'a> {
 
 #[derive(Template)]
 #[template(path = "client/csharp/teo.cs.jinja", escape = "none")]
-pub(self) struct SwiftMainTemplate<'a> {
+pub(self) struct CSharpMainTemplate<'a> {
     pub(self) outline: &'a Outline<'a>,
     pub(self) conf: &'a Conf,
 }
@@ -56,7 +55,7 @@ impl Generator for CSharpClientGenerator {
     }
 
     async fn generate_main(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
-        generator.generate_file("Teo.cs", SwiftMainTemplate {
+        generator.generate_file("Teo.cs", CSharpMainTemplate {
             outline: &ctx.outline,
             conf: ctx.conf,
         }.render().unwrap()).await
