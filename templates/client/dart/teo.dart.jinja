@@ -82,6 +82,26 @@ Future<dynamic> request(
   }
 }
 
+dynamic anyToJson(dynamic any) {
+  if (any is List) {
+    return any.map((e) => anyToJson(e)).toList();
+  } else if (any is int) {
+    return any;
+  } else if (any is double) {
+    return any;
+  } else if (any is bool) {
+    return any;
+  } else if (any is String) {
+    return any;
+  } else if (any == null) {
+    return null;
+  } else if (any is DateTime) {
+    return any.toIso8601String();
+  } else {
+    return any.toJson();
+  }
+}
+
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
 class ObjectIdFilter {
   String? equals;
@@ -92,6 +112,7 @@ class ObjectIdFilter {
   String? lte;
   String? gt;
   String? gte;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   ObjectIdFilter({
     this.equals,
@@ -108,6 +129,7 @@ class ObjectIdFilter {
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
 class ObjectIdNullableFilter {
+  @JsonKey(toJson: anyToJson)
   dynamic equals;
   @JsonKey(name: 'in')
   List<String>? isOneOf;
@@ -116,6 +138,7 @@ class ObjectIdNullableFilter {
   String? lte;
   String? gt;
   String? gte;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   ObjectIdNullableFilter({
     this.equals,
@@ -144,6 +167,7 @@ class StringFilter {
   String? startsWith;
   String? endsWith;
   String? matches;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   StringFilter({
     this.equals,
@@ -164,6 +188,7 @@ class StringFilter {
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
 class StringNullableFilter {
+  @JsonKey(toJson: anyToJson)
   dynamic equals;
   @JsonKey(name: 'in')
   List<String>? isOneOf;
@@ -176,6 +201,7 @@ class StringNullableFilter {
   String? startsWith;
   String? endsWith;
   String? matches;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   StringNullableFilter({
     this.equals,
@@ -197,6 +223,7 @@ class StringNullableFilter {
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
 class BoolFilter {
   bool? equals;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   BoolFilter({
     this.equals,
@@ -207,7 +234,9 @@ class BoolFilter {
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
 class BoolNullableFilter {
+  @JsonKey(toJson: anyToJson)
   dynamic equals;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   BoolNullableFilter({
     this.equals,
@@ -226,6 +255,7 @@ class IntFilter {
   int? lte;
   int? gt;
   int? gte;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   IntFilter({
     this.equals,
@@ -242,6 +272,7 @@ class IntFilter {
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
 class IntNullableFilter {
+  @JsonKey(toJson: anyToJson)
   dynamic equals;
   @JsonKey(name: 'in')
   List<int>? isOneOf;
@@ -250,6 +281,7 @@ class IntNullableFilter {
   int? lte;
   int? gt;
   int? gte;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   IntNullableFilter({
     this.equals,
@@ -274,6 +306,7 @@ class DoubleFilter {
   double? lte;
   double? gt;
   double? gte;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   DoubleFilter({
     this.equals,
@@ -290,6 +323,7 @@ class DoubleFilter {
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
 class DoubleNullableFilter {
+  @JsonKey(toJson: anyToJson)
   dynamic equals;
   @JsonKey(name: 'in')
   List<double>? isOneOf;
@@ -298,6 +332,7 @@ class DoubleNullableFilter {
   double? lte;
   double? gt;
   double? gte;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   DoubleNullableFilter({
     this.equals,
@@ -322,6 +357,7 @@ class DecimalFilter {
   Decimal? lte;
   Decimal? gt;
   Decimal? gte;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   DecimalFilter({
     this.equals,
@@ -338,6 +374,7 @@ class DecimalFilter {
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
 class DecimalNullableFilter {
+  @JsonKey(toJson: anyToJson)
   dynamic equals;
   @JsonKey(name: 'in')
   List<Decimal>? isOneOf;
@@ -346,6 +383,7 @@ class DecimalNullableFilter {
   Decimal? lte;
   Decimal? gt;
   Decimal? gte;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   DecimalNullableFilter({
     this.equals,
@@ -370,6 +408,7 @@ class DateFilter {
   String? lte;
   String? gt;
   String? gte;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   DateFilter({
     this.equals,
@@ -386,6 +425,7 @@ class DateFilter {
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
 class DateNullableFilter {
+  @JsonKey(toJson: anyToJson)
   dynamic equals;
   @JsonKey(name: 'in')
   List<String>? isOneOf;
@@ -394,6 +434,7 @@ class DateNullableFilter {
   String? lte;
   String? gt;
   String? gte;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   DateNullableFilter({
     this.equals,
@@ -418,6 +459,7 @@ class DateTimeFilter {
   DateTime? lte;
   DateTime? gt;
   DateTime? gte;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   DateTimeFilter({
     this.equals,
@@ -434,6 +476,7 @@ class DateTimeFilter {
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
 class DateTimeNullableFilter {
+  @JsonKey(toJson: anyToJson)
   dynamic equals;
   @JsonKey(name: 'in')
   List<DateTime>? isOneOf;
@@ -442,6 +485,7 @@ class DateTimeNullableFilter {
   DateTime? lte;
   DateTime? gt;
   DateTime? gte;
+  @JsonKey(toJson: anyToJson)
   dynamic not;
   DateTimeNullableFilter({
     this.equals,
@@ -454,4 +498,29 @@ class DateTimeNullableFilter {
     this.not,
   });
   Map<String, dynamic> toJson() => _$DateTimeNullableFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class ArrayFilter<T> {
+  @JsonKey(toJson: anyToJson)
+  List<T>? equals;
+  @JsonKey(toJson: anyToJson)
+  T? has;
+  @JsonKey(toJson: anyToJson)
+  List<T>? hasSome;
+  @JsonKey(toJson: anyToJson)
+  List<T>? hasEvery;
+  @JsonKey(toJson: anyToJson)
+  bool? isEmpty;
+  @JsonKey(toJson: anyToJson)
+  int? length;
+  ArrayFilter({
+    this.equals,
+    this.has,
+    this.hasSome,
+    this.hasEvery,
+    this.isEmpty,
+    this.length,
+  });
+  Map<String, dynamic> toJson() => _$ArrayFilterToJson(this);
 }
