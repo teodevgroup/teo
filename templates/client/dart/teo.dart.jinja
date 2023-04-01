@@ -24,7 +24,7 @@ class Response<D> {
   Response({ required this.data });
 }
 
-class ResponseWithMeta<D, M> {
+class ResponseWithMeta<M, D> {
   D data;
   M meta;
   ResponseWithMeta({ required this.data, required this.meta });
