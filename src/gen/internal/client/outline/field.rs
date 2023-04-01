@@ -19,7 +19,7 @@ pub(in crate::gen) struct Field<'a> {
 
 impl<'a> Field<'a> {
     pub(in crate::gen) fn should_escape_dart(&self) -> bool {
-        self.name.starts_with("_") || (self.name == "is")
+        self.name.starts_with("_") || ["is", "AND", "OR", "NOT"].contains(&self.name)
     }
 
     pub(in crate::gen) fn type_is_not_dynamic_dart(&self) -> bool {

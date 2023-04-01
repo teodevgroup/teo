@@ -4,10 +4,12 @@ pub fn camelcase<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     let s = s.to_string();
     Ok(s.to_camel_case())
 }
+
 pub fn pascalcase<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     let s = s.to_string();
     Ok(s.to_pascal_case())
 }
+
 pub fn capitalize_first<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     let s = s.to_string();
     let mut c = s.chars();
@@ -17,6 +19,7 @@ pub fn capitalize_first<T: std::fmt::Display>(s: T) -> ::askama::Result<String> 
     };
     Ok(result)
 }
+
 pub fn decapitalize<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     let s = s.to_string();
     let mut c = s.chars();
@@ -52,6 +55,9 @@ pub fn escape_dart<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     } else {
         match s.as_str() {
             "is" => Ok("matches".to_owned()),
+            "AND" => Ok("$and".to_owned()),
+            "OR" => Ok("$or".to_owned()),
+            "NOT" => Ok("$not".to_owned()),
             _ => Ok(s),
         }
     }

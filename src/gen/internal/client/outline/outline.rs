@@ -393,6 +393,64 @@ impl<'a> Outline<'a> {
                                 kind: FieldKind::Field,
                             }).collect(),
                         }),
+                        // credentials
+                        if m.identity() {
+                            // c.block(format!(r#"export type {model_name}CredentialsInput = {{"#), |b| {
+                            //     let auth_identity_keys = model.auth_identity_keys();
+                            //     let auth_by_keys = model.auth_by_keys();
+                            //     let auth_identity_optional = auth_identity_keys.len() != 1;
+                            //     let auth_by_keys_optional = auth_by_keys.len() != 1;
+                            //     for key in auth_identity_keys {
+                            //         let field = model.field(key).unwrap();
+                            //         let field_name = &field.name;
+                            //         let field_type = field.field_type().to_typescript_type(auth_identity_optional);
+                            //         b.doc(field_doc(field));
+                            //         b.line(format!("{field_name}: {field_type}"));
+                            //     }
+                            //     for key in auth_by_keys {
+                            //         let field = model.field(key).unwrap();
+                            //         let field_name = &field.name;
+                            //         let field_type = field.field_type().to_typescript_type(auth_by_keys_optional);
+                            //         b.doc(field_doc(field));
+                            //         b.line(format!("{field_name}: {field_type}"));
+                            //     }
+                            // }, "}");
+                            Some(Class {
+                                model_name: m.name(),
+                                localized_name: Cow::Borrowed(""),
+                                name_suffix: Cow::Borrowed("CredentialsInput"),
+                                docs: Cow::Owned(format!("{} credentials for signing in.", m.name())),
+                                kind: ClassKind::CredentialsInput,
+                                fields: {
+                                    let mut fields = vec![];
+                                    fields.extend(m.auth_identity_keys().iter().map(|k| {
+                                        let f = m.field(k).unwrap();
+                                        Field {
+                                            name: f.name(),
+                                            localized_name: Cow::Owned(f.localized_name()),
+                                            docs: Cow::Borrowed(f.description().unwrap_or("")),
+                                            field_type: lookup.field_type_to_create_type(f.field_type(), false),
+                                            optional: if m.auth_identity_keys().len() == 1 { false } else { true },
+                                            kind: FieldKind::Field,
+                                        }
+                                    }));
+                                    fields.extend(m.auth_by_keys().iter().map(|k| {
+                                        let f = m.field(k).unwrap();
+                                        Field {
+                                            name: f.name(),
+                                            localized_name: Cow::Owned(f.localized_name()),
+                                            docs: Cow::Borrowed(f.description().unwrap_or("")),
+                                            field_type: lookup.field_type_to_create_type(f.field_type(), false),
+                                            optional: if m.auth_by_keys().len() == 1 { false } else { true },
+                                            kind: FieldKind::Field,
+                                        }
+                                    }));
+                                    fields
+                                }
+                            })
+                        } else {
+                            None
+                        }
                     ].into_iter().flatten().collect();
                     let without = {
                         let mut without = vec![""];
