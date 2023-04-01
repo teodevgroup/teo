@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use crate::core::action::{Action};
+use crate::core::action::{Action, AGGREGATE_HANDLER, COUNT_HANDLER, CREATE_HANDLER, CREATE_MANY_HANDLER, DELETE_HANDLER, DELETE_MANY_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, FIND_UNIQUE_HANDLER, GROUP_BY_HANDLER, IDENTITY_HANDLER, SIGN_IN_HANDLER, UPDATE_HANDLER, UPDATE_MANY_HANDLER, UPSERT_HANDLER};
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::gen::internal::type_lookup::TypeLookup;
 
@@ -11,15 +11,55 @@ impl DartTypes {
 
 impl TypeLookup for DartTypes {
     fn field_type_to_filter_type<'a>(&self, _field_type: &'a FieldType, _optional: bool) -> Cow<'a, str> {
-        todo!()
+        Cow::Borrowed("dynamic")
     }
 
-    fn field_type_to_create_type<'a>(&self, _field_type: &'a FieldType, _optional: bool) -> Cow<'a, str> {
-        todo!()
+    fn field_type_to_create_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
+        if optional {
+            Cow::Borrowed("dynamic")
+        } else {
+            match field_type {
+                FieldType::ObjectId => Cow::Borrowed("String"),
+                FieldType::Bool => Cow::Borrowed("bool"),
+                FieldType::I32 => Cow::Borrowed("int"),
+                FieldType::I64 => Cow::Borrowed("int"),
+                FieldType::F32 => Cow::Borrowed("double"),
+                FieldType::F64 => Cow::Borrowed("double"),
+                FieldType::Decimal => Cow::Borrowed("Decimal"),
+                FieldType::String => Cow::Borrowed("String"),
+                FieldType::Date => Cow::Borrowed("String"),
+                FieldType::DateTime => Cow::Borrowed("DateTime"),
+                FieldType::Enum(enum_def) => Cow::Borrowed(enum_def.name()),
+                FieldType::Vec(inner) => Cow::Owned("List<".to_owned() + self.field_type_to_result_type(inner.field_type(), inner.is_optional()).as_ref() + ">"),
+                FieldType::HashMap(_) => unreachable!(),
+                FieldType::BTreeMap(_) => unreachable!(),
+                FieldType::Object(_) => unreachable!(),
+            }
+        }
     }
 
-    fn field_type_to_update_type<'a>(&self, _field_type: &'a FieldType, _optional: bool) -> Cow<'a, str> {
-        todo!()
+    fn field_type_to_update_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
+        if optional {
+            Cow::Borrowed("dynamic")
+        } else {
+            match field_type {
+                FieldType::ObjectId => Cow::Borrowed("String"),
+                FieldType::Bool => Cow::Borrowed("bool"),
+                FieldType::I32 => Cow::Borrowed("dynamic"),
+                FieldType::I64 => Cow::Borrowed("dynamic"),
+                FieldType::F32 => Cow::Borrowed("dynamic"),
+                FieldType::F64 => Cow::Borrowed("dynamic"),
+                FieldType::Decimal => Cow::Borrowed("dynamic"),
+                FieldType::String => Cow::Borrowed("String"),
+                FieldType::Date => Cow::Borrowed("String"),
+                FieldType::DateTime => Cow::Borrowed("DateTime"),
+                FieldType::Enum(enum_def) => Cow::Borrowed(enum_def.name()),
+                FieldType::Vec(_inner) => Cow::Borrowed("dynamic"),
+                FieldType::HashMap(_) => unreachable!(),
+                FieldType::BTreeMap(_) => unreachable!(),
+                FieldType::Object(_) => unreachable!(),
+            }
+        }
     }
 
     fn field_type_to_result_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
@@ -33,10 +73,10 @@ impl TypeLookup for DartTypes {
             FieldType::F32 => Cow::Borrowed("double"),
             FieldType::F64 => Cow::Borrowed("double"),
             FieldType::Decimal => Cow::Borrowed("decimal"),
-            FieldType::Date => Cow::Borrowed("DateOnly"),
+            FieldType::Date => Cow::Borrowed("String"),
             FieldType::DateTime => Cow::Borrowed("DateTime"),
             FieldType::Enum(enum_def) => Cow::Owned(enum_def.name().to_string()),
-            FieldType::Vec(inner) => Cow::Owned(self.field_type_to_result_type(inner.field_type(), inner.is_optional()).as_ref().to_owned() + "[]"),
+            FieldType::Vec(inner) => Cow::Owned("List<".to_owned() + self.field_type_to_result_type(inner.field_type(), inner.is_optional()).as_ref() + ">"),
             FieldType::HashMap(_) => panic!(),
             FieldType::BTreeMap(_) => panic!(),
             FieldType::Object(name) => Cow::Owned(name.to_string()),
@@ -65,7 +105,24 @@ impl TypeLookup for DartTypes {
     }
 
     fn action_result_type<'a>(&self, _action: Action, _model_name: &'a str) -> Cow<'a, str> {
-        todo!()
+        Cow::Owned(match action.to_u32() {
+            FIND_UNIQUE_HANDLER => format!("Response<{model_name}>"),
+            FIND_FIRST_HANDLER => format!("Response<{model_name}>"),
+            FIND_MANY_HANDLER => format!("ResponseWithMeta<PagingInfo, [{model_name}]>"),
+            CREATE_HANDLER => format!("Response<{model_name}>"),
+            UPDATE_HANDLER => format!("Response<{model_name}>"),
+            UPSERT_HANDLER => format!("Response<{model_name}>"),
+            DELETE_HANDLER => format!("Response<{model_name}>"),
+            CREATE_MANY_HANDLER => format!("ResponseWithMeta<PagingInfo, [{model_name}]>"),
+            UPDATE_MANY_HANDLER => format!("ResponseWithMeta<PagingInfo, [{model_name}]>"),
+            DELETE_MANY_HANDLER => format!("ResponseWithMeta<PagingInfo, [{model_name}]>"),
+            COUNT_HANDLER => format!("Response<Int64>"),
+            AGGREGATE_HANDLER => format!("Response<{model_name}>"),
+            GROUP_BY_HANDLER => format!("Response<{model_name}>"),
+            SIGN_IN_HANDLER => format!("ResponseWithMeta<TokenInfo, {model_name}>"),
+            IDENTITY_HANDLER => format!("Response<{model_name}>"),
+            _ => unreachable!()
+        })
     }
 
     fn number_type(&self) -> &'static str {
