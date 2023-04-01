@@ -3,6 +3,8 @@ use std::fs::{File};
 use std::io::Write;
 use std::fs::create_dir_all;
 use std::fs::remove_dir_all;
+use crate::gen::internal::message::{green_message, red_message, yellow_message};
+use pathdiff::diff_paths;
 
 pub(in crate::gen) struct FileUtil {
     base_dir: PathBuf,
@@ -18,6 +20,7 @@ impl FileUtil {
 
     pub(in crate::gen) async fn ensure_root_directory(&self) -> std::io::Result<()> {
         if !self.base_dir.exists() {
+            yellow_message("create", diff_paths(&self.base_dir, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
             create_dir_all(&self.base_dir)?;
         }
         Ok(())
@@ -26,6 +29,7 @@ impl FileUtil {
     pub(in crate::gen) async fn ensure_directory<D: Into<String>>(&self, dir_name: D) -> std::io::Result<()> {
         let dirname = self.base_dir.join(dir_name.into());
         if !dirname.exists() {
+            yellow_message("create", diff_paths(&dirname, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
             create_dir_all(dirname)
         } else {
             Ok(())
@@ -34,8 +38,10 @@ impl FileUtil {
 
     pub(in crate::gen) async fn clear_root_directory(&self) -> std::io::Result<()> {
         if !&self.base_dir.exists() {
+            yellow_message("create", diff_paths(&self.base_dir, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
             create_dir_all(&self.base_dir)
         } else {
+            red_message("clear", diff_paths(&self.base_dir, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
             remove_dir_all(&self.base_dir)?;
             create_dir_all(&self.base_dir)
         }
@@ -44,8 +50,10 @@ impl FileUtil {
     pub(in crate::gen) async fn clear_directory<D: Into<String>>(&self, dir_name: D) -> std::io::Result<()> {
         let dirname = self.base_dir.join(dir_name.into());
         if !&dirname.exists() {
+            yellow_message("create", diff_paths(&dirname, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
             create_dir_all(&dirname)
         } else {
+            red_message("clear", diff_paths(&dirname, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
             remove_dir_all(&dirname)?;
             create_dir_all(&dirname)
         }
@@ -53,8 +61,8 @@ impl FileUtil {
 
     pub(in crate::gen) async fn generate_file<F: Into<String>, S: AsRef<str>>(&self, file_name: F, content: S) -> std::io::Result<()> {
         let filename = self.base_dir.join(file_name.into());
-        println!("{}", filename.as_os_str().to_str().unwrap());
-        let mut output_file = File::create(filename)?;
+        let mut output_file = File::create(&filename)?;
+        green_message("create", diff_paths(&filename, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
         write!(output_file, "{}", content.as_ref())
     }
 

@@ -54,6 +54,7 @@ to-mut = "0.1.0"
 to-mut-proc-macro = "0.1.0"
 rand = "0.8.4"
 askama = "0.12.0"
+pathdiff = "0.2.1"
 
 [dev-dependencies]
 serial_test = "1.0.0"

@@ -39,14 +39,12 @@ impl Generator for DartClientGenerator {
     }
 
     async fn generate_module_files(&self, _ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
-        generator.ensure_root_directory().await?;
         generator.clear_root_directory().await?;
         Ok(())
     }
 
     async fn generate_package_files(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
-        generator.clear_root_directory().await?;
         generator.generate_file(".gitignore", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/dart/gitignore"))).await?;
         generator.generate_file("README.md", DartReadMeTemplate { conf: ctx.conf }.render().unwrap()).await?;
         generator.generate_file("pubspec.yaml", DartPubspecTemplate { conf: ctx.conf }.render().unwrap()).await?;
