@@ -636,7 +636,7 @@ class NullableArrayFieldUpdateOperationsInput<T> {
   Map<String, dynamic> toJson() => _$NullableArrayFieldUpdateOperationsInputToJson(this);
 }
 
-{%- for class in outline.classes %}
+{% for class in outline.classes %}
     {%- if class.kind.is_enum() %}
 enum {{ class.name() }} {
         {%- for field in class.fields %}
@@ -644,15 +644,16 @@ enum {{ class.name() }} {
         {%- endfor %}
 }
     {%- else %}
+@JsonSerializable(explicitToJson: true, includeIfNull: false, {% if class.kind.is_output() %}createToJson{% else %}createFactory{% endif %}: false)
 class {{ class.name() }} {
     {%- for field in class.fields_optional_at_last() %}
-    {{ field.field_type }}{%- if field.optional %}?{%- endif %} {{ field.name }};
+    {{ field.field_type }}{%- if field.optional || class.kind.is_output() %}?{%- endif %} {{ field.name }};
     {%- endfor %}
     {{ class.name() }}({
     {%- for field in class.fields_optional_at_last() %}
-        {%- if !field.optional %}required {%- endif %}this.{{ field.name }},
+        {% if !(field.optional || class.kind.is_output()) %}required {% endif %}this.{{ field.name }},
     {%- endfor %}
-    })
+    });
     Map<String, dynamic> toJson() => _${{ class.name() }}ToJson(this);
 }
     {%- endif %}

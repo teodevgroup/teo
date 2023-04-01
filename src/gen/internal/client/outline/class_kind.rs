@@ -41,4 +41,11 @@ impl ClassKind {
             _ => false,
         }
     }
+
+    pub(in crate::gen) fn is_output(&self) -> bool {
+        match self {
+            ClassKind::DataOutput => true,
+            _ => false,
+        }
+    }
 }

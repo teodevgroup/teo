@@ -1158,7 +1158,7 @@ mod helper {
     }
     pub(super) fn args__avg_field(model: &str, optional: bool) -> Field {
         Field {
-            name: "_count",
+            name: "_avg",
             localized_name: Cow::Borrowed(""),
             docs: Cow::Borrowed("Select which field to calculate average with."),
             field_type: Cow::Owned(format!("{}AvgAggregateInputType", model)),
