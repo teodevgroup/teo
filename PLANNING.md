@@ -357,7 +357,8 @@
 - Remove URL segment name **[DONE]**
 - Refactor the generator code to make it production ready
 - Swift client
-- TypeScript client: distinct in handler args
+- Dart client **[DONE]**
+- Client: distinct in handler args
 - TypeScript client: correct return types for `aggregate` and `groupBy`
 - Setup integration tests: reset database
 - Schema lang: dataset

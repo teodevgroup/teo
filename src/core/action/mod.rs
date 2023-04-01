@@ -395,8 +395,6 @@ impl Action {
             Action::from_u32(COUNT_HANDLER),
             Action::from_u32(AGGREGATE_HANDLER),
             Action::from_u32(GROUP_BY_HANDLER),
-            Action::from_u32(SIGN_IN_HANDLER),
-            Action::from_u32(IDENTITY_HANDLER),
         ].iter().map(|x| *x))
     }
 

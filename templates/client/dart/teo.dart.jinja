@@ -1183,8 +1183,7 @@ class {{ delegate.model_name }}Delegate {
   }
   {%- endfor %}
 }
-{%- endfor %}
-
+{% endfor %}
 class {{ conf.object_name|capitalize_first }} {
   String? $token;
   {%- for delegate in outline.delegates %}
