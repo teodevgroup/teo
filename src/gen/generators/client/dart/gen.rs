@@ -1,3 +1,4 @@
+use std::process::Command;
 use askama::Template;
 use async_trait::async_trait;
 use crate::gen::interface::client::conf::Conf;
@@ -6,6 +7,7 @@ use crate::gen::internal::client::generator::Generator;
 use crate::gen::internal::client::outline::outline::Outline;
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::internal::filters;
+use crate::gen::internal::message::green_message;
 
 #[derive(Template)]
 #[template(path = "client/dart/readme.md.jinja", escape = "none")]
@@ -55,6 +57,15 @@ impl Generator for DartClientGenerator {
         generator.generate_file(format!("{}.dart", ctx.conf.inferred_package_name_snake_case()), DartMainTemplate {
             outline: &ctx.outline,
             conf: ctx.conf,
-        }.render().unwrap()).await
+        }.render().unwrap()).await?;
+        // run commands
+        let base = generator.get_base_dir();
+        let parent = base.parent().unwrap();
+        std::env::set_current_dir(parent).unwrap();
+        green_message("run", "`dart pub get`".to_owned());
+        Command::new("dart").arg("pub").arg("get").spawn()?.wait()?;
+        green_message("run", "`dart pub run build_runner build --delete-conflicting-outputs`".to_owned());
+        Command::new("dart").arg("pub").arg("run").arg("build_runner").arg("build").arg("--delete-conflicting-outputs").spawn()?.wait()?;
+        Ok(())
     }
 }
