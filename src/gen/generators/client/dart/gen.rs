@@ -54,7 +54,7 @@ impl Generator for DartClientGenerator {
     }
 
     async fn generate_main(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
-        generator.generate_file("teo.dart", DartMainTemplate {
+        generator.generate_file(format!("{}.dart", ctx.conf.inferred_package_name_snake_case()), DartMainTemplate {
             outline: &ctx.outline,
             conf: ctx.conf,
         }.render().unwrap()).await

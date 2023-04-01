@@ -1,3 +1,7 @@
+pub(crate) mod builder;
+pub(crate) mod index;
+pub(crate) mod migration;
+
 use std::collections::{HashMap, HashSet};
 use std::ops::BitOr;
 use std::sync::Arc;
@@ -15,10 +19,6 @@ use crate::prelude::{Graph, Value};
 use crate::core::result::Result;
 use crate::teon;
 use self::index::ModelIndex;
-
-pub(crate) mod builder;
-pub(crate) mod index;
-pub(crate) mod migration;
 
 pub struct ModelInner {
     pub(crate) name: String,
