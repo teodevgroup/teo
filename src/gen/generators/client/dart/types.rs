@@ -104,7 +104,7 @@ impl TypeLookup for DartTypes {
         Cow::Borrowed("dynamic")
     }
 
-    fn action_result_type<'a>(&self, _action: Action, _model_name: &'a str) -> Cow<'a, str> {
+    fn action_result_type<'a>(&self, action: Action, model_name: &'a str) -> Cow<'a, str> {
         Cow::Owned(match action.to_u32() {
             FIND_UNIQUE_HANDLER => format!("Response<{model_name}>"),
             FIND_FIRST_HANDLER => format!("Response<{model_name}>"),
