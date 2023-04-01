@@ -244,6 +244,22 @@ impl<'a> Outline<'a> {
                             }).collect(),
                             kind: ClassKind::OrderByInput,
                         }),
+                        // scalar field enum
+                        Some(Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("ScalarFieldEnum"),
+                            docs: Cow::Owned(format!("{} scalar field enum.", m.name())),
+                            kind: ClassKind::ScalarFieldEnum,
+                            fields: m.fields().iter().map(|f| Field {
+                                name: f.name(),
+                                localized_name: Cow::Owned(f.localized_name()),
+                                docs: Cow::Borrowed(f.description().unwrap_or("")),
+                                field_type: Cow::Borrowed(""),
+                                optional: false,
+                                kind: FieldKind::Field,
+                            }).collect(),
+                        }),
                     ].into_iter().flatten().collect();
                     let without = {
                         let mut without = vec![""];
@@ -1112,7 +1128,7 @@ mod helper {
             name: "distinct",
             localized_name: Cow::Borrowed(""),
             docs: Cow::Borrowed("Select distinct records by fields."),
-            field_type: lookup.generated_type_to_enumerate(Cow::Owned(format!("{}DistinctFieldEnum", model))),
+            field_type: lookup.generated_type_to_enumerate(Cow::Owned(format!("{}ScalarFieldEnum", model))),
             optional,
             kind: FieldKind::Predefined,
         }

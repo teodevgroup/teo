@@ -20,6 +20,7 @@ pub(in crate::gen) enum ClassKind {
     UpdateNestedManyInput,
     UpdateWithWhereUniqueInput,
     UpdateManyWithWhereInput,
+    ScalarFieldEnum,
 }
 
 impl ClassKind {
@@ -30,9 +31,9 @@ impl ClassKind {
         }
     }
 
-    pub(in crate::gen) fn is_enum(&self) -> bool {
+    pub(in crate::gen) fn is_any_kind_of_enum(&self) -> bool {
         match self {
-            ClassKind::Enum => true,
+            ClassKind::Enum | ClassKind::ScalarFieldEnum => true,
             _ => false,
         }
     }

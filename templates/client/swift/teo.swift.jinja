@@ -485,7 +485,7 @@ public enum ArrayFieldUpdateOperation<T: Encodable>: Encodable {
 }
 
 {%- for class in outline.classes %}
-    {%- if class.kind.is_enum() %}
+    {%- if class.kind.is_any_kind_of_enum() %}
 public enum {{ class.model_name }}{{ class.name_suffix }}: String, Codable {
         {%- for field in class.fields %}
     case {{ field.name|camelcase }} = "{{ field.name }}"

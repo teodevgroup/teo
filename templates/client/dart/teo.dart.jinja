@@ -637,7 +637,7 @@ class NullableArrayFieldUpdateOperationsInput<T> {
 }
 
 {% for class in outline.classes %}
-    {%- if class.kind.is_enum() %}
+    {%- if class.kind.is_any_kind_of_enum() %}
 enum {{ class.name() }} {
         {%- for field in class.fields %}
     @JsonValue("{{ field.name }}") {{ field.name|camelcase }}
