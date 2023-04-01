@@ -14,6 +14,10 @@ impl TypeLookup for KotlinTypes {
         todo!()
     }
 
+    fn field_type_to_filter_with_aggregates_type<'a>(&self, field_type: &'a FieldType, nullable: bool) -> Cow<'a, str> {
+        todo!()
+    }
+
     fn field_type_to_create_type<'a>(&self, _field_type: &'a FieldType, _optional: bool) -> Cow<'a, str> {
         todo!()
     }

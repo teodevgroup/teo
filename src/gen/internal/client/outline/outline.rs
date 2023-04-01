@@ -128,25 +128,29 @@ impl<'a> Outline<'a> {
                             localized_name: Cow::Borrowed(""),
                             name_suffix: Cow::Borrowed("WhereInput"),
                             docs: Cow::Owned(format!("{} filter.", m.name())),
-                            fields: m.query_keys().iter().map(|k| if let Some(field) = m.field(k) {
-                                Field {
-                                    name: field.name(),
-                                    field_type: lookup.field_type_to_filter_type(field.field_type(), field.is_optional()),
-                                    optional: true,
-                                    localized_name: Cow::Owned(field.localized_name()),
-                                    docs: Cow::Borrowed(field.description().unwrap_or("")),
-                                    kind: FieldKind::Field,
-                                }
-                            } else if let Some(relation) = m.relation(k) {
-                                Field {
-                                    name: relation.name(),
-                                    field_type: if relation.is_vec() { Cow::Owned(relation.model().to_owned() + "ListRelationFilter") } else { Cow::Owned(relation.model().to_owned() + "RelationFilter") },
-                                    optional: true,
-                                    localized_name: Cow::Owned(relation.localized_name()),
-                                    docs: Cow::Borrowed(relation.description().unwrap_or("")),
-                                    kind: FieldKind::Relation,
-                                }
-                            } else { unreachable!() }).collect(),
+                            fields: {
+                                let mut fields: Vec<Field> = helper::where_the_three_ops(lookup.generated_type_to_enumerate(Cow::Owned(format!("{}WhereInput", m.name()))));
+                                fields.extend(m.query_keys().iter().map(|k| if let Some(field) = m.field(k) {
+                                    Field {
+                                        name: field.name(),
+                                        field_type: lookup.field_type_to_filter_type(field.field_type(), field.is_optional()),
+                                        optional: true,
+                                        localized_name: Cow::Owned(field.localized_name()),
+                                        docs: Cow::Borrowed(field.description().unwrap_or("")),
+                                        kind: FieldKind::Field,
+                                    }
+                                } else if let Some(relation) = m.relation(k) {
+                                    Field {
+                                        name: relation.name(),
+                                        field_type: if relation.is_vec() { Cow::Owned(relation.model().to_owned() + "ListRelationFilter") } else { Cow::Owned(relation.model().to_owned() + "RelationFilter") },
+                                        optional: true,
+                                        localized_name: Cow::Owned(relation.localized_name()),
+                                        docs: Cow::Borrowed(relation.description().unwrap_or("")),
+                                        kind: FieldKind::Relation,
+                                    }
+                                } else { unreachable!() }).collect::<Vec<Field>>());
+                                fields
+                            },
                             kind: ClassKind::WhereInput,
                         }),
                         // where unique input
@@ -164,6 +168,32 @@ impl<'a> Outline<'a> {
                                 kind: FieldKind::Field,
                             })).flatten().dedup_by(|f1, f2| f1.name == f2.name).collect(),
                             kind: ClassKind::WhereUniqueInput,
+                        }),
+                        // scalar where with aggregates input
+                        Some(Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("ScalarWhereWithAggregatesInput"),
+                            docs: Cow::Owned(format!("{} scalar where with aggregates input.", m.name())),
+                            kind: ClassKind::ScalarWhereWithAggregatesInput,
+                            fields: {
+                                let mut fields: Vec<Field> = helper::where_the_three_ops(lookup.generated_type_to_enumerate(Cow::Owned(format!("{}ScalarWhereWithAggregatesInput", m.name()))));
+                                fields.extend(m.query_keys().iter().filter_map(|k| if let Some(field) = m.field(k) {
+                                    if field.field_type().is_scalar() {
+                                        Some(Field {
+                                            name: field.name(),
+                                            field_type: lookup.field_type_to_filter_with_aggregates_type(field.field_type(), field.is_optional()),
+                                            optional: true,
+                                            localized_name: Cow::Owned(field.localized_name()),
+                                            docs: Cow::Borrowed(field.description().unwrap_or("")),
+                                            kind: FieldKind::Field,
+                                        })
+                                    } else {
+                                        None
+                                    }
+                                } else { None }));
+                                fields
+                            },
                         }),
                         // relation filter
                         Some(Class {
@@ -251,13 +281,17 @@ impl<'a> Outline<'a> {
                             name_suffix: Cow::Borrowed("ScalarFieldEnum"),
                             docs: Cow::Owned(format!("{} scalar field enum.", m.name())),
                             kind: ClassKind::ScalarFieldEnum,
-                            fields: m.fields().iter().map(|f| Field {
-                                name: f.name(),
-                                localized_name: Cow::Owned(f.localized_name()),
-                                docs: Cow::Borrowed(f.description().unwrap_or("")),
-                                field_type: Cow::Borrowed(""),
-                                optional: false,
-                                kind: FieldKind::Field,
+                            fields: m.fields().iter().filter_map(|f| if f.field_type().is_scalar() {
+                                Some(Field {
+                                    name: f.name(),
+                                    localized_name: Cow::Owned(f.localized_name()),
+                                    docs: Cow::Borrowed(f.description().unwrap_or("")),
+                                    field_type: Cow::Borrowed(""),
+                                    optional: false,
+                                    kind: FieldKind::Field,
+                                })
+                            } else {
+                                None
                             }).collect(),
                         }),
                         // aggregate: count
@@ -1382,5 +1416,34 @@ mod helper {
             optional,
             kind: FieldKind::Predefined,
         }
+    }
+
+    pub(super) fn where_the_three_ops(field_type: Cow<str>) -> Vec<Field> {
+        vec![
+            Field {
+                name: "AND",
+                localized_name: Cow::Borrowed(""),
+                docs: Cow::Borrowed(""),
+                field_type: field_type.clone(),
+                optional: true,
+                kind: FieldKind::Predefined,
+            },
+            Field {
+                name: "OR",
+                localized_name: Cow::Borrowed(""),
+                docs: Cow::Borrowed(""),
+                field_type: field_type.clone(),
+                optional: true,
+                kind: FieldKind::Predefined,
+            },
+            Field {
+                name: "NOT",
+                localized_name: Cow::Borrowed(""),
+                docs: Cow::Borrowed(""),
+                field_type,
+                optional: true,
+                kind: FieldKind::Predefined,
+            }
+        ]
     }
 }
