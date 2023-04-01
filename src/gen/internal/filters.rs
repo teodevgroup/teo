@@ -47,8 +47,12 @@ pub fn escape_csharp<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
 
 pub fn escape_dart<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     let s = s.to_string();
-    match s.as_str() {
-        "is" => Ok("matches".to_owned()),
-        _ => Ok(s),
+    if s.starts_with("_") {
+        Ok(s.replace("_", "$"))
+    } else {
+        match s.as_str() {
+            "is" => Ok("matches".to_owned()),
+            _ => Ok(s),
+        }
     }
 }
