@@ -260,6 +260,105 @@ impl<'a> Outline<'a> {
                                 kind: FieldKind::Field,
                             }).collect(),
                         }),
+                        // aggregate: count
+                        Some(Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("CountAggregateInputType"),
+                            docs: Cow::Owned(format!("{} count aggregate input type.", m.name())),
+                            kind: ClassKind::AggregateInputType,
+                            fields: {
+                                let mut fields: Vec<Field> = m.fields().iter().map(|f| Field {
+                                    name: f.name(),
+                                    localized_name: Cow::Owned(f.localized_name()),
+                                    docs: Cow::Borrowed(f.description().unwrap_or("")),
+                                    field_type: Cow::Borrowed(lookup.bool_type()),
+                                    optional: true,
+                                    kind: FieldKind::Field,
+                                }).collect();
+                                fields.push(Field {
+                                    name: "_all",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: Cow::Borrowed("Count all records."),
+                                    field_type: Cow::Borrowed(lookup.bool_type()),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                });
+                                fields
+                            },
+                        }),
+                        // aggregate: avg
+                        Some(Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("AvgAggregateInputType"),
+                            docs: Cow::Owned(format!("{} average aggregate input type.", m.name())),
+                            kind: ClassKind::AggregateInputType,
+                            fields: m.fields().iter().filter_map(|f| if f.field_type().is_number() {
+                                Some(Field {
+                                    name: f.name(),
+                                    localized_name: Cow::Owned(f.localized_name()),
+                                    docs: Cow::Borrowed(f.description().unwrap_or("")),
+                                    field_type: Cow::Borrowed(lookup.bool_type()),
+                                    optional: true,
+                                    kind: FieldKind::Field,
+                                })
+                            } else {
+                                None
+                            }).collect(),
+                        }),
+                        // aggregate: sum
+                        Some(Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("SumAggregateInputType"),
+                            docs: Cow::Owned(format!("{} sum aggregate input type.", m.name())),
+                            kind: ClassKind::AggregateInputType,
+                            fields: m.fields().iter().filter_map(|f| if f.field_type().is_number() {
+                                Some(Field {
+                                    name: f.name(),
+                                    localized_name: Cow::Owned(f.localized_name()),
+                                    docs: Cow::Borrowed(f.description().unwrap_or("")),
+                                    field_type: Cow::Borrowed(lookup.bool_type()),
+                                    optional: true,
+                                    kind: FieldKind::Field,
+                                })
+                            } else {
+                                None
+                            }).collect(),
+                        }),
+                        // aggregate: min
+                        Some(Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("MinAggregateInputType"),
+                            docs: Cow::Owned(format!("{} min aggregate input type.", m.name())),
+                            kind: ClassKind::AggregateInputType,
+                            fields: m.fields().iter().map(|f| Field {
+                                name: f.name(),
+                                localized_name: Cow::Owned(f.localized_name()),
+                                docs: Cow::Borrowed(f.description().unwrap_or("")),
+                                field_type: Cow::Borrowed(lookup.bool_type()),
+                                optional: true,
+                                kind: FieldKind::Field,
+                            }).collect(),
+                        }),
+                        // aggregate: max
+                        Some(Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("MaxAggregateInputType"),
+                            docs: Cow::Owned(format!("{} max aggregate input type.", m.name())),
+                            kind: ClassKind::AggregateInputType,
+                            fields: m.fields().iter().map(|f| Field {
+                                name: f.name(),
+                                localized_name: Cow::Owned(f.localized_name()),
+                                docs: Cow::Borrowed(f.description().unwrap_or("")),
+                                field_type: Cow::Borrowed(lookup.bool_type()),
+                                optional: true,
+                                kind: FieldKind::Field,
+                            }).collect(),
+                        }),
                     ].into_iter().flatten().collect();
                     let without = {
                         let mut without = vec![""];
@@ -965,6 +1064,7 @@ impl<'a> Outline<'a> {
 mod helper {
     use std::borrow::Cow;
     use inflector::Inflector;
+    use crate::core::field::r#type::FieldType;
     use crate::gen::internal::client::outline::field::Field;
     use crate::gen::internal::client::outline::field_kind::FieldKind;
     use crate::gen::internal::type_lookup::TypeLookup;
