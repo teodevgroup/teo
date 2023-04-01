@@ -922,7 +922,7 @@ namespace Teo {
 #nullable enable
 namespace Teo {
 {%- for class in outline.classes %}
-    {%- if class.kind.is_enum() %}
+    {%- if class.kind.is_any_kind_of_enum() %}
     public enum {{ class.model_name }} {
         {%- for field in class.fields %}
         {{ field.name|pascalcase }} = {{ loop.index }},
@@ -1114,7 +1114,7 @@ namespace Teo {
     }
 
 {%- for class in outline.classes %}
-    {%- if class.kind.is_enum() %}
+    {%- if class.kind.is_any_kind_of_enum() %}
     public class {{ class.model_name }}JsonConverter : JsonConverter<{{ class.model_name }}> {
         public override {{ class.model_name }} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
             switch (reader.GetString()) {
@@ -1154,7 +1154,7 @@ namespace Teo {
             options.Converters.Add(new EnumerableJsonConverterFactory());
             options.Converters.Add(new SortOrderJsonConverter());
 {%- for class in outline.classes %}
-    {%- if class.kind.is_enum() %}
+    {%- if class.kind.is_any_kind_of_enum() %}
             options.Converters.Add(new {{ class.model_name }}JsonConverter());
     {%- endif %}
 {%- endfor %}
