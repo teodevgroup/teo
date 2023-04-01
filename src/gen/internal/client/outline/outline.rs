@@ -1143,7 +1143,7 @@ impl<'a> Outline<'a> {
                 Delegate {
                     model_name: Cow::Borrowed(m.name()),
                     actions: m.actions().iter().map(|a| DelegateAction {
-                        name: Cow::Borrowed(a.as_handler_str()),
+                        name: a.as_handler_str(),
                         response: lookup.action_result_type(*a, m.name()),
                         docs: None,
                     }).collect(),

@@ -1173,3 +1173,25 @@ class {{ class.name() }} {
 }
     {%- endif %}
 {%- endfor %}
+{% for delegate in outline.delegates %}
+class {{ delegate.model_name }}Delegate {
+  String? $token;
+  {{ delegate.model_name }}Delegate(this.$token);
+  {%- for action in delegate.actions %}
+  Future<{{ action.response }}> {{ action.name }}({{ delegate.model_name }}{{ action.name|capitalize_first }}Args args) async {
+    return await request("{{ action.name }}", "{{ delegate.model_name }}", args, $token, {{ delegate.value_for_data_transformer_dart(action.name) }}, {{ delegate.value_for_meta_transformer_dart(action.name) }});
+  }
+  {%- endfor %}
+}
+{%- endfor %}
+
+class {{ conf.object_name|capitalize_first }} {
+  String? $token;
+  {%- for delegate in outline.delegates %}
+  late {{ delegate.model_name|capitalize_first }}Delegate {{ delegate.model_name|camelcase }} = {{ delegate.model_name|capitalize_first }}Delegate($token);
+  {%- endfor %}
+  {{ conf.object_name|capitalize_first }} $withToken(String token) => {{ conf.object_name|capitalize_first }}(token);
+  {{ conf.object_name|capitalize_first }}(this.$token);
+}
+
+final {{ conf.object_name }} = {{ conf.object_name|capitalize_first }}(null);
