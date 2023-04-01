@@ -24,4 +24,8 @@ impl<'a> Class<'a> {
     pub(in crate::gen) fn fields_optional_at_last(&'a self) -> Vec<&'a Field<'a>> {
         self.fields.iter().sorted_by(|a, _b| if a.optional { Ordering::Greater } else { Ordering::Less }).collect()
     }
+
+    pub(in crate::gen) fn name(&'a self) -> String {
+        self.model_name.to_owned() + self.name_suffix.as_ref()
+    }
 }

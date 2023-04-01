@@ -635,3 +635,25 @@ class NullableArrayFieldUpdateOperationsInput<T> {
   NullableArrayFieldUpdateOperationsInput({ this.set, this.push });
   Map<String, dynamic> toJson() => _$NullableArrayFieldUpdateOperationsInputToJson(this);
 }
+
+{%- for class in outline.classes %}
+    {%- if class.kind.is_enum() %}
+enum {{ class.name() }} {
+        {%- for field in class.fields %}
+    @JsonValue("{{ field.name }}") {{ field.name|camelcase }}
+        {%- endfor %}
+}
+    {%- else %}
+class {{ class.name() }} {
+    {%- for field in class.fields_optional_at_last() %}
+    {{ field.field_type }}{%- if field.optional %}?{%- endif %} {{ field.name }};
+    {%- endfor %}
+    {{ class.name() }}({
+    {%- for field in class.fields_optional_at_last() %}
+        {%- if !field.optional %}required {%- endif %}this.{{ field.name }},
+    {%- endfor %}
+    })
+    Map<String, dynamic> toJson() => _${{ class.name() }}ToJson(this);
+}
+    {%- endif %}
+{%- endfor %}
