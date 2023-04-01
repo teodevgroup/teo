@@ -75,7 +75,7 @@ impl<'a> Outline<'a> {
                                         field_type: if relation.is_vec() {
                                             lookup.generated_type_to_vec(Cow::Borrowed(relation.model()))
                                         } else {
-                                            Cow::Borrowed(relation.name())
+                                            Cow::Borrowed(relation.model())
                                         },
                                         optional: relation.is_optional(),
                                         localized_name: Cow::Owned(relation.localized_name()),

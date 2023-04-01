@@ -640,14 +640,16 @@ class NullableArrayFieldUpdateOperationsInput<T> {
     {%- if class.kind.is_any_kind_of_enum() %}
 enum {{ class.name() }} {
         {%- for field in class.fields %}
-    @JsonValue("{{ field.name }}") {{ field.name|camelcase }}
+    @JsonValue("{{ field.name }}") {{ field.name|camelcase }},
         {%- endfor %}
 }
     {%- else %}
 @JsonSerializable(explicitToJson: true, includeIfNull: false, {% if class.kind.is_output() %}createToJson{% else %}createFactory{% endif %}: false)
 class {{ class.name() }} {
     {%- for field in class.fields_optional_at_last() %}
-    {% if field.should_escape_dart() %}@JsonKey(name: '{{ field.name }}'){% endif %}
+    {%- if field.should_escape_dart() %}
+    @JsonKey(name: '{{ field.name }}')
+    {% endif %}
     {{ field.field_type }}{%- if field.type_is_not_dynamic_dart() && (field.optional || class.kind.is_output()) %}?{%- endif %} {{ field.name|escape_dart }};
     {%- endfor %}
     {{ class.name() }}({
