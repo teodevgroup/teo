@@ -16,3 +16,17 @@ pub(in crate::gen) struct Field<'a> {
     pub(in crate::gen) optional: bool,
     pub(in crate::gen) kind: FieldKind,
 }
+
+impl<'a> Field<'a> {
+    pub(in crate::gen) fn should_escape_dart(&self) -> bool {
+        self.name == "is"
+    }
+
+    pub(in crate::gen) fn type_is_not_dynamic_dart(&self) -> bool {
+        self.field_type.as_ref() != "dynamic"
+    }
+
+    pub(in crate::gen) fn type_is_dynamic_dart(&self) -> bool {
+        self.field_type.as_ref() == "dynamic"
+    }
+}
