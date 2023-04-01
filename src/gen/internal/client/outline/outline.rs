@@ -165,6 +165,66 @@ impl<'a> Outline<'a> {
                             })).flatten().dedup_by(|f1, f2| f1.name == f2.name).collect(),
                             kind: ClassKind::WhereUniqueInput,
                         }),
+                        // relation filter
+                        Some(Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("RelationFilter"),
+                            docs: Cow::Owned(format!("{} relation filter.", m.name())),
+                            kind: ClassKind::RelationFilter,
+                            fields: vec![
+                                Field {
+                                    name: "is",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: Cow::Borrowed(""),
+                                    field_type: Cow::Owned(format!("{}WhereInput", m.name())),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "isNot",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: Cow::Borrowed(""),
+                                    field_type: Cow::Owned(format!("{}WhereInput", m.name())),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                            ],
+                        }),
+                        // list relation filter
+                        Some(Class {
+                            model_name: m.name(),
+                            localized_name: Cow::Borrowed(""),
+                            name_suffix: Cow::Borrowed("ListRelationFilter"),
+                            docs: Cow::Owned(format!("{} list relation filter.", m.name())),
+                            kind: ClassKind::ListRelationFilter,
+                            fields: vec![
+                                Field {
+                                    name: "every",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: Cow::Borrowed(""),
+                                    field_type: Cow::Owned(format!("{}WhereInput", m.name())),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "some",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: Cow::Borrowed(""),
+                                    field_type: Cow::Owned(format!("{}WhereInput", m.name())),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                                Field {
+                                    name: "none",
+                                    localized_name: Cow::Borrowed(""),
+                                    docs: Cow::Borrowed(""),
+                                    field_type: Cow::Owned(format!("{}WhereInput", m.name())),
+                                    optional: true,
+                                    kind: FieldKind::Predefined,
+                                },
+                            ],
+                        }),
                         // order by input
                         Some(Class {
                             model_name: m.name(),

@@ -654,7 +654,11 @@ class {{ class.name() }} {
         {% if !(field.optional || class.kind.is_output()) %}required {% endif %}this.{{ field.name }},
     {%- endfor %}
     });
+    {%- if class.kind.is_output() %}
+    factory {{ class.name() }}.fromJson(Map<String, dynamic> json) => _${{ class.name() }}FromJson(json);
+    {%- else %}
     Map<String, dynamic> toJson() => _${{ class.name() }}ToJson(this);
+    {%- endif %}
 }
     {%- endif %}
 {%- endfor %}

@@ -3,6 +3,8 @@ pub(in crate::gen) enum ClassKind {
     DataOutput,
     WhereInput,
     WhereUniqueInput,
+    RelationFilter,
+    ListRelationFilter,
     CreateInput,
     UpdateInput,
     OrderByInput,
