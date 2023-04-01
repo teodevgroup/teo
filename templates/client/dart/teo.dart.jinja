@@ -221,6 +221,91 @@ class StringNullableFilter {
 }
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class StringWithAggregatesFilter {
+  String? equals;
+  @JsonKey(name: 'in')
+  List<String>? isOneOf;
+  List<String>? notIn;
+  String? lt;
+  String? lte;
+  String? gt;
+  String? gte;
+  String? contains;
+  String? startsWith;
+  String? endsWith;
+  String? matches;
+  @JsonKey(toJson: anyToJson)
+  dynamic not;
+  @JsonKey(name: '_count')
+  IntFilter? $count;
+  @JsonKey(name: '_min')
+  StringFilter? $min;
+  @JsonKey(name: '_max')
+  StringFilter? $max;
+  StringWithAggregatesFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.contains,
+    this.startsWith,
+    this.endsWith,
+    this.matches,
+    this.not,
+    this.$count,
+    this.$min,
+    this.$max,
+  });
+  Map<String, dynamic> toJson() => _$StringWithAggregatesFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class StringNullableWithAggregatesFilter {
+  @JsonKey(toJson: anyToJson)
+  dynamic equals;
+  @JsonKey(name: 'in')
+  List<String>? isOneOf;
+  List<String>? notIn;
+  String? lt;
+  String? lte;
+  String? gt;
+  String? gte;
+  String? contains;
+  String? startsWith;
+  String? endsWith;
+  String? matches;
+  @JsonKey(toJson: anyToJson)
+  dynamic not;
+  @JsonKey(name: '_count')
+  IntNullableFilter? $count;
+  @JsonKey(name: '_min')
+  StringNullableFilter? $min;
+  @JsonKey(name: '_max')
+  StringNullableFilter? $max;
+  StringNullableWithAggregatesFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.contains,
+    this.startsWith,
+    this.endsWith,
+    this.matches,
+    this.not,
+    this.$count,
+    this.$min,
+    this.$max,
+  });
+  Map<String, dynamic> toJson() => _$StringNullableWithAggregatesFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
 class BoolFilter {
   bool? equals;
   @JsonKey(toJson: anyToJson)
@@ -243,6 +328,49 @@ class BoolNullableFilter {
     this.not,
   });
   Map<String, dynamic> toJson() => _$BoolNullableFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class BoolWithAggregatesFilter {
+  bool? equals;
+  @JsonKey(toJson: anyToJson)
+  dynamic not;
+  @JsonKey(name: '_count')
+  IntFilter? $count;
+  @JsonKey(name: '_min')
+  BoolFilter? $min;
+  @JsonKey(name: '_max')
+  BoolFilter? $max;
+  BoolWithAggregatesFilter({
+    this.equals,
+    this.not,
+    this.$count,
+    this.$min,
+    this.$max,
+  });
+  Map<String, dynamic> toJson() => _$BoolWithAggregatesFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class BoolNullableWithAggregatesFilter {
+  @JsonKey(toJson: anyToJson)
+  dynamic equals;
+  @JsonKey(toJson: anyToJson)
+  dynamic not;
+  @JsonKey(name: '_count')
+  IntNullableFilter? $count;
+  @JsonKey(name: '_min')
+  BoolNullableFilter? $min;
+  @JsonKey(name: '_max')
+  BoolNullableFilter? $max;
+  BoolNullableWithAggregatesFilter({
+    this.equals,
+    this.not,
+    this.$count,
+    this.$min,
+    this.$max,
+  });
+  Map<String, dynamic> toJson() => _$BoolNullableWithAggregatesFilterToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
@@ -297,6 +425,87 @@ class IntNullableFilter {
 }
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class IntWithAggregatesFilter {
+  int? equals;
+  @JsonKey(name: 'in')
+  List<int>? isOneOf;
+  List<int>? notIn;
+  int? lt;
+  int? lte;
+  int? gt;
+  int? gte;
+  @JsonKey(toJson: anyToJson)
+  dynamic not;
+  @JsonKey(name: '_count')
+  IntFilter? $count;
+  @JsonKey(name: '_avg')
+  DoubleFilter? $avg;
+  @JsonKey(name: '_sum')
+  IntFilter? $sum;
+  @JsonKey(name: '_min')
+  IntFilter? $min;
+  @JsonKey(name: '_max')
+  IntFilter? $max;
+  IntWithAggregatesFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+    this.$count,
+    this.$avg,
+    this.$sum,
+    this.$min,
+    this.$max,
+  });
+  Map<String, dynamic> toJson() => _$IntWithAggregatesFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class IntNullableWithAggregatesFilter {
+  @JsonKey(toJson: anyToJson)
+  dynamic equals;
+  @JsonKey(name: 'in')
+  List<int>? isOneOf;
+  List<int>? notIn;
+  int? lt;
+  int? lte;
+  int? gt;
+  int? gte;
+  @JsonKey(toJson: anyToJson)
+  dynamic not;
+  @JsonKey(name: '_count')
+  IntNullableFilter? $count;
+  @JsonKey(name: '_avg')
+  DoubleNullableFilter? $avg;
+  @JsonKey(name: '_sum')
+  IntNullableFilter? $sum;
+  @JsonKey(name: '_min')
+  IntNullableFilter? $min;
+  @JsonKey(name: '_max')
+  IntNullableFilter? $max;
+  IntNullableWithAggregatesFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+    this.$count,
+    this.$avg,
+    this.$sum,
+    this.$min,
+    this.$max,
+  });
+  Map<String, dynamic> toJson() => _$IntNullableWithAggregatesFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
 class DoubleFilter {
   double? equals;
   @JsonKey(name: 'in')
@@ -348,6 +557,87 @@ class DoubleNullableFilter {
 }
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class DoubleWithAggregatesFilter {
+  double? equals;
+  @JsonKey(name: 'in')
+  List<double>? isOneOf;
+  List<double>? notIn;
+  double? lt;
+  double? lte;
+  double? gt;
+  double? gte;
+  @JsonKey(toJson: anyToJson)
+  dynamic not;
+  @JsonKey(name: '_count')
+  IntFilter? $count;
+  @JsonKey(name: '_avg')
+  DoubleFilter? $avg;
+  @JsonKey(name: '_sum')
+  DoubleFilter? $sum;
+  @JsonKey(name: '_min')
+  DoubleFilter? $min;
+  @JsonKey(name: '_max')
+  DoubleFilter? $max;
+  DoubleWithAggregatesFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+    this.$count,
+    this.$avg,
+    this.$sum,
+    this.$min,
+    this.$max,
+  });
+  Map<String, dynamic> toJson() => _$DoubleWithAggregatesFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class DoubleNullableWithAggregatesFilter {
+  @JsonKey(toJson: anyToJson)
+  dynamic equals;
+  @JsonKey(name: 'in')
+  List<double>? isOneOf;
+  List<double>? notIn;
+  double? lt;
+  double? lte;
+  double? gt;
+  double? gte;
+  @JsonKey(toJson: anyToJson)
+  dynamic not;
+  @JsonKey(name: '_count')
+  IntNullableFilter? $count;
+  @JsonKey(name: '_avg')
+  DoubleNullableFilter? $avg;
+  @JsonKey(name: '_sum')
+  DoubleNullableFilter? $sum;
+  @JsonKey(name: '_min')
+  DoubleNullableFilter? $min;
+  @JsonKey(name: '_max')
+  DoubleNullableFilter? $max;
+  DoubleNullableWithAggregatesFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+    this.$count,
+    this.$avg,
+    this.$sum,
+    this.$min,
+    this.$max,
+  });
+  Map<String, dynamic> toJson() => _$DoubleNullableWithAggregatesFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
 class DecimalFilter {
   Decimal? equals;
   @JsonKey(name: 'in')
@@ -396,6 +686,87 @@ class DecimalNullableFilter {
     this.not,
   });
   Map<String, dynamic> toJson() => _$DecimalNullableFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class DecimalWithAggregatesFilter {
+  Decimal? equals;
+  @JsonKey(name: 'in')
+  List<Decimal>? isOneOf;
+  List<Decimal>? notIn;
+  Decimal? lt;
+  Decimal? lte;
+  Decimal? gt;
+  Decimal? gte;
+  @JsonKey(toJson: anyToJson)
+  dynamic not;
+  @JsonKey(name: '_count')
+  IntFilter? $count;
+  @JsonKey(name: '_avg')
+  DecimalFilter? $avg;
+  @JsonKey(name: '_sum')
+  DecimalFilter? $sum;
+  @JsonKey(name: '_min')
+  DecimalFilter? $min;
+  @JsonKey(name: '_max')
+  DecimalFilter? $max;
+  DecimalWithAggregatesFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+    this.$count,
+    this.$avg,
+    this.$sum,
+    this.$min,
+    this.$max,
+  });
+  Map<String, dynamic> toJson() => _$DecimalWithAggregatesFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class DecimalNullableWithAggregatesFilter {
+  @JsonKey(toJson: anyToJson)
+  dynamic equals;
+  @JsonKey(name: 'in')
+  List<Decimal>? isOneOf;
+  List<Decimal>? notIn;
+  Decimal? lt;
+  Decimal? lte;
+  Decimal? gt;
+  Decimal? gte;
+  @JsonKey(toJson: anyToJson)
+  dynamic not;
+  @JsonKey(name: '_count')
+  IntNullableFilter? $count;
+  @JsonKey(name: '_avg')
+  DecimalNullableFilter? $avg;
+  @JsonKey(name: '_sum')
+  DecimalNullableFilter? $sum;
+  @JsonKey(name: '_min')
+  DecimalNullableFilter? $min;
+  @JsonKey(name: '_max')
+  DecimalNullableFilter? $max;
+  DecimalNullableWithAggregatesFilter({
+    this.equals,
+    this.isOneOf,
+    this.notIn,
+    this.lt,
+    this.lte,
+    this.gt,
+    this.gte,
+    this.not,
+    this.$count,
+    this.$avg,
+    this.$sum,
+    this.$min,
+    this.$max,
+  });
+  Map<String, dynamic> toJson() => _$DecimalNullableWithAggregatesFilterToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
@@ -635,21 +1006,20 @@ class NullableArrayFieldUpdateOperationsInput<T> {
   NullableArrayFieldUpdateOperationsInput({ this.set, this.push });
   Map<String, dynamic> toJson() => _$NullableArrayFieldUpdateOperationsInputToJson(this);
 }
-
-{% for class in outline.classes %}
-    {%- if class.kind.is_any_kind_of_enum() %}
+{%- for class in outline.classes %}
+    {% if class.kind.is_any_kind_of_enum() %}
 enum {{ class.name() }} {
         {%- for field in class.fields %}
     @JsonValue("{{ field.name }}") {{ field.name|camelcase }},
         {%- endfor %}
 }
-    {%- else %}
+    {% else %}
 @JsonSerializable(explicitToJson: true, includeIfNull: false, {% if class.kind.is_output() %}createToJson{% else %}createFactory{% endif %}: false)
 class {{ class.name() }} {
     {%- for field in class.fields_optional_at_last() %}
     {%- if field.should_escape_dart() %}
     @JsonKey(name: '{{ field.name }}')
-    {% endif %}
+    {%- endif %}
     {{ field.field_type }}{%- if field.type_is_not_dynamic_dart() && (field.optional || class.kind.is_output()) %}?{%- endif %} {{ field.name|escape_dart }};
     {%- endfor %}
     {{ class.name() }}({

@@ -23,6 +23,7 @@ pub(in crate::gen) enum ClassKind {
     UpdateManyWithWhereInput,
     ScalarFieldEnum,
     AggregateInputType,
+    CredentialsInput,
 }
 
 impl ClassKind {
