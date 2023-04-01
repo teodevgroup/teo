@@ -524,3 +524,114 @@ class ArrayFilter<T> {
   });
   Map<String, dynamic> toJson() => _$ArrayFilterToJson(this);
 }
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class ArrayNullableFilter<T> {
+  @JsonKey(toJson: anyToJson)
+  dynamic equals;
+  @JsonKey(toJson: anyToJson)
+  T? has;
+  @JsonKey(toJson: anyToJson)
+  List<T>? hasSome;
+  @JsonKey(toJson: anyToJson)
+  List<T>? hasEvery;
+  @JsonKey(toJson: anyToJson)
+  bool? isEmpty;
+  @JsonKey(toJson: anyToJson)
+  int? length;
+  ArrayNullableFilter({
+    this.equals,
+    this.has,
+    this.hasSome,
+    this.hasEvery,
+    this.isEmpty,
+    this.length,
+  });
+  Map<String, dynamic> toJson() => _$ArrayNullableFilterToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class IntFieldUpdateOperationsInput {
+  int? set;
+  int? increment;
+  int? decrement;
+  int? multiply;
+  int? divide;
+  IntFieldUpdateOperationsInput({ this.set, this.increment, this.decrement, this.multiply, this.divide });
+  Map<String, dynamic> toJson() => _$IntFieldUpdateOperationsInputToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class NullableIntFieldUpdateOperationsInput {
+  dynamic set;
+  int? increment;
+  int? decrement;
+  int? multiply;
+  int? divide;
+  NullableIntFieldUpdateOperationsInput({ this.set, this.increment, this.decrement, this.multiply, this.divide });
+  Map<String, dynamic> toJson() => _$NullableIntFieldUpdateOperationsInputToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class DoubleFieldUpdateOperationsInput {
+  double? set;
+  double? increment;
+  double? decrement;
+  double? multiply;
+  double? divide;
+  DoubleFieldUpdateOperationsInput({ this.set, this.increment, this.decrement, this.multiply, this.divide });
+  Map<String, dynamic> toJson() => _$DoubleFieldUpdateOperationsInputToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class NullableDoubleFieldUpdateOperationsInput {
+  dynamic set;
+  double? increment;
+  double? decrement;
+  double? multiply;
+  double? divide;
+  NullableDoubleFieldUpdateOperationsInput({ this.set, this.increment, this.decrement, this.multiply, this.divide });
+  Map<String, dynamic> toJson() => _$NullableDoubleFieldUpdateOperationsInputToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class DecimalFieldUpdateOperationsInput {
+  Decimal? set;
+  Decimal? increment;
+  Decimal? decrement;
+  Decimal? multiply;
+  Decimal? divide;
+  DecimalFieldUpdateOperationsInput({ this.set, this.increment, this.decrement, this.multiply, this.divide });
+  Map<String, dynamic> toJson() => _$DecimalFieldUpdateOperationsInputToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class NullableDecimalFieldUpdateOperationsInput {
+  dynamic set;
+  Decimal? increment;
+  Decimal? decrement;
+  Decimal? multiply;
+  Decimal? divide;
+  NullableDecimalFieldUpdateOperationsInput({ this.set, this.increment, this.decrement, this.multiply, this.divide });
+  Map<String, dynamic> toJson() => _$NullableDecimalFieldUpdateOperationsInputToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class ArrayFieldUpdateOperationsInput<T> {
+  @JsonKey(toJson: anyToJson)
+  List<T>? set;
+  @JsonKey(toJson: anyToJson)
+  T? push;
+  ArrayFieldUpdateOperationsInput({ this.set, this.push });
+  Map<String, dynamic> toJson() => _$ArrayFieldUpdateOperationsInputToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
+class NullableArrayFieldUpdateOperationsInput<T> {
+  @JsonKey(toJson: anyToJson)
+  dynamic set;
+  @JsonKey(toJson: anyToJson)
+  T? push;
+  NullableArrayFieldUpdateOperationsInput({ this.set, this.push });
+  Map<String, dynamic> toJson() => _$NullableArrayFieldUpdateOperationsInputToJson(this);
+}
