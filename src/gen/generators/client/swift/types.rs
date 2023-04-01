@@ -29,6 +29,11 @@ impl TypeLookup for SwiftTypes {
             FieldType::Object(_) => unreachable!(),
         }
     }
+
+    fn field_type_to_filter_with_aggregates_type<'a>(&self, field_type: &'a FieldType, nullable: bool) -> Cow<'a, str> {
+        todo!()
+    }
+
     fn field_type_to_create_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
         match field_type {
             FieldType::ObjectId => if optional { Cow::Borrowed("NullOr<String>") } else { Cow::Borrowed("String") },

@@ -14,6 +14,10 @@ impl TypeLookup for DartTypes {
         Cow::Borrowed("dynamic")
     }
 
+    fn field_type_to_filter_with_aggregates_type<'a>(&self, field_type: &'a FieldType, nullable: bool) -> Cow<'a, str> {
+        Cow::Borrowed("dynamic")
+    }
+
     fn field_type_to_create_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
         if optional {
             Cow::Borrowed("dynamic")

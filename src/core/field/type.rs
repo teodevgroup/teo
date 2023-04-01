@@ -27,6 +27,14 @@ pub enum FieldType {
 
 impl FieldType {
 
+    pub fn is_scalar(&self) -> bool {
+        use self::FieldType::*;
+        match self {
+            Vec(_) | HashMap(_) | BTreeMap(_) | Object(_) => false,
+            _ => true,
+        }
+    }
+
     pub fn is_string(&self) -> bool {
         match self {
             FieldType::String => true,
