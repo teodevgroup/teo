@@ -1190,7 +1190,7 @@ class {{ delegate.model_name }}Delegate {
   String? $token;
   {{ delegate.model_name }}Delegate(this.$token);
   {%- for action in delegate.actions %}
-  Future<{{ action.response }}> {{ action.name }}({{ delegate.model_name }}{{ action.name|capitalize_first }}Args args) async {
+  Future<{{ action.response }}> {{ action.name }}(dynamic args) async {
     return await request("{{ action.name }}", "{{ delegate.model_name }}", args, $token, {{ delegate.value_for_data_transformer_dart(action.name) }}, {{ delegate.value_for_meta_transformer_dart(action.name) }});
   }
   {%- endfor %}
