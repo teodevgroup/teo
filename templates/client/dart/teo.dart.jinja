@@ -33,8 +33,8 @@ class ResponseWithMeta<M, D> {
 @JsonSerializable(explicitToJson: true, includeIfNull: false)
 class PagingInfo {
   int count;
-  int numberOfPages;
-  PagingInfo({ required this.count, required this.numberOfPages });
+  int? numberOfPages;
+  PagingInfo({ required this.count, this.numberOfPages });
   factory PagingInfo.fromJson(Map<String, dynamic> json) =>
       _$PagingInfoFromJson(json);
   Map<String, dynamic> toJson() => _$PagingInfoToJson(this);
@@ -57,12 +57,13 @@ class TeoError {
   TeoError({ required this.type, required this.message, this.errors });
   factory TeoError.fromJson(Map<String, dynamic> json) => _$TeoErrorFromJson(json);
   Map<String, dynamic> toJson() => _$TeoErrorToJson(this);
+  String toString() => this.toJson().toString();
 }
 
-Future<dynamic> request(
+Future<dynamic> request<D, M>(
     String action, String model, dynamic args, String? token,
-    dynamic Function(dynamic) data, dynamic Function(dynamic)? meta
-    ) async {
+    D Function(dynamic) data, M Function(dynamic)? meta
+) async {
   final res = await http.post(
     Uri.parse('{{ conf.host }}/$model/action/$action'),
     headers: token != null ? {
@@ -1152,7 +1153,7 @@ enum {{ class.name() }} {
         {%- endfor %}
 }
     {% else %}
-@JsonSerializable(explicitToJson: true, includeIfNull: false, {% if class.kind.is_output() %}createToJson{% else %}createFactory{% endif %}: false)
+@JsonSerializable(explicitToJson: true, includeIfNull: false{% if !class.kind.is_output() %}, createFactory: false{% endif %})
 class {{ class.name() }} {
     {%- for field in class.fields_optional_at_last() %}
     {%- if field.should_escape_dart() %}
@@ -1167,9 +1168,8 @@ class {{ class.name() }} {
     });
     {%- if class.kind.is_output() %}
     factory {{ class.name() }}.fromJson(Map<String, dynamic> json) => _${{ class.name() }}FromJson(json);
-    {%- else %}
-    Map<String, dynamic> toJson() => _${{ class.name() }}ToJson(this);
     {%- endif %}
+    Map<String, dynamic> toJson() => _${{ class.name() }}ToJson(this);
 }
     {%- endif %}
 {%- endfor %}

@@ -395,26 +395,6 @@ impl<'a> Outline<'a> {
                         }),
                         // credentials
                         if m.identity() {
-                            // c.block(format!(r#"export type {model_name}CredentialsInput = {{"#), |b| {
-                            //     let auth_identity_keys = model.auth_identity_keys();
-                            //     let auth_by_keys = model.auth_by_keys();
-                            //     let auth_identity_optional = auth_identity_keys.len() != 1;
-                            //     let auth_by_keys_optional = auth_by_keys.len() != 1;
-                            //     for key in auth_identity_keys {
-                            //         let field = model.field(key).unwrap();
-                            //         let field_name = &field.name;
-                            //         let field_type = field.field_type().to_typescript_type(auth_identity_optional);
-                            //         b.doc(field_doc(field));
-                            //         b.line(format!("{field_name}: {field_type}"));
-                            //     }
-                            //     for key in auth_by_keys {
-                            //         let field = model.field(key).unwrap();
-                            //         let field_name = &field.name;
-                            //         let field_type = field.field_type().to_typescript_type(auth_by_keys_optional);
-                            //         b.doc(field_doc(field));
-                            //         b.line(format!("{field_name}: {field_type}"));
-                            //     }
-                            // }, "}");
                             Some(Class {
                                 model_name: m.name(),
                                 localized_name: Cow::Borrowed(""),
@@ -500,7 +480,7 @@ impl<'a> Outline<'a> {
                                                 Cow::Owned(format!("{}CreateNested{}Input", relation.model(), if relation.is_vec() { "Many" } else { "One" }))
                                             }
                                         },
-                                        optional: relation.is_optional(),
+                                        optional: if relation.has_foreign_key() { true } else { relation.is_optional() },
                                         kind: FieldKind::Relation,
                                     })
                                 }
@@ -643,7 +623,7 @@ impl<'a> Outline<'a> {
                                                 Cow::Owned(format!("{}UpdateNested{}Input", relation.model(), if relation.is_vec() { "Many" } else { "One" }))
                                             }
                                         },
-                                        optional: relation.is_optional(),
+                                        optional: true,
                                         kind: FieldKind::Relation,
                                     })
                                 }
