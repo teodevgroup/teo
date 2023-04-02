@@ -103,6 +103,14 @@ dynamic anyToJson(dynamic any) {
   }
 }
 
+DateTime fromTeoDateTime(Map<String, dynamic> arg) {
+  return DateTime.parse(arg["\$date"]! as String);
+}
+
+Decimal fromTeoDecimal(Map<String, dynamic> arg) {
+  return Decimal.parse(arg["\$decimal"]! as String);
+}
+
 @JsonSerializable(explicitToJson: true, includeIfNull: false, createFactory: false)
 class ObjectIdFilter {
   String? equals;
@@ -1158,6 +1166,10 @@ class {{ class.name() }} {
     {%- for field in class.fields_optional_at_last() %}
     {%- if field.should_escape_dart() %}
     @JsonKey(name: '{{ field.name }}')
+    {%- else if class.kind.is_output() && field.field_type.as_ref() == "DateTime" %}
+    @JsonKey(fromJson: fromTeoDateTime)
+    {%- else if class.kind.is_output() && field.field_type.as_ref() == "Decimal" %}
+    @JsonKey(fromJson: fromTeoDecimal)
     {%- endif %}
     {{ field.field_type }}{%- if field.type_is_not_dynamic_dart() && (field.optional || class.kind.is_output()) %}?{%- endif %} {{ field.name|escape_dart }};
     {%- endfor %}
@@ -1178,7 +1190,7 @@ class {{ delegate.model_name }}Delegate {
   String? $token;
   {{ delegate.model_name }}Delegate(this.$token);
   {%- for action in delegate.actions %}
-  Future<{{ action.response }}> {{ action.name }}({{ delegate.model_name }}{{ action.name|capitalize_first }}Args args) async {
+  Future<{{ action.response }}> {{ action.name }}(dynamic args) async {
     return await request("{{ action.name }}", "{{ delegate.model_name }}", args, $token, {{ delegate.value_for_data_transformer_dart(action.name) }}, {{ delegate.value_for_meta_transformer_dart(action.name) }});
   }
   {%- endfor %}
