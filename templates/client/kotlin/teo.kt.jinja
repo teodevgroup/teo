@@ -14,16 +14,28 @@ data class ResponseWithMeta<M, D>(val meta: M, val data: D)
 @Serializable
 data class Response<D>(val data: D)
 
-object NULL {}
+@Serializable(NullSerializer::class)
+object NULL { }
 
-@OptIn(ExperimentalSerializationApi::class)
-@Serializer(forClass = NULL::class)
-object ExplicitNullSerializer : KSerializer<NULL> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("NULL", PrimitiveKind.CHAR)
+object NullSerializer : KSerializer<NULL> {
+    override val descriptor: SerialDescriptor
+        get() = PrimitiveSerialDescriptor("NULL", PrimitiveKind.INT)
+
     override fun deserialize(decoder: Decoder): NULL {
         return NULL
     }
+
+    @OptIn(ExperimentalSerializationApi::class)
     override fun serialize(encoder: Encoder, value: NULL) {
-        encoder.encodeNull()
+        (encoder as JsonEncoder).encodeJsonElement(JsonPrimitive(null))
     }
+}
+
+object AnySerializer : JsonContentPolymorphicSerializer<Any>(Any::class) {
+    override fun selectDeserializer(content: JsonElement) = throw NotImplementedError()
+}
+
+@OptIn(ExperimentalSerializationApi::class)
+val json_serializer = Json {
+    explicitNulls = false
 }
