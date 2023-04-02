@@ -1,0 +1,29 @@
+import kotlinx.serialization.*
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.plus
+
+@Serializable
+data class ResponseWithMeta<M, D>(val meta: M, val data: D)
+
+@Serializable
+data class Response<D>(val data: D)
+
+object NULL {}
+
+@OptIn(ExperimentalSerializationApi::class)
+@Serializer(forClass = NULL::class)
+object ExplicitNullSerializer : KSerializer<NULL> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("NULL", PrimitiveKind.CHAR)
+    override fun deserialize(decoder: Decoder): NULL {
+        return NULL
+    }
+    override fun serialize(encoder: Encoder, value: NULL) {
+        encoder.encodeNull()
+    }
+}
