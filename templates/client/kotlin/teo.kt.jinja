@@ -108,7 +108,6 @@ object DateTimeSerializer : KSerializer<OffsetDateTime> {
         return decoder.decodeStructure(descriptor) {
             val index = decodeElementIndex(descriptor)
             val string = decodeStringElement(descriptor, index)
-
             OffsetDateTime.parse(string)
         }
     }
@@ -387,6 +386,46 @@ typealias DateTimeFilter = Filter<@Contextual OffsetDateTime>
 typealias DateTimeNullableFilter = NullableFilter<@Contextual LocalDateTime>
 typealias DateTimeWithAggregatesFilter = FilterWithAggregates<@Contextual LocalDateTime, DateTimeFilter>
 typealias DateTimeNullableWithAggregatesFilter = FilterWithAggregates<@Contextual LocalDateTime, DateTimeNullableFilter>
+
+@Serializable
+data class EnumFilter<T>(
+    val equals: T? = null,
+    val `in`: List<T>? = null,
+    val notIn: List<T>? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+)
+
+@Serializable
+data class EnumNullableFilter<T>(
+    @Serializable(with=AnySerializer::class)
+    val equals: Any? = null,
+    val `in`: List<T>? = null,
+    val notIn: List<T>? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+)
+
+@Serializable
+data class ArrayFilter<T>(
+    val equals: List<T>? = null,
+    val has: T? = null,
+    val hasSome: List<T>? = null,
+    val hasEvery: List<T>? = null,
+    val isEmpty: Boolean? = null,
+    val length: Int? = null,
+)
+
+@Serializable
+data class ArrayNullableFilter<T>(
+    @Serializable(with=AnySerializer::class)
+    val equals: Any? = null,
+    val has: T? = null,
+    val hasSome: List<T>? = null,
+    val hasEvery: List<T>? = null,
+    val isEmpty: Boolean? = null,
+    val length: Int? = null,
+)
 
 @OptIn(ExperimentalSerializationApi::class)
 val json_serializer = Json {
