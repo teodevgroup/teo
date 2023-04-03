@@ -2,11 +2,18 @@ import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.encoding.decodeStructure
+import kotlinx.serialization.json.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.plus
+import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatterBuilder
 
 @Serializable
 data class ResponseWithMeta<M, D>(val meta: M, val data: D)
@@ -14,9 +21,24 @@ data class ResponseWithMeta<M, D>(val meta: M, val data: D)
 @Serializable
 data class Response<D>(val data: D)
 
+enum class SortOrder {
+    @SerialName("asc") ASC,
+    @SerialName("desc") DESC,
+}
+
+@Serializable
+data class PagingInfo(val count: Int, val numberOfPages: Int?)
+
+@Serializable
+data class TokenInfo(val token: String)
+
+@Serializable
+data class TeoException(override val message: String, val type: String, val errors: Map<String, String>?) : Exception(message);
+
 @Serializable(NullSerializer::class)
 object NULL { }
 
+@Serializer(forClass=NULL::class)
 object NullSerializer : KSerializer<NULL> {
     override val descriptor: SerialDescriptor
         get() = PrimitiveSerialDescriptor("NULL", PrimitiveKind.INT)
@@ -32,10 +54,349 @@ object NullSerializer : KSerializer<NULL> {
 }
 
 object AnySerializer : JsonContentPolymorphicSerializer<Any>(Any::class) {
-    override fun selectDeserializer(content: JsonElement) = throw NotImplementedError()
+    override fun selectDeserializer(element: JsonElement) = throw NotImplementedError()
 }
+
+@Serializer(forClass=BigDecimal::class)
+object BigDecimalSerializer : KSerializer<BigDecimal> {
+    override val descriptor: SerialDescriptor
+        get() = buildClassSerialDescriptor("BigDecimal") {
+            element("\$decimal", PrimitiveSerialDescriptor("BigDecimalElement", PrimitiveKind.STRING))
+        }
+
+    override fun deserialize(decoder: Decoder): BigDecimal {
+        return decoder.decodeStructure(descriptor) {
+            val index = decodeElementIndex(descriptor)
+            val string = decodeStringElement(descriptor, index)
+            BigDecimal(string)
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: BigDecimal) {
+        encoder.encodeString(value.toString())
+    }
+}
+
+@Serializer(forClass=LocalDate::class)
+object DateSerializer : KSerializer<LocalDate> {
+    override val descriptor: SerialDescriptor
+        get() = buildClassSerialDescriptor("LocalDate") {
+            element("\$date", PrimitiveSerialDescriptor("LocalDateElement", PrimitiveKind.STRING))
+        }
+    override fun deserialize(decoder: Decoder): LocalDate {
+        return LocalDate.parse(decoder.decodeString())
+    }
+
+    override fun serialize(encoder: Encoder, value: LocalDate) {
+        encoder.encodeString(value.toString())
+    }
+}
+
+@Serializer(forClass=OffsetDateTime::class)
+object DateTimeSerializer : KSerializer<OffsetDateTime> {
+    private val ISO_8601_FORMATTER = DateTimeFormatterBuilder()
+        .parseCaseInsensitive()
+        .appendInstant(3)
+        .toFormatter();
+
+    override val descriptor: SerialDescriptor
+        get() = buildClassSerialDescriptor("LocalDateTime") {
+            element("\$date", PrimitiveSerialDescriptor("DateElement", PrimitiveKind.STRING))
+        }
+
+    override fun deserialize(decoder: Decoder): OffsetDateTime {
+        return decoder.decodeStructure(descriptor) {
+            val index = decodeElementIndex(descriptor)
+            val string = decodeStringElement(descriptor, index)
+
+            OffsetDateTime.parse(string)
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: OffsetDateTime) {
+        encoder.encodeString(ISO_8601_FORMATTER.format(value))
+    }
+}
+
+@Serializable
+data class StringFilter(
+    val equals: String? = null,
+    val `in`: List<String>? = null,
+    val notIn: List<String>? = null,
+    val lt: String? = null,
+    val lte: String? = null,
+    val gt: String? = null,
+    val gte: String? = null,
+    val contains: String? = null,
+    val startsWith: String? = null,
+    val endsWith: String? = null,
+    val matches: String? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+)
+
+@Serializable
+data class StringNullableFilter(
+    @Serializable(with=AnySerializer::class)
+    val equals: Any? = null,
+    val `in`: List<String>? = null,
+    val notIn: List<String>? = null,
+    val lt: String? = null,
+    val lte: String? = null,
+    val gt: String? = null,
+    val gte: String? = null,
+    val contains: String? = null,
+    val startsWith: String? = null,
+    val endsWith: String? = null,
+    val matches: String? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+)
+
+@Serializable
+data class StringWithAggregatesFilter(
+    val equals: String? = null,
+    val `in`: List<String>? = null,
+    val notIn: List<String>? = null,
+    val lt: String? = null,
+    val lte: String? = null,
+    val gt: String? = null,
+    val gte: String? = null,
+    val contains: String? = null,
+    val startsWith: String? = null,
+    val endsWith: String? = null,
+    val matches: String? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+    @SerialName("_count")
+    val count: IntFilter? = null,
+    @SerialName("_max")
+    val max: StringFilter? = null,
+    @SerialName("_min")
+    val min: StringFilter? = null,
+)
+
+@Serializable
+data class StringNullableWithAggregatesFilter(
+    @Serializable(with=AnySerializer::class)
+    val equals: Any? = null,
+    val `in`: List<String>? = null,
+    val notIn: List<String>? = null,
+    val lt: String? = null,
+    val lte: String? = null,
+    val gt: String? = null,
+    val gte: String? = null,
+    val contains: String? = null,
+    val startsWith: String? = null,
+    val endsWith: String? = null,
+    val matches: String? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+    @SerialName("_count")
+    val count: IntNullableFilter? = null,
+    @SerialName("_max")
+    val max: StringNullableFilter? = null,
+    @SerialName("_min")
+    val min: StringNullableFilter? = null,
+)
+
+@Serializable
+data class BooleanFilter(
+    val equals: Boolean? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+)
+
+@Serializable
+data class BooleanNullableFilter(
+    @Serializable(with=AnySerializer::class)
+    val equals: Any? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+)
+
+@Serializable
+data class BooleanWithAggregatesFilter(
+    val equals: Boolean? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+    @SerialName("_count")
+    val count: IntFilter? = null,
+    @SerialName("_min")
+    val min: BooleanFilter? = null,
+    @SerialName("_max")
+    val max: BooleanFilter? = null,
+)
+
+@Serializable
+data class BooleanNullableWithAggregatesFilter(
+    @Serializable(with=AnySerializer::class)
+    val equals: Any? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+    @SerialName("_count")
+    val count: IntNullableFilter? = null,
+    @SerialName("_min")
+    val min: BooleanNullableFilter? = null,
+    @SerialName("_max")
+    val max: BooleanNullableFilter? = null,
+)
+
+@Serializable
+data class Filter<T>(
+    val equals: T? = null,
+    val `in`: List<T>? = null,
+    val notIn: List<T>? = null,
+    val lt: T? = null,
+    val lte: T? = null,
+    val gt: T? = null,
+    val gte: T? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+)
+
+@Serializable
+data class NullableFilter<T>(
+    @Serializable(with=AnySerializer::class)
+    val equals: Any? = null,
+    val `in`: List<T>? = null,
+    val notIn: List<T>? = null,
+    val lt: T? = null,
+    val lte: T? = null,
+    val gt: T? = null,
+    val gte: T? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+)
+
+@Serializable
+data class FilterWithAggregates<T, U>(
+    val equals: T? = null,
+    val `in`: List<T>? = null,
+    val notIn: List<T>? = null,
+    val lt: T? = null,
+    val lte: T? = null,
+    val gt: T? = null,
+    val gte: T? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+    @SerialName("_count")
+    val count: IntFilter? = null,
+    @SerialName("_min")
+    val min: U? = null,
+    @SerialName("_max")
+    val max: U? = null,
+)
+
+@Serializable
+data class NullableFilterWithAggregates<T, U>(
+    @Serializable(with=AnySerializer::class)
+    val equals: Any? = null,
+    val `in`: List<T>? = null,
+    val notIn: List<T>? = null,
+    val lt: T? = null,
+    val lte: T? = null,
+    val gt: T? = null,
+    val gte: T? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+    @SerialName("_count")
+    val count: IntNullableFilter? = null,
+    @SerialName("_min")
+    val min: U? = null,
+    @SerialName("_max")
+    val max: U? = null,
+)
+
+@Serializable
+data class NumberFilterWithAggregates<T, U>(
+    val equals: T? = null,
+    val `in`: List<T>? = null,
+    val notIn: List<T>? = null,
+    val lt: T? = null,
+    val lte: T? = null,
+    val gt: T? = null,
+    val gte: T? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+    @SerialName("_count")
+    val count: IntFilter? = null,
+    @SerialName("_sum")
+    val sum: U? = null,
+    @SerialName("_avg")
+    val avg: DoubleFilter? = null,
+    @SerialName("_min")
+    val min: U? = null,
+    @SerialName("_max")
+    val max: U? = null,
+)
+
+@Serializable
+data class NumberNullableFilterWithAggregates<T, U>(
+    @Serializable(with=AnySerializer::class)
+    val equals: Any? = null,
+    val `in`: List<T>? = null,
+    val notIn: List<T>? = null,
+    val lt: T? = null,
+    val lte: T? = null,
+    val gt: T? = null,
+    val gte: T? = null,
+    @Serializable(with=AnySerializer::class)
+    val not: Any? = null,
+    @SerialName("_count")
+    val count: IntNullableFilter? = null,
+    @SerialName("_sum")
+    val sum: U? = null,
+    @SerialName("_avg")
+    val avg: DoubleNullableFilter? = null,
+    @SerialName("_min")
+    val min: U? = null,
+    @SerialName("_max")
+    val max: U? = null,
+)
+
+typealias ObjectIdFilter = Filter<String>
+typealias ObjectIdNullableFilter = NullableFilter<String>
+typealias ObjectIdWithAggregatesFilter = FilterWithAggregates<String, StringFilter>
+typealias ObjectIdNullableWithAggregatesFilter = NullableFilterWithAggregates<String, StringNullableFilter>
+typealias IntFilter = Filter<Int>
+typealias IntNullableFilter = NullableFilter<Int>
+typealias IntWithAggregatesFilter = NumberFilterWithAggregates<Int, IntFilter>
+typealias IntNullableWithAggregatesFilter = NumberNullableFilterWithAggregates<Int, IntNullableFilter>
+typealias LongFilter = Filter<Long>
+typealias LongNullableFilter = NullableFilter<Long>
+typealias LongWithAggregatesFilter = NumberFilterWithAggregates<Long, LongFilter>
+typealias LongNullableWithAggregatesFilter = NumberNullableFilterWithAggregates<Long, LongNullableFilter>
+typealias FloatFilter = Filter<Float>
+typealias FloatNullableFilter = NullableFilter<Float>
+typealias FloatWithAggregatesFilter = NumberFilterWithAggregates<Float, FloatFilter>
+typealias FloatNullableWithAggregatesFilter = NumberNullableFilterWithAggregates<Float, FloatNullableFilter>
+typealias DoubleFilter = Filter<Double>
+typealias DoubleNullableFilter = NullableFilter<Double>
+typealias DoubleWithAggregatesFilter = NumberFilterWithAggregates<Double, DoubleFilter>
+typealias DoubleNullableWithAggregatesFilter = NumberNullableFilterWithAggregates<Double, DoubleNullableFilter>
+typealias BigDecimalFilter = Filter<@Contextual BigDecimal>
+typealias BigDecimalNullableFilter = NullableFilter<@Contextual BigDecimal>
+typealias BigDecimalWithAggregatesFilter = NumberFilterWithAggregates<@Contextual BigDecimal, @Contextual BigDecimalFilter>
+typealias BigDecimalNullableWithAggregatesFilter = NumberNullableFilterWithAggregates<@Contextual BigDecimal, @Contextual BigDecimalNullableFilter>
+typealias DateFilter = Filter<@Contextual LocalDate>
+typealias DateNullableFilter = NullableFilter<@Contextual LocalDate>
+typealias DateWithAggregatesFilter = FilterWithAggregates<@Contextual LocalDate, DateFilter>
+typealias DateNullableWithAggregatesFilter = FilterWithAggregates<@Contextual LocalDate, DateNullableFilter>
+typealias DateTimeFilter = Filter<@Contextual OffsetDateTime>
+typealias DateTimeNullableFilter = NullableFilter<@Contextual LocalDateTime>
+typealias DateTimeWithAggregatesFilter = FilterWithAggregates<@Contextual LocalDateTime, DateTimeFilter>
+typealias DateTimeNullableWithAggregatesFilter = FilterWithAggregates<@Contextual LocalDateTime, DateTimeNullableFilter>
 
 @OptIn(ExperimentalSerializationApi::class)
 val json_serializer = Json {
     explicitNulls = false
+    serializersModule = serializersModule.plus(SerializersModule {
+        contextual(BigDecimal::class, BigDecimalSerializer)
+        polymorphic(Any::class, BigDecimal::class, BigDecimalSerializer)
+        contextual(LocalDate::class, DateSerializer)
+        polymorphic(Any::class, LocalDate::class, DateSerializer)
+        contextual(OffsetDateTime::class, DateTimeSerializer)
+        polymorphic(Any::class, OffsetDateTime::class, DateTimeSerializer)
+    })
 }
