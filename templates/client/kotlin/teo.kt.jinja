@@ -9,6 +9,10 @@ import kotlinx.serialization.encoding.decodeStructure
 import kotlinx.serialization.json.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.plus
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -34,6 +38,16 @@ data class TokenInfo(val token: String)
 
 @Serializable
 data class TeoException(override val message: String, val type: String, val errors: Map<String, String>?) : Exception(message);
+
+inline fun<reified I, reified O> request(action: String, model: String, input: I, token: String? = null): O {
+    val client = OkHttpClient()
+    val builder = Request.Builder().url("http://localhost:5500/$model/action/$action");
+    if (token != null) {
+        builder.addHeader("Authorization", "Bearer $token")
+    }
+    val req = builder.post(json_serializer.encodeToString(input).toRequestBody("application/json".toMediaType())).build();
+    client.newCall(req).execute().use { response -> return json_serializer.decodeFromString(response.body!!.string()) }
+}
 
 @Serializable(NullSerializer::class)
 object NULL { }
@@ -486,3 +500,19 @@ data class {{ class.name() }}(
 )
     {%- endif %}
 {%- endfor %}
+{% for delegate in outline.delegates %}
+class {{ delegate.model_name }}Delegate(val token: String?) {
+  {%- for action in delegate.actions %}
+    fun {{ action.name }}(input: {{ delegate.model_name }}{{ action.name|capitalize_first }}Args): {{ action.response }} {
+        return request("{{ action.name }}", "{{ delegate.model_name }}", input, token)
+    }
+  {%- endfor %}
+}
+{% endfor %}
+class {{ conf.object_name|capitalize_first }}(token: String? = null) {
+  {%- for delegate in outline.delegates %}
+  val {{ delegate.model_name|camelcase }}: {{ delegate.model_name|capitalize_first }}Delegate = {{ delegate.model_name|capitalize_first }}Delegate(token)
+  {%- endfor %}
+}
+
+val {{ conf.object_name }} = {{ conf.object_name|capitalize_first }}()
