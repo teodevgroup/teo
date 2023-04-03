@@ -427,6 +427,37 @@ data class ArrayNullableFilter<T>(
     val length: Int? = null,
 )
 
+@Serializable
+data class NumberFieldUpdateOperationsInput<T>(
+    val set: T? = null,
+    val increment: T? = null,
+    val decrement: T? = null,
+    val multiply: T? = null,
+    val divide: T? = null,
+)
+
+@Serializable
+data class NullableNumberFieldUpdateOperationsInput<T>(
+    @Serializable(with=AnySerializer::class)
+    val set: Any? = null,
+    val increment: T? = null,
+    val decrement: T? = null,
+    val multiply: T? = null,
+    val divide: T? = null,
+)
+
+@Serializable
+data class ArrayFieldUpdateOperationsInput<T>(
+    val set: List<T>? = null,
+    val push: T? = null,
+)
+
+@Serializable
+data class NullableArrayFieldUpdateOperationsInput<T>(
+    @Serializable(with=AnySerializer::class) val set: Any? = null,
+    val push: T? = null,
+)
+
 @OptIn(ExperimentalSerializationApi::class)
 val json_serializer = Json {
     explicitNulls = false
