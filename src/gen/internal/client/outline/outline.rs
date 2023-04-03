@@ -52,7 +52,7 @@ impl<'a> Outline<'a> {
                                     if let Some(field) = m.field(key) {
                                         fields.push(Field {
                                             name: field.name(),
-                                            field_type: lookup.field_type_to_result_type(field.field_type(), false),
+                                            field_type: lookup.field_type_to_result_type(field.field_type()),
                                             optional: field.is_optional(),
                                             localized_name: Cow::Owned(field.localized_name()),
                                             docs: field.description().map(|d| Cow::Borrowed(d)).unwrap_or(Cow::Borrowed("")),
@@ -61,7 +61,7 @@ impl<'a> Outline<'a> {
                                     } else if let Some(property) = m.property(key) {
                                         fields.push(Field {
                                             name: property.name(),
-                                            field_type: lookup.field_type_to_result_type(property.field_type(), property.is_optional()),
+                                            field_type: lookup.field_type_to_result_type(property.field_type()),
                                             optional: property.is_optional(),
                                             localized_name: Cow::Owned(property.localized_name()),
                                             docs: property.description.as_ref().map(|s| Cow::Borrowed(s.as_str())).unwrap_or(Cow::Borrowed("")),
@@ -94,7 +94,7 @@ impl<'a> Outline<'a> {
                             docs: Cow::Owned(format!("Select fields from the {} model.", m.name().to_word_case())),
                             fields: m.output_keys().iter().filter_map(|k| m.field(k)).map(|f| Field {
                                 name: f.name(),
-                                field_type: lookup.field_type_to_result_type(f.field_type(), false),
+                                field_type: lookup.field_type_to_result_type(f.field_type()),
                                 optional: f.is_optional(),
                                 localized_name: Cow::Owned(f.localized_name()),
                                 docs: f.description().map(|d| Cow::Borrowed(d)).unwrap_or(Cow::Borrowed("")),
@@ -1136,7 +1136,6 @@ impl<'a> Outline<'a> {
 mod helper {
     use std::borrow::Cow;
     use inflector::Inflector;
-    use crate::core::field::r#type::FieldType;
     use crate::gen::internal::client::outline::field::Field;
     use crate::gen::internal::client::outline::field_kind::FieldKind;
     use crate::gen::internal::type_lookup::TypeLookup;

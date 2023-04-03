@@ -34,7 +34,7 @@ impl TypeLookup for DartTypes {
                 FieldType::Date => Cow::Borrowed("String"),
                 FieldType::DateTime => Cow::Borrowed("DateTime"),
                 FieldType::Enum(enum_def) => Cow::Borrowed(enum_def.name()),
-                FieldType::Vec(inner) => Cow::Owned("List<".to_owned() + self.field_type_to_result_type(inner.field_type(), inner.is_optional()).as_ref() + ">"),
+                FieldType::Vec(inner) => Cow::Owned("List<".to_owned() + self.field_type_to_result_type(inner.field_type()).as_ref() + ">"),
                 FieldType::HashMap(_) => unreachable!(),
                 FieldType::BTreeMap(_) => unreachable!(),
                 FieldType::Object(_) => unreachable!(),
@@ -66,8 +66,8 @@ impl TypeLookup for DartTypes {
         }
     }
 
-    fn field_type_to_result_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
-        let base: Cow<str> = match field_type {
+    fn field_type_to_result_type<'a>(&self, field_type: &'a FieldType) -> Cow<'a, str> {
+        match field_type {
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => Cow::Borrowed("String"),
             FieldType::String => Cow::Borrowed("String"),
@@ -80,15 +80,10 @@ impl TypeLookup for DartTypes {
             FieldType::Date => Cow::Borrowed("String"),
             FieldType::DateTime => Cow::Borrowed("DateTime"),
             FieldType::Enum(enum_def) => Cow::Owned(enum_def.name().to_string()),
-            FieldType::Vec(inner) => Cow::Owned("List<".to_owned() + self.field_type_to_result_type(inner.field_type(), inner.is_optional()).as_ref() + ">"),
+            FieldType::Vec(inner) => Cow::Owned("List<".to_owned() + self.field_type_to_result_type(inner.field_type()).as_ref() + ">"),
             FieldType::HashMap(_) => panic!(),
             FieldType::BTreeMap(_) => panic!(),
             FieldType::Object(name) => Cow::Owned(name.to_string()),
-        };
-        if optional {
-            Cow::Owned(base.as_ref().to_owned() + "?")
-        } else {
-            base
         }
     }
 

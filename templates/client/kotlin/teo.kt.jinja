@@ -470,3 +470,19 @@ val json_serializer = Json {
         polymorphic(Any::class, OffsetDateTime::class, DateTimeSerializer)
     })
 }
+{%- for class in outline.classes %}
+    {% if class.kind.is_any_kind_of_enum() %}
+enum class {{ class.name() }} {
+        {%- for field in class.fields %}
+    @SerialName("{{ field.name }}") {{ field.name|constantize }},
+        {%- endfor %}
+}
+    {% else %}
+@Serializable
+data class {{ class.name() }}(
+{%- for field in class.fields_optional_at_last() %}
+    val {{ field.name }}: {{ field.field_type }}{%- if field.optional || class.kind.is_output() %}? = null{%- endif %},
+{%- endfor %}
+)
+    {% endif %}
+{%- endfor %}

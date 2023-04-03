@@ -23,7 +23,7 @@ impl TypeLookup for SwiftTypes {
             FieldType::Date => if optional { Cow::Borrowed("DateNullableFilter") } else { Cow::Borrowed("DateFilter") },
             FieldType::DateTime => if optional { Cow::Borrowed("DateTimeNullableFilter") } else { Cow::Borrowed("DateTimeFilter") },
             FieldType::Enum(enum_def) => Cow::Owned("Enum".to_owned() + if optional { "Nullable" } else { "" } + "Filter<" + enum_def.name() + ">"),
-            FieldType::Vec(inner) => Cow::Owned("Array".to_owned() + if optional { "Nullable" } else { "" } + "Filter<" + self.field_type_to_result_type(inner.field_type(), true).as_ref() + if inner.is_optional() { "?" } else { "" } + ">"),
+            FieldType::Vec(inner) => Cow::Owned("Array".to_owned() + if optional { "Nullable" } else { "" } + "Filter<" + self.field_type_to_result_type(inner.field_type()).as_ref() + if inner.is_optional() { "?" } else { "" } + ">"),
             FieldType::HashMap(_) => unreachable!(),
             FieldType::BTreeMap(_) => unreachable!(),
             FieldType::Object(_) => unreachable!(),
@@ -47,7 +47,7 @@ impl TypeLookup for SwiftTypes {
             FieldType::Date => if optional { Cow::Borrowed("NullOr<String>") } else { Cow::Borrowed("String") },
             FieldType::DateTime => if optional { Cow::Borrowed("NullOr<Date>") } else { Cow::Borrowed("Date") },
             FieldType::Enum(enum_def) => if optional { Cow::Owned("NullOr<".to_owned() + enum_def.name() + ">") } else { Cow::Borrowed(enum_def.name()) },
-            FieldType::Vec(inner) => Cow::Owned((if optional { "NullOr<[" } else { "[" }).to_owned() + self.field_type_to_result_type(inner.field_type(), true).as_ref() + if inner.is_optional() { "?" } else { "" } + if optional { "]>" } else { ">" }),
+            FieldType::Vec(inner) => Cow::Owned((if optional { "NullOr<[" } else { "[" }).to_owned() + self.field_type_to_result_type(inner.field_type()).as_ref() + if inner.is_optional() { "?" } else { "" } + if optional { "]>" } else { ">" }),
             FieldType::HashMap(_) => unreachable!(),
             FieldType::BTreeMap(_) => unreachable!(),
             FieldType::Object(_) => unreachable!(),
@@ -67,14 +67,14 @@ impl TypeLookup for SwiftTypes {
             FieldType::Date => if optional { Cow::Borrowed("NullOr<String>") } else { Cow::Borrowed("String") },
             FieldType::DateTime => if optional { Cow::Borrowed("NullOr<Date>") } else { Cow::Borrowed("Date") },
             FieldType::Enum(enum_def) => if optional { Cow::Owned("NullOr<".to_owned() + enum_def.name() + ">") } else { Cow::Borrowed(enum_def.name()) },
-            FieldType::Vec(inner) => Cow::Owned((if optional { "NullOr<[" } else { "[" }).to_owned() + self.field_type_to_result_type(inner.field_type(), true).as_ref() + if inner.is_optional() { "?" } else { "" } + if optional { "]>" } else { ">" }),
+            FieldType::Vec(inner) => Cow::Owned((if optional { "NullOr<[" } else { "[" }).to_owned() + self.field_type_to_result_type(inner.field_type()).as_ref() + if inner.is_optional() { "?" } else { "" } + if optional { "]>" } else { ">" }),
             FieldType::HashMap(_) => unreachable!(),
             FieldType::BTreeMap(_) => unreachable!(),
             FieldType::Object(_) => unreachable!(),
         }
     }
 
-    fn field_type_to_result_type<'a>(&self, field_type: &'a FieldType, _optional: bool) -> Cow<'a, str> {
+    fn field_type_to_result_type<'a>(&self, field_type: &'a FieldType) -> Cow<'a, str> {
         match field_type {
             FieldType::ObjectId => Cow::Borrowed("String"),
             FieldType::Bool => Cow::Borrowed("Bool"),
@@ -87,7 +87,7 @@ impl TypeLookup for SwiftTypes {
             FieldType::Date => Cow::Borrowed("String"),
             FieldType::DateTime => Cow::Borrowed("Date"),
             FieldType::Enum(enum_def) => Cow::Borrowed(enum_def.name()),
-            FieldType::Vec(inner) => Cow::Owned("[".to_owned() + self.field_type_to_result_type(inner.field_type(), true).as_ref() + if inner.is_optional() { "?" } else { "" } + "]"),
+            FieldType::Vec(inner) => Cow::Owned("[".to_owned() + self.field_type_to_result_type(inner.field_type()).as_ref() + if inner.is_optional() { "?" } else { "" } + "]"),
             FieldType::HashMap(_) => unreachable!(),
             FieldType::BTreeMap(_) => unreachable!(),
             FieldType::Object(_) => unreachable!(),

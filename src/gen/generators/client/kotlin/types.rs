@@ -26,7 +26,7 @@ impl TypeLookup for KotlinTypes {
         todo!()
     }
 
-    fn field_type_to_result_type<'a>(&self, field_type: &'a FieldType, _optional: bool) -> Cow<'a, str> {
+    fn field_type_to_result_type<'a>(&self, field_type: &'a FieldType) -> Cow<'a, str> {
         match field_type {
             FieldType::ObjectId => Cow::Borrowed("String"),
             FieldType::Bool => Cow::Borrowed("Boolean"),
@@ -37,9 +37,9 @@ impl TypeLookup for KotlinTypes {
             FieldType::Decimal => Cow::Borrowed("Decimal"),
             FieldType::String => Cow::Borrowed("String"),
             FieldType::Date => Cow::Borrowed("LocalDate"),
-            FieldType::DateTime => Cow::Borrowed("Date"),
+            FieldType::DateTime => Cow::Borrowed("OffsetDateTime"),
             FieldType::Enum(enum_def) => Cow::Borrowed(enum_def.name()),
-            FieldType::Vec(inner) => Cow::Owned("List<".to_owned() + self.field_type_to_result_type(inner.field_type(), true).as_ref() + if inner.is_optional() { "?" } else { "" } + ">"),
+            FieldType::Vec(inner) => Cow::Owned("List<".to_owned() + self.field_type_to_result_type(inner.field_type()).as_ref() + if inner.is_optional() { "?" } else { "" } + ">"),
             FieldType::HashMap(_) => unreachable!(),
             FieldType::BTreeMap(_) => unreachable!(),
             FieldType::Object(_) => unreachable!(),
