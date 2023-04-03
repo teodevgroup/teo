@@ -477,12 +477,12 @@ enum class {{ class.name() }} {
     @SerialName("{{ field.name }}") {{ field.name|constantize }},
         {%- endfor %}
 }
-    {% else %}
+    {%- else %}
 @Serializable
 data class {{ class.name() }}(
 {%- for field in class.fields_optional_at_last() %}
-    val {{ field.name }}: {{ field.field_type }}{%- if field.optional || class.kind.is_output() %}? = null{%- endif %},
+    val {{ field.name|escape_kotlin }}: {{ field.field_type|type_annotation_kotlin }}{%- if field.optional || class.kind.is_output() %}? = null{%- endif %},
 {%- endfor %}
 )
-    {% endif %}
+    {%- endif %}
 {%- endfor %}
