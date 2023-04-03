@@ -50,15 +50,15 @@ impl CSharpTypes {
             FieldType::DateTime => format!("{prefix}DateTimeFieldUpdateOperationsInput"),
             FieldType::Bool => format!("{prefix}BoolFieldUpdateOperationsInput"),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 | FieldType::Decimal => {
-                let number_type = self.field_type_to_result_type(field_type, false);
+                let number_type = self.field_type_to_result_type(field_type);
                 format!("{prefix}NumberFieldUpdateOperationsInput<{number_type}>")
             },
             FieldType::Enum(_name) => {
-                let enum_type = self.field_type_to_result_type(field_type, false);
+                let enum_type = self.field_type_to_result_type(field_type);
                 format!("{prefix}EnumFieldUpdateOperationsInput<{enum_type}>")
             },
             FieldType::Vec(internal) => {
-                let internal_type = self.field_type_to_result_type(internal.field_type(), false);
+                let internal_type = self.field_type_to_result_type(internal.field_type());
                 let arr_prefix = array_prefix(&internal_type);
                 format!("{prefix}{arr_prefix}ArrayFieldUpdateOperationsInput<{internal_type}>")
             },
@@ -72,7 +72,7 @@ impl CSharpTypes {
 impl TypeLookup for CSharpTypes {
     fn field_type_to_filter_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
         let nullable = nullable_if_optional(optional);
-        let base_type = to_optional(&self.field_type_to_result_type(field_type, false), optional);
+        let base_type = to_optional(&self.field_type_to_result_type(field_type), optional);
         Cow::Owned(match field_type {
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => one_of(base_type, format!("ObjectId{nullable}Filter")),
@@ -81,15 +81,15 @@ impl TypeLookup for CSharpTypes {
             FieldType::DateTime => one_of(base_type, format!("DateTime{nullable}Filter")),
             FieldType::Bool => one_of(base_type, format!("Bool{nullable}Filter")),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 | FieldType::Decimal => {
-                let number_type = self.field_type_to_result_type(field_type, false);
+                let number_type = self.field_type_to_result_type(field_type);
                 one_of(base_type, format!("Number{nullable}Filter<{number_type}>"))
             },
             FieldType::Enum(_name) => {
-                let enum_type = self.field_type_to_result_type(field_type, false);
+                let enum_type = self.field_type_to_result_type(field_type);
                 one_of(base_type, format!("Enum{nullable}Filter<{enum_type}>"))
             },
             FieldType::Vec(internal) => {
-                let internal_type = self.field_type_to_result_type(internal.field_type(), false);
+                let internal_type = self.field_type_to_result_type(internal.field_type());
                 let prefix = array_prefix(internal_type.as_ref());
                 one_of(base_type, format!("{prefix}Array{nullable}Filter<{internal_type}>"))
             },
@@ -104,7 +104,7 @@ impl TypeLookup for CSharpTypes {
     }
 
     fn field_type_to_create_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
-        let mut retval = self.field_type_to_result_type(field_type, false);
+        let mut retval = self.field_type_to_result_type(field_type);
         if optional {
             retval = Cow::Owned(format!("Optional<{}>", retval.as_ref()));
         }
@@ -117,8 +117,8 @@ impl TypeLookup for CSharpTypes {
         Cow::Owned(one_of(create_input.as_ref(), operation_input))
     }
 
-    fn field_type_to_result_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
-        let base: Cow<str> = match field_type {
+    fn field_type_to_result_type<'a>(&self, field_type: &'a FieldType) -> Cow<'a, str> {
+        match field_type {
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => Cow::Borrowed("string"),
             FieldType::String => Cow::Borrowed("string"),
@@ -131,15 +131,10 @@ impl TypeLookup for CSharpTypes {
             FieldType::Date => Cow::Borrowed("DateOnly"),
             FieldType::DateTime => Cow::Borrowed("DateTime"),
             FieldType::Enum(enum_def) => Cow::Owned(enum_def.name().to_string()),
-            FieldType::Vec(inner) => Cow::Owned(self.field_type_to_result_type(inner.field_type(), inner.is_optional()).as_ref().to_owned() + "[]"),
+            FieldType::Vec(inner) => Cow::Owned(self.field_type_to_result_type(inner.field_type()).as_ref().to_owned() + "[]"),
             FieldType::HashMap(_) => panic!(),
             FieldType::BTreeMap(_) => panic!(),
             FieldType::Object(name) => Cow::Owned(name.to_string()),
-        };
-        if optional {
-            Cow::Owned(base.as_ref().to_owned() + "?")
-        } else {
-            base
         }
     }
 

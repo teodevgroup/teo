@@ -30,6 +30,11 @@ pub fn decapitalize<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     Ok(result)
 }
 
+pub fn constantize<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
+    let s = s.to_string();
+    Ok(s.to_snake_case().to_uppercase())
+}
+
 pub fn escape_swift<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     let s = s.to_string();
     if vec!["where", "break", "case", "continue", "catch", "default", "defer", "do", "else", "for", "fallthrough", "for", "in", "repeat", "guard", "while", "return", "throw"].contains(&s.as_str()) {
