@@ -27,4 +27,8 @@ impl Conf {
     pub(crate) fn inferred_package_name_snake_case(&self) -> String {
         self.inferred_package_name().to_snake_case()
     }
+
+    pub(crate) fn inferred_package_name_camel_case(&self) -> String {
+        self.inferred_package_name().to_camel_case()
+    }
 }

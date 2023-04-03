@@ -1,3 +1,4 @@
+use askama::filters::format;
 use inflector::Inflector;
 
 pub fn camelcase<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
@@ -65,5 +66,24 @@ pub fn escape_dart<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
             "NOT" => Ok("$not".to_owned()),
             _ => Ok(s),
         }
+    }
+}
+
+pub fn escape_kotlin<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
+    let s = s.to_string();
+    if ["is"].contains(&s.as_str()) {
+        Ok(format!("`{}`", s.as_str()))
+    } else {
+        Ok(s)
+    }
+}
+
+pub fn type_annotation_kotlin<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
+    let s = s.to_string();
+    match s.as_str() {
+        "Any" => Ok("@Serializable(AnySerializer::class) Any".to_string()),
+        "LocalDate" => Ok("@Serializable(DateSerializer::class) LocalDate".to_string()),
+        "OffsetDateTime" => Ok("@Serializable(DateTimeSerializer::class) OffsetDateTime".to_string()),
+        _ => Ok(s),
     }
 }

@@ -25,8 +25,8 @@ impl TypeLookup for KotlinTypes {
                 FieldType::F64 => Cow::Borrowed("DoubleNullableWithAggregatesFilter"),
                 FieldType::Decimal => Cow::Borrowed("BigDecimalNullableWithAggregatesFilter"),
                 FieldType::String => Cow::Borrowed("StringNullableWithAggregatesFilter"),
-                FieldType::Date => Cow::Borrowed("LocalDateNullableWithAggregatesFilter"),
-                FieldType::DateTime => Cow::Borrowed("OffsetDateTimeNullableWithAggregatesFilter"),
+                FieldType::Date => Cow::Borrowed("DateNullableWithAggregatesFilter"),
+                FieldType::DateTime => Cow::Borrowed("DateTimeNullableWithAggregatesFilter"),
                 _ => unreachable!(),
             }
         } else {
@@ -39,8 +39,8 @@ impl TypeLookup for KotlinTypes {
                 FieldType::F64 => Cow::Borrowed("DoubleWithAggregatesFilter"),
                 FieldType::Decimal => Cow::Borrowed("BigDecimalWithAggregatesFilter"),
                 FieldType::String => Cow::Borrowed("StringWithAggregatesFilter"),
-                FieldType::Date => Cow::Borrowed("LocalDateWithAggregatesFilter"),
-                FieldType::DateTime => Cow::Borrowed("OffsetDateTimeWithAggregatesFilter"),
+                FieldType::Date => Cow::Borrowed("DateWithAggregatesFilter"),
+                FieldType::DateTime => Cow::Borrowed("DateTimeWithAggregatesFilter"),
                 _ => unreachable!(),
             }
         }
@@ -89,7 +89,7 @@ impl TypeLookup for KotlinTypes {
         Cow::Owned("List<".to_owned() + generated_type.as_ref() + ">")
     }
 
-    fn generated_type_to_enumerate<'a>(&self, _generated_type: Cow<'a, str>) -> Cow<'a, str> {
+    fn generated_type_to_enumerate<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
         Cow::Owned("List<".to_owned() + generated_type.as_ref() + ">")
     }
 
@@ -101,7 +101,7 @@ impl TypeLookup for KotlinTypes {
         Cow::Borrowed("Any")
     }
 
-    fn action_result_type<'a>(&self, _action: Action, _model_name: &'a str) -> Cow<'a, str> {
+    fn action_result_type<'a>(&self, action: Action, model_name: &'a str) -> Cow<'a, str> {
         Cow::Owned(match action.to_u32() {
             FIND_UNIQUE_HANDLER => format!("Response<{model_name}>"),
             FIND_FIRST_HANDLER => format!("Response<{model_name}>"),
