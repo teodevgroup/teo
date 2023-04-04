@@ -355,15 +355,20 @@
 
 #### 0.0.55
 - Remove URL segment name **[DONE]**
-- Refactor the generator code to make it production ready
+- Refactor the generator code to make it production ready **[DONE]**
 - Swift client
+- Kotlin client **[DONE]**
 - Dart client **[DONE]**
+- C# client: refactor
+- TS client: refactor
 - Client: distinct in handler args
 - TypeScript client: correct return types for `aggregate` and `groupBy`
+- Generate decimal imports in rust entities **[DONE]**
+
+#### 0.0.56
 - Setup integration tests: reset database
 - Schema lang: dataset
 - Parser: parse dataset
-- Generate decimal imports in rust entities **[DONE]**
 - Cross language error handling for node.js @victorteokw
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection @victorteokw
 - Rewrite connector to support pooled connections @victorteokw
@@ -372,11 +377,9 @@
 - Log SQL queries
 - Migration dry run
 
-#### 0.0.56
+#### 0.0.57
 - Python server
 - Relation onUpdate
-
-#### 0.0.57
 - Relation onDelete
 
 #### 0.0.58
@@ -406,44 +409,25 @@
 - CLI mode: When running server, panic if custom programming callback is provided
 - Soft delete documentation
 
+#### 0.0.60
+- The copy action
+- PostgreSQL: Enum types
+- Input omissible and output omissible for generated clients
+
 #### 0.1.0
 - Linting, warnings and errors
 
-#### 0.1.1
-- The copy action
-
-#### 0.1.2
-- PostgreSQL: Enum types
-
-#### 0.1.3
+#### 0.2.0
 - Database type mapping for field, property and collection types' item field
 
-#### 0.2.0
+#### 0.2.5
 - Support MSSQL
 
-#### 0.2.1
-- Input omissible and output omissible for generated clients
-
-#### 0.2.2
+#### 0.2.8
 - Correct count with cursor
 
 #### 0.3.0
-- Kotlin package
-
-#### 0.4.0
-- Dart client
-
-#### 0.4.1
 - `@canAccess`
-
-#### 0.5.0
-- Plugins
-
-#### 0.6.0
-- Java server
-
-#### 0.7.0
-- Go server
 
 #### 1.0.0
 - First stable version
