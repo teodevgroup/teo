@@ -19,6 +19,14 @@ fn nullable_if_optional(optional: bool) -> &'static str {
     }
 }
 
+fn with_agg(agg: bool) -> &'static str {
+    if agg {
+        "WithAggregates"
+    } else {
+        ""
+    }
+}
+
 fn one_of(t0: impl AsRef<str>, t1: impl AsRef<str>) -> String {
     format!("OneOf<{}, {}>", t0.as_ref(), t1.as_ref())
 }
@@ -67,40 +75,46 @@ impl CSharpTypes {
             FieldType::Object(_name) => "Unimplemented".to_string(),
         }
     }
-}
 
-impl TypeLookup for CSharpTypes {
-    fn field_type_to_filter_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
+    fn internal_field_type_to_filter_type<'a>(&self, field_type: &'a FieldType, optional: bool, with_aggregates: bool) -> Cow<'a, str> {
         let nullable = nullable_if_optional(optional);
+        let aggregates = with_agg(with_aggregates);
+        let infix = nullable.to_owned() + aggregates;
         let base_type = to_optional(&self.field_type_to_result_type(field_type), optional);
         Cow::Owned(match field_type {
             #[cfg(feature = "data-source-mongodb")]
-            FieldType::ObjectId => one_of(base_type, format!("ObjectId{nullable}Filter")),
-            FieldType::String => one_of(base_type, format!("String{nullable}Filter")),
-            FieldType::Date => one_of(base_type, format!("DateOnly{nullable}Filter")),
-            FieldType::DateTime => one_of(base_type, format!("DateTime{nullable}Filter")),
-            FieldType::Bool => one_of(base_type, format!("Bool{nullable}Filter")),
+            FieldType::ObjectId => one_of(base_type, format!("RefComparable{infix}Filter<string>")),
+            FieldType::String => one_of(base_type, format!("String{infix}Filter")),
+            FieldType::Date => one_of(base_type, format!("RefComparable{infix}Filter<DateOnly>")),
+            FieldType::DateTime => one_of(base_type, format!("RefComparable{infix}Filter<DateTime>")),
+            FieldType::Bool => one_of(base_type, format!("Bool{infix}Filter")),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 | FieldType::Decimal => {
                 let number_type = self.field_type_to_result_type(field_type);
-                one_of(base_type, format!("Number{nullable}Filter<{number_type}>"))
+                one_of(base_type, format!("Comparable{infix}Filter<{number_type}>"))
             },
             FieldType::Enum(_name) => {
                 let enum_type = self.field_type_to_result_type(field_type);
-                one_of(base_type, format!("Enum{nullable}Filter<{enum_type}>"))
+                one_of(base_type, format!("Enum{infix}Filter<{enum_type}>"))
             },
             FieldType::Vec(internal) => {
                 let internal_type = self.field_type_to_result_type(internal.field_type());
                 let prefix = array_prefix(internal_type.as_ref());
-                one_of(base_type, format!("{prefix}Array{nullable}Filter<{internal_type}>"))
+                one_of(base_type, format!("{prefix}Array{infix}Filter<{internal_type}>"))
             },
             FieldType::HashMap(_) => panic!(),
             FieldType::BTreeMap(_) => panic!(),
             FieldType::Object(_name) => "Unimplemented".to_string(),
         })
     }
+}
+
+impl TypeLookup for CSharpTypes {
+    fn field_type_to_filter_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
+        self.internal_field_type_to_filter_type(field_type, optional, false)
+    }
 
     fn field_type_to_filter_with_aggregates_type<'a>(&self, field_type: &'a FieldType, nullable: bool) -> Cow<'a, str> {
-        todo!()
+        self.internal_field_type_to_filter_type(field_type, nullable, true)
     }
 
     fn field_type_to_create_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
@@ -143,7 +157,7 @@ impl TypeLookup for CSharpTypes {
     }
 
     fn generated_type_to_enumerate<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
-        Cow::Owned("Enumerate<".to_owned() + generated_type.as_ref() + ">")
+        Cow::Owned("Enumerable<".to_owned() + generated_type.as_ref() + ">")
     }
 
     fn generated_type_to_optional<'a>(&self, generated_type: Cow<'a, str>) -> Cow<'a, str> {
@@ -158,14 +172,14 @@ impl TypeLookup for CSharpTypes {
         Cow::Owned(match action.to_u32() {
             FIND_UNIQUE_HANDLER => format!("Response<{model_name}>"),
             FIND_FIRST_HANDLER => format!("Response<{model_name}>"),
-            FIND_MANY_HANDLER => format!("Response<PagingInfo, [{model_name}]>"),
+            FIND_MANY_HANDLER => format!("Response<PagingInfo, {model_name}[]>"),
             CREATE_HANDLER => format!("Response<{model_name}>"),
             UPDATE_HANDLER => format!("Response<{model_name}>"),
             UPSERT_HANDLER => format!("Response<{model_name}>"),
             DELETE_HANDLER => format!("Response<{model_name}>"),
-            CREATE_MANY_HANDLER => format!("Response<PagingInfo, RefArray<{model_name}>>"),
-            UPDATE_MANY_HANDLER => format!("Response<PagingInfo, RefArray<{model_name}>>"),
-            DELETE_MANY_HANDLER => format!("Response<PagingInfo, RefArray<{model_name}>>"),
+            CREATE_MANY_HANDLER => format!("Response<PagingInfo, {model_name}[]>"),
+            UPDATE_MANY_HANDLER => format!("Response<PagingInfo, {model_name}[]>"),
+            DELETE_MANY_HANDLER => format!("Response<PagingInfo, {model_name}[]>"),
             COUNT_HANDLER => format!("Response<long>"),
             AGGREGATE_HANDLER => format!("Response<{model_name}>"),
             GROUP_BY_HANDLER => format!("Response<{model_name}>"),
