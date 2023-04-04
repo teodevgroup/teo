@@ -2,7 +2,7 @@ TEO
 ===
 [![License][license-image]][license-url] [![PR Welcome][pr-image]][pr-url]
 
-**Next-generation** web framework for Rust, Node.js and Python.
+Next-generation web framework for Rust, Node.js and Python.
 
 Official site: https://teocloud.io
 
