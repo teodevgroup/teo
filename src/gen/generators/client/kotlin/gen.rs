@@ -58,20 +58,22 @@ impl Generator for KotlinClientGenerator {
         let mut has_project = false;
         for file in ["build.gradle", "build.gradle.kts"] {
             let proj_file = base.join(file);
-            if proj_file.exists() { has_project = true; }
+            if proj_file.exists() { has_project = true; break; }
         }
         if has_project {
 
         } else {
             let saved_cwd = env::current_dir().unwrap();
             env::set_current_dir(base).unwrap();
-            green_message("run", "`gradle init --type basic`".to_owned());
-            Command::new("gradle").arg("init").arg("--type").arg("basic").spawn()?.wait()?;
-            env::set_current_dir(saved_cwd).unwrap();
-            generator.generate_file(".gitignore", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/kotlin/gitignore"))).await?;
-            generator.generate_file("README.md", KotlinReadMeTemplate { conf: ctx.conf }.render().unwrap()).await?;
-            generator.generate_file("build.gradle.kts", KotlinBuildGradleTemplate { conf: ctx.conf }.render().unwrap()).await?;
-            generator.generate_file("settings.gradle.kts", KotlinSettingsGradleTemplate { conf: ctx.conf }.render().unwrap()).await?;
+            green_message("run", format!("`gradle init --type basic --dsl kotlin --project-name {}`", ctx.conf.inferred_package_name_camel_case()));
+            let exit_status = Command::new("gradle").arg("init").arg("--type").arg("basic").arg("--dsl").arg("kotlin").arg("--project-name").arg(ctx.conf.inferred_package_name_camel_case()).spawn()?.wait()?;
+            if exit_status.success() {
+                env::set_current_dir(saved_cwd).unwrap();
+                generator.generate_file(".gitignore", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/kotlin/gitignore"))).await?;
+                generator.generate_file("README.md", KotlinReadMeTemplate { conf: ctx.conf }.render().unwrap()).await?;
+                generator.generate_file("build.gradle.kts", KotlinBuildGradleTemplate { conf: ctx.conf }.render().unwrap()).await?;
+                generator.generate_file("settings.gradle.kts", KotlinSettingsGradleTemplate { conf: ctx.conf }.render().unwrap()).await?;
+            }
         }
         Ok(())
     }
