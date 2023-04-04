@@ -1,4 +1,3 @@
-use askama::filters::format;
 use inflector::Inflector;
 
 pub fn camelcase<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
