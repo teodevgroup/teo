@@ -96,6 +96,154 @@ namespace Teo {
         }
     }
 
+    public class ComparableWithAggregatesFilter<T> where T : struct {
+        public new T? Equals { get; set; }
+        public T[]? In { get; set; }
+        public T[]? NotIn { get; set; }
+        public T? Lt { get; set; }
+        public T? Lte { get; set; }
+        public T? Gt { get; set; }
+        public T? Gte { get; set; }
+        public OneOf<T, ComparableWithAggregatesFilter<T>>? Not { get; set; }
+        public ComparableFilter<int>? _Equals { get; set; }
+        public ComparableFilter<T>? _Min { get; set; }
+        public ComparableFilter<T>? _Max { get; set; }
+        public ComparableWithAggregatesFilter(
+            T? equals = null,
+            OneOf<T, ComparableWithAggregatesFilter<T>>? not = null,
+            T[]? @in = null,
+            T[]? notIn = null,
+            T? lt = null,
+            T? lte = null,
+            T? gt = null,
+            T? gte = null,
+            ComparableFilter<int>? _equals = null,
+            ComparableFilter<T>? _min = null,
+            ComparableFilter<T>? _max = null
+        ) {
+            Equals = equals;
+            Not = not;
+            In = @in;
+            NotIn = notIn;
+            Lt = lt;
+            Lte = lte;
+            Gt = gt;
+            Gte = gte;
+            _Equals = _equals;
+            _Min = _min;
+            _Max = _max;
+        }
+    }
+
+    public class ComparableNullableWithAggregatesFilter<T> where T : struct {
+        public new Optional<T>? Equals { get; set; }
+        public Optional<T>[]? In { get; set; }
+        public Optional<T>[]? NotIn { get; set; }
+        public T? Lt { get; set; }
+        public T? Lte { get; set; }
+        public T? Gt { get; set; }
+        public T? Gte { get; set; }
+        public OneOf<T, ComparableNullableWithAggregatesFilter<T>>? Not { get; set; }
+        public ComparableNullableFilter<int>? _Equals { get; set; }
+        public ComparableNullableFilter<T>? _Min { get; set; }
+        public ComparableNullableFilter<T>? _Max { get; set; }
+        public ComparableNullableWithAggregatesFilter(
+            Optional<T>? equals = null,
+            OneOf<T, ComparableNullableWithAggregatesFilter<T>>? not = null,
+            Optional<T>[]? @in = null,
+            Optional<T>[]? notIn = null,
+            T? lt = null,
+            T? lte = null,
+            T? gt = null,
+            T? gte = null,
+            ComparableNullableFilter<int>? _equals = null,
+            ComparableNullableFilter<T>? _min = null,
+            ComparableNullableFilter<T>? _max = null
+        ) {
+            Equals = equals;
+            Not = not;
+            In = @in;
+            NotIn = notIn;
+            Lt = lt;
+            Lte = lte;
+            Gt = gt;
+            Gte = gte;
+            _Equals = _equals;
+            _Min = _min;
+            _Max = _max;
+        }
+    }
+
+    public class NumberWithAggregatesFilter<T> : ComparableWithAggregatesFilter<T> where T : struct {
+        public new OneOf<T, NumberWithAggregatesFilter<T>>? Not { get; set; }
+        public ComparableFilter<T>? _Sum { get; set; }
+        public ComparableFilter<double>? _Avg { get; set; }
+        public NumberWithAggregatesFilter(
+            T? equals = null,
+            OneOf<T, NumberWithAggregatesFilter<T>>? not = null,
+            T[]? @in = null,
+            T[]? notIn = null,
+            T? lt = null,
+            T? lte = null,
+            T? gt = null,
+            T? gte = null,
+            ComparableFilter<int>? _equals = null,
+            ComparableFilter<T>? _min = null,
+            ComparableFilter<T>? _max = null,
+            ComparableFilter<T>? _sum = null,
+            ComparableFilter<double>? _avg = null
+        ) {
+            Equals = equals;
+            Not = not;
+            In = @in;
+            NotIn = notIn;
+            Lt = lt;
+            Lte = lte;
+            Gt = gt;
+            Gte = gte;
+            _Equals = _equals;
+            _Min = _min;
+            _Max = _max;
+            _Sum = _sum;
+            _Avg = _avg;
+        }
+    }
+
+    public class NumberNullableWithAggregatesFilter<T> : ComparableNullableWithAggregatesFilter<T> where T : struct {
+        public new OneOf<T, NumberNullableWithAggregatesFilter<T>>? Not { get; set; }
+        public ComparableNullableFilter<T>? _Sum { get; set; }
+        public ComparableNullableFilter<double>? _Avg { get; set; }
+        public NumberNullableWithAggregatesFilter(
+            Optional<T>? equals = null,
+            OneOf<T, NumberNullableWithAggregatesFilter<T>>? not = null,
+            Optional<T>[]? @in = null,
+            Optional<T>[]? notIn = null,
+            T? lt = null,
+            T? lte = null,
+            T? gt = null,
+            T? gte = null,
+            ComparableNullableFilter<int>? _equals = null,
+            ComparableNullableFilter<T>? _min = null,
+            ComparableNullableFilter<T>? _max = null,
+            ComparableNullableFilter<T>? _sum = null,
+            ComparableNullableFilter<double>? _avg = null
+        ) {
+            Equals = equals;
+            Not = not;
+            In = @in;
+            NotIn = notIn;
+            Lt = lt;
+            Lte = lte;
+            Gt = gt;
+            Gte = gte;
+            _Equals = _equals;
+            _Min = _min;
+            _Max = _max;
+            _Sum = _sum;
+            _Avg = _avg;
+        }
+    }
+
     public class RefComparableFilter<T> where T : class {
         public new T? Equals { get; set; }
         public T[]? In { get; set; }
@@ -156,6 +304,84 @@ namespace Teo {
         }
     }
 
+    public class RefComparableWithAggregatesFilter<T> where T : class {
+        public new T? Equals { get; set; }
+        public T[]? In { get; set; }
+        public T[]? NotIn { get; set; }
+        public T? Lt { get; set; }
+        public T? Lte { get; set; }
+        public T? Gt { get; set; }
+        public T? Gte { get; set; }
+        public OneOf<T, RefComparableWithAggregatesFilter<T>>? Not { get; set; }
+        public ComparableFilter<int>? _Count { get; set; }
+        public RefComparableFilter<T>? _Min { get; set; }
+        public RefComparableFilter<T>? _Max { get; set; }
+        public RefComparableWithAggregatesFilter(
+            T? equals = null,
+            OneOf<T, RefComparableWithAggregatesFilter<T>>? not = null,
+            T[]? @in = null,
+            T[]? notIn = null,
+            T? lt = null,
+            T? lte = null,
+            T? gt = null,
+            T? gte = null,
+            ComparableFilter<int>? _count = null,
+            RefComparableFilter<T>? _min = null,
+            RefComparableFilter<T>? _max = null
+        ) {
+            Equals = equals;
+            Not = not;
+            In = @in;
+            NotIn = notIn;
+            Lt = lt;
+            Lte = lte;
+            Gt = gt;
+            Gte = gte;
+            _Count = _count;
+            _Min = _min;
+            _Max = _max;
+        }
+    }
+
+    public class RefComparableNullableWithAggregatesFilter<T> where T : class {
+        public new Optional<T>? Equals { get; set; }
+        public Optional<T>[]? In { get; set; }
+        public Optional<T>[]? NotIn { get; set; }
+        public T? Lt { get; set; }
+        public T? Lte { get; set; }
+        public T? Gt { get; set; }
+        public T? Gte { get; set; }
+        public OneOf<T, RefComparableNullableWithAggregatesFilter<T>>? Not { get; set; }
+        public ComparableNullableFilter<int>? _Count { get; set; }
+        public RefComparableNullableFilter<T>? _Min { get; set; }
+        public RefComparableNullableFilter<T>? _Max { get; set; }
+        public RefComparableNullableWithAggregatesFilter(
+            Optional<T>? equals = null,
+            OneOf<T, RefComparableNullableWithAggregatesFilter<T>>? not = null,
+            Optional<T>[]? @in = null,
+            Optional<T>[]? notIn = null,
+            T? lt = null,
+            T? lte = null,
+            T? gt = null,
+            T? gte = null,
+            ComparableNullableFilter<int>? _count = null,
+            RefComparableNullableFilter<T>? _min = null,
+            RefComparableNullableFilter<T>? _max = null
+        ) {
+            Equals = equals;
+            Not = not;
+            In = @in;
+            NotIn = notIn;
+            Lt = lt;
+            Lte = lte;
+            Gt = gt;
+            Gte = gte;
+            _Count = _count;
+            _Min = _min;
+            _Max = _max;
+        }
+    }
+
     public class BoolFilter {
         public new bool? Equals { get; set; }
         public OneOf<bool, BoolFilter>? Not { get; set; }
@@ -171,6 +397,48 @@ namespace Teo {
         public BoolNullableFilter(Optional<bool>? equals = null, OneOf<Optional<bool>, BoolNullableFilter>? not = null) {
             Equals = equals;
             Not = not;
+        }
+    }
+
+    public class BoolWithAggregatesFilter {
+        public new bool? Equals { get; set; }
+        public OneOf<bool, BoolWithAggregatesFilter>? Not { get; set; }
+        public ComparableFilter<int>? _Count { get; set; }
+        public BoolFilter? _Min { get; set; }
+        public BoolFilter? _Max { get; set; }
+        public BoolWithAggregatesFilter(
+            bool? equals = null,
+            OneOf<bool, BoolWithAggregatesFilter>? not = null,
+            ComparableFilter<int>? _count = null,
+            BoolFilter? _min = null,
+            BoolFilter? _max = null
+        ) {
+            Equals = equals;
+            Not = not;
+            _Count = _count;
+            _Min = _min;
+            _Max = _max;
+        }
+    }
+
+    public class BoolNullableWithAggregatesFilter {
+        public new Optional<bool>? Equals { get; set; }
+        public OneOf<bool, BoolNullableWithAggregatesFilter>? Not { get; set; }
+        public ComparableNullableFilter<int>? _Count { get; set; }
+        public BoolNullableFilter? _Min { get; set; }
+        public BoolNullableFilter? _Max { get; set; }
+        public BoolNullableWithAggregatesFilter(
+            bool? equals = null,
+            OneOf<bool, BoolNullableWithAggregatesFilter>? not = null,
+            ComparableNullableFilter<int>? _count = null,
+            BoolNullableFilter? _min = null,
+            BoolNullableFilter? _max = null
+        ) {
+            Equals = equals;
+            Not = not;
+            _Count = _count;
+            _Min = _min;
+            _Max = _max;
         }
     }
 
@@ -241,6 +509,92 @@ namespace Teo {
             EndsWith = endsWith;
             Matches = matches;
             Not = not;
+        }
+    }
+
+    public class StringWithAggregatesFilter : RefComparableWithAggregatesFilter<string> {
+        public string? Contains { get; set; }
+        public string? StartsWith { get; set; }
+        public string? EndsWith { get; set; }
+        public string? Matches { get; set; }
+        public new OneOf<string, StringWithAggregatesFilter>? Not { get; set; }
+        public new StringFilter? _Min { get; set; }
+        public new StringFilter? _Max { get; set; }
+        public StringWithAggregatesFilter(
+            string? equals = null,
+            string[]? @in = null,
+            string[]? notIn = null,
+            string? lt = null,
+            string? lte = null,
+            string? gt = null,
+            string? gte = null,
+            string? contains = null,
+            string? startsWith = null,
+            string? endsWith = null,
+            string? matches = null,
+            OneOf<string, StringWithAggregatesFilter>? not = null,
+            ComparableFilter<int>? _count = null,
+            StringFilter? _min = null,
+            StringFilter? _max = null
+        ) {
+            Equals = equals;
+            In = @in;
+            NotIn = notIn;
+            Lt = lt;
+            Lte = lte;
+            Gt = gt;
+            Gte = gte;
+            Contains = contains;
+            StartsWith = startsWith;
+            EndsWith = endsWith;
+            Matches = matches;
+            Not = not;
+            _Count = _count;
+            _Min = _min;
+            _Max = _max;
+        }
+    }
+
+    public class StringNullableWithAggregatesFilter : RefComparableNullableWithAggregatesFilter<string> {
+        public string? Contains { get; set; }
+        public string? StartsWith { get; set; }
+        public string? EndsWith { get; set; }
+        public string? Matches { get; set; }
+        public new OneOf<string, StringNullableWithAggregatesFilter>? Not { get; set; }
+        public new StringNullableFilter? _Min { get; set; }
+        public new StringNullableFilter? _Max { get; set; }
+        public StringNullableWithAggregatesFilter(
+            Optional<string>? equals = null,
+            Optional<string>[]? @in = null,
+            Optional<string>[]? notIn = null,
+            string? lt = null,
+            string? lte = null,
+            string? gt = null,
+            string? gte = null,
+            string? contains = null,
+            string? startsWith = null,
+            string? endsWith = null,
+            string? matches = null,
+            OneOf<string, StringNullableWithAggregatesFilter>? not = null,
+            ComparableFilter<int>? _count = null,
+            StringNullableFilter? _min = null,
+            StringNullableFilter? _max = null
+        ) {
+            Equals = equals;
+            In = @in;
+            NotIn = notIn;
+            Lt = lt;
+            Lte = lte;
+            Gt = gt;
+            Gte = gte;
+            Contains = contains;
+            StartsWith = startsWith;
+            EndsWith = endsWith;
+            Matches = matches;
+            Not = not;
+            _Count = _count;
+            _Min = _min;
+            _Max = _max;
         }
     }
 
@@ -538,7 +892,7 @@ namespace Teo {
 }
 
 // Operations
-
+#nullable enable
 namespace Teo {
     public class ObjectIdFieldUpdateOperationsInput {
         public string? Set { get; set; }
@@ -768,7 +1122,7 @@ namespace Teo {
 namespace Teo {
 {%- for class in outline.classes %}
     {%- if class.kind.is_any_kind_of_enum() %}
-    public enum {{ class.model_name }} {
+    public enum {{ class.name() }} {
         {%- for field in class.fields %}
         {{ field.name|pascalcase }} = {{ loop.index }},
         {%- endfor %}
@@ -776,7 +1130,7 @@ namespace Teo {
     {%- else %}
     public class {{ class.model_name }}{{ class.name_suffix }} {
         {%- for field in class.fields_optional_at_last() %}
-        public {{ field.field_type }}{%- if field.optional || class.kind.is_output() %}?{%- endif %} {{ field.name|capitalize }} { get; set; }
+        public {{ field.field_type }}{%- if field.optional || class.kind.is_output() %}?{%- endif %} {{ field.name|capitalize_first }} { get; set; }
         {%- endfor %}
         public {{ class.model_name }}{{ class.name_suffix }}(
         {%- for field in class.fields_optional_at_last() %}
@@ -784,7 +1138,7 @@ namespace Teo {
         {%- endfor %}
         ) {
         {%- for field in class.fields_optional_at_last() %}
-            {{ field.name|capitalize }} = {{ field.name|escape_csharp }};
+            {{ field.name|capitalize_first }} = {{ field.name|escape_csharp }};
         {%- endfor %}
         }
     }
@@ -960,7 +1314,7 @@ namespace Teo {
 
 {%- for class in outline.classes %}
     {%- if class.kind.is_any_kind_of_enum() %}
-    public class {{ class.model_name }}JsonConverter : JsonConverter<{{ class.model_name }}> {
+    public class {{ class.name() }}JsonConverter : JsonConverter<{{ class.name() }}> {
         public override {{ class.model_name }} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
             switch (reader.GetString()) {
         {%- for field in class.fields %}
@@ -1000,7 +1354,7 @@ namespace Teo {
             options.Converters.Add(new SortOrderJsonConverter());
 {%- for class in outline.classes %}
     {%- if class.kind.is_any_kind_of_enum() %}
-            options.Converters.Add(new {{ class.model_name }}JsonConverter());
+            options.Converters.Add(new {{ class.name() }}JsonConverter());
     {%- endif %}
 {%- endfor %}
             return options;

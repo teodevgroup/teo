@@ -34,10 +34,6 @@ fn one_of(t0: impl AsRef<str>, t1: impl AsRef<str>) -> String {
 fn array_prefix(t: &str) -> &str {
     if t == "string" {
         "Ref"
-    } else if t == "DateOnly" {
-        "Ref"
-    } else if t == "DateTime" {
-        "Ref"
     } else {
         "Value"
     }
@@ -85,12 +81,16 @@ impl CSharpTypes {
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => one_of(base_type, format!("RefComparable{infix}Filter<string>")),
             FieldType::String => one_of(base_type, format!("String{infix}Filter")),
-            FieldType::Date => one_of(base_type, format!("RefComparable{infix}Filter<DateOnly>")),
-            FieldType::DateTime => one_of(base_type, format!("RefComparable{infix}Filter<DateTime>")),
+            FieldType::Date => one_of(base_type, format!("Comparable{infix}Filter<DateOnly>")),
+            FieldType::DateTime => one_of(base_type, format!("Comparable{infix}Filter<DateTime>")),
             FieldType::Bool => one_of(base_type, format!("Bool{infix}Filter")),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 | FieldType::Decimal => {
                 let number_type = self.field_type_to_result_type(field_type);
-                one_of(base_type, format!("Comparable{infix}Filter<{number_type}>"))
+                if with_aggregates {
+                    one_of(base_type, format!("Number{infix}Filter<{number_type}>"))
+                } else {
+                    one_of(base_type, format!("Comparable{infix}Filter<{number_type}>"))
+                }
             },
             FieldType::Enum(_name) => {
                 let enum_type = self.field_type_to_result_type(field_type);
