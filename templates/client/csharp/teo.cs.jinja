@@ -1370,12 +1370,12 @@ namespace Teo {
     {%- for delegate in outline.delegates %}
         public class {{ delegate.model_name }}Delegate : Delegate {
             readonly string? _Token;
-            protected internal AdminDelegate(string? token = null) {
+            protected internal {{ delegate.model_name }}Delegate(string? token = null) {
                 _Token = token;
             }
     {%- for action in delegate.actions %}
             public async Task<{{ action.response }}> {{ action.name|capitalize_first }}({{ delegate.model_name }}{{ action.name|capitalize_first }}Args args) {
-                return await Request<{{ action.response }}>("{{ delegate.model_name }}", "{{ action.name }}", args);
+                return await Request<{{ action.response }}>("{{ delegate.model_name }}", "{{ action.name }}", args, _Token);
             }
     {%- endfor %}
         }
