@@ -3,7 +3,6 @@ pub mod r#type;
 
 use async_trait::async_trait;
 use crate::gen::generators::client::typescript::pkg::src::index_d_ts::generate_index_d_ts;
-
 use crate::gen::generators::client::typescript::pkg::gitignore::generate_gitignore_ts;
 use crate::gen::generators::client::typescript::pkg::package_json::{generate_package_json, update_package_json};
 use crate::gen::generators::client::typescript::pkg::readme::generate_readme_ts;
@@ -26,10 +25,7 @@ impl Generator for TypeScriptClientGenerator {
     }
 
     async fn generate_module_files(&self, _ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
-        generator.ensure_root_directory().await?;
-        generator.clear_root_directory().await?;
-        generator.generate_file("decimal.js", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/ts/src/decimal.js"))).await?;
-        generator.generate_file("decimal.d.ts", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/ts/src/decimal.d.ts"))).await
+        generator.clear_root_directory().await
     }
 
     async fn generate_package_files(&self, _ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {

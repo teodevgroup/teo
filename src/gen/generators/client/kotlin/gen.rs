@@ -8,6 +8,12 @@ use crate::gen::internal::file_util::FileUtil;
 use crate::gen::internal::filters;
 
 #[derive(Template)]
+#[template(path = "client/kotlin/readme.md.jinja", escape = "none")]
+pub(self) struct KotlinReadMeTemplate<'a> {
+    pub(self) conf: &'a Conf,
+}
+
+#[derive(Template)]
 #[template(path = "client/kotlin/teo.kt.jinja", escape = "none")]
 pub(self) struct KotlinMainTemplate<'a> {
     pub(self) outline: &'a Outline<'a>,
@@ -31,13 +37,15 @@ impl Generator for KotlinClientGenerator {
         Ok(())
     }
 
-    async fn generate_package_files(&self, _ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_package_files(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
+        generator.generate_file(".gitignore", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/kotlin/gitignore"))).await?;
+        generator.generate_file("README.md", KotlinReadMeTemplate { conf: ctx.conf }.render().unwrap()).await?;
         Ok(())
     }
 
     async fn generate_main(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
-        generator.generate_file(format!("{}.kt", ctx.conf.inferred_package_name_snake_case()), KotlinMainTemplate {
+        generator.generate_file(format!("{}.kt", ctx.conf.inferred_package_name_camel_case()), KotlinMainTemplate {
             outline: &ctx.outline,
             conf: ctx.conf,
         }.render().unwrap()).await?;
