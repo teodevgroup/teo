@@ -421,7 +421,7 @@ impl Display for {model_name} {{
                         for choice in e.variants() {
                             b.line(format!("\"{}\" => Ok({enum_name}::{}),", choice.name(), choice.name()));
                         }
-                        b.line(format!("_ => Err(Error::custom_error(format!(\"Cannot convert value '{{}}' to `{enum_name}'.\", s))),"));
+                        b.line(format!("_ => Err(Error::custom_internal_server_error(format!(\"Cannot convert value '{{}}' to `{enum_name}'.\", s))),"));
                     }, "}");
                 }, "}");
             }, "}");

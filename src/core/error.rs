@@ -16,7 +16,6 @@ pub(crate) enum ErrorType {
     UnknownDatabaseDeleteError,
     UnknownDatabaseFindError,
     UnknownDatabaseFindUniqueError,
-    UnknownDatabaseCountError,
     WrongIdentityModel,
     PropertySetterError,
 
@@ -44,9 +43,6 @@ pub(crate) enum ErrorType {
     // response destination
     ObjectNotFound,
 
-    // response output
-    UnexpectedOutputException,
-
     // object api
     InvalidKey,
     InvalidOperation,
@@ -68,7 +64,6 @@ impl ErrorType {
             ErrorType::UnknownDatabaseDeleteError => { 500 }
             ErrorType::UnknownDatabaseFindError => { 500 }
             ErrorType::UnknownDatabaseFindUniqueError => { 500 }
-            ErrorType::UnknownDatabaseCountError => { 500 }
             ErrorType::DestinationNotFound => { 404 }
             ErrorType::InternalServerError => { 500 }
             ErrorType::ObjectNotFound => { 404 }
@@ -85,7 +80,6 @@ impl ErrorType {
             ErrorType::InvalidKey => { 500 }
             ErrorType::InvalidOperation => { 500 }
             ErrorType::PermissionError => { 401 }
-            ErrorType::UnexpectedOutputException => { 500 }
             ErrorType::DeletionDenied => { 400 }
             ErrorType::RecordDecodingError => { 500 }
         }
@@ -195,14 +189,6 @@ impl Error {
         Error {
             r#type: ErrorType::UnknownDatabaseFindUniqueError,
             message: "An unknown query unique error occurred.".to_string(),
-            errors: None
-        }
-    }
-
-    pub(crate) fn unknown_database_count_error() -> Self {
-        Error {
-            r#type: ErrorType::UnknownDatabaseCountError,
-            message: "An unknown count error occurred.".to_string(),
             errors: None
         }
     }
@@ -342,14 +328,6 @@ impl Error {
             r#type: ErrorType::InvalidOperation,
             message: reason.as_ref().to_string(),
             errors: None
-        }
-    }
-
-    pub(crate) fn unexpected_output_exception<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl AsRef<str>) -> Self {
-        Error {
-            r#type: ErrorType::UnexpectedOutputException,
-            message: format!("Unexpected output exception."),
-            errors: Some(hashmap!{path.as_ref().to_string() => reason.as_ref().to_string()})
         }
     }
 
