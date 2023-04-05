@@ -359,7 +359,7 @@
 - Swift client
 - Kotlin client **[DONE]**
 - Dart client **[DONE]**
-- C# client: refactor
+- C# client: refactor **[DONE]**
 - TS client: refactor
 - Client: distinct in handler args
 - TypeScript client: correct return types for `aggregate` and `groupBy`
