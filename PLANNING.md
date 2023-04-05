@@ -365,11 +365,12 @@
 - C# client: capitalized names and names with underscore
 - TypeScript client: correct return types for `aggregate` and `groupBy`
 - Generate decimal imports in rust entities **[DONE]**
-
-#### 0.0.56
-- Setup integration tests: reset database
 - Schema lang: dataset
 - Parser: parse dataset
+- Data seeding
+- Setup integration tests: reset after each request
+
+#### 0.0.56
 - Cross language error handling for node.js @victorteokw
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection @victorteokw
 - Rewrite connector to support pooled connections @victorteokw
