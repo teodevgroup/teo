@@ -1315,11 +1315,11 @@ namespace Teo {
 {%- for class in outline.classes %}
     {%- if class.kind.is_any_kind_of_enum() %}
     public class {{ class.name() }}JsonConverter : JsonConverter<{{ class.name() }}> {
-        public override {{ class.model_name }} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+        public override {{ class.name() }} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
             switch (reader.GetString()) {
         {%- for field in class.fields %}
                 case "{{ field.name }}": {
-                    return {{ class.model_name }}.{{ field.name|pascalcase}};
+                    return {{ class.name() }}.{{ field.name|pascalcase}};
                 }
         {%- endfor %}
             }
@@ -1328,7 +1328,7 @@ namespace Teo {
         public override void Write(Utf8JsonWriter writer, Sex value, JsonSerializerOptions options) {
             switch (value) {
         {%- for field in class.fields %}
-                case {{ class.model_name }}.{{ field.name|pascalcase}}: {
+                case {{ class.name() }}.{{ field.name|pascalcase}}: {
                     writer.WriteStringValue("{{ field.name }}");
                     return;
                }
