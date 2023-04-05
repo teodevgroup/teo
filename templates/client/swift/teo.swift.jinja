@@ -52,9 +52,16 @@ private func request<I: Encodable, O: Decodable>(model: String, action: String, 
     return try! JSONDecoder().decode(O.self, from: data)
 }
 
-struct AnyEncodable: Encodable {
+public struct AnyEncodable: Encodable {
+    static func from(value: Encodable?) -> Self? {
+        if let value {
+            return Self(value: value)
+        } else {
+            return nil
+        }
+    }
     let value: any Encodable
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try! container.encode(value)
     }
@@ -110,7 +117,7 @@ public class NumberFilter<T: Encodable>: Encodable {
     public let lte: T?
     public let gt: T?
     public let gte: T?
-    public let not: NumberFilter<T>?
+    public let not: AnyEncodable?
     public init(
         equals: T? = nil,
         `in`: [T]? = nil,
@@ -119,7 +126,7 @@ public class NumberFilter<T: Encodable>: Encodable {
         lte: T? = nil,
         gt: T? = nil,
         gte: T? = nil,
-        not: NumberFilter<T>? = nil
+        not: Encodable? = nil
     ) {
         self.equals = equals
         self.in = `in`
@@ -128,7 +135,7 @@ public class NumberFilter<T: Encodable>: Encodable {
         self.lte = lte
         self.gt = gt
         self.gte = gte
-        self.not = not
+        self.not = AnyEncodable.from(not)
     }
 }
 
@@ -142,32 +149,32 @@ public typealias DateFilter = NumberFilter<String>
 public typealias DateTimeFilter = NumberFilter<Date>
 
 public class NumberNullableFilter<T: Encodable>: Encodable {
-    public let equals: NullOr<T>?
+    public let equals: AnyEncodable?
     public let `in`: [T]?
     public let notIn: [T]?
     public let lt: T?
     public let lte: T?
     public let gt: T?
     public let gte: T?
-    public let not: NullOr<NumberNullableFilter<T>>?
+    public let not: AnyEncodable?
     public init(
-        equals: NullOr<T>? = nil,
+        equals: Encodable? = nil,
         `in`: [T]? = nil,
         notIn: [T]? = nil,
         lt: T? = nil,
         lte: T? = nil,
         gt: T? = nil,
         gte: T? = nil,
-        not: NullOr<NumberNullableFilter<T>>? = nil
+        not: Encodable? = nil
     ) {
-        self.equals = equals
+        self.equals = AnyEncodable.from(equals)
         self.in = `in`
         self.notIn = notIn
         self.lt = lt
         self.lte = lte
         self.gt = gt
         self.gte = gte
-        self.not = not
+        self.not = AnyEncodable.from(not)
     }
 }
 
@@ -180,8 +187,7 @@ public typealias DecimalNullableFilter = NumberNullableFilter<Decimal>
 public typealias DateNullableFilter = NumberNullableFilter<String>
 public typealias DateTimeNullableFilter = NumberNullableFilter<Date>
 
-
-public class BoolFilter: Encodable, ExpressibleByBooleanLiteral {
+public class BoolFilter: Encodable {
     public let equals: Bool?
     public let not: BoolFilter?
     public init(
@@ -191,31 +197,21 @@ public class BoolFilter: Encodable, ExpressibleByBooleanLiteral {
         self.equals = equals
         self.not = not
     }
-    public required init(booleanLiteral value: Bool) {
-        self.equals = value
-        self.not = nil
-    }
 }
 
-public class BoolNullableFilter: Encodable, ExpressibleByBooleanLiteral {
-    public let equals: NullOr<Bool>?
+public class BoolNullableFilter: Encodable {
+    public let equals: AnyEncodable?
     public let not: BoolNullableFilter?
     public init(
-        equals: NullOr<Bool>? = nil,
+        equals: Encodable? = nil,
         not: BoolNullableFilter? = nil
     ) {
-        self.equals = equals
+        self.equals = AnyEncodable.from(equals)
         self.not = not
     }
-    public required init(booleanLiteral value: Bool) {
-        self.equals = NullOr(booleanLiteral: value)
-        self.not = nil
-    }
-    public static var null = BoolNullableFilter(equals: .null)
 }
 
-public class StringFilter: Encodable, ExpressibleByStringLiteral {
-    public typealias StringLiteralType = String
+public class StringFilter: Encodable {
     public let equals: String?
     public let `in`: [String]?
     public let notIn: [String]?
@@ -255,25 +251,11 @@ public class StringFilter: Encodable, ExpressibleByStringLiteral {
         self.matches = matches
         self.not = not
     }
-    public required init(stringLiteral value: String) {
-        self.equals = value
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
-        self.contains = nil
-        self.startsWith = nil
-        self.endsWith = nil
-        self.matches = nil
-        self.not = nil
-    }
 }
 
-public class StringNullableFilter: Encodable, ExpressibleByStringLiteral {
+public class StringNullableFilter: Encodable {
     public typealias StringLiteralType = String
-    public let equals: NullOr<String>?
+    public let equals: AnyEncodable?
     public let `in`: [String?]?
     public let notIn: [String?]?
     public let lt: String?
@@ -284,9 +266,9 @@ public class StringNullableFilter: Encodable, ExpressibleByStringLiteral {
     public let startsWith: String?
     public let endsWith: String?
     public let matches: String?
-    public let not: StringNullableFilter?
+    public let not: AnyEncodable?
     public init(
-        equals: NullOr<String>? = nil,
+        equals: Encodable? = nil,
         `in`: [String?]? = nil,
         notIn: [String?]? = nil,
         lt: String? = nil,
@@ -297,9 +279,9 @@ public class StringNullableFilter: Encodable, ExpressibleByStringLiteral {
         startsWith: String? = nil,
         endsWith: String? = nil,
         matches: String? = nil,
-        not: StringNullableFilter? = nil
+        not: Encodable? = nil
     ) {
-        self.equals = equals
+        self.equals = AnyEncodable.from(equals)
         self.in = `in`
         self.notIn = notIn
         self.lt = lt
@@ -310,21 +292,7 @@ public class StringNullableFilter: Encodable, ExpressibleByStringLiteral {
         self.startsWith = startsWith
         self.endsWith = endsWith
         self.matches = matches
-        self.not = not
-    }
-    public required init(stringLiteral value: String) {
-        self.equals = .nonnull(value)
-        self.in = nil
-        self.notIn = nil
-        self.lt = nil
-        self.lte = nil
-        self.gt = nil
-        self.gte = nil
-        self.contains = nil
-        self.startsWith = nil
-        self.endsWith = nil
-        self.matches = nil
-        self.not = nil
+        self.not = AnyEncodable.from(not)
     }
 }
 
@@ -347,20 +315,20 @@ public class EnumFilter<T: Encodable>: Encodable {
 }
 
 public class EnumNullableFilter<T: Encodable>: Encodable {
-    public let equals: NullOr<T>?
+    public let equals: AnyEncodable?
     public let `in`: [T?]?
     public let notIn: [T?]?
-    public let not: EnumNullableFilter<T>?
+    public let not: AnyEncodable?
     public init(
-        equals: NullOr<T>? = nil,
+        equals: Encodable? = nil,
         `in`: [T]? = nil,
         notIn: [T]? = nil,
-        not: EnumNullableFilter<T>? = nil
+        not: Encodable? = nil
     ) {
-        self.equals = equals
+        self.equals = AnyEncodable.from(equals)
         self.in = `in`
         self.notIn = notIn
-        self.not = not
+        self.not = AnyEncodable.from(not)
     }
 }
 
@@ -389,21 +357,21 @@ public class ArrayFilter<T: Encodable>: Encodable {
 }
 
 public class ArrayNullableFilter<T: Encodable>: Encodable {
-    public let equals: NullOr<[T]>?
+    public let equals: AnyEncodable?
     public let has: T?
     public let hasSome: [T]?
     public let hasEvery: [T]?
     public let isEmpty: Bool?
     public let length: Int?
     public init(
-        equals: NullOr<[T]>? = nil,
+        equals: Encodable? = nil,
         has: T? = nil,
         hasSome: [T]? = nil,
         hasEvery: [T]? = nil,
         isEmpty: Bool? = nil,
         length: Int? = nil
     ) {
-        self.equals = equals
+        self.equals = AnyEncodable.from(equals)
         self.has = has
         self.hasSome = hasSome
         self.hasEvery = hasEvery
