@@ -888,9 +888,13 @@ impl<'a> Outline<'a> {
                             docs: Cow::Borrowed(""),
                             kind: ClassKind::ActionArgs,
                             fields: vec![
-                                helper::args_select_field(m.name(), true),
-                                helper::args_include_field(m.name(), true),
-                            ],
+                                Some(helper::args_select_field(m.name(), true)),
+                                if m.relations().is_empty() {
+                                    None
+                                } else {
+                                    Some(helper::args_include_field(m.name(), true))
+                                }
+                            ].into_iter().flatten().collect::<Vec<_>>(),
                         },
                         Class {
                             model_name: m.name(),
@@ -899,10 +903,14 @@ impl<'a> Outline<'a> {
                             docs: Cow::Borrowed(""),
                             kind: ClassKind::ActionArgs,
                             fields: vec![
-                                helper::args_where_unique_field(m.name(), false),
-                                helper::args_select_field(m.name(), true),
-                                helper::args_include_field(m.name(), true),
-                            ]
+                                Some(helper::args_where_unique_field(m.name(), false)),
+                                Some(helper::args_select_field(m.name(), true)),
+                                if m.relations().is_empty() {
+                                    None
+                                } else {
+                                    Some(helper::args_include_field(m.name(), true))
+                                }
+                            ].into_iter().flatten().collect::<Vec<_>>()
                         },
                         Class {
                             model_name: m.name(),
@@ -911,16 +919,20 @@ impl<'a> Outline<'a> {
                             docs: Cow::Borrowed(""),
                             kind: ClassKind::ActionArgs,
                             fields: vec![
-                                helper::args_where_field(m.name(), true, true),
-                                helper::args_select_field(m.name(), true),
-                                helper::args_include_field(m.name(), true),
-                                helper::args_order_by_field(m.name(), &lookup, true),
-                                helper::args_cursor_field(m.name(), true),
-                                helper::args_take_field(m.name(), lookup.number_type(), true),
-                                helper::args_skip_field(m.name(), lookup.number_type(), true),
-                                helper::args_page_size_field(m.name(), lookup.number_type(), true),
-                                helper::args_page_number_field(m.name(), lookup.number_type(), true),
-                            ]
+                                Some(helper::args_where_field(m.name(), true, true)),
+                                Some(helper::args_select_field(m.name(), true)),
+                                if m.relations().is_empty() {
+                                    None
+                                } else {
+                                    Some(helper::args_include_field(m.name(), true))
+                                },
+                                Some(helper::args_order_by_field(m.name(), &lookup, true)),
+                                Some(helper::args_cursor_field(m.name(), true)),
+                                Some(helper::args_take_field(m.name(), lookup.number_type(), true)),
+                                Some(helper::args_skip_field(m.name(), lookup.number_type(), true)),
+                                Some(helper::args_page_size_field(m.name(), lookup.number_type(), true)),
+                                Some(helper::args_page_number_field(m.name(), lookup.number_type(), true)),
+                            ].into_iter().flatten().collect::<Vec<_>>()
                         },
                         Class {
                             model_name: m.name(),
@@ -929,16 +941,20 @@ impl<'a> Outline<'a> {
                             docs: Cow::Borrowed(""),
                             kind: ClassKind::ActionArgs,
                             fields: vec![
-                                helper::args_where_field(m.name(), false, true),
-                                helper::args_select_field(m.name(), true),
-                                helper::args_include_field(m.name(), true),
-                                helper::args_order_by_field(m.name(), &lookup, true),
-                                helper::args_cursor_field(m.name(), true),
-                                helper::args_take_field(m.name(), lookup.number_type(), true),
-                                helper::args_skip_field(m.name(), lookup.number_type(), true),
-                                helper::args_page_size_field(m.name(), lookup.number_type(), true),
-                                helper::args_page_number_field(m.name(), lookup.number_type(), true),
-                            ]
+                                Some(helper::args_where_field(m.name(), false, true)),
+                                Some(helper::args_select_field(m.name(), true)),
+                                if m.relations().is_empty() {
+                                    None
+                                } else {
+                                    Some(helper::args_include_field(m.name(), true))
+                                },
+                                Some(helper::args_order_by_field(m.name(), &lookup, true)),
+                                Some(helper::args_cursor_field(m.name(), true)),
+                                Some(helper::args_take_field(m.name(), lookup.number_type(), true)),
+                                Some(helper::args_skip_field(m.name(), lookup.number_type(), true)),
+                                Some(helper::args_page_size_field(m.name(), lookup.number_type(), true)),
+                                Some(helper::args_page_number_field(m.name(), lookup.number_type(), true)),
+                            ].into_iter().flatten().collect::<Vec<_>>()
                         },
                         Class {
                             model_name: m.name(),
@@ -947,10 +963,14 @@ impl<'a> Outline<'a> {
                             docs: Cow::Borrowed(""),
                             kind: ClassKind::ActionArgs,
                             fields: vec![
-                                helper::args_select_field(m.name(), true),
-                                helper::args_include_field(m.name(), true),
-                                helper::args_create_input(m.name(), false),
-                            ]
+                                Some(helper::args_select_field(m.name(), true)),
+                                if m.relations().is_empty() {
+                                    None
+                                } else {
+                                    Some(helper::args_include_field(m.name(), true))
+                                },
+                                Some(helper::args_create_input(m.name(), false)),
+                            ].into_iter().flatten().collect::<Vec<_>>()
                         },
                         Class {
                             model_name: m.name(),
@@ -959,11 +979,15 @@ impl<'a> Outline<'a> {
                             docs: Cow::Borrowed(""),
                             kind: ClassKind::ActionArgs,
                             fields: vec![
-                                helper::args_where_unique_field(m.name(), false),
-                                helper::args_select_field(m.name(), true),
-                                helper::args_include_field(m.name(), true),
-                                helper::args_update_input(m.name(), false),
-                            ]
+                                Some(helper::args_where_unique_field(m.name(), false)),
+                                Some(helper::args_select_field(m.name(), true)),
+                                if m.relations().is_empty() {
+                                    None
+                                } else {
+                                    Some(helper::args_include_field(m.name(), true))
+                                },
+                                Some(helper::args_update_input(m.name(), false)),
+                            ].into_iter().flatten().collect::<Vec<_>>()
                         },
                         Class {
                             model_name: m.name(),
@@ -972,12 +996,16 @@ impl<'a> Outline<'a> {
                             docs: Cow::Borrowed(""),
                             kind: ClassKind::ActionArgs,
                             fields: vec![
-                                helper::args_where_unique_field(m.name(), false),
-                                helper::args_select_field(m.name(), true),
-                                helper::args_include_field(m.name(), true),
-                                helper::args_create_input(m.name(), false),
-                                helper::args_update_input(m.name(), false),
-                            ]
+                                Some(helper::args_where_unique_field(m.name(), false)),
+                                Some(helper::args_select_field(m.name(), true)),
+                                if m.relations().is_empty() {
+                                    None
+                                } else {
+                                    Some(helper::args_include_field(m.name(), true))
+                                },
+                                Some(helper::args_create_input(m.name(), false)),
+                                Some(helper::args_update_input(m.name(), false)),
+                            ].into_iter().flatten().collect::<Vec<_>>()
                         },
                         Class {
                             model_name: m.name(),
@@ -997,10 +1025,14 @@ impl<'a> Outline<'a> {
                             docs: Cow::Borrowed(""),
                             kind: ClassKind::ActionArgs,
                             fields: vec![
-                                helper::args_select_field(m.name(), true),
-                                helper::args_include_field(m.name(), true),
-                                helper::args_create_many_input(m.name(), &lookup, false),
-                            ]
+                                Some(helper::args_select_field(m.name(), true)),
+                                if m.relations().is_empty() {
+                                    None
+                                } else {
+                                    Some(helper::args_include_field(m.name(), true))
+                                },
+                                Some(helper::args_create_many_input(m.name(), &lookup, false)),
+                            ].into_iter().flatten().collect::<Vec<_>>()
                         },
                         Class {
                             model_name: m.name(),
@@ -1009,11 +1041,15 @@ impl<'a> Outline<'a> {
                             docs: Cow::Borrowed(""),
                             kind: ClassKind::ActionArgs,
                             fields: vec![
-                                helper::args_where_field(m.name(), false, true),
-                                helper::args_select_field(m.name(), true),
-                                helper::args_include_field(m.name(), true),
-                                helper::args_update_input(m.name(), false),
-                            ]
+                                Some(helper::args_where_field(m.name(), false, true)),
+                                Some(helper::args_select_field(m.name(), true)),
+                                if m.relations().is_empty() {
+                                    None
+                                } else {
+                                    Some(helper::args_include_field(m.name(), true))
+                                },
+                                Some(helper::args_update_input(m.name(), false)),
+                            ].into_iter().flatten().collect::<Vec<_>>()
                         },
                         Class {
                             model_name: m.name(),
