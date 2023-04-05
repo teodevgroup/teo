@@ -1325,7 +1325,7 @@ namespace Teo {
             }
             throw new NotImplementedException();
         }
-        public override void Write(Utf8JsonWriter writer, Sex value, JsonSerializerOptions options) {
+        public override void Write(Utf8JsonWriter writer, {{ class.name() }} value, JsonSerializerOptions options) {
             switch (value) {
         {%- for field in class.fields %}
                 case {{ class.name() }}.{{ field.name|pascalcase}}: {
