@@ -1401,4 +1401,14 @@ namespace Teo {
             return JSJsonSerializer.Deserialize<T>(httpResponseBody)!;
         }
     }
+
+    public class {{ conf.object_name|capitalize_first }} {
+        private string? _Token;
+        public {{ conf.object_name|capitalize_first }}(string? token = null) {
+            _Token = token;
+        }
+        {%- for delegate in outline.delegates %}
+        public {{ delegate.model_name|capitalize_first }}Delegate {{ delegate.model_name|capitalize_first }}() { return new {{ delegate.model_name|capitalize_first }}Delegate(_Token); }
+        {%- endfor %}
+    }
 }
