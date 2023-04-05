@@ -94,6 +94,9 @@ impl App {
             CLICommand::Migrate(migrate_command) => {
                 migrate(self.graph.to_mut(), migrate_command.dry).await;
             }
+            CLICommand::Seed(seed_command) => {
+
+            }
         }
         Ok(())
     }

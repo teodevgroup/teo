@@ -2,6 +2,7 @@ pub mod core;
 pub(crate) mod parser;
 pub(crate) mod connectors;
 pub(crate) mod gen;
+pub(crate) mod seeder;
 
 pub mod prelude {
     pub use crate::core::app::App;

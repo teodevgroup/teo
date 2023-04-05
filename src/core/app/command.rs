@@ -9,6 +9,7 @@ pub(crate) enum CLICommand {
     Serve(ServeCommand),
     Generate(GenerateCommand),
     Migrate(MigrateCommand),
+    Seed(SeedCommand),
 }
 
 #[derive(Debug)]
@@ -37,4 +38,18 @@ pub(crate) struct GenerateEntityCommand {
 #[derive(Debug)]
 pub(crate) struct MigrateCommand {
     pub(crate) dry: bool,
+}
+
+#[derive(Debug)]
+pub(crate) struct SeedCommand {
+    pub(crate) action: SeedCommandAction,
+    pub(crate) all: bool,
+    pub(crate) names: Option<Vec<String>>,
+}
+
+#[derive(Debug)]
+pub(crate) enum SeedCommandAction {
+    Seed,
+    Unseed,
+    Reseed,
 }
