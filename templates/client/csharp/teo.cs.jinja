@@ -1,10 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Encodings;
+using System.Net.Http;
 
 // Enumerable
 namespace Teo {
@@ -282,7 +281,7 @@ namespace Teo {
         public T? Lte { get; set; }
         public T? Gt { get; set; }
         public T? Gte { get; set; }
-        public new OneOf<Optional<T>, RefComparableNullableFilter<T>>? Not { get; set; }
+        public OneOf<Optional<T>, RefComparableNullableFilter<T>>? Not { get; set; }
         public RefComparableNullableFilter(
             Optional<T>? equals = null,
             OneOf<Optional<T>, RefComparableNullableFilter<T>>? not = null,
@@ -576,7 +575,7 @@ namespace Teo {
             string? endsWith = null,
             string? matches = null,
             OneOf<string, StringNullableWithAggregatesFilter>? not = null,
-            ComparableFilter<int>? _count = null,
+            ComparableNullableFilter<int>? _count = null,
             StringNullableFilter? _min = null,
             StringNullableFilter? _max = null
         ) {
@@ -1385,15 +1384,16 @@ namespace Teo {
 
         protected static readonly string HOST = "{{ conf.host }}";
 
-        protected async Task<T> Request<T>(string urlSegmentName, string action, object args, string? token = null) {
+        protected async Task<T> Request<T>(string model, string action, object args, string? token = null) {
             // not handle our own errors yet
-            var uri = new Uri(HOST + "/" + urlSegmentName + "/action/" + action);
+            var uri = new Uri(HOST + "/" + model + "/action/" + action);
             var client = new HttpClient();
             if (token != null) {
                 client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
             }
-            var content = JSJsonSerializer.Serialize(args)!;
-            var response = await client.PostAsync(uri, new HttpStringContent(content));
+            var jsonContent = JSJsonSerializer.Serialize(args)!;
+            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+            var response = await client.PostAsync(uri, content);
             var httpResponseBody = await response.Content.ReadAsStringAsync();
             if (((int)response.StatusCode) >= 400) {
                 throw new TeoException(JSJsonSerializer.Deserialize<ResponseError>(httpResponseBody)!);
