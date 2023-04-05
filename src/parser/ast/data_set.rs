@@ -1,6 +1,7 @@
 use crate::parser::ast::expression::DictionaryLiteral;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::span::Span;
+use crate::prelude::Value;
 
 #[derive(Debug, Clone)]
 pub struct DataSet {
@@ -44,12 +45,13 @@ pub struct DataSetRecord {
     pub(crate) identifier: Identifier,
     pub(crate) span: Span,
     pub(crate) dictionary: DictionaryLiteral,
+    pub(crate) resolved: Option<Value>,
 }
 
 impl DataSetRecord {
     pub(crate) fn new(source_id: usize, item_id: usize, identifier: Identifier, span: Span, dictionary: DictionaryLiteral) -> Self {
         Self {
-            id: item_id, source_id, identifier, span, dictionary
+            id: item_id, source_id, identifier, span, dictionary, resolved: None
         }
     }
 }
