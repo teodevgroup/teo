@@ -37,7 +37,7 @@ pub fn constantize<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
 
 pub fn escape_swift<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     let s = s.to_string();
-    if vec!["where", "break", "case", "continue", "catch", "default", "defer", "do", "else", "for", "fallthrough", "for", "in", "repeat", "guard", "while", "return", "throw"].contains(&s.as_str()) {
+    if vec!["is", "where", "break", "case", "continue", "catch", "default", "defer", "do", "else", "for", "fallthrough", "for", "in", "repeat", "guard", "while", "return", "throw"].contains(&s.as_str()) {
         Ok(format!("`{}`", s))
     } else {
         Ok(s)

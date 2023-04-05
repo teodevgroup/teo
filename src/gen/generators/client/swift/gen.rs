@@ -41,14 +41,12 @@ impl Generator for SwiftClientGenerator {
     }
 
     async fn generate_module_files(&self, _ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
-        generator.ensure_root_directory().await?;
         generator.clear_root_directory().await?;
         Ok(())
     }
 
     async fn generate_package_files(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
         generator.ensure_root_directory().await?;
-        generator.clear_root_directory().await?;
         generator.generate_file(".gitignore", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/swift/gitignore"))).await?;
         generator.generate_file("README.md", SwiftReadMeTemplate { conf: ctx.conf }.render().unwrap()).await?;
         generator.generate_file("Package.swift", SwiftPackageSwiftTemplate { conf: ctx.conf }.render().unwrap()).await?;

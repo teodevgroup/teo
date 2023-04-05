@@ -40,7 +40,7 @@ private func getBearerToken() -> String? {
 }
 
 private func request<I: Encodable, O: Decodable>(model: String, action: String, input: I, token: String? = getBearerToken()) async -> O {
-    let url = URL(string: "http://127.0.0.1:5300/" + model + "/action/" + action)!
+    let url = URL(string: "{{ conf.host }}/" + model + "/action/" + action)!
     var request = URLRequest(url: url)
     if let token {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -70,61 +70,37 @@ public struct Null: Encodable {
 
 public let null = Null()
 
-public enum NullOr<T>: Encodable where T: Encodable {
-    case null
-    case nonnull(T)
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .null:
-            try! container.encodeNil()
-        case .nonnull(let t):
-            try! container.encode(t)
-        }
-    }
-}
+public protocol NullableString { }
+extension Null : NullableString { }
+extension String : NullableString { }
 
-extension NullOr: ExpressibleByUnicodeScalarLiteral where T: ExpressibleByUnicodeScalarLiteral {
-    public typealias UnicodeScalarLiteralType = T.UnicodeScalarLiteralType
-    public init(unicodeScalarLiteral value: T.UnicodeScalarLiteralType) {
-        self = .nonnull(T(unicodeScalarLiteral: value))
-    }
-}
+public protocol NullableBool { }
+extension Null : NullableBool { }
+extension Bool : NullableBool { }
 
-extension NullOr: ExpressibleByExtendedGraphemeClusterLiteral where T: ExpressibleByExtendedGraphemeClusterLiteral {
-    public typealias ExtendedGraphemeClusterLiteralType = T.ExtendedGraphemeClusterLiteralType
-    public init(extendedGraphemeClusterLiteral value: T.ExtendedGraphemeClusterLiteralType) {
-        self = .nonnull(T(extendedGraphemeClusterLiteral: value))
-    }
-}
+public protocol NullableInt32 { }
+extension Null : NullableInt32 { }
+extension Int32 : NullableInt32 { }
 
-extension NullOr: ExpressibleByStringLiteral where T: ExpressibleByStringLiteral {
-    public typealias StringLiteralType = T.StringLiteralType
-    public init(stringLiteral value: T.StringLiteralType) {
-        self = .nonnull(T(stringLiteral: value))
-    }
-}
+public protocol NullableInt64 { }
+extension Null : NullableInt64 { }
+extension Int64 : NullableInt64 { }
 
-extension NullOr: ExpressibleByBooleanLiteral where T: ExpressibleByBooleanLiteral {
-    public typealias BooleanLiteralType = T.BooleanLiteralType
-    public init(booleanLiteral value: T.BooleanLiteralType) {
-        self = .nonnull(T(booleanLiteral: value))
-    }
-}
+public protocol NullableFloat { }
+extension Null : NullableFloat { }
+extension Float : NullableFloat { }
 
-extension NullOr: ExpressibleByIntegerLiteral where T: ExpressibleByIntegerLiteral {
-    public typealias IntegerLiteralType = T.IntegerLiteralType
-    public init(integerLiteral value: T.IntegerLiteralType) {
-        self = .nonnull(T(integerLiteral: value))
-    }
-}
+public protocol NullableDouble { }
+extension Null : NullableDouble { }
+extension Double : NullableDouble { }
 
-extension NullOr: ExpressibleByFloatLiteral where T: ExpressibleByFloatLiteral {
-    public typealias FloatLiteralType = T.FloatLiteralType
-    public init(floatLiteral value: T.FloatLiteralType) {
-        self = .nonnull(T(floatLiteral: value))
-    }
-}
+public protocol NullableDateTime { }
+extension Null : NullableDateTime { }
+extension Date : NullableDateTime { }
+
+public protocol NullableDecimal { }
+extension Null : NullableDecimal { }
+extension Decimal : NullableDecimal { }
 
 public class NumberFilter<T: Encodable>: Encodable {
     public let equals: T?
@@ -498,10 +474,10 @@ public enum {{ class.model_name }}{{ class.name_suffix }}: Encodable {
         {%- endfor %}
 }
     {%- else %}
-public class {{ class.model_name }}{{ class.name_suffix }}: Encodable {
+public class {{ class.model_name }}{{ class.name_suffix }}: {% if class.kind.is_output() %}Decodable{% else %}Encodable{% endif %} {
         {%- for field in class.fields_optional_at_last() %}
     {% if !field.docs.is_empty() %}/// {{ field.docs }}{% endif %}
-    public let {{ field.name|escape_swift }}: {{ field.field_type }}{%- if field.optional %}?{%- endif %}
+    public let {{ field.name|escape_swift }}: {{ field.field_type }}{%- if field.optional %}?{% endif %}
         {%- endfor %}
     public init(
         {%- for field in class.fields_optional_at_last() %}
