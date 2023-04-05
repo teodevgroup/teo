@@ -1408,7 +1408,7 @@ namespace Teo {
             _Token = token;
         }
         {%- for delegate in outline.delegates %}
-        public {{ delegate.model_name|capitalize_first }}Delegate {{ delegate.model_name|capitalize_first }}() { return new {{ delegate.model_name|capitalize_first }}Delegate(_Token); }
+        public {{ delegate.model_name|capitalize_first }}Delegate {{ delegate.model_name|capitalize_first }} { get { return new {{ delegate.model_name|capitalize_first }}Delegate(_Token); } }
         {%- endfor %}
     }
 }
