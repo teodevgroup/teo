@@ -1086,6 +1086,10 @@ namespace Teo {
         public D Data { get; set; }
     }
 
+    public struct ErrorResponse {
+        public ResponseError Error { get; set; }
+    }
+
     public struct ResponseError {
         public string Type { get; set; }
         public string Message { get; set; }
@@ -1103,14 +1107,11 @@ namespace Teo {
 
     public class TeoException : Exception {
 
-        public override string Message { get; }
-
         public string Type { get; }
 
         public Dictionary<string, string>? Errors { get; }
 
-        public TeoException(ResponseError responseError) {
-            Message = responseError.Message;
+        public TeoException(ResponseError responseError) : base(JSJsonSerializer.Serialize(responseError)) {
             Type = responseError.Type;
             Errors = responseError.Errors;
         }
@@ -1451,7 +1452,7 @@ namespace Teo {
             var response = await client.PostAsync(uri, content);
             var httpResponseBody = await response.Content.ReadAsStringAsync();
             if (((int)response.StatusCode) >= 400) {
-                throw new TeoException(JSJsonSerializer.Deserialize<ResponseError>(httpResponseBody)!);
+                throw new TeoException(JSJsonSerializer.Deserialize<ErrorResponse>(httpResponseBody)!.Error);
             }
             return JSJsonSerializer.Deserialize<T>(httpResponseBody)!;
         }
