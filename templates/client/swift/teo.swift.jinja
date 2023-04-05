@@ -427,24 +427,39 @@ public enum ArrayFieldUpdateOperation<T: Encodable>: Encodable {
         }
     }
 }
-
 {%- for class in outline.classes %}
-    {%- if class.kind.is_any_kind_of_enum() %}
+    {% if class.kind.is_any_kind_of_enum() %}
 public enum {{ class.model_name }}{{ class.name_suffix }}: String, Codable {
         {%- for field in class.fields %}
     case {{ field.name|camelcase }} = "{{ field.name }}"
         {%- endfor %}
 }
-    {%- else if class.kind.is_order_by_input() %}
+    {% else if class.kind.is_order_by_input() %}
 public enum {{ class.model_name }}{{ class.name_suffix }}: Encodable {
         {%- for field in class.fields %}
     case {{ field.name|camelcase }}(SortOrder)
         {%- endfor %}
+    enum CodingKeys: CodingKey {
+        {%- for field in class.fields %}
+        case {{ field.name|camelcase }}
+        {%- endfor %}
+    }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        {%- for field in class.fields %}
+        case .{{ field.name|camelcase }}(let a0):
+            try! container.encode(a0, forKey: .{{ field.name|camelcase }})
+        {%- endfor %}
+        }
+    }
 }
-    {%- else %}
+    {% else %}
 public class {{ class.model_name }}{{ class.name_suffix }}: {% if class.kind.is_output() %}Decodable{% else %}Encodable{% endif %} {
         {%- for field in class.fields_optional_at_last() %}
-    {% if !field.docs.is_empty() %}/// {{ field.docs }}{% endif %}
+    {%- if !field.docs.is_empty() %}
+    /// {{ field.docs }}
+    {%- endif %}
     public let {{ field.name|escape_swift }}: {{ field.field_type }}{%- if field.optional %}?{% endif %}
         {%- endfor %}
     public init(
@@ -459,8 +474,7 @@ public class {{ class.model_name }}{{ class.name_suffix }}: {% if class.kind.is_
 }
     {%- endif %}
 {%- endfor %}
-
-{%- for delegate in outline.delegates %}
+{% for delegate in outline.delegates %}
 public struct {{ delegate.model_name }}Delegate {
     private let token: String?
     fileprivate init(_ token: String?) { self.token = token }
