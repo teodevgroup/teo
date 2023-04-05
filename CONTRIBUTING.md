@@ -71,6 +71,7 @@ We structure our messages like this:
 * core: The core
 * pipeline: The pipeline items
 * lang: The schema language
+* seed: The data seeder
 * client: Client generators
   * ts: TypeScript client generator 
   * swift: Swift client generator
