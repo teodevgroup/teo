@@ -1132,10 +1132,14 @@ impl<'a> Outline<'a> {
                             docs: Cow::Borrowed(""),
                             kind: ClassKind::ActionArgs,
                             fields: vec![
-                                helper::args_credentials_field(m.name(), false),
-                                helper::args_select_field(m.name(), false),
-                                helper::args_include_field(m.name(), false),
-                            ],
+                                Some(helper::args_credentials_field(m.name(), false)),
+                                Some(helper::args_select_field(m.name(), true)),
+                                if m.relations().is_empty() {
+                                    None
+                                } else {
+                                    Some(helper::args_include_field(m.name(), true))
+                                },
+                            ].into_iter().flatten().collect::<Vec<_>>(),
                         });
                     }
                     if m.has_action(Action::from_u32(IDENTITY_HANDLER)) {
@@ -1146,9 +1150,13 @@ impl<'a> Outline<'a> {
                             docs: Cow::Borrowed(""),
                             kind: ClassKind::ActionArgs,
                             fields: vec![
-                                helper::args_select_field(m.name(), false),
-                                helper::args_include_field(m.name(), false),
-                            ],
+                                Some(helper::args_select_field(m.name(), true)),
+                                if m.relations().is_empty() {
+                                    None
+                                } else {
+                                    Some(helper::args_include_field(m.name(), true))
+                                },
+                            ].into_iter().flatten().collect::<Vec<_>>(),
                         });
                     }
                     classes
