@@ -10,16 +10,16 @@ impl DartTypes {
 }
 
 impl TypeLookup for DartTypes {
-    fn field_type_to_filter_type<'a>(&self, _field_type: &'a FieldType, _optional: bool) -> Cow<'a, str> {
+    fn field_type_to_filter_type<'a>(&self, _field_type: &'a FieldType, _nullable: bool) -> Cow<'a, str> {
         Cow::Borrowed("dynamic")
     }
 
-    fn field_type_to_filter_with_aggregates_type<'a>(&self, field_type: &'a FieldType, nullable: bool) -> Cow<'a, str> {
+    fn field_type_to_filter_with_aggregates_type<'a>(&self, _field_type: &'a FieldType, _nullable: bool) -> Cow<'a, str> {
         Cow::Borrowed("dynamic")
     }
 
-    fn field_type_to_create_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
-        if optional {
+    fn field_type_to_create_type<'a>(&self, field_type: &'a FieldType, nullable: bool) -> Cow<'a, str> {
+        if nullable {
             Cow::Borrowed("dynamic")
         } else {
             match field_type {
@@ -42,8 +42,8 @@ impl TypeLookup for DartTypes {
         }
     }
 
-    fn field_type_to_update_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
-        if optional {
+    fn field_type_to_update_type<'a>(&self, field_type: &'a FieldType, nullable: bool) -> Cow<'a, str> {
+        if nullable {
             Cow::Borrowed("dynamic")
         } else {
             match field_type {

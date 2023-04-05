@@ -53,7 +53,7 @@ private func request<I: Encodable, O: Decodable>(model: String, action: String, 
 }
 
 public struct AnyEncodable: Encodable {
-    static func from(value: Encodable?) -> Self? {
+    static func from(_ value: Encodable?) -> Self? {
         if let value {
             return Self(value: value)
         } else {
@@ -449,11 +449,11 @@ public class {{ class.model_name }}{{ class.name_suffix }}: {% if class.kind.is_
         {%- endfor %}
     public init(
         {%- for field in class.fields_optional_at_last() %}
-        {{ field.name|escape_swift }}: {{ field.field_type }}{%- if field.optional %}? = nil{%- endif %}{% if !loop.last %},{% endif %}
+        {{ field.name|escape_swift }}: {% if field.field_type.as_ref() == "AnyEncodable" %}Encodable{% else %}{{ field.field_type }}{% endif %}{%- if field.optional %}? = nil{%- endif %}{% if !loop.last %},{% endif %}
         {%- endfor %}
     ) {
         {%- for field in class.fields_optional_at_last() %}
-        self.{{ field.name }} = {{ field.name|escape_swift }}
+        self.{{ field.name }} = {% if field.field_type.as_ref() == "AnyEncodable" %}AnyEncodable.from({{ field.name|escape_swift }}){% else %}{{ field.name|escape_swift }}{% endif %}
         {%- endfor %}
     }
 }
