@@ -26,7 +26,7 @@ use crate::parser::ast::source::Source;
 use crate::parser::ast::subscript::Subscript;
 use crate::parser::ast::top::Top;
 use crate::parser::ast::unit::Unit;
-use crate::parser::parser::Parser;
+use crate::parser::parser::parser::Parser;
 use crate::parser::std::decorators::field::GlobalFieldDecorators;
 use crate::parser::std::decorators::model::GlobalModelDecorators;
 use crate::parser::std::decorators::property::GlobalPropertyDecorators;

@@ -1,13 +1,11 @@
 use crate::parser::ast::expression::DictionaryLiteral;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::span::Span;
-use crate::parser::ast::item::Item;
 
 #[derive(Debug, Clone)]
 pub struct DataSet {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
-    pub(crate) items: Vec<Item>,
     pub(crate) span: Span,
     pub(crate) auto_seed: bool,
     pub(crate) groups: Vec<DataSetGroup>,
@@ -15,9 +13,9 @@ pub struct DataSet {
 }
 
 impl DataSet {
-    pub(crate) fn new(items: Vec<Item>, span: Span, source_id: usize, item_id: usize) -> Self {
+    pub(crate) fn new(span: Span, source_id: usize, item_id: usize, auto_seed: bool, groups: Vec<DataSetGroup>) -> Self {
         Self {
-            id: item_id, items, span, source_id, auto_seed: false, groups: vec![]
+            id: item_id, span, source_id, auto_seed, groups
         }
     }
 }
@@ -27,15 +25,14 @@ pub struct DataSetGroup {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
     pub(crate) identifier: Identifier,
-    pub(crate) items: Vec<Item>,
     pub(crate) span: Span,
     pub(crate) records: Vec<DataSetRecord>,
 }
 
 impl DataSetGroup {
-    pub(crate) fn new(source_id: usize, item_id: usize, identifier: Identifier, span: Span, items: Vec<Item>) -> Self {
+    pub(crate) fn new(source_id: usize, item_id: usize, identifier: Identifier, span: Span, records: Vec<DataSetRecord>) -> Self {
         Self {
-            id: item_id, items, span, source_id, records: vec![], identifier
+            id: item_id, span, source_id, identifier, records
         }
     }
 }
