@@ -13,7 +13,7 @@ use crate::core::result::Result;
 use crate::connectors::mongodb::connector::MongoDBConnector;
 use crate::connectors::sql::connector::SQLConnector;
 use crate::connectors::sql::schema::dialect::SQLDialect;
-use crate::core::app::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, MigrateCommand, ServeCommand};
+use crate::core::app::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, MigrateCommand, SeedCommand, SeedCommandAction, ServeCommand};
 use crate::core::app::conf::{EntityGeneratorConf, ServerConf};
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
@@ -175,6 +175,29 @@ impl AppBuilder {
                     .long("dry")
                     .help("Dry run")
                     .action(ArgAction::SetTrue)))
+            .subcommand(ClapCommand::new("seed")
+                .about("Seed data")
+                .arg(Arg::new("unseed")
+                    .short('u')
+                    .long("unseed")
+                    .help("Unseed records")
+                    .action(ArgAction::SetTrue))
+                .arg(Arg::new("reseed")
+                    .short('r')
+                    .long("reseed")
+                    .help("Reseed records")
+                    .action(ArgAction::SetTrue))
+                .arg(Arg::new("all")
+                    .short('a')
+                    .long("all")
+                    .help("Do for all data sets")
+                    .action(ArgAction::SetTrue)
+                    .conflicts_with("NAME"))
+                .arg(Arg::new("NAME")
+                    .action(ArgAction::Append)
+                    .conflicts_with("all")
+                    .help("Data set names to process")
+                    .num_args(1..)))
             .get_matches_from(match environment_version {
                 EnvironmentVersion::Python(_) | EnvironmentVersion::NodeJS(_) => {
                     env::args_os().enumerate().filter(|(i, x)| (*i != 1) && (!x.to_str().unwrap().ends_with("ts-node") && !x.to_str().unwrap().ends_with(".ts"))).map(|(_i, x)| x).collect::<Vec<OsString>>()
@@ -193,17 +216,32 @@ impl AppBuilder {
                 match submatches.subcommand() {
                     Some(("client", submatches)) => {
                         let names: Option<Vec<String>> = submatches.get_many::<String>("NAME").map(|s| s.map(|v| v.to_string()).collect::<Vec<String>>());
-                        CLICommand::Generate(GenerateCommand::GenerateClientCommand(GenerateClientCommand { all: false, names }))
+                        CLICommand::Generate(GenerateCommand::GenerateClientCommand(GenerateClientCommand { all: submatches.get_flag("all"), names }))
                     }
                     Some(("entity", submatches)) => {
                         let names: Option<Vec<String>> = submatches.get_many::<String>("NAME").map(|s| s.map(|v| v.to_string()).collect::<Vec<String>>());
-                        CLICommand::Generate(GenerateCommand::GenerateEntityCommand(GenerateEntityCommand { all: false, names }))
+                        CLICommand::Generate(GenerateCommand::GenerateEntityCommand(GenerateEntityCommand { all: submatches.get_flag("all"), names }))
                     }
                     _ => unreachable!()
                 }
             }
             Some(("migrate", submatches)) => {
                 CLICommand::Migrate(MigrateCommand { dry: submatches.get_flag("dry") })
+            }
+            Some(("seed", submatches)) => {
+                let action = if submatches.get_flag("reseed") {
+                    SeedCommandAction::Reseed
+                } else if submatches.get_flag("unseed") {
+                    SeedCommandAction::Unseed
+                } else {
+                    SeedCommandAction::Seed
+                };
+                let names: Option<Vec<String>> = submatches.get_many::<String>("NAME").map(|s| s.map(|v| v.to_string()).collect::<Vec<String>>());
+                CLICommand::Seed(SeedCommand {
+                    action,
+                    all: submatches.get_flag("all"),
+                    names,
+                })
             }
             _ => unreachable!()
         };
