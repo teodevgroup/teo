@@ -90,6 +90,10 @@ impl Resolver {
                 Top::ServerConfig(config) => {
                     Self::resolve_config(parser, source, config);
                 }
+                Top::DataSet(data_set) => {
+                    // Self::resolve_data_set(parser, source, data_set);
+                    unreachable!()
+                }
             }
         }
         source.to_mut().resolved = true;

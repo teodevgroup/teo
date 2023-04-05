@@ -2,6 +2,7 @@ use crate::parser::ast::client::Client;
 use crate::parser::ast::config::ServerConfig;
 use crate::parser::ast::connector::Connector;
 use crate::parser::ast::constant::Constant;
+use crate::parser::ast::data_set::DataSet;
 use crate::parser::ast::generator::Generator;
 use crate::parser::ast::import::Import;
 use crate::parser::ast::model::Model;
@@ -17,6 +18,7 @@ pub(crate) enum Top {
     Generator(Generator),
     Client(Client),
     ServerConfig(ServerConfig),
+    DataSet(DataSet),
 }
 
 impl Top {
@@ -31,6 +33,7 @@ impl Top {
             Top::Generator(g) => g.id,
             Top::Client(c) => c.id,
             Top::ServerConfig(c) => c.id,
+            Top::DataSet(d) => d.id,
         }
     }
 
@@ -176,5 +179,23 @@ impl Top {
 
     pub(crate) fn is_server_config(&self) -> bool {
         self.as_server_config().is_some()
+    }
+
+    pub(crate) fn as_data_set(&self) -> Option<&DataSet> {
+        match self {
+            Top::DataSet(d) => Some(d),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_data_set_mut(&mut self) -> Option<&mut DataSet> {
+        match self {
+            Top::DataSet(d) => Some(d),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn is_data_set(&self) -> bool {
+        self.as_data_set().is_some()
     }
 }
