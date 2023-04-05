@@ -38,6 +38,7 @@ use crate::core::app::environment::Environment;
 use crate::gen::interface::client::kind::Kind;
 use crate::parser::ast::arith_expr::{ArithExpr, Op};
 use crate::parser::ast::client::{Client};
+use crate::parser::ast::data_set::DataSet;
 use crate::parser::ast::generator::Generator;
 use crate::parser::std::pipeline::global::{GlobalFunctionInstallers, GlobalPipelineInstallers};
 
@@ -88,11 +89,10 @@ impl Resolver {
                     Self::resolve_client_generator(parser, source, client);
                 }
                 Top::ServerConfig(config) => {
-                    Self::resolve_config(parser, source, config);
+                    Self::resolve_server_config_block(parser, source, config);
                 }
                 Top::DataSet(data_set) => {
-                    // Self::resolve_data_set(parser, source, data_set);
-                    unreachable!()
+                    Self::resolve_data_set(parser, source, data_set);
                 }
             }
         }
@@ -551,7 +551,15 @@ impl Resolver {
         }
     }
 
-    pub(crate) fn resolve_config(parser: &Parser, source: &Source, config: &mut ServerConfig) {
+    pub(crate) fn resolve_data_set(parser: &Parser, source: &Source, data_set: &mut DataSet) {
+        for group in data_set.groups.iter_mut() {
+            for record in group.records.iter_mut() {
+                record.resolved = Some(Self::resolve_dictionary_literal(parser, source, &record.dictionary).as_value().unwrap().clone());
+            }
+        }
+    }
+
+    pub(crate) fn resolve_server_config_block(parser: &Parser, source: &Source, config: &mut ServerConfig) {
         for item in config.items.iter_mut() {
             match item.identifier.name.as_str() {
                 "bind" => {
