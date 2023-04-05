@@ -1157,11 +1157,33 @@ namespace Teo {
 
     public class DateTimeConverter : JsonConverter<DateTime> {
         public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
-            return DateTime.Parse(reader.GetString() ?? string.Empty);
+            if (reader.TokenType != JsonTokenType.StartObject) {
+                throw new JsonException($"JsonTokenType was of type {reader.TokenType}, only objects are supported");
+            }
+            DateTime? result = null;
+            while (reader.Read()) {
+                if (reader.TokenType == JsonTokenType.EndObject) {
+                    if (result == null) {
+                        throw new JsonException("DateTime value is not found");
+                    } else {
+                        return result! ?? DateTime.UtcNow;
+                    }
+                }
+                if (reader.TokenType != JsonTokenType.PropertyName) {
+                    throw new JsonException("JsonTokenType was not PropertyName");
+                }
+                var propertyName = reader.GetString();
+                if (propertyName != "$date") {
+                    throw new JsonException($"Expect `$date', PropertyName was {propertyName}");
+                }
+                reader.Read();
+                result = DateTime.Parse(reader.GetString() ?? string.Empty);
+            }
+            throw new JsonException("DateTime value is not parsed");
         }
 
         public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options) {
-            writer.WriteStringValue(value.ToString("yyyy-MM-ddTHH:mm:ss.fffK"));
+            writer.WriteStringValue(value.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffK"));
         }
     }
 
@@ -1172,6 +1194,38 @@ namespace Teo {
 
         public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options) {
             writer.WriteStringValue(value.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffK"));
+        }
+    }
+
+    public class DecimalConverter : JsonConverter<decimal> {
+        public override decimal Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+            if (reader.TokenType != JsonTokenType.StartObject) {
+                throw new JsonException($"JsonTokenType was of type {reader.TokenType}, only objects are supported");
+            }
+            decimal? result = null;
+            while (reader.Read()) {
+                if (reader.TokenType == JsonTokenType.EndObject) {
+                    if (result == null) {
+                        throw new JsonException("decimal value is not found");
+                    } else {
+                        return result! ?? 0;
+                    }
+                }
+                if (reader.TokenType != JsonTokenType.PropertyName) {
+                    throw new JsonException("JsonTokenType was not PropertyName");
+                }
+                var propertyName = reader.GetString();
+                if (propertyName != "$decimal") {
+                    throw new JsonException($"Expect `$decimal', PropertyName was {propertyName}");
+                }
+                reader.Read();
+                result = decimal.Parse(reader.GetString() ?? string.Empty);
+            }
+            throw new JsonException("decimal value is not parsed");
+        }
+
+        public override void Write(Utf8JsonWriter writer, decimal value, JsonSerializerOptions options) {
+            writer.WriteStringValue(value.ToString());
         }
     }
 
@@ -1347,6 +1401,7 @@ namespace Teo {
             options.Converters.Add(new DateOnlyConverter());
             options.Converters.Add(new DateTimeConverter());
             options.Converters.Add(new DateTimeOffsetConverter());
+            options.Converters.Add(new DecimalConverter());
             options.Converters.Add(new OneOfJsonConverterFactory());
             options.Converters.Add(new OptionalJsonConverterFactory());
             options.Converters.Add(new EnumerableJsonConverterFactory());
