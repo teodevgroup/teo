@@ -356,12 +356,13 @@
 #### 0.0.55
 - Remove URL segment name **[DONE]**
 - Refactor the generator code to make it production ready **[DONE]**
-- Swift client
+- Swift client **[DONE]**
 - Kotlin client **[DONE]**
 - Dart client **[DONE]**
 - C# client: refactor **[DONE]**
 - TS client: refactor
 - Client: distinct in handler args
+- C# client: capitalized names and names with underscore
 - TypeScript client: correct return types for `aggregate` and `groupBy`
 - Generate decimal imports in rust entities **[DONE]**
 
