@@ -30,7 +30,7 @@ impl FieldType {
     pub fn is_scalar(&self) -> bool {
         use self::FieldType::*;
         match self {
-            Vec(_) | HashMap(_) | BTreeMap(_) | Object(_) => false,
+            Vec(_) | HashMap(_) | BTreeMap(_) | Object(_) | Enum(_) => false,
             _ => true,
         }
     }
