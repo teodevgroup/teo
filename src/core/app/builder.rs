@@ -34,7 +34,7 @@ use crate::core::r#enum::{Enum, EnumVariant};
 use crate::core::relation::Relation;
 use crate::gen::interface::client::conf::{Conf as ClientConf};
 use crate::parser::ast::r#type::Arity;
-use crate::parser::parser::Parser;
+use crate::parser::parser::parser::Parser;
 
 #[derive(Debug)]
 pub(crate) struct CallbackLookupTable {
