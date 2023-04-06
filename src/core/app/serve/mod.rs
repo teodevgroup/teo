@@ -661,7 +661,7 @@ fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl 
                     return Error::destination_not_found().into();
                 }
             };
-            if !model_def.has_action(action) {
+            if !model_def.has_action(action) || model_def.is_teo_internal() {
                 log_unhandled(start, r.method().as_str(), &path, 400);
                 return Error::destination_not_found().into();
             }

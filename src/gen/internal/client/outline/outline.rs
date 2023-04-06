@@ -37,7 +37,7 @@ impl<'a> Outline<'a> {
                         }).collect(),
                     }
                 }).collect::<Vec<Class>>();
-                results.extend(graph.models().iter().map(|m| {
+                results.extend(graph.models_without_teo_internal().iter().map(|m| {
                     let mut classes: Vec<Class> = vec![
                         // data output
                         Some(Class {

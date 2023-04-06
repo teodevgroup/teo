@@ -63,6 +63,7 @@ pub struct ModelInner {
     pub(crate) disabled_actions: Option<Vec<Action>>,
     pub(crate) action_transformers: Vec<Pipeline>,
     pub(crate) migration: Option<ModelMigration>,
+    pub(crate) teo_internal: bool,
 }
 
 #[derive(Clone)]
@@ -71,6 +72,10 @@ pub struct Model {
 }
 
 impl Model {
+
+    pub(crate) fn is_teo_internal(&self) -> bool {
+        self.inner.teo_internal
+    }
 
     pub(crate) fn new_with_inner(inner: Arc<ModelInner>) -> Model {
         Model { inner }

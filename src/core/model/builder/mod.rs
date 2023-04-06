@@ -39,6 +39,7 @@ pub struct ModelBuilder {
     pub(crate) disabled_actions: Option<Vec<Action>>,
     pub(crate) action_transformers: Vec<Pipeline>,
     pub(crate) migration: Option<ModelMigration>,
+    pub(crate) teo_internal: bool,
 }
 
 impl ModelBuilder {
@@ -67,6 +68,7 @@ impl ModelBuilder {
             disabled_actions: None,
             action_transformers: vec![],
             migration: None,
+            teo_internal: false,
         }
     }
 
@@ -275,6 +277,7 @@ impl ModelBuilder {
             disabled_actions: self.disabled_actions.clone(),
             action_transformers: self.action_transformers.clone(),
             migration: self.migration.clone(),
+            teo_internal: self.teo_internal,
         };
         Model::new_with_inner(Arc::new(inner))
     }

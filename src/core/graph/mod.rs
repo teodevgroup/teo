@@ -37,6 +37,10 @@ impl Graph {
         self.inner.models_vec.as_ref()
     }
 
+    pub fn models_without_teo_internal(&self) -> Vec<&Model> {
+        self.inner.models_vec.iter().filter(|m| !m.is_teo_internal()).collect()
+    }
+
     pub fn current() -> &'static Self {
         unsafe {
             if CURRENT.is_none() {
