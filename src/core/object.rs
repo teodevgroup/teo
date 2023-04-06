@@ -117,6 +117,7 @@ impl Object {
                 self.set_property(key, value).await?;
             }
         }
+        self.inner.is_initialized.store(true, Ordering::SeqCst);
         Ok(())
     }
 
