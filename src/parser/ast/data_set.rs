@@ -8,15 +8,16 @@ pub struct DataSet {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
     pub(crate) span: Span,
+    pub(crate) identifier: Identifier,
     pub(crate) auto_seed: bool,
     pub(crate) groups: Vec<DataSetGroup>,
 
 }
 
 impl DataSet {
-    pub(crate) fn new(span: Span, source_id: usize, item_id: usize, auto_seed: bool, groups: Vec<DataSetGroup>) -> Self {
+    pub(crate) fn new(span: Span, source_id: usize, item_id: usize, identifier: Identifier, auto_seed: bool, groups: Vec<DataSetGroup>) -> Self {
         Self {
-            id: item_id, span, source_id, auto_seed, groups
+            id: item_id, span, source_id, auto_seed, groups, identifier
         }
     }
 }

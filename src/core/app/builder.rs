@@ -35,6 +35,7 @@ use crate::core::relation::Relation;
 use crate::gen::interface::client::conf::{Conf as ClientConf};
 use crate::parser::ast::r#type::Arity;
 use crate::parser::parser::parser::Parser;
+use crate::seeder::data_set::{DataSet, Group, Record};
 
 #[derive(Debug)]
 pub(crate) struct CallbackLookupTable {
@@ -74,6 +75,7 @@ pub struct AppBuilder {
     pub(crate) environment_version: EnvironmentVersion,
     pub(crate) entrance: Entrance,
     pub(crate) args: Arc<CLI>,
+    pub(crate) data_sets: Vec<DataSet>,
 }
 
 impl AppBuilder {
@@ -103,6 +105,7 @@ impl AppBuilder {
             environment_version: environment_version.clone(),
             entrance,
             args: Arc::new(Self::parse_cli_args(environment_version.clone(), entrance.clone())),
+            data_sets: vec![],
         }
     }
 
@@ -310,6 +313,7 @@ impl AppBuilder {
             entrance: self.entrance.clone(),
             args: self.args.clone(),
             before_server_start: self.before_server_start.clone(),
+            data_sets: self.data_sets.clone(),
         }
     }
 
@@ -588,6 +592,22 @@ impl AppBuilder {
                     }
                 }
             });
+        }
+        // load data sets
+        for data_set_ref in parser.data_sets.clone() {
+            let source = parser.get_source(data_set_ref.0);
+            let parser_data_set = source.get_data_set(data_set_ref.1);
+            let seeder_data_set = DataSet {
+                name: parser_data_set.identifier.name.clone(),
+                groups: parser_data_set.groups.iter().map(|g| Group {
+                    name: g.identifier.name.clone(),
+                    records: g.records.iter().map(|r| Record {
+                        name: r.identifier.name.clone(),
+                        value: r.resolved.as_ref().unwrap().clone()
+                    }).collect(),
+                }).collect(),
+            };
+            self.data_sets.push(seeder_data_set);
         }
     }
 
