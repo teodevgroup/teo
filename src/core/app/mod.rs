@@ -19,6 +19,9 @@ use crate::core::graph::Graph;
 use crate::gen::interface::client::conf::Conf as ClientConf;
 use crate::gen::interface::client::gen::gen as gen_client;
 use crate::gen::interface::server::gen as gen_entity;
+use crate::seeder::data_set::DataSet;
+use crate::seeder::seed;
+use crate::seeder::seed::seed;
 
 pub struct App {
     graph: Graph,
@@ -29,6 +32,7 @@ pub struct App {
     entrance: Entrance,
     args: Arc<CLI>,
     before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
+    data_sets: Vec<DataSet>,
 }
 
 impl App {
@@ -95,7 +99,12 @@ impl App {
                 migrate(self.graph.to_mut(), migrate_command.dry).await;
             }
             CLICommand::Seed(seed_command) => {
-
+                let names = if seed_command.all {
+                    self.data_sets.iter().map(|d| d.name.clone()).collect()
+                } else {
+                    seed_command.names.clone().unwrap()
+                };
+                seed(seed_command.action, self.graph(), &self.data_sets, names).await
             }
         }
         Ok(())

@@ -47,7 +47,7 @@ pub(crate) struct SeedCommand {
     pub(crate) names: Option<Vec<String>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub(crate) enum SeedCommandAction {
     Seed,
     Unseed,

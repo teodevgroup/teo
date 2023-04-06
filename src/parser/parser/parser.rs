@@ -73,6 +73,7 @@ pub(crate) struct Parser {
     pub(crate) config: Option<(usize, usize)>,
     pub(crate) generators: Vec<(usize, usize)>,
     pub(crate) clients: Vec<(usize, usize)>,
+    pub(crate) data_sets: Vec<(usize, usize)>,
     pub(crate) next_id: usize,
     pub(crate) resolved: bool,
     pub(crate) global_model_decorators: Option<GlobalModelDecorators>,
@@ -95,6 +96,7 @@ impl Parser {
             config: None,
             generators: vec![],
             clients: vec![],
+            data_sets: vec![],
             next_id: 0,
             resolved: false,
             global_model_decorators: None,
@@ -191,6 +193,7 @@ impl Parser {
                 Rule::dataset_declaration => {
                     let dataset_block = self.parse_dataset_block(current, source_id, item_id);
                     tops.insert(item_id, dataset_block);
+                    self.data_sets.push((source_id, item_id));
                 }
                 Rule::EOI | Rule::EMPTY_LINES => {},
                 Rule::CATCH_ALL => panic!("Catch all: {}", current.as_str()),
@@ -441,7 +444,7 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        Top::DataSet(DataSet::new(span, source_id, item_id, auto_seed, groups))
+        Top::DataSet(DataSet::new(span, source_id, item_id, identifier.unwrap(), auto_seed, groups))
     }
 
     fn parse_dataset_group(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> DataSetGroup {
