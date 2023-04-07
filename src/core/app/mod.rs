@@ -20,7 +20,6 @@ use crate::gen::interface::client::conf::Conf as ClientConf;
 use crate::gen::interface::client::gen::gen as gen_client;
 use crate::gen::interface::server::gen as gen_entity;
 use crate::seeder::data_set::DataSet;
-use crate::seeder::seed;
 use crate::seeder::seed::seed;
 
 pub struct App {
