@@ -29,8 +29,6 @@ use crate::core::pipeline::items::function::compare::{CompareArgument, CompareIt
 use crate::core::pipeline::items::function::perform::{PerformArgument, PerformItem, PerformResult};
 use crate::core::pipeline::items::function::transform::{TransformResult, TransformArgument, TransformItem};
 use crate::core::pipeline::items::function::validate::{ValidateArgument, ValidateItem, ValidateResult};
-use crate::core::pipeline::items::string::generation::cuid::CUIDItem;
-use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
 use crate::core::r#enum::{Enum, EnumVariant};
 use crate::core::relation::Relation;
@@ -38,6 +36,7 @@ use crate::gen::interface::client::conf::{Conf as ClientConf};
 use crate::parser::ast::r#type::Arity;
 use crate::parser::parser::parser::Parser;
 use crate::seeder::data_set::{DataSet, Group, Record};
+use crate::seeder::models::define::define_seeder_models;
 
 #[derive(Debug)]
 pub(crate) struct CallbackLookupTable {
@@ -596,28 +595,8 @@ impl AppBuilder {
             });
         }
         // internal model used by teo
-        self.graph_builder.model("__TeoSeedData", |m| {
-            let mut id_field = Field::new("id".to_owned());
-            id_field.primary = true;
-            let mut pipeline = Pipeline::new();
-            pipeline.items.push(Arc::new(CUIDItem::new()));
-            id_field.default = Some(Value::Pipeline(pipeline));
-            m.field(id_field);
-            let mut group_field = Field::new("group".to_owned());
-            group_field.field_type = Some(FieldType::String);
-            m.field(group_field);
-            let mut data_set_field = Field::new("dataset".to_owned());
-            data_set_field.field_type = Some(FieldType::String);
-            m.field(data_set_field);
-            let mut name_field = Field::new("name".to_owned());
-            name_field.field_type = Some(FieldType::String);
-            m.field(name_field);
-            let mut record_field = Field::new("record".to_owned());
-            record_field.field_type = Some(FieldType::String);
-            m.field(record_field);
-            m.table_name = "__teoseeddata".to_owned();
-            m.teo_internal = true;
-        });
+        // load seeder models
+        define_seeder_models(&mut self.graph_builder);
         // load data sets
         for data_set_ref in parser.data_sets.clone() {
             let source = parser.get_source(data_set_ref.0);

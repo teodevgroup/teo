@@ -87,7 +87,7 @@ async fn setup_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<
             for relation in group_model.relations() {
                 if relation.is_optional() && relation.has_foreign_key() {
                     // update this record
-
+                    
                 } else if relation.has_join_table() {
                     // create link records
                 } else if !relation.has_foreign_key() {
