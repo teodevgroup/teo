@@ -9,6 +9,7 @@ use crate::core::action::source::ActionSource;
 use crate::core::app::command::SeedCommandAction;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::Model;
+use crate::core::relation::Relation;
 use crate::core::result::Result;
 use crate::parser::parser::parser::Parser;
 use crate::prelude::{Graph, Object, Value};
@@ -84,7 +85,7 @@ async fn setup_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<
         let group_model = graph.model(group.name.as_str()).unwrap();
         let should_process = group_model.relations().iter().find(|r| !(r.has_foreign_key() && r.is_required())).is_some();
         if !should_process { continue }
-        let seed_records: Vec<Object> = graph.find_many(seed_data_model.name(), &teon!({
+        let seed_records = GroupRecord::find_many(teon!({
             "where": {
                 "group": group.name.as_str(),
                 "dataset": dataset.name.as_str(),
@@ -92,22 +93,65 @@ async fn setup_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<
         })).await.unwrap();
         for record in group.records.iter() {
             if !(limit.is_none() || limit.unwrap().get(&group.name).unwrap().contains(&record.name)) { continue }
-            let seed_record = seed_records.iter().find(|o| o.get_value("name").unwrap().as_str().unwrap() == &record.name).unwrap();
+            let seed_record = seed_records.iter().find(|o| o.name().as_str() == &record.name).unwrap();
             let object: Object = graph.find_unique(group_model.name(), &teon!({
-                "where": record_json_string_to_where_unique(seed_record.get_value("record").unwrap().as_str().unwrap(), group_model)
+                "where": record_json_string_to_where_unique(seed_record.record().as_str(), group_model)
             })).await.unwrap();
             for relation in group_model.relations() {
-                if relation.is_optional() && relation.has_foreign_key() {
-                    // update this record
-
-                } else if relation.has_join_table() {
-                    // create link records
-                } else if !relation.has_foreign_key() {
-                    // update record on that side
+                if let Some(reference) = record.value.as_hashmap().unwrap().get(relation.name()) {
+                    if let Some(references) = reference.as_vec() {
+                        for reference in references {
+                            setup_relations_internal(reference, relation, dataset, graph, &object).await;
+                        }
+                    } else {
+                        setup_relations_internal(reference, relation, dataset, graph, &object).await;
+                    }
                 }
-
             }
+        }
+    }
+}
 
+async fn setup_relations_internal(reference: &Value, relation: &Relation, dataset: &DataSet, graph: &Graph, object: &Object) {
+    let that_name = reference.as_raw_enum_choice().unwrap();
+    let that_seed_record = GroupRecord::find_first(teon!({
+        "where": {
+            "group": relation.model(),
+            "dataset": dataset.name.as_str(),
+            "name": that_name,
+        }
+    })).await.unwrap();
+    let that_object: Object = graph.find_unique(relation.model(), &teon!({
+        "where": record_json_string_to_where_unique(that_seed_record.record(), graph.model(relation.model()).unwrap())
+    })).await.unwrap();
+    if relation.is_optional() && relation.has_foreign_key() {
+        // update this record
+        for (local, foreign) in relation.iter() {
+            object.set_value(local, that_object.get_value(foreign).unwrap()).unwrap();
+        }
+        object.save().await.unwrap();
+    } else if !relation.has_join_table() {
+        // update that record
+        for (local, foreign) in relation.iter() {
+            that_object.set_value(foreign, object.get_value(local).unwrap()).unwrap();
+        }
+        that_object.save().await.unwrap();
+    } else {
+        let (through_model, through_relation) = graph.through_relation(relation);
+        let (_, through_that_relation) = graph.through_opposite_relation(relation);
+        let mut where_unique: HashMap<String, Value> = HashMap::new();
+        for (local, foreign) in through_relation.iter() {
+            where_unique.insert(local.to_string(), object.get_value(foreign).unwrap());
+        }
+        for (local, foreign) in through_that_relation.iter() {
+            where_unique.insert(local.to_string(), that_object.get_value(foreign).unwrap());
+        }
+        let link_record: Result<Object> = graph.find_first(through_model.name(), &teon!({
+            "where": Value::HashMap(where_unique.clone())
+        })).await;
+        if link_record.is_err() {
+            let link_object = graph.create_object(through_model.name(), Value::HashMap(where_unique)).await.unwrap();
+            link_object.save().await.unwrap();
         }
     }
 }
@@ -189,7 +233,6 @@ async fn perform_remove_from_database(dataset: &DataSet, group: &Group, record: 
             let link_record = link_record.unwrap();
             link_record.delete().await.unwrap();
         } else {
-            let that_record = that_record.unwrap();
             let mut link_to_self = true;
             for (local, foreign) in model_relation.iter() {
                 if that_record.get_value(foreign).unwrap() != exist.get_value(local).unwrap() {
@@ -207,15 +250,13 @@ async fn perform_remove_from_database(dataset: &DataSet, group: &Group, record: 
         relation.delete().await.unwrap();
     }
     // Second, delete it and the seed record
-    exist.unwrap().delete().await.unwrap();
+    exist.delete().await.unwrap();
     record.delete().await.unwrap();
 }
 
 /// This perform, saves an object into the database. It doesn't setup relationships without
 /// required foreign keys.
 async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: &Record, group_model: &Model, graph: &Graph) {
-    let object = graph.new_object(group_model.name(), Action::from_u32(PROGRAM_CODE), ActionSource::ProgramCode).unwrap();
-    object.set_teon(&teon!({})).await.unwrap();
     let mut input = teon!({});
     for (k, v) in record.value.as_hashmap().unwrap() {
         if group_model.field(k).is_some() {
@@ -224,14 +265,14 @@ async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: 
             if relation.is_required() && relation.has_foreign_key() {
                 // setup required relationship
                 let that_record_name = v.as_raw_enum_choice().unwrap();
-                let that_record_data: Object = graph.find_first::<Object>(seed_data_model.name(), &teon!({
+                let that_record_data = GroupRecord::find_first(teon!({
                     "where": {
                         "group": relation.model(),
                         "dataset": dataset.name.as_str(),
                         "name": that_record_name,
                     }
                 })).await.unwrap();
-                let that_record_identifier_json = that_record_data.get_value("record").unwrap().as_str().unwrap().to_string();
+                let that_record_identifier_json = that_record_data.record();
                 let that_record: Object = graph.find_unique(relation.model(), &teon!({
                     "where": record_json_string_to_where_unique(&that_record_identifier_json, graph.model(relation.model()).unwrap())
                 })).await.unwrap();
@@ -241,11 +282,12 @@ async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: 
             }
         }
     }
-    object.update_teon(&input).await.unwrap();
+    let object = graph.create_object(group_model.name(), &input).await.unwrap();
     object.save().await.unwrap();
     let record_object = GroupRecord::new(teon!({
         "group": group.name.as_str(),
         "dataset": dataset.name.as_str(),
+        "name": record.name.as_str(),
         "record": object_identifier_in_json(&object),
     })).await;
     record_object.save().await.unwrap();
@@ -279,7 +321,7 @@ fn object_identifier_in_json(object: &Object) -> String {
             _ => unreachable!(),
         };
     }
-    result.as_str().unwrap().to_owned()
+    result.to_string()
 }
 
 fn ordered_group<'a>(groups: &'a Vec<Group>, graph: &Graph) -> Vec<&'a Group> {
