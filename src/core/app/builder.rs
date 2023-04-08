@@ -610,6 +610,8 @@ impl AppBuilder {
                         value: r.resolved.as_ref().unwrap().clone()
                     }).collect(),
                 }).collect(),
+                autoseed: parser_data_set.auto_seed,
+                notrack: parser_data_set.notrack,
             };
             self.data_sets.push(seeder_data_set);
         }

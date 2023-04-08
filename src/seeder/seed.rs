@@ -26,9 +26,7 @@ pub(crate) async fn seed(action: SeedCommandAction, graph: &Graph, data_sets: &V
 }
 
 pub(crate) async fn seed_dataset(graph: &Graph, dataset: &DataSet) {
-    println!("see data set: {:?}", dataset);
-    // let seed_data_model = graph.model("__TeoSeedData").unwrap();
-    // let ordered_groups = ordered_group(&dataset.groups, graph);
+    let ordered_groups = ordered_group(&dataset.groups, graph);
     // // newly added records, we only update reference and relationships for these records.
     // let mut added_records: HashMap<String, Vec<String>> = hashmap!{};
     // // First, insert into database with required foreign key relations
