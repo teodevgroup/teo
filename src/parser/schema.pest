@@ -21,6 +21,7 @@ IMPORT_KEYWORD = _{ "import" }
 FROM_KEYWORD = _{ "from" }
 DATASET_KEYWORD = _{ "dataset" }
 AUTOSEED_KEYWORD = { "autoseed" }
+NOTRACK_KEYWORD = { "notrack" }
 GROUP_KEYWORD = _{ "group" }
 RECORD_KEYWORD = _{ "record" }
 COLON = { ":" }
@@ -291,7 +292,7 @@ field_declaration = {
 // dataset
 // #############
 dataset_declaration = {
-    AUTOSEED_KEYWORD? ~ DATASET_KEYWORD ~ identifier ~ BLOCK_OPEN ~ (EMPTY_LINES | comment_block | dataset_group_declaration)* ~ BLOCK_CLOSE
+    (AUTOSEED_KEYWORD | NOTRACK_KEYWORD)? ~ DATASET_KEYWORD ~ identifier ~ BLOCK_OPEN ~ (EMPTY_LINES | comment_block | dataset_group_declaration)* ~ BLOCK_CLOSE
 }
 dataset_group_declaration = {
     GROUP_KEYWORD ~ identifier ~ BLOCK_OPEN ~ (EMPTY_LINES | comment_block | dataset_group_record_declaration)* ~ BLOCK_CLOSE

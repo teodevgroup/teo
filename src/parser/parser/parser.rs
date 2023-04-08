@@ -428,13 +428,15 @@ impl Parser {
 
     fn parse_dataset_block(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
         let mut identifier: Option<Identifier> = None;
-        let mut auto_seed: bool = false;
+        let mut auto_seed = false;
+        let mut notrack = false;
         let mut groups = vec![];
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE | Rule::EMPTY_LINES => (),
                 Rule::AUTOSEED_KEYWORD => auto_seed = true,
+                Rule::NOTRACK_KEYWORD => notrack = true,
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::dataset_group_declaration => {
                     let next_id = self.next_id();
@@ -444,7 +446,7 @@ impl Parser {
                 _ => panic!("error."),
             }
         }
-        Top::DataSet(DataSet::new(span, source_id, item_id, identifier.unwrap(), auto_seed, groups))
+        Top::DataSet(DataSet::new(span, source_id, item_id, identifier.unwrap(), auto_seed, notrack, groups))
     }
 
     fn parse_dataset_group(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> DataSetGroup {

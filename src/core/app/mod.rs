@@ -103,6 +103,7 @@ impl App {
                 } else {
                     seed_command.names.clone().unwrap()
                 };
+                migrate(self.graph.to_mut(), false).await;
                 seed(seed_command.action, self.graph(), &self.data_sets, names).await
             }
         }
