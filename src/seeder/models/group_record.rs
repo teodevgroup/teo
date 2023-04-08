@@ -1,4 +1,5 @@
 use std::{collections::HashMap, fmt::{Debug, Display, Formatter}};
+use std::borrow::Borrow;
 use crate::prelude::{Graph, Object, Value, Result};
 
 /// Group record
@@ -10,18 +11,18 @@ pub struct GroupRecord {
 impl GroupRecord {
 
     /// Find many group records.
-    pub async fn find_many(query: &Value) -> Result<Vec<GroupRecord>> {
-        Graph::current().find_many("__TeoGroupRecord", query).await
+    pub async fn find_many(query: impl Borrow<Value>) -> Result<Vec<GroupRecord>> {
+        Graph::current().find_many("__TeoGroupRecord", query.borrow()).await
     }
 
     /// Find a unique group record.
-    pub async fn find_unique(query: &Value) -> Result<GroupRecord> {
-        Graph::current().find_unique("__TeoGroupRecord", query).await
+    pub async fn find_unique(query: impl Borrow<Value>) -> Result<GroupRecord> {
+        Graph::current().find_unique("__TeoGroupRecord", query.borrow()).await
     }
 
     /// Find a non unique group record.
-    pub async fn find_first(query: &Value) -> Result<GroupRecord> {
-        Graph::current().find_first("__TeoGroupRecord", query).await
+    pub async fn find_first(query: impl Borrow<Value>) -> Result<GroupRecord> {
+        Graph::current().find_first("__TeoGroupRecord", query.borrow()).await
     }
 
     /// Create a new group record.

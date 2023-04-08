@@ -593,17 +593,14 @@ async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &S
     }
 }
 
-pub fn make_app(graph: Graph, conf: ServerConf) ->  App<impl ServiceFactory<
+pub fn make_app(graph: &'static Graph, conf: &'static ServerConf) ->  App<impl ServiceFactory<
     ServiceRequest,
     Response = ServiceResponse<BoxBody>,
     Config = (),
     InitError = (),
     Error = actix_web::Error,
 > + 'static> {
-    let leaked_graph = Box::leak(Box::new(graph));
-    let leaked_conf = Box::leak(Box::new(conf));
-    Graph::set_current(leaked_graph);
-    make_app_inner(leaked_graph, leaked_conf)
+    make_app_inner(graph, conf)
 }
 
 fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl ServiceFactory<
@@ -830,8 +827,8 @@ async fn server_start_message(port: u16, environment_version: EnvironmentVersion
 }
 
 pub(crate) async fn serve(
-    graph: Graph,
-    conf: ServerConf,
+    graph: &'static Graph,
+    conf: &'static ServerConf,
     environment_version: EnvironmentVersion,
     entrance: Entrance,
     no_migration: bool,
@@ -840,8 +837,6 @@ pub(crate) async fn serve(
     if !no_migration {
         migrate(graph.to_mut(), false).await;
     }
-    let leaked_graph = Box::leak(Box::new(graph.clone()));
-    Graph::set_current(leaked_graph);
     if let Some(cb) = before_server_start {
         match cb.call().await {
             Ok(()) => (),
@@ -851,7 +846,7 @@ pub(crate) async fn serve(
     let bind = conf.bind.clone();
     let port = bind.1;
     let server = HttpServer::new(move || {
-        make_app(graph.clone(), conf.clone())
+        make_app(graph, conf)
     })
         .bind(bind)
         .unwrap()
