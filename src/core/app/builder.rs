@@ -23,7 +23,7 @@ use crate::core::database::name::DatabaseName;
 use crate::core::field::r#type::FieldType;
 use crate::core::graph::builder::GraphBuilder;
 use crate::parser::ast::field::FieldClass;
-use crate::prelude::{App, Value};
+use crate::prelude::{App, Graph, Value};
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::items::function::compare::{CompareArgument, CompareItem};
 use crate::core::pipeline::items::function::perform::{PerformArgument, PerformItem, PerformResult};
@@ -303,18 +303,21 @@ impl AppBuilder {
         self.load_config_from_parser(&parser).await;
     }
 
-    pub async fn build(&mut self) -> App {
+    pub async fn build(mut self) -> App {
         self.load().await;
+        let graph = Box::leak(Box::new(self.graph_builder.build(self.connector.as_ref().unwrap().clone()).await));
+        Graph::set_current(graph);
+        let server_conf = Box::leak(Box::new(self.server_conf.unwrap()));
         App {
-            server_conf: self.server_conf.clone().unwrap(),
-            entity_generator_confs: self.entity_generator_confs.clone(),
-            client_generator_confs: self.client_generator_confs.clone(),
-            graph: self.graph_builder.build(self.connector.as_ref().unwrap().clone()).await,
-            environment_version: self.environment_version.clone(),
+            server_conf,
+            entity_generator_confs: self.entity_generator_confs,
+            client_generator_confs: self.client_generator_confs,
+            graph,
+            environment_version: self.environment_version,
             entrance: self.entrance.clone(),
             args: self.args.clone(),
-            before_server_start: self.before_server_start.clone(),
-            data_sets: self.data_sets.clone(),
+            before_server_start: self.before_server_start,
+            data_sets: self.data_sets,
         }
     }
 

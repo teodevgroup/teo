@@ -23,8 +23,8 @@ use crate::seeder::data_set::DataSet;
 use crate::seeder::seed::seed;
 
 pub struct App {
-    graph: Graph,
-    server_conf: ServerConf,
+    graph: &'static Graph,
+    server_conf: &'static ServerConf,
     entity_generator_confs: Vec<EntityGeneratorConf>,
     client_generator_confs: Vec<ClientConf>,
     environment_version: EnvironmentVersion,
@@ -44,8 +44,8 @@ impl App {
         match &self.args.command {
             CLICommand::Serve(serve_command) => {
                 serve(
-                    self.graph.clone(),
-                    self.server_conf.clone(),
+                    self.graph,
+                    self.server_conf,
                     self.environment_version.clone(),
                     self.entrance.clone(),
                     serve_command.no_migration,

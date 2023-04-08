@@ -12,17 +12,21 @@ use crate::core::model::Model;
 use crate::parser::parser::parser::Parser;
 use crate::prelude::{Graph, Object, Value};
 use crate::seeder::data_set::{DataSet, Group, normalize_dataset_relations, Record};
+use crate::seeder::models::group_record::GroupRecord;
+use crate::seeder::models::group_relation::GroupRelation;
 use crate::teon;
 
-pub(crate) async fn seed(action: SeedCommandAction, graph: &Graph, data_sets: &Vec<DataSet>, names: Vec<String>) {
+pub(crate) async fn seed(action: SeedCommandAction, graph: &Graph, datasets: &Vec<DataSet>, names: Vec<String>) {
+    // seed for user
     for name in &names {
-        let data_set = data_sets.iter().find(|ds| &ds.name == name).unwrap();
+        let dataset = datasets.iter().find(|ds| &ds.name == name).unwrap();
         match action {
-            SeedCommandAction::Seed => seed_dataset(graph, normalize_dataset_relations(data_set, graph)).await,
-            SeedCommandAction::Unseed => unseed_dataset(graph, normalize_dataset_relations(data_set, graph)).await,
-            SeedCommandAction::Reseed => reseed_dataset(graph, normalize_dataset_relations(data_set, graph)).await,
+            SeedCommandAction::Seed => seed_dataset(graph, normalize_dataset_relations(dataset, graph)).await,
+            SeedCommandAction::Unseed => unseed_dataset(graph, normalize_dataset_relations(dataset, graph)).await,
+            SeedCommandAction::Reseed => reseed_dataset(graph, normalize_dataset_relations(dataset, graph)).await,
         }
     }
+    remove_user_deleted_dataset_records_and_relations(datasets).await;
 }
 
 pub(crate) async fn seed_dataset(graph: &Graph, dataset: &DataSet) {
@@ -211,4 +215,29 @@ fn ordered_group<'a>(groups: &'a Vec<Group>, graph: &Graph) -> Vec<&'a Group> {
         }
     }
     result
+}
+
+async fn remove_user_deleted_dataset_records_and_relations(datasets: &Vec<DataSet>) {
+    // remove seed data set records if user removed some seed data set
+    let names = Value::Vec(datasets.iter().map(|d| Value::String(d.name.clone())).collect::<Vec<Value>>());
+    let records_to_remove = GroupRecord::find_many(teon!({
+        "where": {
+            "dataset": {
+                "notIn": &names,
+            }
+        }
+    })).await.unwrap();
+    for record in records_to_remove {
+        record.delete().await.unwrap();
+    }
+    let relations_to_remove = GroupRelation::find_many(teon!({
+        "where": {
+            "dataset": {
+                "notIn": names,
+            }
+        }
+    })).await.unwrap();
+    for relation in relations_to_remove {
+        relation.delete().await.unwrap();
+    }
 }
