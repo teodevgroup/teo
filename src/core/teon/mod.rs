@@ -795,6 +795,7 @@ impl PartialEq for Value {
             (HashMap(s), HashMap(o)) => s == o,
             (IndexMap(s), IndexMap(o)) => s == o,
             (BTreeMap(s), BTreeMap(o)) => s == o,
+            (RawEnumChoice(s1, a1), RawEnumChoice(s2, a2)) => s1 == s2 && a2 == a2,
             _ => false,
         }
     }
