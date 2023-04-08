@@ -169,7 +169,7 @@ async fn setup_relations_internal(record: &Record, reference: &Value, relation: 
                 {
                     "dataset": dataset.name.as_str(),
                     "groupB": object.model().name(),
-                    "groupB": relation.name(),
+                    "relationB": relation.name(),
                     "nameB": record.name.as_str(),
                     "groupA": that_object.model().name(),
                     "nameA": that_name
