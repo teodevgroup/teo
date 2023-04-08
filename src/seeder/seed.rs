@@ -9,6 +9,7 @@ use crate::core::action::source::ActionSource;
 use crate::core::app::command::SeedCommandAction;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::Model;
+use crate::core::result::Result;
 use crate::parser::parser::parser::Parser;
 use crate::prelude::{Graph, Object, Value};
 use crate::seeder::data_set::{DataSet, Group, normalize_dataset_relations, Record};
@@ -31,33 +32,42 @@ pub(crate) async fn seed(action: SeedCommandAction, graph: &Graph, datasets: &Ve
 
 pub(crate) async fn seed_dataset(graph: &Graph, dataset: &DataSet) {
     let ordered_groups = ordered_group(&dataset.groups, graph);
-    // // newly added records, we only update reference and relationships for these records.
-    // let mut added_records: HashMap<String, Vec<String>> = hashmap!{};
-    // // First, insert into database with required foreign key relations
-    // for group in &ordered_groups {
-    //     let group_model = graph.model(group.name.as_str()).unwrap();
-    //     let mut added_names = vec![];
-    //     for record in group.records.iter() {
-    //         let seed_records: Vec<Object> = graph.find_many(seed_data_model.name(), &teon!({
-    //             "where": {
-    //                 "group": group.name.as_str(),
-    //                 "dataset": dataset.name.as_str(),
-    //             }
-    //         })).await.unwrap();
-    //         for seed_record in seed_records.iter() {
-    //             let existing: Option<Object> = graph.find_unique(group_model.name(), &teon!({
-    //                 "where": record_json_string_to_where_unique(seed_record.get_value("record").unwrap().as_str().unwrap(), group_model)
-    //             })).await.unwrap();
-    //             if existing.is_none() {
-    //                 perform_insert_into_database(dataset, group, record, group_model, seed_data_model, graph).await;
-    //                 added_names.push(record.name.clone());
-    //             }
-    //         }
-    //     }
-    //     added_records.insert(group.name.clone(), added_names);
-    // }
-    // // Second, setup optional relations and array relations
-    // setup_relations(graph, dataset, &ordered_groups, seed_data_model, Some(&added_records)).await
+    // newly added records, we only update reference and relationships for these records.
+    let mut added_records: HashMap<String, Vec<String>> = hashmap!{};
+    // First, insert into database with required foreign key relations
+    for group in &ordered_groups {
+        let group_model = graph.model(group.name.as_str()).unwrap();
+        let mut added_names = vec![];
+        let seed_records = GroupRecord::find_many(teon!({
+            "where": {
+                "group": group.name.as_str(),
+                "dataset": dataset.name.as_str(),
+            }
+        })).await.unwrap();
+        for record in group.records.iter() {
+            let mut existing = false;
+            for seed_record in seed_records.iter() {
+                if &seed_record.name() == &record.name {
+                    existing = true;
+                }
+            }
+            if !existing {
+                perform_insert_into_database(dataset, group, record, group_model, graph).await;
+                added_names.push(record.name.clone());
+            }
+        }
+        added_records.insert(group.name.clone(), added_names);
+        // delete records which are not recorded in user dataset
+        for seed_record in seed_records.iter() {
+            let existing = group.records.iter().find(|r| &r.name == &seed_record.name()).is_some();
+            if !existing {
+                perform_remove_from_database(dataset, group, seed_record, group_model, graph).await;
+            }
+
+        }
+    }
+    // Second, setup optional relations and array relations
+    setup_relations(graph, dataset, &ordered_groups, Some(&added_records)).await;
 }
 
 pub(crate) async fn unseed_dataset(graph: &Graph, data_set: &DataSet) {
@@ -70,7 +80,7 @@ pub(crate) async fn reseed_dataset(graph: &Graph, data_set: &DataSet) {
 
 }
 
-async fn setup_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<&Group>, seed_data_model: &Model, limit: Option<&HashMap<String, Vec<String>>>) {
+async fn setup_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<&Group>, limit: Option<&HashMap<String, Vec<String>>>) {
     for group in ordered_groups {
         let group_model = graph.model(group.name.as_str()).unwrap();
         let should_process = group_model.relations().iter().find(|r| !(r.has_foreign_key() && r.is_required())).is_some();
@@ -103,9 +113,22 @@ async fn setup_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<
     }
 }
 
-/// This perform, saves an an object into the database. It doesn't setup relationships without
+/// This perform, deletes an object from the databse.
+async fn perform_remove_from_database(dataset: &DataSet, group: &Group, record: &GroupRecord, group_model: &Model, graph: &Graph) {
+    let json_identifier = record.record();
+    let exist: Result<Object> = graph.find_unique(group_model.name(), &teon!({
+        "where": record_json_string_to_where_unique(json_identifier, group_model)
+    })).await;
+    if exist.is_ok() {
+        exist.unwrap().delete().await.unwrap();
+    }
+    record.delete().await.unwrap();
+    // cut relations here
+}
+
+/// This perform, saves an object into the database. It doesn't setup relationships without
 /// required foreign keys.
-async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: &Record, group_model: &Model, seed_data_model: &Model, graph: &Graph) {
+async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: &Record, group_model: &Model, graph: &Graph) {
     let object = graph.new_object(group_model.name(), Action::from_u32(PROGRAM_CODE), ActionSource::ProgramCode).unwrap();
     object.set_teon(&teon!({})).await.unwrap();
     let mut input = teon!({});
@@ -135,17 +158,16 @@ async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: 
     }
     object.update_teon(&input).await.unwrap();
     object.save().await.unwrap();
-    let record_object = graph.new_object(seed_data_model.name(), Action::from_u32(PROGRAM_CODE), ActionSource::ProgramCode).unwrap();
-    record_object.update_teon(&teon!({
+    let record_object = GroupRecord::new(teon!({
         "group": group.name.as_str(),
         "dataset": dataset.name.as_str(),
         "record": object_identifier_in_json(&object),
-    })).await.unwrap();
+    })).await;
     record_object.save().await.unwrap();
 }
 
-fn record_json_string_to_where_unique(json_str: &str, model: &Model) -> Value {
-    let json_value: serde_json::Value = serde_json::from_str(json_str).unwrap();
+fn record_json_string_to_where_unique(json_str: impl AsRef<str>, model: &Model) -> Value {
+    let json_value: serde_json::Value = serde_json::from_str(json_str.as_ref()).unwrap();
     let json_object = json_value.as_object().unwrap();
     let mut result_teon_value = teon!({});
     for (k, v) in json_object {
