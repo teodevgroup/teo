@@ -84,12 +84,13 @@ impl SQLConnector {
         } else {
             match conn.query(QuaintQuery::from(stmt)).await {
                 Ok(result) => {
-                    let id = result.last_insert_id().unwrap();
-                    for key in auto_keys {
-                        if model.field(key).unwrap().field_type().is_int32() {
-                            object.set_value(key, Value::I32(id as i32))?;
-                        } else {
-                            object.set_value(key, Value::I64(id as i64))?;
+                    if let Some(id) = result.last_insert_id() {
+                        for key in auto_keys {
+                            if model.field(key).unwrap().field_type().is_int32() {
+                                object.set_value(key, Value::I32(id as i32))?;
+                            } else {
+                                object.set_value(key, Value::I64(id as i64))?;
+                            }
                         }
                     }
                     Ok(())
