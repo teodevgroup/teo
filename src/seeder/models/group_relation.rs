@@ -142,14 +142,6 @@ impl GroupRelation {
     pub fn set_name_b(&self, new_value: impl Into<String>) {
         self.inner.set("nameB", new_value.into()).unwrap();
     }
-
-    pub fn relation_type(&self) -> String {
-        self.inner.get("type").unwrap()
-    }
-
-    pub fn set_relation_type(&self, new_value: impl Into<String>) {
-        self.inner.set("type", new_value.into()).unwrap();
-    }
 }
 
 impl Into<Object> for GroupRelation {

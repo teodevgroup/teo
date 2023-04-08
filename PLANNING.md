@@ -369,6 +369,7 @@
 - Parser: parse dataset **[DONE]**
 - Fix dictionary literal parsing bug **[DONE]**
 - Fix SQL non-serial id object creating bug **[DONE]**
+- Fix SQL `OR` in where bug **[DONE]**
 - Data seeding
 - Setup integration tests: reset after each request
 - Unit test: relations for different connectors
