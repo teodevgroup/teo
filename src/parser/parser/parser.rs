@@ -819,7 +819,8 @@ impl Parser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::named_expression => expressions.push(Self::parse_named_expression(current)),
-                _ => unreachable!()
+                Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => (),
+                _ => unreachable!(),
             }
         }
         DictionaryLiteral { expressions, span }
