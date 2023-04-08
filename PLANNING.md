@@ -367,11 +367,15 @@
 - Generate decimal imports in rust entities **[DONE]**
 - Schema lang: dataset **[DONE]**
 - Parser: parse dataset **[DONE]**
+- Fix dictionary literal parsing bug **[DONE]**
 - Data seeding
 - Setup integration tests: reset after each request
+- Unit test: relations for different connectors
+- Unit test: handlers
 
 #### 0.0.56
 - VSCode highlight for data seeding
+- Linter: errors and warnings
 - Cross language error handling for node.js @victorteokw
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection @victorteokw
 - Rewrite connector to support pooled connections @victorteokw
@@ -418,18 +422,15 @@
 - Input omissible and output omissible for generated clients
 
 #### 0.1.0
-- Linting, warnings and errors
-
-#### 0.2.0
 - Database type mapping for field, property and collection types' item field
 
-#### 0.2.5
+#### 0.2.0
 - Support MSSQL
 
-#### 0.2.8
+#### 0.3.0
 - Correct count with cursor
 
-#### 0.3.0
+#### 0.4.0
 - `@canAccess`
 
 #### 1.0.0

@@ -1,7 +1,8 @@
 use std::sync::Arc;
-use crate::core::field::Field;
+use crate::core::field::{Field, Sort};
 use crate::core::field::r#type::FieldType;
 use crate::core::model::builder::ModelBuilder;
+use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::pipeline::items::string::generation::cuid::CUIDItem;
 use crate::core::pipeline::Pipeline;
 use crate::prelude::{GraphBuilder, Value};
@@ -37,6 +38,9 @@ fn install_string_id_and_dataset(m: &mut ModelBuilder) {
     pipeline.items.push(Arc::new(CUIDItem::new()));
     id_field.default = Some(Value::Pipeline(pipeline));
     m.field(id_field);
+    m.primary = Some(ModelIndex::new(ModelIndexType::Primary, None::<String>, vec![
+        ModelIndexItem::new("id".to_string(), Sort::Asc, None)
+    ]));
     let mut data_set_field = Field::new("dataset".to_owned());
     data_set_field.field_type = Some(FieldType::String);
     m.field(data_set_field);

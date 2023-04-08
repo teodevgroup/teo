@@ -108,7 +108,7 @@ array_literal = { "[" ~ (expression ~ ( "," ~ expression )* ~ ","?)? ~ "]" }
 // dict literals
 // #############
 named_expression = { expression ~ ":" ~ expression }
-dictionary_literal = { "{" ~ (named_expression ~ ( "," ~ named_expression )* ~ ","?)? ~ "}" }
+dictionary_literal = { BLOCK_OPEN ~ (named_expression ~ ( NEWLINE* ~ "," ~ NEWLINE* ~ named_expression )* ~ NEWLINE* ~ ","? ~ NEWLINE*)? ~ BLOCK_CLOSE }
 
 // #############
 // subscript
@@ -291,10 +291,10 @@ field_declaration = {
 // dataset
 // #############
 dataset_declaration = {
-    AUTOSEED_KEYWORD? ~ DATASET_KEYWORD ~ identifier ~ BLOCK_OPEN ~ (dataset_group_declaration | comment_block)* ~ BLOCK_CLOSE
+    AUTOSEED_KEYWORD? ~ DATASET_KEYWORD ~ identifier ~ BLOCK_OPEN ~ (EMPTY_LINES | comment_block | dataset_group_declaration)* ~ BLOCK_CLOSE
 }
 dataset_group_declaration = {
-    GROUP_KEYWORD ~ identifier ~ BLOCK_OPEN ~ (dataset_group_record_declaration | comment_block)* ~ BLOCK_CLOSE
+    GROUP_KEYWORD ~ identifier ~ BLOCK_OPEN ~ (EMPTY_LINES | comment_block | dataset_group_record_declaration)* ~ BLOCK_CLOSE
 }
 dataset_group_record_declaration = {
     RECORD_KEYWORD ~ identifier ~ dictionary_literal

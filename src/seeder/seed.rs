@@ -11,50 +11,51 @@ use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::Model;
 use crate::parser::parser::parser::Parser;
 use crate::prelude::{Graph, Object, Value};
-use crate::seeder::data_set::{DataSet, Group, Record};
+use crate::seeder::data_set::{DataSet, Group, normalize_dataset_relations, Record};
 use crate::teon;
 
 pub(crate) async fn seed(action: SeedCommandAction, graph: &Graph, data_sets: &Vec<DataSet>, names: Vec<String>) {
     for name in &names {
         let data_set = data_sets.iter().find(|ds| &ds.name == name).unwrap();
         match action {
-            SeedCommandAction::Seed => seed_dataset(graph, data_set).await,
-            SeedCommandAction::Unseed => unseed_dataset(graph, data_set).await,
-            SeedCommandAction::Reseed => reseed_dataset(graph, data_set).await,
+            SeedCommandAction::Seed => seed_dataset(graph, normalize_dataset_relations(data_set, graph)).await,
+            SeedCommandAction::Unseed => unseed_dataset(graph, normalize_dataset_relations(data_set, graph)).await,
+            SeedCommandAction::Reseed => reseed_dataset(graph, normalize_dataset_relations(data_set, graph)).await,
         }
     }
 }
 
 pub(crate) async fn seed_dataset(graph: &Graph, dataset: &DataSet) {
-    let seed_data_model = graph.model("__TeoSeedData").unwrap();
-    let ordered_groups = ordered_group(&dataset.groups, graph);
-    // newly added records, we only update reference and relationships for these records.
-    let mut added_records: HashMap<String, Vec<String>> = hashmap!{};
-    // First, insert into database with required foreign key relations
-    for group in &ordered_groups {
-        let group_model = graph.model(group.name.as_str()).unwrap();
-        let mut added_names = vec![];
-        for record in group.records.iter() {
-            let seed_records: Vec<Object> = graph.find_many(seed_data_model.name(), &teon!({
-                "where": {
-                    "group": group.name.as_str(),
-                    "dataset": dataset.name.as_str(),
-                }
-            })).await.unwrap();
-            for seed_record in seed_records.iter() {
-                let existing: Option<Object> = graph.find_unique(group_model.name(), &teon!({
-                    "where": record_json_string_to_where_unique(seed_record.get_value("record").unwrap().as_str().unwrap(), group_model)
-                })).await.unwrap();
-                if existing.is_none() {
-                    perform_insert_into_database(dataset, group, record, group_model, seed_data_model, graph).await;
-                    added_names.push(record.name.clone());
-                }
-            }
-        }
-        added_records.insert(group.name.clone(), added_names);
-    }
-    // Second, setup optional relations and array relations
-    setup_relations(graph, dataset, &ordered_groups, seed_data_model, Some(&added_records)).await
+    println!("see data set: {:?}", dataset);
+    // let seed_data_model = graph.model("__TeoSeedData").unwrap();
+    // let ordered_groups = ordered_group(&dataset.groups, graph);
+    // // newly added records, we only update reference and relationships for these records.
+    // let mut added_records: HashMap<String, Vec<String>> = hashmap!{};
+    // // First, insert into database with required foreign key relations
+    // for group in &ordered_groups {
+    //     let group_model = graph.model(group.name.as_str()).unwrap();
+    //     let mut added_names = vec![];
+    //     for record in group.records.iter() {
+    //         let seed_records: Vec<Object> = graph.find_many(seed_data_model.name(), &teon!({
+    //             "where": {
+    //                 "group": group.name.as_str(),
+    //                 "dataset": dataset.name.as_str(),
+    //             }
+    //         })).await.unwrap();
+    //         for seed_record in seed_records.iter() {
+    //             let existing: Option<Object> = graph.find_unique(group_model.name(), &teon!({
+    //                 "where": record_json_string_to_where_unique(seed_record.get_value("record").unwrap().as_str().unwrap(), group_model)
+    //             })).await.unwrap();
+    //             if existing.is_none() {
+    //                 perform_insert_into_database(dataset, group, record, group_model, seed_data_model, graph).await;
+    //                 added_names.push(record.name.clone());
+    //             }
+    //         }
+    //     }
+    //     added_records.insert(group.name.clone(), added_names);
+    // }
+    // // Second, setup optional relations and array relations
+    // setup_relations(graph, dataset, &ordered_groups, seed_data_model, Some(&added_records)).await
 }
 
 pub(crate) async fn unseed_dataset(graph: &Graph, data_set: &DataSet) {
@@ -87,7 +88,7 @@ async fn setup_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<
             for relation in group_model.relations() {
                 if relation.is_optional() && relation.has_foreign_key() {
                     // update this record
-                    
+
                 } else if relation.has_join_table() {
                     // create link records
                 } else if !relation.has_foreign_key() {
