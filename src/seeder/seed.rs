@@ -101,10 +101,10 @@ async fn setup_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<
                 if let Some(reference) = record.value.as_hashmap().unwrap().get(relation.name()) {
                     if let Some(references) = reference.as_vec() {
                         for reference in references {
-                            setup_relations_internal(reference, relation, dataset, graph, &object).await;
+                            setup_relations_internal(record, reference, relation, dataset, graph, &object).await;
                         }
                     } else {
-                        setup_relations_internal(reference, relation, dataset, graph, &object).await;
+                        setup_relations_internal(record, reference, relation, dataset, graph, &object).await;
                     }
                 }
             }
@@ -112,7 +112,7 @@ async fn setup_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<
     }
 }
 
-async fn setup_relations_internal(reference: &Value, relation: &Relation, dataset: &DataSet, graph: &Graph, object: &Object) {
+async fn setup_relations_internal(record: &Record, reference: &Value, relation: &Relation, dataset: &DataSet, graph: &Graph, object: &Object) {
     let that_name = reference.as_raw_enum_choice().unwrap();
     let that_seed_record = GroupRecord::find_first(teon!({
         "where": {
@@ -153,6 +153,43 @@ async fn setup_relations_internal(reference: &Value, relation: &Relation, datase
             let link_object = graph.create_object(through_model.name(), Value::HashMap(where_unique)).await.unwrap();
             link_object.save().await.unwrap();
         }
+    }
+    // update relation record
+    let exist_relation_record = GroupRelation::find_first(teon!({
+        "where": {
+            "OR": [
+                {
+                    "dataset": dataset.name.as_str(),
+                    "groupA": object.model().name(),
+                    "relationA": relation.name(),
+                    "nameA": record.name.as_str(),
+                    "groupB": that_object.model().name(),
+                    "nameB": that_name,
+                },
+                {
+                    "dataset": dataset.name.as_str(),
+                    "groupB": object.model().name(),
+                    "groupB": relation.name(),
+                    "nameB": record.name.as_str(),
+                    "groupA": that_object.model().name(),
+                    "nameA": that_name
+                }
+            ]
+        }
+    })).await;
+    if exist_relation_record.is_err() {
+        // not exist, create
+        let that_relation = graph.opposite_relation(relation).1;
+        let new_relation_record = GroupRelation::new(teon!({
+            "dataset": dataset.name.as_str(),
+            "groupA": object.model().name(),
+            "relationA": relation.name(),
+            "nameA": record.name.as_str(),
+            "groupB": that_object.model().name(),
+            "relationB": if that_relation.is_some() { Value::String(that_relation.unwrap().name().to_owned()) } else { Value::Null },
+            "nameB": that_name,
+        })).await;
+        new_relation_record.save().await.unwrap();
     }
 }
 
@@ -279,6 +316,18 @@ async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: 
                 for (field, reference) in relation.iter() {
                     input.as_hashmap_mut().unwrap().insert(field.to_owned(), that_record.get_value(reference).unwrap());
                 }
+                // update relation record
+                let (_, opposite_relation) = graph.opposite_relation(relation);
+                let relation_record = GroupRelation::new(teon!({
+                    "dataset": dataset.name.as_str(),
+                    "groupA": group.name.as_str(),
+                    "relationA": relation.name(),
+                    "nameA": record.name.as_str(),
+                    "groupB": that_record.model().name(),
+                    "relationB": if opposite_relation.is_some() { Value::String(opposite_relation.unwrap().name().to_owned()) } else { Value::Null },
+                    "nameB": v.as_raw_enum_choice().unwrap()
+                })).await;
+                relation_record.save().await.unwrap();
             }
         }
     }

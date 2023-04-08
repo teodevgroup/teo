@@ -158,7 +158,7 @@ impl Query {
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);
             } else if key == "OR" {
-                let inner = WhereClause::Or(value.as_vec().unwrap().iter().map(|_w| Self::r#where(model, graph, value, dialect, table_alias)).collect()).to_string(dialect);
+                let inner = WhereClause::Or(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, graph, w, dialect, table_alias)).collect()).to_string(dialect);
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);
             } else if key == "NOT" {

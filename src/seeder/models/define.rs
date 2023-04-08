@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use crate::core::field::{Field, Sort};
+use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::FieldType;
 use crate::core::model::builder::ModelBuilder;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
@@ -24,9 +25,8 @@ pub(crate) fn define_seeder_models(graph_builder: &mut GraphBuilder) {
         install_plain_required_string_field(m, "relationA");
         install_plain_required_string_field(m, "nameA");
         install_plain_required_string_field(m, "groupB");
-        install_plain_required_string_field(m, "relationB");
+        install_plain_optional_string_field(m, "relationB");
         install_plain_required_string_field(m, "nameB");
-        install_plain_required_string_field(m, "type");
     });
 }
 
@@ -49,5 +49,12 @@ fn install_string_id_and_dataset(m: &mut ModelBuilder) {
 fn install_plain_required_string_field(m: &mut ModelBuilder, field_name: &str) {
     let mut new_field = Field::new(field_name.to_owned());
     new_field.field_type = Some(FieldType::String);
+    m.field(new_field);
+}
+
+fn install_plain_optional_string_field(m: &mut ModelBuilder, field_name: &str) {
+    let mut new_field = Field::new(field_name.to_owned());
+    new_field.field_type = Some(FieldType::String);
+    new_field.optionality = Optionality::Optional;
     m.field(new_field);
 }
