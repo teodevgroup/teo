@@ -24,8 +24,8 @@ pub(crate) async fn seed(action: SeedCommandAction, graph: &Graph, datasets: &Ve
         let dataset = datasets.iter().find(|ds| &ds.name == name).unwrap();
         match action {
             SeedCommandAction::Seed => seed_dataset(graph, normalize_dataset_relations(dataset, graph)).await,
-            SeedCommandAction::Unseed => unseed_dataset(graph, normalize_dataset_relations(dataset, graph)).await,
             SeedCommandAction::Reseed => reseed_dataset(graph, normalize_dataset_relations(dataset, graph)).await,
+            SeedCommandAction::Unseed => unseed_dataset(graph, normalize_dataset_relations(dataset, graph)).await,
         }
     }
     remove_user_deleted_dataset_records_and_relations(datasets).await;
@@ -96,8 +96,20 @@ pub(crate) async fn reseed_dataset(graph: &Graph, dataset: &DataSet) {
     sync_relations(graph, dataset, &ordered_groups).await;
 }
 
-pub(crate) async fn unseed_dataset(graph: &Graph, data_set: &DataSet) {
-
+pub(crate) async fn unseed_dataset(graph: &Graph, dataset: &DataSet) {
+    for group in &dataset.groups {
+        let group_model = graph.model(group.name.as_str()).unwrap();
+        let seed_records = GroupRecord::find_many(teon!({
+            "where": {
+                "group": group.name.as_str(),
+                "dataset": dataset.name.as_str(),
+            }
+        })).await.unwrap();
+        // delete records
+        for seed_record in seed_records.iter() {
+            perform_remove_from_database(dataset, group, seed_record, group_model, graph).await;
+        }
+    }
 }
 
 async fn sync_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<&Group>) {
