@@ -310,7 +310,7 @@
 - SQL migration: actions **[DONE]**
 - Server: decimal type **[DONE]**
 - TypeScript client: decimal type **[DONE]**
-- Fix number updator bug **[DONE]**
+- Fix number updater bug **[DONE]**
 - PostgreSQL array type: server side **[DONE]**
 - PostgreSQL array type: TypeScript client **[DONE]**
 - Fix optional type decoding **[DONE]**
@@ -371,7 +371,7 @@
 - Fix SQL non-serial id object creating bug **[DONE]**
 - Fix SQL `OR` in where bug **[DONE]**
 - Data seeding **[DONE]**
-- Setup integration tests: reset after each request
+- Setup integration tests: reset after each find request
 - Unit test: relations for different connectors
 - Unit test: handlers
 
