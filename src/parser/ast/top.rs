@@ -3,10 +3,12 @@ use crate::parser::ast::config::ServerConfig;
 use crate::parser::ast::connector::Connector;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::data_set::DataSet;
+use crate::parser::ast::debug_conf::DebugConf;
 use crate::parser::ast::generator::Generator;
 use crate::parser::ast::import::Import;
 use crate::parser::ast::model::Model;
 use crate::parser::ast::r#enum::Enum;
+use crate::parser::ast::test_conf::TestConf;
 
 #[derive(Debug)]
 pub(crate) enum Top {
@@ -19,6 +21,8 @@ pub(crate) enum Top {
     Client(Client),
     ServerConfig(ServerConfig),
     DataSet(DataSet),
+    TestConf(TestConf),
+    DebugConf(DebugConf),
 }
 
 impl Top {
@@ -34,6 +38,8 @@ impl Top {
             Top::Client(c) => c.id,
             Top::ServerConfig(c) => c.id,
             Top::DataSet(d) => d.id,
+            Top::TestConf(t) => t.id,
+            Top::DebugConf(d) => d.id,
         }
     }
 
@@ -197,5 +203,41 @@ impl Top {
 
     pub(crate) fn is_data_set(&self) -> bool {
         self.as_data_set().is_some()
+    }
+
+    pub(crate) fn as_test_conf(&self) -> Option<&TestConf> {
+        match self {
+            Top::TestConf(d) => Some(d),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_test_conf_mut(&mut self) -> Option<&mut TestConf> {
+        match self {
+            Top::TestConf(d) => Some(d),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn is_test_conf(&self) -> bool {
+        self.as_test_conf().is_some()
+    }
+
+    pub(crate) fn as_debug_conf(&self) -> Option<&DebugConf> {
+        match self {
+            Top::DebugConf(d) => Some(d),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_debug_conf_mut(&mut self) -> Option<&mut DebugConf> {
+        match self {
+            Top::DebugConf(d) => Some(d),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn is_debug_conf(&self) -> bool {
+        self.as_debug_conf().is_some()
     }
 }

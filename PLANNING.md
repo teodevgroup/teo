@@ -371,6 +371,8 @@
 - Fix SQL non-serial id object creating bug **[DONE]**
 - Fix SQL `OR` in where bug **[DONE]**
 - Data seeding **[DONE]**
+- Add debug conf block **[DONE]**
+- Add test conf block **[DONE]**
 - Setup integration tests: reset after each find request
 - Unit test: relations for different connectors
 - Unit test: handlers

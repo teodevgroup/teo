@@ -332,9 +332,6 @@ impl AppBuilder {
         let source = parser.get_source(connector_ref.0);
         let connector_declaration = source.get_connector(connector_ref.1);
         let url = connector_declaration.url.as_ref().unwrap();
-        if connector_declaration.debug {
-            env::set_var("_TEO_LOG_DB_OPERATION", "true");
-        }
         let connector: Arc<dyn Connector> = match connector_declaration.provider.unwrap() {
             DatabaseName::MySQL => {
                 #[cfg(feature = "data-source-mysql")]
