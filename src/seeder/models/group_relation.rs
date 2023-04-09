@@ -3,7 +3,7 @@ use std::borrow::Borrow;
 use crate::prelude::{Graph, Object, Value, Result};
 
 /// Group relation
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct GroupRelation {
     pub(super) inner: Object
 }

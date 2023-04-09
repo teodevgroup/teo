@@ -142,10 +142,10 @@ async fn sync_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<&
                 if let Some(reference) = record.value.as_hashmap().unwrap().get(relation.name()) {
                     if let Some(references) = reference.as_vec() {
                         for reference in references {
-                            setup_relations_internal(record, reference, relation, dataset, graph, &object).await;
+                            sync_relation_internal(record, reference, relation, dataset, graph, &object, &relation_records, &mut relation_record_refs).await;
                         }
                     } else {
-                        setup_relations_internal(record, reference, relation, dataset, graph, &object).await;
+                        sync_relation_internal(record, reference, relation, dataset, graph, &object, &relation_records, &mut relation_record_refs).await;
                     }
                 }
                 // find relations and cut
@@ -187,6 +187,18 @@ async fn setup_new_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &
             }
         }
     }
+}
+
+async fn sync_relation_internal(record: &Record, reference: &Value, relation: &Relation, dataset: &DataSet, graph: &Graph, object: &Object, relation_records: &Vec<GroupRelation>, relation_record_refs: &mut Vec<&GroupRelation>) {
+    let that_name = reference.as_raw_enum_choice().unwrap();
+    if let Some(existing_relation_record) = relation_records.iter().find(|r| {
+        (&r.name_a() == record.name.as_str() && r.name_b() == that_name) ||
+            (&r.name_b() == record.name.as_str() && r.name_a() == that_name)
+    }) {
+        let index = relation_record_refs.iter().position(|r| *r == existing_relation_record).unwrap();
+        relation_record_refs.remove(index);
+    }
+    setup_relations_internal(record, reference, relation, dataset, graph, object).await;
 }
 
 async fn setup_relations_internal(record: &Record, reference: &Value, relation: &Relation, dataset: &DataSet, graph: &Graph, object: &Object) {
