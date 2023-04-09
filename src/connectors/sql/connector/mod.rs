@@ -188,7 +188,7 @@ impl Connector for SQLConnector {
         for model in graph.models() {
             let conn = self.pool.check_out().await.unwrap();
             let escape = self.dialect.escape();
-            conn.execute(QuaintQuery::from(format!("DELETE * FROM {escape}{}{escape}", model.table_name()))).await.unwrap();
+            conn.execute(QuaintQuery::from(format!("DELETE FROM {escape}{}{escape}", model.table_name()))).await.unwrap();
         }
         Ok(())
     }
