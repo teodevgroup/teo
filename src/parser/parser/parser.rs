@@ -19,6 +19,7 @@ use crate::parser::ast::config::ServerConfig;
 use crate::parser::ast::connector::Connector;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::data_set::{DataSet, DataSetGroup, DataSetRecord};
+use crate::parser::ast::debug_conf::DebugConf;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral, RegExpLiteral, NullishCoalescing, Negation, BitwiseNegation };
 use crate::parser::ast::field::Field;
@@ -34,6 +35,7 @@ use crate::parser::ast::r#type::{Arity, Type};
 use crate::parser::ast::source::Source;
 use crate::parser::ast::span::Span;
 use crate::parser::ast::subscript::Subscript;
+use crate::parser::ast::test_conf::TestConf;
 use crate::parser::ast::top::Top;
 use crate::parser::ast::unit::Unit;
 use crate::parser::parser::resolver::Resolver;
@@ -74,6 +76,8 @@ pub(crate) struct Parser {
     pub(crate) generators: Vec<(usize, usize)>,
     pub(crate) clients: Vec<(usize, usize)>,
     pub(crate) data_sets: Vec<(usize, usize)>,
+    pub(crate) debug_conf: Option<(usize, usize)>,
+    pub(crate) test_conf: Option<(usize, usize)>,
     pub(crate) next_id: usize,
     pub(crate) resolved: bool,
     pub(crate) global_model_decorators: Option<GlobalModelDecorators>,
@@ -97,6 +101,8 @@ impl Parser {
             generators: vec![],
             clients: vec![],
             data_sets: vec![],
+            debug_conf: None,
+            test_conf: None,
             next_id: 0,
             resolved: false,
             global_model_decorators: None,
@@ -521,6 +527,14 @@ impl Parser {
             "client" => {
                 self.clients.push((source_id, item_id));
                 Top::Client(Client::new(item_id, source_id, identifier, items, span))
+            },
+            "debug" => {
+                self.debug_conf = Some((source_id, item_id));
+                Top::DebugConf(DebugConf::new(items, span, source_id, item_id))
+            },
+            "test" => {
+                self.test_conf = Some((source_id, item_id));
+                Top::TestConf(TestConf::new(items, span, source_id, item_id))
             },
             _ => panic!(),
         }

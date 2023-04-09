@@ -17,6 +17,8 @@ SERVER_KEYWORD = { "server" }
 CONNECTOR_KEYWORD = { "connector" }
 CLIENT_KEYWORD = { "client" }
 ENTITY_KEYWORD = { "entity" }
+DEBUG_KEYWORD = { "debug" }
+TEST_KEYWORD = { "test" }
 IMPORT_KEYWORD = _{ "import" }
 FROM_KEYWORD = _{ "from" }
 DATASET_KEYWORD = _{ "dataset" }
@@ -233,7 +235,7 @@ pipeline = { "$" ~ identifier_unit }
 // config blocks
 // #############
 
-config_keywords = { SERVER_KEYWORD | CONNECTOR_KEYWORD | CLIENT_KEYWORD | ENTITY_KEYWORD }
+config_keywords = { SERVER_KEYWORD | CONNECTOR_KEYWORD | CLIENT_KEYWORD | ENTITY_KEYWORD | DEBUG_KEYWORD | TEST_KEYWORD }
 
 config_declaration = {
     config_keywords
