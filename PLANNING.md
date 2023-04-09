@@ -380,6 +380,7 @@
 #### 0.0.56
 - VSCode highlight for data seeding
 - Linter: errors and warnings
+- Node.js client use dedicated `Date` class instead of builtin `Date`
 - Cross language error handling for node.js @victorteokw
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection @victorteokw
 - Rewrite connector to support pooled connections @victorteokw

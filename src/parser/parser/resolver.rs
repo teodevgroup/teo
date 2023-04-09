@@ -39,7 +39,9 @@ use crate::gen::interface::client::kind::Kind;
 use crate::parser::ast::arith_expr::{ArithExpr, Op};
 use crate::parser::ast::client::{Client};
 use crate::parser::ast::data_set::DataSet;
+use crate::parser::ast::debug_conf::DebugConf;
 use crate::parser::ast::generator::Generator;
+use crate::parser::ast::test_conf::TestConf;
 use crate::parser::std::pipeline::global::{GlobalFunctionInstallers, GlobalPipelineInstallers};
 
 pub(crate) struct Resolver { }
@@ -95,10 +97,10 @@ impl Resolver {
                     Self::resolve_data_set(parser, source, data_set);
                 }
                 Top::DebugConf(debug_conf) => {
-                    unreachable!()
+                    Self::resolve_debug_conf(parser, source, debug_conf);
                 }
                 Top::TestConf(test_conf) => {
-                    unreachable!()
+                    Self::resolve_test_conf(parser, source, test_conf);
                 }
             }
         }
@@ -123,6 +125,13 @@ impl Resolver {
                 for identifier in import.identifiers.iter() {
                     if identifier.name == constant.identifier.name {
                         import.references.insert(identifier.name.clone(), Reference::ConstantReference((from_source.id, *item_id)));
+                    }
+                }
+            } else if top.is_data_set() {
+                let dataset = top.as_data_set().unwrap();
+                for identifier in import.identifiers.iter() {
+                    if identifier.name == dataset.identifier.name {
+                        import.references.insert(identifier.name.clone(), Reference::DataSetReference((from_source.id, *item_id)));
                     }
                 }
             }
@@ -555,6 +564,54 @@ impl Resolver {
         for group in data_set.groups.iter_mut() {
             for record in group.records.iter_mut() {
                 record.resolved = Some(Self::resolve_dictionary_literal(parser, source, &record.dictionary).as_value().unwrap().clone());
+            }
+        }
+    }
+
+    pub(crate) fn resolve_debug_conf(parser: &Parser, source: &Source, config: &mut DebugConf) {
+        for item in config.items.iter_mut() {
+            match item.identifier.name.as_str() {
+                "logQueries" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    match value {
+                        Value::Bool(b) => config.log_queries = true,
+                        Value::Null => (),
+                        _ => panic!(),
+                    }
+                },
+                "logMigrations" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    match value {
+                        Value::Bool(b) => config.log_migrations = true,
+                        Value::Null => (),
+                        _ => panic!(),
+                    }
+                },
+                "logSeedRecords" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    match value {
+                        Value::Bool(b) => config.log_seed_records = true,
+                        Value::Null => (),
+                        _ => panic!(),
+                    }
+                },
+                _ => panic!()
+            }
+        }
+    }
+
+    pub(crate) fn resolve_test_conf(parser: &Parser, source: &Source, config: &mut TestConf) {
+        for item in config.items.iter_mut() {
+            match item.identifier.name.as_str() {
+                "resetAfterFind" => {
+                    Self::resolve_expression(parser, source, &mut item.expression);
+                    let value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
+                    config.reset_after_find = value;
+                },
+                _ => panic!()
             }
         }
     }

@@ -8,13 +8,14 @@ pub struct DebugConf {
     pub(crate) items: Vec<Item>,
     pub(crate) span: Span,
     pub(crate) log_queries: bool,
+    pub(crate) log_migrations: bool,
     pub(crate) log_seed_records: bool,
 }
 
 impl DebugConf {
     pub(crate) fn new(items: Vec<Item>, span: Span, source_id: usize, item_id: usize) -> Self {
         Self {
-            id: item_id, items, span, source_id, log_queries: false, log_seed_records: false,
+            id: item_id, items, span, source_id, log_queries: false, log_migrations: false, log_seed_records: false,
         }
     }
 }
