@@ -9,7 +9,7 @@ pub(crate) mod migrate;
 use std::sync::Arc;
 use to_mut::ToMut;
 use crate::core::app::builder::AsyncCallbackWithoutArgs;
-use crate::core::app::command::{CLI, CLICommand, GenerateCommand};
+use crate::core::app::command::{CLI, CLICommand, GenerateCommand, SeedCommandAction};
 use crate::core::app::conf::{EntityGeneratorConf, ServerConf};
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
@@ -31,7 +31,7 @@ pub struct App {
     entrance: Entrance,
     args: Arc<CLI>,
     before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
-    data_sets: Vec<DataSet>,
+    datasets: Vec<DataSet>,
 }
 
 impl App {
@@ -43,12 +43,18 @@ impl App {
     pub async fn run(&self) -> Result<(), std::io::Error> {
         match &self.args.command {
             CLICommand::Serve(serve_command) => {
+                if !serve_command.no_migration {
+                    migrate(self.graph.to_mut(), false).await;
+                }
+                if !serve_command.no_autoseed {
+                    let names = self.datasets.iter().filter_map(|d| if d.autoseed { Some(d.name.clone()) } else { None }).collect();
+                    seed(SeedCommandAction::Seed, self.graph, &self.datasets, names).await;
+                }
                 serve(
                     self.graph,
                     self.server_conf,
                     self.environment_version.clone(),
                     self.entrance.clone(),
-                    serve_command.no_migration,
                     self.before_server_start.clone(),
                 ).await?
             }
@@ -99,12 +105,12 @@ impl App {
             }
             CLICommand::Seed(seed_command) => {
                 let names = if seed_command.all {
-                    self.data_sets.iter().map(|d| d.name.clone()).collect()
+                    self.datasets.iter().map(|d| d.name.clone()).collect()
                 } else {
                     seed_command.names.clone().unwrap()
                 };
                 migrate(self.graph.to_mut(), false).await;
-                seed(seed_command.action, self.graph(), &self.data_sets, names).await
+                seed(seed_command.action, self.graph(), &self.datasets, names).await
             }
         }
         Ok(())

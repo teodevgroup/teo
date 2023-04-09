@@ -57,12 +57,28 @@ pub(crate) async fn seed_dataset(graph: &Graph, dataset: &DataSet) {
         for seed_record in seed_records.iter() {
             let existing = group.records.iter().find(|r| &r.name == &seed_record.name()).is_some();
             if !existing {
-                perform_remove_from_database(dataset, group, seed_record, group_model, graph).await;
+                perform_remove_from_database(dataset, seed_record, group_model, graph).await;
             }
         }
     }
     // Second, setup optional relations and array relations
     setup_new_relations(graph, dataset, &ordered_groups, Some(&added_records)).await;
+    // Last, remove records for user removed groups
+    remove_records_for_user_removed_groups(dataset, &ordered_groups, graph).await;
+}
+
+async fn remove_records_for_user_removed_groups(dataset: &DataSet, ordered_groups: &Vec<&Group>, graph: &Graph) {
+    let user_removed_seed_records_for_group = GroupRecord::find_many(teon!({
+        "where": {
+            "dataset": dataset.name.as_str(),
+            "group": {
+                "notIn": Value::Vec(ordered_groups.iter().map(|g| Value::String(g.name.clone())).collect()),
+            },
+        }
+    })).await.unwrap();
+    for record in user_removed_seed_records_for_group {
+        perform_remove_from_database(dataset, &record, graph.model(record.group().as_str()).unwrap(), graph).await;
+    }
 }
 
 pub(crate) async fn reseed_dataset(graph: &Graph, dataset: &DataSet) {
@@ -88,12 +104,14 @@ pub(crate) async fn reseed_dataset(graph: &Graph, dataset: &DataSet) {
         for seed_record in seed_records.iter() {
             let existing = group.records.iter().find(|r| &r.name == &seed_record.name()).is_some();
             if !existing {
-                perform_remove_from_database(dataset, group, seed_record, group_model, graph).await;
+                perform_remove_from_database(dataset, seed_record, group_model, graph).await;
             }
         }
     }
     // Second, setup optional relations and array relations
     sync_relations(graph, dataset, &ordered_groups).await;
+    // Last, remove records for user removed groups
+    remove_records_for_user_removed_groups(dataset, &ordered_groups, graph).await;
 }
 
 pub(crate) async fn unseed_dataset(graph: &Graph, dataset: &DataSet) {
@@ -109,7 +127,7 @@ pub(crate) async fn unseed_dataset(graph: &Graph, dataset: &DataSet) {
         })).await.unwrap();
         // delete records
         for seed_record in seed_records.iter() {
-            perform_remove_from_database(dataset, group, seed_record, group_model, graph).await;
+            perform_remove_from_database(dataset, seed_record, graph.model(seed_record.group().as_str()).unwrap(), graph).await;
         }
     }
 }
@@ -164,7 +182,7 @@ async fn sync_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<&
                 }
                 // find relations and cut
                 for relation_record in relation_record_refs {
-                    cut_relation(relation_record, group, graph, group_model, dataset, &object).await;
+                    cut_relation(relation_record, seed_record, graph, group_model, dataset, &object).await;
                 }
             }
         }
@@ -297,7 +315,7 @@ async fn setup_relations_internal(record: &Record, reference: &Value, relation: 
 }
 
 /// This perform, deletes an object from the databse.
-async fn perform_remove_from_database(dataset: &DataSet, group: &Group, record: &GroupRecord, group_model: &Model, graph: &Graph) {
+async fn perform_remove_from_database(dataset: &DataSet, record: &GroupRecord, group_model: &Model, graph: &Graph) {
     let json_identifier = record.record();
     let exist: Result<Object> = graph.find_unique(group_model.name(), &teon!({
         "where": record_json_string_to_where_unique(json_identifier, group_model)
@@ -314,27 +332,27 @@ async fn perform_remove_from_database(dataset: &DataSet, group: &Group, record: 
             "OR": [
                 {
                     "dataset": dataset.name.as_str(),
-                    "groupA": group.name.as_str(),
+                    "groupA": record.group().as_str(),
                     "nameA": record.name().as_str(),
                 },
                 {
                     "dataset": dataset.name.as_str(),
-                    "groupB": group.name.as_str(),
+                    "groupB": record.group().as_str(),
                     "nameB": record.name().as_str(),
                 }
             ]
         }
     })).await.unwrap();
     for relation in relations {
-        cut_relation(&relation, group, graph, group_model, dataset, &exist).await;
+        cut_relation(&relation, record, graph, group_model, dataset, &exist).await;
     }
     // Second, delete it and the seed record
     exist.delete().await.unwrap();
     record.delete().await.unwrap();
 }
 
-async fn cut_relation(relation: &GroupRelation, group: &Group, graph: &Graph, group_model: &Model, dataset: &DataSet, exist: &Object) {
-    let rel_name = if group.name.as_str() == relation.group_a() { relation.relation_a() } else { relation.relation_b() };
+async fn cut_relation(relation: &GroupRelation, record: &GroupRecord, graph: &Graph, group_model: &Model, dataset: &DataSet, exist: &Object) {
+    let rel_name = if record.group().as_str() == relation.group_a() { relation.relation_a() } else { relation.relation_b() };
     let model_relation = group_model.relation(&rel_name).unwrap();
     if model_relation.has_foreign_key() {
         // If has foreign keys, this relation is already cut
@@ -342,9 +360,9 @@ async fn cut_relation(relation: &GroupRelation, group: &Group, graph: &Graph, gr
         return
     }
     // get that record
-    let that_model_name = if group.name.as_str() == relation.group_a() { relation.group_b() } else { relation.group_a() };
+    let that_model_name = if record.group().as_str() == relation.group_a() { relation.group_b() } else { relation.group_a() };
     let that_model = graph.model(&that_model_name).unwrap();
-    let that_name = if group.name.as_str() == relation.group_a() { relation.name_b() } else { relation.name_a() };
+    let that_name = if record.group().as_str() == relation.group_a() { relation.name_b() } else { relation.name_a() };
     let seed_record = GroupRecord::find_first(teon!({
         "dataset": dataset.name.as_str(),
         "group": that_model_name.as_str(),

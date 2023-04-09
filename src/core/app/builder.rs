@@ -141,6 +141,11 @@ impl AppBuilder {
                     .short('M')
                     .long("no-migration")
                     .help("Start server without running migration")
+                    .action(ArgAction::SetTrue))
+                .arg(Arg::new("no-autoseed")
+                    .short('S')
+                    .long("no-autoseed")
+                    .help("Start server without auto seeding autoseed dataset")
                     .action(ArgAction::SetTrue)))
             .subcommand(ClapCommand::new("generate")
                 .about("Generate code")
@@ -214,7 +219,7 @@ impl AppBuilder {
         let schema: Option<&String> = matches.get_one("SCHEMA_FILE");
         let command = match matches.subcommand() {
             Some(("serve", submatches)) => {
-                CLICommand::Serve(ServeCommand { no_migration: submatches.get_flag("no-migration") })
+                CLICommand::Serve(ServeCommand { no_migration: submatches.get_flag("no-migration"), no_autoseed: submatches.get_flag("no-autoseed") })
             }
             Some(("generate", submatches)) => {
                 match submatches.subcommand() {
@@ -317,7 +322,7 @@ impl AppBuilder {
             entrance: self.entrance.clone(),
             args: self.args.clone(),
             before_server_start: self.before_server_start,
-            data_sets: self.data_sets,
+            datasets: self.data_sets,
         }
     }
 

@@ -15,6 +15,7 @@ pub(crate) enum CLICommand {
 #[derive(Debug)]
 pub(crate) struct ServeCommand {
     pub(crate) no_migration: bool,
+    pub(crate) no_autoseed: bool,
 }
 
 #[derive(Debug)]
