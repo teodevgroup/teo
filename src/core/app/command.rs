@@ -10,6 +10,7 @@ pub(crate) enum CLICommand {
     Generate(GenerateCommand),
     Migrate(MigrateCommand),
     Seed(SeedCommand),
+    Purge(PurgeCommand),
 }
 
 #[derive(Debug)]
@@ -54,3 +55,6 @@ pub(crate) enum SeedCommandAction {
     Unseed,
     Reseed,
 }
+
+#[derive(Debug)]
+pub(crate) struct PurgeCommand { }

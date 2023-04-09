@@ -13,7 +13,7 @@ use crate::core::result::Result;
 use crate::connectors::mongodb::connector::MongoDBConnector;
 use crate::connectors::sql::connector::SQLConnector;
 use crate::connectors::sql::schema::dialect::SQLDialect;
-use crate::core::app::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, MigrateCommand, SeedCommand, SeedCommandAction, ServeCommand};
+use crate::core::app::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, MigrateCommand, PurgeCommand, SeedCommand, SeedCommandAction, ServeCommand};
 use crate::core::app::conf::{DebugConf, EntityGeneratorConf, ServerConf, TestConf};
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
@@ -211,6 +211,8 @@ impl AppBuilder {
                     .conflicts_with("all")
                     .help("Data set names to process")
                     .num_args(1..)))
+            .subcommand(ClapCommand::new("purge")
+                .about("Purge and clear the database without dropping tables."))
             .get_matches_from(match environment_version {
                 EnvironmentVersion::Python(_) | EnvironmentVersion::NodeJS(_) => {
                     env::args_os().enumerate().filter(|(i, x)| (*i != 1) && (!x.to_str().unwrap().ends_with("ts-node") && !x.to_str().unwrap().ends_with(".ts"))).map(|(_i, x)| x).collect::<Vec<OsString>>()
@@ -255,6 +257,9 @@ impl AppBuilder {
                     all: submatches.get_flag("all"),
                     names,
                 })
+            }
+            Some(("purge", _submatches)) => {
+                CLICommand::Purge(PurgeCommand { })
             }
             _ => unreachable!()
         };

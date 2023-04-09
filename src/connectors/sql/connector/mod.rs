@@ -184,6 +184,15 @@ impl Connector for SQLConnector {
         Ok(())
     }
 
+    async fn purge(&self, graph: &Graph) -> Result<()> {
+        for model in graph.models() {
+            let conn = self.pool.check_out().await.unwrap();
+            let escape = self.dialect.escape();
+            conn.execute(QuaintQuery::from(format!("DELETE * FROM {escape}{}{escape}", model.table_name()))).await.unwrap();
+        }
+        Ok(())
+    }
+
     async fn query_raw(&self, query: &Value) -> Result<Value> {
         let conn = self.pool.check_out().await.unwrap();
         let result = conn.query(QuaintQuery::from(query.as_str().unwrap())).await;
