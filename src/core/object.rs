@@ -508,7 +508,7 @@ impl Object {
     }
 
     #[async_recursion]
-    pub(crate) async fn apply_on_save_pipeline_and_validate_required_fields(&self, path: &KeyPath) -> Result<()> {
+    pub(crate) async fn apply_on_save_pipeline_and_validate_required_fields(&self, path: &KeyPath, ignore_required_relation: bool) -> Result<()> {
         // apply on save pipeline first
         let model_keys = self.model().save_keys();
         for key in model_keys {
@@ -631,6 +631,9 @@ impl Object {
                     }
                 }
                 if self.is_new() && relation.is_required() && !relation.is_vec() {
+                    if ignore_required_relation {
+                        continue
+                    }
                     // check whether foreign key is received or a value is provided
                     let map = self.inner.relation_mutation_map.lock().await;
                     if map.get(key).is_some() {
@@ -739,8 +742,12 @@ impl Object {
         Ok(())
     }
 
+    pub(crate) async fn save_with_session_and_path<'a>(&self, session: Arc<dyn SaveSession>, path: &'a KeyPath<'a>) -> Result<()> {
+        self.save_with_session_and_path_and_ignore(session, path, false).await
+    }
+
     #[async_recursion]
-    pub(crate) async fn save_with_session_and_path(&self, session: Arc<dyn SaveSession>, path: &KeyPath) -> Result<()> {
+    pub(crate) async fn save_with_session_and_path_and_ignore(&self, session: Arc<dyn SaveSession>, path: &KeyPath, ignore_required_relation: bool) -> Result<()> {
         // check if it's inside before callback
         self.before_save_callback_check()?;
         let is_new = self.is_new();
@@ -748,7 +755,7 @@ impl Object {
         let is_modified = self.is_modified();
         if is_modified || is_new {
             // apply pipeline
-            self.apply_on_save_pipeline_and_validate_required_fields(path).await?;
+            self.apply_on_save_pipeline_and_validate_required_fields(path, ignore_required_relation).await?;
             self.trigger_before_save_callbacks(path).await?;
             // perform relation manipulations (has foreign key)
             self.perform_relation_manipulations(|r| r.has_foreign_key(), session.clone(), path).await?;
@@ -772,6 +779,11 @@ impl Object {
     pub async fn save(&self) -> Result<()> {
         let session = self.graph().connector().new_save_session();
         self.save_with_session_and_path(session, &path![]).await
+    }
+
+    pub(crate) async fn save_for_seed_without_required_relation(&self) -> Result<()> {
+        let session = self.graph().connector().new_save_session();
+        self.save_with_session_and_path_and_ignore(session, &path![], true).await
     }
 
     async fn trigger_before_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {

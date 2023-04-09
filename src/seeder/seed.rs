@@ -232,13 +232,13 @@ async fn setup_relations_internal(record: &Record, reference: &Value, relation: 
         for (local, foreign) in relation.iter() {
             object.set_value(local, that_object.get_value(foreign).unwrap()).unwrap();
         }
-        object.save().await.unwrap();
+        object.save_for_seed_without_required_relation().await.unwrap();
     } else if !relation.has_join_table() {
         // update that record
         for (local, foreign) in relation.iter() {
             that_object.set_value(foreign, object.get_value(local).unwrap()).unwrap();
         }
-        that_object.save().await.unwrap();
+        that_object.save_for_seed_without_required_relation().await.unwrap();
     } else {
         let (through_model, through_relation) = graph.through_relation(relation);
         let (_, through_that_relation) = graph.through_opposite_relation(relation);
@@ -254,7 +254,7 @@ async fn setup_relations_internal(record: &Record, reference: &Value, relation: 
         })).await;
         if link_record.is_err() {
             let link_object = graph.create_object(through_model.name(), Value::HashMap(where_unique)).await.unwrap();
-            link_object.save().await.unwrap();
+            link_object.save_for_seed_without_required_relation().await.unwrap();
         }
     }
     // update relation record
@@ -392,7 +392,7 @@ async fn cut_relation(relation: &GroupRelation, group: &Group, graph: &Graph, gr
             for (_local, foreign) in model_relation.iter() {
                 that_record.set_value(foreign, Value::Null).unwrap();
             }
-            that_record.save().await.unwrap();
+            that_record.save_for_seed_without_required_relation().await.unwrap();
         }
     }
     relation.delete().await.unwrap();
@@ -410,7 +410,7 @@ async fn perform_recreate_or_update_an_record(dataset: &DataSet, group: &Group, 
     let object = object.unwrap();
     let input = insert_or_update_input(dataset, group, record, group_model, graph).await;
     object.set_teon(&input).await.unwrap();
-    object.save().await.unwrap();
+    object.save_for_seed_without_required_relation().await.unwrap();
     seed_record.set_record(object_identifier_in_json(&object));
     seed_record.save().await.unwrap();
 }
@@ -461,7 +461,7 @@ async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Recor
 async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: &Record, group_model: &Model, graph: &Graph) {
     let input = insert_or_update_input(dataset, group, record, group_model, graph).await;
     let object = graph.create_object(group_model.name(), &input).await.unwrap();
-    object.save().await.unwrap();
+    object.save_for_seed_without_required_relation().await.unwrap();
     let record_object = GroupRecord::new(teon!({
         "group": group.name.as_str(),
         "dataset": dataset.name.as_str(),
