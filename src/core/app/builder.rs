@@ -14,7 +14,7 @@ use crate::connectors::mongodb::connector::MongoDBConnector;
 use crate::connectors::sql::connector::SQLConnector;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::app::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, MigrateCommand, SeedCommand, SeedCommandAction, ServeCommand};
-use crate::core::app::conf::{EntityGeneratorConf, ServerConf};
+use crate::core::app::conf::{DebugConf, EntityGeneratorConf, ServerConf, TestConf};
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use crate::core::connector::Connector;
@@ -69,6 +69,8 @@ pub struct AppBuilder {
     pub(crate) connector: Option<Arc<dyn Connector>>,
     pub(crate) graph_builder: GraphBuilder,
     pub(crate) server_conf: Option<ServerConf>,
+    pub(crate) debug_conf: Option<&'static DebugConf>,
+    pub(crate) test_conf: Option<&'static TestConf>,
     pub(crate) entity_generator_confs: Vec<EntityGeneratorConf>,
     pub(crate) client_generator_confs: Vec<ClientConf>,
     pub(crate) callback_lookup_table: Arc<Mutex<CallbackLookupTable>>,
@@ -99,6 +101,8 @@ impl AppBuilder {
             connector: None,
             graph_builder: GraphBuilder::new(),
             server_conf: None,
+            debug_conf: None,
+            test_conf: None,
             entity_generator_confs: vec![],
             client_generator_confs: vec![],
             callback_lookup_table: Arc::new(Mutex::new(CallbackLookupTable::new())),
@@ -315,6 +319,8 @@ impl AppBuilder {
         let server_conf = Box::leak(Box::new(self.server_conf.unwrap()));
         App {
             server_conf,
+            debug_conf: self.debug_conf,
+            test_conf: self.test_conf,
             entity_generator_confs: self.entity_generator_confs,
             client_generator_confs: self.client_generator_confs,
             graph,
@@ -370,6 +376,22 @@ impl AppBuilder {
                 None
             }
         });
+        if let Some(config_ref) = parser.debug_conf {
+            let source = parser.get_source(config_ref.0);
+            let conf = source.get_debug_conf(config_ref.1);
+            self.debug_conf = Some(Box::leak(Box::new(DebugConf {
+                log_queries: conf.log_queries,
+                log_migrations: conf.log_migrations,
+                log_seed_records: conf.log_seed_records,
+            })))
+        }
+        if let Some(config_ref) = parser.test_conf {
+            let source = parser.get_source(config_ref.0);
+            let conf = source.get_test_conf(config_ref.1);
+            self.test_conf = Some(Box::leak(Box::new(TestConf {
+                reset_after_find: conf.reset_after_find.clone(),
+            })))
+        }
         // entity generators
         for entity_generator_ref in parser.generators.iter() {
             let source = parser.get_source(entity_generator_ref.0);
