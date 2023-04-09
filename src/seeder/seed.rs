@@ -179,10 +179,11 @@ async fn sync_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<&
                     } else {
                         sync_relation_internal(record, reference, relation, dataset, graph, &object, &relation_records, &mut relation_record_refs).await;
                     }
-                }
-                // find relations and cut
-                for relation_record in relation_record_refs {
-                    cut_relation(relation_record, seed_record, graph, group_model, dataset, &object).await;
+                } else {
+                    // find relations and cut
+                    for relation_record in relation_record_refs {
+                        cut_relation(relation_record, seed_record, graph, group_model, dataset, &object).await;
+                    }
                 }
             }
         }
