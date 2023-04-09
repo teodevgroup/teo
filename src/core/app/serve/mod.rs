@@ -12,7 +12,6 @@ use colored::Colorize;
 use futures_util::StreamExt;
 use key_path::{KeyPath, path};
 use serde_json::{json, Value as JsonValue};
-use to_mut::ToMut;
 use crate::core::action::{
     Action, CREATE, DELETE, ENTRY, FIND, IDENTITY, MANY, SINGLE, UPDATE, UPSERT,
     FIND_UNIQUE_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, CREATE_HANDLER, UPDATE_HANDLER,
@@ -21,6 +20,7 @@ use crate::core::action::{
 };
 use crate::core::action::source::ActionSource;
 use crate::core::app::builder::AsyncCallbackWithoutArgs;
+use crate::core::app::command::SeedCommandAction;
 use crate::core::app::conf::ServerConf;
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
@@ -34,6 +34,7 @@ use crate::core::pipeline::ctx::{Ctx};
 use crate::core::error::Error;
 use crate::core::teon::decoder::Decoder;
 use crate::prelude::Value;
+use crate::seeder::seed::seed;
 use crate::teon;
 
 pub(crate) mod response;
@@ -831,12 +832,8 @@ pub(crate) async fn serve(
     conf: &'static ServerConf,
     environment_version: EnvironmentVersion,
     entrance: Entrance,
-    no_migration: bool,
     before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
 ) -> Result<(), std::io::Error> {
-    if !no_migration {
-        migrate(graph.to_mut(), false).await;
-    }
     if let Some(cb) = before_server_start {
         match cb.call().await {
             Ok(()) => (),
