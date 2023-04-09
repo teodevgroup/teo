@@ -10,7 +10,7 @@ use futures_util::StreamExt;
 use key_path::path;
 use mongodb::{options::ClientOptions, Client, Database, Collection, IndexModel};
 use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
-use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
+use mongodb::options::{DropCollectionOptions, FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use regex::Regex;
 use crate::connectors::mongodb::aggregation::Aggregation;
 use crate::connectors::mongodb::bson::coder::BsonCoder;
@@ -435,6 +435,14 @@ impl Connector for MongoDBConnector {
                     }
                 }
             }
+        }
+        Ok(())
+    }
+
+    async fn purge(&self, graph: &Graph) -> Result<()> {
+        for model in graph.models() {
+            let col = self.get_collection(model.name());
+            col.drop(None).await.unwrap();
         }
         Ok(())
     }

@@ -25,6 +25,10 @@ pub(crate) trait Connector: Send + Sync {
 
     async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> Result<()>;
 
+    // Purge
+
+    async fn purge(&self, graph: &Graph) -> Result<()>;
+
     // Raw query
 
     async fn query_raw(&self, query: &Value) -> Result<Value>;
