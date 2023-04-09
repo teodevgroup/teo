@@ -97,7 +97,9 @@ pub(crate) async fn reseed_dataset(graph: &Graph, dataset: &DataSet) {
 }
 
 pub(crate) async fn unseed_dataset(graph: &Graph, dataset: &DataSet) {
-    for group in &dataset.groups {
+    let mut ordered_groups = ordered_group(&dataset.groups, graph);
+    ordered_groups.reverse();
+    for group in ordered_groups {
         let group_model = graph.model(group.name.as_str()).unwrap();
         let seed_records = GroupRecord::find_many(teon!({
             "where": {
