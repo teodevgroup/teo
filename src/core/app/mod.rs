@@ -10,7 +10,7 @@ use std::sync::Arc;
 use to_mut::ToMut;
 use crate::core::app::builder::AsyncCallbackWithoutArgs;
 use crate::core::app::command::{CLI, CLICommand, GenerateCommand, SeedCommandAction};
-use crate::core::app::conf::{EntityGeneratorConf, ServerConf};
+use crate::core::app::conf::{DebugConf, EntityGeneratorConf, ServerConf, TestConf};
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use crate::core::app::migrate::migrate;
@@ -25,6 +25,8 @@ use crate::seeder::seed::seed;
 pub struct App {
     graph: &'static Graph,
     server_conf: &'static ServerConf,
+    debug_conf: Option<&'static DebugConf>,
+    test_conf: Option<&'static TestConf>,
     entity_generator_confs: Vec<EntityGeneratorConf>,
     client_generator_confs: Vec<ClientConf>,
     environment_version: EnvironmentVersion,

@@ -8,10 +8,12 @@ use crate::parser::ast::config::ServerConfig;
 use crate::parser::ast::connector::Connector;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::data_set::DataSet;
+use crate::parser::ast::debug_conf::DebugConf;
 use crate::parser::ast::generator::Generator;
 use crate::parser::ast::import::Import;
 use crate::parser::ast::model::Model;
 use crate::parser::ast::r#enum::Enum;
+use crate::parser::ast::test_conf::TestConf;
 use crate::parser::ast::top::Top;
 
 #[derive(ToMut)]
@@ -100,6 +102,14 @@ impl Source {
 
     pub(crate) fn get_data_set(&self, id: usize) -> &DataSet {
         self.tops.get(&id).unwrap().as_data_set().unwrap()
+    }
+
+    pub(crate) fn get_debug_conf(&self, id: usize) -> &DebugConf {
+        self.tops.get(&id).unwrap().as_debug_conf().unwrap()
+    }
+
+    pub(crate) fn get_test_conf(&self, id: usize) -> &TestConf {
+        self.tops.get(&id).unwrap().as_test_conf().unwrap()
     }
 }
 
