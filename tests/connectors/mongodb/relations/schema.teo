@@ -78,6 +78,7 @@ model Post {
 model Artist {
   @id @auto @map("_id") @readonly
   id: ObjectId
+  @unique
   name: String
   @relation(through: Perform, local: .artist, foreign: .song)
   songs: Song[]
@@ -86,6 +87,7 @@ model Artist {
 model Song {
   @id @auto @map("_id") @readonly
   id: ObjectId
+  @unique
   name: String
   @relation(through: Perform, local: .song, foreign: .artist)
   artists: Artist[]

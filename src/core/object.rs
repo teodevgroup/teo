@@ -1018,15 +1018,15 @@ impl Object {
         let foreign = opposite_relation.local();
         let join_local_relation = join_model.relation(local).unwrap();
         let join_foreign_relation = join_model.relation(foreign).unwrap();
-        let local_join_relation = self.graph().opposite_relation(join_local_relation).1.unwrap();
-        let foreign_join_relation = self.graph().opposite_relation(join_foreign_relation).1.unwrap();
-        let where_local = self.intrinsic_where_unique_for_relation(local_join_relation);
-        let where_foreign = object.intrinsic_where_unique_for_relation(foreign_join_relation);
-        let mut r#where_map: HashMap<String, Value> = hashmap!{};
-        r#where_map.extend(where_local.as_hashmap().cloned().unwrap());
-        r#where_map.extend(where_foreign.as_hashmap().cloned().unwrap());
-        let r#where = Value::HashMap(r#where_map);
-        let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
+        let mut finder = HashMap::new();
+        for (l, f) in join_local_relation.iter() {
+            finder.insert(l.to_owned(), self.get_value(f).unwrap());
+        }
+        for (l, f) in join_foreign_relation.iter() {
+            finder.insert(l.to_owned(), object.get_value(f).unwrap());
+        }
+        let r#where = Value::HashMap(finder);
+        let object = match self.graph().find_unique_internal(join_model.name(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
             Ok(object) => object,
             Err(_) => return Err(Error::unexpected_input_value_with_reason("Join object is not found.", path)),
         };
@@ -1156,6 +1156,8 @@ impl Object {
         }
         if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
+        } else if relation.has_join_table() {
+            self.delete_join_object(object, relation, self.graph().opposite_relation(relation).1.unwrap(), session, path).await?;
         } else {
             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
             object.save_with_session_and_path(session.clone(), path).await?;
@@ -1508,7 +1510,7 @@ impl Object {
             &empty
         };
         let action = Action::from_u32(INTERNAL_POSITION | FIND | PROGRAM_CODE | MANY);
-        if let Some(_join_table) = relation.through() {
+        if relation.has_join_table() {
             let identifier = self.identifier();
             let new_self = self.graph().find_unique_internal(model.name(), &teon!({
                 "where": identifier,

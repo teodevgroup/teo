@@ -382,7 +382,8 @@
 - Add test conf block **[DONE]**
 - CLI: Make `--schema` argument global **[DONE]**
 - Setup integration tests: reset after each find request **[DONE]**
-- Unit test: relations for MongoDB connector
+- Unit test: relations for MongoDB connector **[DONE]**
+- Fix many-to-many relationship set is not reset bug **[DONE]**
 - Unit test: handlers
 
 #### 0.0.56
