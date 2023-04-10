@@ -377,21 +377,26 @@ export declare class TeoError extends Error {
         if !server_mode {
             // model definitions
             graph.models().iter().for_each(|m| {
-                let model_name = m.name();
-                c.block(format!("export type {model_name} = {{"), |b| {
-                    m.output_keys().iter().for_each(|k| {
-                        if let Some(field) = m.field(k) {
-                            let field_name = &field.name;
-                            let field_type = field.field_type().to_typescript_type(field.optionality.is_optional());
-                            b.line(format!("{field_name}: {field_type}"));
-                        }
-                    });
-                }, "}");
-                c.empty_line();
+                if !m.is_teo_internal() {
+                    let model_name = m.name();
+                    c.block(format!("export type {model_name} = {{"), |b| {
+                        m.output_keys().iter().for_each(|k| {
+                            if let Some(field) = m.field(k) {
+                                let field_name = &field.name;
+                                let field_type = field.field_type().to_typescript_type(field.optionality.is_optional());
+                                b.line(format!("{field_name}: {field_type}"));
+                            }
+                        });
+                    }, "}");
+                    c.empty_line();
+                }
             });
         }
         // model input arguments
         graph.models().iter().for_each(|m| {
+            if m.is_teo_internal() {
+                return
+            }
             let model_name = m.name();
             // select
             c.block(format!("export type {model_name}Select = {{"), |b| {
@@ -598,6 +603,9 @@ export declare class TeoError extends Error {
             let object_name = client_obj_name.clone();
             let object_class_name = object_name.to_pascal_case();
             graph.models().iter().for_each(|m| {
+                if m.is_teo_internal() {
+                    return
+                }
                 if m.actions().len() > 0 {
                     let model_name = m.name();
                     let model_var_name = model_name.to_camel_case();
@@ -635,6 +643,9 @@ export declare class TeoError extends Error {
             // main interface
             c.block(format!("declare class {object_class_name} {{"), |b| {
                 graph.models().iter().for_each(|m| {
+                    if m.is_teo_internal() {
+                        return
+                    }
                     if m.actions().len() > 0 {
                         let model_name = m.name();
                         let model_var_name = model_name.to_camel_case();

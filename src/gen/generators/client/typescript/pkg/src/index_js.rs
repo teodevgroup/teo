@@ -11,6 +11,9 @@ pub(crate) async fn generate_index_js(graph: &Graph, conf: &Conf) -> String {
         class_name = class_name + "Class";
     }
     for model in graph.models() {
+        if model.is_teo_internal() {
+            continue
+        }
         if model.name() != &model.name().to_camel_case() {
             name_map += &format!("  '{}': '{}',\n", model.name().to_camel_case(), model.name());
         }
