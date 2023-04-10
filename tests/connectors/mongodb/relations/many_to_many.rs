@@ -505,4 +505,116 @@ mod test {
             ]
         }))));
     }
+
+    #[serial]
+    #[test]
+    fn update_with_nested_disconnect_one() {
+        let _update_res = req(PORT, "update", "Artist", json!({
+            "where": {
+                "name": "Ed Sheeran"
+            },
+            "update": {
+                "songs": {
+                    "disconnect": {
+                        "name": "Shape of You"
+                    }
+                }
+            },
+        }));
+        let find_many_res = req(PORT, "findMany", "Artist", json!({
+            "include": {
+                "songs": true
+            }
+        }));
+        assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+            "id": ignore,
+            "name": "Ed Sheeran",
+            "songs": [
+                {
+                    "id": ignore,
+                    "name": "Perfect"
+                },
+            ]
+        }))));
+    }
+
+    #[serial]
+    #[test]
+    fn update_with_nested_disconnect_more_than_one() {
+        let _update_res = req(PORT, "update", "Artist", json!({
+            "where": {
+                "name": "Ed Sheeran"
+            },
+            "update": {
+                "songs": {
+                    "disconnect": [
+                        {
+                            "name": "Shape of You"
+                        },
+                        {
+                            "name": "Perfect"
+                        }
+                    ]
+                }
+            },
+        }));
+        let find_many_res = req(PORT, "findMany", "Artist", json!({
+            "include": {
+                "songs": true
+            }
+        }));
+        assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+            "id": ignore,
+            "name": "Ed Sheeran",
+            "songs": []
+        }))));
+    }
+
+    #[serial]
+    #[test]
+    fn update_with_nested_update_one() {
+        let _update_res = req(PORT, "update", "Artist", json!({
+            "where": {
+                "name": "Ed Sheeran"
+            },
+            "update": {
+                "songs": {
+                    "update": {
+                        "where": {
+                            "name": "Shape of You"
+                        },
+                        "update": {
+                            "name": "Shape of You - Radio Edit"
+                        }
+                    }
+                }
+            },
+        }));
+        let find_many_res = req(PORT, "findMany", "Artist", json!({
+            "include": {
+                "songs": {
+                    "orderBy": {
+                        "name": "asc"
+                    }
+                }
+            }
+        }));
+        assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+            "id": ignore,
+            "name": "Ed Sheeran",
+            "songs": [
+                {
+                    "id": ignore,
+                    "name": "Perfect"
+                },
+                {
+                    "id": ignore,
+                    "name": "Shape of You - Radio Edit"
+                },
+            ]
+        }))));
+    }
 }

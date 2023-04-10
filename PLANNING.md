@@ -384,6 +384,8 @@
 - Setup integration tests: reset after each find request **[DONE]**
 - Unit test: relations for MongoDB connector **[DONE]**
 - Fix many-to-many relationship set is not reset bug **[DONE]**
+- Fix many-to-many relationship cannot be nested updated bug **[DONE]**
+- Fix many-to-many relationship cannot be nested updated many bug **[DONE]**
 - Unit test: handlers
 
 #### 0.0.56

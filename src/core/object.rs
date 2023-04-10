@@ -1228,15 +1228,39 @@ impl Object {
     }
 
     async fn nested_many_update_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
-        let mut r#where = self.intrinsic_where_unique_for_relation(relation);
-        r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().cloned().unwrap());
-        let action = Action::from_u32(NESTED | UPDATE | SINGLE);
-        let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
-            Ok(object) => object,
-            Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", &(path + "where"))),
-        };
-        object.set_teon_with_path(value.get("update").unwrap(), &(path + "update")).await?;
-        object.save_with_session_and_path(session.clone(), path).await?;
+        if relation.has_join_table() {
+            let action = Action::from_u32(NESTED | UPDATE | SINGLE);
+            let mut finder = HashMap::new();
+            let join_relation = self.graph().through_relation(relation).1;
+            for (l, f) in join_relation.iter() {
+                finder.insert(l.to_owned(), self.get_value(f).unwrap());
+            }
+            finder.insert(self.graph().through_opposite_relation(relation).1.name().to_owned(), teon!({
+                "is": value.get("where").unwrap()
+            }));
+            if let Ok(join_object) = self.graph().find_first_internal(relation.through().unwrap(), &teon!({
+                "where": Value::HashMap(finder),
+                "include": {
+                    self.graph().through_opposite_relation(relation).1.name(): true
+                }
+            }), true, action, self.action_source().clone()).await {
+                let object = join_object.get_query_relation_object(self.graph().through_opposite_relation(relation).1.name())?.unwrap();
+                object.set_teon_with_path(value.get("update").unwrap(), &(path + "update")).await?;
+                object.save_with_session_and_path(session.clone(), path).await?;
+            } else {
+                return Err(Error::unexpected_input_value_with_reason("Object is not found.", &(path + "where")));
+            }
+        } else {
+            let mut r#where = self.intrinsic_where_unique_for_relation(relation);
+            r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().cloned().unwrap());
+            let action = Action::from_u32(NESTED | UPDATE | SINGLE);
+            let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
+                Ok(object) => object,
+                Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", &(path + "where"))),
+            };
+            object.set_teon_with_path(value.get("update").unwrap(), &(path + "update")).await?;
+            object.save_with_session_and_path(session.clone(), path).await?;
+        }
         Ok(())
     }
 
