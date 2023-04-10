@@ -71,8 +71,3 @@ data-source-mysql = ["quaint-forked"]
 data-source-postgres = ["quaint-forked"]
 data-source-sqlite = ["quaint-forked"]
 data-source-mssql = ["quaint-forked"]
-
-#[[test]]
-#name = "test-lib"
-#path = "tests/lib/mod.rs"
-#required-features = ["data-source-mongodb", "data-source-mysql", "data-source-postgres", "data-source-sqlite"]

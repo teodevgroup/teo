@@ -51,48 +51,52 @@ impl App {
                 if !serve_command.no_migration {
                     migrate(self.graph.to_mut(), false).await;
                 }
-                if !serve_command.no_autoseed && !self.datasets.is_empty() {
+                let env = serve_command.env.as_ref().cloned().unwrap_or(std::env::var("TEO_ENV").unwrap_or("debug".to_string()));
+                let test_context: Option<&'static TestContext> = if env.as_str() == "test" {
+                    if let Some(test_conf) = self.test_conf {
+                        match &test_conf.reset_after_find {
+                            Value::Null => None,
+                            Value::RawEnumChoice(s, _) => {
+                                if s.as_str() == "auto" {
+                                    Some(Box::leak(Box::new(TestContext {
+                                        reset_mode: ResetMode::AfterQuery,
+                                        datasets: self.datasets.iter().filter(|d| d.autoseed == true).map(|d| d.clone()).collect(),
+                                    })))
+                                } else { None }
+                            },
+                            Value::String(s) => {
+                                Some(Box::leak(Box::new(TestContext {
+                                    reset_mode: ResetMode::AfterQuery,
+                                    datasets: self.datasets.iter().filter(|d| &d.name == s).map(|d| d.clone()).collect(),
+                                })))
+                            },
+                            Value::Vec(v) => {
+                                let sv: Vec<String> = v.iter().map(|v| v.as_str().unwrap().to_owned()).collect();
+                                Some(Box::leak(Box::new(TestContext {
+                                    reset_mode: ResetMode::AfterQuery,
+                                    datasets: self.datasets.iter().filter(|d| sv.contains(&d.name)).map(|d| d.clone()).collect(),
+                                })))
+                            }
+                            _ => unreachable!()
+                        }
+                    } else { None }
+                } else { None };
+                if let Some(test_context) = test_context {
+                    self.graph.connector().purge(self.graph).await.unwrap();
+                    seed(SeedCommandAction::Seed, self.graph, &test_context.datasets, test_context.datasets.iter().map(|d| d.name.clone()).collect()).await;
+                } else if !serve_command.no_autoseed && !self.datasets.is_empty() {
                     let names: Vec<String> = self.datasets.iter().filter_map(|d| if d.autoseed { Some(d.name.clone()) } else { None }).collect();
                     if !names.is_empty() {
                         seed(SeedCommandAction::Seed, self.graph, &self.datasets, names).await;
                     }
                 }
-                let env = serve_command.env.as_ref().cloned().unwrap_or(std::env::var("TEO_ENV").unwrap_or("debug".to_string()));
                 serve(
                     self.graph,
                     self.server_conf,
                     self.environment_version.clone(),
                     self.entrance.clone(),
                     self.before_server_start.clone(),
-                    if env.as_str() == "test" {
-                        if let Some(test_conf) = self.test_conf {
-                            match &test_conf.reset_after_find {
-                                Value::Null => None,
-                                Value::RawEnumChoice(s, _) => {
-                                    if s.as_str() == "auto" {
-                                        Some(Box::leak(Box::new(TestContext {
-                                            reset_mode: ResetMode::AfterQuery,
-                                            datasets: self.datasets.iter().filter(|d| d.autoseed == true).map(|d| d.clone()).collect(),
-                                        })))
-                                    } else { None }
-                                },
-                                Value::String(s) => {
-                                    Some(Box::leak(Box::new(TestContext {
-                                        reset_mode: ResetMode::AfterQuery,
-                                        datasets: self.datasets.iter().filter(|d| &d.name == s).map(|d| d.clone()).collect(),
-                                    })))
-                                },
-                                Value::Vec(v) => {
-                                    let sv: Vec<String> = v.iter().map(|v| v.as_str().unwrap().to_owned()).collect();
-                                    Some(Box::leak(Box::new(TestContext {
-                                        reset_mode: ResetMode::AfterQuery,
-                                        datasets: self.datasets.iter().filter(|d| sv.contains(&d.name)).map(|d| d.clone()).collect(),
-                                    })))
-                                }
-                                _ => unreachable!()
-                            }
-                        } else { None }
-                    } else { None },
+                    test_context,
                 ).await?
             }
             CLICommand::Generate(cmd) => {
