@@ -373,6 +373,7 @@
 - Data seeding **[DONE]**
 - Add debug conf block **[DONE]**
 - Add test conf block **[DONE]**
+- CLI: Make `--schema` argument global **[DONE]**
 - Setup integration tests: reset after each find request
 - Unit test: relations for different connectors
 - Unit test: handlers
