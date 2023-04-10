@@ -132,7 +132,16 @@ impl AppBuilder {
                 .long("schema")
                 .help("The schema file to load").action(ArgAction::Set)
                 .required(false)
-                .num_args(1))
+                .num_args(1)
+                .global(true))
+            .arg(Arg::new("ENV")
+                .short('e')
+                .long("env")
+                .help("The environment to use")
+                .action(ArgAction::Set)
+                .required(false)
+                .num_args(1)
+                .global(true))
             .arg(Arg::new("version")
                 .short('v')
                 .long("version")
@@ -225,7 +234,8 @@ impl AppBuilder {
         let schema: Option<&String> = matches.get_one("SCHEMA_FILE");
         let command = match matches.subcommand() {
             Some(("serve", submatches)) => {
-                CLICommand::Serve(ServeCommand { no_migration: submatches.get_flag("no-migration"), no_autoseed: submatches.get_flag("no-autoseed") })
+                let env: Option<&String> = submatches.get_one("env");
+                CLICommand::Serve(ServeCommand { no_migration: submatches.get_flag("no-migration"), no_autoseed: submatches.get_flag("no-autoseed"), env: env.cloned() })
             }
             Some(("generate", submatches)) => {
                 match submatches.subcommand() {

@@ -1,3 +1,7 @@
+pub(crate) mod response;
+pub(crate) mod jwt_token;
+pub(crate) mod test_context;
+
 use std::io::ErrorKind;
 use std::sync::Arc;
 use futures_util::future;
@@ -25,6 +29,7 @@ use crate::core::app::conf::ServerConf;
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use crate::core::app::migrate::migrate;
+use crate::core::app::serve::test_context::TestContext;
 use crate::core::connector::SaveSession;
 use self::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::graph::Graph;
@@ -36,9 +41,6 @@ use crate::core::teon::decoder::Decoder;
 use crate::prelude::Value;
 use crate::seeder::seed::seed;
 use crate::teon;
-
-pub(crate) mod response;
-pub(crate) mod jwt_token;
 
 fn j(v: Value) -> JsonValue {
     v.into()
@@ -594,17 +596,7 @@ async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &S
     }
 }
 
-pub fn make_app(graph: &'static Graph, conf: &'static ServerConf) ->  App<impl ServiceFactory<
-    ServiceRequest,
-    Response = ServiceResponse<BoxBody>,
-    Config = (),
-    InitError = (),
-    Error = actix_web::Error,
-> + 'static> {
-    make_app_inner(graph, conf)
-}
-
-fn make_app_inner(graph: &'static Graph, conf: &'static ServerConf) -> App<impl ServiceFactory<
+fn make_app(graph: &'static Graph, conf: &'static ServerConf) -> App<impl ServiceFactory<
     ServiceRequest,
     Response = ServiceResponse<BoxBody>,
     Config = (),
@@ -833,6 +825,7 @@ pub(crate) async fn serve(
     environment_version: EnvironmentVersion,
     entrance: Entrance,
     before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
+    test_context: Option<&'static TestContext>,
 ) -> Result<(), std::io::Error> {
     if let Some(cb) = before_server_start {
         match cb.call().await {
