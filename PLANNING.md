@@ -371,6 +371,7 @@
 - Fix SQL non-serial id object creating bug **[DONE]**
 - Fix SQL `OR` in where bug **[DONE]**
 - Fix SQL empty `in` or `notIn` bug **[DONE]**
+- Fix import statement **[DONE]**
 - Add command `seed` **[DONE]**
 - `seed --reseed` **[DONE]**
 - `seed --unseed` **[DONE]**
@@ -381,7 +382,7 @@
 - Add test conf block **[DONE]**
 - CLI: Make `--schema` argument global **[DONE]**
 - Setup integration tests: reset after each find request **[DONE]**
-- Unit test: relations for different connectors
+- Unit test: relations for MongoDB connector
 - Unit test: handlers
 
 #### 0.0.56

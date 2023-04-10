@@ -34,7 +34,7 @@ autoseed dataset default {
   group Author {
     record paul {
       "name": "Paul",
-      "posts": [.swift1, swift2, swift3]
+      "posts": [.swift1, .swift2, .swift3]
     }
     record david {
       "name": "David",

@@ -84,6 +84,7 @@ impl Container {
     }
 
     pub(crate) fn access_property(&self, name: &str) -> &Entity {
+        println!("property name: {name}");
         self.objects.get(name).unwrap()
     }
 }

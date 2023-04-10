@@ -55,7 +55,7 @@ import_statement = {
     ~ string_literal
 }
 
-import_identifier_list = { BLOCK_OPEN ~ (identifier ~ ("," ~ identifier)*)? ~ TRAILING_COMMA? ~ BLOCK_CLOSE }
+import_identifier_list = { "{" ~ (identifier ~ ("," ~ identifier)*)? ~ TRAILING_COMMA? ~ BLOCK_CLOSE }
 
 // #############
 // numeric literals
