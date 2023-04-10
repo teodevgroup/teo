@@ -303,9 +303,10 @@ impl SQLMigration {
             index
         }).collect();
         if dialect == SQLDialect::PostgreSQL {
-            let primary = results.iter().find(|r| r.r#type().is_primary()).unwrap();
-            let unique_for_primary = primary.psql_primary_to_unique(table_name);
-            results.push(unique_for_primary);
+            if let Some(primary) = results.iter().find(|r| r.r#type().is_primary()) {
+                let unique_for_primary = primary.psql_primary_to_unique(table_name);
+                results.push(unique_for_primary);
+            }
         }
         results.into_iter().collect()
     }

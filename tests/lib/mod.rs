@@ -51,6 +51,7 @@ impl ExecutionHandle {
     }
 
     pub fn execute(&mut self, file: &str, args: &str) {
+        env::set_var("TEO_ENV", "test");
         self.child = Some(Command::new(teo_exe_path()).arg("-s").arg(schema_from_file(file)).arg(args).spawn().unwrap());
         thread::sleep(std::time::Duration::from_secs(2))
     }
@@ -172,7 +173,8 @@ macro_rules! assert_json {
     ($left:expr, $right:expr $(,)?) => {
         match (&$left, &$right) {
             (left_val, right_val) => {
-                if let Err(string) = $crate::lib::json_match(left_val, right_val) {
+                use std::borrow::Borrow;
+                if let Err(string) = $crate::lib::json_match(left_val.borrow(), right_val.borrow()) {
                     panic!("{}", string)
                 }
             }

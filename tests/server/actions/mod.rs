@@ -37,7 +37,7 @@ mod test {
                 "string": "vavotitsiangvuntiu",
                 "int": 123456,
             }
-        }))
+        }));
     }
 
     #[test]

@@ -1,3 +1,87 @@
 autoseed dataset default {
-
+  group User {
+    record john {
+      "name": "John",
+      "profile": .johnProfile,
+    }
+    record peter {
+      "name": "Peter",
+    }
+  }
+  group Profile {
+    record johnProfile {
+      "name": "John's profile",
+    }
+    record peterProfile {
+      "name": "Peter's profile",
+      "user": .peter
+    }
+  }
+  group Player {
+    record justin {
+      "name": "Justin Wong",
+      "kof": .justin
+    }
+    record daigo {
+      "name": "Umehara Daigo",
+    }
+  }
+  group KOFPlayer {
+    record justin {
+      "name": "Justin Wong plays KOF"
+    }
+  }
+  group Author {
+    record paul {
+      "name": "Paul",
+      "posts": [.swift1, swift2, swift3]
+    }
+    record david {
+      "name": "David",
+    }
+  }
+  group Post {
+    record swift1 {
+      "name": "Swift 1.0"
+    }
+    record swift2 {
+      "name": "Swift 2.0"
+    }
+    record swift3 {
+      "name": "Swift 3.0"
+    }
+    record rails1 {
+      "name": "Ruby on Rails 1.0",
+      "author": .david
+    }
+    record rails2 {
+      "name": "Ruby on Rails 2.0",
+      "author": .david
+    }
+  }
+  group Artist {
+    record ed {
+      "name": "Ed Sheeran",
+      "songs": [.perfect, .shapeOfYou]
+    }
+    record maroon5 {
+      "name": "Maroon 5",
+    }
+  }
+  group Song {
+    record perfect {
+      "name": "Perfect",
+    }
+    record shapeOfYou {
+      "name": "Shape of You"
+    }
+    record maps {
+      "name": "Maps",
+      "artists": [.maroon5]
+    }
+    record payphone {
+      "name": "Payphone",
+      "artists": [.maroon5]
+    }
+  }
 }

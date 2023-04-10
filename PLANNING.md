@@ -370,11 +370,17 @@
 - Fix dictionary literal parsing bug **[DONE]**
 - Fix SQL non-serial id object creating bug **[DONE]**
 - Fix SQL `OR` in where bug **[DONE]**
+- Fix SQL empty `in` or `notIn` bug **[DONE]**
+- Add command `seed` **[DONE]**
+- `seed --reseed` **[DONE]**
+- `seed --unseed` **[DONE]**
+- Add command `purge` **[DONE]**
+- Use `TEO_ENV` environment variable **[DONE]**
 - Data seeding **[DONE]**
 - Add debug conf block **[DONE]**
 - Add test conf block **[DONE]**
 - CLI: Make `--schema` argument global **[DONE]**
-- Setup integration tests: reset after each find request
+- Setup integration tests: reset after each find request **[DONE]**
 - Unit test: relations for different connectors
 - Unit test: handlers
 
