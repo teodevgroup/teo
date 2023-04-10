@@ -596,7 +596,7 @@ async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &S
     }
 }
 
-fn make_app(graph: &'static Graph, conf: &'static ServerConf) -> App<impl ServiceFactory<
+fn make_app(graph: &'static Graph, conf: &'static ServerConf, test_context: Option<&'static TestContext>) -> App<impl ServiceFactory<
     ServiceRequest,
     Response = ServiceResponse<BoxBody>,
     Config = (),
@@ -725,51 +725,61 @@ fn make_app(graph: &'static Graph, conf: &'static ServerConf) -> App<impl Servic
                 FIND_UNIQUE_HANDLER => {
                     let result = handle_find_unique(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
+                    reset_after_query_if_needed(test_context, graph).await;
                     return result;
                 }
                 FIND_FIRST_HANDLER => {
                     let result = handle_find_first(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
+                    reset_after_query_if_needed(test_context, graph).await;
                     result
                 }
                 FIND_MANY_HANDLER => {
                     let result = handle_find_many(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
+                    reset_after_query_if_needed(test_context, graph).await;
                     result
                 }
                 CREATE_HANDLER => {
                     let result = handle_create(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
+                    reset_after_mutation_if_needed(test_context, graph).await;
                     result
                 }
                 UPDATE_HANDLER => {
                     let result = handle_update(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
+                    reset_after_mutation_if_needed(test_context, graph).await;
                     result
                 }
                 UPSERT_HANDLER => {
                     let result = handle_upsert(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
+                    reset_after_mutation_if_needed(test_context, graph).await;
                     result
                 }
                 DELETE_HANDLER => {
                     let result = handle_delete(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
+                    reset_after_mutation_if_needed(test_context, graph).await;
                     result
                 }
                 CREATE_MANY_HANDLER => {
                     let result = handle_create_many(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
+                    reset_after_mutation_if_needed(test_context, graph).await;
                     result
                 }
                 UPDATE_MANY_HANDLER => {
                     let result = handle_update_many(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
+                    reset_after_mutation_if_needed(test_context, graph).await;
                     result
                 }
                 DELETE_MANY_HANDLER => {
                     let result = handle_delete_many(&graph, &transformed_body, model_def, source.clone()).await;
                     log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
+                    reset_after_mutation_if_needed(test_context, graph).await;
                     result
                 }
                 COUNT_HANDLER => {
@@ -836,11 +846,29 @@ pub(crate) async fn serve(
     let bind = conf.bind.clone();
     let port = bind.1;
     let server = HttpServer::new(move || {
-        make_app(graph, conf)
+        make_app(graph, conf, test_context)
     })
         .bind(bind)
         .unwrap()
         .run();
     let result = future::join(server, server_start_message(port, environment_version, entrance)).await;
     result.0
+}
+
+async fn reset_after_mutation_if_needed(test_context: Option<&'static TestContext>, graph: &Graph) {
+    if let Some(test_context) = test_context {
+        if test_context.reset_mode.is_after_mutation() {
+            graph.connector().purge(graph).await.unwrap();
+            seed(SeedCommandAction::Seed, graph, &test_context.datasets, test_context.datasets.iter().map(|d| d.name.clone()).collect()).await;
+        }
+    }
+}
+
+async fn reset_after_query_if_needed(test_context: Option<&'static TestContext>, graph: &Graph) {
+    if let Some(test_context) = test_context {
+        if test_context.reset_mode.is_after_query() {
+            graph.connector().purge(graph).await.unwrap();
+            seed(SeedCommandAction::Seed, graph, &test_context.datasets, test_context.datasets.iter().map(|d| d.name.clone()).collect()).await;
+        }
+    }
 }
