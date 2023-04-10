@@ -364,9 +364,23 @@ impl AppBuilder {
             },
             #[cfg(feature = "data-source-sqlite")]
             DatabaseName::SQLite => {
+                let mut url = url.clone();
+                if url != "sqlite::memory:" {
+                    if let Some(file) = url.strip_prefix("sqlite:") {
+                        url = String::from("sqlite:") + parser.schema_file.clone().unwrap()
+                            .parent()
+                            .unwrap()
+                            .join(file)
+                            .to_str()
+                            .unwrap()
+                            .trim_start_matches(r"\\?\")
+                            .replace("\\", "/")
+                            .as_str();
+                    }
+                }
                 #[cfg(feature = "data-source-sqlite")]
-                Arc::new(SQLConnector::new(SQLDialect::SQLite, url, false).await)
-            },
+                Arc::new(SQLConnector::new(SQLDialect::SQLite, &url, false).await)
+            }
             DatabaseName::MongoDB => {
                 #[cfg(feature = "data-source-mongodb")]
                 Arc::new(MongoDBConnector::new(url.clone()).await)

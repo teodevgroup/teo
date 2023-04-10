@@ -80,6 +80,7 @@ pub(crate) struct Parser {
     pub(crate) test_conf: Option<(usize, usize)>,
     pub(crate) next_id: usize,
     pub(crate) resolved: bool,
+    pub(crate) schema_file: Option<PathBuf>,
     pub(crate) global_model_decorators: Option<GlobalModelDecorators>,
     pub(crate) global_field_decorators: Option<GlobalFieldDecorators>,
     pub(crate) global_relation_decorators: Option<GlobalRelationDecorators>,
@@ -105,6 +106,7 @@ impl Parser {
             test_conf: None,
             next_id: 0,
             resolved: false,
+            schema_file: None,
             global_model_decorators: None,
             global_field_decorators: None,
             global_relation_decorators: None,
@@ -145,6 +147,7 @@ impl Parser {
             Ok(path) => path,
             Err(_) => panic!("Schema file '{}' is not found.", relative.to_str().unwrap()),
         };
+        self.schema_file = Some(absolute.clone());
         self.parse_source(&absolute);
         Resolver::resolve_parser(self);
     }
