@@ -10,7 +10,7 @@ server {
 }
 
 test {
-  resetAfterFind: .auto
+  resetAfterFind .auto
 }
 
 // User & Profile represents an 1 to 1 required relationship

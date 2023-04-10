@@ -891,6 +891,7 @@ impl Parser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier => identifiers.push(Self::parse_identifier(&current)),
+                Rule::TRAILING_COMMA | Rule::BLOCK_CLOSE => (),
                 _ => panic!(),
             }
         }
