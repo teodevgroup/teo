@@ -157,7 +157,11 @@ fn json_match_object(value: &Value, map: &Map<String, Value>, matcher: &Matcher,
 }
 
 fn json_match_error(value: &Value, path: &KeyPath<'_>) -> Result<(), String> {
-    Err(format!("value `{}` at `{}` does not match matcher.", value.to_string(), path.to_string()))
+    if path.is_empty() {
+        Err(format!("value `{}` does not match json matcher.", value.to_string()))
+    } else {
+        Err(format!("value `{}` at `{}` does not match json matcher.", value.to_string(), path.to_string()))
+    }
 }
 
 fn json_match_error_if_not(result: bool, value: &Value, path: &KeyPath<'_>) -> Result<(), String> {
