@@ -15,10 +15,12 @@ use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
 use crate::core::app::migrate::migrate;
 use crate::core::app::serve::serve;
+use crate::core::app::serve::test_context::{ResetMode, TestContext};
 use crate::core::graph::Graph;
 use crate::gen::interface::client::conf::Conf as ClientConf;
 use crate::gen::interface::client::gen::gen as gen_client;
 use crate::gen::interface::server::gen as gen_entity;
+use crate::prelude::Value;
 use crate::purger::purge;
 use crate::seeder::data_set::DataSet;
 use crate::seeder::seed::seed;
@@ -53,12 +55,42 @@ impl App {
                     let names = self.datasets.iter().filter_map(|d| if d.autoseed { Some(d.name.clone()) } else { None }).collect();
                     seed(SeedCommandAction::Seed, self.graph, &self.datasets, names).await;
                 }
+                let env = serve_command.env.as_ref().cloned().unwrap_or(std::env::var("ENV").unwrap_or("debug".to_string()));
                 serve(
                     self.graph,
                     self.server_conf,
                     self.environment_version.clone(),
                     self.entrance.clone(),
                     self.before_server_start.clone(),
+                    if env.as_str() == "test" {
+                        if let Some(test_conf) = self.test_conf {
+                            match &test_conf.reset_after_find {
+                                Value::Null => None,
+                                Value::RawEnumChoice(s, _) => {
+                                    if s.as_str() == "auto" {
+                                        Some(Box::leak(Box::new(TestContext {
+                                            reset_mode: ResetMode::AfterQuery,
+                                            datasets: self.datasets.iter().filter(|d| d.autoseed == true).map(|d| d.clone()).collect(),
+                                        })))
+                                    } else { None }
+                                },
+                                Value::String(s) => {
+                                    Some(Box::leak(Box::new(TestContext {
+                                        reset_mode: ResetMode::AfterQuery,
+                                        datasets: self.datasets.iter().filter(|d| &d.name == s).map(|d| d.clone()).collect(),
+                                    })))
+                                },
+                                Value::Vec(v) => {
+                                    let sv: Vec<String> = v.iter().map(|v| v.as_str().unwrap().to_owned()).collect();
+                                    Some(Box::leak(Box::new(TestContext {
+                                        reset_mode: ResetMode::AfterQuery,
+                                        datasets: self.datasets.iter().filter(|d| sv.contains(&d.name)).map(|d| d.clone()).collect(),
+                                    })))
+                                }
+                                _ => unreachable!()
+                            }
+                        } else { None }
+                    } else { None },
                 ).await?
             }
             CLICommand::Generate(cmd) => {

@@ -378,13 +378,14 @@
 - Unit test: handlers
 
 #### 0.0.56
+- Rewrite connector to support pooled connections
+- SQL transaction
+- MongoDB transaction
 - VSCode highlight for data seeding
 - Linter: errors and warnings
 - Node.js client use dedicated `Date` class instead of builtin `Date`
 - Cross language error handling for node.js
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection
-- Rewrite connector to support pooled connections
-- SQL Transaction
 - Connector bug: unique constraint violating: error message should have key path
 - Log SQL queries
 - Migration dry run
@@ -409,35 +410,41 @@
 - All many actions should throw errors
 
 #### 0.0.59
+- Refactor Rust entities
+- Refactor Node.js entities
 - Rust entities: setter documentation
 - Rust entities: optional string array
 - Rust entities: required string array
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
 - Remove `unqueryable` and `unsortable` fields from generated clients
 - Relation with read write rules
-- Support code comment tags for VSCode
-- Support code comment tags for IntelliJ IDEA
 - Pipeline documentation
 - CLI mode: When running generation, ignore custom programming callbacks
 - CLI mode: When running server, panic if custom programming callback is provided
 - Soft delete documentation
+- Correct count with cursor
 
 #### 0.0.60
 - The copy action
 - PostgreSQL: Enum types
 - Input omissible and output omissible for generated clients
+- Support code comment tags for VSCode
+- Support code comment tags for IntelliJ IDEA
 
 #### 0.1.0
-- Database type mapping for field, property and collection types' item field
+- First stable release
 
 #### 0.2.0
-- Support MSSQL
+- Database type mapping for field, property and collection types' item field
 
 #### 0.3.0
-- Correct count with cursor
+- Support MSSQL
 
 #### 0.4.0
 - `@canAccess`
 
+#### 0.5.0
+- Custom routes
+
 #### 1.0.0
-- First stable version
+- First major version
