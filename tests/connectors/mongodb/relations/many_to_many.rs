@@ -25,7 +25,7 @@ mod test {
 
     #[test]
     fn create_with_nested_create_one() {
-        let create_res = req(PORT, "create", "Artist", json!({
+        let _create_res = req(PORT, "create", "Artist", json!({
             "create": {
                 "name": "Taylor Swift",
                 "songs": {
@@ -46,6 +46,7 @@ mod test {
             "name": "Taylor Swift",
             "songs": [
                 {
+                    "id": ignore,
                     "name": "Love Story"
                 }
             ]
