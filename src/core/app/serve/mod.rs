@@ -28,7 +28,6 @@ use crate::core::app::command::SeedCommandAction;
 use crate::core::app::conf::ServerConf;
 use crate::core::app::entrance::Entrance;
 use crate::core::app::environment::EnvironmentVersion;
-use crate::core::app::migrate::migrate;
 use crate::core::app::serve::test_context::TestContext;
 use crate::core::connector::SaveSession;
 use self::jwt_token::{Claims, decode_token, encode_token};
