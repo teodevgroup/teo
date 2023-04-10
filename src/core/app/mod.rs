@@ -51,11 +51,13 @@ impl App {
                 if !serve_command.no_migration {
                     migrate(self.graph.to_mut(), false).await;
                 }
-                if !serve_command.no_autoseed {
-                    let names = self.datasets.iter().filter_map(|d| if d.autoseed { Some(d.name.clone()) } else { None }).collect();
-                    seed(SeedCommandAction::Seed, self.graph, &self.datasets, names).await;
+                if !serve_command.no_autoseed && !self.datasets.is_empty() {
+                    let names: Vec<String> = self.datasets.iter().filter_map(|d| if d.autoseed { Some(d.name.clone()) } else { None }).collect();
+                    if !names.is_empty() {
+                        seed(SeedCommandAction::Seed, self.graph, &self.datasets, names).await;
+                    }
                 }
-                let env = serve_command.env.as_ref().cloned().unwrap_or(std::env::var("ENV").unwrap_or("debug".to_string()));
+                let env = serve_command.env.as_ref().cloned().unwrap_or(std::env::var("TEO_ENV").unwrap_or("debug".to_string()));
                 serve(
                     self.graph,
                     self.server_conf,

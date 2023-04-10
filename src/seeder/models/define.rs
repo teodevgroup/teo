@@ -41,6 +41,9 @@ fn install_string_id_and_dataset(m: &mut ModelBuilder) {
     m.primary = Some(ModelIndex::new(ModelIndexType::Primary, None::<String>, vec![
         ModelIndexItem::new("id".to_string(), Sort::Asc, None)
     ]));
+    m.indices.push(ModelIndex::new(ModelIndexType::Primary, None::<String>, vec![
+        ModelIndexItem::new("id".to_string(), Sort::Asc, None)
+    ]));
     let mut data_set_field = Field::new("dataset".to_owned());
     data_set_field.field_type = Some(FieldType::String);
     m.field(data_set_field);

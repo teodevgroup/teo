@@ -72,10 +72,14 @@ impl Query {
                         result.push(Self::where_item(&column_name, "<=", &value.to_sql_string(r#type, false, graph)));
                     }
                     "in" => {
-                        result.push(Self::where_entry_array(&column_name, r#type, optional, value, graph, "IN"));
+                        if !value.as_vec().unwrap().is_empty() {
+                            result.push(Self::where_entry_array(&column_name, r#type, optional, value, graph, "IN"));
+                        }
                     }
                     "notIn" => {
-                        result.push(Self::where_entry_array(&column_name, r#type, optional, value, graph, "NOT IN"));
+                        if !value.as_vec().unwrap().is_empty() {
+                            result.push(Self::where_entry_array(&column_name, r#type, optional, value, graph, "NOT IN"));
+                        }
                     }
                     "contains" => {
                         let i_mode = Input::has_i_mode(map);

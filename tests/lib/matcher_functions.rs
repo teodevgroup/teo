@@ -1,4 +1,8 @@
+use std::borrow::Borrow;
+use regex::Regex;
 use serde_json::Value;
+use crate::lib::json_match;
+use crate::lib::matcher::Matcher;
 
 pub fn date_time_value(val: impl AsRef<str>) -> impl Fn(&Value) -> bool {
     return move |v: &Value| {
@@ -21,5 +25,25 @@ pub fn decimal_value(val: impl AsRef<str>) -> impl Fn(&Value) -> bool {
         let date_value = obj.get("$decimal").unwrap();
         if !date_value.is_string() { return false }
         date_value.as_str().unwrap() == val.as_ref()
+    }
+}
+
+pub fn object_id_value(v: &Value) -> bool {
+    if !v.is_string() { return false }
+    let regex = Regex::new("[\\da-f]{24}").unwrap();
+    regex.is_match(v.as_str().unwrap())
+}
+
+pub fn one_match(matcher: impl Borrow<Matcher>) -> impl Fn(&Value) -> bool {
+    return move |v: &Value| {
+        if !v.is_array() { return false }
+        let array = v.as_array().unwrap();
+        for value in array {
+            let match_result = json_match(value, matcher.borrow());
+            if match_result.is_ok() {
+                return true
+            }
+        }
+        false
     }
 }

@@ -234,7 +234,7 @@ impl AppBuilder {
         let schema: Option<&String> = matches.get_one("SCHEMA_FILE");
         let command = match matches.subcommand() {
             Some(("serve", submatches)) => {
-                let env: Option<&String> = submatches.get_one("env");
+                let env: Option<&String> = submatches.get_one("ENV");
                 CLICommand::Serve(ServeCommand { no_migration: submatches.get_flag("no-migration"), no_autoseed: submatches.get_flag("no-autoseed"), env: env.cloned() })
             }
             Some(("generate", submatches)) => {
