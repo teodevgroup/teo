@@ -1254,7 +1254,7 @@ impl Object {
             }
         } else {
             let mut r#where = self.intrinsic_where_unique_for_relation(relation);
-            r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().cloned().unwrap());
+            r#where.as_hashmap_mut().unwrap().extend(value.as_hashmap().cloned().unwrap());
             let action = Action::from_u32(NESTED | UPDATE | MANY);
             let objects = self.graph().find_many_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await.unwrap();
             Ok(objects)
@@ -1284,7 +1284,7 @@ impl Object {
             }
         } else {
             let mut r#where = self.intrinsic_where_unique_for_relation(relation);
-            r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().cloned().unwrap());
+            r#where.as_hashmap_mut().unwrap().extend(value.as_hashmap().cloned().unwrap());
             let action = Action::from_u32(NESTED | UPDATE | SINGLE);
             let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
                 Ok(object) => object,

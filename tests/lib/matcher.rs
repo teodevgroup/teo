@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
 
 use serde_json::{Number, Value};
@@ -11,7 +12,7 @@ pub enum Matcher {
     String(String),
     Array(Vec<Matcher>),
     Object(HashMap<String, Matcher>),
-    ValueMatcher(Box<dyn Fn(&Value) -> bool>),
+    ValueMatcher(Arc<dyn Fn(&Value) -> bool>),
 }
 
 #[macro_export(local_inner_macros)]
@@ -263,7 +264,13 @@ impl From<bool> for Matcher {
 
 impl<T> From<T> for Matcher where T: Fn(&Value) -> bool + 'static {
     fn from(value: T) -> Self {
-        Matcher::ValueMatcher(Box::new(value))
+        Matcher::ValueMatcher(Arc::new(value))
+    }
+}
+
+impl From<Arc<dyn Fn(&Value) -> bool + 'static>> for Matcher {
+    fn from(value: Arc<dyn Fn(&Value) -> bool + 'static>) -> Self {
+        Matcher::ValueMatcher(value.clone())
     }
 }
 

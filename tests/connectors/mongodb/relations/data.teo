@@ -84,4 +84,31 @@ autoseed dataset default {
       "artists": [.maroon5]
     }
   }
+  group Product {
+    record lipstick {
+      "name": "Lipstick"
+    }
+    record nailPolish {
+      "name": "Nail Polish"
+    }
+    record lipidRestore {
+      "name": "Lipid Restore"
+    }
+    record serum {
+      "name": "Sérum"
+    }
+    record hairJelly {
+      "name": "Hair Jelly"
+    }
+  }
+  group Category {
+    record cosmetics {
+      "name": "Cosmetics",
+      "products": [.lipstick, .nailPolish]
+    }
+    record skincares {
+      "name": "Skincares",
+      "products": [.lipidRestore, .serum]
+    }
+  }
 }

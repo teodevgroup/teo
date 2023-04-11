@@ -53,7 +53,29 @@ model KOFPlayer {
   player: Player?
 }
 
-// Author & Post represents an 1 to many relationship
+// Product & Category represents an 1 optional to many relationship
+
+model Product {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @foreignKey
+  categoryId: ObjectId?
+  @relation(fields: .categoryId, references: .id)
+  category: Category?
+}
+
+model Category {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @relation(fields: .id, references: .categoryId)
+  products: Product[]
+}
+
+// Author & Post represents an 1 required to many relationship
 
 model Author {
   @id @auto @map("_id") @readonly
