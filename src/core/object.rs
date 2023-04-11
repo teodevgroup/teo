@@ -1115,13 +1115,16 @@ impl Object {
         // disconnect old
         let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
         self.nested_disconnect_relation_object(relation, &disconnect_value, session.clone(), path).await?;
-        // connect new
-        let action = Action::from_u32(NESTED | SET | SINGLE);
-        let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone()).await {
-            Ok(object) => object,
-            Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
-        };
-        self.link_and_save_relation_object(relation, &object, session.clone(), path).await
+        if !value.is_null() {
+            // connect new
+            let action = Action::from_u32(NESTED | SET | SINGLE);
+            let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone()).await {
+                Ok(object) => object,
+                Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
+            };
+            self.link_and_save_relation_object(relation, &object, session.clone(), path).await?;
+        }
+        Ok(())
     }
 
     async fn nested_connect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
@@ -1346,7 +1349,6 @@ impl Object {
 
     async fn nested_many_delete_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let object = self.find_relation_object_by_value(relation, value, path, Action::from_u32(NESTED | DELETE | SINGLE)).await?;
-        println!("see will delete: {:?}", object);
         object.delete_from_database(session.clone()).await?;
         if relation.has_join_table() {
             let opposite_relation = self.graph().opposite_relation(relation).1.unwrap();
@@ -1357,7 +1359,6 @@ impl Object {
 
     async fn nested_many_delete_many_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let objects = self.find_relation_objects_by_value(relation, value, path, Action::from_u32(NESTED | DELETE | MANY)).await?;
-        println!("see will deletes: {:?}", objects);
         for object in objects {
             object.delete_from_database(session.clone()).await?;
             if relation.has_join_table() {

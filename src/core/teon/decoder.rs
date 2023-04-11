@@ -361,7 +361,7 @@ impl Decoder {
                     Err(Error::unexpected_input_key(k, &path))?
                 },
                 "set" => if model.has_action(Action::from_u32(SET | NESTED | SINGLE)) {
-                    Ok((k.to_owned(), Self::decode_where_unique(model, graph, v, path)?))
+                    Ok((k.to_owned(), Self::decode_where_unique_or_null(model, graph, v, path)?))
                 } else {
                     Err(Error::unexpected_input_key(k, &path))?
                 },
@@ -764,6 +764,14 @@ impl Decoder {
             }
         }
         Ok(Value::HashMap(retval))
+    }
+
+    fn decode_where_unique_or_null<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
+        if json_value.is_null() {
+            Ok(Value::Null)
+        } else {
+            Self::decode_where_unique(model, graph, json_value, path)
+        }
     }
 
     fn decode_where_unique<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {

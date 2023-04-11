@@ -382,17 +382,23 @@
 - Add test conf block **[DONE]**
 - CLI: Make `--schema` argument global **[DONE]**
 - Setup integration tests: reset after each find request **[DONE]**
-- Unit test: relations for MongoDB connector **[DONE]**
+- Unit test: relations for MongoDB connector **[IN PROGRESS]**
 - Fix many-to-many relationship set is not reset bug **[DONE]**
 - Fix many-to-many relationship cannot be nested updated bug **[DONE]**
 - Fix many-to-many relationship cannot be nested updated many bug **[DONE]**
 - Fix many-to-many relationship cannot be nested deleted bug **[DONE]**
 - Fix many-to-many relationship cannot be nested deleted many bug **[DONE]**
+- Single relation: nested set to null **[DONE]**
 - Unit test: handlers
 
 #### 0.0.56
 - Rewrite connector to support pooled connections
 - SQL transaction
+- Foreign key management
+- Relation onUpdate
+- Relation onDelete
+
+#### 0.0.57
 - MongoDB transaction
 - VSCode highlight for data seeding
 - Linter: errors and warnings
@@ -404,12 +410,10 @@
 - Migration dry run
 - MongoDB: connector is not using table name
 
-#### 0.0.57
-- Python server
-- Relation onUpdate
-- Relation onDelete
-
 #### 0.0.58
+- Python server
+
+#### 0.0.59
 - Migration decorator docs
 - Dropped decorator docs
 - MongoDB migration
@@ -422,7 +426,7 @@
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 
-#### 0.0.59
+#### 0.0.60
 - Refactor Rust entities
 - Refactor Node.js entities
 - Rust entities: setter documentation
@@ -437,7 +441,7 @@
 - Soft delete documentation
 - Correct count with cursor
 
-#### 0.0.60
+#### 0.0.61
 - The copy action
 - PostgreSQL: Enum types
 - Input omissible and output omissible for generated clients
