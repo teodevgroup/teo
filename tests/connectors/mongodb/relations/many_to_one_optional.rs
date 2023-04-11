@@ -863,6 +863,4 @@ mod test {
             "products": []
         }))));
     }
-
-
 }

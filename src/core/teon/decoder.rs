@@ -204,7 +204,13 @@ impl Decoder {
         } else {
             return Err(Error::unexpected_input_type("object", path));
         };
-        Self::check_json_keys(json_map, &NESTED_UPDATE_MANY_ARG_KEYS, path)?;
+        let oppo_model = graph.opposite_relation(relation).0;
+        let required = !relation.has_join_table() && relation.iter().find(|(_l, f)| oppo_model.field(f).unwrap().is_required()).is_some();
+        if required {
+            Self::check_json_keys(json_map, &NESTED_UPDATE_MANY_REQUIRED_ARG_KEYS, path)?;
+        } else {
+            Self::check_json_keys(json_map, &NESTED_UPDATE_MANY_ARG_KEYS, path)?;
+        }
         Ok(Value::HashMap(json_map.iter().map(|(k, value)| {
             let k = k.as_str();
             let path = path + k;
@@ -1051,4 +1057,8 @@ static NESTED_UPDATE_ONE_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
 
 static NESTED_UPDATE_MANY_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
     hashset!{"create", "createMany", "connect", "connectOrCreate", "set", "disconnect", "update", "updateMany", "upsert", "delete", "deleteMany"}
+});
+
+static NESTED_UPDATE_MANY_REQUIRED_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"create", "createMany", "connect", "connectOrCreate", "update", "updateMany", "upsert", "delete", "deleteMany"}
 });

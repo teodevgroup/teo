@@ -389,6 +389,7 @@
 - Fix many-to-many relationship cannot be nested deleted bug **[DONE]**
 - Fix many-to-many relationship cannot be nested deleted many bug **[DONE]**
 - Single relation: nested set to null **[DONE]**
+- Many to one required: disable set and disconnect nested action **[DONE]**
 - Unit test: handlers
 
 #### 0.0.56

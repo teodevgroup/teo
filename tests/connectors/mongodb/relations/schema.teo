@@ -80,6 +80,7 @@ model Category {
 model Author {
   @id @auto @map("_id") @readonly
   id: ObjectId
+  @unique
   name: String
   @relation(fields: .id, references: .authorId)
   posts: Post[]
@@ -88,6 +89,7 @@ model Author {
 model Post {
   @id @auto @map("_id") @readonly
   id: ObjectId
+  @unique
   name: String
   @foreignKey
   authorId: ObjectId
