@@ -197,7 +197,7 @@ impl Decoder {
         }).collect::<Result<HashMap<String, Value>>>()?))
     }
 
-    fn decode_nested_many_update_arg<'a>(graph: &Graph, relation: &Relation, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
+    fn decode_nested_many_update_arg<'a>(graph: &Graph, model: &Model, relation: &Relation, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
         let path = path.as_ref();
         let json_map = if let Some(json_map) = json_value.as_object() {
             json_map
@@ -205,7 +205,7 @@ impl Decoder {
             return Err(Error::unexpected_input_type("object", path));
         };
         let oppo_model = graph.opposite_relation(relation).0;
-        let required = !relation.has_join_table() && relation.iter().find(|(_l, f)| oppo_model.field(f).unwrap().is_required()).is_some();
+        let required = !relation.has_join_table() && relation.iter().find(|(l, f)| (oppo_model.field(f).unwrap().is_required()) && (model.field(l).unwrap().is_required())).is_some();
         if required {
             Self::check_json_keys(json_map, &NESTED_UPDATE_MANY_REQUIRED_ARG_KEYS, path)?;
         } else {
@@ -343,14 +343,20 @@ impl Decoder {
         }).collect::<Result<HashMap<String, Value>>>()?))
     }
 
-    fn decode_nested_one_update_arg<'a>(graph: &Graph, relation: &Relation, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
+    fn decode_nested_one_update_arg<'a>(graph: &Graph, model: &Model, relation: &Relation, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
         let path = path.as_ref();
         let json_map = if let Some(json_map) = json_value.as_object() {
             json_map
         } else {
             return Err(Error::unexpected_input_type("object", path));
         };
-        Self::check_json_keys(json_map, &NESTED_UPDATE_ONE_ARG_KEYS, path)?;
+        let oppo_model = graph.opposite_relation(relation).0;
+        let required = !relation.has_join_table() && relation.iter().find(|(l, f)| (oppo_model.field(f).unwrap().is_required()) && (model.field(l).unwrap().is_required())).is_some();
+        if required {
+            Self::check_json_keys(json_map, &NESTED_UPDATE_ONE_REQUIRED_ARG_KEYS, path)?;
+        } else {
+            Self::check_json_keys(json_map, &NESTED_UPDATE_ONE_ARG_KEYS, path)?;
+        }
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
             let k = k.as_str();
             let path = path + k;
@@ -367,7 +373,11 @@ impl Decoder {
                     Err(Error::unexpected_input_key(k, &path))?
                 },
                 "set" => if model.has_action(Action::from_u32(SET | NESTED | SINGLE)) {
-                    Ok((k.to_owned(), Self::decode_where_unique_or_null(model, graph, v, path)?))
+                    Ok((k.to_owned(), if required {
+                        Self::decode_where_unique(model, graph, v, path)?
+                    } else {
+                        Self::decode_where_unique_or_null(model, graph, v, path)?
+                    }))
                 } else {
                     Err(Error::unexpected_input_key(k, &path))?
                 },
@@ -530,9 +540,9 @@ impl Decoder {
                 Ok((k.to_owned(), Self::decode_value_or_updator_for_field_type(graph, field.field_type(), field.is_optional(), v, path, false)?))
             } else if let Some(relation) = model.relation(k) {
                 if relation.is_vec() {
-                    Ok((k.to_owned(), Self::decode_nested_many_update_arg(graph, relation, v, path)?))
+                    Ok((k.to_owned(), Self::decode_nested_many_update_arg(graph, model, relation, v, path)?))
                 } else {
-                    Ok((k.to_owned(), Self::decode_nested_one_update_arg(graph, relation, v, path)?))
+                    Ok((k.to_owned(), Self::decode_nested_one_update_arg(graph, model, relation, v, path)?))
                 }
             } else if let Some(property) = model.property(k) {
                 Ok((k.to_owned(), Self::decode_value_or_updator_for_field_type(graph, property.field_type(), property.is_optional(), v, path, true)?))
@@ -1053,6 +1063,10 @@ static NESTED_CREATE_MANY_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
 
 static NESTED_UPDATE_ONE_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
     hashset!{"create", "connect", "connectOrCreate", "set", "disconnect", "update", "delete", "upsert"}
+});
+
+static NESTED_UPDATE_ONE_REQUIRED_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"create", "connect", "connectOrCreate", "set", "update", "upsert"}
 });
 
 static NESTED_UPDATE_MANY_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {

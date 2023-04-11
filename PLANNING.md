@@ -390,6 +390,8 @@
 - Fix many-to-many relationship cannot be nested deleted many bug **[DONE]**
 - Single relation: nested set to null **[DONE]**
 - Many to one required: disable set and disconnect nested action **[DONE]**
+- One required to many: disable set to null and disconnect **[DONE]**
+- Fix set for single relation is not set bug **[DONE]**
 - Unit test: handlers
 
 #### 0.0.56

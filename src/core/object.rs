@@ -1112,9 +1112,11 @@ impl Object {
     }
 
     async fn nested_set_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
-        // disconnect old
-        let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
-        self.nested_disconnect_relation_object(relation, &disconnect_value, session.clone(), path).await?;
+        if !(relation.has_foreign_key() && relation.is_required()) {
+            // disconnect old
+            let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
+            self.nested_disconnect_relation_object(relation, &disconnect_value, session.clone(), path).await?;
+        }
         if !value.is_null() {
             // connect new
             let action = Action::from_u32(NESTED | SET | SINGLE);
