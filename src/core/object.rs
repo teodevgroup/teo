@@ -1115,7 +1115,7 @@ impl Object {
         if !(relation.has_foreign_key() && relation.is_required()) {
             // disconnect old
             let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
-            let _ = self.nested_disconnect_relation_object(relation, &disconnect_value, session.clone(), path).await;
+            let _ = self.nested_disconnect_relation_object_no_check(relation, &disconnect_value, session.clone(), path).await;
         }
         if !value.is_null() {
             // connect new
@@ -1170,10 +1170,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_disconnect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
-        if !relation.is_vec() && relation.is_required() {
-            return Err(Error::unexpected_input_value_with_reason("Cannot disconnect required relation.", path));
-        }
+    async fn nested_disconnect_relation_object_no_check(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
         } else {
@@ -1186,6 +1183,14 @@ impl Object {
             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
             object.save_with_session_and_path(session.clone(), path).await?;
         }
+        Ok(())
+    }
+
+    async fn nested_disconnect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+        if !relation.is_vec() && relation.is_required() {
+            return Err(Error::unexpected_input_value_with_reason("Cannot disconnect required relation.", path));
+        }
+        self.nested_disconnect_relation_object_no_check(relation, value, session, path).await?;
         Ok(())
     }
 
@@ -1392,7 +1397,7 @@ impl Object {
             match action_u32 {
                 NESTED_CREATE_ACTION | NESTED_CONNECT_ACTION | NESTED_CONNECT_OR_CREATE_ACTION => {
                     let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
-                    let _ = self.nested_disconnect_relation_object(relation, &disconnect_value, session.clone(), path).await;
+                    let _ = self.nested_disconnect_relation_object_no_check(relation, &disconnect_value, session.clone(), path).await;
                 },
                 _ => ()
             }
