@@ -392,6 +392,7 @@
 - Many to one required: disable set and disconnect nested action **[DONE]**
 - One required to many: disable set to null and disconnect **[DONE]**
 - Fix set for single relation is not set bug **[DONE]**
+- One foreign to one local optional: when nested create, disconnect the previous one **[DONE]**
 - Unit test: handlers
 
 #### 0.0.56

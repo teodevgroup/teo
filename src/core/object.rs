@@ -1115,7 +1115,7 @@ impl Object {
         if !(relation.has_foreign_key() && relation.is_required()) {
             // disconnect old
             let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
-            self.nested_disconnect_relation_object(relation, &disconnect_value, session.clone(), path).await?;
+            let _ = self.nested_disconnect_relation_object(relation, &disconnect_value, session.clone(), path).await;
         }
         if !value.is_null() {
             // connect new
@@ -1372,7 +1372,17 @@ impl Object {
     }
 
     async fn perform_relation_manipulation_one_inner(&self, relation: &Relation, action: Action, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
-        match action.to_u32() {
+        let action_u32 = action.to_u32();
+        if !relation.is_vec() && !relation.has_foreign_key() && !self.is_new() {
+            match action_u32 {
+                NESTED_CREATE_ACTION | NESTED_CONNECT_ACTION | NESTED_CONNECT_OR_CREATE_ACTION => {
+                    let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
+                    let _ = self.nested_disconnect_relation_object(relation, &disconnect_value, session.clone(), path).await;
+                },
+                _ => ()
+            }
+        }
+        match action_u32 {
             NESTED_CREATE_ACTION => self.nested_create_relation_object(relation, value, session.clone(), &path).await,
             NESTED_CONNECT_ACTION => self.nested_connect_relation_object(relation, value, session.clone(), &path).await,
             NESTED_SET_ACTION => self.nested_set_relation_object(relation, value, session.clone(), &path).await,

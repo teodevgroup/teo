@@ -30,6 +30,9 @@ autoseed dataset default {
     record justin {
       "name": "Justin Wong plays KOF"
     }
+    record laggia {
+      "name": "Laggia"
+    }
   }
   group Author {
     record paul {
