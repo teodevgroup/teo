@@ -93,6 +93,13 @@ Run this command to startup testing databases:
 docker-compose -f databases.yml up -d
 ```
 
+### Run integration tests
+
+To run integration tests, use this command:
+```shell
+RUST_TEST_THREADS=1 cargo test --test '*' 
+```
+
 ## Legal
 
 Pull Request authors must sign the [TEO Cloud CLA](https://cla-assistant.io/teocloud/teo), it will show up in an 
