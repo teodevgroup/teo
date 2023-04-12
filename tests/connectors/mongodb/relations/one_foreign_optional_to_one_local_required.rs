@@ -89,12 +89,12 @@ mod test {
     fn update_with_nested_create() {
         let update_res = req(PORT, "update", "Game", json!({
             "where": {
-                "name": "KOF98"
+                "name": "KOFXV"
             },
             "update": {
                 "commandList": {
                     "create": {
-                        "name": "KOF98UM Command List"
+                        "name": "KOFXV Command List"
                     }
                 }
             },
@@ -107,10 +107,10 @@ mod test {
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 3 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
-            "name": "KOF98",
+            "name": "KOFXV",
             "commandList": {
                 "id": ignore,
-                "name": "KOF98UM Command List",
+                "name": "KOFXV Command List",
                 "gameId": ignore,
             }
         }))));
