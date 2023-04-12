@@ -135,4 +135,25 @@ autoseed dataset default {
       "products": [.lipidRestore, .serum]
     }
   }
+  group Event {
+    record renaissance {
+      "name": "The Renaissance"
+    }
+    record frenchRevolution {
+      "name": "The French Revolution"
+    }
+    record industrialRevolution {
+      "name": "The Industrial Revolution"
+    }
+  }
+  group Note {
+    record renaissanceNote {
+      "name": "Note of The Renaissance",
+      "event": .renaissance
+    }
+    record frenchRevolutionNote {
+      "name": "Note of The French Revolution",
+      "event": .frenchRevolution
+    }
+  }
 }

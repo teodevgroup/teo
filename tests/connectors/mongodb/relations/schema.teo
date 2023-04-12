@@ -57,6 +57,28 @@ model KOFPlayer {
   player: Player?
 }
 
+// Event & Note represents an 1 optional to 1 required relationship
+
+model Event {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @foreignKey
+  noteId: ObjectId?
+  @relation(fields: .noteId, references: .id)
+  note: Note?
+}
+
+model Note {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @relation(fields: .id, references: .noteId)
+  event: Event
+}
+
 // Game & CommandList represents an 1 optional to 1 required relationship
 
 model Game {
