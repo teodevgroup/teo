@@ -18,6 +18,7 @@ test {
 model User {
   @id @auto @map("_id") @readonly
   id: ObjectId
+  @unique
   name: String
   @relation(fields: .id, references: .userId)
   profile: Profile
@@ -26,6 +27,7 @@ model User {
 model Profile {
   @id @auto @map("_id") @readonly
   id: ObjectId
+  @unique
   name: String
   @foreignKey
   userId: ObjectId
