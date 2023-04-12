@@ -17,6 +17,27 @@ autoseed dataset default {
       "user": .peter
     }
   }
+  group Game {
+    record kof97 {
+      "name": "KOF97"
+    }
+    record kof98 {
+      "name": "KOF98"
+    }
+    record kofxv {
+      "name": "KOFXV"
+    }
+  }
+  group CommandList {
+    record kof97c {
+      "name": "KOF97 Command List",
+      "game": .kof97
+    }
+    record kof98c {
+      "name": "KOF98 Command List",
+      "game": .kof98
+    }
+  }
   group Player {
     record justin {
       "name": "Justin Wong",

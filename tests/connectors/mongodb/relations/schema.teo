@@ -57,6 +57,28 @@ model KOFPlayer {
   player: Player?
 }
 
+// Game & CommandList represents an 1 optional to 1 required relationship
+
+model Game {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @relation(fields: .id, references: .gameId)
+  commandList: CommandList?
+}
+
+model CommandList {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @foreignKey
+  gameId: ObjectId
+  @relation(fields: .gameId, references: .id)
+  game: Game
+}
+
 // Product & Category represents an 1 optional to many relationship
 
 model Product {

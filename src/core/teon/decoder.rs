@@ -352,7 +352,9 @@ impl Decoder {
         };
         let oppo_model = graph.opposite_relation(relation).0;
         let required = !relation.has_join_table() && relation.iter().find(|(l, f)| (oppo_model.field(f).unwrap().is_required()) && (model.field(l).unwrap().is_required())).is_some();
-        if required {
+        if relation.is_optional() && required {
+            Self::check_json_keys(json_map, &NESTED_UPDATE_ONE_LOCAL_OPTIONAL_FOREIGN_REQUIRED_KEYS, path)?;
+        } else if required {
             Self::check_json_keys(json_map, &NESTED_UPDATE_ONE_REQUIRED_ARG_KEYS, path)?;
         } else {
             Self::check_json_keys(json_map, &NESTED_UPDATE_ONE_ARG_KEYS, path)?;
@@ -1063,6 +1065,10 @@ static NESTED_CREATE_MANY_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
 
 static NESTED_UPDATE_ONE_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
     hashset!{"create", "connect", "connectOrCreate", "set", "disconnect", "update", "delete", "upsert"}
+});
+
+static NESTED_UPDATE_ONE_LOCAL_OPTIONAL_FOREIGN_REQUIRED_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
+    hashset!{"create", "connect", "connectOrCreate", "set", "update", "delete", "upsert"}
 });
 
 static NESTED_UPDATE_ONE_REQUIRED_ARG_KEYS: Lazy<HashSet<&str>> = Lazy::new(|| {
