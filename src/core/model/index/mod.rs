@@ -62,7 +62,7 @@ impl ModelIndexItem {
 pub(crate) struct ModelIndex {
     pub(self) index_type: ModelIndexType,
     pub(self) name: Option<String>,
-    pub(self) items: Vec<ModelIndexItem>,
+    pub(crate) items: Vec<ModelIndexItem>,
     pub(self) keys: Vec<String>,
 }
 

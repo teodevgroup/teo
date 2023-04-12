@@ -15,7 +15,7 @@ impl SQLCreateStatement {
     }
 
     pub(crate) fn table(&self, table: impl Into<String>) -> SQLCreateTableStatement {
-        SQLCreateTableStatement { table: table.into(), if_not_exists: false, columns: vec![] }
+        SQLCreateTableStatement { table: table.into(), if_not_exists: false, columns: vec![], primary: None }
     }
 
     pub(crate) fn index(&self, index: impl Into<String>) -> SQLCreateIndexStatement {

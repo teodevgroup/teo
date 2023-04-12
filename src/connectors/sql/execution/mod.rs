@@ -146,7 +146,6 @@ impl Execution {
         }
         if let Some(include) = include.map(|i| i.as_hashmap().unwrap()) {
             for (key, value) in include {
-
                 let skip = value.as_hashmap().map(|m| m.get("skip")).flatten().map(|v| v.as_i64().unwrap());
                 let take = value.as_hashmap().map(|m| m.get("take")).flatten().map(|v| v.as_i64().unwrap());
                 let take_abs = take.map(|t| t.abs() as u64);
@@ -272,6 +271,7 @@ impl Execution {
                     let included_values = Self::query_internal(pool, opposite_model, graph, &nested_query, dialect, Some(where_addition), Some(left_join), Some(join_table_results), negative_take, additional_inner_distinct).await?;
                     // println!("see included {:?}", included_values);
                     for result in results.iter_mut() {
+                        result.as_hashmap_mut().unwrap().insert(relation.name().to_owned(), Value::Vec(vec![]));
                         let mut skipped = 0;
                         let mut taken = 0;
                         for included_value in included_values.iter() {
@@ -289,9 +289,6 @@ impl Execution {
                             }
                             if matched {
                                 if (skip.is_none() || skip.unwrap() <= skipped) && (take.is_none() || taken < take_abs.unwrap()) {
-                                    if result.get(relation.name()).is_none() {
-                                        result.as_hashmap_mut().unwrap().insert(relation.name().to_owned(), Value::Vec(vec![]));
-                                    }
                                     if negative_take {
                                         result.as_hashmap_mut().unwrap().get_mut(relation.name()).unwrap().as_vec_mut().unwrap().insert(0, included_value.clone());
                                     } else {

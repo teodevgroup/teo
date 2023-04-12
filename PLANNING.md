@@ -393,6 +393,10 @@
 - One required to many: disable set to null and disconnect **[DONE]**
 - Fix set for single relation is not set bug **[DONE]**
 - One foreign to one local optional: when nested create, disconnect the previous one **[DONE]**
+- Unit test: relations for MySQL connector **[IN PROGRESS]**
+- Fix composite primary bug for MySQL **[DONE]**
+- Fix SQL where with join error **[DONE]**
+- SQL: required many-to-many relation should display an empty relation array if included **[DONE]**
 - Unit test: handlers
 
 #### 0.0.56

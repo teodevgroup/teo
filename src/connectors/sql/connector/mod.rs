@@ -96,7 +96,7 @@ impl SQLConnector {
                     Ok(())
                 }
                 Err(err) => {
-                    println!("{:?}", err);
+                    println!("create object error: {:?}", err);
                     Err(Self::handle_err_result(self,err))
                 }
             }

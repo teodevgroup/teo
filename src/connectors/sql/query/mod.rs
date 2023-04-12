@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::collections::BTreeMap;
+use itertools::Itertools;
 use maplit::{btreemap, hashmap};
 use once_cell::sync::Lazy;
 use crate::connectors::sql::schema::dialect::SQLDialect;
@@ -48,7 +49,7 @@ impl Query {
         graph: &Graph,
         dialect: SQLDialect,
     ) -> String {
-        let column_name = column_name.escape(dialect);
+        let column_name = escape_wisdom(column_name, dialect);
         if let Some(map) = value.as_hashmap() {
             let mut result: Vec<String> = vec![];
             for (key, value) in map {
@@ -174,6 +175,7 @@ impl Query {
                     let column_name = field.column_name();
                     let optional = field.optionality.is_optional();
                     let entry_column_name = if let Some(alias) = table_alias {
+                        let a = format!("{}.{}", alias, column_name);
                         Cow::Owned(format!("{}.{}", alias, column_name))
                     } else {
                         Cow::Borrowed(column_name)
@@ -495,3 +497,9 @@ static SQL_AGGREGATE_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
         "_max" => "MAX"
     }
 });
+
+fn escape_wisdom(s: impl AsRef<str>, dialect: SQLDialect) -> String {
+    let s = s.as_ref();
+    let escape = dialect.escape();
+    s.split(".").map(|s| format!("{escape}{s}{escape}")).join(".")
+}

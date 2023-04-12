@@ -14,6 +14,9 @@ impl From<&Model> for SQLCreateTableStatement {
                 stmt.column(property.into());
             }
         }
+        if model.primary_field_names().len() > 1 {
+            stmt.primary(model.primary_index().clone());
+        }
         stmt
     }
 }
