@@ -48,8 +48,7 @@ impl ExecutionHandle {
 
     pub fn execute(&mut self, file: &str, args: &str) {
         env::set_var("TEO_ENV", "test");
-        // .stdout(Stdio::null())
-        self.child = Some(Command::new(teo_exe_path()).arg("-s").arg(schema_from_file(file)).arg(args).spawn().unwrap());
+        self.child = Some(Command::new(teo_exe_path()).arg("-s").arg(schema_from_file(file)).arg(args).stdout(Stdio::null()).spawn().unwrap());
         thread::sleep(std::time::Duration::from_secs(3))
     }
 
