@@ -1,16 +1,12 @@
 pub mod matcher;
 pub mod matcher_functions;
 
-use std::process::{Child, Command};
+use std::process::{Child, Command, Stdio};
 use std::{env, thread};
 use std::borrow::Borrow;
 use std::collections::HashSet;
-
 use std::path::{Path, PathBuf};
-
-
 use key_path::{KeyPath, path};
-
 use serde_json::{Map, Number, Value};
 use crate::lib::matcher::Matcher;
 use whoami::Platform;
@@ -52,7 +48,7 @@ impl ExecutionHandle {
 
     pub fn execute(&mut self, file: &str, args: &str) {
         env::set_var("TEO_ENV", "test");
-        self.child = Some(Command::new(teo_exe_path()).arg("-s").arg(schema_from_file(file)).arg(args).spawn().unwrap());
+        self.child = Some(Command::new(teo_exe_path()).arg("-s").arg(schema_from_file(file)).arg(args).stdout(Stdio::null()).spawn().unwrap());
         thread::sleep(std::time::Duration::from_secs(3))
     }
 
