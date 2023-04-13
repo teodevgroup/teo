@@ -181,10 +181,10 @@ impl ToSQLInputDialect for String {
         result.push('\'');
         for ch in self.chars() {
             match ch {
-                '\'' => if dialect.is_postgres() {
-                    result.push_str("''");
-                } else {
+                '\'' => if dialect.is_mysql() {
                     result.push_str("\\'");
+                } else {
+                    result.push_str("''");
                 },
                 _ => result.push(ch)
             }
@@ -201,10 +201,10 @@ impl ToSQLInputDialect for &str {
         result.push('\'');
         for ch in self.chars() {
             match ch {
-                '\'' => if dialect.is_postgres() {
-                    result.push_str("''");
-                } else {
+                '\'' => if dialect.is_mysql() {
                     result.push_str("\\'");
+                } else {
+                    result.push_str("''");
                 },
                 _ => result.push(ch)
             }

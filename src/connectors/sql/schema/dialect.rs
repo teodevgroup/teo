@@ -20,4 +20,11 @@ impl SQLDialect {
             _ => false,
         }
     }
+
+    pub(crate) fn is_mysql(&self) -> bool {
+        match self {
+            SQLDialect::MySQL => true,
+            _ => false,
+        }
+    }
 }

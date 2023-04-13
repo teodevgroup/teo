@@ -178,6 +178,8 @@ impl SQLMigration {
                 let db_columns = Self::db_columns(&conn, dialect, table_name).await;
                 let need_to_alter_any_column = ColumnDecoder::need_to_alter_any_columns(&db_columns, &model_columns);
                 if need_to_alter_any_column && dialect == SQLDialect::SQLite {
+                    println!("see model_columns: {:?}", &model_columns);
+                    println!("see db_columns: {:?}", &db_columns);
                     panic!("SQLite doesn't support column altering");
                 }
                 let table_has_records = Self::table_has_records(dialect, &conn, table_name).await;

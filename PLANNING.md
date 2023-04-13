@@ -398,7 +398,8 @@
 - Fix string encode escape bug for PostgreSQL **[DONE]**
 - Fix where name escape bug for PostgreSQL **[DONE]**
 - Fix: SQL delete clause escapes identifiers **[DONE]**
-- Unit test: relations for SQLite connector
+- Unit test: relations for SQLite connector **[DONE]**
+- Fix: SQL encode escape bug for SQLite **[DONE]**
 
 #### 0.0.56
 - TS client: refactor

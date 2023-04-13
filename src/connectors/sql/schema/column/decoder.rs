@@ -172,13 +172,21 @@ impl ColumnDecoder {
     }
 
     pub(crate) fn decode_sqlite_columns(columns: ResultSet, indices: ResultSet, auto_increment: ResultSet) -> HashSet<SQLColumn> {
+        let columns_iter: Vec<ResultRow> = columns.into_iter().collect();
         let indices_iter: Vec<ResultRow> = indices.into_iter().collect();
+        let primary_is_single = columns_iter.iter().filter(|r| {
+            r.get("pk").unwrap().as_i64().unwrap() > 0
+        }).count() == 1;
         let mut result = hashset!{};
-        for column in columns {
+        for column in &columns_iter {
             let name = column.get("name").unwrap().as_str().unwrap();
             let r#type = column.get("type").unwrap().as_str().unwrap();
             let not_null = column.get("notnull").unwrap().as_bool().unwrap();
-            let pk = column.get("pk").unwrap().as_bool().unwrap();
+            let pk = if primary_is_single {
+                column.get("pk").unwrap().as_bool().unwrap_or(false)
+            } else {
+                false
+            };
             let unique_row = indices_iter.iter().find(|i| {
                 i.get("column_name").unwrap().as_str().unwrap() == name
             });

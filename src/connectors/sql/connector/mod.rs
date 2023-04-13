@@ -63,6 +63,7 @@ impl SQLConnector {
         }
         let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();
         let stmt = SQL::insert_into(model.table_name()).values(value_refs).returning(auto_keys).to_string(self.dialect);
+        // println!("create stmt: {}", stmt);
         if self.dialect == SQLDialect::PostgreSQL {
             match conn.query(QuaintQuery::from(stmt)).await {
                 Ok(result_set) => {
@@ -135,7 +136,7 @@ impl SQLConnector {
         let r#where = Query::where_from_identifier(object, self.dialect);
         if !value_refs.is_empty() {
             let stmt = SQL::update(model.table_name()).values(value_refs).r#where(&r#where).to_string(self.dialect);
-            // println!("see update sql: {}", stmt);
+            // println!("update stmt: {}", stmt);
             let result = conn.execute(QuaintQuery::from(stmt)).await;
             if result.is_err() {
                 println!("{:?}", result.err().unwrap());
