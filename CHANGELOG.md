@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.0.55 (Apr. 13th, 2023)
+
+### Tests
+
+* Setup integration tests for relation and pipeline items [@victorteokw](https://github.com/victorteokw) [@l1xnan](https://github.com/l1xnan)
+
+### Database
+
+* Improve stability on relation manipulations [@victorteokw](https://github.com/victorteokw)
+
+### Client
+
+* Multiple frontend clients generation [@victorteokw](https://github.com/victorteokw)
+
 ## 0.0.54 (Mar. 24th, 2023)
 
 ### Tests
