@@ -283,6 +283,14 @@ impl Error {
         }
     }
 
+    pub(crate) fn cannot_disconnect_previous_relation() -> Self {
+        Error {
+            r#type: ErrorType::ValidationError,
+            message: "Required relation cannot disconnect previous connected value.".to_string(),
+            errors: None,
+        }
+    }
+
     pub(crate) fn unexpected_input_value_with_reason<'a>(reason: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         Error {
             r#type: ErrorType::ValidationError,

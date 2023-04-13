@@ -119,7 +119,7 @@ impl SQLConnector {
                         "multiply" => values.push((column_name, format!("{} * {}", column_name, val.to_string(self.dialect)))),
                         "divide" => values.push((column_name, format!("{} / {}", column_name, val.to_string(self.dialect)))),
                         "push" => values.push((column_name, format!("ARRAY_APPEND({}, {})", column_name, val.to_string(self.dialect)))),
-                        _ => panic!("Unhandled key."),
+                        _ => unreachable!(),
                     }
                 } else {
                     let val = object.get_value(key).unwrap();

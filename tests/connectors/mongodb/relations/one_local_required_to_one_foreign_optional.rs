@@ -62,7 +62,7 @@ mod test {
                 "name": "KOFXIV Command List",
                 "game": {
                     "connect": {
-                        "name": "KOF98"
+                        "name": "KOFXV"
                     }
                 }
             },
@@ -79,12 +79,8 @@ mod test {
             "gameId": ignore,
             "game": {
                 "id": ignore,
-                "name": "KOF98",
+                "name": "KOFXV",
             }
-        }))));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
-            "id": ignore,
-            "name": "KOF98 Command List",
         }))));
     }
 
@@ -130,7 +126,7 @@ mod test {
             "update": {
                 "game": {
                     "connect": {
-                        "name": "KOF98"
+                        "name": "KOFXV"
                     }
                 }
             },
@@ -147,12 +143,8 @@ mod test {
             "gameId": ignore,
             "game": {
                 "id": ignore,
-                "name": "KOF98",
+                "name": "KOFXV",
             }
-        }))));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
-            "id": ignore,
-            "name": "KOF98 Command List",
         }))));
     }
 
@@ -166,7 +158,7 @@ mod test {
             "update": {
                 "game": {
                     "set": {
-                        "name": "KOF98"
+                        "name": "KOFXV"
                     }
                 }
             },
@@ -183,12 +175,8 @@ mod test {
             "gameId": ignore,
             "game": {
                 "id": ignore,
-                "name": "KOF98",
+                "name": "KOFXV",
             }
-        }))));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
-            "id": ignore,
-            "name": "KOF98 Command List",
         }))));
     }
 

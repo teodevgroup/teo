@@ -360,10 +360,6 @@
 - Kotlin client **[DONE]**
 - Dart client **[DONE]**
 - C# client: refactor **[DONE]**
-- TS client: refactor
-- Client: distinct in handler args
-- C# client: capitalized names and names with underscore
-- TypeScript client: correct return types for `aggregate` and `groupBy`
 - Generate decimal imports in rust entities **[DONE]**
 - Schema lang: dataset **[DONE]**
 - Parser: parse dataset **[DONE]**
@@ -397,10 +393,18 @@
 - Fix composite primary bug for MySQL **[DONE]**
 - Fix SQL where with join error **[DONE]**
 - SQL: required many-to-many relation should display an empty relation array if included **[DONE]**
-- Unit test: handlers
+- Unit test: relations for PostgreSQL connector
+- Unit test: relations for SQLite connector
 
 #### 0.0.56
+- TS client: refactor
+- Client: distinct in handler args
+- C# client: capitalized names and names with underscore
+- TypeScript client: correct return types for `aggregate` and `groupBy`
+- Unit test: handlers
+- Find unique and find first return null instead of `ObjectNotFound` error
 - Rewrite connector to support pooled connections
+- Unit test: relations for SQLite memory connector
 - SQL transaction
 - Foreign key management
 - Relation onUpdate

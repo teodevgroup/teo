@@ -1376,7 +1376,7 @@ impl Object {
         Ok(())
     }
 
-    async fn disconnect_object_which_connects_to(&self, relation: &Relation, value: &Value) {
+    async fn disconnect_object_which_connects_to(&self, relation: &Relation, value: &Value) -> Result<()> {
         if let Ok(that) = self.graph().find_unique::<Object>(self.model().name(), &teon!({
             "where": {
                 relation.name(): {
@@ -1384,11 +1384,16 @@ impl Object {
                 }
             }
         })).await {
-            for (l, f) in relation.iter() {
-                that.set_value(l, Value::Null).unwrap();
+            if relation.is_required() {
+                return Err(Error::cannot_disconnect_previous_relation());
+            } else {
+                for (l, f) in relation.iter() {
+                    that.set_value(l, Value::Null).unwrap();
+                }
+                that.save().await.unwrap();
             }
-            that.save().await.unwrap();
         }
+        Ok(())
     }
 
     async fn perform_relation_manipulation_one_inner(&self, relation: &Relation, action: Action, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
@@ -1408,11 +1413,11 @@ impl Object {
                     match action_u32 {
                         NESTED_CONNECT_ACTION | NESTED_SET_ACTION => {
                             if !value.is_null() {
-                                self.disconnect_object_which_connects_to(relation, value).await;
+                                self.disconnect_object_which_connects_to(relation, value).await?;
                             }
                         }
                         NESTED_CONNECT_OR_CREATE_ACTION => {
-                            self.disconnect_object_which_connects_to(relation, value.get("where").unwrap()).await;
+                            self.disconnect_object_which_connects_to(relation, value.get("where").unwrap()).await?;
                         }
                         _ => ()
                     }
