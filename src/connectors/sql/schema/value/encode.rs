@@ -20,12 +20,12 @@ impl TypeOrNull for &str {
 }
 
 pub(crate) trait ValueToSQLString {
-    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph) -> String;
-    fn to_sql_string_array_arg<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph) -> String;
+    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph, dialect: SQLDialect) -> String;
+    fn to_sql_string_array_arg<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph, dialect: SQLDialect) -> String;
 }
 
 impl ValueToSQLString for Value {
-    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph) -> String {
+    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph, dialect: SQLDialect) -> String {
         if optional {
             if self.is_null() {
                 return "NULL".to_owned()
@@ -34,7 +34,7 @@ impl ValueToSQLString for Value {
         match r#type {
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => panic!("SQL doesn't support `ObjectId`."),
-            FieldType::String => ToSQLInput::to_sql_input(&self.as_str().unwrap()),
+            FieldType::String => ToSQLInputDialect::to_sql_input(&self.as_str().unwrap(), dialect),
             FieldType::Bool => self.as_bool().unwrap().to_sql_input(),
             FieldType::I32 | FieldType::I64 |
             FieldType::F32 | FieldType::F64 => if let Some(val) = self.as_f64() {
@@ -44,23 +44,23 @@ impl ValueToSQLString for Value {
             } else {
                 panic!("Uncoded number.")
             }
-            FieldType::Enum(_) => ToSQLInput::to_sql_input(&self.as_str().unwrap()),
+            FieldType::Enum(_) => ToSQLInputDialect::to_sql_input(&self.as_str().unwrap(), dialect),
             FieldType::Vec(element_field) => {
                 let val = self.as_vec().unwrap();
                 let mut result: Vec<String> = vec![];
                 for (_i, v) in val.iter().enumerate() {
-                    result.push(v.to_sql_string(element_field.field_type(), element_field.is_optional(), graph));
+                    result.push(v.to_sql_string(element_field.field_type(), element_field.is_optional(), graph, dialect));
                 }
                 result.join(", ").wrap_in_array()
             }
-            FieldType::Date => self.as_date().unwrap().to_string().to_sql_input(),
-            FieldType::DateTime => self.as_datetime().unwrap().to_string().to_sql_input(),
-            FieldType::Decimal => self.as_decimal().unwrap().to_string().to_sql_input(),
+            FieldType::Date => self.as_date().unwrap().to_string().to_sql_input(dialect),
+            FieldType::DateTime => self.as_datetime().unwrap().to_string().to_sql_input(dialect),
+            FieldType::Decimal => self.as_decimal().unwrap().to_string().to_sql_input(dialect),
             _ => { panic!() }
         }
     }
 
-    fn to_sql_string_array_arg<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph) -> String {
+    fn to_sql_string_array_arg<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph, dialect: SQLDialect) -> String {
         if optional {
             if self.is_null() {
                 return "NULL".to_owned()
@@ -69,7 +69,7 @@ impl ValueToSQLString for Value {
         match r#type {
             #[cfg(feature = "data-source-mongodb")]
             FieldType::ObjectId => panic!("SQL doesn't support `ObjectId`."),
-            FieldType::String => ToSQLInputDialect::to_sql_input(&self.as_str().unwrap(), SQLDialect::PostgreSQL),
+            FieldType::String => ToSQLInputDialect::to_sql_input(&self.as_str().unwrap(), dialect),
             FieldType::Bool => self.as_bool().unwrap().to_sql_input(),
             FieldType::I32 | FieldType::I64 |
             FieldType::F32 | FieldType::F64 => if let Some(val) = self.as_f64() {
@@ -79,12 +79,12 @@ impl ValueToSQLString for Value {
             } else {
                 panic!("Uncoded number.")
             }
-            FieldType::Enum(_) => ToSQLInput::to_sql_input(&self.as_str().unwrap()),
+            FieldType::Enum(_) => ToSQLInputDialect::to_sql_input(&self.as_str().unwrap(), dialect),
             FieldType::Vec(element_field) => {
                 let val = self.as_vec().unwrap();
                 let mut result: Vec<String> = vec![];
                 for (_i, v) in val.iter().enumerate() {
-                    result.push(v.to_sql_string_array_arg(element_field.field_type(), element_field.is_optional(), graph));
+                    result.push(v.to_sql_string_array_arg(element_field.field_type(), element_field.is_optional(), graph, dialect));
                 }
                 result.join(",").wrap_in_array()
             }
@@ -97,12 +97,12 @@ impl ValueToSQLString for Value {
 }
 
 impl ValueToSQLString for &Value {
-    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph) -> String {
-        (*self).to_sql_string(r#type, optional, graph)
+    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph, dialect: SQLDialect) -> String {
+        (*self).to_sql_string(r#type, optional, graph, dialect)
     }
 
-    fn to_sql_string_array_arg<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph) -> String {
-        (*self).to_sql_string_array_arg(r#type, optional, graph)
+    fn to_sql_string_array_arg<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph, dialect: SQLDialect) -> String {
+        (*self).to_sql_string_array_arg(r#type, optional, graph, dialect)
     }
 }
 
@@ -110,7 +110,7 @@ impl ToSQLString for Value {
     fn to_string(&self, dialect: SQLDialect) -> String {
         match self {
             Value::Null => "NULL".to_owned(),
-            Value::String(string) => string.to_sql_input(),
+            Value::String(string) => string.to_sql_input(dialect),
             Value::I32(i) => i.to_string(),
             Value::I64(i) => i.to_string(),
             Value::F32(i) => i.to_string(),
@@ -175,13 +175,17 @@ pub trait ToSQLInputDialect {
     fn to_sql_input(&self, dialect: SQLDialect) -> String;
 }
 
-impl ToSQLInput for String {
-    fn to_sql_input(&self) -> String {
+impl ToSQLInputDialect for String {
+    fn to_sql_input(&self, dialect: SQLDialect) -> String {
         let mut result = String::with_capacity(self.len() + 2);
         result.push('\'');
         for ch in self.chars() {
             match ch {
-                '\'' => result.push_str("\\'"),
+                '\'' => if dialect.is_postgres() {
+                    result.push_str("''");
+                } else {
+                    result.push_str("\\'");
+                },
                 _ => result.push(ch)
             }
         }
@@ -190,32 +194,22 @@ impl ToSQLInput for String {
     }
 }
 
-impl ToSQLInput for &str {
-    fn to_sql_input(&self) -> String {
-        let mut result = String::with_capacity(self.len() + 2);
-        result.push('\'');
-        for ch in self.chars() {
-            match ch {
-                '\'' => result.push_str("\\'"),
-                _ => result.push(ch)
-            }
-        }
-        result.push('\'');
-        result
-    }
-}
 
 impl ToSQLInputDialect for &str {
-    fn to_sql_input(&self, _dialect: SQLDialect) -> String {
+    fn to_sql_input(&self, dialect: SQLDialect) -> String {
         let mut result = String::with_capacity(self.len() + 2);
-        result.push('\"');
+        result.push('\'');
         for ch in self.chars() {
             match ch {
-                '\'' => result.push_str("\\\""),
+                '\'' => if dialect.is_postgres() {
+                    result.push_str("''");
+                } else {
+                    result.push_str("\\'");
+                },
                 _ => result.push(ch)
             }
         }
-        result.push('\"');
+        result.push('\'');
         result
     }
 }
@@ -240,7 +234,7 @@ impl ToSQLInputDialect for BigDecimal {
 
 impl ToSQLInputDialect for NaiveDate {
     fn to_sql_input(&self, dialect: SQLDialect) -> String {
-        let result = self.format("%Y-%m-%d").to_string().to_sql_input();
+        let result = self.format("%Y-%m-%d").to_string().to_sql_input(dialect);
         if dialect == SQLDialect::PostgreSQL {
             result + "::date"
         } else {
@@ -252,9 +246,9 @@ impl ToSQLInputDialect for NaiveDate {
 impl ToSQLInputDialect for DateTime<Utc> {
     fn to_sql_input(&self, dialect: SQLDialect) -> String {
         if dialect == SQLDialect::SQLite {
-            self.to_rfc3339_opts(SecondsFormat::Millis, true).to_sql_input()
+            self.to_rfc3339_opts(SecondsFormat::Millis, true).to_sql_input(dialect)
         } else {
-            let result = self.format("%Y-%m-%d %H:%M:%S.%3f").to_string().to_sql_input();
+            let result = self.format("%Y-%m-%d %H:%M:%S.%3f").to_string().to_sql_input(dialect);
             if dialect == SQLDialect::PostgreSQL {
                 result + "::timestamp"
             } else {

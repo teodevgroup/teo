@@ -26,7 +26,7 @@ impl ToSQLString for SQLCreateIndexOnStatement {
         let unique = if self.unique { " UNIQUE" } else { "" };
         let index = &self.index;
         let table = &self.table;
-        let def = self.columns.iter().map(|c| ModelIndex::sql_format_item(dialect, c)).collect::<Vec<String>>().join(", ");
+        let def = self.columns.iter().map(|c| ModelIndex::sql_format_item(dialect, c, false)).collect::<Vec<String>>().join(", ");
         format!("CREATE{unique} INDEX `{index}` ON `{table}`({def})")
     }
 }

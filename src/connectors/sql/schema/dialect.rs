@@ -13,4 +13,11 @@ impl SQLDialect {
             _ => "`",
         }
     }
+
+    pub(crate) fn is_postgres(&self) -> bool {
+        match self {
+            SQLDialect::PostgreSQL => true,
+            _ => false,
+        }
+    }
 }

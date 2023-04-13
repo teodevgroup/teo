@@ -145,12 +145,12 @@ impl ModelIndex {
         let index_name = index_name_cow.as_ref();
         let unique = if self.r#type().is_unique() { "UNIQUE " } else { "" };
         let fields: Vec<String> = self.items.iter().map(|item| {
-            Self::sql_format_item(dialect, item)
+            Self::sql_format_item(dialect, item, false)
         }).collect();
         format!("CREATE {unique}INDEX {escape}{index_name}{escape} ON {escape}{table_name}{escape}({})", fields.join(","))
     }
 
-    pub(crate) fn sql_format_item(dialect: SQLDialect, item: &ModelIndexItem) -> String {
+    pub(crate) fn sql_format_item(dialect: SQLDialect, item: &ModelIndexItem, table_create_mode: bool) -> String {
         let escape = dialect.escape();
         let name = item.field_name();
         let sort = item.sort().to_str();
@@ -163,7 +163,11 @@ impl ModelIndex {
         } else {
             Cow::Borrowed("")
         };
-        format!("{escape}{name}{escape}{len} {sort}")
+        if table_create_mode && dialect == SQLDialect::PostgreSQL {
+            format!("{escape}{name}{escape}")
+        } else {
+            format!("{escape}{name}{escape}{len} {sort}")
+        }
     }
 
     pub(crate) fn normalize_name(&self, table_name: &str, dialect: SQLDialect) -> String {

@@ -393,7 +393,9 @@
 - Fix composite primary bug for MySQL **[DONE]**
 - Fix SQL where with join error **[DONE]**
 - SQL: required many-to-many relation should display an empty relation array if included **[DONE]**
-- Unit test: relations for PostgreSQL connector
+- Unit test: relations for PostgreSQL connector **[DONE]**
+- Fix composite primary bug for PostgreSQL **[DONE]**
+- Fix string encode escape bug for PostgreSQL **[DONE]**
 - Unit test: relations for SQLite connector
 
 #### 0.0.56

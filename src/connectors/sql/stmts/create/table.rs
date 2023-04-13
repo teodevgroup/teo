@@ -42,7 +42,7 @@ impl ToSQLString for SQLCreateTableStatement {
         }).collect::<Vec<String>>().join(", ");
         if let Some(primary) = &self.primary {
             let fields: Vec<String> = primary.items.iter().map(|item| {
-                ModelIndex::sql_format_item(dialect, item)
+                ModelIndex::sql_format_item(dialect, item, true)
             }).collect();
             columns += &format!(", PRIMARY KEY ({})", fields.join(","));
         }

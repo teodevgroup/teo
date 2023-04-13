@@ -31,12 +31,13 @@ impl Query {
         optional: bool,
         value: &Value,
         graph: &Graph,
-        op: &str
+        op: &str,
+        dialect: SQLDialect,
     ) -> String {
         let arr_val = value.as_vec().unwrap();
         let mut arr: Vec<String> = Vec::new();
         for val in arr_val {
-            arr.push(val.to_sql_string(r#type, optional, graph));
+            arr.push(val.to_sql_string(r#type, optional, graph, dialect));
         }
         Query::where_item(column_name, op, &arr.join(", ").to_wrapped())
     }
@@ -55,65 +56,65 @@ impl Query {
             for (key, value) in map {
                 match key.as_str() {
                     "equals" => {
-                        result.push(Self::where_item(&column_name, "=", &value.to_sql_string(r#type, optional, graph)));
+                        result.push(Self::where_item(&column_name, "=", &value.to_sql_string(r#type, optional, graph, dialect)));
                     }
                     "not" => {
-                        result.push(Self::where_item(&column_name, "<>", &value.to_sql_string(r#type, optional, graph)));
+                        result.push(Self::where_item(&column_name, "<>", &value.to_sql_string(r#type, optional, graph, dialect)));
                     }
                     "gt" => {
-                        result.push(Self::where_item(&column_name, ">", &value.to_sql_string(r#type, false, graph)));
+                        result.push(Self::where_item(&column_name, ">", &value.to_sql_string(r#type, false, graph, dialect)));
                     }
                     "gte" => {
-                        result.push(Self::where_item(&column_name, ">=", &value.to_sql_string(r#type, false, graph)));
+                        result.push(Self::where_item(&column_name, ">=", &value.to_sql_string(r#type, false, graph, dialect)));
                     }
                     "lt" => {
-                        result.push(Self::where_item(&column_name, "<", &value.to_sql_string(r#type, false, graph)));
+                        result.push(Self::where_item(&column_name, "<", &value.to_sql_string(r#type, false, graph, dialect)));
                     }
                     "lte" => {
-                        result.push(Self::where_item(&column_name, "<=", &value.to_sql_string(r#type, false, graph)));
+                        result.push(Self::where_item(&column_name, "<=", &value.to_sql_string(r#type, false, graph, dialect)));
                     }
                     "in" => {
                         if !value.as_vec().unwrap().is_empty() {
-                            result.push(Self::where_entry_array(&column_name, r#type, optional, value, graph, "IN"));
+                            result.push(Self::where_entry_array(&column_name, r#type, optional, value, graph, "IN", dialect));
                         }
                     }
                     "notIn" => {
                         if !value.as_vec().unwrap().is_empty() {
-                            result.push(Self::where_entry_array(&column_name, r#type, optional, value, graph, "NOT IN"));
+                            result.push(Self::where_entry_array(&column_name, r#type, optional, value, graph, "NOT IN", dialect));
                         }
                     }
                     "contains" => {
                         let i_mode = Input::has_i_mode(map);
-                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "LIKE", &value.to_sql_string(r#type, false, graph).to_like(true, true).to_i_mode(i_mode)));
+                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "LIKE", &value.to_sql_string(r#type, false, graph, dialect).to_like(true, true).to_i_mode(i_mode)));
                     }
                     "startsWith" => {
                         let i_mode = Input::has_i_mode(map);
-                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "LIKE", &value.to_sql_string(r#type, false, graph).to_like(false, true).to_i_mode(i_mode)));
+                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "LIKE", &value.to_sql_string(r#type, false, graph, dialect).to_like(false, true).to_i_mode(i_mode)));
                     }
                     "endsWith" => {
                         let i_mode = Input::has_i_mode(map);
-                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "LIKE", &value.to_sql_string(r#type, false, graph).to_like(true, false).to_i_mode(i_mode)));
+                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "LIKE", &value.to_sql_string(r#type, false, graph, dialect).to_like(true, false).to_i_mode(i_mode)));
                     }
                     "matches" => {
                         let i_mode = Input::has_i_mode(map);
-                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "REGEXP", &value.to_sql_string(r#type, false, graph).to_i_mode(i_mode)));
+                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "REGEXP", &value.to_sql_string(r#type, false, graph, dialect).to_i_mode(i_mode)));
                     }
                     "mode" => { }
                     "has" => {
                         let element_type = r#type.element_field().unwrap();
-                        result.push(Self::where_item(&column_name, "@>", &value.to_sql_string_array_arg(element_type.field_type(), element_type.is_optional(), graph).wrap_in_array()));
+                        result.push(Self::where_item(&column_name, "@>", &value.to_sql_string_array_arg(element_type.field_type(), element_type.is_optional(), graph, dialect).wrap_in_array()));
                     }
                     "hasEvery" => {
-                        result.push(Self::where_item(&column_name, "@>", &value.to_sql_string_array_arg(r#type, false, graph)));
+                        result.push(Self::where_item(&column_name, "@>", &value.to_sql_string_array_arg(r#type, false, graph, dialect)));
                     }
                     "hasSome" => {
-                        result.push(Self::where_item(&column_name, "&&", &value.to_sql_string_array_arg(r#type, false, graph)));
+                        result.push(Self::where_item(&column_name, "&&", &value.to_sql_string_array_arg(r#type, false, graph, dialect)));
                     }
                     "isEmpty" => {
                         result.push(Self::where_item(&format!("ARRAY_LENGTH({})", &column_name), "=", "0"));
                     }
                     "length" => {
-                        result.push(Self::where_item(&format!("ARRAY_LENGTH({})", &column_name), "=", &value.to_sql_string(&FieldType::I64, false, graph)));
+                        result.push(Self::where_item(&format!("ARRAY_LENGTH({})", &column_name), "=", &value.to_sql_string(&FieldType::I64, false, graph, dialect)));
                     }
                     "_count" => {
                         result.push(Self::where_entry_item(&format!("COUNT({})", &column_name), &FieldType::I64, false, value, graph, dialect));
@@ -129,7 +130,7 @@ impl Query {
             }
             And(result).to_wrapped_string(dialect)
         } else {
-            Query::where_item(column_name, "=", &value.to_sql_string(r#type, optional, graph))
+            Query::where_item(column_name, "=", &value.to_sql_string(r#type, optional, graph, dialect))
         }
     }
 
