@@ -396,6 +396,8 @@
 - Unit test: relations for PostgreSQL connector **[DONE]**
 - Fix composite primary bug for PostgreSQL **[DONE]**
 - Fix string encode escape bug for PostgreSQL **[DONE]**
+- Fix where name escape bug for PostgreSQL **[DONE]**
+- Fix: SQL delete clause escapes identifiers **[DONE]**
 - Unit test: relations for SQLite connector
 
 #### 0.0.56

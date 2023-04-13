@@ -150,7 +150,8 @@ impl Query {
         for (key, value) in identifier.as_hashmap().unwrap() {
             let field = model.field(key).unwrap();
             let column_name = field.column_name();
-            retval.push(format!("{} = {}", column_name, value.to_string(dialect)));
+            let escape = dialect.escape();
+            retval.push(format!("{}{}{} = {}", escape, column_name, escape, value.to_string(dialect)));
         }
         And(retval).to_string(dialect)
     }
@@ -499,8 +500,12 @@ static SQL_AGGREGATE_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
     }
 });
 
-fn escape_wisdom(s: impl AsRef<str>, dialect: SQLDialect) -> String {
+pub(crate) fn escape_wisdom(s: impl AsRef<str>, dialect: SQLDialect) -> String {
     let s = s.as_ref();
     let escape = dialect.escape();
-    s.split(".").map(|s| format!("{escape}{s}{escape}")).join(".")
+    if s.contains(escape) {
+        s.to_owned()
+    } else {
+        s.split(".").map(|s| format!("{escape}{s}{escape}")).join(".")
+    }
 }

@@ -1,3 +1,4 @@
+use crate::connectors::sql::query::escape_wisdom;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
 
@@ -43,7 +44,9 @@ impl<'a> SQLSelectStatement<'a> {
 
 impl<'a> ToSQLString for SQLSelectStatement<'a> {
     fn to_string(&self, dialect: SQLDialect) -> String {
-        let columns = if self.columns.is_none() { "*".to_owned() } else { self.columns.unwrap().join(", ") };
+        let columns = if self.columns.is_none() { "*".to_owned() } else { self.columns.unwrap().iter().map(|c| {
+            escape_wisdom(c, dialect)
+        }).collect::<Vec<_>>().join(", ") };
         let left_join = if let Some(left_join) = &self.left_join {
             " LEFT JOIN ".to_owned() + left_join
         } else {

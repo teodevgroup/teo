@@ -15,12 +15,13 @@ impl<'a> SQLDeleteFromStatement<'a> {
 }
 
 impl<'a> ToSQLString for SQLDeleteFromStatement<'a> {
-    fn to_string(&self, _dialect: SQLDialect) -> String {
+    fn to_string(&self, dialect: SQLDialect) -> String {
         let r#where = if let Some(r#where) = &self.r#where {
             " WHERE ".to_owned() + r#where
         } else {
             "".to_owned()
         };
-        format!("DELETE FROM {}{}", self.from, r#where)
+        let escape = dialect.escape();
+        format!("DELETE FROM {}{}{}{}", escape, self.from, escape, r#where)
     }
 }

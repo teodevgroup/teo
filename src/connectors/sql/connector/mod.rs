@@ -135,6 +135,7 @@ impl SQLConnector {
         let r#where = Query::where_from_identifier(object, self.dialect);
         if !value_refs.is_empty() {
             let stmt = SQL::update(model.table_name()).values(value_refs).r#where(&r#where).to_string(self.dialect);
+            // println!("see update sql: {}", stmt);
             let result = conn.execute(QuaintQuery::from(stmt)).await;
             if result.is_err() {
                 println!("{:?}", result.err().unwrap());
@@ -227,6 +228,7 @@ impl Connector for SQLConnector {
         let model = object.model();
         let r#where = Query::where_from_identifier(object, self.dialect);
         let stmt = SQL::delete_from(model.table_name()).r#where(r#where).to_string(self.dialect);
+        // println!("see delete stmt: {}", stmt);
         let result = conn.execute(QuaintQuery::from(stmt)).await;
         if result.is_err() {
             println!("{:?}", result.err().unwrap());
