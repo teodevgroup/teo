@@ -64,7 +64,7 @@ impl<F, Fut> AsyncCallbackWithoutArgs for F where
     }
 }
 
-#[derive(ToMut)]
+#[derive(ToMut, Clone)]
 pub struct AppBuilder {
     pub(crate) connector: Option<Arc<dyn Connector>>,
     pub(crate) graph_builder: GraphBuilder,
