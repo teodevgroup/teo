@@ -16,6 +16,7 @@ use crate::core::model::{Model, ModelInner};
 use crate::core::model::migration::ModelMigration;
 use crate::core::pipeline::Pipeline;
 
+#[derive(Clone)]
 pub struct ModelBuilder {
     pub(crate) name: String,
     pub(crate) table_name: String,
