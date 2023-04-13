@@ -402,6 +402,7 @@
 - Fix: SQL encode escape bug for SQLite **[DONE]**
 
 #### 0.0.56
+- Python server
 - TS client: refactor
 - Client: distinct in handler args
 - C# client: capitalized names and names with underscore
@@ -426,9 +427,6 @@
 - Log SQL queries
 - Migration dry run
 - MongoDB: connector is not using table name
-
-#### 0.0.58
-- Python server
 
 #### 0.0.59
 - Migration decorator docs
