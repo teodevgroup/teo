@@ -121,7 +121,7 @@ mod test {
     fn update_with_nested_connect() {
         let update_res = req(PORT, "update", "Game", json!({
             "where": {
-                "name": "KOF98"
+                "name": "KOFXV"
             },
             "update": {
                 "commandList": {
@@ -139,7 +139,7 @@ mod test {
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 3 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
-            "name": "KOF98",
+            "name": "KOFXV",
             "commandList": {
                 "id": ignore,
                 "name": "KOF97 Command List",
@@ -153,7 +153,7 @@ mod test {
     fn update_with_nested_set_to_another_one() {
         let update_res = req(PORT, "update", "Game", json!({
             "where": {
-                "name": "KOF98"
+                "name": "KOFXV"
             },
             "update": {
                 "commandList": {
@@ -171,7 +171,7 @@ mod test {
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 3 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
-            "name": "KOF98",
+            "name": "KOFXV",
             "commandList": {
                 "id": ignore,
                 "name": "KOF97 Command List",
