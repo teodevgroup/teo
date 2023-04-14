@@ -27,6 +27,15 @@ pub(crate) enum PreviousValueRule {
     Keep,
 }
 
+impl PreviousValueRule {
+    pub(crate) fn is_keep(&self) -> bool {
+        match self {
+            PreviousValueRule::Keep => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Sort {
     Asc,

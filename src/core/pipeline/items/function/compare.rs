@@ -56,7 +56,10 @@ impl<T: From<Value> + Send + Sync, O: Into<ValidateResult> + Send + Sync> Item f
         if ctx.path.len() != 1 {
             return Err(ctx.internal_server_error("compare: used on nested level fields."));
         }
-        let key = ctx.path[0].as_key().unwrap();
+        let key = ctx.path[ctx.path.len() - 1].as_key().unwrap();
+        if !ctx.object.as_ref().unwrap().model().field(key).unwrap().previous_value_rule.is_keep() {
+            return Ok(ctx.clone());
+        }
         let previous_value = ctx.object.as_ref().unwrap().get_previous_value(key);
         if let Ok(previous_value) = previous_value {
             let current_value = (&ctx).value.clone();

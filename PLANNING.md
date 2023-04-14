@@ -403,6 +403,8 @@
 
 #### 0.0.56
 - Python server
+- Fix: on save now displays correct validate error message **[DONE]**
+- Fix: compare is not called when field is not `recordPrevious` **[DONE]**
 - TS client: refactor
 - Client: distinct in handler args
 - C# client: capitalized names and names with underscore
