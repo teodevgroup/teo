@@ -528,11 +528,11 @@ impl Object {
                 };
                 let context = Ctx::initial_state_with_object(self.clone())
                     .with_value(initial_value)
-                    .with_path(path![field.name.as_str()]);
+                    .with_path(path + field.name.as_str());
                 let result = field.perform_on_save_callback(context).await;
                 match result {
                     Err(err) => {
-                        return Err(Error::unexpected_input_value_with_reason(err.message, &(path + key)));
+                        return Err(err);
                     }
                     Ok(value) => {
                         self.inner.value_map.lock().unwrap().insert(key.to_string(), value);
