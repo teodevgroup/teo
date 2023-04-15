@@ -2,7 +2,6 @@ pub mod builder;
 pub mod environment;
 pub mod entrance;
 pub(crate) mod conf;
-pub(crate) mod serve;
 pub(crate) mod command;
 pub(crate) mod migrate;
 
@@ -14,8 +13,8 @@ use crate::app::conf::{DebugConf, EntityGeneratorConf, ServerConf, TestConf};
 use crate::app::entrance::Entrance;
 use crate::app::environment::EnvironmentVersion;
 use crate::app::migrate::migrate;
-use crate::app::serve::serve;
-use crate::app::serve::test_context::{ResetMode, TestContext};
+use crate::serve::serve;
+use crate::serve::test_context::{ResetMode, TestContext};
 use crate::core::graph::Graph;
 use crate::gen::interface::client::conf::Conf as ClientConf;
 use crate::gen::interface::client::gen::gen as gen_client;

@@ -5,6 +5,7 @@ pub(crate) mod gen;
 pub(crate) mod seeder;
 pub(crate) mod purger;
 pub mod app;
+pub(crate) mod serve;
 
 pub mod prelude {
     pub use crate::app::App;
