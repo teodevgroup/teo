@@ -158,12 +158,12 @@ impl RustEntityGenerator {
     }}
 
     /// Find a unique {localized_name_word_case}.
-    pub async fn find_unique(query: &Value) -> Result<{model_name}> {{
+    pub async fn find_unique(query: &Value) -> Result<Option<{model_name}>> {{
         Graph::current().find_unique("{model_name}", query).await
     }}
 
     /// Find a non unique {localized_name_word_case}.
-    pub async fn find_first(query: &Value) -> Result<{model_name}> {{
+    pub async fn find_first(query: &Value) -> Result<Option<{model_name}>> {{
         Graph::current().find_first("{model_name}", query).await
     }}"#));
                 b.line("");

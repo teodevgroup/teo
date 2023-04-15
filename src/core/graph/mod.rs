@@ -58,16 +58,22 @@ impl Graph {
 
     // MARK: - Queries
 
-    pub async fn find_unique<T: From<Object>>(&self, model: &str, finder: &Value) -> Result<T> {
+    pub async fn find_unique<T: From<Object>>(&self, model: &str, finder: &Value) -> Result<Option<T>> {
         match self.find_unique_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), ActionSource::ProgramCode).await {
-            Ok(result) => Ok(result.into()),
+            Ok(result) => match result {
+                Some(o) => Ok(Some(o.into())),
+                None => Ok(None),
+            },
             Err(err) => Err(err),
         }
     }
 
-    pub async fn find_first<T: From<Object>>(&self, model: &str, finder: &Value) -> Result<T> {
+    pub async fn find_first<T: From<Object>>(&self, model: &str, finder: &Value) -> Result<Option<T>> {
         match self.find_first_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), ActionSource::ProgramCode).await {
-            Ok(result) => Ok(result.into()),
+            Ok(result) => match result {
+                Some(o) => Ok(Some(o.into())),
+                None => Ok(None),
+            },
             Err(err) => Err(err),
         }
     }
@@ -79,12 +85,12 @@ impl Graph {
         }
     }
 
-    pub(crate) async fn find_unique_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Object> {
+    pub(crate) async fn find_unique_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Option<Object>> {
         let model = self.model(model).unwrap();
         self.connector().find_unique(self, model, finder, mutation_mode, action, action_source).await
     }
 
-    pub(crate) async fn find_first_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Object> {
+    pub(crate) async fn find_first_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Option<Object>> {
         let model = self.model(model).unwrap();
         let mut finder = finder.as_hashmap().clone().unwrap().clone();
         finder.insert("take".to_string(), 1.into());
@@ -94,9 +100,9 @@ impl Graph {
             Err(err) => Err(err),
             Ok(retval) => {
                 if retval.is_empty() {
-                    Err(Error::object_not_found())
+                    Ok(None)
                 } else {
-                    Ok(retval.get(0).unwrap().clone())
+                    Ok(Some(retval.get(0).unwrap().clone()))
                 }
             }
         }

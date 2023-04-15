@@ -481,10 +481,9 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Object> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Option<Object>> {
         let select = finder.get("select");
         let include = finder.get("include");
-
         let aggregate_input = Aggregation::build(model, graph, finder)?;
         let col = self.get_collection(model);
         let cur = col.aggregate(aggregate_input, None).await;
@@ -494,14 +493,15 @@ impl Connector for MongoDBConnector {
         let cur = cur.unwrap();
         let results: Vec<std::result::Result<Document, MongoDBError>> = cur.collect().await;
         if results.is_empty() {
-            return Err(Error::object_not_found());
+            Ok(None)
+        } else {
+            for doc in results {
+                let obj = graph.new_object(model.name(), action, action_source.clone())?;
+                self.document_to_object(&doc.unwrap(), &obj, select, include)?;
+                return Ok(Some(obj));
+            }
+            Ok(None)
         }
-        for doc in results {
-            let obj = graph.new_object(model.name(), action, action_source.clone())?;
-            self.document_to_object(&doc.unwrap(), &obj, select, include)?;
-            return Ok(obj);
-        }
-        Err(Error::object_not_found())
     }
 
     async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Vec<Object>> {

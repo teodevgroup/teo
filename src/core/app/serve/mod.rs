@@ -33,7 +33,7 @@ use crate::core::connector::SaveSession;
 use self::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::graph::Graph;
 use crate::core::model::Model;
-use crate::core::object::Object;
+use crate::core::object::{ErrorIfNotFound, Object};
 use crate::core::pipeline::ctx::{Ctx};
 use crate::core::error::Error;
 use crate::core::teon::decoder::Decoder;
@@ -117,10 +117,10 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConf) -> Resu
             "where": tson_identifier
         }),
         true, Action::from_u32(IDENTITY | FIND | SINGLE | ENTRY), ActionSource::ProgramCode).await;
-    if let Err(_) = identity {
-        return Err(Error::invalid_auth_token())
+    match identity {
+        Err(_) => Err(Error::invalid_auth_token()),
+        Ok(identity) => Ok(identity),
     }
-    return Ok(Some(identity.unwrap()));
 }
 
 async fn handle_find_unique(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
@@ -128,8 +128,13 @@ async fn handle_find_unique(graph: &Graph, input: &Value, model: &Model, source:
     let result = graph.find_unique_internal(model.name(), input, false, action, source).await;
     match result {
         Ok(obj) => {
-            let json_data: JsonValue = obj.to_json_internal(&path!["data"]).await.unwrap().into();
-            HttpResponse::Ok().json(json!({"data": json_data}))
+            match obj {
+                None => HttpResponse::Ok().json(json!({"data": null})),
+                Some(obj) => {
+                    let json_data: JsonValue = obj.to_json_internal(&path!["data"]).await.unwrap().into();
+                    HttpResponse::Ok().json(json!({"data": json_data}))
+                }
+            }
         }
         Err(err) => {
             err.into()
@@ -142,8 +147,13 @@ async fn handle_find_first(graph: &Graph, input: &Value, model: &Model, source: 
     let result = graph.find_first_internal(model.name(), input, false, action, source).await;
     match result {
         Ok(obj) => {
-            let json_data: JsonValue = obj.to_json_internal(&path!["data"]).await.unwrap().into();
-            HttpResponse::Ok().json(json!({"data": json_data}))
+            match obj {
+                None => HttpResponse::Ok().json(json!({"data": null})),
+                Some(obj) => {
+                    let json_data: JsonValue = obj.to_json_internal(&path!["data"]).await.unwrap().into();
+                    HttpResponse::Ok().json(json!({"data": json_data}))
+                }
+            }
         }
         Err(err) => {
             err.into()
@@ -244,7 +254,7 @@ async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&
 
 async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
     let action = Action::from_u32(UPDATE | ENTRY | SINGLE);
-    let result = graph.find_unique_internal(model.name(), input, true, action, source).await;
+    let result = graph.find_unique_internal(model.name(), input, true, action, source).await.into_not_found_error();
     if result.is_err() {
         return HttpResponse::NotFound().json(json!({"error": result.err()}));
     }
@@ -267,7 +277,7 @@ async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: Acti
 
 async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
     let action = Action::from_u32(UPSERT | UPDATE | ENTRY | SINGLE);
-    let result = graph.find_unique_internal(model.name(), input, true, action, source.clone()).await;
+    let result = graph.find_unique_internal(model.name(), input, true, action, source.clone()).await.into_not_found_error();
     let include = input.get("include");
     let select = input.get("select");
     return match result {
@@ -339,7 +349,7 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Acti
 
 async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
     let action = Action::from_u32(DELETE | SINGLE | ENTRY);
-    let result = graph.find_unique_internal(model.name(), input, true, action, source).await;
+    let result = graph.find_unique_internal(model.name(), input, true, action, source).await.into_not_found_error();
     if result.is_err() {
         return HttpResponse::NotFound().json(json!({"error": result.err()}));
     }
@@ -534,7 +544,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
         "where": {
             identity_key.unwrap(): identity_value.unwrap()
         }
-    }), true, Action::from_u32(FIND | SINGLE | ENTRY), ActionSource::ProgramCode).await;
+    }), true, Action::from_u32(FIND | SINGLE | ENTRY), ActionSource::ProgramCode).await.into_not_found_error();
     if let Err(_err) = obj_result {
         return Error::unexpected_input_value("This identity is not found.", path!["credentials", identity_key.unwrap()]).into();
     }

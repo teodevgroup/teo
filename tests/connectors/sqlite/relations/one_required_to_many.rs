@@ -163,7 +163,6 @@ mod test {
                 }
             },
         }));
-        println!("see create res: {}", create_res);
         let find_many_res = req(PORT, "findMany", "Post", json!({
             "include": {
                 "author": true

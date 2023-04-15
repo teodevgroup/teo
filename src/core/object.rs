@@ -1029,7 +1029,7 @@ impl Object {
         let object = match self.graph().find_unique_internal(join_model.name(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
             Ok(object) => object,
             Err(_) => return Err(Error::unexpected_input_value_with_reason("Join object is not found.", path)),
-        };
+        }.into_not_found_error()?;
         match object.delete_from_database(session.clone()).await {
             Ok(_) => Ok(()),
             Err(_) => Err(Error::unexpected_input_value_with_reason("Can't delete join record.", path)),
@@ -1121,7 +1121,7 @@ impl Object {
             // connect new
             let action = Action::from_u32(NESTED | SET | SINGLE);
             let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone()).await {
-                Ok(object) => object,
+                Ok(object) => object.into_not_found_error()?,
                 Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
             };
             self.link_and_save_relation_object(relation, &object, session.clone(), path).await?;
@@ -1134,7 +1134,7 @@ impl Object {
         let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone()).await {
             Ok(object) => object,
             Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
-        };
+        }.into_not_found_error()?;
         self.link_and_save_relation_object(relation, &object, session.clone(), path).await
     }
 
@@ -1143,7 +1143,7 @@ impl Object {
         let create = value.get("create").unwrap();
         let action = Action::from_u32(CONNECT_OR_CREATE | CONNECT | NESTED | SINGLE);
         let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
-            Ok(object) => object,
+            Ok(object) => object.into_not_found_error()?,
             Err(_) => {
                 self.graph().new_object_with_tson_and_path(relation.model(), create, &(path + "create"), action, self.action_source().clone()).await?
             },
@@ -1179,7 +1179,7 @@ impl Object {
             let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
                 Ok(object) => object,
                 Err(_) => return Err(Error::unexpected_input_value_with_reason("object is not found", path)),
-            };
+            }.into_not_found_error()?;
             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
             object.save_with_session_and_path(session.clone(), path).await?;
         }
@@ -1200,7 +1200,7 @@ impl Object {
         let create = value.get("create").unwrap();
         let update = value.get("update").unwrap();
         let action = Action::from_u32(NESTED | UPSERT | UPDATE | SINGLE);
-        match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
+        match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await.into_not_found_error() {
             Ok(object) => {
                 let path = path + "update";
                 object.set_teon_with_path(update, &path).await?;
@@ -1219,7 +1219,7 @@ impl Object {
         if relation.has_join_table() {
             let action = Action::from_u32(JOIN_DELETE | DELETE | SINGLE);
             let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone()).await {
-                Ok(object) => object,
+                Ok(object) => object.into_not_found_error()?,
                 Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
             };
             self.delete_join_object(&object, relation, self.graph().opposite_relation(relation).1.unwrap(), session.clone(), path).await?;
@@ -1228,7 +1228,7 @@ impl Object {
             r#where.as_hashmap_mut().unwrap().extend(value.as_hashmap().cloned().unwrap().into_iter());
             let action = Action::from_u32(DISCONNECT | NESTED | SINGLE);
             let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
-                Ok(object) => object,
+                Ok(object) => object.into_not_found_error()?,
                 Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
             };
             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
@@ -1286,7 +1286,7 @@ impl Object {
                 "include": {
                     self.graph().through_opposite_relation(relation).1.name(): true
                 }
-            }), true, action, self.action_source().clone()).await {
+            }), true, action, self.action_source().clone()).await.into_not_found_error() {
                 let object = join_object.get_query_relation_object(self.graph().through_opposite_relation(relation).1.name())?.unwrap();
                 Ok(object)
             } else {
@@ -1299,7 +1299,7 @@ impl Object {
             let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
                 Ok(object) => object,
                 Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", &(path + "where"))),
-            };
+            }.into_not_found_error()?;
             Ok(object)
         }
     }
@@ -1325,7 +1325,7 @@ impl Object {
         let r#where = value.get("where").unwrap();
         let action = Action::from_u32(NESTED | UPDATE | SINGLE);
         let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
-            Ok(object) => object,
+            Ok(object) => object.into_not_found_error()?,
             Err(_) => return Err(Error::unexpected_input_value_with_reason("update: object not found", path)),
         };
         object.set_teon_with_path(value.get("update").unwrap(), path).await?;
@@ -1340,7 +1340,7 @@ impl Object {
         let r#where = value.get("where").unwrap();
         let action = Action::from_u32(NESTED | DELETE | SINGLE);
         let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
-            Ok(object) => object,
+            Ok(object) => object.into_not_found_error()?,
             Err(_) => return Err(Error::unexpected_input_value_with_reason("delete: object not found", path)),
         };
         object.delete_from_database(session.clone()).await?;
@@ -1383,7 +1383,7 @@ impl Object {
                     "is": value
                 }
             }
-        })).await {
+        })).await.into_not_found_error() {
             if relation.is_required() {
                 return Err(Error::cannot_disconnect_previous_relation());
             } else {
@@ -1527,7 +1527,7 @@ impl Object {
         if let Some(select) = select {
             finder.as_hashmap_mut().unwrap().insert("select".to_string(), select.clone());
         }
-        graph.find_unique_internal(self.model().name(), &finder, false, self.action(), self.action_source().clone()).await
+        graph.find_unique_internal(self.model().name(), &finder, false, self.action(), self.action_source().clone()).await.into_not_found_error()
     }
 
     pub async fn force_set_relation_objects(&self, key: &str, objects: Vec<Object>) -> () {
@@ -1580,7 +1580,7 @@ impl Object {
         let action = Action::from_u32(NESTED | FIND | PROGRAM_CODE | SINGLE);
         match graph.find_unique_internal(relation_model_name, &finder, false, action, ActionSource::ProgramCode).await {
             Ok(result) => {
-                self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec![result]);
+                self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec![result.into_not_found_error()?]);
                 let obj = self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().get(0).unwrap().clone();
                 Ok(Some(obj.clone()))
             }
@@ -1617,7 +1617,7 @@ impl Object {
                 "include": {
                     key.as_ref(): include_inside
                 }
-            }), false, action, ActionSource::ProgramCode).await?;
+            }), false, action, ActionSource::ProgramCode).await.into_not_found_error()?;
             let vec = new_self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().clone();
             Ok(vec)
         } else {
@@ -1702,3 +1702,28 @@ impl PartialEq for Object {
 
 unsafe impl Send for Object { }
 unsafe impl Sync for Object { }
+
+pub(crate) trait ErrorIfNotFound {
+    fn into_not_found_error(self) -> Result<Object>;
+}
+
+impl ErrorIfNotFound for Option<Object> {
+    fn into_not_found_error(self) -> Result<Object> {
+        match self {
+            Some(object) => Ok(object),
+            None => Err(Error::object_not_found()),
+        }
+    }
+}
+
+impl ErrorIfNotFound for Result<Option<Object>> {
+    fn into_not_found_error(self) -> Result<Object> {
+        match self {
+            Err(err) => Err(err),
+            Ok(option) => match option {
+                Some(object) => Ok(object),
+                None => Err(Error::object_not_found()),
+            }
+        }
+    }
+}

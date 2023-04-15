@@ -16,12 +16,12 @@ impl GroupRecord {
     }
 
     /// Find a unique group record.
-    pub async fn find_unique(query: impl Borrow<Value>) -> Result<GroupRecord> {
+    pub async fn find_unique(query: impl Borrow<Value>) -> Result<Option<GroupRecord>> {
         Graph::current().find_unique("__TeoGroupRecord", query.borrow()).await
     }
 
     /// Find a non unique group record.
-    pub async fn find_first(query: impl Borrow<Value>) -> Result<GroupRecord> {
+    pub async fn find_first(query: impl Borrow<Value>) -> Result<Option<GroupRecord>> {
         Graph::current().find_first("__TeoGroupRecord", query.borrow()).await
     }
 

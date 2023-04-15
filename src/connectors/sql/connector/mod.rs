@@ -239,12 +239,12 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Object> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Option<Object>> {
         let objects = Execution::query_objects(&self.pool, model, graph, finder, self.dialect, action, action_source.clone()).await?;
         if objects.is_empty() {
-            Err(Error::object_not_found())
+            Ok(None)
         } else {
-            Ok(objects.get(0).unwrap().clone())
+            Ok(Some(objects.get(0).unwrap().clone()))
         }
     }
 

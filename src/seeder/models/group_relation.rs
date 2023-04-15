@@ -16,12 +16,12 @@ impl GroupRelation {
     }
 
     /// Find a unique group relation.
-    pub async fn find_unique(query: impl Borrow<Value>) -> Result<GroupRelation> {
+    pub async fn find_unique(query: impl Borrow<Value>) -> Result<Option<GroupRelation>> {
         Graph::current().find_unique("__TeoGroupRelation", query.borrow()).await
     }
 
     /// Find a non unique group relation.
-    pub async fn find_first(query: impl Borrow<Value>) -> Result<GroupRelation> {
+    pub async fn find_first(query: impl Borrow<Value>) -> Result<Option<GroupRelation>> {
         Graph::current().find_first("__TeoGroupRelation", query.borrow()).await
     }
 

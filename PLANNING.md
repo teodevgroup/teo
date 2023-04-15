@@ -402,6 +402,7 @@
 - Fix: SQL encode escape bug for SQLite **[DONE]**
 
 #### 0.0.56
+- Find unique and find first returns null **[DONE]**
 - Python server
 - Fix: on save now displays correct validate error message **[DONE]**
 - Fix: compare is not called when field is not `recordPrevious` **[DONE]**
@@ -464,6 +465,9 @@
 - Input omissible and output omissible for generated clients
 - Support code comment tags for VSCode
 - Support code comment tags for IntelliJ IDEA
+
+#### 0.0.62
+- Enum value references enum definition
 
 #### 0.1.0
 - First stable release

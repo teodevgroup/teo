@@ -7,7 +7,6 @@ use crate::core::app::command::SeedCommandAction;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::Model;
 use crate::core::relation::Relation;
-use crate::core::result::Result;
 use crate::prelude::{Graph, Object, Value};
 use crate::seeder::data_set::{DataSet, Group, normalize_dataset_relations, Record};
 use crate::seeder::models::group_record::GroupRecord;
@@ -143,7 +142,7 @@ async fn sync_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<&
             let seed_record = seed_records.iter().find(|o| o.name().as_str() == &record.name).unwrap();
             let object: Object = graph.find_unique(group_model.name(), &teon!({
                 "where": record_json_string_to_where_unique(seed_record.record().as_str(), group_model)
-            })).await.unwrap();
+            })).await.unwrap().unwrap();
             for relation in group_model.relations() {
                 // find relations
                 let relation_records = GroupRelation::find_many(teon!({
@@ -202,7 +201,7 @@ async fn setup_new_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &
             let seed_record = seed_records.iter().find(|o| o.name().as_str() == &record.name).unwrap();
             let object: Object = graph.find_unique(group_model.name(), &teon!({
                 "where": record_json_string_to_where_unique(seed_record.record().as_str(), group_model)
-            })).await.unwrap();
+            })).await.unwrap().unwrap();
             for relation in group_model.relations() {
                 if let Some(reference) = record.value.as_hashmap().unwrap().get(relation.name()) {
                     if let Some(references) = reference.as_vec() {
@@ -238,10 +237,10 @@ async fn setup_relations_internal(record: &Record, reference: &Value, relation: 
             "dataset": dataset.name.as_str(),
             "name": that_name,
         }
-    })).await.unwrap();
+    })).await.unwrap().unwrap();
     let that_object: Object = graph.find_unique(relation.model(), &teon!({
         "where": record_json_string_to_where_unique(that_seed_record.record(), graph.model(relation.model()).unwrap())
-    })).await.unwrap();
+    })).await.unwrap().unwrap();
     if relation.is_optional() && relation.has_foreign_key() {
         // update this record
         for (local, foreign) in relation.iter() {
@@ -264,10 +263,10 @@ async fn setup_relations_internal(record: &Record, reference: &Value, relation: 
         for (local, foreign) in through_that_relation.iter() {
             where_unique.insert(local.to_string(), that_object.get_value(foreign).unwrap());
         }
-        let link_record: Result<Object> = graph.find_first(through_model.name(), &teon!({
+        let link_record: Option<Object> = graph.find_first(through_model.name(), &teon!({
             "where": Value::HashMap(where_unique.clone())
-        })).await;
-        if link_record.is_err() {
+        })).await.unwrap();
+        if link_record.is_none() {
             let link_object = graph.create_object(through_model.name(), Value::HashMap(where_unique)).await.unwrap();
             link_object.save_for_seed_without_required_relation().await.unwrap();
         }
@@ -314,10 +313,10 @@ async fn setup_relations_internal(record: &Record, reference: &Value, relation: 
 /// This perform, deletes an object from the databse.
 async fn perform_remove_from_database(dataset: &DataSet, record: &GroupRecord, group_model: &Model, graph: &Graph) {
     let json_identifier = record.record();
-    let exist: Result<Object> = graph.find_unique(group_model.name(), &teon!({
+    let exist: Option<Object> = graph.find_unique(group_model.name(), &teon!({
         "where": record_json_string_to_where_unique(json_identifier, group_model)
-    })).await;
-    if exist.is_err() {
+    })).await.unwrap();
+    if exist.is_none() {
         // This record doesn't exist, cannot delete it or cut its relationships
         record.delete().await.unwrap();
         return
@@ -364,13 +363,13 @@ async fn cut_relation(relation: &GroupRelation, record: &GroupRecord, graph: &Gr
         "dataset": dataset.name.as_str(),
         "group": that_model_name.as_str(),
         "name": that_name.as_str()
-    })).await.unwrap();
+    })).await.unwrap().unwrap();
     let identifier = seed_record.record();
     let unique = record_json_string_to_where_unique(&identifier, that_model);
-    let that_record: Result<Object> = graph.find_unique(that_model_name.as_str(), &teon!({
-                "where": unique
-            })).await;
-    if that_record.is_err() {
+    let that_record: Option<Object> = graph.find_unique(that_model_name.as_str(), &teon!({
+            "where": unique
+        })).await.unwrap();
+    if that_record.is_none() {
         relation.delete().await.unwrap();
         return
     }
@@ -385,10 +384,10 @@ async fn cut_relation(relation: &GroupRelation, record: &GroupRecord, graph: &Gr
         for (local, foreign) in through_that_relation.iter() {
             where_unique.insert(local.to_string(), that_record.get_value(foreign).unwrap());
         }
-        let link_record: Result<Object> = graph.find_first(through_model.name(), &teon!({
-                "where": Value::HashMap(where_unique)
-            })).await;
-        if link_record.is_err() {
+        let link_record: Option<Object> = graph.find_first(through_model.name(), &teon!({
+            "where": Value::HashMap(where_unique)
+        })).await.unwrap();
+        if link_record.is_none() {
             // Maybe this record is deleted already
             relation.delete().await.unwrap();
             return
@@ -414,10 +413,10 @@ async fn cut_relation(relation: &GroupRelation, record: &GroupRecord, graph: &Gr
 }
 
 async fn perform_recreate_or_update_an_record(dataset: &DataSet, group: &Group, record: &Record, group_model: &Model, graph: &Graph, seed_record: &GroupRecord) {
-    let object: Result<Object> = graph.find_unique(group_model.name(), &teon!({
+    let object: Option<Object> = graph.find_unique(group_model.name(), &teon!({
         "where": record_json_string_to_where_unique(seed_record.record(), group_model)
-    })).await;
-    if object.is_err() {
+    })).await.unwrap();
+    if object.is_none() {
         seed_record.delete().await.unwrap();
         perform_insert_into_database(dataset, group, record, group_model, graph).await;
         return
@@ -445,11 +444,11 @@ async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Recor
                         "dataset": dataset.name.as_str(),
                         "name": that_record_name,
                     }
-                })).await.unwrap();
+                })).await.unwrap().unwrap();
                 let that_record_identifier_json = that_record_data.record();
                 let that_record: Object = graph.find_unique(relation.model(), &teon!({
                     "where": record_json_string_to_where_unique(&that_record_identifier_json, graph.model(relation.model()).unwrap())
-                })).await.unwrap();
+                })).await.unwrap().unwrap();
                 for (field, reference) in relation.iter() {
                     input.as_hashmap_mut().unwrap().insert(field.to_owned(), that_record.get_value(reference).unwrap());
                 }
