@@ -1,6 +1,6 @@
 use async_trait::async_trait;
-use crate::core::app::conf::EntityGeneratorConf;
-use crate::core::app::environment::Environment;
+use crate::app::conf::EntityGeneratorConf;
+use crate::app::environment::Environment;
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::generators::server::go::GoEntityGenerator;
 use crate::gen::generators::server::java::JavaEntityGenerator;

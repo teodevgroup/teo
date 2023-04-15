@@ -2,7 +2,7 @@ pub(crate) mod utils;
 pub(crate) mod runtime_d_ts;
 
 use array_tool::vec::Join;
-use crate::core::app::conf::EntityGeneratorConf;
+use crate::app::conf::EntityGeneratorConf;
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::interface::server::EntityGenerator;
 use crate::prelude::Graph;

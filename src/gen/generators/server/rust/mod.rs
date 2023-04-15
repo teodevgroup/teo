@@ -5,7 +5,7 @@ use inflector::Inflector;
 use maplit::hashset;
 use tokio::fs;
 use toml_edit::{Document, value};
-use crate::core::app::conf::EntityGeneratorConf;
+use crate::app::conf::EntityGeneratorConf;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::Model;
 use crate::core::r#enum::Enum;

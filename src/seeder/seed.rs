@@ -3,7 +3,7 @@ use bson::oid::ObjectId;
 use itertools::Itertools;
 use maplit::hashmap;
 use serde_json::json;
-use crate::core::app::command::SeedCommandAction;
+use crate::app::command::SeedCommandAction;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::Model;
 use crate::core::relation::Relation;

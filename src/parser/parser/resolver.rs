@@ -34,7 +34,7 @@ use crate::parser::std::decorators::relation::GlobalRelationDecorators;
 use crate::prelude::Value;
 use to_mut::ToMut;
 use crate::core::action::Action;
-use crate::core::app::environment::Environment;
+use crate::app::environment::Environment;
 use crate::gen::interface::client::kind::Kind;
 use crate::parser::ast::arith_expr::{ArithExpr, Op};
 use crate::parser::ast::client::{Client};

@@ -10,7 +10,7 @@ use pest::pratt_parser::PrattParser;
 use to_mut::ToMut;
 use to_mut_proc_macro::ToMut;
 use once_cell::sync::Lazy;
-use crate::core::app::builder::CallbackLookupTable;
+use crate::app::builder::CallbackLookupTable;
 use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::arith_expr::{ArithExpr, Op};
 use crate::parser::ast::client::Client;

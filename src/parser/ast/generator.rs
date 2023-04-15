@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use crate::core::app::environment::Environment;
+use crate::app::environment::Environment;
 use crate::parser::ast::span::Span;
 use crate::parser::ast::item::Item;
 use crate::parser::ast::identifier::Identifier;

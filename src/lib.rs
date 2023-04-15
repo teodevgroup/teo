@@ -4,10 +4,11 @@ pub(crate) mod connectors;
 pub(crate) mod gen;
 pub(crate) mod seeder;
 pub(crate) mod purger;
+pub mod app;
 
 pub mod prelude {
-    pub use crate::core::app::App;
-    pub use crate::core::app::builder::AppBuilder;
+    pub use crate::app::App;
+    pub use crate::app::builder::AppBuilder;
     pub use crate::core::graph::Graph;
     pub use crate::core::graph::builder::GraphBuilder;
     pub use crate::core::teon::Value;

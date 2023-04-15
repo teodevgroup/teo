@@ -1,5 +1,5 @@
 use std::sync::{Arc, Mutex};
-use crate::core::app::builder::CallbackLookupTable;
+use crate::app::builder::CallbackLookupTable;
 use crate::core::pipeline::item::Item;
 
 

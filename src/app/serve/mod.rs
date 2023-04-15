@@ -23,12 +23,12 @@ use crate::core::action::{
     COUNT_HANDLER, AGGREGATE_HANDLER, GROUP_BY_HANDLER, SIGN_IN_HANDLER, IDENTITY_HANDLER,
 };
 use crate::core::initiator::Initiator;
-use crate::core::app::builder::AsyncCallbackWithoutArgs;
-use crate::core::app::command::SeedCommandAction;
-use crate::core::app::conf::ServerConf;
-use crate::core::app::entrance::Entrance;
-use crate::core::app::environment::EnvironmentVersion;
-use crate::core::app::serve::test_context::TestContext;
+use crate::app::builder::AsyncCallbackWithoutArgs;
+use crate::app::command::SeedCommandAction;
+use crate::app::conf::ServerConf;
+use crate::app::entrance::Entrance;
+use crate::app::environment::EnvironmentVersion;
+use crate::app::serve::test_context::TestContext;
 use crate::core::connector::SaveSession;
 use self::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::graph::Graph;
@@ -572,7 +572,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
                 exp
             };
             if conf.jwt_secret.as_ref().is_none() {
-                return super::super::error::Error::internal_server_error("Missing JWT secret.").into();
+                return Error::internal_server_error("Missing JWT secret.").into();
             }
             let token = encode_token(claims, &conf.jwt_secret.as_ref().unwrap());
             HttpResponse::Ok().json(json!({

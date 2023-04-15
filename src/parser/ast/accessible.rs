@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::sync::{Arc, Mutex};
 use maplit::hashmap;
-use crate::core::app::builder::CallbackLookupTable;
+use crate::app::builder::CallbackLookupTable;
 use crate::core::field::Field;
 use crate::core::model::builder::ModelBuilder;
 use crate::core::pipeline::item::Item;

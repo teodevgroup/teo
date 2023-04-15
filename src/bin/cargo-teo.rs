@@ -1,5 +1,5 @@
 use tokio::main;
-use teo::core::app::entrance::Entrance;
+use teo::app::entrance::Entrance;
 use teo::prelude::AppBuilder;
 
 #[main]
