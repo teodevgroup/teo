@@ -16,7 +16,7 @@ use crate::connectors::mongodb::aggregation::Aggregation;
 use crate::connectors::mongodb::bson::coder::BsonCoder;
 use crate::connectors::mongodb::connector::save_session::MongoDBSaveSession;
 use crate::core::action::{Action, FIND, MANY, NESTED, SINGLE};
-use crate::core::action::source::ActionSource;
+use crate::core::initiator::Initiator;
 use crate::core::connector::Connector;
 use crate::core::object::Object;
 use crate::core::field::Sort;
@@ -321,7 +321,7 @@ impl MongoDBConnector {
             let result = col.find_one_and_update(identifier.clone(), update_doc, options).await;
             match result {
                 Ok(updated_document) => {
-                    for key in object.inner.atomic_updator_map.lock().unwrap().keys() {
+                    for key in object.inner.atomic_updater_map.lock().unwrap().keys() {
                         let bson_new_val = updated_document.as_ref().unwrap().get(key).unwrap();
                         let field = object.model().field(key).unwrap();
                         let field_value = BsonCoder::decode(model, object.graph(), field.field_type(), field.is_optional(), bson_new_val, path![])?;
@@ -481,7 +481,7 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Option<Object>> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
         let select = finder.get("select");
         let include = finder.get("include");
         let aggregate_input = Aggregation::build(model, graph, finder)?;
@@ -504,7 +504,7 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Vec<Object>> {
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
         let select = finder.get("select");
         let include = finder.get("include");
         let aggregate_input = Aggregation::build(model, graph, finder)?;

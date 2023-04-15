@@ -5,7 +5,7 @@ use key_path::KeyPath;
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
 use crate::core::action::{Action, CREATE, INTERNAL_AMOUNT, INTERNAL_POSITION, PROGRAM_CODE, SINGLE};
-use crate::core::action::source::ActionSource;
+use crate::core::initiator::Initiator;
 use crate::core::connector::Connector;
 use crate::core::model::Model;
 use crate::core::object::Object;
@@ -59,7 +59,7 @@ impl Graph {
     // MARK: - Queries
 
     pub async fn find_unique<T: From<Object>>(&self, model: &str, finder: &Value) -> Result<Option<T>> {
-        match self.find_unique_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), ActionSource::ProgramCode).await {
+        match self.find_unique_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), Initiator::ProgramCode).await {
             Ok(result) => match result {
                 Some(o) => Ok(Some(o.into())),
                 None => Ok(None),
@@ -69,7 +69,7 @@ impl Graph {
     }
 
     pub async fn find_first<T: From<Object>>(&self, model: &str, finder: &Value) -> Result<Option<T>> {
-        match self.find_first_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), ActionSource::ProgramCode).await {
+        match self.find_first_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), Initiator::ProgramCode).await {
             Ok(result) => match result {
                 Some(o) => Ok(Some(o.into())),
                 None => Ok(None),
@@ -79,18 +79,18 @@ impl Graph {
     }
 
     pub async fn find_many<T: From<Object>>(&self, model: &str, finder: &Value) -> Result<Vec<T>> {
-        match self.find_many_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), ActionSource::ProgramCode).await {
+        match self.find_many_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), Initiator::ProgramCode).await {
             Ok(results) => Ok(results.iter().map(|item| item.clone().into()).collect()),
             Err(err) => Err(err),
         }
     }
 
-    pub(crate) async fn find_unique_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Option<Object>> {
+    pub(crate) async fn find_unique_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
         let model = self.model(model).unwrap();
         self.connector().find_unique(self, model, finder, mutation_mode, action, action_source).await
     }
 
-    pub(crate) async fn find_first_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Option<Object>> {
+    pub(crate) async fn find_first_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
         let model = self.model(model).unwrap();
         let mut finder = finder.as_hashmap().clone().unwrap().clone();
         finder.insert("take".to_string(), 1.into());
@@ -108,12 +108,12 @@ impl Graph {
         }
     }
 
-    pub(crate) async fn find_many_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Vec<Object>> {
+    pub(crate) async fn find_many_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
         let model = self.model(model).unwrap();
         self.connector().find_many(self, model, finder, mutation_mode, action, action_source).await
     }
 
-    pub(crate) async fn batch<F, Fut>(&self, model: &str, finder: &Value, action: Action, action_source: ActionSource, f: F) -> Result<()> where
+    pub(crate) async fn batch<F, Fut>(&self, model: &str, finder: &Value, action: Action, action_source: Initiator, f: F) -> Result<()> where
     F: Fn(Object) -> Fut,
     Fut: Future<Output = Result<()>> {
         let batch_size: usize = 200;
@@ -150,21 +150,21 @@ impl Graph {
 
     // MARK: - Create an object
 
-    pub(crate) fn new_object(&self, model: &str, action: Action, action_source: ActionSource) -> Result<Object> {
+    pub(crate) fn new_object(&self, model: &str, action: Action, action_source: Initiator) -> Result<Object> {
         match self.model(model) {
             Some(model) => Ok(Object::new(self, model, action, action_source)),
             None => Err(Error::invalid_operation(format!("Model with name '{model}' is not defined.")))
         }
     }
 
-    pub(crate) async fn new_object_with_tson_and_path<'a>(&self, model: &str, initial: &Value, path: &KeyPath<'a>, action: Action, action_source: ActionSource) -> Result<Object> {
+    pub(crate) async fn new_object_with_tson_and_path<'a>(&self, model: &str, initial: &Value, path: &KeyPath<'a>, action: Action, action_source: Initiator) -> Result<Object> {
         let object = self.new_object(model, action, action_source)?;
         object.set_teon_with_path(initial, path).await?;
         Ok(object)
     }
 
     pub async fn create_object(&self, model: &str, initial: impl AsRef<Value>) -> Result<Object> {
-        let obj = self.new_object(model, Action::from_u32(PROGRAM_CODE | CREATE | SINGLE | INTERNAL_POSITION), ActionSource::ProgramCode)?;
+        let obj = self.new_object(model, Action::from_u32(PROGRAM_CODE | CREATE | SINGLE | INTERNAL_POSITION), Initiator::ProgramCode)?;
         obj.set_teon(initial.as_ref()).await?;
         Ok(obj)
     }

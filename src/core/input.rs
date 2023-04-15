@@ -1,11 +1,11 @@
 use std::collections::HashMap;
-use crate::core::input::Input::{AtomicUpdator, SetValue};
+use crate::core::input::Input::{AtomicUpdater, SetValue};
 use crate::core::teon::Value;
 
 
 pub(crate) enum Input {
     SetValue(Value),
-    AtomicUpdator(Value),
+    AtomicUpdater(Value),
 }
 
 impl Input {
@@ -16,7 +16,7 @@ impl Input {
             if key.as_str() == "set" {
                 SetValue(value.clone())
             } else {
-                AtomicUpdator(updator.clone())
+                AtomicUpdater(updator.clone())
             }
         } else {
             SetValue(updator.clone())

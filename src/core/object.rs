@@ -13,11 +13,11 @@ use indexmap::IndexMap;
 use to_mut::ToMut;
 use to_mut_proc_macro::ToMut;
 use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, PROGRAM_CODE, DELETE, DISCONNECT, FIND, JOIN_CREATE, JOIN_DELETE, MANY, NESTED, SINGLE, UPDATE, UPSERT, NESTED_CREATE_ACTION, NESTED_DISCONNECT_ACTION, NESTED_SET_ACTION, NESTED_CONNECT_ACTION, NESTED_DELETE_MANY_ACTION, NESTED_UPDATE_MANY_ACTION, NESTED_UPDATE_ACTION, NESTED_DELETE_ACTION, NESTED_CONNECT_OR_CREATE_ACTION, NESTED_UPSERT_ACTION, INTERNAL_POSITION, SET};
-use crate::core::action::source::ActionSource;
+use crate::core::initiator::Initiator;
 use crate::core::field::{Field, PreviousValueRule};
 use crate::core::field::optionality::Optionality;
 use crate::core::input::Input;
-use crate::core::input::Input::{AtomicUpdator, SetValue};
+use crate::core::input::Input::{AtomicUpdater, SetValue};
 use crate::core::graph::Graph;
 use crate::core::model::Model;
 use crate::core::relation::Relation;
@@ -41,7 +41,7 @@ pub(crate) struct ObjectInner {
     pub(crate) model: Model,
     pub(crate) graph: Graph,
     pub(crate) action: Action,
-    pub(crate) action_source: ActionSource,
+    pub(crate) initiator: Initiator,
     pub(crate) is_initialized: AtomicBool,
     pub(crate) is_new: AtomicBool,
     pub(crate) is_modified: AtomicBool,
@@ -53,7 +53,7 @@ pub(crate) struct ObjectInner {
     pub(crate) modified_fields: Arc<Mutex<HashSet<String>>>,
     pub(crate) value_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) previous_value_map: Arc<Mutex<HashMap<String, Value>>>,
-    pub(crate) atomic_updator_map: Arc<Mutex<HashMap<String, Value>>>,
+    pub(crate) atomic_updater_map: Arc<Mutex<HashMap<String, Value>>>,
     pub(crate) relation_mutation_map: Arc<TokioMutex<HashMap<String, Value>>>,
     pub(crate) relation_query_map: Arc<Mutex<HashMap<String, Vec<Object>>>>,
     pub(crate) cached_property_map: Arc<Mutex<HashMap<String, Value>>>,
@@ -73,13 +73,13 @@ fn check_user_json_keys<'a>(map: &HashMap<String, Value>, allowed: &HashSet<&str
 
 impl Object {
 
-    pub(crate) fn new(graph: &Graph, model: &Model, action: Action, action_source: ActionSource) -> Object {
+    pub(crate) fn new(graph: &Graph, model: &Model, action: Action, action_source: Initiator) -> Object {
         Object {
             inner: Arc::new(ObjectInner {
                 graph: graph.clone(),
                 model: model.clone(),
                 action,
-                action_source,
+                initiator: action_source,
                 is_initialized: AtomicBool::new(false),
                 is_new: AtomicBool::new(true),
                 is_modified: AtomicBool::new(false),
@@ -91,7 +91,7 @@ impl Object {
                 modified_fields: Arc::new(Mutex::new(HashSet::new())),
                 previous_value_map: Arc::new(Mutex::new(HashMap::new())),
                 value_map: Arc::new(Mutex::new(HashMap::new())),
-                atomic_updator_map: Arc::new(Mutex::new(HashMap::new())),
+                atomic_updater_map: Arc::new(Mutex::new(HashMap::new())),
                 relation_query_map: Arc::new(Mutex::new(HashMap::new())),
                 relation_mutation_map: Arc::new(TokioMutex::new(HashMap::new())),
                 cached_property_map: Arc::new(Mutex::new(HashMap::new())),
@@ -174,7 +174,7 @@ impl Object {
                     // set_value_to_value_map
                     let value = value_map.get(key).unwrap();
                     match Input::decode_field(value) {
-                        AtomicUpdator(updator) => self.set_value_to_atomic_updator_map(key, updator),
+                        AtomicUpdater(updator) => self.set_value_to_atomic_updator_map(key, updator),
                         SetValue(value) => {
                             // record previous value if needed
                             self.record_previous_value_for_field_if_needed(field);
@@ -268,7 +268,7 @@ impl Object {
     }
 
     fn set_value_to_atomic_updator_map(&self, key: &str, value: Value) {
-        self.inner.atomic_updator_map.lock().unwrap().insert(key.to_string(), value);
+        self.inner.atomic_updater_map.lock().unwrap().insert(key.to_string(), value);
         if !self.is_new() {
             self.inner.is_modified.store(true, Ordering::SeqCst);
             self.inner.modified_fields.lock().unwrap().insert(key.to_string());
@@ -449,7 +449,7 @@ impl Object {
     }
 
     pub(crate) fn get_atomic_updator(&self, key: &str) -> Option<Value> {
-        self.inner.atomic_updator_map.lock().unwrap().get(key).cloned()
+        self.inner.atomic_updater_map.lock().unwrap().get(key).cloned()
     }
 
     pub fn set_select(&self, select: Option<&Value>) -> Result<()> {
@@ -657,7 +657,7 @@ impl Object {
         self.inner.is_modified.store(false, Ordering::SeqCst);
         if is_new && self.model().identity() && self.action_source().is_identity() && self.action_source().as_identity().is_none() {
             let mut_inner = self.inner.as_ref().to_mut();
-            mut_inner.action_source = ActionSource::Identity(Some(self.clone()));
+            mut_inner.initiator = Initiator::Identity(Some(self.clone()));
         }
     }
 
@@ -705,7 +705,7 @@ impl Object {
                             continue
                         }
                         let finder = self.intrinsic_where_unique_for_relation(relation);
-                        graph.batch(opposite_model.name(), &finder, Action::from_u32(PROGRAM_CODE | DISCONNECT | (if relation.is_vec() { MANY } else { SINGLE })), ActionSource::ProgramCode, |object| async move {
+                        graph.batch(opposite_model.name(), &finder, Action::from_u32(PROGRAM_CODE | DISCONNECT | (if relation.is_vec() { MANY } else { SINGLE })), Initiator::ProgramCode, |object| async move {
                             for key in opposite_relation.fields() {
                                 object.set_value(key, Value::Null)?;
                             }
@@ -715,7 +715,7 @@ impl Object {
                     },
                     DeleteRule::Cascade => {
                         let finder = self.intrinsic_where_unique_for_relation(relation);
-                        graph.batch(opposite_model.name(), &finder, Action::from_u32(PROGRAM_CODE | DELETE | (if relation.is_vec() { MANY } else { SINGLE })), ActionSource::ProgramCode, |object| async move {
+                        graph.batch(opposite_model.name(), &finder, Action::from_u32(PROGRAM_CODE | DELETE | (if relation.is_vec() { MANY } else { SINGLE })), Initiator::ProgramCode, |object| async move {
                             object.delete_from_database(self.graph().connector().new_save_session()).await?;
                             Ok(())
                         }).await?;
@@ -1578,7 +1578,7 @@ impl Object {
         let relation_model_name = relation.model();
         let graph = self.graph();
         let action = Action::from_u32(NESTED | FIND | PROGRAM_CODE | SINGLE);
-        match graph.find_unique_internal(relation_model_name, &finder, false, action, ActionSource::ProgramCode).await {
+        match graph.find_unique_internal(relation_model_name, &finder, false, action, Initiator::ProgramCode).await {
             Ok(result) => {
                 self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec![result.into_not_found_error()?]);
                 let obj = self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().get(0).unwrap().clone();
@@ -1617,7 +1617,7 @@ impl Object {
                 "include": {
                     key.as_ref(): include_inside
                 }
-            }), false, action, ActionSource::ProgramCode).await.into_not_found_error()?;
+            }), false, action, Initiator::ProgramCode).await.into_not_found_error()?;
             let vec = new_self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().clone();
             Ok(vec)
         } else {
@@ -1641,7 +1641,7 @@ impl Object {
             }
             let relation_model_name = relation.model();
             let graph = self.graph();
-            let results = graph.find_many_internal(relation_model_name, &finder, false, action, ActionSource::ProgramCode).await?;
+            let results = graph.find_many_internal(relation_model_name, &finder, false, action, Initiator::ProgramCode).await?;
             Ok(results)
         }
     }
@@ -1652,7 +1652,7 @@ impl Object {
         } else {
             self.model().save_keys().iter().filter(|k| {
                 self.inner.modified_fields.lock().unwrap().contains(&k.to_string()) ||
-                    self.inner.atomic_updator_map.lock().unwrap().contains_key(&k.to_string())
+                    self.inner.atomic_updater_map.lock().unwrap().contains_key(&k.to_string())
             }).map(|k| k.as_str()).collect()
         }
     }
@@ -1661,8 +1661,8 @@ impl Object {
         self.inner.action
     }
 
-    pub(crate) fn action_source(&self) -> &ActionSource {
-        &self.inner.action_source
+    pub(crate) fn action_source(&self) -> &Initiator {
+        &self.inner.initiator
     }
 
     pub(crate) fn ignore_relation(&self, name: &str) {

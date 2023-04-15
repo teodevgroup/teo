@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use crate::core::action::source::ActionSource;
+use crate::core::initiator::Initiator;
 use crate::core::pipeline::item::Item;
 use crate::core::teon::Value;
 use crate::core::pipeline::ctx::Ctx;
@@ -21,7 +21,7 @@ impl IdentityItem {
 impl Item for IdentityItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
         match ctx.get_object()?.action_source() {
-            ActionSource::Identity(user) => {
+            Initiator::Identity(user) => {
                 let user = match user {
                     Some(u) => Value::Object(u.clone()),
                     None => Value::Null,

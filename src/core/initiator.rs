@@ -1,14 +1,14 @@
 use crate::prelude::{Object, Value};
-use self::ActionSource::*;
+use self::Initiator::*;
 
 #[derive(Clone)]
-pub(crate) enum ActionSource {
+pub(crate) enum Initiator {
     Identity(Option<Object>),
     DataClient,
     ProgramCode,
 }
 
-impl ActionSource {
+impl Initiator {
 
     pub(crate) fn is_data_client(&self) -> bool {
         match self {

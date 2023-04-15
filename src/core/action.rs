@@ -1,5 +1,3 @@
-pub(crate) mod source;
-
 use std::collections::HashSet;
 use std::slice::Iter;
 use maplit::hashset;

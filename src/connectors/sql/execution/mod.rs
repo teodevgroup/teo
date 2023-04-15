@@ -10,7 +10,7 @@ use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::decode::RowDecoder;
 use crate::connectors::sql::schema::value::encode::{SQLEscape, ToSQLString, ToWrapped};
 use crate::core::action::Action;
-use crate::core::action::source::ActionSource;
+use crate::core::initiator::Initiator;
 use crate::core::error::Error;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::input::Input;
@@ -82,7 +82,7 @@ impl Execution {
         Value::HashMap(retval)
     }
 
-    pub(crate) async fn query_objects(pool: &Quaint, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect, action: Action, action_source: ActionSource) -> Result<Vec<Object>> {
+    pub(crate) async fn query_objects(pool: &Quaint, model: &Model, graph: &Graph, finder: &Value, dialect: SQLDialect, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
         let values = Self::query(pool, model, graph, finder, dialect).await?;
         let select = finder.as_hashmap().unwrap().get("select");
         let include = finder.as_hashmap().unwrap().get("include");

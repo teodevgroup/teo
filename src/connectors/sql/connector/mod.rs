@@ -19,7 +19,7 @@ use crate::connectors::sql::schema::value::encode::ToSQLString;
 use crate::connectors::sql::schema::value::encode::PSQLArrayToSQLString;
 use crate::connectors::sql::url::url_utils;
 use crate::core::action::Action;
-use crate::core::action::source::ActionSource;
+use crate::core::initiator::Initiator;
 use crate::core::connector::{Connector, SaveSession};
 use crate::core::database::r#type::DatabaseType;
 use crate::core::error::Error;
@@ -239,7 +239,7 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Option<Object>> {
+    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
         let objects = Execution::query_objects(&self.pool, model, graph, finder, self.dialect, action, action_source.clone()).await?;
         if objects.is_empty() {
             Ok(None)
@@ -248,7 +248,7 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: ActionSource) -> Result<Vec<Object>> {
+    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
         Execution::query_objects(&self.pool, model, graph, finder, self.dialect, action, action_source).await
     }
 

@@ -22,7 +22,7 @@ use crate::core::action::{
     UPSERT_HANDLER, DELETE_HANDLER, CREATE_MANY_HANDLER, UPDATE_MANY_HANDLER, DELETE_MANY_HANDLER,
     COUNT_HANDLER, AGGREGATE_HANDLER, GROUP_BY_HANDLER, SIGN_IN_HANDLER, IDENTITY_HANDLER,
 };
-use crate::core::action::source::ActionSource;
+use crate::core::initiator::Initiator;
 use crate::core::app::builder::AsyncCallbackWithoutArgs;
 use crate::core::app::command::SeedCommandAction;
 use crate::core::app::conf::ServerConf;
@@ -116,14 +116,14 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConf) -> Resu
         &teon!({
             "where": tson_identifier
         }),
-        true, Action::from_u32(IDENTITY | FIND | SINGLE | ENTRY), ActionSource::ProgramCode).await;
+        true, Action::from_u32(IDENTITY | FIND | SINGLE | ENTRY), Initiator::ProgramCode).await;
     match identity {
         Err(_) => Err(Error::invalid_auth_token()),
         Ok(identity) => Ok(identity),
     }
 }
 
-async fn handle_find_unique(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+async fn handle_find_unique(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(FIND | SINGLE | ENTRY);
     let result = graph.find_unique_internal(model.name(), input, false, action, source).await;
     match result {
@@ -142,7 +142,7 @@ async fn handle_find_unique(graph: &Graph, input: &Value, model: &Model, source:
     }
 }
 
-async fn handle_find_first(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+async fn handle_find_first(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(FIND | SINGLE | ENTRY);
     let result = graph.find_first_internal(model.name(), input, false, action, source).await;
     match result {
@@ -161,7 +161,7 @@ async fn handle_find_first(graph: &Graph, input: &Value, model: &Model, source: 
     }
 }
 
-async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(FIND | MANY | ENTRY);
     let result = graph.find_many_internal(model.name(), input, false, action, source).await;
     match result {
@@ -205,7 +205,7 @@ async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: A
     }
 }
 
-async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: Option<&Value>, select: Option<&Value>, model: &Model, path: &KeyPath<'_>, action: Action, action_source: ActionSource, session: Arc<dyn SaveSession>) -> Result<Value, Error> {
+async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: Option<&Value>, select: Option<&Value>, model: &Model, path: &KeyPath<'_>, action: Action, action_source: Initiator, session: Arc<dyn SaveSession>) -> Result<Value, Error> {
     let obj = graph.new_object(model.name(), action, action_source)?;
     let set_json_result = match create {
         Some(create) => {
@@ -226,7 +226,7 @@ async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: 
     refetched.to_json_internal(&path!["data"]).await
 }
 
-async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(CREATE | ENTRY | SINGLE);
     let input = input.as_hashmap().unwrap();
     let create = input.get("create");
@@ -252,7 +252,7 @@ async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&
     refetched.to_json_internal(&path!["data"]).await
 }
 
-async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(UPDATE | ENTRY | SINGLE);
     let result = graph.find_unique_internal(model.name(), input, true, action, source).await.into_not_found_error();
     if result.is_err() {
@@ -275,7 +275,7 @@ async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: Acti
     }
 }
 
-async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(UPSERT | UPDATE | ENTRY | SINGLE);
     let result = graph.find_unique_internal(model.name(), input, true, action, source.clone()).await.into_not_found_error();
     let include = input.get("include");
@@ -347,7 +347,7 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Acti
     }
 }
 
-async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(DELETE | SINGLE | ENTRY);
     let result = graph.find_unique_internal(model.name(), input, true, action, source).await.into_not_found_error();
     if result.is_err() {
@@ -366,7 +366,7 @@ async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: Acti
     }
 }
 
-async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(CREATE | MANY | ENTRY);
     let input = input.as_hashmap().unwrap();
     let create = input.get("create");
@@ -404,7 +404,7 @@ async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source:
     }))
 }
 
-async fn handle_update_many(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+async fn handle_update_many(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(UPDATE | MANY | ENTRY);
     let result = graph.find_many_internal(model.name(), input, true, action, source).await;
     if result.is_err() {
@@ -435,7 +435,7 @@ async fn handle_update_many(graph: &Graph, input: &Value, model: &Model, source:
         }))
 }
 
-async fn handle_delete_many(graph: &Graph, input: &Value, model: &Model, source: ActionSource) -> HttpResponse {
+async fn handle_delete_many(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(DELETE | MANY | ENTRY);
     let result = graph.find_many_internal(model.name(), input, true, action, source).await;
     if result.is_err() {
@@ -466,7 +466,7 @@ async fn handle_delete_many(graph: &Graph, input: &Value, model: &Model, source:
         }))
 }
 
-async fn handle_count(graph: &Graph, input: &Value, model: &Model, _source: ActionSource) -> HttpResponse {
+async fn handle_count(graph: &Graph, input: &Value, model: &Model, _source: Initiator) -> HttpResponse {
     let result = graph.count(model.name(), input).await;
     match result {
         Ok(count) => {
@@ -478,7 +478,7 @@ async fn handle_count(graph: &Graph, input: &Value, model: &Model, _source: Acti
     }
 }
 
-async fn handle_aggregate(graph: &Graph, input: &Value, model: &Model, _source: ActionSource) -> HttpResponse {
+async fn handle_aggregate(graph: &Graph, input: &Value, model: &Model, _source: Initiator) -> HttpResponse {
     match graph.aggregate(model.name(), input).await {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": j(count)}))
@@ -489,7 +489,7 @@ async fn handle_aggregate(graph: &Graph, input: &Value, model: &Model, _source: 
     }
 }
 
-async fn handle_group_by(graph: &Graph, input: &Value, model: &Model, _source: ActionSource) -> HttpResponse {
+async fn handle_group_by(graph: &Graph, input: &Value, model: &Model, _source: Initiator) -> HttpResponse {
     match graph.group_by(model.name(), input).await {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": j(count)}))
@@ -544,7 +544,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
         "where": {
             identity_key.unwrap(): identity_value.unwrap()
         }
-    }), true, Action::from_u32(FIND | SINGLE | ENTRY), ActionSource::ProgramCode).await.into_not_found_error();
+    }), true, Action::from_u32(FIND | SINGLE | ENTRY), Initiator::ProgramCode).await.into_not_found_error();
     if let Err(_err) = obj_result {
         return Error::unexpected_input_value("This identity is not found.", path!["credentials", identity_key.unwrap()]).into();
     }
@@ -585,7 +585,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     }
 }
 
-async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &ServerConf, source: ActionSource) -> HttpResponse {
+async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &ServerConf, source: Initiator) -> HttpResponse {
     let identity = source.as_identity();
     if let Some(identity) = identity {
         if identity.model() != model {
@@ -729,7 +729,7 @@ fn make_app(graph: &'static Graph, conf: &'static ServerConf, test_context: Opti
             } else {
                 (parsed_body, action)
             };
-            let source = ActionSource::Identity(identity);
+            let source = Initiator::Identity(identity);
             match transformed_action.to_u32() {
                 FIND_UNIQUE_HANDLER => {
                     let result = handle_find_unique(&graph, &transformed_body, model_def, source.clone()).await;

@@ -402,36 +402,39 @@
 - Fix: SQL encode escape bug for SQLite **[DONE]**
 
 #### 0.0.56
-- Find unique and find first returns null **[DONE]**
-- Python server
+- Find unique and find first returns null instead of `ObjectNotFound` error **[DONE]**
 - Fix: on save now displays correct validate error message **[DONE]**
-- Fix: compare is not called when field is not `recordPrevious` **[DONE]**
+- Fix: compare should not be called when field is not `recordPrevious` **[DONE]**
+- Refactor
+- Rename `source` to `initiator` **[DONE]**
 - TS client: refactor
 - Client: distinct in handler args
 - C# client: capitalized names and names with underscore
 - TypeScript client: correct return types for `aggregate` and `groupBy`
 - Unit test: handlers
-- Find unique and find first return null instead of `ObjectNotFound` error
+- Linter: errors and warnings
 - Rewrite connector to support pooled connections
+- Fix SQLite memory bug: A HTTP connection should use single pooled connection
 - Unit test: relations for SQLite memory connector
 - SQL transaction
 - Foreign key management
 - Relation onUpdate
 - Relation onDelete
+- Node.js bindings: date only type
+- Node.js bindings: error handling
 
 #### 0.0.57
 - MongoDB transaction
 - VSCode highlight for data seeding
-- Linter: errors and warnings
 - Node.js client use dedicated `Date` class instead of builtin `Date`
 - Cross language error handling for node.js
-- Fix SQLite memory bug: A HTTP connection should use single pooled connection
 - Connector bug: unique constraint violating: error message should have key path
 - Log SQL queries
 - Migration dry run
 - MongoDB: connector is not using table name
 
 #### 0.0.59
+- Python server
 - Migration decorator docs
 - Dropped decorator docs
 - MongoDB migration
