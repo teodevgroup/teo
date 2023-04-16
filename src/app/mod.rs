@@ -4,6 +4,7 @@ pub mod entrance;
 pub(crate) mod conf;
 pub(crate) mod command;
 pub(crate) mod migrate;
+pub mod new_app;
 
 use std::sync::Arc;
 use to_mut::ToMut;

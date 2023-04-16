@@ -25,10 +25,14 @@ use crate::core::graph::builder::GraphBuilder;
 use crate::parser::ast::field::FieldClass;
 use crate::prelude::{App, Graph, Value};
 use crate::core::pipeline::item::Item;
-use crate::core::pipeline::items::function::compare::{CompareArgument, CompareItem};
-use crate::core::pipeline::items::function::perform::{PerformArgument, PerformItem, PerformResult};
-use crate::core::pipeline::items::function::transform::{TransformResult, TransformArgument, TransformItem};
-use crate::core::pipeline::items::function::validate::{ValidateArgument, ValidateItem, ValidateResult};
+use crate::core::pipeline::items::function::compare::CompareItem;
+use crate::core::callbacks::types::compare::CompareArgument;
+use crate::core::pipeline::items::function::perform::CallbackItem;
+use crate::core::callbacks::types::callback::{CallbackArgument, CallbackResult};
+use crate::core::pipeline::items::function::transform::TransformItem;
+use crate::core::callbacks::types::transform::{TransformResult, TransformArgument};
+use crate::core::pipeline::items::function::validate::ValidateItem;
+use crate::core::callbacks::types::validate::{ValidateArgument, ValidateResult};
 use crate::core::property::Property;
 use crate::core::r#enum::{Enum, EnumVariant};
 use crate::core::relation::Relation;
@@ -290,9 +294,9 @@ impl AppBuilder {
 
     pub fn callback<T, F, O>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
         T: From<Value> + Send + Sync + 'static,
-        F: PerformArgument<T, O> + 'static,
-        O: Into<PerformResult> + Send + Sync + 'static {
-        self.callback_lookup_table.lock().unwrap().callbacks.insert(name.into(), Arc::new(PerformItem::new(f)));
+        F: CallbackArgument<T, O> + 'static,
+        O: Into<CallbackResult> + Send + Sync + 'static {
+        self.callback_lookup_table.lock().unwrap().callbacks.insert(name.into(), Arc::new(CallbackItem::new(f)));
         self
     }
 

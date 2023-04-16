@@ -7,6 +7,7 @@ pub mod database;
 pub mod pipeline;
 pub mod object;
 pub mod teon;
+pub mod callbacks;
 pub(crate) mod connector;
 pub(crate) mod field;
 pub(crate) mod relation;
