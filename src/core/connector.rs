@@ -2,6 +2,7 @@ use std::fmt::Debug;
 use std::sync::Arc;
 use async_trait::async_trait;
 use crate::core::action::Action;
+use crate::core::database::name::DatabaseName;
 use crate::core::initiator::Initiator;
 use crate::core::database::r#type::DatabaseType;
 use crate::core::field::r#type::FieldType;
@@ -10,6 +11,11 @@ use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::result::Result;
 use crate::prelude::Value;
+
+pub(crate) struct ConnectorConf {
+    pub(crate) provider: DatabaseName,
+    pub(crate) url: &'static str,
+}
 
 #[async_trait]
 pub(crate) trait SaveSession: Debug + Send + Sync { }

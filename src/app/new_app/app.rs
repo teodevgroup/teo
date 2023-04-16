@@ -1,3 +1,16 @@
+use std::sync::Arc;
+use crate::app::cli::parse_cli::parse_cli;
+use crate::app::parse_schema::{load_schema, parse_schema};
+use crate::core::callbacks::types::callback::{CallbackArgument, CallbackResult};
+use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
+use crate::core::callbacks::types::compare::CompareArgument;
+use crate::core::callbacks::types::transform::{TransformArgument, TransformResult};
+use crate::core::callbacks::types::validate::{ValidateArgument, ValidateResult};
+use crate::core::items::function::compare::CompareItem;
+use crate::core::items::function::perform::CallbackItem;
+use crate::core::items::function::transform::TransformItem;
+use crate::core::items::function::validate::ValidateItem;
+use crate::prelude::Value;
 use super::new_error::Error;
 use super::ctx::AppCtx;
 use super::new_result::Result;
@@ -5,6 +18,7 @@ use super::new_result::Result;
 pub struct App(usize);
 
 impl App {
+
     pub fn new() -> Result<Self> {
         if AppCtx::create() {
             Ok(Self(0))
@@ -13,13 +27,50 @@ impl App {
         }
     }
 
-    pub fn setup() { }
+    pub fn transform<T, F, R>(&mut self, name: &'static str, f: F) -> Result<&mut Self> where
+        T: From<Value> + Into<Value> + Send + Sync + 'static,
+        R: Into<TransformResult<T>> + Send + Sync + 'static,
+        F: TransformArgument<T, R> + 'static {
+        AppCtx::get_mut()?.callbacks_mut().add_transform(name, Arc::new(TransformItem::new(f)));
+        Ok(self)
+    }
 
-    pub fn transform() { }
+    pub fn callback<T, F, O>(&mut self, name: &'static str, f: F) -> Result<&mut Self> where
+        T: From<Value> + Send + Sync + 'static,
+        F: CallbackArgument<T, O> + 'static,
+        O: Into<CallbackResult> + Send + Sync + 'static {
+        AppCtx::get_mut()?.callbacks_mut().add_callback(name, Arc::new(CallbackItem::new(f)));
+        Ok(self)
+    }
 
-    pub fn validate() { }
+    pub fn validate<T, O, F>(&mut self, name: &'static str, f: F) -> Result<&mut Self> where
+        T: From<Value> + Send + Sync + 'static,
+        O: Into<ValidateResult> + Send + Sync + 'static,
+        F: ValidateArgument<T, O> + 'static {
+        AppCtx::get_mut()?.callbacks_mut().add_validator(name, Arc::new(ValidateItem::new(f)));
+        Ok(self)
+    }
 
+    pub fn compare<T, O, F>(&mut self, name: &'static str, f: F) -> Result<&mut Self> where
+        T: From<Value> + Send + Sync + 'static,
+        O: Into<ValidateResult> + Send + Sync + 'static,
+        F: CompareArgument<T, O> + 'static {
+        AppCtx::get_mut()?.callbacks_mut().add_compare(name, Arc::new(CompareItem::new(f)));
+        Ok(self)
+    }
 
+    pub fn setup<F>(&mut self, f: F) -> Result<&mut Self> where F: AsyncCallbackWithoutArgs + 'static {
+        AppCtx::get_mut()?.set_setup(Arc::new(f));
+        Ok(self)
+    }
+
+    pub async fn run(&self) -> Result<()> {
+        let cli = parse_cli()?;
+        parse_schema(cli.main())?;
+        load_schema()?;
+        run_command().await?;
+        Ok(())
+    }
 }
 
 impl Drop for App {

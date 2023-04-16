@@ -1,19 +1,4 @@
 #[derive(Debug)]
-pub(crate) struct CLI {
-    pub(crate) command: CLICommand,
-    pub(crate) schema: Option<String>,
-}
-
-#[derive(Debug)]
-pub(crate) enum CLICommand {
-    Serve(ServeCommand),
-    Generate(GenerateCommand),
-    Migrate(MigrateCommand),
-    Seed(SeedCommand),
-    Purge(PurgeCommand),
-}
-
-#[derive(Debug)]
 pub(crate) struct ServeCommand {
     pub(crate) no_migration: bool,
     pub(crate) no_autoseed: bool,
@@ -59,3 +44,24 @@ pub(crate) enum SeedCommandAction {
 
 #[derive(Debug)]
 pub(crate) struct PurgeCommand { }
+
+#[derive(Debug)]
+pub(crate) struct CLI {
+    pub(crate) command: CLICommand,
+    pub(crate) schema: Option<String>,
+}
+
+impl CLI {
+    pub(crate) fn main(&self) -> Option<&str> {
+        self.schema.map(|s| s.as_str())
+    }
+}
+
+#[derive(Debug)]
+pub(crate) enum CLICommand {
+    Serve(ServeCommand),
+    Generate(GenerateCommand),
+    Migrate(MigrateCommand),
+    Seed(SeedCommand),
+    Purge(PurgeCommand),
+}

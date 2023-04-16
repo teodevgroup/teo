@@ -3,17 +3,17 @@ use std::fmt;
 use std::path::PathBuf;
 use to_mut::ToMut;
 use to_mut_proc_macro::ToMut;
-use crate::parser::ast::client::Client;
-use crate::parser::ast::config::ServerConfig;
-use crate::parser::ast::connector::Connector;
+use crate::parser::ast::client::ASTClient;
+use crate::parser::ast::config::ASTServer;
+use crate::parser::ast::connector::ASTConnector;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::data_set::DataSet;
-use crate::parser::ast::debug_conf::DebugConf;
-use crate::parser::ast::generator::Generator;
+use crate::parser::ast::debug_conf::ASTDebugConf;
+use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::import::Import;
-use crate::parser::ast::model::Model;
-use crate::parser::ast::r#enum::Enum;
-use crate::parser::ast::test_conf::TestConf;
+use crate::parser::ast::model::ASTModel;
+use crate::parser::ast::r#enum::ASTEnum;
+use crate::parser::ast::test_conf::ASTTestConf;
 use crate::parser::ast::top::Top;
 
 #[derive(ToMut)]
@@ -76,27 +76,27 @@ impl Source {
         self.tops.get(&id).unwrap().as_constant().unwrap()
     }
 
-    pub(crate) fn get_enum(&self, id: usize) -> &Enum {
+    pub(crate) fn get_enum(&self, id: usize) -> &ASTEnum {
         self.tops.get(&id).unwrap().as_enum().unwrap()
     }
 
-    pub(crate) fn get_model(&self, id: usize) -> &Model {
+    pub(crate) fn get_model(&self, id: usize) -> &ASTModel {
         self.tops.get(&id).unwrap().as_model().unwrap()
     }
 
-    pub(crate) fn get_connector(&self, id: usize) -> &Connector {
+    pub(crate) fn get_connector(&self, id: usize) -> &ASTConnector {
         self.tops.get(&id).unwrap().as_connector().unwrap()
     }
 
-    pub(crate) fn get_server_config(&self, id: usize) -> &ServerConfig {
+    pub(crate) fn get_server(&self, id: usize) -> &ASTServer {
         self.tops.get(&id).unwrap().as_server_config().unwrap()
     }
 
-    pub(crate) fn get_entity(&self, id: usize) -> &Generator {
+    pub(crate) fn get_entity(&self, id: usize) -> &ASTEntity {
         self.tops.get(&id).unwrap().as_generator().unwrap()
     }
 
-    pub(crate) fn get_client(&self, id: usize) -> &Client {
+    pub(crate) fn get_client(&self, id: usize) -> &ASTClient {
         self.tops.get(&id).unwrap().as_client().unwrap()
     }
 
@@ -104,11 +104,11 @@ impl Source {
         self.tops.get(&id).unwrap().as_data_set().unwrap()
     }
 
-    pub(crate) fn get_debug_conf(&self, id: usize) -> &DebugConf {
+    pub(crate) fn get_debug_conf(&self, id: usize) -> &ASTDebugConf {
         self.tops.get(&id).unwrap().as_debug_conf().unwrap()
     }
 
-    pub(crate) fn get_test_conf(&self, id: usize) -> &TestConf {
+    pub(crate) fn get_test_conf(&self, id: usize) -> &ASTTestConf {
         self.tops.get(&id).unwrap().as_test_conf().unwrap()
     }
 }

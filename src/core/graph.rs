@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::sync::Arc;
 use key_path::KeyPath;
+use maplit::hashmap;
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
 use crate::core::action::{Action, CREATE, INTERNAL_AMOUNT, INTERNAL_POSITION, PROGRAM_CODE, SINGLE};
@@ -15,45 +16,35 @@ use crate::core::relation::Relation;
 use crate::core::result::Result;
 use crate::prelude::Value;
 
-pub mod builder;
-
 #[derive(Clone, ToMut)]
 pub struct Graph {
-    inner: Arc<GraphInner>
+    pub(crate) enums: HashMap<&'static str, Enum>,
+    pub(crate) models: HashMap<&'static str, Model>,
 }
-
-pub(crate) struct GraphInner {
-    pub(crate) enums: HashMap<String, Enum>,
-    pub(crate) models_vec: Vec<Model>,
-    pub(crate) models_map: HashMap<String, Model>,
-    pub(crate) connector: Option<Arc<dyn Connector>>,
-}
-
-static mut CURRENT: Option<&'static Graph> = None;
 
 impl Graph {
 
-    pub fn models(&self) -> &Vec<Model> {
-        self.inner.models_vec.as_ref()
+    pub(crate) fn new() -> Self {
+        Self {
+            enums: hashmap!{},
+            models: hashmap!{},
+        }
+    }
+
+    pub(crate) fn add_enum(&mut self, e: Enum) {
+        self.enums.insert(e.name, e);
+    }
+
+    pub(crate) fn add_model(&mut self, m: Model) {
+        self.models.insert(m.name, m);
+    }
+
+    pub fn models(&self) -> Vec<&Model> {
+        self.models.values().collect()
     }
 
     pub fn models_without_teo_internal(&self) -> Vec<&Model> {
-        self.inner.models_vec.iter().filter(|m| !m.is_teo_internal()).collect()
-    }
-
-    pub fn current() -> &'static Self {
-        unsafe {
-            if CURRENT.is_none() {
-                panic!("Current graph is accessed before app is initialized.")
-            }
-            CURRENT.unwrap()
-        }
-    }
-
-    pub(crate) fn set_current(current: &'static Graph) {
-        unsafe {
-            CURRENT = Some(current);
-        }
+        self.models().iter().filter(|m| !m.is_teo_internal()).collect()
     }
 
     // MARK: - Queries
@@ -114,8 +105,8 @@ impl Graph {
     }
 
     pub(crate) async fn batch<F, Fut>(&self, model: &str, finder: &Value, action: Action, action_source: Initiator, f: F) -> Result<()> where
-    F: Fn(Object) -> Fut,
-    Fut: Future<Output = Result<()>> {
+        F: Fn(Object) -> Fut,
+        Fut: Future<Output = Result<()>> {
         let batch_size: usize = 200;
         let mut index: usize = 0;
         loop {
@@ -169,42 +160,18 @@ impl Graph {
         Ok(obj)
     }
 
-    // MARK: - Getting the connector
-
-    pub(crate) fn connector(&self) -> &dyn Connector {
-        match &self.inner.connector {
-            Some(c) => { c.as_ref() }
-            None => { panic!() }
-        }
-    }
-
-    pub(crate) fn connector_mut(&self) -> &mut dyn Connector {
-        match &self.inner.connector {
-            Some(c) => {
-                let r = c.as_ref();
-                let result = unsafe {
-                    let d: * const dyn Connector = r;
-                    let e: * mut dyn Connector = d as *mut dyn Connector;
-                    &mut *e
-                };
-                result
-            }
-            None => { panic!() }
-        }
-    }
-
     pub(crate) fn model(&self, name: &str) -> Option<&Model> {
-        self.inner.models_map.get(name)
+        self.models.get(name)
     }
 
     pub(crate) fn r#enum(&self, name: &str) -> Option<&Enum> {
-        self.inner.enums.get(name)
+        self.enums.get(name)
     }
 
-    pub(crate) fn enums(&self) -> &HashMap<String, Enum> { &self.inner.enums }
+    pub(crate) fn enums(&self) -> &HashMap<&'static str, Enum> { &self.enums }
 
     pub(crate) fn enum_values(&self, name: &str) -> Option<&Vec<String>> {
-        match self.inner.enums.get(name) {
+        match self.enums.get(name) {
             Some(e) => Some(e.values()),
             None => None,
         }

@@ -5,7 +5,7 @@ use crate::parser::ast::item::Item;
 use crate::parser::ast::identifier::Identifier;
 
 #[derive(Debug, Clone)]
-pub struct Client {
+pub struct ASTClient {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
     pub(crate) identifier: Option<Identifier>,
@@ -19,7 +19,7 @@ pub struct Client {
     pub(crate) git_commit: bool,
 }
 
-impl Client {
+impl ASTClient {
     pub(crate) fn new(id: usize, source_id: usize, identifier: Option<Identifier>, items: Vec<Item>, span: Span) -> Self {
         Self {
             id,

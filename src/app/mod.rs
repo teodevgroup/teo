@@ -1,10 +1,9 @@
 pub mod builder;
 pub mod program;
 pub mod entrance;
-pub(crate) mod conf;
-pub(crate) mod command;
-pub(crate) mod migrate;
+pub(crate) mod cli;
 pub mod new_app;
+pub(self) mod parse_schema;
 
 use std::sync::Arc;
 use to_mut::ToMut;
@@ -14,8 +13,8 @@ use crate::app::conf::{DebugConf, EntityGeneratorConf, ServerConf, TestConf};
 use crate::app::entrance::Entrance;
 use crate::app::program::Program;
 use crate::app::migrate::migrate;
-use crate::serve::serve;
-use crate::serve::test_context::{ResetMode, TestContext};
+use crate::server::serve;
+use crate::server::test_context::{ResetMode, TestContext};
 use crate::core::graph::Graph;
 use crate::gen::interface::client::conf::Conf as ClientConf;
 use crate::gen::interface::client::gen::gen as gen_client;
@@ -24,6 +23,7 @@ use crate::prelude::Value;
 use crate::purger::purge;
 use crate::seeder::data_set::DataSet;
 use crate::seeder::seed::seed;
+use crate::server::conf::ServerConf;
 
 pub struct App {
     graph: &'static Graph,

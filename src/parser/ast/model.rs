@@ -5,7 +5,7 @@ use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::span::Span;
 
 #[derive(Debug)]
-pub struct Model {
+pub struct ASTModel {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
     pub(crate) identifier: Identifier,
@@ -19,7 +19,7 @@ pub struct Model {
     pub(crate) direct_relation_enum: Vec<String>,
 }
 
-impl Model {
+impl ASTModel {
     pub(crate) fn new(id: usize, source_id: usize, identifier: Identifier, comment_block: Option<CommentBlock>, fields: Vec<Field>, decorators: Vec<Decorator>, span: Span) -> Self {
         Self {
             id, source_id, identifier, comment_block, fields, decorators, span, resolved: false,

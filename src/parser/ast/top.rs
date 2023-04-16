@@ -1,28 +1,28 @@
-use crate::parser::ast::client::Client;
-use crate::parser::ast::config::ServerConfig;
-use crate::parser::ast::connector::Connector;
+use crate::parser::ast::client::ASTClient;
+use crate::parser::ast::config::ASTServer;
+use crate::parser::ast::connector::ASTConnector;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::data_set::DataSet;
-use crate::parser::ast::debug_conf::DebugConf;
-use crate::parser::ast::generator::Generator;
+use crate::parser::ast::debug_conf::ASTDebugConf;
+use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::import::Import;
-use crate::parser::ast::model::Model;
-use crate::parser::ast::r#enum::Enum;
-use crate::parser::ast::test_conf::TestConf;
+use crate::parser::ast::model::ASTModel;
+use crate::parser::ast::r#enum::ASTEnum;
+use crate::parser::ast::test_conf::ASTTestConf;
 
 #[derive(Debug)]
 pub(crate) enum Top {
     Import(Import),
     Constant(Constant),
-    Enum(Enum),
-    Model(Model),
-    Connector(Connector),
-    Generator(Generator),
-    Client(Client),
-    ServerConfig(ServerConfig),
+    Enum(ASTEnum),
+    Model(ASTModel),
+    Connector(ASTConnector),
+    Generator(ASTEntity),
+    Client(ASTClient),
+    ServerConfig(ASTServer),
     DataSet(DataSet),
-    TestConf(TestConf),
-    DebugConf(DebugConf),
+    TestConf(ASTTestConf),
+    DebugConf(ASTDebugConf),
 }
 
 impl Top {
@@ -79,14 +79,14 @@ impl Top {
         self.as_constant().is_some()
     }
 
-    pub(crate) fn as_enum(&self) -> Option<&Enum> {
+    pub(crate) fn as_enum(&self) -> Option<&ASTEnum> {
         match self {
             Top::Enum(i) => Some(i),
             _ => None
         }
     }
 
-    pub(crate) fn as_enum_mut(&mut self) -> Option<&mut Enum> {
+    pub(crate) fn as_enum_mut(&mut self) -> Option<&mut ASTEnum> {
         match self {
             Top::Enum(i) => Some(i),
             _ => None
@@ -97,14 +97,14 @@ impl Top {
         self.as_enum().is_some()
     }
 
-    pub(crate) fn as_model(&self) -> Option<&Model> {
+    pub(crate) fn as_model(&self) -> Option<&ASTModel> {
         match self {
             Top::Model(i) => Some(i),
             _ => None
         }
     }
 
-    pub(crate) fn as_model_mut(&mut self) -> Option<&mut Model> {
+    pub(crate) fn as_model_mut(&mut self) -> Option<&mut ASTModel> {
         match self {
             Top::Model(i) => Some(i),
             _ => None
@@ -115,14 +115,14 @@ impl Top {
         self.as_model().is_some()
     }
 
-    pub(crate) fn as_connector(&self) -> Option<&Connector> {
+    pub(crate) fn as_connector(&self) -> Option<&ASTConnector> {
         match self {
             Top::Connector(i) => Some(i),
             _ => None
         }
     }
 
-    pub(crate) fn as_connector_mut(&mut self) -> Option<&mut Connector> {
+    pub(crate) fn as_connector_mut(&mut self) -> Option<&mut ASTConnector> {
         match self {
             Top::Connector(i) => Some(i),
             _ => None
@@ -133,14 +133,14 @@ impl Top {
         self.as_connector().is_some()
     }
 
-    pub(crate) fn as_generator(&self) -> Option<&Generator> {
+    pub(crate) fn as_generator(&self) -> Option<&ASTEntity> {
         match self {
             Top::Generator(i) => Some(i),
             _ => None
         }
     }
 
-    pub(crate) fn as_generator_mut(&mut self) -> Option<&mut Generator> {
+    pub(crate) fn as_generator_mut(&mut self) -> Option<&mut ASTEntity> {
         match self {
             Top::Generator(i) => Some(i),
             _ => None
@@ -151,14 +151,14 @@ impl Top {
         self.as_generator().is_some()
     }
 
-    pub(crate) fn as_client(&self) -> Option<&Client> {
+    pub(crate) fn as_client(&self) -> Option<&ASTClient> {
         match self {
             Top::Client(i) => Some(i),
             _ => None
         }
     }
 
-    pub(crate) fn as_client_mut(&mut self) -> Option<&mut Client> {
+    pub(crate) fn as_client_mut(&mut self) -> Option<&mut ASTClient> {
         match self {
             Top::Client(i) => Some(i),
             _ => None
@@ -169,14 +169,14 @@ impl Top {
         self.as_client().is_some()
     }
 
-    pub(crate) fn as_server_config(&self) -> Option<&ServerConfig> {
+    pub(crate) fn as_server_config(&self) -> Option<&ASTServer> {
         match self {
             Top::ServerConfig(i) => Some(i),
             _ => None
         }
     }
 
-    pub(crate) fn as_server_config_mut(&mut self) -> Option<&mut ServerConfig> {
+    pub(crate) fn as_server_config_mut(&mut self) -> Option<&mut ASTServer> {
         match self {
             Top::ServerConfig(i) => Some(i),
             _ => None
@@ -205,14 +205,14 @@ impl Top {
         self.as_data_set().is_some()
     }
 
-    pub(crate) fn as_test_conf(&self) -> Option<&TestConf> {
+    pub(crate) fn as_test_conf(&self) -> Option<&ASTTestConf> {
         match self {
             Top::TestConf(d) => Some(d),
             _ => None,
         }
     }
 
-    pub(crate) fn as_test_conf_mut(&mut self) -> Option<&mut TestConf> {
+    pub(crate) fn as_test_conf_mut(&mut self) -> Option<&mut ASTTestConf> {
         match self {
             Top::TestConf(d) => Some(d),
             _ => None,
@@ -223,14 +223,14 @@ impl Top {
         self.as_test_conf().is_some()
     }
 
-    pub(crate) fn as_debug_conf(&self) -> Option<&DebugConf> {
+    pub(crate) fn as_debug_conf(&self) -> Option<&ASTDebugConf> {
         match self {
             Top::DebugConf(d) => Some(d),
             _ => None,
         }
     }
 
-    pub(crate) fn as_debug_conf_mut(&mut self) -> Option<&mut DebugConf> {
+    pub(crate) fn as_debug_conf_mut(&mut self) -> Option<&mut ASTDebugConf> {
         match self {
             Top::DebugConf(d) => Some(d),
             _ => None,

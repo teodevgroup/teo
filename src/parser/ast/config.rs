@@ -2,7 +2,7 @@ use crate::parser::ast::span::Span;
 use crate::parser::ast::item::Item;
 
 #[derive(Debug, Clone)]
-pub struct ServerConfig {
+pub struct ASTServer {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
     pub(crate) items: Vec<Item>,
@@ -12,7 +12,7 @@ pub struct ServerConfig {
     pub(crate) path_prefix: Option<String>,
 }
 
-impl ServerConfig {
+impl ASTServer {
     pub(crate) fn new(item_id: usize, source_id: usize, items: Vec<Item>, span: Span) -> Self {
         Self {
             id: item_id,

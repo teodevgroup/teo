@@ -13,29 +13,29 @@ use once_cell::sync::Lazy;
 use crate::core::callbacks::lookup::CallbackLookup;
 use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::arith_expr::{ArithExpr, Op};
-use crate::parser::ast::client::Client;
+use crate::parser::ast::client::ASTClient;
 use crate::parser::ast::comment_block::CommentBlock;
-use crate::parser::ast::config::ServerConfig;
-use crate::parser::ast::connector::Connector;
+use crate::parser::ast::config::ASTServer;
+use crate::parser::ast::connector::ASTConnector;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::data_set::{DataSet, DataSetGroup, DataSetRecord};
-use crate::parser::ast::debug_conf::DebugConf;
+use crate::parser::ast::debug_conf::ASTDebugConf;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral, RegExpLiteral, NullishCoalescing, Negation, BitwiseNegation };
 use crate::parser::ast::field::Field;
-use crate::parser::ast::generator::Generator;
+use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::import::Import;
 use crate::parser::ast::item::Item;
-use crate::parser::ast::model::Model;
+use crate::parser::ast::model::ASTModel;
 use crate::parser::ast::pipeline::Pipeline;
-use crate::parser::ast::r#enum::{Enum, EnumChoice};
+use crate::parser::ast::r#enum::{ASTEnum, EnumChoice};
 use crate::parser::ast::r#type::{Arity, Type};
 use crate::parser::ast::source::Source;
 use crate::parser::ast::span::Span;
 use crate::parser::ast::subscript::Subscript;
-use crate::parser::ast::test_conf::TestConf;
+use crate::parser::ast::test_conf::ASTTestConf;
 use crate::parser::ast::top::Top;
 use crate::parser::ast::unit::Unit;
 use crate::parser::parser::resolver::Resolver;
@@ -67,13 +67,13 @@ static PRATT_PARSER: Lazy<PrattParser<Rule>> = Lazy::new(|| {
 });
 
 #[derive(Debug, ToMut)]
-pub(crate) struct Parser {
+pub(crate) struct ASTParser {
     pub(crate) sources: BTreeMap<usize, Source>,
     pub(crate) enums: Vec<(usize, usize)>,
     pub(crate) models: Vec<(usize, usize)>,
     pub(crate) connector: Option<(usize, usize)>,
-    pub(crate) config: Option<(usize, usize)>,
-    pub(crate) generators: Vec<(usize, usize)>,
+    pub(crate) server: Option<(usize, usize)>,
+    pub(crate) entities: Vec<(usize, usize)>,
     pub(crate) clients: Vec<(usize, usize)>,
     pub(crate) data_sets: Vec<(usize, usize)>,
     pub(crate) debug_conf: Option<(usize, usize)>,
@@ -86,19 +86,19 @@ pub(crate) struct Parser {
     pub(crate) global_property_decorators: Option<GlobalPropertyDecorators>,
     pub(crate) global_pipeline_installers: Option<GlobalPipelineInstallers>,
     pub(crate) global_function_installers: Option<GlobalFunctionInstallers>,
-    pub(crate) callback_lookup_table: Arc<Mutex<CallbackLookup>>,
+    pub(crate) callback_lookup_table: &'static CallbackLookup,
 }
 
-impl Parser {
+impl ASTParser {
 
-    pub(crate) fn new(callback_lookup_table: Arc<Mutex<CallbackLookup>>) -> Self {
+    pub(crate) fn new(callbacks: &'static CallbackLookup) -> Self {
         Self {
             sources: btreemap!{},
             enums: vec![],
             models: vec![],
             connector: None,
-            config: None,
-            generators: vec![],
+            server: None,
+            entities: vec![],
             clients: vec![],
             data_sets: vec![],
             debug_conf: None,
@@ -111,7 +111,7 @@ impl Parser {
             global_property_decorators: None,
             global_pipeline_installers: None,
             global_function_installers: None,
-            callback_lookup_table,
+            callback_lookup_table: callbacks,
         }
     }
 
@@ -338,7 +338,7 @@ impl Parser {
                 _ => panic!("error. {:?}", current),
             }
         }
-        Top::Model(Model::new(
+        Top::Model(ASTModel::new(
             item_id,
             source_id,
             identifier.unwrap(),
@@ -390,7 +390,7 @@ impl Parser {
                 _ => panic!("error. {}", current),
             }
         }
-        Top::Enum(Enum::new(
+        Top::Enum(ASTEnum::new(
             item_id,
             source_id,
             comment_block,
@@ -507,34 +507,34 @@ impl Parser {
         }
         match keyword {
             "server" => {
-                if self.config.is_some() {
+                if self.server.is_some() {
                     panic!("Duplicated config found.");
                 }
-                self.config = Some((source_id, item_id));
-                Top::ServerConfig(ServerConfig::new(item_id, source_id, items, span))
+                self.server = Some((source_id, item_id));
+                Top::ServerConfig(ASTServer::new(item_id, source_id, items, span))
             },
             "connector" => {
                 if self.connector.is_some() {
                     panic!("Duplicated connector found.");
                 }
                 self.connector = Some((source_id, item_id));
-                Top::Connector(Connector::new(items, span, source_id, item_id))
+                Top::Connector(ASTConnector::new(items, span, source_id, item_id))
             },
             "entity" => {
-                self.generators.push((source_id, item_id));
-                Top::Generator(Generator::new(item_id, source_id, identifier, items, span))
+                self.entities.push((source_id, item_id));
+                Top::Generator(ASTEntity::new(item_id, source_id, identifier, items, span))
             },
             "client" => {
                 self.clients.push((source_id, item_id));
-                Top::Client(Client::new(item_id, source_id, identifier, items, span))
+                Top::Client(ASTClient::new(item_id, source_id, identifier, items, span))
             },
             "debug" => {
                 self.debug_conf = Some((source_id, item_id));
-                Top::DebugConf(DebugConf::new(items, span, source_id, item_id))
+                Top::DebugConf(ASTDebugConf::new(items, span, source_id, item_id))
             },
             "test" => {
                 self.test_conf = Some((source_id, item_id));
-                Top::TestConf(TestConf::new(items, span, source_id, item_id))
+                Top::TestConf(ASTTestConf::new(items, span, source_id, item_id))
             },
             _ => panic!(),
         }
@@ -915,6 +915,68 @@ impl Parser {
 
     pub(crate) fn get_source(&self, id: usize) -> &Source {
         self.sources.get(&id).unwrap()
+    }
+
+    pub(crate) fn connector(&self) -> crate::app::new_app::new_result::Result<&ASTConnector> {
+        match self.connector {
+            Some(connector) => {
+                let source = self.get_source(connector.0);
+                Ok(source.get_connector(connector.1))
+            }
+            None => Err(crate::app::new_app::new_error::Error::fatal("Parser's connector is accessed while it's not set.")),
+        }
+    }
+
+    pub(crate) fn server(&self) -> crate::app::new_app::new_result::Result<&ASTServer> {
+        match self.server {
+            Some(server) => {
+                let source = self.get_source(server.0);
+                Ok(source.get_server(server.1))
+            }
+            None => Err(crate::app::new_app::new_error::Error::fatal("Parser's server is accessed while it's not set.")),
+        }
+    }
+
+    pub(crate) fn debug(&self) -> Option<&ASTDebugConf> {
+        self.debug_conf.map(|debug| {
+            let source = self.get_source(debug.0);
+            source.get_debug_conf(debug.1)
+        })
+    }
+
+    pub(crate) fn test(&self) -> Option<&ASTTestConf> {
+        self.test_conf.map(|test| {
+            let source = self.get_source(test.0);
+            source.get_test_conf(test.1)
+        })
+    }
+
+    pub(crate) fn entities(&self) -> Vec<&ASTEntity> {
+        self.entities.iter().map(|g| {
+            let source = self.get_source(g.0);
+            source.get_entity(g.1)
+        }).collect()
+    }
+
+    pub(crate) fn clients(&self) -> Vec<&ASTClient> {
+        self.clients.iter().map(|g| {
+            let source = self.get_source(g.0);
+            source.get_client(g.1)
+        }).collect()
+    }
+
+    pub(crate) fn enums(&self) -> Vec<&ASTEnum> {
+        self.enums.iter().map(|e| {
+            let source = self.get_source(e.0);
+            source.get_enum(e.1)
+        }).collect()
+    }
+
+    pub(crate) fn models(&self) -> Vec<&ASTModel> {
+        self.models.iter().map(|m| {
+            let source = self.get_source(e.0);
+            source.get_model(e.1)
+        }).collect()
     }
 
     pub(crate) fn set_global_model_decorators(&self, deco: GlobalModelDecorators) {

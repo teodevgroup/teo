@@ -407,6 +407,9 @@
 - Fix: compare should not be called when field is not `recordPrevious` **[DONE]**
 - Refactor
 - Rename `source` to `initiator` **[DONE]**
+- Rename `environment version` to `program` **[DONE]**
+- Remove `GraphBuilder` **[DONE]**
+- Remove `AppBuilder` **[DONE]**
 - TS client: refactor
 - Client: distinct in handler args
 - C# client: capitalized names and names with underscore

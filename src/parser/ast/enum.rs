@@ -4,7 +4,7 @@ use crate::parser::ast::identifier::Identifier;
 use crate::parser::ast::span::Span;
 
 #[derive(Debug)]
-pub(crate) struct Enum {
+pub(crate) struct ASTEnum {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
     pub(crate) comment_block: Option<CommentBlock>,
@@ -15,7 +15,7 @@ pub(crate) struct Enum {
     pub(crate) resolved: bool,
 }
 
-impl Enum {
+impl ASTEnum {
     pub(crate) fn new(item_id: usize, source_id: usize, comment_block: Option<CommentBlock>, identifier: Identifier, decorators: Vec<Decorator>, choices: Vec<EnumChoice>, span: Span) -> Self {
         Self {
             id: item_id,

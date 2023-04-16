@@ -1,3 +1,5 @@
+pub(crate) mod conf;
+
 use async_trait::async_trait;
 use crate::app::conf::EntityGeneratorConf;
 use crate::app::program::ProgramLang;

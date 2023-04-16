@@ -1,6 +1,7 @@
 pub(crate) mod response;
 pub(crate) mod jwt_token;
 pub(crate) mod test_context;
+pub(crate) mod conf;
 
 use std::io::ErrorKind;
 use std::sync::Arc;
@@ -28,7 +29,7 @@ use crate::app::command::SeedCommandAction;
 use crate::app::conf::ServerConf;
 use crate::app::entrance::Entrance;
 use crate::app::program::Program;
-use crate::serve::test_context::TestContext;
+use crate::server::test_context::TestContext;
 use crate::core::connector::SaveSession;
 use self::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::graph::Graph;

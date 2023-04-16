@@ -37,21 +37,9 @@ use crate::core::r#enum::{Enum, EnumVariant};
 use crate::core::relation::Relation;
 use crate::gen::interface::client::conf::{Conf as ClientConf};
 use crate::parser::ast::r#type::Arity;
-use crate::parser::parser::parser::Parser;
+use crate::parser::parser::parser::ASTParser;
 use crate::seeder::data_set::{DataSet, Group, Record};
 use crate::seeder::models::define::define_seeder_models;
-
-pub trait AsyncCallbackWithoutArgs: Send + Sync {
-    fn call(&self) -> BoxFuture<'static, Result<()>>;
-}
-
-impl<F, Fut> AsyncCallbackWithoutArgs for F where
-    F: Fn() -> Fut + Sync + Send,
-    Fut: Future<Output = Result<()>> + Send + 'static {
-    fn call(&self) -> BoxFuture<'static, Result<()>> {
-        Box::pin(self())
-    }
-}
 
 #[derive(ToMut, Clone)]
 pub struct AppBuilder {
@@ -103,207 +91,11 @@ impl AppBuilder {
         }
     }
 
-    fn parse_cli_args(environment_version: Program, entrance: Entrance) -> CLI {
-        let version = Box::leak(Box::new(format!("Teo {} ({}) [{}]", env!("CARGO_PKG_VERSION"), environment_version.to_string(), entrance.to_str())));
-        let about = Box::leak(Box::new(match entrance {
-            Entrance::CLI => format!("{version}\n\nRun Teo application with CLI."),
-            Entrance::APP => format!("{version}\n\nRun Teo application with custom code loaded."),
-        }));
-        let matches = ClapCommand::new("teo")
-            .version(version.as_str())
-            .disable_version_flag(true)
-            .disable_help_subcommand(true)
-            .arg_required_else_help(true)
-            .about(about.as_str())
-            .subcommand_required(true)
-            .arg(Arg::new("SCHEMA_FILE")
-                .short('s')
-                .long("schema")
-                .help("The schema file to load").action(ArgAction::Set)
-                .required(false)
-                .num_args(1)
-                .global(true))
-            .arg(Arg::new("ENV")
-                .short('e')
-                .long("env")
-                .help("The environment to use")
-                .action(ArgAction::Set)
-                .required(false)
-                .num_args(1)
-                .global(true))
-            .arg(Arg::new("version")
-                .short('v')
-                .long("version")
-                .help("Print version information")
-                .action(ArgAction::Version))
-            .subcommand(ClapCommand::new("serve")
-                .about("Run migration and start the server")
-                .arg_required_else_help(false)
-                .arg(Arg::new("no-migration")
-                    .short('M')
-                    .long("no-migration")
-                    .help("Start server without running migration")
-                    .action(ArgAction::SetTrue))
-                .arg(Arg::new("no-autoseed")
-                    .short('S')
-                    .long("no-autoseed")
-                    .help("Start server without auto seeding autoseed dataset")
-                    .action(ArgAction::SetTrue)))
-            .subcommand(ClapCommand::new("generate")
-                .about("Generate code")
-                .arg_required_else_help(true)
-                .subcommand(ClapCommand::new("client")
-                    .about("Generate client")
-                    .arg(Arg::new("all")
-                        .short('a')
-                        .long("all")
-                        .help("Generate all clients")
-                        .action(ArgAction::SetTrue)
-                        .conflicts_with("NAME"))
-                    .arg(Arg::new("NAME")
-                        .action(ArgAction::Append)
-                        .conflicts_with("all")
-                        .help("Client names to generate")
-                        .num_args(1..)))
-                .subcommand(ClapCommand::new("entity")
-                    .about("Generate model entities")
-                    .arg_required_else_help(false)
-                    .arg(Arg::new("all")
-                        .short('a')
-                        .long("all")
-                        .help("Generate all clients")
-                        .action(ArgAction::SetTrue)
-                        .conflicts_with("NAME"))
-                    .arg(Arg::new("NAME")
-                        .action(ArgAction::Append)
-                        .conflicts_with("all")
-                        .help("Entity names to generate")
-                        .num_args(1..))))
-            .subcommand(ClapCommand::new("migrate")
-                .about("Run migration")
-                .arg(Arg::new("dry")
-                    .short('d')
-                    .long("dry")
-                    .help("Dry run")
-                    .action(ArgAction::SetTrue)))
-            .subcommand(ClapCommand::new("seed")
-                .about("Seed data")
-                .arg(Arg::new("unseed")
-                    .short('u')
-                    .long("unseed")
-                    .help("Unseed records")
-                    .action(ArgAction::SetTrue))
-                .arg(Arg::new("reseed")
-                    .short('r')
-                    .long("reseed")
-                    .help("Reseed records")
-                    .action(ArgAction::SetTrue))
-                .arg(Arg::new("all")
-                    .short('a')
-                    .long("all")
-                    .help("Do for all data sets")
-                    .action(ArgAction::SetTrue)
-                    .conflicts_with("NAME"))
-                .arg(Arg::new("NAME")
-                    .action(ArgAction::Append)
-                    .conflicts_with("all")
-                    .help("Data set names to process")
-                    .num_args(1..)))
-            .subcommand(ClapCommand::new("purge")
-                .about("Purge and clear the database without dropping tables."))
-            .get_matches_from(match environment_version {
-                Program::Python(_) | Program::NodeJS(_) => {
-                    env::args_os().enumerate().filter(|(i, x)| (*i != 1) && (!x.to_str().unwrap().ends_with("ts-node") && !x.to_str().unwrap().ends_with(".ts"))).map(|(_i, x)| x).collect::<Vec<OsString>>()
-                },
-                Program::Rust(_) => env::args_os().enumerate().filter(|(i, x)| {
-                    !((*i == 1) && x.to_str().unwrap() == "teo")
-                }).map(|(_i, x)| x).collect::<Vec<OsString>>(),
-                _ => env::args_os().collect::<Vec<OsString>>(),
-            });
-        let schema: Option<&String> = matches.get_one("SCHEMA_FILE");
-        let command = match matches.subcommand() {
-            Some(("serve", submatches)) => {
-                let env: Option<&String> = submatches.get_one("ENV");
-                CLICommand::Serve(ServeCommand { no_migration: submatches.get_flag("no-migration"), no_autoseed: submatches.get_flag("no-autoseed"), env: env.cloned() })
-            }
-            Some(("generate", submatches)) => {
-                match submatches.subcommand() {
-                    Some(("client", submatches)) => {
-                        let names: Option<Vec<String>> = submatches.get_many::<String>("NAME").map(|s| s.map(|v| v.to_string()).collect::<Vec<String>>());
-                        CLICommand::Generate(GenerateCommand::GenerateClientCommand(GenerateClientCommand { all: submatches.get_flag("all"), names }))
-                    }
-                    Some(("entity", submatches)) => {
-                        let names: Option<Vec<String>> = submatches.get_many::<String>("NAME").map(|s| s.map(|v| v.to_string()).collect::<Vec<String>>());
-                        CLICommand::Generate(GenerateCommand::GenerateEntityCommand(GenerateEntityCommand { all: submatches.get_flag("all"), names }))
-                    }
-                    _ => unreachable!()
-                }
-            }
-            Some(("migrate", submatches)) => {
-                CLICommand::Migrate(MigrateCommand { dry: submatches.get_flag("dry") })
-            }
-            Some(("seed", submatches)) => {
-                let action = if submatches.get_flag("reseed") {
-                    SeedCommandAction::Reseed
-                } else if submatches.get_flag("unseed") {
-                    SeedCommandAction::Unseed
-                } else {
-                    SeedCommandAction::Seed
-                };
-                let names: Option<Vec<String>> = submatches.get_many::<String>("NAME").map(|s| s.map(|v| v.to_string()).collect::<Vec<String>>());
-                CLICommand::Seed(SeedCommand {
-                    action,
-                    all: submatches.get_flag("all"),
-                    names,
-                })
-            }
-            Some(("purge", _submatches)) => {
-                CLICommand::Purge(PurgeCommand { })
-            }
-            _ => unreachable!()
-        };
-        CLI { command, schema: schema.map(|s| s.to_string()) }
-    }
 
-    pub fn transform<T, F, R>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
-        T: From<Value> + Into<Value> + Send + Sync + 'static,
-        R: Into<TransformResult<T>> + Send + Sync + 'static,
-        F: TransformArgument<T, R> + 'static {
-        self.callback_lookup_table.lock().unwrap().add_transform(Box::leak(Box::new(name.into())).as_str(), Arc::new(TransformItem::new(f)));
-        self
-    }
 
-    pub fn callback<T, F, O>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
-        T: From<Value> + Send + Sync + 'static,
-        F: CallbackArgument<T, O> + 'static,
-        O: Into<CallbackResult> + Send + Sync + 'static {
-        self.callback_lookup_table.lock().unwrap().add_callback(Box::leak(Box::new(name.into())).as_str(), Arc::new(CallbackItem::new(f)));
-        self
-    }
-
-    pub fn validate<T, O, F>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
-        T: From<Value> + Send + Sync + 'static,
-        O: Into<ValidateResult> + Send + Sync + 'static,
-        F: ValidateArgument<T, O> + 'static {
-        self.callback_lookup_table.lock().unwrap().add_validator(Box::leak(Box::new(name.into())).as_str(), Arc::new(ValidateItem::new(f)));
-        self
-    }
-
-    pub fn compare<T, O, F>(&mut self, name: impl Into<String>, f: F) -> &mut Self where
-        T: From<Value> + Send + Sync + 'static,
-        O: Into<ValidateResult> + Send + Sync + 'static,
-        F: CompareArgument<T, O> + 'static {
-        self.callback_lookup_table.lock().unwrap().add_compare(Box::leak(Box::new(name.into())).as_str(), Arc::new(CompareItem::new(f)));
-        self
-    }
-
-    pub fn before_server_start<F>(&mut self, f: F) -> &mut Self where F: AsyncCallbackWithoutArgs + 'static {
-        self.before_server_start = Some(Arc::new(f));
-        self
-    }
 
     async fn load(&mut self) {
-        let mut parser = Parser::new(self.callback_lookup_table.clone());
+        let mut parser = ASTParser::new(self.callback_lookup_table.clone());
         let main = match self.args.schema.as_ref() {
             Some(s) => Some(s.as_str()),
             None => None
@@ -332,7 +124,7 @@ impl AppBuilder {
         }
     }
 
-    async fn load_config_from_parser(&mut self, parser: &Parser) {
+    async fn load_config_from_parser(&mut self, parser: &ASTParser) {
         // connector
         let connector_ref = parser.connector.unwrap();
         let source = parser.get_source(connector_ref.0);
@@ -358,64 +150,7 @@ impl AppBuilder {
             },
         };
         self.connector = Some(connector.clone());
-        // server config
-        let config_ref = parser.config.unwrap();
-        let source = parser.get_source(config_ref.0);
-        let config = source.get_server_config(config_ref.1);
-        let bind = config.bind.as_ref().unwrap();
-        self.server_conf = Some(ServerConf {
-            bind: bind.clone(),
-            path_prefix: if let Some(path_prefix) = &config.path_prefix {
-                Some(path_prefix.clone())
-            } else {
-                None
-            },
-            jwt_secret: if let Some(jwt_secret) = &config.jwt_secret {
-                Some(jwt_secret.clone())
-            } else {
-                None
-            }
-        });
-        if let Some(config_ref) = parser.debug_conf {
-            let source = parser.get_source(config_ref.0);
-            let conf = source.get_debug_conf(config_ref.1);
-            self.debug_conf = Some(Box::leak(Box::new(DebugConf {
-                log_queries: conf.log_queries,
-                log_migrations: conf.log_migrations,
-                log_seed_records: conf.log_seed_records,
-            })))
-        }
-        if let Some(config_ref) = parser.test_conf {
-            let source = parser.get_source(config_ref.0);
-            let conf = source.get_test_conf(config_ref.1);
-            self.test_conf = Some(Box::leak(Box::new(TestConf {
-                reset_after_find: conf.reset_after_find.clone(),
-            })))
-        }
-        // entity generators
-        for entity_generator_ref in parser.generators.iter() {
-            let source = parser.get_source(entity_generator_ref.0);
-            let entity = source.get_entity(entity_generator_ref.1);
-            self.entity_generator_confs.push(EntityGeneratorConf {
-                name: entity.identifier.as_ref().map(|i| i.name.clone()),
-                provider: entity.provider.unwrap(),
-                dest: entity.dest.clone().unwrap(),
-            })
-        }
-        // client generators
-        for client_generator_ref in parser.clients.iter() {
-            let source = parser.get_source(client_generator_ref.0);
-            let client = source.get_client(client_generator_ref.1);
-            self.client_generator_confs.push(ClientConf {
-                name: client.identifier.as_ref().map(|i| i.name.clone()),
-                kind: client.provider.unwrap(),
-                dest: client.dest.clone().unwrap(),
-                package: client.package.unwrap(),
-                host: client.host.clone().unwrap(),
-                object_name: client.object_name.clone(),
-                git_commit: client.git_commit,
-            })
-        }
+
         // load enums
         for enum_ref in parser.enums.clone() {
             let source = parser.get_source(enum_ref.0);
