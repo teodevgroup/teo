@@ -1,11 +1,11 @@
 use crate::parser::ast::comment_block::CommentBlock;
 use crate::parser::ast::decorator::Decorator;
-use crate::parser::ast::identifier::Identifier;
+use crate::parser::ast::identifier::ASTIdentifier;
 use crate::parser::ast::r#type::Type;
 use crate::parser::ast::span::Span;
 
 #[derive(Debug)]
-pub(crate) enum FieldClass {
+pub(crate) enum ASTFieldClass {
     Unresolved,
     Field,
     DroppedField,
@@ -14,20 +14,20 @@ pub(crate) enum FieldClass {
 }
 
 #[derive(Debug)]
-pub(crate) struct Field {
+pub(crate) struct ASTField {
     pub(crate) comment_block: Option<CommentBlock>,
-    pub(crate) identifier: Identifier,
+    pub(crate) identifier: ASTIdentifier,
     pub(crate) r#type: Type,
     pub(crate) decorators: Vec<Decorator>,
     pub(crate) span: Span,
     pub(crate) resolved: bool,
-    pub(crate) field_class: FieldClass,
+    pub(crate) field_class: ASTFieldClass,
 }
 
-impl Field {
-    pub(crate) fn new(comment_block: Option<CommentBlock>, identifier: Identifier, r#type: Type, decorators: Vec<Decorator>, span: Span) -> Self {
+impl ASTField {
+    pub(crate) fn new(comment_block: Option<CommentBlock>, identifier: ASTIdentifier, r#type: Type, decorators: Vec<Decorator>, span: Span) -> Self {
         Self {
-            comment_block, identifier, r#type, decorators, span, resolved: false, field_class: FieldClass::Unresolved,
+            comment_block, identifier, r#type, decorators, span, resolved: false, field_class: ASTFieldClass::Unresolved,
         }
     }
 
@@ -38,15 +38,15 @@ impl Field {
                     let name = unit.expressions.get(0).unwrap().as_identifier().unwrap().name.as_str();
                     match name {
                         "relation" => {
-                            self.field_class = FieldClass::Relation;
+                            self.field_class = ASTFieldClass::Relation;
                             return;
                         }
                         "getter" | "setter" => {
-                            self.field_class = FieldClass::Property;
+                            self.field_class = ASTFieldClass::Property;
                             return;
                         }
                         "dropped" => {
-                            self.field_class = FieldClass::DroppedField;
+                            self.field_class = ASTFieldClass::DroppedField;
                             return;
                         }
                         _ => {}
@@ -55,6 +55,6 @@ impl Field {
                 _ => {},
             }
         }
-        self.field_class = FieldClass::Field;
+        self.field_class = ASTFieldClass::Field;
     }
 }

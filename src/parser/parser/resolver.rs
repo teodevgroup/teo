@@ -14,9 +14,9 @@ use crate::parser::ast::constant::Constant;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::entity::Entity;
 use crate::parser::ast::expression::{ArrayLiteral, BitwiseNegation, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, Negation, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
-use crate::parser::ast::field::{Field, FieldClass};
+use crate::parser::ast::field::{ASTField, ASTFieldClass};
 use crate::parser::ast::group::Group;
-use crate::parser::ast::identifier::Identifier;
+use crate::parser::ast::identifier::ASTIdentifier;
 use crate::parser::ast::import::Import;
 use crate::parser::ast::model::ASTModel;
 use crate::parser::ast::pipeline::Pipeline;
@@ -361,7 +361,7 @@ impl Resolver {
                 }
             }
             ExpressionKind::Unit(unit) => {
-                let mut previous_identifier: Option<&Identifier> = None;
+                let mut previous_identifier: Option<&ASTIdentifier> = None;
                 for expression in &unit.expressions {
                     match expression {
                         ExpressionKind::Identifier(identifier) => {
@@ -417,20 +417,20 @@ impl Resolver {
         Entity::Value(Value::Pipeline(value_pipeline))
     }
 
-    fn resolve_field(parser: &ASTParser, source: &Source, field: &mut Field) {
+    fn resolve_field(parser: &ASTParser, source: &Source, field: &mut ASTField) {
         field.figure_out_class();
         match &field.field_class {
-            FieldClass::Field => {
+            ASTFieldClass::Field => {
                 for decorator in field.decorators.iter_mut() {
                     Self::resolve_field_decorator(parser, source, decorator);
                 }
             }
-            FieldClass::Relation => {
+            ASTFieldClass::Relation => {
                 for decorator in field.decorators.iter_mut() {
                     Self::resolve_relation_decorator(parser, source, decorator);
                 }
             }
-            FieldClass::Property => {
+            ASTFieldClass::Property => {
                 for decorator in field.decorators.iter_mut() {
                     Self::resolve_property_decorator(parser, source, decorator);
                 }
@@ -738,7 +738,7 @@ impl Resolver {
         Self::resolve_expression_kind(parser, source, &group.expression, when_option)
     }
 
-    fn resolve_identifier(parser: &ASTParser, source: &Source, identifier: &Identifier, parent: Option<&Entity>) -> Entity {
+    fn resolve_identifier(parser: &ASTParser, source: &Source, identifier: &ASTIdentifier, parent: Option<&Entity>) -> Entity {
         match parent {
             Some(parent) => {
                 if parent.is_accessible() {
@@ -1080,7 +1080,7 @@ impl Resolver {
 
     // Unwrap references
 
-    fn find_identifier_origin_in_source(parser: &ASTParser, source: &Source, identifier: &Identifier) -> Option<Reference> {
+    fn find_identifier_origin_in_source(parser: &ASTParser, source: &Source, identifier: &ASTIdentifier) -> Option<Reference> {
         // test for constant
         for id in source.constants.iter() {
             let c = source.get_constant(*id);

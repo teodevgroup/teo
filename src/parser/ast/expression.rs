@@ -4,7 +4,7 @@ use crate::parser::ast::arith_expr::ArithExpr;
 use crate::parser::ast::entity::Entity;
 use crate::parser::ast::group::Group;
 use crate::parser::ast::pipeline::Pipeline;
-use crate::parser::ast::identifier::Identifier;
+use crate::parser::ast::identifier::ASTIdentifier;
 use crate::parser::ast::span::Span;
 use crate::parser::ast::subscript::Subscript;
 use crate::parser::ast::unit::Unit;
@@ -233,7 +233,7 @@ pub(crate) enum ExpressionKind {
     TupleLiteral(TupleLiteral),
     ArrayLiteral(ArrayLiteral),
     DictionaryLiteral(DictionaryLiteral),
-    Identifier(Identifier),
+    Identifier(ASTIdentifier),
     ArgumentList(ArgumentList),
     Subscript(Subscript),
     Unit(Unit),
@@ -382,14 +382,14 @@ impl ExpressionKind {
         }
     }
 
-    pub(crate) fn as_identifier(&self) -> Option<&Identifier> {
+    pub(crate) fn as_identifier(&self) -> Option<&ASTIdentifier> {
         match self {
             ExpressionKind::Identifier(i) => Some(i),
             _ => None,
         }
     }
 
-    pub(crate) fn as_identifier_mut(&mut self) -> Option<&mut Identifier> {
+    pub(crate) fn as_identifier_mut(&mut self) -> Option<&mut ASTIdentifier> {
         match self {
             ExpressionKind::Identifier(i) => Some(i),
             _ => None,

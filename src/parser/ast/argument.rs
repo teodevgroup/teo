@@ -1,12 +1,12 @@
 use std::fmt::{Display, Formatter};
 use crate::parser::ast::entity::Entity;
 use crate::parser::ast::expression::ExpressionKind;
-use crate::parser::ast::identifier::Identifier;
+use crate::parser::ast::identifier::ASTIdentifier;
 use crate::parser::ast::span::Span;
 
 #[derive(Debug, Clone)]
 pub struct Argument {
-    pub(crate) name: Option<Identifier>,
+    pub(crate) name: Option<ASTIdentifier>,
     pub(crate) value: ExpressionKind,
     pub(crate) span: Span,
     pub(crate) resolved: Option<Entity>,

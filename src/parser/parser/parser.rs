@@ -22,10 +22,10 @@ use crate::parser::ast::data_set::{DataSet, DataSetGroup, DataSetRecord};
 use crate::parser::ast::debug_conf::ASTDebugConf;
 use crate::parser::ast::decorator::Decorator;
 use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral, RegExpLiteral, NullishCoalescing, Negation, BitwiseNegation };
-use crate::parser::ast::field::Field;
+use crate::parser::ast::field::ASTField;
 use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::group::Group;
-use crate::parser::ast::identifier::Identifier;
+use crate::parser::ast::identifier::ASTIdentifier;
 use crate::parser::ast::import::Import;
 use crate::parser::ast::item::Item;
 use crate::parser::ast::model::ASTModel;
@@ -323,8 +323,8 @@ impl ASTParser {
 
     fn parse_model(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
         let mut comment_block = None;
-        let mut identifier: Option<Identifier> = None;
-        let mut fields: Vec<Field> = vec![];
+        let mut identifier: Option<ASTIdentifier> = None;
+        let mut fields: Vec<ASTField> = vec![];
         let mut decorators: Vec<Decorator> = vec![];
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
@@ -349,9 +349,9 @@ impl ASTParser {
         ))
     }
 
-    fn parse_field(pair: Pair<'_>) -> Field {
+    fn parse_field(pair: Pair<'_>) -> ASTField {
         let mut comment_block = None;
-        let mut identifier: Option<Identifier> = None;
+        let mut identifier: Option<ASTIdentifier> = None;
         let mut r#type: Option<Type> = None;
         let mut decorators: Vec<Decorator> = vec![];
         let span = Self::parse_span(&pair);
@@ -365,7 +365,7 @@ impl ASTParser {
                 _ => unreachable!(),
             }
         }
-        Field::new(
+        ASTField::new(
             comment_block,
             identifier.unwrap(),
             r#type.unwrap(),
@@ -376,7 +376,7 @@ impl ASTParser {
 
     fn parse_enum(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
         let mut comment_block = None;
-        let mut identifier: Option<Identifier> = None;
+        let mut identifier: Option<ASTIdentifier> = None;
         let mut choices: Vec<EnumChoice> = vec![];
         let mut decorators: Vec<Decorator> = vec![];
         let span = Self::parse_span(&pair);
@@ -403,7 +403,7 @@ impl ASTParser {
 
     fn parse_enum_value(&mut self, pair: Pair<'_>) -> EnumChoice {
         let mut comment_block = None;
-        let mut identifier: Option<Identifier> = None;
+        let mut identifier: Option<ASTIdentifier> = None;
         let mut decorators: Vec<Decorator> = vec![];
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
@@ -420,7 +420,7 @@ impl ASTParser {
 
     fn parse_let_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
         let span = Self::parse_span(&pair);
-        let mut identifier: Option<Identifier> = None;
+        let mut identifier: Option<ASTIdentifier> = None;
         let mut expression: Option<Expression> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
@@ -433,7 +433,7 @@ impl ASTParser {
     }
 
     fn parse_dataset_block(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
-        let mut identifier: Option<Identifier> = None;
+        let mut identifier: Option<ASTIdentifier> = None;
         let mut auto_seed = false;
         let mut notrack = false;
         let mut groups = vec![];
@@ -456,7 +456,7 @@ impl ASTParser {
     }
 
     fn parse_dataset_group(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> DataSetGroup {
-        let mut identifier: Option<Identifier> = None;
+        let mut identifier: Option<ASTIdentifier> = None;
         let mut records = vec![];
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
@@ -475,7 +475,7 @@ impl ASTParser {
     }
 
     fn parse_dataset_record_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> DataSetRecord {
-        let mut identifier: Option<Identifier> = None;
+        let mut identifier: Option<ASTIdentifier> = None;
         let mut dictionary: Option<DictionaryLiteral> = None;
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
@@ -489,7 +489,7 @@ impl ASTParser {
     }
 
     fn parse_config_block(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
-        let mut identifier: Option<Identifier> = None;
+        let mut identifier: Option<ASTIdentifier> = None;
         let mut items: Vec<Item> = vec![];
         let mut keyword = "";
         let span = Self::parse_span(&pair);
@@ -542,7 +542,7 @@ impl ASTParser {
 
     fn parse_config_item(pair: Pair<'_>) -> Item {
         let span = Self::parse_span(&pair);
-        let mut identifier: Option<Identifier> = None;
+        let mut identifier: Option<ASTIdentifier> = None;
         let mut expression: Option<Expression> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
@@ -583,7 +583,7 @@ impl ASTParser {
 
     fn parse_argument(pair: Pair<'_>) -> Argument {
         let span = Self::parse_span(&pair);
-        let name: Option<Identifier> = None;
+        let name: Option<ASTIdentifier> = None;
         let mut value: Option<ExpressionKind> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
@@ -600,7 +600,7 @@ impl ASTParser {
 
     fn parse_named_argument(pair: Pair<'_>) -> Argument {
         let span = Self::parse_span(&pair);
-        let mut name: Option<Identifier> = None;
+        let mut name: Option<ASTIdentifier> = None;
         let mut value: Option<ExpressionKind> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
@@ -886,7 +886,7 @@ impl ASTParser {
         )
     }
 
-    fn parse_import_identifier_list(pair: Pair<'_>) -> Vec<Identifier> {
+    fn parse_import_identifier_list(pair: Pair<'_>) -> Vec<ASTIdentifier> {
         let mut identifiers = vec![];
         for current in pair.into_inner() {
             match current.as_rule() {
@@ -898,8 +898,8 @@ impl ASTParser {
         identifiers
     }
 
-    fn parse_identifier(pair: &Pair<'_>) -> Identifier {
-        Identifier {
+    fn parse_identifier(pair: &Pair<'_>) -> ASTIdentifier {
+        ASTIdentifier {
             name: pair.as_str().to_owned(),
             span: Self::parse_span(pair),
         }

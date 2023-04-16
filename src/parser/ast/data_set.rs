@@ -1,5 +1,5 @@
 use crate::parser::ast::expression::DictionaryLiteral;
-use crate::parser::ast::identifier::Identifier;
+use crate::parser::ast::identifier::ASTIdentifier;
 use crate::parser::ast::span::Span;
 use crate::prelude::Value;
 
@@ -8,7 +8,7 @@ pub struct DataSet {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
     pub(crate) span: Span,
-    pub(crate) identifier: Identifier,
+    pub(crate) identifier: ASTIdentifier,
     pub(crate) auto_seed: bool,
     pub(crate) notrack: bool,
     pub(crate) groups: Vec<DataSetGroup>,
@@ -16,7 +16,7 @@ pub struct DataSet {
 }
 
 impl DataSet {
-    pub(crate) fn new(span: Span, source_id: usize, item_id: usize, identifier: Identifier, auto_seed: bool, notrack: bool, groups: Vec<DataSetGroup>) -> Self {
+    pub(crate) fn new(span: Span, source_id: usize, item_id: usize, identifier: ASTIdentifier, auto_seed: bool, notrack: bool, groups: Vec<DataSetGroup>) -> Self {
         Self {
             id: item_id, span, source_id, auto_seed, groups, identifier, notrack,
         }
@@ -27,13 +27,13 @@ impl DataSet {
 pub struct DataSetGroup {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
-    pub(crate) identifier: Identifier,
+    pub(crate) identifier: ASTIdentifier,
     pub(crate) span: Span,
     pub(crate) records: Vec<DataSetRecord>,
 }
 
 impl DataSetGroup {
-    pub(crate) fn new(source_id: usize, item_id: usize, identifier: Identifier, span: Span, records: Vec<DataSetRecord>) -> Self {
+    pub(crate) fn new(source_id: usize, item_id: usize, identifier: ASTIdentifier, span: Span, records: Vec<DataSetRecord>) -> Self {
         Self {
             id: item_id, span, source_id, identifier, records
         }
@@ -44,14 +44,14 @@ impl DataSetGroup {
 pub struct DataSetRecord {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
-    pub(crate) identifier: Identifier,
+    pub(crate) identifier: ASTIdentifier,
     pub(crate) span: Span,
     pub(crate) dictionary: DictionaryLiteral,
     pub(crate) resolved: Option<Value>,
 }
 
 impl DataSetRecord {
-    pub(crate) fn new(source_id: usize, item_id: usize, identifier: Identifier, span: Span, dictionary: DictionaryLiteral) -> Self {
+    pub(crate) fn new(source_id: usize, item_id: usize, identifier: ASTIdentifier, span: Span, dictionary: DictionaryLiteral) -> Self {
         Self {
             id: item_id, source_id, identifier, span, dictionary, resolved: None
         }

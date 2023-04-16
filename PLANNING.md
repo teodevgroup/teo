@@ -411,6 +411,7 @@
 - Remove `GraphBuilder` **[DONE]**
 - Remove `AppBuilder` **[DONE]**
 - Remove `ModelBuilder` **[DONE]**
+- Rewrite model API **[DONE]**
 - TS client: refactor
 - Client: distinct in handler args
 - C# client: capitalized names and names with underscore

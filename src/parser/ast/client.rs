@@ -2,13 +2,13 @@ use std::path::PathBuf;
 use crate::gen::interface::client::kind::Kind as ClientKind;
 use crate::parser::ast::span::Span;
 use crate::parser::ast::item::Item;
-use crate::parser::ast::identifier::Identifier;
+use crate::parser::ast::identifier::ASTIdentifier;
 
 #[derive(Debug, Clone)]
 pub struct ASTClient {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
-    pub(crate) identifier: Option<Identifier>,
+    pub(crate) identifier: Option<ASTIdentifier>,
     pub(crate) items: Vec<Item>,
     pub(crate) span: Span,
     pub(crate) provider: Option<ClientKind>,
@@ -20,7 +20,7 @@ pub struct ASTClient {
 }
 
 impl ASTClient {
-    pub(crate) fn new(id: usize, source_id: usize, identifier: Option<Identifier>, items: Vec<Item>, span: Span) -> Self {
+    pub(crate) fn new(id: usize, source_id: usize, identifier: Option<ASTIdentifier>, items: Vec<Item>, span: Span) -> Self {
         Self {
             id,
             source_id,
