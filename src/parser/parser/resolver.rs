@@ -34,7 +34,7 @@ use crate::parser::std::decorators::relation::GlobalRelationDecorators;
 use crate::prelude::Value;
 use to_mut::ToMut;
 use crate::core::action::Action;
-use crate::app::environment::Environment;
+use crate::app::program::ProgramLang;
 use crate::gen::interface::client::kind::Kind;
 use crate::parser::ast::arith_expr::{ArithExpr, Op};
 use crate::parser::ast::client::{Client};
@@ -538,11 +538,11 @@ impl Resolver {
                     let provider_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let provider_str = provider_value.as_raw_enum_choice().unwrap();
                     match provider_str {
-                        "rust" => generator.provider = Some(Environment::Rust),
-                        "node" => generator.provider = Some(Environment::NodeJS),
-                        "python" => generator.provider = Some(Environment::Python),
-                        "go" => generator.provider = Some(Environment::Go),
-                        "java" => generator.provider = Some(Environment::Java),
+                        "rust" => generator.provider = Some(ProgramLang::Rust),
+                        "node" => generator.provider = Some(ProgramLang::NodeJS),
+                        "python" => generator.provider = Some(ProgramLang::Python),
+                        "go" => generator.provider = Some(ProgramLang::Go),
+                        "java" => generator.provider = Some(ProgramLang::Java),
                         _ => panic!("Unrecognized entity generator provider. {}", provider_str)
                     }
                 },

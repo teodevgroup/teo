@@ -1,5 +1,5 @@
 pub mod builder;
-pub mod environment;
+pub mod program;
 pub mod entrance;
 pub(crate) mod conf;
 pub(crate) mod command;
@@ -12,7 +12,7 @@ use crate::app::builder::AsyncCallbackWithoutArgs;
 use crate::app::command::{CLI, CLICommand, GenerateCommand, SeedCommandAction};
 use crate::app::conf::{DebugConf, EntityGeneratorConf, ServerConf, TestConf};
 use crate::app::entrance::Entrance;
-use crate::app::environment::EnvironmentVersion;
+use crate::app::program::Program;
 use crate::app::migrate::migrate;
 use crate::serve::serve;
 use crate::serve::test_context::{ResetMode, TestContext};
@@ -32,7 +32,7 @@ pub struct App {
     test_conf: Option<&'static TestConf>,
     entity_generator_confs: Vec<EntityGeneratorConf>,
     client_generator_confs: Vec<ClientConf>,
-    environment_version: EnvironmentVersion,
+    environment_version: Program,
     entrance: Entrance,
     args: Arc<CLI>,
     before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,

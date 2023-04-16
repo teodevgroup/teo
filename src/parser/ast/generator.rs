@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use crate::app::environment::Environment;
+use crate::app::program::ProgramLang;
 use crate::parser::ast::span::Span;
 use crate::parser::ast::item::Item;
 use crate::parser::ast::identifier::Identifier;
@@ -11,7 +11,7 @@ pub struct Generator {
     pub(crate) identifier: Option<Identifier>,
     pub(crate) items: Vec<Item>,
     pub(crate) span: Span,
-    pub(crate) provider: Option<Environment>,
+    pub(crate) provider: Option<ProgramLang>,
     pub(crate) dest: Option<PathBuf>,
 }
 

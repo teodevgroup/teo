@@ -15,7 +15,7 @@ use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::app::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, MigrateCommand, PurgeCommand, SeedCommand, SeedCommandAction, ServeCommand};
 use crate::app::conf::{DebugConf, EntityGeneratorConf, ServerConf, TestConf};
 use crate::app::entrance::Entrance;
-use crate::app::environment::EnvironmentVersion;
+use crate::app::program::Program;
 use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::connector::Connector;
 use crate::core::field::Field;
@@ -64,7 +64,7 @@ pub struct AppBuilder {
     pub(crate) client_generator_confs: Vec<ClientConf>,
     pub(crate) callback_lookup_table: Arc<Mutex<CallbackLookup>>,
     pub(crate) before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
-    pub(crate) environment_version: EnvironmentVersion,
+    pub(crate) environment_version: Program,
     pub(crate) entrance: Entrance,
     pub(crate) args: Arc<CLI>,
     pub(crate) data_sets: Vec<DataSet>,
@@ -73,18 +73,18 @@ pub struct AppBuilder {
 impl AppBuilder {
 
     pub fn new() -> Self {
-        Self::new_with_environment_version_and_entrance(Self::rust_environment_version(), Entrance::APP)
+        Self::new_with_environment_version_and_entrance(Program::Rust("deprecated"), Entrance::APP)
     }
 
-    pub fn new_with_environment_version(environment_version: EnvironmentVersion) -> Self {
+    pub fn new_with_environment_version(environment_version: Program) -> Self {
         Self::new_with_environment_version_and_entrance(environment_version, Entrance::APP)
     }
 
     pub fn new_with_entrance(entrance: Entrance) -> Self {
-        Self::new_with_environment_version_and_entrance(Self::rust_environment_version(), entrance)
+        Self::new_with_environment_version_and_entrance(Program::Rust("deprecated"), entrance)
     }
 
-    pub fn new_with_environment_version_and_entrance(environment_version: EnvironmentVersion, entrance: Entrance) -> Self {
+    pub fn new_with_environment_version_and_entrance(environment_version: Program, entrance: Entrance) -> Self {
         let _ = dotenv(); // load dotenv file if exist. If the file does not exist, do nothing.
         Self {
             connector: None,
@@ -103,7 +103,7 @@ impl AppBuilder {
         }
     }
 
-    fn parse_cli_args(environment_version: EnvironmentVersion, entrance: Entrance) -> CLI {
+    fn parse_cli_args(environment_version: Program, entrance: Entrance) -> CLI {
         let version = Box::leak(Box::new(format!("Teo {} ({}) [{}]", env!("CARGO_PKG_VERSION"), environment_version.to_string(), entrance.to_str())));
         let about = Box::leak(Box::new(match entrance {
             Entrance::CLI => format!("{version}\n\nRun Teo application with CLI."),
@@ -212,10 +212,10 @@ impl AppBuilder {
             .subcommand(ClapCommand::new("purge")
                 .about("Purge and clear the database without dropping tables."))
             .get_matches_from(match environment_version {
-                EnvironmentVersion::Python(_) | EnvironmentVersion::NodeJS(_) => {
+                Program::Python(_) | Program::NodeJS(_) => {
                     env::args_os().enumerate().filter(|(i, x)| (*i != 1) && (!x.to_str().unwrap().ends_with("ts-node") && !x.to_str().unwrap().ends_with(".ts"))).map(|(_i, x)| x).collect::<Vec<OsString>>()
                 },
-                EnvironmentVersion::Rust(_) => env::args_os().enumerate().filter(|(i, x)| {
+                Program::Rust(_) => env::args_os().enumerate().filter(|(i, x)| {
                     !((*i == 1) && x.to_str().unwrap() == "teo")
                 }).map(|(_i, x)| x).collect::<Vec<OsString>>(),
                 _ => env::args_os().collect::<Vec<OsString>>(),
@@ -263,10 +263,6 @@ impl AppBuilder {
             _ => unreachable!()
         };
         CLI { command, schema: schema.map(|s| s.to_string()) }
-    }
-
-    fn rust_environment_version() -> EnvironmentVersion {
-        EnvironmentVersion::Rust(env!("TEO_RUSTC_VERSION").to_string())
     }
 
     pub fn transform<T, F, R>(&mut self, name: impl Into<String>, f: F) -> &mut Self where

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use crate::app::conf::EntityGeneratorConf;
-use crate::app::environment::Environment;
+use crate::app::program::ProgramLang;
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::generators::server::go::GoEntityGenerator;
 use crate::gen::generators::server::java::JavaEntityGenerator;
@@ -11,12 +11,12 @@ use crate::prelude::Graph;
 
 pub(crate) async fn gen(graph: &Graph, conf: &EntityGeneratorConf) -> std::io::Result<()> {
     match conf.provider {
-        Environment::Rust => generate_entity_typed(RustEntityGenerator::new(), graph, conf).await,
-        Environment::Go => generate_entity_typed(GoEntityGenerator::new(), graph, conf).await,
-        Environment::NodeJS => generate_entity_typed(NodeJSEntityGenerator::new(), graph, conf).await,
-        Environment::Python => generate_entity_typed(PythonEntityGenerator::new(), graph, conf).await,
-        Environment::Java => generate_entity_typed(JavaEntityGenerator::new(), graph, conf).await,
-        Environment::C => panic!("C entity generation is not supported. Use a high level language instead."),
+        ProgramLang::Rust => generate_entity_typed(RustEntityGenerator::new(), graph, conf).await,
+        ProgramLang::Go => generate_entity_typed(GoEntityGenerator::new(), graph, conf).await,
+        ProgramLang::NodeJS => generate_entity_typed(NodeJSEntityGenerator::new(), graph, conf).await,
+        ProgramLang::Python => generate_entity_typed(PythonEntityGenerator::new(), graph, conf).await,
+        ProgramLang::Java => generate_entity_typed(JavaEntityGenerator::new(), graph, conf).await,
+        ProgramLang::C => panic!("C entity generation is not supported. Use a high level language instead."),
     }
 }
 

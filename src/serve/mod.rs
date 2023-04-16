@@ -27,7 +27,7 @@ use crate::app::builder::AsyncCallbackWithoutArgs;
 use crate::app::command::SeedCommandAction;
 use crate::app::conf::ServerConf;
 use crate::app::entrance::Entrance;
-use crate::app::environment::EnvironmentVersion;
+use crate::app::program::Program;
 use crate::serve::test_context::TestContext;
 use crate::core::connector::SaveSession;
 use self::jwt_token::{Claims, decode_token, encode_token};
@@ -822,7 +822,7 @@ fn make_app(graph: &'static Graph, conf: &'static ServerConf, test_context: Opti
     app
 }
 
-async fn server_start_message(port: u16, environment_version: EnvironmentVersion, entrance: Entrance) -> Result<(), std::io::Error> {
+async fn server_start_message(port: u16, environment_version: Program, entrance: Entrance) -> Result<(), std::io::Error> {
     // Introducing
     let now: DateTime<Local> = Local::now();
     let now_formatted = format!("{now}").dimmed();
@@ -841,7 +841,7 @@ async fn server_start_message(port: u16, environment_version: EnvironmentVersion
 pub(crate) async fn serve(
     graph: &'static Graph,
     conf: &'static ServerConf,
-    environment_version: EnvironmentVersion,
+    environment_version: Program,
     entrance: Entrance,
     before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
     test_context: Option<&'static TestContext>,
