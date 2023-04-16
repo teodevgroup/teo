@@ -57,7 +57,7 @@ mod test {
     #[serial]
     #[test]
     fn create_with_nested_connect() {
-        let create_res = req(PORT, "create", "KOFPlayer", json!({
+        let _create_res = req(PORT, "create", "KOFPlayer", json!({
             "create": {
                 "name": "Dan",
                 "player": {

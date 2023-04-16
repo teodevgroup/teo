@@ -57,7 +57,7 @@ mod test {
     #[serial]
     #[test]
     fn update_with_nested_update() {
-        let update_res = req(PORT, "update", "User", json!({
+        let _update_res = req(PORT, "update", "User", json!({
             "where": {
                 "name": "John"
             },

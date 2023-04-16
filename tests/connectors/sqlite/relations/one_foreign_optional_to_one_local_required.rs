@@ -87,7 +87,7 @@ mod test {
     #[serial]
     #[test]
     fn update_with_nested_create() {
-        let update_res = req(PORT, "update", "Game", json!({
+        let _update_res = req(PORT, "update", "Game", json!({
             "where": {
                 "name": "KOFXV"
             },
@@ -119,7 +119,7 @@ mod test {
     #[serial]
     #[test]
     fn update_with_nested_connect() {
-        let update_res = req(PORT, "update", "Game", json!({
+        let _update_res = req(PORT, "update", "Game", json!({
             "where": {
                 "name": "KOFXV"
             },
@@ -151,7 +151,7 @@ mod test {
     #[serial]
     #[test]
     fn update_with_nested_set_to_another_one() {
-        let update_res = req(PORT, "update", "Game", json!({
+        let _update_res = req(PORT, "update", "Game", json!({
             "where": {
                 "name": "KOFXV"
             },
@@ -183,7 +183,7 @@ mod test {
     #[serial]
     #[test]
     fn update_with_nested_update() {
-        let update_res = req(PORT, "update", "Game", json!({
+        let _update_res = req(PORT, "update", "Game", json!({
             "where": {
                 "name": "KOF98"
             },
@@ -215,7 +215,7 @@ mod test {
     #[serial]
     #[test]
     fn update_with_nested_delete() {
-        let update_res = req(PORT, "update", "Game", json!({
+        let _update_res = req(PORT, "update", "Game", json!({
             "where": {
                 "name": "KOF98"
             },

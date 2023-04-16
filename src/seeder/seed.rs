@@ -113,7 +113,7 @@ pub(crate) async fn unseed_dataset(graph: &Graph, dataset: &DataSet) {
     let mut ordered_groups = ordered_group(&dataset.groups, graph);
     ordered_groups.reverse();
     for group in ordered_groups {
-        let group_model = graph.model(group.name.as_str()).unwrap();
+        let _group_model = graph.model(group.name.as_str()).unwrap();
         let seed_records = GroupRecord::find_many(teon!({
             "where": {
                 "group": group.name.as_str(),
@@ -547,7 +547,7 @@ fn ordered_group<'a>(groups: &'a Vec<Group>, graph: &Graph) -> Vec<&'a Group> {
         for group in &result {
             deps.remove(&group.name);
         }
-        for (model_name, model_deps) in deps.iter_mut() {
+        for (_model_name, model_deps) in deps.iter_mut() {
             for group in &result {
                 if let Some(index) = model_deps.iter().position(|x| x == &group.name) {
                     model_deps.remove(index);

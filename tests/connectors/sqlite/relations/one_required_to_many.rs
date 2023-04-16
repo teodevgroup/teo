@@ -151,7 +151,7 @@ mod test {
     #[serial]
     #[test]
     fn update_with_nested_set_to_another_one() {
-        let create_res = req(PORT, "update", "Post", json!({
+        let _create_res = req(PORT, "update", "Post", json!({
             "where": {
                 "name": "Swift 1.0"
             },

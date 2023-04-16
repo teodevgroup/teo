@@ -177,7 +177,7 @@ impl Query {
                     let column_name = field.column_name();
                     let optional = field.optionality.is_optional();
                     let entry_column_name = if let Some(alias) = table_alias {
-                        let a = format!("{}.{}", alias, column_name);
+                        let _a = format!("{}.{}", alias, column_name);
                         Cow::Owned(format!("{}.{}", alias, column_name))
                     } else {
                         Cow::Borrowed(column_name)

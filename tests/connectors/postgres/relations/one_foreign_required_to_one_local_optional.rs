@@ -87,7 +87,7 @@ mod test {
     #[serial]
     #[test]
     fn update_with_nested_create() {
-        let update_res = req(PORT, "update", "Note", json!({
+        let _update_res = req(PORT, "update", "Note", json!({
             "where": {
                 "name": "Note of The Renaissance",
             },

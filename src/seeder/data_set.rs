@@ -30,7 +30,7 @@ pub(crate) fn normalize_dataset_relations<'a>(dataset: &'a DataSet, graph: &Grap
         for record in &group.records {
             for (k, v) in record.value.as_hashmap().unwrap() {
                 if let Some(relation) = model.relation(k) {
-                    let (opposite_model, opposite_rel) = graph.opposite_relation(relation);
+                    let (_opposite_model, opposite_rel) = graph.opposite_relation(relation);
                     // If there isn't a relation defined on the opposite side, just leave it here
                     if opposite_rel.is_none() {
                         continue

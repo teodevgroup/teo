@@ -575,7 +575,7 @@ impl Resolver {
                     Self::resolve_expression(parser, source, &mut item.expression);
                     let value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     match value {
-                        Value::Bool(b) => config.log_queries = true,
+                        Value::Bool(_b) => config.log_queries = true,
                         Value::Null => (),
                         _ => panic!(),
                     }
@@ -584,7 +584,7 @@ impl Resolver {
                     Self::resolve_expression(parser, source, &mut item.expression);
                     let value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     match value {
-                        Value::Bool(b) => config.log_migrations = true,
+                        Value::Bool(_b) => config.log_migrations = true,
                         Value::Null => (),
                         _ => panic!(),
                     }
@@ -593,7 +593,7 @@ impl Resolver {
                     Self::resolve_expression(parser, source, &mut item.expression);
                     let value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     match value {
-                        Value::Bool(b) => config.log_seed_records = true,
+                        Value::Bool(_b) => config.log_seed_records = true,
                         Value::Null => (),
                         _ => panic!(),
                     }

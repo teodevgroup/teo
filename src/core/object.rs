@@ -1387,7 +1387,7 @@ impl Object {
             if relation.is_required() {
                 return Err(Error::cannot_disconnect_previous_relation());
             } else {
-                for (l, f) in relation.iter() {
+                for (l, _f) in relation.iter() {
                     that.set_value(l, Value::Null).unwrap();
                 }
                 that.save().await.unwrap();

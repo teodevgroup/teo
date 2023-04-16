@@ -365,7 +365,7 @@ impl Connector for MongoDBConnector {
             let _ = self.database.drop(None).await;
         }
         for model in models {
-            let name = model.name();
+            let _name = model.name();
             let collection = self.get_collection(model);
             let mut reviewed_names: Vec<String> = Vec::new();
             let cursor_result = collection.list_indexes(None).await;
