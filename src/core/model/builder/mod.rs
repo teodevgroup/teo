@@ -16,216 +16,30 @@ use crate::core::model::{Model, ModelInner};
 use crate::core::model::migration::ModelMigration;
 use crate::core::pipeline::Pipeline;
 
-#[derive(Clone)]
-pub struct ModelBuilder {
-    pub(crate) name: String,
-    pub(crate) table_name: String,
-    pub(crate) localized_name: String,
-    pub(crate) description: String,
-    pub(crate) identity: bool,
-    pub(crate) internal: bool,
-    pub(crate) r#virtual: bool,
-    pub(crate) fields: Vec<Field>,
-    pub(crate) dropped_fields: Vec<Field>,
-    pub(crate) relations: Vec<Relation>,
-    pub(crate) properties: Vec<Property>,
-    pub(crate) primary: Option<ModelIndex>,
-    pub(crate) indices: Vec<ModelIndex>,
-    pub(crate) before_save_pipeline: Pipeline,
-    pub(crate) after_save_pipeline: Pipeline,
-    pub(crate) before_delete_pipeline: Pipeline,
-    pub(crate) after_delete_pipeline: Pipeline,
-    pub(crate) can_read_pipeline: Pipeline,
-    pub(crate) can_mutate_pipeline: Pipeline,
-    pub(crate) disabled_actions: Option<Vec<Action>>,
-    pub(crate) action_transformers: Vec<Pipeline>,
-    pub(crate) migration: Option<ModelMigration>,
-    pub(crate) teo_internal: bool,
-}
-
-impl ModelBuilder {
-
-    pub(crate) fn new(name: impl Into<String>) -> Self {
-        Self {
-            name: name.into(),
-            table_name: "".to_string(),
-            localized_name: "".to_string(),
-            description: "".to_string(),
-            identity: false,
-            internal: false,
-            r#virtual: false,
-            fields: vec![],
-            dropped_fields: vec![],
-            relations: vec![],
-            properties: vec![],
-            primary: None,
-            indices: Vec::new(),
-            before_save_pipeline: Pipeline::new(),
-            after_save_pipeline: Pipeline::new(),
-            before_delete_pipeline: Pipeline::new(),
-            after_delete_pipeline: Pipeline::new(),
-            can_read_pipeline: Pipeline::new(),
-            can_mutate_pipeline: Pipeline::new(),
-            disabled_actions: None,
-            action_transformers: vec![],
-            migration: None,
-            teo_internal: false,
-        }
-    }
-
-    pub fn table_name(&mut self, table_name: impl Into<String>) -> &mut Self {
-        self.table_name = table_name.into();
-        self
-    }
-
-    pub fn localized_name(&mut self, localized_name: impl Into<String>) -> &mut Self {
-        self.localized_name = localized_name.into();
-        self
-    }
-
-    pub fn description(&mut self, description: impl Into<String>) -> &mut Self {
-        self.description = description.into();
-        self
-    }
-
-    pub fn identity(&mut self) -> &mut Self {
-        self.identity = true;
-        self
-    }
-
-    pub(crate) fn field(&mut self, field: Field) -> &mut Self {
-        self.fields.push(field);
-        self
-    }
-
-    pub(crate) fn dropped_field(&mut self, field: Field) -> &mut Self {
-        self.dropped_fields.push(field);
-        self
-    }
-
-    pub(crate) fn relation(&mut self, relation: Relation) -> &mut Self {
-        self.relations.push(relation);
-        self
-    }
-
-    pub(crate) fn property(&mut self, property: Property) -> &mut Self {
-        self.properties.push(property);
-        self
-    }
-
-    pub fn internal(&mut self) -> &mut Self {
-        self.internal = true;
-        self
-    }
-
-    pub fn r#virtual(&mut self) -> &mut Self {
-        self.r#virtual = true;
-        self
-    }
-
-    pub fn primary<I, T>(&mut self, keys: I) -> &mut Self where I: IntoIterator<Item = T>, T: Into<String> {
-        let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
-        let name = string_keys.join("_");
-        let items: Vec<ModelIndexItem> = string_keys.iter().map(|k| {
-            ModelIndexItem::new(k, Sort::Asc, None)
-        }).collect();
-        let primary_index = ModelIndex::new(ModelIndexType::Primary, Some(name), items);
-        self.indices.push(primary_index.clone());
-        self.primary = Some(primary_index);
-        self
-    }
-
-    pub fn primary_settings<F: Fn(&mut ModelIndexBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut builder = ModelIndexBuilder::new(ModelIndexType::Primary);
-        build(&mut builder);
-        self.primary = Some(builder.build());
-        self
-    }
-
-    pub fn index<I, T>(&mut self, keys: I) -> &mut Self where I: IntoIterator<Item = T>, T: Into<String> {
-        let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
-        let name = string_keys.join("_");
-        let items: Vec<ModelIndexItem> = string_keys.iter().map(|k| {
-            ModelIndexItem::new(k, Sort::Asc, None)
-        }).collect();
-        let index = ModelIndex::new(ModelIndexType::Index, Some(name), items);
-        self.indices.push(index);
-        self
-    }
-
-    pub fn index_settings<F: Fn(&mut ModelIndexBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut builder = ModelIndexBuilder::new(ModelIndexType::Index);
-        build(&mut builder);
-        self.indices.push(builder.build());
-        self
-    }
-
-    pub fn unique<I, T>(&mut self, keys: I) -> &mut Self where I: IntoIterator<Item = T>, T: Into<String> {
-        let string_keys: Vec<String> = keys.into_iter().map(Into::into).collect();
-        let name = string_keys.join("_");
-        let items: Vec<ModelIndexItem> = string_keys.iter().map(|k| {
-            ModelIndexItem::new(k, Sort::Asc, None)
-        }).collect();
-        let index = ModelIndex::new(ModelIndexType::Unique, Some(name), items);
-        self.indices.push(index);
-        self
-    }
-
-    pub fn unique_settings<F: Fn(&mut ModelIndexBuilder)>(&mut self, build: F) -> &mut Self {
-        let mut builder = ModelIndexBuilder::new(ModelIndexType::Unique);
-        build(&mut builder);
-        self.indices.push(builder.build());
-        self
-    }
 
     pub(crate) fn build(&self, connector: Arc<dyn Connector>) -> Model {
-        let fields_vec: Vec<Arc<Field>> = self.fields.clone().iter_mut().map(|fb| { Arc::new({ fb.finalize(connector.clone()); fb.clone()}) }).collect();
-        let dropped_fields_vec: Vec<Arc<Field>> = self.dropped_fields.clone().iter_mut().map(|fb| { Arc::new({ fb.finalize(connector.clone()); fb.clone()}) }).collect();
-        let properties_vec: Vec<Arc<Property>> = self.properties.clone().iter_mut().map(|pb| { Arc::new({ pb.finalize(connector.clone()); pb.clone() }) }).collect();
-        let mut fields_map: HashMap<String, Arc<Field>> = HashMap::new();
-        let mut dropped_fields_map: HashMap<String, Arc<Field>> = HashMap::new();
-        let mut properties_map: HashMap<String, Arc<Property>> = HashMap::new();
-        let mut primary = self.primary.clone();
-        let mut indices = self.indices.clone();
-        for field in dropped_fields_vec.iter() {
-            dropped_fields_map.insert(field.name.clone(), field.clone());
-        }
-        for field in fields_vec.iter() {
-            fields_map.insert(field.name.clone(), field.clone());
-            if field.index.is_some() {
-                match &field.index.as_ref().unwrap() {
-                    FieldIndex::Index(settings) => {
-                        indices.push(ModelIndex::new(ModelIndexType::Index, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
-                            ModelIndexItem::new(field.name(), settings.sort, settings.length)
-                        ]));
+        // generate indices from fields
+        if field.index.is_some() {
+            match &field.index.as_ref().unwrap() {
+                FieldIndex::Index(settings) => {
+                    indices.push(ModelIndex::new(ModelIndexType::Index, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                        ModelIndexItem::new(field.name(), settings.sort, settings.length)
+                    ]));
 
-                    }
-                    FieldIndex::Unique(settings) => {
-                        indices.push(ModelIndex::new(ModelIndexType::Unique, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
-                            ModelIndexItem::new(field.name(), settings.sort, settings.length)
-                        ]));
-                    }
-                    FieldIndex::Primary(settings) => {
-                        primary = Some(ModelIndex::new(ModelIndexType::Primary, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
-                            ModelIndexItem::new(field.name(), settings.sort, settings.length)
-                        ]));
-                        indices.push(primary.as_ref().unwrap().clone());
-                    }
+                }
+                FieldIndex::Unique(settings) => {
+                    indices.push(ModelIndex::new(ModelIndexType::Unique, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                        ModelIndexItem::new(field.name(), settings.sort, settings.length)
+                    ]));
+                }
+                FieldIndex::Primary(settings) => {
+                    primary = Some(ModelIndex::new(ModelIndexType::Primary, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                        ModelIndexItem::new(field.name(), settings.sort, settings.length)
+                    ]));
+                    indices.push(primary.as_ref().unwrap().clone());
                 }
             }
         }
-        let mut relations_map: HashMap<String, Arc<Relation>> = HashMap::new();
-        let relations_vec: Vec<Arc<Relation>> = self.relations.clone().iter_mut().map(|rb| {
-            rb.finalize(&fields_map);
-            Arc::new(rb.clone())
-        }).collect();
-        for relation in relations_vec.iter() {
-            relations_map.insert(relation.name().to_owned(), relation.clone());
-        }
-        for property in properties_vec.iter() {
-            properties_map.insert(property.name.clone(), property.clone());
-        }
-
         if primary.is_none() && !self.r#virtual {
             panic!("Model '{}' must has a primary field.", self.name);
         }

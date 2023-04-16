@@ -1,4 +1,3 @@
-pub mod builder;
 pub mod program;
 pub mod entrance;
 pub(crate) mod cli;

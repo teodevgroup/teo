@@ -410,6 +410,7 @@
 - Rename `environment version` to `program` **[DONE]**
 - Remove `GraphBuilder` **[DONE]**
 - Remove `AppBuilder` **[DONE]**
+- Remove `ModelBuilder` **[DONE]**
 - TS client: refactor
 - Client: distinct in handler args
 - C# client: capitalized names and names with underscore
