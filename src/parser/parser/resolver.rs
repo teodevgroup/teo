@@ -17,9 +17,9 @@ use crate::parser::ast::expression::{ArrayLiteral, BitwiseNegation, BoolLiteral,
 use crate::parser::ast::field::{ASTField, ASTFieldClass};
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::ASTIdentifier;
-use crate::parser::ast::import::Import;
+use crate::parser::ast::import::ASTImport;
 use crate::parser::ast::model::ASTModel;
-use crate::parser::ast::pipeline::Pipeline;
+use crate::parser::ast::pipeline::ASTPipeline;
 use crate::parser::ast::r#enum::{ASTEnum, EnumChoice};
 use crate::parser::ast::reference::{Reference};
 use crate::parser::ast::source::Source;
@@ -107,7 +107,7 @@ impl Resolver {
         source.to_mut().resolved = true;
     }
 
-    pub(crate) fn resolve_import(parser: &ASTParser, _source: &Source, import: &mut Import) {
+    pub(crate) fn resolve_import(parser: &ASTParser, _source: &Source, import: &mut ASTImport) {
         let from_source = parser.sources.iter().find(|(_source_id, source)| {
             &import.path == &source.path
         }).unwrap().1;
@@ -334,7 +334,7 @@ impl Resolver {
         decorator.resolved = true;
     }
 
-    fn resolve_pipeline(parser: &ASTParser, source: &Source, pipeline: &Pipeline) -> Entity {
+    fn resolve_pipeline(parser: &ASTParser, source: &Source, pipeline: &ASTPipeline) -> Entity {
         let mut items: Vec<ASTPipelineItem> = vec![];
         match pipeline.expression.as_ref() {
             ExpressionKind::Identifier(identifier) => {

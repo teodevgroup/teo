@@ -7,7 +7,7 @@ use crate::parser::ast::reference::Reference;
 use crate::parser::ast::span::Span;
 
 #[derive(Clone, Debug)]
-pub(crate) struct Import {
+pub(crate) struct ASTImport {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
     pub(crate) identifiers: Vec<ASTIdentifier>,
@@ -19,7 +19,7 @@ pub(crate) struct Import {
     pub(crate) references: HashMap<String, Reference>,
 }
 
-impl Import {
+impl ASTImport {
 
     pub(crate) fn new(item_id: usize, source_id: usize, identifiers: Vec<ASTIdentifier>, source: StringLiteral, path: PathBuf, span: Span) -> Self {
         Self {

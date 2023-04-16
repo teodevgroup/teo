@@ -8,13 +8,13 @@ use crate::core::pipeline::Pipeline;
 
 #[derive(Clone)]
 pub struct Property {
-    pub(crate) name: String,
+    pub(crate) name: &'static str,
     pub(crate) localized_name: Option<String>,
     pub(crate) description: Option<String>,
     pub(crate) optionality: Optionality,
     pub(crate) field_type: Option<FieldType>,
     pub(crate) database_type: Option<DatabaseType>,
-    pub(crate) dependencies: Vec<String>,
+    pub(crate) dependencies: Vec<&'static str>,
     pub(crate) setter: Option<Pipeline>,
     pub(crate) getter: Option<Pipeline>,
     pub(crate) input_omissible: bool,
@@ -23,7 +23,7 @@ pub struct Property {
 
 impl Property {
 
-    pub(crate) fn new(name: String) -> Self {
+    pub(crate) fn new(name: &'static str) -> Self {
         Self {
             name,
             localized_name: None,

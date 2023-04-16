@@ -3,7 +3,7 @@ use crate::parser::ast::argument::{ArgumentList};
 use crate::parser::ast::arith_expr::ArithExpr;
 use crate::parser::ast::entity::Entity;
 use crate::parser::ast::group::Group;
-use crate::parser::ast::pipeline::Pipeline;
+use crate::parser::ast::pipeline::ASTPipeline;
 use crate::parser::ast::identifier::ASTIdentifier;
 use crate::parser::ast::span::Span;
 use crate::parser::ast::subscript::Subscript;
@@ -237,7 +237,7 @@ pub(crate) enum ExpressionKind {
     ArgumentList(ArgumentList),
     Subscript(Subscript),
     Unit(Unit),
-    Pipeline(Pipeline),
+    Pipeline(ASTPipeline),
 }
 
 impl ExpressionKind {
@@ -438,14 +438,14 @@ impl ExpressionKind {
         }
     }
 
-    pub(crate) fn as_pipeline(&self) -> Option<&Pipeline> {
+    pub(crate) fn as_pipeline(&self) -> Option<&ASTPipeline> {
         match self {
             ExpressionKind::Pipeline(p) => Some(p),
             _ => None,
         }
     }
 
-    pub(crate) fn as_pipeline_mut(&mut self) -> Option<&mut Pipeline> {
+    pub(crate) fn as_pipeline_mut(&mut self) -> Option<&mut ASTPipeline> {
         match self {
             ExpressionKind::Pipeline(p) => Some(p),
             _ => None,

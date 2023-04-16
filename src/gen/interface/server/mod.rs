@@ -1,7 +1,6 @@
 pub(crate) mod conf;
 
 use async_trait::async_trait;
-use crate::app::conf::EntityGeneratorConf;
 use crate::app::program::ProgramLang;
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::generators::server::go::GoEntityGenerator;
@@ -9,6 +8,7 @@ use crate::gen::generators::server::java::JavaEntityGenerator;
 use crate::gen::generators::server::nodejs::NodeJSEntityGenerator;
 use crate::gen::generators::server::python::PythonEntityGenerator;
 use crate::gen::generators::server::rust::RustEntityGenerator;
+use crate::gen::interface::server::conf::EntityGeneratorConf;
 use crate::prelude::Graph;
 
 pub(crate) async fn gen(graph: &Graph, conf: &EntityGeneratorConf) -> std::io::Result<()> {

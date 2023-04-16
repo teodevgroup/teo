@@ -1,9 +1,7 @@
 use std::borrow::Cow;
 use array_tool::vec::Join;
 use crate::connectors::sql::schema::dialect::SQLDialect;
-use crate::core::field::Sort;
-
-pub mod builder;
+use crate::core::field::field::Sort;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ModelIndexType {
@@ -30,23 +28,23 @@ impl ModelIndexType {
 
 #[derive(Clone, Debug, PartialEq, Hash, Eq)]
 pub(crate) struct ModelIndexItem {
-    pub(self) field_name: String,
+    pub(self) field_name: &'static str,
     pub(self) sort: Sort,
     pub(self) len: Option<usize>,
 }
 
 impl ModelIndexItem {
 
-    pub(crate) fn new(name: impl Into<String>, sort: Sort, len: Option<usize>) -> Self {
+    pub(crate) fn new(name: &'static str, sort: Sort, len: Option<usize>) -> Self {
         Self {
-            field_name: name.into(),
+            field_name: name,
             sort,
             len,
         }
     }
 
     pub(crate) fn field_name(&self) -> &str {
-        &self.field_name
+        self.field_name
     }
 
     pub(crate) fn sort(&self) -> Sort {

@@ -13,7 +13,7 @@ use crate::core::relation::delete_rule::DeleteRule;
 
 #[derive(Debug, Clone)]
 pub struct Relation {
-    pub(self) name: String,
+    pub(self) name: &'static str,
     pub(crate) localized_name: Option<String>,
     pub(crate) description: Option<String>,
     pub(self) optionality: Optionality,
@@ -28,9 +28,9 @@ pub struct Relation {
 
 impl Relation {
 
-    pub(crate) fn new(name: impl Into<String>) -> Self {
+    pub(crate) fn new(name: &'static str) -> Self {
         return Self {
-            name: name.into(),
+            name,
             localized_name: None,
             description: None,
             optionality: Optionality::Required,

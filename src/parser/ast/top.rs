@@ -5,14 +5,14 @@ use crate::parser::ast::constant::Constant;
 use crate::parser::ast::data_set::DataSet;
 use crate::parser::ast::debug_conf::ASTDebugConf;
 use crate::parser::ast::generator::ASTEntity;
-use crate::parser::ast::import::Import;
+use crate::parser::ast::import::ASTImport;
 use crate::parser::ast::model::ASTModel;
 use crate::parser::ast::r#enum::ASTEnum;
 use crate::parser::ast::test_conf::ASTTestConf;
 
 #[derive(Debug)]
 pub(crate) enum Top {
-    Import(Import),
+    Import(ASTImport),
     Constant(Constant),
     Enum(ASTEnum),
     Model(ASTModel),
@@ -43,14 +43,14 @@ impl Top {
         }
     }
 
-    pub(crate) fn as_import(&self) -> Option<&Import> {
+    pub(crate) fn as_import(&self) -> Option<&ASTImport> {
         match self {
             Top::Import(i) => Some(i),
             _ => None
         }
     }
 
-    pub(crate) fn as_import_mut(&mut self) -> Option<&mut Import> {
+    pub(crate) fn as_import_mut(&mut self) -> Option<&mut ASTImport> {
         match self {
             Top::Import(i) => Some(i),
             _ => None

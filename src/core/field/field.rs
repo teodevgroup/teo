@@ -1,4 +1,3 @@
-
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use inflector::Inflector;
@@ -71,15 +70,15 @@ impl Sort {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct IndexSettings {
+pub struct FieldIndexSettings {
     pub(crate) name: Option<String>,
     pub(crate) sort: Sort,
     pub(crate) length: Option<usize>,
 }
 
-impl Default for IndexSettings {
+impl Default for FieldIndexSettings {
     fn default() -> Self {
-        IndexSettings {
+        FieldIndexSettings {
             name: None,
             sort: Sort::Asc,
             length: None
@@ -89,9 +88,9 @@ impl Default for IndexSettings {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum FieldIndex {
-    Index(IndexSettings),
-    Unique(IndexSettings),
-    Primary(IndexSettings),
+    Index(FieldIndexSettings),
+    Unique(FieldIndexSettings),
+    Primary(FieldIndexSettings),
 }
 
 impl FieldIndex {
@@ -105,7 +104,7 @@ impl FieldIndex {
 
 #[derive(Clone, ToMut)]
 pub struct Field {
-    pub(crate) name: String,
+    pub(crate) name: &'static str,
     pub(crate) localized_name: Option<String>,
     pub(crate) description: Option<String>,
     pub(crate) field_type: Option<FieldType>,
@@ -184,7 +183,7 @@ impl Field {
     }
 
     pub fn name(&self) -> &str {
-        &self.name
+        self.name
     }
 
     pub(crate) fn localized_name(&self) -> String {
@@ -256,6 +255,10 @@ impl Field {
 
     pub(crate) fn migration(&self) -> Option<&FieldMigration> {
         self.migration.as_ref()
+    }
+
+    pub(crate) fn index(&self) -> Option<&FieldIndex> {
+        self.index.as_ref()
     }
 }
 

@@ -10,7 +10,7 @@ use crate::parser::ast::constant::Constant;
 use crate::parser::ast::data_set::DataSet;
 use crate::parser::ast::debug_conf::ASTDebugConf;
 use crate::parser::ast::generator::ASTEntity;
-use crate::parser::ast::import::Import;
+use crate::parser::ast::import::ASTImport;
 use crate::parser::ast::model::ASTModel;
 use crate::parser::ast::r#enum::ASTEnum;
 use crate::parser::ast::test_conf::ASTTestConf;
@@ -34,7 +34,7 @@ pub(crate) struct SourceImportIter<'a> {
 }
 
 impl<'a> Iterator for SourceImportIter<'a> {
-    type Item = &'a Import;
+    type Item = &'a ASTImport;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.source.imports.iter().skip(self.index).next() {
@@ -68,7 +68,7 @@ impl Source {
         SourceImportIter { source: self, index: 0 }
     }
 
-    pub(crate) fn get_import(&self, id: usize) -> &Import {
+    pub(crate) fn get_import(&self, id: usize) -> &ASTImport {
         self.tops.get(&id).unwrap().as_import().unwrap()
     }
 

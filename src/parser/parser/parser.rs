@@ -26,10 +26,10 @@ use crate::parser::ast::field::ASTField;
 use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::ASTIdentifier;
-use crate::parser::ast::import::Import;
+use crate::parser::ast::import::ASTImport;
 use crate::parser::ast::item::Item;
 use crate::parser::ast::model::ASTModel;
-use crate::parser::ast::pipeline::Pipeline;
+use crate::parser::ast::pipeline::ASTPipeline;
 use crate::parser::ast::r#enum::{ASTEnum, EnumChoice};
 use crate::parser::ast::r#type::{Arity, Type};
 use crate::parser::ast::source::Source;
@@ -239,7 +239,7 @@ impl ASTParser {
             Some(path) => path,
             None => panic!("Schema file '{}' is not found.", relative.to_str().unwrap()),
         };
-        Top::Import(Import::new(item_id, source_id, identifiers, source.unwrap(), absolute, span))
+        Top::Import(ASTImport::new(item_id, source_id, identifiers, source.unwrap(), absolute, span))
     }
 
     fn canonicalize(path_buf: &PathBuf) -> Option<PathBuf> {
@@ -566,7 +566,7 @@ impl ASTParser {
         Decorator::new(unit.unwrap(), span)
     }
 
-    fn parse_pipeline(pair: Pair<'_>) -> Pipeline {
+    fn parse_pipeline(pair: Pair<'_>) -> ASTPipeline {
         let span = Self::parse_span(&pair);
         let mut unit: Option<ExpressionKind> = None;
         for current in pair.into_inner() {
@@ -575,7 +575,7 @@ impl ASTParser {
                 _ => panic!(),
             }
         }
-        Pipeline {
+        ASTPipeline {
             expression: Box::new(unit.unwrap()),
             span,
         }

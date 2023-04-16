@@ -5,14 +5,18 @@ use std::sync::Arc;
 use async_recursion::async_recursion;
 use inflector::Inflector;
 use maplit::{hashmap, hashset};
-use crate::core::action::{Action, FIND, IDENTITY, MANY, NESTED, SIGN_IN, SINGLE};
+use crate::core::action::{Action, CREATE_HANDLER, CREATE_MANY_HANDLER, IDENTITY_HANDLER, SIGN_IN_HANDLER};
+use crate::core::action::{FIND, IDENTITY, MANY, NESTED, SIGN_IN, SINGLE};
 use crate::core::field::Field;
-use crate::core::field::field::Field;
+use crate::core::field::field::{Field, FieldIndex, PreviousValueRule};
+use crate::core::field::r#type::FieldTypeOwner;
+use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::model::migration::ModelMigration;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::relation::Relation;
 use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
+use crate::core::relation::delete_rule::DeleteRule;
 use crate::prelude::{Graph, Value};
 use crate::core::result::Result;
 use crate::teon;
@@ -46,22 +50,22 @@ pub struct Model {
     action_transformers: Vec<Pipeline>,
     migration: Option<ModelMigration>,
     teo_internal: bool,
-    all_keys: Vec<String>,
-    input_keys: Vec<String>,
-    save_keys: Vec<String>,
-    output_keys: Vec<String>,
-    query_keys: Vec<String>,
-    unique_query_keys: Vec<HashSet<String>>,
-    sort_keys: Vec<String>,
-    auth_identity_keys: Vec<String>,
-    auth_by_keys: Vec<String>,
-    auto_keys: Vec<String>,
-    deny_relation_keys: Vec<String>,
-    scalar_keys: Vec<String>,
-    scalar_number_keys: Vec<String>,
-    local_output_keys: Vec<String>,
-    relation_output_keys: Vec<String>,
-    field_property_map: HashMap<String, Vec<String>>,
+    all_keys: Vec<&'static str>,
+    input_keys: Vec<&'static str>,
+    save_keys: Vec<&'static str>,
+    output_keys: Vec<&'static str>,
+    query_keys: Vec<&'static str>,
+    unique_query_keys: Vec<HashSet<&'static str>>,
+    sort_keys: Vec<&'static str>,
+    auth_identity_keys: Vec<&'static str>,
+    auth_by_keys: Vec<&'static str>,
+    auto_keys: Vec<&'static str>,
+    deny_relation_keys: Vec<&'static str>,
+    scalar_keys: Vec<&'static str>,
+    scalar_number_keys: Vec<&'static str>,
+    local_output_keys: Vec<&'static str>,
+    relation_output_keys: Vec<&'static str>,
+    field_property_map: HashMap<&'static str, Vec<&'static str>>,
 }
 
 impl Model {
@@ -266,7 +270,7 @@ impl Model {
         &self.relation_output_keys
     }
 
-    pub(crate) fn field_property_map(&self) -> &HashMap<String, Vec<String>> {
+    pub(crate) fn field_property_map(&self) -> &HashMap<&'static str, Vec<&'static str>> {
         &self.field_property_map
     }
 
@@ -361,11 +365,178 @@ impl Model {
     pub(crate) fn allows_drop_when_migrate(&self) -> bool {
         self.migration.map_or(false, |m| m.drop)
     }
+
+    pub(crate) fn finalize(&mut self) {
+        // generate indices from fields
+        for field in self.fields_vec {
+            if let Some(field_index) = field.index() {
+                match field_index {
+                    FieldIndex::Index(settings) => {
+                        self.indices.push(ModelIndex::new(ModelIndexType::Index, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                            ModelIndexItem::new(field.name(), settings.sort, settings.length)
+                        ]));
+                    }
+                    FieldIndex::Unique(settings) => {
+                        self.indices.push(ModelIndex::new(ModelIndexType::Unique, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                            ModelIndexItem::new(field.name(), settings.sort, settings.length)
+                        ]));
+                    }
+                    FieldIndex::Primary(settings) => {
+                        self.primary = Some(ModelIndex::new(ModelIndexType::Primary, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                            ModelIndexItem::new(field.name(), settings.sort, settings.length)
+                        ]));
+                        self.indices.push(self.primary.as_ref().unwrap().clone());
+                    }
+                }
+            }
+        }
+        if primary.is_none() && !self.r#virtual {
+            panic!("Model '{}' must has a primary field.", self.name);
+        }
+        // install recordPrevious for primary
+        for key in self.primary.as_ref().unwrap().keys() {
+            let field = fields_map.get(key).unwrap();
+            field.as_ref().to_mut().previous_value_rule = PreviousValueRule::Keep;
+        }
+        // load caches
+        let all_field_keys: Vec<&'static str> = self.fields_vec.iter().map(|f| f.name()).collect();
+        let all_relation_keys: Vec<&'static str> = self.relations_vec.iter().map(|r| r.name()).collect();
+        let all_property_keys: Vec<&'static str> = self.properties_vec.iter().map(|p| p.name()).collect();
+        let mut all_keys = vec![];
+        all_keys.extend(all_field_keys);
+        all_keys.extend(all_relation_keys);
+        all_keys.extend(all_property_keys);
+        let input_field_keys: Vec<&'static key> = self.fields_vec.iter().filter(|&f| !f.write_rule.is_no_write()).map(|f| f.name).collect();
+        let input_relation_keys = all_relation_keys.clone();
+        let input_property_keys: Vec<&'static str> = self.properties_vec.iter().filter(|p| p.setter.is_some()).map(|p| p.name).collect();
+        let mut input_keys = vec![];
+        input_keys.extend(input_field_keys);
+        input_keys.extend(input_relation_keys);
+        input_keys.extend(input_property_keys);
+        let field_save_keys: Vec<&str> = self.fields_vec.iter().filter(|f| { !f.r#virtual }).map(|f| f.name).collect();
+        let property_save_keys: Vec<&str> = self.properties_vec.iter().filter(|p| p.cached).map(|p| p.name).collect();
+        let mut save_keys = vec![];
+        save_keys.extend(field_save_keys);
+        save_keys.extend(property_save_keys);
+        let output_field_keys: Vec<&str> = self.fields.iter().filter(|&f| { !f.read_rule.is_no_read() }).map(|f| { f.name }).collect();
+        let output_relation_keys = all_relation_keys.clone();
+        let output_property_keys: Vec<&str> = self.properties.iter().filter(|p| p.getter.is_some()).map(|p| p.name).collect();
+        let mut output_keys = vec![];
+        output_keys.extend(output_field_keys.iter());
+        output_keys.extend(output_relation_keys.iter());
+        output_keys.extend(output_property_keys.iter());
+        let mut output_field_keys_and_property_keys = vec![];
+        output_field_keys_and_property_keys.extend(output_field_keys);
+        output_field_keys_and_property_keys.extend(output_property_keys);
+        let sort_keys: Vec<&str> = self.fields_vec.iter().filter(|f| f.sortable).map(|f| f.name().to_owned()).collect();
+        let query_keys: Vec<&str> = {
+            let mut query_keys = self.fields.iter().filter(|f| f.queryable).map(|f| f.name).collect();
+            query_keys.extend(all_relation_keys.iter());
+            query_keys
+        };
+        let unique_query_keys: Vec<HashSet<&'static str>> = {
+            let mut result = vec![];
+            for index in self.indices() {
+                let set = HashSet::from_iter(index.items().iter().map(|i| {
+                    i.field_name()
+                }));
+                result.push(set);
+            }
+            if let Some(primary) = &self.primary {
+                result.push(HashSet::from_iter(primary.items().iter().map(|i| i.field_name())));
+            }
+            result
+        };
+        let auth_identity_keys: Vec<&'static str> = self.fields_vec.iter()
+            .filter(|&f| { f.identity == true })
+            .map(|f| { f.name })
+            .collect();
+        let auth_by_keys: Vec<&'static str> = self.fields_vec.iter()
+            .filter(|&f| { f.identity_checker.is_some() })
+            .map(|f| { f.name })
+            .collect();
+        let auto_keys: Vec<&'static str> = self.fields_vec
+            .iter()
+            .filter(|&f| { f.auto || f.auto_increment })
+            .map(|f| f.name.clone())
+            .collect();
+        let deny_relation_keys: Vec<&'static str> = self.relations_vec
+            .iter()
+            .filter(|&r| { r.delete_rule() == DeleteRule::Deny })
+            .map(|r| r.name().to_owned())
+            .collect();
+        let scalar_keys: Vec<&'static str> = self.fields_vec
+            .iter()
+            .map(|f| f.name)
+            .collect();
+        let scalar_number_keys: Vec<&'static str> = self.fields_vec
+            .iter()
+            .filter(|f| f.field_type().is_number())
+            .map(|f| f.name.clone())
+            .collect();
+        // assign cache keys
+        self.all_keys = all_keys;
+        self.input_keys = input_keys;
+        self.save_keys = save_keys;
+        self.output_keys = output_keys;
+        self.query_keys = query_keys;
+        self.sort_keys = sort_keys;
+        self.unique_query_keys = unique_query_keys;
+        self.auth_identity_keys = auth_identity_keys;
+        self.auth_by_keys = auth_by_keys;
+        self.auto_keys = auto_keys;
+        self.deny_relation_keys = deny_relation_keys;
+        self.scalar_keys = scalar_keys;
+        self.scalar_number_keys = scalar_number_keys;
+        self.local_output_keys = output_field_keys_and_property_keys;
+        self.relation_output_keys = output_relation_keys;
+
+        // figure out actions
+        self.handler_actions = {
+            let mut default = if self.internal {
+                HashSet::new()
+            } else if self.r#virtual {
+                HashSet::from([Action::from_u32(CREATE_HANDLER), Action::from_u32(CREATE_MANY_HANDLER)])
+            } else {
+                Action::handlers_default()
+            };
+            if self.identity {
+                default.insert(Action::from_u32(SIGN_IN_HANDLER));
+                default.insert(Action::from_u32(IDENTITY_HANDLER));
+            }
+            if let Some(disabled) = &self.disabled_actions {
+                default.iter().filter(|a| {
+                    !a.passes(disabled)
+                }).cloned().collect()
+            } else {
+                default
+            }
+        };
+        // field property map
+        self.field_property_map = {
+            let mut map = HashMap::new();
+            for property in self.properties_vec.iter() {
+                if property.cached {
+                    for dependency in property.dependencies {
+                        if map.get(dependency).is_none() {
+                            map.insert(dependency, vec![]);
+                        }
+                        map.get_mut(dependency).unwrap().push(property.name)
+                    }
+                }
+            }
+            map
+        };
+    }
+
+    pub(crate) fn add_action_transformer(&mut self, pipeline: Pipeline) {
+        self.action_transformers.push(pipeline);
+    }
 }
 
 impl PartialEq for Model {
     fn eq(&self, other: &Self) -> bool {
-        self.name == other.inner.name
+        self.name == other.name
     }
 }
 
