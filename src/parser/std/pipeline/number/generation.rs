@@ -3,8 +3,8 @@ use std::sync::Arc;
 use crate::{
     core::pipeline::{
         item::Item,
-        items::number::generation::{random_float::RandomFloatItem, random_int::RandomIntItem},
     },
+    core::items::number::generation::{random_float::RandomFloatItem, random_int::RandomIntItem},
     parser::ast::argument::Argument,
 };
 

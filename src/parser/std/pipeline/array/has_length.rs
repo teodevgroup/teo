@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use crate::core::pipeline::item::Item;
 
-use crate::core::pipeline::items::array::has_length::HasLengthItem;
+use crate::core::items::array::has_length::HasLengthItem;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn has_length(args: Vec<Argument>) -> Arc<dyn Item> {

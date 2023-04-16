@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use crate::core::teon::Value;
 use crate::core::pipeline::item::Item;
 use crate::core::pipeline::ctx::Ctx;
-use crate::core::pipeline::items::object::get::GetItem;
+use crate::core::items::object::get::GetItem;
 use crate::core::result::Result;
 
 #[derive(Debug, Clone)]

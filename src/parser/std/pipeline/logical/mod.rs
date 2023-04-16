@@ -1,14 +1,14 @@
 use std::sync::Arc;
 use crate::core::pipeline::item::Item;
-use crate::core::pipeline::items::logical::all::AllItem;
-use crate::core::pipeline::items::logical::and::AndItem;
-use crate::core::pipeline::items::logical::any::AnyItem;
-use crate::core::pipeline::items::logical::valid::ValidItem;
-use crate::core::pipeline::items::logical::invalid::InvalidItem;
-use crate::core::pipeline::items::logical::not::NotItem;
-use crate::core::pipeline::items::logical::or::OrItem;
-use crate::core::pipeline::items::logical::passed::PassedItem;
-use crate::core::pipeline::items::logical::r#if::IfItem;
+use crate::core::items::logical::all::AllItem;
+use crate::core::items::logical::and::AndItem;
+use crate::core::items::logical::any::AnyItem;
+use crate::core::items::logical::valid::ValidItem;
+use crate::core::items::logical::invalid::InvalidItem;
+use crate::core::items::logical::not::NotItem;
+use crate::core::items::logical::or::OrItem;
+use crate::core::items::logical::passed::PassedItem;
+use crate::core::items::logical::r#if::IfItem;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn valid(_args: Vec<Argument>) -> Arc<dyn Item> {

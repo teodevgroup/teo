@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use crate::core::pipeline::item::Item;
-use crate::core::pipeline::items::datetime::now::NowItem;
-use crate::core::pipeline::items::datetime::today::TodayItem;
+use crate::core::items::datetime::now::NowItem;
+use crate::core::items::datetime::today::TodayItem;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn now(_args: Vec<Argument>) -> Arc<dyn Item> {

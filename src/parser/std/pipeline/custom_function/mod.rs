@@ -4,8 +4,8 @@ use crate::core::pipeline::item::Item;
 
 
 
-use crate::core::pipeline::items::logical::transform_with::TransformWithItem;
-use crate::core::pipeline::items::logical::validate_with::ValidateWithItem;
+use crate::core::items::logical::transform_with::TransformWithItem;
+use crate::core::items::logical::validate_with::ValidateWithItem;
 use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
 

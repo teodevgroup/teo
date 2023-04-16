@@ -4,7 +4,7 @@ use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::FieldType;
 use crate::core::model::builder::ModelBuilder;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
-use crate::core::pipeline::items::string::generation::cuid::CUIDItem;
+use crate::core::items::string::generation::cuid::CUIDItem;
 use crate::core::pipeline::Pipeline;
 use crate::prelude::{GraphBuilder, Value};
 

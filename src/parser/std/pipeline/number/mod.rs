@@ -1,6 +1,6 @@
 use crate::core::pipeline::item::Item;
-use crate::core::pipeline::items::number::is_even::IsEvenItem;
-use crate::core::pipeline::items::number::is_odd::IsOddItem;
+use crate::core::items::number::is_even::IsEvenItem;
+use crate::core::items::number::is_odd::IsOddItem;
 use crate::parser::ast::argument::Argument;
 use std::sync::Arc;
 

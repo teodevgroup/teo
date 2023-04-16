@@ -1,16 +1,16 @@
 use std::sync::Arc;
 use crate::core::pipeline::item::Item;
-use crate::core::pipeline::items::string::transform::ellipsis::EllipsisItem;
-use crate::core::pipeline::items::string::transform::to_upper_case::ToUpperCaseItem;
-use crate::core::pipeline::items::string::transform::to_lower_case::ToLowerCaseItem;
-use crate::core::pipeline::items::string::transform::pad_end::PadEndItem;
-use crate::core::pipeline::items::string::transform::pad_start::PadStartItem;
-use crate::core::pipeline::items::string::transform::regex_replace::RegexReplaceItem;
-use crate::core::pipeline::items::string::transform::split::SplitItem;
-use crate::core::pipeline::items::string::transform::trim::TrimItem;
-use crate::core::pipeline::items::string::transform::to_word_case::ToWordCaseItem;
-use crate::core::pipeline::items::string::transform::to_sentence_case::ToSentenceCaseItem;
-use crate::core::pipeline::items::string::transform::to_title_case::ToTitleCaseItem;
+use crate::core::items::string::transform::ellipsis::EllipsisItem;
+use crate::core::items::string::transform::to_upper_case::ToUpperCaseItem;
+use crate::core::items::string::transform::to_lower_case::ToLowerCaseItem;
+use crate::core::items::string::transform::pad_end::PadEndItem;
+use crate::core::items::string::transform::pad_start::PadStartItem;
+use crate::core::items::string::transform::regex_replace::RegexReplaceItem;
+use crate::core::items::string::transform::split::SplitItem;
+use crate::core::items::string::transform::trim::TrimItem;
+use crate::core::items::string::transform::to_word_case::ToWordCaseItem;
+use crate::core::items::string::transform::to_sentence_case::ToSentenceCaseItem;
+use crate::core::items::string::transform::to_title_case::ToTitleCaseItem;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn regex_replace(args: Vec<Argument>) -> Arc<dyn Item> {

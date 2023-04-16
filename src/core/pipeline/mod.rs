@@ -1,6 +1,5 @@
 pub mod ctx;
 pub mod item;
-pub mod items;
 
 use std::sync::Arc;
 use crate::core::error::ErrorType::InternalServerError;

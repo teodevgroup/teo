@@ -1,16 +1,16 @@
 use std::sync::Arc;
 use crate::core::pipeline::item::Item;
-use crate::core::pipeline::items::string::validation::has_prefix::HasPrefixItem;
-use crate::core::pipeline::items::string::validation::has_suffix::HasSuffixItem;
-use crate::core::pipeline::items::string::validation::is_alphabetic::IsAlphabeticItem;
-use crate::core::pipeline::items::string::validation::is_alphanumeric::IsAlphanumericItem;
-use crate::core::pipeline::items::string::validation::is_email::IsEmailItem;
-use crate::core::pipeline::items::string::validation::is_hex_color::IsHexColorItem;
-use crate::core::pipeline::items::string::validation::is_numeric::IsNumericItem;
-use crate::core::pipeline::items::string::validation::is_prefix_of::IsPrefixOfItem;
-use crate::core::pipeline::items::string::validation::is_secure_password::IsSecurePasswordItem;
-use crate::core::pipeline::items::string::validation::is_suffix_of::IsSuffixOfItem;
-use crate::core::pipeline::items::string::validation::regex_match::RegexMatchItem;
+use crate::core::items::string::validation::has_prefix::HasPrefixItem;
+use crate::core::items::string::validation::has_suffix::HasSuffixItem;
+use crate::core::items::string::validation::is_alphabetic::IsAlphabeticItem;
+use crate::core::items::string::validation::is_alphanumeric::IsAlphanumericItem;
+use crate::core::items::string::validation::is_email::IsEmailItem;
+use crate::core::items::string::validation::is_hex_color::IsHexColorItem;
+use crate::core::items::string::validation::is_numeric::IsNumericItem;
+use crate::core::items::string::validation::is_prefix_of::IsPrefixOfItem;
+use crate::core::items::string::validation::is_secure_password::IsSecurePasswordItem;
+use crate::core::items::string::validation::is_suffix_of::IsSuffixOfItem;
+use crate::core::items::string::validation::regex_match::RegexMatchItem;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn is_email(_args: Vec<Argument>) -> Arc<dyn Item> {

@@ -1,8 +1,8 @@
 use std::sync::Arc;
 use crate::core::action::Action;
 use crate::core::pipeline::item::Item;
-use crate::core::pipeline::items::action::redirect::RedirectItem;
-use crate::core::pipeline::items::action::when::WhenItem;
+use crate::core::items::action::redirect::RedirectItem;
+use crate::core::items::action::when::WhenItem;
 use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
 

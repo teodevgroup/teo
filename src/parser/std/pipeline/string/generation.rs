@@ -1,10 +1,10 @@
 use std::sync::Arc;
 use crate::core::pipeline::item::Item;
-use crate::core::pipeline::items::string::generation::cuid2::CUID2Item;
-use crate::core::pipeline::items::string::generation::cuid::CUIDItem;
-use crate::core::pipeline::items::string::generation::random_digits::RandomDigitsItem;
-use crate::core::pipeline::items::string::generation::slug::SlugItem;
-use crate::core::pipeline::items::string::generation::uuid::UUIDItem;
+use crate::core::items::string::generation::cuid2::CUID2Item;
+use crate::core::items::string::generation::cuid::CUIDItem;
+use crate::core::items::string::generation::random_digits::RandomDigitsItem;
+use crate::core::items::string::generation::slug::SlugItem;
+use crate::core::items::string::generation::uuid::UUIDItem;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn cuid(_args: Vec<Argument>) -> Arc<dyn Item> {

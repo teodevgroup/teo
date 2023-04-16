@@ -1,20 +1,20 @@
 use std::sync::Arc;
 use crate::core::pipeline::item::Item;
-use crate::core::pipeline::items::math::abs::AbsItem;
-use crate::core::pipeline::items::math::add::AddItem;
-use crate::core::pipeline::items::math::cbrt::CbrtItem;
-use crate::core::pipeline::items::math::ceil::CeilItem;
-use crate::core::pipeline::items::math::divide::DivideItem;
-use crate::core::pipeline::items::math::floor::FloorItem;
-use crate::core::pipeline::items::math::max::MaxItem;
-use crate::core::pipeline::items::math::min::MinItem;
-use crate::core::pipeline::items::math::modular::ModularItem;
-use crate::core::pipeline::items::math::multiply::MultiplyItem;
-use crate::core::pipeline::items::math::pow::PowItem;
-use crate::core::pipeline::items::math::root::RootItem;
-use crate::core::pipeline::items::math::round::RoundItem;
-use crate::core::pipeline::items::math::sqrt::SqrtItem;
-use crate::core::pipeline::items::math::subtract::SubtractItem;
+use crate::core::items::math::abs::AbsItem;
+use crate::core::items::math::add::AddItem;
+use crate::core::items::math::cbrt::CbrtItem;
+use crate::core::items::math::ceil::CeilItem;
+use crate::core::items::math::divide::DivideItem;
+use crate::core::items::math::floor::FloorItem;
+use crate::core::items::math::max::MaxItem;
+use crate::core::items::math::min::MinItem;
+use crate::core::items::math::modular::ModularItem;
+use crate::core::items::math::multiply::MultiplyItem;
+use crate::core::items::math::pow::PowItem;
+use crate::core::items::math::root::RootItem;
+use crate::core::items::math::round::RoundItem;
+use crate::core::items::math::sqrt::SqrtItem;
+use crate::core::items::math::subtract::SubtractItem;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn abs(_args: Vec<Argument>) -> Arc<dyn Item> {

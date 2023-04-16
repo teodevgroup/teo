@@ -1,12 +1,12 @@
 use std::sync::Arc;
 use crate::core::pipeline::item::Item;
-use crate::core::pipeline::items::object::assign::AssignItem;
-use crate::core::pipeline::items::object::ctx_self::SelfItem;
-use crate::core::pipeline::items::object::is_object_of::IsObjectOfItem;
-use crate::core::pipeline::items::object::get_previous::GetPreviousItem;
-use crate::core::pipeline::items::object::set::SetItem;
-use crate::core::pipeline::items::object::get::GetItem;
-use crate::core::pipeline::items::object::is::IsItem;
+use crate::core::items::object::assign::AssignItem;
+use crate::core::items::object::ctx_self::SelfItem;
+use crate::core::items::object::is_object_of::IsObjectOfItem;
+use crate::core::items::object::get_previous::GetPreviousItem;
+use crate::core::items::object::set::SetItem;
+use crate::core::items::object::get::GetItem;
+use crate::core::items::object::is::IsItem;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn ctx_self(_args: Vec<Argument>) -> Arc<dyn Item> {

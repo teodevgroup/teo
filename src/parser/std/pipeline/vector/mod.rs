@@ -1,10 +1,10 @@
 use std::sync::Arc;
 use crate::core::pipeline::item::Item;
 
-use crate::core::pipeline::items::vector::filter::FilterItem;
-use crate::core::pipeline::items::vector::item_at::AtItem;
-use crate::core::pipeline::items::vector::join::JoinItem;
-use crate::core::pipeline::items::vector::map::MapItem;
+use crate::core::items::vector::filter::FilterItem;
+use crate::core::items::vector::item_at::AtItem;
+use crate::core::items::vector::join::JoinItem;
+use crate::core::items::vector::map::MapItem;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn join(args: Vec<Argument>) -> Arc<dyn Item> {

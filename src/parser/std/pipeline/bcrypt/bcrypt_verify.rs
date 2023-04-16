@@ -2,7 +2,7 @@ use std::sync::Arc;
 use crate::core::pipeline::item::Item;
 
 
-use crate::core::pipeline::items::bcrypt::bcrypt_verify::BcryptVerifyItem;
+use crate::core::items::bcrypt::bcrypt_verify::BcryptVerifyItem;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn bcrypt_verify(args: Vec<Argument>) -> Arc<dyn Item> {

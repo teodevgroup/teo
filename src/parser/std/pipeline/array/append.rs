@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use crate::core::pipeline::item::Item;
-use crate::core::pipeline::items::array::append::AppendItem;
+use crate::core::items::array::append::AppendItem;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn append(args: Vec<Argument>) -> Arc<dyn Item> {
