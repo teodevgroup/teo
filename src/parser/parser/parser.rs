@@ -10,7 +10,7 @@ use pest::pratt_parser::PrattParser;
 use to_mut::ToMut;
 use to_mut_proc_macro::ToMut;
 use once_cell::sync::Lazy;
-use crate::app::builder::CallbackLookupTable;
+use crate::core::callbacks::lookup::CallbackLookup;
 use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::arith_expr::{ArithExpr, Op};
 use crate::parser::ast::client::Client;
@@ -86,12 +86,12 @@ pub(crate) struct Parser {
     pub(crate) global_property_decorators: Option<GlobalPropertyDecorators>,
     pub(crate) global_pipeline_installers: Option<GlobalPipelineInstallers>,
     pub(crate) global_function_installers: Option<GlobalFunctionInstallers>,
-    pub(crate) callback_lookup_table: Arc<Mutex<CallbackLookupTable>>,
+    pub(crate) callback_lookup_table: Arc<Mutex<CallbackLookup>>,
 }
 
 impl Parser {
 
-    pub(crate) fn new(callback_lookup_table: Arc<Mutex<CallbackLookupTable>>) -> Self {
+    pub(crate) fn new(callback_lookup_table: Arc<Mutex<CallbackLookup>>) -> Self {
         Self {
             sources: btreemap!{},
             enums: vec![],

@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::env;
 use std::ffi::{OsString};
-use std::fmt::{Debug};
 use std::sync::{Arc, Mutex};
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
@@ -17,6 +16,7 @@ use crate::app::command::{CLI, CLICommand, GenerateClientCommand, GenerateComman
 use crate::app::conf::{DebugConf, EntityGeneratorConf, ServerConf, TestConf};
 use crate::app::entrance::Entrance;
 use crate::app::environment::EnvironmentVersion;
+use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::connector::Connector;
 use crate::core::field::Field;
 use crate::core::database::name::DatabaseName;
@@ -24,15 +24,14 @@ use crate::core::field::r#type::FieldType;
 use crate::core::graph::builder::GraphBuilder;
 use crate::parser::ast::field::FieldClass;
 use crate::prelude::{App, Graph, Value};
-use crate::core::item::Item;
-use crate::core::items::function::compare::CompareItem;
 use crate::core::callbacks::types::compare::CompareArgument;
-use crate::core::items::function::perform::CallbackItem;
 use crate::core::callbacks::types::callback::{CallbackArgument, CallbackResult};
-use crate::core::items::function::transform::TransformItem;
 use crate::core::callbacks::types::transform::{TransformResult, TransformArgument};
-use crate::core::items::function::validate::ValidateItem;
 use crate::core::callbacks::types::validate::{ValidateArgument, ValidateResult};
+use crate::core::items::function::compare::CompareItem;
+use crate::core::items::function::perform::CallbackItem;
+use crate::core::items::function::transform::TransformItem;
+use crate::core::items::function::validate::ValidateItem;
 use crate::core::property::Property;
 use crate::core::r#enum::{Enum, EnumVariant};
 use crate::core::relation::Relation;
@@ -41,20 +40,6 @@ use crate::parser::ast::r#type::Arity;
 use crate::parser::parser::parser::Parser;
 use crate::seeder::data_set::{DataSet, Group, Record};
 use crate::seeder::models::define::define_seeder_models;
-
-#[derive(Debug)]
-pub(crate) struct CallbackLookupTable {
-    pub(crate) transforms: HashMap<String, Arc<dyn Item>>,
-    pub(crate) validators: HashMap<String, Arc<dyn Item>>,
-    pub(crate) callbacks: HashMap<String, Arc<dyn Item>>,
-    pub(crate) compares: HashMap<String, Arc<dyn Item>>,
-}
-
-impl CallbackLookupTable {
-    fn new() -> Self {
-        Self { transforms: HashMap::new(), validators: HashMap::new(), callbacks: HashMap::new(), compares: HashMap::new() }
-    }
-}
 
 pub trait AsyncCallbackWithoutArgs: Send + Sync {
     fn call(&self) -> BoxFuture<'static, Result<()>>;
@@ -77,7 +62,7 @@ pub struct AppBuilder {
     pub(crate) test_conf: Option<&'static TestConf>,
     pub(crate) entity_generator_confs: Vec<EntityGeneratorConf>,
     pub(crate) client_generator_confs: Vec<ClientConf>,
-    pub(crate) callback_lookup_table: Arc<Mutex<CallbackLookupTable>>,
+    pub(crate) callback_lookup_table: Arc<Mutex<CallbackLookup>>,
     pub(crate) before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
     pub(crate) environment_version: EnvironmentVersion,
     pub(crate) entrance: Entrance,
@@ -109,7 +94,7 @@ impl AppBuilder {
             test_conf: None,
             entity_generator_confs: vec![],
             client_generator_confs: vec![],
-            callback_lookup_table: Arc::new(Mutex::new(CallbackLookupTable::new())),
+            callback_lookup_table: Arc::new(Mutex::new(CallbackLookup::new())),
             before_server_start: None,
             environment_version: environment_version.clone(),
             entrance,
@@ -288,7 +273,7 @@ impl AppBuilder {
         T: From<Value> + Into<Value> + Send + Sync + 'static,
         R: Into<TransformResult<T>> + Send + Sync + 'static,
         F: TransformArgument<T, R> + 'static {
-        self.callback_lookup_table.lock().unwrap().transforms.insert(name.into(), Arc::new(TransformItem::new(f)));
+        self.callback_lookup_table.lock().unwrap().add_transform(Box::leak(Box::new(name.into())).as_str(), Arc::new(TransformItem::new(f)));
         self
     }
 
@@ -296,7 +281,7 @@ impl AppBuilder {
         T: From<Value> + Send + Sync + 'static,
         F: CallbackArgument<T, O> + 'static,
         O: Into<CallbackResult> + Send + Sync + 'static {
-        self.callback_lookup_table.lock().unwrap().callbacks.insert(name.into(), Arc::new(CallbackItem::new(f)));
+        self.callback_lookup_table.lock().unwrap().add_callback(Box::leak(Box::new(name.into())).as_str(), Arc::new(CallbackItem::new(f)));
         self
     }
 
@@ -304,7 +289,7 @@ impl AppBuilder {
         T: From<Value> + Send + Sync + 'static,
         O: Into<ValidateResult> + Send + Sync + 'static,
         F: ValidateArgument<T, O> + 'static {
-        self.callback_lookup_table.lock().unwrap().validators.insert(name.into(), Arc::new(ValidateItem::new(f)));
+        self.callback_lookup_table.lock().unwrap().add_validator(Box::leak(Box::new(name.into())).as_str(), Arc::new(ValidateItem::new(f)));
         self
     }
 
@@ -312,7 +297,7 @@ impl AppBuilder {
         T: From<Value> + Send + Sync + 'static,
         O: Into<ValidateResult> + Send + Sync + 'static,
         F: CompareArgument<T, O> + 'static {
-        self.callback_lookup_table.lock().unwrap().compares.insert(name.into(), Arc::new(CompareItem::new(f)));
+        self.callback_lookup_table.lock().unwrap().add_compare(Box::leak(Box::new(name.into())).as_str(), Arc::new(CompareItem::new(f)));
         self
     }
 

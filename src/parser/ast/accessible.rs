@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::sync::{Arc, Mutex};
 use maplit::hashmap;
-use crate::app::builder::CallbackLookupTable;
+use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::field::Field;
 use crate::core::model::builder::ModelBuilder;
 use crate::core::item::Item;
@@ -33,13 +33,13 @@ pub(crate) type ModelDecorator = fn(args: Vec<Argument>, model: &mut ModelBuilde
 
 pub(crate) type ASTPipelineInstaller = fn(args: Vec<Argument>) -> Arc<dyn Item>;
 
-pub(crate) type ASTFunctionInstaller = fn(lookup_table: Arc<Mutex<CallbackLookupTable>>, args: Vec<Argument>) -> Arc<dyn Item>;
+pub(crate) type ASTFunctionInstaller = fn(lookup_table: Arc<Mutex<CallbackLookup>>, args: Vec<Argument>) -> Arc<dyn Item>;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ASTPipelineItem {
     pub(crate) installer: Option<ASTPipelineInstaller>,
     pub(crate) function_installer: Option<ASTFunctionInstaller>,
-    pub(crate) lookup_table: Option<Arc<Mutex<CallbackLookupTable>>>,
+    pub(crate) lookup_table: Option<Arc<Mutex<CallbackLookup>>>,
     pub(crate) args: Vec<Argument>,
 }
 
