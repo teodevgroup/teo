@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use crate::core::pipeline::item::Item;
+use crate::core::item::Item;
 use crate::core::items::string::generation::cuid2::CUID2Item;
 use crate::core::items::string::generation::cuid::CUIDItem;
 use crate::core::items::string::generation::random_digits::RandomDigitsItem;

@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use crate::core::pipeline::item::Item;
+use crate::core::item::Item;
 use crate::core::items::string::transform::ellipsis::EllipsisItem;
 use crate::core::items::string::transform::to_upper_case::ToUpperCaseItem;
 use crate::core::items::string::transform::to_lower_case::ToLowerCaseItem;

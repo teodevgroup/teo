@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use crate::core::pipeline::item::Item;
+use crate::core::item::Item;
 use crate::core::items::string::validation::has_prefix::HasPrefixItem;
 use crate::core::items::string::validation::has_suffix::HasSuffixItem;
 use crate::core::items::string::validation::is_alphabetic::IsAlphabeticItem;

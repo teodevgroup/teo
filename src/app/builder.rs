@@ -24,7 +24,7 @@ use crate::core::field::r#type::FieldType;
 use crate::core::graph::builder::GraphBuilder;
 use crate::parser::ast::field::FieldClass;
 use crate::prelude::{App, Graph, Value};
-use crate::core::pipeline::item::Item;
+use crate::core::item::Item;
 use crate::core::items::function::compare::CompareItem;
 use crate::core::callbacks::types::compare::CompareArgument;
 use crate::core::items::function::perform::CallbackItem;

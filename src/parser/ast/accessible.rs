@@ -5,7 +5,7 @@ use maplit::hashmap;
 use crate::app::builder::CallbackLookupTable;
 use crate::core::field::Field;
 use crate::core::model::builder::ModelBuilder;
-use crate::core::pipeline::item::Item;
+use crate::core::item::Item;
 use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
 use crate::core::relation::Relation;

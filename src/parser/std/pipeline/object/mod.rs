@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use crate::core::pipeline::item::Item;
+use crate::core::item::Item;
 use crate::core::items::object::assign::AssignItem;
 use crate::core::items::object::ctx_self::SelfItem;
 use crate::core::items::object::is_object_of::IsObjectOfItem;

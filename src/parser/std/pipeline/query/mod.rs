@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use crate::core::pipeline::item::Item;
+use crate::core::item::Item;
 use crate::core::items::query::query_raw::QueryRawItem;
 use crate::parser::ast::argument::Argument;
 

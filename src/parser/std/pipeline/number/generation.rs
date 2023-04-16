@@ -1,12 +1,10 @@
 use std::sync::Arc;
 
 use crate::{
-    core::pipeline::{
-        item::Item,
-    },
     core::items::number::generation::{random_float::RandomFloatItem, random_int::RandomIntItem},
     parser::ast::argument::Argument,
 };
+use crate::core::item::Item;
 
 pub(crate) fn random_int(args: Vec<Argument>) -> Arc<dyn Item> {
     let value = args

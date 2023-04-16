@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use crate::core::action::Action;
-use crate::core::pipeline::item::Item;
+use crate::core::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
 

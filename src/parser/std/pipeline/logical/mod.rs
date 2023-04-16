@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use crate::core::pipeline::item::Item;
+use crate::core::item::Item;
 use crate::core::items::logical::all::AllItem;
 use crate::core::items::logical::and::AndItem;
 use crate::core::items::logical::any::AnyItem;
