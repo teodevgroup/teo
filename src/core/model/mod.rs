@@ -361,11 +361,7 @@ impl Model {
     }
 
     pub(crate) fn allows_drop_when_migrate(&self) -> bool {
-        if let Some(m) = self.migration() {
-            m.drop
-        } else {
-            false
-        }
+        self.migration.map_or(false, |m| m.drop)
     }
 }
 

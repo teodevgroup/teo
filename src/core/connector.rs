@@ -17,15 +17,17 @@ pub(crate) struct ConnectorConf {
     pub(crate) url: &'static str,
 }
 
+impl ConnectorConf {
+    pub(crate) fn default_database_type(&self, field_type: &FieldType) -> DatabaseType {
+        self.provider.default_database_type(field_type)
+    }
+}
+
 #[async_trait]
 pub(crate) trait SaveSession: Debug + Send + Sync { }
 
 #[async_trait]
 pub(crate) trait Connector: Send + Sync {
-
-    // Query database types
-
-    fn default_database_type(&self, field_type: &FieldType) -> DatabaseType;
 
     // Migration
 

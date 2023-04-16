@@ -340,25 +340,6 @@ impl MongoDBConnector {
 
 #[async_trait]
 impl Connector for MongoDBConnector {
-    fn default_database_type(&self, field_type: &FieldType) -> DatabaseType {
-        match field_type {
-            FieldType::ObjectId => DatabaseType::ObjectId,
-            FieldType::Bool => DatabaseType::Bool,
-            FieldType::I32 => DatabaseType::Int32,
-            FieldType::I64 => DatabaseType::Int64,
-            FieldType::F32 => DatabaseType::Double { m: None, d: None },
-            FieldType::F64 => DatabaseType::Double { m: None, d: None },
-            FieldType::Decimal => DatabaseType::Decimal { m: None, d: None },
-            FieldType::String => DatabaseType::String,
-            FieldType::Date => DatabaseType::DateTime(3),
-            FieldType::DateTime => DatabaseType::DateTime(3),
-            FieldType::Enum(_) => DatabaseType::String,
-            FieldType::Vec(inner) => DatabaseType::Vec(Box::new(self.default_database_type(inner.field_type()))),
-            FieldType::HashMap(_) => panic!(""),
-            FieldType::BTreeMap(_) => panic!(""),
-            FieldType::Object(_) => panic!(""),
-        }
-    }
 
     async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> Result<()> {
         if reset_database {
