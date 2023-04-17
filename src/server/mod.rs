@@ -25,10 +25,12 @@ use crate::core::action::{
 };
 use crate::core::initiator::Initiator;
 use crate::app::builder::AsyncCallbackWithoutArgs;
+use crate::app::cli::command::SeedCommandAction;
 use crate::app::command::SeedCommandAction;
 use crate::app::conf::ServerConf;
 use crate::app::entrance::Entrance;
 use crate::app::program::Program;
+use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
 use crate::server::test_context::TestContext;
 use crate::core::connector::SaveSession;
 use self::jwt_token::{Claims, decode_token, encode_token};
@@ -40,6 +42,7 @@ use crate::core::error::Error;
 use crate::core::teon::decoder::Decoder;
 use crate::prelude::Value;
 use crate::seeder::seed::seed;
+use crate::server::conf::ServerConf;
 use crate::teon;
 
 fn j(v: Value) -> JsonValue {
@@ -842,8 +845,8 @@ async fn server_start_message(port: u16, environment_version: Program, entrance:
 pub(crate) async fn serve(
     graph: &'static Graph,
     conf: &'static ServerConf,
-    environment_version: Program,
-    entrance: Entrance,
+    environment_version: &'static Program,
+    entrance: &'static Entrance,
     before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
     test_context: Option<&'static TestContext>,
 ) -> Result<(), std::io::Error> {
