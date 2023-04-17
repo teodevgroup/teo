@@ -53,7 +53,7 @@ impl AppCtx {
         }
     }
 
-    pub(super) fn create() -> bool {
+    pub(in crate::app) fn create() -> bool {
         unsafe {
             if CURRENT.is_some() {
                 return false;
@@ -65,7 +65,7 @@ impl AppCtx {
         }
     }
 
-    pub(super) fn drop() {
+    pub(in crate::app) fn drop() {
         unsafe {
             let reference = CURRENT.unwrap();
             let ptr = reference as *const AppCtx as *mut AppCtx;

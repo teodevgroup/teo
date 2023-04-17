@@ -3,95 +3,121 @@ use std::fmt::{Debug, Display, Formatter};
 use serde::{Serialize};
 use maplit::hashmap;
 use key_path::KeyPath;
+use std::borrow::Cow;
 use crate::core::model::Model;
 
-#[derive(Debug, PartialEq, Serialize, Clone)]
-pub(crate) enum ErrorType {
+// New errors
 
-    // server errors
+#[derive(Debug)]
+pub struct FatalError(Cow<'static, str>);
 
-    InternalServerError,
+#[derive(Debug)]
+pub struct ServerError(Cow<'static, str>);
 
-    UnknownDatabaseWriteError,
-    UnknownDatabaseDeleteError,
-    UnknownDatabaseFindError,
-    UnknownDatabaseFindUniqueError,
-    WrongIdentityModel,
-    PropertySetterError,
-
-    // user errors
-
-    // request destination
-    DestinationNotFound,
-
-    // request input
-    IncorrectJSONFormat,
-    UnexpectedInputRootType,
-    UnexpectedInputType,
-    UnexpectedInputKey,
-    ValidationError,
-    MissingRequiredInput,
-    UnexpectedObjectLength,
-
-    // request token
-    InvalidAuthToken,
-
-    // request permission
-    PermissionError,
-    DeletionDenied,
-
-    // response destination
-    ObjectNotFound,
-
-    // object api
-    InvalidKey,
-    InvalidOperation,
-
-    // user defined
-    CustomInternalServerError,
-    CustomValidationError,
-
-    // database
-    RecordDecodingError,
+#[derive(Debug)]
+pub enum RuntimeError {
+    RuntimeError1,
 }
 
-impl ErrorType {
-    pub(crate) fn code(&self) -> u16 {
+impl Display for RuntimeError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        use RuntimeError::*;
         match self {
-            ErrorType::ValidationError => { 400 }
-            ErrorType::IncorrectJSONFormat => { 400 }
-            ErrorType::UnknownDatabaseWriteError => { 500 }
-            ErrorType::UnknownDatabaseDeleteError => { 500 }
-            ErrorType::UnknownDatabaseFindError => { 500 }
-            ErrorType::UnknownDatabaseFindUniqueError => { 500 }
-            ErrorType::DestinationNotFound => { 404 }
-            ErrorType::InternalServerError => { 500 }
-            ErrorType::ObjectNotFound => { 404 }
-            ErrorType::InvalidAuthToken => { 401 }
-            ErrorType::CustomInternalServerError => { 500 }
-            ErrorType::CustomValidationError => { 400 }
-            ErrorType::WrongIdentityModel => { 401 }
-            ErrorType::PropertySetterError => { 400 }
-            ErrorType::UnexpectedInputRootType => { 400 }
-            ErrorType::UnexpectedInputType => { 400 }
-            ErrorType::UnexpectedInputKey => { 400 }
-            ErrorType::MissingRequiredInput => { 400 }
-            ErrorType::UnexpectedObjectLength => { 400 }
-            ErrorType::InvalidKey => { 500 }
-            ErrorType::InvalidOperation => { 500 }
-            ErrorType::PermissionError => { 401 }
-            ErrorType::DeletionDenied => { 400 }
-            ErrorType::RecordDecodingError => { 500 }
+            RuntimeError1 => f.write_str("Runtime error 1")
         }
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Clone)]
-pub struct Error {
-    pub(crate) r#type: ErrorType,
-    pub(crate) message: String,
-    pub(crate) errors: Option<HashMap<String, String>>
+pub enum UserErrorType {
+    ValidationError,
+    UnexpectedInput,
+    DestinationNotFound,
+    IncorrectJSONFormat,
+    MissingRequiredInput,
+    ObjectNotFound,
+    InvalidAuthToken,
+    PermissionError,
+    DeletionDenied,
+    CustomInternalServerError,
+    CustomValidationError,
+    CustomErrorType(Cow<'static, str>),
 }
+
+#[derive(Debug)]
+pub struct UserError {
+    r#type: UserErrorType,
+    message: Cow<'static, str>,
+    errors: Option<HashMap<Cow<'static, str>, Cow<'static, str>>>,
+}
+
+#[derive(Debug)]
+pub enum Error {
+    FatalError(FatalError),
+    RuntimeError(RuntimeError),
+    UserError(UserError),
+    ServerError(ServerError),
+}
+
+impl Error {
+    pub fn fatal(message: &'static str) -> Self {
+        Self::FatalError(FatalError(Cow::Borrowed(message)))
+    }
+
+    pub fn fatal_message(message: String) -> Self {
+        Self::FatalError(FatalError(Cow::Owned(message)))
+    }
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        use Error::*;
+        match self {
+            FatalError(err) => f.write_str(err.0.as_ref()),
+            RuntimeError(err) => Display::fmt(err, f),
+            UserError(err) => f.write_str(err.message.as_ref()),
+            ServerError(err) => f.write_str(err.0.as_ref()),
+        }
+    }
+}
+
+impl std::error::Error for Error { }
+
+
+
+
+// Old errors
+
+
+// impl ErrorType {
+//     pub(crate) fn code(&self) -> u16 {
+//         match self {
+//             ErrorType::ValidationError => { 400 }
+//             ErrorType::IncorrectJSONFormat => { 400 }
+//             ErrorType::UnknownDatabaseWriteError => { 500 }
+//             ErrorType::UnknownDatabaseDeleteError => { 500 }
+//             ErrorType::UnknownDatabaseFindError => { 500 }
+//             ErrorType::UnknownDatabaseFindUniqueError => { 500 }
+//             ErrorType::DestinationNotFound => { 404 }
+//             ErrorType::InternalServerError => { 500 }
+//             ErrorType::ObjectNotFound => { 404 }
+//             ErrorType::InvalidAuthToken => { 401 }
+//             ErrorType::CustomInternalServerError => { 500 }
+//             ErrorType::CustomValidationError => { 400 }
+//             ErrorType::WrongIdentityModel => { 401 }
+//             ErrorType::PropertySetterError => { 400 }
+//             ErrorType::UnexpectedInputRootType => { 400 }
+//             ErrorType::UnexpectedInputType => { 400 }
+//             ErrorType::UnexpectedInputKey => { 400 }
+//             ErrorType::MissingRequiredInput => { 400 }
+//             ErrorType::UnexpectedObjectLength => { 400 }
+//             ErrorType::InvalidKey => { 500 }
+//             ErrorType::InvalidOperation => { 500 }
+//             ErrorType::PermissionError => { 401 }
+//             ErrorType::DeletionDenied => { 400 }
+//             ErrorType::RecordDecodingError => { 500 }
+//         }
+//     }
+// }
 
 impl Error {
 
@@ -379,14 +405,6 @@ impl Error {
         self.r#type == ErrorType::CustomValidationError
     }
 }
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.r#type.fmt(f)
-    }
-}
-
-impl std::error::Error for Error { }
 
 impl From<&str> for Error {
     fn from(value: &str) -> Self {
