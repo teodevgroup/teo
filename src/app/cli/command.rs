@@ -65,3 +65,12 @@ pub(crate) enum CLICommand {
     Seed(SeedCommand),
     Purge(PurgeCommand),
 }
+
+impl CLICommand {
+    pub(crate) fn is_generate(&self) -> bool {
+        match self {
+            CLICommand::Generate(_) => true,
+            _ => false,
+        }
+    }
+}

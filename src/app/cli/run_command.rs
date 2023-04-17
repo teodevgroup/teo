@@ -1,10 +1,11 @@
-use crate::app::cli::command::{CLI, CLICommand, SeedCommandAction};
+use crate::app::cli::command::{CLI, CLICommand, GenerateCommand, SeedCommandAction};
 use crate::app::new_app::ctx::AppCtx;
 use crate::migrate::migrate;
 use crate::app::new_app::new_result::Result;
 use crate::core::conf::test::ResetMode;
-use crate::server::test_context::TestContext;
+use crate::server::test_context::{TestContext};
 use crate::core::teon::Value;
+use crate::purger::purge;
 use crate::seeder::seed::seed;
 use crate::server::serve;
 
@@ -68,39 +69,39 @@ pub(crate) async fn run_command(cli: CLI) -> Result<()> {
         CLICommand::Generate(cmd) => {
             match cmd {
                 GenerateCommand::GenerateEntityCommand(entity_command) => {
-                    match self.entity_generator_confs.len() {
+                    match app_ctx.entities().len() {
                         0 => println!("Cannot find an entity generator declaration."),
                         1 => {
-                            let conf = self.entity_generator_confs.get(0).unwrap();
-                            gen_entity(&self.graph, conf).await?;
+                            let conf = app_ctx.entities().get(0).unwrap();
+                            gen_entity(graph, conf).await?;
                         },
                         _ => {
                             let mut names = entity_command.names.clone().unwrap_or(vec![]);
                             if entity_command.all {
-                                names = self.entity_generator_confs.iter().map(|c| c.name.clone().unwrap()).collect();
+                                names = app_ctx.entities().iter().map(|c| c.name.clone().unwrap()).collect();
                             }
                             for name in names.iter() {
-                                let conf = self.entity_generator_confs.iter().find(|c| c.name.as_ref().unwrap() == name).unwrap();
-                                gen_entity(&self.graph, conf).await?;
+                                let conf = app_ctx.entities().iter().find(|c| c.name.as_ref().unwrap() == name).unwrap();
+                                gen_entity(graph, conf).await?;
                             }
                         }
                     }
                 }
                 GenerateCommand::GenerateClientCommand(client_command) => {
-                    match self.client_generator_confs.len() {
+                    match app_ctx.clients().len() {
                         0 => println!("Cannot find a client generator declaration."),
                         1 => {
-                            let conf = self.client_generator_confs.get(0).unwrap();
-                            gen_client(&self.graph, conf).await?;
+                            let conf = app_ctx.clients().get(0).unwrap();
+                            gen_client(graph, conf).await?;
                         },
                         _ => {
                             let mut names = client_command.names.clone().unwrap_or(vec![]);
                             if client_command.all {
-                                names = self.client_generator_confs.iter().map(|c| c.name.clone().unwrap()).collect();
+                                names = app_ctx.clients().iter().map(|c| c.name.clone().unwrap()).collect();
                             }
                             for name in names.iter() {
-                                let conf = self.client_generator_confs.iter().find(|c| c.name.as_ref().unwrap() == name).unwrap();
-                                gen_client(&self.graph, conf).await?;
+                                let conf = app_ctx.clients().iter().find(|c| c.name.as_ref().unwrap() == name).unwrap();
+                                gen_client(graph, conf).await?;
                             }
                         }
                     }
@@ -108,19 +109,19 @@ pub(crate) async fn run_command(cli: CLI) -> Result<()> {
             }
         }
         CLICommand::Migrate(migrate_command) => {
-            migrate(self.graph.to_mut(), migrate_command.dry).await;
+            migrate(graph, migrate_command.dry).await;
         }
         CLICommand::Seed(seed_command) => {
             let names = if seed_command.all {
-                self.datasets.iter().map(|d| d.name.clone()).collect()
+                datasets.iter().map(|d| d.name.clone()).collect()
             } else {
                 seed_command.names.clone().unwrap()
             };
-            migrate(self.graph, false).await;
-            seed(seed_command.action, self.graph(), &self.datasets, names).await
+            migrate(graph, false).await;
+            seed(seed_command.action, graph(), datasets, names).await
         }
         CLICommand::Purge(_) => {
-            purge(self.graph).await.unwrap()
+            purge(graph).await.unwrap()
         }
     }
     Ok(())

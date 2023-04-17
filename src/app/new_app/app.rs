@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use crate::app::cli::parse_cli::parse_cli;
 use crate::app::cli::run_command::run_command;
+use crate::app::connect_to_database::connect_to_database;
 use crate::app::parse_schema::{load_schema, parse_schema};
 use crate::core::callbacks::types::callback::{CallbackArgument, CallbackResult};
 use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
@@ -69,6 +70,9 @@ impl App {
         let cli = parse_cli()?;
         parse_schema(cli.main())?;
         load_schema()?;
+        if !cli.command.is_generate() {
+            connect_to_database().await?;
+        }
         run_command(cli).await?;
         Ok(())
     }
