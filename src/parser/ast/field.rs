@@ -4,7 +4,7 @@ use crate::parser::ast::identifier::ASTIdentifier;
 use crate::parser::ast::r#type::Type;
 use crate::parser::ast::span::Span;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub(crate) enum ASTFieldClass {
     Unresolved,
     Field,

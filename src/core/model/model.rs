@@ -30,13 +30,13 @@ pub struct Model {
     identity: bool,
     r#virtual: bool,
     fields_vec: Vec<Arc<Field>>,
-    fields_map: HashMap<String, Arc<Field>>,
-    dropped_fields: Vec<Arc<Field>>,
-    dropped_fields_map: HashMap<String, Arc<Field>>,
+    fields_map: HashMap<&'static str, Arc<Field>>,
+    dropped_fields_vec: Vec<Arc<Field>>,
+    dropped_fields_map: HashMap<&'static str, Arc<Field>>,
     relations_vec: Vec<Arc<Relation>>,
-    relations_map: HashMap<String, Arc<Relation>>,
+    relations_map: HashMap<&'static str, Arc<Relation>>,
     properties_vec: Vec<Arc<Property>>,
-    properties_map: HashMap<String, Arc<Property>>,
+    properties_map: HashMap<&'static str, Arc<Property>>,
     indices: Vec<ModelIndex>,
     primary: Option<ModelIndex>,
     before_save_pipeline: Pipeline,
@@ -80,7 +80,7 @@ impl Model {
             r#virtual: false,
             fields_vec: vec![],
             fields_map: hashmap!{},
-            dropped_fields: vec![],
+            dropped_fields_vec: vec![],
             dropped_fields_map: hashmap!{},
             relations_vec: vec![],
             relations_map: hashmap!{},
@@ -578,6 +578,30 @@ impl Model {
 
     pub(crate) fn set_virtual(&mut self, r#virtual: bool) {
         self.r#virtual = r#virtual;
+    }
+
+    pub(crate) fn add_field(&mut self, field: Field) {
+        let arc = Arc::new(field);
+        self.fields_vec.push(arc.clone());
+        self.fields_map.insert(arc.name(), arc);
+    }
+
+    pub(crate) fn add_dropped_field(&mut self, field: Field) {
+        let arc = Arc::new(field);
+        self.dropped_fields_vec.push(arc.clone());
+        self.dropped_fields_map.insert(arc.name(), arc);
+    }
+
+    pub(crate) fn add_relation(&mut self, relation: Relation) {
+        let arc = Arc::new(relation);
+        self.relations_vec.push(arc.clone());
+        self.relations_map.insert(arc.name(), arc);
+    }
+
+    pub(crate) fn add_property(&mut self, property: Property) {
+        let arc = Arc::new(property);
+        self.properties_vec.push(arc.clone());
+        self.properties_map.insert(arc.name(), arc);
     }
 }
 
