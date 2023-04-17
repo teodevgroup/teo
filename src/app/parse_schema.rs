@@ -3,6 +3,7 @@ use crate::core::conf::debug::DebugConf;
 use crate::core::conf::test::{Reset, ResetDatasets, ResetMode, TestConf};
 use crate::core::connector::ConnectorConf;
 use crate::core::model::Model;
+use crate::core::model::model::Model;
 use crate::gen::interface::client::conf::Conf;
 use crate::gen::interface::server::conf::EntityGeneratorConf;
 use crate::parser::parser::parser::ASTParser;
@@ -88,7 +89,14 @@ pub(super) fn load_schema() -> Result<()> {
     }
     // models
     for ast_model in parser.models() {
-        let mut model = Model::new();
+        let mut model = Model::new(
+            ast_model.identifier.name.as_str(),
+            ast_model.comment_block.map(|c|c.name.map(|n|n.as_str())).flatten(),
+            ast_model.comment_block.map(|c|c.desc.map(|n|n.as_str())).flatten());
+        for ast_decorator in ast_model.decorators.iter() {
+            let model_decorator = ast_decorator.accessible.as_ref().unwrap().as_model_decorator().unwrap();
+            model_decorator(ast_decorator.get_argument_list(), &mut model);
+        }
     }
 
 
@@ -96,14 +104,7 @@ pub(super) fn load_schema() -> Result<()> {
     // // load models
     // for model_ref in parser.models.clone() {
     //     self.graph_builder.model(&model.identifier.name, |model_builder| {
-    //         if let Some(comment) = &model.comment_block {
-    //             if let Some(name) = comment.name.as_ref() {
-    //                 model_builder.localized_name(name);
-    //             }
-    //             if let Some(desc) = comment.desc.as_ref() {
-    //                 model_builder.description(desc);
-    //             }
-    //         }
+    //
     //         for decorator in model.decorators.iter() {
     //             let model_decorator = decorator.accessible.as_ref().unwrap().as_model_decorator().unwrap();
     //             model_decorator(decorator.get_argument_list(), model_builder);

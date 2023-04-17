@@ -4,7 +4,7 @@ use crate::parser::ast::expression::ExpressionKind;
 use crate::parser::ast::span::Span;
 
 #[derive(Debug, Clone)]
-pub struct Decorator {
+pub struct ASTDecorator {
     pub(crate) expression: ExpressionKind,
     pub(crate) span: Span,
     pub(crate) resolved: bool,
@@ -12,15 +12,15 @@ pub struct Decorator {
     pub(crate) arguments: Option<ArgumentList>,
 }
 
-impl Decorator {
+impl ASTDecorator {
     pub(crate) fn new(expression: ExpressionKind, span: Span) -> Self {
         Self { expression, span, resolved: false, accessible: None, arguments: None }
     }
 
-    pub(crate) fn get_argument_list(&self) -> Vec<Argument> {
+    pub(crate) fn get_argument_list(&self) -> Option<&Vec<Argument>> {
         match &self.arguments {
-            Some(argument_list) => argument_list.arguments.clone(),
-            None => vec![],
+            Some(argument_list) => Some(&argument_list.arguments),
+            None => None,
         }
     }
 }

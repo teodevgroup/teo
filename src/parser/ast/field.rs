@@ -1,5 +1,5 @@
 use crate::parser::ast::comment_block::CommentBlock;
-use crate::parser::ast::decorator::Decorator;
+use crate::parser::ast::decorator::ASTDecorator;
 use crate::parser::ast::identifier::ASTIdentifier;
 use crate::parser::ast::r#type::Type;
 use crate::parser::ast::span::Span;
@@ -18,14 +18,14 @@ pub(crate) struct ASTField {
     pub(crate) comment_block: Option<CommentBlock>,
     pub(crate) identifier: ASTIdentifier,
     pub(crate) r#type: Type,
-    pub(crate) decorators: Vec<Decorator>,
+    pub(crate) decorators: Vec<ASTDecorator>,
     pub(crate) span: Span,
     pub(crate) resolved: bool,
     pub(crate) field_class: ASTFieldClass,
 }
 
 impl ASTField {
-    pub(crate) fn new(comment_block: Option<CommentBlock>, identifier: ASTIdentifier, r#type: Type, decorators: Vec<Decorator>, span: Span) -> Self {
+    pub(crate) fn new(comment_block: Option<CommentBlock>, identifier: ASTIdentifier, r#type: Type, decorators: Vec<ASTDecorator>, span: Span) -> Self {
         Self {
             comment_block, identifier, r#type, decorators, span, resolved: false, field_class: ASTFieldClass::Unresolved,
         }

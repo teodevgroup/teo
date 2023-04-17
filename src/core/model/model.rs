@@ -70,10 +70,10 @@ pub struct Model {
 
 impl Model {
 
-    pub(crate) fn new(name: &'static str, table_name: Option<&'static str>, localized_name: Option<&'static str>, description: Option<&'static str>) -> Self {
+    pub(crate) fn new(name: &'static str, localized_name: Option<&'static str>, description: Option<&'static str>) -> Self {
         Self {
             name,
-            table_name: table_name.map_or_else(|| Cow::Owned(name.to_lowercase().to_plural()), |n| Cow::Borrowed(n)),
+            table_name: Cow::Owned(name.to_lowercase().to_plural()),
             localized_name: localized_name.map_or_else(|| Cow::Owned(name.to_sentence_case()), |n| Cow::Borrowed(n)),
             description: description.map_or_else(|| Cow::Borrowed("This model doesn't have a description."), |n| Cow::Borrowed(n)),
             identity: false,
@@ -166,7 +166,7 @@ impl Model {
         &self.handler_actions
     }
 
-    pub(crate) fn deny_relation_keys(&self) -> &Vec<String> {
+    pub(crate) fn deny_relation_keys(&self) -> &Vec<&str> {
         return &self.deny_relation_keys
     }
 
@@ -218,41 +218,41 @@ impl Model {
         None
     }
 
-    pub(crate) fn all_keys(&self) -> &Vec<String> { &self.all_keys }
+    pub(crate) fn all_keys(&self) -> &Vec<&str> { &self.all_keys }
 
-    pub(crate) fn input_keys(&self) -> &Vec<String> {
+    pub(crate) fn input_keys(&self) -> &Vec<&str> {
         &self.input_keys
     }
 
-    pub(crate) fn save_keys(&self) -> &Vec<String> {
+    pub(crate) fn save_keys(&self) -> &Vec<&str> {
         &self.save_keys
     }
 
-    pub(crate) fn output_keys(&self) -> &Vec<String> {
+    pub(crate) fn output_keys(&self) -> &Vec<&str> {
         &self.output_keys
     }
 
-    pub(crate) fn query_keys(&self) -> &Vec<String> {
+    pub(crate) fn query_keys(&self) -> &Vec<&str> {
         &self.query_keys
     }
 
-    pub(crate) fn unique_query_keys(&self) -> &Vec<HashSet<String>> {
+    pub(crate) fn unique_query_keys(&self) -> &Vec<HashSet<&'static str>> {
         &self.unique_query_keys
     }
 
-    pub(crate) fn sort_keys(&self) -> &Vec<String> {
+    pub(crate) fn sort_keys(&self) -> &Vec<&str> {
         &self.sort_keys
     }
 
-    pub(crate) fn auth_identity_keys(&self) -> &Vec<String> { &self.auth_identity_keys }
+    pub(crate) fn auth_identity_keys(&self) -> &Vec<&str> { &self.auth_identity_keys }
 
-    pub(crate) fn auth_by_keys(&self) -> &Vec<String> { &self.auth_by_keys }
+    pub(crate) fn auth_by_keys(&self) -> &Vec<&str> { &self.auth_by_keys }
 
-    pub(crate) fn auto_keys(&self) -> &Vec<String> { &self.auto_keys }
+    pub(crate) fn auto_keys(&self) -> &Vec<&str> { &self.auto_keys }
 
-    pub(crate) fn scalar_keys(&self) -> &Vec<String> { &self.scalar_keys }
+    pub(crate) fn scalar_keys(&self) -> &Vec<&str> { &self.scalar_keys }
 
-    pub(crate) fn scalar_number_keys(&self) -> &Vec<String> { &self.scalar_number_keys }
+    pub(crate) fn scalar_number_keys(&self) -> &Vec<&str> { &self.scalar_number_keys }
 
     pub(crate) fn allowed_keys_for_aggregate(&self, name: &str) -> HashSet<&str> {
         match name {
@@ -262,11 +262,11 @@ impl Model {
         }
     }
 
-    pub(crate) fn local_output_keys(&self) -> &Vec<String> {
+    pub(crate) fn local_output_keys(&self) -> &Vec<&'static str> {
         &self.local_output_keys
     }
 
-    pub(crate) fn relation_output_keys(&self) -> &Vec<String> {
+    pub(crate) fn relation_output_keys(&self) -> &Vec<&'static str> {
         &self.relation_output_keys
     }
 
@@ -531,6 +531,53 @@ impl Model {
 
     pub(crate) fn add_action_transformer(&mut self, pipeline: Pipeline) {
         self.action_transformers.push(pipeline);
+    }
+
+    pub(crate) fn set_before_save_pipeline(&mut self, p: Pipeline) {
+        self.before_save_pipeline = p;
+    }
+
+    pub(crate) fn set_after_save_pipeline(&mut self, p: Pipeline) {
+        self.after_save_pipeline = p;
+    }
+
+    pub(crate) fn set_before_delete_pipeline(&mut self, p: Pipeline) {
+        self.before_delete_pipeline = p;
+    }
+
+    pub(crate) fn set_after_delete_pipeline(&mut self, p: Pipeline) {
+        self.after_delete_pipeline = p;
+    }
+
+    pub(crate) fn set_can_read_pipeline(&mut self, p: Pipeline) {
+        self.can_read_pipeline = p;
+    }
+
+    pub(crate) fn set_can_mutate_pipeline(&mut self, p: Pipeline) {
+        self.can_mutate_pipeline = p;
+    }
+
+    pub(crate) fn set_disabled_actions(&mut self, actions: Vec<Action>) {
+        self.disabled_actions = Some(actions);
+    }
+
+    pub(crate) fn add_index(&mut self, index: ModelIndex) {
+        if index.r#type().is_primary() {
+            self.primary = Some(index.clone());
+        }
+        self.indices.push(index);
+    }
+
+    pub(crate) fn set_identity(&mut self, identity: bool) {
+        self.identity = identity;
+    }
+
+    pub(crate) fn set_migration(&mut self, migration: ModelMigration) {
+        self.migration = Some(migration);
+    }
+
+    pub(crate) fn set_virtual(&mut self, r#virtual: bool) {
+        self.r#virtual = r#virtual;
     }
 }
 

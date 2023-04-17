@@ -11,7 +11,7 @@ use crate::parser::ast::accessible::{Accessible, ASTPipeline, ASTPipelineItem, C
 use crate::parser::ast::argument::ArgumentList;
 use crate::parser::ast::config::ASTServer;
 use crate::parser::ast::constant::Constant;
-use crate::parser::ast::decorator::Decorator;
+use crate::parser::ast::decorator::ASTDecorator;
 use crate::parser::ast::entity::Entity;
 use crate::parser::ast::expression::{ArrayLiteral, BitwiseNegation, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, Negation, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
 use crate::parser::ast::field::{ASTField, ASTFieldClass};
@@ -169,7 +169,7 @@ impl Resolver {
         model.resolved = true;
     }
 
-    fn resolve_model_decorator(parser: &ASTParser, source: &Source, decorator: &mut Decorator) {
+    fn resolve_model_decorator(parser: &ASTParser, source: &Source, decorator: &mut ASTDecorator) {
         match &decorator.expression {
             ExpressionKind::Identifier(identifier) => {
                 let d = parser.global_model_decorators();
@@ -211,7 +211,7 @@ impl Resolver {
         decorator.resolved = true;
     }
 
-    fn resolve_field_decorator(parser: &ASTParser, source: &Source, decorator: &mut Decorator) {
+    fn resolve_field_decorator(parser: &ASTParser, source: &Source, decorator: &mut ASTDecorator) {
         match &decorator.expression {
             ExpressionKind::Identifier(identifier) => {
                 let d = parser.global_field_decorators();
@@ -252,7 +252,7 @@ impl Resolver {
         decorator.resolved = true;
     }
 
-    fn resolve_property_decorator(parser: &ASTParser, source: &Source, decorator: &mut Decorator) {
+    fn resolve_property_decorator(parser: &ASTParser, source: &Source, decorator: &mut ASTDecorator) {
         match &decorator.expression {
             ExpressionKind::Identifier(identifier) => {
                 let d = parser.global_property_decorators();
@@ -293,7 +293,7 @@ impl Resolver {
         decorator.resolved = true;
     }
 
-    fn resolve_relation_decorator(parser: &ASTParser, source: &Source, decorator: &mut Decorator) {
+    fn resolve_relation_decorator(parser: &ASTParser, source: &Source, decorator: &mut ASTDecorator) {
         match &decorator.expression {
             ExpressionKind::Identifier(identifier) => {
                 let d = parser.global_relation_decorators();

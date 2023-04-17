@@ -4,8 +4,10 @@ use std::sync::{Arc, Mutex};
 use maplit::hashmap;
 use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::field::Field;
-use crate::core::model::builder::ModelBuilder;
+use crate::core::field::field::Field;
+use crate::core::model::model::Model;
 use crate::core::item::Item;
+use crate::core::model::model::Model;
 use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
 use crate::core::relation::Relation;
@@ -29,7 +31,7 @@ pub(crate) type RelationDecorator = fn(args: Vec<Argument>, relation: &mut Relat
 
 pub(crate) type PropertyDecorator = fn(args: Vec<Argument>, property: &mut Property);
 
-pub(crate) type ModelDecorator = fn(args: Vec<Argument>, model: &mut ModelBuilder);
+pub(crate) type ModelDecorator = fn(args: Option<&Vec<Argument>>, model: &mut Model);
 
 pub(crate) type ASTPipelineInstaller = fn(args: Vec<Argument>) -> Arc<dyn Item>;
 

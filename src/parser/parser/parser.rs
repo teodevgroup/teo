@@ -20,7 +20,7 @@ use crate::parser::ast::connector::ASTConnector;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::data_set::{DataSet, DataSetGroup, DataSetRecord};
 use crate::parser::ast::debug_conf::ASTDebugConf;
-use crate::parser::ast::decorator::Decorator;
+use crate::parser::ast::decorator::ASTDecorator;
 use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral, RegExpLiteral, NullishCoalescing, Negation, BitwiseNegation };
 use crate::parser::ast::field::ASTField;
 use crate::parser::ast::generator::ASTEntity;
@@ -325,7 +325,7 @@ impl ASTParser {
         let mut comment_block = None;
         let mut identifier: Option<ASTIdentifier> = None;
         let mut fields: Vec<ASTField> = vec![];
-        let mut decorators: Vec<Decorator> = vec![];
+        let mut decorators: Vec<ASTDecorator> = vec![];
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
@@ -353,7 +353,7 @@ impl ASTParser {
         let mut comment_block = None;
         let mut identifier: Option<ASTIdentifier> = None;
         let mut r#type: Option<Type> = None;
-        let mut decorators: Vec<Decorator> = vec![];
+        let mut decorators: Vec<ASTDecorator> = vec![];
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
@@ -378,7 +378,7 @@ impl ASTParser {
         let mut comment_block = None;
         let mut identifier: Option<ASTIdentifier> = None;
         let mut choices: Vec<EnumChoice> = vec![];
-        let mut decorators: Vec<Decorator> = vec![];
+        let mut decorators: Vec<ASTDecorator> = vec![];
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
@@ -404,7 +404,7 @@ impl ASTParser {
     fn parse_enum_value(&mut self, pair: Pair<'_>) -> EnumChoice {
         let mut comment_block = None;
         let mut identifier: Option<ASTIdentifier> = None;
-        let mut decorators: Vec<Decorator> = vec![];
+        let mut decorators: Vec<ASTDecorator> = vec![];
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
@@ -554,7 +554,7 @@ impl ASTParser {
         Item { identifier: identifier.unwrap(), expression: expression.unwrap(), span }
     }
 
-    fn parse_decorator(pair: Pair<'_>) -> Decorator {
+    fn parse_decorator(pair: Pair<'_>) -> ASTDecorator {
         let span = Self::parse_span(&pair);
         let mut unit: Option<ExpressionKind> = None;
         for current in pair.into_inner() {
@@ -563,7 +563,7 @@ impl ASTParser {
                 _ => panic!(),
             }
         }
-        Decorator::new(unit.unwrap(), span)
+        ASTDecorator::new(unit.unwrap(), span)
     }
 
     fn parse_pipeline(pair: Pair<'_>) -> ASTPipeline {

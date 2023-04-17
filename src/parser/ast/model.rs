@@ -1,5 +1,5 @@
 use crate::parser::ast::comment_block::CommentBlock;
-use crate::parser::ast::decorator::Decorator;
+use crate::parser::ast::decorator::ASTDecorator;
 use crate::parser::ast::field::ASTField;
 use crate::parser::ast::identifier::ASTIdentifier;
 use crate::parser::ast::span::Span;
@@ -11,7 +11,7 @@ pub struct ASTModel {
     pub(crate) identifier: ASTIdentifier,
     pub(crate) comment_block: Option<CommentBlock>,
     pub(crate) fields: Vec<ASTField>,
-    pub(crate) decorators: Vec<Decorator>,
+    pub(crate) decorators: Vec<ASTDecorator>,
     pub(crate) span: Span,
     pub(crate) resolved: bool,
     pub(crate) scalar_field_enum: Vec<String>,
@@ -20,7 +20,7 @@ pub struct ASTModel {
 }
 
 impl ASTModel {
-    pub(crate) fn new(id: usize, source_id: usize, identifier: ASTIdentifier, comment_block: Option<CommentBlock>, fields: Vec<ASTField>, decorators: Vec<Decorator>, span: Span) -> Self {
+    pub(crate) fn new(id: usize, source_id: usize, identifier: ASTIdentifier, comment_block: Option<CommentBlock>, fields: Vec<ASTField>, decorators: Vec<ASTDecorator>, span: Span) -> Self {
         Self {
             id, source_id, identifier, comment_block, fields, decorators, span, resolved: false,
             scalar_field_enum: vec![], scalar_field_and_cached_property_enum: vec![],

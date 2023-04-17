@@ -3,6 +3,7 @@ use crate::parser::ast::entity::Entity;
 use crate::parser::ast::expression::ExpressionKind;
 use crate::parser::ast::identifier::ASTIdentifier;
 use crate::parser::ast::span::Span;
+use crate::prelude::Value;
 
 #[derive(Debug, Clone)]
 pub struct Argument {
@@ -10,6 +11,12 @@ pub struct Argument {
     pub(crate) value: ExpressionKind,
     pub(crate) span: Span,
     pub(crate) resolved: Option<Entity>,
+}
+
+impl Argument {
+    pub(crate) fn get_value(&self) -> Option<&Value> {
+        self.resolved.as_ref().map(|e| e.as_value()).flatten()
+    }
 }
 
 impl Display for Argument {

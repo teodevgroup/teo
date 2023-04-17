@@ -1,11 +1,12 @@
-use crate::core::model::builder::ModelBuilder;
+use crate::core::model::model::Model;
 use crate::core::model::migration::ModelMigration;
 use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
 
 static VALID_NAMES: [&str; 3] = ["renamed", "version", "drop"];
 
-pub(crate) fn migration_decorator(args: Vec<Argument>, model: &mut ModelBuilder) {
+pub(crate) fn migration_decorator(args: Option<&Vec<Argument>>, model: &mut Model) {
+    let args = args.unwrap();
     let mut migration = ModelMigration { renamed: vec![], version: None, drop: false };
     for arg in args {
         if arg.name.is_none() {
@@ -41,5 +42,5 @@ pub(crate) fn migration_decorator(args: Vec<Argument>, model: &mut ModelBuilder)
         }
 
     }
-    model.migration = Some(migration);
+    model.set_migration(migration);
 }

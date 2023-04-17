@@ -1,5 +1,6 @@
+use crate::core::field::field::Sort;
 use crate::core::field::Sort;
-use crate::core::model::builder::ModelBuilder;
+use crate::core::model::model::Model;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
@@ -8,19 +9,20 @@ static MODEL_INDEX_PRIMARY: u8 = 0;
 static MODEL_INDEX_INDEX: u8 = 1;
 static MODEL_INDEX_UNIQUE: u8 = 2;
 
-pub(crate) fn id_decorator(args: Vec<Argument>, model: &mut ModelBuilder) {
+pub(crate) fn id_decorator(args: Option<&Vec<Argument>>, model: &mut Model) {
     decorator(args, model, MODEL_INDEX_PRIMARY)
 }
 
-pub(crate) fn index_decorator(args: Vec<Argument>, model: &mut ModelBuilder) {
+pub(crate) fn index_decorator(args: Option<&Vec<Argument>>, model: &mut Model) {
     decorator(args, model, MODEL_INDEX_INDEX)
 }
 
-pub(crate) fn unique_decorator(args: Vec<Argument>, model: &mut ModelBuilder) {
+pub(crate) fn unique_decorator(args: Option<&Vec<Argument>>, model: &mut Model) {
     decorator(args, model, MODEL_INDEX_UNIQUE)
 }
 
-fn decorator(args: Vec<Argument>, model: &mut ModelBuilder, index_kind: u8) {
+fn decorator(args: Option<&Vec<Argument>>, model: &mut Model, index_kind: u8) {
+    let args = args.unwrap();
     let mut items: Vec<ModelIndexItem> = vec![];
     let mut map: Option<String> = None;
     if args.is_empty() {
@@ -55,19 +57,14 @@ fn decorator(args: Vec<Argument>, model: &mut ModelBuilder, index_kind: u8) {
         map = Some(arg1.resolved.as_ref().unwrap().as_value().unwrap().as_str().unwrap().to_owned());
     }
     match index_kind {
-        0 => {
-            let index = ModelIndex::new(ModelIndexType::Primary, map, items);
-            model.indices.push(index.clone());
-            model.primary = Some(index);
-        },
-        1 => model.indices.push(ModelIndex::new(ModelIndexType::Index, map, items)),
-        2 => model.indices.push(ModelIndex::new(ModelIndexType::Unique, map, items)),
+        0 => model.add_index(ModelIndex::new(ModelIndexType::Primary, map, items)),
+        1 => model.add_index(ModelIndex::new(ModelIndexType::Index, map, items)),
+        2 => model.add_index(ModelIndex::new(ModelIndexType::Unique, map, items)),
         _ => unreachable!(),
     }
 }
 
-fn model_index_item(name: &String, args: &Option<Vec<(Option<String>, Value)>>) -> ModelIndexItem {
-    let name: String = name.clone();
+fn model_index_item(name: &str, args: &Option<Vec<(Option<String>, Value)>>) -> ModelIndexItem {
     let mut sort = Sort::Asc;
     let mut len: Option<usize> = None;
     if let Some(args) = args {

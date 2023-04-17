@@ -413,6 +413,7 @@
 - Remove `ModelBuilder` **[DONE]**
 - Rewrite model API **[DONE]**
 - Remove `ModelIndexBuilder` **[DONE]**
+- Rewrite framework errors
 - TS client: refactor
 - Client: distinct in handler args
 - C# client: capitalized names and names with underscore

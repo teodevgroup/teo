@@ -2,7 +2,7 @@ use std::sync::Arc;
 use crate::core::field::{Field, Sort};
 use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::FieldType;
-use crate::core::model::builder::ModelBuilder;
+use crate::core::model::model::Model;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::items::string::generation::cuid::CUIDItem;
 use crate::core::pipeline::Pipeline;
