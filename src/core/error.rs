@@ -16,15 +16,20 @@ pub struct ServerError(Cow<'static, str>);
 
 #[derive(Debug)]
 pub enum RuntimeError {
-    RuntimeError1,
+    ObjectIsNotSaved,
+}
+
+impl RuntimeError {
+    pub fn message(&self) -> &'static str {
+        match self {
+            RuntimeError::ObjectIsNotSaved => "Object is not saved thus can't be deleted.",
+        }
+    }
 }
 
 impl Display for RuntimeError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        use RuntimeError::*;
-        match self {
-            RuntimeError1 => f.write_str("Runtime error 1")
-        }
+        f.write_str(self.message())
     }
 }
 
@@ -40,6 +45,8 @@ pub enum UserErrorType {
     DeletionDenied,
     CustomInternalServerError,
     CustomValidationError,
+    UniqueConstraintError,
+    WrongIdentityModel,
     CustomErrorType(Cow<'static, str>),
 }
 
@@ -122,199 +129,145 @@ impl std::error::Error for Error { }
 impl Error {
 
     pub fn message(&self) -> &str {
-        &self.message
-    }
-
-    pub(crate) fn unexpected_enum_value(field: impl Into<String>) -> Self {
-        let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
-        errors.insert(field.into(), "Enum value is unexpected.".to_string());
-        Error {
-            r#type: ErrorType::ValidationError,
-            message: "Enum value is unexpected.".to_string(),
-            errors: Some(errors)
+        match self {
+            Error::FatalError(fatal_error) => fatal_error.0.as_ref(),
+            Error::ServerError(server_error) => server_error.0.as_ref(),
+            Error::RuntimeError(runtime_error) => runtime_error.message(),
+            Error::UserError(user_error) => user_error.message.as_ref(),
         }
     }
 
-    pub(crate) fn unique_value_duplicated_reason(field: impl AsRef<str>, reason: impl AsRef<str>) -> Self {
-        let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
-        errors.insert(field.as_ref().into(), format!("{}", reason.as_ref()));
-        Error {
-            r#type: ErrorType::ValidationError,
-            message: "Unique value duplicated.".to_string(),
-            errors: Some(errors)
-        }
-    }
-
-    pub(crate) fn unique_value_duplicated(field: impl AsRef<str>) -> Self {
-        let mut errors: HashMap<String, String> = HashMap::with_capacity(1);
-        errors.insert(field.as_ref().into(), "value is not unique".into());
-        Error {
-            r#type: ErrorType::ValidationError,
-            message: "Unique value duplicated.".to_string(),
-            errors: Some(errors)
-        }
+    pub(crate) fn unique_value_duplicated(field: &'static str) -> Self {
+        Error::UserError(UserError {
+            r#type: UserErrorType::UniqueConstraintError,
+            message: Cow::Borrowed("Value is not unique."),
+            errors: Some(hashmap!{
+                Cow::Borrowed(field) => Cow::Borrowed("value is not unique")
+            }),
+        })
     }
 
     pub(crate) fn internal_server_error(reason: impl Into<String>) -> Self {
-        Error {
-            r#type: ErrorType::InternalServerError,
-            message: reason.into(),
-            errors: None
-        }
+        Error::ServerError(ServerError(Cow::Owned(reason.into())))
     }
 
     pub(crate) fn unknown_database_write_error() -> Self {
-        Error {
-            r#type: ErrorType::UnknownDatabaseWriteError,
-            message: "An unknown database write error occurred.".to_string(),
-            errors: None
-        }
+        Error::ServerError(ServerError(Cow::Borrowed("An unknown database write error occurred.")))
     }
 
     pub(crate) fn unknown_database_delete_error() -> Self {
-        Error {
-            r#type: ErrorType::UnknownDatabaseDeleteError,
-            message: "An unknown database delete error occurred.".to_string(),
-            errors: None
-        }
+        Error::ServerError(ServerError(Cow::Borrowed("An unknown database delete error occurred.")))
     }
 
     pub(crate) fn destination_not_found() -> Self {
-        Error {
-            r#type: ErrorType::DestinationNotFound,
-            message: "The request destination is not found.".to_string(),
-            errors: None
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::DestinationNotFound,
+            message: Cow::Borrowed("The request destination is not found."),
+            errors: None,
+        })
     }
 
     pub(crate) fn object_not_found() -> Self {
-        Error {
-            r#type: ErrorType::ObjectNotFound,
-            message: "The requested object does not exist.".to_string(),
-            errors: None
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::ObjectNotFound,
+            message: Cow::Borrowed("The request object is not found."),
+            errors: None,
+        })
     }
 
     pub(crate) fn object_is_not_saved_thus_cant_be_deleted() -> Self {
-        Error {
-            r#type: ErrorType::InternalServerError,
-            message: "This object is not saved thus can't be deleted.".to_string(),
-            errors: None
-        }
+        Error::RuntimeError(RuntimeError::ObjectIsNotSaved)
     }
 
     pub(crate) fn unknown_database_find_error() -> Self {
-        Error {
-            r#type: ErrorType::UnknownDatabaseFindError,
-            message: "An unknown query error occurred.".to_string(),
-            errors: None
-        }
+        Error::ServerError(ServerError(Cow::Borrowed("An unknown database find error occurred.")))
     }
 
     pub(crate) fn unknown_database_find_unique_error() -> Self {
-        Error {
-            r#type: ErrorType::UnknownDatabaseFindUniqueError,
-            message: "An unknown query unique error occurred.".to_string(),
-            errors: None
-        }
+        Error::ServerError(ServerError(Cow::Borrowed("An unknown database find unique error occurred.")))
     }
 
     pub(crate) fn record_decoding_error<'a>(model: &str, path: impl AsRef<KeyPath<'a>>, expected: impl AsRef<str>) -> Self {
-        Error {
-            r#type: ErrorType::RecordDecodingError,
-            message: format!("Expect `{}' for value at path `{}' of model `{model}'.", expected.as_ref(), path.as_ref()),
-            errors: None
-        }
+        Error::ServerError(ServerError(Cow::Owned(format!("Record decoding error. Expect `{}' for value at path `{}' of model `{model}'.", expected.as_ref(), path.as_ref()))))
     }
 
     pub(crate) fn invalid_auth_token() -> Self {
-        Error {
-            r#type: ErrorType::InvalidAuthToken,
-            message: "This auth token is invalid.".to_string(),
-            errors: None
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::InvalidAuthToken,
+            message: Cow::Borrowed("This auth token is invalid."),
+            errors: None,
+        })
     }
 
     pub fn custom_internal_server_error(message: impl Into<String>) -> Self {
-        Error {
-            r#type: ErrorType::CustomInternalServerError,
-            message: message.into(),
-            errors: None
-        }
+        Error::ServerError(ServerError(Cow::Owned(message.into())))
     }
 
     pub fn custom_validation_error(message: impl Into<String>) -> Self {
-        Error {
-            r#type: ErrorType::CustomValidationError,
-            message: message.into(),
-            errors: None
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::CustomValidationError,
+            message: Cow::Owned(message.into()),
+            errors: None,
+        })
     }
 
     pub(crate) fn wrong_identity_model() -> Self {
-        Error {
-            r#type: ErrorType::WrongIdentityModel,
-            message: format!("This identity is valid but is not of this model."),
-            errors: None
-        }
-    }
-
-    pub(crate) fn property_setter_error(reason: impl Into<String>) -> Self {
-        Error {
-            r#type: ErrorType::PropertySetterError,
-            message: reason.into(),
-            errors: None
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::WrongIdentityModel,
+            message: Cow::Borrowed("This identity is valid but is not of this model."),
+            errors: None,
+        })
     }
 
     // new error types which should be used across the project
 
     pub(crate) fn incorrect_json_format() -> Self {
-        Error {
-            r#type: ErrorType::IncorrectJSONFormat,
-            message: "Incorrect JSON format.".to_string(),
-            errors: None
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::IncorrectJSONFormat,
+            message: Cow::Borrowed("The request JSON body format is incorrect."),
+            errors: None,
+        })
     }
 
     pub(crate) fn unexpected_input_root_type<'a>(expected: impl AsRef<str>) -> Self {
-        Error {
-            r#type: ErrorType::UnexpectedInputRootType,
-            message: format!("Unexpected root input type. Expect {}.", expected.as_ref()),
-            errors: None
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::UnexpectedInput,
+            message: Cow::Owned(format!("Unexpected root input type. Expect {}.", expected.as_ref())),
+            errors: None,
+        })
     }
 
     pub(crate) fn unexpected_input_type<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
-        Error {
-            r#type: ErrorType::UnexpectedInputType,
-            message: "Unexpected input type found.".to_string(),
-            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expect {}.", expected.into())}),
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::UnexpectedInput,
+            message: Cow::Owned(format!("Unexpected input type. Expect {}.", expected.as_ref())),
+            errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Owned(format!("Expect {}.", expected.into()))}),
+        })
+
     }
 
     pub(crate) fn unexpected_input_key<'a>(unexpected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
-        Error {
-            r#type: ErrorType::UnexpectedInputKey,
-            message: "Unexpected key found.".to_string(),
-            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Unexpected key '{}'.", unexpected.into())}),
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::UnexpectedInput,
+            message: Cow::Owned(format!("Unexpected key '{}'.", unexpected.as_ref())),
+            errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Owned(format!("Expect {}.", unexpected.into()))}),
+        })
     }
 
     pub(crate) fn unexpected_input_value<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
-        Error {
-            r#type: ErrorType::ValidationError,
-            message: "Unexpected value found.".to_string(),
-            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expect `{}'.", expected.into())}),
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::UnexpectedInput,
+            message: Cow::Owned(format!("Unexpected value found.")),
+            errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Owned(format!("Expect {}.", expected.into()))}),
+        })
     }
 
     pub(crate) fn cannot_disconnect_previous_relation() -> Self {
-        Error {
-            r#type: ErrorType::ValidationError,
-            message: "Required relation cannot disconnect previous connected value.".to_string(),
+        Error::UserError(UserError {
+            r#type: UserErrorType::UnexpectedInput,
+            message: Cow::Owned(format!("Required relation cannot disconnect previous connected value.")),
             errors: None,
-        }
+        })
     }
 
     pub(crate) fn unexpected_input_value_with_reason<'a>(reason: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
