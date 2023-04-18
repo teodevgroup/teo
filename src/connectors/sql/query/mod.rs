@@ -10,7 +10,7 @@ use crate::connectors::sql::stmts::select::r#where::WhereClause::{And, Not};
 use crate::connectors::sql::stmts::SQL;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::input::Input;
-use crate::core::model::Model;
+use crate::core::model::model::Model;
 use crate::prelude::{Graph, Object, Value};
 
 pub(crate) struct Query { }

@@ -5,7 +5,7 @@ use crate::gen::interface::client::kind::Kind;
 /// # Client conf
 ///
 /// Client configuration.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Conf {
     pub(crate) kind: Kind,
     pub(crate) name: Option<String>,

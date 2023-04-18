@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use crate::app::new_app::ctx::AppCtx;
+use crate::app::ctx::AppCtx;
 use crate::connectors::mongodb::connector::MongoDBConnector;
 use crate::connectors::sql::connector::SQLConnector;
 use crate::connectors::sql::schema::dialect::SQLDialect;

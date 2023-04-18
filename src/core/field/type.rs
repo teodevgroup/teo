@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::ops::BitOr;
 use maplit::hashset;
 use once_cell::sync::Lazy;
-use crate::core::field::Field;
+use crate::core::field::field::Field;
 use crate::core::r#enum::Enum;
 
 #[derive(Debug, Clone)]

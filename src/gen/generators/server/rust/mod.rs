@@ -7,7 +7,7 @@ use tokio::fs;
 use toml_edit::{Document, value};
 use crate::app::conf::EntityGeneratorConf;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
-use crate::core::model::Model;
+use crate::core::model::model::Model;
 use crate::core::r#enum::Enum;
 use crate::core::relation::Relation;
 use crate::gen::interface::server::EntityGenerator;
@@ -154,30 +154,30 @@ impl RustEntityGenerator {
                 b.line("");
                 b.line(format!(r#"/// Find many {localized_name_word_case_plural}.
     pub async fn find_many(query: &Value) -> Result<Vec<{model_name}>> {{
-        Graph::current().find_many("{model_name}", query).await
+        AppCtx::get()?.graph()?.find_many("{model_name}", query).await
     }}
 
     /// Find a unique {localized_name_word_case}.
     pub async fn find_unique(query: &Value) -> Result<Option<{model_name}>> {{
-        Graph::current().find_unique("{model_name}", query).await
+        AppCtx::get()?.graph()?.find_unique("{model_name}", query).await
     }}
 
     /// Find a non unique {localized_name_word_case}.
     pub async fn find_first(query: &Value) -> Result<Option<{model_name}>> {{
-        Graph::current().find_first("{model_name}", query).await
+        AppCtx::get()?.graph()?.find_first("{model_name}", query).await
     }}"#));
                 b.line("");
                 b.line(format!(r#"/// Create a new {localized_name_word_case}.
     pub async fn new(values: impl AsRef<Value>) -> Self {{
         Self {{
-            inner: Graph::current().create_object("{model_name}", values).await.unwrap(),
+            inner: AppCtx::get()?.graph()?.create_object("{model_name}", values).await.unwrap(),
         }}
     }}"#));
                 b.line("");
                 b.line(format!(r#"/// Create an empty {localized_name_word_case}.
     pub async fn default() -> Self {{
         Self {{
-            inner: Graph::current().create_object("{model_name}", Value::HashMap(HashMap::new())).await.unwrap(),
+            inner: AppCtx::get()?.graph()?.create_object("{model_name}", Value::HashMap(HashMap::new())).await.unwrap(),
         }}
     }}
 

@@ -44,7 +44,7 @@ pub struct Enum {
 impl Enum {
 
     pub(crate) fn new(name: &'static str, localized_name: Option<String>, description: Option<String>, choices: Vec<EnumVariant>) -> Self {
-        let values = choices.iter().map(|c| c.name.clone()).collect();
+        let values = choices.iter().map(|c| c.name.to_string()).collect();
         Self {
             name,
             localized_name,

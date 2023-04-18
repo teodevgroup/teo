@@ -1,4 +1,4 @@
-use crate::core::field::Field;
+use crate::core::field::field::Field;
 use crate::parser::ast::argument::Argument;
 use crate::parser::ast::entity::Entity;
 

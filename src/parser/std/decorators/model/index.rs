@@ -1,5 +1,4 @@
 use crate::core::field::field::Sort;
-use crate::core::field::Sort;
 use crate::core::model::model::Model;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::parser::ast::argument::Argument;

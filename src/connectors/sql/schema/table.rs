@@ -1,6 +1,6 @@
 use crate::connectors::sql::stmts::create::table::SQLCreateTableStatement;
 use crate::connectors::sql::stmts::SQL;
-use crate::core::model::Model;
+use crate::core::model::model::Model;
 
 impl From<&Model> for SQLCreateTableStatement {
     fn from(model: &Model) -> Self {

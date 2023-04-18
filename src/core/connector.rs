@@ -7,11 +7,12 @@ use crate::core::initiator::Initiator;
 use crate::core::database::r#type::DatabaseType;
 use crate::core::field::r#type::FieldType;
 use crate::core::graph::Graph;
-use crate::core::model::Model;
+use crate::core::model::model::Model;
 use crate::core::object::Object;
 use crate::core::result::Result;
 use crate::prelude::Value;
 
+#[derive(Debug)]
 pub(crate) struct ConnectorConf {
     pub(crate) provider: DatabaseName,
     pub(crate) url: &'static str,
@@ -27,7 +28,7 @@ impl ConnectorConf {
 pub(crate) trait SaveSession: Debug + Send + Sync { }
 
 #[async_trait]
-pub(crate) trait Connector: Send + Sync {
+pub(crate) trait Connector: Send + Sync + Debug {
 
     // Migration
 

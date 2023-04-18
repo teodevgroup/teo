@@ -3,7 +3,7 @@ use std::sync::Arc;
 use inflector::Inflector;
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
-use crate::app::new_app::ctx::AppCtx;
+use crate::app::ctx::AppCtx;
 use crate::core::connector::Connector;
 use crate::core::database::r#type::DatabaseType;
 use crate::core::field::migration::FieldMigration;

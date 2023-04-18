@@ -5,11 +5,11 @@ use std::sync::Arc;
 use async_recursion::async_recursion;
 use inflector::Inflector;
 use maplit::{hashmap, hashset};
+use to_mut::ToMut;
 use crate::core::action::{Action, CREATE_HANDLER, CREATE_MANY_HANDLER, IDENTITY_HANDLER, SIGN_IN_HANDLER};
 use crate::core::action::{FIND, IDENTITY, MANY, NESTED, SIGN_IN, SINGLE};
-use crate::core::field::Field;
 use crate::core::field::field::{Field, FieldIndex, PreviousValueRule};
-use crate::core::field::r#type::FieldTypeOwner;
+use crate::core::field::field::r#type::FieldTypeOwner;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::model::migration::ModelMigration;
 use crate::core::pipeline::ctx::Ctx;
@@ -116,6 +116,10 @@ impl Model {
             migration: None,
             teo_internal: false,
         }
+    }
+
+    pub(crate) fn set_table_name(&mut self, table_name: &'static str) {
+        self.table_name = Cow::Borrowed(table_name);
     }
 
     pub(crate) fn set_is_teo_internal(&mut self) {
@@ -256,9 +260,9 @@ impl Model {
 
     pub(crate) fn allowed_keys_for_aggregate(&self, name: &str) -> HashSet<&str> {
         match name {
-            "_count" => self.scalar_keys().iter().map(|k| k.as_str()).collect::<HashSet<&str>>().bitor(&hashset!{"_all"}),
-            "_min" | "_max" => self.scalar_keys().iter().map(|k| k.as_str()).collect(),
-            _ => self.scalar_number_keys().iter().map(|k| k.as_str()).collect(),
+            "_count" => self.scalar_keys().iter().map(|k| *k).collect::<HashSet<&str>>().bitor(&hashset!{"_all"}),
+            "_min" | "_max" => self.scalar_keys().iter().map(|k| *k).collect(),
+            _ => self.scalar_number_keys().iter().map(|k| *k).collect(),
         }
     }
 
@@ -346,7 +350,7 @@ impl Model {
                 let mut transformed_include = teon!({});
                 for (key, included_value) in include.as_hashmap().unwrap() {
                     let relation = self.relation(key).unwrap();
-                    let (opposite_model, _opposite_relation) = Graph::current().opposite_relation(relation);
+                    let (opposite_model, _opposite_relation) = AppCtx::get()?.graph()?.opposite_relation(relation);
                     let find_action = if relation.is_vec() {
                         Action::from_u32(NESTED | FIND | MANY)
                     } else {
@@ -390,12 +394,12 @@ impl Model {
                 }
             }
         }
-        if primary.is_none() && !self.r#virtual {
+        if self.primary.is_none() && !self.r#virtual {
             panic!("Model '{}' must has a primary field.", self.name);
         }
         // install recordPrevious for primary
         for key in self.primary.as_ref().unwrap().keys() {
-            let field = fields_map.get(key).unwrap();
+            let field = self.fields_map.get(key).unwrap();
             field.as_ref().to_mut().previous_value_rule = PreviousValueRule::Keep;
         }
         // load caches
@@ -406,7 +410,7 @@ impl Model {
         all_keys.extend(all_field_keys);
         all_keys.extend(all_relation_keys);
         all_keys.extend(all_property_keys);
-        let input_field_keys: Vec<&'static key> = self.fields_vec.iter().filter(|&f| !f.write_rule.is_no_write()).map(|f| f.name).collect();
+        let input_field_keys: Vec<&'static str> = self.fields_vec.iter().filter(|&f| !f.write_rule.is_no_write()).map(|f| f.name).collect();
         let input_relation_keys = all_relation_keys.clone();
         let input_property_keys: Vec<&'static str> = self.properties_vec.iter().filter(|p| p.setter.is_some()).map(|p| p.name).collect();
         let mut input_keys = vec![];
@@ -613,5 +617,3 @@ impl PartialEq for Model {
 
 unsafe impl Send for Model {}
 unsafe impl Sync for Model {}
-unsafe impl Send for ModelInner {}
-unsafe impl Sync for ModelInner {}

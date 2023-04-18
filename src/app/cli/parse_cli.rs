@@ -1,9 +1,10 @@
 use std::env;
 use std::ffi::OsString;
 use clap::{Arg, ArgAction};
+use clap::{Command as ClapCommand};
 use crate::app::cli::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, MigrateCommand, PurgeCommand, SeedCommand, SeedCommandAction, ServeCommand};
+use crate::app::ctx::AppCtx;
 use crate::app::entrance::Entrance;
-use crate::app::new_app::ctx::AppCtx;
 use crate::app::new_app::new_result::Result;
 use crate::app::program::Program;
 

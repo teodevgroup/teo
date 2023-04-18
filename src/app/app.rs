@@ -13,9 +13,9 @@ use crate::core::items::function::perform::CallbackItem;
 use crate::core::items::function::transform::TransformItem;
 use crate::core::items::function::validate::ValidateItem;
 use crate::prelude::Value;
-use super::new_error::Error;
+use crate::core::error::Error;
 use super::ctx::AppCtx;
-use super::new_result::Result;
+use crate::core::result::Result;
 
 pub struct App(usize);
 

@@ -12,7 +12,7 @@ use serde_json::{Value as JsonValue, Map as JsonMap};
 use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, CREATE_MANY_HANDLER, DELETE, DISCONNECT, FIND_MANY_HANDLER, FIND_UNIQUE_HANDLER, MANY, NESTED, SET, SINGLE, UPDATE, UPSERT};
 use crate::core::error::Error;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
-use crate::core::model::Model;
+use crate::core::model::model::Model;
 use crate::core::result::Result;
 use crate::core::graph::Graph;
 use crate::core::relation::Relation;

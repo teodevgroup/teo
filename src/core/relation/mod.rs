@@ -7,7 +7,7 @@ use std::sync::Arc;
 use inflector::Inflector;
 use maplit::hashset;
 use once_cell::sync::Lazy;
-use crate::core::field::Field;
+use crate::core::field::field::Field;
 use crate::core::field::optionality::Optionality;
 use crate::core::relation::delete_rule::DeleteRule;
 

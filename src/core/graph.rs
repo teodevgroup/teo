@@ -1,22 +1,21 @@
 use std::collections::HashMap;
 use std::future::Future;
-use std::sync::Arc;
 use key_path::KeyPath;
 use maplit::hashmap;
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
+use crate::app::ctx::AppCtx;
 use crate::core::action::{Action, CREATE, INTERNAL_AMOUNT, INTERNAL_POSITION, PROGRAM_CODE, SINGLE};
 use crate::core::initiator::Initiator;
-use crate::core::connector::Connector;
-use crate::core::model::Model;
 use crate::core::object::Object;
 use crate::core::r#enum::Enum;
 use crate::core::error::Error;
+use crate::core::model::model::Model;
 use crate::core::relation::Relation;
 use crate::core::result::Result;
 use crate::prelude::Value;
 
-#[derive(Clone, ToMut)]
+#[derive(Clone, ToMut, Debug)]
 pub struct Graph {
     pub(crate) enums: HashMap<&'static str, Enum>,
     pub(crate) models: HashMap<&'static str, Model>,
@@ -77,16 +76,16 @@ impl Graph {
     }
 
     pub(crate) async fn find_unique_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
-        let model = self.model(model).unwrap();
-        self.connector().find_unique(self, model, finder, mutation_mode, action, action_source).await
+        let model = self.model(model)?;
+        AppCtx::get()?.connector()?.find_unique(self, model, finder, mutation_mode, action, action_source).await
     }
 
     pub(crate) async fn find_first_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
-        let model = self.model(model).unwrap();
+        let model = self.model(model)?;
         let mut finder = finder.as_hashmap().clone().unwrap().clone();
         finder.insert("take".to_string(), 1.into());
         let finder = Value::HashMap(finder);
-        let result = self.connector().find_many(self, model, &finder, mutation_mode, action, action_source).await;
+        let result = AppCtx::get()?.connector()?.find_many(self, model, &finder, mutation_mode, action, action_source).await;
         match result {
             Err(err) => Err(err),
             Ok(retval) => {
@@ -100,8 +99,8 @@ impl Graph {
     }
 
     pub(crate) async fn find_many_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
-        let model = self.model(model).unwrap();
-        self.connector().find_many(self, model, finder, mutation_mode, action, action_source).await
+        let model = self.model(model)?;
+        AppCtx::get()?.connector()?.find_many(self, model, finder, mutation_mode, action, action_source).await
     }
 
     pub(crate) async fn batch<F, Fut>(&self, model: &str, finder: &Value, action: Action, action_source: Initiator, f: F) -> Result<()> where
@@ -125,18 +124,18 @@ impl Graph {
     }
 
     pub(crate) async fn count(&self, model: &str, finder: &Value) -> Result<usize> {
-        let model = self.model(model).unwrap();
-        self.connector().count(self, model, finder).await
+        let model = self.model(model)?;
+        AppCtx::get()?.connector()?.count(self, model, finder).await
     }
 
     pub(crate) async fn aggregate(&self, model: &str, finder: &Value) -> Result<Value> {
-        let model = self.model(model).unwrap();
-        self.connector().aggregate(self, model, finder).await
+        let model = self.model(model)?;
+        AppCtx::get()?.connector()?.aggregate(self, model, finder).await
     }
 
     pub(crate) async fn group_by(&self, model: &str, finder: &Value) -> Result<Value> {
-        let model = self.model(model).unwrap();
-        self.connector().group_by(self, model, finder).await
+        let model = self.model(model)?;
+        AppCtx::get()?.connector()?.group_by(self, model, finder).await
     }
 
     // MARK: - Create an object
@@ -160,8 +159,11 @@ impl Graph {
         Ok(obj)
     }
 
-    pub(crate) fn model(&self, name: &str) -> Option<&Model> {
-        self.models.get(name)
+    pub(crate) fn model(&self, name: &str) -> Result<&Model> {
+        match self.models.get(name) {
+            Some(model) => Ok(model),
+            None => Err(Error::fatal_message(format!("Model `{}' is not found.", name))),
+        }
     }
 
     pub(crate) fn r#enum(&self, name: &str) -> Option<&Enum> {

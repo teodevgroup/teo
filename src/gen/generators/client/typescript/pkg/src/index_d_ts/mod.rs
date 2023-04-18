@@ -6,7 +6,7 @@ use crate::core::field::r#type::FieldTypeOwner;
 use crate::gen::generators::client::typescript::pkg::src::index_d_ts::docs::{action_doc, action_group_doc, create_or_update_doc, credentials_doc, cursor_doc, field_doc, include_doc, main_object_doc, nested_connect_doc, nested_create_doc, nested_create_or_connect_doc, nested_delete_doc, nested_disconnect_doc, nested_set_doc, nested_update_doc, nested_upsert_doc, order_by_doc, page_number_doc, page_size_doc, relation_doc, select_doc, skip_doc, take_doc, unique_connect_create_doc, unique_connect_doc, unique_where_doc, where_doc, where_doc_first, with_token_doc};
 use crate::gen::generators::client::typescript::r#type::ToTypeScriptType;
 use crate::core::graph::Graph;
-use crate::core::model::{Model};
+use crate::core::model::model::{Model};
 use crate::core::model::index::ModelIndexType::{Primary, Unique};
 use crate::gen::generators::client::typescript::pkg::src::filter_d_ts::generate_filter_types;
 use crate::gen::generators::client::typescript::pkg::src::operation_d_ts::generate_operation_types;

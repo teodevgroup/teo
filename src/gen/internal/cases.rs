@@ -1,6 +1,6 @@
 use inflector::Inflector;
-use crate::core::field::Field;
-use crate::core::model::Model;
+use crate::core::field::field::Field;
+use crate::core::model::model::Model;
 use crate::core::relation::Relation;
 
 pub(crate) fn model_localized_name(model: &Model) -> String {

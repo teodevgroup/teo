@@ -1,7 +1,6 @@
 pub mod ctx;
 
 use std::sync::Arc;
-use crate::core::error::ErrorType::InternalServerError;
 use crate::core::result::Result;
 use crate::core::item::Item;
 use crate::core::pipeline::ctx::Ctx;
@@ -42,7 +41,7 @@ impl Pipeline {
         let path = ctx.path.clone();
         match self.process(ctx).await {
             Ok(_) => Ok(()),
-            Err(error) => if error.r#type == InternalServerError {
+            Err(error) => if error.is_server_error() {
                 Err(error)
             } else {
                 Err(Error::permission_error(path, "permission denied"))

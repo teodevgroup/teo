@@ -42,7 +42,7 @@ impl<'a> Outline<'a> {
                         // data output
                         Some(Class {
                             model_name: m.name(),
-                            localized_name: Cow::Owned(m.localized_name()),
+                            localized_name: Cow::Borrowed(m.localized_name()),
                             name_suffix: Cow::Borrowed(""),
                             docs: Cow::Borrowed(m.description()),
                             kind: ClassKind::DataOutput,
@@ -394,7 +394,7 @@ impl<'a> Outline<'a> {
                             }).collect(),
                         }),
                         // credentials
-                        if m.identity() {
+                        if m.is_identity() {
                             Some(Class {
                                 model_name: m.name(),
                                 localized_name: Cow::Borrowed(""),

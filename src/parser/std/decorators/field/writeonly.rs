@@ -1,4 +1,4 @@
-use crate::core::field::Field;
+use crate::core::field::field::Field;
 
 use crate::core::field::read_rule::ReadRule;
 use crate::parser::ast::argument::Argument;

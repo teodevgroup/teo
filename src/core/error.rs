@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
-use serde::{Serialize};
 use maplit::hashmap;
 use key_path::KeyPath;
 use std::borrow::Cow;
-use crate::core::model::Model;
+use crate::core::model::model::Model;
 
 // New errors
 
@@ -33,6 +32,7 @@ impl Display for RuntimeError {
     }
 }
 
+#[derive(Debug)]
 pub enum UserErrorType {
     ValidationError,
     UnexpectedInput,
@@ -57,6 +57,23 @@ pub struct UserError {
     errors: Option<HashMap<Cow<'static, str>, Cow<'static, str>>>,
 }
 
+impl UserError {
+
+    pub(self) fn is_custom_validation_error(&self) -> bool {
+        match self.r#type {
+            UserErrorType::CustomValidationError => true,
+            _ => false,
+        }
+    }
+
+    pub(self) fn is_custom_internal_server_error(&self) -> bool {
+        match self.r#type {
+            UserErrorType::CustomInternalServerError => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum Error {
     FatalError(FatalError),
@@ -72,6 +89,13 @@ impl Error {
 
     pub fn fatal_message(message: String) -> Self {
         Self::FatalError(FatalError(Cow::Owned(message)))
+    }
+
+    pub fn is_server_error(&self) -> bool {
+        match self {
+            Error::ServerError(_) => true,
+            _ => false,
+        }
     }
 }
 
@@ -271,91 +295,104 @@ impl Error {
     }
 
     pub(crate) fn unexpected_input_value_with_reason<'a>(reason: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
-        Error {
-            r#type: ErrorType::ValidationError,
-            message: "Unexpected value found.".to_string(),
-            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("{}", reason.into())}),
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::UnexpectedInput,
+            message: Cow::Owned(format!("Unexpected value found.")),
+            errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Owned(format!("{}", reason.into()))}),
+        })
+
     }
 
     pub(crate) fn missing_required_input<'a>(key_path: impl AsRef<KeyPath<'a>>) -> Self {
-        Error {
-            r#type: ErrorType::MissingRequiredInput,
-            message: "Missing required input.".to_string(),
-            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("value is required")})
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::MissingRequiredInput,
+            message: Cow::Owned(format!("Missing required input.")),
+            errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Borrowed("value is required")})
+        })
     }
 
     pub(crate) fn missing_required_input_with_type<'a>(expected: impl AsRef<str>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
-        Error {
-            r#type: ErrorType::MissingRequiredInput,
-            message: "Missing required input.".to_string(),
-            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("{} value is required", expected.as_ref())})
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::MissingRequiredInput,
+            message: Cow::Owned(format!("Missing required input.")),
+            errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Owned(format!("{} value is required", expected.as_ref()))})
+        })
     }
 
     pub(crate) fn unexpected_object_length<'a>(expected: usize, key_path: impl AsRef<KeyPath<'a>>) -> Self {
-        Error {
-            r#type: ErrorType::UnexpectedObjectLength,
-            message: "Unexpected object length.".to_string(),
-            errors: Some(hashmap!{key_path.as_ref().to_string() => format!("Expect length {}.", expected)})
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::UnexpectedInput,
+            message: Cow::Owned(format!("Unexpected object length.")),
+            errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Owned(format!("Expect length {}.", expected))})
+        })
     }
 
     pub(crate) fn invalid_key(unexpected_key: impl AsRef<str>, model: &Model) -> Self {
-        Error {
-            r#type: ErrorType::InvalidKey,
-            message: format!("Invalid key '{}' accessed on model `{}'", unexpected_key.as_ref(), model.name()),
-            errors: None
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::UnexpectedInput,
+            message: Cow::Owned(format!("Invalid key '{}' accessed on model `{}'", unexpected_key.as_ref(), model.name())),
+            errors: None,
+        })
     }
 
     pub(crate) fn invalid_operation(reason: impl AsRef<str>) -> Self {
-        Error {
-            r#type: ErrorType::InvalidOperation,
-            message: reason.as_ref().to_string(),
-            errors: None
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::UnexpectedInput,
+            message: Cow::Owned(reason.as_ref().to_string()),
+            errors: None,
+        })
     }
 
     pub(crate) fn deletion_denied(relation_name: impl AsRef<str>) -> Self {
-        Error {
-            r#type: ErrorType::DeletionDenied,
-            message: format!("Deletion denied by `{}'.", relation_name.as_ref()),
-            errors: None
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::UnexpectedInput,
+            message: Cow::Owned(format!("Deletion denied by `{}'.", relation_name.as_ref())),
+            errors: None,
+        })
     }
 
     pub(crate) fn validation_error<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
-        Error {
-            r#type: ErrorType::ValidationError,
-            message: "Validation failed.".to_string(),
-            errors: Some(hashmap!{path.as_ref().to_string() => reason.into()})
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::ValidationError,
+            message: Cow::Owned(format!("Validation failed.")),
+            errors: Some(hashmap!{Cow::Owned(path.as_ref().to_string()) => Cow::Owned(reason.into())}),
+        })
     }
 
     pub(crate) fn internal_server_error_with_path<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
-        Error {
-            r#type: ErrorType::InternalServerError,
-            message: "Internal server error.".to_string(),
-            errors: Some(hashmap!{path.as_ref().to_string() => reason.into()})
-        }
+        todo!()
+        // Error::UserError(UserError {
+        //     r#type: UserErrorType::CustomInternalServerError,
+        //     message: Cow::Owned(format!("Validation failed.")),
+        //     errors: Some(hashmap!{Cow::Owned(path.as_ref().to_string()) => Cow::Owned(reason.into())}),
+        // })
+        // Error {
+        //     r#type: ErrorType::InternalServerError,
+        //     message: "Internal server error.".to_string(),
+        //     errors: Some(hashmap!{path.as_ref().to_string() => reason.into()})
+        // }
     }
 
     pub(crate) fn permission_error<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
-        Error {
-            r#type: ErrorType::PermissionError,
-            message: "Permission denied.".to_string(),
-            errors: Some(hashmap!{path.as_ref().to_string() => reason.into()})
-        }
+        Error::UserError(UserError {
+            r#type: UserErrorType::PermissionError,
+            message: Cow::Owned(format!("Permission denied.")),
+            errors: Some(hashmap!{Cow::Owned(path.as_ref().to_string()) => Cow::Owned(reason.into())})
+        })
     }
 
     pub(crate) fn is_custom_internal_server_error(&self) -> bool {
-        self.r#type == ErrorType::CustomInternalServerError
+        match self {
+            Error::UserError(user_error) => user_error.is_custom_internal_server_error(),
+            _ => false,
+        }
     }
 
     pub(crate) fn is_custom_validation_error(&self) -> bool {
-        self.r#type == ErrorType::CustomValidationError
+        match self {
+            Error::UserError(user_error) => user_error.is_custom_validation_error(),
+            _ => false,
+        }
     }
 }
 

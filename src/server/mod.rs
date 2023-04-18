@@ -35,7 +35,7 @@ use crate::server::test_context::TestContext;
 use crate::core::connector::SaveSession;
 use self::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::graph::Graph;
-use crate::core::model::Model;
+use crate::core::model::model::Model;
 use crate::core::object::{ErrorIfNotFound, Object};
 use crate::core::pipeline::ctx::{Ctx};
 use crate::core::error::Error;

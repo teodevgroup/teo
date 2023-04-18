@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fmt::{Debug, Display, Formatter}};
 use std::borrow::Borrow;
+use crate::app::ctx::AppCtx;
 use crate::prelude::{Graph, Object, Value, Result};
 
 /// Group record
@@ -12,30 +13,30 @@ impl GroupRecord {
 
     /// Find many group records.
     pub async fn find_many(query: impl Borrow<Value>) -> Result<Vec<GroupRecord>> {
-        Graph::current().find_many("__TeoGroupRecord", query.borrow()).await
+        AppCtx::get()?.graph()?.find_many("__TeoGroupRecord", query.borrow()).await
     }
 
     /// Find a unique group record.
     pub async fn find_unique(query: impl Borrow<Value>) -> Result<Option<GroupRecord>> {
-        Graph::current().find_unique("__TeoGroupRecord", query.borrow()).await
+        AppCtx::get()?.graph()?.find_unique("__TeoGroupRecord", query.borrow()).await
     }
 
     /// Find a non unique group record.
     pub async fn find_first(query: impl Borrow<Value>) -> Result<Option<GroupRecord>> {
-        Graph::current().find_first("__TeoGroupRecord", query.borrow()).await
+        AppCtx::get()?.graph()?.find_first("__TeoGroupRecord", query.borrow()).await
     }
 
     /// Create a new group record.
     pub async fn new(values: impl AsRef<Value>) -> Self {
         Self {
-            inner: Graph::current().create_object("__TeoGroupRecord", values).await.unwrap(),
+            inner: AppCtx::get()?.graph()?.create_object("__TeoGroupRecord", values).await.unwrap(),
         }
     }
 
     /// Create an empty group record.
     pub async fn default() -> Self {
         Self {
-            inner: Graph::current().create_object("__TeoGroupRecord", Value::HashMap(HashMap::new())).await.unwrap(),
+            inner: AppCtx::get()?.graph()?.create_object("__TeoGroupRecord", Value::HashMap(HashMap::new())).await.unwrap(),
         }
     }
 

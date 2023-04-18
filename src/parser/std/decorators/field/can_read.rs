@@ -1,4 +1,4 @@
-use crate::core::field::Field;
+use crate::core::field::field::Field;
 use crate::parser::ast::argument::Argument;
 
 pub(crate) fn can_read_decorator(args: Vec<Argument>, field: &mut Field) {

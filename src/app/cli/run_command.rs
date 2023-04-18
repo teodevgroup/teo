@@ -1,5 +1,5 @@
 use crate::app::cli::command::{CLI, CLICommand, GenerateCommand, SeedCommandAction};
-use crate::app::new_app::ctx::AppCtx;
+use crate::app::ctx::AppCtx;
 use crate::migrate::migrate;
 use crate::app::new_app::new_result::Result;
 use crate::core::conf::test::ResetMode;

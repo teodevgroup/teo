@@ -1,9 +1,9 @@
 use inflector::Inflector;
 use crate::core::action::{Action, FIND_FIRST_HANDLER, FIND_UNIQUE_HANDLER, AGGREGATE_HANDLER, ResData, FIND_MANY_HANDLER, UPSERT_HANDLER};
 use crate::gen::internal::cases::{field_description, field_localized_name, model_api_object_description, model_localized_name, model_localized_name_word_case, relation_description, relation_localized_name};
-use crate::core::field::Field;
+use crate::core::field::field::Field;
 use crate::core::graph::Graph;
-use crate::core::model::Model;
+use crate::core::model::model::Model;
 use crate::core::relation::Relation;
 
 pub(crate) fn simple_model_example(name: &str, model: &Model) -> String {

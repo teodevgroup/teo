@@ -12,10 +12,9 @@ use crate::parser::parser::parser::ASTParser;
 use crate::prelude::Graph;
 use crate::seeder::data_set::DataSet;
 use crate::server::conf::ServerConf;
-use super::new_result::Result;
-use super::new_error::Error;
+use crate::core::result::Result;
+use crate::core::error::Error;
 
-#[derive(Debug)]
 pub struct AppCtx {
     callbacks: CallbackLookup,
     entrance: Entrance,
@@ -44,6 +43,7 @@ impl AppCtx {
             connector: None,
             graph: None,
             server_conf: None,
+            connector_conf: None,
             clients: vec![],
             entities: vec![],
             datasets: vec![],

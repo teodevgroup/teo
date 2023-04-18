@@ -6,7 +6,7 @@ use async_trait::async_trait;
 use quaint_forked::{prelude::*, pooled::Quaint, ast::Query as QuaintQuery};
 use quaint_forked::error::DatabaseConstraint;
 use quaint_forked::error::ErrorKind::UniqueConstraintViolation;
-use crate::core::model::Model;
+use crate::core::model::model::Model;
 use crate::connectors::sql::schema::r#type::field::ToDatabaseType;
 use crate::connectors::sql::connector::save_session::SQLSaveSession;
 use crate::connectors::sql::execution::Execution;

@@ -4,7 +4,7 @@ use key_path::KeyPath;
 
 use crate::core::error::Error;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
-use crate::core::model::Model;
+use crate::core::model::model::Model;
 use crate::core::result::Result;
 use crate::prelude::{Graph, Value};
 

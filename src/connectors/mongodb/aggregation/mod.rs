@@ -4,7 +4,7 @@ use bson::{Bson, doc, Document, Regex as BsonRegex};
 use maplit::hashmap;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::input::Input;
-use crate::core::model::Model;
+use crate::core::model::model::Model;
 use crate::core::relation::Relation;
 use crate::core::result::Result;
 use crate::prelude::{Graph, Value};

@@ -14,7 +14,7 @@ use crate::core::initiator::Initiator;
 use crate::core::error::Error;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::input::Input;
-use crate::core::model::Model;
+use crate::core::model::model::Model;
 use crate::core::result::Result;
 use crate::prelude::{Graph, Object, Value};
 use crate::teon;
