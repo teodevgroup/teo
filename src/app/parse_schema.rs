@@ -6,7 +6,6 @@ use crate::core::connector::ConnectorConf;
 use crate::core::field::field::Field;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::model::Model;
-use crate::core::model::model::Model;
 use crate::core::property::Property;
 use crate::gen::interface::client::conf::Conf;
 use crate::gen::interface::server::conf::EntityGeneratorConf;
@@ -110,7 +109,7 @@ pub(super) fn load_schema() -> Result<()> {
             match ast_field.field_class {
                 ASTFieldClass::Field | ASTFieldClass::DroppedField => {
                     let mut model_field = Field::new(field.identifier.name.as_str().to_owned());
-                    if let Some(comment) = &field.comment_block {
+                    if let Some(comment) = &ast_field.comment_block {
                         if let Some(name) = comment.name.as_ref() {
                             model_field.localized_name = Some(name.to_owned());
                         }
@@ -119,9 +118,9 @@ pub(super) fn load_schema() -> Result<()> {
                         }
                     }
                     // type
-                    match field.r#type.arity {
+                    match ast_field.r#type.arity {
                         Arity::Scalar => {
-                            if field.r#type.item_required {
+                            if ast_field.r#type.item_required {
                                 model_field.set_required();
                             } else {
                                 model_field.set_optional();
@@ -129,14 +128,14 @@ pub(super) fn load_schema() -> Result<()> {
                             Self::install_types_to_field_owner(&field.r#type.identifier.name, &mut model_field, &enums);
                         }
                         Arity::Array => {
-                            if field.r#type.collection_required {
+                            if ast_field.r#type.collection_required {
                                 model_field.set_required();
                             } else {
                                 model_field.set_optional();
                             }
                             model_field.field_type = Some(FieldType::Vec(Box::new({
                                 let mut inner = Field::new("".to_owned());
-                                if field.r#type.item_required {
+                                if ast_field.r#type.item_required {
                                     inner.set_required();
                                 } else {
                                     inner.set_optional();
@@ -146,14 +145,14 @@ pub(super) fn load_schema() -> Result<()> {
                             })));
                         }
                         Arity::Dictionary => {
-                            if field.r#type.collection_required {
+                            if ast_field.r#type.collection_required {
                                 model_field.set_required();
                             } else {
                                 model_field.set_optional();
                             }
                             model_field.field_type = Some(FieldType::HashMap(Box::new({
                                 let mut inner = Field::new("".to_owned());
-                                if field.r#type.item_required {
+                                if ast_field.r#type.item_required {
                                     inner.set_required();
                                 } else {
                                     inner.set_optional();
@@ -164,11 +163,11 @@ pub(super) fn load_schema() -> Result<()> {
                         }
                     }
                     // decorators
-                    for decorator in field.decorators.iter() {
+                    for decorator in ast_field.decorators.iter() {
                         let field_decorator = decorator.accessible.as_ref().unwrap().as_field_decorator().unwrap();
                         field_decorator(decorator.get_argument_list(), &mut model_field);
                     }
-                    match &field.field_class {
+                    match &ast_field.field_class {
                         FieldClass::DroppedField => {
                             model.add_dropped_field(model_field);
                         }
@@ -179,7 +178,7 @@ pub(super) fn load_schema() -> Result<()> {
                 }
                 ASTFieldClass::Relation => {
                     let mut model_relation = Relation::new(field.identifier.name.as_str().to_owned());
-                    if let Some(comment) = &field.comment_block {
+                    if let Some(comment) = &ast_field.comment_block {
                         if let Some(name) = comment.name.as_ref() {
                             model_relation.localized_name = Some(name.to_owned());
                         }
@@ -187,18 +186,18 @@ pub(super) fn load_schema() -> Result<()> {
                             model_relation.description = Some(desc.to_owned());
                         }
                     }
-                    match field.r#type.arity {
+                    match ast_field.r#type.arity {
                         Arity::Scalar => {
-                            if field.r#type.item_required {
+                            if ast_field.r#type.item_required {
                                 model_relation.set_required();
                             } else {
                                 model_relation.set_optional();
                             }
                             model_relation.set_is_vec(false);
-                            model_relation.set_model(field.r#type.identifier.name.clone());
+                            model_relation.set_model(ast_field.r#type.identifier.name.clone());
                         }
                         Arity::Array => {
-                            if !field.r#type.item_required {
+                            if !ast_field.r#type.item_required {
                                 panic!("Relation cannot have optional items.")
                             }
                             model_relation.set_is_vec(true);
@@ -207,15 +206,15 @@ pub(super) fn load_schema() -> Result<()> {
                         Arity::Dictionary => panic!("Relations cannot be dictionary.")
                     }
                     // handle decorators
-                    for decorator in field.decorators.iter() {
+                    for decorator in ast_field.decorators.iter() {
                         let relation_decorator = decorator.accessible.as_ref().unwrap().as_relation_decorator().unwrap();
                         relation_decorator(decorator.get_argument_list(), &mut model_relation);
                     }
                     model.add_relation(model_relation);
                 }
                 ASTFieldClass::Property => {
-                    let mut model_property = Property::new(field.identifier.name.clone());
-                    if let Some(comment) = &field.comment_block {
+                    let mut model_property = Property::new(ast_field.identifier.name.clone());
+                    if let Some(comment) = &ast_field.comment_block {
                         if let Some(name) = comment.name.as_ref() {
                             model_property.localized_name = Some(name.to_owned());
                         }
@@ -224,46 +223,46 @@ pub(super) fn load_schema() -> Result<()> {
                         }
                     }
                     // type
-                    match field.r#type.arity {
+                    match ast_field.r#type.arity {
                         Arity::Scalar => {
-                            if field.r#type.item_required {
+                            if ast_field.r#type.item_required {
                                 model_property.set_required();
                             } else {
                                 model_property.set_optional();
                             }
-                            Self::install_types_to_field_owner(&field.r#type.identifier.name, &mut model_property, &enums);
+                            Self::install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut model_property, &enums);
                         }
                         Arity::Array => {
-                            if field.r#type.collection_required {
+                            if ast_field.r#type.collection_required {
                                 model_property.set_required();
                             } else {
                                 model_property.set_optional();
                             }
                             model_property.field_type = Some(FieldType::Vec(Box::new({
                                 let mut inner = Field::new("".to_owned());
-                                if field.r#type.item_required {
+                                if ast_field.r#type.item_required {
                                     inner.set_required();
                                 } else {
                                     inner.set_optional();
                                 }
-                                Self::install_types_to_field_owner(&field.r#type.identifier.name, &mut inner, &enums);
+                                Self::install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, &enums);
                                 inner
                             })));
                         }
                         Arity::Dictionary => {
-                            if field.r#type.collection_required {
+                            if ast_field.r#type.collection_required {
                                 model_property.set_required();
                             } else {
                                 model_property.set_optional();
                             }
                             model_property.field_type = Some(FieldType::HashMap(Box::new({
                                 let mut inner = Field::new("".to_owned());
-                                if field.r#type.item_required {
+                                if ast_field.r#type.item_required {
                                     inner.set_required();
                                 } else {
                                     inner.set_optional();
                                 }
-                                Self::install_types_to_field_owner(&field.r#type.identifier.name, &mut inner, &enums);
+                                Self::install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, &enums);
                                 inner
                             })));
                         }

@@ -14,7 +14,7 @@ use crate::connectors::sql::schema::column::SQLColumn;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::model::model::Model;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
-
+use crate::core::field::field::Sort;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::pipeline::ctx::Ctx;
 use crate::prelude::Value;

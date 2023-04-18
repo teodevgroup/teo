@@ -8,6 +8,8 @@ use crate::core::teon::Value;
 use crate::purger::purge;
 use crate::seeder::seed::seed;
 use crate::server::serve;
+use crate::gen::interface::server::gen as gen_entity;
+use crate::gen::interface::client::gen as gen_client;
 
 pub(crate) async fn run_command(cli: CLI) -> Result<()> {
     let app_ctx = AppCtx::get_mut()?;
@@ -34,14 +36,14 @@ pub(crate) async fn run_command(cli: CLI) -> Result<()> {
                         Value::String(s) => {
                             Some(Box::leak(Box::new(TestContext {
                                 reset_mode: ResetMode::AfterQuery,
-                                datasets: self.datasets.iter().filter(|d| &d.name == s).map(|d| d.clone()).collect(),
+                                datasets: app_ctx.datasets().iter().filter(|d| &d.name == s).map(|d| d.clone()).collect(),
                             })))
                         },
                         Value::Vec(v) => {
                             let sv: Vec<String> = v.iter().map(|v| v.as_str().unwrap().to_owned()).collect();
                             Some(Box::leak(Box::new(TestContext {
                                 reset_mode: ResetMode::AfterQuery,
-                                datasets: self.datasets.iter().filter(|d| sv.contains(&d.name)).map(|d| d.clone()).collect(),
+                                datasets: app_ctx.datasets().iter().filter(|d| sv.contains(&d.name)).map(|d| d.clone()).collect(),
                             })))
                         }
                         _ => unreachable!()

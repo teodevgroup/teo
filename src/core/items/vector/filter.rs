@@ -28,7 +28,7 @@ impl Item for FilterItem {
             match result {
                 Ok(_) => retval.push(item_ctx.value.clone()),
                 Err(error) => {
-                    if error.r#type == ErrorType::InternalServerError {
+                    if error.is_server_error() {
                         return Err(error);
                     }
                 }

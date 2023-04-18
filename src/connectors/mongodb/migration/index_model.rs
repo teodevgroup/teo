@@ -1,5 +1,5 @@
 use mongodb::IndexModel;
-
+use crate::core::field::field::Sort;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 
 impl From<&IndexModel> for ModelIndex {

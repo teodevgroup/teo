@@ -14,7 +14,7 @@ use to_mut::ToMut;
 use to_mut_proc_macro::ToMut;
 use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, PROGRAM_CODE, DELETE, DISCONNECT, FIND, JOIN_CREATE, JOIN_DELETE, MANY, NESTED, SINGLE, UPDATE, UPSERT, NESTED_CREATE_ACTION, NESTED_DISCONNECT_ACTION, NESTED_SET_ACTION, NESTED_CONNECT_ACTION, NESTED_DELETE_MANY_ACTION, NESTED_UPDATE_MANY_ACTION, NESTED_UPDATE_ACTION, NESTED_DELETE_ACTION, NESTED_CONNECT_OR_CREATE_ACTION, NESTED_UPSERT_ACTION, INTERNAL_POSITION, SET};
 use crate::core::initiator::Initiator;
-use crate::core::field::{Field, PreviousValueRule};
+use crate::core::field::field::{Field, PreviousValueRule};
 use crate::core::field::optionality::Optionality;
 use crate::core::input::Input;
 use crate::core::input::Input::{AtomicUpdater, SetValue};
@@ -26,7 +26,6 @@ use crate::core::pipeline::ctx::{Ctx};
 use crate::core::teon::Value;
 use crate::core::error::{Error, ErrorType};
 use crate::core::field::write_rule::WriteRule;
-use crate::core::model::model::Model;
 use crate::core::relation::delete_rule::DeleteRule;
 use crate::core::relation::delete_rule::DeleteRule::Deny;
 use crate::core::result::Result;
@@ -1586,12 +1585,7 @@ impl Object {
                 Ok(Some(obj.clone()))
             }
             Err(err) => {
-                if err.r#type == ErrorType::ObjectNotFound {
-                    self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec![]);
-                    Ok(None)
-                } else {
-                    Err(err)
-                }
+                Err(err)
             }
         }
     }

@@ -3,7 +3,6 @@ use snailquote::unescape;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::fs;
-use std::sync::{Arc, Mutex};
 use maplit::{btreemap, btreeset};
 use pest::Parser as PestParser;
 use pest::pratt_parser::PrattParser;
@@ -923,7 +922,7 @@ impl ASTParser {
                 let source = self.get_source(connector.0);
                 Ok(source.get_connector(connector.1))
             }
-            None => Err(crate::app::new_app::new_error::Error::fatal("Parser's connector is accessed while it's not set.")),
+            None => Err(crate::core::error::Error::fatal("Parser's connector is accessed while it's not set.")),
         }
     }
 
@@ -933,7 +932,7 @@ impl ASTParser {
                 let source = self.get_source(server.0);
                 Ok(source.get_server(server.1))
             }
-            None => Err(crate::app::new_app::new_error::Error::fatal("Parser's server is accessed while it's not set.")),
+            None => Err(crate::core::error::Error::fatal("Parser's server is accessed while it's not set.")),
         }
     }
 
@@ -974,8 +973,8 @@ impl ASTParser {
 
     pub(crate) fn models(&self) -> Vec<&ASTModel> {
         self.models.iter().map(|m| {
-            let source = self.get_source(e.0);
-            source.get_model(e.1)
+            let source = self.get_source(m.0);
+            source.get_model(m.1)
         }).collect()
     }
 

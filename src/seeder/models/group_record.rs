@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt::{Debug, Display, Formatter}};
 use std::borrow::Borrow;
 use crate::app::ctx::AppCtx;
-use crate::prelude::{Graph, Object, Value, Result};
+use crate::prelude::{Object, Value, Result};
 
 /// Group record
 #[derive(Clone, PartialEq)]

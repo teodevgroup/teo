@@ -1,4 +1,4 @@
-use crate::core::field::{Field, FieldIndex, IndexSettings, Sort};
+use crate::core::field::field::{Field, FieldIndex, IndexSettings, Sort};
 use crate::parser::ast::argument::Argument;
 
 static VALID_NAMES: [&str; 3] = ["map", "length", "sort"];

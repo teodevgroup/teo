@@ -1,4 +1,4 @@
-use crate::app::conf::EntityGeneratorConf;
+
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::interface::server::EntityGenerator;
 use crate::prelude::Graph;

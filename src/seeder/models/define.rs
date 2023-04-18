@@ -1,5 +1,4 @@
 use std::sync::Arc;
-use crate::core::field::{Field, Sort};
 use crate::core::field::field::{Field, Sort};
 use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::FieldType;

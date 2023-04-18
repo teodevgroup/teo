@@ -1,10 +1,8 @@
 use std::fmt::{Debug, Formatter};
-use std::sync::Arc;
 use inflector::Inflector;
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
 use crate::app::ctx::AppCtx;
-use crate::core::connector::Connector;
 use crate::core::database::r#type::DatabaseType;
 use crate::core::field::migration::FieldMigration;
 use crate::core::field::optionality::Optionality;

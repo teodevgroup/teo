@@ -24,7 +24,6 @@ use crate::core::action::{
     COUNT_HANDLER, AGGREGATE_HANDLER, GROUP_BY_HANDLER, SIGN_IN_HANDLER, IDENTITY_HANDLER,
 };
 use crate::core::initiator::Initiator;
-use crate::app::builder::AsyncCallbackWithoutArgs;
 use crate::app::cli::command::SeedCommandAction;
 use crate::app::command::SeedCommandAction;
 use crate::app::conf::ServerConf;

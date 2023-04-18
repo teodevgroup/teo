@@ -1,5 +1,5 @@
 use crate::core::database::r#type::DatabaseType;
-use crate::core::field::r#type::FieldType;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 
 #[derive(Debug, Clone, Copy)]
 pub enum DatabaseName {
@@ -33,7 +33,7 @@ fn default_database_type_mongodb(field_type: &FieldType) -> DatabaseType {
         FieldType::Date => DatabaseType::DateTime(3),
         FieldType::DateTime => DatabaseType::DateTime(3),
         FieldType::Enum(_) => DatabaseType::String,
-        FieldType::Vec(inner) => DatabaseType::Vec(Box::new(self.default_database_type(inner.field_type()))),
+        FieldType::Vec(inner) => DatabaseType::Vec(Box::new(default_database_type_mongodb(inner.field_type()))),
         FieldType::HashMap(_) => panic!(""),
         FieldType::BTreeMap(_) => panic!(""),
         FieldType::Object(_) => panic!(""),

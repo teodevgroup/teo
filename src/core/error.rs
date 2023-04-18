@@ -3,6 +3,7 @@ use std::fmt::{Debug, Display, Formatter};
 use maplit::hashmap;
 use key_path::KeyPath;
 use std::borrow::Cow;
+use serde::Serialize;
 use crate::core::model::model::Model;
 
 // New errors
@@ -50,7 +51,29 @@ pub enum UserErrorType {
     CustomErrorType(Cow<'static, str>),
 }
 
-#[derive(Debug)]
+impl UserErrorType {
+    fn code(&self) -> u16 {
+        use UserErrorType::*;
+        match self {
+            ValidationError => 400,
+            UnexpectedInput => 400,
+            DestinationNotFound => 404,
+            IncorrectJSONFormat => 400,
+            MissingRequiredInput => 400,
+            ObjectNotFound => 404,
+            InvalidAuthToken => 401,
+            PermissionError => 401,
+            DeletionDenied => 400,
+            CustomInternalServerError => 500,
+            CustomValidationError => 400,
+            UniqueConstraintError => 400,
+            WrongIdentityModel => 400,
+            CustomErrorType(_) => 400,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
 pub struct UserError {
     r#type: UserErrorType,
     message: Cow<'static, str>,
@@ -58,6 +81,10 @@ pub struct UserError {
 }
 
 impl UserError {
+
+    pub(crate) fn code(&self) -> u16 {
+        self.r#type.code()
+    }
 
     pub(self) fn is_custom_validation_error(&self) -> bool {
         match self.r#type {
@@ -112,43 +139,6 @@ impl Display for Error {
 }
 
 impl std::error::Error for Error { }
-
-
-
-
-// Old errors
-
-
-// impl ErrorType {
-//     pub(crate) fn code(&self) -> u16 {
-//         match self {
-//             ErrorType::ValidationError => { 400 }
-//             ErrorType::IncorrectJSONFormat => { 400 }
-//             ErrorType::UnknownDatabaseWriteError => { 500 }
-//             ErrorType::UnknownDatabaseDeleteError => { 500 }
-//             ErrorType::UnknownDatabaseFindError => { 500 }
-//             ErrorType::UnknownDatabaseFindUniqueError => { 500 }
-//             ErrorType::DestinationNotFound => { 404 }
-//             ErrorType::InternalServerError => { 500 }
-//             ErrorType::ObjectNotFound => { 404 }
-//             ErrorType::InvalidAuthToken => { 401 }
-//             ErrorType::CustomInternalServerError => { 500 }
-//             ErrorType::CustomValidationError => { 400 }
-//             ErrorType::WrongIdentityModel => { 401 }
-//             ErrorType::PropertySetterError => { 400 }
-//             ErrorType::UnexpectedInputRootType => { 400 }
-//             ErrorType::UnexpectedInputType => { 400 }
-//             ErrorType::UnexpectedInputKey => { 400 }
-//             ErrorType::MissingRequiredInput => { 400 }
-//             ErrorType::UnexpectedObjectLength => { 400 }
-//             ErrorType::InvalidKey => { 500 }
-//             ErrorType::InvalidOperation => { 500 }
-//             ErrorType::PermissionError => { 401 }
-//             ErrorType::DeletionDenied => { 400 }
-//             ErrorType::RecordDecodingError => { 500 }
-//         }
-//     }
-// }
 
 impl Error {
 

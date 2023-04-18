@@ -12,20 +12,20 @@ pub(super) async fn connect_to_database() -> crate::app::new_app::new_result::Re
     let connector: Box<dyn Connector> = match connector_conf.provider {
         DatabaseName::MySQL => {
             #[cfg(feature = "data-source-mysql")]
-            Box::new(SQLConnector::new(SQLDialect::MySQL, url, false).await)
+            Box::new(SQLConnector::new(SQLDialect::MySQL, connector_conf.url, false).await)
         },
         DatabaseName::PostgreSQL => {
             #[cfg(feature = "data-source-postgres")]
-            Box::new(SQLConnector::new(SQLDialect::PostgreSQL, url, false).await)
+            Box::new(SQLConnector::new(SQLDialect::PostgreSQL, connector_conf.url, false).await)
         },
         #[cfg(feature = "data-source-sqlite")]
         DatabaseName::SQLite => {
             #[cfg(feature = "data-source-sqlite")]
-            Box::new(SQLConnector::new(SQLDialect::SQLite, url, false).await)
+            Box::new(SQLConnector::new(SQLDialect::SQLite, connector_conf.url, false).await)
         },
         DatabaseName::MongoDB => {
             #[cfg(feature = "data-source-mongodb")]
-            Box::new(MongoDBConnector::new(url.clone()).await)
+            Box::new(MongoDBConnector::new(connector_conf.url.to_string()).await)
         },
     };
     app_ctx.set_connector(connector);

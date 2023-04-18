@@ -3,7 +3,7 @@ use crate::app::ctx::AppCtx;
 use crate::core::item::Item;
 use crate::core::pipeline::ctx::Ctx;
 use crate::core::result::Result;
-use crate::prelude::{Graph, Value};
+use crate::prelude::Value;
 
 #[derive(Debug, Clone)]
 pub struct QueryRawItem {

@@ -1,6 +1,7 @@
 use std::{collections::HashMap, fmt::{Debug, Display, Formatter}};
 use std::borrow::Borrow;
-use crate::prelude::{Graph, Object, Value, Result};
+use crate::app::ctx::AppCtx;
+use crate::prelude::{Object, Value, Result};
 
 /// Group relation
 #[derive(Clone, PartialEq)]

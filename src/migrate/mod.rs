@@ -1,5 +1,4 @@
 use crate::app::ctx::AppCtx;
-use crate::app::ctx::AppCtx;
 use crate::prelude::{Graph};
 
 pub(crate) async fn migrate(graph: &Graph, _dry_run: bool) {
