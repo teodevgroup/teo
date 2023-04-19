@@ -143,7 +143,7 @@ impl Object {
         // find keys to iterate
         let initialized = self.inner.is_initialized.load(Ordering::SeqCst);
         let keys = if initialized {
-            self.model().all_keys().iter().filter(|k| value_map_keys.contains(*k)).collect::<Vec<&str>>()
+            self.model().all_keys().iter().filter(|k| value_map_keys.contains(*k)).map(|k| **k).collect::<Vec<&str>>()
         } else {
             self.model().all_keys().clone()
         };

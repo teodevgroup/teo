@@ -5,7 +5,7 @@ use std::fs::create_dir_all;
 use std::fs::remove_dir_all;
 use crate::gen::internal::message::{green_message, red_message, yellow_message};
 use pathdiff::diff_paths;
-use crate::core::result::Result;
+use crate::core::result::{IntoTeoResult, Result};
 
 pub(in crate::gen) struct FileUtil {
     base_dir: PathBuf,
@@ -31,7 +31,7 @@ impl FileUtil {
         let dirname = self.base_dir.join(dir_name.into());
         if !dirname.exists() {
             yellow_message("create", diff_paths(&dirname, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
-            create_dir_all(dirname).into()
+            create_dir_all(dirname).io_result_into_teo_result()
         } else {
             Ok(())
         }
@@ -40,11 +40,11 @@ impl FileUtil {
     pub(in crate::gen) async fn clear_root_directory(&self) -> Result<()> {
         if !&self.base_dir.exists() {
             yellow_message("create", diff_paths(&self.base_dir, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
-            create_dir_all(&self.base_dir).into()
+            create_dir_all(&self.base_dir).io_result_into_teo_result()
         } else {
             red_message("clear", diff_paths(&self.base_dir, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
-            remove_dir_all(&self.base_dir)?;
-            create_dir_all(&self.base_dir).into()
+            remove_dir_all(&self.base_dir).io_result_into_teo_result()?;
+            create_dir_all(&self.base_dir).io_result_into_teo_result()
         }
     }
 
@@ -52,11 +52,11 @@ impl FileUtil {
         let dirname = self.base_dir.join(dir_name.into());
         if !&dirname.exists() {
             yellow_message("create", diff_paths(&dirname, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
-            create_dir_all(&dirname).into()
+            create_dir_all(&dirname).io_result_into_teo_result()
         } else {
             red_message("clear", diff_paths(&dirname, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
-            remove_dir_all(&dirname).into()?;
-            create_dir_all(&dirname).into().into()
+            remove_dir_all(&dirname).io_result_into_teo_result()?;
+            create_dir_all(&dirname).io_result_into_teo_result()
         }
     }
 

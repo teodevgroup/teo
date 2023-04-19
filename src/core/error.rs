@@ -3,7 +3,7 @@ use std::fmt::{Debug, Display, Formatter};
 use maplit::hashmap;
 use key_path::KeyPath;
 use std::borrow::Cow;
-use serde::Serialize;
+use serde::{Serialize, Serializer};
 use crate::core::model::model::Model;
 
 // New errors
@@ -53,6 +53,26 @@ pub enum UserErrorType {
 }
 
 impl UserErrorType {
+
+    fn to_str(&self) -> &'static str {
+        use UserErrorType::*;
+        match self {
+            ValidationError => "ValidationError",
+            UnexpectedInput => "UnexpectedInput",
+            DestinationNotFound => "DestinationNotFound",
+            IncorrectJSONFormat => "IncorrectJSONFormat",
+            MissingRequiredInput => "MissingRequiredInput",
+            ObjectNotFound => "ObjectNotFound",
+            InvalidAuthToken => "InvalidAuthToken",
+            PermissionError => "PermissionError",
+            DeletionDenied => "DeletionDenied",
+            CustomInternalServerError => "CustomInternalServerError",
+            CustomValidationError => "CustomValidationError",
+            UniqueConstraintError => "UniqueConstraintError",
+            WrongIdentityModel => "WrongIdentityModel",
+        }
+    }
+
     fn code(&self) -> u16 {
         use UserErrorType::*;
         match self {
@@ -77,7 +97,7 @@ impl UserErrorType {
 pub struct UserError {
     r#type: UserErrorType,
     message: Cow<'static, str>,
-    errors: Option<HashMap<Cow<'static, str>, Cow<'static, str>>>,
+    errors: Option<HashMap<String, Cow<'static, str>>>,
 }
 
 impl UserError {
@@ -163,7 +183,7 @@ impl Error {
             r#type: UserErrorType::UniqueConstraintError,
             message: Cow::Borrowed("Value is not unique."),
             errors: Some(hashmap!{
-                Cow::Owned(field) => Cow::Borrowed("value is not unique")
+                field => Cow::Borrowed("value is not unique")
             }),
         })
     }
@@ -262,7 +282,7 @@ impl Error {
         Error::UserError(UserError {
             r#type: UserErrorType::UnexpectedInput,
             message: Cow::Owned(format!("Unexpected input type. Expect {}.", expected.into())),
-            errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Owned(format!("Expect {}.", expected.into()))}),
+            errors: Some(hashmap!{key_path.as_ref().to_string() => Cow::Owned(format!("Expect {}.", expected.into()))}),
         })
 
     }
@@ -271,7 +291,7 @@ impl Error {
         Error::UserError(UserError {
             r#type: UserErrorType::UnexpectedInput,
             message: Cow::Owned(format!("Unexpected key '{}'.", unexpected.into())),
-            errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Owned(format!("Expect {}.", unexpected.into()))}),
+            errors: Some(hashmap!{key_path.as_ref().to_string() => Cow::Owned(format!("Expect {}.", unexpected.into()))}),
         })
     }
 
@@ -279,7 +299,7 @@ impl Error {
         Error::UserError(UserError {
             r#type: UserErrorType::UnexpectedInput,
             message: Cow::Owned(format!("Unexpected value found.")),
-            errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Owned(format!("Expect {}.", expected.into()))}),
+            errors: Some(hashmap!{key_path.as_ref().to_string() => Cow::Owned(format!("Expect {}.", expected.into()))}),
         })
     }
 
@@ -295,7 +315,7 @@ impl Error {
         Error::UserError(UserError {
             r#type: UserErrorType::UnexpectedInput,
             message: Cow::Owned(format!("Unexpected value found.")),
-            errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Owned(format!("{}", reason.into()))}),
+            errors: Some(hashmap!{key_path.as_ref().to_string() => Cow::Owned(format!("{}", reason.into()))}),
         })
 
     }
@@ -304,7 +324,7 @@ impl Error {
         Error::UserError(UserError {
             r#type: UserErrorType::MissingRequiredInput,
             message: Cow::Owned(format!("Missing required input.")),
-            errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Borrowed("value is required")})
+            errors: Some(hashmap!{key_path.as_ref().to_string() => Cow::Borrowed("value is required")})
         })
     }
 
@@ -312,7 +332,7 @@ impl Error {
         Error::UserError(UserError {
             r#type: UserErrorType::MissingRequiredInput,
             message: Cow::Owned(format!("Missing required input.")),
-            errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Owned(format!("{} value is required", expected.as_ref()))})
+            errors: Some(hashmap!{key_path.as_ref().to_string() => Cow::Owned(format!("{} value is required", expected.as_ref()))})
         })
     }
 
@@ -320,7 +340,7 @@ impl Error {
         Error::UserError(UserError {
             r#type: UserErrorType::UnexpectedInput,
             message: Cow::Owned(format!("Unexpected object length.")),
-            errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Owned(format!("Expect length {}.", expected))})
+            errors: Some(hashmap!{key_path.as_ref().to_string() => Cow::Owned(format!("Expect length {}.", expected))})
         })
     }
 
@@ -352,7 +372,7 @@ impl Error {
         Error::UserError(UserError {
             r#type: UserErrorType::ValidationError,
             message: Cow::Owned(format!("Validation failed.")),
-            errors: Some(hashmap!{Cow::Owned(path.as_ref().to_string()) => Cow::Owned(reason.into())}),
+            errors: Some(hashmap!{path.as_ref().to_string() => Cow::Owned(reason.into())}),
         })
     }
 
@@ -374,7 +394,7 @@ impl Error {
         Error::UserError(UserError {
             r#type: UserErrorType::PermissionError,
             message: Cow::Owned(format!("Permission denied.")),
-            errors: Some(hashmap!{Cow::Owned(path.as_ref().to_string()) => Cow::Owned(reason.into())})
+            errors: Some(hashmap!{path.as_ref().to_string() => Cow::Owned(reason.into())})
         })
     }
 
@@ -413,3 +433,37 @@ impl From<std::io::Error> for Error {
 
 unsafe impl Sync for Error {}
 unsafe impl Send for Error {}
+
+#[derive(Serialize)]
+struct SerializedError {
+    r#type: Cow<'static, str>,
+    message: Cow<'static, str>,
+    errors: Option<HashMap<String, Cow<'static, str>>>,
+}
+
+impl Into<SerializedError> for Error {
+    fn into(self) -> SerializedError {
+        match self {
+            Error::ServerError(server_error) => SerializedError {
+                r#type: Cow::Borrowed("InternalServerError"),
+                message: server_error.0,
+                errors: None,
+            },
+            Error::FatalError(fatal_error) => SerializedError {
+                r#type: Cow::Borrowed("InternalServerError"),
+                message: fatal_error.0,
+                errors: None,
+            },
+            Error::RuntimeError(runtime_error) => SerializedError {
+                r#type: Cow::Borrowed("InternalServerError"),
+                message: Cow::Borrowed(runtime_error.message()),
+                errors: None,
+            },
+            Error::UserError(user_error) => SerializedError {
+                r#type: Cow::Borrowed(user_error.r#type.to_str()),
+                message: user_error.message,
+                errors: user_error.errors,
+            },
+        }
+    }
+}

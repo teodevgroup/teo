@@ -235,7 +235,7 @@ async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: Init
     let create = input.get("create");
     let include = input.get("include");
     let select = input.get("select");
-    let session = AppCtx::get().unwrap().graph().unwrap().new_save_session();
+    let session = AppCtx::get().unwrap().connector().unwrap().new_save_session();
     let result = handle_create_internal(graph, create, include, select, model, &path!["create"], action, source, session).await;
     match result {
         Ok(val) => {
@@ -864,20 +864,22 @@ pub(crate) async fn serve(
     result.0
 }
 
-async fn reset_after_mutation_if_needed(test_context: Option<&'static TestContext>, graph: &Graph) {
+async fn reset_after_mutation_if_needed(test_context: Option<&'static TestContext>, graph: &Graph) -> Result<()> {
     if let Some(test_context) = test_context {
         if test_context.reset_mode.is_after_mutation() {
             AppCtx::get()?.connector()?.purge(graph).await.unwrap();
             seed(SeedCommandAction::Seed, graph, &test_context.datasets, test_context.datasets.iter().map(|d| d.name.clone()).collect()).await;
         }
     }
+    Ok(())
 }
 
-async fn reset_after_query_if_needed(test_context: Option<&'static TestContext>, graph: &Graph) {
+async fn reset_after_query_if_needed(test_context: Option<&'static TestContext>, graph: &Graph) -> Result<()> {
     if let Some(test_context) = test_context {
-        if test_context.reset_mode.is_after_query() {
+        if test_context.reset_mode.after_query() {
             AppCtx::get()?.connector()?.purge(graph).await.unwrap();
             seed(SeedCommandAction::Seed, graph, &test_context.datasets, test_context.datasets.iter().map(|d| d.name.clone()).collect()).await;
         }
     }
+    Ok(())
 }
