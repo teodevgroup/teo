@@ -1,6 +1,6 @@
 use crate::core::field::field::Field;
 use crate::parser::ast::argument::Argument;
 
-pub(crate) fn queryable_decorator(_args: Vec<Argument>, field: &mut Field) {
+pub(crate) fn queryable_decorator(_args: &Vec<Argument>, field: &mut Field) {
     field.queryable = true;
 }

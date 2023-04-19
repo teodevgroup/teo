@@ -177,7 +177,7 @@ pub(super) fn load_schema() -> Result<()> {
                     }
                 }
                 ASTFieldClass::Relation => {
-                    let mut model_relation = Relation::new(ast_field.identifier.name.as_str().to_owned());
+                    let mut model_relation = Relation::new(ast_field.identifier.name.as_str());
                     if let Some(comment) = &ast_field.comment_block {
                         if let Some(name) = comment.name.as_ref() {
                             model_relation.localized_name = Some(name.to_owned());
@@ -213,7 +213,7 @@ pub(super) fn load_schema() -> Result<()> {
                     model.add_relation(model_relation);
                 }
                 ASTFieldClass::Property => {
-                    let mut model_property = Property::new(ast_field.identifier.name.clone());
+                    let mut model_property = Property::new(ast_field.identifier.name.as_str());
                     if let Some(comment) = &ast_field.comment_block {
                         if let Some(name) = comment.name.as_ref() {
                             model_property.localized_name = Some(name.to_owned());

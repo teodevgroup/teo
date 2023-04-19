@@ -34,6 +34,7 @@ impl ResetMode {
     }
 }
 
+#[derive(Debug)]
 pub(crate) enum ResetDatasets {
     Auto,
     Names(Vec<&'static str>),

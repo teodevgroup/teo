@@ -144,9 +144,9 @@ impl Debug for Field {
 
 impl Field {
 
-    pub(crate) fn new(name: String) -> Self {
+    pub(crate) fn new(name: &'static str) -> Self {
         return Self {
-            name: name.into(),
+            name,
             localized_name: None,
             description: None,
             field_type: None,

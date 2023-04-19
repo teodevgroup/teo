@@ -6,7 +6,7 @@ use crate::{
 };
 use crate::core::item::Item;
 
-pub(crate) fn random_int(args: Vec<Argument>) -> Arc<dyn Item> {
+pub(crate) fn random_int(args: &Vec<Argument>) -> Arc<dyn Item> {
     let value = args
         .get(0)
         .unwrap()
@@ -18,7 +18,7 @@ pub(crate) fn random_int(args: Vec<Argument>) -> Arc<dyn Item> {
     Arc::new(RandomIntItem::new(value.clone()))
 }
 
-pub(crate) fn random_float(args: Vec<Argument>) -> Arc<dyn Item> {
+pub(crate) fn random_float(args: &Vec<Argument>) -> Arc<dyn Item> {
     let value = args
         .get(0)
         .unwrap()

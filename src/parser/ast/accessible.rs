@@ -33,14 +33,14 @@ pub(crate) type ModelDecorator = fn(args: &Vec<Argument>, model: &mut Model);
 
 pub(crate) type ASTPipelineInstaller = fn(args: &Vec<Argument>) -> Arc<dyn Item>;
 
-pub(crate) type ASTFunctionInstaller = fn(lookup_table: Arc<Mutex<CallbackLookup>>, args: &Vec<Argument>) -> Arc<dyn Item>;
+pub(crate) type ASTFunctionInstaller = fn(lookup_table: &'static CallbackLookup, args: &Vec<Argument>) -> Arc<dyn Item>;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ASTPipelineItem {
     pub(crate) installer: Option<ASTPipelineInstaller>,
     pub(crate) function_installer: Option<ASTFunctionInstaller>,
     pub(crate) lookup_table: &'static CallbackLookup,
-    pub(crate) args: Vec<Argument>,
+    pub(crate) args: &Vec<Argument>,
 }
 
 #[derive(Debug, Clone)]
@@ -49,13 +49,17 @@ pub(crate) struct ASTVPipeline {
 }
 
 impl ASTVPipeline {
+
+    pub(crate) fn args(&self) -> &Vec<Argument> {
+        &self.args
+    }
     pub(crate) fn to_value_pipeline(&self) -> Pipeline {
         let mut modifiers = vec![];
         for item in self.items.iter() {
             if let Some(installer) = item.installer {
-                modifiers.push((installer)(item.args.clone()));
+                modifiers.push((installer)(item.args()));
             } else if let Some(function_installer) = item.function_installer {
-                modifiers.push((function_installer)(item.lookup_table.as_ref().unwrap().clone(), item.args.clone()));
+                modifiers.push((function_installer)(item.lookup_table, item.args()));
             }
         }
         Pipeline { items: modifiers }

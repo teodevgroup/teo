@@ -1,7 +1,7 @@
 use crate::core::relation::Relation;
 use crate::parser::ast::argument::Argument;
 
-pub(crate) fn relation_decorator(args: Vec<Argument>, relation: &mut Relation) {
+pub(crate) fn relation_decorator(args: &Vec<Argument>, relation: &mut Relation) {
     let fields_arg = args.iter().find(|a| {
         a.name.as_ref().unwrap().name == "fields"
     });

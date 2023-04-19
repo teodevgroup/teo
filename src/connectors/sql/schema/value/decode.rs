@@ -1,5 +1,5 @@
 use crate::connectors::sql::schema::dialect::SQLDialect;
-use crate::core::field::r#type::{FieldType};
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::teon::Value;
 use chrono::{NaiveDate, DateTime, Utc};
 use indexmap::IndexMap;

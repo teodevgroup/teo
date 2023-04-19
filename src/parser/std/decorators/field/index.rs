@@ -7,19 +7,19 @@ static FIELD_INDEX_PRIMARY: u8 = 0;
 static FIELD_INDEX_INDEX: u8 = 1;
 static FIELD_INDEX_UNIQUE: u8 = 2;
 
-pub(crate) fn id_decorator(args: Vec<Argument>, field: &mut Field) {
+pub(crate) fn id_decorator(args: &Vec<Argument>, field: &mut Field) {
     decorator(args, field, FIELD_INDEX_PRIMARY)
 }
 
-pub(crate) fn unique_decorator(args: Vec<Argument>, field: &mut Field) {
+pub(crate) fn unique_decorator(args: &Vec<Argument>, field: &mut Field) {
     decorator(args, field, FIELD_INDEX_UNIQUE)
 }
 
-pub(crate) fn index_decorator(args: Vec<Argument>, field: &mut Field) {
+pub(crate) fn index_decorator(args: &Vec<Argument>, field: &mut Field) {
     decorator(args, field, FIELD_INDEX_INDEX)
 }
 
-fn decorator(args: Vec<Argument>, field: &mut Field, index_kind: u8) {
+fn decorator(args: &Vec<Argument>, field: &mut Field, index_kind: u8) {
     if index_kind == FIELD_INDEX_PRIMARY {
         field.primary = true;
     }

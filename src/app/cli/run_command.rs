@@ -30,7 +30,7 @@ pub(crate) async fn run_command(cli: CLI) -> Result<()> {
                                 datasets: app_ctx.datasets().iter().filter(|d| d.autoseed == true).map(|d| d.clone()).collect(),
                             }))),
                             ResetDatasets::Names(names) => {
-                                let sv: Vec<String> = names.iter().map(|v| v.as_str().unwrap().to_owned()).collect();
+                                let sv: Vec<String> = names.iter().map(|v| v.to_owned()).collect();
                                 Some(Box::leak(Box::new(TestContext {
                                     reset_mode: ResetMode::AfterQuery,
                                     datasets: app_ctx.datasets().iter().filter(|d| sv.contains(&d.name)).map(|d| d.clone()).collect(),

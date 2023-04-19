@@ -3,7 +3,7 @@ use crate::core::item::Item;
 use crate::core::items::debug::print::PrintItem;
 use crate::parser::ast::argument::Argument;
 
-pub(crate) fn print(args: Vec<Argument>) -> Arc<dyn Item> {
+pub(crate) fn print(args: &Vec<Argument>) -> Arc<dyn Item> {
     if args.len() == 0 {
         Arc::new(PrintItem::new(None))
     } else {

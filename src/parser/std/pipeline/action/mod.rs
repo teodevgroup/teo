@@ -6,7 +6,7 @@ use crate::core::items::action::when::WhenItem;
 use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
 
-pub(crate) fn when(args: Vec<Argument>) -> Arc<dyn Item> {
+pub(crate) fn when(args: &Vec<Argument>) -> Arc<dyn Item> {
     let pipeline = args.get(1).unwrap().resolved.as_ref().unwrap().as_value().unwrap().as_pipeline().unwrap();
     let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
     match value {
@@ -23,7 +23,7 @@ pub(crate) fn when(args: Vec<Argument>) -> Arc<dyn Item> {
     }
 }
 
-pub(crate) fn redirect(args: Vec<Argument>) -> Arc<dyn Item> {
+pub(crate) fn redirect(args: &Vec<Argument>) -> Arc<dyn Item> {
     let value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
     match value {
         Value::RawOptionChoice(action_value) => {

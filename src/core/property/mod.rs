@@ -1,10 +1,12 @@
 use std::sync::Arc;
 use inflector::Inflector;
+use crate::app::ctx::AppCtx;
 use crate::core::connector::Connector;
 use crate::core::database::r#type::DatabaseType;
 use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::pipeline::Pipeline;
+use crate::core::result::Result;
 
 #[derive(Clone)]
 pub struct Property {
@@ -59,8 +61,9 @@ impl Property {
         self.optionality.is_required()
     }
 
-    pub(crate) fn finalize(&mut self, connector: Arc<dyn Connector>) {
-        self.database_type = Some(connector.default_database_type(self.field_type()));
+    pub(crate) fn finalize(&mut self) -> Result<()> {
+        self.database_type = Some(AppCtx::get()?.connector_conf()?.default_database_type(self.field_type()));
+        Ok(())
     }
 
     pub(crate) fn set_required(&mut self) {

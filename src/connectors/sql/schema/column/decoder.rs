@@ -293,7 +293,7 @@ impl From<&Arc<Field>> for SQLColumn {
 
 impl From<&Property> for SQLColumn {
     fn from(property: &Property) -> Self {
-        SQLColumn::new(property.name.clone(), property.database_type().clone(), property.is_required(), false, None, false)
+        SQLColumn::new(property.name.to_string(), property.database_type().clone(), property.is_required(), false, None, false)
     }
 }
 

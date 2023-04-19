@@ -6,7 +6,7 @@ use crate::core::items::logical::validate_with::ValidateWithItem;
 use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
 
-pub(crate) fn custom_transform(lookup_table: Arc<Mutex<CallbackLookup>>, args: Vec<Argument>) -> Arc<dyn Item> {
+pub(crate) fn custom_transform(lookup_table: Arc<Mutex<CallbackLookup>>, args: &Vec<Argument>) -> Arc<dyn Item> {
     let arg_value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
     match arg_value {
         Value::String(s) => {
@@ -26,7 +26,7 @@ pub(crate) fn custom_transform(lookup_table: Arc<Mutex<CallbackLookup>>, args: V
     }
 }
 
-pub(crate) fn custom_callback(lookup_table: Arc<Mutex<CallbackLookup>>, args: Vec<Argument>) -> Arc<dyn Item> {
+pub(crate) fn custom_callback(lookup_table: Arc<Mutex<CallbackLookup>>, args: &Vec<Argument>) -> Arc<dyn Item> {
     let name = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap().as_str().unwrap();
     let lookup_table = lookup_table.lock().unwrap();
     let modifier = lookup_table.callback(name);
@@ -37,7 +37,7 @@ pub(crate) fn custom_callback(lookup_table: Arc<Mutex<CallbackLookup>>, args: Ve
     }
 }
 
-pub(crate) fn custom_validate(lookup_table: Arc<Mutex<CallbackLookup>>, args: Vec<Argument>) -> Arc<dyn Item> {
+pub(crate) fn custom_validate(lookup_table: Arc<Mutex<CallbackLookup>>, args: &Vec<Argument>) -> Arc<dyn Item> {
     let arg_value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
     match arg_value {
         Value::String(s) => {
@@ -57,7 +57,7 @@ pub(crate) fn custom_validate(lookup_table: Arc<Mutex<CallbackLookup>>, args: Ve
     }
 }
 
-pub(crate) fn custom_compare(lookup_table: Arc<Mutex<CallbackLookup>>, args: Vec<Argument>) -> Arc<dyn Item> {
+pub(crate) fn custom_compare(lookup_table: Arc<Mutex<CallbackLookup>>, args: &Vec<Argument>) -> Arc<dyn Item> {
     let name = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap().as_str().unwrap();
     let lookup_table = lookup_table.lock().unwrap();
     let modifier = lookup_table.compare(name);

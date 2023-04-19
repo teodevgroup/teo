@@ -387,8 +387,8 @@ GROUP BY   tnsp.nspname,
         let result_set = conn.query(Query::from(sql)).await.unwrap();
         let mut indices = vec![];
         for row in result_set {
-            let index_name = row.get("index_name").unwrap().as_str().unwrap();
-            let column_name = row.get("column_name").unwrap().as_str().unwrap();
+            let index_name = Box::leak(Box::new(row.get("index_name").unwrap().to_string().unwrap()));
+            let column_name = Box::leak(Box::new(row.get("column_name").unwrap().to_string().unwrap()));
             let order = Sort::from_str(row.get("order").unwrap().as_str().unwrap()).unwrap();
             if let Some(position) = indices.iter().position(|m: &ModelIndex| m.name().unwrap() == index_name) {
                 let model_index = indices.get_mut(position).unwrap();
@@ -465,8 +465,8 @@ ORDER BY 1,6"#, table_name);
             let result_set = conn.query(Query::from(sql)).await.unwrap();
             let row = result_set.into_single().unwrap();
             let column_name = row.get("name").unwrap().as_str().unwrap();
+            let leaked = Box::leak(Box::new(column_name));
             let index = ModelIndex::new(ModelIndexType::Primary, Some(format!("sqlite_autoindex_{table_name}_1")), vec![
-                let leaked = Box::leak(Box::new(column_name));
                 ModelIndexItem::new(leaked, Sort::Asc, None)
             ]);
             results.push(index);

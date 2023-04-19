@@ -10,8 +10,9 @@ use crate::gen::generators::server::python::PythonEntityGenerator;
 use crate::gen::generators::server::rust::RustEntityGenerator;
 use crate::gen::interface::server::conf::EntityGeneratorConf;
 use crate::prelude::Graph;
+use crate::core::result::Result;
 
-pub(crate) async fn gen(graph: &Graph, conf: &EntityGeneratorConf) -> std::io::Result<()> {
+pub(crate) async fn gen(graph: &Graph, conf: &EntityGeneratorConf) -> Result<()> {
     match conf.provider {
         ProgramLang::Rust => generate_entity_typed(RustEntityGenerator::new(), graph, conf).await,
         ProgramLang::Go => generate_entity_typed(GoEntityGenerator::new(), graph, conf).await,
@@ -22,7 +23,7 @@ pub(crate) async fn gen(graph: &Graph, conf: &EntityGeneratorConf) -> std::io::R
     }
 }
 
-async fn generate_entity_typed<T: EntityGenerator>(entity_generator: T, graph: &Graph, conf: &EntityGeneratorConf) -> std::io::Result<()> {
+async fn generate_entity_typed<T: EntityGenerator>(entity_generator: T, graph: &Graph, conf: &EntityGeneratorConf) -> Result<()> {
     let dest = &conf.dest;
     let generator = FileUtil::new(&dest);
     generator.ensure_root_directory().await?;
@@ -32,5 +33,5 @@ async fn generate_entity_typed<T: EntityGenerator>(entity_generator: T, graph: &
 
 #[async_trait]
 pub(in crate::gen) trait EntityGenerator {
-    async fn generate_entity_files(&self, graph: &Graph, conf: &EntityGeneratorConf, generator: &FileUtil) -> std::io::Result<()>;
+    async fn generate_entity_files(&self, graph: &Graph, conf: &EntityGeneratorConf, generator: &FileUtil) -> Result<()>;
 }

@@ -96,7 +96,7 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
                     let relation_model = graph.model(relation_model_name).unwrap();
                     let num = if relation.is_vec() { "Many" } else { "One" };
                     if let Some(without_relation) = without_relation {
-                        if without_relation.name() != k {
+                        if without_relation.name() != *k {
                             if let Some(opposite_relation) = relation_model.relations().iter().find(|r| {
                                 r.fields() == relation.references() && r.references() == relation.fields()
                             }) {
@@ -263,7 +263,7 @@ fn generate_model_update_input(graph: &Graph, model: &Model, without: Option<&st
                     let relation_model = graph.model(relation_model_name).unwrap();
                     let num = if relation.is_vec() { "Many" } else { "One" };
                     if let Some(without_relation) = without_relation {
-                        if without_relation.name() != k {
+                        if without_relation.name() != *k {
                             if let Some(opposite_relation) = relation_model.relations().iter().find(|r| {
                                 r.fields() == relation.references() && r.references() == relation.fields()
                             }) {
@@ -508,7 +508,7 @@ export declare class TeoError extends Error {
                 c.line(generate_model_update_with_where_unique_input(m, Some(r.name())));
                 c.line(generate_model_update_many_with_where_input(m, Some(r.name())));
             });
-            if m.identity() {
+            if m.is_identity() {
                 c.line(generate_model_credentials_input(m));
             }
             if server_mode {

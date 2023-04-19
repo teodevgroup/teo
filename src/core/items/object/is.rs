@@ -48,7 +48,7 @@ impl Item for IsItem {
                             return Err(ctx.with_invalid("value object is not target object"))
                         }
                         for (f, r) in rhs_relation.iter() {
-                            if rhs.get_value(f) != o.get_value(r) {
+                            if rhs.get_value(f)? != o.get_value(r)? {
                                 return Err(ctx.with_invalid("value object is not target object"))
                             }
                         }

@@ -3,6 +3,7 @@ pub(crate) mod jwt_token;
 pub(crate) mod test_context;
 pub(crate) mod conf;
 
+use crate::core::result::Result;
 use std::io::ErrorKind;
 use std::sync::Arc;
 use futures_util::future;
@@ -825,7 +826,7 @@ fn make_app(graph: &'static Graph, conf: &'static ServerConf, test_context: Opti
     app
 }
 
-async fn server_start_message(port: u16, environment_version: Program, entrance: Entrance) -> Result<(), std::io::Error> {
+async fn server_start_message(port: u16, environment_version: &'static Program, entrance: &'static Entrance) -> Result<()> {
     // Introducing
     let now: DateTime<Local> = Local::now();
     let now_formatted = format!("{now}").dimmed();
@@ -848,12 +849,9 @@ pub(crate) async fn serve(
     entrance: &'static Entrance,
     before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
     test_context: Option<&'static TestContext>,
-) -> Result<(), std::io::Error> {
+) -> Result<()> {
     if let Some(cb) = before_server_start {
-        match cb.call().await {
-            Ok(()) => (),
-            Err(err) => return Err(std::io::Error::new(ErrorKind::Other, err.message())),
-        }
+        cb.call().await?;
     }
     let bind = conf.bind.clone();
     let port = bind.1;

@@ -402,7 +402,7 @@ impl Query {
         };
         let mut columns: Vec<String> = vec![];
         if additional_left_join.is_some() {
-            columns = model.save_keys().iter().map(|k| format!("t.{} AS {}", k.as_str().escape(dialect), k.as_str().escape(dialect))).collect::<Vec<String>>();
+            columns = model.save_keys().iter().map(|k| format!("t.{} AS {}", k.escape(dialect), k.escape(dialect))).collect::<Vec<String>>();
         }
         if let Some(join_table_results) = join_table_results {
             for result_key in join_table_results {

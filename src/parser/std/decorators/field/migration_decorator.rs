@@ -5,7 +5,7 @@ use crate::prelude::Value;
 
 static VALID_NAMES: [&str; 5] = ["renamed", "default", "version", "action", "priority"];
 
-pub(crate) fn migration_decorator(args: Vec<Argument>, field: &mut Field) {
+pub(crate) fn migration_decorator(args: &Vec<Argument>, field: &mut Field) {
     let mut migration = FieldMigration { renamed: vec![], default: None, version: None, action: None, priority: None };
     for arg in args {
         if arg.name.is_none() {
