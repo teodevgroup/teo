@@ -18,7 +18,7 @@ use crate::core::relation::Relation;
 use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
 use crate::core::relation::delete_rule::DeleteRule;
-use crate::prelude::{Graph, Value};
+use crate::prelude::Value;
 use crate::core::result::Result;
 use crate::teon;
 

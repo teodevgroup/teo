@@ -11,6 +11,7 @@ use inflector::Inflector;
 use crate::gen::generators::client::typescript::pkg::src::index_d_ts::generate_index_d_ts;
 use crate::gen::internal::code::Code;
 use crate::gen::generators::server::nodejs::utils::{field_to_nodejs_api_type, relation_to_nodejs_api_type};
+use crate::gen::interface::server::conf::EntityGeneratorConf;
 
 pub(crate) struct NodeJSEntityGenerator { }
 

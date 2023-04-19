@@ -7,7 +7,7 @@ use regex::Regex;
 use snailquote::unescape;
 use crate::core::database::name::DatabaseName;
 use crate::core::teon::range::Range;
-use crate::parser::ast::accessible::{Accessible, ASTPipeline, ASTPipelineItem, Container};
+use crate::parser::ast::accessible::{Accessible, ASTVPipeline, ASTPipelineItem, Container};
 use crate::parser::ast::argument::ArgumentList;
 use crate::parser::ast::config::ASTServer;
 use crate::parser::ast::constant::Constant;
@@ -343,7 +343,7 @@ impl Resolver {
                     items.push(ASTPipelineItem {
                         installer: Some(installer.clone()),
                         function_installer: None,
-                        lookup_table: None,
+                        lookup_table: parser.callback_lookup_table,
                         args: vec![]
                     })
                 } else {
@@ -352,7 +352,7 @@ impl Resolver {
                         items.push(ASTPipelineItem {
                             installer: None,
                             function_installer: Some(installer.clone()),
-                            lookup_table: Some(parser.callback_lookup_table.clone()),
+                            lookup_table: parser.callback_lookup_table,
                             args: vec![]
                         })
                     } else {
@@ -368,7 +368,7 @@ impl Resolver {
                             if let Some(previous_identifier) = previous_identifier {
                                 let installer = parser.global_pipeline_installers().get(&previous_identifier.name);
                                 if let Some(installer) = installer {
-                                    items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: None, args: vec![]});
+                                    items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: parser.callback_lookup_table, args: vec![]});
                                 } else {
                                     panic!("Cannot find pipeline item named '{}'.", identifier.name);
                                 }
@@ -387,11 +387,11 @@ impl Resolver {
                             }
                             let installer = parser.global_pipeline_installers().get(&previous_identifier.unwrap().name);
                             if let Some(installer) = installer {
-                                items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: None, args: args.arguments});
+                                items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: parser.callback_lookup_table, args: args.arguments});
                             } else {
                                 let installer = parser.global_function_installers().get(&previous_identifier.unwrap().name);
                                 if let Some(installer) = installer {
-                                    items.push(ASTPipelineItem { installer: None, function_installer: Some(installer.clone()), lookup_table: Some(parser.callback_lookup_table.clone()), args: args.arguments});
+                                    items.push(ASTPipelineItem { installer: None, function_installer: Some(installer.clone()), lookup_table: parser.callback_lookup_table, args: args.arguments});
                                 } else {
                                     panic!("Cannot find pipeline item named '{}'.", previous_identifier.unwrap().name);
                                 }
@@ -404,7 +404,7 @@ impl Resolver {
                 if let Some(previous_identifier) = previous_identifier {
                     let installer = parser.global_pipeline_installers().get(&previous_identifier.name);
                     if let Some(installer) = installer {
-                        items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: None, args: vec![]});
+                        items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: parser.callback_lookup_table, args: vec![]});
                     } else {
                         panic!("Cannot find pipeline item named '{}'.", previous_identifier.name);
                     }
@@ -412,7 +412,7 @@ impl Resolver {
             }
             _ => panic!()
         }
-        let ast_pipeline = ASTPipeline { items };
+        let ast_pipeline = ASTVPipeline { items };
         let value_pipeline = ast_pipeline.to_value_pipeline();
         Entity::Value(Value::Pipeline(value_pipeline))
     }
@@ -788,7 +788,7 @@ impl Resolver {
                     arg.resolved = Some(Entity::Value(value));
                 }
                 match entity.as_accessible().unwrap() {
-                    Accessible::Callable(callable) => Entity::Value(callable(args.arguments.clone())),
+                    Accessible::Callable(callable) => Entity::Value(callable(args.arguments())),
                     _ => unreachable!(),
                 }
             }

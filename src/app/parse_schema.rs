@@ -108,7 +108,7 @@ pub(super) fn load_schema() -> Result<()> {
         for ast_field in ast_model.fields.iter() {
             match ast_field.field_class {
                 ASTFieldClass::Field | ASTFieldClass::DroppedField => {
-                    let mut model_field = Field::new(field.identifier.name.as_str().to_owned());
+                    let mut model_field = Field::new(ast_field.identifier.name.as_str().to_owned());
                     if let Some(comment) = &ast_field.comment_block {
                         if let Some(name) = comment.name.as_ref() {
                             model_field.localized_name = Some(name.to_owned());
@@ -125,7 +125,7 @@ pub(super) fn load_schema() -> Result<()> {
                             } else {
                                 model_field.set_optional();
                             }
-                            Self::install_types_to_field_owner(&field.r#type.identifier.name, &mut model_field, &enums);
+                            install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut model_field, graph.enums());
                         }
                         Arity::Array => {
                             if ast_field.r#type.collection_required {
@@ -140,7 +140,7 @@ pub(super) fn load_schema() -> Result<()> {
                                 } else {
                                     inner.set_optional();
                                 }
-                                install_types_to_field_owner(&field.r#type.identifier.name, &mut inner, &enums);
+                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums());
                                 inner
                             })));
                         }
@@ -157,7 +157,7 @@ pub(super) fn load_schema() -> Result<()> {
                                 } else {
                                     inner.set_optional();
                                 }
-                                Self::install_types_to_field_owner(&field.r#type.identifier.name, &mut inner, &enums);
+                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums());
                                 inner
                             })));
                         }
@@ -168,7 +168,7 @@ pub(super) fn load_schema() -> Result<()> {
                         field_decorator(decorator.get_argument_list(), &mut model_field);
                     }
                     match &ast_field.field_class {
-                        FieldClass::DroppedField => {
+                        ASTFieldClass::DroppedField => {
                             model.add_dropped_field(model_field);
                         }
                         _ => {
@@ -177,7 +177,7 @@ pub(super) fn load_schema() -> Result<()> {
                     }
                 }
                 ASTFieldClass::Relation => {
-                    let mut model_relation = Relation::new(field.identifier.name.as_str().to_owned());
+                    let mut model_relation = Relation::new(ast_field.identifier.name.as_str().to_owned());
                     if let Some(comment) = &ast_field.comment_block {
                         if let Some(name) = comment.name.as_ref() {
                             model_relation.localized_name = Some(name.to_owned());
@@ -201,7 +201,7 @@ pub(super) fn load_schema() -> Result<()> {
                                 panic!("Relation cannot have optional items.")
                             }
                             model_relation.set_is_vec(true);
-                            model_relation.set_model(field.r#type.identifier.name.clone());
+                            model_relation.set_model(ast_field.r#type.identifier.name.clone());
                         }
                         Arity::Dictionary => panic!("Relations cannot be dictionary.")
                     }
@@ -230,7 +230,7 @@ pub(super) fn load_schema() -> Result<()> {
                             } else {
                                 model_property.set_optional();
                             }
-                            Self::install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut model_property, &enums);
+                            install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut model_property, graph.enums());
                         }
                         Arity::Array => {
                             if ast_field.r#type.collection_required {
@@ -245,7 +245,7 @@ pub(super) fn load_schema() -> Result<()> {
                                 } else {
                                     inner.set_optional();
                                 }
-                                Self::install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, &enums);
+                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums());
                                 inner
                             })));
                         }
@@ -262,12 +262,12 @@ pub(super) fn load_schema() -> Result<()> {
                                 } else {
                                     inner.set_optional();
                                 }
-                                Self::install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, &enums);
+                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums());
                                 inner
                             })));
                         }
                     }
-                    for decorator in field.decorators.iter() {
+                    for decorator in ast_field.decorators.iter() {
                         let property_decorator = decorator.accessible.as_ref().unwrap().as_property_decorator().unwrap();
                         property_decorator(decorator.get_argument_list(), &mut model_property);
                     }
@@ -299,20 +299,20 @@ pub(super) fn load_schema() -> Result<()> {
     Ok(())
 }
 
-fn install_types_to_field_owner<F>(name: &str, field: &mut F, enums: &HashMap<String, Enum>) where F: FieldTypeOwner {
+fn install_types_to_field_owner<F>(name: &str, field: &mut F, enums: &HashMap<&'static str, Enum>) where F: FieldTypeOwner {
     match name {
-        "String" => field.field_type = Some(FieldType::String),
-        "Bool" => field.field_type = Some(FieldType::Bool),
-        "Int" | "Int32" => field.field_type = Some(FieldType::I32),
-        "Int64" => field.field_type = Some(FieldType::I64),
-        "Float32" => field.field_type = Some(FieldType::F32),
-        "Float" | "Float64" => field.field_type = Some(FieldType::F64),
-        "Date" => field.field_type = Some(FieldType::Date),
-        "DateTime" => field.field_type = Some(FieldType::DateTime),
-        "Decimal" => field.field_type = Some(FieldType::Decimal),
+        "String" => field.set_field_type(FieldType::String),
+        "Bool" => field.set_field_type(FieldType::Bool),
+        "Int" | "Int32" => field.set_field_type(FieldType::I32),
+        "Int64" => field.set_field_type(FieldType::I64),
+        "Float32" => field.set_field_type(FieldType::F32),
+        "Float" | "Float64" => field.set_field_type(FieldType::F64),
+        "Date" => field.set_field_type(FieldType::Date),
+        "DateTime" => field.set_field_type(FieldType::DateTime),
+        "Decimal" => field.set_field_type(FieldType::Decimal),
         #[cfg(feature = "data-source-mongodb")]
-        "ObjectId" => field.field_type = Some(FieldType::ObjectId),
+        "ObjectId" => field.set_field_type(FieldType::ObjectId),
         // _ => panic!("Unrecognized type: '{}'.", name)
-        _ => field.field_type = Some(FieldType::Enum(enums.get(name).unwrap().clone())),
+        _ => field.set_field_type(FieldType::Enum(enums.get(name).unwrap().clone())),
     };
 }

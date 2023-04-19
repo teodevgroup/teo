@@ -28,11 +28,11 @@ impl ConnectorConf {
 pub(crate) trait SaveSession: Debug + Send + Sync { }
 
 #[async_trait]
-pub(crate) trait Connector: Send + Sync + Debug {
+pub(crate) trait Connector: Send + Sync {
 
     // Migration
 
-    async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> Result<()>;
+    async fn migrate(&self, models: Vec<&Model>, reset_database: bool) -> Result<()>;
 
     // Purge
 

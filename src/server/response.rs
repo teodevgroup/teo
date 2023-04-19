@@ -18,7 +18,7 @@ fn status_code_for_error(error: &Error) -> u16 {
     }
 }
 
-fn error_to_json(error: &Error) -> serde_json::Value {
+pub(super) fn error_to_json(error: &Error) -> serde_json::Value {
     match error {
         Error::ServerError(server_error) => json!({"type": "InternalServerError", "message": server_error.0}),
         Error::FatalError(fatal_error) => json!({"type": "InternalServerError", "message": fatal_error.0}),

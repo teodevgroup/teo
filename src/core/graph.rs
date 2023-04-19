@@ -15,7 +15,7 @@ use crate::core::relation::Relation;
 use crate::core::result::Result;
 use crate::prelude::Value;
 
-#[derive(Clone, ToMut, Debug)]
+#[derive(ToMut)]
 pub struct Graph {
     pub(crate) enums: HashMap<&'static str, Enum>,
     pub(crate) models: HashMap<&'static str, Model>,
@@ -35,7 +35,7 @@ impl Graph {
     }
 
     pub(crate) fn add_model(&mut self, m: Model) {
-        self.models.insert(m.name, m);
+        self.models.insert(m.name(), m);
     }
 
     pub fn models(&self) -> Vec<&Model> {
@@ -43,7 +43,7 @@ impl Graph {
     }
 
     pub fn models_without_teo_internal(&self) -> Vec<&Model> {
-        self.models().iter().filter(|m| !m.is_teo_internal()).collect()
+        self.models().iter().filter(|m| !m.is_teo_internal()).map(|m| *m).collect()
     }
 
     // MARK: - Queries
@@ -142,8 +142,8 @@ impl Graph {
 
     pub(crate) fn new_object(&self, model: &str, action: Action, action_source: Initiator) -> Result<Object> {
         match self.model(model) {
-            Some(model) => Ok(Object::new(self, model, action, action_source)),
-            None => Err(Error::invalid_operation(format!("Model with name '{model}' is not defined.")))
+            Ok(model) => Ok(Object::new(self, model, action, action_source)),
+            Err(_) => Err(Error::invalid_operation(format!("Model with name '{model}' is not defined.")))
         }
     }
 

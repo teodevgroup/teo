@@ -18,8 +18,8 @@ impl<'a> SQLInsertIntoStatement<'a> {
         self
     }
 
-    pub(crate) fn returning(&mut self, keys: &Vec<String>) -> &mut Self {
-        self.returning = keys.clone();
+    pub(crate) fn returning<S>(&mut self, keys: &Vec<S>) -> &mut Self where S: Into<String> {
+        self.returning = keys.iter().map(|k| k.into()).collect();
         self
     }
 }

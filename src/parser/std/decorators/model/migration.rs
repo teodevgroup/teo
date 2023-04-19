@@ -5,8 +5,7 @@ use crate::prelude::Value;
 
 static VALID_NAMES: [&str; 3] = ["renamed", "version", "drop"];
 
-pub(crate) fn migration_decorator(args: Option<&Vec<Argument>>, model: &mut Model) {
-    let args = args.unwrap();
+pub(crate) fn migration_decorator(args: &Vec<Argument>, model: &mut Model) {
     let mut migration = ModelMigration { renamed: vec![], version: None, drop: false };
     for arg in args {
         if arg.name.is_none() {

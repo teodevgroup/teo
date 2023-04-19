@@ -8,20 +8,19 @@ static MODEL_INDEX_PRIMARY: u8 = 0;
 static MODEL_INDEX_INDEX: u8 = 1;
 static MODEL_INDEX_UNIQUE: u8 = 2;
 
-pub(crate) fn id_decorator(args: Option<&Vec<Argument>>, model: &mut Model) {
+pub(crate) fn id_decorator(args: &Vec<Argument>, model: &mut Model) {
     decorator(args, model, MODEL_INDEX_PRIMARY)
 }
 
-pub(crate) fn index_decorator(args: Option<&Vec<Argument>>, model: &mut Model) {
+pub(crate) fn index_decorator(args: &Vec<Argument>, model: &mut Model) {
     decorator(args, model, MODEL_INDEX_INDEX)
 }
 
-pub(crate) fn unique_decorator(args: Option<&Vec<Argument>>, model: &mut Model) {
+pub(crate) fn unique_decorator(args: &Vec<Argument>, model: &mut Model) {
     decorator(args, model, MODEL_INDEX_UNIQUE)
 }
 
-fn decorator(args: Option<&Vec<Argument>>, model: &mut Model, index_kind: u8) {
-    let args = args.unwrap();
+fn decorator(args: &Vec<Argument>, model: &mut Model, index_kind: u8) {
     let mut items: Vec<ModelIndexItem> = vec![];
     let mut map: Option<String> = None;
     if args.is_empty() {

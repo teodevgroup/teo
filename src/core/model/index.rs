@@ -61,13 +61,13 @@ pub(crate) struct ModelIndex {
     pub(self) index_type: ModelIndexType,
     pub(self) name: Option<String>,
     pub(crate) items: Vec<ModelIndexItem>,
-    pub(self) keys: Vec<String>,
+    pub(self) keys: Vec<&'static str>,
 }
 
 impl ModelIndex {
 
     pub(crate) fn new(r#type: ModelIndexType, name: Option<impl Into<String>>, items: Vec<ModelIndexItem>) -> Self {
-        let keys: Vec<String> = items.iter().map(|i| i.field_name.clone()).collect();
+        let keys: Vec<&'static str> = items.iter().map(|i| i.field_name).collect();
         Self {
             index_type: r#type,
             name: name.map(|v| v.into()),
@@ -122,7 +122,7 @@ impl ModelIndex {
         &self.items
     }
 
-    pub(crate) fn keys(&self) -> &Vec<String> {
+    pub(crate) fn keys(&self) -> &Vec<&'static str> {
         &self.keys
     }
 
@@ -208,7 +208,7 @@ impl ModelIndex {
     }
 
     pub(crate) fn append_item(&mut self, item: ModelIndexItem) {
-        let key = item.field_name().to_owned();
+        let key = item.field_name();
         self.items.push(item);
         self.keys.push(key);
     }

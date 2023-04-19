@@ -17,10 +17,11 @@ impl ASTDecorator {
         Self { expression, span, resolved: false, accessible: None, arguments: None }
     }
 
-    pub(crate) fn get_argument_list(&self) -> Option<&Vec<Argument>> {
+    pub(crate) fn get_argument_list(&self) -> &Vec<Argument> {
+        static ARGUMENTS: Vec<Argument> = vec![];
         match &self.arguments {
-            Some(argument_list) => Some(&argument_list.arguments),
-            None => None,
+            Some(argument_list) => &argument_list.arguments,
+            None => &ARGUMENTS,
         }
     }
 }

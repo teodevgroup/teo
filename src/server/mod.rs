@@ -25,8 +25,7 @@ use crate::core::action::{
 };
 use crate::core::initiator::Initiator;
 use crate::app::cli::command::SeedCommandAction;
-use crate::app::command::SeedCommandAction;
-use crate::app::conf::ServerConf;
+use crate::app::ctx::AppCtx;
 use crate::app::entrance::Entrance;
 use crate::app::program::Program;
 use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
@@ -42,6 +41,7 @@ use crate::core::teon::decoder::Decoder;
 use crate::prelude::Value;
 use crate::seeder::seed::seed;
 use crate::server::conf::ServerConf;
+use crate::server::response::error_to_json;
 use crate::teon;
 
 fn j(v: Value) -> JsonValue {
@@ -202,8 +202,8 @@ async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: I
         }
         Err(err) => {
             HttpResponse::BadRequest().json(json!({
-                    "error": err
-                }))
+                "error": error_to_json(&err)
+            }))
         }
     }
 }
@@ -235,14 +235,14 @@ async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: Init
     let create = input.get("create");
     let include = input.get("include");
     let select = input.get("select");
-    let session = graph.connector().new_save_session();
+    let session = AppCtx::get().unwrap().graph().new_save_session();
     let result = handle_create_internal(graph, create, include, select, model, &path!["create"], action, source, session).await;
     match result {
         Ok(val) => {
             let json_val: JsonValue = val.into();
             HttpResponse::Ok().json(json!({"data": json_val}))
         },
-        Err(err) => HttpResponse::BadRequest().json(json!({"error": err}))
+        Err(err) => HttpResponse::BadRequest().json(json!({"error": error_to_json(&err)}))
     }
 }
 
@@ -259,7 +259,7 @@ async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: Init
     let action = Action::from_u32(UPDATE | ENTRY | SINGLE);
     let result = graph.find_unique_internal(model.name(), input, true, action, source).await.into_not_found_error();
     if result.is_err() {
-        return HttpResponse::NotFound().json(json!({"error": result.err()}));
+        return HttpResponse::NotFound().json(json!({"error": error_to_json(&result.err().unwrap())}));
     }
     let result = result.unwrap();
     let update = input.get("update");
@@ -273,7 +273,7 @@ async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: Init
             HttpResponse::Ok().json(json!({"data": json_val}))
         }
         Err(err) => {
-            HttpResponse::BadRequest().json(json!({"error": err}))
+            HttpResponse::BadRequest().json(json!({"error": error_to_json(&err)}))
         }
     }
 }
@@ -306,12 +306,12 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Init
                             HttpResponse::Ok().json(json!({"data": json_val}))
                         }
                         Err(err) => {
-                            HttpResponse::BadRequest().json(json!({"error": err}))
+                            HttpResponse::BadRequest().json(json!({"error": error_to_json(&err)}))
                         }
                     }
                 }
                 Err(err) => {
-                    HttpResponse::BadRequest().json(json!({"error": err}))
+                    HttpResponse::BadRequest().json(json!({"error": error_to_json(&err)}))
                 }
             }
         }
@@ -338,12 +338,12 @@ async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Init
                             return HttpResponse::Ok().json(json!({"data": json_data}));
                         }
                         Err(err) => {
-                            HttpResponse::BadRequest().json(json!({"error": err}))
+                            HttpResponse::BadRequest().json(json!({"error": error_to_json(&err)}))
                         }
                     }
                 }
                 Err(err) => {
-                    HttpResponse::BadRequest().json(json!({"error": err}))
+                    HttpResponse::BadRequest().json(json!({"error": error_to_json(&err)}))
                 }
             }
         }
@@ -354,7 +354,7 @@ async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: Init
     let action = Action::from_u32(DELETE | SINGLE | ENTRY);
     let result = graph.find_unique_internal(model.name(), input, true, action, source).await.into_not_found_error();
     if result.is_err() {
-        return HttpResponse::NotFound().json(json!({"error": result.err()}));
+        return HttpResponse::NotFound().json(json!({"error": result.err().unwrap()}));
     }
     let result = result.unwrap();
     // find the object here
@@ -377,22 +377,22 @@ async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source:
     let select = input.get("select");
     if create.is_none() {
         let err = Error::missing_required_input_with_type("array", path!["create"]);
-        return HttpResponse::BadRequest().json(json!({"error": err}));
+        return HttpResponse::BadRequest().json(json!({"error": error_to_json(&err)}));
     }
     let create = create.unwrap();
     if !create.is_vec() {
         let err = Error::unexpected_input_type("array", path!["create"]);
-        return HttpResponse::BadRequest().json(json!({"error": err}));
+        return HttpResponse::BadRequest().json(json!({"error": error_to_json(&err)}));
     }
     let create = create.as_vec().unwrap();
     let mut count = 0;
     let mut ret_data: Vec<Value> = vec![];
-    let session = graph.connector().new_save_session();
+    let session = AppCtx::get()?.connector()?.new_save_session();
     for (index, val) in create.iter().enumerate() {
         let result = handle_create_internal(graph, Some(val), include, select, model, &path!["create", index], action, source.clone(), session.clone()).await;
         match result {
             Err(err) => {
-                println!("{:?}", err.errors);
+                //println!("{:?}", err.errors);
             },
             Ok(val) => {
                 count += 1;
@@ -411,7 +411,7 @@ async fn handle_update_many(graph: &Graph, input: &Value, model: &Model, source:
     let action = Action::from_u32(UPDATE | MANY | ENTRY);
     let result = graph.find_many_internal(model.name(), input, true, action, source).await;
     if result.is_err() {
-        return HttpResponse::BadRequest().json(json!({"error": result.err()}));
+        return HttpResponse::BadRequest().json(json!({"error": result.err().unwrap()}));
     }
     let result = result.unwrap();
     let update = input.get("update");
@@ -442,7 +442,7 @@ async fn handle_delete_many(graph: &Graph, input: &Value, model: &Model, source:
     let action = Action::from_u32(DELETE | MANY | ENTRY);
     let result = graph.find_many_internal(model.name(), input, true, action, source).await;
     if result.is_err() {
-        return HttpResponse::BadRequest().json(json!({"error": result.err()}));
+        return HttpResponse::BadRequest().json(json!({"error": result.err().unwrap()}));
     }
     let result = result.unwrap();
     let mut count = 0;
@@ -476,7 +476,7 @@ async fn handle_count(graph: &Graph, input: &Value, model: &Model, _source: Init
             HttpResponse::Ok().json(json!({"data": count}))
         }
         Err(err) => {
-            HttpResponse::BadRequest().json(json!({"error": err}))
+            HttpResponse::BadRequest().json(json!({"error": error_to_json(&err)}))
         }
     }
 }
@@ -487,7 +487,7 @@ async fn handle_aggregate(graph: &Graph, input: &Value, model: &Model, _source: 
             HttpResponse::Ok().json(json!({"data": j(count)}))
         }
         Err(err) => {
-            HttpResponse::BadRequest().json(json!({"error": err}))
+            HttpResponse::BadRequest().json(json!({"error": error_to_json(&err)}))
         }
     }
 }
@@ -498,7 +498,7 @@ async fn handle_group_by(graph: &Graph, input: &Value, model: &Model, _source: I
             HttpResponse::Ok().json(json!({"data": j(count)}))
         }
         Err(err) => {
-            HttpResponse::BadRequest().json(json!({"error": err}))
+            HttpResponse::BadRequest().json(json!({"error": error_to_json(&err)}))
         }
     }
 }
@@ -519,14 +519,14 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     let mut by_key: Option<&String> = None;
     let mut by_value: Option<&Value> = None;
     for (k, v) in credentials {
-        if model.auth_identity_keys().contains(k) {
+        if model.auth_identity_keys().contains(&k.as_str()) {
             if identity_key == None {
                 identity_key = Some(k);
                 identity_value = Some(v);
             } else {
                 return Error::unexpected_input_value_with_reason("Multiple auth identity provided", path!["credentials", k]).into();
             }
-        } else if model.auth_by_keys().contains(k) {
+        } else if model.auth_by_keys().contains(&k.as_str()) {
             if by_key == None {
                 by_key = Some(k);
                 by_value = Some(v);
@@ -592,7 +592,7 @@ async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &S
     let identity = source.as_identity();
     if let Some(identity) = identity {
         if identity.model() != model {
-            return HttpResponse::Unauthorized().json(json!({"error": Error::wrong_identity_model()}));
+            return HttpResponse::Unauthorized().json(json!({"error": Error::wrong_identity_model().as_user_error().unwrap()}));
         }
         let select = input.get("select");
         let include = input.get("include");
@@ -657,8 +657,8 @@ fn make_app(graph: &'static Graph, conf: &'static ServerConf, test_context: Opti
                 }
             };
             let model_def = match graph.model(model_url_segment_name) {
-                Some(name) => name,
-                None => {
+                Ok(name) => name,
+                Err(_) => {
                     log_unhandled(start, r.method().as_str(), &path, 404);
                     return Error::destination_not_found().into();
                 }
@@ -870,7 +870,7 @@ pub(crate) async fn serve(
 async fn reset_after_mutation_if_needed(test_context: Option<&'static TestContext>, graph: &Graph) {
     if let Some(test_context) = test_context {
         if test_context.reset_mode.is_after_mutation() {
-            graph.connector().purge(graph).await.unwrap();
+            AppCtx::get()?.connector()?.purge(graph).await.unwrap();
             seed(SeedCommandAction::Seed, graph, &test_context.datasets, test_context.datasets.iter().map(|d| d.name.clone()).collect()).await;
         }
     }
@@ -879,7 +879,7 @@ async fn reset_after_mutation_if_needed(test_context: Option<&'static TestContex
 async fn reset_after_query_if_needed(test_context: Option<&'static TestContext>, graph: &Graph) {
     if let Some(test_context) = test_context {
         if test_context.reset_mode.is_after_query() {
-            graph.connector().purge(graph).await.unwrap();
+            AppCtx::get()?.connector()?.purge(graph).await.unwrap();
             seed(SeedCommandAction::Seed, graph, &test_context.datasets, test_context.datasets.iter().map(|d| d.name.clone()).collect()).await;
         }
     }

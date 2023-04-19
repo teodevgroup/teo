@@ -1,4 +1,4 @@
-use crate::core::field::field::{Field, FieldIndex, IndexSettings, Sort};
+use crate::core::field::field::{Field, FieldIndex, FieldIndexSettings, Sort};
 use crate::parser::ast::argument::Argument;
 
 static VALID_NAMES: [&str; 3] = ["map", "length", "sort"];
@@ -23,7 +23,7 @@ fn decorator(args: Vec<Argument>, field: &mut Field, index_kind: u8) {
     if index_kind == FIELD_INDEX_PRIMARY {
         field.primary = true;
     }
-    let mut settings = IndexSettings::default();
+    let mut settings = FieldIndexSettings::default();
     for arg in args {
         if arg.name.is_none() {
             panic!("@migration requires argument name.");

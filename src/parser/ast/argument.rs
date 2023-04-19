@@ -36,6 +36,12 @@ pub struct ArgumentList {
     pub(crate) resolved: bool,
 }
 
+impl ArgumentList {
+    pub fn arguments(&self) -> &Vec<Argument> {
+        &self.arguments
+    }
+}
+
 impl Display for ArgumentList {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str("(")?;

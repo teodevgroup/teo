@@ -28,7 +28,7 @@ impl Item for IfItem {
             Value::Bool(b) => valid = *b,
             Value::Pipeline(p) => match p.process(ctx.clone()).await {
                 Ok(_) => valid = true,
-                Err(error) => if error.r#type == InternalServerError {
+                Err(error) => if error.is_server_error() {
                     return Err(error)
                 } else {
                     valid = false;

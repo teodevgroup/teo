@@ -12,6 +12,7 @@ use maplit::hashmap;
 use indexmap::IndexMap;
 use to_mut::ToMut;
 use to_mut_proc_macro::ToMut;
+use crate::app::ctx::AppCtx;
 use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, PROGRAM_CODE, DELETE, DISCONNECT, FIND, JOIN_CREATE, JOIN_DELETE, MANY, NESTED, SINGLE, UPDATE, UPSERT, NESTED_CREATE_ACTION, NESTED_DISCONNECT_ACTION, NESTED_SET_ACTION, NESTED_CONNECT_ACTION, NESTED_DELETE_MANY_ACTION, NESTED_UPDATE_MANY_ACTION, NESTED_UPDATE_ACTION, NESTED_DELETE_ACTION, NESTED_CONNECT_OR_CREATE_ACTION, NESTED_UPSERT_ACTION, INTERNAL_POSITION, SET};
 use crate::core::initiator::Initiator;
 use crate::core::field::field::{Field, PreviousValueRule};
@@ -24,7 +25,7 @@ use crate::core::relation::Relation;
 use crate::core::connector::SaveSession;
 use crate::core::pipeline::ctx::{Ctx};
 use crate::core::teon::Value;
-use crate::core::error::{Error, ErrorType};
+use crate::core::error::Error;
 use crate::core::field::write_rule::WriteRule;
 use crate::core::relation::delete_rule::DeleteRule;
 use crate::core::relation::delete_rule::DeleteRule::Deny;
@@ -38,8 +39,8 @@ pub struct Object {
 
 #[derive(ToMut)]
 pub(crate) struct ObjectInner {
-    pub(crate) model: Model,
-    pub(crate) graph: Graph,
+    pub(crate) model: &'static Model,
+    pub(crate) graph: &'static Graph,
     pub(crate) action: Action,
     pub(crate) initiator: Initiator,
     pub(crate) is_initialized: AtomicBool,
@@ -73,11 +74,11 @@ fn check_user_json_keys<'a>(map: &HashMap<String, Value>, allowed: &HashSet<&str
 
 impl Object {
 
-    pub(crate) fn new(graph: &Graph, model: &Model, action: Action, action_source: Initiator) -> Object {
+    pub(crate) fn new(graph: &'static Graph, model: &'static Model, action: Action, action_source: Initiator) -> Object {
         Object {
             inner: Arc::new(ObjectInner {
-                graph: graph.clone(),
-                model: model.clone(),
+                graph,
+                model,
                 action,
                 initiator: action_source,
                 is_initialized: AtomicBool::new(false),
@@ -137,21 +138,21 @@ impl Object {
         let value_map_keys: Vec<&String> = value_map.keys().collect();
         // check keys
         if user_mode {
-            check_user_json_keys(value_map, &model.input_keys().iter().map(|k| k.as_str()).collect(), model)?;
+            check_user_json_keys(value_map, &model.input_keys().iter().map(|k| *k).collect(), model)?;
         }
         // find keys to iterate
         let initialized = self.inner.is_initialized.load(Ordering::SeqCst);
         let keys = if initialized {
-            self.model().all_keys().iter().filter(|k| value_map_keys.contains(k)).collect::<Vec<&String>>()
+            self.model().all_keys().iter().filter(|k| value_map_keys.contains(k.as_ref())).collect::<Vec<&str>>()
         } else {
-            self.model().all_keys().iter().collect::<Vec<&String>>()
+            self.model().all_keys().clone()
         };
         // assign values
         for key in keys {
             let path = path + key;
             if let Some(field) = self.model().field(key) {
                 let need_to_trigger_default_value = if initialized { false } else {
-                    !value_map_keys.contains(&key)
+                    !value_map_keys.contains(key.as_ref())
                 };
                 if need_to_trigger_default_value {
                     // apply default values
@@ -195,7 +196,7 @@ impl Object {
                 };
                 self.set_value_to_relation_manipulation_map(key, manipulation).await;
             } else if let Some(property) = self.model().property(key) {
-                if value_map_keys.contains(&key) {
+                if value_map_keys.contains(key.as_ref()) {
                     if let Some(setter) = property.setter.as_ref() {
                         let value = value_map.get(&key.to_string()).unwrap();
                         let input_result = Input::decode_field(value);
@@ -341,7 +342,7 @@ impl Object {
             self.inner.modified_fields.lock().unwrap().insert(key.to_string());
             if let Some(properties) = self.model().field_property_map().get(key) {
                 for property in properties {
-                    self.inner.modified_fields.lock().unwrap().insert(property.clone());
+                    self.inner.modified_fields.lock().unwrap().insert(property.to_string());
                     self.inner.cached_property_map.lock().unwrap().remove(property);
                 }
             }
@@ -351,7 +352,7 @@ impl Object {
     pub fn get_query_relation_object(&self, key: impl AsRef<str>) -> Result<Option<Object>> {
         let key = key.as_ref();
         let model_keys = self.model().all_keys();
-        if !model_keys.contains(&key.to_string()) {
+        if !model_keys.contains(&key) {
             return Err(Error::invalid_key(key, self.model()));
         }
         match self.inner.relation_query_map.lock().unwrap().get(key) {
@@ -363,7 +364,7 @@ impl Object {
     pub fn get_mutation_relation_object(&self, key: impl AsRef<str>) -> Result<Option<Object>> {
         let key = key.as_ref();
         let model_keys = self.model().all_keys();
-        if !model_keys.contains(&key.to_string()) {
+        if !model_keys.contains(&key) {
             return Err(Error::invalid_key(key, self.model()));
         }
         match self.inner.relation_query_map.lock().unwrap().get(key) {
@@ -383,7 +384,7 @@ impl Object {
     pub fn get_relation_vec(&self, key: impl AsRef<str>) -> Result<Vec<Object>> {
         let key = key.as_ref();
         let model_keys = self.model().all_keys();
-        if !model_keys.contains(&key.to_string()) {
+        if !model_keys.contains(&key) {
             return Err(Error::invalid_key(key, self.model()));
         }
         match self.inner.relation_query_map.lock().unwrap().get(key) {
@@ -422,7 +423,7 @@ impl Object {
     pub(crate) fn get_previous_value(&self, key: impl AsRef<str>) -> Result<Value> {
         let key = key.as_ref();
         let model_keys = self.model().all_keys();
-        if !model_keys.contains(&key.to_string()) {
+        if !model_keys.contains(&key) {
             let model = self.model();
             return Err(Error::invalid_key(key, model));
         }
@@ -442,7 +443,7 @@ impl Object {
 
     pub fn get_value(&self, key: impl AsRef<str>) -> Result<Value> {
         let model_keys = self.model().all_keys();
-        if !model_keys.contains(&key.as_ref().to_string()) {
+        if !model_keys.contains(&key.as_ref()) {
             return Err(Error::invalid_key(key, self.model()));
         }
         Ok(self.get_value_map_value(key.as_ref()))
@@ -478,11 +479,11 @@ impl Object {
             self.model().all_keys().iter().for_each(|k| {
                 if let Some(field) = self.model().field(k) {
                     if !false_list.contains(&&***&k) {
-                        result.push(field.name.clone());
+                        result.push(field.name.to_string());
                     }
                 } else if let Some(property) = self.model().property(k) {
                     if !false_list.contains(&&***&k) {
-                        result.push(property.name.clone());
+                        result.push(property.name.to_string());
                     }
                 }
             });
@@ -494,11 +495,11 @@ impl Object {
             self.model().all_keys().iter().for_each(|k| {
                 if let Some(field) = self.model().field(k) {
                     if true_list.contains(&&***&k) {
-                        result.push(field.name.clone());
+                        result.push(field.name.to_string());
                     }
                 } else if let Some(property) = self.model().property(k) {
                     if true_list.contains(&&***&k) {
-                        result.push(property.name.clone());
+                        result.push(property.name.to_string());
                     }
                 }
             });
@@ -528,7 +529,7 @@ impl Object {
                 };
                 let context = Ctx::initial_state_with_object(self.clone())
                     .with_value(initial_value)
-                    .with_path(path + field.name.as_str());
+                    .with_path(path + field.name());
                 let result = field.perform_on_save_callback(context).await;
                 match result {
                     Err(err) => {
@@ -555,7 +556,7 @@ impl Object {
                     Optionality::Required => {
                         let value = self.get_value(key).unwrap();
                         if value.is_null() {
-                            return Err(Error::missing_required_input(path + key));
+                            return Err(Error::missing_required_input(path + *key));
                         }
                     }
                     Optionality::PresentWith(field_names) => {
@@ -641,7 +642,7 @@ impl Object {
                     }
                     for field_name in relation.fields() {
                         if self.get_value(field_name).unwrap().is_null() {
-                            return Err(Error::missing_required_input(&(path + key)));
+                            return Err(Error::missing_required_input(&(path + *key)));
                         }
                     }
                     continue
@@ -655,7 +656,7 @@ impl Object {
         let is_new = self.is_new();
         self.inner.is_new.store(false, Ordering::SeqCst);
         self.inner.is_modified.store(false, Ordering::SeqCst);
-        if is_new && self.model().identity() && self.action_source().is_identity() && self.action_source().as_identity().is_none() {
+        if is_new && self.model().is_identity() && self.action_source().is_identity() && self.action_source().as_identity().is_none() {
             let mut_inner = self.inner.as_ref().to_mut();
             mut_inner.initiator = Initiator::Identity(Some(self.clone()));
         }
@@ -688,7 +689,7 @@ impl Object {
             }
         }
         // real delete
-        let connector = self.graph().connector();
+        let connector = AppCtx::get()?.connector()?;
         connector.delete_object(self, session.clone()).await?;
         // nullify and cascade
         for relation in model.relations() {
@@ -709,14 +710,14 @@ impl Object {
                             for key in opposite_relation.fields() {
                                 object.set_value(key, Value::Null)?;
                             }
-                            object.save_with_session_and_path(self.graph().connector().new_save_session(), &path![]).await?;
+                            object.save_with_session_and_path(AppCtx::get()?.connector()?.new_save_session(), &path![]).await?;
                             Ok(())
                         }).await?;
                     },
                     DeleteRule::Cascade => {
                         let finder = self.intrinsic_where_unique_for_relation(relation);
                         graph.batch(opposite_model.name(), &finder, Action::from_u32(PROGRAM_CODE | DELETE | (if relation.is_vec() { MANY } else { SINGLE })), Initiator::ProgramCode, |object| async move {
-                            object.delete_from_database(self.graph().connector().new_save_session()).await?;
+                            object.delete_from_database(AppCtx::get()?.connector()?.new_save_session()).await?;
                             Ok(())
                         }).await?;
                     }
@@ -728,7 +729,7 @@ impl Object {
 
     #[async_recursion]
     async fn save_to_database(&self, session: Arc<dyn SaveSession>) -> Result<()> {
-        let connector = self.graph().connector();
+        let connector = AppCtx::get()?.connector()?;
         connector.save_object(self, session).await?;
         self.clear_new_state();
         Ok(())
@@ -759,7 +760,7 @@ impl Object {
             self.trigger_before_save_callbacks(path).await?;
             // perform relation manipulations (has foreign key)
             self.perform_relation_manipulations(|r| r.has_foreign_key(), session.clone(), path).await?;
-            if !self.model().r#virtual() {
+            if !self.model().is_virtual() {
                 self.save_to_database(session.clone()).await?;
             }
         } else {
@@ -777,12 +778,12 @@ impl Object {
     }
 
     pub async fn save(&self) -> Result<()> {
-        let session = self.graph().connector().new_save_session();
+        let session = AppCtx::get()?.connector()?.new_save_session();
         self.save_with_session_and_path(session, &path![]).await
     }
 
     pub(crate) async fn save_for_seed_without_required_relation(&self) -> Result<()> {
-        let session = self.graph().connector().new_save_session();
+        let session = AppCtx::get()?.connector()?.new_save_session();
         self.save_with_session_and_path_and_ignore(session, &path![], true).await
     }
 
@@ -823,13 +824,13 @@ impl Object {
 
     pub async fn delete(&self) -> Result<()> {
         self.trigger_before_delete_callbacks(path![]).await?;
-        self.delete_from_database(self.graph().connector().new_save_session()).await
+        self.delete_from_database(AppCtx::get()?.connector()?.new_save_session()).await
     }
 
     pub(crate) async fn delete_internal<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         self.check_model_write_permission(path.as_ref()).await?;
         self.trigger_before_delete_callbacks(path.as_ref()).await?;
-        self.delete_from_database(self.graph().connector().new_save_session()).await?;
+        self.delete_from_database(AppCtx::get()?.connector()?.new_save_session()).await?;
         self.trigger_after_delete_callbacks(path.as_ref()).await
     }
 
@@ -862,7 +863,7 @@ impl Object {
                         map.insert(key.to_string(), Value::Vec(result_vec));
                     }
                 }
-            } else if (!select_filter) || (select_filter && select_list.contains(key)) {
+            } else if (!select_filter) || (select_filter && select_list.contains(&key.to_string())) {
                 if let Some(field) = self.model().field(key) {
                     let value = self.get_value(key).unwrap();
                     if self.check_field_read_permission(field, path.as_ref()).await.is_err() {
@@ -870,7 +871,7 @@ impl Object {
                     }
                     let context = Ctx::initial_state_with_object(self.clone())
                         .with_value(value)
-                        .with_path(path![key.as_str()]);
+                        .with_path(path![*key]);
                     let value = field.perform_on_output_callback(context).await?;
                     if !value.is_null() {
                         map.insert(key.to_string(), value);
@@ -905,11 +906,11 @@ impl Object {
     }
 
     pub fn model(&self) -> &Model {
-        &self.inner.model
+        self.inner.model
     }
 
     pub fn graph(&self) -> &Graph {
-        &self.inner.graph
+        self.inner.graph
     }
 
     pub(crate) fn identifier(&self) -> Value {
@@ -1513,7 +1514,7 @@ impl Object {
     }
 
     pub async fn refreshed(&self, include: Option<&Value>, select: Option<&Value>) -> Result<Object> {
-        if self.model().r#virtual() {
+        if self.model().is_virtual() {
             self.set_select(select).unwrap();
             return Ok(self.clone())
         }
@@ -1643,12 +1644,12 @@ impl Object {
 
     pub(crate) fn keys_for_save(&self) -> Vec<&str> {
         if self.is_new() {
-            self.model().save_keys().iter().map(|k| k.as_str()).collect()
+            self.model().save_keys().iter().map(|k| *k).collect()
         } else {
             self.model().save_keys().iter().filter(|k| {
                 self.inner.modified_fields.lock().unwrap().contains(&k.to_string()) ||
                     self.inner.atomic_updater_map.lock().unwrap().contains_key(&k.to_string())
-            }).map(|k| k.as_str()).collect()
+            }).map(|k| *k).collect()
         }
     }
 

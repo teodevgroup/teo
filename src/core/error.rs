@@ -33,7 +33,7 @@ impl Display for RuntimeError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub enum UserErrorType {
     ValidationError,
     UnexpectedInput,
@@ -48,7 +48,6 @@ pub enum UserErrorType {
     CustomValidationError,
     UniqueConstraintError,
     WrongIdentityModel,
-    CustomErrorType(Cow<'static, str>),
 }
 
 impl UserErrorType {
@@ -68,7 +67,6 @@ impl UserErrorType {
             CustomValidationError => 400,
             UniqueConstraintError => 400,
             WrongIdentityModel => 400,
-            CustomErrorType(_) => 400,
         }
     }
 }
@@ -124,6 +122,13 @@ impl Error {
             _ => false,
         }
     }
+
+    pub fn as_user_error(&self) -> Option<&UserError> {
+        match self {
+            Error::UserError(u) => Some(u),
+            _ => None,
+        }
+    }
 }
 
 impl Display for Error {
@@ -151,12 +156,12 @@ impl Error {
         }
     }
 
-    pub(crate) fn unique_value_duplicated(field: &'static str) -> Self {
+    pub(crate) fn unique_value_duplicated(field: String) -> Self {
         Error::UserError(UserError {
             r#type: UserErrorType::UniqueConstraintError,
             message: Cow::Borrowed("Value is not unique."),
             errors: Some(hashmap!{
-                Cow::Borrowed(field) => Cow::Borrowed("value is not unique")
+                Cow::Owned(field) => Cow::Borrowed("value is not unique")
             }),
         })
     }
@@ -254,7 +259,7 @@ impl Error {
     pub(crate) fn unexpected_input_type<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         Error::UserError(UserError {
             r#type: UserErrorType::UnexpectedInput,
-            message: Cow::Owned(format!("Unexpected input type. Expect {}.", expected.as_ref())),
+            message: Cow::Owned(format!("Unexpected input type. Expect {}.", expected.into())),
             errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Owned(format!("Expect {}.", expected.into()))}),
         })
 
@@ -263,7 +268,7 @@ impl Error {
     pub(crate) fn unexpected_input_key<'a>(unexpected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         Error::UserError(UserError {
             r#type: UserErrorType::UnexpectedInput,
-            message: Cow::Owned(format!("Unexpected key '{}'.", unexpected.as_ref())),
+            message: Cow::Owned(format!("Unexpected key '{}'.", unexpected.into())),
             errors: Some(hashmap!{Cow::Owned(key_path.as_ref().to_string()) => Cow::Owned(format!("Expect {}.", unexpected.into()))}),
         })
     }

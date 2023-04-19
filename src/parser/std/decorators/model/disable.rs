@@ -3,7 +3,7 @@ use crate::core::model::model::Model;
 use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
 
-pub(crate) fn disable_decorator(args: Option<&Vec<Argument>>, model: &mut Model) {
+pub(crate) fn disable_decorator(args: &Vec<Argument>, model: &mut Model) {
     let value = args.unwrap().get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
     let actions = match value {
         Value::RawOptionChoice(action_value) => {

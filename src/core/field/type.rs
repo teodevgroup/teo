@@ -206,6 +206,7 @@ impl FieldType {
 pub trait FieldTypeOwner {
     fn field_type(&self) -> &FieldType;
     fn is_optional(&self) -> bool;
+    fn set_field_type(&mut self, field_type: FieldType);
 }
 
 static DEFAULT_UPDATORS: Lazy<HashSet<&str>> = Lazy::new(|| {

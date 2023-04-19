@@ -29,14 +29,14 @@ impl GroupRecord {
     /// Create a new group record.
     pub async fn new(values: impl AsRef<Value>) -> Self {
         Self {
-            inner: AppCtx::get()?.graph()?.create_object("__TeoGroupRecord", values).await.unwrap(),
+            inner: AppCtx::get().unwrap().graph().unwrap().create_object("__TeoGroupRecord", values).await.unwrap(),
         }
     }
 
     /// Create an empty group record.
     pub async fn default() -> Self {
         Self {
-            inner: AppCtx::get()?.graph()?.create_object("__TeoGroupRecord", Value::HashMap(HashMap::new())).await.unwrap(),
+            inner: AppCtx::get().unwrap().graph().unwrap().create_object("__TeoGroupRecord", Value::HashMap(HashMap::new())).await.unwrap(),
         }
     }
 

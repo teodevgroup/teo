@@ -2,14 +2,14 @@ use crate::app::cli::command::{CLI, CLICommand, GenerateCommand, SeedCommandActi
 use crate::app::ctx::AppCtx;
 use crate::migrate::migrate;
 use crate::app::new_app::new_result::Result;
-use crate::core::conf::test::ResetMode;
+use crate::core::conf::test::{ResetDatasets, ResetMode};
 use crate::server::test_context::{TestContext};
 use crate::core::teon::Value;
 use crate::purger::purge;
 use crate::seeder::seed::seed;
 use crate::server::serve;
 use crate::gen::interface::server::gen as gen_entity;
-use crate::gen::interface::client::gen as gen_client;
+use crate::gen::interface::client::gen::gen as gen_client;
 
 pub(crate) async fn run_command(cli: CLI) -> Result<()> {
     let app_ctx = AppCtx::get_mut()?;
@@ -23,30 +23,22 @@ pub(crate) async fn run_command(cli: CLI) -> Result<()> {
             let env = serve_command.env.as_ref().cloned().unwrap_or(std::env::var("TEO_ENV").unwrap_or("debug".to_string()));
             let test_context: Option<&'static TestContext> = if env.as_str() == "test" {
                 if let Some(test_conf) = app_ctx.test_conf() {
-                    match &test_conf.reset_after_find {
-                        Value::Null => None,
-                        Value::RawEnumChoice(s, _) => {
-                            if s.as_str() == "auto" {
+                    if let Some(reset) = &test_conf.reset {
+                        match &reset.datasets {
+                            ResetDatasets::Auto => Some(Box::leak(Box::new(TestContext {
+                                reset_mode: ResetMode::AfterQuery,
+                                datasets: app_ctx.datasets().iter().filter(|d| d.autoseed == true).map(|d| d.clone()).collect(),
+                            }))),
+                            ResetDatasets::Names(names) => {
+                                let sv: Vec<String> = names.iter().map(|v| v.as_str().unwrap().to_owned()).collect();
                                 Some(Box::leak(Box::new(TestContext {
                                     reset_mode: ResetMode::AfterQuery,
-                                    datasets: app_ctx.datasets().iter().filter(|d| d.autoseed == true).map(|d| d.clone()).collect(),
+                                    datasets: app_ctx.datasets().iter().filter(|d| sv.contains(&d.name)).map(|d| d.clone()).collect(),
                                 })))
-                            } else { None }
-                        },
-                        Value::String(s) => {
-                            Some(Box::leak(Box::new(TestContext {
-                                reset_mode: ResetMode::AfterQuery,
-                                datasets: app_ctx.datasets().iter().filter(|d| &d.name == s).map(|d| d.clone()).collect(),
-                            })))
-                        },
-                        Value::Vec(v) => {
-                            let sv: Vec<String> = v.iter().map(|v| v.as_str().unwrap().to_owned()).collect();
-                            Some(Box::leak(Box::new(TestContext {
-                                reset_mode: ResetMode::AfterQuery,
-                                datasets: app_ctx.datasets().iter().filter(|d| sv.contains(&d.name)).map(|d| d.clone()).collect(),
-                            })))
+                            }
                         }
-                        _ => unreachable!()
+                    } else {
+                        None
                     }
                 } else { None }
             } else { None };

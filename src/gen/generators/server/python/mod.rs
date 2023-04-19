@@ -3,6 +3,7 @@ use crate::gen::internal::file_util::FileUtil;
 use crate::gen::interface::server::EntityGenerator;
 use crate::prelude::Graph;
 use async_trait::async_trait;
+use crate::gen::interface::server::conf::EntityGeneratorConf;
 
 pub(crate) struct PythonEntityGenerator {}
 

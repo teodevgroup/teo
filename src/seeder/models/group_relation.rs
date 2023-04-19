@@ -29,14 +29,14 @@ impl GroupRelation {
     /// Create a new group relation.
     pub async fn new(values: impl AsRef<Value>) -> Self {
         Self {
-            inner: AppCtx::get()?.graph()?.create_object("__TeoGroupRelation", values).await.unwrap(),
+            inner: AppCtx::get().unwrap().graph().unwrap().create_object("__TeoGroupRelation", values).await.unwrap(),
         }
     }
 
     /// Create an empty group relation.
     pub async fn default() -> Self {
         Self {
-            inner: AppCtx::get()?.graph()?.create_object("__TeoGroupRelation", Value::HashMap(HashMap::new())).await.unwrap(),
+            inner: AppCtx::get().unwrap().graph().unwrap().create_object("__TeoGroupRelation", Value::HashMap(HashMap::new())).await.unwrap(),
         }
     }
 

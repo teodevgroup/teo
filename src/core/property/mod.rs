@@ -88,4 +88,8 @@ impl FieldTypeOwner for Property {
     fn is_optional(&self) -> bool {
         self.optionality.is_optional()
     }
+
+    fn set_field_type(&mut self, field_type: FieldType) {
+        self.field_type = Some(field_type);
+    }
 }

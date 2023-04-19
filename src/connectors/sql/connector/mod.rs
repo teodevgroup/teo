@@ -7,7 +7,6 @@ use quaint_forked::{prelude::*, pooled::Quaint, ast::Query as QuaintQuery};
 use quaint_forked::error::DatabaseConstraint;
 use quaint_forked::error::ErrorKind::UniqueConstraintViolation;
 use crate::core::model::model::Model;
-use crate::connectors::sql::schema::r#type::field::ToDatabaseType;
 use crate::connectors::sql::connector::save_session::SQLSaveSession;
 use crate::connectors::sql::execution::Execution;
 use crate::connectors::sql::migration::migrate::SQLMigration;
@@ -21,9 +20,8 @@ use crate::connectors::sql::url::url_utils;
 use crate::core::action::Action;
 use crate::core::initiator::Initiator;
 use crate::core::connector::{Connector, SaveSession};
-use crate::core::database::r#type::DatabaseType;
 use crate::core::error::Error;
-use crate::core::field::r#type::{FieldType, FieldTypeOwner};
+use crate::core::field::r#type::FieldTypeOwner;
 use crate::core::input::Input;
 use crate::core::result::Result;
 use crate::prelude::{Graph, Object, Value};
@@ -176,10 +174,6 @@ impl SQLConnector {
 
 #[async_trait]
 impl Connector for SQLConnector {
-
-    fn default_database_type(&self, field_type: &FieldType) -> DatabaseType {
-        field_type.to_database_type(self.dialect)
-    }
 
     async fn migrate(&mut self, models: &Vec<Model>, _reset_database: bool) -> Result<()> {
         SQLMigration::migrate(self.dialect, &self.pool, models).await;

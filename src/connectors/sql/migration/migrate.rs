@@ -148,7 +148,7 @@ impl SQLMigration {
         let mut db_tables = Self::get_db_user_tables(dialect, &conn).await;
         // compare each table and do migration
         for model in models {
-            if model.r#virtual() { continue }
+            if model.is_virtual() { continue }
             let table_name = model.table_name();
             if let Some(migration) = model.migration() {
                 if !db_tables.iter().any(|x| x == table_name) {
@@ -466,7 +466,8 @@ ORDER BY 1,6"#, table_name);
             let row = result_set.into_single().unwrap();
             let column_name = row.get("name").unwrap().as_str().unwrap();
             let index = ModelIndex::new(ModelIndexType::Primary, Some(format!("sqlite_autoindex_{table_name}_1")), vec![
-                ModelIndexItem::new(column_name.to_owned(), Sort::Asc, None)
+                let leaked = Box::leak(Box::new(column_name));
+                ModelIndexItem::new(leaked, Sort::Asc, None)
             ]);
             results.push(index);
         }
