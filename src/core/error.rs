@@ -434,6 +434,13 @@ impl From<std::io::Error> for Error {
 unsafe impl Sync for Error {}
 unsafe impl Send for Error {}
 
+impl Serialize for Error {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+        let serialized_error: SerializedError = self.into();
+        Serialize::serialize(&serialized_error, serializer)
+    }
+}
+
 #[derive(Serialize)]
 struct SerializedError {
     r#type: Cow<'static, str>,
@@ -441,17 +448,17 @@ struct SerializedError {
     errors: Option<HashMap<String, Cow<'static, str>>>,
 }
 
-impl Into<SerializedError> for Error {
+impl Into<SerializedError> for &Error {
     fn into(self) -> SerializedError {
         match self {
             Error::ServerError(server_error) => SerializedError {
                 r#type: Cow::Borrowed("InternalServerError"),
-                message: server_error.0,
+                message: server_error.0.clone(),
                 errors: None,
             },
             Error::FatalError(fatal_error) => SerializedError {
                 r#type: Cow::Borrowed("InternalServerError"),
-                message: fatal_error.0,
+                message: fatal_error.0.clone(),
                 errors: None,
             },
             Error::RuntimeError(runtime_error) => SerializedError {
@@ -461,8 +468,8 @@ impl Into<SerializedError> for Error {
             },
             Error::UserError(user_error) => SerializedError {
                 r#type: Cow::Borrowed(user_error.r#type.to_str()),
-                message: user_error.message,
-                errors: user_error.errors,
+                message: user_error.message.clone(),
+                errors: user_error.errors.clone(),
             },
         }
     }

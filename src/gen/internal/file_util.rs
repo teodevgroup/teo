@@ -64,7 +64,7 @@ impl FileUtil {
         let filename = self.base_dir.join(file_name.into());
         let mut output_file = File::create(&filename)?;
         green_message("create", diff_paths(&filename, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
-        write!(output_file, "{}", content.as_ref()).into()
+        write!(output_file, "{}", content.as_ref()).io_result_into_teo_result()
     }
 
     pub(in crate::gen) async fn generate_file_if_not_exist<F: AsRef<str>, S: AsRef<str>>(&self, file_name: F, content: S) -> Result<bool> {

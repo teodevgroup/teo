@@ -340,7 +340,7 @@ impl SQLMigration {
                 let item = ModelIndexItem::new(column_name, order, None);
                 indices.push(ModelIndex::new(
                     if *index_name == "PRIMARY" { ModelIndexType::Primary } else if is_unique { ModelIndexType::Unique } else { ModelIndexType::Index },
-                    Some(*index_name),
+                    Some(index_name.as_str()),
                     vec![item],
                 ))
             }
@@ -451,7 +451,7 @@ ORDER BY 1,6"#, table_name);
                 let item = ModelIndexItem::new(column_name, order, None);
                 indices.push(ModelIndex::new(
                     if is_primary { ModelIndexType::Primary } else if is_unique { ModelIndexType::Unique} else { ModelIndexType::Index },
-                    Some(*index_name),
+                    Some(index_name.as_str()),
                     vec![item],
                 ))
             }

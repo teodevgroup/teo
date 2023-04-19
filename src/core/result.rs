@@ -2,11 +2,11 @@ use crate::core::error::Error;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-pub(crate) trait IntoTeoResult {
+pub(crate) trait IntoTeoResult<T> {
     fn io_result_into_teo_result(self) -> Result<T>;
 }
 
-impl<T> IntoTeoResult for std::io::Result<T> {
+impl<T> IntoTeoResult<T> for std::io::Result<T> {
     fn io_result_into_teo_result(self) -> Result<T> {
         match self {
             Ok(t) => Ok(t),
