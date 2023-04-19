@@ -9,6 +9,7 @@ use crate::gen::internal::client::outline::outline::Outline;
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::internal::filters;
 use crate::gen::internal::message::green_message;
+use crate::core::result::Result;
 
 #[derive(Template)]
 #[template(path = "client/kotlin/readme.md.jinja", escape = "none")]
@@ -47,12 +48,12 @@ impl Generator for KotlinClientGenerator {
         "src/main/kotlin".to_owned()
     }
 
-    async fn generate_module_files(&self, _ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_module_files(&self, _ctx: &Ctx, generator: &FileUtil) -> Result<()> {
         generator.clear_root_directory().await?;
         Ok(())
     }
 
-    async fn generate_package_files(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_package_files(&self, ctx: &Ctx, generator: &FileUtil) -> Result<()> {
         generator.ensure_root_directory().await?;
         let base = generator.get_base_dir();
         let mut has_project = false;
@@ -78,7 +79,7 @@ impl Generator for KotlinClientGenerator {
         Ok(())
     }
 
-    async fn generate_main(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_main(&self, ctx: &Ctx, generator: &FileUtil) -> Result<()> {
         generator.generate_file(format!("{}.kt", ctx.conf.inferred_package_name_camel_case()), KotlinMainTemplate {
             outline: &ctx.outline,
             conf: ctx.conf,

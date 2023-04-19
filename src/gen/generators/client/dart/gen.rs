@@ -8,6 +8,7 @@ use crate::gen::internal::client::outline::outline::Outline;
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::internal::filters;
 use crate::gen::internal::message::green_message;
+use crate::core::result::Result;
 
 #[derive(Template)]
 #[template(path = "client/dart/readme.md.jinja", escape = "none")]
@@ -40,12 +41,12 @@ impl Generator for DartClientGenerator {
         "lib".to_owned()
     }
 
-    async fn generate_module_files(&self, _ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_module_files(&self, _ctx: &Ctx, generator: &FileUtil) -> Result<()> {
         generator.clear_root_directory().await?;
         Ok(())
     }
 
-    async fn generate_package_files(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_package_files(&self, ctx: &Ctx, generator: &FileUtil) -> Result<()> {
         generator.ensure_root_directory().await?;
         generator.generate_file(".gitignore", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/dart/gitignore"))).await?;
         generator.generate_file("README.md", DartReadMeTemplate { conf: ctx.conf }.render().unwrap()).await?;
@@ -53,7 +54,7 @@ impl Generator for DartClientGenerator {
         Ok(())
     }
 
-    async fn generate_main(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_main(&self, ctx: &Ctx, generator: &FileUtil) -> Result<()> {
         generator.generate_file(format!("{}.dart", ctx.conf.inferred_package_name_snake_case()), DartMainTemplate {
             outline: &ctx.outline,
             conf: ctx.conf,

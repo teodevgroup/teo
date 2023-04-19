@@ -136,7 +136,7 @@ impl MongoDBConnector {
                                 let regex = Regex::new(r"dup key: \{ (.+?):").unwrap();
                                 let field_column_name = regex.captures(write_error.message.as_str()).unwrap().get(1).unwrap().as_str();
                                 let field_name = object.model().field_with_column_name(field_column_name).unwrap().name();
-                                Error::unique_value_duplicated(field_name)
+                                Error::unique_value_duplicated(field_name.to_string())
                             }
                             _ => {
                                 Error::unknown_database_write_error()
@@ -340,7 +340,7 @@ impl MongoDBConnector {
 #[async_trait]
 impl Connector for MongoDBConnector {
 
-    async fn migrate(&mut self, models: &Vec<Model>, reset_database: bool) -> Result<()> {
+    async fn migrate(&self, models: Vec<&Model>, reset_database: bool) -> Result<()> {
         if reset_database {
             let _ = self.database.drop(None).await;
         }

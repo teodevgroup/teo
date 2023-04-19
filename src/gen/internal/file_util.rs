@@ -5,6 +5,7 @@ use std::fs::create_dir_all;
 use std::fs::remove_dir_all;
 use crate::gen::internal::message::{green_message, red_message, yellow_message};
 use pathdiff::diff_paths;
+use crate::core::result::Result;
 
 pub(in crate::gen) struct FileUtil {
     base_dir: PathBuf,
@@ -18,7 +19,7 @@ impl FileUtil {
         }
     }
 
-    pub(in crate::gen) async fn ensure_root_directory(&self) -> std::io::Result<()> {
+    pub(in crate::gen) async fn ensure_root_directory(&self) -> Result<()> {
         if !self.base_dir.exists() {
             yellow_message("create", diff_paths(&self.base_dir, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
             create_dir_all(&self.base_dir)?;
@@ -26,47 +27,47 @@ impl FileUtil {
         Ok(())
     }
 
-    pub(in crate::gen) async fn ensure_directory<D: Into<String>>(&self, dir_name: D) -> std::io::Result<()> {
+    pub(in crate::gen) async fn ensure_directory<D: Into<String>>(&self, dir_name: D) -> Result<()> {
         let dirname = self.base_dir.join(dir_name.into());
         if !dirname.exists() {
             yellow_message("create", diff_paths(&dirname, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
-            create_dir_all(dirname)
+            create_dir_all(dirname).into()
         } else {
             Ok(())
         }
     }
 
-    pub(in crate::gen) async fn clear_root_directory(&self) -> std::io::Result<()> {
+    pub(in crate::gen) async fn clear_root_directory(&self) -> Result<()> {
         if !&self.base_dir.exists() {
             yellow_message("create", diff_paths(&self.base_dir, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
-            create_dir_all(&self.base_dir)
+            create_dir_all(&self.base_dir).into()
         } else {
             red_message("clear", diff_paths(&self.base_dir, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
             remove_dir_all(&self.base_dir)?;
-            create_dir_all(&self.base_dir)
+            create_dir_all(&self.base_dir).into()
         }
     }
 
-    pub(in crate::gen) async fn clear_directory<D: Into<String>>(&self, dir_name: D) -> std::io::Result<()> {
+    pub(in crate::gen) async fn clear_directory<D: Into<String>>(&self, dir_name: D) -> Result<()> {
         let dirname = self.base_dir.join(dir_name.into());
         if !&dirname.exists() {
             yellow_message("create", diff_paths(&dirname, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
-            create_dir_all(&dirname)
+            create_dir_all(&dirname).into()
         } else {
             red_message("clear", diff_paths(&dirname, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
-            remove_dir_all(&dirname)?;
-            create_dir_all(&dirname)
+            remove_dir_all(&dirname).into()?;
+            create_dir_all(&dirname).into().into()
         }
     }
 
-    pub(in crate::gen) async fn generate_file<F: Into<String>, S: AsRef<str>>(&self, file_name: F, content: S) -> std::io::Result<()> {
+    pub(in crate::gen) async fn generate_file<F: Into<String>, S: AsRef<str>>(&self, file_name: F, content: S) -> Result<()> {
         let filename = self.base_dir.join(file_name.into());
         let mut output_file = File::create(&filename)?;
         green_message("create", diff_paths(&filename, std::env::current_dir().unwrap()).unwrap().to_str().unwrap().to_string());
-        write!(output_file, "{}", content.as_ref())
+        write!(output_file, "{}", content.as_ref()).into()
     }
 
-    pub(in crate::gen) async fn generate_file_if_not_exist<F: AsRef<str>, S: AsRef<str>>(&self, file_name: F, content: S) -> std::io::Result<bool> {
+    pub(in crate::gen) async fn generate_file_if_not_exist<F: AsRef<str>, S: AsRef<str>>(&self, file_name: F, content: S) -> Result<bool> {
         let filename = self.base_dir.join(PathBuf::from(file_name.as_ref()));
         if !filename.exists() {
             self.generate_file(file_name.as_ref().to_owned(), content.as_ref().to_owned()).await?;

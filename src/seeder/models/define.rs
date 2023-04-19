@@ -31,7 +31,7 @@ pub(crate) fn define_seeder_models(graph: &mut Graph) {
 }
 
 fn install_string_id_and_dataset(m: &mut Model) {
-    let mut id_field = Field::new("id".to_owned());
+    let mut id_field = Field::new("id");
     id_field.field_type = Some(FieldType::String);
     id_field.primary = true;
     let mut pipeline = Pipeline::new();
@@ -41,19 +41,19 @@ fn install_string_id_and_dataset(m: &mut Model) {
     m.add_index(ModelIndex::new(ModelIndexType::Primary, None::<String>, vec![
         ModelIndexItem::new("id", Sort::Asc, None)
     ]));
-    let mut data_set_field = Field::new("dataset".to_owned());
+    let mut data_set_field = Field::new("dataset");
     data_set_field.field_type = Some(FieldType::String);
     m.add_field(data_set_field);
 }
 
 fn install_plain_required_string_field(m: &mut Model, field_name: &str) {
-    let mut new_field = Field::new(field_name.to_owned());
+    let mut new_field = Field::new(field_name);
     new_field.field_type = Some(FieldType::String);
     m.add_field(new_field);
 }
 
 fn install_plain_optional_string_field(m: &mut Model, field_name: &str) {
-    let mut new_field = Field::new(field_name.to_owned());
+    let mut new_field = Field::new(field_name);
     new_field.field_type = Some(FieldType::String);
     new_field.optionality = Optionality::Optional;
     m.add_field(new_field);

@@ -27,6 +27,7 @@ pub struct Model {
     table_name: Cow<'static, str>,
     localized_name: Cow<'static, str>,
     description: Cow<'static, str>,
+    internal: bool,
     identity: bool,
     r#virtual: bool,
     fields_vec: Vec<Arc<Field>>,
@@ -77,6 +78,7 @@ impl Model {
             localized_name: localized_name.map_or_else(|| Cow::Owned(name.to_sentence_case()), |n| Cow::Borrowed(n)),
             description: description.map_or_else(|| Cow::Borrowed("This model doesn't have a description."), |n| Cow::Borrowed(n)),
             identity: false,
+            internal: false,
             r#virtual: false,
             fields_vec: vec![],
             fields_map: hashmap!{},
@@ -422,9 +424,9 @@ impl Model {
         let mut save_keys = vec![];
         save_keys.extend(field_save_keys);
         save_keys.extend(property_save_keys);
-        let output_field_keys: Vec<&str> = self.fields.iter().filter(|&f| { !f.read_rule.is_no_read() }).map(|f| { f.name }).collect();
+        let output_field_keys: Vec<&str> = self.fields().iter().filter(|&f| { !f.read_rule.is_no_read() }).map(|f| { f.name }).collect();
         let output_relation_keys = all_relation_keys.clone();
-        let output_property_keys: Vec<&str> = self.properties.iter().filter(|p| p.getter.is_some()).map(|p| p.name).collect();
+        let output_property_keys: Vec<&str> = self.properties().iter().filter(|p| p.getter.is_some()).map(|p| p.name).collect();
         let mut output_keys = vec![];
         output_keys.extend(output_field_keys.iter());
         output_keys.extend(output_relation_keys.iter());
@@ -432,9 +434,9 @@ impl Model {
         let mut output_field_keys_and_property_keys = vec![];
         output_field_keys_and_property_keys.extend(output_field_keys);
         output_field_keys_and_property_keys.extend(output_property_keys);
-        let sort_keys: Vec<&str> = self.fields_vec.iter().filter(|f| f.sortable).map(|f| f.name().to_owned()).collect();
+        let sort_keys: Vec<&str> = self.fields_vec.iter().filter(|f| f.sortable).map(|f| f.name()).collect();
         let query_keys: Vec<&str> = {
-            let mut query_keys = self.fields.iter().filter(|f| f.queryable).map(|f| f.name).collect();
+            let mut query_keys: Vec<&str> = self.fields().iter().filter(|f| f.queryable).map(|f| f.name()).collect();
             query_keys.extend(all_relation_keys.iter());
             query_keys
         };
@@ -467,7 +469,7 @@ impl Model {
         let deny_relation_keys: Vec<&'static str> = self.relations_vec
             .iter()
             .filter(|&r| { r.delete_rule() == DeleteRule::Deny })
-            .map(|r| r.name().to_owned())
+            .map(|r| r.name())
             .collect();
         let scalar_keys: Vec<&'static str> = self.fields_vec
             .iter()

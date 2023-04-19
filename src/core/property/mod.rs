@@ -1,7 +1,5 @@
-use std::sync::Arc;
 use inflector::Inflector;
 use crate::app::ctx::AppCtx;
-use crate::core::connector::Connector;
 use crate::core::database::r#type::DatabaseType;
 use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};

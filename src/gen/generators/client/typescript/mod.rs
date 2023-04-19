@@ -1,6 +1,6 @@
 pub mod pkg;
 pub mod r#type;
-
+use crate::core::result::Result;
 use async_trait::async_trait;
 use crate::gen::generators::client::typescript::pkg::src::index_d_ts::generate_index_d_ts;
 use crate::gen::generators::client::typescript::pkg::gitignore::generate_gitignore_ts;
@@ -24,11 +24,11 @@ impl Generator for TypeScriptClientGenerator {
         return "src".to_owned();
     }
 
-    async fn generate_module_files(&self, _ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_module_files(&self, _ctx: &Ctx, generator: &FileUtil) -> Result<()> {
         generator.clear_root_directory().await
     }
 
-    async fn generate_package_files(&self, _ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_package_files(&self, _ctx: &Ctx, generator: &FileUtil) -> Result<()> {
         generator.ensure_root_directory().await?;
         generator.generate_file_if_not_exist(".gitignore", generate_gitignore_ts()).await?;
         generator.generate_file_if_not_exist("README.md", generate_readme_ts(generator.get_base_dir())).await?;
@@ -41,7 +41,7 @@ impl Generator for TypeScriptClientGenerator {
         Ok(())
     }
 
-    async fn generate_main(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_main(&self, ctx: &Ctx, generator: &FileUtil) -> Result<()> {
         generator.generate_file("index.d.ts", generate_index_d_ts(ctx.graph, ctx.conf.object_name.clone(), false)).await?;
         generator.generate_file("index.js", generate_index_js(ctx.graph, ctx.conf).await).await?;
         Ok(())

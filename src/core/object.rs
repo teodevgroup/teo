@@ -110,7 +110,7 @@ impl Object {
     }
 
     pub async fn update_teon(&self, value: &Value) -> Result<()> {
-        check_user_json_keys(value.as_hashmap().unwrap(), &self.model().input_keys().iter().map(|k| k.as_str()).collect(), self.model())?;
+        check_user_json_keys(value.as_hashmap().unwrap(), &self.model().input_keys().iter().map(|k| *k).collect(), self.model())?;
         for (key, value) in value.as_hashmap().unwrap() {
             if self.model().field(key).is_some() {
                 self.set_value(key, value.clone())?;
@@ -135,7 +135,7 @@ impl Object {
         }
         // get value map
         let value_map = value.as_hashmap().unwrap();
-        let value_map_keys: Vec<&String> = value_map.keys().collect();
+        let value_map_keys: Vec<&str> = value_map.keys().map(|k| k.as_str()).collect();
         // check keys
         if user_mode {
             check_user_json_keys(value_map, &model.input_keys().iter().map(|k| *k).collect(), model)?;
@@ -143,7 +143,7 @@ impl Object {
         // find keys to iterate
         let initialized = self.inner.is_initialized.load(Ordering::SeqCst);
         let keys = if initialized {
-            self.model().all_keys().iter().filter(|k| value_map_keys.contains(k.as_ref())).collect::<Vec<&str>>()
+            self.model().all_keys().iter().filter(|k| value_map_keys.contains(*k)).collect::<Vec<&str>>()
         } else {
             self.model().all_keys().clone()
         };
@@ -152,7 +152,7 @@ impl Object {
             let path = path + key;
             if let Some(field) = self.model().field(key) {
                 let need_to_trigger_default_value = if initialized { false } else {
-                    !value_map_keys.contains(key.as_ref())
+                    !value_map_keys.contains(&key)
                 };
                 if need_to_trigger_default_value {
                     // apply default values
@@ -196,7 +196,7 @@ impl Object {
                 };
                 self.set_value_to_relation_manipulation_map(key, manipulation).await;
             } else if let Some(property) = self.model().property(key) {
-                if value_map_keys.contains(key.as_ref()) {
+                if value_map_keys.contains(&key) {
                     if let Some(setter) = property.setter.as_ref() {
                         let value = value_map.get(&key.to_string()).unwrap();
                         let input_result = Input::decode_field(value);
@@ -290,7 +290,7 @@ impl Object {
 
     pub fn set_value(&self, key: impl AsRef<str>, value: Value) -> Result<()> {
         let model_keys = self.model().save_keys();
-        if !model_keys.contains(&key.as_ref().to_string()) {
+        if !model_keys.contains(&key.as_ref()) {
             return Err(Error::invalid_key(key, self.model()));
         }
         self.set_value_to_value_map(key.as_ref(), value);
@@ -343,7 +343,7 @@ impl Object {
             if let Some(properties) = self.model().field_property_map().get(key) {
                 for property in properties {
                     self.inner.modified_fields.lock().unwrap().insert(property.to_string());
-                    self.inner.cached_property_map.lock().unwrap().remove(property);
+                    self.inner.cached_property_map.lock().unwrap().remove(&property.to_string());
                 }
             }
         }
@@ -637,7 +637,7 @@ impl Object {
                     }
                     // check whether foreign key is received or a value is provided
                     let map = self.inner.relation_mutation_map.lock().await;
-                    if map.get(key).is_some() {
+                    if map.get(&key.to_string()).is_some() {
                         continue
                     }
                     for field_name in relation.fields() {
@@ -877,8 +877,8 @@ impl Object {
                         map.insert(key.to_string(), value);
                     }
                 } else if let Some(property) = self.model().property(key) {
-                    if property.cached && self.inner.cached_property_map.lock().unwrap().contains_key(key) {
-                        let value = self.inner.cached_property_map.lock().unwrap().get(key).unwrap().clone();
+                    if property.cached && self.inner.cached_property_map.lock().unwrap().contains_key(&key.to_string()) {
+                        let value = self.inner.cached_property_map.lock().unwrap().get(&key.to_string()).unwrap().clone();
                         if !value.is_null() {
                             map.insert(key.to_string(), value);
                         }

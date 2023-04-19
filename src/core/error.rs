@@ -17,12 +17,14 @@ pub struct ServerError(Cow<'static, str>);
 #[derive(Debug)]
 pub enum RuntimeError {
     ObjectIsNotSaved,
+    StdIOError(String),
 }
 
 impl RuntimeError {
     pub fn message(&self) -> &'static str {
         match self {
             RuntimeError::ObjectIsNotSaved => "Object is not saved thus can't be deleted.",
+            RuntimeError::StdIOError(s) => Box::leak(Box::new(s.clone())).as_str(),
         }
     }
 }
@@ -400,6 +402,12 @@ impl From<&str> for Error {
 impl From<String> for Error {
     fn from(value: String) -> Self {
         Error::custom_internal_server_error(value)
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(value: std::io::Error) -> Self {
+        Self::RuntimeError(RuntimeError::StdIOError(value.to_string()))
     }
 }
 

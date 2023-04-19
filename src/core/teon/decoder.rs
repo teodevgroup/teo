@@ -37,7 +37,7 @@ impl Decoder {
         } else {
             return Err(Error::unexpected_input_type("object", path));
         };
-        Self::check_json_keys(json_map, &model.all_keys().iter().map(|k| k.as_str()).collect(), path)?;
+        Self::check_json_keys(json_map, &model.all_keys().iter().map(|k| k).collect(), path)?;
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
             let path = path + k;
             if let Some(field) = model.field(k) {
@@ -101,7 +101,7 @@ impl Decoder {
     }
 
     fn check_json_keys<'a>(map: &JsonMap<String, JsonValue>, allowed: &HashSet<&str>, path: &KeyPath<'a>) -> Result<()> {
-        if let Some(unallowed) = map.keys().find(|k| !allowed.contains(k.as_str())) {
+        if let Some(unallowed) = map.keys().find(|k| !allowed.contains(k)) {
             return Err(Error::unexpected_input_key(unallowed, path + unallowed));
         }
         Ok(())
@@ -122,8 +122,8 @@ impl Decoder {
 
     fn decode_credentials<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
         if let Some(map) = json_value.as_object() {
-            let by_set = model.auth_by_keys().iter().map(|k| k.as_str()).collect::<HashSet<&str>>();
-            let identity_set = model.auth_identity_keys().iter().map(|k| k.as_str()).collect::<HashSet<&str>>();
+            let by_set = model.auth_by_keys().iter().map(|k| k).collect::<HashSet<&str>>();
+            let identity_set = model.auth_identity_keys().iter().map(|k| k).collect::<HashSet<&str>>();
             let allowed = by_set.bitor(&identity_set);
             Self::check_json_keys(map, &allowed, path.as_ref())?;
             Ok(Self::decode_create(model, graph, json_value, path.as_ref())?)
@@ -139,7 +139,7 @@ impl Decoder {
         } else {
             return Err(Error::unexpected_input_type("object", path));
         };
-        Self::check_json_keys(json_map, &model.input_keys().iter().map(|k| k.as_str()).collect(), path)?;
+        Self::check_json_keys(json_map, &model.input_keys().iter().map(|k| k).collect(), path)?;
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
             let path = path + k;
             if let Some(field) = model.field(k) {
@@ -167,7 +167,7 @@ impl Decoder {
         };
         Self::check_json_keys(json_map, &NESTED_CREATE_MANY_ARG_KEYS, path)?;
         Ok(Value::HashMap(json_map.iter().map(|(k, value)| {
-            let k = k.as_str();
+            let k = k;
             let path = path + k;
             let (model, relation) = graph.opposite_relation(relation);
             match k {
@@ -212,7 +212,7 @@ impl Decoder {
             Self::check_json_keys(json_map, &NESTED_UPDATE_MANY_ARG_KEYS, path)?;
         }
         Ok(Value::HashMap(json_map.iter().map(|(k, value)| {
-            let k = k.as_str();
+            let k = k;
             let path = path + k;
             let (model, relation) = graph.opposite_relation(relation);
             match k {
@@ -313,7 +313,7 @@ impl Decoder {
         };
         Self::check_json_keys(json_map, &NESTED_CREATE_ONE_ARG_KEYS, path)?;
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
-            let k = k.as_str();
+            let k = k;
             let path = path + k;
             let (model, relation) = graph.opposite_relation(relation);
             match k {
@@ -360,10 +360,10 @@ impl Decoder {
             Self::check_json_keys(json_map, &NESTED_UPDATE_ONE_ARG_KEYS, path)?;
         }
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
-            let k = k.as_str();
+            let k = k;
             let path = path + k;
             let (model, relation) = graph.opposite_relation(relation);
-            match k {
+            match k.as_str() {
                 "create" => if model.has_action(Action::from_u32(CREATE | NESTED | SINGLE)) {
                     Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?))
                 } else {
@@ -421,7 +421,7 @@ impl Decoder {
         };
         Self::check_json_keys(json_map, if no_where { &NESTED_UPSERT_INPUT_KEYS_WITHOUT_WHERE } else { &NESTED_UPSERT_INPUT_KEYS }, path)?;
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
-            let k = k.as_str();
+            let k = k;
             let path = path + k;
             match k {
                 "create" => Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?)),
@@ -440,7 +440,7 @@ impl Decoder {
         };
         Self::check_json_keys(json_map, &NESTED_CONNECT_OR_CREATE_INPUT_KEYS, path)?;
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
-            let k = k.as_str();
+            let k = k;
             let path = path + k;
             match k {
                 "create" => Ok((k.to_owned(), Self::decode_nested_create_input(model, graph, relation, v, path)?)),
@@ -458,7 +458,7 @@ impl Decoder {
         };
         Self::check_json_keys(json_map, &NESTED_UPDATE_INPUT_KEYS, path)?;
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
-            let k = k.as_str();
+            let k = k;
             let path = path + k;
             match k {
                 "update" => Ok((k.to_owned(), Self::decode_nested_inner_update_input(model, graph, relation, v, path)?)),
@@ -476,7 +476,7 @@ impl Decoder {
         };
         Self::check_json_keys(json_map, &NESTED_UPDATE_INPUT_KEYS, path)?;
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
-            let k = k.as_str();
+            let k = k;
             let path = path + k;
             match k {
                 "update" => Ok((k.to_owned(), Self::decode_nested_inner_update_input(model, graph, relation, v, path)?)),
@@ -494,14 +494,14 @@ impl Decoder {
         };
         let without: Vec<&str> = if let Some(relation) = relation {
             let mut without = vec![relation.name()];
-            without.extend(relation.fields().iter().map(|k| k.as_str()));
+            without.extend(relation.fields().iter().map(|k| k));
             without
         } else {
             vec![]
         };
         let allowed = model.input_keys().iter().filter(|k| {
-            !without.contains(&k.as_str())
-        }).map(|k| k.as_str()).collect();
+            !without.contains(&k)
+        }).map(|k| k).collect();
         Self::check_json_keys(json_map, &allowed, path)?;
         Self::decode_update(model, graph, &json_value, path)
     }
@@ -515,15 +515,15 @@ impl Decoder {
         let without: Vec<&str> = if let Some(relation) = relation {
             let mut without = vec![relation.name()];
             if relation.has_foreign_key() {
-                without.extend(relation.fields().iter().map(|k| k.as_str()));
+                without.extend(relation.fields().iter().map(|k| k));
             }
             without
         } else {
             vec![]
         };
         let allowed = model.input_keys().iter().filter(|k| {
-            !without.contains(&k.as_str())
-        }).map(|k| k.as_str()).collect();
+            !without.contains(&k)
+        }).map(|k| k).collect();
         Self::check_json_keys(json_map, &allowed, path)?;
         Self::decode_create(model, graph, &json_value, path)
     }
@@ -535,7 +535,7 @@ impl Decoder {
         } else {
             return Err(Error::unexpected_input_type("object", path));
         };
-        Self::check_json_keys(json_map, &model.input_keys().iter().map(|k| k.as_str()).collect(), path)?;
+        Self::check_json_keys(json_map, &model.input_keys().iter().map(|k| k).collect(), path)?;
         Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
             let path = path + k;
             if let Some(field) = model.field(k) {
@@ -557,7 +557,7 @@ impl Decoder {
     fn decode_having<'a>(model: &Model, graph: &Graph, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
         let path = path.as_ref();
         if let Some(json_map) = json_value.as_object() {
-            Self::check_json_keys(json_map, &model.scalar_keys().iter().map(|k| k.as_str()).collect(), path)?;
+            Self::check_json_keys(json_map, &model.scalar_keys().iter().map(|k| k).collect(), path)?;
             Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
                 let path = path + k;
                 let field = model.field(k).unwrap();
@@ -574,7 +574,7 @@ impl Decoder {
             Ok(Value::Vec(json_array.iter().enumerate().map(|(i, v)| {
                 let path = path + i;
                 match v.as_str() {
-                    Some(s) => if model.scalar_keys().contains(&s.to_string()) {
+                    Some(s) => if model.scalar_keys().contains(&s) {
                         Ok(Value::String(s.to_owned()))
                     } else {
                         Err(Error::unexpected_input_value("scalar field name", path))
@@ -604,7 +604,7 @@ impl Decoder {
         if let Some(json_map) = json_value.as_object() {
             Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
                 let path = path + k;
-                if model.relation_output_keys().contains(k) {
+                if model.relation_output_keys().contains(&k.as_str()) {
                     Ok((k.to_owned(), Self::decode_include_item(model, graph, k, v, path)?))
                 } else {
                     Err(Error::unexpected_input_key(k, path))
@@ -637,7 +637,7 @@ impl Decoder {
         if let Some(json_map) = json_value.as_object() {
             Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
                 let path = path + k;
-                if model.local_output_keys().contains(k) {
+                if model.local_output_keys().contains(&k.as_str()) {
                     Ok((k.to_owned(), Self::decode_bool(v, path)?))
                 } else {
                     Err(Error::unexpected_input_key(k, path))
@@ -690,7 +690,7 @@ impl Decoder {
 
     fn decode_distinct_item<'a>(model: &Model, json_value: &JsonValue, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
         if let Some(s) = json_value.as_str() {
-            if model.scalar_keys().contains(&s.to_string()) {
+            if model.scalar_keys().contains(&s) {
                 Ok(Value::String(s.to_owned()))
             } else {
                 Err(Error::unexpected_input_value("scalar fields enum", path))
@@ -769,7 +769,7 @@ impl Decoder {
                 }
                 _ => {
                     let path = path + key;
-                    if !model.query_keys().contains(&key.to_string()) {
+                    if !model.query_keys().contains(&key) {
                         return Err(Error::unexpected_input_key(key, path));
                     }
                     if let Some(field) = model.field(key) {
@@ -920,7 +920,7 @@ impl Decoder {
             Self::check_length_1(json_value, path)?;
             Self::check_json_keys(json_map, if set_only { r#type.default_updators() } else { r#type.updators() }, path)?;
             Ok(Value::HashMap(json_map.iter().map(|(k, v)| {
-                let k = k.as_str();
+                let k = k;
                 let path = path + k;
                 Ok((k.to_owned(), match k {
                     "set" => Self::decode_value_for_field_type(graph, r#type, optional, v, path)?,

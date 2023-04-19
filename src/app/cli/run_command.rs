@@ -4,7 +4,6 @@ use crate::migrate::migrate;
 use crate::app::new_app::new_result::Result;
 use crate::core::conf::test::{ResetDatasets, ResetMode};
 use crate::server::test_context::{TestContext};
-use crate::core::teon::Value;
 use crate::purger::purge;
 use crate::seeder::seed::seed;
 use crate::server::serve;
@@ -33,7 +32,7 @@ pub(crate) async fn run_command(cli: CLI) -> Result<()> {
                                 let sv: Vec<String> = names.iter().map(|v| v.to_owned()).collect();
                                 Some(Box::leak(Box::new(TestContext {
                                     reset_mode: ResetMode::AfterQuery,
-                                    datasets: app_ctx.datasets().iter().filter(|d| sv.contains(&d.name)).map(|d| d.clone()).collect(),
+                                    datasets: app_ctx.datasets().iter().filter(|d| sv.contains(&d.name)).map(|d| d.name.clone()).collect(),
                                 })))
                             }
                         }
@@ -111,8 +110,8 @@ pub(crate) async fn run_command(cli: CLI) -> Result<()> {
             } else {
                 seed_command.names.clone().unwrap()
             };
-            migrate(graph, false).await;
-            seed(seed_command.action, graph(), datasets, names).await
+            migrate(graph, false).await?;
+            seed(seed_command.action, graph, datasets, names).await
         }
         CLICommand::Purge(_) => {
             purge(graph).await.unwrap()

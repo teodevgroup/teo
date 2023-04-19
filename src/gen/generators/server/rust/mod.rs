@@ -14,6 +14,8 @@ use crate::gen::interface::server::EntityGenerator;
 use crate::gen::internal::code::Code;
 use crate::gen::internal::file_util::FileUtil;
 use crate::prelude::Graph;
+use crate::core::result::Result;
+
 
 pub(in crate::gen) struct RustEntityGenerator {}
 
@@ -77,7 +79,7 @@ impl RustEntityGenerator {
         }
     }
 
-    async fn generate_file_for_model(&self, name: String, model: &Model, generator: &FileUtil) -> std::io::Result<HashSet<&str>> {
+    async fn generate_file_for_model(&self, name: String, model: &Model, generator: &FileUtil) -> Result<HashSet<&str>> {
         let mut package_requirements = hashset![];
         let model_name = model.name();
         let localized_name_title_case = model.localized_name();
@@ -389,7 +391,7 @@ impl Display for {model_name} {{
         Ok(package_requirements)
     }
 
-    async fn generate_file_for_enum(&self, name: String, e: &Enum, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_file_for_enum(&self, name: String, e: &Enum, generator: &FileUtil) -> Result<()> {
         let enum_name = e.name();
         generator.generate_file(format!("{name}.rs"), Code::new(0, 4, |b| {
             // use lines
@@ -441,7 +443,7 @@ impl From<Value> for {enum_name} {{
         Ok(())
     }
 
-    async fn generate_mod_rs(&self, names: Vec<String>, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_mod_rs(&self, names: Vec<String>, generator: &FileUtil) -> Result<()> {
         generator.generate_file("mod.rs", Code::new(0, 4, |b| {
             for name in names.iter() {
                 b.line(format!("pub mod {};", name));
@@ -473,7 +475,7 @@ impl From<Value> for {enum_name} {{
 
 #[async_trait]
 impl EntityGenerator for RustEntityGenerator {
-    async fn generate_entity_files(&self, graph: &Graph, _conf: &EntityGeneratorConf, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_entity_files(&self, graph: &Graph, _conf: &EntityGeneratorConf, generator: &FileUtil) -> Result<()> {
         let mut names: Vec<String> = vec![];
         for (name, e) in graph.enums() {
             let name = name.to_snake_case();

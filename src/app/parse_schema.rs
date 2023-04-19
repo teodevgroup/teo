@@ -108,7 +108,7 @@ pub(super) fn load_schema() -> Result<()> {
         for ast_field in ast_model.fields.iter() {
             match ast_field.field_class {
                 ASTFieldClass::Field | ASTFieldClass::DroppedField => {
-                    let mut model_field = Field::new(ast_field.identifier.name.as_str().to_owned());
+                    let mut model_field = Field::new(ast_field.identifier.name.as_str());
                     if let Some(comment) = &ast_field.comment_block {
                         if let Some(name) = comment.name.as_ref() {
                             model_field.localized_name = Some(name.to_owned());
@@ -134,7 +134,7 @@ pub(super) fn load_schema() -> Result<()> {
                                 model_field.set_optional();
                             }
                             model_field.field_type = Some(FieldType::Vec(Box::new({
-                                let mut inner = Field::new("".to_owned());
+                                let mut inner = Field::new("");
                                 if ast_field.r#type.item_required {
                                     inner.set_required();
                                 } else {
@@ -151,7 +151,7 @@ pub(super) fn load_schema() -> Result<()> {
                                 model_field.set_optional();
                             }
                             model_field.field_type = Some(FieldType::HashMap(Box::new({
-                                let mut inner = Field::new("".to_owned());
+                                let mut inner = Field::new("");
                                 if ast_field.r#type.item_required {
                                     inner.set_required();
                                 } else {
@@ -239,7 +239,7 @@ pub(super) fn load_schema() -> Result<()> {
                                 model_property.set_optional();
                             }
                             model_property.field_type = Some(FieldType::Vec(Box::new({
-                                let mut inner = Field::new("".to_owned());
+                                let mut inner = Field::new("");
                                 if ast_field.r#type.item_required {
                                     inner.set_required();
                                 } else {
@@ -256,7 +256,7 @@ pub(super) fn load_schema() -> Result<()> {
                                 model_property.set_optional();
                             }
                             model_property.field_type = Some(FieldType::HashMap(Box::new({
-                                let mut inner = Field::new("".to_owned());
+                                let mut inner = Field::new("");
                                 if ast_field.r#type.item_required {
                                     inner.set_required();
                                 } else {

@@ -16,8 +16,9 @@ use crate::gen::internal::client::generator::Generator;
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::internal::message::green_message;
 use crate::prelude::Graph;
+use crate::core::result::Result;
 
-pub(crate) async fn gen(graph: &Graph, conf: &Conf) -> std::io::Result<()> {
+pub(crate) async fn gen(graph: &Graph, conf: &Conf) -> Result<()> {
     match conf.kind {
         Kind::TypeScript => generate_client_typed(TypeScriptClientGenerator::new(), &Ctx::build(graph, conf, SwiftTypes::new())).await,
         Kind::Swift => generate_client_typed(SwiftClientGenerator::new(), &Ctx::build(graph, conf, SwiftTypes::new())).await,
@@ -27,7 +28,7 @@ pub(crate) async fn gen(graph: &Graph, conf: &Conf) -> std::io::Result<()> {
     }
 }
 
-async fn generate_client_typed<T: Generator>(client_generator: T, ctx: &Ctx<'_>) -> std::io::Result<()> {
+async fn generate_client_typed<T: Generator>(client_generator: T, ctx: &Ctx<'_>) -> Result<()> {
     let dest = &ctx.conf.dest;
     let package = ctx.conf.package;
     let git_commit = ctx.conf.git_commit;

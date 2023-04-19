@@ -4,7 +4,6 @@ pub(crate) mod test_context;
 pub(crate) mod conf;
 
 use crate::core::result::Result;
-use std::io::ErrorKind;
 use std::sync::Arc;
 use futures_util::future;
 use std::time::SystemTime;
@@ -96,7 +95,7 @@ fn log_request(start: SystemTime, action: &str, model: &str, code: u16) {
     println!("{} {} on {} - {} {}", local_formatted, action.bold(), model, code_string, ms_str.dimmed());
 }
 
-async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConf) -> Result<Option<Object>, Error> {
+async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConf) -> Result<Option<Object>> {
     let header_value = r.headers().get("authorization");
     if let None = header_value {
         return Ok(None);
@@ -209,7 +208,7 @@ async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: I
     }
 }
 
-async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: Option<&Value>, select: Option<&Value>, model: &Model, path: &KeyPath<'_>, action: Action, action_source: Initiator, session: Arc<dyn SaveSession>) -> Result<Value, Error> {
+async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: Option<&Value>, select: Option<&Value>, model: &Model, path: &KeyPath<'_>, action: Action, action_source: Initiator, session: Arc<dyn SaveSession>) -> Result<Value> {
     let obj = graph.new_object(model.name(), action, action_source)?;
     let set_json_result = match create {
         Some(create) => {
@@ -236,7 +235,7 @@ async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: Init
     let create = input.get("create");
     let include = input.get("include");
     let select = input.get("select");
-    let session = AppCtx::get().unwrap().graph().new_save_session();
+    let session = AppCtx::get().unwrap().graph().unwrap().new_save_session();
     let result = handle_create_internal(graph, create, include, select, model, &path!["create"], action, source, session).await;
     match result {
         Ok(val) => {
@@ -247,7 +246,7 @@ async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: Init
     }
 }
 
-async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&Value>, include: Option<&Value>, select: Option<&Value>, _where: Option<&Value>, _model: &Model) -> Result<Value, Error> {
+async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&Value>, include: Option<&Value>, select: Option<&Value>, _where: Option<&Value>, _model: &Model) -> Result<Value> {
     let empty = teon!({});
     let updator = if update.is_some() { update.unwrap() } else { &empty };
     object.set_teon_with_path(updator, &path!["update"]).await?;
@@ -388,7 +387,7 @@ async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source:
     let create = create.as_vec().unwrap();
     let mut count = 0;
     let mut ret_data: Vec<Value> = vec![];
-    let session = AppCtx::get()?.connector()?.new_save_session();
+    let session = AppCtx::get().unwrap().connector().unwrap().new_save_session();
     for (index, val) in create.iter().enumerate() {
         let result = handle_create_internal(graph, Some(val), include, select, model, &path!["create", index], action, source.clone(), session.clone()).await;
         match result {
@@ -682,7 +681,7 @@ fn make_app(graph: &'static Graph, conf: &'static ServerConf, test_context: Opti
                 }
                 body.extend_from_slice(&chunk);
             }
-            let parsed_body: Result<JsonValue, serde_json::Error> = serde_json::from_slice(&body);
+            let parsed_body: std::result::Result<JsonValue, serde_json::Error> = serde_json::from_slice(&body);
             let parsed_body = match parsed_body {
                 Ok(b) => b,
                 Err(_) => {

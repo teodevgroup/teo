@@ -6,6 +6,7 @@ use crate::gen::internal::client::generator::Generator;
 use crate::gen::internal::client::outline::outline::Outline;
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::internal::filters;
+use crate::core::result::Result;
 
 #[derive(Template)]
 #[template(path = "client/csharp/readme.md.jinja", escape = "none")]
@@ -38,13 +39,13 @@ impl Generator for CSharpClientGenerator {
         return "src".to_owned();
     }
 
-    async fn generate_module_files(&self, _ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_module_files(&self, _ctx: &Ctx, generator: &FileUtil) -> Result<()> {
         generator.ensure_root_directory().await?;
         generator.clear_root_directory().await?;
         Ok(())
     }
 
-    async fn generate_package_files(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_package_files(&self, ctx: &Ctx, generator: &FileUtil) -> Result<()> {
         generator.ensure_root_directory().await?;
         generator.clear_root_directory().await?;
         generator.generate_file(".gitignore", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/client/csharp/gitignore"))).await?;
@@ -54,7 +55,7 @@ impl Generator for CSharpClientGenerator {
         Ok(())
     }
 
-    async fn generate_main(&self, ctx: &Ctx, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_main(&self, ctx: &Ctx, generator: &FileUtil) -> Result<()> {
         generator.generate_file("Teo.cs", CSharpMainTemplate {
             outline: &ctx.outline,
             conf: ctx.conf,

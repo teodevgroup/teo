@@ -291,13 +291,13 @@ impl Aggregation {
 
     fn build_select(model: &Model, _graph: &Graph, select: &Value, distinct: Option<&Value>) -> Result<Document> {
         let map = select.as_hashmap().unwrap();
-        let true_keys: Vec<&String> = map.iter().filter(|(_k, v)| v.as_bool().unwrap() == true).map(|(k, _)| k).collect();
-        let false_keys: Vec<&String> = map.iter().filter(|(_k, v)| v.as_bool().unwrap() == false).map(|(k, _)| k).collect();
+        let true_keys: Vec<&str> = map.iter().filter(|(_k, v)| v.as_bool().unwrap() == true).map(|(k, _)| k.as_str()).collect();
+        let false_keys: Vec<&str> = map.iter().filter(|(_k, v)| v.as_bool().unwrap() == false).map(|(k, _)| k.as_str()).collect();
         let primary_field_names = model.primary_index().keys();
         let mut keys: HashSet<String> = HashSet::new();
         let save_unmentioned_keys = true_keys.is_empty();
         model.all_keys().iter().for_each(|k| {
-            let save = primary_field_names.contains(k) || (!false_keys.contains(&k) && (true_keys.contains(&k) || save_unmentioned_keys));
+            let save = primary_field_names.contains(k) || (!false_keys.contains(k) && (true_keys.contains(&k) || save_unmentioned_keys));
             if save {
                 if let Some(field) = model.field(k) {
                     let column_name = field.column_name();

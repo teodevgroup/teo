@@ -82,7 +82,7 @@ fn generate_model_create_input(graph: &Graph, model: &Model, without: Option<&st
                     let field_name = &field.name;
                     let field_ts_type = field.field_type().to_typescript_create_input_type(field.optionality.is_optional(), server_mode);
                     if let Some(without_relation) = without_relation {
-                        if !without_relation.fields().contains(k) {
+                        if !without_relation.fields().contains(&k.to_string()) {
                             b.doc(field_doc(field));
                             b.line(format!("{field_name}?: {field_ts_type}"));
                         }

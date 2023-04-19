@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use maplit::hashmap;
 use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::field::field::Field;
@@ -40,7 +40,13 @@ pub(crate) struct ASTPipelineItem {
     pub(crate) installer: Option<ASTPipelineInstaller>,
     pub(crate) function_installer: Option<ASTFunctionInstaller>,
     pub(crate) lookup_table: &'static CallbackLookup,
-    pub(crate) args: &Vec<Argument>,
+    pub(crate) args: &'static Vec<Argument>,
+}
+
+impl ASTPipelineItem {
+    pub(crate) fn args(&self) -> &Vec<Argument> {
+        &self.args
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -50,9 +56,6 @@ pub(crate) struct ASTVPipeline {
 
 impl ASTVPipeline {
 
-    pub(crate) fn args(&self) -> &Vec<Argument> {
-        &self.args
-    }
     pub(crate) fn to_value_pipeline(&self) -> Pipeline {
         let mut modifiers = vec![];
         for item in self.items.iter() {

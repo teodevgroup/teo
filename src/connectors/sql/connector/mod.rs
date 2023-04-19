@@ -155,7 +155,7 @@ impl SQLConnector {
             UniqueConstraintViolation { constraint } => {
                 match constraint {
                     DatabaseConstraint::Fields(fields) => {
-                        Error::unique_value_duplicated(fields.get(0).unwrap())
+                        Error::unique_value_duplicated(fields.get(0).unwrap().to_string())
                     }
                     DatabaseConstraint::Index(index) => {
                         Error::unique_value_duplicated(index.clone())
@@ -175,7 +175,7 @@ impl SQLConnector {
 #[async_trait]
 impl Connector for SQLConnector {
 
-    async fn migrate(&mut self, models: &Vec<Model>, _reset_database: bool) -> Result<()> {
+    async fn migrate(&self, models: Vec<&Model>, _reset_database: bool) -> Result<()> {
         SQLMigration::migrate(self.dialect, &self.pool, models).await;
         Ok(())
     }

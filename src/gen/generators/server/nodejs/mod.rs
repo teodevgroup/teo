@@ -2,6 +2,7 @@ pub(crate) mod utils;
 pub(crate) mod runtime_d_ts;
 
 use array_tool::vec::Join;
+use crate::core::result::Result;
 
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::interface::server::EntityGenerator;
@@ -20,7 +21,7 @@ impl NodeJSEntityGenerator {
         Self { }
     }
 
-    async fn generate_index_js(&self, graph: &Graph, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_index_js(&self, graph: &Graph, generator: &FileUtil) -> Result<()> {
         let names: Vec<&str> = graph.models().iter().map(|m| m.name()).collect();
         let prefixed_names: Vec<String> = names.iter().map(|n| "  ".to_owned() + n).collect();
         let import = "const { getModelClass } = require(\"@teocloud/teo\")";
@@ -29,7 +30,7 @@ impl NodeJSEntityGenerator {
         generator.generate_file("index.js", format!("{import}\n\n{body}\n\n{export}\n")).await
     }
 
-    async fn generate_index_d_ts(&self, graph: &Graph, generator: &FileUtil, shared: String) -> std::io::Result<()> {
+    async fn generate_index_d_ts(&self, graph: &Graph, generator: &FileUtil, shared: String) -> Result<()> {
         let shared_ref = &shared;
         let content = Code::new(0, 4, |b| {
             b.line(shared_ref);
@@ -109,7 +110,7 @@ impl NodeJSEntityGenerator {
 
 #[async_trait]
 impl EntityGenerator for NodeJSEntityGenerator {
-    async fn generate_entity_files(&self, graph: &Graph, _conf: &EntityGeneratorConf, generator: &FileUtil) -> std::io::Result<()> {
+    async fn generate_entity_files(&self, graph: &Graph, _conf: &EntityGeneratorConf, generator: &FileUtil) -> Result<()> {
         self.generate_index_js(graph, generator).await?;
         let content = generate_index_d_ts(graph,"teo".to_owned(), true);
         self.generate_index_d_ts(graph, generator, content).await?;
