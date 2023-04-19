@@ -11,7 +11,8 @@ impl From<&IndexModel> for ModelIndex {
         };
         let mut items: Vec<ModelIndexItem> = Vec::new();
         for (k, v) in &index_model.keys {
-            let item = ModelIndexItem::new(k, if v.as_i32().unwrap() == 1 { Sort::Asc } else { Sort::Desc }, None);
+            let k_longlive = Box::leak(Box::new(k.clone())).as_str();
+            let item = ModelIndexItem::new(k_longlive, if v.as_i32().unwrap() == 1 { Sort::Asc } else { Sort::Desc }, None);
             items.push(item);
         }
         ModelIndex::new(if unique { ModelIndexType::Unique } else { ModelIndexType::Index }, Some(index_model.options.as_ref().unwrap().name.as_ref().unwrap().to_string()), items)

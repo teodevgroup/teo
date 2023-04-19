@@ -336,7 +336,7 @@ impl Resolver {
 
     fn resolve_pipeline(parser: &ASTParser, source: &Source, pipeline: &ASTPipeline) -> Entity {
         let mut items: Vec<ASTPipelineItem> = vec![];
-        let STATIC_EMPTY_ARGS: Vec<Argument> = vec![];
+        static STATIC_EMPTY_ARGS: Vec<Argument> = vec![];
         match pipeline.expression.as_ref() {
             ExpressionKind::Identifier(identifier) => {
                 let installer = parser.global_pipeline_installers().get(&identifier.name);

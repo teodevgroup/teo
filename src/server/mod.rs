@@ -207,7 +207,7 @@ async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: I
     }
 }
 
-async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: Option<&Value>, select: Option<&Value>, model: &Model, path: &KeyPath<'_>, action: Action, action_source: Initiator, session: Arc<dyn SaveSession>) -> Result<Value> {
+async fn handle_create_internal(graph: &'static Graph, create: Option<&Value>, include: Option<&Value>, select: Option<&Value>, model: &Model, path: &KeyPath<'_>, action: Action, action_source: Initiator, session: Arc<dyn SaveSession>) -> Result<Value> {
     let obj = graph.new_object(model.name(), action, action_source)?;
     let set_json_result = match create {
         Some(create) => {
@@ -228,7 +228,7 @@ async fn handle_create_internal(graph: &Graph, create: Option<&Value>, include: 
     refetched.to_json_internal(&path!["data"]).await
 }
 
-async fn handle_create(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
+async fn handle_create(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(CREATE | ENTRY | SINGLE);
     let input = input.as_hashmap().unwrap();
     let create = input.get("create");
@@ -277,7 +277,7 @@ async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: Init
     }
 }
 
-async fn handle_upsert(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
+async fn handle_upsert(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(UPSERT | UPDATE | ENTRY | SINGLE);
     let result = graph.find_unique_internal(model.name(), input, true, action, source.clone()).await.into_not_found_error();
     let include = input.get("include");
@@ -368,7 +368,7 @@ async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: Init
     }
 }
 
-async fn handle_create_many(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
+async fn handle_create_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(CREATE | MANY | ENTRY);
     let input = input.as_hashmap().unwrap();
     let create = input.get("create");
@@ -860,10 +860,10 @@ pub(crate) async fn serve(
         .unwrap()
         .run();
     let result = future::join(server, server_start_message(port, environment_version, entrance)).await;
-    result.0
+    result.1
 }
 
-async fn reset_after_mutation_if_needed(test_context: Option<&'static TestContext>, graph: &Graph) -> Result<()> {
+async fn reset_after_mutation_if_needed(test_context: Option<&'static TestContext>, graph: &'static Graph) -> Result<()> {
     if let Some(test_context) = test_context {
         if test_context.reset_mode.after_mutation() {
             AppCtx::get()?.connector()?.purge(graph).await.unwrap();
@@ -873,7 +873,7 @@ async fn reset_after_mutation_if_needed(test_context: Option<&'static TestContex
     Ok(())
 }
 
-async fn reset_after_query_if_needed(test_context: Option<&'static TestContext>, graph: &Graph) -> Result<()> {
+async fn reset_after_query_if_needed(test_context: Option<&'static TestContext>, graph: &'static Graph) -> Result<()> {
     if let Some(test_context) = test_context {
         if test_context.reset_mode.after_query() {
             AppCtx::get()?.connector()?.purge(graph).await.unwrap();

@@ -278,19 +278,19 @@ impl Error {
         })
     }
 
-    pub(crate) fn unexpected_input_type<'a>(expected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
+    pub(crate) fn unexpected_input_type<'a>(expected: impl Into<String> + Clone, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         Error::UserError(UserError {
             r#type: UserErrorType::UnexpectedInput,
-            message: Cow::Owned(format!("Unexpected input type. Expect {}.", expected.into())),
+            message: Cow::Owned(format!("Unexpected input type. Expect {}.", expected.clone().into())),
             errors: Some(hashmap!{key_path.as_ref().to_string() => Cow::Owned(format!("Expect {}.", expected.into()))}),
         })
 
     }
 
-    pub(crate) fn unexpected_input_key<'a>(unexpected: impl Into<String>, key_path: impl AsRef<KeyPath<'a>>) -> Self {
+    pub(crate) fn unexpected_input_key<'a>(unexpected: impl Into<String> + Clone, key_path: impl AsRef<KeyPath<'a>>) -> Self {
         Error::UserError(UserError {
             r#type: UserErrorType::UnexpectedInput,
-            message: Cow::Owned(format!("Unexpected key '{}'.", unexpected.into())),
+            message: Cow::Owned(format!("Unexpected key '{}'.", unexpected.clone().into())),
             errors: Some(hashmap!{key_path.as_ref().to_string() => Cow::Owned(format!("Expect {}.", unexpected.into()))}),
         })
     }

@@ -9,15 +9,17 @@ use crate::core::pipeline::Pipeline;
 use crate::prelude::{Graph, Value};
 
 pub(crate) fn define_seeder_models(graph: &mut Graph) {
-    let mut group_record = Model::new("__TeoGroupRecord", None, None);
+    let group_record_model_name = "__TeoGroupRecord";
+    let mut group_record = Model::new(group_record_model_name, None, None);
     group_record.set_table_name("__teogrouprecord");
     group_record.set_is_teo_internal();
     install_string_id_and_dataset(&mut group_record);
     install_plain_required_string_field(&mut group_record, "group");
     install_plain_required_string_field(&mut group_record, "name");
     install_plain_required_string_field(&mut group_record, "record");
-    graph.add_model(group_record);
-    let mut group_relation = Model::new("__TeoGroupRelation", None, None);
+    graph.add_model(group_record, group_record_model_name);
+    let group_relation_model_name = "__TeoGroupRelation";
+    let mut group_relation = Model::new(group_relation_model_name, None, None);
     group_relation.set_table_name("__teogrouprelation");
     group_relation.set_is_teo_internal();
     install_string_id_and_dataset(&mut group_relation);
@@ -27,7 +29,7 @@ pub(crate) fn define_seeder_models(graph: &mut Graph) {
     install_plain_required_string_field(&mut group_relation, "groupB");
     install_plain_optional_string_field(&mut group_relation, "relationB");
     install_plain_required_string_field(&mut group_relation, "nameB");
-    graph.add_model(group_relation);
+    graph.add_model(group_relation, group_relation_model_name);
 }
 
 fn install_string_id_and_dataset(m: &mut Model) {

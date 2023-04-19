@@ -41,8 +41,8 @@ pub(super) fn load_schema() -> Result<()> {
     let server = parser.server()?;
     app_ctx.set_server_conf(Box::new(ServerConf {
         bind: server.bind.as_ref().unwrap().clone(),
-        jwt_secret: server.jwt_secret.map(|s| s.as_str()),
-        path_prefix: server.path_prefix.map(|s| s.as_str()),
+        jwt_secret: server.jwt_secret.as_ref().map(|s| s.as_str()),
+        path_prefix: server.path_prefix.as_ref().map(|s| s.as_str()),
     }));
     // debug conf
     if let Some(debug) = parser.debug() {
@@ -99,7 +99,7 @@ pub(super) fn load_schema() -> Result<()> {
     for ast_model in parser.models() {
         let mut model = Model::new(
             ast_model.identifier.name.as_str(),
-            ast_model.comment_block.map(|c|c.name.map(|n|n.as_str())).flatten(),
+            ast_model.comment_block.map(|c|c.name.as_ref().map(|n|n.as_str())).flatten(),
             ast_model.comment_block.map(|c|c.desc.map(|n|n.as_str())).flatten());
         for ast_decorator in ast_model.decorators.iter() {
             let model_decorator = ast_decorator.accessible.as_ref().unwrap().as_model_decorator().unwrap();
@@ -276,6 +276,7 @@ pub(super) fn load_schema() -> Result<()> {
                 ASTFieldClass::Unresolved => unreachable!()
             }
         }
+        graph.add_model(model, ast_model.identifier.name.as_str());
     }
     define_seeder_models(app_ctx.graph_mut()?);
     // datasets

@@ -208,8 +208,8 @@ impl ModelIndex {
     }
 
     pub(crate) fn append_item(&mut self, item: ModelIndexItem) {
-        let key = item.field_name();
+        let key = Box::leak(Box::new(item.field_name().to_string()));
         self.items.push(item);
-        self.keys.push(key);
+        self.keys.push(key.as_str());
     }
 }

@@ -34,8 +34,8 @@ impl Graph {
         self.enums.insert(e.name, e);
     }
 
-    pub(crate) fn add_model(&mut self, m: Model) {
-        self.models.insert(m.name(), m);
+    pub(crate) fn add_model(&mut self, m: Model, name: &'static str) {
+        self.models.insert(name, m);
     }
 
     pub fn models(&self) -> Vec<&Model> {
@@ -140,20 +140,20 @@ impl Graph {
 
     // MARK: - Create an object
 
-    pub(crate) fn new_object(&self, model: &str, action: Action, action_source: Initiator) -> Result<Object> {
+    pub(crate) fn new_object(&'static self, model: &str, action: Action, action_source: Initiator) -> Result<Object> {
         match self.model(model) {
             Ok(model) => Ok(Object::new(self, model, action, action_source)),
             Err(_) => Err(Error::invalid_operation(format!("Model with name '{model}' is not defined.")))
         }
     }
 
-    pub(crate) async fn new_object_with_tson_and_path<'a>(&self, model: &str, initial: &Value, path: &KeyPath<'a>, action: Action, action_source: Initiator) -> Result<Object> {
+    pub(crate) async fn new_object_with_tson_and_path<'a>(&'static self, model: &str, initial: &Value, path: &KeyPath<'a>, action: Action, action_source: Initiator) -> Result<Object> {
         let object = self.new_object(model, action, action_source)?;
         object.set_teon_with_path(initial, path).await?;
         Ok(object)
     }
 
-    pub async fn create_object(&self, model: &str, initial: impl AsRef<Value>) -> Result<Object> {
+    pub async fn create_object(&'static self, model: &str, initial: impl AsRef<Value>) -> Result<Object> {
         let obj = self.new_object(model, Action::from_u32(PROGRAM_CODE | CREATE | SINGLE | INTERNAL_POSITION), Initiator::ProgramCode)?;
         obj.set_teon(initial.as_ref()).await?;
         Ok(obj)

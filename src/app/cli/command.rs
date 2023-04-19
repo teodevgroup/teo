@@ -53,7 +53,7 @@ pub(crate) struct CLI {
 
 impl CLI {
     pub(crate) fn main(&self) -> Option<&str> {
-        self.schema.map(|s| s.as_str())
+        self.schema.as_ref().map(|s| s.as_str())
     }
 }
 

@@ -13,7 +13,7 @@ use crate::seeder::models::group_record::GroupRecord;
 use crate::seeder::models::group_relation::GroupRelation;
 use crate::teon;
 
-pub(crate) async fn seed(action: SeedCommandAction, graph: &Graph, datasets: &Vec<DataSet>, names: Vec<String>) {
+pub(crate) async fn seed(action: SeedCommandAction, graph: &'static Graph, datasets: &'static Vec<DataSet>, names: Vec<String>) {
     // seed for user
     for name in &names {
         let dataset = datasets.iter().find(|ds| &ds.name == name).unwrap();
@@ -26,7 +26,7 @@ pub(crate) async fn seed(action: SeedCommandAction, graph: &Graph, datasets: &Ve
     remove_user_deleted_dataset_records_and_relations(datasets).await;
 }
 
-pub(crate) async fn seed_dataset(graph: &Graph, dataset: &DataSet) {
+pub(crate) async fn seed_dataset(graph: &'static Graph, dataset: &'static DataSet) {
     let ordered_groups = ordered_group(&dataset.groups, graph);
     // newly added records, we only update reference and relationships for these records.
     let mut added_records: HashMap<String, Vec<String>> = hashmap!{};
@@ -62,7 +62,7 @@ pub(crate) async fn seed_dataset(graph: &Graph, dataset: &DataSet) {
     remove_records_for_user_removed_groups(dataset, &ordered_groups, graph).await;
 }
 
-async fn remove_records_for_user_removed_groups(dataset: &DataSet, ordered_groups: &Vec<&Group>, graph: &Graph) {
+async fn remove_records_for_user_removed_groups(dataset: &'static DataSet, ordered_groups: &Vec<&'static Group>, graph: &'static Graph) {
     let user_removed_seed_records_for_group = GroupRecord::find_many(teon!({
         "where": {
             "dataset": dataset.name.as_str(),
@@ -76,7 +76,7 @@ async fn remove_records_for_user_removed_groups(dataset: &DataSet, ordered_group
     }
 }
 
-pub(crate) async fn reseed_dataset(graph: &Graph, dataset: &DataSet) {
+pub(crate) async fn reseed_dataset(graph: &'static Graph, dataset: &'static DataSet) {
     let ordered_groups = ordered_group(&dataset.groups, graph);
     for group in &ordered_groups {
         let group_model = graph.model(group.name.as_str()).unwrap();
@@ -109,7 +109,7 @@ pub(crate) async fn reseed_dataset(graph: &Graph, dataset: &DataSet) {
     remove_records_for_user_removed_groups(dataset, &ordered_groups, graph).await;
 }
 
-pub(crate) async fn unseed_dataset(graph: &Graph, dataset: &DataSet) {
+pub(crate) async fn unseed_dataset(graph: &'static Graph, dataset: &'static DataSet) {
     let mut ordered_groups = ordered_group(&dataset.groups, graph);
     ordered_groups.reverse();
     for group in ordered_groups {
@@ -127,7 +127,7 @@ pub(crate) async fn unseed_dataset(graph: &Graph, dataset: &DataSet) {
     }
 }
 
-async fn sync_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<&Group>) {
+async fn sync_relations(graph: &'static Graph, dataset: &'static DataSet, ordered_groups: &Vec<&'static Group>) {
     for group in ordered_groups {
         let group_model = graph.model(group.name.as_str()).unwrap();
         let should_process = group_model.relations().iter().find(|r| !(r.has_foreign_key() && r.is_required())).is_some();
@@ -165,7 +165,7 @@ async fn sync_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<&
                         ]
                     }
                 })).await.unwrap();
-                let mut relation_record_refs: Vec<&GroupRelation> = relation_records.iter().collect();
+                let mut relation_record_refs: Vec<&'static GroupRelation> = relation_records.iter().collect();
                 if let Some(reference) = record.value.as_hashmap().unwrap().get(relation.name()) {
                     if let Some(references) = reference.as_vec() {
                         for reference in references {
@@ -185,7 +185,7 @@ async fn sync_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<&
     }
 }
 
-async fn setup_new_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &Vec<&Group>, limit: Option<&HashMap<String, Vec<String>>>) {
+async fn setup_new_relations(graph: &'static Graph, dataset: &'static DataSet, ordered_groups: &Vec<&'static Group>, limit: Option<&HashMap<String, Vec<String>>>) {
     for group in ordered_groups {
         let group_model = graph.model(group.name.as_str()).unwrap();
         let should_process = group_model.relations().iter().find(|r| !(r.has_foreign_key() && r.is_required())).is_some();
@@ -217,7 +217,7 @@ async fn setup_new_relations(graph: &Graph, dataset: &DataSet, ordered_groups: &
     }
 }
 
-async fn sync_relation_internal(record: &Record, reference: &Value, relation: &Relation, dataset: &DataSet, graph: &Graph, object: &Object, relation_records: &Vec<GroupRelation>, relation_record_refs: &mut Vec<&GroupRelation>) {
+async fn sync_relation_internal(record: &'static Record, reference: &Value, relation: &Relation, dataset: &'static DataSet, graph: &'static Graph, object: &Object, relation_records: &Vec<GroupRelation>, relation_record_refs: &mut Vec<&'static GroupRelation>) {
     let that_name = reference.as_raw_enum_choice().unwrap();
     if let Some(existing_relation_record) = relation_records.iter().find(|r| {
         (&r.name_a() == record.name.as_str() && r.name_b() == that_name) ||
@@ -229,7 +229,7 @@ async fn sync_relation_internal(record: &Record, reference: &Value, relation: &R
     setup_relations_internal(record, reference, relation, dataset, graph, object).await;
 }
 
-async fn setup_relations_internal(record: &Record, reference: &Value, relation: &Relation, dataset: &DataSet, graph: &Graph, object: &Object) {
+async fn setup_relations_internal(record: &'static Record, reference: &Value, relation: &'static Relation, dataset: &'static DataSet, graph: &'static Graph, object: &Object) {
     let that_name = reference.as_raw_enum_choice().unwrap();
     let that_seed_record = GroupRecord::find_first(teon!({
         "where": {
@@ -311,7 +311,7 @@ async fn setup_relations_internal(record: &Record, reference: &Value, relation: 
 }
 
 /// This perform, deletes an object from the databse.
-async fn perform_remove_from_database(dataset: &DataSet, record: &GroupRecord, group_model: &Model, graph: &Graph) {
+async fn perform_remove_from_database(dataset: &'static DataSet, record: &'static GroupRecord, group_model: &'static Model, graph: &'static Graph) {
     let json_identifier = record.record();
     let exist: Option<Object> = graph.find_unique(group_model.name(), &teon!({
         "where": record_json_string_to_where_unique(json_identifier, group_model)
@@ -347,7 +347,7 @@ async fn perform_remove_from_database(dataset: &DataSet, record: &GroupRecord, g
     record.delete().await.unwrap();
 }
 
-async fn cut_relation(relation: &GroupRelation, record: &GroupRecord, graph: &Graph, group_model: &Model, dataset: &DataSet, exist: &Object) {
+async fn cut_relation(relation: &'static GroupRelation, record: &'static GroupRecord, graph: &'static Graph, group_model: &'static Model, dataset: &'static DataSet, exist: &Object) {
     let rel_name = if record.group().as_str() == relation.group_a() { relation.relation_a() } else { relation.relation_b() };
     let model_relation = group_model.relation(&rel_name).unwrap();
     if model_relation.has_foreign_key() {
@@ -412,7 +412,7 @@ async fn cut_relation(relation: &GroupRelation, record: &GroupRecord, graph: &Gr
     relation.delete().await.unwrap();
 }
 
-async fn perform_recreate_or_update_an_record(dataset: &DataSet, group: &Group, record: &Record, group_model: &Model, graph: &Graph, seed_record: &GroupRecord) {
+async fn perform_recreate_or_update_an_record(dataset: &'static DataSet, group: &'static Group, record: &'static Record, group_model: &'static Model, graph: &'static Graph, seed_record: &'static GroupRecord) {
     let object: Option<Object> = graph.find_unique(group_model.name(), &teon!({
         "where": record_json_string_to_where_unique(seed_record.record(), group_model)
     })).await.unwrap();
@@ -429,7 +429,7 @@ async fn perform_recreate_or_update_an_record(dataset: &DataSet, group: &Group, 
     seed_record.save().await.unwrap();
 }
 
-async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Record, group_model: &Model, graph: &Graph) -> Value {
+async fn insert_or_update_input(dataset: &'static DataSet, group: &'static Group, record: &'static Record, group_model: &'static Model, graph: &'static Graph) -> Value {
     let mut input = teon!({});
     for (k, v) in record.value.as_hashmap().unwrap() {
         if group_model.field(k).is_some() {
@@ -472,7 +472,7 @@ async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Recor
 
 /// This perform, saves an object into the database. It doesn't setup relationships without
 /// required foreign keys.
-async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: &Record, group_model: &Model, graph: &Graph) {
+async fn perform_insert_into_database(dataset: &'static DataSet, group: &'static Group, record: &'static Record, group_model: &'static Model, graph: &'static Graph) {
     let input = insert_or_update_input(dataset, group, record, group_model, graph).await;
     let object = graph.create_object(group_model.name(), &input).await.unwrap();
     object.save_for_seed_without_required_relation().await.unwrap();
@@ -485,7 +485,7 @@ async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: 
     record_object.save().await.unwrap();
 }
 
-fn record_json_string_to_where_unique(json_str: impl AsRef<str>, model: &Model) -> Value {
+fn record_json_string_to_where_unique(json_str: impl AsRef<str>, model: &'static Model) -> Value {
     let json_value: serde_json::Value = serde_json::from_str(json_str.as_ref()).unwrap();
     let json_object = json_value.as_object().unwrap();
     let mut result_teon_value = teon!({});
@@ -516,7 +516,7 @@ fn object_identifier_in_json(object: &Object) -> String {
     result.to_string()
 }
 
-fn ordered_group<'a>(groups: &'a Vec<Group>, graph: &Graph) -> Vec<&'a Group> {
+fn ordered_group<'a>(groups: &'a Vec<Group>, graph: &'static Graph) -> Vec<&'a Group> {
     let mut deps: HashMap<String, Vec<String>> = HashMap::new();
     for group in groups {
         let model_name = &group.name;
@@ -558,7 +558,7 @@ fn ordered_group<'a>(groups: &'a Vec<Group>, graph: &Graph) -> Vec<&'a Group> {
     result
 }
 
-async fn remove_user_deleted_dataset_records_and_relations(datasets: &Vec<DataSet>) {
+async fn remove_user_deleted_dataset_records_and_relations(datasets: &'static Vec<DataSet>) {
     // remove seed data set records if user removed some seed data set
     let names = Value::Vec(datasets.iter().map(|d| Value::String(d.name.clone())).collect::<Vec<Value>>());
     let records_to_remove = GroupRecord::find_many(teon!({

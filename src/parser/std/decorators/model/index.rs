@@ -62,7 +62,7 @@ fn decorator(args: &Vec<Argument>, model: &mut Model, index_kind: u8) {
     }
 }
 
-fn model_index_item(name: &str, args: &Option<Vec<(Option<String>, Value)>>) -> ModelIndexItem {
+fn model_index_item(name: &'static str, args: &Option<Vec<(Option<String>, Value)>>) -> ModelIndexItem {
     let mut sort = Sort::Asc;
     let mut len: Option<usize> = None;
     if let Some(args) = args {

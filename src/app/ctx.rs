@@ -208,7 +208,7 @@ impl AppCtx {
     }
 
     pub(crate) fn debug_conf(&self) -> Option<&DebugConf> {
-        self.debug_conf.map(|c| c.as_ref())
+        self.debug_conf.as_ref().map(|c| c.as_ref())
     }
 
     pub(crate) fn set_test_conf(&mut self, test_conf: Box<TestConf>) {
@@ -216,7 +216,7 @@ impl AppCtx {
     }
 
     pub(crate) fn test_conf(&self) -> Option<&TestConf> {
-        self.test_conf.map(|c| c.as_ref())
+        self.test_conf.as_ref().map(|c| c.as_ref())
     }
 
     pub(crate) fn program(&self) -> &Program {

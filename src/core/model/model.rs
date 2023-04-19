@@ -369,27 +369,28 @@ impl Model {
     }
 
     pub(crate) fn allows_drop_when_migrate(&self) -> bool {
-        self.migration.map_or(false, |m| m.drop)
+        self.migration.as_ref().map_or(false, |m| m.drop)
     }
 
-    pub(crate) fn finalize(&mut self) {
+    pub(crate) fn finalize(&'static mut self) {
         // generate indices from fields
-        for field in self.fields_vec {
+        for field in &self.fields_vec {
+            let field_name = Box::leak(Box::new(field.name().to_string())).as_str();
             if let Some(field_index) = field.index() {
                 match field_index {
                     FieldIndex::Index(settings) => {
                         self.indices.push(ModelIndex::new(ModelIndexType::Index, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
-                            ModelIndexItem::new(field.name(), settings.sort, settings.length)
+                            ModelIndexItem::new(field_name, settings.sort, settings.length)
                         ]));
                     }
                     FieldIndex::Unique(settings) => {
                         self.indices.push(ModelIndex::new(ModelIndexType::Unique, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
-                            ModelIndexItem::new(field.name(), settings.sort, settings.length)
+                            ModelIndexItem::new(field_name, settings.sort, settings.length)
                         ]));
                     }
                     FieldIndex::Primary(settings) => {
                         self.primary = Some(ModelIndex::new(ModelIndexType::Primary, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
-                            ModelIndexItem::new(field.name(), settings.sort, settings.length)
+                            ModelIndexItem::new(field_name, settings.sort, settings.length)
                         ]));
                         self.indices.push(self.primary.as_ref().unwrap().clone());
                     }

@@ -21,21 +21,21 @@ use crate::parser::std::callables::string_constructor::string_constructor;
 use crate::parser::std::constants::EnvObject;
 use crate::prelude::Value;
 
-pub(crate) type Callable = fn(args: &Vec<Argument>) -> Value;
+pub(crate) type Callable = fn(args: &'static Vec<Argument>) -> Value;
 
-pub(crate) type FieldDecorator = fn(args: &Vec<Argument>, field: &mut Field);
+pub(crate) type FieldDecorator = fn(args: &'static Vec<Argument>, field: &mut Field);
 
-pub(crate) type RelationDecorator = fn(args: &Vec<Argument>, relation: &mut Relation);
+pub(crate) type RelationDecorator = fn(args: &'static Vec<Argument>, relation: &mut Relation);
 
-pub(crate) type PropertyDecorator = fn(args: &Vec<Argument>, property: &mut Property);
+pub(crate) type PropertyDecorator = fn(args: &'static Vec<Argument>, property: &mut Property);
 
-pub(crate) type ModelDecorator = fn(args: &Vec<Argument>, model: &mut Model);
+pub(crate) type ModelDecorator = fn(args: &'static Vec<Argument>, model: &mut Model);
 
-pub(crate) type ASTPipelineInstaller = fn(args: &Vec<Argument>) -> Arc<dyn Item>;
+pub(crate) type ASTPipelineInstaller = fn(args: &'static Vec<Argument>) -> Arc<dyn Item>;
 
-pub(crate) type ASTFunctionInstaller = fn(lookup_table: &'static CallbackLookup, args: &Vec<Argument>) -> Arc<dyn Item>;
+pub(crate) type ASTFunctionInstaller = fn(lookup_table: &'static CallbackLookup, args: &'static Vec<Argument>) -> Arc<dyn Item>;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub(crate) struct ASTPipelineItem {
     pub(crate) installer: Option<ASTPipelineInstaller>,
     pub(crate) function_installer: Option<ASTFunctionInstaller>,
@@ -49,7 +49,7 @@ impl ASTPipelineItem {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub(crate) struct ASTVPipeline {
     pub(crate) items: Vec<ASTPipelineItem>
 }

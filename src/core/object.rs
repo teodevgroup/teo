@@ -65,7 +65,7 @@ pub(crate) struct ObjectInner {
     pub(crate) ignore_relation: Option<String>,
 }
 
-fn check_user_json_keys<'a>(map: &HashMap<String, Value>, allowed: &HashSet<&str>, model: &Model) -> Result<()> {
+fn check_user_json_keys<'a>(map: &HashMap<String, Value>, allowed: &HashSet<&str>, model: &'static Model) -> Result<()> {
     if let Some(unallowed) = map.keys().find(|k| !allowed.contains(k.as_str())) {
         return Err(Error::invalid_key(unallowed, model));
     }
@@ -905,11 +905,11 @@ impl Object {
         self.inner.is_modified.load(Ordering::SeqCst)
     }
 
-    pub fn model(&self) -> &Model {
+    pub fn model(&self) -> &'static Model {
         self.inner.model
     }
 
-    pub fn graph(&self) -> &Graph {
+    pub fn graph(&self) -> &'static Graph {
         self.inner.graph
     }
 
@@ -938,7 +938,7 @@ impl Object {
         Value::HashMap(identifier)
     }
 
-    async fn perform_relation_manipulations<F: Fn(&Relation) -> bool>(&self, f: F, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn perform_relation_manipulations<F: Fn(&'static Relation) -> bool>(&self, f: F, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         for relation in self.model().relations() {
             if f(relation) {
                 let many = relation.is_vec();
@@ -995,7 +995,7 @@ impl Object {
         Ok(())
     }
 
-    async fn create_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn create_join_object(&self, object: &Object, relation: &'static Relation, opposite_relation: &'static Relation, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let join_model = self.graph().model(relation.through().unwrap()).unwrap();
         let action = Action::from_u32(JOIN_CREATE | CREATE | SINGLE);
         let join_object = self.graph().new_object(join_model.name(), action, self.action_source().clone())?;
@@ -1012,7 +1012,7 @@ impl Object {
         }
     }
 
-    async fn delete_join_object(&self, object: &Object, relation: &Relation, opposite_relation: &Relation, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn delete_join_object(&self, object: &Object, relation: &'static Relation, opposite_relation: &'static Relation, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let join_model = self.graph().model(relation.through().unwrap()).unwrap();
         let action = Action::from_u32(JOIN_DELETE | DELETE | SINGLE);
         let local = relation.local();
@@ -1037,25 +1037,25 @@ impl Object {
         }
     }
 
-    fn assign_linked_values_to_related_object(&self, object: &Object, opposite_relation: &Relation) {
+    fn assign_linked_values_to_related_object(&self, object: &Object, opposite_relation: &'static Relation) {
         for (field, reference) in opposite_relation.iter() {
             object.set_value_to_value_map(field, self.get_value_map_value(reference));
         }
     }
 
-    fn remove_linked_values_from_related_relation(&self, relation: &Relation) {
+    fn remove_linked_values_from_related_relation(&self, relation: &'static Relation) {
         for (field, _) in relation.iter() {
             self.set_value_to_value_map(field, Value::Null)
         }
     }
 
-    fn remove_linked_values_from_related_relation_on_related_object(&self, relation: &Relation, object: &Object) {
+    fn remove_linked_values_from_related_relation_on_related_object(&self, relation: &'static Relation, object: &Object) {
         for (_, reference) in relation.iter() {
             object.set_value_to_value_map(reference, Value::Null)
         }
     }
 
-    async fn link_and_save_relation_object(&self, relation: &Relation, object: &Object, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn link_and_save_relation_object(&self, relation: &'static Relation, object: &Object, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let mut linked = false;
         let (_, opposite_relation) = self.graph().opposite_relation(relation);
         if let Some(opposite_relation) = opposite_relation {
@@ -1075,7 +1075,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_create_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_create_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let action = Action::from_u32(NESTED | CREATE | SINGLE);
         let object = self.graph().new_object(relation.model(), action, self.action_source().clone())?;
         object.set_teon_with_path(value.get("create").unwrap(), path).await?;
@@ -1085,7 +1085,7 @@ impl Object {
         self.link_and_save_relation_object(relation, &object, session.clone(), path).await
     }
 
-    async fn nested_set_many_relation_object_object(&self, relation: &Relation, objects: &Vec<Object>, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_set_many_relation_object_object(&self, relation: &'static Relation, objects: &Vec<Object>, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         // disconnect previous
         let records = self.fetch_relation_objects(relation.name(), None).await?;
         for record in records.iter() {
@@ -1098,7 +1098,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_set_many_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_set_many_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         // disconnect previous
         let records = self.fetch_relation_objects(relation.name(), None).await?;
         for record in records.iter() {
@@ -1112,7 +1112,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_set_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_set_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         if !(relation.has_foreign_key() && relation.is_required()) {
             // disconnect old
             let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
@@ -1130,7 +1130,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_connect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_connect_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let action = Action::from_u32(NESTED | CONNECT | SINGLE);
         let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone()).await {
             Ok(object) => object,
@@ -1139,7 +1139,7 @@ impl Object {
         self.link_and_save_relation_object(relation, &object, session.clone(), path).await
     }
 
-    async fn nested_connect_or_create_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_connect_or_create_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let r#where = value.get("where").unwrap();
         let create = value.get("create").unwrap();
         let action = Action::from_u32(CONNECT_OR_CREATE | CONNECT | NESTED | SINGLE);
@@ -1152,11 +1152,11 @@ impl Object {
         self.link_and_save_relation_object(relation, &object, session.clone(), path).await
     }
 
-    fn intrinsic_where_unique_for_relation(&self, relation: &Relation) -> Value {
+    fn intrinsic_where_unique_for_relation(&self, relation: &'static Relation) -> Value {
         Value::HashMap(relation.iter().map(|(f, r)| (r.to_owned(), self.get_value(f).unwrap())).collect())
     }
 
-    async fn nested_disconnect_relation_object_object(&self, relation: &Relation, object: &Object, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_disconnect_relation_object_object(&self, relation: &'static Relation, object: &Object, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         if !relation.is_vec() && relation.is_required() {
             return Err(Error::unexpected_input_value_with_reason("Cannot disconnect required relation.", path));
         }
@@ -1171,7 +1171,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_disconnect_relation_object_no_check(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_disconnect_relation_object_no_check(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
         } else {
@@ -1187,7 +1187,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_disconnect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_disconnect_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         if !relation.is_vec() && relation.is_required() {
             return Err(Error::unexpected_input_value_with_reason("Cannot disconnect required relation.", path));
         }
@@ -1195,7 +1195,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_upsert_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_upsert_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let mut r#where = self.intrinsic_where_unique_for_relation(relation);
         r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().cloned().unwrap());
         let create = value.get("create").unwrap();
@@ -1216,7 +1216,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_many_disconnect_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_many_disconnect_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         if relation.has_join_table() {
             let action = Action::from_u32(JOIN_DELETE | DELETE | SINGLE);
             let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone()).await {
@@ -1238,7 +1238,7 @@ impl Object {
         Ok(())
     }
 
-    async fn find_relation_objects_by_value(&self, relation: &Relation, value: &Value, path: &KeyPath<'_>, action: Action) -> Result<Vec<Object>> {
+    async fn find_relation_objects_by_value(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>, action: Action) -> Result<Vec<Object>> {
         if relation.has_join_table() {
             let mut finder = HashMap::new();
             let join_relation = self.graph().through_relation(relation).1;
@@ -1272,7 +1272,7 @@ impl Object {
         }
     }
 
-    async fn find_relation_object_by_value(&self, relation: &Relation, value: &Value, path: &KeyPath<'_>, action: Action) -> Result<Object> {
+    async fn find_relation_object_by_value(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>, action: Action) -> Result<Object> {
         if relation.has_join_table() {
             let mut finder = HashMap::new();
             let join_relation = self.graph().through_relation(relation).1;
@@ -1305,14 +1305,14 @@ impl Object {
         }
     }
 
-    async fn nested_many_update_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_many_update_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let object = self.find_relation_object_by_value(relation, value.get("where").unwrap(), path, Action::from_u32(NESTED | UPDATE | SINGLE)).await?;
         object.set_teon_with_path(value.get("update").unwrap(), &(path + "update")).await?;
         object.save_with_session_and_path(session.clone(), path).await?;
         Ok(())
     }
 
-    async fn nested_many_update_many_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_many_update_many_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let objects = self.find_relation_objects_by_value(relation, value.get("where").unwrap(), path, Action::from_u32(NESTED | UPDATE | MANY)).await?;
         let update = value.get("update").unwrap();
         for object in objects {
@@ -1322,7 +1322,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_update_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_update_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let r#where = value.get("where").unwrap();
         let action = Action::from_u32(NESTED | UPDATE | SINGLE);
         let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
@@ -1334,7 +1334,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_delete_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_delete_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         if !relation.is_vec() && relation.is_required() {
             return Err(Error::unexpected_input_value_with_reason("Cannot delete required relation.", path));
         }
@@ -1355,7 +1355,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_many_delete_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_many_delete_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let object = self.find_relation_object_by_value(relation, value, path, Action::from_u32(NESTED | DELETE | SINGLE)).await?;
         object.delete_from_database(session.clone()).await?;
         if relation.has_join_table() {
@@ -1365,7 +1365,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_many_delete_many_relation_object(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_many_delete_many_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let objects = self.find_relation_objects_by_value(relation, value, path, Action::from_u32(NESTED | DELETE | MANY)).await?;
         for object in objects {
             object.delete_from_database(session.clone()).await?;
@@ -1377,7 +1377,7 @@ impl Object {
         Ok(())
     }
 
-    async fn disconnect_object_which_connects_to(&self, relation: &Relation, value: &Value) -> Result<()> {
+    async fn disconnect_object_which_connects_to(&self, relation: &'static Relation, value: &Value) -> Result<()> {
         if let Ok(that) = self.graph().find_unique::<Object>(self.model().name(), &teon!({
             "where": {
                 relation.name(): {
@@ -1397,7 +1397,7 @@ impl Object {
         Ok(())
     }
 
-    async fn perform_relation_manipulation_one_inner(&self, relation: &Relation, action: Action, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn perform_relation_manipulation_one_inner(&self, relation: &'static Relation, action: Action, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         let action_u32 = action.to_u32();
         if !relation.is_vec() && !relation.has_foreign_key() && !self.is_new() {
             match action_u32 {
@@ -1438,7 +1438,7 @@ impl Object {
         }
     }
 
-    fn normalize_relation_one_value<'a>(&'a self, relation: &Relation, action: Action, value: &'a Value) -> Cow<Value> {
+    fn normalize_relation_one_value<'a>(&'a self, relation: &'static Relation, action: Action, value: &'a Value) -> Cow<Value> {
         match action.to_u32() {
             NESTED_CREATE_ACTION => Owned(Value::HashMap(hashmap! {"create".to_owned() => value.clone()})),
             NESTED_UPDATE_ACTION => Owned(Value::HashMap(hashmap! {"update".to_owned() => value.clone(), "where".to_owned() => self.intrinsic_where_unique_for_relation(relation)})),
@@ -1453,7 +1453,7 @@ impl Object {
         }
     }
 
-    async fn perform_relation_manipulation_one(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn perform_relation_manipulation_one(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         for (key, value) in value.as_hashmap().unwrap() {
             let key = key.as_str();
             let path = path + key;
@@ -1474,7 +1474,7 @@ impl Object {
         }
     }
 
-    async fn perform_relation_manipulation_many_inner(&self, relation: &Relation, action: Action, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn perform_relation_manipulation_many_inner(&self, relation: &'static Relation, action: Action, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         match action.to_u32() {
             NESTED_CREATE_ACTION => self.nested_create_relation_object(relation, value, session.clone(), &path).await,
             NESTED_CONNECT_ACTION => self.nested_connect_relation_object(relation, value, session.clone(), &path).await,
@@ -1490,7 +1490,7 @@ impl Object {
         }
     }
 
-    async fn perform_relation_manipulation_many(&self, relation: &Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn perform_relation_manipulation_many(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
         for (key, value) in value.as_hashmap().unwrap() {
             let key = key.as_str();
             let path = path + key;
