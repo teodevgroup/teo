@@ -18,10 +18,10 @@ use crate::parser::ast::r#type::Arity;
 use crate::seeder::data_set::{DataSet, Group, Record};
 use crate::seeder::models::define::define_seeder_models;
 use crate::server::conf::ServerConf;
-use super::new_app::new_result::Result;
+use crate::core::result::Result;
 
 pub(super) fn parse_schema(main: Option<&str>) -> Result<()> {
-    let app_ctx = AppCtx::get_mut()?;
+    let app_ctx = AppCtx::get()?;
     app_ctx.set_parser(Box::new(ASTParser::new(AppCtx::get()?.callbacks())));
     let parser = app_ctx.parser_mut()?;
     parser.parse(main);
@@ -29,7 +29,7 @@ pub(super) fn parse_schema(main: Option<&str>) -> Result<()> {
 }
 
 pub(super) fn load_schema() -> Result<()> {
-    let app_ctx = AppCtx::get_mut()?;
+    let app_ctx = AppCtx::get()?;
     let parser = app_ctx.parser()?;
     // connector conf
     let connector = parser.connector()?;
@@ -99,8 +99,8 @@ pub(super) fn load_schema() -> Result<()> {
     for ast_model in parser.models() {
         let mut model = Model::new(
             ast_model.identifier.name.as_str(),
-            ast_model.comment_block.map(|c|c.name.as_ref().map(|n|n.as_str())).flatten(),
-            ast_model.comment_block.map(|c|c.desc.map(|n|n.as_str())).flatten());
+            ast_model.comment_block.map(|c|c.name()).flatten(),
+            ast_model.comment_block.map(|c|c.desc()).flatten());
         for ast_decorator in ast_model.decorators.iter() {
             let model_decorator = ast_decorator.accessible.as_ref().unwrap().as_model_decorator().unwrap();
             model_decorator(ast_decorator.get_argument_list(), &mut model);

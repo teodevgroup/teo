@@ -9,6 +9,7 @@ use pest::pratt_parser::PrattParser;
 use to_mut::ToMut;
 use to_mut_proc_macro::ToMut;
 use once_cell::sync::Lazy;
+use crate::core::result::Result;
 use crate::core::callbacks::lookup::CallbackLookup;
 use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::arith_expr::{ArithExpr, Op};
@@ -916,7 +917,7 @@ impl ASTParser {
         self.sources.get(&id).unwrap()
     }
 
-    pub(crate) fn connector(&self) -> crate::app::new_app::new_result::Result<&ASTConnector> {
+    pub(crate) fn connector(&self) -> Result<&ASTConnector> {
         match self.connector {
             Some(connector) => {
                 let source = self.get_source(connector.0);
@@ -926,7 +927,7 @@ impl ASTParser {
         }
     }
 
-    pub(crate) fn server(&self) -> crate::app::new_app::new_result::Result<&ASTServer> {
+    pub(crate) fn server(&self) -> Result<&ASTServer> {
         match self.server {
             Some(server) => {
                 let source = self.get_source(server.0);

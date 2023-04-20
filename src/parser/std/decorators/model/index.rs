@@ -20,7 +20,7 @@ pub(crate) fn unique_decorator(args: &Vec<Argument>, model: &mut Model) {
     decorator(args, model, MODEL_INDEX_UNIQUE)
 }
 
-fn decorator(args: &Vec<Argument>, model: &mut Model, index_kind: u8) {
+fn decorator(args: &'static Vec<Argument>, model: &mut Model, index_kind: u8) {
     let mut items: Vec<ModelIndexItem> = vec![];
     let mut map: Option<String> = None;
     if args.is_empty() {

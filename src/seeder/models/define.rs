@@ -48,13 +48,13 @@ fn install_string_id_and_dataset(m: &mut Model) {
     m.add_field(data_set_field);
 }
 
-fn install_plain_required_string_field(m: &mut Model, field_name: &str) {
+fn install_plain_required_string_field(m: &mut Model, field_name: &'static str) {
     let mut new_field = Field::new(field_name);
     new_field.field_type = Some(FieldType::String);
     m.add_field(new_field);
 }
 
-fn install_plain_optional_string_field(m: &mut Model, field_name: &str) {
+fn install_plain_optional_string_field(m: &mut Model, field_name: &'static str) {
     let mut new_field = Field::new(field_name);
     new_field.field_type = Some(FieldType::String);
     new_field.optionality = Optionality::Optional;

@@ -165,7 +165,7 @@ async fn sync_relations(graph: &'static Graph, dataset: &'static DataSet, ordere
                         ]
                     }
                 })).await.unwrap();
-                let mut relation_record_refs: Vec<&'static GroupRelation> = relation_records.iter().collect();
+                let mut relation_record_refs: Vec<&GroupRelation> = relation_records.iter().collect();
                 if let Some(reference) = record.value.as_hashmap().unwrap().get(relation.name()) {
                     if let Some(references) = reference.as_vec() {
                         for reference in references {
@@ -217,7 +217,7 @@ async fn setup_new_relations(graph: &'static Graph, dataset: &'static DataSet, o
     }
 }
 
-async fn sync_relation_internal(record: &'static Record, reference: &Value, relation: &Relation, dataset: &'static DataSet, graph: &'static Graph, object: &Object, relation_records: &Vec<GroupRelation>, relation_record_refs: &mut Vec<&'static GroupRelation>) {
+async fn sync_relation_internal<'a>(record: &'static Record, reference: &'a Value, relation: &'static Relation, dataset: &'static DataSet, graph: &'static Graph, object: &'a Object, relation_records: &'a Vec<GroupRelation>, relation_record_refs: &mut Vec<&'a GroupRelation>) {
     let that_name = reference.as_raw_enum_choice().unwrap();
     if let Some(existing_relation_record) = relation_records.iter().find(|r| {
         (&r.name_a() == record.name.as_str() && r.name_b() == that_name) ||
@@ -229,7 +229,7 @@ async fn sync_relation_internal(record: &'static Record, reference: &Value, rela
     setup_relations_internal(record, reference, relation, dataset, graph, object).await;
 }
 
-async fn setup_relations_internal(record: &'static Record, reference: &Value, relation: &'static Relation, dataset: &'static DataSet, graph: &'static Graph, object: &Object) {
+async fn setup_relations_internal<'a>(record: &'static Record, reference: &'a Value, relation: &'static Relation, dataset: &'static DataSet, graph: &'static Graph, object: &'a Object) {
     let that_name = reference.as_raw_enum_choice().unwrap();
     let that_seed_record = GroupRecord::find_first(teon!({
         "where": {
@@ -311,7 +311,7 @@ async fn setup_relations_internal(record: &'static Record, reference: &Value, re
 }
 
 /// This perform, deletes an object from the databse.
-async fn perform_remove_from_database(dataset: &'static DataSet, record: &'static GroupRecord, group_model: &'static Model, graph: &'static Graph) {
+async fn perform_remove_from_database<'a>(dataset: &'static DataSet, record: &'a GroupRecord, group_model: &'static Model, graph: &'static Graph) {
     let json_identifier = record.record();
     let exist: Option<Object> = graph.find_unique(group_model.name(), &teon!({
         "where": record_json_string_to_where_unique(json_identifier, group_model)
@@ -347,7 +347,7 @@ async fn perform_remove_from_database(dataset: &'static DataSet, record: &'stati
     record.delete().await.unwrap();
 }
 
-async fn cut_relation(relation: &'static GroupRelation, record: &'static GroupRecord, graph: &'static Graph, group_model: &'static Model, dataset: &'static DataSet, exist: &Object) {
+async fn cut_relation<'a>(relation: &'a GroupRelation, record: &'a GroupRecord, graph: &'static Graph, group_model: &'static Model, dataset: &'static DataSet, exist: &'a Object) {
     let rel_name = if record.group().as_str() == relation.group_a() { relation.relation_a() } else { relation.relation_b() };
     let model_relation = group_model.relation(&rel_name).unwrap();
     if model_relation.has_foreign_key() {
@@ -412,7 +412,7 @@ async fn cut_relation(relation: &'static GroupRelation, record: &'static GroupRe
     relation.delete().await.unwrap();
 }
 
-async fn perform_recreate_or_update_an_record(dataset: &'static DataSet, group: &'static Group, record: &'static Record, group_model: &'static Model, graph: &'static Graph, seed_record: &'static GroupRecord) {
+async fn perform_recreate_or_update_an_record<'a>(dataset: &'static DataSet, group: &'static Group, record: &'static Record, group_model: &'static Model, graph: &'static Graph, seed_record: &'a GroupRecord) {
     let object: Option<Object> = graph.find_unique(group_model.name(), &teon!({
         "where": record_json_string_to_where_unique(seed_record.record(), group_model)
     })).await.unwrap();

@@ -1,7 +1,7 @@
 use crate::app::cli::command::{CLI, CLICommand, GenerateCommand, SeedCommandAction};
 use crate::app::ctx::AppCtx;
 use crate::migrate::migrate;
-use crate::app::new_app::new_result::Result;
+use crate::core::result::Result;
 use crate::core::conf::test::{ResetDatasets, ResetMode};
 use crate::server::test_context::{TestContext};
 use crate::purger::purge;
@@ -11,7 +11,7 @@ use crate::gen::interface::server::gen as gen_entity;
 use crate::gen::interface::client::gen::gen as gen_client;
 
 pub(crate) async fn run_command(cli: CLI) -> Result<()> {
-    let app_ctx = AppCtx::get_mut()?;
+    let app_ctx = AppCtx::get()?;
     let graph = app_ctx.graph()?;
     let datasets = app_ctx.datasets();
     match cli.command {

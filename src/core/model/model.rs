@@ -410,9 +410,9 @@ impl Model {
         let all_relation_keys: Vec<&'static str> = self.relations_vec.iter().map(|r| r.name()).collect();
         let all_property_keys: Vec<&'static str> = self.properties_vec.iter().map(|p| p.name()).collect();
         let mut all_keys = vec![];
-        all_keys.extend(all_field_keys);
-        all_keys.extend(all_relation_keys);
-        all_keys.extend(all_property_keys);
+        all_keys.extend(all_field_keys.clone());
+        all_keys.extend(all_relation_keys.clone());
+        all_keys.extend(all_property_keys.clone());
         let input_field_keys: Vec<&'static str> = self.fields_vec.iter().filter(|&f| !f.write_rule.is_no_write()).map(|f| f.name).collect();
         let input_relation_keys = all_relation_keys.clone();
         let input_property_keys: Vec<&'static str> = self.properties_vec.iter().filter(|p| p.setter.is_some()).map(|p| p.name).collect();
@@ -524,9 +524,9 @@ impl Model {
             let mut map = HashMap::new();
             for property in self.properties_vec.iter() {
                 if property.cached {
-                    for dependency in property.dependencies {
+                    for dependency in &property.dependencies {
                         if map.get(dependency).is_none() {
-                            map.insert(dependency, vec![]);
+                            map.insert(*dependency, vec![]);
                         }
                         map.get_mut(dependency).unwrap().push(property.name)
                     }

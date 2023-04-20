@@ -390,7 +390,7 @@ async fn handle_create_many(graph: &'static Graph, input: &Value, model: &'stati
     for (index, val) in create.iter().enumerate() {
         let result = handle_create_internal(graph, Some(val), include, select, model, &path!["create", index], action, source.clone(), session.clone()).await;
         match result {
-            Err(err) => {
+            Err(_err) => {
                 //println!("{:?}", err.errors);
             },
             Ok(val) => {

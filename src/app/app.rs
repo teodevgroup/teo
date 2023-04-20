@@ -33,7 +33,7 @@ impl App {
         T: From<Value> + Into<Value> + Send + Sync + 'static,
         R: Into<TransformResult<T>> + Send + Sync + 'static,
         F: TransformArgument<T, R> + 'static {
-        AppCtx::get_mut()?.callbacks_mut().add_transform(name, Arc::new(TransformItem::new(f)));
+        AppCtx::get()?.callbacks_mut().add_transform(name, Arc::new(TransformItem::new(f)));
         Ok(self)
     }
 
@@ -41,7 +41,7 @@ impl App {
         T: From<Value> + Send + Sync + 'static,
         F: CallbackArgument<T, O> + 'static,
         O: Into<CallbackResult> + Send + Sync + 'static {
-        AppCtx::get_mut()?.callbacks_mut().add_callback(name, Arc::new(CallbackItem::new(f)));
+        AppCtx::get()?.callbacks_mut().add_callback(name, Arc::new(CallbackItem::new(f)));
         Ok(self)
     }
 
@@ -49,7 +49,7 @@ impl App {
         T: From<Value> + Send + Sync + 'static,
         O: Into<ValidateResult> + Send + Sync + 'static,
         F: ValidateArgument<T, O> + 'static {
-        AppCtx::get_mut()?.callbacks_mut().add_validator(name, Arc::new(ValidateItem::new(f)));
+        AppCtx::get()?.callbacks_mut().add_validator(name, Arc::new(ValidateItem::new(f)));
         Ok(self)
     }
 
@@ -57,12 +57,12 @@ impl App {
         T: From<Value> + Send + Sync + 'static,
         O: Into<ValidateResult> + Send + Sync + 'static,
         F: CompareArgument<T, O> + 'static {
-        AppCtx::get_mut()?.callbacks_mut().add_compare(name, Arc::new(CompareItem::new(f)));
+        AppCtx::get()?.callbacks_mut().add_compare(name, Arc::new(CompareItem::new(f)));
         Ok(self)
     }
 
     pub fn setup<F>(&mut self, f: F) -> Result<&mut Self> where F: AsyncCallbackWithoutArgs + 'static {
-        AppCtx::get_mut()?.set_setup(Arc::new(f));
+        AppCtx::get()?.set_setup(Arc::new(f));
         Ok(self)
     }
 

@@ -82,7 +82,7 @@ impl Execution {
         Value::HashMap(retval)
     }
 
-    pub(crate) async fn query_objects(pool: &Quaint, model: &'static Model, graph: &'static Graph, finder: &Value, dialect: SQLDialect, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
+    pub(crate) async fn query_objects<'a>(pool: &'a Quaint, model: &'static Model, graph: &'static Graph, finder: &'a Value, dialect: SQLDialect, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
         let values = Self::query(pool, model, graph, finder, dialect).await?;
         let select = finder.as_hashmap().unwrap().get("select");
         let include = finder.as_hashmap().unwrap().get("include");

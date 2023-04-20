@@ -83,7 +83,7 @@ impl AppCtx {
         }
     }
 
-    pub(crate) fn get_mut() -> Result<&'static mut AppCtx> {
+    fn get_mut() -> Result<&'static mut AppCtx> {
         unsafe {
             match CURRENT {
                 Some(ctx) => Ok({
@@ -95,12 +95,12 @@ impl AppCtx {
         }
     }
 
-    pub fn set_entrance(entrance: Entrance) -> Result<()> {
+    pub fn set_entrance(&self, entrance: Entrance) -> Result<()> {
         Self::get_mut()?.entrance = entrance;
         Ok(())
     }
 
-    pub fn set_program(program: Program) -> Result<()> {
+    pub fn set_program(&self, program: Program) -> Result<()> {
         Self::get_mut()?.program = program;
         Ok(())
     }
@@ -109,12 +109,12 @@ impl AppCtx {
         &self.callbacks
     }
 
-    pub(crate) fn callbacks_mut(&mut self) -> &mut CallbackLookup {
-        &mut self.callbacks
+    pub(crate) fn callbacks_mut(&self) -> &mut CallbackLookup {
+        &mut Self::get_mut().unwrap().callbacks
     }
 
-    pub(crate) fn set_parser(&mut self, parser: Box<ASTParser>) {
-        self.parser = Some(parser)
+    pub fn set_parser(&self, parser: Box<ASTParser>) {
+        Self::get_mut().unwrap().parser = Some(parser);
     }
 
     pub(crate) fn parser(&self) -> Result<&ASTParser> {
@@ -124,8 +124,8 @@ impl AppCtx {
         }
     }
 
-    pub(crate) fn parser_mut(&mut self) -> Result<&mut ASTParser> {
-        match &mut self.parser {
+    pub(crate) fn parser_mut(&self) -> Result<&mut ASTParser> {
+        match &mut AppCtx::get_mut()?.parser {
             Some(parser) => Ok(parser.as_mut()),
             None => Err(Error::fatal("Parser is accessed mutably while it's not set.")),
         }
@@ -135,12 +135,12 @@ impl AppCtx {
         &self.datasets
     }
 
-    pub(crate) fn datasets_mut(&mut self) -> &mut Vec<DataSet> {
-        &mut self.datasets
+    pub(crate) fn datasets_mut(&self) -> &mut Vec<DataSet> {
+        &mut AppCtx::get_mut().unwrap().datasets
     }
 
-    pub(crate) fn set_setup(&mut self, setup: Arc<dyn AsyncCallbackWithoutArgs>) {
-        self.setup = Some(setup);
+    pub(crate) fn set_setup(&self, setup: Arc<dyn AsyncCallbackWithoutArgs>) {
+        AppCtx::get_mut().unwrap().setup = Some(setup);
     }
 
     pub(crate) fn setup(&self) -> Option<Arc<dyn AsyncCallbackWithoutArgs>> {
@@ -151,20 +151,20 @@ impl AppCtx {
         &self.clients
     }
 
-    pub(crate) fn clients_mut(&mut self) -> &mut Vec<ClientConf> {
-        &mut self.clients
+    pub(crate) fn clients_mut(&self) -> &mut Vec<ClientConf> {
+        &mut AppCtx::get_mut().unwrap().clients
     }
 
     pub(crate) fn entities(&self) -> &Vec<EntityGeneratorConf> {
         &self.entities
     }
 
-    pub(crate) fn entities_mut(&mut self) -> &mut Vec<EntityGeneratorConf> {
-        &mut self.entities
+    pub(crate) fn entities_mut(&self) -> &mut Vec<EntityGeneratorConf> {
+        &mut AppCtx::get_mut().unwrap().entities
     }
 
-    pub(crate) fn set_server_conf(&mut self, server_conf: Box<ServerConf>) {
-        self.server_conf = Some(server_conf);
+    pub(crate) fn set_server_conf(&self, server_conf: Box<ServerConf>) {
+        AppCtx::get_mut().unwrap().server_conf = Some(server_conf);
     }
 
     pub(crate) fn server_conf(&self) -> Result<&ServerConf> {
@@ -174,8 +174,8 @@ impl AppCtx {
         }
     }
 
-    pub(crate) fn set_graph(&mut self, graph: Box<Graph>) {
-        self.graph = Some(graph);
+    pub(crate) fn set_graph(&self, graph: Box<Graph>) {
+        AppCtx::get_mut().unwrap().graph = Some(graph);
     }
 
     pub(crate) fn graph(&self) -> Result<&Graph> {
@@ -185,15 +185,15 @@ impl AppCtx {
         }
     }
 
-    pub(crate) fn graph_mut(&mut self) -> Result<&mut Graph> {
-        match &mut self.graph {
+    pub(crate) fn graph_mut(&self) -> Result<&mut Graph> {
+        match &mut AppCtx::get_mut()?.graph {
             Some(graph) => Ok(graph.as_mut()),
             None => Err(Error::fatal("Graph is accessed mutably while it's not set.")),
         }
     }
 
-    pub(crate) fn set_connector(&mut self, connector: Box<dyn Connector>) {
-        self.connector = Some(connector);
+    pub(crate) fn set_connector(&self, connector: Box<dyn Connector>) {
+        AppCtx::get_mut().unwrap().connector = Some(connector);
     }
 
     pub(crate) fn connector(&self) -> Result<&dyn Connector> {
@@ -203,16 +203,16 @@ impl AppCtx {
         }
     }
 
-    pub(crate) fn set_debug_conf(&mut self, debug_conf: Box<DebugConf>) {
-        self.debug_conf = Some(debug_conf);
+    pub(crate) fn set_debug_conf(&self, debug_conf: Box<DebugConf>) {
+        AppCtx::get_mut().unwrap().debug_conf = Some(debug_conf);
     }
 
     pub(crate) fn debug_conf(&self) -> Option<&DebugConf> {
         self.debug_conf.as_ref().map(|c| c.as_ref())
     }
 
-    pub(crate) fn set_test_conf(&mut self, test_conf: Box<TestConf>) {
-        self.test_conf = Some(test_conf);
+    pub(crate) fn set_test_conf(&self, test_conf: Box<TestConf>) {
+        AppCtx::get_mut().unwrap().test_conf = Some(test_conf);
     }
 
     pub(crate) fn test_conf(&self) -> Option<&TestConf> {
@@ -227,8 +227,8 @@ impl AppCtx {
         &self.entrance
     }
 
-    pub(crate) fn set_connector_conf(&mut self, connector_conf: Box<ConnectorConf>) {
-        self.connector_conf = Some(connector_conf);
+    pub(crate) fn set_connector_conf(&self, connector_conf: Box<ConnectorConf>) {
+        AppCtx::get_mut().unwrap().connector_conf = Some(connector_conf);
     }
 
     pub(crate) fn connector_conf(&self) -> Result<&ConnectorConf> {

@@ -4,9 +4,10 @@ use crate::connectors::sql::connector::SQLConnector;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::connector::Connector;
 use crate::core::database::name::DatabaseName;
+use crate::core::result::Result;
 
-pub(super) async fn connect_to_database() -> crate::app::new_app::new_result::Result<()> {
-    let app_ctx = AppCtx::get_mut()?;
+pub(super) async fn connect_to_database() -> Result<()> {
+    let app_ctx = AppCtx::get()?;
     let connector_conf = app_ctx.connector_conf()?;
     let connector: Box<dyn Connector> = match connector_conf.provider {
         DatabaseName::MySQL => {

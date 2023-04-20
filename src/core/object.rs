@@ -995,7 +995,7 @@ impl Object {
         Ok(())
     }
 
-    async fn create_join_object(&self, object: &Object, relation: &'static Relation, opposite_relation: &'static Relation, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn create_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, session: Arc<dyn SaveSession>, path: &'a KeyPath<'_>) -> Result<()> {
         let join_model = self.graph().model(relation.through().unwrap()).unwrap();
         let action = Action::from_u32(JOIN_CREATE | CREATE | SINGLE);
         let join_object = self.graph().new_object(join_model.name(), action, self.action_source().clone())?;
@@ -1012,7 +1012,7 @@ impl Object {
         }
     }
 
-    async fn delete_join_object(&self, object: &Object, relation: &'static Relation, opposite_relation: &'static Relation, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn delete_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, session: Arc<dyn SaveSession>, path: &'a KeyPath<'_>) -> Result<()> {
         let join_model = self.graph().model(relation.through().unwrap()).unwrap();
         let action = Action::from_u32(JOIN_DELETE | DELETE | SINGLE);
         let local = relation.local();
@@ -1322,7 +1322,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_update_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_update_relation_object<'a>(&'a self, relation: &'static Relation, value: &'a Value, session: Arc<dyn SaveSession>, path: &'a KeyPath<'_>) -> Result<()> {
         let r#where = value.get("where").unwrap();
         let action = Action::from_u32(NESTED | UPDATE | SINGLE);
         let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone()).await {
@@ -1377,7 +1377,7 @@ impl Object {
         Ok(())
     }
 
-    async fn disconnect_object_which_connects_to(&self, relation: &'static Relation, value: &Value) -> Result<()> {
+    async fn disconnect_object_which_connects_to<'a>(&'a self, relation: &'static Relation, value: &'a Value) -> Result<()> {
         if let Ok(that) = self.graph().find_unique::<Object>(self.model().name(), &teon!({
             "where": {
                 relation.name(): {
