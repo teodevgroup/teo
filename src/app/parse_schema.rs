@@ -99,8 +99,8 @@ pub(super) fn load_schema() -> Result<()> {
     for ast_model in parser.models() {
         let mut model = Model::new(
             ast_model.identifier.name.as_str(),
-            ast_model.comment_block.map(|c|c.name()).flatten(),
-            ast_model.comment_block.map(|c|c.desc()).flatten());
+            ast_model.comment_block.as_ref().map(|c|c.name()).flatten(),
+            ast_model.comment_block.as_ref().map(|c|c.desc()).flatten());
         for ast_decorator in ast_model.decorators.iter() {
             let model_decorator = ast_decorator.accessible.as_ref().unwrap().as_model_decorator().unwrap();
             model_decorator(ast_decorator.get_argument_list(), &mut model);

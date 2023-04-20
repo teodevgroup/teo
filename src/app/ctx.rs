@@ -74,7 +74,7 @@ impl AppCtx {
         }
     }
 
-    pub(crate) fn get() -> Result<&'static AppCtx> {
+    pub fn get() -> Result<&'static AppCtx> {
         unsafe {
             match CURRENT {
                 Some(ctx) => Ok(ctx),
@@ -113,7 +113,7 @@ impl AppCtx {
         &mut Self::get_mut().unwrap().callbacks
     }
 
-    pub fn set_parser(&self, parser: Box<ASTParser>) {
+    pub(crate) fn set_parser(&self, parser: Box<ASTParser>) {
         Self::get_mut().unwrap().parser = Some(parser);
     }
 

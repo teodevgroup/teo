@@ -94,7 +94,7 @@ fn log_request(start: SystemTime, action: &str, model: &str, code: u16) {
     println!("{} {} on {} - {} {}", local_formatted, action.bold(), model, code_string, ms_str.dimmed());
 }
 
-async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConf) -> Result<Option<Object>> {
+async fn get_identity(r: &HttpRequest, graph: &'static Graph, conf: &ServerConf) -> Result<Option<Object>> {
     let header_value = r.headers().get("authorization");
     if let None = header_value {
         return Ok(None);
@@ -125,7 +125,7 @@ async fn get_identity(r: &HttpRequest, graph: &Graph, conf: &ServerConf) -> Resu
     }
 }
 
-async fn handle_find_unique(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
+async fn handle_find_unique(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(FIND | SINGLE | ENTRY);
     let result = graph.find_unique_internal(model.name(), input, false, action, source).await;
     match result {
@@ -144,7 +144,7 @@ async fn handle_find_unique(graph: &Graph, input: &Value, model: &Model, source:
     }
 }
 
-async fn handle_find_first(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
+async fn handle_find_first(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(FIND | SINGLE | ENTRY);
     let result = graph.find_first_internal(model.name(), input, false, action, source).await;
     match result {
@@ -163,7 +163,7 @@ async fn handle_find_first(graph: &Graph, input: &Value, model: &Model, source: 
     }
 }
 
-async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
+async fn handle_find_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(FIND | MANY | ENTRY);
     let result = graph.find_many_internal(model.name(), input, false, action, source).await;
     match result {
@@ -207,7 +207,7 @@ async fn handle_find_many(graph: &Graph, input: &Value, model: &Model, source: I
     }
 }
 
-async fn handle_create_internal(graph: &'static Graph, create: Option<&Value>, include: Option<&Value>, select: Option<&Value>, model: &Model, path: &KeyPath<'_>, action: Action, action_source: Initiator, session: Arc<dyn SaveSession>) -> Result<Value> {
+async fn handle_create_internal<'a>(graph: &'static Graph, create: Option<&'a Value>, include: Option<&'a Value>, select: Option<&'a Value>, model: &'static Model, path: &'a KeyPath<'_>, action: Action, action_source: Initiator, session: Arc<dyn SaveSession>) -> Result<Value> {
     let obj = graph.new_object(model.name(), action, action_source)?;
     let set_json_result = match create {
         Some(create) => {
@@ -245,7 +245,7 @@ async fn handle_create(graph: &'static Graph, input: &Value, model: &'static Mod
     }
 }
 
-async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&Value>, include: Option<&Value>, select: Option<&Value>, _where: Option<&Value>, _model: &Model) -> Result<Value> {
+async fn handle_update_internal<'a>(_graph: &'static Graph, object: Object, update: Option<&'a Value>, include: Option<&'a Value>, select: Option<&'a Value>, _where: Option<&'a Value>, _model: &'static Model) -> Result<Value> {
     let empty = teon!({});
     let updator = if update.is_some() { update.unwrap() } else { &empty };
     object.set_teon_with_path(updator, &path!["update"]).await?;
@@ -254,7 +254,7 @@ async fn handle_update_internal(_graph: &Graph, object: Object, update: Option<&
     refetched.to_json_internal(&path!["data"]).await
 }
 
-async fn handle_update(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
+async fn handle_update(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(UPDATE | ENTRY | SINGLE);
     let result = graph.find_unique_internal(model.name(), input, true, action, source).await.into_not_found_error();
     if result.is_err() {
@@ -349,7 +349,7 @@ async fn handle_upsert(graph: &'static Graph, input: &Value, model: &'static Mod
     }
 }
 
-async fn handle_delete(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
+async fn handle_delete(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(DELETE | SINGLE | ENTRY);
     let result = graph.find_unique_internal(model.name(), input, true, action, source).await.into_not_found_error();
     if result.is_err() {
@@ -406,7 +406,7 @@ async fn handle_create_many(graph: &'static Graph, input: &Value, model: &'stati
     }))
 }
 
-async fn handle_update_many(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
+async fn handle_update_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(UPDATE | MANY | ENTRY);
     let result = graph.find_many_internal(model.name(), input, true, action, source).await;
     if result.is_err() {
@@ -437,7 +437,7 @@ async fn handle_update_many(graph: &Graph, input: &Value, model: &Model, source:
         }))
 }
 
-async fn handle_delete_many(graph: &Graph, input: &Value, model: &Model, source: Initiator) -> HttpResponse {
+async fn handle_delete_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator) -> HttpResponse {
     let action = Action::from_u32(DELETE | MANY | ENTRY);
     let result = graph.find_many_internal(model.name(), input, true, action, source).await;
     if result.is_err() {
@@ -468,7 +468,7 @@ async fn handle_delete_many(graph: &Graph, input: &Value, model: &Model, source:
         }))
 }
 
-async fn handle_count(graph: &Graph, input: &Value, model: &Model, _source: Initiator) -> HttpResponse {
+async fn handle_count(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator) -> HttpResponse {
     let result = graph.count(model.name(), input).await;
     match result {
         Ok(count) => {
@@ -480,7 +480,7 @@ async fn handle_count(graph: &Graph, input: &Value, model: &Model, _source: Init
     }
 }
 
-async fn handle_aggregate(graph: &Graph, input: &Value, model: &Model, _source: Initiator) -> HttpResponse {
+async fn handle_aggregate(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator) -> HttpResponse {
     match graph.aggregate(model.name(), input).await {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": j(count)}))
@@ -491,7 +491,7 @@ async fn handle_aggregate(graph: &Graph, input: &Value, model: &Model, _source: 
     }
 }
 
-async fn handle_group_by(graph: &Graph, input: &Value, model: &Model, _source: Initiator) -> HttpResponse {
+async fn handle_group_by(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator) -> HttpResponse {
     match graph.group_by(model.name(), input).await {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": j(count)}))
@@ -502,7 +502,7 @@ async fn handle_group_by(graph: &Graph, input: &Value, model: &Model, _source: I
     }
 }
 
-async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &ServerConf) -> HttpResponse {
+async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'static Model, conf: &'a ServerConf) -> HttpResponse {
     let input = input.as_hashmap().unwrap();
     let credentials = input.get("credentials");
     if let None = credentials {
@@ -587,7 +587,7 @@ async fn handle_sign_in(graph: &Graph, input: &Value, model: &Model, conf: &Serv
     }
 }
 
-async fn handle_identity(_graph: &Graph, input: &Value, model: &Model, _conf: &ServerConf, source: Initiator) -> HttpResponse {
+async fn handle_identity<'a>(_graph: &'static Graph, input: &'a Value, model: &'static Model, _conf: &'a ServerConf, source: Initiator) -> HttpResponse {
     let identity = source.as_identity();
     if let Some(identity) = identity {
         if identity.model() != model {
