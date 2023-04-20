@@ -2,7 +2,7 @@ pub mod update_rule;
 pub mod delete_rule;
 pub mod disconnect_rule;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashSet};
 use std::sync::Arc;
 use inflector::Inflector;
 use maplit::hashset;
@@ -162,11 +162,11 @@ impl Relation {
         self.model = model;
     }
 
-    pub(crate) fn finalize(&mut self, fields: &HashMap<String, Arc<Field>>) {
+    pub(crate) fn finalize(&mut self, fields: &Vec<Arc<Field>>) {
         self.has_foreign_key = if self.through.is_some() {
             false
         } else {
-            self.fields.iter().find(|name| fields.get(name.as_str()).unwrap().foreign_key).is_some()
+            self.fields.iter().find(|name| fields.iter().find(|f| f.name() == name.as_str() && f.foreign_key).is_some()).is_some()
         }
     }
 }

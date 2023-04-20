@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+use itertools::Itertools;
 use crate::parser::ast::comment_block::CommentBlock;
 use crate::parser::ast::decorator::ASTDecorator;
 use crate::parser::ast::field::ASTField;
@@ -26,6 +28,16 @@ impl ASTModel {
             scalar_field_enum: vec![], scalar_field_and_cached_property_enum: vec![],
             direct_relation_enum: vec![],
         }
+    }
+
+    pub(crate) fn sorted_fields(&self) -> Vec<&ASTField> {
+        self.fields.iter().sorted_by(|a, b| if a.field_class.is_relation() {
+            Ordering::Greater
+        } else if b.field_class.is_relation() {
+            Ordering::Less
+        } else {
+            Ordering::Less
+        }).collect()
     }
 
     pub(crate) fn resolve(&mut self, scalar_field_enum: Vec<String>, scalar_field_and_cached_property_enum: Vec<String>, direct_relation_enum: Vec<String>) {

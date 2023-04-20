@@ -105,7 +105,7 @@ pub(super) fn load_schema() -> Result<()> {
             let model_decorator = ast_decorator.accessible.as_ref().unwrap().as_model_decorator().unwrap();
             model_decorator(ast_decorator.get_argument_list(), &mut model);
         }
-        for ast_field in ast_model.fields.iter() {
+        for ast_field in ast_model.sorted_fields() {
             match ast_field.field_class {
                 ASTFieldClass::Field | ASTFieldClass::DroppedField => {
                     let mut model_field = Field::new(ast_field.identifier.name.as_str());
@@ -167,6 +167,8 @@ pub(super) fn load_schema() -> Result<()> {
                         let field_decorator = decorator.accessible.as_ref().unwrap().as_field_decorator().unwrap();
                         field_decorator(decorator.get_argument_list(), &mut model_field);
                     }
+                    // finalize
+                    model_field.finalize();
                     match &ast_field.field_class {
                         ASTFieldClass::DroppedField => {
                             model.add_dropped_field(model_field, ast_field.identifier.name.as_str());
@@ -210,6 +212,7 @@ pub(super) fn load_schema() -> Result<()> {
                         let relation_decorator = decorator.accessible.as_ref().unwrap().as_relation_decorator().unwrap();
                         relation_decorator(decorator.get_argument_list(), &mut model_relation);
                     }
+                    model_relation.finalize(model.fields());
                     model.add_relation(model_relation, ast_field.identifier.name.as_str());
                 }
                 ASTFieldClass::Property => {
@@ -271,12 +274,14 @@ pub(super) fn load_schema() -> Result<()> {
                         let property_decorator = decorator.accessible.as_ref().unwrap().as_property_decorator().unwrap();
                         property_decorator(decorator.get_argument_list(), &mut model_property);
                     }
+                    model_property.finalize()?;
                     model.add_property(model_property, ast_field.identifier.name.as_str());
                 }
                 ASTFieldClass::Unresolved => unreachable!()
             }
         }
         graph.add_model(model, ast_model.identifier.name.as_str());
+        graph.model(ast_model.identifier.name.as_str())?.finalize();
     }
     define_seeder_models(app_ctx.graph_mut()?);
     // datasets

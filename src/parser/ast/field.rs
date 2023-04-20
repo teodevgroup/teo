@@ -13,6 +13,15 @@ pub(crate) enum ASTFieldClass {
     Property,
 }
 
+impl ASTFieldClass {
+    pub(crate) fn is_relation(&self) -> bool {
+        match self {
+            ASTFieldClass::Relation => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub(crate) struct ASTField {
     pub(crate) comment_block: Option<CommentBlock>,

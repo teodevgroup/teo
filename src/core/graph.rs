@@ -30,12 +30,14 @@ impl Graph {
         }
     }
 
-    pub(crate) fn add_enum(&mut self, e: Enum) {
-        self.enums.insert(e.name, e);
+    pub(crate) fn add_enum(&self, e: Enum) {
+        let mut_self = self.to_mut();
+        mut_self.enums.insert(e.name, e);
     }
 
-    pub(crate) fn add_model(&mut self, m: Model, name: &'static str) {
-        self.models.insert(name, m);
+    pub(crate) fn add_model(&self, m: Model, name: &'static str) {
+        let mut_self = self.to_mut();
+        mut_self.models.insert(name, m);
     }
 
     pub fn models(&self) -> Vec<&Model> {

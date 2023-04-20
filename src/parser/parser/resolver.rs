@@ -8,7 +8,7 @@ use snailquote::unescape;
 use crate::core::database::name::DatabaseName;
 use crate::core::teon::range::Range;
 use crate::parser::ast::accessible::{Accessible, ASTResolvedPipeline, ASTPipelineItem, Container};
-use crate::parser::ast::argument::{Argument, ArgumentList};
+use crate::parser::ast::argument::{ArgumentList};
 use crate::parser::ast::config::ASTServer;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::decorator::ASTDecorator;
