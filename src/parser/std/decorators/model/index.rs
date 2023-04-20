@@ -8,15 +8,15 @@ static MODEL_INDEX_PRIMARY: u8 = 0;
 static MODEL_INDEX_INDEX: u8 = 1;
 static MODEL_INDEX_UNIQUE: u8 = 2;
 
-pub(crate) fn id_decorator(args: &Vec<Argument>, model: &mut Model) {
+pub(crate) fn id_decorator(args: &'static Vec<Argument>, model: &mut Model) {
     decorator(args, model, MODEL_INDEX_PRIMARY)
 }
 
-pub(crate) fn index_decorator(args: &Vec<Argument>, model: &mut Model) {
+pub(crate) fn index_decorator(args: &'static Vec<Argument>, model: &mut Model) {
     decorator(args, model, MODEL_INDEX_INDEX)
 }
 
-pub(crate) fn unique_decorator(args: &Vec<Argument>, model: &mut Model) {
+pub(crate) fn unique_decorator(args: &'static Vec<Argument>, model: &mut Model) {
     decorator(args, model, MODEL_INDEX_UNIQUE)
 }
 

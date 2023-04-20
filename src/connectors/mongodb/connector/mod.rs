@@ -461,7 +461,7 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
+    async fn find_unique<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
         let select = finder.get("select");
         let include = finder.get("include");
         let aggregate_input = Aggregation::build(model, graph, finder)?;
@@ -484,7 +484,7 @@ impl Connector for MongoDBConnector {
         }
     }
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
+    async fn find_many<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
         let select = finder.get("select");
         let include = finder.get("include");
         let aggregate_input = Aggregation::build(model, graph, finder)?;

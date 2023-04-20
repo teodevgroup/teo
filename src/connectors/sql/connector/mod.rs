@@ -233,7 +233,7 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
+    async fn find_unique<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
         let objects = Execution::query_objects(&self.pool, model, graph, finder, self.dialect, action, action_source.clone()).await?;
         if objects.is_empty() {
             Ok(None)
@@ -242,7 +242,7 @@ impl Connector for SQLConnector {
         }
     }
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
+    async fn find_many<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
         Execution::query_objects(&self.pool, model, graph, finder, self.dialect, action, action_source).await
     }
 

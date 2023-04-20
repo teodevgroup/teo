@@ -6,6 +6,7 @@ use async_recursion::async_recursion;
 use inflector::Inflector;
 use maplit::{hashmap, hashset};
 use to_mut::ToMut;
+use to_mut_proc_macro::ToMut;
 use crate::app::ctx::AppCtx;
 use crate::core::action::{Action, CREATE_HANDLER, CREATE_MANY_HANDLER, IDENTITY_HANDLER, SIGN_IN_HANDLER};
 use crate::core::action::{FIND, IDENTITY, MANY, NESTED, SIGN_IN, SINGLE};
@@ -22,6 +23,7 @@ use crate::prelude::Value;
 use crate::core::result::Result;
 use crate::teon;
 
+#[derive(ToMut)]
 pub struct Model {
     name: &'static str,
     table_name: Cow<'static, str>,
@@ -372,27 +374,28 @@ impl Model {
         self.migration.as_ref().map_or(false, |m| m.drop)
     }
 
-    pub(crate) fn finalize(&'static mut self) {
+    pub(crate) fn finalize(&'static self) {
+        let mut_self = self.to_mut();
         // generate indices from fields
         for field in &self.fields_vec {
             let field_name = Box::leak(Box::new(field.name().to_string())).as_str();
             if let Some(field_index) = field.index() {
                 match field_index {
                     FieldIndex::Index(settings) => {
-                        self.indices.push(ModelIndex::new(ModelIndexType::Index, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                        mut_self.indices.push(ModelIndex::new(ModelIndexType::Index, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
                             ModelIndexItem::new(field_name, settings.sort, settings.length)
                         ]));
                     }
                     FieldIndex::Unique(settings) => {
-                        self.indices.push(ModelIndex::new(ModelIndexType::Unique, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                        mut_self.indices.push(ModelIndex::new(ModelIndexType::Unique, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
                             ModelIndexItem::new(field_name, settings.sort, settings.length)
                         ]));
                     }
                     FieldIndex::Primary(settings) => {
-                        self.primary = Some(ModelIndex::new(ModelIndexType::Primary, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                        mut_self.primary = Some(ModelIndex::new(ModelIndexType::Primary, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
                             ModelIndexItem::new(field_name, settings.sort, settings.length)
                         ]));
-                        self.indices.push(self.primary.as_ref().unwrap().clone());
+                        mut_self.indices.push(self.primary.as_ref().unwrap().clone());
                     }
                 }
             }
@@ -406,16 +409,16 @@ impl Model {
             field.as_ref().to_mut().previous_value_rule = PreviousValueRule::Keep;
         }
         // load caches
-        let all_field_keys: Vec<&'static str> = self.fields_vec.iter().map(|f| f.name()).collect();
-        let all_relation_keys: Vec<&'static str> = self.relations_vec.iter().map(|r| r.name()).collect();
-        let all_property_keys: Vec<&'static str> = self.properties_vec.iter().map(|p| p.name()).collect();
+        let all_field_keys: Vec<&str> = self.fields_vec.iter().map(|f| f.name()).collect();
+        let all_relation_keys: Vec<&str> = self.relations_vec.iter().map(|r| r.name()).collect();
+        let all_property_keys: Vec<&str> = self.properties_vec.iter().map(|p| p.name()).collect();
         let mut all_keys = vec![];
         all_keys.extend(all_field_keys.clone());
         all_keys.extend(all_relation_keys.clone());
         all_keys.extend(all_property_keys.clone());
-        let input_field_keys: Vec<&'static str> = self.fields_vec.iter().filter(|&f| !f.write_rule.is_no_write()).map(|f| f.name).collect();
+        let input_field_keys: Vec<&str> = self.fields_vec.iter().filter(|&f| !f.write_rule.is_no_write()).map(|f| f.name).collect();
         let input_relation_keys = all_relation_keys.clone();
-        let input_property_keys: Vec<&'static str> = self.properties_vec.iter().filter(|p| p.setter.is_some()).map(|p| p.name).collect();
+        let input_property_keys: Vec<&str> = self.properties_vec.iter().filter(|p| p.setter.is_some()).map(|p| p.name).collect();
         let mut input_keys = vec![];
         input_keys.extend(input_field_keys);
         input_keys.extend(input_relation_keys);
@@ -441,7 +444,7 @@ impl Model {
             query_keys.extend(all_relation_keys.iter());
             query_keys
         };
-        let unique_query_keys: Vec<HashSet<&'static str>> = {
+        let unique_query_keys: Vec<HashSet<&str>> = {
             let mut result = vec![];
             for index in self.indices() {
                 let set = HashSet::from_iter(index.items().iter().map(|i| {
@@ -454,53 +457,53 @@ impl Model {
             }
             result
         };
-        let auth_identity_keys: Vec<&'static str> = self.fields_vec.iter()
+        let auth_identity_keys: Vec<&str> = self.fields_vec.iter()
             .filter(|&f| { f.identity == true })
             .map(|f| { f.name })
             .collect();
-        let auth_by_keys: Vec<&'static str> = self.fields_vec.iter()
+        let auth_by_keys: Vec<&str> = self.fields_vec.iter()
             .filter(|&f| { f.identity_checker.is_some() })
             .map(|f| { f.name })
             .collect();
-        let auto_keys: Vec<&'static str> = self.fields_vec
+        let auto_keys: Vec<&str> = self.fields_vec
             .iter()
             .filter(|&f| { f.auto || f.auto_increment })
             .map(|f| f.name.clone())
             .collect();
-        let deny_relation_keys: Vec<&'static str> = self.relations_vec
+        let deny_relation_keys: Vec<&str> = self.relations_vec
             .iter()
             .filter(|&r| { r.delete_rule() == DeleteRule::Deny })
             .map(|r| r.name())
             .collect();
-        let scalar_keys: Vec<&'static str> = self.fields_vec
+        let scalar_keys: Vec<&str> = self.fields_vec
             .iter()
             .map(|f| f.name)
             .collect();
-        let scalar_number_keys: Vec<&'static str> = self.fields_vec
+        let scalar_number_keys: Vec<&str> = self.fields_vec
             .iter()
             .filter(|f| f.field_type().is_number())
             .map(|f| f.name.clone())
             .collect();
         // assign cache keys
-        self.all_keys = all_keys;
-        self.input_keys = input_keys;
-        self.save_keys = save_keys;
-        self.output_keys = output_keys;
-        self.query_keys = query_keys;
-        self.sort_keys = sort_keys;
-        self.unique_query_keys = unique_query_keys;
-        self.auth_identity_keys = auth_identity_keys;
-        self.auth_by_keys = auth_by_keys;
-        self.auto_keys = auto_keys;
-        self.deny_relation_keys = deny_relation_keys;
-        self.scalar_keys = scalar_keys;
-        self.scalar_number_keys = scalar_number_keys;
-        self.local_output_keys = output_field_keys_and_property_keys;
-        self.relation_output_keys = output_relation_keys;
+        mut_self.all_keys = all_keys;
+        mut_self.input_keys = input_keys;
+        mut_self.save_keys = save_keys;
+        mut_self.output_keys = output_keys;
+        mut_self.query_keys = query_keys;
+        mut_self.sort_keys = sort_keys;
+        mut_self.unique_query_keys = unique_query_keys;
+        mut_self.auth_identity_keys = auth_identity_keys;
+        mut_self.auth_by_keys = auth_by_keys;
+        mut_self.auto_keys = auto_keys;
+        mut_self.deny_relation_keys = deny_relation_keys;
+        mut_self.scalar_keys = scalar_keys;
+        mut_self.scalar_number_keys = scalar_number_keys;
+        mut_self.local_output_keys = output_field_keys_and_property_keys;
+        mut_self.relation_output_keys = output_relation_keys;
 
         // figure out actions
-        self.handler_actions = {
-            let mut default = if self.internal {
+        mut_self.handler_actions = {
+            let mut default = if mut_self.internal {
                 HashSet::new()
             } else if self.r#virtual {
                 HashSet::from([Action::from_u32(CREATE_HANDLER), Action::from_u32(CREATE_MANY_HANDLER)])
@@ -520,7 +523,7 @@ impl Model {
             }
         };
         // field property map
-        self.field_property_map = {
+        mut_self.field_property_map = {
             let mut map = HashMap::new();
             for property in self.properties_vec.iter() {
                 if property.cached {
@@ -587,28 +590,28 @@ impl Model {
         self.r#virtual = r#virtual;
     }
 
-    pub(crate) fn add_field(&mut self, field: Field) {
+    pub(crate) fn add_field(&mut self, field: Field, name: &'static str) {
         let arc = Arc::new(field);
         self.fields_vec.push(arc.clone());
-        self.fields_map.insert(arc.name(), arc);
+        self.fields_map.insert(name, arc);
     }
 
-    pub(crate) fn add_dropped_field(&mut self, field: Field) {
+    pub(crate) fn add_dropped_field(&mut self, field: Field, name: &'static str) {
         let arc = Arc::new(field);
         self.dropped_fields_vec.push(arc.clone());
-        self.dropped_fields_map.insert(arc.name(), arc);
+        self.dropped_fields_map.insert(name, arc);
     }
 
-    pub(crate) fn add_relation(&mut self, relation: Relation) {
+    pub(crate) fn add_relation(&mut self, relation: Relation, name: &'static str) {
         let arc = Arc::new(relation);
         self.relations_vec.push(arc.clone());
-        self.relations_map.insert(arc.name(), arc);
+        self.relations_map.insert(name, arc);
     }
 
-    pub(crate) fn add_property(&mut self, property: Property) {
+    pub(crate) fn add_property(&mut self, property: Property, name: &'static str) {
         let arc = Arc::new(property);
         self.properties_vec.push(arc.clone());
-        self.properties_map.insert(arc.name(), arc);
+        self.properties_map.insert(name, arc);
     }
 }
 

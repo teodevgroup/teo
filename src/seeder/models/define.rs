@@ -39,24 +39,24 @@ fn install_string_id_and_dataset(m: &mut Model) {
     let mut pipeline = Pipeline::new();
     pipeline.items.push(Arc::new(CUIDItem::new()));
     id_field.default = Some(Value::Pipeline(pipeline));
-    m.add_field(id_field);
+    m.add_field(id_field, "id");
     m.add_index(ModelIndex::new(ModelIndexType::Primary, None::<String>, vec![
         ModelIndexItem::new("id", Sort::Asc, None)
     ]));
     let mut data_set_field = Field::new("dataset");
     data_set_field.field_type = Some(FieldType::String);
-    m.add_field(data_set_field);
+    m.add_field(data_set_field, "dataset");
 }
 
 fn install_plain_required_string_field(m: &mut Model, field_name: &'static str) {
     let mut new_field = Field::new(field_name);
     new_field.field_type = Some(FieldType::String);
-    m.add_field(new_field);
+    m.add_field(new_field, field_name);
 }
 
 fn install_plain_optional_string_field(m: &mut Model, field_name: &'static str) {
     let mut new_field = Field::new(field_name);
     new_field.field_type = Some(FieldType::String);
     new_field.optionality = Optionality::Optional;
-    m.add_field(new_field);
+    m.add_field(new_field, field_name);
 }

@@ -48,9 +48,9 @@ pub(crate) trait Connector: Send + Sync {
 
     async fn delete_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> Result<()>;
 
-    async fn find_unique(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>>;
+    async fn find_unique<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>>;
 
-    async fn find_many(&self, graph: &Graph, model: &Model, finder: &Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>>;
+    async fn find_many<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>>;
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize>;
 

@@ -169,10 +169,10 @@ pub(super) fn load_schema() -> Result<()> {
                     }
                     match &ast_field.field_class {
                         ASTFieldClass::DroppedField => {
-                            model.add_dropped_field(model_field);
+                            model.add_dropped_field(model_field, ast_field.identifier.name.as_str());
                         }
                         _ => {
-                            model.add_field(model_field);
+                            model.add_field(model_field, ast_field.identifier.name.as_str());
                         }
                     }
                 }
@@ -210,7 +210,7 @@ pub(super) fn load_schema() -> Result<()> {
                         let relation_decorator = decorator.accessible.as_ref().unwrap().as_relation_decorator().unwrap();
                         relation_decorator(decorator.get_argument_list(), &mut model_relation);
                     }
-                    model.add_relation(model_relation);
+                    model.add_relation(model_relation, ast_field.identifier.name.as_str());
                 }
                 ASTFieldClass::Property => {
                     let mut model_property = Property::new(ast_field.identifier.name.as_str());
@@ -271,7 +271,7 @@ pub(super) fn load_schema() -> Result<()> {
                         let property_decorator = decorator.accessible.as_ref().unwrap().as_property_decorator().unwrap();
                         property_decorator(decorator.get_argument_list(), &mut model_property);
                     }
-                    model.add_property(model_property);
+                    model.add_property(model_property, ast_field.identifier.name.as_str());
                 }
                 ASTFieldClass::Unresolved => unreachable!()
             }

@@ -48,7 +48,7 @@ impl Graph {
 
     // MARK: - Queries
 
-    pub async fn find_unique<T: From<Object>>(&self, model: &str, finder: &Value) -> Result<Option<T>> {
+    pub async fn find_unique<'a, T: From<Object>>(&'static self, model: &'a str, finder: &'a Value) -> Result<Option<T>> {
         match self.find_unique_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), Initiator::ProgramCode).await {
             Ok(result) => match result {
                 Some(o) => Ok(Some(o.into())),
@@ -58,7 +58,7 @@ impl Graph {
         }
     }
 
-    pub async fn find_first<T: From<Object>>(&self, model: &str, finder: &Value) -> Result<Option<T>> {
+    pub async fn find_first<'a, T: From<Object>>(&'static self, model: &'a str, finder: &'a Value) -> Result<Option<T>> {
         match self.find_first_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), Initiator::ProgramCode).await {
             Ok(result) => match result {
                 Some(o) => Ok(Some(o.into())),
@@ -68,19 +68,19 @@ impl Graph {
         }
     }
 
-    pub async fn find_many<T: From<Object>>(&self, model: &str, finder: &Value) -> Result<Vec<T>> {
+    pub async fn find_many<'a, T: From<Object>>(&'static self, model: &'a str, finder: &'a Value) -> Result<Vec<T>> {
         match self.find_many_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), Initiator::ProgramCode).await {
             Ok(results) => Ok(results.iter().map(|item| item.clone().into()).collect()),
             Err(err) => Err(err),
         }
     }
 
-    pub(crate) async fn find_unique_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
+    pub(crate) async fn find_unique_internal<'a>(&'static self, model: &'a str, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
         let model = self.model(model)?;
         AppCtx::get()?.connector()?.find_unique(self, model, finder, mutation_mode, action, action_source).await
     }
 
-    pub(crate) async fn find_first_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
+    pub(crate) async fn find_first_internal<'a>(&'static self, model: &'a str, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
         let model = self.model(model)?;
         let mut finder = finder.as_hashmap().clone().unwrap().clone();
         finder.insert("take".to_string(), 1.into());
@@ -98,12 +98,12 @@ impl Graph {
         }
     }
 
-    pub(crate) async fn find_many_internal(&self, model: &str, finder: &Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
+    pub(crate) async fn find_many_internal<'a>(&'static self, model: &'a str, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
         let model = self.model(model)?;
         AppCtx::get()?.connector()?.find_many(self, model, finder, mutation_mode, action, action_source).await
     }
 
-    pub(crate) async fn batch<F, Fut>(&self, model: &str, finder: &Value, action: Action, action_source: Initiator, f: F) -> Result<()> where
+    pub(crate) async fn batch<'a, F, Fut>(&'static self, model: &'a str, finder: &'a Value, action: Action, action_source: Initiator, f: F) -> Result<()> where
         F: Fn(Object) -> Fut,
         Fut: Future<Output = Result<()>> {
         let batch_size: usize = 200;

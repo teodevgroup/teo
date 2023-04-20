@@ -377,7 +377,7 @@ impl Resolver {
                             previous_identifier = Some(&identifier);
                         }
                         ExpressionKind::ArgumentList(argument_list) => {
-                            let mut args = argument_list.clone();
+                            let args = argument_list.to_mut();
                             for (index, arg) in &mut args.arguments.iter_mut().enumerate() {
                                 let value = if ((&previous_identifier.unwrap().name == "when") || (&previous_identifier.unwrap().name == "redirect")) && index == 0 {
                                     Self::resolve_expression_kind_force_value(parser, source, &arg.value, true)
@@ -388,11 +388,11 @@ impl Resolver {
                             }
                             let installer = parser.global_pipeline_installers().get(&previous_identifier.unwrap().name);
                             if let Some(installer) = installer {
-                                items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: parser.callback_lookup_table, args: args.arguments()});
+                                items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: parser.callback_lookup_table, args: argument_list.arguments()});
                             } else {
                                 let installer = parser.global_function_installers().get(&previous_identifier.unwrap().name);
                                 if let Some(installer) = installer {
-                                    items.push(ASTPipelineItem { installer: None, function_installer: Some(installer.clone()), lookup_table: parser.callback_lookup_table, args: args.arguments()});
+                                    items.push(ASTPipelineItem { installer: None, function_installer: Some(installer.clone()), lookup_table: parser.callback_lookup_table, args: argument_list.arguments()});
                                 } else {
                                     panic!("Cannot find pipeline item named '{}'.", previous_identifier.unwrap().name);
                                 }

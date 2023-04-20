@@ -1,4 +1,6 @@
 use std::fmt::{Display, Formatter};
+use to_mut_proc_macro::ToMut;
+use to_mut::ToMut;
 use crate::parser::ast::entity::Entity;
 use crate::parser::ast::expression::ExpressionKind;
 use crate::parser::ast::identifier::ASTIdentifier;
@@ -29,7 +31,7 @@ impl Display for Argument {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, ToMut)]
 pub struct ArgumentList {
     pub(crate) arguments: Vec<Argument>,
     pub(crate) span: Span,
