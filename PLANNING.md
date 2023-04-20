@@ -405,7 +405,7 @@
 - Find unique and find first returns null instead of `ObjectNotFound` error **[DONE]**
 - Fix: on save now displays correct validate error message **[DONE]**
 - Fix: compare should not be called when field is not `recordPrevious` **[DONE]**
-- Refactor
+- Refactor **[DONE]**
 - Rename `source` to `initiator` **[DONE]**
 - Rename `environment version` to `program` **[DONE]**
 - Remove `GraphBuilder` **[DONE]**
@@ -413,16 +413,16 @@
 - Remove `ModelBuilder` **[DONE]**
 - Rewrite model API **[DONE]**
 - Remove `ModelIndexBuilder` **[DONE]**
-- Rewrite framework errors
+- Rewrite framework errors **[DONE]**
+- Rewrite connector to support pooled connections
+- Fix SQLite memory bug: A HTTP connection should use single pooled connection
+- Unit test: relations for SQLite memory connector
 - TS client: refactor
 - Client: distinct in handler args
 - C# client: capitalized names and names with underscore
 - TypeScript client: correct return types for `aggregate` and `groupBy`
 - Unit test: handlers
 - Linter: errors and warnings
-- Rewrite connector to support pooled connections
-- Fix SQLite memory bug: A HTTP connection should use single pooled connection
-- Unit test: relations for SQLite memory connector
 - SQL transaction
 - Foreign key management
 - Relation onUpdate

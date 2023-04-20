@@ -8,7 +8,7 @@ use crate::core::items::string::generation::cuid::CUIDItem;
 use crate::core::pipeline::Pipeline;
 use crate::prelude::{Graph, Value};
 
-pub(crate) fn define_seeder_models(graph: &mut Graph) {
+pub(crate) fn define_seeder_models(graph: &'static Graph) {
     let group_record_model_name = "__TeoGroupRecord";
     let mut group_record = Model::new(group_record_model_name, None, None);
     group_record.set_table_name("__teogrouprecord");
@@ -18,6 +18,7 @@ pub(crate) fn define_seeder_models(graph: &mut Graph) {
     install_plain_required_string_field(&mut group_record, "name");
     install_plain_required_string_field(&mut group_record, "record");
     graph.add_model(group_record, group_record_model_name);
+    graph.model(group_record_model_name).unwrap().finalize();
     let group_relation_model_name = "__TeoGroupRelation";
     let mut group_relation = Model::new(group_relation_model_name, None, None);
     group_relation.set_table_name("__teogrouprelation");
@@ -30,6 +31,7 @@ pub(crate) fn define_seeder_models(graph: &mut Graph) {
     install_plain_optional_string_field(&mut group_relation, "relationB");
     install_plain_required_string_field(&mut group_relation, "nameB");
     graph.add_model(group_relation, group_relation_model_name);
+    graph.model(group_relation_model_name).unwrap().finalize();
 }
 
 fn install_string_id_and_dataset(m: &mut Model) {
