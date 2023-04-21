@@ -30,7 +30,7 @@ use crate::app::entrance::Entrance;
 use crate::app::program::Program;
 use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
 use crate::server::test_context::TestContext;
-use crate::core::connector::SaveSession;
+use crate::core::connector::session::SaveSession;
 use self::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::graph::Graph;
 use crate::core::model::model::Model;

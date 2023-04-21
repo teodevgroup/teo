@@ -22,7 +22,7 @@ use crate::core::input::Input::{AtomicUpdater, SetValue};
 use crate::core::graph::Graph;
 use crate::core::model::model::Model;
 use crate::core::relation::Relation;
-use crate::core::connector::SaveSession;
+use crate::core::connector::session::SaveSession;
 use crate::core::pipeline::ctx::{Ctx};
 use crate::core::teon::Value;
 use crate::core::error::Error;

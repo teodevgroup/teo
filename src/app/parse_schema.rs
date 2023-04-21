@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use crate::app::ctx::AppCtx;
 use crate::core::conf::debug::DebugConf;
 use crate::core::conf::test::{Reset, ResetDatasets, ResetMode, TestConf};
-use crate::core::connector::ConnectorConf;
+use crate::core::connector::conf::ConnectorConf;
 use crate::core::field::field::Field;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::model::Model;
