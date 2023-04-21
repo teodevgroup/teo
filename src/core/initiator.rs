@@ -2,7 +2,7 @@ use crate::prelude::{Object, Value};
 use self::Initiator::*;
 
 #[derive(Clone)]
-pub(crate) enum Initiator {
+pub enum Initiator {
     Identity(Option<Object>),
     DataClient,
     ProgramCode,

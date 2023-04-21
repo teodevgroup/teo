@@ -70,7 +70,7 @@ pub(crate) const NESTED_UPDATE_MANY_ACTION: u32 = UPDATE | NESTED | MANY;
 pub(crate) const NESTED_DELETE_MANY_ACTION: u32 = DELETE | NESTED | MANY;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-pub(crate) struct Action {
+pub struct Action {
     value: u32
 }
 

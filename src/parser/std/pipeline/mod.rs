@@ -9,7 +9,6 @@ pub(crate) mod math;
 pub(crate) mod number;
 pub(crate) mod object;
 pub(crate) mod string;
-pub(crate) mod teon;
 pub(crate) mod value;
 pub(crate) mod vector;
 pub(crate) mod debug;

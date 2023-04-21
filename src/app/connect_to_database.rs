@@ -1,6 +1,6 @@
 use crate::app::ctx::AppCtx;
-use crate::connectors::mongodb::connector::MongoDBConnector;
-use crate::connectors::sql::connector::SQLConnector;
+use crate::connectors::mongodb::connector::connector::MongoDBConnector;
+use crate::connectors::sql::connector::connector::SQLConnector;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::connector::connector::Connector;
 use crate::core::database::name::DatabaseName;

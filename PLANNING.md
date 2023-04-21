@@ -414,13 +414,9 @@
 - Rewrite model API **[DONE]**
 - Remove `ModelIndexBuilder` **[DONE]**
 - Rewrite framework errors **[DONE]**
-- Rewrite connector to support pooled connections
-- Fix SQLite memory bug: A HTTP connection should use single pooled connection
-- Unit test: relations for SQLite memory connector
-- TS client: refactor
-- Client: distinct in handler args
-- C# client: capitalized names and names with underscore
-- TypeScript client: correct return types for `aggregate` and `groupBy`
+- Rewrite connector to support pooled connections **[DONE]**
+- Fix SQLite memory bug: A HTTP connection should use single pooled connection **[DONE]**
+- Unit test: relations for SQLite memory connector **[DONE]**
 - Unit test: handlers
 - Linter: errors and warnings
 - SQL transaction
@@ -432,6 +428,10 @@
 
 #### 0.0.57
 - MongoDB transaction
+- TS client: refactor
+- Client: distinct in handler args
+- C# client: capitalized names and names with underscore
+- TypeScript client: correct return types for `aggregate` and `groupBy`
 - VSCode highlight for data seeding
 - Node.js client use dedicated `Date` class instead of builtin `Date`
 - Cross language error handling for node.js

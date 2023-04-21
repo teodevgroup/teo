@@ -1,11 +1,13 @@
 use std::collections::HashMap;
 use std::future::Future;
+use std::sync::Arc;
 use key_path::KeyPath;
 use maplit::hashmap;
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
 use crate::app::ctx::AppCtx;
 use crate::core::action::{Action, CREATE, INTERNAL_AMOUNT, INTERNAL_POSITION, PROGRAM_CODE, SINGLE};
+use crate::core::connector::connection::Connection;
 use crate::core::initiator::Initiator;
 use crate::core::object::Object;
 use crate::core::r#enum::Enum;
@@ -50,8 +52,9 @@ impl Graph {
 
     // MARK: - Queries
 
-    pub async fn find_unique<'a, T: From<Object>>(&'static self, model: &'a str, finder: &'a Value) -> Result<Option<T>> {
-        match self.find_unique_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), Initiator::ProgramCode).await {
+    pub async fn find_unique<'a, T: From<Object>>(&'static self, model: &'a str, finder: &'a Value, connection: Option<Arc<dyn Connection>>) -> Result<Option<T>> {
+        let connection = connection.unwrap_or(AppCtx::get()?.connector()?.connection().await?);
+        match self.find_unique_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), Initiator::ProgramCode, connection).await {
             Ok(result) => match result {
                 Some(o) => Ok(Some(o.into())),
                 None => Ok(None),
@@ -60,8 +63,9 @@ impl Graph {
         }
     }
 
-    pub async fn find_first<'a, T: From<Object>>(&'static self, model: &'a str, finder: &'a Value) -> Result<Option<T>> {
-        match self.find_first_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), Initiator::ProgramCode).await {
+    pub async fn find_first<'a, T: From<Object>>(&'static self, model: &'a str, finder: &'a Value, connection: Option<Arc<dyn Connection>>) -> Result<Option<T>> {
+        let connection = connection.unwrap_or(AppCtx::get()?.connector()?.connection().await?);
+        match self.find_first_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), Initiator::ProgramCode, connection).await {
             Ok(result) => match result {
                 Some(o) => Ok(Some(o.into())),
                 None => Ok(None),
@@ -70,24 +74,25 @@ impl Graph {
         }
     }
 
-    pub async fn find_many<'a, T: From<Object>>(&'static self, model: &'a str, finder: &'a Value) -> Result<Vec<T>> {
-        match self.find_many_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), Initiator::ProgramCode).await {
+    pub async fn find_many<'a, T: From<Object>>(&'static self, model: &'a str, finder: &'a Value, connection: Option<Arc<dyn Connection>>) -> Result<Vec<T>> {
+        let connection = connection.unwrap_or(AppCtx::get()?.connector()?.connection().await?);
+        match self.find_many_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), Initiator::ProgramCode, connection).await {
             Ok(results) => Ok(results.iter().map(|item| item.clone().into()).collect()),
             Err(err) => Err(err),
         }
     }
 
-    pub(crate) async fn find_unique_internal<'a>(&'static self, model: &'a str, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
+    pub(crate) async fn find_unique_internal<'a>(&'static self, model: &'a str, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator, connection: Arc<dyn Connection>) -> Result<Option<Object>> {
         let model = self.model(model)?;
-        AppCtx::get()?.connector()?.find_unique(self, model, finder, mutation_mode, action, action_source).await
+        connection.find_unique(self, model, finder, mutation_mode, action, action_source).await
     }
 
-    pub(crate) async fn find_first_internal<'a>(&'static self, model: &'a str, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
+    pub(crate) async fn find_first_internal<'a>(&'static self, model: &'a str, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator, connection: Arc<dyn Connection>) -> Result<Option<Object>> {
         let model = self.model(model)?;
         let mut finder = finder.as_hashmap().clone().unwrap().clone();
         finder.insert("take".to_string(), 1.into());
         let finder = Value::HashMap(finder);
-        let result = AppCtx::get()?.connector()?.find_many(self, model, &finder, mutation_mode, action, action_source).await;
+        let result = connection.find_many(self, model, &finder, mutation_mode, action, action_source).await;
         match result {
             Err(err) => Err(err),
             Ok(retval) => {
@@ -100,12 +105,12 @@ impl Graph {
         }
     }
 
-    pub(crate) async fn find_many_internal<'a>(&'static self, model: &'a str, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
+    pub(crate) async fn find_many_internal<'a>(&'static self, model: &'a str, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator, connection: Arc<dyn Connection>) -> Result<Vec<Object>> {
         let model = self.model(model)?;
-        AppCtx::get()?.connector()?.find_many(self, model, finder, mutation_mode, action, action_source).await
+        connection.find_many(self, model, finder, mutation_mode, action, action_source).await
     }
 
-    pub(crate) async fn batch<'a, F, Fut>(&'static self, model: &'a str, finder: &'a Value, action: Action, action_source: Initiator, f: F) -> Result<()> where
+    pub(crate) async fn batch<'a, F, Fut>(&'static self, model: &'a str, finder: &'a Value, action: Action, action_source: Initiator, f: F, connection: Arc<dyn Connection>) -> Result<()> where
         F: Fn(Object) -> Fut,
         Fut: Future<Output = Result<()>> {
         let batch_size: usize = 200;
@@ -114,7 +119,7 @@ impl Graph {
             let mut batch_finder = finder.clone();
             batch_finder.as_hashmap_mut().unwrap().insert("skip".to_owned(), (index * batch_size).into());
             batch_finder.as_hashmap_mut().unwrap().insert("take".to_owned(), batch_size.into());
-            let results = self.find_many_internal(model, &batch_finder, true, action, action_source.clone()).await?;
+            let results = self.find_many_internal(model, &batch_finder, true, action, action_source.clone(), connection.clone()).await?;
             for result in results.iter() {
                 f(result.clone()).await?;
             }
@@ -125,38 +130,42 @@ impl Graph {
         }
     }
 
-    pub(crate) async fn count(&self, model: &str, finder: &Value) -> Result<usize> {
+    pub(crate) async fn count<'a>(&'static self, model: &'a str, finder: &'a Value, connection: Option<Arc<dyn Connection>>) -> Result<usize> {
+        let connection = connection.unwrap_or(AppCtx::get()?.connector()?.connection().await?);
         let model = self.model(model)?;
-        AppCtx::get()?.connector()?.count(self, model, finder).await
+        connection.count(self, model, finder).await
     }
 
-    pub(crate) async fn aggregate(&self, model: &str, finder: &Value) -> Result<Value> {
+    pub(crate) async fn aggregate<'a>(&'static self, model: &'a str, finder: &'a Value, connection: Option<Arc<dyn Connection>>) -> Result<Value> {
+        let connection = connection.unwrap_or(AppCtx::get()?.connector()?.connection().await?);
         let model = self.model(model)?;
-        AppCtx::get()?.connector()?.aggregate(self, model, finder).await
+        connection.aggregate(self, model, finder).await
     }
 
-    pub(crate) async fn group_by(&self, model: &str, finder: &Value) -> Result<Value> {
+    pub(crate) async fn group_by<'a>(&'static self, model: &'a str, finder: &'a Value, connection: Option<Arc<dyn Connection>>) -> Result<Value> {
+        let connection = connection.unwrap_or(AppCtx::get()?.connector()?.connection().await?);
         let model = self.model(model)?;
-        AppCtx::get()?.connector()?.group_by(self, model, finder).await
+        connection.group_by(self, model, finder).await
     }
 
     // MARK: - Create an object
 
-    pub(crate) fn new_object(&'static self, model: &str, action: Action, action_source: Initiator) -> Result<Object> {
+    pub(crate) fn new_object(&'static self, model: &str, action: Action, action_source: Initiator, connection: Arc<dyn Connection>) -> Result<Object> {
         match self.model(model) {
-            Ok(model) => Ok(Object::new(self, model, action, action_source)),
+            Ok(model) => Ok(Object::new(self, model, action, action_source, connection)),
             Err(_) => Err(Error::invalid_operation(format!("Model with name '{model}' is not defined.")))
         }
     }
 
-    pub(crate) async fn new_object_with_tson_and_path<'a>(&'static self, model: &str, initial: &Value, path: &KeyPath<'a>, action: Action, action_source: Initiator) -> Result<Object> {
-        let object = self.new_object(model, action, action_source)?;
+    pub(crate) async fn new_object_with_teon_and_path<'a>(&'static self, model: &str, initial: &Value, path: &KeyPath<'a>, action: Action, action_source: Initiator, connection: Arc<dyn Connection>) -> Result<Object> {
+        let object = self.new_object(model, action, action_source, connection)?;
         object.set_teon_with_path(initial, path).await?;
         Ok(object)
     }
 
-    pub async fn create_object(&'static self, model: &str, initial: impl AsRef<Value>) -> Result<Object> {
-        let obj = self.new_object(model, Action::from_u32(PROGRAM_CODE | CREATE | SINGLE | INTERNAL_POSITION), Initiator::ProgramCode)?;
+    pub async fn create_object(&'static self, model: &str, initial: impl AsRef<Value>, connection: Option<Arc<dyn Connection>>) -> Result<Object> {
+        let connection = connection.unwrap_or(AppCtx::get()?.connector()?.connection().await?);
+        let obj = self.new_object(model, Action::from_u32(PROGRAM_CODE | CREATE | SINGLE | INTERNAL_POSITION), Initiator::ProgramCode, connection)?;
         obj.set_teon(initial.as_ref()).await?;
         Ok(obj)
     }

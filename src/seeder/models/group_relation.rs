@@ -1,6 +1,8 @@
-use std::{collections::HashMap, fmt::{Debug, Display, Formatter}};
+use std::fmt::{Debug, Display, Formatter};
 use std::borrow::Borrow;
+use std::sync::Arc;
 use crate::app::ctx::AppCtx;
+use crate::core::connector::connection::Connection;
 use crate::prelude::{Object, Value, Result};
 
 /// Group relation
@@ -13,30 +15,23 @@ impl GroupRelation {
 
     /// Find many group relations.
     pub async fn find_many(query: impl Borrow<Value>) -> Result<Vec<GroupRelation>> {
-        AppCtx::get()?.graph()?.find_many("__TeoGroupRelation", query.borrow()).await
+        AppCtx::get()?.graph()?.find_many("__TeoGroupRelation", query.borrow(), None).await
     }
 
     /// Find a unique group relation.
     pub async fn find_unique(query: impl Borrow<Value>) -> Result<Option<GroupRelation>> {
-        AppCtx::get()?.graph()?.find_unique("__TeoGroupRelation", query.borrow()).await
+        AppCtx::get()?.graph()?.find_unique("__TeoGroupRelation", query.borrow(), None).await
     }
 
     /// Find a non unique group relation.
     pub async fn find_first(query: impl Borrow<Value>) -> Result<Option<GroupRelation>> {
-        AppCtx::get()?.graph()?.find_first("__TeoGroupRelation", query.borrow()).await
+        AppCtx::get()?.graph()?.find_first("__TeoGroupRelation", query.borrow(), None).await
     }
 
     /// Create a new group relation.
-    pub async fn new(values: impl AsRef<Value>) -> Self {
+    pub async fn new(values: impl AsRef<Value>, connection: Arc<dyn Connection>) -> Self {
         Self {
-            inner: AppCtx::get().unwrap().graph().unwrap().create_object("__TeoGroupRelation", values).await.unwrap(),
-        }
-    }
-
-    /// Create an empty group relation.
-    pub async fn default() -> Self {
-        Self {
-            inner: AppCtx::get().unwrap().graph().unwrap().create_object("__TeoGroupRelation", Value::HashMap(HashMap::new())).await.unwrap(),
+            inner: AppCtx::get().unwrap().graph().unwrap().create_object("__TeoGroupRelation", values, Some(connection)).await.unwrap(),
         }
     }
 

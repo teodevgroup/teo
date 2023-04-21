@@ -18,6 +18,7 @@ pub struct ServerError(Cow<'static, str>);
 pub enum RuntimeError {
     ObjectIsNotSaved,
     StdIOError(String),
+    CannotCreatePooledConnection(String),
 }
 
 impl RuntimeError {
@@ -25,6 +26,7 @@ impl RuntimeError {
         match self {
             RuntimeError::ObjectIsNotSaved => "Object is not saved thus can't be deleted.",
             RuntimeError::StdIOError(s) => Box::leak(Box::new(s.clone())).as_str(),
+            RuntimeError::CannotCreatePooledConnection(s) => Box::leak(Box::new(s.clone())).as_str(),
         }
     }
 }

@@ -143,8 +143,7 @@ impl SQLMigration {
         !conn.query(Query::from(sql)).await.unwrap().is_empty()
     }
 
-    pub(crate) async fn migrate(dialect: SQLDialect, pool: &Quaint, models: Vec<&Model>) {
-        let conn = pool.check_out().await.unwrap();
+    pub(crate) async fn migrate(dialect: SQLDialect, conn: &PooledConnection, models: Vec<&Model>) {
         let mut db_tables = Self::get_db_user_tables(dialect, &conn).await;
         // compare each table and do migration
         for model in models {

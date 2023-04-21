@@ -19,7 +19,7 @@ impl QueryRawItem {
 #[async_trait]
 impl Item for QueryRawItem {
     async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
-        let result = AppCtx::get()?.connector()?.query_raw(&self.query).await;
+        let result = AppCtx::get()?.connector()?.connection().await?.query_raw(&self.query).await;
         match result {
             Err(err) => Err(err),
             Ok(val) => Ok(ctx.with_value(val)),
