@@ -417,16 +417,21 @@
 - Rewrite connector to support pooled connections **[DONE]**
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection **[DONE]**
 - Unit test: relations for SQLite memory connector **[DONE]**
-- Unit test: handlers
-- Linter: errors and warnings
 - SQL transaction
 - Foreign key management
 - Relation onUpdate
 - Relation onDelete
+- Node.js bindings: refactor
 - Node.js bindings: date only type
 - Node.js bindings: error handling
+- Refactor Rust entities
+- Refactor Node.js entities
+- Enum value references enum definition
+- Add synthesised enums to graph
 
 #### 0.0.57
+- Unit test: handlers
+- Linter: errors and warnings
 - MongoDB transaction
 - TS client: refactor
 - Client: distinct in handler args
@@ -440,7 +445,7 @@
 - Migration dry run
 - MongoDB: connector is not using table name
 
-#### 0.0.59
+#### 0.0.58
 - Python server
 - Migration decorator docs
 - Dropped decorator docs
@@ -454,8 +459,7 @@
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 
-#### 0.0.60
-- Refactor Rust entities
+#### 0.0.59
 - Refactor Node.js entities
 - Rust entities: setter documentation
 - Rust entities: optional string array
@@ -469,18 +473,15 @@
 - Soft delete documentation
 - Correct count with cursor
 
-#### 0.0.61
+#### 0.0.60
 - The copy action
 - PostgreSQL: Enum types
 - Input omissible and output omissible for generated clients
 - Support code comment tags for VSCode
 - Support code comment tags for IntelliJ IDEA
 
-#### 0.0.62
-- Enum value references enum definition
-
 #### 0.1.0
-- First stable release
+- First stable release with unit test covering
 
 #### 0.2.0
 - Database type mapping for field, property and collection types' item field

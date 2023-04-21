@@ -34,6 +34,8 @@ pub(crate) struct SQLConnection {
 impl SQLConnection {
 
     async fn create_object(&self, object: &Object) -> Result<()> {
+        let tran = self.conn.start_transaction().await.unwrap();
+        tran.commit();
         let model = object.model();
         let keys = object.keys_for_save();
         let auto_keys = model.auto_keys();
