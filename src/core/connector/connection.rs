@@ -1,7 +1,6 @@
 use std::sync::Arc;
 use async_trait::async_trait;
 use crate::core::action::Action;
-use crate::core::connector::session::SaveSession;
 use crate::core::initiator::Initiator;
 use crate::core::graph::Graph;
 use crate::core::model::model::Model;
@@ -26,9 +25,9 @@ pub trait Connection: Send + Sync {
 
     // Object manipulation
 
-    async fn save_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> Result<()>;
+    async fn save_object(&self, object: &Object) -> Result<()>;
 
-    async fn delete_object(&self, object: &Object, session: Arc<dyn SaveSession>) -> Result<()>;
+    async fn delete_object(&self, object: &Object) -> Result<()>;
 
     async fn find_unique<'a>(self: Arc<Self>, graph: &'static Graph, model: &'static Model, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>>;
 
@@ -40,7 +39,4 @@ pub trait Connection: Send + Sync {
 
     async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value>;
 
-    // Save session
-
-    fn new_save_session(&self) -> Arc<dyn SaveSession>;
 }

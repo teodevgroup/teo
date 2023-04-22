@@ -31,7 +31,6 @@ use crate::app::program::Program;
 use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
 use crate::core::connector::connection::Connection;
 use crate::server::test_context::TestContext;
-use crate::core::connector::session::SaveSession;
 use self::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::graph::Graph;
 use crate::core::model::model::Model;
@@ -208,7 +207,7 @@ async fn handle_find_many(graph: &'static Graph, input: &Value, model: &'static 
     }
 }
 
-async fn handle_create_internal<'a>(graph: &'static Graph, create: Option<&'a Value>, include: Option<&'a Value>, select: Option<&'a Value>, model: &'static Model, path: &'a KeyPath<'_>, action: Action, action_source: Initiator, session: Arc<dyn SaveSession>, connection: Arc<dyn Connection>) -> Result<Value> {
+async fn handle_create_internal<'a>(graph: &'static Graph, create: Option<&'a Value>, include: Option<&'a Value>, select: Option<&'a Value>, model: &'static Model, path: &'a KeyPath<'_>, action: Action, action_source: Initiator, connection: Arc<dyn Connection>) -> Result<Value> {
     let obj = graph.new_object(model.name(), action, action_source, connection)?;
     let set_json_result = match create {
         Some(create) => {
@@ -224,7 +223,7 @@ async fn handle_create_internal<'a>(graph: &'static Graph, create: Option<&'a Va
     if set_json_result.is_err() {
         return Err(set_json_result.err().unwrap());
     }
-    obj.save_with_session_and_path(session.clone(), path).await?;
+    obj.save_with_session_and_path(path).await?;
     let refetched = obj.refreshed(include, select).await?;
     refetched.to_json_internal(&path!["data"]).await
 }
@@ -235,8 +234,7 @@ async fn handle_create(graph: &'static Graph, input: &Value, model: &'static Mod
     let create = input.get("create");
     let include = input.get("include");
     let select = input.get("select");
-    let session = connection.new_save_session();
-    let result = handle_create_internal(graph, create, include, select, model, &path!["create"], action, source, session, connection.clone()).await;
+    let result = handle_create_internal(graph, create, include, select, model, &path!["create"], action, source, connection.clone()).await;
     match result {
         Ok(val) => {
             let json_val: JsonValue = val.into();
@@ -387,9 +385,8 @@ async fn handle_create_many(graph: &'static Graph, input: &Value, model: &'stati
     let create = create.as_vec().unwrap();
     let mut count = 0;
     let mut ret_data: Vec<Value> = vec![];
-    let session = connection.new_save_session();
     for (index, val) in create.iter().enumerate() {
-        let result = handle_create_internal(graph, Some(val), include, select, model, &path!["create", index], action, source.clone(), session.clone(), connection.clone()).await;
+        let result = handle_create_internal(graph, Some(val), include, select, model, &path!["create", index], action, source.clone(), connection.clone()).await;
         match result {
             Err(_err) => {
                 //println!("{:?}", err.errors);

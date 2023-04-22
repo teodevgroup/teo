@@ -57,7 +57,8 @@ impl SQLConnector {
         } else {
             Ok(Arc::new(SQLConnection {
                 dialect: self.dialect,
-                conn: pooled_connection.unwrap(),
+                conn: Arc::new(pooled_connection.unwrap()),
+                tran: None,
             }))
         }
     }

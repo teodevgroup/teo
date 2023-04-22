@@ -12,7 +12,6 @@ use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use regex::Regex;
 use crate::connectors::mongodb::aggregation::Aggregation;
 use crate::connectors::mongodb::bson::coder::BsonCoder;
-use crate::connectors::mongodb::connector::save_session::MongoDBSaveSession;
 use crate::core::action::{Action, FIND, MANY, NESTED, SINGLE};
 use crate::core::connector::connection::Connection;
 use crate::core::initiator::Initiator;
@@ -20,7 +19,6 @@ use crate::core::object::Object;
 use crate::core::graph::Graph;
 use crate::core::model::model::{Model};
 use crate::core::model::index::{ModelIndex, ModelIndexType};
-use crate::core::connector::session::SaveSession;
 use crate::core::teon::Value;
 use crate::core::error::Error;
 use crate::core::field::field::Sort;
@@ -408,7 +406,7 @@ impl Connection for MongoDBConnection {
         // }
     }
 
-    async fn save_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> Result<()> {
+    async fn save_object(&self, object: &Object) -> Result<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
             self.create_object(object).await
         } else {
@@ -416,7 +414,7 @@ impl Connection for MongoDBConnection {
         }
     }
 
-    async fn delete_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> Result<()> {
+    async fn delete_object(&self, object: &Object) -> Result<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
             return Err(Error::object_is_not_saved_thus_cant_be_deleted());
         }
@@ -532,10 +530,6 @@ impl Connection for MongoDBConnection {
 
     async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value> {
         Ok(Value::Vec(self.aggregate_or_group_by(graph, model, finder).await?))
-    }
-
-    fn new_save_session(&self) -> Arc<dyn SaveSession> {
-        Arc::new(MongoDBSaveSession {})
     }
 }
 

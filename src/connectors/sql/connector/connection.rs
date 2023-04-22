@@ -6,7 +6,6 @@ use quaint_forked::error::DatabaseConstraint;
 use quaint_forked::error::ErrorKind::UniqueConstraintViolation;
 use quaint_forked::pooled::PooledConnection;
 use crate::core::model::model::Model;
-use crate::connectors::sql::connector::save_session::SQLSaveSession;
 use crate::connectors::sql::execution::Execution;
 use crate::connectors::sql::migration::migrate::SQLMigration;
 use crate::connectors::sql::query::Query;
@@ -18,7 +17,6 @@ use crate::connectors::sql::schema::value::encode::PSQLArrayToSQLString;
 use crate::core::action::Action;
 use crate::core::connector::connection::Connection;
 use crate::core::initiator::Initiator;
-use crate::core::connector::session::SaveSession;
 use crate::core::error::Error;
 use crate::core::field::r#type::FieldTypeOwner;
 use crate::core::input::Input;
@@ -26,16 +24,18 @@ use crate::core::result::Result;
 use crate::prelude::{Graph, Object, Value};
 use crate::teon;
 
+#[derive(Clone)]
 pub(crate) struct SQLConnection {
     pub(super) dialect: SQLDialect,
-    pub(super) conn: PooledConnection,
+    pub(super) conn: Arc<PooledConnection>,
+    pub(super) tran: Option<Arc<Transaction<'static>>>,
 }
 
 impl SQLConnection {
 
     async fn create_object(&self, object: &Object) -> Result<()> {
-        let tran = self.conn.start_transaction().await.unwrap();
-        tran.commit();
+        // let tran = self.conn.start_transaction().await.unwrap();
+        // tran.commit();
         let model = object.model();
         let keys = object.keys_for_save();
         let auto_keys = model.auto_keys();
@@ -188,15 +188,15 @@ impl Connection for SQLConnection {
             return Err(Error::internal_server_error(msg.unwrap()));
         } else {
             let result = result.unwrap();
-            if result.is_empty() {
-                return Ok(Value::Null);
+            return if result.is_empty() {
+                Ok(Value::Null)
             } else {
-                return Ok(RowDecoder::decode_raw_result_set(result));
+                Ok(RowDecoder::decode_raw_result_set(result))
             }
         }
     }
 
-    async fn save_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> Result<()> {
+    async fn save_object(&self, object: &Object) -> Result<()> {
         let is_new = object.inner.is_new.load(Ordering::SeqCst);
         if is_new {
             self.create_object(object).await
@@ -205,7 +205,7 @@ impl Connection for SQLConnection {
         }
     }
 
-    async fn delete_object(&self, object: &Object, _session: Arc<dyn SaveSession>) -> Result<()> {
+    async fn delete_object(&self, object: &Object) -> Result<()> {
         if object.inner.is_new.load(Ordering::SeqCst) {
             return Err(Error::object_is_not_saved_thus_cant_be_deleted());
         }
@@ -248,9 +248,5 @@ impl Connection for SQLConnection {
 
     async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value> {
         Execution::query_group_by(&self.conn, model, graph, finder, self.dialect).await
-    }
-
-    fn new_save_session(&self) -> Arc<dyn SaveSession> {
-        Arc::new(SQLSaveSession { })
     }
 }

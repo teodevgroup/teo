@@ -22,7 +22,6 @@ use crate::core::input::Input::{AtomicUpdater, SetValue};
 use crate::core::graph::Graph;
 use crate::core::model::model::Model;
 use crate::core::relation::Relation;
-use crate::core::connector::session::SaveSession;
 use crate::core::pipeline::ctx::{Ctx};
 use crate::core::teon::Value;
 use crate::core::error::Error;
@@ -670,7 +669,7 @@ impl Object {
     }
 
     #[async_recursion]
-    pub(crate) async fn delete_from_database(&self, session: Arc<dyn SaveSession>) -> Result<()> {
+    pub(crate) async fn delete_from_database(&self) -> Result<()> {
         let model = self.model();
         let graph = self.graph();
         // check deny first
@@ -690,7 +689,7 @@ impl Object {
             }
         }
         // real delete
-        self.connection().delete_object(self, session.clone()).await?;
+        self.connection().delete_object(self, ).await?;
         // nullify and cascade
         for relation in model.relations() {
             if relation.through().is_some() {
@@ -710,14 +709,14 @@ impl Object {
                             for key in opposite_relation.fields() {
                                 object.set_value(key, Value::Null)?;
                             }
-                            object.save_with_session_and_path(self.connection().new_save_session(), &path![]).await?;
+                            object.save_with_session_and_path( &path![]).await?;
                             Ok(())
                         }, self.connection()).await?;
                     },
                     DeleteRule::Cascade => {
                         let finder = self.intrinsic_where_unique_for_relation(relation);
                         graph.batch(opposite_model.name(), &finder, Action::from_u32(PROGRAM_CODE | DELETE | (if relation.is_vec() { MANY } else { SINGLE })), Initiator::ProgramCode, |object| async move {
-                            object.delete_from_database(self.connection().new_save_session()).await?;
+                            object.delete_from_database().await?;
                             Ok(())
                         }, self.connection()).await?;
                     }
@@ -728,8 +727,8 @@ impl Object {
     }
 
     #[async_recursion]
-    async fn save_to_database(&self, session: Arc<dyn SaveSession>) -> Result<()> {
-        self.connection().save_object(self, session).await?;
+    async fn save_to_database(&self) -> Result<()> {
+        self.connection().save_object(self).await?;
         self.clear_new_state();
         Ok(())
     }
@@ -742,12 +741,12 @@ impl Object {
         Ok(())
     }
 
-    pub(crate) async fn save_with_session_and_path<'a>(&self, session: Arc<dyn SaveSession>, path: &'a KeyPath<'a>) -> Result<()> {
-        self.save_with_session_and_path_and_ignore(session, path, false).await
+    pub(crate) async fn save_with_session_and_path<'a>(&self, path: &'a KeyPath<'a>) -> Result<()> {
+        self.save_with_session_and_path_and_ignore(path, false).await
     }
 
     #[async_recursion]
-    pub(crate) async fn save_with_session_and_path_and_ignore(&self, session: Arc<dyn SaveSession>, path: &KeyPath, ignore_required_relation: bool) -> Result<()> {
+    pub(crate) async fn save_with_session_and_path_and_ignore(&self, path: &KeyPath, ignore_required_relation: bool) -> Result<()> {
         // check if it's inside before callback
         self.before_save_callback_check()?;
         let is_new = self.is_new();
@@ -758,16 +757,16 @@ impl Object {
             self.apply_on_save_pipeline_and_validate_required_fields(path, ignore_required_relation).await?;
             self.trigger_before_save_callbacks(path).await?;
             // perform relation manipulations (has foreign key)
-            self.perform_relation_manipulations(|r| r.has_foreign_key(), session.clone(), path).await?;
+            self.perform_relation_manipulations(|r| r.has_foreign_key(), path).await?;
             if !self.model().is_virtual() {
-                self.save_to_database(session.clone()).await?;
+                self.save_to_database().await?;
             }
         } else {
             // perform relation manipulations (has foreign key)
-            self.perform_relation_manipulations(|r| r.has_foreign_key(), session.clone(), path).await?;
+            self.perform_relation_manipulations(|r| r.has_foreign_key(), path).await?;
         }
         // perform relation manipulations (doesn't have foreign key)
-        self.perform_relation_manipulations(|r| !r.has_foreign_key(), session.clone(), path).await?;
+        self.perform_relation_manipulations(|r| !r.has_foreign_key(), path).await?;
         // clear properties
         self.clear_state();
         if is_modified || is_new {
@@ -777,13 +776,11 @@ impl Object {
     }
 
     pub async fn save(&self) -> Result<()> {
-        let session = self.connection().new_save_session();
-        self.save_with_session_and_path(session, &path![]).await
+        self.save_with_session_and_path(&path![]).await
     }
 
     pub(crate) async fn save_for_seed_without_required_relation(&self) -> Result<()> {
-        let session = self.connection().new_save_session();
-        self.save_with_session_and_path_and_ignore(session, &path![], true).await
+        self.save_with_session_and_path_and_ignore(&path![], true).await
     }
 
     async fn trigger_before_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
@@ -823,15 +820,13 @@ impl Object {
 
     pub async fn delete(&self) -> Result<()> {
         self.trigger_before_delete_callbacks(path![]).await?;
-        let session = self.connection().new_save_session();
-        self.delete_from_database(session).await
+        self.delete_from_database().await
     }
 
     pub(crate) async fn delete_internal<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         self.check_model_write_permission(path.as_ref()).await?;
         self.trigger_before_delete_callbacks(path.as_ref()).await?;
-        let session = self.connection().new_save_session();
-        self.delete_from_database(session).await?;
+        self.delete_from_database().await?;
         self.trigger_after_delete_callbacks(path.as_ref()).await
     }
 
@@ -939,7 +934,7 @@ impl Object {
         Value::HashMap(identifier)
     }
 
-    async fn perform_relation_manipulations<F: Fn(&'static Relation) -> bool>(&self, f: F, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn perform_relation_manipulations<F: Fn(&'static Relation) -> bool>(&self, f: F, path: &KeyPath<'_>) -> Result<()> {
         for relation in self.model().relations() {
             if f(relation) {
                 let many = relation.is_vec();
@@ -947,17 +942,17 @@ impl Object {
                 if many {
                     let object_set_many_map = self.inner.object_set_many_map.lock().await;
                     if let Some(objects_to_set) = object_set_many_map.get(relation.name()) {
-                        self.nested_set_many_relation_object_object(relation, objects_to_set, session.clone(), path).await?;
+                        self.nested_set_many_relation_object_object(relation, objects_to_set, path).await?;
                     }
                 } else {
                     let object_set_map = self.inner.object_set_map.lock().await;
                     if let Some(option) = object_set_map.get(relation.name()) {
                         // disconnect current
                         let value = self.intrinsic_where_unique_for_relation(relation);
-                        self.nested_disconnect_relation_object(relation, &value, session.clone(), path).await?;
+                        self.nested_disconnect_relation_object(relation, &value, path).await?;
                         if let Some(new_object) = option {
                             // connect new
-                            self.link_and_save_relation_object(relation, new_object, session.clone(), path).await?;
+                            self.link_and_save_relation_object(relation, new_object, path).await?;
                         }
                     }
                 }
@@ -965,7 +960,7 @@ impl Object {
                 let object_connect_map = self.inner.object_connect_map.lock().await;
                 if let Some(objects_to_connect) = object_connect_map.get(relation.name()) {
                     for object in objects_to_connect {
-                        self.link_and_save_relation_object(relation.as_ref(), object, session.clone(), path).await?;
+                        self.link_and_save_relation_object(relation.as_ref(), object, path).await?;
                     }
                 }
                 // programming code disconnections
@@ -973,12 +968,12 @@ impl Object {
                 if let Some(objects_to_disconnect) = object_disconnect_map.get(relation.name()) {
                     for object in objects_to_disconnect {
                         if relation.has_join_table() {
-                            self.delete_join_object(object, relation.as_ref(), self.graph().opposite_relation(relation).1.unwrap(), session.clone(), path).await?;
+                            self.delete_join_object(object, relation.as_ref(), self.graph().opposite_relation(relation).1.unwrap(), path).await?;
                         } else if relation.has_foreign_key() {
                             self.remove_linked_values_from_related_relation(relation);
                         } else {
                             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
-                            object.save_with_session_and_path(session.clone(), path).await?;
+                            object.save_with_session_and_path(path).await?;
                         }
                     }
                 }
@@ -986,9 +981,9 @@ impl Object {
                 let relation_mutation_map = self.inner.relation_mutation_map.lock().await;
                 if let Some(manipulation) = relation_mutation_map.get(relation.name()) {
                     if many {
-                        self.perform_relation_manipulation_many(relation, manipulation, session.clone(), &(path + relation.name())).await?;
+                        self.perform_relation_manipulation_many(relation, manipulation, &(path + relation.name())).await?;
                     } else {
-                        self.perform_relation_manipulation_one(relation, manipulation, session.clone(), &(path + relation.name())).await?;
+                        self.perform_relation_manipulation_one(relation, manipulation, &(path + relation.name())).await?;
                     }
                 }
             }
@@ -996,7 +991,7 @@ impl Object {
         Ok(())
     }
 
-    async fn create_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, session: Arc<dyn SaveSession>, path: &'a KeyPath<'_>) -> Result<()> {
+    async fn create_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, path: &'a KeyPath<'_>) -> Result<()> {
         let join_model = self.graph().model(relation.through().unwrap()).unwrap();
         let action = Action::from_u32(JOIN_CREATE | CREATE | SINGLE);
         let join_object = self.graph().new_object(join_model.name(), action, self.action_source().clone(), self.connection())?;
@@ -1007,13 +1002,13 @@ impl Object {
         self.assign_linked_values_to_related_object(&join_object, join_local_relation);
         let join_foreign_relation = join_model.relation(foreign).unwrap();
         object.assign_linked_values_to_related_object(&join_object, join_foreign_relation);
-        match join_object.save_with_session_and_path(session.clone(), path).await {
+        match join_object.save_with_session_and_path(path).await {
             Ok(_) => Ok(()),
             Err(_) => Err(Error::unexpected_input_value_with_reason("Can't create join record.", path)),
         }
     }
 
-    async fn delete_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, session: Arc<dyn SaveSession>, path: &'a KeyPath<'_>) -> Result<()> {
+    async fn delete_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, path: &'a KeyPath<'_>) -> Result<()> {
         let join_model = self.graph().model(relation.through().unwrap()).unwrap();
         let action = Action::from_u32(JOIN_DELETE | DELETE | SINGLE);
         let local = relation.local();
@@ -1032,7 +1027,7 @@ impl Object {
             Ok(object) => object,
             Err(_) => return Err(Error::unexpected_input_value_with_reason("Join object is not found.", path)),
         }.into_not_found_error()?;
-        match object.delete_from_database(session.clone()).await {
+        match object.delete_from_database().await {
             Ok(_) => Ok(()),
             Err(_) => Err(Error::unexpected_input_value_with_reason("Can't delete join record.", path)),
         }
@@ -1056,7 +1051,7 @@ impl Object {
         }
     }
 
-    async fn link_and_save_relation_object(&self, relation: &'static Relation, object: &Object, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn link_and_save_relation_object(&self, relation: &'static Relation, object: &Object, path: &KeyPath<'_>) -> Result<()> {
         let mut linked = false;
         let (_, opposite_relation) = self.graph().opposite_relation(relation);
         if let Some(opposite_relation) = opposite_relation {
@@ -1065,59 +1060,59 @@ impl Object {
                 linked = true;
             }
         }
-        object.save_with_session_and_path(session.clone(), path).await?;
+        object.save_with_session_and_path(path).await?;
         if !linked {
             if relation.has_foreign_key() {
                 object.assign_linked_values_to_related_object(self, relation);
             } else if relation.has_join_table() {
-                self.create_join_object(object, relation, opposite_relation.unwrap(), session.clone(), path).await?;
+                self.create_join_object(object, relation, opposite_relation.unwrap(), path).await?;
             }
         }
         Ok(())
     }
 
-    async fn nested_create_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_create_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         let action = Action::from_u32(NESTED | CREATE | SINGLE);
         let object = self.graph().new_object(relation.model(), action, self.action_source().clone(), self.connection())?;
         object.set_teon_with_path(value.get("create").unwrap(), path).await?;
         if let Some(opposite) = self.graph().opposite_relation(relation).1 {
             object.ignore_relation(opposite.name());
         }
-        self.link_and_save_relation_object(relation, &object, session.clone(), path).await
+        self.link_and_save_relation_object(relation, &object, path).await
     }
 
-    async fn nested_set_many_relation_object_object(&self, relation: &'static Relation, objects: &Vec<Object>, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_set_many_relation_object_object(&self, relation: &'static Relation, objects: &Vec<Object>, path: &KeyPath<'_>) -> Result<()> {
         // disconnect previous
         let records = self.fetch_relation_objects(relation.name(), None).await?;
         for record in records.iter() {
-            self.nested_disconnect_relation_object_object(relation, record, session.clone(), path).await?;
+            self.nested_disconnect_relation_object_object(relation, record, path).await?;
         }
         // connect new
         for object in objects {
-            self.link_and_save_relation_object(relation, &object, session.clone(), path).await?;
+            self.link_and_save_relation_object(relation, &object, path).await?;
         }
         Ok(())
     }
 
-    async fn nested_set_many_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_set_many_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         // disconnect previous
         let records = self.fetch_relation_objects(relation.name(), None).await?;
         for record in records.iter() {
-            self.nested_disconnect_relation_object_object(relation, record, session.clone(), path).await?;
+            self.nested_disconnect_relation_object_object(relation, record, path).await?;
         }
         // connect new
         let value_vec = value.as_vec().unwrap();
         for value in value_vec {
-            self.nested_connect_relation_object(relation, value, session.clone(), path).await?;
+            self.nested_connect_relation_object(relation, value, path).await?;
         }
         Ok(())
     }
 
-    async fn nested_set_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_set_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         if !(relation.has_foreign_key() && relation.is_required()) {
             // disconnect old
             let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
-            let _ = self.nested_disconnect_relation_object_no_check(relation, &disconnect_value, session.clone(), path).await;
+            let _ = self.nested_disconnect_relation_object_no_check(relation, &disconnect_value, path).await;
         }
         if !value.is_null() {
             // connect new
@@ -1126,21 +1121,21 @@ impl Object {
                 Ok(object) => object.into_not_found_error()?,
                 Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
             };
-            self.link_and_save_relation_object(relation, &object, session.clone(), path).await?;
+            self.link_and_save_relation_object(relation, &object, path).await?;
         }
         Ok(())
     }
 
-    async fn nested_connect_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_connect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         let action = Action::from_u32(NESTED | CONNECT | SINGLE);
         let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone(), self.connection()).await {
             Ok(object) => object,
             Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
         }.into_not_found_error()?;
-        self.link_and_save_relation_object(relation, &object, session.clone(), path).await
+        self.link_and_save_relation_object(relation, &object, path).await
     }
 
-    async fn nested_connect_or_create_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_connect_or_create_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         let r#where = value.get("where").unwrap();
         let create = value.get("create").unwrap();
         let action = Action::from_u32(CONNECT_OR_CREATE | CONNECT | NESTED | SINGLE);
@@ -1150,29 +1145,29 @@ impl Object {
                 self.graph().new_object_with_teon_and_path(relation.model(), create, &(path + "create"), action, self.action_source().clone(), self.connection()).await?
             },
         };
-        self.link_and_save_relation_object(relation, &object, session.clone(), path).await
+        self.link_and_save_relation_object(relation, &object, path).await
     }
 
     fn intrinsic_where_unique_for_relation(&self, relation: &'static Relation) -> Value {
         Value::HashMap(relation.iter().map(|(f, r)| (r.to_owned(), self.get_value(f).unwrap())).collect())
     }
 
-    async fn nested_disconnect_relation_object_object(&self, relation: &'static Relation, object: &Object, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_disconnect_relation_object_object(&self, relation: &'static Relation, object: &Object, path: &KeyPath<'_>) -> Result<()> {
         if !relation.is_vec() && relation.is_required() {
             return Err(Error::unexpected_input_value_with_reason("Cannot disconnect required relation.", path));
         }
         if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
         } else if relation.has_join_table() {
-            self.delete_join_object(object, relation, self.graph().opposite_relation(relation).1.unwrap(), session, path).await?;
+            self.delete_join_object(object, relation, self.graph().opposite_relation(relation).1.unwrap(), path).await?;
         } else {
             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
-            object.save_with_session_and_path(session.clone(), path).await?;
+            object.save_with_session_and_path(path).await?;
         }
         Ok(())
     }
 
-    async fn nested_disconnect_relation_object_no_check(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_disconnect_relation_object_no_check(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
         } else {
@@ -1183,20 +1178,20 @@ impl Object {
                 Err(_) => return Err(Error::unexpected_input_value_with_reason("object is not found", path)),
             }.into_not_found_error()?;
             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
-            object.save_with_session_and_path(session.clone(), path).await?;
+            object.save_with_session_and_path(path).await?;
         }
         Ok(())
     }
 
-    async fn nested_disconnect_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_disconnect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         if !relation.is_vec() && relation.is_required() {
             return Err(Error::unexpected_input_value_with_reason("Cannot disconnect required relation.", path));
         }
-        self.nested_disconnect_relation_object_no_check(relation, value, session, path).await?;
+        self.nested_disconnect_relation_object_no_check(relation, value, path).await?;
         Ok(())
     }
 
-    async fn nested_upsert_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_upsert_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         let mut r#where = self.intrinsic_where_unique_for_relation(relation);
         r#where.as_hashmap_mut().unwrap().extend(value.get("where").unwrap().as_hashmap().cloned().unwrap());
         let create = value.get("create").unwrap();
@@ -1206,25 +1201,25 @@ impl Object {
             Ok(object) => {
                 let path = path + "update";
                 object.set_teon_with_path(update, &path).await?;
-                object.save_with_session_and_path(session.clone(), &path).await?;
+                object.save_with_session_and_path(&path).await?;
             },
             Err(_) => {
                 let action = Action::from_u32(NESTED | UPSERT | CREATE | SINGLE);
                 let object = self.graph().new_object_with_teon_and_path(relation.model(), create, &(path + "create"), action, self.action_source().clone(), self.connection()).await?;
-                self.link_and_save_relation_object(relation, &object, session.clone(), path).await?;
+                self.link_and_save_relation_object(relation, &object, path).await?;
             },
         };
         Ok(())
     }
 
-    async fn nested_many_disconnect_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_many_disconnect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         if relation.has_join_table() {
             let action = Action::from_u32(JOIN_DELETE | DELETE | SINGLE);
             let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone(), self.connection()).await {
                 Ok(object) => object.into_not_found_error()?,
                 Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
             };
-            self.delete_join_object(&object, relation, self.graph().opposite_relation(relation).1.unwrap(), session.clone(), path).await?;
+            self.delete_join_object(&object, relation, self.graph().opposite_relation(relation).1.unwrap(), path).await?;
         } else {
             let mut r#where = self.intrinsic_where_unique_for_relation(relation);
             r#where.as_hashmap_mut().unwrap().extend(value.as_hashmap().cloned().unwrap().into_iter());
@@ -1234,7 +1229,7 @@ impl Object {
                 Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
             };
             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
-            object.save_with_session_and_path(session.clone(), path).await?;
+            object.save_with_session_and_path(path).await?;
         }
         Ok(())
     }
@@ -1306,24 +1301,24 @@ impl Object {
         }
     }
 
-    async fn nested_many_update_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_many_update_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         let object = self.find_relation_object_by_value(relation, value.get("where").unwrap(), path, Action::from_u32(NESTED | UPDATE | SINGLE)).await?;
         object.set_teon_with_path(value.get("update").unwrap(), &(path + "update")).await?;
-        object.save_with_session_and_path(session.clone(), path).await?;
+        object.save_with_session_and_path(path).await?;
         Ok(())
     }
 
-    async fn nested_many_update_many_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_many_update_many_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         let objects = self.find_relation_objects_by_value(relation, value.get("where").unwrap(), path, Action::from_u32(NESTED | UPDATE | MANY)).await?;
         let update = value.get("update").unwrap();
         for object in objects {
             object.set_teon_with_path(update, path).await?;
-            object.save_with_session_and_path(session.clone(), path).await?;
+            object.save_with_session_and_path(path).await?;
         }
         Ok(())
     }
 
-    async fn nested_update_relation_object<'a>(&'a self, relation: &'static Relation, value: &'a Value, session: Arc<dyn SaveSession>, path: &'a KeyPath<'_>) -> Result<()> {
+    async fn nested_update_relation_object<'a>(&'a self, relation: &'static Relation, value: &'a Value, path: &'a KeyPath<'_>) -> Result<()> {
         let r#where = value.get("where").unwrap();
         let action = Action::from_u32(NESTED | UPDATE | SINGLE);
         let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone(), self.connection()).await {
@@ -1331,11 +1326,11 @@ impl Object {
             Err(_) => return Err(Error::unexpected_input_value_with_reason("update: object not found", path)),
         };
         object.set_teon_with_path(value.get("update").unwrap(), path).await?;
-        object.save_with_session_and_path(session.clone(), path).await?;
+        object.save_with_session_and_path(path).await?;
         Ok(())
     }
 
-    async fn nested_delete_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_delete_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         if !relation.is_vec() && relation.is_required() {
             return Err(Error::unexpected_input_value_with_reason("Cannot delete required relation.", path));
         }
@@ -1345,10 +1340,10 @@ impl Object {
             Ok(object) => object.into_not_found_error()?,
             Err(_) => return Err(Error::unexpected_input_value_with_reason("delete: object not found", path)),
         };
-        object.delete_from_database(session.clone()).await?;
+        object.delete_from_database().await?;
         if relation.has_join_table() {
             let opposite_relation = self.graph().opposite_relation(relation).1.unwrap();
-            self.delete_join_object(&object, relation, opposite_relation, session.clone(), path).await?;
+            self.delete_join_object(&object, relation, opposite_relation, path).await?;
         }
         if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
@@ -1356,23 +1351,23 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_many_delete_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_many_delete_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         let object = self.find_relation_object_by_value(relation, value, path, Action::from_u32(NESTED | DELETE | SINGLE)).await?;
-        object.delete_from_database(session.clone()).await?;
+        object.delete_from_database().await?;
         if relation.has_join_table() {
             let opposite_relation = self.graph().opposite_relation(relation).1.unwrap();
-            self.delete_join_object(&object, relation, opposite_relation, session.clone(), path).await?;
+            self.delete_join_object(&object, relation, opposite_relation, path).await?;
         }
         Ok(())
     }
 
-    async fn nested_many_delete_many_relation_object(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn nested_many_delete_many_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         let objects = self.find_relation_objects_by_value(relation, value, path, Action::from_u32(NESTED | DELETE | MANY)).await?;
         for object in objects {
-            object.delete_from_database(session.clone()).await?;
+            object.delete_from_database().await?;
             if relation.has_join_table() {
                 let opposite_relation = self.graph().opposite_relation(relation).1.unwrap();
-                self.delete_join_object(&object, relation, opposite_relation, session.clone(), path).await?;
+                self.delete_join_object(&object, relation, opposite_relation, path).await?;
             }
         }
         Ok(())
@@ -1398,13 +1393,13 @@ impl Object {
         Ok(())
     }
 
-    async fn perform_relation_manipulation_one_inner(&self, relation: &'static Relation, action: Action, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn perform_relation_manipulation_one_inner(&self, relation: &'static Relation, action: Action, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         let action_u32 = action.to_u32();
         if !relation.is_vec() && !relation.has_foreign_key() && !self.is_new() {
             match action_u32 {
                 NESTED_CREATE_ACTION | NESTED_CONNECT_ACTION | NESTED_CONNECT_OR_CREATE_ACTION => {
                     let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
-                    let _ = self.nested_disconnect_relation_object_no_check(relation, &disconnect_value, session.clone(), path).await;
+                    let _ = self.nested_disconnect_relation_object_no_check(relation, &disconnect_value, path).await;
                 },
                 _ => ()
             }
@@ -1427,14 +1422,14 @@ impl Object {
             }
         }
         match action_u32 {
-            NESTED_CREATE_ACTION => self.nested_create_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_CONNECT_ACTION => self.nested_connect_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_SET_ACTION => self.nested_set_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_CONNECT_OR_CREATE_ACTION => self.nested_connect_or_create_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_DISCONNECT_ACTION => self.nested_disconnect_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_UPDATE_ACTION => self.nested_update_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_DELETE_ACTION => self.nested_delete_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_UPSERT_ACTION => self.nested_upsert_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_CREATE_ACTION => self.nested_create_relation_object(relation, value, &path).await,
+            NESTED_CONNECT_ACTION => self.nested_connect_relation_object(relation, value, &path).await,
+            NESTED_SET_ACTION => self.nested_set_relation_object(relation, value, &path).await,
+            NESTED_CONNECT_OR_CREATE_ACTION => self.nested_connect_or_create_relation_object(relation, value, &path).await,
+            NESTED_DISCONNECT_ACTION => self.nested_disconnect_relation_object(relation, value, &path).await,
+            NESTED_UPDATE_ACTION => self.nested_update_relation_object(relation, value, &path).await,
+            NESTED_DELETE_ACTION => self.nested_delete_relation_object(relation, value, &path).await,
+            NESTED_UPSERT_ACTION => self.nested_upsert_relation_object(relation, value, &path).await,
             _ => unreachable!(),
         }
     }
@@ -1454,7 +1449,7 @@ impl Object {
         }
     }
 
-    async fn perform_relation_manipulation_one(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn perform_relation_manipulation_one(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         for (key, value) in value.as_hashmap().unwrap() {
             let key = key.as_str();
             let path = path + key;
@@ -1463,7 +1458,7 @@ impl Object {
             let normalized_value = self.normalize_relation_one_value(relation, action, value);
             let ctx = Ctx::initial_state_with_value(normalized_value.as_ref().clone()).with_path(path.clone()).with_action(action);
             let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
-            self.perform_relation_manipulation_one_inner(relation, new_action, &transformed_value, session.clone(), &path).await?;
+            self.perform_relation_manipulation_one_inner(relation, new_action, &transformed_value, &path).await?;
         }
         Ok(())
     }
@@ -1475,23 +1470,23 @@ impl Object {
         }
     }
 
-    async fn perform_relation_manipulation_many_inner(&self, relation: &'static Relation, action: Action, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn perform_relation_manipulation_many_inner(&self, relation: &'static Relation, action: Action, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         match action.to_u32() {
-            NESTED_CREATE_ACTION => self.nested_create_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_CONNECT_ACTION => self.nested_connect_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_SET_ACTION => self.nested_set_many_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_CONNECT_OR_CREATE_ACTION => self.nested_connect_or_create_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_DISCONNECT_ACTION => self.nested_many_disconnect_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_UPSERT_ACTION => self.nested_upsert_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_UPDATE_ACTION => self.nested_many_update_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_UPDATE_MANY_ACTION => self.nested_many_update_many_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_DELETE_ACTION => self.nested_many_delete_relation_object(relation, value, session.clone(), &path).await,
-            NESTED_DELETE_MANY_ACTION => self.nested_many_delete_many_relation_object(relation, value, session.clone(), &path).await,
+            NESTED_CREATE_ACTION => self.nested_create_relation_object(relation, value, &path).await,
+            NESTED_CONNECT_ACTION => self.nested_connect_relation_object(relation, value, &path).await,
+            NESTED_SET_ACTION => self.nested_set_many_relation_object(relation, value, &path).await,
+            NESTED_CONNECT_OR_CREATE_ACTION => self.nested_connect_or_create_relation_object(relation, value, &path).await,
+            NESTED_DISCONNECT_ACTION => self.nested_many_disconnect_relation_object(relation, value, &path).await,
+            NESTED_UPSERT_ACTION => self.nested_upsert_relation_object(relation, value, &path).await,
+            NESTED_UPDATE_ACTION => self.nested_many_update_relation_object(relation, value, &path).await,
+            NESTED_UPDATE_MANY_ACTION => self.nested_many_update_many_relation_object(relation, value, &path).await,
+            NESTED_DELETE_ACTION => self.nested_many_delete_relation_object(relation, value, &path).await,
+            NESTED_DELETE_MANY_ACTION => self.nested_many_delete_many_relation_object(relation, value, &path).await,
             _ => unreachable!(),
         }
     }
 
-    async fn perform_relation_manipulation_many(&self, relation: &'static Relation, value: &Value, session: Arc<dyn SaveSession>, path: &KeyPath<'_>) -> Result<()> {
+    async fn perform_relation_manipulation_many(&self, relation: &'static Relation, value: &Value, path: &KeyPath<'_>) -> Result<()> {
         for (key, value) in value.as_hashmap().unwrap() {
             let key = key.as_str();
             let path = path + key;
@@ -1502,13 +1497,13 @@ impl Object {
                     let normalized_value = self.normalize_relation_many_value(action, value);
                     let ctx = Ctx::initial_state_with_value(normalized_value.as_ref().clone()).with_path(&(path.clone() + index)).with_action(action);
                     let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
-                    self.perform_relation_manipulation_many_inner(relation, new_action, &transformed_value, session.clone(), &path).await?;
+                    self.perform_relation_manipulation_many_inner(relation, new_action, &transformed_value, &path).await?;
                 }
             }  else {
                 let normalized_value = self.normalize_relation_many_value(action, value);
                 let ctx = Ctx::initial_state_with_value(normalized_value.as_ref().clone()).with_path(path.clone()).with_action(action);
                 let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
-                self.perform_relation_manipulation_many_inner(relation, new_action, &transformed_value, session.clone(), &path).await?;
+                self.perform_relation_manipulation_many_inner(relation, new_action, &transformed_value, &path).await?;
             }
         }
         Ok(())
