@@ -29,14 +29,20 @@ pub trait Connection: Send + Sync {
 
     async fn delete_object(&self, object: &Object) -> Result<()>;
 
-    async fn find_unique<'a>(self: Arc<Self>, graph: &'static Graph, model: &'static Model, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>>;
+    async fn find_unique<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>>;
 
-    async fn find_many<'a>(self: Arc<Self>, graph: &'static Graph, model: &'static Model, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>>;
+    async fn find_many<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>>;
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize>;
 
     async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value>;
 
     async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value>;
+
+    // Transaction
+
+    async fn transaction(&self) -> Result<Arc<dyn Connection>>;
+
+    async fn commit(&self) -> Result<()>;
 
 }

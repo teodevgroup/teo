@@ -27,7 +27,7 @@ use crate::core::input::Input;
 use crate::core::result::Result;
 use crate::teon;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct MongoDBConnection {
     pub(super) database: Database,
 }
@@ -38,7 +38,7 @@ impl MongoDBConnection {
         self.database.collection(model.table_name())
     }
 
-    fn document_to_object(self: Arc<Self>, document: &Document, object: &Object, select: Option<&Value>, include: Option<&Value>) -> Result<()> {
+    fn document_to_object(&self, document: &Document, object: &Object, select: Option<&Value>, include: Option<&Value>) -> Result<()> {
         for key in document.keys() {
             let object_field = object.model().fields().iter().find(|f| f.column_name() == key);
             if object_field.is_some() {
@@ -83,7 +83,7 @@ impl MongoDBConnection {
                 let mut related: Vec<Object> = vec![];
                 for related_object_bson in object_bsons {
                     let action = Action::from_u32(NESTED | FIND | (if relation.is_vec() { MANY } else { SINGLE }));
-                    let related_object = object.graph().new_object(model_name, action, object.action_source().clone(), self.clone())?;
+                    let related_object = object.graph().new_object(model_name, action, object.action_source().clone(), Arc::new(self.clone()))?;
                     self.clone().document_to_object(related_object_bson.as_document().unwrap(), &related_object, inner_select, inner_include)?;
                     related.push(related_object);
                 }
@@ -431,7 +431,7 @@ impl Connection for MongoDBConnection {
         }
     }
 
-    async fn find_unique<'a>(self: Arc<Self>, graph: &'static Graph, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
+    async fn find_unique<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
         let select = finder.get("select");
         let include = finder.get("include");
         let aggregate_input = Aggregation::build(model, graph, finder)?;
@@ -446,7 +446,7 @@ impl Connection for MongoDBConnection {
             Ok(None)
         } else {
             for doc in results {
-                let obj = graph.new_object(model.name(), action, action_source.clone(), self.clone())?;
+                let obj = graph.new_object(model.name(), action, action_source.clone(), Arc::new(self.clone()))?;
                 self.clone().document_to_object(&doc.unwrap(), &obj, select, include)?;
                 return Ok(Some(obj));
             }
@@ -454,7 +454,7 @@ impl Connection for MongoDBConnection {
         }
     }
 
-    async fn find_many<'a>(self: Arc<Self>, graph: &'static Graph, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
+    async fn find_many<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
         let select = finder.get("select");
         let include = finder.get("include");
         let aggregate_input = Aggregation::build(model, graph, finder)?;
@@ -470,7 +470,7 @@ impl Connection for MongoDBConnection {
         let mut result: Vec<Object> = vec![];
         let results: Vec<std::result::Result<Document, MongoDBError>> = cur.collect().await;
         for doc in results {
-            let obj = graph.new_object(model.name(), action, action_source.clone(), self.clone())?;
+            let obj = graph.new_object(model.name(), action, action_source.clone(), Arc::new(self.clone()))?;
             match self.clone().document_to_object(&doc.unwrap(), &obj, select, include) {
                 Ok(_) => {
                     if reverse {
@@ -530,6 +530,14 @@ impl Connection for MongoDBConnection {
 
     async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value> {
         Ok(Value::Vec(self.aggregate_or_group_by(graph, model, finder).await?))
+    }
+
+    async fn transaction(&self) -> Result<Arc<dyn Connection>> {
+        Ok(Arc::new(self.clone()))
+    }
+
+    async fn commit(&self) -> Result<()> {
+        Ok(())
     }
 }
 
