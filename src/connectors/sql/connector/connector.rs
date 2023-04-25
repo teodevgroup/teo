@@ -55,11 +55,7 @@ impl SQLConnector {
         if pooled_connection.is_err() {
             Err(Error::RuntimeError(RuntimeError::CannotCreatePooledConnection(pooled_connection.err().unwrap().to_string())))
         } else {
-            Ok(Arc::new(SQLConnection {
-                dialect: self.dialect,
-                conn: Arc::new(pooled_connection.unwrap()),
-                tran: None,
-            }))
+            Ok(Arc::new(SQLConnection::new(self.dialect, Arc::new(pooled_connection.unwrap()), None)))
         }
     }
 }

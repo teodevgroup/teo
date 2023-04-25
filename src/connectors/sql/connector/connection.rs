@@ -5,6 +5,7 @@ use quaint_forked::{prelude::*, ast::Query as QuaintQuery};
 use quaint_forked::error::DatabaseConstraint;
 use quaint_forked::error::ErrorKind::UniqueConstraintViolation;
 use quaint_forked::pooled::PooledConnection;
+use quaint_forked::connector::owned_transaction::OwnedTransaction;
 use crate::core::model::model::Model;
 use crate::connectors::sql::execution::Execution;
 use crate::connectors::sql::migration::migrate::SQLMigration;
@@ -28,14 +29,32 @@ use crate::teon;
 pub(crate) struct SQLConnection {
     pub(super) dialect: SQLDialect,
     pub(super) conn: Arc<PooledConnection>,
-    pub(super) tran: Option<Arc<Transaction<'static>>>,
+    pub(super) tran: Option<Arc<OwnedTransaction>>,
+}
+
+impl SQLConnection {
+    pub(super) fn new(dialect: SQLDialect, conn: Arc<PooledConnection>, tran: Option<Arc<OwnedTransaction>>) -> Self {
+        Self {
+            dialect, conn, tran
+        }
+    }
 }
 
 impl SQLConnection {
 
+    fn dialect(&self) -> SQLDialect {
+        self.dialect
+    }
+
+    fn conn(&self) -> &PooledConnection {
+        self.conn.as_ref()
+    }
+
+    fn tran(&self) -> Option<&Arc<OwnedTransaction>> {
+        self.tran.as_ref()
+    }
+
     async fn create_object(&self, object: &Object) -> Result<()> {
-        // let tran = self.conn.start_transaction().await.unwrap();
-        // tran.commit();
         let model = object.model();
         let keys = object.keys_for_save();
         let auto_keys = model.auto_keys();
@@ -45,23 +64,23 @@ impl SQLConnection {
                 let column_name = field.column_name();
                 let val = object.get_value(key).unwrap();
                 if !(field.auto_increment && val.is_null()) {
-                    values.push((column_name, PSQLArrayToSQLString::to_string_with_ft(&val, self.dialect, field.field_type())));
+                    values.push((column_name, PSQLArrayToSQLString::to_string_with_ft(&val, self.dialect(), field.field_type())));
                 }
             } else if let Some(property) = model.property(key) {
                 let val: Value = object.get_property(key).await.unwrap();
-                values.push((key, PSQLArrayToSQLString::to_string_with_ft(&val, self.dialect, property.field_type())));
+                values.push((key, PSQLArrayToSQLString::to_string_with_ft(&val, self.dialect(), property.field_type())));
             }
         }
         let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();
-        let stmt = SQL::insert_into(model.table_name()).values(value_refs).returning(auto_keys).to_string(self.dialect);
+        let stmt = SQL::insert_into(model.table_name()).values(value_refs).returning(auto_keys).to_string(self.dialect());
         // println!("create stmt: {}", stmt);
-        if self.dialect == SQLDialect::PostgreSQL {
-            match self.conn.query(QuaintQuery::from(stmt)).await {
+        if self.dialect() == SQLDialect::PostgreSQL {
+            match self.conn().query(QuaintQuery::from(stmt)).await {
                 Ok(result_set) => {
                     let columns = result_set.columns().clone();
                     let result = result_set.into_iter().next();
                     if result.is_some() {
-                        let value = Execution::row_to_value(model, object.graph(), &result.unwrap(), &columns, self.dialect);
+                        let value = Execution::row_to_value(model, object.graph(), &result.unwrap(), &columns, self.dialect());
                         for (k, v) in value.as_hashmap().unwrap() {
                             object.set_value(k, v.clone())?;
                         }
@@ -74,7 +93,7 @@ impl SQLConnection {
                 }
             }
         } else {
-            match self.conn.query(QuaintQuery::from(stmt)).await {
+            match self.conn().query(QuaintQuery::from(stmt)).await {
                 Ok(result) => {
                     if let Some(id) = result.last_insert_id() {
                         for key in auto_keys {
@@ -105,35 +124,35 @@ impl SQLConnection {
                 if let Some(updator) = object.get_atomic_updator(key) {
                     let (key, val) = Input::key_value(updator.as_hashmap().unwrap());
                     match key {
-                        "increment" => values.push((column_name, format!("{} + {}", column_name, val.to_string(self.dialect)))),
-                        "decrement" => values.push((column_name, format!("{} - {}", column_name, val.to_string(self.dialect)))),
-                        "multiply" => values.push((column_name, format!("{} * {}", column_name, val.to_string(self.dialect)))),
-                        "divide" => values.push((column_name, format!("{} / {}", column_name, val.to_string(self.dialect)))),
-                        "push" => values.push((column_name, format!("ARRAY_APPEND({}, {})", column_name, val.to_string(self.dialect)))),
+                        "increment" => values.push((column_name, format!("{} + {}", column_name, val.to_string(self.dialect())))),
+                        "decrement" => values.push((column_name, format!("{} - {}", column_name, val.to_string(self.dialect())))),
+                        "multiply" => values.push((column_name, format!("{} * {}", column_name, val.to_string(self.dialect())))),
+                        "divide" => values.push((column_name, format!("{} / {}", column_name, val.to_string(self.dialect())))),
+                        "push" => values.push((column_name, format!("ARRAY_APPEND({}, {})", column_name, val.to_string(self.dialect())))),
                         _ => unreachable!(),
                     }
                 } else {
                     let val = object.get_value(key).unwrap();
-                    values.push((column_name, PSQLArrayToSQLString::to_string_with_ft(&val, self.dialect, field.field_type())));
+                    values.push((column_name, PSQLArrayToSQLString::to_string_with_ft(&val, self.dialect(), field.field_type())));
                 }
             } else if let Some(property) = model.property(key) {
                 let val: Value = object.get_property(key).await.unwrap();
-                values.push((key, PSQLArrayToSQLString::to_string_with_ft(&val, self.dialect, property.field_type())));
+                values.push((key, PSQLArrayToSQLString::to_string_with_ft(&val, self.dialect(), property.field_type())));
             }
         }
         let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();
         let identifier = object.identifier();
-        let r#where = Query::where_from_identifier(object, self.dialect);
+        let r#where = Query::where_from_identifier(object, self.dialect());
         if !value_refs.is_empty() {
-            let stmt = SQL::update(model.table_name()).values(value_refs).r#where(&r#where).to_string(self.dialect);
+            let stmt = SQL::update(model.table_name()).values(value_refs).r#where(&r#where).to_string(self.dialect());
             // println!("update stmt: {}", stmt);
-            let result = self.conn.execute(QuaintQuery::from(stmt)).await;
+            let result = self.conn().execute(QuaintQuery::from(stmt)).await;
             if result.is_err() {
                 println!("{:?}", result.err().unwrap());
                 return Err(Error::unknown_database_write_error());
             }
         }
-        let result = Execution::query(&self.conn, model, object.graph(), &teon!({"where": identifier, "take": 1}), self.dialect).await?;
+        let result = Execution::query(self.conn(), model, object.graph(), &teon!({"where": identifier, "take": 1}), self.dialect()).await?;
         if result.is_empty() {
             Err(Error::object_not_found())
         } else {
@@ -162,26 +181,27 @@ impl SQLConnection {
             }
         }
     }
+
 }
 
 #[async_trait]
 impl Connection for SQLConnection {
 
     async fn migrate(&self, models: Vec<&Model>, _reset_database: bool) -> Result<()> {
-        SQLMigration::migrate(self.dialect, &self.conn, models).await;
+        SQLMigration::migrate(self.dialect(), self.conn(), models).await;
         Ok(())
     }
 
     async fn purge(&self, graph: &Graph) -> Result<()> {
         for model in graph.models() {
-            let escape = self.dialect.escape();
-            self.conn.execute(QuaintQuery::from(format!("DELETE FROM {escape}{}{escape}", model.table_name()))).await.unwrap();
+            let escape = self.dialect().escape();
+            self.conn().execute(QuaintQuery::from(format!("DELETE FROM {escape}{}{escape}", model.table_name()))).await.unwrap();
         }
         Ok(())
     }
 
     async fn query_raw(&self, query: &Value) -> Result<Value> {
-        let result = self.conn.query(QuaintQuery::from(query.as_str().unwrap())).await;
+        let result = self.conn().query(QuaintQuery::from(query.as_str().unwrap())).await;
         if result.is_err() {
             let err = result.unwrap_err();
             let msg = err.original_message();
@@ -210,10 +230,10 @@ impl Connection for SQLConnection {
             return Err(Error::object_is_not_saved_thus_cant_be_deleted());
         }
         let model = object.model();
-        let r#where = Query::where_from_identifier(object, self.dialect);
-        let stmt = SQL::delete_from(model.table_name()).r#where(r#where).to_string(self.dialect);
+        let r#where = Query::where_from_identifier(object, self.dialect());
+        let stmt = SQL::delete_from(model.table_name()).r#where(r#where).to_string(self.dialect());
         // println!("see delete stmt: {}", stmt);
-        let result = self.conn.execute(QuaintQuery::from(stmt)).await;
+        let result = self.conn().execute(QuaintQuery::from(stmt)).await;
         if result.is_err() {
             println!("{:?}", result.err().unwrap());
             return Err(Error::unknown_database_write_error());
@@ -223,7 +243,7 @@ impl Connection for SQLConnection {
     }
 
     async fn find_unique<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
-        let objects = Execution::query_objects(&self.conn, model, graph, finder, self.dialect, action, action_source.clone(), Arc::new(self.clone())).await?;
+        let objects = Execution::query_objects(self.conn(), model, graph, finder, self.dialect(), action, action_source.clone(), Arc::new(self.clone())).await?;
         if objects.is_empty() {
             Ok(None)
         } else {
@@ -232,22 +252,22 @@ impl Connection for SQLConnection {
     }
 
     async fn find_many<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
-        Execution::query_objects(&self.conn, model, graph, finder, self.dialect, action, action_source, Arc::new(self.clone())).await
+        Execution::query_objects(self.conn(), model, graph, finder, self.dialect(), action, action_source, Arc::new(self.clone())).await
     }
 
     async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize> {
-        match Execution::query_count(&self.conn, model, graph, finder, self.dialect).await {
+        match Execution::query_count(self.conn(), model, graph, finder, self.dialect()).await {
             Ok(c) => Ok(c as usize),
             Err(e) => Err(e),
         }
     }
 
     async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value> {
-        Execution::query_aggregate(&self.conn, model, graph, finder, self.dialect).await
+        Execution::query_aggregate(self.conn(), model, graph, finder, self.dialect()).await
     }
 
     async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value> {
-        Execution::query_group_by(&self.conn, model, graph, finder, self.dialect).await
+        Execution::query_group_by(self.conn(), model, graph, finder, self.dialect()).await
     }
 
     async fn transaction(&self) -> Result<Arc<dyn Connection>> {
