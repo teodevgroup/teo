@@ -6,6 +6,7 @@ use quaint_forked::error::DatabaseConstraint;
 use quaint_forked::error::ErrorKind::UniqueConstraintViolation;
 use quaint_forked::pooled::PooledConnection;
 use quaint_forked::connector::owned_transaction::OwnedTransaction;
+use quaint_forked::connector::start_owned_transaction;
 use crate::core::model::model::Model;
 use crate::connectors::sql::execution::Execution;
 use crate::connectors::sql::migration::migrate::SQLMigration;
@@ -271,10 +272,17 @@ impl Connection for SQLConnection {
     }
 
     async fn transaction(&self) -> Result<Arc<dyn Connection>> {
-        Ok(Arc::new(self.clone()))
+        Ok(Arc::new(SQLConnection {
+            dialect: self.dialect,
+            conn: self.conn.clone(),
+            tran: Some(Arc::new(start_owned_transaction(self.conn.clone(), None).await.unwrap()))
+        }))
     }
 
     async fn commit(&self) -> Result<()> {
+        if let Some(tran) = &self.tran {
+            tran.commit().await.unwrap()
+        }
         Ok(())
     }
 }
