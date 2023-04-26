@@ -229,12 +229,14 @@ async fn handle_create_internal<'a>(graph: &'static Graph, create: Option<&'a Va
 }
 
 async fn handle_create(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+    let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(CREATE | ENTRY | SINGLE);
     let input = input.as_hashmap().unwrap();
     let create = input.get("create");
     let include = input.get("include");
     let select = input.get("select");
-    let result = handle_create_internal(graph, create, include, select, model, &path!["create"], action, source, connection.clone()).await;
+    let result = handle_create_internal(graph, create, include, select, model, &path!["create"], action, source, transaction.clone()).await;
+    transaction.clone().commit().await.unwrap();
     match result {
         Ok(val) => {
             let json_val: JsonValue = val.into();
@@ -248,14 +250,15 @@ async fn handle_update_internal<'a>(_graph: &'static Graph, object: Object, upda
     let empty = teon!({});
     let updator = if update.is_some() { update.unwrap() } else { &empty };
     object.set_teon_with_path(updator, &path!["update"]).await?;
-    object.save().await?;
+    object.save().await.unwrap();
     let refetched = object.refreshed(include, select).await?;
     refetched.to_json_internal(&path!["data"]).await
 }
 
 async fn handle_update(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+    let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(UPDATE | ENTRY | SINGLE);
-    let result = graph.find_unique_internal(model.name(), input, true, action, source, connection.clone()).await.into_not_found_error();
+    let result = graph.find_unique_internal(model.name(), input, true, action, source, transaction.clone()).await.into_not_found_error();
     if result.is_err() {
         return HttpResponse::NotFound().json(json!({"error": &result.err().unwrap()}));
     }
@@ -265,6 +268,7 @@ async fn handle_update(graph: &'static Graph, input: &Value, model: &'static Mod
     let select = input.get("select");
     let r#where = input.get("where");
     let update_result = handle_update_internal(graph, result.clone(), update, include, select, r#where, model).await;
+    transaction.clone().commit().await.unwrap();
     match update_result {
         Ok(value) => {
             let json_val: JsonValue = value.into();
@@ -277,8 +281,9 @@ async fn handle_update(graph: &'static Graph, input: &Value, model: &'static Mod
 }
 
 async fn handle_upsert(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+    let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(UPSERT | UPDATE | ENTRY | SINGLE);
-    let result = graph.find_unique_internal(model.name(), input, true, action, source.clone(), connection.clone()).await.into_not_found_error();
+    let result = graph.find_unique_internal(model.name(), input, true, action, source.clone(), transaction.clone()).await.into_not_found_error();
     let include = input.get("include");
     let select = input.get("select");
     return match result {
@@ -301,14 +306,17 @@ async fn handle_upsert(graph: &'static Graph, input: &Value, model: &'static Mod
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
                             let json_val: JsonValue = refetched.to_json_internal(&path!["data"]).await.unwrap().into();
+                            transaction.clone().commit().await.unwrap();
                             HttpResponse::Ok().json(json!({"data": json_val}))
                         }
                         Err(err) => {
+                            transaction.clone().commit().await.unwrap();
                             HttpResponse::BadRequest().json(json!({"error": err}))
                         }
                     }
                 }
                 Err(err) => {
+                    transaction.clone().commit().await.unwrap();
                     HttpResponse::BadRequest().json(json!({"error": err}))
                 }
             }
@@ -316,7 +324,7 @@ async fn handle_upsert(graph: &'static Graph, input: &Value, model: &'static Mod
         Err(_) => {
             let create = input.get("create");
             let action = Action::from_u32(UPSERT | CREATE | ENTRY | SINGLE);
-            let obj = graph.new_object(model.name(), action, source, connection.clone()).unwrap();
+            let obj = graph.new_object(model.name(), action, source, transaction.clone()).unwrap();
             let set_json_result = match create {
                 Some(create) => {
                     obj.set_teon_with_path(create, &path!["create"]).await
@@ -333,14 +341,17 @@ async fn handle_upsert(graph: &'static Graph, input: &Value, model: &'static Mod
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
                             let json_data: JsonValue = refetched.to_json_internal(&path!["data"]).await.unwrap().into();
+                            transaction.clone().commit().await.unwrap();
                             return HttpResponse::Ok().json(json!({"data": json_data}));
                         }
                         Err(err) => {
+                            transaction.clone().commit().await.unwrap();
                             HttpResponse::BadRequest().json(json!({"error": err}))
                         }
                     }
                 }
                 Err(err) => {
+                    transaction.clone().commit().await.unwrap();
                     HttpResponse::BadRequest().json(json!({"error": err}))
                 }
             }
@@ -349,19 +360,23 @@ async fn handle_upsert(graph: &'static Graph, input: &Value, model: &'static Mod
 }
 
 async fn handle_delete(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+    let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(DELETE | SINGLE | ENTRY);
-    let result = graph.find_unique_internal(model.name(), input, true, action, source, connection).await.into_not_found_error();
+    let result = graph.find_unique_internal(model.name(), input, true, action, source, transaction.clone()).await.into_not_found_error();
     if result.is_err() {
+        transaction.clone().commit().await.unwrap();
         return HttpResponse::NotFound().json(json!({"error": result.err().unwrap()}));
     }
     let result = result.unwrap();
     // find the object here
     return match result.delete_internal(path!["delete"]).await {
         Ok(_) => {
+            transaction.clone().commit().await.unwrap();
             let json_data: JsonValue = result.to_json_internal(&path!["data"]).await.unwrap().into();
             HttpResponse::Ok().json(json!({"data": json_data}))
         }
         Err(err) => {
+            transaction.clone().commit().await.unwrap();
             err.into()
         }
     }
@@ -847,7 +862,7 @@ pub(crate) async fn serve(
     test_context: Option<&'static TestContext>,
 ) -> Result<()> {
     if let Some(cb) = before_server_start {
-        cb.call().await?;
+        cb.call().await.unwrap();
     }
     let bind = conf.bind.clone();
     let port = bind.1;
