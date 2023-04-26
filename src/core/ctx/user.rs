@@ -3,7 +3,6 @@ use std::sync::Arc;
 use crate::app::ctx::AppCtx;
 use crate::core::connector::connection::Connection;
 use crate::core::ctx::model::ModelCtx;
-use crate::core::model::model::Model;
 use crate::core::result::Result;
 
 pub struct UserCtx {
