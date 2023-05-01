@@ -383,6 +383,7 @@ async fn handle_delete(graph: &'static Graph, input: &Value, model: &'static Mod
 }
 
 async fn handle_create_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+    let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(CREATE | MANY | ENTRY);
     let input = input.as_hashmap().unwrap();
     let create = input.get("create");
@@ -401,7 +402,7 @@ async fn handle_create_many(graph: &'static Graph, input: &Value, model: &'stati
     let mut count = 0;
     let mut ret_data: Vec<Value> = vec![];
     for (index, val) in create.iter().enumerate() {
-        let result = handle_create_internal(graph, Some(val), include, select, model, &path!["create", index], action, source.clone(), connection.clone()).await;
+        let result = handle_create_internal(graph, Some(val), include, select, model, &path!["create", index], action, source.clone(), transaction.clone()).await;
         match result {
             Err(_err) => {
                 //println!("{:?}", err.errors);
@@ -412,6 +413,7 @@ async fn handle_create_many(graph: &'static Graph, input: &Value, model: &'stati
             }
         }
     }
+    transaction.commit().await.unwrap();
     let json_ret_data: JsonValue = Value::Vec(ret_data).into();
     HttpResponse::Ok().json(json!({
         "meta": {"count": count},
@@ -420,9 +422,11 @@ async fn handle_create_many(graph: &'static Graph, input: &Value, model: &'stati
 }
 
 async fn handle_update_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+    let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(UPDATE | MANY | ENTRY);
-    let result = graph.find_many_internal(model.name(), input, true, action, source, connection.clone()).await;
+    let result = graph.find_many_internal(model.name(), input, true, action, source, transaction.clone()).await;
     if result.is_err() {
+        transaction.commit().await.unwrap();
         return HttpResponse::BadRequest().json(json!({"error": result.err().unwrap()}));
     }
     let result = result.unwrap();
@@ -442,18 +446,21 @@ async fn handle_update_many(graph: &'static Graph, input: &Value, model: &'stati
             Err(_err) => {}
         }
     }
+    transaction.commit().await.unwrap();
     HttpResponse::Ok().json(json!({
-            "meta": {
-                "count": count
-            },
-            "data": j(Value::Vec(ret_data))
-        }))
+        "meta": {
+            "count": count
+        },
+        "data": j(Value::Vec(ret_data))
+    }))
 }
 
 async fn handle_delete_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+    let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(DELETE | MANY | ENTRY);
-    let result = graph.find_many_internal(model.name(), input, true, action, source, connection).await;
+    let result = graph.find_many_internal(model.name(), input, true, action, source, transaction.clone()).await;
     if result.is_err() {
+        transaction.commit().await.unwrap();
         return HttpResponse::BadRequest().json(json!({"error": result.err().unwrap()}));
     }
     let result = result.unwrap();
@@ -473,12 +480,13 @@ async fn handle_delete_many(graph: &'static Graph, input: &Value, model: &'stati
             Err(_) => {}
         }
     }
+    transaction.commit().await.unwrap();
     HttpResponse::Ok().json(json!({
-            "meta": {
-                "count": count
-            },
-            "data": j(Value::Vec(retval))
-        }))
+        "meta": {
+            "count": count
+        },
+        "data": j(Value::Vec(retval))
+    }))
 }
 
 async fn handle_count(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
