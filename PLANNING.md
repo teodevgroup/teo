@@ -417,19 +417,20 @@
 - Rewrite connector to support pooled connections **[DONE]**
 - Fix SQLite memory bug: A HTTP connection should use single pooled connection **[DONE]**
 - Unit test: relations for SQLite memory connector **[DONE]**
-- SQL transaction
-- Foreign key management
-- Relation onUpdate
-- Relation onDelete
+- SQL transaction **[DONE]**
+- Pass teo object to callbacks
+- Refactor Rust entities
+- Refactor Node.js entities
 - Node.js bindings: refactor
 - Node.js bindings: date only type
 - Node.js bindings: error handling
-- Refactor Rust entities
-- Refactor Node.js entities
-- Enum value references enum definition
-- Add synthesised enums to graph
 
 #### 0.0.57
+- Enum value references enum definition
+- Add synthesised enums to graph
+- Foreign key management
+- Relation onUpdate
+- Relation onDelete
 - Unit test: handlers
 - Linter: errors and warnings
 - MongoDB transaction
