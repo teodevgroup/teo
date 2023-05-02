@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::fs;
+use std::sync::Arc;
 use itertools::Itertools;
 use maplit::hashset;
 use quaint_forked::pooled::{PooledConnection, Quaint};
@@ -14,6 +15,7 @@ use crate::connectors::sql::schema::column::SQLColumn;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::model::model::Model;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
+use crate::core::connector::connection::Connection;
 use crate::core::field::field::Sort;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::pipeline::ctx::PipelineCtx;
@@ -143,7 +145,7 @@ impl SQLMigration {
         !conn.query(Query::from(sql)).await.unwrap().is_empty()
     }
 
-    pub(crate) async fn migrate(dialect: SQLDialect, conn: &PooledConnection, models: Vec<&Model>) {
+    pub(crate) async fn migrate(dialect: SQLDialect, conn: &PooledConnection, models: Vec<&Model>, pconn: Arc<dyn Connection>) {
         let mut db_tables = Self::get_db_user_tables(dialect, &conn).await;
         // compare each table and do migration
         for model in models {
@@ -215,7 +217,7 @@ impl SQLMigration {
                                 let stmt = SQL::alter_table(table_name).add(c).to_string(dialect);
                                 conn.execute(Query::from(stmt)).await.unwrap();
                                 if let Some(action)= action {
-                                    let ctx = PipelineCtx::initial_state_with_value(Value::Null);
+                                    let ctx = PipelineCtx::initial_state_with_value(Value::Null, pconn.clone());
                                     action.process(ctx).await.unwrap();
                                 }
                             }
@@ -232,7 +234,7 @@ impl SQLMigration {
                             }
                             ColumnManipulation::RemoveColumn(name, action) => {
                                 if let Some(action)= action {
-                                    let ctx = PipelineCtx::initial_state_with_value(Value::Null);
+                                    let ctx = PipelineCtx::initial_state_with_value(Value::Null, pconn.clone());
                                     action.process(ctx).await.unwrap();
                                 }
                                 let stmt = SQL::alter_table(table_name).drop_column(name).to_string(dialect);

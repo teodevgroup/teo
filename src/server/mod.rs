@@ -567,7 +567,7 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
         "where": {
             identity_key.unwrap(): identity_value.unwrap()
         }
-    }), true, Action::from_u32(FIND | SINGLE | ENTRY), Initiator::ProgramCode, connection).await.into_not_found_error();
+    }), true, Action::from_u32(FIND | SINGLE | ENTRY), Initiator::ProgramCode, connection.clone()).await.into_not_found_error();
     if let Err(_err) = obj_result {
         return Error::unexpected_input_value("This identity is not found.", path!["credentials", identity_key.unwrap()]).into();
     }
@@ -575,7 +575,7 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
     let auth_by_arg = by_field.identity_checker.as_ref().unwrap();
     let pipeline = auth_by_arg.as_pipeline().unwrap();
     let action_by_input = by_value.unwrap();
-    let ctx = PipelineCtx::initial_state_with_object(obj.clone()).with_value(action_by_input.clone());
+    let ctx = PipelineCtx::initial_state_with_object(obj.clone(), connection.clone()).with_value(action_by_input.clone());
     let result = pipeline.process(ctx).await;
     return match result {
         Err(_err) => {
@@ -730,7 +730,7 @@ fn make_app(graph: &'static Graph, conf: &'static ServerConf, test_context: Opti
                     let mut transformed_entries: Vec<Value> = vec![];
                     let mut new_action = action;
                     for (_index, entry) in entries.iter().enumerate() {
-                        let ctx = PipelineCtx::initial_state_with_value(teon!({"create": entry})).with_action(action);
+                        let ctx = PipelineCtx::initial_state_with_value(teon!({"create": entry}), connection.clone()).with_action(action);
                         match model_def.transformed_action(ctx).await {
                             Ok(result) => {
                                 transformed_entries.push(result.0.get("create").unwrap().clone());
@@ -743,7 +743,7 @@ fn make_app(graph: &'static Graph, conf: &'static ServerConf, test_context: Opti
                     new_val.as_hashmap_mut().unwrap().insert("create".to_owned(), Value::Vec(transformed_entries));
                     (new_val, new_action)
                 } else {
-                    let ctx = PipelineCtx::initial_state_with_value(parsed_body).with_action(action);
+                    let ctx = PipelineCtx::initial_state_with_value(parsed_body, connection.clone()).with_action(action);
                     match model_def.transformed_action(ctx).await {
                         Ok(result) => result,
                         Err(err) => return err.into(),

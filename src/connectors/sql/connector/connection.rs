@@ -188,8 +188,8 @@ impl SQLConnection {
 #[async_trait]
 impl Connection for SQLConnection {
 
-    async fn migrate(&self, models: Vec<&Model>, _reset_database: bool) -> Result<()> {
-        SQLMigration::migrate(self.dialect(), self.conn(), models).await;
+    async fn migrate(self: Arc<Self>, models: Vec<&Model>, _reset_database: bool) -> Result<()> {
+        SQLMigration::migrate(self.dialect(), self.conn(), models, self.clone()).await;
         Ok(())
     }
 

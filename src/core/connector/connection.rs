@@ -13,7 +13,7 @@ pub trait Connection: Send + Sync {
 
     // Migration
 
-    async fn migrate(&self, models: Vec<&Model>, reset_database: bool) -> Result<()>;
+    async fn migrate(self: Arc<Self>, models: Vec<&Model>, reset_database: bool) -> Result<()>;
 
     // Purge
 

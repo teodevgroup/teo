@@ -310,7 +310,7 @@ impl MongoDBConnection {
 #[async_trait]
 impl Connection for MongoDBConnection {
 
-    async fn migrate(&self, models: Vec<&Model>, reset_database: bool) -> Result<()> {
+    async fn migrate(self: Arc<Self>, models: Vec<&Model>, reset_database: bool) -> Result<()> {
         if reset_database {
             let _ = self.database.drop(None).await;
         }

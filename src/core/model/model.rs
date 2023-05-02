@@ -360,7 +360,7 @@ impl Model {
                     } else {
                         Action::from_u32(NESTED | FIND | SINGLE)
                     };
-                    let inner = PipelineCtx::initial_state_with_value(if included_value.is_bool() { teon!({}) } else {included_value.clone()}).with_action(find_action);
+                    let inner = PipelineCtx::initial_state_with_value(if included_value.is_bool() { teon!({}) } else {included_value.clone()}, ctx.conn.clone()).with_action(find_action);
                     let result = opposite_model.transformed_action(inner).await?.0;
                     transformed_include.as_hashmap_mut().unwrap().insert(key.clone(), result);
                 }

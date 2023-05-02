@@ -159,7 +159,7 @@ impl Object {
                     if let Some(argument) = &field.default {
                         match argument {
                             Value::Pipeline(pipeline) => {
-                                let ctx = PipelineCtx::initial_state_with_object(self.clone()).with_path(&path);
+                                let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection()).with_path(&path);
                                 let result = pipeline.process(ctx).await?;
                                 self.set_value_to_value_map(key, result);
                             }
@@ -180,7 +180,7 @@ impl Object {
                             // record previous value if needed
                             self.record_previous_value_for_field_if_needed(field);
                             // on set pipeline
-                            let context = PipelineCtx::initial_state_with_object(self.clone())
+                            let context = PipelineCtx::initial_state_with_object(self.clone(), self.connection())
                                 .with_path(path.clone())
                                 .with_value(value);
                             let value = field.on_set_pipeline.process(context).await?;
@@ -204,7 +204,7 @@ impl Object {
                             SetValue(v) => v,
                             _ => return Err(Error::unexpected_input_type("value", &(path + key))),
                         };
-                        let ctx = PipelineCtx::initial_state_with_object(self.clone())
+                        let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection())
                             .with_value(value);
                         let _ = setter.process(ctx).await?;
                     }
@@ -217,23 +217,23 @@ impl Object {
     }
 
     async fn check_model_write_permission<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
-        let ctx = PipelineCtx::initial_state_with_object(self.clone()).with_path(path.as_ref());
+        let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection()).with_path(path.as_ref());
         self.model().can_mutate_pipeline().process_into_permission_result(ctx).await
     }
 
     async fn check_model_read_permission<'a>(&self, _path: impl AsRef<KeyPath<'a>>) -> Result<()> {
-        let ctx = PipelineCtx::initial_state_with_object(self.clone());
+        let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection());
         let result = self.model().can_read_pipeline().process_into_permission_result(ctx).await;
         return result
     }
 
     async fn check_field_write_permission<'a>(&self, field: &Field, _path: impl AsRef<KeyPath<'a>>) -> Result<()> {
-        let ctx = PipelineCtx::initial_state_with_object(self.clone()).with_value(self.get_value(field.name()).unwrap()).with_path(path![field.name()]);
+        let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection()).with_value(self.get_value(field.name()).unwrap()).with_path(path![field.name()]);
         field.can_mutate_pipeline.process_into_permission_result(ctx).await
     }
 
     async fn check_field_read_permission<'a>(&self, field: &Field, _path: impl AsRef<KeyPath<'a>>) -> Result<()> {
-        let ctx = PipelineCtx::initial_state_with_object(self.clone()).with_value(self.get_value(field.name()).unwrap()).with_path(path![field.name()]);
+        let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection()).with_value(self.get_value(field.name()).unwrap()).with_path(path![field.name()]);
         field.can_read_pipeline.process_into_permission_result(ctx).await
     }
 
@@ -255,7 +255,7 @@ impl Object {
             WriteRule::WriteOnce => if is_new { true } else { self.get_value(key.as_ref()).unwrap().is_null() },
             WriteRule::WriteNonNull => if is_new { true } else { !value.is_null() },
             WriteRule::WriteIf(pipeline) => {
-                let ctx = PipelineCtx::initial_state_with_object(self.clone())
+                let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection())
                     .with_path(path![key.as_ref()])
                     .with_value(value.clone());
                 pipeline.process(ctx).await.is_ok()
@@ -300,7 +300,7 @@ impl Object {
     pub async fn set_property(&self, key: &str, value: impl Into<Value>) -> Result<()> {
         let property = self.model().property(key).unwrap();
         let setter = property.setter.as_ref().unwrap();
-        let ctx = PipelineCtx::initial_state_with_object(self.clone())
+        let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection())
             .with_value(value.into());
         let _ = setter.process(ctx).await;
         Ok(())
@@ -401,7 +401,7 @@ impl Object {
             }
         }
         let getter = property.getter.as_ref().unwrap();
-        let ctx = PipelineCtx::initial_state_with_object(self.clone());
+        let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection());
         let value = getter.process(ctx).await?;
         if property.cached {
             self.inner.cached_property_map.lock().unwrap().insert(key.to_string(), value.clone());
@@ -527,7 +527,7 @@ impl Object {
                         Value::Null
                     }
                 };
-                let context = PipelineCtx::initial_state_with_object(self.clone())
+                let context = PipelineCtx::initial_state_with_object(self.clone(), self.connection())
                     .with_value(initial_value)
                     .with_path(path + field.name());
                 let result = field.perform_on_save_callback(context).await;
@@ -613,7 +613,7 @@ impl Object {
                     Optionality::PresentIf(pipeline) => {
                         let value = self.get_value(key).unwrap();
                         if value.is_null() {
-                            let ctx = PipelineCtx::initial_state_with_object(self.clone());
+                            let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection());
                             let invalid = pipeline.process(ctx).await.is_err();
                             if invalid {
                                 return Err(Error::missing_required_input_with_type(key, path))
@@ -786,21 +786,21 @@ impl Object {
     async fn trigger_before_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         let model = self.model();
         let pipeline = model.before_delete_pipeline();
-        let ctx = PipelineCtx::initial_state_with_object(self.clone()).with_path(path.as_ref());
+        let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection()).with_path(path.as_ref());
         pipeline.process_into_permission_result(ctx).await
     }
 
     async fn trigger_after_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         let model = self.model();
         let pipeline = model.after_delete_pipeline();
-        let ctx = PipelineCtx::initial_state_with_object(self.clone()).with_path(path.as_ref());
+        let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection()).with_path(path.as_ref());
         pipeline.process_into_permission_result(ctx).await
     }
 
     async fn trigger_before_save_callbacks<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         let model = self.model();
         let pipeline = model.before_save_pipeline();
-        let ctx = PipelineCtx::initial_state_with_object(self.clone()).with_path(path.as_ref());
+        let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection()).with_path(path.as_ref());
         pipeline.process_into_permission_result(ctx).await
     }
 
@@ -812,7 +812,7 @@ impl Object {
         self.inner.inside_after_save_callback.store(true, Ordering::SeqCst);
         let model = self.model();
         let pipeline = model.after_save_pipeline();
-        let ctx = PipelineCtx::initial_state_with_object(self.clone()).with_path(path.as_ref());
+        let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection()).with_path(path.as_ref());
         pipeline.process_into_permission_result(ctx).await?;
         self.inner.inside_after_save_callback.store(false, Ordering::SeqCst);
         Ok(())
@@ -865,7 +865,7 @@ impl Object {
                     if self.check_field_read_permission(field, path.as_ref()).await.is_err() {
                         continue
                     }
-                    let context = PipelineCtx::initial_state_with_object(self.clone())
+                    let context = PipelineCtx::initial_state_with_object(self.clone(), self.connection())
                         .with_value(value)
                         .with_path(path![*key]);
                     let value = field.perform_on_output_callback(context).await?;
@@ -880,7 +880,7 @@ impl Object {
                         }
                     } else {
                         if let Some(getter) = &property.getter {
-                            let ctx = PipelineCtx::initial_state_with_object(self.clone());
+                            let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection());
                             let value = getter.process(ctx).await?;
                             if !value.is_null() {
                                 map.insert(key.to_string(), value);
@@ -1456,7 +1456,7 @@ impl Object {
             let action = Action::nested_action_from_name(key).unwrap();
             let other_model = self.graph().opposite_relation(relation).0;
             let normalized_value = self.normalize_relation_one_value(relation, action, value);
-            let ctx = PipelineCtx::initial_state_with_value(normalized_value.as_ref().clone()).with_path(path.clone()).with_action(action);
+            let ctx = PipelineCtx::initial_state_with_value(normalized_value.as_ref().clone(), self.connection()).with_path(path.clone()).with_action(action);
             let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
             self.perform_relation_manipulation_one_inner(relation, new_action, &transformed_value, &path).await?;
         }
@@ -1495,13 +1495,13 @@ impl Object {
             if value.is_vec() && action.to_u32() != NESTED_SET_ACTION {
                 for (index, value) in value.as_vec().unwrap().iter().enumerate() {
                     let normalized_value = self.normalize_relation_many_value(action, value);
-                    let ctx = PipelineCtx::initial_state_with_value(normalized_value.as_ref().clone()).with_path(&(path.clone() + index)).with_action(action);
+                    let ctx = PipelineCtx::initial_state_with_value(normalized_value.as_ref().clone(), self.connection()).with_path(&(path.clone() + index)).with_action(action);
                     let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
                     self.perform_relation_manipulation_many_inner(relation, new_action, &transformed_value, &path).await?;
                 }
             }  else {
                 let normalized_value = self.normalize_relation_many_value(action, value);
-                let ctx = PipelineCtx::initial_state_with_value(normalized_value.as_ref().clone()).with_path(path.clone()).with_action(action);
+                let ctx = PipelineCtx::initial_state_with_value(normalized_value.as_ref().clone(), self.connection()).with_path(path.clone()).with_action(action);
                 let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
                 self.perform_relation_manipulation_many_inner(relation, new_action, &transformed_value, &path).await?;
             }

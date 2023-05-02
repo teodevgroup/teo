@@ -42,7 +42,7 @@ impl<A0: From<Value> + Send + Sync, O: Into<Value> + Send + Sync, R: Into<Transf
         let cb = self.callback.clone();
         let param = CallbackParam {
             value: (&ctx).value.clone(),
-            object: (&ctx).object.unwrap().clone(),
+            object: (&ctx).object.clone().unwrap().clone(),
             user_ctx: ctx.user_ctx(),
             _marker: PhantomData::default(),
         };
