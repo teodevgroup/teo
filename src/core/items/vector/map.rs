@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use crate::core::item::Item;
 use crate::core::pipeline::Pipeline;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::prelude::Value;
 use crate::core::result::Result;
 
@@ -20,7 +20,7 @@ impl MapItem {
 
 #[async_trait]
 impl Item for MapItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         let mut retval = Vec::new();
         for (i, val) in ctx.value.as_vec().unwrap().iter().enumerate() {
             let item_ctx = ctx.with_value(val.clone()).with_path(&ctx.path + i);

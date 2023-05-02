@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use pad::{PadStr, Alignment};
 use crate::core::item::Item;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::prelude::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
@@ -18,7 +18,7 @@ impl PadEndItem {
 
 #[async_trait]
 impl Item for PadEndItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         match ctx.value.as_str() {
             None => Err(ctx.internal_server_error("padEnd: value is not string")),
             Some(s) => {

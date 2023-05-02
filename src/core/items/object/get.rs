@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use crate::core::item::Item;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::teon::Value;
 use crate::core::result::Result;
 
@@ -17,7 +17,7 @@ impl GetItem {
 
 #[async_trait]
 impl Item for GetItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         let key = self.key.resolve(ctx.clone()).await?;
         match key {
             Value::Vec(keys) => {

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use crate::core::item::Item;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::prelude::Value;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
@@ -17,7 +17,7 @@ impl EllipsisItem {
 
 #[async_trait]
 impl Item for EllipsisItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         match ctx.value.as_str() {
             None => Err(ctx.internal_server_error("ellipsis: value is not string")),
             Some(s) => {

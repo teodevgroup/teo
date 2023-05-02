@@ -5,6 +5,7 @@ use crate::core::connector::connection::Connection;
 use crate::core::ctx::model::ModelCtx;
 use crate::core::result::Result;
 
+#[derive(Clone)]
 pub struct UserCtx {
     conn: Arc<dyn Connection>,
 }

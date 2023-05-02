@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use crate::core::result::Result;
 use crate::core::item::Item;
 use crate::core::teon::Value;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 
 #[derive(Debug, Clone)]
 pub struct RegexMatchItem {
@@ -19,7 +19,7 @@ impl RegexMatchItem {
 
 #[async_trait]
 impl Item for RegexMatchItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         let arg_value = self.argument.resolve(ctx.clone()).await?;
         let regex = arg_value.as_regexp().unwrap();
         match ctx.get_value() {

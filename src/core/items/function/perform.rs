@@ -3,7 +3,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use crate::core::callbacks::types::callback::{CallbackArgument, CallbackResult};
 use crate::core::item::Item;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::teon::Value;
 use crate::core::result::Result;
 
@@ -32,7 +32,7 @@ impl<T, O> CallbackItem<T, O> {
 
 #[async_trait]
 impl<T: From<Value> + Send + Sync, O: Into<CallbackResult> + Send + Sync> Item for CallbackItem<T, O> {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         let cb = self.callback.clone();
         let result = cb.call((&ctx).value.clone().into()).await.into();
         match result {

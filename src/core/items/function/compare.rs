@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use crate::core::callbacks::types::compare::CompareArgument;
 use crate::core::callbacks::types::validate::ValidateResult;
 use crate::core::item::Item;
-use crate::core::pipeline::ctx::{Ctx};
+use crate::core::pipeline::ctx::{PipelineCtx};
 use crate::core::teon::Value;
 use crate::core::result::Result;
 
@@ -34,7 +34,7 @@ impl<T, O> CompareItem<T, O> {
 #[async_trait]
 impl<T: From<Value> + Send + Sync, O: Into<ValidateResult> + Send + Sync> Item for CompareItem<T, O> {
 
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         if ctx.get_object()?.is_new() {
             return Ok(ctx);
         }

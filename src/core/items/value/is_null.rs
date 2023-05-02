@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use crate::core::item::Item;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::result::Result;
 
 #[derive(Debug, Copy, Clone)]
@@ -14,7 +14,7 @@ impl IsNullItem {
 
 #[async_trait]
 impl Item for IsNullItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         if ctx.value.is_null() {
             Ok(ctx)
         } else {

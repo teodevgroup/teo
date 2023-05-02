@@ -29,10 +29,11 @@ impl App {
         }
     }
 
-    pub fn transform<T, F, R>(&mut self, name: &'static str, f: F) -> Result<&mut Self> where
-        T: From<Value> + Into<Value> + Send + Sync + 'static,
-        R: Into<TransformResult<T>> + Send + Sync + 'static,
-        F: TransformArgument<T, R> + 'static {
+    pub fn transform<A0, O, F, R>(&mut self, name: &'static str, f: F) -> Result<&mut Self> where
+        A0: From<Value> + Send + Sync + 'static,
+        O: Into<Value> + Send + Sync + 'static,
+        R: Into<TransformResult<O>> + Send + Sync + 'static,
+        F: TransformArgument<A0, O, R> + 'static {
         AppCtx::get()?.callbacks_mut().add_transform(name, Arc::new(TransformItem::new(f)));
         Ok(self)
     }

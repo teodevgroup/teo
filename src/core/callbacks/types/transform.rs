@@ -1,5 +1,6 @@
 use futures_util::future::BoxFuture;
 use std::future::Future;
+use crate::core::callbacks::param::{CallbackParam, ExtractFromCallbackParam, ExtractValueFromCallbackParam};
 use crate::core::teon::Value;
 use crate::core::error::Error;
 use crate::core::result::Result;
@@ -24,16 +25,48 @@ impl<T, U> From<std::result::Result<T, U>> for TransformResult<T> where T: Into<
     }
 }
 
-pub trait TransformArgument<T: From<Value> + Send + Sync + Into<Value> + Send + Sync, R: Into<TransformResult<T>>>: Send + Sync {
-    fn call(&self, args: T) -> BoxFuture<'static, R>;
+pub trait TransformArgument<A0, O: Into<Value> + Send + Sync, R: Into<TransformResult<O>>>: Send + Sync {
+    fn call(&self, args: CallbackParam<A0>) -> BoxFuture<'static, R>;
 }
 
-impl<T, F, R, Fut> TransformArgument<T, R> for F where
-    T: From<Value> + Send + Sync + Into<Value>,
-    F: Fn(T) -> Fut + Sync + Send,
-    R: Into<TransformResult<T>> + Send + Sync,
+impl<A0, O, F, R, Fut> TransformArgument<A0, O, R> for F where
+    A0: ExtractValueFromCallbackParam<A0> + Send + Sync,
+    F: Fn(A0) -> Fut + Sync + Send,
+    O: Into<Value> + Sync + Send,
+    R: Into<TransformResult<O>> + Send + Sync,
     Fut: Future<Output = R> + Send + 'static {
-    fn call(&self, args: T) -> BoxFuture<'static, R> {
-        Box::pin(self(args))
+    fn call(&self, args: CallbackParam<A0>) -> BoxFuture<'static, R> {
+        let value: A0 = ExtractValueFromCallbackParam::extract(&args);
+        Box::pin(self(value))
     }
 }
+
+// impl<A0, A1, O, F, R, Fut> TransformArgument<A0, O, R> for F where
+//     A0: ExtractValueFromCallbackParam<A0> + Send + Sync,
+//     A1: ExtractFromCallbackParam<A0> + Send + Sync,
+//     F: Fn(A0, A1) -> Fut + Sync + Send,
+//     O: Into<Value> + Sync + Send,
+//     R: Into<TransformResult<O>> + Send + Sync,
+//     Fut: Future<Output = R> + Send + 'static {
+//     fn call(&self, args: CallbackParam<A0>) -> BoxFuture<'static, R> {
+//         let value: A0 = ExtractValueFromCallbackParam::extract(&args);
+//         let arg1: A1 = ExtractFromCallbackParam::extract(&args);
+//         Box::pin(self(value, arg1))
+//     }
+// }
+//
+// impl<A0, A1, A2, O, F, R, Fut> TransformArgument<A0, O, R> for F where
+//     A0: ExtractValueFromCallbackParam<A0> + Send + Sync,
+//     A1: ExtractFromCallbackParam<A0> + Send + Sync,
+//     A2: ExtractFromCallbackParam<A0> + Send + Sync,
+//     F: Fn(A0, A1, A2) -> Fut + Sync + Send,
+//     O: Into<Value> + Sync + Send,
+//     R: Into<TransformResult<O>> + Send + Sync,
+//     Fut: Future<Output = R> + Send + 'static {
+//     fn call(&self, args: CallbackParam<A0>) -> BoxFuture<'static, R> {
+//         let value: A0 = ExtractValueFromCallbackParam::extract(&args);
+//         let arg1: A1 = ExtractFromCallbackParam::extract(&args);
+//         let arg2: A2 = ExtractFromCallbackParam::extract(&args);
+//         Box::pin(self(value, arg1, arg2))
+//     }
+// }

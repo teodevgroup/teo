@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use crate::core::item::Item;
 use crate::core::teon::Value;
 use crate::core::result::Result;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 
 #[derive(Debug, Copy, Clone)]
 pub struct CeilItem {}
@@ -16,7 +16,7 @@ impl CeilItem {
 #[async_trait]
 impl Item for CeilItem {
 
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         Ok(match ctx.get_value() {
             Value::F32(v) => ctx.with_value(Value::F32(v.ceil())),
             Value::F64(v) => ctx.with_value(Value::F64(v.ceil())),

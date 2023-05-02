@@ -2,7 +2,7 @@ use std::cmp::{max};
 use async_trait::async_trait;
 use crate::core::teon::Value;
 use crate::core::item::Item;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
 pub struct MinItem {
@@ -18,7 +18,7 @@ impl MinItem {
 #[async_trait]
 impl Item for MinItem {
 
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?;
         Ok(match ctx.get_value() {
             Value::I32(v) => ctx.with_value(Value::I32(max(v, argument.as_i32().unwrap()))),

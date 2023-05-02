@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use crate::core::item::Item;
 use crate::core::result::Result;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::prelude::Value;
 
 #[derive(Debug, Clone)]
@@ -21,7 +21,7 @@ impl AssignItem {
 
 #[async_trait]
 impl Item for AssignItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         match ctx.object.as_ref() {
             None => Err(ctx.internal_server_error("assign: ctx object does not exist")),
             Some(obj) => {

@@ -16,7 +16,7 @@ use crate::core::model::model::Model;
 use crate::connectors::sql::schema::value::encode::ToSQLString;
 use crate::core::field::field::Sort;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::prelude::Value;
 
 pub(crate) struct SQLMigration { }
@@ -215,7 +215,7 @@ impl SQLMigration {
                                 let stmt = SQL::alter_table(table_name).add(c).to_string(dialect);
                                 conn.execute(Query::from(stmt)).await.unwrap();
                                 if let Some(action)= action {
-                                    let ctx = Ctx::initial_state_with_value(Value::Null);
+                                    let ctx = PipelineCtx::initial_state_with_value(Value::Null);
                                     action.process(ctx).await.unwrap();
                                 }
                             }
@@ -232,7 +232,7 @@ impl SQLMigration {
                             }
                             ColumnManipulation::RemoveColumn(name, action) => {
                                 if let Some(action)= action {
-                                    let ctx = Ctx::initial_state_with_value(Value::Null);
+                                    let ctx = PipelineCtx::initial_state_with_value(Value::Null);
                                     action.process(ctx).await.unwrap();
                                 }
                                 let stmt = SQL::alter_table(table_name).drop_column(name).to_string(dialect);

@@ -3,7 +3,7 @@ pub mod ctx;
 use std::sync::Arc;
 use crate::core::result::Result;
 use crate::core::item::Item;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::prelude::{Error, Value};
 
 #[derive(Debug, Clone)]
@@ -21,7 +21,7 @@ impl Pipeline {
         self.items.len() > 0
     }
 
-    pub(crate) async fn process(&self, ctx: Ctx<'_>) -> Result<Value> {
+    pub(crate) async fn process(&self, ctx: PipelineCtx<'_>) -> Result<Value> {
         let mut ctx = ctx;
         for item in &self.items {
             ctx = item.call(ctx.clone()).await?;
@@ -29,7 +29,7 @@ impl Pipeline {
         Ok(ctx.value)
     }
 
-    pub(crate) async fn process_with_ctx_result<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    pub(crate) async fn process_with_ctx_result<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         let mut ctx = ctx;
         for item in &self.items {
             ctx = item.call(ctx.clone()).await?;
@@ -37,7 +37,7 @@ impl Pipeline {
         Ok(ctx)
     }
 
-    pub(crate) async fn process_into_permission_result(&self, ctx: Ctx<'_>) -> Result<()> {
+    pub(crate) async fn process_into_permission_result(&self, ctx: PipelineCtx<'_>) -> Result<()> {
         let path = ctx.path.clone();
         match self.process(ctx).await {
             Ok(_) => Ok(()),

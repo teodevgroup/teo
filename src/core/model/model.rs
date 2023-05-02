@@ -14,7 +14,7 @@ use crate::core::field::field::{Field, FieldIndex, PreviousValueRule};
 use crate::core::field::r#type::FieldTypeOwner;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::model::migration::ModelMigration;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::relation::Relation;
 use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
@@ -343,7 +343,7 @@ impl Model {
     }
 
     #[async_recursion]
-    pub(crate) async fn transformed_action<'a: 'async_recursion>(&self, ctx: Ctx<'a>) -> Result<(Value, Action)> {
+    pub(crate) async fn transformed_action<'a: 'async_recursion>(&self, ctx: PipelineCtx<'a>) -> Result<(Value, Action)> {
         let mut ctx = ctx;
         for transformer in self.action_transformers.iter() {
             ctx = transformer.process_with_ctx_result(ctx).await?;
@@ -360,7 +360,7 @@ impl Model {
                     } else {
                         Action::from_u32(NESTED | FIND | SINGLE)
                     };
-                    let inner = Ctx::initial_state_with_value(if included_value.is_bool() { teon!({}) } else {included_value.clone()}).with_action(find_action);
+                    let inner = PipelineCtx::initial_state_with_value(if included_value.is_bool() { teon!({}) } else {included_value.clone()}).with_action(find_action);
                     let result = opposite_model.transformed_action(inner).await?.0;
                     transformed_include.as_hashmap_mut().unwrap().insert(key.clone(), result);
                 }

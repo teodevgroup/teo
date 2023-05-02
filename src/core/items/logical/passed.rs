@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use crate::core::item::Item;
 use crate::core::pipeline::Pipeline;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::teon::Value;
 use crate::core::result::Result;
 
@@ -20,7 +20,7 @@ impl PassedItem {
 
 #[async_trait]
 impl Item for PassedItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         match self.pipeline.process(ctx.clone()).await {
             Ok(_) => Ok(ctx.with_value(Value::Bool(true))),
             Err(error) => if error.is_server_error() {

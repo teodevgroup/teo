@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use crate::core::action::Action;
 use crate::core::item::Item;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::result::Result;
 
 #[derive(Debug, Clone)]
@@ -20,7 +20,7 @@ impl RedirectItem {
 #[async_trait]
 impl Item for RedirectItem {
 
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         Ok(ctx.redirect(self.action))
     }
 }

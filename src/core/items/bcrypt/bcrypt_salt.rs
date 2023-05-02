@@ -3,7 +3,7 @@ use bcrypt::{DEFAULT_COST, hash};
 use crate::core::item::Item;
 use crate::core::teon::Value;
 use crate::core::result::Result;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 
 #[derive(Debug, Copy, Clone)]
 pub struct BcryptSaltItem { }
@@ -16,7 +16,7 @@ impl BcryptSaltItem {
 
 #[async_trait]
 impl Item for BcryptSaltItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         match ctx.value.as_str() {
             Some(s) => {
                 Ok(ctx.with_value(Value::String(hash(s, DEFAULT_COST).unwrap())))

@@ -6,14 +6,14 @@ use crate::core::teon::Value;
 use crate::prelude::Error;
 
 #[derive(Clone)]
-pub struct Ctx<'a> {
+pub struct PipelineCtx<'a> {
     pub(crate) value: Value,
     pub(crate) object: Option<Object>,
     pub(crate) path: KeyPath<'a>,
     pub(crate) action: Action,
 }
 
-impl<'a> Ctx<'a> {
+impl<'a> PipelineCtx<'a> {
 
     pub(crate) fn initial_state_with_value(value: Value) -> Self {
         Self {

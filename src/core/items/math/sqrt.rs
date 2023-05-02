@@ -3,7 +3,7 @@ use num_integer::Roots;
 use async_trait::async_trait;
 use crate::core::result::Result;
 use crate::core::item::Item;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::prelude::Value;
 
 #[derive(Debug, Copy, Clone)]
@@ -17,7 +17,7 @@ impl SqrtItem {
 
 #[async_trait]
 impl Item for SqrtItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         Ok(match ctx.get_value() {
             Value::I32(v) => ctx.with_value(Value::I32(v.sqrt())),
             Value::I64(v) => ctx.with_value(Value::I64(v.sqrt())),

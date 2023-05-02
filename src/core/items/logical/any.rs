@@ -3,7 +3,7 @@ use crate::core::result::Result;
 use crate::core::item::Item;
 
 use crate::core::pipeline::Pipeline;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 
 
 #[derive(Debug, Clone)]
@@ -20,7 +20,7 @@ impl AnyItem {
 
 #[async_trait]
 impl Item for AnyItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         for pipeline in &self.pipelines {
             let result = pipeline.process(ctx.clone()).await;
             if result.is_ok() {

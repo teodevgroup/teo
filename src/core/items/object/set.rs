@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use crate::core::teon::Value;
 use crate::core::item::Item;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::items::object::get::GetItem;
 use crate::core::result::Result;
 
@@ -22,7 +22,7 @@ impl SetItem {
 
 #[async_trait]
 impl Item for SetItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         match self.key.as_ref() {
             None => Ok(ctx.with_value(self.value.resolve(ctx.clone()).await?)),
             Some(key) => {

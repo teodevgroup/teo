@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use regex::Regex;
 use crate::core::item::Item;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
 pub struct IsSecurePasswordItem {
@@ -23,7 +23,7 @@ impl IsSecurePasswordItem {
 
 #[async_trait]
 impl Item for IsSecurePasswordItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         match ctx.value.as_str() {
             Some(s) => {
                 for regex in &self.patterns {

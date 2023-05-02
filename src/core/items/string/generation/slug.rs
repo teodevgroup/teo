@@ -3,7 +3,7 @@ use cuid::slug;
 use crate::core::item::Item;
 use crate::core::teon::Value;
 use crate::core::result::Result;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 
 #[derive(Debug, Copy, Clone)]
 pub struct SlugItem {}
@@ -16,7 +16,7 @@ impl SlugItem {
 
 #[async_trait]
 impl Item for SlugItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         Ok(ctx.with_value(Value::String(slug().unwrap())))
     }
 }

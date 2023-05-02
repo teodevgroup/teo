@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use crate::core::item::Item;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::teon::Value;
 use crate::core::result::Result;
 
@@ -17,7 +17,7 @@ impl OneOfItem {
 
 #[async_trait]
 impl Item for OneOfItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         let arg = self.argument.resolve(ctx.clone()).await?;
         let list = arg.as_vec().unwrap();
         if list.iter().find(|item| **item == arg).is_some() {

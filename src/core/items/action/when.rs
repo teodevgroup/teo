@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use crate::core::action::Action;
 use crate::core::item::Item;
 use crate::core::pipeline::Pipeline;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::result::Result;
 use crate::core::error::Error;
 
@@ -24,7 +24,7 @@ impl WhenItem {
 #[async_trait]
 impl Item for WhenItem {
 
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         let action = if ctx.action.is_empty() {
             match ctx.object.as_ref() {
                 Some(object) => object.action(),

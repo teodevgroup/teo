@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use crate::core::item::Item;
 use crate::core::teon::Value;
 use crate::core::result::Result;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 
 #[derive(Debug, Clone)]
 pub struct TruncateItem {
@@ -19,7 +19,7 @@ impl TruncateItem {
 
 #[async_trait]
 impl Item for TruncateItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?.as_usize().unwrap();
         match &ctx.value {
             Value::String(s) => Ok(ctx.with_value(Value::String(s.chars().take(argument).collect()))),

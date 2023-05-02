@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use crate::core::item::Item;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::prelude::Value;
 use crate::core::result::Result;
 #[derive(Debug, Copy, Clone)]
@@ -14,7 +14,7 @@ impl IsOddItem {
 
 #[async_trait]
 impl Item for IsOddItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         match ctx.get_value() {
             Value::I32(v) => if v % 2 == 1 { Ok(ctx) } else { Err(ctx.with_invalid("value is not odd")) },
             Value::I64(v) => if v % 2 == 1 { Ok(ctx) } else { Err(ctx.with_invalid("value is not odd")) },

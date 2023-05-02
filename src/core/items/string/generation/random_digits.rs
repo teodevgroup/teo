@@ -3,7 +3,7 @@ use random_string::generate;
 use crate::core::item::Item;
 use crate::core::teon::Value;
 use crate::core::result::Result;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 
 #[derive(Debug, Clone)]
 pub struct RandomDigitsItem {
@@ -20,7 +20,7 @@ impl RandomDigitsItem {
 
 #[async_trait]
 impl Item for RandomDigitsItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         let len = self.len.resolve(ctx.clone()).await?;
         Ok(ctx.with_value(Value::String(generate(len.as_usize().unwrap(), "1234567890"))))
     }

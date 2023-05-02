@@ -35,7 +35,7 @@ use self::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::graph::Graph;
 use crate::core::model::model::Model;
 use crate::core::object::{ErrorIfNotFound, Object};
-use crate::core::pipeline::ctx::{Ctx};
+use crate::core::pipeline::ctx::{PipelineCtx};
 use crate::core::error::Error;
 use crate::core::teon::decoder::Decoder;
 use crate::prelude::Value;
@@ -575,7 +575,7 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
     let auth_by_arg = by_field.identity_checker.as_ref().unwrap();
     let pipeline = auth_by_arg.as_pipeline().unwrap();
     let action_by_input = by_value.unwrap();
-    let ctx = Ctx::initial_state_with_object(obj.clone()).with_value(action_by_input.clone());
+    let ctx = PipelineCtx::initial_state_with_object(obj.clone()).with_value(action_by_input.clone());
     let result = pipeline.process(ctx).await;
     return match result {
         Err(_err) => {
@@ -730,7 +730,7 @@ fn make_app(graph: &'static Graph, conf: &'static ServerConf, test_context: Opti
                     let mut transformed_entries: Vec<Value> = vec![];
                     let mut new_action = action;
                     for (_index, entry) in entries.iter().enumerate() {
-                        let ctx = Ctx::initial_state_with_value(teon!({"create": entry})).with_action(action);
+                        let ctx = PipelineCtx::initial_state_with_value(teon!({"create": entry})).with_action(action);
                         match model_def.transformed_action(ctx).await {
                             Ok(result) => {
                                 transformed_entries.push(result.0.get("create").unwrap().clone());
@@ -743,7 +743,7 @@ fn make_app(graph: &'static Graph, conf: &'static ServerConf, test_context: Opti
                     new_val.as_hashmap_mut().unwrap().insert("create".to_owned(), Value::Vec(transformed_entries));
                     (new_val, new_action)
                 } else {
-                    let ctx = Ctx::initial_state_with_value(parsed_body).with_action(action);
+                    let ctx = PipelineCtx::initial_state_with_value(parsed_body).with_action(action);
                     match model_def.transformed_action(ctx).await {
                         Ok(result) => result,
                         Err(err) => return err.into(),

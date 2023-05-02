@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use crate::core::item::Item;
 use crate::core::teon::Value;
 
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::result::Result;
 #[derive(Debug, Clone)]
 pub struct AppendItem {
@@ -18,7 +18,7 @@ impl AppendItem {
 #[async_trait]
 impl Item for AppendItem {
 
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         let argument = self.argument.resolve(ctx.clone()).await?;
         match &ctx.get_value() {
             Value::String(s) => {

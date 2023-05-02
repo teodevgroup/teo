@@ -10,7 +10,7 @@ use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::field::read_rule::ReadRule;
 use crate::core::field::write_rule::WriteRule;
 use crate::core::pipeline::Pipeline;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::teon::Value;
 use crate::core::result::Result;
 
@@ -228,11 +228,11 @@ impl Field {
         self.on_output_pipeline.has_any_items()
     }
 
-    pub(crate) async fn perform_on_save_callback(&self, ctx: Ctx<'_>) -> Result<Value> {
+    pub(crate) async fn perform_on_save_callback(&self, ctx: PipelineCtx<'_>) -> Result<Value> {
         self.on_save_pipeline.process(ctx).await
     }
 
-    pub(crate) async fn perform_on_output_callback(&self, ctx: Ctx<'_>) -> Result<Value> {
+    pub(crate) async fn perform_on_output_callback(&self, ctx: PipelineCtx<'_>) -> Result<Value> {
         self.on_output_pipeline.process(ctx).await
     }
 

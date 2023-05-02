@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use crate::core::item::Item;
 use crate::core::result::Result;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::prelude::Value;
 
 
@@ -20,7 +20,7 @@ impl NotItem {
 
 #[async_trait]
 impl Item for NotItem {
-    async fn call<'a>(&self, ctx: Ctx<'a>) -> Result<Ctx<'a>> {
+    async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         match &self.value {
             Value::Pipeline(p) => if p.process(ctx.clone()).await.is_ok() {
                 Err(ctx.with_invalid("value is not invalid"))

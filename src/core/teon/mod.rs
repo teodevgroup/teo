@@ -20,7 +20,7 @@ use regex::Regex;
 use bigdecimal::BigDecimal;
 use crate::core::field::r#type::FieldType;
 use crate::core::object::Object;
-use crate::core::pipeline::ctx::Ctx;
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::pipeline::Pipeline;
 use crate::core::teon::index::Index;
 use crate::core::teon::range::Range;
@@ -530,7 +530,7 @@ impl Value {
     }
 
     // resolve pipeline as value
-    pub(crate) async fn resolve(&self, context: Ctx<'_>) -> Result<Value> {
+    pub(crate) async fn resolve(&self, context: PipelineCtx<'_>) -> Result<Value> {
         match self {
             Value::Pipeline(p) => p.process(context).await,
             Value::HashMap(map) => {
