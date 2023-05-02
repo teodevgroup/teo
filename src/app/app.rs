@@ -29,7 +29,7 @@ impl App {
         }
     }
 
-    pub fn transform<A0, O, F, R>(&mut self, name: &'static str, f: F) -> Result<&mut Self> where
+    pub fn transform<A0, O, F, R>(&self, name: &'static str, f: F) -> Result<&Self> where
         A0: From<Value> + Send + Sync + 'static,
         O: Into<Value> + Send + Sync + 'static,
         R: Into<TransformResult<O>> + Send + Sync + 'static,
@@ -38,7 +38,7 @@ impl App {
         Ok(self)
     }
 
-    pub fn callback<T, F, O>(&mut self, name: &'static str, f: F) -> Result<&mut Self> where
+    pub fn callback<T, F, O>(&self, name: &'static str, f: F) -> Result<&Self> where
         T: From<Value> + Send + Sync + 'static,
         F: CallbackArgument<T, O> + 'static,
         O: Into<CallbackResult> + Send + Sync + 'static {
@@ -46,7 +46,7 @@ impl App {
         Ok(self)
     }
 
-    pub fn validate<T, O, F>(&mut self, name: &'static str, f: F) -> Result<&mut Self> where
+    pub fn validate<T, O, F>(&self, name: &'static str, f: F) -> Result<&Self> where
         T: From<Value> + Send + Sync + 'static,
         O: Into<ValidateResult> + Send + Sync + 'static,
         F: ValidateArgument<T, O> + 'static {
@@ -54,7 +54,7 @@ impl App {
         Ok(self)
     }
 
-    pub fn compare<T, O, F>(&mut self, name: &'static str, f: F) -> Result<&mut Self> where
+    pub fn compare<T, O, F>(&self, name: &'static str, f: F) -> Result<&Self> where
         T: From<Value> + Send + Sync + 'static,
         O: Into<ValidateResult> + Send + Sync + 'static,
         F: CompareArgument<T, O> + 'static {
@@ -62,7 +62,7 @@ impl App {
         Ok(self)
     }
 
-    pub fn setup<F>(&mut self, f: F) -> Result<&mut Self> where F: AsyncCallbackWithoutArgs + 'static {
+    pub fn setup<F>(&self, f: F) -> Result<&Self> where F: AsyncCallbackWithoutArgs + 'static {
         AppCtx::get()?.set_setup(Arc::new(f));
         Ok(self)
     }

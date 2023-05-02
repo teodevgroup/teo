@@ -1,16 +1,13 @@
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
-
 use std::sync::Arc;
 use async_trait::async_trait;
 use crate::core::callbacks::param::CallbackParam;
-
 use crate::core::callbacks::types::transform::{TransformArgument, TransformResult};
 use crate::core::result::Result;
 use crate::core::item::Item;
 use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::teon::Value;
-
 
 #[derive(Clone)]
 pub struct TransformItem<A0, O, R> {
