@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::future::Future;
 use std::sync::Arc;
@@ -163,10 +164,10 @@ impl Graph {
         Ok(object)
     }
 
-    pub async fn create_object(&'static self, model: &str, initial: impl AsRef<Value>, connection: Option<Arc<dyn Connection>>) -> Result<Object> {
+    pub async fn create_object(&'static self, model: &str, initial: impl Borrow<Value>, connection: Option<Arc<dyn Connection>>) -> Result<Object> {
         let connection = connection.unwrap_or(AppCtx::get()?.connector()?.connection().await?);
         let obj = self.new_object(model, Action::from_u32(PROGRAM_CODE | CREATE | SINGLE | INTERNAL_POSITION), Initiator::ProgramCode, connection)?;
-        obj.set_teon(initial.as_ref()).await?;
+        obj.set_teon(initial.borrow()).await?;
         Ok(obj)
     }
 

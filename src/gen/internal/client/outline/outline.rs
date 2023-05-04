@@ -8,7 +8,7 @@ use crate::gen::internal::client::outline::class_kind::ClassKind;
 use crate::gen::internal::client::outline::delegate::{Delegate, DelegateAction};
 use crate::gen::internal::client::outline::field::Field;
 use crate::gen::internal::client::outline::field_kind::FieldKind;
-use crate::gen::internal::type_lookup::TypeLookup;
+use crate::gen::internal::type_lookup::ClientTypeLookup;
 use crate::prelude::Graph;
 
 pub(in crate::gen) struct Outline<'a> {
@@ -17,7 +17,7 @@ pub(in crate::gen) struct Outline<'a> {
 }
 
 impl<'a> Outline<'a> {
-    pub(in crate::gen) fn new<L>(graph: &'a Graph, lookup: L) -> Self where L: TypeLookup {
+    pub(in crate::gen) fn new<L>(graph: &'a Graph, lookup: L) -> Self where L: ClientTypeLookup {
         Self {
             classes: {
                 let mut results = graph.enums().iter().map(|(_name, enum_def)| {
@@ -1182,7 +1182,7 @@ mod helper {
     use inflector::Inflector;
     use crate::gen::internal::client::outline::field::Field;
     use crate::gen::internal::client::outline::field_kind::FieldKind;
-    use crate::gen::internal::type_lookup::TypeLookup;
+    use crate::gen::internal::type_lookup::ClientTypeLookup;
 
     pub(super) fn without_infix<'a>(model_name: &str, before: &str, without: &str, after: &str) -> Cow<'a, str> {
         if without.is_empty() {
@@ -1261,7 +1261,7 @@ mod helper {
         }
     }
 
-    pub(super) fn args_by_field<'a, T>(model: &str, optional: bool, lookup: &T) -> Field<'a> where T: TypeLookup {
+    pub(super) fn args_by_field<'a, T>(model: &str, optional: bool, lookup: &T) -> Field<'a> where T: ClientTypeLookup {
         Field {
             name: "by",
             localized_name: Cow::Borrowed(""),
@@ -1272,7 +1272,7 @@ mod helper {
         }
     }
 
-    pub(super) fn args_having_field<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: TypeLookup {
+    pub(super) fn args_having_field<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: ClientTypeLookup {
         Field {
             name: "having",
             localized_name: Cow::Borrowed(""),
@@ -1327,7 +1327,7 @@ mod helper {
         }
     }
 
-    pub(super) fn args_order_by_field<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: TypeLookup {
+    pub(super) fn args_order_by_field<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: ClientTypeLookup {
         Field {
             name: "orderBy",
             localized_name: Cow::Borrowed(""),
@@ -1338,7 +1338,7 @@ mod helper {
         }
     }
 
-    pub(super) fn args_distinct_field<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: TypeLookup {
+    pub(super) fn args_distinct_field<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: ClientTypeLookup {
         Field {
             name: "distinct",
             localized_name: Cow::Borrowed(""),
@@ -1415,7 +1415,7 @@ mod helper {
         }
     }
 
-    pub(super) fn args_create_many_input<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: TypeLookup {
+    pub(super) fn args_create_many_input<'a, T>(model: &str, lookup: &T, optional: bool) -> Field<'a> where T: ClientTypeLookup {
         Field {
             name: "createMany",
             localized_name: Cow::Borrowed(""),

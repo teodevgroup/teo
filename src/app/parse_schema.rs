@@ -7,8 +7,8 @@ use crate::core::field::field::Field;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::model::Model;
 use crate::core::property::Property;
-use crate::gen::interface::client::conf::Conf;
-use crate::gen::interface::server::conf::EntityGeneratorConf;
+use crate::gen::interface::client::conf::Conf as ClientConf;
+use crate::gen::interface::server::conf::Conf as EntityConf;
 use crate::parser::parser::parser::ASTParser;
 use crate::prelude::Graph;
 use crate::core::r#enum::{Enum, EnumVariant};
@@ -63,7 +63,7 @@ pub(super) fn load_schema() -> Result<()> {
     }
     // entities
     for entity in parser.entities() {
-        app_ctx.entities_mut().push(EntityGeneratorConf {
+        app_ctx.entities_mut().push(EntityConf {
             name: entity.identifier.as_ref().map(|i| i.name.clone()),
             provider: entity.provider.unwrap(),
             dest: entity.dest.clone().unwrap(),
@@ -71,7 +71,7 @@ pub(super) fn load_schema() -> Result<()> {
     }
     // clients
     for client in parser.clients() {
-        app_ctx.clients_mut().push(Conf {
+        app_ctx.clients_mut().push(ClientConf {
             name: client.identifier.as_ref().map(|i| i.name.clone()),
             kind: client.provider.unwrap(),
             dest: client.dest.clone().unwrap(),

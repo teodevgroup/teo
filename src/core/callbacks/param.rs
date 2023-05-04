@@ -3,9 +3,9 @@ use crate::core::ctx::user::UserCtx;
 use crate::prelude::{Object, Value};
 
 pub struct CallbackParam<A0> {
-    pub(crate) value: Value,
-    pub(crate) object: Object,
-    pub(crate) user_ctx: UserCtx,
+    pub value: Value,
+    pub object: Object,
+    pub user_ctx: UserCtx,
     pub(crate) _marker: PhantomData<A0>,
 }
 

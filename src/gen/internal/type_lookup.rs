@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use crate::core::action::Action;
 use crate::core::field::r#type::FieldType;
 
-pub(crate) trait TypeLookup {
+pub(crate) trait ClientTypeLookup {
     fn field_type_to_filter_type<'a>(&self, field_type: &'a FieldType, nullable: bool) -> Cow<'a, str>;
     fn field_type_to_filter_with_aggregates_type<'a>(&self, field_type: &'a FieldType, nullable: bool) -> Cow<'a, str>;
     fn field_type_to_create_type<'a>(&self, field_type: &'a FieldType, nullable: bool) -> Cow<'a, str>;

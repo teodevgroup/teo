@@ -8,7 +8,7 @@ use crate::core::conf::test::TestConf;
 use crate::core::connector::connector::Connector;
 use crate::core::connector::conf::ConnectorConf;
 use crate::gen::interface::client::conf::Conf as ClientConf;
-use crate::gen::interface::server::conf::EntityGeneratorConf;
+use crate::gen::interface::server::conf::Conf;
 use crate::parser::parser::parser::ASTParser;
 use crate::prelude::Graph;
 use crate::seeder::data_set::DataSet;
@@ -28,7 +28,7 @@ pub struct AppCtx {
     debug_conf: Option<Box<DebugConf>>,
     test_conf: Option<Box<TestConf>>,
     clients: Vec<ClientConf>,
-    entities: Vec<EntityGeneratorConf>,
+    entities: Vec<Conf>,
     datasets: Vec<DataSet>,
     setup: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
 }
@@ -156,11 +156,11 @@ impl AppCtx {
         &mut AppCtx::get_mut().unwrap().clients
     }
 
-    pub(crate) fn entities(&self) -> &Vec<EntityGeneratorConf> {
+    pub(crate) fn entities(&self) -> &Vec<Conf> {
         &self.entities
     }
 
-    pub(crate) fn entities_mut(&self) -> &mut Vec<EntityGeneratorConf> {
+    pub(crate) fn entities_mut(&self) -> &mut Vec<Conf> {
         &mut AppCtx::get_mut().unwrap().entities
     }
 

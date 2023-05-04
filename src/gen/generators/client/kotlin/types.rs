@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use crate::core::action::{Action, AGGREGATE_HANDLER, COUNT_HANDLER, CREATE_HANDLER, CREATE_MANY_HANDLER, DELETE_HANDLER, DELETE_MANY_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, FIND_UNIQUE_HANDLER, GROUP_BY_HANDLER, IDENTITY_HANDLER, SIGN_IN_HANDLER, UPDATE_HANDLER, UPDATE_MANY_HANDLER, UPSERT_HANDLER};
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
-use crate::gen::internal::type_lookup::TypeLookup;
+use crate::gen::internal::type_lookup::ClientTypeLookup;
 
 pub(crate) struct KotlinTypes { }
 
@@ -9,7 +9,7 @@ impl KotlinTypes {
     pub(crate) fn new() -> Self { Self { } }
 }
 
-impl TypeLookup for KotlinTypes {
+impl ClientTypeLookup for KotlinTypes {
     fn field_type_to_filter_type<'a>(&self, _field_type: &'a FieldType, _optional: bool) -> Cow<'a, str> {
         Cow::Borrowed("Any")
     }

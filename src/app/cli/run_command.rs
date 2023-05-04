@@ -7,7 +7,7 @@ use crate::server::test_context::{TestContext};
 use crate::purger::purge;
 use crate::seeder::seed::seed;
 use crate::server::serve;
-use crate::gen::interface::server::gen as gen_entity;
+use crate::gen::interface::server::gen::gen as gen_entity;
 use crate::gen::interface::client::gen::gen as gen_client;
 
 pub(crate) async fn run_command(cli: CLI) -> Result<()> {

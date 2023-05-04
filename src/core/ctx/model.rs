@@ -23,4 +23,8 @@ impl ModelCtx {
     pub async fn find_many<T: From<Object>>(&self, finder: &Value) -> Result<Vec<T>> {
         AppCtx::get()?.graph()?.find_many(self.model.name(), finder, Some(self.conn.clone())).await
     }
+
+    pub async fn create_object<T: From<Object>>(&self, values: &Value) -> Result<T> {
+        AppCtx::get()?.graph()?.create_object(self.model.name(), values, Some(self.conn.clone())).await.map(|v| v.into())
+    }
 }

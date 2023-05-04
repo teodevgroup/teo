@@ -29,7 +29,7 @@ impl GroupRelation {
     }
 
     /// Create a new group relation.
-    pub async fn new(values: impl AsRef<Value>, connection: Arc<dyn Connection>) -> Self {
+    pub async fn new(values: impl Borrow<Value>, connection: Arc<dyn Connection>) -> Self {
         Self {
             inner: AppCtx::get().unwrap().graph().unwrap().create_object("__TeoGroupRelation", values, Some(connection)).await.unwrap(),
         }

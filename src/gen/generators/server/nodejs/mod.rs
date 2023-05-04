@@ -5,14 +5,14 @@ use array_tool::vec::Join;
 use crate::core::result::Result;
 
 use crate::gen::internal::file_util::FileUtil;
-use crate::gen::interface::server::EntityGenerator;
+use crate::gen::internal::server::generator::EntityGenerator;
 use crate::prelude::Graph;
 use async_trait::async_trait;
 use inflector::Inflector;
 use crate::gen::generators::client::typescript::pkg::src::index_d_ts::generate_index_d_ts;
 use crate::gen::internal::code::Code;
 use crate::gen::generators::server::nodejs::utils::{field_to_nodejs_api_type, relation_to_nodejs_api_type};
-use crate::gen::interface::server::conf::EntityGeneratorConf;
+use crate::gen::interface::server::conf::Conf;
 
 pub(crate) struct NodeJSEntityGenerator { }
 
@@ -110,7 +110,7 @@ impl NodeJSEntityGenerator {
 
 #[async_trait]
 impl EntityGenerator for NodeJSEntityGenerator {
-    async fn generate_entity_files(&self, graph: &Graph, _conf: &EntityGeneratorConf, generator: &FileUtil) -> Result<()> {
+    async fn generate_entity_files(&self, graph: &Graph, _conf: &Conf, generator: &FileUtil) -> Result<()> {
         self.generate_index_js(graph, generator).await?;
         let content = generate_index_d_ts(graph,"teo".to_owned(), true);
         self.generate_index_d_ts(graph, generator, content).await?;
