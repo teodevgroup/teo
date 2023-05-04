@@ -1,6 +1,6 @@
-use crate::gen::interface::client::conf::Conf;
+use crate::gen::interface::server::conf::Conf;
 use crate::gen::internal::client::outline::outline::Outline;
-use crate::gen::internal::type_lookup::ClientTypeLookup;
+use crate::gen::internal::type_lookup::TypeLookup;
 use crate::prelude::Graph;
 
 pub(in crate::gen) struct Ctx<'a> {
@@ -10,7 +10,7 @@ pub(in crate::gen) struct Ctx<'a> {
 }
 
 impl<'a> Ctx<'a> {
-    pub(in crate::gen) fn build<L>(graph: &'a Graph, conf: &'a Conf, lookup: L) -> Self where L: ClientTypeLookup {
+    pub(in crate::gen) fn build<L>(graph: &'a Graph, conf: &'a Conf, lookup: L) -> Self where L: TypeLookup {
         Self { conf, graph, outline: Outline::new(graph, lookup) }
     }
 }

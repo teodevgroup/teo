@@ -5,6 +5,7 @@ use crate::prelude::Graph;
 use async_trait::async_trait;
 use crate::gen::interface::server::conf::Conf;
 use crate::core::result::Result;
+use crate::gen::internal::server::ctx::Ctx;
 
 pub(crate) struct PythonEntityGenerator {}
 
@@ -16,7 +17,7 @@ impl PythonEntityGenerator {
 
 #[async_trait]
 impl EntityGenerator for PythonEntityGenerator {
-    async fn generate_entity_files(&self, _graph: &Graph, _conf: &Conf, _generator: &FileUtil) -> Result<()> {
+    async fn generate_entity_files(&self, _ctx: &Ctx, _generator: &FileUtil) -> Result<()> {
         Ok(())
     }
 }

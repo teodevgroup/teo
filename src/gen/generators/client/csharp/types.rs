@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use crate::core::action::{Action, AGGREGATE_HANDLER, COUNT_HANDLER, CREATE_HANDLER, CREATE_MANY_HANDLER, DELETE_HANDLER, DELETE_MANY_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, FIND_UNIQUE_HANDLER, GROUP_BY_HANDLER, IDENTITY_HANDLER, SIGN_IN_HANDLER, UPDATE_HANDLER, UPDATE_MANY_HANDLER, UPSERT_HANDLER};
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
-use crate::gen::internal::type_lookup::ClientTypeLookup;
+use crate::gen::internal::type_lookup::TypeLookup;
 
 fn to_optional(t: &str, optional: bool) -> String {
     if !optional {
@@ -108,7 +108,7 @@ impl CSharpTypes {
     }
 }
 
-impl ClientTypeLookup for CSharpTypes {
+impl TypeLookup for CSharpTypes {
     fn field_type_to_filter_type<'a>(&self, field_type: &'a FieldType, optional: bool) -> Cow<'a, str> {
         self.internal_field_type_to_filter_type(field_type, optional, false)
     }

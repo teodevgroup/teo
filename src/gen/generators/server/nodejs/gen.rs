@@ -5,16 +5,16 @@ use crate::gen::internal::file_util::FileUtil;
 use crate::gen::internal::server::generator::EntityGenerator;
 use crate::prelude::Graph;
 
-pub(in crate::gen) struct RustEntityGenerator { }
+pub(in crate::gen) struct NodeJSEntityGenerator { }
 
-impl RustEntityGenerator {
+impl NodeJSEntityGenerator {
     pub(in crate::gen) fn new() -> Self {
         Self { }
     }
 }
 
 #[async_trait]
-impl EntityGenerator for RustEntityGenerator {
+impl EntityGenerator for NodeJSEntityGenerator {
     async fn generate_entity_files(&self, ctx: &Ctx, generator: &FileUtil) -> crate::prelude::Result<()> {
         todo!()
     }
