@@ -60,6 +60,10 @@ impl Relation {
         self.description.as_ref().map(|d| d.as_str())
     }
 
+    pub(crate) fn description_with_default(&self) -> &str {
+        self.description().unwrap_or("This relation doesn't have a description.")
+    }
+
     pub(crate) fn optionality(&self) -> &Optionality { &self.optionality }
 
     pub(crate) fn is_optional(&self) -> bool {

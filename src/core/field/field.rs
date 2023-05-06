@@ -199,6 +199,13 @@ impl Field {
         }
     }
 
+    pub(crate) fn description_with_default(&self) -> &str {
+        match self.description() {
+            Some(desc) => desc,
+            None => "This field doesn't have a description.",
+        }
+    }
+
     pub(crate) fn is_required(&self) -> bool {
         self.optionality.is_required()
     }

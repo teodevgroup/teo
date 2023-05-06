@@ -51,6 +51,14 @@ impl Property {
         &self.name
     }
 
+    pub fn description(&self) -> Option<&str> {
+        self.description.as_ref().map(|d| d.as_str())
+    }
+
+    pub fn description_with_default(&self) -> &str {
+        self.description().unwrap_or("This property doesn't have a description.")
+    }
+
     pub(crate) fn database_type(&self) -> &DatabaseType {
         self.database_type.as_ref().unwrap()
     }

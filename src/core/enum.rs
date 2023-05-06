@@ -24,11 +24,11 @@ impl EnumVariant {
     }
 
     pub(crate) fn description(&self) -> Option<&str> {
-        if let Some(d) = &self.description {
-            Some(d)
-        } else {
-            None
-        }
+        self.description.as_ref().map(|d| d.as_str())
+    }
+
+    pub(crate) fn description_with_default(&self) -> &str {
+        self.description().unwrap_or("This enum variant doesn't have a description.")
     }
 }
 
@@ -72,6 +72,10 @@ impl Enum {
         } else {
             None
         }
+    }
+
+    pub(crate) fn description_with_default(&self) -> &str {
+        self.description().unwrap_or("This enum doesn't have a description.")
     }
 
     pub(crate) fn variants(&self) -> &Vec<EnumVariant> {

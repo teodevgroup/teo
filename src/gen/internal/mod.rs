@@ -6,3 +6,4 @@ pub(in crate::gen) mod server;
 pub(in crate::gen) mod filters;
 pub(in crate::gen) mod type_lookup;
 pub(in crate::gen) mod message;
+pub(in crate::gen) mod server_type_lookup;
