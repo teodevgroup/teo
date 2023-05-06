@@ -10,6 +10,11 @@ pub fn pascalcase<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     Ok(s.to_pascal_case())
 }
 
+pub fn snakecase<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
+    let s = s.to_string();
+    Ok(s.to_snake_case())
+}
+
 pub fn capitalize_first<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     let s = s.to_string();
     let mut c = s.chars();

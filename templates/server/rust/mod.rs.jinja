@@ -1,0 +1,36 @@
+use std::borrow::Borrow;
+use std::fmt::{Debug, Display, Formatter};
+{%- if has_date %}
+use chrono::NaiveDate;
+{%- endif %}
+{%- if has_datetime %}
+use chrono::{DateTime, Utc};
+{%- endif %}
+{%- if has_decimal %}
+use bigdecimal::BigDecimal;
+{%- endif %}
+{%- if has_object_id %}
+use bson::oid::ObjectId;
+{%- endif %}
+use teo::core::callbacks::param::{CallbackParam, ExtractFromCallbackParam};
+use teo::core::ctx::user::UserCtx;
+
+pub struct Teo {
+{%- for class in outline.classes %}
+    {{ class.name|snakecase }}_ctx: {{ class.name }}Ctx,
+{%- endfor %}
+}
+
+impl ExtractFromCallbackParam<A0> for Teo {
+    fn extract(param: &CallbackParam<A0>) -> Self {
+        Self { user_ctx: param.user_ctx.clone() }
+    }
+}
+
+impl Teo {
+{%- for class in outline.classes %}
+    fn {{ class.name|snakecase }}(&self) -> {{ class.name }}Class {
+        {{ class.name }}Class { model_ctx: self.{{ class.name|snakecase }}_ctx.model_ctx("{{ class.name }}").unwrap() }
+    }
+{%- endfor %}
+}
