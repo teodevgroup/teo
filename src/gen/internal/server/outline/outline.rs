@@ -44,12 +44,16 @@ impl<'a> EntityOutline<'a> {
                                     kind: FieldKind::Relation,
                                     input_field_type: if r.is_vec() {
                                         lookup.wrap_in_vec(r.model())
+                                    } else if r.is_optional() {
+                                        lookup.wrap_in_optional(r.model())
                                     } else {
                                         Cow::Borrowed(r.model())
                                     },
                                     input_optional: r.is_optional(),
                                     output_field_type: if r.is_vec() {
                                         lookup.wrap_in_vec(r.model())
+                                    } else if r.is_optional() {
+                                        lookup.wrap_in_optional(r.model())
                                     } else {
                                         Cow::Borrowed(r.model())
                                     },

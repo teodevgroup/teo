@@ -109,4 +109,8 @@ impl ServerTypeLookup for RustTypes {
     fn wrap_in_vec<'a>(&self, original: &str) -> Cow<'a, str> {
         Cow::Owned("Vec<".to_owned() + original + ">")
     }
+
+    fn wrap_in_optional<'a>(&self, original: &str) -> Cow<'a, str> {
+        Cow::Owned("Option<".to_owned() + original + ">")
+    }
 }

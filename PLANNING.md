@@ -419,7 +419,7 @@
 - Unit test: relations for SQLite memory connector **[DONE]**
 - SQL transaction **[DONE]**
 - Pass teo object to callbacks
-- Refactor Rust entities
+- Refactor Rust entities **[DONE]**
 - Refactor Node.js entities
 - Node.js bindings: refactor
 - Node.js bindings: date only type
