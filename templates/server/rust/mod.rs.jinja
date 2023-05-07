@@ -14,6 +14,205 @@ use bson::oid::ObjectId;
 {%- endif %}
 use teo::core::callbacks::param::{CallbackParam, ExtractFromCallbackParam};
 use teo::core::ctx::user::UserCtx;
+use teo::prelude::{Object, Value, Result, ModelCtx};
+use teo::teon;
+
+{%- for class in outline.classes %}
+pub struct {{ class.name }}Class {
+    pub model_ctx: ModelCtx,
+}
+
+impl {{ class.name }}Class {
+
+    /// Find many {{ class.name|wordcase|pluralize }}.
+    pub async fn find_many(&self, query: impl Borrow<Value>) -> Result<Vec<{{ class.name }}>> {
+        self.model_ctx.find_many(query.borrow()).await
+    }
+
+    /// Find a unique {{ class.name|wordcase }}.
+    pub async fn find_unique(&self, query: impl Borrow<Value>) -> Result<Option<{{ class.name }}>> {
+        self.model_ctx.find_unique(query.borrow()).await
+    }
+
+    /// Find a non unique {{ class.name|wordcase }}.
+    pub async fn find_first(&self, query: impl Borrow<Value>) -> Result<Option<{{ class.name }}>> {
+        self.model_ctx.find_first(query.borrow()).await
+    }
+
+    /// Create a new {{ class.name|wordcase }}.
+    pub async fn new(&self, values: impl Borrow<Value>) -> {{ class.name }} {
+        self.model_ctx.create_object::<{{ class.name }}>(values.borrow())
+    }
+
+    /// Create an empty {{ class.name|wordcase }}.
+    pub async fn default(&self) -> Self {
+        self.model_ctx.create_object::<{{ class.name }}>(teon!({}).borrow())
+    }
+}
+
+pub struct {{ class.name }} {
+    pub inner: Object,
+}
+
+impl {{ class.name }} {
+
+    /// Whether this {{ class.name|wordcase }} is new.
+    pub fn is_new(&self) -> bool {
+        self.inner.is_new()
+    }
+
+    /// Whether this {{ class.name|wordcase }} is modified.
+    pub fn is_modified(&self) -> bool {
+        self.inner.is_modified()
+    }
+
+    /// Set new values to a {{ class.name|wordcase }}. Validations and transformations are
+    /// triggered.
+    pub async fn set(&self, values: impl AsRef<Value>) -> Result<()> {
+        self.inner.set_teon(values.as_ref()).await
+    }
+
+    /// Update with new values to a {{ class.name|wordcase }}. Validations and transformations are
+    /// not triggered.
+    pub async fn update(&self, values: impl AsRef<Value>) -> Result<()> {
+        self.inner.update_teon(values.as_ref()).await
+    }
+
+    /// Save this {{ class.name|wordcase }}.
+    pub async fn save(&self) -> Result<()> {
+        self.inner.save().await
+    }
+
+    /// Delete this {{ class.name|wordcase }}.
+    pub async fn delete(&self) -> Result<()> {
+        self.inner.delete().await
+    }
+
+{%- for field in class.fields %}
+{%- if field.kind.is_field() %}
+    /// ## {{ field.localized_name }}
+    ///
+    /// {{ field.desc }}
+    pub fn {{ field.name }}(&self) -> {{ field.output_field_type }} {
+        self.inner.get("{{ field.name }}").unwrap()
+    }
+
+    /// ## {{ field.localized_name }}
+    ///
+    /// {{ field.desc }}
+    pub fn set_{{ field.name }}(&self, new_value: {{ field.input_field_type }}) {
+        self.inner.set("{{ field.name }}", new_value).unwrap();
+    }
+
+{%- else if field.kind.is_relation() %}
+{%- if field.input_field_type.as_ref().contains("Vec<") %}
+    /// ## {{ field.localized_name }}
+    ///
+    /// {{ field.desc }}
+    pub async fn {{ field.name }}(&self, find_many_input: impl AsRef<Value>) -> Vec<{{ field.input_field_type }}> {
+        let objects = self.inner.force_get_relation_objects("{{ field.name }}", find_many_input.as_ref()).await.unwrap();
+        objects.iter().map(|o| {{ field.input_field_type }} { inner: o.clone() }).collect()
+    }
+
+    /// ## {{ field.localized_name }}
+    ///
+    /// {{ field.desc }}
+    pub async fn set_{{ field.name }}(&self, {{ field.name }}: {{ field.input_field_type }}) {
+        let objects = {{ field.name }}.iter().map(|o| o.inner.clone()).collect();
+        self.inner.force_set_relation_objects("{{ field.name }}", objects).await
+    }
+
+    /// ## {{ field.localized_name }}
+    ///
+    /// {{ field.desc }}
+    pub async fn add_to_{{ field.name }}(&self, {{ field.name }}: {{ field.input_field_type }}) {
+        let objects = {{ field.name }}.iter().map(|o| o.inner.clone()).collect();
+        self.inner.force_add_relation_objects("{{ field.name }}", objects).await
+    }
+
+    /// ## {{ field.localized_name }}
+    ///
+    /// {{ field.desc }}
+    pub async fn remove_from_{{ field.name }}(&self, {{ field.name }}: {{ field.input_field_type }}) {
+        let objects = {{ field.name }}.iter().map(|o| o.inner.clone()).collect();
+        self.inner.force_remove_relation_objects("{{ field.name }}", objects).await
+    }
+{%- else %}
+    /// ## {{ field.localized_name }}
+    ///
+    /// {{ field.desc }}
+    pub async fn {{ field.name }}(&self) -> {{ field.input_field_type }} {
+        let object = self.inner.force_get_relation_object("{{ field.name }}").await.unwrap();
+        match object {
+            Some(object) => Some({{ field.input_field_type }} { inner: object }),
+            None => None,
+        }
+    }
+
+    /// ## {{ field.localized_name }}
+    ///
+    /// {{ field.desc }}
+    pub async fn set_{{ field.name }}(&self, {{ field.name }}: {{ field.input_field_type }}) {
+        self.inner.force_set_relation_object("{{ field.name }}", {{ field.name }}.map(|o| o.inner.clone())).await
+    }
+{%- endif %}
+{%- else if field.kind.is_property() %}
+{%- if field.getter %}
+    /// ## {{ field.localized_name }}
+    ///
+    /// {{ field.desc }}
+    pub async fn {{ field.name }}(&self) -> Result<{{ field.output_field_type }}> {
+        self.inner.get_property("{{ field.name }}").await
+    }
+{%- endif %}
+{%- if field.setter %}
+    /// ## {{ field.localized_name }}
+    ///
+    /// {{ field.desc }}
+    pub async fn set_{{ field.name }}(&self, new_value: {{ field.input_field_type }}) -> Result<()> {
+        self.inner.set_property("{{ field.name }}", new_value).await
+    }
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+}
+
+impl Into<Object> for {{ class.name }} {
+    fn into(self) -> Object {
+        self.inner.clone()
+    }
+}
+
+impl From<Object> for {{ class.name }} {
+    fn from(value: Object) -> Self {
+        Self { inner: value }
+    }
+}
+
+impl Into<Value> for {{ class.name }} {
+    fn into(self) -> Value {
+        Value::Object(self.into())
+    }
+}
+
+impl From<Value> for {{ class.name }} {
+    fn from(value: Value) -> Self {
+        Self::from(value.as_object().unwrap().clone())
+    }
+}
+
+impl Debug for {{ class.name }} {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(&self.inner, f)
+    }
+}
+
+impl Display for {{ class.name }} {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.inner, f)
+    }
+}
+{%- endfor %}
 
 pub struct Teo {
 {%- for class in outline.classes %}

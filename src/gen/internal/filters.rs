@@ -15,6 +15,16 @@ pub fn snakecase<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     Ok(s.to_snake_case())
 }
 
+pub fn wordcase<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
+    let s = s.to_string();
+    Ok(s.to_word_case())
+}
+
+pub fn pluralize<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
+    let s = s.to_string();
+    Ok(s.to_plural())
+}
+
 pub fn capitalize_first<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     let s = s.to_string();
     let mut c = s.chars();
