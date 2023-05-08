@@ -1,5 +1,9 @@
+use std::collections::BTreeSet;
 use async_trait::async_trait;
 use askama::Template;
+use maplit::btreeset;
+use tokio::fs;
+use toml_edit::{Document, value};
 use crate::gen::interface::server::conf::Conf;
 use crate::gen::internal::server::ctx::Ctx;
 use crate::gen::internal::file_util::FileUtil;
@@ -60,10 +64,53 @@ impl RustEntityGenerator {
     }
 }
 
+impl RustEntityGenerator {
+    async fn find_and_update_cargo_toml(&self, package_requirements: &BTreeSet<&str>, generator: &FileUtil) {
+        let cargo_toml = match generator.find_file_upwards("Cargo.toml") {
+            Some(path) => path,
+            None => return,
+        };
+        let toml = fs::read_to_string(&cargo_toml).await.unwrap();
+        let mut doc = toml.parse::<Document>().expect("`Cargo.toml' has invalid content");
+        let deps = doc.get_mut("dependencies").unwrap();
+        if package_requirements.contains(&"chrono") {
+            if deps["chrono"].is_none() {
+                deps["chrono"]["version"] = value("0.4.23");
+            }
+        }
+        if package_requirements.contains(&"bson") {
+            if deps["bson"].is_none() {
+                deps["bson"]["version"] = value("2.3.0");
+            }
+        }
+        if package_requirements.contains(&"bigdecimal") {
+            if deps["bigdecimal"].is_none() {
+                deps["bigdecimal"]["version"] = value("0.3.0");
+            }
+        }
+        fs::write(cargo_toml, doc.to_string()).await.unwrap();
+    }
+}
+
 #[async_trait]
 impl EntityGenerator for RustEntityGenerator {
     async fn generate_entity_files(&self, ctx: &Ctx, generator: &FileUtil) -> crate::prelude::Result<()> {
-        generator.generate_file("mod.rs", RustMainTemplate::new(&ctx.entity_outline, ctx.conf).render().unwrap()).await?;
+        let template = RustMainTemplate::new(&ctx.entity_outline, ctx.conf);
+        generator.generate_file("mod.rs", template.render().unwrap()).await?;
+        // Modify files
+        let mut package_requirements = btreeset![];
+        if template.has_date || template.has_datetime {
+            package_requirements.insert("chrono");
+        }
+        if template.has_decimal {
+            package_requirements.insert("bigdecimal");
+        }
+        if template.has_object_id {
+            package_requirements.insert("bson");
+        }
+        if !package_requirements.is_empty() {
+            self.find_and_update_cargo_toml(&package_requirements, generator).await;
+        }
         Ok(())
     }
 }

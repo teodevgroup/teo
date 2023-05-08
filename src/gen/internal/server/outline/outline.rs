@@ -36,6 +36,7 @@ impl<'a> EntityOutline<'a> {
                                     desc: f.description_with_default(),
                                     getter: true,
                                     setter: true,
+                                    is_enum: f.field_type().is_enum(),
                                 }
                             }));
                             fields.extend(m.relations().iter().map(|r| {
@@ -62,6 +63,7 @@ impl<'a> EntityOutline<'a> {
                                     desc: r.description_with_default(),
                                     getter: true,
                                     setter: true,
+                                    is_enum: false,
                                 }
                             }));
                             fields.extend(m.properties().iter().map(|p| {
@@ -76,6 +78,7 @@ impl<'a> EntityOutline<'a> {
                                     desc: p.description_with_default(),
                                     getter: p.has_getter(),
                                     setter: p.has_setter(),
+                                    is_enum: p.field_type().is_enum(),
                                 }
                             }));
                             fields

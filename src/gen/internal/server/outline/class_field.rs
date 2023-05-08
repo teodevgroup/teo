@@ -12,4 +12,5 @@ pub(in crate::gen) struct ClassField<'a> {
     pub(in crate::gen) desc: &'a str,
     pub(in crate::gen) getter: bool,
     pub(in crate::gen) setter: bool,
+    pub(in crate::gen) is_enum: bool,
 }

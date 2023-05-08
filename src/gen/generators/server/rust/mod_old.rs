@@ -452,25 +452,7 @@ impl From<Value> for {enum_name} {{
         Ok(())
     }
 
-    async fn find_and_update_cargo_toml(&self, package_requirements: Vec<&str>, generator: &FileUtil) {
-        let cargo_toml = match generator.find_file_upwards("Cargo.toml") {
-            Some(path) => path,
-            None => return,
-        };
-        let toml = fs::read_to_string(&cargo_toml).await.unwrap();
-        let mut doc = toml.parse::<Document>().expect("`Cargo.toml' has invalid content");
-        let deps = doc.get_mut("dependencies").unwrap();
-        if package_requirements.contains(&"chrono") {
-            deps["chrono"]["version"] = value("0.4.23");
-        }
-        if package_requirements.contains(&"bson") {
-            deps["bson"]["version"] = value("2.3.0");
-        }
-        if package_requirements.contains(&"bigdecimal") {
-            deps["bigdecimal"]["version"] = value("0.3.0");
-        }
-        fs::write(cargo_toml, doc.to_string()).await.unwrap();
-    }
+
 }
 
 #[async_trait]

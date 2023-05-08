@@ -17,6 +17,76 @@ use teo::core::ctx::user::UserCtx;
 use teo::prelude::{Object, Value, Result, ModelCtx};
 use teo::teon;
 
+{%- for e in outline.enums %}
+/// ## {{ e.localized_name }}
+///
+/// {{ e.desc }}
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
+pub enum {{ e.name }} {
+{%- for v in e.variants %}
+    /// ### {{ v.localized_name }}
+    ///
+    /// {{ v.desc }}
+    {{ v.name }},
+{%- endfor %}
+}
+
+impl EnumVariantToValue for {{ e.name }} {
+    fn to_enum_value(&self) -> Value {
+        match self {
+{%- for v in e.variants %}
+            {{ e.name }}::{{ v.name }} => Value::String("{{ v.name }}".to_owned()),
+{%- endfor %}
+        }
+    }
+}
+
+impl EnumVariantToValue for Option<{{ e.name }}> {
+    fn to_enum_value(&self) -> Value {
+        if self.is_none() {
+            return Value::Null;
+        }
+        match self.unwrap() {
+{%- for v in e.variants %}
+            {{ e.name }}::{{ v.name }} => Value::String("{{ v.name }}".to_owned()),
+{%- endfor %}
+        }
+    }
+}
+
+impl ValueToEnumVariant<{{ e.name }}> for Value {
+    fn to_enum_variant(&self) -> Result<{{ e.name }}> {
+        if self.is_string() {
+            Ok(match self.as_str().unwrap() {
+{%- for v in e.variants %}
+                "{{ v.name }}" => {{ e.name }}::{{ v.name }},
+{%- endfor %}
+                _ => return Err(Error::RuntimeError(RuntimeError::CannotConvertValueToEnumVariant))
+            })
+        } else {
+            Err(Error::RuntimeError(RuntimeError::CannotConvertValueToEnumVariant))
+        }
+    }
+}
+
+impl ValueToEnumVariant<Option<{{ e.name }}>> for Value {
+    fn to_enum_variant(&self) -> Result<Option<{{ e.name }}>> {
+        if self.is_string() {
+            Ok(Some(match self.as_str().unwrap() {
+{%- for v in e.variants %}
+                "{{ v.name }}" => {{ e.name }}::{{ v.name }},
+{%- endfor %}
+                _ => return Err(Error::RuntimeError(RuntimeError::CannotConvertValueToEnumVariant))
+            }))
+        } else if self.is_null() {
+            Ok(None)
+        } else {
+            Err(Error::RuntimeError(RuntimeError::CannotConvertValueToEnumVariant))
+        }
+    }
+}
+{%- endfor %}
+
 {%- for class in outline.classes %}
 pub struct {{ class.name }}Class {
     pub model_ctx: ModelCtx,
@@ -40,16 +110,17 @@ impl {{ class.name }}Class {
     }
 
     /// Create a new {{ class.name|wordcase }}.
-    pub async fn new(&self, values: impl Borrow<Value>) -> {{ class.name }} {
-        self.model_ctx.create_object::<{{ class.name }}>(values.borrow())
+    pub async fn new(&self, values: impl Borrow<Value>) -> Result<{{ class.name }}> {
+        self.model_ctx.create_object::<{{ class.name }}>(values.borrow()).await
     }
 
     /// Create an empty {{ class.name|wordcase }}.
-    pub async fn default(&self) -> Self {
-        self.model_ctx.create_object::<{{ class.name }}>(teon!({}).borrow())
+    pub async fn default(&self) -> Result<{{ class.name }}> {
+        self.model_ctx.create_object::<{{ class.name }}>(teon!({}).borrow()).await
     }
 }
 
+#[derive(Clone)]
 pub struct {{ class.name }} {
     pub inner: Object,
 }
