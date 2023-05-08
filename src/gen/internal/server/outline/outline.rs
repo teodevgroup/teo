@@ -43,21 +43,9 @@ impl<'a> EntityOutline<'a> {
                                 ClassField {
                                     name: r.name(),
                                     kind: FieldKind::Relation,
-                                    input_field_type: if r.is_vec() {
-                                        lookup.wrap_in_vec(r.model())
-                                    } else if r.is_optional() {
-                                        lookup.wrap_in_optional(r.model())
-                                    } else {
-                                        Cow::Borrowed(r.model())
-                                    },
+                                    input_field_type: Cow::Borrowed(r.model()),
                                     input_optional: r.is_optional(),
-                                    output_field_type: if r.is_vec() {
-                                        lookup.wrap_in_vec(r.model())
-                                    } else if r.is_optional() {
-                                        lookup.wrap_in_optional(r.model())
-                                    } else {
-                                        Cow::Borrowed(r.model())
-                                    },
+                                    output_field_type: Cow::Borrowed(r.model()),
                                     output_optional: r.is_optional(),
                                     localized_name: Cow::Owned(r.localized_name()),
                                     desc: r.description_with_default(),

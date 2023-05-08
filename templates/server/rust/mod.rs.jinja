@@ -164,7 +164,7 @@ impl {{ class.name }} {
     /// ## {{ field.localized_name }}
     ///
     /// {{ field.desc }}
-    pub fn {{ field.name }}(&self) -> {{ field.output_field_type }} {
+    pub fn {{ field.name|snakecase }}(&self) -> {{ field.output_field_type }} {
     {%- if field.is_enum %}
         let value: Value = self.inner.get("{{ field.name }}").unwrap();
         value.to_enum_variant().unwrap()
@@ -176,7 +176,7 @@ impl {{ class.name }} {
     /// ## {{ field.localized_name }}
     ///
     /// {{ field.desc }}
-    pub fn set_{{ field.name }}(&self, new_value: {{ field.input_field_type }}) {
+    pub fn set_{{ field.name|snakecase }}(&self, new_value: {{ field.input_field_type }}) {
     {%- if field.is_enum %}
         self.inner.set("{{ field.name }}", new_value.to_enum_value()).unwrap();
     {%- else %}
@@ -189,7 +189,7 @@ impl {{ class.name }} {
     /// ## {{ field.localized_name }}
     ///
     /// {{ field.desc }}
-    pub async fn {{ field.name }}(&self, find_many_input: impl AsRef<Value>) -> Vec<{{ field.input_field_type }}> {
+    pub async fn {{ field.name|snakecase }}(&self, find_many_input: impl AsRef<Value>) -> Vec<{{ field.input_field_type }}> {
         let objects = self.inner.force_get_relation_objects("{{ field.name }}", find_many_input.as_ref()).await.unwrap();
         objects.iter().map(|o| {{ field.input_field_type }} { inner: o.clone() }).collect()
     }
@@ -197,7 +197,7 @@ impl {{ class.name }} {
     /// ## {{ field.localized_name }}
     ///
     /// {{ field.desc }}
-    pub async fn set_{{ field.name }}(&self, {{ field.name }}: {{ field.input_field_type }}) {
+    pub async fn set_{{ field.name|snakecase }}(&self, {{ field.name }}: {{ field.input_field_type }}) {
         let objects = {{ field.name }}.iter().map(|o| o.inner.clone()).collect();
         self.inner.force_set_relation_objects("{{ field.name }}", objects).await
     }
@@ -205,7 +205,7 @@ impl {{ class.name }} {
     /// ## {{ field.localized_name }}
     ///
     /// {{ field.desc }}
-    pub async fn add_to_{{ field.name }}(&self, {{ field.name }}: {{ field.input_field_type }}) {
+    pub async fn add_to_{{ field.name|snakecase }}(&self, {{ field.name }}: {{ field.input_field_type }}) {
         let objects = {{ field.name }}.iter().map(|o| o.inner.clone()).collect();
         self.inner.force_add_relation_objects("{{ field.name }}", objects).await
     }
@@ -213,7 +213,7 @@ impl {{ class.name }} {
     /// ## {{ field.localized_name }}
     ///
     /// {{ field.desc }}
-    pub async fn remove_from_{{ field.name }}(&self, {{ field.name }}: {{ field.input_field_type }}) {
+    pub async fn remove_from_{{ field.name|snakecase }}(&self, {{ field.name }}: {{ field.input_field_type }}) {
         let objects = {{ field.name }}.iter().map(|o| o.inner.clone()).collect();
         self.inner.force_remove_relation_objects("{{ field.name }}", objects).await
     }
@@ -221,19 +221,23 @@ impl {{ class.name }} {
     /// ## {{ field.localized_name }}
     ///
     /// {{ field.desc }}
-    pub async fn {{ field.name }}(&self) -> {{ field.input_field_type }} {
+    pub async fn {{ field.name|snakecase }}(&self) -> {% if field.input_optional %}Option<{% endif %}{{ field.input_field_type }}{% if field.input_optional %}>{% endif %} {
         let object = self.inner.force_get_relation_object("{{ field.name }}").await.unwrap();
+        {% if field.input_optional %}
         match object {
             Some(object) => Some({{ field.input_field_type }} { inner: object }),
             None => None,
         }
+        {% else %}
+        {{ field.input_field_type }} { inner: object.unwrap() }
+        {% endif %}
     }
 
     /// ## {{ field.localized_name }}
     ///
     /// {{ field.desc }}
-    pub async fn set_{{ field.name }}(&self, {{ field.name }}: {{ field.input_field_type }}) {
-        self.inner.force_set_relation_object("{{ field.name }}", {{ field.name }}.map(|o| o.inner.clone())).await
+    pub async fn set_{{ field.name|snakecase }}(&self, {{ field.name }}: {% if field.input_optional %}Option<{% endif %}{{ field.input_field_type }}{% if field.input_optional %}>{% endif %}) {
+        self.inner.force_set_relation_object("{{ field.name }}", {% if !field.input_optional %}Some({% endif %}{{ field.name }}{% if field.input_optional %}.map(|o| o.inner.clone()){% else %}.inner.clone(){% if !field.input_optional %}){% endif %}{% endif %}).await
     }
 {%- endif %}
 {%- else if field.kind.is_property() %}
@@ -241,7 +245,7 @@ impl {{ class.name }} {
     /// ## {{ field.localized_name }}
     ///
     /// {{ field.desc }}
-    pub async fn {{ field.name }}(&self) -> Result<{{ field.output_field_type }}> {
+    pub async fn {{ field.name|snakecase }}(&self) -> Result<{{ field.output_field_type }}> {
     {%- if field.is_enum %}
         let value: Value = self.inner.get_property("{{ field.name }}").await;
         value.to_enum_variant()
@@ -254,7 +258,7 @@ impl {{ class.name }} {
     /// ## {{ field.localized_name }}
     ///
     /// {{ field.desc }}
-    pub async fn set_{{ field.name }}(&self, new_value: {{ field.input_field_type }}) -> Result<()> {
+    pub async fn set_{{ field.name|snakecase }}(&self, new_value: {{ field.input_field_type }}) -> Result<()> {
     {%- if field.is_enum %}
         self.inner.set_property("{{ field.name }}", new_value.to_enum_value()).await
     {%- else %}
@@ -305,12 +309,10 @@ impl Display for {{ class.name }} {
 {%- endfor %}
 
 pub struct Teo {
-{%- for class in outline.classes %}
-    {{ class.name|snakecase }}_ctx: {{ class.name }}Ctx,
-{%- endfor %}
+    user_ctx: UserCtx,
 }
 
-impl ExtractFromCallbackParam<A0> for Teo {
+impl<A0> ExtractFromCallbackParam<A0> for Teo {
     fn extract(param: &CallbackParam<A0>) -> Self {
         Self { user_ctx: param.user_ctx.clone() }
     }
@@ -319,7 +321,7 @@ impl ExtractFromCallbackParam<A0> for Teo {
 impl Teo {
 {%- for class in outline.classes %}
     fn {{ class.name|snakecase }}(&self) -> {{ class.name }}Class {
-        {{ class.name }}Class { model_ctx: self.{{ class.name|snakecase }}_ctx.model_ctx("{{ class.name }}").unwrap() }
+        {{ class.name }}Class { model_ctx: self.user_ctx.model_ctx("{{ class.name }}").unwrap() }
     }
 {%- endfor %}
 }

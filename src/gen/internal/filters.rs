@@ -101,3 +101,10 @@ pub fn type_annotation_kotlin<T: std::fmt::Display>(s: T) -> ::askama::Result<St
         _ => Ok(s),
     }
 }
+
+pub fn rust_unwrap_vec<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
+    let mut s = s.to_string();
+    s = s.strip_prefix("Vec<").unwrap().to_owned();
+    s = s.strip_suffix(">").unwrap().to_owned();
+    Ok(s)
+}
