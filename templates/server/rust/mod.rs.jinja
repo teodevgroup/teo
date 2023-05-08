@@ -165,14 +165,23 @@ impl {{ class.name }} {
     ///
     /// {{ field.desc }}
     pub fn {{ field.name }}(&self) -> {{ field.output_field_type }} {
+    {%- if field.is_enum %}
+        let value: Value = self.inner.get("{{ field.name }}").unwrap();
+        value.to_enum_variant().unwrap()
+    {%- else %}
         self.inner.get("{{ field.name }}").unwrap()
+    {%- endif %}
     }
 
     /// ## {{ field.localized_name }}
     ///
     /// {{ field.desc }}
     pub fn set_{{ field.name }}(&self, new_value: {{ field.input_field_type }}) {
+    {%- if field.is_enum %}
+        self.inner.set("{{ field.name }}", new_value.to_enum_value()).unwrap();
+    {%- else %}
         self.inner.set("{{ field.name }}", new_value).unwrap();
+    {%- endif %}
     }
 
 {%- else if field.kind.is_relation() %}
@@ -233,7 +242,12 @@ impl {{ class.name }} {
     ///
     /// {{ field.desc }}
     pub async fn {{ field.name }}(&self) -> Result<{{ field.output_field_type }}> {
+    {%- if field.is_enum %}
+        let value: Value = self.inner.get_property("{{ field.name }}").await;
+        value.to_enum_variant()
+    {%- else %}
         self.inner.get_property("{{ field.name }}").await
+    {%- endif %}
     }
 {%- endif %}
 {%- if field.setter %}
@@ -241,7 +255,12 @@ impl {{ class.name }} {
     ///
     /// {{ field.desc }}
     pub async fn set_{{ field.name }}(&self, new_value: {{ field.input_field_type }}) -> Result<()> {
+    {%- if field.is_enum %}
+        self.inner.set_property("{{ field.name }}", new_value.to_enum_value()).await
+    {%- else %}
         self.inner.set_property("{{ field.name }}", new_value).await
+    {%- endif %}
+
     }
 {%- endif %}
 {%- endif %}
