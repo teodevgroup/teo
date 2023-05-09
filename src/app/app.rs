@@ -55,7 +55,7 @@ impl App {
     }
 
     pub fn compare<T, O, F>(&self, name: &'static str, f: F) -> Result<&Self> where
-        T: From<Value> + Send + Sync + 'static,
+        T: Send + Sync + 'static,
         O: Into<ValidateResult> + Send + Sync + 'static,
         F: CompareArgument<T, O> + 'static {
         AppCtx::get()?.callbacks_mut().add_compare(name, Arc::new(CompareItem::new(f)));
