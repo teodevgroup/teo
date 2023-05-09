@@ -312,15 +312,15 @@ pub struct Teo {
     user_ctx: UserCtx,
 }
 
-impl<A0> ExtractFromCallbackParam<A0> for Teo {
-    fn extract(param: &CallbackParam<A0>) -> Self {
+impl ExtractFromCallbackParam for Teo {
+    fn extract(param: &CallbackParam) -> Self {
         Self { user_ctx: param.user_ctx.clone() }
     }
 }
 
 impl Teo {
 {%- for class in outline.classes %}
-    fn {{ class.name|snakecase }}(&self) -> {{ class.name }}Class {
+    pub fn {{ class.name|snakecase }}(&self) -> {{ class.name }}Class {
         {{ class.name }}Class { model_ctx: self.user_ctx.model_ctx("{{ class.name }}").unwrap() }
     }
 {%- endfor %}
