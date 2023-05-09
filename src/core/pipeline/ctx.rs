@@ -43,6 +43,16 @@ impl<'a> PipelineCtx<'a> {
         }
     }
 
+    pub(crate) fn initial_state_with_object_as_value(object: Object, conn: Arc<dyn Connection>) -> Self {
+        Self {
+            value: Value::Object(object.clone()),
+            object: Some(object),
+            path: KeyPath::default(),
+            action: Action::empty(),
+            conn,
+        }
+    }
+
     pub(crate) fn with_path(&self, path: impl AsRef<KeyPath<'a>>) -> Self {
         Self {
             value: self.value.clone(),

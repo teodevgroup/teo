@@ -786,21 +786,21 @@ impl Object {
     async fn trigger_before_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         let model = self.model();
         let pipeline = model.before_delete_pipeline();
-        let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection()).with_path(path.as_ref());
+        let ctx = PipelineCtx::initial_state_with_object_as_value(self.clone(), self.connection()).with_path(path.as_ref());
         pipeline.process_into_permission_result(ctx).await
     }
 
     async fn trigger_after_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         let model = self.model();
         let pipeline = model.after_delete_pipeline();
-        let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection()).with_path(path.as_ref());
+        let ctx = PipelineCtx::initial_state_with_object_as_value(self.clone(), self.connection()).with_path(path.as_ref());
         pipeline.process_into_permission_result(ctx).await
     }
 
     async fn trigger_before_save_callbacks<'a>(&self, path: impl AsRef<KeyPath<'a>>) -> Result<()> {
         let model = self.model();
         let pipeline = model.before_save_pipeline();
-        let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection()).with_path(path.as_ref());
+        let ctx = PipelineCtx::initial_state_with_object_as_value(self.clone(), self.connection()).with_path(path.as_ref());
         pipeline.process_into_permission_result(ctx).await
     }
 
@@ -812,7 +812,7 @@ impl Object {
         self.inner.inside_after_save_callback.store(true, Ordering::SeqCst);
         let model = self.model();
         let pipeline = model.after_save_pipeline();
-        let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection()).with_path(path.as_ref());
+        let ctx = PipelineCtx::initial_state_with_object_as_value(self.clone(), self.connection()).with_path(path.as_ref());
         pipeline.process_into_permission_result(ctx).await?;
         self.inner.inside_after_save_callback.store(false, Ordering::SeqCst);
         Ok(())

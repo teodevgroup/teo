@@ -39,7 +39,7 @@ impl App {
     }
 
     pub fn callback<T, F, O>(&self, name: &'static str, f: F) -> Result<&Self> where
-        T: From<Value> + Send + Sync + 'static,
+        T: Send + Sync + 'static,
         F: CallbackArgument<T, O> + 'static,
         O: Into<CallbackResult> + Send + Sync + 'static {
         AppCtx::get()?.callbacks_mut().add_callback(name, Arc::new(CallbackItem::new(f)));
