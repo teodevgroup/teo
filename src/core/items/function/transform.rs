@@ -10,23 +10,23 @@ use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::teon::Value;
 
 #[derive(Clone)]
-pub struct TransformItem<A0, O, R> {
-    callback: Arc<dyn TransformArgument<A0, O, R>>
+pub struct TransformItem<A, O, R> {
+    callback: Arc<dyn TransformArgument<A, O, R>>
 }
 
-impl<A0, O, R> Debug for TransformItem<A0, O, R> {
+impl<A, O, R> Debug for TransformItem<A, O, R> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut result = f.debug_struct("TransformItem");
         result.finish()
     }
 }
 
-impl<A0, O, R> TransformItem<A0, O, R> {
-    pub fn new<F>(f: F) -> TransformItem<A0, O, R> where
-        A0: From<Value> + Send + Sync,
+impl<A, O, R> TransformItem<A, O, R> {
+    pub fn new<F>(f: F) -> TransformItem<A, O, R> where
+        A: Send + Sync,
         O: Into<Value> + Send + Sync,
         R: Into<TransformResult<O>> + Send + Sync,
-        F: TransformArgument<A0, O, R> + 'static {
+        F: TransformArgument<A, O, R> + 'static {
         return TransformItem {
             callback: Arc::new(f)
         }
@@ -34,7 +34,7 @@ impl<A0, O, R> TransformItem<A0, O, R> {
 }
 
 #[async_trait]
-impl<A0: From<Value> + Send + Sync, O: Into<Value> + Send + Sync, R: Into<TransformResult<O>> + Send + Sync> Item for TransformItem<A0, O, R> {
+impl<A: Send + Sync + 'static, O: Into<Value> + Send + Sync + 'static, R: Into<TransformResult<O>> + Send + Sync + 'static> Item for TransformItem<A, O, R> {
     async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         let cb = self.callback.clone();
         let param = CallbackParam {
@@ -55,5 +55,5 @@ impl<A0: From<Value> + Send + Sync, O: Into<Value> + Send + Sync, R: Into<Transf
     }
 }
 
-unsafe impl<A0, O, R> Send for TransformItem<A0, O, R> {}
-unsafe impl<A0, O, R> Sync for TransformItem<A0, O, R> {}
+unsafe impl<A, O, R> Send for TransformItem<A, O, R> {}
+unsafe impl<A, O, R> Sync for TransformItem<A, O, R> {}

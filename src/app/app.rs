@@ -12,7 +12,7 @@ use crate::core::items::function::compare::CompareItem;
 use crate::core::items::function::perform::CallbackItem;
 use crate::core::items::function::transform::TransformItem;
 use crate::core::items::function::validate::ValidateItem;
-use crate::prelude::Value;
+use crate::prelude::{UserCtx, Value};
 use crate::core::error::Error;
 use super::ctx::AppCtx;
 use crate::core::result::Result;
@@ -29,11 +29,11 @@ impl App {
         }
     }
 
-    pub fn transform<A0, O, F, R>(&self, name: &'static str, f: F) -> Result<&Self> where
-        A0: From<Value> + Send + Sync + 'static,
+    pub fn transform<A, O, F, R>(&self, name: &'static str, f: F) -> Result<&Self> where
+        A: Send + Sync + 'static,
         O: Into<Value> + Send + Sync + 'static,
         R: Into<TransformResult<O>> + Send + Sync + 'static,
-        F: TransformArgument<A0, O, R> + 'static {
+        F: TransformArgument<A, O, R> + 'static {
         AppCtx::get()?.callbacks_mut().add_transform(name, Arc::new(TransformItem::new(f)));
         Ok(self)
     }
