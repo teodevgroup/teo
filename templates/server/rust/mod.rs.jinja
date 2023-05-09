@@ -306,6 +306,12 @@ impl Display for {{ class.name }} {
         Display::fmt(&self.inner, f)
     }
 }
+
+impl ExtractFromCallbackParam for {{ class.name }} {
+    fn extract(param: &CallbackParam) -> Self {
+        Self { inner: param.object.clone() }
+    }
+}
 {%- endfor %}
 
 pub struct Teo {
