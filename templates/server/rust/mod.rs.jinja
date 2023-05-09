@@ -13,6 +13,7 @@ use bigdecimal::BigDecimal;
 use bson::oid::ObjectId;
 {%- endif %}
 use teo::core::callbacks::param::{CallbackParam, ExtractFromCallbackParam};
+use teo::core::callbacks::compare_param::{CompareParam, ExtractFromCompareParam};
 use teo::core::ctx::user::UserCtx;
 use teo::prelude::{Object, Value, Result, ModelCtx};
 use teo::teon;
@@ -312,6 +313,12 @@ impl ExtractFromCallbackParam for {{ class.name }} {
         Self { inner: param.object.clone() }
     }
 }
+
+impl ExtractFromCompareParam for {{ class.name }} {
+    fn extract(param: &CallbackParam) -> Self {
+        Self { inner: param.object.clone() }
+    }
+}
 {%- endfor %}
 
 pub struct Teo {
@@ -320,6 +327,12 @@ pub struct Teo {
 
 impl ExtractFromCallbackParam for Teo {
     fn extract(param: &CallbackParam) -> Self {
+        Self { user_ctx: param.user_ctx.clone() }
+    }
+}
+
+impl ExtractFromCompareParam for Teo {
+    fn extract(param: &CompareParam) -> Self {
         Self { user_ctx: param.user_ctx.clone() }
     }
 }

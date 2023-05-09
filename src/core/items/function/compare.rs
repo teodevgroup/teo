@@ -1,6 +1,7 @@
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use async_trait::async_trait;
+use crate::core::callbacks::compare_param::CompareParam;
 use crate::core::callbacks::types::compare::CompareArgument;
 use crate::core::callbacks::types::validate::ValidateResult;
 use crate::core::item::Item;
@@ -22,7 +23,7 @@ impl<T, O> Debug for CompareItem<T, O> {
 
 impl<T, O> CompareItem<T, O> {
     pub fn new<F>(f: F) -> CompareItem<T, O> where
-        T: From<Value> + Send + Sync,
+        T: Send + Sync,
         O: Into<ValidateResult> + Send + Sync,
         F: CompareArgument<T, O> + 'static {
         return CompareItem {
@@ -32,7 +33,7 @@ impl<T, O> CompareItem<T, O> {
 }
 
 #[async_trait]
-impl<T: From<Value> + Send + Sync, O: Into<ValidateResult> + Send + Sync> Item for CompareItem<T, O> {
+impl<T: Send + Sync + 'static, O: Into<ValidateResult> + Send + Sync + 'static> Item for CompareItem<T, O> {
 
     async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         if ctx.get_object()?.is_new() {
@@ -52,7 +53,13 @@ impl<T: From<Value> + Send + Sync, O: Into<ValidateResult> + Send + Sync> Item f
                 return Ok(ctx.clone());
             }
             let cb = self.callback.clone();
-            let value = cb.call(previous_value.into(), current_value.into()).await;
+            let param = CompareParam {
+                value_old: previous_value.into(),
+                value_new: current_value.into(),
+                object: ctx.object.clone().unwrap().clone(),
+                user_ctx: ctx.user_ctx(),
+            };
+            let value = cb.call(param).await;
             let result = value.into();
             match result {
                 ValidateResult::Validity(validity) => {
