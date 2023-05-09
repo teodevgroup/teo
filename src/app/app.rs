@@ -12,7 +12,7 @@ use crate::core::items::function::compare::CompareItem;
 use crate::core::items::function::perform::CallbackItem;
 use crate::core::items::function::transform::TransformItem;
 use crate::core::items::function::validate::ValidateItem;
-use crate::prelude::{UserCtx, Value};
+use crate::prelude::Value;
 use crate::core::error::Error;
 use super::ctx::AppCtx;
 use crate::core::result::Result;

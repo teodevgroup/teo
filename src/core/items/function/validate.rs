@@ -2,6 +2,7 @@ use std::fmt::{Debug, Formatter};
 
 use std::sync::Arc;
 use async_trait::async_trait;
+use crate::core::callbacks::param::CallbackParam;
 
 use crate::core::callbacks::types::validate::{ValidateArgument, ValidateResult};
 use crate::core::item::Item;
@@ -11,22 +12,22 @@ use crate::core::result::Result;
 use crate::prelude::Error;
 
 #[derive(Clone)]
-pub struct ValidateItem<T, O> {
-    callback: Arc<dyn ValidateArgument<T, O>>
+pub struct ValidateItem<A, O> {
+    callback: Arc<dyn ValidateArgument<A, O>>
 }
 
-impl<T, O> Debug for ValidateItem<T, O> {
+impl<A, O> Debug for ValidateItem<A, O> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut result = f.debug_struct("ValidateItem");
         result.finish()
     }
 }
 
-impl<T, O> ValidateItem<T, O> {
-    pub fn new<F>(f: F) -> ValidateItem<T, O> where
-        T: From<Value> + Send + Sync,
+impl<A, O> ValidateItem<A, O> {
+    pub fn new<F>(f: F) -> ValidateItem<A, O> where
+        A: Send + Sync + 'static,
         O: Into<ValidateResult> + Send + Sync,
-        F: ValidateArgument<T, O> + 'static {
+        F: ValidateArgument<A, O> + 'static {
         return ValidateItem {
             callback: Arc::new(f)
         }
@@ -34,11 +35,16 @@ impl<T, O> ValidateItem<T, O> {
 }
 
 #[async_trait]
-impl<T: From<Value> + Send + Sync, O: Into<ValidateResult> + Send + Sync> Item for ValidateItem<T, O> {
+impl<A: Send + Sync + 'static, O: Into<ValidateResult> + Send + Sync + 'static> Item for ValidateItem<A, O> {
 
     async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         let cb = self.callback.clone();
-        let value = cb.call((&ctx).value.clone().into()).await;
+        let param = CallbackParam {
+            value: (&ctx).value.clone(),
+            object: (&ctx).object.clone().unwrap().clone(),
+            user_ctx: ctx.user_ctx(),
+        };
+        let value = cb.call(param).await;
         let result = value.into();
         match result {
             ValidateResult::Validity(validity) => {
@@ -62,5 +68,5 @@ impl<T: From<Value> + Send + Sync, O: Into<ValidateResult> + Send + Sync> Item f
     }
 }
 
-unsafe impl<T, O> Send for ValidateItem<T, O> {}
-unsafe impl<T, O> Sync for ValidateItem<T, O> {}
+unsafe impl<A, O> Send for ValidateItem<A, O> {}
+unsafe impl<A, O> Sync for ValidateItem<A, O> {}
