@@ -47,7 +47,7 @@ impl App {
     }
 
     pub fn validate<T, O, F>(&self, name: &'static str, f: F) -> Result<&Self> where
-        T: From<Value> + Send + Sync + 'static,
+        T: Send + Sync + 'static,
         O: Into<ValidateResult> + Send + Sync + 'static,
         F: ValidateArgument<T, O> + 'static {
         AppCtx::get()?.callbacks_mut().add_validator(name, Arc::new(ValidateItem::new(f)));

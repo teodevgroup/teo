@@ -329,7 +329,7 @@ impl ASTParser {
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::MODEL_KEYWORD | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE | Rule::EMPTY_LINES => {}
+                Rule::MODEL_KEYWORD | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE | Rule::EMPTY_LINES | Rule::double_comment_block | Rule::comment_block => {}
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::field_declaration => fields.push(Self::parse_field(current)),
                 Rule::block_decorator => decorators.push(Self::parse_decorator(current)),
