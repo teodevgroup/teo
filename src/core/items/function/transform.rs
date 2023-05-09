@@ -41,7 +41,6 @@ impl<A: Send + Sync + 'static, O: Into<Value> + Send + Sync + 'static, R: Into<T
             value: (&ctx).value.clone(),
             object: (&ctx).object.clone().unwrap().clone(),
             user_ctx: ctx.user_ctx(),
-            _marker: PhantomData::default(),
         };
         let value = cb.call(param).await;
         let function_result = value.into();
