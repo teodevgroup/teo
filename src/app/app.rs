@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use crate::app::cli::command::CLI;
 use crate::app::cli::parse_cli::parse_cli;
 use crate::app::cli::run_command::run_command;
 use crate::app::connect_to_database::connect_to_database;
@@ -67,14 +68,24 @@ impl App {
         Ok(self)
     }
 
-    pub async fn run(&self) -> Result<()> {
+    pub async fn prepare(&self) -> Result<CLI> {
         let cli = parse_cli()?;
         parse_schema(cli.main())?;
         load_schema()?;
+        Ok(cli)
+    }
+
+    pub async fn run_without_prepare(&self, cli: CLI) -> Result<()> {
         if !cli.command.is_generate() {
             connect_to_database().await?;
         }
         run_command(cli).await?;
+        Ok(())
+    }
+
+    pub async fn run(&self) -> Result<()> {
+        let cli = self.prepare()?;
+        self.run_without_prepare(cli).await?;
         Ok(())
     }
 }
