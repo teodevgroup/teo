@@ -46,7 +46,7 @@ pub(crate) enum SeedCommandAction {
 pub(crate) struct PurgeCommand { }
 
 #[derive(Debug)]
-pub(crate) struct CLI {
+pub struct CLI {
     pub(crate) command: CLICommand,
     pub(crate) schema: Option<String>,
 }
