@@ -68,7 +68,7 @@ impl App {
         Ok(self)
     }
 
-    pub async fn prepare(&self) -> Result<CLI> {
+    pub fn prepare(&self) -> Result<CLI> {
         let cli = parse_cli()?;
         parse_schema(cli.main())?;
         load_schema()?;
