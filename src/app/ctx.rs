@@ -179,7 +179,7 @@ impl AppCtx {
         AppCtx::get_mut().unwrap().graph = Some(graph);
     }
 
-    pub(crate) fn graph(&self) -> Result<&Graph> {
+    pub fn graph(&self) -> Result<&Graph> {
         match &self.graph {
             Some(graph) => Ok(graph.as_ref()),
             None => Err(Error::fatal("Graph is accessed while it's not set.")),
