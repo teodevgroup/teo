@@ -5,6 +5,7 @@ use crate::core::model::model::Model;
 use crate::prelude::{Object, Value};
 use crate::core::result::Result;
 
+#[derive(Clone)]
 pub struct ModelCtx {
     pub(super) conn: Arc<dyn Connection>,
     pub(super) model: &'static Model,
