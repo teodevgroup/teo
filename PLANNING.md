@@ -421,10 +421,10 @@
 - Callbacks with variant length parameters **[DONE]**
 - Pass teo object to callbacks **[DONE]**
 - Refactor Rust entities **[DONE]**
+- Node.js bindings: refactor **[DONE]**
+- Node.js bindings: error handling **[DONE]**
 - Refactor Node.js entities
-- Node.js bindings: refactor
 - Node.js bindings: date only type
-- Node.js bindings: error handling
 
 #### 0.0.57
 - Enum value references enum definition
