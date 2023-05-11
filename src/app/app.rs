@@ -75,7 +75,7 @@ impl App {
         Ok(cli)
     }
 
-    pub async fn run_without_prepare(&self, cli: CLI) -> Result<()> {
+    pub async fn run_without_prepare(&self, cli: &CLI) -> Result<()> {
         if !cli.command.is_generate() {
             connect_to_database().await?;
         }
@@ -85,7 +85,7 @@ impl App {
 
     pub async fn run(&self) -> Result<()> {
         let cli = self.prepare()?;
-        self.run_without_prepare(cli).await?;
+        self.run_without_prepare(&cli).await?;
         Ok(())
     }
 }

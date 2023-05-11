@@ -10,11 +10,11 @@ use crate::server::serve;
 use crate::gen::interface::server::gen::gen as gen_entity;
 use crate::gen::interface::client::gen::gen as gen_client;
 
-pub(crate) async fn run_command(cli: CLI) -> Result<()> {
+pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
     let app_ctx = AppCtx::get()?;
     let graph = app_ctx.graph()?;
     let datasets = app_ctx.datasets();
-    match cli.command {
+    match &cli.command {
         CLICommand::Serve(serve_command) => {
             if !serve_command.no_migration {
                 migrate(app_ctx.graph()?, false).await;
