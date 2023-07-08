@@ -422,11 +422,12 @@
 - Pass teo object to callbacks **[DONE]**
 - Refactor Rust entities **[DONE]**
 - Node.js bindings: refactor **[DONE]**
-- Node.js bindings: error handling **[DONE]**
-- Refactor Node.js entities
-- Node.js bindings: date only type
+- Refactor Node.js entities **[DONE]**
+- Node.js bindings: error handling
+- Node.js object printing
 
 #### 0.0.57
+- Node.js bindings: date only type
 - Enum value references enum definition
 - Add synthesised enums to graph
 - Foreign key management

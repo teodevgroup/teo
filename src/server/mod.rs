@@ -679,6 +679,7 @@ fn make_app(graph: &'static Graph, conf: &'static ServerConf, test_context: Opti
             let model_def = match graph.model(model_url_segment_name) {
                 Ok(name) => name,
                 Err(_) => {
+                    println!("Here cannot find model with name {model_url_segment_name}");
                     log_unhandled(start, r.method().as_str(), &path, 404);
                     return Error::destination_not_found().into();
                 }

@@ -334,13 +334,9 @@ fn generate_model_credentials_input(model: &Model) -> String {
 }
 
 pub(crate) fn generate_index_d_ts(graph: &Graph, client_obj_name: String, server_mode: bool) -> String {
-    let decimal = if !server_mode {
-        "./decimal"
-    } else {
-        "decimal.js"
-    };
+    let decimal = "decimal.js";
     Code::new(0, 4, |c| {
-        c.line(format!(r#"import Decimal from "{decimal}""#));
+        c.line(format!(r#"import Decimal from "decimal.js""#));
         c.line(if server_mode {
             generate_server_runtime_types()
         } else {
@@ -350,7 +346,6 @@ pub(crate) fn generate_index_d_ts(graph: &Graph, client_obj_name: String, server
         c.line(generate_operation_types(server_mode));
         if !server_mode {
             c.line(r#"
-export * from "./decimal"
 
 export declare function setBearerToken(token: string | undefined)
 
