@@ -1,0 +1,70 @@
+{%- for e in outline.enums %}
+/// ## {{ e.localized_name }}
+///
+/// {{ e.desc }}
+export enum {{ e.name }} {
+{%- for v in e.variants %}
+    /// ### {{ v.localized_name }}
+    ///
+    /// {{ v.desc }}
+    {{ v.name }} = "{{ v.name }}",
+{%- endfor %}
+}
+{%- endfor %}
+
+{%- for class in outline.classes %}
+export class {{ class.name }}Model {
+    async findMany(query: {{ class.name }}FindManyArgs): {{ class.name }}[]
+    async findUnique(query: {{ class.name }}FindUniqueArgs): {{ class.name }} | undefined
+    async findFirst(query: {{ class.name }}FindManyArgs): {{ class.name }} | undefined
+    async create(input?: {{ class.name }}CreateInput): {{ class.name }}
+}
+
+export class {{ class.name }} {
+    get isNew(): boolean
+    get isModified(): boolean
+    async set(input: {{ class.name }}UpdateInput): void
+    async update(input: {{ class.name }}ScalarUpdateInput): void
+    async save(): void
+    async delete(): void
+    {%- for field in class.fields %}
+    {%- if field.kind.is_field() %}
+    /// ## {{ field.localized_name }}
+    ///
+    /// {{ field.desc }}
+    get {{ field.name }}(): {{ field.output_field_type }}
+
+    /// ## {{ field.localized_name }}
+    ///
+    /// {{ field.desc }}
+    set {{ field.name }}(newValue: {{ field.input_field_type }}): void
+
+    {%- else if field.kind.is_relation() %}
+    {%- if field.input_field_type.as_ref().contains("[]") %}
+    get {{ field.name }}(): Promise<{{ field.output_field_type }}>
+    set{{ field.name|pascalcase}}(newValue: {{ field.input_field_type }}): Promise<void>
+    {%- else %}
+    get {{ field.name }}(): Promise<{{ field.output_field_type }}>
+    set{{ field.name|pascalcase}}(newValue: {{ field.input_field_type }}): Promise<void>
+    addTo{{ field.name|pascalcase}}(newValue: {{ field.input_field_type }}): Promise<void>
+    removeFrom{{ field.name|pascalcase}}(newValue: {{ field.input_field_type }}): Promise<void>
+    {%- endif %}
+    {%- else if field.kind.is_property() %}
+    {%- if field.getter %}
+    get {{ field.name }}(): Promise<{{ field.output_field_type }}>
+    {%- endif %}
+    {%- if field.setter %}
+    set{{ field.name|pascalcase}}(newValue: {{ field.input_field_type }}): Promise<void>
+    {%- endif %}
+    {%- endif %}
+    {%- endfor %}
+}
+
+{%- endfor %}
+
+export class Teo {
+    private constructor(): never
+{%- for class in outline.classes %}
+    get {{ class.name|snakecase }}(): {{ class.name }}Model
+{%- endfor %}
+}
