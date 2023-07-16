@@ -423,6 +423,7 @@
 - Refactor Rust entities **[DONE]**
 - Node.js bindings: refactor **[DONE]**
 - Refactor Node.js entities **[DONE]**
+- Fixed Node.js transform number bug **[Done]**
 - Node.js bindings: error handling
 - Node.js object printing
 

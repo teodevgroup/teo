@@ -120,7 +120,7 @@ impl ToSQLString for Value {
             Value::DateTime(d) => d.to_sql_input(dialect),
             Value::Decimal(d) => d.to_sql_input(dialect),
             Value::Vec(values) => format!("array[{}]", values.iter().map(|v| v.to_string(dialect)).join(",")),
-            _ => panic!("unhandled"),
+            _ => panic!("unhandled value: {:?}", self),
         }
     }
 }
