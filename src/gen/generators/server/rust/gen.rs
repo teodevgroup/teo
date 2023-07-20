@@ -74,17 +74,17 @@ impl RustEntityGenerator {
         let mut doc = toml.parse::<Document>().expect("`Cargo.toml' has invalid content");
         let deps = doc.get_mut("dependencies").unwrap();
         if package_requirements.contains(&"chrono") {
-            if deps["chrono"].is_none() {
+            if deps.get("chrono").is_none() {
                 deps["chrono"]["version"] = value("0.4.23");
             }
         }
         if package_requirements.contains(&"bson") {
-            if deps["bson"].is_none() {
+            if deps.get("bson").is_none() {
                 deps["bson"]["version"] = value("2.3.0");
             }
         }
         if package_requirements.contains(&"bigdecimal") {
-            if deps["bigdecimal"].is_none() {
+            if deps.get("bigdecimal").is_none() {
                 deps["bigdecimal"]["version"] = value("0.3.0");
             }
         }

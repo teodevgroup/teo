@@ -315,7 +315,7 @@ impl ExtractFromCallbackParam for {{ class.name }} {
 }
 
 impl ExtractFromCompareParam for {{ class.name }} {
-    fn extract(param: &CallbackParam) -> Self {
+    fn extract(param: &CompareParam) -> Self {
         Self { inner: param.object.clone() }
     }
 }
