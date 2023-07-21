@@ -20,7 +20,9 @@ impl Item for OneOfItem {
     async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         let arg = self.argument.resolve(ctx.clone()).await?;
         let list = arg.as_vec().unwrap();
-        if list.iter().find(|item| **item == arg).is_some() {
+        if list.iter().find(|item| {
+            **item == ctx.value
+        }).is_some() {
             Ok(ctx)
         } else {
             Err(ctx.with_invalid("oneOf: value is not one of valid ones"))
