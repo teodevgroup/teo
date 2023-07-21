@@ -426,6 +426,7 @@
 - Fixed Node.js transform number bug **[Done]**
 - Fixed rust entity generation callback method bug **[Done]**
 - Fixed update Cargo.toml bug **[Done]**
+- Fixed `$oneOf` bug **[Done]**
 - Node.js bindings: error handling
 - Node.js object printing
 
