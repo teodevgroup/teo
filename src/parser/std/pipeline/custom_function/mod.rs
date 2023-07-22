@@ -1,7 +1,9 @@
 use std::sync::Arc;
+use crate::app::ctx::AppCtx;
 use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::item::Item;
 use crate::core::items::logical::transform_with::TransformWithItem;
+use crate::core::items::logical::valid::ValidItem;
 use crate::core::items::logical::validate_with::ValidateWithItem;
 use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
@@ -26,13 +28,18 @@ pub(crate) fn custom_transform(lookup_table: &'static CallbackLookup, args: &Vec
 }
 
 pub(crate) fn custom_callback(lookup_table: &'static CallbackLookup, args: &Vec<Argument>) -> Arc<dyn Item> {
-    let name = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap().as_str().unwrap();
-    let modifier = lookup_table.callback(name);
-    if let Some(modifier) = modifier {
-        modifier.clone()
+    if AppCtx::get().unwrap().ignore_callbacks() {
+        Arc::new(ValidItem::new())
     } else {
-        panic!("Cannot find a callback named '{}'.", name)
+        let name = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap().as_str().unwrap();
+        let modifier = lookup_table.callback(name);
+        if let Some(modifier) = modifier {
+            modifier.clone()
+        } else {
+            panic!("Cannot find a callback named '{}'.", name)
+        }
     }
+
 }
 
 pub(crate) fn custom_validate(lookup_table: &'static CallbackLookup, args: &Vec<Argument>) -> Arc<dyn Item> {

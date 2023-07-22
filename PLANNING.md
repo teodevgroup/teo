@@ -430,7 +430,8 @@
 - Fixed rust enum traits bug **[Done]**
 - Fixed `dotenv` is not triggered bug **[Done]**
 - Schema lang: Each line can contain comments now **[Done]**
-- Entity: rust entity now contains aggregate methods
+- Entity: rust entity now contains aggregate methods **[Done]**
+- When running generation, ignore custom programming callbacks **[Done]**
 
 #### 0.0.57
 - Node.js bindings: error handling
@@ -479,7 +480,6 @@
 - Remove `unqueryable` and `unsortable` fields from generated clients
 - Relation with read write rules
 - Pipeline documentation
-- CLI mode: When running generation, ignore custom programming callbacks
 - CLI mode: When running server, panic if custom programming callback is provided
 - Soft delete documentation
 - Correct count with cursor
