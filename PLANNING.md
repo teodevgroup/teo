@@ -429,6 +429,7 @@
 - Fixed `$oneOf` bug **[Done]**
 - Fixed rust enum traits bug **[Done]**
 - Fixed `dotenv` is not triggered bug **[Done]**
+- Schema lang: Each line can contain comments now **[Done]**
 
 #### 0.0.57
 - Node.js bindings: error handling

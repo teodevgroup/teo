@@ -257,7 +257,7 @@ enum_declaration = {
     ~ ENUM_KEYWORD
     ~ identifier
     ~ BLOCK_OPEN
-    ~ (enum_value_declaration | (block_decorator ~ NEWLINE) | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
+    ~ (enum_value_declaration | block_decorator | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
     ~ BLOCK_CLOSE
 }
 
@@ -272,7 +272,7 @@ model_declaration = {
     ~ MODEL_KEYWORD
     ~ identifier
     ~ BLOCK_OPEN
-    ~ (field_declaration | (block_decorator ~ NEWLINE) | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
+    ~ (field_declaration | block_decorator | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
     ~ BLOCK_CLOSE
 }
 
@@ -281,12 +281,12 @@ model_declaration = {
 // #############
 field_declaration = {
     triple_comment_block? ~
-    (item_decorator ~ (NEWLINE | WHITESPACE)*)*
+    (item_decorator ~ double_comment_block? ~ (NEWLINE | WHITESPACE)*)*
     ~ identifier
     ~ COLON
     ~ field_type
-    ~ double_comment_block?
-    ~ NEWLINE?
+//     ~ double_comment_block?
+//     ~ NEWLINE?
 }
 
 // #############

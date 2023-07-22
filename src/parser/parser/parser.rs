@@ -363,7 +363,8 @@ impl ASTParser {
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::field_type => r#type = Some(Self::parse_type(current)),
                 Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
-                _ => unreachable!(),
+                Rule::double_comment_block => {},
+                _ => panic!("syntax error: {:?}", current),
             }
         }
         ASTField::new(
