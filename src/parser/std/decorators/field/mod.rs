@@ -48,7 +48,7 @@ use crate::parser::std::decorators::field::auto::auto_decorator;
 use crate::parser::std::decorators::field::auto_increment::auto_increment_decorator;
 use crate::parser::std::decorators::field::can_mutate::can_mutate_decorator;
 use crate::parser::std::decorators::field::can_read::can_read_decorator;
-use crate::parser::std::decorators::field::db::db_container;
+use crate::parser::std::decorators::field::db::db_decorator;
 use crate::parser::std::decorators::field::default::default_decorator;
 use crate::parser::std::decorators::field::dropped::dropped_decorator;
 use crate::parser::std::decorators::field::foreign_key::foreign_key_decorator;
@@ -94,7 +94,7 @@ impl GlobalFieldDecorators {
 
     pub(crate) fn new(database_name: DatabaseName) -> Self {
         let mut objects: HashMap<String, Accessible> = HashMap::new();
-        objects.insert("db".to_owned(), Accessible::Container(db_container(database_name)));
+        objects.insert("db".to_owned(), Accessible::FieldDecorator(db_decorator(database_name)));
         objects.insert("id".to_owned(), Accessible::FieldDecorator(id_decorator));
         objects.insert("map".to_owned(), Accessible::FieldDecorator(map_decorator));
         objects.insert("unique".to_owned(), Accessible::FieldDecorator(unique_decorator));
