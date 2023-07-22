@@ -261,6 +261,13 @@ impl Value {
         }
     }
 
+    pub fn into_vec(self) -> Option<Vec<Value>> {
+        match self {
+            Value::Vec(vec) => Some(vec),
+            _ => None,
+        }
+    }
+
     pub fn as_vec_mut(&mut self) -> Option<&mut Vec<Value>> {
         match self {
             Value::Vec(vec) => Some(vec),

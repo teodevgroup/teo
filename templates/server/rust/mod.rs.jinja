@@ -143,7 +143,7 @@ impl {{ class.name }}Class {
     }
 
     /// Group by on {{ class.name|wordcase }}.
-    pub async fn group_by(&self, query: impl Borrow<Value>) -> Result<{{ class.name }}AggregateResult> {
+    pub async fn group_by(&self, query: impl Borrow<Value>) -> Result<Vec<{{ class.name }}AggregateResult>> {
         self.model_ctx.group_by(query.borrow()).await
     }
 
