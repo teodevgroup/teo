@@ -40,6 +40,7 @@ impl<'a> ColumnManipulation<'a> {
 
     pub(crate) fn priority(&self, model: &Model) -> i64 {
         match self {
+            ColumnManipulation::AddColumn(_, _, _) => -200,
             ColumnManipulation::CreateIndex(_) => -100,
             ColumnManipulation::DropIndex(_) => -100,
             _ => self.get_field(model).map(|f| f.migration().map(|m| m.priority.unwrap_or(0))).unwrap_or(Some(0)).unwrap_or(0)

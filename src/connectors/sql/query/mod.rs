@@ -335,6 +335,7 @@ impl Query {
         dialect: SQLDialect,
     ) -> String {
         let map = value.as_hashmap().unwrap();
+        let escape = dialect.escape();
         let mut results: Vec<String> = vec![];
         for (key, value) in map {
             match key.as_str() {
@@ -343,7 +344,7 @@ impl Query {
                         let k = k.as_str();
                         if v.as_bool().unwrap() {
                             match k {
-                                "_all" => results.push("COUNT(*) as `_count._all`".to_owned()),
+                                "_all" => results.push(format!("COUNT(*) as {escape}_count._all{escape}")),
                                 _ => {
                                     let column_name = model.field(k).unwrap().column_name();
                                     let func = SQL_AGGREGATE_MAP.get(key.as_str()).unwrap();
@@ -353,7 +354,7 @@ impl Query {
                                         "_avg" | "_sum" => left = format!("CAST({} AS DOUBLE)", left),
                                         _ => ()
                                     }
-                                    results.push(format!("{} as `{}.{}`", left, key, k));
+                                    results.push(format!("{} as {escape}{}.{}{escape}", left, key, k));
                                 }
                             }
                         }

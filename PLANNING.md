@@ -432,6 +432,8 @@
 - Schema lang: Each line can contain comments now **[Done]**
 - Entity: rust entity now contains aggregate methods **[Done]**
 - When running generation, ignore custom programming callbacks **[Done]**
+- Fixed aggregate SQL clause bug for PostgreSQL **[Done]**
+- Fixed create index on a newly defined column causes crash bug **[Done]**
 
 #### 0.0.57
 - Node.js bindings: error handling
