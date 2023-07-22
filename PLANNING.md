@@ -428,6 +428,7 @@
 - Fixed update Cargo.toml bug **[Done]**
 - Fixed `$oneOf` bug **[Done]**
 - Fixed rust enum traits bug **[Done]**
+- Fixed `dotenv` is not triggered bug **[Done]**
 
 #### 0.0.57
 - Node.js bindings: error handling
