@@ -113,7 +113,7 @@ pub fn rust_as<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     let string = s.to_string();
     let s = string.as_str();
     Ok(match s {
-        "String" => "string",
+        "String" => "str",
         "NaiveDate" => "date",
         "DateTime<Utc>" => "datetime",
         "BigDecimal" => "decimal",
@@ -125,7 +125,11 @@ pub fn rust_as<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
 pub fn rust_ref_if_needed<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     let string = s.to_string();
     Ok(if string.chars().nth(0).unwrap().is_uppercase() {
-        "&".to_owned() + string.as_str()
+        if string.as_str() == "String" {
+            "&str".to_owned()
+        } else {
+            "&".to_owned() + string.as_str()
+        }
     } else {
         string
     })

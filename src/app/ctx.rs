@@ -31,6 +31,7 @@ pub struct AppCtx {
     entities: Vec<Conf>,
     datasets: Vec<DataSet>,
     setup: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
+    ignore_callbacks: bool,
 }
 
 impl AppCtx {
@@ -51,6 +52,7 @@ impl AppCtx {
             debug_conf: None,
             test_conf: None,
             setup: None,
+            ignore_callbacks: false,
         }
     }
 
@@ -237,6 +239,14 @@ impl AppCtx {
             Some(connector_conf) => Ok(connector_conf.as_ref()),
             None => Err(Error::fatal("Connector conf is accessed while it's not set."))
         }
+    }
+
+    pub(crate) fn set_ignore_callbacks(&self, value: bool) {
+        AppCtx::get_mut().unwrap().ignore_callbacks = value;
+    }
+
+    pub(crate) fn ignore_callbacks(&self) -> bool {
+        self.ignore_callbacks
     }
 }
 

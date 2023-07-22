@@ -33,7 +33,7 @@ impl ModelCtx {
         AppCtx::get()?.graph()?.count(self.model.name(), finder, Some(self.conn.clone())).await
     }
 
-    pub async fn aggregates<T: From<Value>>(&self, finder: &Value) -> Result<T> {
+    pub async fn aggregate<T: From<Value>>(&self, finder: &Value) -> Result<T> {
         AppCtx::get()?.graph()?.aggregate(self.model.name(), finder, Some(self.conn.clone())).await.map(|v| v.into())
     }
 

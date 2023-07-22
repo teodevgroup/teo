@@ -135,6 +135,7 @@ pub(crate) fn parse_cli() -> Result<CLI> {
             CLICommand::Serve(ServeCommand { no_migration: submatches.get_flag("no-migration"), no_autoseed: submatches.get_flag("no-autoseed"), env: env.cloned() })
         }
         Some(("generate", submatches)) => {
+            AppCtx::get().unwrap().set_ignore_callbacks(true);
             match submatches.subcommand() {
                 Some(("client", submatches)) => {
                     let names: Option<Vec<String>> = submatches.get_many::<String>("NAME").map(|s| s.map(|v| v.to_string()).collect::<Vec<String>>());
