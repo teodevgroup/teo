@@ -121,3 +121,12 @@ pub fn rust_as<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
         _ => s,
     }.to_string())
 }
+
+pub fn rust_ref_if_needed<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
+    let string = s.to_string();
+    Ok(if string.chars().nth(0).unwrap().is_uppercase() {
+        "&".to_owned() + string.as_str()
+    } else {
+        string
+    })
+}

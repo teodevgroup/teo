@@ -369,13 +369,13 @@ impl {{ class.name }}AggregateResult {
     {%- endif %}
 
     {%- if field.aggregate().can_max %}
-    pub fn _max_{{ field.name|snakecase }}(&self) -> Option<{{ field.aggregate().max_type }}> {
+    pub fn _max_{{ field.name|snakecase }}(&self) -> Option<{{ field.aggregate().max_type|rust_ref_if_needed }}> {
         self.inner.get("_max").cloned().map(|r| r.get("{{ field.name }}").cloned()).flatten().map(|v| v.as_{{ field.aggregate().max_type|rust_as }}()).flatten()
     }
     {%- endif %}
 
     {%- if field.aggregate().can_min %}
-    pub fn _min_{{ field.name|snakecase }}(&self) -> Option<{{ field.aggregate().min_type }}> {
+    pub fn _min_{{ field.name|snakecase }}(&self) -> Option<{{ field.aggregate().min_type|rust_ref_if_needed }}> {
         self.inner.get("_min").cloned().map(|r| r.get("{{ field.name }}").cloned()).flatten().map(|v| v.as_{{ field.aggregate().min_type|rust_as }}()).flatten()
     }
     {%- endif %}
@@ -393,7 +393,7 @@ impl {{ class.name }}AggregateResult {
     {%- endif %}
 
     {%- if field.aggregate().can_group_by %}
-    pub fn {{ field.name|snakecase }}(&self) -> Option<{{ field.aggregate().group_by_type.as_ref().unwrap() }}> {
+    pub fn {{ field.name|snakecase }}(&self) -> Option<{{ field.aggregate().group_by_type.as_ref().unwrap()|rust_ref_if_needed }}> {
         self.inner.get("{{ field.name }}").cloned().map(|v| v.as_{{ field.aggregate().group_by_type.as_ref().unwrap()|rust_as }}()).flatten()
     }
     {%- endif %}
