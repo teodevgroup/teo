@@ -17,6 +17,18 @@ use teo::core::callbacks::compare_param::{CompareParam, ExtractFromCompareParam}
 use teo::core::ctx::user::UserCtx;
 use teo::prelude::{Object, Value, Result, ModelCtx};
 use teo::teon;
+{%- if outline.enums.count() > 0 %}
+use teo::core::error::*;
+
+trait EnumVariantToValue {
+    fn to_enum_value(&self) -> Value;
+}
+
+trait ValueToEnumVariant<T> {
+    fn to_enum_variant(&self) -> Result<T>;
+}
+{%- endif %}
+
 
 {%- for e in outline.enums %}
 /// ## {{ e.localized_name }}
