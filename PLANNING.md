@@ -427,10 +427,11 @@
 - Fixed rust entity generation callback method bug **[Done]**
 - Fixed update Cargo.toml bug **[Done]**
 - Fixed `$oneOf` bug **[Done]**
-- Node.js bindings: error handling
-- Node.js object printing
+- Fixed rust enum traits bug **[Done]**
 
 #### 0.0.57
+- Node.js bindings: error handling
+- Node.js object printing
 - Node.js bindings: date only type
 - Enum value references enum definition
 - Add synthesised enums to graph
