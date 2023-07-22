@@ -28,4 +28,16 @@ impl ModelCtx {
     pub async fn create_object<T: From<Object>>(&self, values: &Value) -> Result<T> {
         AppCtx::get()?.graph()?.create_object(self.model.name(), values, Some(self.conn.clone())).await.map(|v| v.into())
     }
+
+    pub async fn count(&self, finder: &Value) -> Result<usize> {
+        AppCtx::get()?.graph()?.count(self.model.name(), finder, Some(self.conn.clone()))
+    }
+
+    pub async fn aggregates(&self, finder: &Value) -> Result<Value> {
+        AppCtx::get()?.graph()?.aggregate(self.model.name(), finder, Some(some.conn.clone()))
+    }
+
+    pub async fn group_by(&self, finder: &Value) -> Result<Value> {
+        AppCtx::get()?.graph()?.group_by(self.model.name(), finder, Some(some.conn.clone()))
+    }
 }
