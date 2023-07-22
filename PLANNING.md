@@ -430,6 +430,7 @@
 - Fixed rust enum traits bug **[Done]**
 - Fixed `dotenv` is not triggered bug **[Done]**
 - Schema lang: Each line can contain comments now **[Done]**
+- Entity: rust entity now contains aggregate methods
 
 #### 0.0.57
 - Node.js bindings: error handling

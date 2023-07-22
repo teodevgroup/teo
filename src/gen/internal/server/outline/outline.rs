@@ -1,12 +1,14 @@
 use std::borrow::Cow;
-use crate::core::field::r#type::FieldTypeOwner;
+use std::sync::Arc;
+use crate::core::field::field::Field;
+use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::gen::internal::server::outline::class::Class;
-use crate::gen::internal::server::outline::class_field::ClassField;
+use crate::gen::internal::server::outline::class_field::{ClassField, ClassFieldAggregate};
 use crate::gen::internal::server::outline::enum_variant::EnumVariant;
 use crate::gen::internal::server::outline::field_kind::FieldKind;
 use crate::gen::internal::server::outline::r#enum::Enum;
 use crate::gen::internal::server_type_lookup::ServerTypeLookup;
-use crate::prelude::Graph;
+use crate::prelude::{Graph, Value};
 
 pub(in crate::gen) struct EntityOutline<'a> {
     pub(in crate::gen) classes: Vec<Class<'a>>,
@@ -37,6 +39,7 @@ impl<'a> EntityOutline<'a> {
                                     getter: true,
                                     setter: true,
                                     is_enum: f.field_type().is_enum(),
+                                    aggregate: Some(Self::aggregate_for_field(f, &lookup)),
                                 }
                             }));
                             fields.extend(m.relations().iter().map(|r| {
@@ -52,6 +55,7 @@ impl<'a> EntityOutline<'a> {
                                     getter: true,
                                     setter: true,
                                     is_enum: false,
+                                    aggregate: None,
                                 }
                             }));
                             fields.extend(m.properties().iter().map(|p| {
@@ -67,6 +71,7 @@ impl<'a> EntityOutline<'a> {
                                     getter: p.has_getter(),
                                     setter: p.has_setter(),
                                     is_enum: p.field_type().is_enum(),
+                                    aggregate: None,
                                 }
                             }));
                             fields
@@ -90,6 +95,33 @@ impl<'a> EntityOutline<'a> {
                     desc: e.description_with_default(),
                 }
             }).collect(),
+        }
+    }
+
+    fn aggregate_for_field<L>(field: &'a Arc<Field>, lookup: &L) -> ClassFieldAggregate<'a> where L: ServerTypeLookup {
+        ClassFieldAggregate {
+            can_count: true,
+            can_max: field.field_type().is_scalar(),
+            max_type: lookup.output_type(field.field_type(), false),
+            can_min: field.field_type().is_scalar(),
+            min_type: lookup.output_type(field.field_type(), false),
+            can_avg: field.field_type().is_number(),
+            can_sum: field.field_type().is_number(),
+            sum_type: if field.field_type().is_number() {
+                if field.field_type().is_int() {
+                    lookup.output_type(&FieldType::I64, false)
+                } else {
+                    lookup.output_type(&FieldType::F64, false)
+                }
+            } else {
+                Cow::Borrowed("")
+            },
+            can_group_by: field.field_type().is_scalar(),
+            group_by_type: if field.field_type().is_scalar() {
+                Some(lookup.output_type(field.field_type(), false))
+            } else {
+                None
+            },
         }
     }
 }

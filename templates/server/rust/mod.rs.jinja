@@ -131,6 +131,22 @@ impl {{ class.name }}Class {
     pub async fn default(&self) -> Result<{{ class.name }}> {
         self.model_ctx.create_object::<{{ class.name }}>(teon!({}).borrow()).await
     }
+
+    /// Count on {{ class.name|wordcase }}.
+    pub async fn count(&self, query: impl Borrow<Value>) -> Result<usize> {
+        self.model_ctx.count(query.borrow()).await
+    }
+
+    /// Aggregate on {{ class.name|wordcase }}.
+    pub async fn aggregate(&self, query: impl Borrow<Value>) -> Result<{{ class.name }}AggregateResult> {
+        self.model_ctx.aggregate(query.borrow()).await
+    }
+
+    /// Group by on {{ class.name|wordcase }}.
+    pub async fn group_by(&self, query: impl Borrow<Value>) -> Result<{{ class.name }}AggregateResult> {
+        self.model_ctx.group_by(query.borrow()).await
+    }
+
 }
 
 #[derive(Clone)]
@@ -331,6 +347,62 @@ impl ExtractFromCompareParam for {{ class.name }} {
         Self { inner: param.object.clone() }
     }
 }
+
+#[derive(Clone)]
+pub struct {{ class.name }}AggregateResult {
+    pub inner: Value,
+}
+
+impl {{ class.name }}AggregateResult {
+
+    pub fn _count__all(&self) -> Option<usize> {
+        self.inner.get("_count").cloned().map(|r| r.get("_all").cloned()).flatten().map(|v| v.as_usize()).flatten()
+    }
+
+    {%- for field in class.fields %}
+    {%- if field.aggregate.is_some() %}
+
+    {%- if field.aggregate().can_count %}
+    pub fn _count_{{ field.name|snakecase }}(&self) -> Option<usize> {
+        self.inner.get("_count").cloned().map(|r| r.get("{{ field.name }}").cloned()).flatten().map(|v| v.as_usize()).flatten()
+    }
+    {%- endif %}
+
+    {%- if field.aggregate().can_max %}
+    pub fn _max_{{ field.name|snakecase }}(&self) -> Option<{{ field.aggregate().max_type }}> {
+        self.inner.get("_max").cloned().map(|r| r.get("{{ field.name }}").cloned()).flatten().map(|v| v.as_{{ field.aggregate().max_type|rust_as }}()).flatten()
+    }
+    {%- endif %}
+
+    {%- if field.aggregate().can_min %}
+    pub fn _min_{{ field.name|snakecase }}(&self) -> Option<{{ field.aggregate().min_type }}> {
+        self.inner.get("_min").cloned().map(|r| r.get("{{ field.name }}").cloned()).flatten().map(|v| v.as_{{ field.aggregate().min_type|rust_as }}()).flatten()
+    }
+    {%- endif %}
+
+    {%- if field.aggregate().can_avg %}
+    pub fn _avg_{{ field.name|snakecase }}(&self) -> Option<f64> {
+        self.inner.get("_avg").cloned().map(|r| r.get("{{ field.name }}").cloned()).flatten().map(|v| v.as_f64()).flatten()
+    }
+    {%- endif %}
+
+    {%- if field.aggregate().can_sum %}
+    pub fn _sum_{{ field.name|snakecase }}(&self) -> Option<{{ field.aggregate().sum_type }}> {
+        self.inner.get("_sum").cloned().map(|r| r.get("{{ field.name }}").cloned()).flatten().map(|v| v.as_{{ field.aggregate().sum_type }}()).flatten()
+    }
+    {%- endif %}
+
+    {%- if field.aggregate().can_group_by %}
+    pub fn {{ field.name|snakecase }}(&self) -> Option<{{ field.aggregate().group_by_type.as_ref().unwrap() }}> {
+        self.inner.get("{{ field.name }}").cloned().map(|v| v.as_{{ field.aggregate().group_by_type.as_ref().unwrap()|rust_as }}()).flatten()
+    }
+    {%- endif %}
+
+    {%- endif %}
+    {%- endfor %}
+
+}
+
 {%- endfor %}
 
 pub struct Teo {

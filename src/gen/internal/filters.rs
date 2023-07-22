@@ -108,3 +108,16 @@ pub fn rust_unwrap_vec<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     s = s.strip_suffix(">").unwrap().to_owned();
     Ok(s)
 }
+
+pub fn rust_as<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
+    let string = s.to_string();
+    let s = string.as_str();
+    Ok(match s {
+        "String" => "string",
+        "NaiveDate" => "date",
+        "DateTime<Utc>" => "datetime",
+        "BigDecimal" => "decimal",
+        "ObjectId" => "object_id",
+        _ => s,
+    }.to_string())
+}
