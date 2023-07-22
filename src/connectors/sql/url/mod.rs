@@ -35,7 +35,11 @@ pub(crate) mod url_utils {
     }
 
     pub(crate) fn normalized_url(dialect: SQLDialect, url: &str) -> Url {
-        let mut url = Url::parse(url).unwrap();
+        let url_result = Url::parse(url);
+        if let Err(err) = url_result {
+            panic!("URL '{}' parse error: {}", url, err);
+        }
+        let mut url = url_result.unwrap();
         match dialect {
             SQLDialect::MySQL => {
                 if url.username() == "" {
