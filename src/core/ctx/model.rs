@@ -30,14 +30,14 @@ impl ModelCtx {
     }
 
     pub async fn count(&self, finder: &Value) -> Result<usize> {
-        AppCtx::get()?.graph()?.count(self.model.name(), finder, Some(self.conn.clone()))
+        AppCtx::get()?.graph()?.count(self.model.name(), finder, Some(self.conn.clone())).await
     }
 
-    pub async fn aggregates(&self, finder: &Value) -> Result<Value> {
-        AppCtx::get()?.graph()?.aggregate(self.model.name(), finder, Some(some.conn.clone()))
+    pub async fn aggregates<T: From<Value>>(&self, finder: &Value) -> Result<T> {
+        AppCtx::get()?.graph()?.aggregate(self.model.name(), finder, Some(self.conn.clone())).await.map(|v| v.into())
     }
 
-    pub async fn group_by(&self, finder: &Value) -> Result<Value> {
-        AppCtx::get()?.graph()?.group_by(self.model.name(), finder, Some(some.conn.clone()))
+    pub async fn group_by<T: From<Value>>(&self, finder: &Value) -> Result<T> {
+        AppCtx::get()?.graph()?.group_by(self.model.name(), finder, Some(self.conn.clone())).await.map(|v| v.into())
     }
 }
