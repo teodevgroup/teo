@@ -289,9 +289,10 @@ impl ASTParser {
                     } else {
                         desc = Self::append_doc_desc(desc, doc)
                     }
-
                 },
-                _ => panic!("error."),
+                Rule::double_comment_block => {},
+                Rule::double_comment => {},
+                _ => panic!("error. see rule: {:?}", current.as_rule()),
             }
         }
         CommentBlock {
@@ -387,7 +388,7 @@ impl ASTParser {
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::enum_value_declaration => choices.push(self.parse_enum_value(current)),
                 Rule::block_decorator => decorators.push(Self::parse_decorator(current)),
-                _ => panic!("error. {}", current),
+                _ => panic!("error. {}", current.as_str()),
             }
         }
         Top::Enum(ASTEnum::new(
@@ -412,7 +413,7 @@ impl ASTParser {
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
                 Rule::triple_comment_block => comment_block = Some(Self::parse_comment_block(current)),
-                _ => panic!("error."),
+                _ => panic!("error: {}", current.as_str()),
             }
         }
         EnumChoice::new(identifier.unwrap(),comment_block,decorators, span)
@@ -500,9 +501,8 @@ impl ASTParser {
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::config_item => items.push(Self::parse_config_item(current)),
                 Rule::comment_block => (),
-                _ => {
-                    unreachable!()
-                },
+                Rule::BLOCK_LEVEL_CATCH_ALL => println!("error: {:?}", current),
+                _ => unreachable!(),
             }
         }
         match keyword {

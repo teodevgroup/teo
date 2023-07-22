@@ -125,10 +125,9 @@ comment_token = { "@" ~ (!(WHITESPACE | NEWLINE) ~ ANY)+ }
 doc_content = @{ (!NEWLINE ~ ANY)* }
 triple_comment = { WHITESPACE* ~ "///" ~ comment_token? ~ doc_content }
 double_comment = { WHITESPACE* ~ (!"///") ~ "//" ~ doc_content }
-triple_comment_block = { ((triple_comment) ~ NEWLINE?)+ }
-double_comment_block = { ((double_comment) ~ NEWLINE?)+ }
+triple_comment_block = { (triple_comment ~ NEWLINE?)+ }
+double_comment_block = { (double_comment ~ NEWLINE?)+ }
 comment_block = { triple_comment_block | double_comment_block }
-trailing_comment = ${ triple_comment | double_comment }
 
 // #############
 // operators
@@ -136,7 +135,7 @@ trailing_comment = ${ triple_comment | double_comment }
 ADD = { "+" }
 SUB = { "-" }
 MUL = { "*" }
-DIV = { "/" }
+DIV = { (!"/")  ~ "/" }
 MOD = { "%" }
 BI_AND = { "&" }
 BI_XOR = { "^" }
@@ -241,7 +240,7 @@ config_declaration = {
     config_keywords
     ~ identifier?
     ~ BLOCK_OPEN
-    ~ (config_item | comment_block | EMPTY_LINES)*
+    ~ (config_item | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
     ~ BLOCK_CLOSE
 }
 
@@ -262,7 +261,7 @@ enum_declaration = {
     ~ BLOCK_CLOSE
 }
 
-enum_value_declaration = { triple_comment_block? ~ item_decorator* ~ identifier ~ trailing_comment? ~ NEWLINE }
+enum_value_declaration = { triple_comment_block? ~ item_decorator* ~ identifier ~ NEWLINE? }
 
 // #############
 // model
@@ -286,8 +285,8 @@ field_declaration = {
     ~ identifier
     ~ COLON
     ~ field_type
-    ~ trailing_comment?
-    ~ NEWLINE
+    ~ double_comment_block?
+    ~ NEWLINE?
 }
 
 // #############
