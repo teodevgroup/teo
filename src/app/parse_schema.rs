@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use dotenvy::dotenv;
 use crate::app::ctx::AppCtx;
 use crate::core::conf::debug::DebugConf;
 use crate::core::conf::test::{Reset, ResetDatasets, ResetMode, TestConf};
@@ -29,6 +30,9 @@ pub(super) fn parse_schema(main: Option<&str>) -> Result<()> {
 }
 
 pub(super) fn load_schema() -> Result<()> {
+    // load env first
+    let _ = dotenv();
+    // then load schema
     let app_ctx = AppCtx::get()?;
     let parser = app_ctx.parser()?;
     // connector conf
