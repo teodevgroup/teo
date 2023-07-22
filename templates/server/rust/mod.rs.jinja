@@ -17,7 +17,7 @@ use teo::core::callbacks::compare_param::{CompareParam, ExtractFromCompareParam}
 use teo::core::ctx::user::UserCtx;
 use teo::prelude::{Object, Value, Result, ModelCtx};
 use teo::teon;
-{%- if outline.enums.count() > 0 %}
+{%- if outline.enums.len() > 0 %}
 use teo::core::error::*;
 
 trait EnumVariantToValue {
