@@ -25,7 +25,7 @@ use crate::core::action::{
 };
 use crate::core::initiator::Initiator;
 use crate::app::cli::command::SeedCommandAction;
-use crate::app::ctx::AppCtx;
+use crate::app::app_ctx::AppCtx;
 use crate::app::entrance::Entrance;
 use crate::app::program::Program;
 use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;

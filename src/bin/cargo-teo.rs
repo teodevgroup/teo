@@ -2,7 +2,7 @@ use tokio::main;
 use teo::app::entrance::Entrance;
 use teo::core::result::Result;
 use teo::app::app::App;
-use teo::app::ctx::AppCtx;
+use teo::app::app_ctx::AppCtx;
 
 #[main]
 async fn main() -> Result<()> {

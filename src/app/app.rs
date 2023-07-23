@@ -15,7 +15,7 @@ use crate::core::items::function::transform::TransformItem;
 use crate::core::items::function::validate::ValidateItem;
 use crate::prelude::Value;
 use crate::core::error::Error;
-use super::ctx::AppCtx;
+use super::app_ctx::AppCtx;
 use crate::core::result::Result;
 
 pub struct App(usize);
@@ -29,6 +29,8 @@ impl App {
             Err(Error::fatal("A running Teo application cannot have more than 1 app instance."))
         }
     }
+
+    // pub fn middleware
 
     pub fn transform<A, O, F, R>(&self, name: &'static str, f: F) -> Result<&Self> where
         A: Send + Sync + 'static,

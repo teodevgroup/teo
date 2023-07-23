@@ -5,7 +5,7 @@ use itertools::Itertools;
 use maplit::hashmap;
 use serde_json::json;
 use crate::app::cli::command::SeedCommandAction;
-use crate::app::ctx::AppCtx;
+use crate::app::app_ctx::AppCtx;
 use crate::core::connector::connection::Connection;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::model::Model;

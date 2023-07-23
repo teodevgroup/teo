@@ -436,6 +436,8 @@
 - Fixed create index on a newly defined column causes crash bug **[Done]**
 - MySQL basic custom string types **[Done]**
 - Fixed decimal.js import bug for generated Node.js client **[Done]**
+- Custom routes: action
+- Custom routes: middleware
 
 #### 0.0.57
 - Use database specific database types
