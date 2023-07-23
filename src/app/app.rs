@@ -1,9 +1,12 @@
+use std::future::Future;
 use std::sync::Arc;
 use crate::app::cli::command::CLI;
 use crate::app::cli::parse_cli::parse_cli;
 use crate::app::cli::run_command::run_command;
 use crate::app::connect_to_database::connect_to_database;
 use crate::app::parse_schema::{load_schema, parse_schema};
+use crate::app::routes::action_ctx::ActionHandler;
+use crate::app::routes::middleware_ctx::{Middleware, MiddlewareCtx};
 use crate::core::callbacks::types::callback::{CallbackArgument, CallbackResult};
 use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
 use crate::core::callbacks::types::compare::CompareArgument;
@@ -30,7 +33,17 @@ impl App {
         }
     }
 
-    // pub fn middleware
+    pub fn middleware<F>(&self, name: &'static str, f: F) -> Result<()> where
+        F: Middleware + 'static,
+    {
+        AppCtx::get()?.add_middleware(name, f)
+    }
+
+    pub fn action<F>(&self, group: &'static str, name: &'static str, f: F) -> Result<()> where
+        F: ActionHandler + 'static,
+    {
+        AppCtx::get()?.add_action_handler(group, name, f)
+    }
 
     pub fn transform<A, O, F, R>(&self, name: &'static str, f: F) -> Result<&Self> where
         A: Send + Sync + 'static,

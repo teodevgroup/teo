@@ -1,6 +1,9 @@
 use std::sync::Arc;
+use indexmap::IndexMap;
 use crate::app::entrance::Entrance;
 use crate::app::program::Program;
+use crate::app::routes::action_ctx::{ActionHandler, ActionHandlerDef};
+use crate::app::routes::middleware_ctx::Middleware;
 use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
 use crate::core::conf::debug::DebugConf;
@@ -32,6 +35,8 @@ pub struct AppCtx {
     datasets: Vec<DataSet>,
     setup: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
     ignore_callbacks: bool,
+    middlewares: IndexMap<&'static str, Arc<dyn Middleware>>,
+    action_handlers: Vec<ActionHandlerDef>,
 }
 
 impl AppCtx {
@@ -53,6 +58,8 @@ impl AppCtx {
             test_conf: None,
             setup: None,
             ignore_callbacks: false,
+            middlewares: IndexMap::new(),
+            action_handlers: vec![],
         }
     }
 
@@ -193,6 +200,22 @@ impl AppCtx {
             Some(graph) => Ok(graph.as_mut()),
             None => Err(Error::fatal("Graph is accessed mutably while it's not set.")),
         }
+    }
+
+    pub(crate) fn add_middleware<F>(&self, name: &'static str, f: F) -> Result<()> where
+        F: Middleware + 'static,
+    {
+        AppCtx::get_mut()?.middlewares.insert(name, Arc::new(f));
+        Ok(())
+    }
+
+    pub(crate) fn add_action_handler<F>(&self, group: &'static str, name: &'static str, f: F) -> Result<()> where
+        F: ActionHandler + 'static,
+    {
+        AppCtx::get_mut()?.action_handlers.push(ActionHandlerDef {
+            group, name, f: Arc::new(f),
+        });
+        Ok(())
     }
 
     pub(crate) fn set_connector(&self, connector: Box<dyn Connector>) {
