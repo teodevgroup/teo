@@ -18,7 +18,7 @@ pub(crate) async fn generate_index_js(graph: &Graph, conf: &Conf) -> String {
             name_map += &format!("  '{}': '{}',\n", model.name().to_camel_case(), model.name());
         }
     }
-    format!(r#"const Decimal = require('./decimal')
+    format!(r#"const Decimal = require('decimal.js')
 
 const nameMap = {{
 {name_map}}}

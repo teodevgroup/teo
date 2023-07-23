@@ -434,8 +434,14 @@
 - When running generation, ignore custom programming callbacks **[Done]**
 - Fixed aggregate SQL clause bug for PostgreSQL **[Done]**
 - Fixed create index on a newly defined column causes crash bug **[Done]**
+- MySQL basic custom string types **[Done]**
+- Fixed decimal.js import bug for generated Node.js client **[Done]**
 
 #### 0.0.57
+- Use database specific database types
+- Full custom types for all supported databases
+
+#### 0.0.58
 - Node.js bindings: error handling
 - Node.js object printing
 - Node.js bindings: date only type
@@ -459,7 +465,7 @@
 - Migration dry run
 - MongoDB: connector is not using table name
 
-#### 0.0.58
+#### 0.0.59
 - Python server
 - Migration decorator docs
 - Dropped decorator docs
@@ -473,7 +479,7 @@
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 
-#### 0.0.59
+#### 0.0.60
 - Refactor Node.js entities
 - Rust entities: setter documentation
 - Rust entities: optional string array
@@ -486,7 +492,7 @@
 - Soft delete documentation
 - Correct count with cursor
 
-#### 0.0.60
+#### 0.0.61
 - The copy action
 - PostgreSQL: Enum types
 - Input omissible and output omissible for generated clients
