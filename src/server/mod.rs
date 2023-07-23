@@ -8,13 +8,14 @@ use std::sync::Arc;
 use futures_util::future;
 use std::time::SystemTime;
 use actix_http::body::BoxBody;
-use actix_http::{Method};
+use actix_http::{HttpMessage, Method, Payload};
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::DefaultHeaders;
 use chrono::{DateTime, Duration, Local, Utc};
 use colored::Colorize;
 use futures_util::StreamExt;
+use indexmap::IndexMap;
 use key_path::{KeyPath, path};
 use serde_json::{json, Value as JsonValue};
 use crate::core::action::{
@@ -28,6 +29,9 @@ use crate::app::cli::command::SeedCommandAction;
 use crate::app::app_ctx::AppCtx;
 use crate::app::entrance::Entrance;
 use crate::app::program::Program;
+use crate::app::routes::action_ctx::ActionHandlerDef;
+use crate::app::routes::middleware_ctx::Middleware;
+use crate::app::routes::req::Req;
 use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
 use crate::core::connector::connection::Connection;
 use crate::server::test_context::TestContext;
@@ -38,7 +42,7 @@ use crate::core::object::{ErrorIfNotFound, Object};
 use crate::core::pipeline::ctx::{PipelineCtx};
 use crate::core::error::Error;
 use crate::core::teon::decoder::Decoder;
-use crate::prelude::Value;
+use crate::prelude::{ActionCtx, Res, Value};
 use crate::seeder::seed::seed;
 use crate::server::conf::ServerConf;
 use crate::teon;
@@ -628,14 +632,20 @@ async fn handle_identity<'a>(_graph: &'static Graph, input: &'a Value, model: &'
     }
 }
 
-fn make_app(graph: &'static Graph, conf: &'static ServerConf, test_context: Option<&'static TestContext>) -> App<impl ServiceFactory<
+fn make_app(
+    graph: &'static Graph,
+    conf: &'static ServerConf,
+    middlewares: &'static IndexMap<&'static str, Arc<dyn Middleware>>,
+    action_defs: &'static Vec<ActionHandlerDef>,
+    test_context: Option<&'static TestContext>
+) -> App<impl ServiceFactory<
     ServiceRequest,
     Response = ServiceResponse<BoxBody>,
     Config = (),
     InitError = (),
     Error = actix_web::Error,
 > + 'static> {
-    let app = App::new()
+    let mut app = App::new()
         .wrap(DefaultHeaders::new()
             .add(("Access-Control-Allow-Origin", "*"))
             .add(("Access-Control-Allow-Methods", "OPTIONS, POST, GET"))
@@ -843,6 +853,25 @@ fn make_app(graph: &'static Graph, conf: &'static ServerConf, test_context: Opti
                 _ => unreachable!()
             }
         }));
+    for action_def in action_defs {
+        app = app.route(format!("/{}/action/{}", action_def.group, action_def.name).as_str(), web::post().to(|request: HttpRequest, payload: web::Payload| async {
+            let start = SystemTime::now();
+            let mut ctx = ActionCtx {
+                req: Req::new(request, payload)
+            };
+            let res = action_def.f.call(&mut ctx).await;
+            match res {
+                Ok(ok) => {
+                    log_request(start, action_def.name, action_def.group, ok.code());
+                    <Res as Into<HttpResponse>>::into(ok)
+                },
+                Err(err) => {
+                    log_request(start, action_def.name, action_def.group, 400); // TODO: should not be 400
+                    <Error as Into<HttpResponse>>::into(err)
+                },
+            }
+        }));
+    }
     app
 }
 
@@ -868,6 +897,8 @@ pub(crate) async fn serve(
     environment_version: &'static Program,
     entrance: &'static Entrance,
     before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
+    middlewares: &'static IndexMap<&'static str, Arc<dyn Middleware>>,
+    action_defs: &'static Vec<ActionHandlerDef>,
     test_context: Option<&'static TestContext>,
 ) -> Result<()> {
     if let Some(cb) = before_server_start {
@@ -876,7 +907,7 @@ pub(crate) async fn serve(
     let bind = conf.bind.clone();
     let port = bind.1;
     let server = HttpServer::new(move || {
-        make_app(graph, conf, test_context)
+        make_app(graph, conf, middlewares, action_defs, test_context)
     })
         .bind(bind)
         .unwrap()

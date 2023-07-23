@@ -202,22 +202,6 @@ impl AppCtx {
         }
     }
 
-    pub(crate) fn add_middleware<F>(&self, name: &'static str, f: F) -> Result<()> where
-        F: Middleware + 'static,
-    {
-        AppCtx::get_mut()?.middlewares.insert(name, Arc::new(f));
-        Ok(())
-    }
-
-    pub(crate) fn add_action_handler<F>(&self, group: &'static str, name: &'static str, f: F) -> Result<()> where
-        F: ActionHandler + 'static,
-    {
-        AppCtx::get_mut()?.action_handlers.push(ActionHandlerDef {
-            group, name, f: Arc::new(f),
-        });
-        Ok(())
-    }
-
     pub(crate) fn set_connector(&self, connector: Box<dyn Connector>) {
         AppCtx::get_mut().unwrap().connector = Some(connector);
     }
@@ -271,6 +255,31 @@ impl AppCtx {
     pub(crate) fn ignore_callbacks(&self) -> bool {
         self.ignore_callbacks
     }
+
+    pub(crate) fn add_middleware<F>(&self, name: &'static str, f: F) -> Result<()> where
+        F: Middleware + 'static,
+    {
+        AppCtx::get_mut()?.middlewares.insert(name, Arc::new(f));
+        Ok(())
+    }
+
+    pub(crate) fn add_action_handler<F>(&self, group: &'static str, name: &'static str, f: F) -> Result<()> where
+        F: ActionHandler + 'static,
+    {
+        AppCtx::get_mut()?.action_handlers.push(ActionHandlerDef {
+            group, name, f: Arc::new(f),
+        });
+        Ok(())
+    }
+
+    pub(crate) fn middlewares(&self) -> &IndexMap<&'static str, Arc<dyn Middleware>> {
+        &self.middlewares
+    }
+
+    pub(crate) fn action_handlers(&self) -> &Vec<ActionHandlerDef> {
+        &self.action_handlers
+    }
+
 }
 
 static mut CURRENT: Option<&'static AppCtx> = None;

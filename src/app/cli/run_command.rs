@@ -56,6 +56,8 @@ pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
                 app_ctx.program(),
                 app_ctx.entrance(),
                 app_ctx.setup(),
+                app_ctx.middlewares(),
+                app_ctx.action_handlers(),
                 test_context,
             ).await?
         }
