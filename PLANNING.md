@@ -440,6 +440,10 @@
 #### 0.0.57
 - Use database specific database types
 - Full custom types for all supported databases
+- Rewrite Node.js client generating with askama engine
+- Refactor Node.js entities
+- The copy action
+- PostgreSQL: Enum types
 
 #### 0.0.58
 - Node.js bindings: error handling
@@ -480,8 +484,6 @@
 - All many actions should throw errors
 
 #### 0.0.60
-- Refactor Node.js entities
-- Rust entities: setter documentation
 - Rust entities: optional string array
 - Rust entities: required string array
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
@@ -493,8 +495,6 @@
 - Correct count with cursor
 
 #### 0.0.61
-- The copy action
-- PostgreSQL: Enum types
 - Input omissible and output omissible for generated clients
 - Support code comment tags for VSCode
 - Support code comment tags for IntelliJ IDEA
