@@ -31,7 +31,6 @@ pub(crate) fn mysql_db_types_decorator(args: &Vec<Argument>, field: &mut Field) 
         _ => panic!("Argument to @db decorator should be enum member.")
     };
     match name.as_str() {
-        "text" => field.database_type = Some(DatabaseType::Text { m: None, n: None, c: None }),
         "varChar" => {
             let first_arg = args.as_ref().unwrap().get(0).unwrap();
             field.database_type = Some(DatabaseType::VarChar { m: first_arg.1.as_usize().unwrap() as u16, n: None, c: None })
@@ -40,9 +39,11 @@ pub(crate) fn mysql_db_types_decorator(args: &Vec<Argument>, field: &mut Field) 
             let first_arg = args.as_ref().unwrap().get(0).unwrap();
             field.database_type = Some(DatabaseType::Char { m: Some(first_arg.1.as_usize().unwrap() as u8), n: None, c: None })
         }
+        "text" => field.database_type = Some(DatabaseType::Text { m: None, n: None, c: None }),
         "mediumText" => field.database_type = Some(DatabaseType::MediumText { n: None, c: None }),
         "longText" => field.database_type = Some(DatabaseType::LongText { n: None, c: None }),
-        "int" => field.database_type = Some(DatabaseType::Int),
+        "int" => field.database_type = Some(DatabaseType::Int { m: None, u: false }),
+        "unsignedInt" => field.database_type = Some(DatabaseType::Int { m: None, u: true }),
         "smallInt" => field.database_type = Some(DatabaseType::SmallInt { m: None, u: false }),
         "unsignedSmallInt" => field.database_type = Some(DatabaseType::SmallInt { m: None, u: true }),
         "mediumInt" => field.database_type = Some(DatabaseType::MediumInt { m: None, u: false }),
@@ -56,13 +57,13 @@ pub(crate) fn mysql_db_types_decorator(args: &Vec<Argument>, field: &mut Field) 
 }
 
 pub(crate) fn postgresql_db_types_decorator(args: &Vec<Argument>, field: &mut Field) {
-
+    panic!("PostgreSQL @db decorator is not implemented.")
 }
 
 pub(crate) fn sqlite_db_types_decorator(args: &Vec<Argument>, field: &mut Field) {
-
+    panic!("SQLite @db decorator is not implemented.")
 }
 
 pub(crate) fn mongodb_db_types_decorator(args: &Vec<Argument>, field: &mut Field) {
-
+    panic!("MongoDB @db decorator is not implemented.")
 }

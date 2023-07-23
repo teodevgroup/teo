@@ -39,6 +39,9 @@ fn mysql_type_to_database_type(r#type: &str) -> DatabaseType {
                 "double" => DatabaseType::Double { m: None, d: None },
                 "char" => DatabaseType::Char { m: arg.map(|a| u8::from_str(a).unwrap()), n: None, c: None },
                 "varchar" => DatabaseType::VarChar { m: arg.map(|a| u16::from_str(a).unwrap()).unwrap(), n: None, c: None },
+                "text" => DatabaseType::Text { m: None, n: None, c: None },
+                "mediumtext" => DatabaseType::MediumText { n: None, c: None },
+                "longtext" => DatabaseType::LongText { n: None, c: None },
                 "date" => DatabaseType::Date,
                 "datetime" => DatabaseType::DateTime(u8::from_str(arg.unwrap()).unwrap()),
                 "decimal" => {

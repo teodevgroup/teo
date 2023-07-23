@@ -245,7 +245,9 @@ impl Field {
 
     pub(crate) fn finalize(&mut self) {
         let connector_conf = AppCtx::get().unwrap().connector_conf().unwrap();
-        self.database_type = Some(connector_conf.default_database_type(self.field_type()));
+        if self.database_type.is_none() {
+            self.database_type = Some(connector_conf.default_database_type(self.field_type()));
+        }
     }
 
     pub(crate) fn set_required(&mut self) {
