@@ -460,7 +460,22 @@ impl ExtractFromCompareParam for Teo {
     }
 }
 
+impl From<UserCtx> for Teo {
+    fn from(value: UserCtx) -> Self {
+        Self { user_ctx: value }
+    }
+}
+
 impl Teo {
+
+    pub async fn transaction<F, C, Fut>(&self, f: F) -> Result<()> where
+        F: Fn(C) -> Fut,
+        C: From<UserCtx>,
+    Fut: Future<Output = Result<()>> {
+        self.user_ctx.transaction(f).await
+    }
+
+
 {%- for class in outline.classes %}
     pub fn {{ class.name|snakecase }}(&self) -> {{ class.name }}Class {
         {{ class.name }}Class { model_ctx: self.user_ctx.model_ctx("{{ class.name }}").unwrap() }

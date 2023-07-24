@@ -24,13 +24,13 @@ impl UserCtx {
         })
     }
 
-    pub async fn transaction<F, Fut, C>(&self, f: F) -> Result<()> where F: Fn(C) -> Fut, C: From<UserCtx>, Fut: Future<Output = Result<()>> {
+    pub async fn transaction<F, Fut, C, R>(&self, f: F) -> Result<R> where F: Fn(C) -> Fut, C: From<UserCtx>, Fut: Future<Output = Result<R>> {
         let conn_with_transaction = self.conn.transaction().await?;
         let tran_ctx = UserCtx {
             conn: conn_with_transaction.clone()
         };
-        f(tran_ctx.into()).await?;
+        let result = f(tran_ctx.into()).await?;
         conn_with_transaction.commit().await?;
-        Ok(())
+        Ok(result)
     }
 }
