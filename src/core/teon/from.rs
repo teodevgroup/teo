@@ -92,7 +92,6 @@ impl From<Value> for i32 {
     }
 }
 
-
 impl From<Value> for i64 {
     fn from(v: Value) -> Self {
         v.as_i64().unwrap()

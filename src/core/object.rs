@@ -289,7 +289,7 @@ impl Object {
     }
 
     pub fn set_value(&self, key: impl AsRef<str>, value: Value) -> Result<()> {
-        let model_keys = self.model().save_keys();
+        let model_keys = self.model().save_keys_and_virtual_keys();
         if !model_keys.contains(&key.as_ref()) {
             return Err(Error::invalid_key(key, self.model()));
         }
@@ -1524,7 +1524,25 @@ impl Object {
         if let Some(select) = select {
             finder.as_hashmap_mut().unwrap().insert("select".to_string(), select.clone());
         }
-        graph.find_unique_internal(self.model().name(), &finder, false, self.action(), self.action_source().clone(), self.connection()).await.into_not_found_error()
+        let target = graph.find_unique_internal(self.model().name(), &finder, false, self.action(), self.action_source().clone(), self.connection()).await.into_not_found_error();
+        match target {
+            Ok(obj) => {
+                if self.model().has_virtual_fields() {
+                    self.copy_virtual_fields(&obj);
+                }
+                Ok(obj)
+            }
+            Err(err) => Err(err)
+        }
+    }
+
+    fn copy_virtual_fields(&self, other: &Object) {
+        for field in self.model().fields() {
+            if field.r#virtual {
+                let result = self.get_value(field.name()).unwrap();
+                other.set(field.name(), result).unwrap();
+            }
+        }
     }
 
     pub async fn force_set_relation_objects(&self, key: &str, objects: Vec<Object>) -> () {

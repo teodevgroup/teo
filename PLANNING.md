@@ -436,6 +436,8 @@
 - Fixed create index on a newly defined column causes crash bug **[Done]**
 - MySQL basic custom string types **[Done]**
 - Fixed decimal.js import bug for generated Node.js client **[Done]**
+- Fixed a bug causes virtual fields to be created **[Done]**
+- When refreshed, virtual value is kept for root level object **[Done]**
 - Custom routes: action
 - Custom routes: middleware
 

@@ -162,6 +162,7 @@ impl ColumnDecoder {
     pub(crate) fn decode_model_columns(model: &Model) -> HashSet<SQLColumn> {
         let mut result = hashset!{};
         for field in model.fields() {
+            if field.r#virtual { continue }
             result.insert(field.into());
         }
         for property in model.properties() {

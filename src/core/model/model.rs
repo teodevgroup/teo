@@ -56,6 +56,7 @@ pub struct Model {
     all_keys: Vec<&'static str>,
     input_keys: Vec<&'static str>,
     save_keys: Vec<&'static str>,
+    save_keys_and_virtual_keys: Vec<&'static str>,
     output_keys: Vec<&'static str>,
     query_keys: Vec<&'static str>,
     unique_query_keys: Vec<HashSet<&'static str>>,
@@ -69,6 +70,7 @@ pub struct Model {
     local_output_keys: Vec<&'static str>,
     relation_output_keys: Vec<&'static str>,
     field_property_map: HashMap<&'static str, Vec<&'static str>>,
+    has_virtual_fields: bool,
 }
 
 impl Model {
@@ -101,6 +103,7 @@ impl Model {
             all_keys: vec![],
             input_keys: vec![],
             save_keys: vec![],
+            save_keys_and_virtual_keys: vec![],
             output_keys: vec![],
             query_keys: vec![],
             unique_query_keys: vec![],
@@ -119,6 +122,7 @@ impl Model {
             action_transformers: vec![],
             migration: None,
             teo_internal: false,
+            has_virtual_fields: false,
         }
     }
 
@@ -224,6 +228,10 @@ impl Model {
             }
         }
         None
+    }
+
+    pub(crate) fn save_keys_and_virtual_keys(&self) -> &Vec<&str> {
+        &self.save_keys_and_virtual_keys
     }
 
     pub(crate) fn all_keys(&self) -> &Vec<&str> { &self.all_keys }
@@ -426,8 +434,11 @@ impl Model {
         let field_save_keys: Vec<&str> = self.fields_vec.iter().filter(|f| { !f.r#virtual }).map(|f| f.name).collect();
         let property_save_keys: Vec<&str> = self.properties_vec.iter().filter(|p| p.cached).map(|p| p.name).collect();
         let mut save_keys = vec![];
-        save_keys.extend(field_save_keys);
-        save_keys.extend(property_save_keys);
+        save_keys.extend(field_save_keys.clone());
+        save_keys.extend(property_save_keys.clone());
+        let mut save_keys_and_virtual_keys = vec![];
+        save_keys_and_virtual_keys.extend(all_field_keys.clone());
+        save_keys_and_virtual_keys.extend(property_save_keys);
         let output_field_keys: Vec<&str> = self.fields().iter().filter(|&f| { !f.read_rule.is_no_read() }).map(|f| { f.name }).collect();
         let output_relation_keys = all_relation_keys.clone();
         let output_property_keys: Vec<&str> = self.properties().iter().filter(|p| p.getter.is_some()).map(|p| p.name).collect();
@@ -488,6 +499,7 @@ impl Model {
         mut_self.all_keys = all_keys;
         mut_self.input_keys = input_keys;
         mut_self.save_keys = save_keys;
+        mut_self.save_keys_and_virtual_keys = save_keys_and_virtual_keys;
         mut_self.output_keys = output_keys;
         mut_self.query_keys = query_keys;
         mut_self.sort_keys = sort_keys;
@@ -593,7 +605,10 @@ impl Model {
     pub(crate) fn add_field(&mut self, field: Field, name: &'static str) {
         let arc = Arc::new(field);
         self.fields_vec.push(arc.clone());
-        self.fields_map.insert(name, arc);
+        self.fields_map.insert(name, arc.clone());
+        if arc.r#virtual {
+            self.has_virtual_fields = true;
+        }
     }
 
     pub(crate) fn add_dropped_field(&mut self, field: Field, name: &'static str) {
@@ -612,6 +627,10 @@ impl Model {
         let arc = Arc::new(property);
         self.properties_vec.push(arc.clone());
         self.properties_map.insert(name, arc);
+    }
+
+    pub(crate) fn has_virtual_fields(&self) -> bool {
+        self.has_virtual_fields
     }
 }
 
