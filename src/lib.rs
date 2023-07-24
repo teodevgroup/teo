@@ -11,7 +11,7 @@ pub(crate) mod migrate;
 pub mod prelude {
     pub use crate::app::app::App;
     pub use crate::app::routes::middleware_ctx::MiddlewareCtx;
-    pub use crate::app::routes::action_ctx::ActionCtx;
+    pub use crate::app::routes::action_ctx::*;
     pub use crate::app::routes::req::Req;
     pub use crate::app::routes::res::Res;
     pub use crate::core::graph::Graph;

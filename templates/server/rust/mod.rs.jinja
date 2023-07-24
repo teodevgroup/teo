@@ -442,6 +442,12 @@ pub struct Teo {
     user_ctx: UserCtx,
 }
 
+impl ExtractValueFromActionCtxBase for Teo {
+    fn extract(param: &ActionCtxBase) -> Self {
+        Self { user_ctx: param.user_ctx.clone() }
+    }
+}
+
 impl ExtractFromCallbackParam for Teo {
     fn extract(param: &CallbackParam) -> Self {
         Self { user_ctx: param.user_ctx.clone() }

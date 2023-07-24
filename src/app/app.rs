@@ -5,7 +5,7 @@ use crate::app::cli::parse_cli::parse_cli;
 use crate::app::cli::run_command::run_command;
 use crate::app::connect_to_database::connect_to_database;
 use crate::app::parse_schema::{load_schema, parse_schema};
-use crate::app::routes::action_ctx::ActionHandler;
+use crate::app::routes::action_ctx::{ActionCtxArgument, ActionHandler};
 use crate::app::routes::middleware_ctx::{Middleware, MiddlewareCtx};
 use crate::core::callbacks::types::callback::{CallbackArgument, CallbackResult};
 use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
@@ -16,7 +16,7 @@ use crate::core::items::function::compare::CompareItem;
 use crate::core::items::function::perform::CallbackItem;
 use crate::core::items::function::transform::TransformItem;
 use crate::core::items::function::validate::ValidateItem;
-use crate::prelude::Value;
+use crate::prelude::{Res, Value};
 use crate::core::error::Error;
 use super::app_ctx::AppCtx;
 use crate::core::result::Result;
@@ -39,8 +39,9 @@ impl App {
         AppCtx::get()?.add_middleware(name, f)
     }
 
-    pub fn action<F>(&self, group: &'static str, name: &'static str, f: F) -> Result<()> where
-        F: ActionHandler + 'static,
+    pub fn action<T, F>(&self, group: &'static str, name: &'static str, f: F) -> Result<()> where
+        T: 'static,
+        F: ActionCtxArgument<T> + 'static,
     {
         AppCtx::get()?.add_action_handler(group, name, f)
     }

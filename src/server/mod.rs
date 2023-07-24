@@ -29,7 +29,7 @@ use crate::app::cli::command::SeedCommandAction;
 use crate::app::app_ctx::AppCtx;
 use crate::app::entrance::Entrance;
 use crate::app::program::Program;
-use crate::app::routes::action_ctx::ActionHandlerDef;
+use crate::app::routes::action_ctx::{ActionCtxBase, ActionHandlerDef, ActionHandlerDefTrait};
 use crate::app::routes::middleware_ctx::Middleware;
 use crate::app::routes::req::Req;
 use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
@@ -42,7 +42,7 @@ use crate::core::object::{ErrorIfNotFound, Object};
 use crate::core::pipeline::ctx::{PipelineCtx};
 use crate::core::error::Error;
 use crate::core::teon::decoder::Decoder;
-use crate::prelude::{ActionCtx, Res, Value};
+use crate::prelude::{Res, UserCtx, Value};
 use crate::seeder::seed::seed;
 use crate::server::conf::ServerConf;
 use crate::teon;
@@ -636,7 +636,7 @@ fn make_app(
     graph: &'static Graph,
     conf: &'static ServerConf,
     middlewares: &'static IndexMap<&'static str, Arc<dyn Middleware>>,
-    action_defs: &'static Vec<ActionHandlerDef>,
+    action_defs: &'static Vec<Arc<dyn ActionHandlerDefTrait>>,
     test_context: Option<&'static TestContext>
 ) -> App<impl ServiceFactory<
     ServiceRequest,
@@ -854,19 +854,22 @@ fn make_app(
             }
         }));
     for action_def in action_defs {
-        app = app.route(format!("/{}/action/{}", action_def.group, action_def.name).as_str(), web::post().to(|request: HttpRequest, payload: web::Payload| async {
+        app = app.route(format!("/{}/action/{}", action_def.group(), action_def.name()).as_str(), web::post().to(|request: HttpRequest, payload: web::Payload| async {
             let start = SystemTime::now();
-            let mut ctx = ActionCtx {
-                req: Req::new(request, payload)
+            let connection = AppCtx::get().unwrap().connector().unwrap().connection().await.unwrap();
+            let user_ctx = UserCtx::new(connection);
+            let ctx = ActionCtxBase {
+                req: Req::new(request, payload),
+                user_ctx,
             };
-            let res = action_def.f.call(&mut ctx).await;
+            let res = action_def.call(ctx).await;
             match res {
                 Ok(ok) => {
-                    log_request(start, action_def.name, action_def.group, ok.code());
+                    log_request(start, action_def.name(), action_def.group(), ok.code());
                     <Res as Into<HttpResponse>>::into(ok)
                 },
                 Err(err) => {
-                    log_request(start, action_def.name, action_def.group, 400); // TODO: should not be 400
+                    log_request(start, action_def.name(), action_def.group(), 400); // TODO: should not be 400
                     <Error as Into<HttpResponse>>::into(err)
                 },
             }
@@ -898,7 +901,7 @@ pub(crate) async fn serve(
     entrance: &'static Entrance,
     before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
     middlewares: &'static IndexMap<&'static str, Arc<dyn Middleware>>,
-    action_defs: &'static Vec<ActionHandlerDef>,
+    action_defs: &'static Vec<Arc<dyn ActionHandlerDefTrait>>,
     test_context: Option<&'static TestContext>,
 ) -> Result<()> {
     if let Some(cb) = before_server_start {

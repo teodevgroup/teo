@@ -2,7 +2,7 @@ use std::sync::Arc;
 use indexmap::IndexMap;
 use crate::app::entrance::Entrance;
 use crate::app::program::Program;
-use crate::app::routes::action_ctx::{ActionHandler, ActionHandlerDef};
+use crate::app::routes::action_ctx::{ActionCtxArgument, ActionHandler, ActionHandlerDef, ActionHandlerDefTrait};
 use crate::app::routes::middleware_ctx::Middleware;
 use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
@@ -13,7 +13,7 @@ use crate::core::connector::conf::ConnectorConf;
 use crate::gen::interface::client::conf::Conf as ClientConf;
 use crate::gen::interface::server::conf::Conf;
 use crate::parser::parser::parser::ASTParser;
-use crate::prelude::Graph;
+use crate::prelude::{Graph, Res};
 use crate::seeder::data_set::DataSet;
 use crate::server::conf::ServerConf;
 use crate::core::result::Result;
@@ -36,7 +36,7 @@ pub struct AppCtx {
     setup: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
     ignore_callbacks: bool,
     middlewares: IndexMap<&'static str, Arc<dyn Middleware>>,
-    action_handlers: Vec<ActionHandlerDef>,
+    action_handlers: Vec<Arc<dyn ActionHandlerDefTrait>>,
 }
 
 impl AppCtx {
@@ -263,12 +263,12 @@ impl AppCtx {
         Ok(())
     }
 
-    pub(crate) fn add_action_handler<F>(&self, group: &'static str, name: &'static str, f: F) -> Result<()> where
-        F: ActionHandler + 'static,
+    pub(crate) fn add_action_handler<A: 'static, F>(&self, group: &'static str, name: &'static str, f: F) -> Result<()> where
+        F: ActionCtxArgument<A> + 'static,
     {
-        AppCtx::get_mut()?.action_handlers.push(ActionHandlerDef {
+        AppCtx::get_mut()?.action_handlers.push(Arc::new(ActionHandlerDef {
             group, name, f: Arc::new(f),
-        });
+        }));
         Ok(())
     }
 
@@ -276,7 +276,7 @@ impl AppCtx {
         &self.middlewares
     }
 
-    pub(crate) fn action_handlers(&self) -> &Vec<ActionHandlerDef> {
+    pub(crate) fn action_handlers(&self) -> &Vec<Arc<dyn ActionHandlerDefTrait>> {
         &self.action_handlers
     }
 
