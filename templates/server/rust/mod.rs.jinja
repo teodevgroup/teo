@@ -1,5 +1,6 @@
 use std::borrow::Borrow;
 use std::fmt::{Debug, Display, Formatter};
+use std::future::Future;
 {%- if has_date %}
 use chrono::NaiveDate;
 {%- endif %}
@@ -15,7 +16,7 @@ use bson::oid::ObjectId;
 use teo::core::callbacks::param::{CallbackParam, ExtractFromCallbackParam};
 use teo::core::callbacks::compare_param::{CompareParam, ExtractFromCompareParam};
 use teo::core::ctx::user::UserCtx;
-use teo::prelude::{Object, Value, Result, ModelCtx};
+use teo::prelude::{Object, Value, Result, ModelCtx, ExtractValueFromActionCtxBase, ActionCtxBase};
 use teo::teon;
 {%- if outline.enums.len() > 0 %}
 use teo::core::error::*;
@@ -468,10 +469,10 @@ impl From<UserCtx> for Teo {
 
 impl Teo {
 
-    pub async fn transaction<F, C, Fut>(&self, f: F) -> Result<()> where
+    pub async fn transaction<F, C, Fut, R>(&self, f: F) -> Result<R> where
         F: Fn(C) -> Fut,
         C: From<UserCtx>,
-    Fut: Future<Output = Result<()>> {
+        Fut: Future<Output = Result<R>> {
         self.user_ctx.transaction(f).await
     }
 
