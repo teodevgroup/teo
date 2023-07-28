@@ -439,6 +439,7 @@
 - Fixed a bug causes virtual fields to be created **[Done]**
 - When refreshed, virtual value is kept for root level object **[Done]**
 - Fixed count `where` bug **[Done]**
+- Add `timezone` parameter to `$today` **[Done]**
 - Custom routes: action
 - Custom routes: middleware
 

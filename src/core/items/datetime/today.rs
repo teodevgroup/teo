@@ -1,16 +1,20 @@
 use async_trait::async_trait;
-use chrono::Utc;
+use chrono::{Duration, Utc};
 use crate::core::item::Item;
 use crate::core::teon::Value;
 use crate::core::result::Result;
 use crate::core::pipeline::ctx::PipelineCtx;
 
 #[derive(Debug, Copy, Clone)]
-pub struct TodayItem {}
+pub struct TodayItem {
+    timezone: i32
+}
 
 impl TodayItem {
-    pub fn new() -> Self {
-        return TodayItem {};
+    pub fn new(timezone: i32) -> Self {
+        return TodayItem {
+            timezone
+        };
     }
 }
 
@@ -18,6 +22,8 @@ impl TodayItem {
 impl Item for TodayItem {
 
     async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
-        Ok(ctx.with_value(Value::Date(Utc::now().date_naive())))
+        let mut now = Utc::now();
+        let calculated = now + Duration::hours(self.timezone as i64);
+        Ok(ctx.with_value(Value::Date(calculated.date_naive())))
     }
 }
