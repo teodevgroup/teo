@@ -266,7 +266,7 @@ impl Action {
 
     pub(crate) fn handler_requires_where(&self) -> bool {
         match self.value {
-            FIND_FIRST_HANDLER | FIND_MANY_HANDLER | UPDATE_MANY_HANDLER | DELETE_MANY_HANDLER => true,
+            FIND_FIRST_HANDLER | FIND_MANY_HANDLER | UPDATE_MANY_HANDLER | DELETE_MANY_HANDLER | COUNT_HANDLER | AGGREGATE_HANDLER | GROUP_BY_HANDLER => true,
             _ => false,
         }
     }

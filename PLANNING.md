@@ -438,6 +438,7 @@
 - Fixed decimal.js import bug for generated Node.js client **[Done]**
 - Fixed a bug causes virtual fields to be created **[Done]**
 - When refreshed, virtual value is kept for root level object **[Done]**
+- Fixed count `where` bug **[Done]**
 - Custom routes: action
 - Custom routes: middleware
 
