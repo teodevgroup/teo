@@ -166,12 +166,12 @@ impl Execution {
                         // in a (?,?,?,?,?) format
                         let field_name = fields.get(0).unwrap();
                         results.iter().map(|v| {
-                            v.as_hashmap().unwrap().get(field_name).unwrap().to_string(dialect)
+                            ToSQLString::to_string(&v.as_hashmap().unwrap().get(field_name).unwrap(), dialect)
                         }).collect::<Vec<String>>().join(",").to_wrapped()
                     } else {
                         // in a (VALUES (?,?),(?,?)) format
                         format!("(VALUES {})", results.iter().map(|o| {
-                            fields.iter().map(|f| o.as_hashmap().unwrap().get(f).unwrap().to_string(dialect)).collect::<Vec<String>>().join(",").to_wrapped()
+                            fields.iter().map(|f| ToSQLString::to_string(&o.as_hashmap().unwrap().get(f).unwrap(), dialect)).collect::<Vec<String>>().join(",").to_wrapped()
                         }).collect::<Vec<String>>().join(","))
                     };
                     let where_addition = Query::where_item(&names, "IN", &values);
@@ -240,11 +240,11 @@ impl Execution {
                     let values = if through_relation.len() == 1 { // (?,?,?,?,?) format
                         let field_name = through_relation.references().get(0).unwrap();
                         results.iter().map(|v| {
-                            v.as_hashmap().unwrap().get(field_name).unwrap().to_string(dialect)
+                            ToSQLString::to_string(&v.as_hashmap().unwrap().get(field_name).unwrap(), dialect)
                         }).collect::<Vec<String>>().join(",").to_wrapped()
                     } else { // (VALUES (?,?),(?,?)) format
                         let pairs = results.iter().map(|o| {
-                            through_relation.references().iter().map(|f| o.as_hashmap().unwrap().get(f).unwrap().to_string(dialect)).collect::<Vec<String>>().join(",").to_wrapped()
+                            through_relation.references().iter().map(|f| ToSQLString::to_string(&o.as_hashmap().unwrap().get(f).unwrap(), dialect)).collect::<Vec<String>>().join(",").to_wrapped()
                         }).collect::<Vec<String>>().join(",");
                         format!("(VALUES {})", pairs)
                     };

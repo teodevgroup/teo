@@ -212,7 +212,7 @@ impl SQLMigration {
                                 }
                                 let mut c = column.clone().clone();
                                 if default.is_some() {
-                                    c.set_default(Some(default.as_ref().unwrap().to_string(dialect)));
+                                    c.set_default(Some(ToSQLString::to_string(&default.as_ref().unwrap(), dialect)));
                                 }
                                 let stmt = SQL::alter_table(table_name).add(c).to_string(dialect);
                                 conn.execute(Query::from(stmt)).await.unwrap();

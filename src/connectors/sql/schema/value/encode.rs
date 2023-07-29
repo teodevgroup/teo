@@ -106,7 +106,7 @@ impl ValueToSQLString for &Value {
     }
 }
 
-impl ToSQLString for Value {
+impl ToSQLString for &Value {
     fn to_string(&self, dialect: SQLDialect) -> String {
         match self {
             Value::Null => "NULL".to_owned(),
@@ -119,9 +119,15 @@ impl ToSQLString for Value {
             Value::Date(d) => d.to_sql_input(dialect),
             Value::DateTime(d) => d.to_sql_input(dialect),
             Value::Decimal(d) => d.to_sql_input(dialect),
-            Value::Vec(values) => format!("array[{}]", values.iter().map(|v| v.to_string(dialect)).join(",")),
+            Value::Vec(values) => format!("array[{}]", values.iter().map(|v| ToSQLString::to_string(&v, dialect)).join(",")),
             _ => panic!("unhandled value: {:?}", self),
         }
+    }
+}
+
+impl ToSQLString for Value {
+    fn to_string(&self, dialect: SQLDialect) -> String {
+        ToSQLString::to_string(self, dialect)
     }
 }
 
@@ -149,10 +155,10 @@ impl PSQLArrayToSQLString for Value {
                 format!("array[]::{}[]", field_type_to_psql(field_type.element_field().unwrap().field_type()))
             } else {
                 format!("array[{}]", values.iter().map(|v| {
-                    v.to_string(dialect)
+                    ToSQLString::to_string(&v, dialect)
                 }).join(","))
             },
-            _ => self.to_string(dialect),
+            _ => ToSQLString::to_string(&self, dialect),
         }
     }
 }

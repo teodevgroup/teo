@@ -125,11 +125,11 @@ impl SQLConnection {
                 if let Some(updator) = object.get_atomic_updator(key) {
                     let (key, val) = Input::key_value(updator.as_hashmap().unwrap());
                     match key {
-                        "increment" => values.push((column_name, format!("{} + {}", column_name, val.to_string(self.dialect())))),
-                        "decrement" => values.push((column_name, format!("{} - {}", column_name, val.to_string(self.dialect())))),
-                        "multiply" => values.push((column_name, format!("{} * {}", column_name, val.to_string(self.dialect())))),
-                        "divide" => values.push((column_name, format!("{} / {}", column_name, val.to_string(self.dialect())))),
-                        "push" => values.push((column_name, format!("ARRAY_APPEND({}, {})", column_name, val.to_string(self.dialect())))),
+                        "increment" => values.push((column_name, format!("{} + {}", column_name, ToSQLString::to_string(&val, self.dialect())))),
+                        "decrement" => values.push((column_name, format!("{} - {}", column_name, ToSQLString::to_string(&val, self.dialect())))),
+                        "multiply" => values.push((column_name, format!("{} * {}", column_name, ToSQLString::to_string(&val, self.dialect())))),
+                        "divide" => values.push((column_name, format!("{} / {}", column_name, ToSQLString::to_string(&val, self.dialect())))),
+                        "push" => values.push((column_name, format!("ARRAY_APPEND({}, {})", column_name, ToSQLString::to_string(&val, self.dialect())))),
                         _ => unreachable!(),
                     }
                 } else {

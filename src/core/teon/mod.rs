@@ -6,18 +6,22 @@ pub mod range;
 pub(crate) mod decoder;
 pub(crate) mod utils;
 
+use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap};
+use std::fmt::{Display, Formatter};
 use std::mem;
 use std::ops::{Add, Div, Mul, Sub, Rem, Neg, BitAnd, BitXor, BitOr};
 use chrono::prelude::{DateTime, Utc};
 use indexmap::IndexMap;
 #[cfg(feature = "data-source-mongodb")]
 use bson::oid::ObjectId;
-use chrono::NaiveDate;
+use chrono::{NaiveDate, SecondsFormat};
 use maplit::hashmap;
 use regex::Regex;
 use bigdecimal::BigDecimal;
+use itertools::Itertools;
+use snailquote::escape;
 use crate::core::field::r#type::FieldType;
 use crate::core::object::Object;
 use crate::core::pipeline::ctx::PipelineCtx;
@@ -582,6 +586,37 @@ impl Value {
             _ => panic!()
         }
     }
+
+    pub(crate) fn fmt_for_display(&self) -> Cow<str> {
+        match self {
+            Value::Null => Cow::Borrowed("null"),
+            Value::Bool(v) => if *v {
+                Cow::Borrowed("true")
+            } else {
+                Cow::Borrowed("false")
+            },
+            Value::I32(i) => Cow::Owned(i.to_string()),
+            Value::I64(i) => Cow::Owned(i.to_string()),
+            Value::F32(f) => Cow::Owned(f.to_string()),
+            Value::F64(f) => Cow::Owned(f.to_string()),
+            Value::Decimal(d) => Cow::Owned(d.to_string()),
+            Value::ObjectId(o) => Cow::Owned(format!("ObjectId(\"{}\")", o.to_hex())),
+            Value::String(s) => Cow::Owned(format!("\"{}\"", s.replace("\"", "\\\""))),
+            Value::Date(d) => Cow::Owned(d.to_string()),
+            Value::DateTime(dt) => Cow::Owned(dt.to_rfc3339_opts(SecondsFormat::Millis, true)),
+            Value::Vec(v) => Cow::Owned("[".to_string() + v.iter().map(|v| v.fmt_for_display()).join(", ").as_str() + "]"),
+            Value::HashMap(_) => unreachable!(),
+            Value::BTreeMap(_) => unreachable!(),
+            Value::IndexMap(_) => unreachable!(),
+            Value::Range(_) => unreachable!(),
+            Value::Tuple(_) => unreachable!(),
+            Value::Pipeline(_) => unreachable!(),
+            Value::RawEnumChoice(v, _) => Cow::Owned(format!(".{}", v.as_str())),
+            Value::RawOptionChoice(_) => unreachable!(),
+            Value::RegExp(_) => unreachable!(),
+            Value::Object(_) => unreachable!(),
+        }
+    }
 }
 
 impl Default for Value {
@@ -811,5 +846,11 @@ impl PartialEq for Value {
 impl AsRef<Value> for Value {
     fn as_ref(&self) -> &Value {
         &self
+    }
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.fmt_for_display().as_ref())
     }
 }

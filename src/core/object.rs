@@ -10,6 +10,7 @@ use key_path::{KeyPath, path};
 use async_recursion::async_recursion;
 use maplit::hashmap;
 use indexmap::IndexMap;
+use itertools::Itertools;
 use to_mut::ToMut;
 use to_mut_proc_macro::ToMut;
 use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, PROGRAM_CODE, DELETE, DISCONNECT, FIND, JOIN_CREATE, JOIN_DELETE, MANY, NESTED, SINGLE, UPDATE, UPSERT, NESTED_CREATE_ACTION, NESTED_DISCONNECT_ACTION, NESTED_SET_ACTION, NESTED_CONNECT_ACTION, NESTED_DELETE_MANY_ACTION, NESTED_UPDATE_MANY_ACTION, NESTED_UPDATE_ACTION, NESTED_DELETE_ACTION, NESTED_CONNECT_OR_CREATE_ACTION, NESTED_UPSERT_ACTION, INTERNAL_POSITION, SET};
@@ -1698,13 +1699,11 @@ impl Debug for Object {
 
 impl Display for Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut result = f.debug_struct(self.model().name());
-        for field in self.model().fields() {
+        f.write_str(format!("{} {{ {} }}", self.model().name(), self.model().fields().iter().map(|field| {
             let map = self.inner.value_map.lock().unwrap();
             let value = map.get(field.name()).unwrap_or(&Value::Null);
-            result.field(field.name(), value);
-        }
-        result.finish()
+            format!("{}: {}", field.name(), value.fmt_for_display().as_ref())
+        }).join(", ")).as_str())
     }
 }
 

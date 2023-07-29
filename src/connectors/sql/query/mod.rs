@@ -151,7 +151,7 @@ impl Query {
             let field = model.field(key).unwrap();
             let column_name = field.column_name();
             let escape = dialect.escape();
-            retval.push(format!("{}{}{} = {}", escape, column_name, escape, value.to_string(dialect)));
+            retval.push(format!("{}{}{} = {}", escape, column_name, escape, ToSQLString::to_string(&value, dialect)));
         }
         And(retval).to_string(dialect)
     }
