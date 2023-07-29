@@ -21,6 +21,7 @@ use crate::core::property::Property;
 use crate::core::relation::delete_rule::DeleteRule;
 use crate::prelude::Value;
 use crate::core::result::Result;
+use crate::core::field::indexable::FieldIndexable;
 use crate::teon;
 
 #[derive(ToMut)]
@@ -382,30 +383,41 @@ impl Model {
         self.migration.as_ref().map_or(false, |m| m.drop)
     }
 
+    pub(crate) fn install_field_index(&mut self, field_name: &'static str, field_index: &FieldIndex) {
+        match field_index {
+            FieldIndex::Index(settings) => {
+                self.indices.push(ModelIndex::new(ModelIndexType::Index, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                    ModelIndexItem::new(field_name, settings.sort, settings.length)
+                ]));
+            }
+            FieldIndex::Unique(settings) => {
+                self.indices.push(ModelIndex::new(ModelIndexType::Unique, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                    ModelIndexItem::new(field_name, settings.sort, settings.length)
+                ]));
+            }
+            FieldIndex::Primary(settings) => {
+                self.primary = Some(ModelIndex::new(ModelIndexType::Primary, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                    ModelIndexItem::new(field_name, settings.sort, settings.length)
+                ]));
+                self.indices.push(self.primary.as_ref().unwrap().clone());
+            }
+        }
+    }
+
     pub(crate) fn finalize(&'static self) {
         let mut_self = self.to_mut();
         // generate indices from fields
         for field in &self.fields_vec {
             let field_name = Box::leak(Box::new(field.name().to_string())).as_str();
             if let Some(field_index) = field.index() {
-                match field_index {
-                    FieldIndex::Index(settings) => {
-                        mut_self.indices.push(ModelIndex::new(ModelIndexType::Index, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
-                            ModelIndexItem::new(field_name, settings.sort, settings.length)
-                        ]));
-                    }
-                    FieldIndex::Unique(settings) => {
-                        mut_self.indices.push(ModelIndex::new(ModelIndexType::Unique, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
-                            ModelIndexItem::new(field_name, settings.sort, settings.length)
-                        ]));
-                    }
-                    FieldIndex::Primary(settings) => {
-                        mut_self.primary = Some(ModelIndex::new(ModelIndexType::Primary, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
-                            ModelIndexItem::new(field_name, settings.sort, settings.length)
-                        ]));
-                        mut_self.indices.push(self.primary.as_ref().unwrap().clone());
-                    }
-                }
+                mut_self.install_field_index(field_name, field_index);
+            }
+        }
+        // generate indices from properties
+        for property in &self.properties_vec {
+            let field_name = Box::leak(Box::new(property.name().to_string())).as_str();
+            if let Some(field_index) = property.index() {
+                mut_self.install_field_index(field_name, field_index);
             }
         }
         if self.primary.is_none() && !self.r#virtual {

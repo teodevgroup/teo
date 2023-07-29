@@ -1,6 +1,8 @@
 use inflector::Inflector;
 use crate::app::app_ctx::AppCtx;
 use crate::core::database::r#type::DatabaseType;
+use crate::core::field::field::FieldIndex;
+use crate::core::field::indexable::FieldIndexable;
 use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::pipeline::Pipeline;
@@ -19,6 +21,7 @@ pub struct Property {
     pub(crate) getter: Option<Pipeline>,
     pub(crate) input_omissible: bool,
     pub(crate) cached: bool,
+    pub(crate) index: Option<FieldIndex>,
 }
 
 impl Property {
@@ -36,6 +39,7 @@ impl Property {
             getter: None,
             cached: false,
             input_omissible: false,
+            index: None,
         }
     }
 
@@ -100,5 +104,19 @@ impl FieldTypeOwner for Property {
 
     fn set_field_type(&mut self, field_type: FieldType) {
         self.field_type = Some(field_type);
+    }
+}
+
+impl FieldIndexable for Property {
+    fn index(&self) -> Option<&FieldIndex> {
+        self.index.as_ref()
+    }
+
+    fn set_index(&mut self, index: Option<FieldIndex>) {
+        self.index = index;
+    }
+
+    fn set_primary(&mut self, primary: bool) {
+        // do nothing
     }
 }

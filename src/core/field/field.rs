@@ -4,6 +4,7 @@ use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
 use crate::app::app_ctx::AppCtx;
 use crate::core::database::r#type::DatabaseType;
+use crate::core::field::indexable::FieldIndexable;
 use crate::core::field::migration::FieldMigration;
 use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
@@ -280,6 +281,20 @@ impl FieldTypeOwner for Field {
 
     fn set_field_type(&mut self, field_type: FieldType) {
         self.field_type = Some(field_type);
+    }
+}
+
+impl FieldIndexable for Field {
+    fn index(&self) -> Option<&FieldIndex> {
+        self.index.as_ref()
+    }
+
+    fn set_index(&mut self, index: Option<FieldIndex>) {
+        self.index = index;
+    }
+
+    fn set_primary(&mut self, primary: bool) {
+        self.primary = primary;
     }
 }
 
