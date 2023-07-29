@@ -440,6 +440,7 @@
 - When refreshed, virtual value is kept for root level object **[Done]**
 - Fixed count `where` bug **[Done]**
 - Add `timezone` parameter to `$today` **[Done]**
+- Cached properties can be indexed **[Done]**
 - Custom routes: action
 - Custom routes: middleware
 
