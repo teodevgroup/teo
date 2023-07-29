@@ -441,10 +441,13 @@
 - Fixed count `where` bug **[Done]**
 - Add `timezone` parameter to `$today` **[Done]**
 - Cached properties can be indexed **[Done]**
+- Better object inspection **[Done]**
+
+#### 0.0.57
 - Custom routes: action
 - Custom routes: middleware
 
-#### 0.0.57
+#### 0.0.58
 - Use database specific database types
 - Full custom types for all supported databases
 - Rewrite Node.js client generating with askama engine
@@ -452,7 +455,7 @@
 - The copy action
 - PostgreSQL: Enum types
 
-#### 0.0.58
+#### 0.0.59
 - Node.js bindings: error handling
 - Node.js object printing
 - Node.js bindings: date only type
@@ -476,7 +479,7 @@
 - Migration dry run
 - MongoDB: connector is not using table name
 
-#### 0.0.59
+#### 0.0.60
 - Python server
 - Migration decorator docs
 - Dropped decorator docs
@@ -490,7 +493,7 @@
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 
-#### 0.0.60
+#### 0.0.61
 - Rust entities: optional string array
 - Rust entities: required string array
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
@@ -501,10 +504,9 @@
 - Soft delete documentation
 - Correct count with cursor
 
-#### 0.0.61
+#### 0.0.62
 - Input omissible and output omissible for generated clients
 - Support code comment tags for VSCode
-- Support code comment tags for IntelliJ IDEA
 
 #### 0.1.0
 - First stable release with unit test covering
