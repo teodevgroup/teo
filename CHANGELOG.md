@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.56 (Jul. 29th, 2023)
+
+### Database
+
+* Added transactions [@victorteokw](https://github.com/victorteokw)
+
 ## 0.0.55 (Apr. 13th, 2023)
 
 ### Tests
