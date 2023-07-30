@@ -70,3 +70,21 @@ impl<A0, A1, A2, O, F, R, Fut> TransformArgument<(A0, A1, A2), O, R> for F where
         Box::pin(self(value, arg1, arg2))
     }
 }
+
+impl<A0, A1, A2, A3, O, F, R, Fut> TransformArgument<(A0, A1, A2, A3), O, R> for F where
+    A0: ExtractValueFromCallbackParam + Send + Sync,
+    A1: ExtractFromCallbackParam + Send + Sync,
+    A2: ExtractFromCallbackParam + Send + Sync,
+    A3: ExtractFromCallbackParam + Send + Sync,
+    F: Fn(A0, A1, A2, A3) -> Fut + Sync + Send + 'static,
+    O: Into<Value> + Sync + Send,
+    R: Into<TransformResult<O>> + Send + Sync,
+    Fut: Future<Output = R> + Send + 'static {
+    fn call(&self, args: CallbackParam) -> BoxFuture<'static, R> {
+        let value: A0 = ExtractValueFromCallbackParam::extract(&args);
+        let arg1: A1 = ExtractFromCallbackParam::extract(&args);
+        let arg2: A2 = ExtractFromCallbackParam::extract(&args);
+        let arg3: A3 = ExtractFromCallbackParam::extract(&args);
+        Box::pin(self(value, arg1, arg2, arg3))
+    }
+}
