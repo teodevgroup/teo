@@ -217,7 +217,7 @@ impl SQLMigration {
                                 let stmt = SQL::alter_table(table_name).add(c).to_string(dialect);
                                 conn.execute(Query::from(stmt)).await.unwrap();
                                 if let Some(action)= action {
-                                    let ctx = PipelineCtx::initial_state_with_value(Value::Null, pconn.clone());
+                                    let ctx = PipelineCtx::initial_state_with_value(Value::Null, pconn.clone(), None);
                                     action.process(ctx).await.unwrap();
                                 }
                             }
@@ -234,7 +234,7 @@ impl SQLMigration {
                             }
                             ColumnManipulation::RemoveColumn(name, action) => {
                                 if let Some(action)= action {
-                                    let ctx = PipelineCtx::initial_state_with_value(Value::Null, pconn.clone());
+                                    let ctx = PipelineCtx::initial_state_with_value(Value::Null, pconn.clone(), None);
                                     action.process(ctx).await.unwrap();
                                 }
                                 let stmt = SQL::alter_table(table_name).drop_column(name).to_string(dialect);

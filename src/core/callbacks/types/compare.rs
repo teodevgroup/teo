@@ -1,6 +1,6 @@
 use std::future::Future;
 use futures_util::future::BoxFuture;
-use crate::core::callbacks::compare_param::{CompareParam, ExtractFromCompareParam, ExtractOldValueFromCompareParam, ExtractNewValueFromCompareParam};
+use crate::core::callbacks::params::compare::{CompareParam, ExtractFromCompareParam, ExtractOldValueFromCompareParam, ExtractNewValueFromCompareParam};
 use crate::core::callbacks::types::validate::ValidateResult;
 use crate::core::teon::Value;
 

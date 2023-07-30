@@ -1,12 +1,12 @@
-use std::marker::PhantomData;
 use crate::core::ctx::user::UserCtx;
-use crate::prelude::{Object, Value};
+use crate::prelude::{Object, Req, Value};
 
 pub struct CompareParam {
     pub value_old: Value,
     pub value_new: Value,
     pub object: Object,
     pub user_ctx: UserCtx,
+    pub req: Option<Req>,
 }
 
 pub trait ExtractOldValueFromCompareParam {
@@ -42,5 +42,11 @@ impl ExtractFromCompareParam for Object {
 impl ExtractFromCompareParam for UserCtx {
     fn extract(param: &CompareParam) -> Self {
         param.user_ctx.clone()
+    }
+}
+
+impl ExtractFromCompareParam for Option<Req> {
+    fn extract(param: &CompareParam) -> Self {
+        param.req.clone()
     }
 }

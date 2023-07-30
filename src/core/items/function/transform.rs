@@ -2,7 +2,7 @@ use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use std::sync::Arc;
 use async_trait::async_trait;
-use crate::core::callbacks::param::CallbackParam;
+use crate::core::callbacks::params::callback::CallbackParam;
 use crate::core::callbacks::types::transform::{TransformArgument, TransformResult};
 use crate::core::result::Result;
 use crate::core::item::Item;
@@ -41,6 +41,7 @@ impl<A: Send + Sync + 'static, O: Into<Value> + Send + Sync + 'static, R: Into<T
             value: (&ctx).value.clone(),
             object: (&ctx).object.clone().unwrap().clone(),
             user_ctx: ctx.user_ctx(),
+            req: ctx.req(),
         };
         let value = cb.call(param).await;
         let function_result = value.into();

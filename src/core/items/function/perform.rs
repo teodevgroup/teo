@@ -1,7 +1,7 @@
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use async_trait::async_trait;
-use crate::core::callbacks::param::CallbackParam;
+use crate::core::callbacks::params::callback::CallbackParam;
 use crate::core::callbacks::types::callback::{CallbackArgument, CallbackResult};
 use crate::core::item::Item;
 use crate::core::pipeline::ctx::PipelineCtx;
@@ -39,6 +39,7 @@ impl<T: Send + Sync + 'static, O: Into<CallbackResult> + Send + Sync + 'static> 
             value: (&ctx).value.clone(),
             object: (&ctx).object.clone().unwrap().clone(),
             user_ctx: ctx.user_ctx(),
+            req: ctx.req(),
         };
         let result = cb.call(param).await.into();
         match result {

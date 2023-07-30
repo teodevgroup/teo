@@ -2,12 +2,11 @@ use std::fmt::{Debug, Formatter};
 
 use std::sync::Arc;
 use async_trait::async_trait;
-use crate::core::callbacks::param::CallbackParam;
+use crate::core::callbacks::params::callback::CallbackParam;
 
 use crate::core::callbacks::types::validate::{ValidateArgument, ValidateResult};
 use crate::core::item::Item;
 use crate::core::pipeline::ctx::PipelineCtx;
-use crate::core::teon::Value;
 use crate::core::result::Result;
 use crate::prelude::Error;
 
@@ -43,6 +42,7 @@ impl<A: Send + Sync + 'static, O: Into<ValidateResult> + Send + Sync + 'static> 
             value: (&ctx).value.clone(),
             object: (&ctx).object.clone().unwrap().clone(),
             user_ctx: ctx.user_ctx(),
+            req: ctx.req(),
         };
         let value = cb.call(param).await;
         let result = value.into();

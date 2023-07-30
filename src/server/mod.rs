@@ -8,7 +8,7 @@ use std::sync::Arc;
 use futures_util::future;
 use std::time::SystemTime;
 use actix_http::body::BoxBody;
-use actix_http::{HttpMessage, Method, Payload};
+use actix_http::Method;
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::DefaultHeaders;
@@ -29,7 +29,7 @@ use crate::app::cli::command::SeedCommandAction;
 use crate::app::app_ctx::AppCtx;
 use crate::app::entrance::Entrance;
 use crate::app::program::Program;
-use crate::app::routes::action_ctx::{ActionCtxBase, ActionHandlerDef, ActionHandlerDefTrait};
+use crate::app::routes::action_ctx::{ActionCtxBase, ActionHandlerDefTrait};
 use crate::app::routes::middleware_ctx::Middleware;
 use crate::app::routes::req::Req;
 use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
@@ -98,7 +98,7 @@ fn log_request(start: SystemTime, action: &str, model: &str, code: u16) {
     println!("{} {} on {} - {} {}", local_formatted, action.bold(), model, code_string, ms_str.dimmed());
 }
 
-async fn get_identity(r: &HttpRequest, graph: &'static Graph, conf: &ServerConf, connection: Arc<dyn Connection>) -> Result<Option<Object>> {
+async fn get_identity(r: &HttpRequest, graph: &'static Graph, conf: &ServerConf, connection: Arc<dyn Connection>, req: Req) -> Result<Option<Object>> {
     let header_value = r.headers().get("authorization");
     if let None = header_value {
         return Ok(None);
@@ -122,7 +122,7 @@ async fn get_identity(r: &HttpRequest, graph: &'static Graph, conf: &ServerConf,
         &teon!({
             "where": tson_identifier
         }),
-        true, Action::from_u32(IDENTITY | FIND | SINGLE | ENTRY), Initiator::ProgramCode, connection).await;
+        true, Action::from_u32(IDENTITY | FIND | SINGLE | ENTRY), Initiator::ProgramCode(Some(req)), connection).await;
     match identity {
         Err(_) => Err(Error::invalid_auth_token()),
         Ok(identity) => Ok(identity),
@@ -527,7 +527,7 @@ async fn handle_group_by(graph: &'static Graph, input: &Value, model: &'static M
     }
 }
 
-async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'static Model, conf: &'a ServerConf, connection: Arc<dyn Connection>) -> HttpResponse {
+async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'static Model, conf: &'a ServerConf, connection: Arc<dyn Connection>, req: Req) -> HttpResponse {
     let input = input.as_hashmap().unwrap();
     let credentials = input.get("credentials");
     if let None = credentials {
@@ -571,7 +571,7 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
         "where": {
             identity_key.unwrap(): identity_value.unwrap()
         }
-    }), true, Action::from_u32(FIND | SINGLE | ENTRY), Initiator::ProgramCode, connection.clone()).await.into_not_found_error();
+    }), true, Action::from_u32(FIND | SINGLE | ENTRY), Initiator::ProgramCode(Some(req.clone())), connection.clone()).await.into_not_found_error();
     if let Err(_err) = obj_result {
         return Error::unexpected_input_value("This identity is not found.", path!["credentials", identity_key.unwrap()]).into();
     }
@@ -579,7 +579,7 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
     let auth_by_arg = by_field.identity_checker.as_ref().unwrap();
     let pipeline = auth_by_arg.as_pipeline().unwrap();
     let action_by_input = by_value.unwrap();
-    let ctx = PipelineCtx::initial_state_with_object(obj.clone(), connection.clone()).with_value(action_by_input.clone());
+    let ctx = PipelineCtx::initial_state_with_object(obj.clone(), connection.clone(), Some(req)).with_value(action_by_input.clone());
     let result = pipeline.process(ctx).await;
     return match result {
         Err(_err) => {
@@ -726,7 +726,8 @@ fn make_app(
                 return HttpResponse::BadRequest().json(json!({"error": Error::unexpected_input_root_type("object")}));
             }
             let connection = AppCtx::get().unwrap().connector().unwrap().connection().await.unwrap();
-            let identity = match get_identity(&r, &graph, conf, connection.clone()).await {
+            let req = Req::new(r.clone(), payload);
+            let identity = match get_identity(&r, &graph, conf, connection.clone(), req.clone()).await {
                 Ok(identity) => { identity },
                 Err(err) => return HttpResponse::Unauthorized().json(json!({"error": err }))
             };
@@ -741,7 +742,7 @@ fn make_app(
                     let mut transformed_entries: Vec<Value> = vec![];
                     let mut new_action = action;
                     for (_index, entry) in entries.iter().enumerate() {
-                        let ctx = PipelineCtx::initial_state_with_value(teon!({"create": entry}), connection.clone()).with_action(action);
+                        let ctx = PipelineCtx::initial_state_with_value(teon!({"create": entry}), connection.clone(), Some(req.clone())).with_action(action);
                         match model_def.transformed_action(ctx).await {
                             Ok(result) => {
                                 transformed_entries.push(result.0.get("create").unwrap().clone());
@@ -754,7 +755,7 @@ fn make_app(
                     new_val.as_hashmap_mut().unwrap().insert("create".to_owned(), Value::Vec(transformed_entries));
                     (new_val, new_action)
                 } else {
-                    let ctx = PipelineCtx::initial_state_with_value(parsed_body, connection.clone()).with_action(action);
+                    let ctx = PipelineCtx::initial_state_with_value(parsed_body, connection.clone(), Some(req.clone())).with_action(action);
                     match model_def.transformed_action(ctx).await {
                         Ok(result) => result,
                         Err(err) => return err.into(),
@@ -763,7 +764,7 @@ fn make_app(
             } else {
                 (parsed_body, action)
             };
-            let source = Initiator::Identity(identity);
+            let source = Initiator::Identity(identity, req.clone());
             match transformed_action.to_u32() {
                 FIND_UNIQUE_HANDLER => {
                     let result = handle_find_unique(&graph, &transformed_body, model_def, source.clone(), connection.clone()).await;
@@ -841,7 +842,7 @@ fn make_app(
                     result
                 }
                 SIGN_IN_HANDLER => {
-                    let result = handle_sign_in(&graph, &transformed_body, model_def, conf, connection).await;
+                    let result = handle_sign_in(&graph, &transformed_body, model_def, conf, connection, req.clone()).await;
                     log_request(start, action.as_handler_str(), model_def.name(), result.status().as_u16());
                     result
                 }
@@ -857,9 +858,10 @@ fn make_app(
         app = app.route(format!("/{}/action/{}", action_def.group(), action_def.name()).as_str(), web::post().to(|request: HttpRequest, payload: web::Payload| async {
             let start = SystemTime::now();
             let connection = AppCtx::get().unwrap().connector().unwrap().connection().await.unwrap();
-            let user_ctx = UserCtx::new(connection);
+            let req = Req::new(request, payload);
+            let user_ctx = UserCtx::new(connection, Some(req.clone()));
             let ctx = ActionCtxBase {
-                req: Req::new(request, payload),
+                req,
                 user_ctx,
             };
             let res = action_def.call(ctx).await;

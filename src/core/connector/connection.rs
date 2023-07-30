@@ -44,5 +44,4 @@ pub trait Connection: Send + Sync {
     async fn transaction(&self) -> Result<Arc<dyn Connection>>;
 
     async fn commit(&self) -> Result<()>;
-
 }

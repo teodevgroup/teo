@@ -6,7 +6,7 @@ use crate::core::ctx::user::UserCtx;
 use crate::core::object::Object;
 use crate::core::result::Result;
 use crate::core::teon::Value;
-use crate::prelude::Error;
+use crate::prelude::{Error, Req};
 
 #[derive(Clone)]
 pub struct PipelineCtx<'a> {
@@ -15,41 +15,49 @@ pub struct PipelineCtx<'a> {
     pub(crate) path: KeyPath<'a>,
     pub(crate) action: Action,
     pub(crate) conn: Arc<dyn Connection>,
+    pub(crate) req: Option<Req>,
 }
 
 impl<'a> PipelineCtx<'a> {
 
     pub(crate) fn user_ctx(&self) -> UserCtx {
-        UserCtx::new(self.conn.clone())
+        UserCtx::new(self.conn.clone(), self.req.clone())
     }
 
-    pub(crate) fn initial_state_with_value(value: Value, conn: Arc<dyn Connection>) -> Self {
+    pub(crate) fn req(&self) -> Option<Req> {
+        self.req.clone()
+    }
+
+    pub(crate) fn initial_state_with_value(value: Value, conn: Arc<dyn Connection>, req: Option<Req>) -> Self {
         Self {
             value,
             object: None,
             path: KeyPath::default(),
             action: Action::empty(),
             conn,
+            req,
         }
     }
 
-    pub(crate) fn initial_state_with_object(object: Object, conn: Arc<dyn Connection>) -> Self {
+    pub(crate) fn initial_state_with_object(object: Object, conn: Arc<dyn Connection>, req: Option<Req>) -> Self {
         Self {
             value: Value::Null,
             object: Some(object),
             path: KeyPath::default(),
             action: Action::empty(),
             conn,
+            req,
         }
     }
 
-    pub(crate) fn initial_state_with_object_as_value(object: Object, conn: Arc<dyn Connection>) -> Self {
+    pub(crate) fn initial_state_with_object_as_value(object: Object, conn: Arc<dyn Connection>, req: Option<Req>) -> Self {
         Self {
             value: Value::Object(object.clone()),
             object: Some(object),
             path: KeyPath::default(),
             action: Action::empty(),
             conn,
+            req,
         }
     }
 
@@ -60,6 +68,7 @@ impl<'a> PipelineCtx<'a> {
             path: path.as_ref().clone(),
             action: self.action.clone(),
             conn: self.conn.clone(),
+            req: self.req.clone(),
         }
     }
 
@@ -70,6 +79,7 @@ impl<'a> PipelineCtx<'a> {
             path: self.path.clone(),
             action: self.action.clone(),
             conn: self.conn.clone(),
+            req: self.req.clone(),
         }
     }
 
@@ -80,7 +90,8 @@ impl<'a> PipelineCtx<'a> {
                 object: self.object.clone(),
                 path: self.path.clone(),
                 action: self.action.clone(),
-                conn: self.conn.clone()
+                conn: self.conn.clone(),
+                req: self.req.clone(),
             }),
             Err(err) => Err(err),
         }
@@ -97,6 +108,7 @@ impl<'a> PipelineCtx<'a> {
             path: self.path.clone(),
             action,
             conn: self.conn.clone(),
+            req: self.req.clone(),
         }
     }
 
@@ -132,6 +144,7 @@ impl<'a> PipelineCtx<'a> {
             path: self.path.clone(),
             action: self.action.redirect(action),
             conn: self.conn.clone(),
+            req: self.req.clone(),
         }
     }
 }

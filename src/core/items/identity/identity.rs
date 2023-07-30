@@ -21,7 +21,7 @@ impl IdentityItem {
 impl Item for IdentityItem {
     async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         match ctx.get_object()?.action_source() {
-            Initiator::Identity(user) => {
+            Initiator::Identity(user, _) => {
                 let user = match user {
                     Some(u) => Value::Object(u.clone()),
                     None => Value::Null,

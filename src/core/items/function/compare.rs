@@ -1,7 +1,7 @@
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use async_trait::async_trait;
-use crate::core::callbacks::compare_param::CompareParam;
+use crate::core::callbacks::params::compare::CompareParam;
 use crate::core::callbacks::types::compare::CompareArgument;
 use crate::core::callbacks::types::validate::ValidateResult;
 use crate::core::item::Item;
@@ -58,6 +58,7 @@ impl<T: Send + Sync + 'static, O: Into<ValidateResult> + Send + Sync + 'static> 
                 value_new: current_value.into(),
                 object: ctx.object.clone().unwrap().clone(),
                 user_ctx: ctx.user_ctx(),
+                req: ctx.req(),
             };
             let value = cb.call(param).await;
             let result = value.into();

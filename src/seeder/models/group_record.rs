@@ -15,23 +15,23 @@ impl GroupRecord {
 
     /// Find many group records.
     pub async fn find_many(query: impl Borrow<Value>) -> Result<Vec<GroupRecord>> {
-        AppCtx::get()?.graph()?.find_many("__TeoGroupRecord", query.borrow(), None).await
+        AppCtx::get()?.graph()?.find_many("__TeoGroupRecord", query.borrow(), None, None).await
     }
 
     /// Find a unique group record.
     pub async fn find_unique(query: impl Borrow<Value>) -> Result<Option<GroupRecord>> {
-        AppCtx::get()?.graph()?.find_unique("__TeoGroupRecord", query.borrow(), None).await
+        AppCtx::get()?.graph()?.find_unique("__TeoGroupRecord", query.borrow(), None, None).await
     }
 
     /// Find a non unique group record.
     pub async fn find_first(query: impl Borrow<Value>) -> Result<Option<GroupRecord>> {
-        AppCtx::get()?.graph()?.find_first("__TeoGroupRecord", query.borrow(), None).await
+        AppCtx::get()?.graph()?.find_first("__TeoGroupRecord", query.borrow(), None, None).await
     }
 
     /// Create a new group record.
     pub async fn new(values: impl Borrow<Value>, connection: Arc<dyn Connection>) -> Self {
         Self {
-            inner: AppCtx::get().unwrap().graph().unwrap().create_object("__TeoGroupRecord", values, Some(connection)).await.unwrap(),
+            inner: AppCtx::get().unwrap().graph().unwrap().create_object("__TeoGroupRecord", values, Some(connection), None).await.unwrap(),
         }
     }
 
