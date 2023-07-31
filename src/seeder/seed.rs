@@ -28,7 +28,7 @@ pub(crate) async fn seed(action: SeedCommandAction, graph: &'static Graph, datas
             SeedCommandAction::Unseed => unseed_dataset(graph, normalize_dataset_relations(dataset, graph), connection.clone()).await,
         }
     }
-    remove_user_deleted_dataset_records_and_relations(datasets).await;
+    remove_user_deleted_dataset_records_and_relations(datasets, connection.clone()).await;
     Ok(())
 }
 
@@ -45,7 +45,7 @@ pub(crate) async fn seed_dataset(graph: &'static Graph, dataset: &'static DataSe
                 "group": group.name.as_str(),
                 "dataset": dataset.name.as_str(),
             }
-        })).await.unwrap();
+        }), connection.clone()).await.unwrap();
         for record in group.records.iter() {
             let existing = seed_records.iter().find(|r| &r.name() == &record.name).is_some();
             if !existing {
@@ -76,7 +76,7 @@ async fn remove_records_for_user_removed_groups(dataset: &'static DataSet, order
                 "notIn": Value::Vec(ordered_groups.iter().map(|g| Value::String(g.name.clone())).collect()),
             },
         }
-    })).await.unwrap();
+    }), connection.clone()).await.unwrap();
     for record in user_removed_seed_records_for_group {
         perform_remove_from_database(dataset, &record, graph.model(record.group().as_str()).unwrap(), graph, connection.clone()).await;
     }
@@ -91,7 +91,7 @@ pub(crate) async fn reseed_dataset(graph: &'static Graph, dataset: &'static Data
                 "group": group.name.as_str(),
                 "dataset": dataset.name.as_str(),
             }
-        })).await.unwrap();
+        }), connection.clone()).await.unwrap();
         for record in group.records.iter() {
             if let Some(seed_record) = seed_records.iter().find(|r| &r.name() == &record.name) {
                 // recreate or update
@@ -125,7 +125,7 @@ pub(crate) async fn unseed_dataset(graph: &'static Graph, dataset: &'static Data
                 "group": group.name.as_str(),
                 "dataset": dataset.name.as_str(),
             }
-        })).await.unwrap();
+        }), connection.clone()).await.unwrap();
         // delete records
         for seed_record in seed_records.iter() {
             perform_remove_from_database(dataset, seed_record, graph.model(seed_record.group().as_str()).unwrap(), graph, connection.clone()).await;
@@ -143,12 +143,12 @@ async fn sync_relations(graph: &'static Graph, dataset: &'static DataSet, ordere
                 "group": group.name.as_str(),
                 "dataset": dataset.name.as_str(),
             }
-        })).await.unwrap();
+        }), connection.clone()).await.unwrap();
         for record in group.records.iter() {
             let seed_record = seed_records.iter().find(|o| o.name().as_str() == &record.name).unwrap();
             let object: Object = graph.find_unique(group_model.name(), &teon!({
                 "where": record_json_string_to_where_unique(seed_record.record().as_str(), group_model)
-            }), Some(connection.clone()), None).await.unwrap().unwrap();
+            }), connection.clone(), None).await.unwrap().unwrap();
             for relation in group_model.relations() {
                 // find relations
                 let relation_records = GroupRelation::find_many(teon!({
@@ -170,7 +170,7 @@ async fn sync_relations(graph: &'static Graph, dataset: &'static DataSet, ordere
                             }
                         ]
                     }
-                })).await.unwrap();
+                }), connection.clone()).await.unwrap();
                 let mut relation_record_refs: Vec<&GroupRelation> = relation_records.iter().collect();
                 if let Some(reference) = record.value.as_hashmap().unwrap().get(relation.name()) {
                     if let Some(references) = reference.as_vec() {
@@ -201,13 +201,13 @@ async fn setup_new_relations(graph: &'static Graph, dataset: &'static DataSet, o
                 "group": group.name.as_str(),
                 "dataset": dataset.name.as_str(),
             }
-        })).await.unwrap();
+        }), connection.clone()).await.unwrap();
         for record in group.records.iter() {
             if !(limit.is_none() || limit.unwrap().get(&group.name).unwrap().contains(&record.name)) { continue }
             let seed_record = seed_records.iter().find(|o| o.name().as_str() == &record.name).unwrap();
             let object: Object = graph.find_unique(group_model.name(), &teon!({
                 "where": record_json_string_to_where_unique(seed_record.record().as_str(), group_model)
-            }), Some(connection.clone()), None).await.unwrap().unwrap();
+            }), connection.clone(), None).await.unwrap().unwrap();
             for relation in group_model.relations() {
                 if let Some(reference) = record.value.as_hashmap().unwrap().get(relation.name()) {
                     if let Some(references) = reference.as_vec() {
@@ -243,10 +243,10 @@ async fn setup_relations_internal<'a>(record: &'static Record, reference: &'a Va
             "dataset": dataset.name.as_str(),
             "name": that_name,
         }
-    })).await.unwrap().unwrap();
+    }), connection.clone()).await.unwrap().unwrap();
     let that_object: Object = graph.find_unique(relation.model(), &teon!({
         "where": record_json_string_to_where_unique(that_seed_record.record(), graph.model(relation.model()).unwrap())
-    }), Some(connection.clone()), None).await.unwrap().unwrap();
+    }), connection.clone(), None).await.unwrap().unwrap();
     if relation.is_optional() && relation.has_foreign_key() {
         // update this record
         for (local, foreign) in relation.iter() {
@@ -271,9 +271,9 @@ async fn setup_relations_internal<'a>(record: &'static Record, reference: &'a Va
         }
         let link_record: Option<Object> = graph.find_first(through_model.name(), &teon!({
             "where": Value::HashMap(where_unique.clone())
-        }), Some(connection.clone()), None).await.unwrap();
+        }), connection.clone(), None).await.unwrap();
         if link_record.is_none() {
-            let link_object = graph.create_object(through_model.name(), Value::HashMap(where_unique), Some(connection.clone()), None).await.unwrap();
+            let link_object = graph.create_object(through_model.name(), Value::HashMap(where_unique), connection.clone(), None).await.unwrap();
             link_object.save_for_seed_without_required_relation().await.unwrap();
         }
     }
@@ -299,7 +299,7 @@ async fn setup_relations_internal<'a>(record: &'static Record, reference: &'a Va
                 }
             ]
         }
-    })).await;
+    }), connection.clone()).await;
     if exist_relation_record.is_err() {
         // not exist, create
         let that_relation = graph.opposite_relation(relation).1;
@@ -321,7 +321,7 @@ async fn perform_remove_from_database<'a>(dataset: &'static DataSet, record: &'a
     let json_identifier = record.record();
     let exist: Option<Object> = graph.find_unique(group_model.name(), &teon!({
         "where": record_json_string_to_where_unique(json_identifier, group_model)
-    }), Some(connection.clone()), None).await.unwrap();
+    }), connection.clone(), None).await.unwrap();
     if exist.is_none() {
         // This record doesn't exist, cannot delete it or cut its relationships
         record.delete().await.unwrap();
@@ -344,7 +344,7 @@ async fn perform_remove_from_database<'a>(dataset: &'static DataSet, record: &'a
                 }
             ]
         }
-    })).await.unwrap();
+    }), connection.clone()).await.unwrap();
     for relation in relations {
         cut_relation(&relation, record, graph, group_model, dataset, &exist, connection.clone()).await;
     }
@@ -369,12 +369,12 @@ async fn cut_relation<'a>(relation: &'a GroupRelation, record: &'a GroupRecord, 
         "dataset": dataset.name.as_str(),
         "group": that_model_name.as_str(),
         "name": that_name.as_str()
-    })).await.unwrap().unwrap();
+    }), connection.clone()).await.unwrap().unwrap();
     let identifier = seed_record.record();
     let unique = record_json_string_to_where_unique(&identifier, that_model);
     let that_record: Option<Object> = graph.find_unique(that_model_name.as_str(), &teon!({
             "where": unique
-        }), Some(connection.clone()), None).await.unwrap();
+        }), connection.clone(), None).await.unwrap();
     if that_record.is_none() {
         relation.delete().await.unwrap();
         return
@@ -392,7 +392,7 @@ async fn cut_relation<'a>(relation: &'a GroupRelation, record: &'a GroupRecord, 
         }
         let link_record: Option<Object> = graph.find_first(through_model.name(), &teon!({
             "where": Value::HashMap(where_unique)
-        }), Some(connection.clone()), None).await.unwrap();
+        }), connection.clone(), None).await.unwrap();
         if link_record.is_none() {
             // Maybe this record is deleted already
             relation.delete().await.unwrap();
@@ -421,7 +421,7 @@ async fn cut_relation<'a>(relation: &'a GroupRelation, record: &'a GroupRecord, 
 async fn perform_recreate_or_update_an_record<'a>(dataset: &'static DataSet, group: &'static Group, record: &'static Record, group_model: &'static Model, graph: &'static Graph, seed_record: &'a GroupRecord, connection: Arc<dyn Connection>) {
     let object: Option<Object> = graph.find_unique(group_model.name(), &teon!({
         "where": record_json_string_to_where_unique(seed_record.record(), group_model)
-    }), Some(connection.clone()), None).await.unwrap();
+    }), connection.clone(), None).await.unwrap();
     if object.is_none() {
         seed_record.delete().await.unwrap();
         perform_insert_into_database(dataset, group, record, group_model, graph, connection.clone()).await;
@@ -450,11 +450,11 @@ async fn insert_or_update_input(dataset: &'static DataSet, group: &'static Group
                         "dataset": dataset.name.as_str(),
                         "name": that_record_name,
                     }
-                })).await.unwrap().unwrap();
+                }), connection.clone()).await.unwrap().unwrap();
                 let that_record_identifier_json = that_record_data.record();
                 let that_record: Object = graph.find_unique(relation.model(), &teon!({
                     "where": record_json_string_to_where_unique(&that_record_identifier_json, graph.model(relation.model()).unwrap())
-                }), Some(connection.clone()), None).await.unwrap().unwrap();
+                }), connection.clone(), None).await.unwrap().unwrap();
                 for (field, reference) in relation.iter() {
                     input.as_hashmap_mut().unwrap().insert(field.to_owned(), that_record.get_value(reference).unwrap());
                 }
@@ -480,7 +480,7 @@ async fn insert_or_update_input(dataset: &'static DataSet, group: &'static Group
 /// required foreign keys.
 async fn perform_insert_into_database(dataset: &'static DataSet, group: &'static Group, record: &'static Record, group_model: &'static Model, graph: &'static Graph, connection: Arc<dyn Connection>) {
     let input = insert_or_update_input(dataset, group, record, group_model, graph, connection.clone()).await;
-    let object = graph.create_object(group_model.name(), &input, Some(connection.clone()), None).await.unwrap();
+    let object = graph.create_object(group_model.name(), &input, connection.clone(), None).await.unwrap();
     object.save_for_seed_without_required_relation().await.unwrap();
     let record_object = GroupRecord::new(teon!({
         "group": group.name.as_str(),
@@ -564,7 +564,7 @@ fn ordered_group<'a>(groups: &'a Vec<Group>, graph: &'static Graph) -> Vec<&'a G
     result
 }
 
-async fn remove_user_deleted_dataset_records_and_relations(datasets: &'static Vec<DataSet>) {
+async fn remove_user_deleted_dataset_records_and_relations(datasets: &'static Vec<DataSet>, connection: Arc<dyn Connection>) {
     // remove seed data set records if user removed some seed data set
     let names = Value::Vec(datasets.iter().map(|d| Value::String(d.name.clone())).collect::<Vec<Value>>());
     let records_to_remove = GroupRecord::find_many(teon!({
@@ -573,7 +573,7 @@ async fn remove_user_deleted_dataset_records_and_relations(datasets: &'static Ve
                 "notIn": &names,
             }
         }
-    })).await.unwrap();
+    }), connection.clone()).await.unwrap();
     for record in records_to_remove {
         record.delete().await.unwrap();
     }
@@ -583,7 +583,7 @@ async fn remove_user_deleted_dataset_records_and_relations(datasets: &'static Ve
                 "notIn": names,
             }
         }
-    })).await.unwrap();
+    }), connection).await.unwrap();
     for relation in relations_to_remove {
         relation.delete().await.unwrap();
     }

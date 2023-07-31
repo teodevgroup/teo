@@ -683,7 +683,7 @@ impl Object {
             if let Some(opposite_relation) = opposite_relation {
                 if opposite_relation.delete_rule() == DeleteRule::Deny {
                     let finder = self.intrinsic_where_unique_for_relation(relation);
-                    let count = graph.count(opposite_model.name(), &finder, Some(self.connection())).await.unwrap();
+                    let count = graph.count(opposite_model.name(), &finder, self.connection()).await.unwrap();
                     if count > 0 {
                         return Err(Error::deletion_denied(relation.name()));
                     }
@@ -1382,7 +1382,7 @@ impl Object {
                     "is": value
                 }
             }
-        }), Some(self.connection()), self.initiator().as_req()).await.into_not_found_error() {
+        }), self.connection(), self.initiator().as_req()).await.into_not_found_error() {
             if relation.is_required() {
                 return Err(Error::cannot_disconnect_previous_relation());
             } else {

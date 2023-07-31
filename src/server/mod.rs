@@ -178,7 +178,7 @@ async fn handle_find_many(graph: &'static Graph, input: &Value, model: &'static 
             count_input_obj.remove("take");
             count_input_obj.remove("pageSize");
             count_input_obj.remove("pageNumber");
-            let count = graph.count(model.name(), &count_input, Some(connection.clone())).await.unwrap();
+            let count = graph.count(model.name(), &count_input, connection.clone()).await.unwrap();
             let mut meta = json!({"count": count});
             let page_size = input.get("pageSize");
             if page_size.is_some() {
@@ -494,7 +494,7 @@ async fn handle_delete_many(graph: &'static Graph, input: &Value, model: &'stati
 }
 
 async fn handle_count(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
-    let result = graph.count(model.name(), input, Some(connection)).await;
+    let result = graph.count(model.name(), input, connection).await;
     match result {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": count}))
@@ -506,7 +506,7 @@ async fn handle_count(graph: &'static Graph, input: &Value, model: &'static Mode
 }
 
 async fn handle_aggregate(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
-    match graph.aggregate(model.name(), input, Some(connection)).await {
+    match graph.aggregate(model.name(), input, connection).await {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": j(count)}))
         }
@@ -517,7 +517,7 @@ async fn handle_aggregate(graph: &'static Graph, input: &Value, model: &'static 
 }
 
 async fn handle_group_by(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
-    match graph.group_by(model.name(), input, Some(connection)).await {
+    match graph.group_by(model.name(), input, connection).await {
         Ok(count) => {
             HttpResponse::Ok().json(json!({"data": j(count)}))
         }

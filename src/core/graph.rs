@@ -6,7 +6,6 @@ use key_path::KeyPath;
 use maplit::hashmap;
 use to_mut_proc_macro::ToMut;
 use to_mut::ToMut;
-use crate::app::app_ctx::AppCtx;
 use crate::core::action::{Action, CREATE, INTERNAL_AMOUNT, INTERNAL_POSITION, PROGRAM_CODE, SINGLE};
 use crate::core::connector::connection::Connection;
 use crate::core::initiator::Initiator;
@@ -53,8 +52,7 @@ impl Graph {
 
     // MARK: - Queries
 
-    pub async fn find_unique<'a, T: From<Object>>(&'static self, model: &'a str, finder: &'a Value, connection: Option<Arc<dyn Connection>>, req: Option<Req>) -> Result<Option<T>> {
-        let connection = connection.unwrap();
+    pub async fn find_unique<'a, T: From<Object>>(&'static self, model: &'a str, finder: &'a Value, connection: Arc<dyn Connection>, req: Option<Req>) -> Result<Option<T>> {
         match self.find_unique_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), Initiator::ProgramCode(req), connection).await {
             Ok(result) => match result {
                 Some(o) => Ok(Some(o.into())),
@@ -64,8 +62,7 @@ impl Graph {
         }
     }
 
-    pub async fn find_first<'a, T: From<Object>>(&'static self, model: &'a str, finder: &'a Value, connection: Option<Arc<dyn Connection>>, req: Option<Req>) -> Result<Option<T>> {
-        let connection = connection.unwrap();
+    pub async fn find_first<'a, T: From<Object>>(&'static self, model: &'a str, finder: &'a Value, connection: Arc<dyn Connection>, req: Option<Req>) -> Result<Option<T>> {
         match self.find_first_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), Initiator::ProgramCode(req), connection).await {
             Ok(result) => match result {
                 Some(o) => Ok(Some(o.into())),
@@ -75,8 +72,7 @@ impl Graph {
         }
     }
 
-    pub async fn find_many<'a, T: From<Object>>(&'static self, model: &'a str, finder: &'a Value, connection: Option<Arc<dyn Connection>>, req: Option<Req>) -> Result<Vec<T>> {
-        let connection = connection.unwrap();
+    pub async fn find_many<'a, T: From<Object>>(&'static self, model: &'a str, finder: &'a Value, connection: Arc<dyn Connection>, req: Option<Req>) -> Result<Vec<T>> {
         match self.find_many_internal(model, finder, false, Action::from_u32(PROGRAM_CODE | INTERNAL_AMOUNT | INTERNAL_POSITION), Initiator::ProgramCode(req), connection).await {
             Ok(results) => Ok(results.iter().map(|item| item.clone().into()).collect()),
             Err(err) => Err(err),
@@ -131,20 +127,17 @@ impl Graph {
         }
     }
 
-    pub(crate) async fn count<'a>(&'static self, model: &'a str, finder: &'a Value, connection: Option<Arc<dyn Connection>>) -> Result<usize> {
-        let connection = connection.unwrap();
+    pub(crate) async fn count<'a>(&'static self, model: &'a str, finder: &'a Value, connection: Arc<dyn Connection>) -> Result<usize> {
         let model = self.model(model)?;
         connection.count(self, model, finder).await
     }
 
-    pub(crate) async fn aggregate<'a>(&'static self, model: &'a str, finder: &'a Value, connection: Option<Arc<dyn Connection>>) -> Result<Value> {
-        let connection = connection.unwrap();
+    pub(crate) async fn aggregate<'a>(&'static self, model: &'a str, finder: &'a Value, connection: Arc<dyn Connection>) -> Result<Value> {
         let model = self.model(model)?;
         connection.aggregate(self, model, finder).await
     }
 
-    pub(crate) async fn group_by<'a>(&'static self, model: &'a str, finder: &'a Value, connection: Option<Arc<dyn Connection>>) -> Result<Value> {
-        let connection = connection.unwrap();
+    pub(crate) async fn group_by<'a>(&'static self, model: &'a str, finder: &'a Value, connection: Arc<dyn Connection>) -> Result<Value> {
         let model = self.model(model)?;
         connection.group_by(self, model, finder).await
     }
@@ -164,8 +157,7 @@ impl Graph {
         Ok(object)
     }
 
-    pub async fn create_object(&'static self, model: &str, initial: impl Borrow<Value>, connection: Option<Arc<dyn Connection>>, req: Option<Req>) -> Result<Object> {
-        let connection = connection.unwrap();
+    pub async fn create_object(&'static self, model: &str, initial: impl Borrow<Value>, connection: Arc<dyn Connection>, req: Option<Req>) -> Result<Object> {
         let obj = self.new_object(model, Action::from_u32(PROGRAM_CODE | CREATE | SINGLE | INTERNAL_POSITION), Initiator::ProgramCode(req), connection)?;
         obj.set_teon(initial.borrow()).await?;
         Ok(obj)
