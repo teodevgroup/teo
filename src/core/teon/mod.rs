@@ -21,7 +21,6 @@ use maplit::hashmap;
 use regex::Regex;
 use bigdecimal::BigDecimal;
 use itertools::Itertools;
-use snailquote::escape;
 use crate::core::field::r#type::FieldType;
 use crate::core::object::Object;
 use crate::core::pipeline::ctx::PipelineCtx;

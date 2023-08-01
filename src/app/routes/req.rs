@@ -1,19 +1,16 @@
-use std::sync::Arc;
 use actix_http::HttpMessage;
 use actix_web::HttpRequest;
-use actix_web::dev::Payload;
 use crate::app::routes::readonly_header_map::ReadOnlyHeaderMap;
 
 #[derive(Clone)]
 pub struct Req {
     request: HttpRequest,
-    payload: Arc<Payload>,
 }
 
 impl Req {
 
-    pub(crate) fn new(request: HttpRequest, payload: Payload) -> Self {
-        Self { request, payload: Arc::new(payload) }
+    pub(crate) fn new(request: HttpRequest) -> Self {
+        Self { request }
     }
 
     pub fn method(&self) -> &str {
@@ -35,7 +32,6 @@ impl Req {
     pub fn headers(&self) -> ReadOnlyHeaderMap {
         ReadOnlyHeaderMap::new(self.request.headers().clone())
     }
-
 }
 
 unsafe impl Send for Req { }
