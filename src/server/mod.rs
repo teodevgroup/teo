@@ -8,7 +8,7 @@ use crate::core::result::Result;
 use std::sync::Arc;
 use futures_util::{future, TryFutureExt};
 use std::time::SystemTime;
-use actix_http::body::MessageBody;
+use actix_http::body::{BoxBody, MessageBody};
 use actix_http::{HttpMessage, Method};
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
@@ -669,6 +669,29 @@ fn make_app(
     InitError = (),
     Error = actix_web::Error,
 > + 'static> {
+    let middleware = move |req: ServiceRequest, next: LabNext<BoxBody>| async move {
+        // This is where our middleware stack begins
+        // Validate method
+        let method = req.method();
+        if (method != Method::POST) && (method != Method::OPTIONS) {
+            return Ok(ServiceResponse::new(req.request().clone(), Error::destination_not_found().into()));
+        }
+        // Validate path
+        let path_components = match parse_path(req.path(), conf.path_prefix) {
+            Ok(components) => components,
+            Err(err) => return Ok(ServiceResponse::new(req.request().clone(), Error::destination_not_found().into())),
+        };
+        // Pass data
+        // Acquire a connection
+        let connection = AppCtx::get().unwrap().connector().unwrap().connection().await.unwrap();
+        let request = req.request().clone();
+        let mut exts = request.extensions_mut();
+        exts.insert(connection);
+        exts.insert(path_components);
+        // pre-processing
+        next.call(req).await
+        // post-processing
+    };
     let mut app = App::new()
         .wrap(DefaultHeaders::new()
             .add(("Access-Control-Allow-Origin", "*"))
@@ -680,8 +703,8 @@ fn make_app(
             let start = SystemTime::now();
             let extensions = r.extensions();
             let path_components = extensions.get::<PathComponents>().unwrap();
-            let model_url_segment_name = path_components.model;
-            let action_segment_name = path_components.action;
+            let model_url_segment_name = path_components.model.as_str();
+            let action_segment_name = path_components.action.as_str();
             let action = Action::handler_from_name(action_segment_name);
             let action = match action {
                 Some(a) => a,
@@ -883,12 +906,12 @@ fn make_app(
     app
 }
 
-struct PathComponents<'a> {
-    model: &'a str,
-    action: &'a str,
+struct PathComponents {
+    model: String,
+    action: String,
 }
 
-fn parse_path<'a>(path: &'a str, prefix: Option<&'static str>) -> Result<PathComponents<'a>> {
+fn parse_path(path: &str, prefix: Option<&str>) -> Result<PathComponents> {
     let mut path_striped = if let Some(prefix) = prefix {
         if !path.starts_with(prefix) {
             return Err(Error::destination_not_found());
@@ -913,7 +936,7 @@ fn parse_path<'a>(path: &'a str, prefix: Option<&'static str>) -> Result<PathCom
     }
     let model = components.get(0).unwrap();
     let action = components.get(2).unwrap();
-    Ok(PathComponents { model, action })
+    Ok(PathComponents { model: model.to_string(), action: action.to_string() })
 }
 
 async fn server_start_message(port: u16, environment_version: &'static Program, entrance: &'static Entrance) -> Result<()> {
@@ -977,28 +1000,3 @@ async fn reset_after_query_if_needed(test_context: Option<&'static TestContext>,
     Ok(())
 }
 
-async fn middleware(
-    req: ServiceRequest,
-    next: LabNext<impl MessageBody>,
-) -> std::result::Result<ServiceResponse<impl MessageBody>, actix_web::Error> {
-    // // This is where our middleware stack begins
-    // // Validate method
-    // let method = req.method();
-    // if (method != Method::POST) && (method != Method::OPTIONS) {
-    //     return Ok(ServiceResponse::new(req.request().clone(), Error::destination_not_found().into()));
-    // }
-    // // Validate path
-    // let path_components = match parse_path(req.path(), conf.path_prefix) {
-    //     Ok(components) => components,
-    //     Err(err) => return Ok(ServiceResponse::new(req.request().clone(), Error::destination_not_found().into())),
-    // };
-    // // Pass data
-    // // Acquire a connection
-    // let connection = AppCtx::get().unwrap().connector().unwrap().connection().await.unwrap();
-    // let exts = req.request().extensions_mut();
-    // exts.insert(connection);
-    // exts.insert(path_components);
-    // pre-processing
-    next.call(req).await
-    // post-processing
-}
