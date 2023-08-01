@@ -3,15 +3,19 @@ pub(crate) mod jwt_token;
 pub(crate) mod test_context;
 pub(crate) mod conf;
 
+use std::future::Future;
 use crate::core::result::Result;
 use std::sync::Arc;
-use futures_util::future;
+use futures_util::{future, TryFutureExt};
 use std::time::SystemTime;
-use actix_http::body::BoxBody;
-use actix_http::Method;
+use actix_http::body::MessageBody;
+use actix_http::{HttpMessage, Method};
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::DefaultHeaders;
+use actix_web::dev::Service;
+use actix_web_lab::middleware::{Next as LabNext, from_fn as lab_from_fn};
+use futures_util::FutureExt;
 use chrono::{DateTime, Duration, Local, Utc};
 use colored::Colorize;
 use futures_util::StreamExt;
@@ -39,7 +43,7 @@ use self::jwt_token::{Claims, decode_token, encode_token};
 use crate::core::graph::Graph;
 use crate::core::model::model::Model;
 use crate::core::object::{ErrorIfNotFound, Object};
-use crate::core::pipeline::ctx::{PipelineCtx};
+use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::error::Error;
 use crate::core::teon::decoder::Decoder;
 use crate::prelude::{Res, UserCtx, Value};
@@ -49,20 +53,6 @@ use crate::teon;
 
 fn j(v: Value) -> JsonValue {
     v.into()
-}
-
-fn path_components(path: &str) -> Vec<&str> {
-    let components = path.split("/");
-    let mut retval: Vec<&str> = Vec::new();
-    let mut ignore = true;
-    for component in components {
-        if ignore == true {
-            ignore = false;
-        } else {
-            retval.push(component);
-        }
-    }
-    retval
 }
 
 fn log_unhandled(start: SystemTime, method: &str, path: &str, code: u16) {
@@ -632,6 +622,40 @@ async fn handle_identity<'a>(_graph: &'static Graph, input: &'a Value, model: &'
     }
 }
 
+// fn build_final_middleware(middlewares: &'static IndexMap<&'static str, Arc<dyn Middleware>>) -> Arc<dyn Middleware>
+// {
+//
+//     return Arc::new(|ctx: MiddlewareCtx| async {
+//         (ctx.next.as_ref())(ctx.req, ctx.user_ctx).await
+//     })
+// }
+
+// .wrap_fn(|service_request, srv| {
+// let res = srv.call(service_request).map(|res| {
+// res
+// });
+// res
+// let req = Req::new(service_request.request().clone(), service_request.take_payload());
+// let user_ctx = UserCtx::new(AppCtx::get().unwrap().connector().unwrap().connection().unwrap(), Some(req.clone()));
+// let context = MiddlewareCtx {
+//     req,
+//     user_ctx,
+//     next: Arc::new(|req, user_ctx| async {
+//         let result = srv.call(service_request).await;
+//         match result {
+//             Ok(res) => {
+//                 res.
+//                 let http_res = HttpResponse::from(res);
+//                 Ok(Res::EmptyRes)
+//             }
+//             Err(err) => {
+//                 Error::
+//             }
+//         }
+//     }),
+// }
+//})
+
 fn make_app(
     graph: &'static Graph,
     conf: &'static ServerConf,
@@ -640,7 +664,7 @@ fn make_app(
     test_context: Option<&'static TestContext>
 ) -> App<impl ServiceFactory<
     ServiceRequest,
-    Response = ServiceResponse<BoxBody>,
+    Response = ServiceResponse<impl MessageBody>,
     Config = (),
     InitError = (),
     Error = actix_web::Error,
@@ -651,51 +675,30 @@ fn make_app(
             .add(("Access-Control-Allow-Methods", "OPTIONS, POST, GET"))
             .add(("Access-Control-Allow-Headers", "*"))
             .add(("Access-Control-Max-Age", "86400")))
+        .wrap(lab_from_fn(middleware))
         .default_service(web::route().to(move |r: HttpRequest, mut payload: web::Payload| async move {
             let start = SystemTime::now();
-            let mut path = r.path().to_string();
-            if let Some(prefix) = &conf.path_prefix {
-                if !path.starts_with(prefix) {
-                    log_unhandled(start, r.method().as_str(), &path, 404);
-                    return Error::destination_not_found().into();
-                }
-                path = path.strip_prefix(prefix).unwrap().to_string();
-            }
-            let path = if path.len() > 1 && path.ends_with("/") {
-                path[0..path.len() - 1].to_string()
-            } else {
-                path
-            };
-            if (r.method() != Method::POST) && (r.method() != Method::OPTIONS) {
-                log_unhandled(start, r.method().as_str(), &path, 404);
-                return Error::destination_not_found().into();
-            }
-            let path_components = path_components(&path);
-            let first_component = path_components.get(1).unwrap();
-            if !(path_components.len() == 3 && first_component == &"action") {
-                log_unhandled(start, r.method().as_str(), &path, 404);
-                return Error::destination_not_found().into();
-            }
-            let model_url_segment_name = path_components[0];
-            let action_segment_name = path_components[2];
+            let extensions = r.extensions();
+            let path_components = extensions.get::<PathComponents>().unwrap();
+            let model_url_segment_name = path_components.model;
+            let action_segment_name = path_components.action;
             let action = Action::handler_from_name(action_segment_name);
             let action = match action {
                 Some(a) => a,
                 None => {
-                    log_unhandled(start, r.method().as_str(), &path, 404);
+                    log_unhandled(start, r.method().as_str(), &r.path(), 404);
                     return Error::destination_not_found().into();
                 }
             };
             let model_def = match graph.model(model_url_segment_name) {
                 Ok(name) => name,
                 Err(_) => {
-                    println!("Here cannot find model with name {model_url_segment_name}");
-                    log_unhandled(start, r.method().as_str(), &path, 404);
+                    log_unhandled(start, r.method().as_str(), &r.path(), 404);
                     return Error::destination_not_found().into();
                 }
             };
             if !model_def.has_action(action) || model_def.is_teo_internal() {
-                log_unhandled(start, r.method().as_str(), &path, 400);
+                log_unhandled(start, r.method().as_str(), &r.path(), 400);
                 return Error::destination_not_found().into();
             }
             if r.method() == Method::OPTIONS {
@@ -716,17 +719,17 @@ fn make_app(
             let parsed_body = match parsed_body {
                 Ok(b) => b,
                 Err(_) => {
-                    log_unhandled(start, r.method().as_str(), &path, 400);
+                    log_unhandled(start, r.method().as_str(), &r.path(), 400);
                     return HttpResponse::BadRequest().json(json!({"error": Error::incorrect_json_format()}));
                 }
             };
 
             if !parsed_body.is_object() {
-                log_unhandled(start, r.method().as_str(), &path, 400);
+                log_unhandled(start, r.method().as_str(), &r.path(), 400);
                 return HttpResponse::BadRequest().json(json!({"error": Error::unexpected_input_root_type("object")}));
             }
             let connection = AppCtx::get().unwrap().connector().unwrap().connection().await.unwrap();
-            let req = Req::new(r.clone(), payload);
+            let req = Req::new(r.clone(), payload.into_inner());
             let identity = match get_identity(&r, &graph, conf, connection.clone(), req.clone()).await {
                 Ok(identity) => { identity },
                 Err(err) => return HttpResponse::Unauthorized().json(json!({"error": err }))
@@ -858,7 +861,7 @@ fn make_app(
         app = app.route(format!("/{}/action/{}", action_def.group(), action_def.name()).as_str(), web::post().to(|request: HttpRequest, payload: web::Payload| async {
             let start = SystemTime::now();
             let connection = AppCtx::get().unwrap().connector().unwrap().connection().await.unwrap();
-            let req = Req::new(request, payload);
+            let req = Req::new(request, payload.into_inner());
             let user_ctx = UserCtx::new(connection, Some(req.clone()));
             let ctx = ActionCtxBase {
                 req,
@@ -878,6 +881,39 @@ fn make_app(
         }));
     }
     app
+}
+
+struct PathComponents<'a> {
+    model: &'a str,
+    action: &'a str,
+}
+
+fn parse_path<'a>(path: &'a str, prefix: Option<&'static str>) -> Result<PathComponents<'a>> {
+    let mut path_striped = if let Some(prefix) = prefix {
+        if !path.starts_with(prefix) {
+            return Err(Error::destination_not_found());
+        } else {
+            path.strip_prefix(prefix).unwrap()
+        }
+    } else {
+        path
+    };
+    if path_striped.ends_with("/") {
+        path_striped = path_striped.strip_suffix("/").unwrap();
+    }
+    if path_striped.starts_with("/") {
+        path_striped = path_striped.strip_prefix("/").unwrap();
+    }
+    let components: Vec<&str> = path.split("/").into_iter().collect();
+    if components.len() != 3 {
+        return Err(Error::destination_not_found());
+    }
+    if *components.get(1).unwrap() != "action" {
+        return Err(Error::destination_not_found());
+    }
+    let model = components.get(0).unwrap();
+    let action = components.get(2).unwrap();
+    Ok(PathComponents { model, action })
 }
 
 async fn server_start_message(port: u16, environment_version: &'static Program, entrance: &'static Entrance) -> Result<()> {
@@ -939,4 +975,30 @@ async fn reset_after_query_if_needed(test_context: Option<&'static TestContext>,
         }
     }
     Ok(())
+}
+
+async fn middleware(
+    req: ServiceRequest,
+    next: LabNext<impl MessageBody>,
+) -> std::result::Result<ServiceResponse<impl MessageBody>, actix_web::Error> {
+    // // This is where our middleware stack begins
+    // // Validate method
+    // let method = req.method();
+    // if (method != Method::POST) && (method != Method::OPTIONS) {
+    //     return Ok(ServiceResponse::new(req.request().clone(), Error::destination_not_found().into()));
+    // }
+    // // Validate path
+    // let path_components = match parse_path(req.path(), conf.path_prefix) {
+    //     Ok(components) => components,
+    //     Err(err) => return Ok(ServiceResponse::new(req.request().clone(), Error::destination_not_found().into())),
+    // };
+    // // Pass data
+    // // Acquire a connection
+    // let connection = AppCtx::get().unwrap().connector().unwrap().connection().await.unwrap();
+    // let exts = req.request().extensions_mut();
+    // exts.insert(connection);
+    // exts.insert(path_components);
+    // pre-processing
+    next.call(req).await
+    // post-processing
 }

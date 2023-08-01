@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use actix_http::HttpMessage;
 use actix_web::HttpRequest;
-use actix_web::web::Payload;
+use actix_web::dev::Payload;
 use crate::app::routes::readonly_header_map::ReadOnlyHeaderMap;
 
 #[derive(Clone)]

@@ -13,7 +13,6 @@ use crate::parser::std::decorators::property::getter::getter_decorator;
 use crate::parser::std::decorators::property::index::{index_decorator, unique_decorator};
 use crate::parser::std::decorators::property::setter::setter_decorator;
 
-
 pub(crate) struct GlobalPropertyDecorators {
     objects: HashMap<String, Accessible>
 }
