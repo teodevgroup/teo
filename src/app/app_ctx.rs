@@ -35,7 +35,7 @@ pub struct AppCtx {
     datasets: Vec<DataSet>,
     setup: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
     ignore_callbacks: bool,
-    middlewares: IndexMap<&'static str, Arc<dyn Middleware>>,
+    middlewares: IndexMap<&'static str, &'static dyn Middleware>,
     action_handlers: Vec<Arc<dyn ActionHandlerDefTrait>>,
 }
 
@@ -259,7 +259,7 @@ impl AppCtx {
     pub(crate) fn add_middleware<F>(&self, name: &'static str, f: F) -> Result<()> where
         F: Middleware + 'static,
     {
-        AppCtx::get_mut()?.middlewares.insert(name, Arc::new(f));
+        AppCtx::get_mut()?.middlewares.insert(name, Box::leak(Box::new(f)));
         Ok(())
     }
 
@@ -272,7 +272,7 @@ impl AppCtx {
         Ok(())
     }
 
-    pub(crate) fn middlewares(&self) -> &IndexMap<&'static str, Arc<dyn Middleware>> {
+    pub(crate) fn middlewares(&self) -> &IndexMap<&'static str, &'static dyn Middleware> {
         &self.middlewares
     }
 

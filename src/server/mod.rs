@@ -625,7 +625,7 @@ async fn handle_identity<'a>(_graph: &'static Graph, input: &'a Value, model: &'
 fn make_app(
     graph: &'static Graph,
     conf: &'static ServerConf,
-    middlewares: &'static IndexMap<&'static str, Arc<dyn Middleware>>,
+    middlewares: &'static IndexMap<&'static str, &'static dyn Middleware>,
     action_defs: &'static Vec<Arc<dyn ActionHandlerDefTrait>>,
     test_context: Option<&'static TestContext>
 ) -> App<impl ServiceFactory<
@@ -916,7 +916,7 @@ pub(crate) async fn serve(
     environment_version: &'static Program,
     entrance: &'static Entrance,
     before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
-    middlewares: &'static IndexMap<&'static str, Arc<dyn Middleware>>,
+    middlewares: &'static IndexMap<&'static str, &'static dyn Middleware>,
     action_defs: &'static Vec<Arc<dyn ActionHandlerDefTrait>>,
     test_context: Option<&'static TestContext>,
 ) -> Result<()> {

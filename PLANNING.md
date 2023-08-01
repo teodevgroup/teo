@@ -448,7 +448,7 @@
 - Custom routes: middleware
 
 #### 0.0.58
-- Use database specific database types
+- Database specific database types
 - Full custom types for all supported databases
 - Rewrite Node.js client generating with askama engine
 - Refactor Node.js entities
