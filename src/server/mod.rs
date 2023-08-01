@@ -128,12 +128,12 @@ async fn handle_find_unique(graph: &'static Graph, input: &Value, model: &'stati
                 None => Ok(Res::TeonDataRes(teon!(null))),
                 Some(obj) => {
                     let obj_data = obj.to_json_internal(&path!["data"]).await.unwrap();
-                    Res::TeonDataRes(obj_data)
+                    Ok(Res::TeonDataRes(obj_data))
                 }
             }
         }
         Err(err) => {
-            err.into()
+            Err(err)
         }
     }
 }
@@ -147,12 +147,12 @@ async fn handle_find_first(graph: &'static Graph, input: &Value, model: &'static
                 None => Ok(Res::TeonDataRes(teon!(null))),
                 Some(obj) => {
                     let obj_data = obj.to_json_internal(&path!["data"]).await.unwrap();
-                    Res::TeonDataRes(obj_data)
+                    Ok(Res::TeonDataRes(obj_data))
                 }
             }
         }
         Err(err) => {
-            err.into()
+            Err(err)
         }
     }
 }
@@ -178,7 +178,7 @@ async fn handle_find_many(graph: &'static Graph, input: &Value, model: &'static 
                 if count % page_size != 0 {
                     number_of_pages += 1;
                 }
-                meta.as_object_mut().unwrap().insert("numberOfPages".to_string(), number_of_pages.into());
+                meta.as_hashmap_mut().unwrap().insert("numberOfPages".to_string(), number_of_pages.into());
             }
 
             let mut result_json: Vec<Value> = vec![];
@@ -426,13 +426,13 @@ async fn handle_update_many(graph: &'static Graph, input: &Value, model: &'stati
     Ok(Res::TeonDataMetaRes(Value::Vec(ret_data), teon!(count)))
 }
 
-async fn handle_delete_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+async fn handle_delete_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(DELETE | MANY | ENTRY);
     let result = graph.find_many_internal(model.name(), input, true, action, source, transaction.clone()).await;
     if result.is_err() {
         transaction.commit().await.unwrap();
-        return HttpResponse::BadRequest().json(json!({"error": result.err().unwrap()}));
+        return Err(result.err().unwrap());
     }
     let result = result.unwrap();
     let mut count = 0;
@@ -452,57 +452,30 @@ async fn handle_delete_many(graph: &'static Graph, input: &Value, model: &'stati
         }
     }
     transaction.commit().await.unwrap();
-    HttpResponse::Ok().json(json!({
-        "meta": {
-            "count": count
-        },
-        "data": j(Value::Vec(retval))
-    }))
+    return Ok(Res::TeonDataMetaRes(Value::Vec(retval), teon!(count)));
 }
 
-async fn handle_count(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
-    let result = graph.count(model.name(), input, connection).await;
-    match result {
-        Ok(count) => {
-            HttpResponse::Ok().json(json!({"data": count}))
-        }
-        Err(err) => {
-            HttpResponse::BadRequest().json(json!({"error": err}))
-        }
-    }
+async fn handle_count(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
+    graph.count(model.name(), input, connection).await.map(|count| Res::teon_data(teon!(count)))
 }
 
-async fn handle_aggregate(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
-    match graph.aggregate(model.name(), input, connection).await {
-        Ok(count) => {
-            HttpResponse::Ok().json(json!({"data": j(count)}))
-        }
-        Err(err) => {
-            HttpResponse::BadRequest().json(json!({"error": err}))
-        }
-    }
+async fn handle_aggregate(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
+    graph.aggregate(model.name(), input, connection).await.map(|result| Res::teon_data(result))
 }
 
-async fn handle_group_by(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
-    match graph.group_by(model.name(), input, connection).await {
-        Ok(count) => {
-            HttpResponse::Ok().json(json!({"data": j(count)}))
-        }
-        Err(err) => {
-            HttpResponse::BadRequest().json(json!({"error": err}))
-        }
-    }
+async fn handle_group_by(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
+    graph.group_by(model.name(), input, connection).await.map(|result| Res::teon_data(result))
 }
 
-async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'static Model, conf: &'a ServerConf, connection: Arc<dyn Connection>, req: Req) -> HttpResponse {
+async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'static Model, conf: &'a ServerConf, connection: Arc<dyn Connection>, req: Req) -> Result<Res> {
     let input = input.as_hashmap().unwrap();
     let credentials = input.get("credentials");
     if let None = credentials {
-        return Error::missing_required_input_with_type("object", path!["credentials"]).into();
+        return Err(Error::missing_required_input_with_type("object", path!["credentials"]));
     }
     let credentials = credentials.unwrap();
     if !credentials.is_hashmap() {
-        return Error::unexpected_input_type("object", path!["credentials"]).into();
+        return Err(Error::unexpected_input_type("object", path!["credentials"]));
     }
     let credentials = credentials.as_hashmap().unwrap();
     let mut identity_key: Option<&String> = None;
@@ -515,23 +488,23 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
                 identity_key = Some(k);
                 identity_value = Some(v);
             } else {
-                return Error::unexpected_input_value_with_reason("Multiple auth identity provided", path!["credentials", k]).into();
+                return Err(Error::unexpected_input_value_with_reason("Multiple auth identity provided", path!["credentials", k]));
             }
         } else if model.auth_by_keys().contains(&k.as_str()) {
             if by_key == None {
                 by_key = Some(k);
                 by_value = Some(v);
             } else {
-                return Error::unexpected_input_value_with_reason("Multiple auth checker provided", path!["credentials", k]).into();
+                return Err(Error::unexpected_input_value_with_reason("Multiple auth checker provided", path!["credentials", k]));
             }
         } else {
-            return Error::unexpected_input_key(k, path!["credentials", k]).into();
+            return Err(Error::unexpected_input_key(k, path!["credentials", k]));
         }
     }
     if identity_key == None {
-        return Error::missing_required_input_with_type("auth identity", path!["credentials"]).into();
+        return Err(Error::missing_required_input_with_type("auth identity", path!["credentials"]));
     } else if by_key == None {
-        return Error::missing_required_input_with_type("auth checker", path!["credentials"]).into();
+        return Err(Error::missing_required_input_with_type("auth checker", path!["credentials"]));
     }
     let by_field = model.field(by_key.unwrap()).unwrap();
     let obj_result = graph.find_unique_internal(model.name(), &teon!({
@@ -540,7 +513,7 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
         }
     }), true, Action::from_u32(FIND | SINGLE | ENTRY), Initiator::ProgramCode(Some(req.clone())), connection.clone()).await.into_not_found_error();
     if let Err(_err) = obj_result {
-        return Error::unexpected_input_value("This identity is not found.", path!["credentials", identity_key.unwrap()]).into();
+        return Err(Error::unexpected_input_value("This identity is not found.", path!["credentials", identity_key.unwrap()]));
     }
     let obj = obj_result.unwrap();
     let auth_by_arg = by_field.identity_checker.as_ref().unwrap();
@@ -550,7 +523,7 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
     let result = pipeline.process(ctx).await;
     return match result {
         Err(_err) => {
-            return Error::unexpected_input_value_with_reason("Authentication failed.", path!["credentials", by_key.unwrap()]).into();
+            return Err(Error::unexpected_input_value_with_reason("Authentication failed.", path!["credentials", by_key.unwrap()]));
         }
         Ok(_v) => {
             let include = input.get("include");
@@ -566,36 +539,27 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
                 exp
             };
             if conf.jwt_secret.as_ref().is_none() {
-                return Error::internal_server_error("Missing JWT secret.").into();
+                return Err(Error::internal_server_error("Missing JWT secret."));
             }
             let token = encode_token(claims, &conf.jwt_secret.as_ref().unwrap());
-            HttpResponse::Ok().json(json!({
-            "meta": {
-                "token": token
-            },
-            "data": j(json_data.unwrap())
-        }))
+            return Ok(Res::teon_data_meta(json_data?, teon!(token)))
         }
     }
 }
 
-async fn handle_identity<'a>(_graph: &'static Graph, input: &'a Value, model: &'static Model, _conf: &'a ServerConf, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+async fn handle_identity<'a>(_graph: &'static Graph, input: &'a Value, model: &'static Model, _conf: &'a ServerConf, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let identity = source.as_identity();
-    if let Some(identity) = identity {
+    return if let Some(identity) = identity {
         if identity.model() != model {
-            return HttpResponse::Unauthorized().json(json!({"error": Error::wrong_identity_model().as_user_error().unwrap()}));
+            return Err(Error::wrong_identity_model());
         }
         let select = input.get("select");
         let include = input.get("include");
         let refreshed = identity.refreshed(include, select).await.unwrap();
         let json_data = refreshed.to_json_internal(&path!["data"]).await;
-        HttpResponse::Ok().json(json!({
-            "data": j(json_data.unwrap())
-        }))
+        Ok(Res::TeonDataRes(json_data?))
     } else {
-        HttpResponse::Ok().json(json!({
-            "data": null
-        }))
+        Ok(Res::TeonDataRes(teon!(null)))
     }
 }
 
