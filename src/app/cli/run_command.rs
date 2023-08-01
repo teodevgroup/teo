@@ -17,7 +17,7 @@ pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
     match &cli.command {
         CLICommand::Serve(serve_command) => {
             if !serve_command.no_migration {
-                migrate(app_ctx.graph()?, false).await;
+                migrate(app_ctx.graph()?, false).await?;
             }
             let env = serve_command.env.as_ref().cloned().unwrap_or(std::env::var("TEO_ENV").unwrap_or("debug".to_string()));
             let test_context: Option<&'static TestContext> = if env.as_str() == "test" {
@@ -43,11 +43,11 @@ pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
             } else { None };
             if let Some(test_context) = test_context {
                 app_ctx.connector()?.connection().await?.purge(graph).await.unwrap();
-                seed(SeedCommandAction::Seed, graph, &test_context.datasets, test_context.datasets.iter().map(|d| d.name.clone()).collect()).await;
+                seed(SeedCommandAction::Seed, graph, &test_context.datasets, test_context.datasets.iter().map(|d| d.name.clone()).collect()).await?;
             } else if !serve_command.no_autoseed && !datasets.is_empty() {
                 let names: Vec<String> = datasets.iter().filter_map(|d| if d.autoseed { Some(d.name.clone()) } else { None }).collect();
                 if !names.is_empty() {
-                    seed(SeedCommandAction::Seed, graph, datasets, names).await;
+                    seed(SeedCommandAction::Seed, graph, datasets, names).await?;
                 }
             }
             serve(
@@ -104,7 +104,7 @@ pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
             }
         }
         CLICommand::Migrate(migrate_command) => {
-            migrate(graph, migrate_command.dry).await;
+            migrate(graph, migrate_command.dry).await?;
         }
         CLICommand::Seed(seed_command) => {
             let names = if seed_command.all {
@@ -113,7 +113,7 @@ pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
                 seed_command.names.clone().unwrap()
             };
             migrate(graph, false).await?;
-            seed(seed_command.action, graph, datasets, names).await;
+            seed(seed_command.action, graph, datasets, names).await?;
         }
         CLICommand::Purge(_) => {
             purge(graph).await.unwrap()

@@ -30,7 +30,7 @@ impl<F, Fut> Middleware for F where
     }
 }
 
-fn combine_middleware(middlewares: IndexMap<&'static str, &'static dyn Middleware>) -> &'static dyn Middleware {
+pub(crate) fn combine_middleware(middlewares: IndexMap<&'static str, &'static dyn Middleware>) -> &'static dyn Middleware {
     match middlewares.len() {
         0 => Box::leak(Box::new(|req_ctx: ReqCtx, next: &'static dyn Next| async move {
             next.call(req_ctx).await

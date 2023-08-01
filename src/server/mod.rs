@@ -46,7 +46,7 @@ use crate::core::object::{ErrorIfNotFound, Object};
 use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::error::Error;
 use crate::core::teon::decoder::Decoder;
-use crate::prelude::{Res, UserCtx, Value};
+use crate::prelude::{combine_middleware, Res, UserCtx, Value};
 use crate::seeder::seed::seed;
 use crate::server::conf::ServerConf;
 use crate::teon;
@@ -119,16 +119,16 @@ async fn get_identity(r: &HttpRequest, graph: &'static Graph, conf: &ServerConf,
     }
 }
 
-async fn handle_find_unique(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+async fn handle_find_unique(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let action = Action::from_u32(FIND | SINGLE | ENTRY);
     let result = graph.find_unique_internal(model.name(), input, false, action, source, connection).await;
     match result {
         Ok(obj) => {
             match obj {
-                None => HttpResponse::Ok().json(json!({"data": null})),
+                None => Ok(Res::TeonDataRes(teon!(null))),
                 Some(obj) => {
-                    let json_data: JsonValue = obj.to_json_internal(&path!["data"]).await.unwrap().into();
-                    HttpResponse::Ok().json(json!({"data": json_data}))
+                    let obj_data = obj.to_json_internal(&path!["data"]).await.unwrap();
+                    Res::TeonDataRes(obj_data)
                 }
             }
         }
@@ -138,16 +138,16 @@ async fn handle_find_unique(graph: &'static Graph, input: &Value, model: &'stati
     }
 }
 
-async fn handle_find_first(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+async fn handle_find_first(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let action = Action::from_u32(FIND | SINGLE | ENTRY);
     let result = graph.find_first_internal(model.name(), input, false, action, source, connection).await;
     match result {
         Ok(obj) => {
             match obj {
-                None => HttpResponse::Ok().json(json!({"data": null})),
+                None => Ok(Res::TeonDataRes(teon!(null))),
                 Some(obj) => {
-                    let json_data: JsonValue = obj.to_json_internal(&path!["data"]).await.unwrap().into();
-                    HttpResponse::Ok().json(json!({"data": json_data}))
+                    let obj_data = obj.to_json_internal(&path!["data"]).await.unwrap();
+                    Res::TeonDataRes(obj_data)
                 }
             }
         }
@@ -157,7 +157,7 @@ async fn handle_find_first(graph: &'static Graph, input: &Value, model: &'static
     }
 }
 
-async fn handle_find_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+async fn handle_find_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let action = Action::from_u32(FIND | MANY | ENTRY);
     let result = graph.find_many_internal(model.name(), input, false, action, source, connection.clone()).await;
     match result {
@@ -169,7 +169,7 @@ async fn handle_find_many(graph: &'static Graph, input: &Value, model: &'static 
             count_input_obj.remove("pageSize");
             count_input_obj.remove("pageNumber");
             let count = graph.count(model.name(), &count_input, connection.clone()).await.unwrap();
-            let mut meta = json!({"count": count});
+            let mut meta = teon!({"count": count});
             let page_size = input.get("pageSize");
             if page_size.is_some() {
                 let page_size = page_size.unwrap().as_i32().unwrap();
@@ -181,23 +181,16 @@ async fn handle_find_many(graph: &'static Graph, input: &Value, model: &'static 
                 meta.as_object_mut().unwrap().insert("numberOfPages".to_string(), number_of_pages.into());
             }
 
-            let mut result_json: Vec<JsonValue> = vec![];
+            let mut result_json: Vec<Value> = vec![];
             for (index, result) in results.iter().enumerate() {
                 match result.to_json_internal(&path!["data", index]).await {
-                    Ok(result) => result_json.push(result.into()),
-                    Err(_) => return Error::permission_error(path!["data"], "not allowed to read").into(),
+                    Ok(result) => result_json.push(result),
+                    Err(_) => return Err(Error::permission_error(path!["data"], "not allowed to read")),
                 }
             }
-            HttpResponse::Ok().json(json!({
-                    "meta": meta,
-                    "data": result_json
-                }))
-        }
-        Err(err) => {
-            HttpResponse::BadRequest().json(json!({
-                "error": err
-            }))
-        }
+            Ok(Res::TeonDataMetaRes(Value::Vec(result_json), meta))
+        },
+        Err(err) => Err(err)
     }
 }
 
@@ -222,7 +215,7 @@ async fn handle_create_internal<'a>(graph: &'static Graph, create: Option<&'a Va
     refetched.to_json_internal(&path!["data"]).await
 }
 
-async fn handle_create(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+async fn handle_create(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(CREATE | ENTRY | SINGLE);
     let input = input.as_hashmap().unwrap();
@@ -232,29 +225,26 @@ async fn handle_create(graph: &'static Graph, input: &Value, model: &'static Mod
     let result = handle_create_internal(graph, create, include, select, model, &path!["create"], action, source, transaction.clone()).await;
     transaction.clone().commit().await.unwrap();
     match result {
-        Ok(val) => {
-            let json_val: JsonValue = val.into();
-            HttpResponse::Ok().json(json!({"data": json_val}))
-        },
-        Err(err) => HttpResponse::BadRequest().json(json!({"error": err}))
+        Ok(result) => Ok(Res::TeonDataRes(result)),
+        Err(err) => Err(err),
     }
 }
 
 async fn handle_update_internal<'a>(_graph: &'static Graph, object: Object, update: Option<&'a Value>, include: Option<&'a Value>, select: Option<&'a Value>, _where: Option<&'a Value>, _model: &'static Model) -> Result<Value> {
     let empty = teon!({});
-    let updator = if update.is_some() { update.unwrap() } else { &empty };
-    object.set_teon_with_path(updator, &path!["update"]).await?;
+    let updater = if update.is_some() { update.unwrap() } else { &empty };
+    object.set_teon_with_path(updater, &path!["update"]).await?;
     object.save().await.unwrap();
     let refetched = object.refreshed(include, select).await?;
     refetched.to_json_internal(&path!["data"]).await
 }
 
-async fn handle_update(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+async fn handle_update(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(UPDATE | ENTRY | SINGLE);
     let result = graph.find_unique_internal(model.name(), input, true, action, source, transaction.clone()).await.into_not_found_error();
     if result.is_err() {
-        return HttpResponse::NotFound().json(json!({"error": &result.err().unwrap()}));
+        return Err(result.err().unwrap());
     }
     let result = result.unwrap();
     let update = input.get("update");
@@ -264,17 +254,12 @@ async fn handle_update(graph: &'static Graph, input: &Value, model: &'static Mod
     let update_result = handle_update_internal(graph, result.clone(), update, include, select, r#where, model).await;
     transaction.clone().commit().await.unwrap();
     match update_result {
-        Ok(value) => {
-            let json_val: JsonValue = value.into();
-            HttpResponse::Ok().json(json!({"data": json_val}))
-        }
-        Err(err) => {
-            HttpResponse::BadRequest().json(json!({"error": err}))
-        }
+        Ok(value) => Ok(Res::TeonDataRes(value)),
+        Err(err) => Err(err),
     }
 }
 
-async fn handle_upsert(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+async fn handle_upsert(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(UPSERT | UPDATE | ENTRY | SINGLE);
     let result = graph.find_unique_internal(model.name(), input, true, action, source.clone(), transaction.clone()).await.into_not_found_error();
@@ -299,19 +284,19 @@ async fn handle_upsert(graph: &'static Graph, input: &Value, model: &'static Mod
                         Ok(_) => {
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
-                            let json_val: JsonValue = refetched.to_json_internal(&path!["data"]).await.unwrap().into();
+                            let json_val = refetched.to_json_internal(&path!["data"]).await.unwrap();
                             transaction.clone().commit().await.unwrap();
-                            HttpResponse::Ok().json(json!({"data": json_val}))
+                            Ok(Res::TeonDataRes(json_val))
                         }
                         Err(err) => {
                             transaction.clone().commit().await.unwrap();
-                            HttpResponse::BadRequest().json(json!({"error": err}))
+                            Err(err)
                         }
                     }
                 }
                 Err(err) => {
                     transaction.clone().commit().await.unwrap();
-                    HttpResponse::BadRequest().json(json!({"error": err}))
+                    Err(err)
                 }
             }
         }
@@ -334,49 +319,49 @@ async fn handle_upsert(graph: &'static Graph, input: &Value, model: &'static Mod
                         Ok(_) => {
                             // refetch here
                             let refetched = obj.refreshed(include, select).await.unwrap();
-                            let json_data: JsonValue = refetched.to_json_internal(&path!["data"]).await.unwrap().into();
+                            let json_data = refetched.to_json_internal(&path!["data"]).await.unwrap();
                             transaction.clone().commit().await.unwrap();
-                            return HttpResponse::Ok().json(json!({"data": json_data}));
+                            return Ok(Res::TeonDataRes(json_data));
                         }
                         Err(err) => {
                             transaction.clone().commit().await.unwrap();
-                            HttpResponse::BadRequest().json(json!({"error": err}))
+                            return Err(err);
                         }
                     }
                 }
                 Err(err) => {
                     transaction.clone().commit().await.unwrap();
-                    HttpResponse::BadRequest().json(json!({"error": err}))
+                    return Err(err);
                 }
             }
         }
     }
 }
 
-async fn handle_delete(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+async fn handle_delete(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(DELETE | SINGLE | ENTRY);
     let result = graph.find_unique_internal(model.name(), input, true, action, source, transaction.clone()).await.into_not_found_error();
     if result.is_err() {
         transaction.clone().commit().await.unwrap();
-        return HttpResponse::NotFound().json(json!({"error": result.err().unwrap()}));
+        return Err(result.err().unwrap())
     }
     let result = result.unwrap();
     // find the object here
     return match result.delete_internal(path!["delete"]).await {
         Ok(_) => {
             transaction.clone().commit().await.unwrap();
-            let json_data: JsonValue = result.to_json_internal(&path!["data"]).await.unwrap().into();
-            HttpResponse::Ok().json(json!({"data": json_data}))
+            let json_data = result.to_json_internal(&path!["data"]).await.unwrap();
+            Ok(Res::TeonDataRes(json_data))
         }
         Err(err) => {
             transaction.clone().commit().await.unwrap();
-            err.into()
+            Err(err)
         }
     }
 }
 
-async fn handle_create_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+async fn handle_create_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(CREATE | MANY | ENTRY);
     let input = input.as_hashmap().unwrap();
@@ -385,12 +370,12 @@ async fn handle_create_many(graph: &'static Graph, input: &Value, model: &'stati
     let select = input.get("select");
     if create.is_none() {
         let err = Error::missing_required_input_with_type("array", path!["create"]);
-        return HttpResponse::BadRequest().json(json!({"error": err}));
+        return Err(err);
     }
     let create = create.unwrap();
     if !create.is_vec() {
         let err = Error::unexpected_input_type("array", path!["create"]);
-        return HttpResponse::BadRequest().json(json!({"error": err}));
+        return Err(err);
     }
     let create = create.as_vec().unwrap();
     let mut count = 0;
@@ -408,20 +393,17 @@ async fn handle_create_many(graph: &'static Graph, input: &Value, model: &'stati
         }
     }
     transaction.commit().await.unwrap();
-    let json_ret_data: JsonValue = Value::Vec(ret_data).into();
-    HttpResponse::Ok().json(json!({
-        "meta": {"count": count},
-        "data": json_ret_data
-    }))
+    let json_ret_data = Value::Vec(ret_data);
+    Ok(Res::TeonDataMetaRes(json_ret_data, Value::I32(count)))
 }
 
-async fn handle_update_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
+async fn handle_update_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(UPDATE | MANY | ENTRY);
     let result = graph.find_many_internal(model.name(), input, true, action, source, transaction.clone()).await;
     if result.is_err() {
         transaction.commit().await.unwrap();
-        return HttpResponse::BadRequest().json(json!({"error": result.err().unwrap()}));
+        return Err(result.err().unwrap());
     }
     let result = result.unwrap();
     let update = input.get("update");
@@ -441,12 +423,7 @@ async fn handle_update_many(graph: &'static Graph, input: &Value, model: &'stati
         }
     }
     transaction.commit().await.unwrap();
-    HttpResponse::Ok().json(json!({
-        "meta": {
-            "count": count
-        },
-        "data": j(Value::Vec(ret_data))
-    }))
+    Ok(Res::TeonDataMetaRes(Value::Vec(ret_data), teon!(count)))
 }
 
 async fn handle_delete_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> HttpResponse {
@@ -635,229 +612,223 @@ fn make_app(
     InitError = (),
     Error = actix_web::Error,
 > + 'static> {
-    let middleware = move |mut req: ServiceRequest, next: LabNext<BoxBody>| async move {
-        // This is where our middleware stack begins
-        let start = SystemTime::now();
-        // Validate method
-        let method = req.method();
-        if (method != Method::POST) && (method != Method::OPTIONS) {
-            return Ok(ServiceResponse::new(req.request().clone(), Error::destination_not_found().into()));
+    let handler = |req_ctx: ReqCtx| async move {
+        let connection = req_ctx.connection.clone();
+        let req = req_ctx.req.clone();
+        let identity = req_ctx.identity.clone();
+        let source = Initiator::Identity(identity, req.clone());
+        let action = req_ctx.transformed_action.unwrap();
+        let body = &req_ctx.transformed_teon_body;
+        let model_def = graph.model(req_ctx.path_components.model.as_str()).unwrap();
+        match action.to_u32() {
+            FIND_UNIQUE_HANDLER => {
+                let result = handle_find_unique(&graph, &body, model_def, source.clone(), connection.clone()).await;
+                let _ = reset_after_query_if_needed(test_context, graph, connection.clone()).await;
+                return result;
+            }
+            FIND_FIRST_HANDLER => {
+                let result = handle_find_first(&graph, &body, model_def, source.clone(), connection.clone()).await;
+                let _ = reset_after_query_if_needed(test_context, graph, connection.clone()).await;
+                result
+            }
+            FIND_MANY_HANDLER => {
+                let result = handle_find_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
+                let _ = reset_after_query_if_needed(test_context, graph, connection.clone()).await;
+                result
+            }
+            CREATE_HANDLER => {
+                let result = handle_create(&graph, &body, model_def, source.clone(), connection.clone()).await;
+                let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
+                result
+            }
+            UPDATE_HANDLER => {
+                let result = handle_update(&graph, &body, model_def, source.clone(), connection.clone()).await;
+                let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
+                result
+            }
+            UPSERT_HANDLER => {
+                let result = handle_upsert(&graph, &body, model_def, source.clone(), connection.clone()).await;
+                let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
+                result
+            }
+            DELETE_HANDLER => {
+                let result = handle_delete(&graph, &body, model_def, source.clone(), connection.clone()).await;
+                let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
+                result
+            }
+            CREATE_MANY_HANDLER => {
+                let result = handle_create_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
+                let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
+                result
+            }
+            UPDATE_MANY_HANDLER => {
+                let result = handle_update_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
+                let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
+                result
+            }
+            DELETE_MANY_HANDLER => {
+                let result = handle_delete_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
+                let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
+                result
+            }
+            COUNT_HANDLER => handle_count(&graph, &body, model_def, source.clone(), connection).await,
+            AGGREGATE_HANDLER => handle_aggregate(&graph, &body, model_def, source.clone(), connection).await,
+            GROUP_BY_HANDLER => handle_group_by(&graph, &body, model_def, source.clone(), connection).await,
+            SIGN_IN_HANDLER => handle_sign_in(&graph, &body, model_def, conf, connection, req.clone()).await,
+            IDENTITY_HANDLER => handle_identity(&graph, &body, model_def, conf, source.clone(), connection).await,
+            _ => unreachable!()
         }
-        // Validate path
-        let path_components = match parse_path(req.path(), conf.path_prefix) {
-            Ok(components) => components,
-            Err(err) => return Ok(ServiceResponse::new(req.request().clone(), Error::destination_not_found().into())),
-        };
-        // Return for OPTIONS
-        if req.method() == Method::OPTIONS {
-            return Ok(ServiceResponse::new(req.request().clone(), Res::EmptyRes.into()));
-        }
-        // Pass data
-        // Acquire a connection
-        let connection = AppCtx::get().unwrap().connector().unwrap().connection().await.unwrap();
-        let request = req.request().clone();
-        let teo_req = Req::new(request.clone());
-        let user_ctx = UserCtx::new(connection.clone(), Some(teo_req.clone()));
-        // Parse body
-        let mut body = web::BytesMut::new();
-        let mut payload = req.take_payload();
-        while let Some(chunk) = payload.next().await {
-            let chunk = chunk.unwrap();
-            // limit max size of in-memory payload
-            if (body.len() + chunk.len()) > 262_144usize {
-                return Ok(ServiceResponse::new(req.request().clone(), Error::internal_server_error("Memory overflow.").into()));
-            }
-            body.extend_from_slice(&chunk);
-        }
-        let parsed_json_body_result: std::result::Result<JsonValue, serde_json::Error> = serde_json::from_slice(&body);
-        let parsed_json_body = match parsed_json_body_result {
-            Ok(b) => b,
-            Err(_) => {
-                // log_unhandled(start, r.method().as_str(), &r.path(), 400);
-                return Ok(ServiceResponse::new(req.request().clone(), Error::incorrect_json_format().into()));
-            }
-        };
-        if !parsed_json_body.is_object() {
-            // log_unhandled(start, r.method().as_str(), &r.path(), 400);
-            return Ok(ServiceResponse::new(req.request().clone(), Error::unexpected_input_root_type("object").into()));
-        }
-        // Teo Req
-        let teo_req = Req::new(request.clone());
-        // Identity
-        let identity = match get_identity(&request, &graph, conf, connection.clone(), teo_req.clone()).await {
-            Ok(identity) => { identity },
-            Err(err) => return Ok(ServiceResponse::new(req.request().clone(), err.into())),
-        };
-        let original_action = Action::handler_from_name(path_components.action.as_str());
-        let model_def = match graph.model(path_components.model.as_str()) {
-            Ok(m) => Some(m),
-            Err(_) => None,
-        };
-        let original_teon_body = if let (Some(original_action), Some(model_def)) = (original_action, model_def) {
-            // Check whether this action is supported by this model
-            if !model_def.has_action(original_action) || model_def.is_teo_internal() {
-                return Ok(ServiceResponse::new(req.request().clone(), Error::destination_not_found().into()));
-            }
-            // Parse body the predefined way
-            match Decoder::decode_action_arg(model_def, graph, original_action, &parsed_json_body) {
-                Ok(body) => body,
-                Err(err) => return Ok(ServiceResponse::new(req.request().clone(), err.into())),
-            }
-        } else {
-            // Parse body the user defined way
-            unreachable!("Currently parsing user defined body is not implemented.")
-        };
-        let (transformed_teon_body, transformed_action) = if let (Some(original_action), Some(model_def)) = (original_action, model_def) {
-            if model_def.has_action_transformers() || original_teon_body.as_hashmap().unwrap().get("include").is_some() {
-                if ((original_action.to_u32() == CREATE_MANY_HANDLER) || (original_action.to_u32() == CREATE_HANDLER)) && (original_teon_body.get("create").unwrap().is_vec()) {
-                    // create with many items
-                    let entries = original_teon_body.get("create").unwrap().as_vec().unwrap();
-                    let mut transformed_entries: Vec<Value> = vec![];
-                    let mut new_action = original_action;
-                    for (_index, entry) in entries.iter().enumerate() {
-                        let ctx = PipelineCtx::initial_state_with_value(teon!({"create": entry}), connection.clone(), Some(teo_req.clone())).with_action(original_action);
-                        match model_def.transformed_action(ctx).await {
-                            Ok(result) => {
-                                transformed_entries.push(result.0.get("create").unwrap().clone());
-                                new_action = result.1;
-                            },
-                            Err(err) => return Ok(ServiceResponse::new(req.request().clone(), err.into())),
-                        }
-                    }
-                    let mut new_val = original_teon_body.clone();
-                    new_val.as_hashmap_mut().unwrap().insert("create".to_owned(), Value::Vec(transformed_entries));
-                    (new_val, new_action)
-                } else {
-                    let ctx = PipelineCtx::initial_state_with_value(original_teon_body, connection.clone(), Some(teo_req.clone())).with_action(original_action);
-                    match model_def.transformed_action(ctx).await {
-                        Ok(result) => result,
-                        Err(err) => return Ok(ServiceResponse::new(req.request().clone(), err.into())),
-                    }
-                }
-            } else {
-                (original_teon_body, original_action)
-            }
-        } else {
-            (original_teon_body, original_action.unwrap())
-        };
-        // Save the request local data into the extension
-        let req_ctx = ReqCtx {
-            start,
-            connection,
-            path_components,
-            req: teo_req,
-            user_ctx,
-            transformed_action: Some(transformed_action),
-            transformed_teon_body,
-            identity
-        };
-        let mut exts = request.extensions_mut();
-        exts.insert(req_ctx);
-
-        // pre-processing
-        let res = next.call(req).await;
-
-        res
-        // post-processing
     };
+    let combined_middleware = combine_middleware(middlewares.clone());
     let mut app = App::new()
         .wrap(DefaultHeaders::new()
             .add(("Access-Control-Allow-Origin", "*"))
             .add(("Access-Control-Allow-Methods", "OPTIONS, POST, GET"))
             .add(("Access-Control-Allow-Headers", "*"))
             .add(("Access-Control-Max-Age", "86400")))
-        .wrap(lab_from_fn(middleware))
-        .default_service(web::route().to(move |r: HttpRequest, mut payload: web::Payload| async move {
-            let binding = r.clone();
-            let extensions = binding.extensions();
-            let req_ctx = extensions.get::<ReqCtx>().unwrap();
-            let connection = req_ctx.connection.clone();
-            let req = req_ctx.req.clone();
-            let identity = req_ctx.identity.clone();
-            let source = Initiator::Identity(identity, req.clone());
-            let action = req_ctx.transformed_action.unwrap();
-            let body = &req_ctx.transformed_teon_body;
-            let model_def = graph.model(req_ctx.path_components.model.as_str()).unwrap();
-            match action.to_u32() {
-                FIND_UNIQUE_HANDLER => {
-                    let result = handle_find_unique(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                    let _ = reset_after_query_if_needed(test_context, graph, connection.clone()).await;
-                    return result;
-                }
-                FIND_FIRST_HANDLER => {
-                    let result = handle_find_first(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                    let _ = reset_after_query_if_needed(test_context, graph, connection.clone()).await;
-                    result
-                }
-                FIND_MANY_HANDLER => {
-                    let result = handle_find_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                    let _ = reset_after_query_if_needed(test_context, graph, connection.clone()).await;
-                    result
-                }
-                CREATE_HANDLER => {
-                    let result = handle_create(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                    let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
-                    result
-                }
-                UPDATE_HANDLER => {
-                    let result = handle_update(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                    let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
-                    result
-                }
-                UPSERT_HANDLER => {
-                    let result = handle_upsert(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                    let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
-                    result
-                }
-                DELETE_HANDLER => {
-                    let result = handle_delete(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                    let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
-                    result
-                }
-                CREATE_MANY_HANDLER => {
-                    let result = handle_create_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                    let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
-                    result
-                }
-                UPDATE_MANY_HANDLER => {
-                    let result = handle_update_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                    let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
-                    result
-                }
-                DELETE_MANY_HANDLER => {
-                    let result = handle_delete_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                    let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
-                    result
-                }
-                COUNT_HANDLER => handle_count(&graph, &body, model_def, source.clone(), connection).await,
-                AGGREGATE_HANDLER => handle_aggregate(&graph, &body, model_def, source.clone(), connection).await,
-                GROUP_BY_HANDLER => handle_group_by(&graph, &body, model_def, source.clone(), connection).await,
-                SIGN_IN_HANDLER => handle_sign_in(&graph, &body, model_def, conf, connection, req.clone()).await,
-                IDENTITY_HANDLER => handle_identity(&graph, &body, model_def, conf, source.clone(), connection).await,
-                _ => unreachable!()
+        .default_service(web::route().to(move |http_request: HttpRequest, mut payload: web::Payload| async move {
+            // This is where our stack begins
+            let start = SystemTime::now();
+            // Validate method
+            let method = http_request.method();
+            if (method != Method::POST) && (method != Method::OPTIONS) {
+                return Ok(Error::destination_not_found().into());
             }
-        }));
-    for action_def in action_defs {
-        app = app.route(format!("/{}/action/{}", action_def.group(), action_def.name()).as_str(), web::post().to(move |request: HttpRequest| async move {
-            let binding = request.clone();
-            let exts = binding.extensions();
-            let req_ctx = exts.get::<ReqCtx>().unwrap();
-            let user_ctx = req_ctx.user_ctx.clone();
-            let ctx = ActionCtxBase {
-                req: req_ctx.req.clone(),
-                user_ctx,
+            // Validate path
+            let path_components = match parse_path(http_request.path(), conf.path_prefix) {
+                Ok(components) => components,
+                Err(err) => return Ok(Error::destination_not_found().into()),
             };
-            let res = action_def.call(ctx).await;
-            match res {
-                Ok(ok) => {
-                    <Res as Into<HttpResponse>>::into(ok)
-                },
-                Err(err) => {
-                    <Error as Into<HttpResponse>>::into(err)
-                },
+            // Return for OPTIONS
+            if http_request.method() == Method::OPTIONS {
+                return Ok(Res::EmptyRes.into());
             }
-        }));
-    }
+            // Pass data
+            // Acquire a connection
+            let connection = AppCtx::get().unwrap().connector().unwrap().connection().await.unwrap();
+            let teo_req = Req::new(http_request.clone());
+            let user_ctx = UserCtx::new(connection.clone(), Some(teo_req.clone()));
+            // Parse body
+            let mut body = web::BytesMut::new();
+            while let Some(chunk) = payload.next().await {
+                let chunk = chunk.unwrap();
+                // limit max size of in-memory payload
+                if (body.len() + chunk.len()) > 262_144usize {
+                    return Ok(Error::internal_server_error("Memory overflow.").into());
+                }
+                body.extend_from_slice(&chunk);
+            }
+            let parsed_json_body_result: std::result::Result<JsonValue, serde_json::Error> = serde_json::from_slice(&body);
+            let parsed_json_body = match parsed_json_body_result {
+                Ok(b) => b,
+                Err(_) => {
+                    // log_unhandled(start, r.method().as_str(), &r.path(), 400);
+                    return Ok(Error::incorrect_json_format().into());
+                }
+            };
+            if !parsed_json_body.is_object() {
+                // log_unhandled(start, r.method().as_str(), &r.path(), 400);
+                return Ok(Error::unexpected_input_root_type("object").into());
+            }
+            // Teo Req
+            let teo_req = Req::new(http_request.clone());
+            // Identity
+            let identity = match get_identity(&http_request, &graph, conf, connection.clone(), teo_req.clone()).await {
+                Ok(identity) => { identity },
+                Err(err) => return Ok(err.into()),
+            };
+            let original_action = Action::handler_from_name(path_components.action.as_str());
+            let model_def = match graph.model(path_components.model.as_str()) {
+                Ok(m) => Some(m),
+                Err(_) => None,
+            };
+            let original_teon_body = if let (Some(original_action), Some(model_def)) = (original_action, model_def) {
+                // Check whether this action is supported by this model
+                if !model_def.has_action(original_action) || model_def.is_teo_internal() {
+                    return Ok(Error::destination_not_found().into());
+                }
+                // Parse body the predefined way
+                match Decoder::decode_action_arg(model_def, graph, original_action, &parsed_json_body) {
+                    Ok(body) => body,
+                    Err(err) => return Ok(err.into()),
+                }
+            } else {
+                // Parse body the user defined way
+                unreachable!("Currently parsing user defined body is not implemented.")
+            };
+            let (transformed_teon_body, transformed_action) = if let (Some(original_action), Some(model_def)) = (original_action, model_def) {
+                if model_def.has_action_transformers() || original_teon_body.as_hashmap().unwrap().get("include").is_some() {
+                    if ((original_action.to_u32() == CREATE_MANY_HANDLER) || (original_action.to_u32() == CREATE_HANDLER)) && (original_teon_body.get("create").unwrap().is_vec()) {
+                        // create with many items
+                        let entries = original_teon_body.get("create").unwrap().as_vec().unwrap();
+                        let mut transformed_entries: Vec<Value> = vec![];
+                        let mut new_action = original_action;
+                        for (_index, entry) in entries.iter().enumerate() {
+                            let ctx = PipelineCtx::initial_state_with_value(teon!({"create": entry}), connection.clone(), Some(teo_req.clone())).with_action(original_action);
+                            match model_def.transformed_action(ctx).await {
+                                Ok(result) => {
+                                    transformed_entries.push(result.0.get("create").unwrap().clone());
+                                    new_action = result.1;
+                                },
+                                Err(err) => return Ok(err.into()),
+                            }
+                        }
+                        let mut new_val = original_teon_body.clone();
+                        new_val.as_hashmap_mut().unwrap().insert("create".to_owned(), Value::Vec(transformed_entries));
+                        (new_val, new_action)
+                    } else {
+                        let ctx = PipelineCtx::initial_state_with_value(original_teon_body, connection.clone(), Some(teo_req.clone())).with_action(original_action);
+                        match model_def.transformed_action(ctx).await {
+                            Ok(result) => result,
+                            Err(err) => return Ok(err.into()),
+                        }
+                    }
+                } else {
+                    (original_teon_body, original_action)
+                }
+            } else {
+                (original_teon_body, original_action.unwrap())
+            };
+            // Save the request local data into the extension
+            let req_ctx = ReqCtx {
+                start,
+                connection,
+                path_components,
+                req: teo_req,
+                user_ctx,
+                transformed_action: Some(transformed_action),
+                transformed_teon_body,
+                identity
+            };
+            let result = combined_middleware.call(req_ctx, Box::leak(Box::new(|req_ctx: ReqCtx| async move {
+                handler(req_ctx).await
+            }))).await;
+            match result {
+                Ok(res) => Ok(res.into()),
+                Err(err) => Ok(err.into()),
+            }
+      }));
+    // for action_def in action_defs {
+    //     app = app.route(format!("/{}/action/{}", action_def.group(), action_def.name()).as_str(), web::post().to(move |request: HttpRequest| async move {
+    //         let binding = request.clone();
+    //         let exts = binding.extensions();
+    //         let req_ctx = exts.get::<ReqCtx>().unwrap();
+    //         let user_ctx = req_ctx.user_ctx.clone();
+    //         let ctx = ActionCtxBase {
+    //             req: req_ctx.req.clone(),
+    //             user_ctx,
+    //         };
+    //         let res = action_def.call(ctx).await;
+    //         match res {
+    //             Ok(ok) => {
+    //                 <Res as Into<HttpResponse>>::into(ok)
+    //             },
+    //             Err(err) => {
+    //                 <Error as Into<HttpResponse>>::into(err)
+    //             },
+    //         }
+    //     }));
+    // }
     app
 }
 
@@ -955,6 +926,7 @@ async fn reset_after_query_if_needed(test_context: Option<&'static TestContext>,
     Ok(())
 }
 
+#[derive(Clone)]
 pub struct ReqCtx {
     pub start: SystemTime,
     pub connection: Arc<dyn Connection>,

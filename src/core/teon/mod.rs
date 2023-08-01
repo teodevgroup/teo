@@ -33,13 +33,13 @@ use crate::prelude::Error;
 // Code from this file is inspired from serde json
 // https://github.com/serde-rs/json/blob/master/src/value/mod.rs
 
-/// Represents any valid Tson value. A Tson value is an extension for Teo just like Bson for
+/// Represents any valid Teon value. A Teon value is an extension for Teo just like Bson for
 /// MongoDB.
 ///
 #[derive(Debug, Clone)]
 pub enum Value {
 
-    /// Represents a JSON null value.
+    /// Represents a TEON null value.
     ///
     /// ```
     /// # use teo::prelude::teon;
@@ -48,7 +48,7 @@ pub enum Value {
     /// ```
     Null,
 
-    /// Represents a Tson bool.
+    /// Represents a Teon bool.
     ///
     /// ```
     /// # use teo::prelude::teon;
@@ -57,7 +57,7 @@ pub enum Value {
     /// ```
     Bool(bool),
 
-    /// Represents a Tson i32.
+    /// Represents a Teon i32.
     ///
     /// ```
     /// # use teo::prelude::teon;
@@ -66,7 +66,7 @@ pub enum Value {
     /// ```
     I32(i32),
 
-    /// Represents a Tson i64.
+    /// Represents a Teon i64.
     ///
     /// ```
     /// # use teo::prelude::teon;
@@ -75,7 +75,7 @@ pub enum Value {
     /// ```
     I64(i64),
 
-    /// Represents a Tson f32.
+    /// Represents a Teon f32.
     ///
     /// ```
     /// # use teo::prelude::teon;
@@ -84,7 +84,7 @@ pub enum Value {
     /// ```
     F32(f32),
 
-    /// Represents a Tson f64.
+    /// Represents a Teon f64.
     ///
     /// ```
     /// # use teo::prelude::teon;
@@ -93,52 +93,52 @@ pub enum Value {
     /// ```
     F64(f64),
 
-    /// Represents a Tson decimal.
+    /// Represents a Teon decimal.
     ///
     Decimal(BigDecimal),
 
-    /// Represents a Tson object id.
+    /// Represents a Teon object id.
     ///
     #[cfg(feature = "data-source-mongodb")]
     ObjectId(ObjectId),
 
-    /// Represents a Tson string.
+    /// Represents a Teon string.
     ///
     String(String),
 
-    /// Represents a Tson date.
+    /// Represents a Teon date.
     ///
     Date(NaiveDate),
 
-    /// Represents a Tson datetime.
+    /// Represents a Teon datetime.
     ///
     DateTime(DateTime<Utc>),
 
-    /// Represents a Tson array.
+    /// Represents a Teon array.
     ///
     Vec(Vec<Value>),
 
-    /// Represents a Tson hashmap.
+    /// Represents a Teon hashmap.
     ///
     HashMap(HashMap<String, Value>),
 
-    /// Represents a Tson btreemap.
+    /// Represents a Teon btreemap.
     ///
     BTreeMap(BTreeMap<String, Value>),
 
-    /// Represents a Tson btreemap.
+    /// Represents a Teon btreemap.
     ///
     IndexMap(IndexMap<String, Value>),
 
-    /// Represents a Tson range.
+    /// Represents a Teon range.
     ///
     Range(Range),
 
-    /// Represents a Tson tuple.
+    /// Represents a Teon tuple.
     ///
     Tuple(Vec<Value>),
 
-    /// Represents a Tson pipeline.
+    /// Represents a Teon pipeline.
     ///
     Pipeline(Pipeline),
 
@@ -154,7 +154,7 @@ pub enum Value {
     ///
     RegExp(Regex),
 
-    /// Represents a Tson object.
+    /// Represents a Teon object.
     ///
     Object(Object),
 }
