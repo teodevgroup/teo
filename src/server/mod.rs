@@ -51,10 +51,6 @@ use crate::seeder::seed::seed;
 use crate::server::conf::ServerConf;
 use crate::teon;
 
-fn j(v: Value) -> JsonValue {
-    v.into()
-}
-
 fn log_unhandled(start: SystemTime, method: &str, path: &str, code: u16) {
     let now = SystemTime::now();
     let local: DateTime<Local> = Local::now();
@@ -822,7 +818,7 @@ fn parse_path(path: &str, prefix: Option<&str>) -> Result<PathComponents> {
     if path_striped.starts_with("/") {
         path_striped = path_striped.strip_prefix("/").unwrap();
     }
-    let components: Vec<&str> = path.split("/").into_iter().collect();
+    let components: Vec<&str> = path_striped.split("/").into_iter().collect();
     if components.len() != 3 {
         return Err(Error::destination_not_found());
     }
