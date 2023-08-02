@@ -334,7 +334,7 @@ fn generate_model_credentials_input(model: &Model) -> String {
 }
 
 pub(crate) fn generate_index_d_ts(graph: &Graph, client_obj_name: String, server_mode: bool) -> String {
-    let decimal = "decimal.js";
+    let _decimal = "decimal.js";
     Code::new(0, 4, |c| {
         c.line(format!(r#"import Decimal from "decimal.js""#));
         c.line(if server_mode {

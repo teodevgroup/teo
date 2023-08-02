@@ -22,7 +22,7 @@ impl TodayItem {
 impl Item for TodayItem {
 
     async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
-        let mut now = Utc::now();
+        let now = Utc::now();
         let calculated = now + Duration::hours(self.timezone as i64);
         Ok(ctx.with_value(Value::Date(calculated.date_naive())))
     }

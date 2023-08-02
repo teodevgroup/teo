@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use dotenvy::dotenv;
-use std::env;
+
 use crate::app::app_ctx::AppCtx;
 use crate::core::conf::debug::DebugConf;
 use crate::core::conf::test::{Reset, ResetDatasets, ResetMode, TestConf};

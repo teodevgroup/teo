@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+
 use crate::gen::internal::server::outline::enum_variant::EnumVariant;
 
 pub(in crate::gen) struct Enum<'a> {

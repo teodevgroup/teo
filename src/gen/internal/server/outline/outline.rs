@@ -8,7 +8,7 @@ use crate::gen::internal::server::outline::enum_variant::EnumVariant;
 use crate::gen::internal::server::outline::field_kind::FieldKind;
 use crate::gen::internal::server::outline::r#enum::Enum;
 use crate::gen::internal::server_type_lookup::ServerTypeLookup;
-use crate::prelude::{Graph, Value};
+use crate::prelude::{Graph};
 
 pub(in crate::gen) struct EntityOutline<'a> {
     pub(in crate::gen) classes: Vec<Class<'a>>,

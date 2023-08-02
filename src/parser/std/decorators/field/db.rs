@@ -56,14 +56,14 @@ pub(crate) fn mysql_db_types_decorator(args: &Vec<Argument>, field: &mut Field) 
     }
 }
 
-pub(crate) fn postgresql_db_types_decorator(args: &Vec<Argument>, field: &mut Field) {
+pub(crate) fn postgresql_db_types_decorator(_args: &Vec<Argument>, _field: &mut Field) {
     panic!("PostgreSQL @db decorator is not implemented.")
 }
 
-pub(crate) fn sqlite_db_types_decorator(args: &Vec<Argument>, field: &mut Field) {
+pub(crate) fn sqlite_db_types_decorator(_args: &Vec<Argument>, _field: &mut Field) {
     panic!("SQLite @db decorator is not implemented.")
 }
 
-pub(crate) fn mongodb_db_types_decorator(args: &Vec<Argument>, field: &mut Field) {
+pub(crate) fn mongodb_db_types_decorator(_args: &Vec<Argument>, _field: &mut Field) {
     panic!("MongoDB @db decorator is not implemented.")
 }

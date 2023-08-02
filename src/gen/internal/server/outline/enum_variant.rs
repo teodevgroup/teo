@@ -1,5 +1,5 @@
-use std::borrow::Cow;
-use crate::gen::internal::server::outline::field_kind::FieldKind;
+
+
 
 pub(in crate::gen) struct EnumVariant<'a> {
     pub(in crate::gen) name: &'a str,

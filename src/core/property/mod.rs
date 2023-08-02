@@ -116,7 +116,7 @@ impl FieldIndexable for Property {
         self.index = index;
     }
 
-    fn set_primary(&mut self, primary: bool) {
+    fn set_primary(&mut self, _primary: bool) {
         // do nothing
     }
 }

@@ -3,7 +3,7 @@ use actix_http::StatusCode;
 use actix_web::HttpResponse;
 use crate::prelude::Value;
 use crate::teon;
-use crate::core::teon::json;
+
 
 pub enum Res {
     EmptyRes,
@@ -37,7 +37,7 @@ impl Res {
 
     pub(crate) fn code(&self) -> u16 {
         match self {
-            Self::TeonErrorRes{ code, kind, message, fields } => *code,
+            Self::TeonErrorRes{ code, kind: _, message: _, fields: _ } => *code,
             _ => 200,
         }
     }

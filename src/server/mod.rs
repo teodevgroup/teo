@@ -3,10 +3,10 @@ pub(crate) mod jwt_token;
 pub(crate) mod test_context;
 pub(crate) mod conf;
 
-use std::future::Future;
+
 use crate::core::result::Result;
 use std::sync::Arc;
-use futures_util::{future, TryFutureExt};
+use futures_util::{future};
 use std::time::SystemTime;
 use actix_http::body::MessageBody;
 use actix_http::{HttpMessage, Method};
@@ -14,7 +14,7 @@ use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::DefaultHeaders;
 use actix_web::dev::Service;
-use actix_web::web::ReqData;
+
 use futures_util::FutureExt;
 use chrono::{DateTime, Duration, Local, Utc};
 use colored::Colorize;
@@ -22,9 +22,9 @@ use futures_util::StreamExt;
 use indexmap::IndexMap;
 use key_path::{KeyPath, path};
 use serde_json::Value as JsonValue;
-use to_mut_proc_macro::ToMut;
-use to_mut::ToMut;
-use tokio::sync::{Mutex, MutexGuard};
+
+
+
 use crate::core::action::{
     Action, CREATE, DELETE, ENTRY, FIND, IDENTITY, MANY, SINGLE, UPDATE, UPSERT,
     FIND_UNIQUE_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, CREATE_HANDLER, UPDATE_HANDLER,
@@ -36,7 +36,7 @@ use crate::app::cli::command::SeedCommandAction;
 use crate::app::app_ctx::AppCtx;
 use crate::app::entrance::Entrance;
 use crate::app::program::Program;
-use crate::app::routes::action_ctx::{ActionCtxBase, ActionHandlerDefTrait};
+use crate::app::routes::action_ctx::{ActionHandlerDefTrait};
 use crate::app::routes::middleware_ctx::Middleware;
 use crate::app::routes::req::Req;
 use crate::app::routes::req_local::ReqLocal;
@@ -560,7 +560,7 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
     }
 }
 
-async fn handle_identity<'a>(_graph: &'static Graph, input: &'a Value, model: &'static Model, _conf: &'a ServerConf, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
+async fn handle_identity<'a>(_graph: &'static Graph, input: &'a Value, model: &'static Model, _conf: &'a ServerConf, source: Initiator, _connection: Arc<dyn Connection>) -> Result<Res> {
     let identity = source.as_identity();
     return if let Some(identity) = identity {
         if identity.model() != model {
@@ -653,8 +653,8 @@ fn make_app(
     graph: &'static Graph,
     conf: &'static ServerConf,
     middlewares: &'static IndexMap<&'static str, &'static dyn Middleware>,
-    action_defs: &'static Vec<Arc<dyn ActionHandlerDefTrait>>,
-    test_context: Option<&'static TestContext>
+    _action_defs: &'static Vec<Arc<dyn ActionHandlerDefTrait>>,
+    _test_context: Option<&'static TestContext>
 ) -> App<impl ServiceFactory<
     ServiceRequest,
     Response = ServiceResponse<impl MessageBody>,

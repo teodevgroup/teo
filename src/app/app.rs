@@ -1,11 +1,11 @@
-use std::future::Future;
+
 use std::sync::Arc;
 use crate::app::cli::command::CLI;
 use crate::app::cli::parse_cli::parse_cli;
 use crate::app::cli::run_command::run_command;
 use crate::app::connect_to_database::connect_to_database;
 use crate::app::parse_schema::{load_schema, parse_schema};
-use crate::app::routes::action_ctx::{ActionCtxArgument, ActionHandler};
+use crate::app::routes::action_ctx::{ActionCtxArgument};
 use crate::app::routes::middleware_ctx::Middleware;
 use crate::core::callbacks::types::callback::{CallbackArgument, CallbackResult};
 use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
@@ -16,7 +16,7 @@ use crate::core::items::function::compare::CompareItem;
 use crate::core::items::function::perform::CallbackItem;
 use crate::core::items::function::transform::TransformItem;
 use crate::core::items::function::validate::ValidateItem;
-use crate::prelude::{Res, Value};
+use crate::prelude::{Value};
 use crate::core::error::Error;
 use super::app_ctx::AppCtx;
 use crate::core::result::Result;

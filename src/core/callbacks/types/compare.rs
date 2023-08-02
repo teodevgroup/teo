@@ -2,7 +2,7 @@ use std::future::Future;
 use futures_util::future::BoxFuture;
 use crate::core::callbacks::params::compare::{CompareParam, ExtractFromCompareParam, ExtractOldValueFromCompareParam, ExtractNewValueFromCompareParam};
 use crate::core::callbacks::types::validate::ValidateResult;
-use crate::core::teon::Value;
+
 
 pub trait CompareArgument<A, O: Into<ValidateResult>>: Send + Sync + 'static {
     fn call(&self, args: CompareParam) -> BoxFuture<'static, O>;

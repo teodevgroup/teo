@@ -1,12 +1,12 @@
 use async_trait::async_trait;
 use askama::Template;
-use crate::gen::generators::client::typescript::pkg::src::index_d_ts::generate_index_d_ts;
+
 use crate::gen::interface::server::conf::Conf;
 use crate::gen::internal::server::ctx::Ctx;
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::internal::server::generator::EntityGenerator;
 use crate::gen::internal::server::outline::outline::EntityOutline;
-use crate::prelude::Graph;
+
 use crate::gen::internal::filters;
 
 #[derive(Template)]

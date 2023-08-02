@@ -13,7 +13,7 @@ use crate::core::connector::conf::ConnectorConf;
 use crate::gen::interface::client::conf::Conf as ClientConf;
 use crate::gen::interface::server::conf::Conf;
 use crate::parser::parser::parser::ASTParser;
-use crate::prelude::{Graph, Res};
+use crate::prelude::{Graph};
 use crate::seeder::data_set::DataSet;
 use crate::server::conf::ServerConf;
 use crate::core::result::Result;

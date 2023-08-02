@@ -8,7 +8,7 @@ use crate::gen::generators::server::rust::gen::RustEntityGenerator;
 use crate::gen::interface::server::conf::Conf;
 use crate::prelude::Graph;
 use crate::core::result::Result;
-use crate::gen::generators::client::swift::types::SwiftTypes;
+
 use crate::gen::generators::server::nodejs::types::NodeJSTypes;
 use crate::gen::generators::server::rust::types::RustTypes;
 use crate::gen::internal::server::ctx::Ctx;
