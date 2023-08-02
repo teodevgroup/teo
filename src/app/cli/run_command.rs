@@ -41,6 +41,7 @@ pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
                     }
                 } else { None }
             } else { None };
+            app_ctx.set_test_context(test_context)?;
             if let Some(test_context) = test_context {
                 app_ctx.connector()?.connection().await?.purge(graph).await.unwrap();
                 seed(SeedCommandAction::Seed, graph, &test_context.datasets, test_context.datasets.iter().map(|d| d.name.clone()).collect()).await?;

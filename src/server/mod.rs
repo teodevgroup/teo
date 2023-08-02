@@ -563,6 +563,79 @@ async fn handle_identity<'a>(_graph: &'static Graph, input: &'a Value, model: &'
     }
 }
 
+async fn handler(req_ctx: ReqCtx) -> Result<Res> {
+    let app_ctx = AppCtx::get()?;
+    let graph = app_ctx.graph()?;
+    let test_context = app_ctx.test_context();
+    let conf = app_ctx.server_conf()?;
+    let connection = req_ctx.connection.clone();
+    let req = req_ctx.req.clone();
+    let identity = req_ctx.identity.clone();
+    let source = Initiator::Identity(identity, req.clone());
+    let action = req_ctx.transformed_action.unwrap();
+    let body = &req_ctx.transformed_teon_body;
+    let model_def = graph.model(req_ctx.path_components.model.as_str()).unwrap();
+    match action.to_u32() {
+        FIND_UNIQUE_HANDLER => {
+            let result = handle_find_unique(&graph, &body, model_def, source.clone(), connection.clone()).await;
+            let _ = reset_after_query_if_needed(test_context, graph, connection.clone()).await;
+            return result;
+        }
+        FIND_FIRST_HANDLER => {
+            let result = handle_find_first(&graph, &body, model_def, source.clone(), connection.clone()).await;
+            let _ = reset_after_query_if_needed(test_context, graph, connection.clone()).await;
+            result
+        }
+        FIND_MANY_HANDLER => {
+            let result = handle_find_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
+            let _ = reset_after_query_if_needed(test_context, graph, connection.clone()).await;
+            result
+        }
+        CREATE_HANDLER => {
+            let result = handle_create(&graph, &body, model_def, source.clone(), connection.clone()).await;
+            let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
+            result
+        }
+        UPDATE_HANDLER => {
+            let result = handle_update(&graph, &body, model_def, source.clone(), connection.clone()).await;
+            let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
+            result
+        }
+        UPSERT_HANDLER => {
+            let result = handle_upsert(&graph, &body, model_def, source.clone(), connection.clone()).await;
+            let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
+            result
+        }
+        DELETE_HANDLER => {
+            let result = handle_delete(&graph, &body, model_def, source.clone(), connection.clone()).await;
+            let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
+            result
+        }
+        CREATE_MANY_HANDLER => {
+            let result = handle_create_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
+            let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
+            result
+        }
+        UPDATE_MANY_HANDLER => {
+            let result = handle_update_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
+            let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
+            result
+        }
+        DELETE_MANY_HANDLER => {
+            let result = handle_delete_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
+            let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
+            result
+        }
+        COUNT_HANDLER => handle_count(&graph, &body, model_def, source.clone(), connection).await,
+        AGGREGATE_HANDLER => handle_aggregate(&graph, &body, model_def, source.clone(), connection).await,
+        GROUP_BY_HANDLER => handle_group_by(&graph, &body, model_def, source.clone(), connection).await,
+        SIGN_IN_HANDLER => handle_sign_in(&graph, &body, model_def, conf, connection, req.clone()).await,
+        IDENTITY_HANDLER => handle_identity(&graph, &body, model_def, conf, source.clone(), connection).await,
+        _ => unreachable!()
+    }
+
+}
+
 fn make_app(
     graph: &'static Graph,
     conf: &'static ServerConf,
@@ -576,73 +649,6 @@ fn make_app(
     InitError = (),
     Error = actix_web::Error,
 > + 'static> {
-    let handler = |req_ctx: ReqCtx| async move {
-        let connection = req_ctx.connection.clone();
-        let req = req_ctx.req.clone();
-        let identity = req_ctx.identity.clone();
-        let source = Initiator::Identity(identity, req.clone());
-        let action = req_ctx.transformed_action.unwrap();
-        let body = &req_ctx.transformed_teon_body;
-        let model_def = graph.model(req_ctx.path_components.model.as_str()).unwrap();
-        match action.to_u32() {
-            FIND_UNIQUE_HANDLER => {
-                let result = handle_find_unique(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                let _ = reset_after_query_if_needed(test_context, graph, connection.clone()).await;
-                return result;
-            }
-            FIND_FIRST_HANDLER => {
-                let result = handle_find_first(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                let _ = reset_after_query_if_needed(test_context, graph, connection.clone()).await;
-                result
-            }
-            FIND_MANY_HANDLER => {
-                let result = handle_find_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                let _ = reset_after_query_if_needed(test_context, graph, connection.clone()).await;
-                result
-            }
-            CREATE_HANDLER => {
-                let result = handle_create(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
-                result
-            }
-            UPDATE_HANDLER => {
-                let result = handle_update(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
-                result
-            }
-            UPSERT_HANDLER => {
-                let result = handle_upsert(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
-                result
-            }
-            DELETE_HANDLER => {
-                let result = handle_delete(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
-                result
-            }
-            CREATE_MANY_HANDLER => {
-                let result = handle_create_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
-                result
-            }
-            UPDATE_MANY_HANDLER => {
-                let result = handle_update_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
-                result
-            }
-            DELETE_MANY_HANDLER => {
-                let result = handle_delete_many(&graph, &body, model_def, source.clone(), connection.clone()).await;
-                let _ = reset_after_mutation_if_needed(test_context, graph, connection.clone()).await;
-                result
-            }
-            COUNT_HANDLER => handle_count(&graph, &body, model_def, source.clone(), connection).await,
-            AGGREGATE_HANDLER => handle_aggregate(&graph, &body, model_def, source.clone(), connection).await,
-            GROUP_BY_HANDLER => handle_group_by(&graph, &body, model_def, source.clone(), connection).await,
-            SIGN_IN_HANDLER => handle_sign_in(&graph, &body, model_def, conf, connection, req.clone()).await,
-            IDENTITY_HANDLER => handle_identity(&graph, &body, model_def, conf, source.clone(), connection).await,
-            _ => unreachable!()
-        }
-    };
     let combined_middleware = combine_middleware(middlewares.clone());
     let mut app = App::new()
         .wrap(DefaultHeaders::new()
@@ -656,16 +662,16 @@ fn make_app(
             // Validate method
             let method = http_request.method();
             if (method != Method::POST) && (method != Method::OPTIONS) {
-                return Ok(Error::destination_not_found().into());
+                return <Error as Into<HttpResponse>>::into(Error::destination_not_found());
             }
             // Validate path
             let path_components = match parse_path(http_request.path(), conf.path_prefix) {
                 Ok(components) => components,
-                Err(err) => return Ok(Error::destination_not_found().into()),
+                Err(_err) => return Error::destination_not_found().into(),
             };
             // Return for OPTIONS
             if http_request.method() == Method::OPTIONS {
-                return Ok(Res::EmptyRes.into());
+                return Res::EmptyRes.into();
             }
             // Pass data
             // Acquire a connection
@@ -678,7 +684,7 @@ fn make_app(
                 let chunk = chunk.unwrap();
                 // limit max size of in-memory payload
                 if (body.len() + chunk.len()) > 262_144usize {
-                    return Ok(Error::internal_server_error("Memory overflow.").into());
+                    return Error::internal_server_error("Memory overflow.").into();
                 }
                 body.extend_from_slice(&chunk);
             }
@@ -687,19 +693,19 @@ fn make_app(
                 Ok(b) => b,
                 Err(_) => {
                     // log_unhandled(start, r.method().as_str(), &r.path(), 400);
-                    return Ok(Error::incorrect_json_format().into());
+                    return Error::incorrect_json_format().into();
                 }
             };
             if !parsed_json_body.is_object() {
                 // log_unhandled(start, r.method().as_str(), &r.path(), 400);
-                return Ok(Error::unexpected_input_root_type("object").into());
+                return Error::unexpected_input_root_type("object").into();
             }
             // Teo Req
             let teo_req = Req::new(http_request.clone());
             // Identity
             let identity = match get_identity(&http_request, &graph, conf, connection.clone(), teo_req.clone()).await {
                 Ok(identity) => { identity },
-                Err(err) => return Ok(err.into()),
+                Err(err) => return err.into(),
             };
             let original_action = Action::handler_from_name(path_components.action.as_str());
             let model_def = match graph.model(path_components.model.as_str()) {
@@ -709,12 +715,12 @@ fn make_app(
             let original_teon_body = if let (Some(original_action), Some(model_def)) = (original_action, model_def) {
                 // Check whether this action is supported by this model
                 if !model_def.has_action(original_action) || model_def.is_teo_internal() {
-                    return Ok(Error::destination_not_found().into());
+                    return Error::destination_not_found().into();
                 }
                 // Parse body the predefined way
                 match Decoder::decode_action_arg(model_def, graph, original_action, &parsed_json_body) {
                     Ok(body) => body,
-                    Err(err) => return Ok(err.into()),
+                    Err(err) => return err.into(),
                 }
             } else {
                 // Parse body the user defined way
@@ -734,7 +740,7 @@ fn make_app(
                                     transformed_entries.push(result.0.get("create").unwrap().clone());
                                     new_action = result.1;
                                 },
-                                Err(err) => return Ok(err.into()),
+                                Err(err) => return err.into(),
                             }
                         }
                         let mut new_val = original_teon_body.clone();
@@ -744,7 +750,7 @@ fn make_app(
                         let ctx = PipelineCtx::initial_state_with_value(original_teon_body, connection.clone(), Some(teo_req.clone())).with_action(original_action);
                         match model_def.transformed_action(ctx).await {
                             Ok(result) => result,
-                            Err(err) => return Ok(err.into()),
+                            Err(err) => return err.into(),
                         }
                     }
                 } else {
@@ -764,12 +770,10 @@ fn make_app(
                 transformed_teon_body,
                 identity
             };
-            let result = combined_middleware.call(req_ctx, Box::leak(Box::new(|req_ctx: ReqCtx| async move {
-                handler(req_ctx).await
-            }))).await;
+            let result = combined_middleware.call(req_ctx, Box::leak(Box::new(handler))).await;
             match result {
-                Ok(res) => Ok(res.into()),
-                Err(err) => Ok(err.into()),
+                Ok(res) => res.into(),
+                Err(err) => err.into(),
             }
       }));
     // for action_def in action_defs {
@@ -796,6 +800,7 @@ fn make_app(
     app
 }
 
+#[derive(Clone)]
 pub(crate) struct PathComponents {
     model: String,
     action: String,

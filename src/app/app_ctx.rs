@@ -2,7 +2,7 @@ use std::sync::Arc;
 use indexmap::IndexMap;
 use crate::app::entrance::Entrance;
 use crate::app::program::Program;
-use crate::app::routes::action_ctx::{ActionCtxArgument, ActionHandler, ActionHandlerDef, ActionHandlerDefTrait};
+use crate::app::routes::action_ctx::{ActionCtxArgument, ActionHandlerDef, ActionHandlerDefTrait};
 use crate::app::routes::middleware_ctx::Middleware;
 use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
@@ -18,6 +18,7 @@ use crate::seeder::data_set::DataSet;
 use crate::server::conf::ServerConf;
 use crate::core::result::Result;
 use crate::core::error::Error;
+use crate::server::test_context::TestContext;
 
 pub struct AppCtx {
     callbacks: CallbackLookup,
@@ -37,6 +38,7 @@ pub struct AppCtx {
     ignore_callbacks: bool,
     middlewares: IndexMap<&'static str, &'static dyn Middleware>,
     action_handlers: Vec<Arc<dyn ActionHandlerDefTrait>>,
+    test_context: Option<&'static TestContext>,
 }
 
 impl AppCtx {
@@ -60,6 +62,7 @@ impl AppCtx {
             ignore_callbacks: false,
             middlewares: IndexMap::new(),
             action_handlers: vec![],
+            test_context: None,
         }
     }
 
@@ -280,6 +283,14 @@ impl AppCtx {
         &self.action_handlers
     }
 
+    pub(crate) fn set_test_context(&self, test_context: Option<&'static TestContext>) -> Result<()> {
+        AppCtx::get_mut()?.test_context = test_context;
+        Ok(())
+    }
+
+    pub(crate) fn test_context(&self) -> Option<&'static TestContext> {
+        self.test_context
+    }
 }
 
 static mut CURRENT: Option<&'static AppCtx> = None;
