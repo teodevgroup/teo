@@ -5,7 +5,7 @@ use std::fmt;
 #[derive(Default)]
 pub struct ReqLocal {
     /// Use AHasher with a std HashMap with for faster lookups on the small `TypeId` keys.
-    map: HashMap<String, Box<dyn Any>>,
+    map: HashMap<String, Box<dyn Any + Send + Sync>>,
 }
 
 impl ReqLocal {
@@ -17,23 +17,23 @@ impl ReqLocal {
         }
     }
 
-    pub fn insert<T: 'static>(&mut self, key: impl Into<String>, val: T) {
+    pub fn insert<T: 'static + Send + Sync>(&mut self, key: impl Into<String>, val: T) {
         self.map.insert(key.into(), Box::new(val));
     }
 
-    pub fn get<T: 'static>(&self, key: &str) -> Option<&T> {
+    pub fn get<T: 'static + Send>(&self, key: &str) -> Option<&T> {
         self.map.get(key).and_then(|boxed| boxed.downcast_ref())
     }
 
-    pub fn get_mut<T: 'static>(&mut self, key: &str) -> Option<&mut T> {
+    pub fn get_mut<T: 'static + Send>(&mut self, key: &str) -> Option<&mut T> {
         self.map.get_mut(key).and_then(|boxed| boxed.downcast_mut())
     }
 
-    pub fn contains<T: 'static>(&self, key: &str) -> bool {
+    pub fn contains<T: 'static + Send>(&self, key: &str) -> bool {
         self.map.contains_key(key)
     }
 
-    pub fn remove<T: 'static>(&mut self, key: &str) -> Option<&T> {
+    pub fn remove<T: 'static + Send>(&mut self, key: &str) -> Option<&T> {
         self.map.remove(key).and_then(|boxed| downcast_owned(boxed))
     }
 
