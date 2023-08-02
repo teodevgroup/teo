@@ -17,8 +17,8 @@ impl ReqLocal {
         }
     }
 
-    pub fn insert<T: 'static>(&mut self, key: String, val: T) {
-        self.map.insert(key, Box::new(val));
+    pub fn insert<T: 'static>(&mut self, key: impl Into<String>, val: T) {
+        self.map.insert(key.into(), Box::new(val));
     }
 
     pub fn get<T: 'static>(&self, key: &str) -> Option<&T> {

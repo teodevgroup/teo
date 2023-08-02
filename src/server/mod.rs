@@ -3,6 +3,7 @@ pub(crate) mod jwt_token;
 pub(crate) mod test_context;
 pub(crate) mod conf;
 
+use std::cell::{Ref, RefCell, RefMut};
 use std::future::Future;
 use crate::core::result::Result;
 use std::sync::Arc;
@@ -14,6 +15,7 @@ use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::DefaultHeaders;
 use actix_web::dev::Service;
+use actix_web::web::ReqData;
 use futures_util::FutureExt;
 use chrono::{DateTime, Duration, Local, Utc};
 use colored::Colorize;
@@ -21,6 +23,7 @@ use futures_util::StreamExt;
 use indexmap::IndexMap;
 use key_path::{KeyPath, path};
 use serde_json::Value as JsonValue;
+use tokio::sync::Mutex;
 use crate::core::action::{
     Action, CREATE, DELETE, ENTRY, FIND, IDENTITY, MANY, SINGLE, UPDATE, UPSERT,
     FIND_UNIQUE_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, CREATE_HANDLER, UPDATE_HANDLER,
@@ -35,6 +38,7 @@ use crate::app::program::Program;
 use crate::app::routes::action_ctx::{ActionCtxBase, ActionHandlerDefTrait};
 use crate::app::routes::middleware_ctx::Middleware;
 use crate::app::routes::req::Req;
+use crate::app::routes::req_local::ReqLocal;
 use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
 use crate::core::connector::connection::Connection;
 use crate::server::test_context::TestContext;
@@ -774,7 +778,8 @@ fn make_app(
                 user_ctx,
                 transformed_action: Some(transformed_action),
                 transformed_teon_body,
-                identity
+                identity,
+                req_local: Arc::new(tokio::sync::Mutex::new(ReqLocal::new()))
             };
             let result = combined_middleware.call(req_ctx, Box::leak(Box::new(handler))).await;
             match result {
@@ -911,4 +916,14 @@ pub struct ReqCtx {
     pub transformed_action: Option<Action>,
     pub transformed_teon_body: Value,
     pub identity: Option<Object>,
+    pub req_local: Arc<tokio::sync::Mutex<ReqLocal>>,
 }
+
+impl ReqCtx {
+    pub async fn req_local(&self) -> tokio::sync::MutexGuard<'_, ReqLocal> {
+        self.req_local.lock().await
+    }
+}
+
+unsafe impl Send for ReqCtx { }
+unsafe impl Sync for ReqCtx { }
