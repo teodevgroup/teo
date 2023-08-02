@@ -2,10 +2,16 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::Arc;
+use to_mut_proc_macro::ToMut;
+use to_mut::ToMut;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct ReqLocal {
-    /// Use AHasher with a std HashMap with for faster lookups on the small `TypeId` keys.
+    inner: Arc<ReqLocalInner>,
+}
+
+#[derive(Default, ToMut)]
+struct ReqLocalInner {
     map: HashMap<String, Box<dyn Any + Send + Sync>>,
 }
 
@@ -14,36 +20,34 @@ impl ReqLocal {
     #[inline]
     pub fn new() -> ReqLocal {
         Self {
-            map: HashMap::default(),
+            inner: Arc::new(ReqLocalInner {
+                map: HashMap::default(),
+            })
         }
     }
 
-    pub fn insert<T: 'static + Send + Sync>(&mut self, key: impl Into<String>, val: T) {
-        self.map.insert(key.into(), Box::new(val));
+    pub fn insert<T: 'static + Send + Sync>(&self, key: impl Into<String>, val: T) {
+        self.inner.to_mut().map.insert(key.into(), Box::new(val));
     }
 
     pub fn get<T: 'static + Send>(&self, key: &str) -> Option<&T> {
-        self.map.get(key).and_then(|boxed| boxed.downcast_ref())
+        self.inner.map.get(key).and_then(|boxed| boxed.downcast_ref())
     }
 
-    pub fn get_mut<T: 'static + Send>(&mut self, key: &str) -> Option<&mut T> {
-        self.map.get_mut(key).and_then(|boxed| boxed.downcast_mut())
+    pub fn get_mut<T: 'static + Send>(&self, key: &str) -> Option<&mut T> {
+        self.inner.to_mut().map.get_mut(key).and_then(|boxed| boxed.downcast_mut())
     }
 
     pub fn contains<T: 'static + Send>(&self, key: &str) -> bool {
-        self.map.contains_key(key)
+        self.inner.map.contains_key(key)
     }
 
-    pub fn remove<T: 'static + Send>(&mut self, key: &str) -> Option<&T> {
-        self.map.remove(key).and_then(|boxed| downcast_owned(boxed))
+    pub fn remove<T: 'static + Send>(&self, key: &str) -> Option<&T> {
+        self.inner.to_mut().map.remove(key).and_then(|boxed| downcast_owned(boxed))
     }
 
     pub fn clear(&mut self) {
-        self.map.clear()
-    }
-
-    pub fn extend(&mut self, other: Self) {
-        self.map.extend(other.map);
+        self.inner.to_mut().map.clear()
     }
 }
 
