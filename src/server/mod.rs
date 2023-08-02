@@ -8,20 +8,19 @@ use crate::core::result::Result;
 use std::sync::Arc;
 use futures_util::{future, TryFutureExt};
 use std::time::SystemTime;
-use actix_http::body::{BoxBody, MessageBody};
+use actix_http::body::MessageBody;
 use actix_http::{HttpMessage, Method};
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::DefaultHeaders;
 use actix_web::dev::Service;
-use actix_web_lab::middleware::{Next as LabNext, from_fn as lab_from_fn};
 use futures_util::FutureExt;
 use chrono::{DateTime, Duration, Local, Utc};
 use colored::Colorize;
 use futures_util::StreamExt;
 use indexmap::IndexMap;
 use key_path::{KeyPath, path};
-use serde_json::{json, Value as JsonValue};
+use serde_json::Value as JsonValue;
 use crate::core::action::{
     Action, CREATE, DELETE, ENTRY, FIND, IDENTITY, MANY, SINGLE, UPDATE, UPSERT,
     FIND_UNIQUE_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, CREATE_HANDLER, UPDATE_HANDLER,
@@ -50,6 +49,20 @@ use crate::prelude::{combine_middleware, Res, UserCtx, Value};
 use crate::seeder::seed::seed;
 use crate::server::conf::ServerConf;
 use crate::teon;
+
+fn log_err_and_return_response(start: SystemTime, model: &str, action: &str, err: Error) -> HttpResponse {
+    let http_response: HttpResponse = err.into();
+    let code = http_response.status().as_u16();
+    log_unhandled(start, action, model, code);
+    http_response
+}
+
+fn log_req_and_return_response<T>(start: SystemTime, model: &str, action: &str, res: T) -> HttpResponse where T: Into<HttpResponse> {
+    let http_response = res.into();
+    let code = http_response.status().as_u16();
+    log_request(start, action, model, code);
+    http_response
+}
 
 fn log_unhandled(start: SystemTime, method: &str, path: &str, code: u16) {
     let now = SystemTime::now();
@@ -101,7 +114,6 @@ async fn get_identity(r: &HttpRequest, graph: &'static Graph, conf: &ServerConf,
     let claims = claims_result.unwrap();
     let json_identifier = claims.id;
     let tson_identifier = Decoder::decode_object(graph.model(&claims.model).unwrap(), graph, &json_identifier)?;
-    // Decoder::
     let _model = graph.model(claims.model.as_str()).unwrap();
     let identity = graph.find_unique_internal(
         graph.model(claims.model.as_str()).unwrap().name(),
@@ -646,7 +658,7 @@ fn make_app(
     Error = actix_web::Error,
 > + 'static> {
     let combined_middleware = combine_middleware(middlewares.clone());
-    let mut app = App::new()
+    let app = App::new()
         .wrap(DefaultHeaders::new()
             .add(("Access-Control-Allow-Origin", "*"))
             .add(("Access-Control-Allow-Methods", "OPTIONS, POST, GET"))
@@ -658,12 +670,12 @@ fn make_app(
             // Validate method
             let method = http_request.method();
             if (method != Method::POST) && (method != Method::OPTIONS) {
-                return <Error as Into<HttpResponse>>::into(Error::destination_not_found());
+                return log_err_and_return_response(start, method.as_str(), http_request.path(), Error::destination_not_found());
             }
             // Validate path
             let path_components = match parse_path(http_request.path(), conf.path_prefix) {
                 Ok(components) => components,
-                Err(_err) => return Error::destination_not_found().into(),
+                Err(_err) => return log_err_and_return_response(start, method.as_str(), http_request.path(), Error::destination_not_found()),
             };
             // Return for OPTIONS
             if http_request.method() == Method::OPTIONS {
@@ -680,7 +692,7 @@ fn make_app(
                 let chunk = chunk.unwrap();
                 // limit max size of in-memory payload
                 if (body.len() + chunk.len()) > 262_144usize {
-                    return Error::internal_server_error("Memory overflow.").into();
+                    return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), Error::internal_server_error("Memory overflow."));
                 }
                 body.extend_from_slice(&chunk);
             }
@@ -688,20 +700,18 @@ fn make_app(
             let parsed_json_body = match parsed_json_body_result {
                 Ok(b) => b,
                 Err(_) => {
-                    // log_unhandled(start, r.method().as_str(), &r.path(), 400);
-                    return Error::incorrect_json_format().into();
+                    return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), Error::incorrect_json_format());
                 }
             };
             if !parsed_json_body.is_object() {
-                // log_unhandled(start, r.method().as_str(), &r.path(), 400);
-                return Error::unexpected_input_root_type("object").into();
+                return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), Error::unexpected_input_root_type("object"));
             }
             // Teo Req
             let teo_req = Req::new(http_request.clone());
             // Identity
             let identity = match get_identity(&http_request, &graph, conf, connection.clone(), teo_req.clone()).await {
                 Ok(identity) => { identity },
-                Err(err) => return err.into(),
+                Err(err) => return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), err),
             };
             let original_action = Action::handler_from_name(path_components.action.as_str());
             let model_def = match graph.model(path_components.model.as_str()) {
@@ -711,12 +721,12 @@ fn make_app(
             let original_teon_body = if let (Some(original_action), Some(model_def)) = (original_action, model_def) {
                 // Check whether this action is supported by this model
                 if !model_def.has_action(original_action) || model_def.is_teo_internal() {
-                    return Error::destination_not_found().into();
+                    return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), Error::destination_not_found());
                 }
                 // Parse body the predefined way
                 match Decoder::decode_action_arg(model_def, graph, original_action, &parsed_json_body) {
                     Ok(body) => body,
-                    Err(err) => return err.into(),
+                    Err(err) => return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), err),
                 }
             } else {
                 // Parse body the user defined way
@@ -736,7 +746,7 @@ fn make_app(
                                     transformed_entries.push(result.0.get("create").unwrap().clone());
                                     new_action = result.1;
                                 },
-                                Err(err) => return err.into(),
+                                Err(err) => return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), err),
                             }
                         }
                         let mut new_val = original_teon_body.clone();
@@ -746,7 +756,7 @@ fn make_app(
                         let ctx = PipelineCtx::initial_state_with_value(original_teon_body, connection.clone(), Some(teo_req.clone())).with_action(original_action);
                         match model_def.transformed_action(ctx).await {
                             Ok(result) => result,
-                            Err(err) => return err.into(),
+                            Err(err) => return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), err),
                         }
                     }
                 } else {
@@ -759,7 +769,7 @@ fn make_app(
             let req_ctx = ReqCtx {
                 start,
                 connection,
-                path_components,
+                path_components: path_components.clone(),
                 req: teo_req,
                 user_ctx,
                 transformed_action: Some(transformed_action),
@@ -768,8 +778,8 @@ fn make_app(
             };
             let result = combined_middleware.call(req_ctx, Box::leak(Box::new(handler))).await;
             match result {
-                Ok(res) => res.into(),
-                Err(err) => err.into(),
+                Ok(res) => log_req_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), res),
+                Err(err) => log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), err),
             }
       }));
     // for action_def in action_defs {
