@@ -1,6 +1,7 @@
 use std::any::Any;
 use std::collections::HashMap;
 use std::fmt;
+use std::sync::Arc;
 
 #[derive(Default)]
 pub struct ReqLocal {

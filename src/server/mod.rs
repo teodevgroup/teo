@@ -23,7 +23,9 @@ use futures_util::StreamExt;
 use indexmap::IndexMap;
 use key_path::{KeyPath, path};
 use serde_json::Value as JsonValue;
-use tokio::sync::Mutex;
+use to_mut_proc_macro::ToMut;
+use to_mut::ToMut;
+use tokio::sync::{Mutex, MutexGuard};
 use crate::core::action::{
     Action, CREATE, DELETE, ENTRY, FIND, IDENTITY, MANY, SINGLE, UPDATE, UPSERT,
     FIND_UNIQUE_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, CREATE_HANDLER, UPDATE_HANDLER,
@@ -575,7 +577,7 @@ async fn handle_identity<'a>(_graph: &'static Graph, input: &'a Value, model: &'
     }
 }
 
-async fn handler(req_ctx: ReqCtx) -> Result<Res> {
+async fn handler(req_ctx: &ReqCtx) -> Result<Res> {
     let app_ctx = AppCtx::get()?;
     let graph = app_ctx.graph()?;
     let test_context = app_ctx.test_context();
@@ -779,9 +781,9 @@ fn make_app(
                 transformed_action: Some(transformed_action),
                 transformed_teon_body,
                 identity,
-                req_local: Arc::new(RefCell::new(ReqLocal::new()))
+                req_local: ReqLocal::new()
             };
-            let result = combined_middleware.call(req_ctx, Box::leak(Box::new(handler))).await;
+            let result = combined_middleware.call(&req_ctx, &handler).await;
             match result {
                 Ok(res) => log_req_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), res),
                 Err(err) => log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), err),
@@ -906,7 +908,7 @@ async fn reset_after_query_if_needed(test_context: Option<&'static TestContext>,
     Ok(())
 }
 
-#[derive(Clone)]
+#[derive(ToMut)]
 pub struct ReqCtx {
     pub start: SystemTime,
     pub connection: Arc<dyn Connection>,
@@ -916,16 +918,17 @@ pub struct ReqCtx {
     pub transformed_action: Option<Action>,
     pub transformed_teon_body: Value,
     pub identity: Option<Object>,
-    pub req_local: Arc<RefCell<ReqLocal>>,
+    pub req_local: ReqLocal,
 }
 
 impl ReqCtx {
-    pub fn req_local(&self) -> Ref<'_, ReqLocal> {
-        self.req_local.borrow()
+    pub fn req_local(&self) -> &ReqLocal {
+        &self.req_local
     }
 
-    pub fn req_local_mut(&self) -> RefMut<'_, ReqLocal> {
-        self.req_local.borrow_mut()
+    pub fn req_local_mut(&self) -> &mut ReqLocal {
+        let mut_self = self.to_mut();
+        &mut mut_self.req_local
     }
 }
 
