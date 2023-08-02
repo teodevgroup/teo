@@ -779,7 +779,7 @@ fn make_app(
                 transformed_action: Some(transformed_action),
                 transformed_teon_body,
                 identity,
-                req_local: Arc::new(tokio::sync::Mutex::new(ReqLocal::new()))
+                req_local: Arc::new(RefCell::new(ReqLocal::new()))
             };
             let result = combined_middleware.call(req_ctx, Box::leak(Box::new(handler))).await;
             match result {
@@ -916,12 +916,16 @@ pub struct ReqCtx {
     pub transformed_action: Option<Action>,
     pub transformed_teon_body: Value,
     pub identity: Option<Object>,
-    pub req_local: Arc<tokio::sync::Mutex<ReqLocal>>,
+    pub req_local: Arc<RefCell<ReqLocal>>,
 }
 
 impl ReqCtx {
-    pub async fn req_local(&self) -> tokio::sync::MutexGuard<'_, ReqLocal> {
-        self.req_local.lock().await
+    pub fn req_local(&self) -> Ref<'_, ReqLocal> {
+        self.req_local.borrow()
+    }
+
+    pub fn req_local_mut(&self) -> RefMut<'_, ReqLocal> {
+        self.req_local.borrow_mut()
     }
 }
 
