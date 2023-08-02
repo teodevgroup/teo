@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::i64;
 use std::path::PathBuf;
 use std::str::FromStr;
 use path_absolutize::Absolutize;
