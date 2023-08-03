@@ -1,5 +1,7 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 use indexmap::IndexMap;
+use maplit::hashmap;
 use crate::app::entrance::Entrance;
 use crate::app::program::Program;
 use crate::app::routes::action_ctx::{ActionCtxArgument, ActionHandlerDef, ActionHandlerDefTrait};
@@ -37,7 +39,8 @@ pub struct AppCtx {
     setup: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
     ignore_callbacks: bool,
     middlewares: IndexMap<&'static str, &'static dyn Middleware>,
-    action_handlers: Vec<Arc<dyn ActionHandlerDefTrait>>,
+    action_handlers: Vec<&'static dyn ActionHandlerDefTrait>,
+    action_map: HashMap<&'static str, HashMap<&'static str, &'static dyn ActionHandlerDefTrait>>,
     test_context: Option<&'static TestContext>,
 }
 
@@ -62,6 +65,7 @@ impl AppCtx {
             ignore_callbacks: false,
             middlewares: IndexMap::new(),
             action_handlers: vec![],
+            action_map: hashmap!{},
             test_context: None,
         }
     }
@@ -269,9 +273,16 @@ impl AppCtx {
     pub(crate) fn add_action_handler<A: 'static, F>(&self, group: &'static str, name: &'static str, f: F) -> Result<()> where
         F: ActionCtxArgument<A> + 'static,
     {
-        AppCtx::get_mut()?.action_handlers.push(Arc::new(ActionHandlerDef {
+        let handler_def = Box::leak(Box::new(ActionHandlerDef {
             group, name, f: Arc::new(f),
         }));
+        AppCtx::get_mut()?.action_handlers.push(handler_def);
+        let action_map_mut = AppCtx::get_mut()?.action_map_mut();
+        if !action_map_mut.contains_key(group) {
+            action_map_mut.insert(group, HashMap::new());
+        }
+        let name_map = action_map_mut.get_mut(group).unwrap();
+        name_map.insert(name, handler_def);
         Ok(())
     }
 
@@ -279,8 +290,24 @@ impl AppCtx {
         &self.middlewares
     }
 
-    pub(crate) fn action_handlers(&self) -> &Vec<Arc<dyn ActionHandlerDefTrait>> {
+    pub(crate) fn action_handlers(&self) -> &Vec<&'static dyn ActionHandlerDefTrait> {
         &self.action_handlers
+    }
+
+    pub(crate) fn action_map_mut(&mut self) -> &mut HashMap<&'static str, HashMap<&'static str, &'static dyn ActionHandlerDefTrait>> {
+        &mut self.action_map
+    }
+
+    pub(crate) fn action_map(&self) -> &HashMap<&'static str, HashMap<&'static str, &'static dyn ActionHandlerDefTrait>> {
+        &self.action_map
+    }
+
+    pub(crate) fn has_action_handler_for(&self, group: &str, action: &str) -> bool {
+        self.action_map().contains_key(group) && self.action_map().get(group).unwrap().contains_key(action)
+    }
+
+    pub(crate) fn get_action_handler(&self, group: &str, action: &str) -> &'static dyn ActionHandlerDefTrait {
+        self.action_map().get(group).unwrap().get(action).cloned().unwrap()
     }
 
     pub(crate) fn set_test_context(&self, test_context: Option<&'static TestContext>) -> Result<()> {

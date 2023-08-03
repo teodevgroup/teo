@@ -3,7 +3,6 @@ pub(crate) mod jwt_token;
 pub(crate) mod test_context;
 pub(crate) mod conf;
 
-
 use crate::core::result::Result;
 use std::sync::Arc;
 use futures_util::{future};
@@ -14,7 +13,6 @@ use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::DefaultHeaders;
 use actix_web::dev::Service;
-
 use futures_util::FutureExt;
 use chrono::{DateTime, Duration, Local, Utc};
 use colored::Colorize;
@@ -22,9 +20,6 @@ use futures_util::StreamExt;
 use indexmap::IndexMap;
 use key_path::{KeyPath, path};
 use serde_json::Value as JsonValue;
-
-
-
 use crate::core::action::{
     Action, CREATE, DELETE, ENTRY, FIND, IDENTITY, MANY, SINGLE, UPDATE, UPSERT,
     FIND_UNIQUE_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, CREATE_HANDLER, UPDATE_HANDLER,
@@ -118,12 +113,12 @@ async fn get_identity(r: &HttpRequest, graph: &'static Graph, conf: &ServerConf,
     }
     let claims = claims_result.unwrap();
     let json_identifier = claims.id;
-    let tson_identifier = Decoder::decode_object(graph.model(&claims.model).unwrap(), graph, &json_identifier)?;
+    let teon_identifier = Decoder::decode_object(graph.model(&claims.model).unwrap(), graph, &json_identifier)?;
     let _model = graph.model(claims.model.as_str()).unwrap();
     let identity = graph.find_unique_internal(
         graph.model(claims.model.as_str()).unwrap().name(),
         &teon!({
-            "where": tson_identifier
+            "where": teon_identifier
         }),
         true, Action::from_u32(IDENTITY | FIND | SINGLE | ENTRY), Initiator::ProgramCode(Some(req)), connection).await;
     match identity {
@@ -544,8 +539,8 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
             let obj = obj.refreshed(include, select).await.unwrap();
             let json_data = obj.to_json_internal(&path!["data"]).await;
             let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
-            let tson_identifier = obj.identifier();
-            let json_identifier: JsonValue = tson_identifier.into();
+            let teon_identifier = obj.identifier();
+            let json_identifier: JsonValue = teon_identifier.into();
             let claims = Claims {
                 id: json_identifier,
                 model: obj.model().name().to_string(),
@@ -653,8 +648,6 @@ fn make_app(
     graph: &'static Graph,
     conf: &'static ServerConf,
     middlewares: &'static IndexMap<&'static str, &'static dyn Middleware>,
-    _action_defs: &'static Vec<Arc<dyn ActionHandlerDefTrait>>,
-    _test_context: Option<&'static TestContext>
 ) -> App<impl ServiceFactory<
     ServiceRequest,
     Response = ServiceResponse<impl MessageBody>,
@@ -782,7 +775,15 @@ fn make_app(
                 identity,
                 req_local: ReqLocal::new()
             };
-            let result = combined_middleware.call(req_ctx, &handler).await;
+            let result = if AppCtx::get().unwrap().has_action_handler_for(&path_components.model, &path_components.action) {
+                combined_middleware.call(req_ctx, &|req_ctx: ReqCtx| async {
+                    let path_components = req_ctx.path_components.clone();
+                    let action_def = AppCtx::get().unwrap().get_action_handler(&path_components.model, &path_components.action);
+                    action_def.call(req_ctx).await
+                }).await
+            } else {
+                combined_middleware.call(req_ctx, &handler).await
+            };
             match result {
                 Ok(res) => log_req_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), res),
                 Err(err) => log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), err),
@@ -869,8 +870,6 @@ pub(crate) async fn serve(
     entrance: &'static Entrance,
     before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
     middlewares: &'static IndexMap<&'static str, &'static dyn Middleware>,
-    action_defs: &'static Vec<Arc<dyn ActionHandlerDefTrait>>,
-    test_context: Option<&'static TestContext>,
 ) -> Result<()> {
     if let Some(cb) = before_server_start {
         cb.call().await.unwrap();
@@ -878,7 +877,7 @@ pub(crate) async fn serve(
     let bind = conf.bind.clone();
     let port = bind.1;
     let server = HttpServer::new(move || {
-        make_app(graph, conf, middlewares, action_defs, test_context)
+        make_app(graph, conf, middlewares)
     })
         .bind(bind)
         .unwrap()

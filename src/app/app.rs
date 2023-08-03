@@ -1,4 +1,3 @@
-
 use std::sync::Arc;
 use crate::app::cli::command::CLI;
 use crate::app::cli::parse_cli::parse_cli;
