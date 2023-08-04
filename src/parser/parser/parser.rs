@@ -204,6 +204,10 @@ impl ASTParser {
                 Rule::EOI | Rule::EMPTY_LINES => {},
                 Rule::CATCH_ALL => panic!("Catch all: {}", current.as_str()),
                 Rule::comment_block => (),
+                                Rule::interface_declaration => (),
+                Rule::action_group_declaration => (),
+                Rule::action_declaration => (),
+                Rule::middleware_declaration => (),
                 _ => panic!("Parsing panic! {}", current),
             }
         }
