@@ -1,6 +1,6 @@
 schema = {
     SOI
-    ~ (import_statement | config_declaration | enum_declaration | model_declaration | let_declaration | dataset_declaration | interface_declaration | middleware_declaration | action_group_declaration | action_declaration | comment_block | EMPTY_LINES | CATCH_ALL)*
+    ~ (import_statement | config_declaration | enum_declaration | model_declaration | let_declaration | dataset_declaration | interface_declaration | interface_enum_declaration | middleware_declaration | action_group_declaration | action_declaration | comment_block | EMPTY_LINES | CATCH_ALL)*
     ~ EOI
 }
 
@@ -330,7 +330,7 @@ action_declaration = {
 // interface
 // #############
 identifier_with_generic = {
-    identifier ~ ("<" ~ identifier ~ ("," ~ identifier)* ~ ","? ~ ">")?
+    identifier ~ ("<" ~ identifier_with_generic ~ ("," ~ identifier_with_generic)* ~ ","? ~ ">")?
 }
 interface_declaration = {
     INTERFACE_KEYWORD ~ identifier_with_generic ~ (EXTENDS_KEYWORD ~ identifier_with_generic ~ ("," ~ identifier_with_generic)* ~ ","?)? ~ BLOCK_OPEN
@@ -339,4 +339,9 @@ interface_declaration = {
 }
 interface_item = {
     identifier ~ COLON ~ identifier_with_generic
+}
+interface_enum_declaration = {
+    INTERFACE_KEYWORD ~ ENUM_KEYWORD ~ identifier ~ (EXTENDS_KEYWORD ~ identifier_with_generic ~ ("," ~ identifier_with_generic)* ~ ","?)? ~ BLOCK_OPEN
+    ~ (enum_value_declaration | block_decorator | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
+    ~ BLOCK_CLOSE
 }

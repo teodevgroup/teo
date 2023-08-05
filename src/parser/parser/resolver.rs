@@ -101,6 +101,7 @@ impl Resolver {
                 Top::TestConf(test_conf) => {
                     Self::resolve_test_conf(parser, source, test_conf);
                 }
+                _ => panic!(), // TODO: remove this panic!
             }
         }
         source.to_mut().resolved = true;

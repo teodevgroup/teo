@@ -11,6 +11,7 @@ use to_mut_proc_macro::ToMut;
 use once_cell::sync::Lazy;
 use crate::core::result::Result;
 use crate::core::callbacks::lookup::CallbackLookup;
+use crate::parser::ast::action::{ActionDeclaration, ActionGroupDeclaration};
 use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::arith_expr::{ArithExpr, Op};
 use crate::parser::ast::client::ASTClient;
@@ -27,7 +28,9 @@ use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::ASTIdentifier;
 use crate::parser::ast::import::ASTImport;
+use crate::parser::ast::interface::InterfaceDeclaration;
 use crate::parser::ast::item::Item;
+use crate::parser::ast::middleware::MiddlewareDeclaration;
 use crate::parser::ast::model::ASTModel;
 use crate::parser::ast::pipeline::ASTPipeline;
 use crate::parser::ast::r#enum::{ASTEnum, EnumChoice};
@@ -37,6 +40,7 @@ use crate::parser::ast::span::Span;
 use crate::parser::ast::subscript::Subscript;
 use crate::parser::ast::test_conf::ASTTestConf;
 use crate::parser::ast::top::Top;
+use crate::parser::ast::type_with_generic::TypeWithGenerics;
 use crate::parser::ast::unit::Unit;
 use crate::parser::parser::resolver::Resolver;
 use crate::parser::std::decorators::field::GlobalFieldDecorators;
@@ -78,6 +82,10 @@ pub(crate) struct ASTParser {
     pub(crate) data_sets: Vec<(usize, usize)>,
     pub(crate) debug_conf: Option<(usize, usize)>,
     pub(crate) test_conf: Option<(usize, usize)>,
+    pub(crate) middlewares: Vec<(usize, usize)>,
+    pub(crate) action_groups: Vec<(usize, usize)>,
+    pub(crate) actions: Vec<(usize, usize)>,
+    pub(crate) interfaces: Vec<(usize, usize)>,
     pub(crate) next_id: usize,
     pub(crate) resolved: bool,
     pub(crate) global_model_decorators: Option<GlobalModelDecorators>,
@@ -103,6 +111,10 @@ impl ASTParser {
             data_sets: vec![],
             debug_conf: None,
             test_conf: None,
+            middlewares: vec![],
+            action_groups: vec![],
+            actions: vec![],
+            interfaces: vec![],
             next_id: 0,
             resolved: false,
             global_model_decorators: None,
@@ -202,12 +214,25 @@ impl ASTParser {
                     self.data_sets.push((source_id, item_id));
                 }
                 Rule::EOI | Rule::EMPTY_LINES => {},
-                Rule::CATCH_ALL => panic!("Catch all: {}", current.as_str()),
                 Rule::comment_block => (),
-                                Rule::interface_declaration => (),
-                Rule::action_group_declaration => (),
-                Rule::action_declaration => (),
-                Rule::middleware_declaration => (),
+                Rule::interface_declaration => {
+                    let interface_declaration = self.parse_interface_declaration(current, source_id, item_id);
+                    tops.insert(item_id, interface_declaration);
+                },
+                Rule::action_group_declaration => {
+                    let action_group_declaration = self.parse_action_group_declaration(current, source_id, item_id);
+                    tops.insert(item_id, action_group_declaration);
+                },
+                Rule::action_declaration => {
+                    let action_declaration = self.parse_action_declaration(current, source_id, item_id);
+                    tops.insert(item_id, action_declaration);
+                },
+                Rule::middleware_declaration => {
+                    let middleware_declaration = self.parse_middleware_declaration(current, source_id, item_id);
+                    tops.insert(item_id, middleware_declaration);
+                },
+                Rule::interface_enum_declaration => (),
+                Rule::CATCH_ALL => panic!("Catch all: {}", current.as_str()),
                 _ => panic!("Parsing panic! {}", current),
             }
         }
@@ -492,6 +517,122 @@ impl ASTParser {
             }
         }
         DataSetRecord::new(source_id, item_id, identifier.unwrap(), span, dictionary.unwrap())
+    }
+
+    fn parse_identifier_with_generic(pair: Pair<'_>) -> TypeWithGenerics {
+        let span = Self::parse_span(&pair);
+        let mut name: Option<ASTIdentifier> = None;
+        let mut args: Vec<TypeWithGenerics> = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::identifier => {
+                    let identifier = Self::parse_identifier(&current);
+                    name = Some(identifier);
+                },
+                Rule::identifier_with_generic => {
+                    let identifier = Self::parse_identifier_with_generic(current);
+                    args.push(identifier);
+                }
+                _ => panic!(),
+            }
+        }
+        TypeWithGenerics {
+            name: name.unwrap(),
+            args,
+            span,
+        }
+    }
+
+    fn parse_middleware_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
+        let mut name: Option<ASTIdentifier> = None;
+        let span = Self::parse_span(&pair);
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::identifier => name = Some(Self::parse_identifier(&current)),
+                _ => unreachable!(),
+            }
+        }
+        Top::MiddlewareDeclaration(MiddlewareDeclaration {
+            id: item_id,
+            source_id,
+            identifier: name.unwrap(),
+            span,
+        })
+    }
+
+    fn parse_action_group_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
+        let mut name: Option<ASTIdentifier> = None;
+        let span = Self::parse_span(&pair);
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::identifier => name = Some(Self::parse_identifier(&current)),
+                _ => unreachable!(),
+            }
+        }
+        Top::ActionGroupDeclaration(ActionGroupDeclaration {
+            id: item_id,
+            source_id,
+            identifier: name.unwrap(),
+            span,
+        })
+    }
+
+    fn parse_action_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
+        let mut group_identifier: Option<ASTIdentifier> = None;
+        let mut name_identifier: Option<ASTIdentifier> = None;
+        let mut input_type: Option<TypeWithGenerics> = None;
+        let mut output_type: Option<TypeWithGenerics> = None;
+        let span = Self::parse_span(&pair);
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::identifier => if group_identifier.is_some() {
+                    name_identifier = Some(Self::parse_identifier(&current));
+                } else {
+                    group_identifier = Some(Self::parse_identifier(&current));
+                }
+                Rule::identifier_with_generic => if input_type.is_some() {
+                    output_type = Some(Self::parse_identifier_with_generic(current));
+                } else {
+                    input_type = Some(Self::parse_identifier_with_generic(current));
+                }
+                _ => unreachable!(),
+            }
+        }
+        Top::ActionDeclaration(ActionDeclaration {
+            id: item_id,
+            source_id,
+            group_identifier: group_identifier.unwrap(),
+            name_identifier: name_identifier.unwrap(),
+            input_type: input_type.unwrap(),
+            output_type: output_type.unwrap(),
+            span,
+        })
+    }
+
+    fn parse_interface_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
+        let mut name: Option<TypeWithGenerics> = None;
+        let mut args: Vec<TypeWithGenerics> = vec![];
+        let span = Self::parse_span(&pair);
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::identifier_with_generic => {
+                    let identifier_with_generic = Self::parse_identifier_with_generic(current);
+                    if name.is_some() {
+                        args.push(identifier_with_generic);
+                    } else {
+                        name = Some(identifier_with_generic);
+                    }
+                }
+                _ => (),
+            }
+        }
+        Top::InterfaceDeclaration(InterfaceDeclaration {
+            id: item_id,
+            source_id,
+            name: name.unwrap(),
+            args,
+            span,
+        })
     }
 
     fn parse_config_block(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {

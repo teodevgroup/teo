@@ -31,3 +31,7 @@ pub(crate) mod arith_expr;
 pub(crate) mod comment_block;
 pub(crate) mod test_conf;
 pub(crate) mod debug_conf;
+pub(crate) mod middleware;
+pub(crate) mod action;
+pub(crate) mod interface;
+pub(crate) mod type_with_generic;

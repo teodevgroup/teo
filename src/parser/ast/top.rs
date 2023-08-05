@@ -1,3 +1,4 @@
+use crate::parser::ast::action::{ActionDeclaration, ActionGroupDeclaration};
 use crate::parser::ast::client::ASTClient;
 use crate::parser::ast::config::ASTServer;
 use crate::parser::ast::connector::ASTConnector;
@@ -6,6 +7,8 @@ use crate::parser::ast::data_set::DataSet;
 use crate::parser::ast::debug_conf::ASTDebugConf;
 use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::import::ASTImport;
+use crate::parser::ast::interface::InterfaceDeclaration;
+use crate::parser::ast::middleware::MiddlewareDeclaration;
 use crate::parser::ast::model::ASTModel;
 use crate::parser::ast::r#enum::ASTEnum;
 use crate::parser::ast::test_conf::ASTTestConf;
@@ -23,6 +26,10 @@ pub(crate) enum Top {
     DataSet(DataSet),
     TestConf(ASTTestConf),
     DebugConf(ASTDebugConf),
+    MiddlewareDeclaration(MiddlewareDeclaration),
+    ActionGroupDeclaration(ActionGroupDeclaration),
+    ActionDeclaration(ActionDeclaration),
+    InterfaceDeclaration(InterfaceDeclaration),
 }
 
 impl Top {
@@ -40,6 +47,10 @@ impl Top {
             Top::DataSet(d) => d.id,
             Top::TestConf(t) => t.id,
             Top::DebugConf(d) => d.id,
+            Top::MiddlewareDeclaration(m) => m.id,
+            Top::ActionGroupDeclaration(a) => a.id,
+            Top::ActionDeclaration(a) => a.id,
+            Top::InterfaceDeclaration(i) => i.id,
         }
     }
 

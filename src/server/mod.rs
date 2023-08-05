@@ -789,27 +789,6 @@ fn make_app(
                 Err(err) => log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), err),
             }
       }));
-    // for action_def in action_defs {
-    //     app = app.route(format!("/{}/action/{}", action_def.group(), action_def.name()).as_str(), web::post().to(move |request: HttpRequest| async move {
-    //         let binding = request.clone();
-    //         let exts = binding.extensions();
-    //         let req_ctx = exts.get::<ReqCtx>().unwrap();
-    //         let user_ctx = req_ctx.user_ctx.clone();
-    //         let ctx = ActionCtxBase {
-    //             req: req_ctx.req.clone(),
-    //             user_ctx,
-    //         };
-    //         let res = action_def.call(ctx).await;
-    //         match res {
-    //             Ok(ok) => {
-    //                 <Res as Into<HttpResponse>>::into(ok)
-    //             },
-    //             Err(err) => {
-    //                 <Error as Into<HttpResponse>>::into(err)
-    //             },
-    //         }
-    //     }));
-    // }
     app
 }
 
