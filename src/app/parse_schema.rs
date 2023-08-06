@@ -7,6 +7,7 @@ use crate::core::conf::test::{Reset, ResetDatasets, ResetMode, TestConf};
 use crate::core::connector::conf::ConnectorConf;
 use crate::core::field::field::Field;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
+use crate::core::interface::{CustomActionDefinition, InterfaceRef};
 use crate::core::model::model::Model;
 use crate::core::property::Property;
 use crate::gen::interface::client::conf::Conf as ClientConf;
@@ -21,6 +22,7 @@ use crate::seeder::data_set::{DataSet, Group, Record};
 use crate::seeder::models::define::define_seeder_models;
 use crate::server::conf::ServerConf;
 use crate::core::result::Result;
+use crate::parser::ast::type_with_generic::TypeWithGenerics;
 
 pub(super) fn parse_schema(main: Option<&str>) -> Result<()> {
     // load env first
@@ -308,7 +310,6 @@ pub(super) fn load_schema() -> Result<()> {
     }
     // interfaces
     for interface_dec in parser.interfaces() {
-
     }
     // middlewares
     for middleware_dec in parser.middlewares() {
@@ -316,9 +317,30 @@ pub(super) fn load_schema() -> Result<()> {
     }
     // action groups
     for action_group_dec in parser.action_groups() {
+        let group = action_group_dec.identifier.name.clone();
+        let group_str = Box::leak(Box::new(action_group_dec.identifier.name.clone().clone()));
+        for action_dec in action_group_dec.actions.iter() {
+            let name = action_dec.identifier.name.clone();
+            let name_str = Box::leak(Box::new(name.clone()));
+            app_ctx.add_custom_action_declaration(group_str, name_str, CustomActionDefinition {
+                group: group.clone(),
+                name,
+                input: interface_ref_from(&action_dec.input_type),
+                output: interface_ref_from(&action_dec.output_type),
+            })?;
+        }
 
     }
     Ok(())
+}
+
+fn interface_ref_from(type_with_generics: &TypeWithGenerics) -> InterfaceRef {
+    InterfaceRef {
+        name: type_with_generics.name.name.clone(),
+        args: type_with_generics.args.iter().map(|a| {
+            interface_ref_from(a)
+        }).collect(),
+    }
 }
 
 fn install_types_to_field_owner<F>(name: &str, field: &mut F, enums: &HashMap<&'static str, Enum>) where F: FieldTypeOwner {

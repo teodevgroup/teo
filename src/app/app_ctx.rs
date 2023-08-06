@@ -20,6 +20,7 @@ use crate::seeder::data_set::DataSet;
 use crate::server::conf::ServerConf;
 use crate::core::result::Result;
 use crate::core::error::Error;
+use crate::core::interface::CustomActionDefinition;
 use crate::server::test_context::TestContext;
 
 pub struct AppCtx {
@@ -42,6 +43,7 @@ pub struct AppCtx {
     action_handlers: Vec<&'static dyn ActionHandlerDefTrait>,
     action_map: HashMap<&'static str, HashMap<&'static str, &'static dyn ActionHandlerDefTrait>>,
     test_context: Option<&'static TestContext>,
+    custom_action_declarations: HashMap<&'static str, HashMap<&'static str, CustomActionDefinition>>,
 }
 
 impl AppCtx {
@@ -67,6 +69,7 @@ impl AppCtx {
             action_handlers: vec![],
             action_map: hashmap!{},
             test_context: None,
+            custom_action_declarations: hashmap!{},
         }
     }
 
@@ -270,6 +273,16 @@ impl AppCtx {
         Ok(())
     }
 
+    pub(crate) fn add_custom_action_declaration(&self, group: &'static str, name: &'static str, dec: CustomActionDefinition) -> Result<()> {
+        let custom_action_declaration_mut = AppCtx::get_mut()?.custom_action_declaration_mut();
+        if !custom_action_declaration_mut.contains_key(group) {
+            custom_action_declaration_mut.insert(group, HashMap::new());
+        }
+        let name_map = custom_action_declaration_mut.get_mut(group).unwrap();
+        name_map.insert(name, dec);
+        Ok(())
+    }
+
     pub(crate) fn add_action_handler<A: 'static, F>(&self, group: &'static str, name: &'static str, f: F) -> Result<()> where
         F: ActionCtxArgument<A> + 'static,
     {
@@ -302,12 +315,28 @@ impl AppCtx {
         &self.action_map
     }
 
-    pub(crate) fn has_action_handler_for(&self, group: &str, action: &str) -> bool {
-        self.action_map().contains_key(group) && self.action_map().get(group).unwrap().contains_key(action)
+    pub(crate) fn custom_action_declaration_mut(&mut self) -> &mut HashMap<&'static str, HashMap<&'static str, CustomActionDefinition>> {
+        &mut self.custom_action_declarations
     }
 
-    pub(crate) fn get_action_handler(&self, group: &str, action: &str) -> &'static dyn ActionHandlerDefTrait {
-        self.action_map().get(group).unwrap().get(action).cloned().unwrap()
+    pub(crate) fn custom_action_declaration(&self) -> &HashMap<&'static str, HashMap<&'static str, CustomActionDefinition>> {
+        &self.custom_action_declarations
+    }
+
+    pub(crate) fn has_action_handler_for(&self, group: &str, name: &str) -> bool {
+        self.action_map().contains_key(group) && self.action_map().get(group).unwrap().contains_key(name)
+    }
+
+    pub(crate) fn get_action_handler(&self, group: &str, name: &str) -> &'static dyn ActionHandlerDefTrait {
+        self.action_map().get(group).unwrap().get(name).cloned().unwrap()
+    }
+
+    pub(crate) fn has_custom_action_declaration_for(&self, group: &str, name: &str) -> bool {
+        self.custom_action_declaration().contains_key(group) && self.custom_action_declaration().get(group).unwrap().contains_key(name)
+    }
+
+    pub(crate) fn get_custom_action_declaration_for(&self, group: &str, name: &str) -> &CustomActionDefinition {
+        self.custom_action_declaration().get(group).unwrap().get(name).unwrap()
     }
 
     pub(crate) fn set_test_context(&self, test_context: Option<&'static TestContext>) -> Result<()> {

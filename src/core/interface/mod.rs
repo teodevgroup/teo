@@ -1,26 +1,26 @@
 #[derive(Debug)]
 pub struct InterfaceRef {
-    name: String,
-    args: Vec<String>,
+    pub name: String,
+    pub args: Vec<InterfaceRef>,
 }
 
 #[derive(Debug)]
 pub struct InterfaceDefinition {
-    name: String,
-    args: Vec<String>,
-    extends: Vec<InterfaceRef>,
+    pub name: String,
+    pub args: Vec<String>,
+    pub extends: Vec<InterfaceRef>,
 }
 
 #[derive(Debug)]
 pub struct InterfaceField {
-    name: String,
-    kind: InterfaceRef,
+    pub name: String,
+    pub kind: InterfaceRef,
 }
 
 #[derive(Debug)]
 pub struct CustomActionDefinition {
-    group: String,
-    name: String,
-    input: InterfaceRef,
-    output: InterfaceRef,
+    pub group: String,
+    pub name: String,
+    pub input: InterfaceRef,
+    pub output: InterfaceRef,
 }
