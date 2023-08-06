@@ -3,6 +3,7 @@ use std::fmt;
 use std::path::PathBuf;
 use to_mut::ToMut;
 use to_mut_proc_macro::ToMut;
+use crate::parser::ast::action::ActionGroupDeclaration;
 use crate::parser::ast::client::ASTClient;
 use crate::parser::ast::config::ASTServer;
 use crate::parser::ast::connector::ASTConnector;
@@ -11,6 +12,8 @@ use crate::parser::ast::data_set::DataSet;
 use crate::parser::ast::debug_conf::ASTDebugConf;
 use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::import::ASTImport;
+use crate::parser::ast::interface::InterfaceDeclaration;
+use crate::parser::ast::middleware::MiddlewareDeclaration;
 use crate::parser::ast::model::ASTModel;
 use crate::parser::ast::r#enum::ASTEnum;
 use crate::parser::ast::test_conf::ASTTestConf;
@@ -110,6 +113,18 @@ impl Source {
 
     pub(crate) fn get_test_conf(&self, id: usize) -> &ASTTestConf {
         self.tops.get(&id).unwrap().as_test_conf().unwrap()
+    }
+
+    pub(crate) fn get_middleware(&self, id: usize) -> &MiddlewareDeclaration {
+        self.tops.get(&id).unwrap().as_middleware().unwrap()
+    }
+
+    pub(crate) fn get_action_group(&self, id: usize) -> &ActionGroupDeclaration {
+        self.tops.get(&id).unwrap().as_action_group().unwrap()
+    }
+
+    pub(crate) fn get_interface(&self, id: usize) -> &InterfaceDeclaration {
+        self.tops.get(&id).unwrap().as_interface().unwrap()
     }
 }
 

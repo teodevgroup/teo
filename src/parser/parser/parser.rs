@@ -218,14 +218,17 @@ impl ASTParser {
                 Rule::interface_declaration => {
                     let interface_declaration = self.parse_interface_declaration(current, source_id, item_id);
                     tops.insert(item_id, interface_declaration);
+                    self.interfaces.push((source_id, item_id));
                 },
                 Rule::action_group_declaration => {
                     let action_group_declaration = self.parse_action_group_declaration(current, source_id, item_id);
                     tops.insert(item_id, action_group_declaration);
+                    self.action_groups.push((source_id, item_id));
                 },
                 Rule::middleware_declaration => {
                     let middleware_declaration = self.parse_middleware_declaration(current, source_id, item_id);
                     tops.insert(item_id, middleware_declaration);
+                    self.middlewares.push((source_id, item_id));
                 },
                 Rule::interface_enum_declaration => (),
                 Rule::CATCH_ALL => panic!("Catch all: {}", current.as_str()),
@@ -1123,6 +1126,13 @@ impl ASTParser {
         self.models.iter().map(|m| {
             let source = self.get_source(m.0);
             source.get_model(m.1)
+        }).collect()
+    }
+
+    pub(crate) fn middlewares(&self) -> Vec<&MiddlewareDeclaration> {
+        self.middlewares.iter().map(|m| {
+            let source = self.get_source(m.0);
+            source.get_middleware(m.1)
         }).collect()
     }
 

@@ -249,4 +249,58 @@ impl Top {
     pub(crate) fn is_debug_conf(&self) -> bool {
         self.as_debug_conf().is_some()
     }
+
+    pub(crate) fn as_middleware(&self) -> Option<&MiddlewareDeclaration> {
+        match self {
+            Top::MiddlewareDeclaration(m) => Some(m),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_middleware_mut(&mut self) -> Option<&mut MiddlewareDeclaration> {
+        match self {
+            Top::MiddlewareDeclaration(m) => Some(m),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn is_middleware(&self) -> bool {
+        self.as_middleware().is_some()
+    }
+
+    pub(crate) fn as_action_group(&self) -> Option<&ActionGroupDeclaration> {
+        match self {
+            Top::ActionGroupDeclaration(m) => Some(m),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_action_group_mut(&mut self) -> Option<&mut ActionGroupDeclaration> {
+        match self {
+            Top::ActionGroupDeclaration(m) => Some(m),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn is_action_group(&self) -> bool {
+        self.as_action_group().is_some()
+    }
+
+    pub(crate) fn as_interface(&self) -> Option<&InterfaceDeclaration> {
+        match self {
+            Top::InterfaceDeclaration(m) => Some(m),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_interface_mut(&mut self) -> Option<&mut InterfaceDeclaration> {
+        match self {
+            Top::InterfaceDeclaration(m) => Some(m),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn is_interface(&self) -> bool {
+        self.as_interface().is_some()
+    }
 }
