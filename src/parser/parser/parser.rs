@@ -28,7 +28,7 @@ use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::ASTIdentifier;
 use crate::parser::ast::import::ASTImport;
-use crate::parser::ast::interface::InterfaceDeclaration;
+use crate::parser::ast::interface::{InterfaceDeclaration, InterfaceItemDeclaration};
 use crate::parser::ast::item::Item;
 use crate::parser::ast::middleware::MiddlewareDeclaration;
 use crate::parser::ast::model::ASTModel;
@@ -616,6 +616,7 @@ impl ASTParser {
     fn parse_interface_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
         let mut name: Option<TypeWithGenerics> = None;
         let mut args: Vec<TypeWithGenerics> = vec![];
+        let mut items: Vec<InterfaceItemDeclaration> = vec![];
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
@@ -627,6 +628,10 @@ impl ASTParser {
                         name = Some(identifier_with_generic);
                     }
                 }
+                Rule::interface_item => {
+                    let interface_item_decl = self.parse_interface_item_declaration(current);
+                    items.push(interface_item_decl);
+                }
                 _ => (),
             }
         }
@@ -635,8 +640,23 @@ impl ASTParser {
             source_id,
             name: name.unwrap(),
             args,
+            items,
             span,
         })
+    }
+
+    fn parse_interface_item_declaration(&mut self, pair: Pair<'_>) -> InterfaceItemDeclaration {
+        let mut name: Option<ASTIdentifier> = None;
+        let mut kind: Option<TypeWithGenerics> = None;
+        let span = Self::parse_span(&pair);
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::identifier => name = Some(Self::parse_identifier(&current)),
+                Rule::identifier_with_generic => kind = Some(Self::parse_identifier_with_generic(current)),
+                _ => (),
+            }
+        }
+        InterfaceItemDeclaration { name: name.unwrap(), kind: kind.unwrap(), span }
     }
 
     fn parse_config_block(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
@@ -1133,6 +1153,20 @@ impl ASTParser {
         self.middlewares.iter().map(|m| {
             let source = self.get_source(m.0);
             source.get_middleware(m.1)
+        }).collect()
+    }
+
+    pub(crate) fn action_groups(&self) -> Vec<&ActionGroupDeclaration> {
+        self.action_groups.iter().map(|m| {
+            let source = self.get_source(m.0);
+            source.get_action_group(m.1)
+        }).collect()
+    }
+
+    pub(crate) fn interfaces(&self) -> Vec<&InterfaceDeclaration> {
+        self.interfaces.iter().map(|m| {
+            let source = self.get_source(m.0);
+            source.get_interface(m.1)
         }).collect()
     }
 
