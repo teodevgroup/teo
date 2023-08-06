@@ -28,7 +28,6 @@ pub(crate) enum Top {
     DebugConf(ASTDebugConf),
     MiddlewareDeclaration(MiddlewareDeclaration),
     ActionGroupDeclaration(ActionGroupDeclaration),
-    ActionDeclaration(ActionDeclaration),
     InterfaceDeclaration(InterfaceDeclaration),
 }
 
@@ -49,7 +48,6 @@ impl Top {
             Top::DebugConf(d) => d.id,
             Top::MiddlewareDeclaration(m) => m.id,
             Top::ActionGroupDeclaration(a) => a.id,
-            Top::ActionDeclaration(a) => a.id,
             Top::InterfaceDeclaration(i) => i.id,
         }
     }

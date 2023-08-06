@@ -223,10 +223,6 @@ impl ASTParser {
                     let action_group_declaration = self.parse_action_group_declaration(current, source_id, item_id);
                     tops.insert(item_id, action_group_declaration);
                 },
-                Rule::action_declaration => {
-                    let action_declaration = self.parse_action_declaration(current, source_id, item_id);
-                    tops.insert(item_id, action_declaration);
-                },
                 Rule::middleware_declaration => {
                     let middleware_declaration = self.parse_middleware_declaration(current, source_id, item_id);
                     tops.insert(item_id, middleware_declaration);
@@ -563,9 +559,16 @@ impl ASTParser {
     fn parse_action_group_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
         let mut name: Option<ASTIdentifier> = None;
         let span = Self::parse_span(&pair);
+        let mut actions: Vec<ActionDeclaration> = vec![];
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier => name = Some(Self::parse_identifier(&current)),
+                Rule::comment_block => (),
+                Rule::action_declaration => {
+                    let action_id = self.next_id();
+                    actions.push(self.parse_action_declaration(current, source_id, action_id, item_id));
+                },
+                Rule::EMPTY_LINES | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => (),
                 _ => unreachable!(),
             }
         }
@@ -573,40 +576,38 @@ impl ASTParser {
             id: item_id,
             source_id,
             identifier: name.unwrap(),
+            actions,
             span,
         })
     }
 
-    fn parse_action_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
-        let mut group_identifier: Option<ASTIdentifier> = None;
-        let mut name_identifier: Option<ASTIdentifier> = None;
+    fn parse_action_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, group_id: usize) -> ActionDeclaration {
+        let mut identifier: Option<ASTIdentifier> = None;
         let mut input_type: Option<TypeWithGenerics> = None;
         let mut output_type: Option<TypeWithGenerics> = None;
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::identifier => if group_identifier.is_some() {
-                    name_identifier = Some(Self::parse_identifier(&current));
-                } else {
-                    group_identifier = Some(Self::parse_identifier(&current));
-                }
+                Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::identifier_with_generic => if input_type.is_some() {
                     output_type = Some(Self::parse_identifier_with_generic(current));
                 } else {
                     input_type = Some(Self::parse_identifier_with_generic(current));
                 }
+                Rule::COLON => (),
+                Rule::req_type => (),
                 _ => unreachable!(),
             }
         }
-        Top::ActionDeclaration(ActionDeclaration {
+        ActionDeclaration {
             id: item_id,
             source_id,
-            group_identifier: group_identifier.unwrap(),
-            name_identifier: name_identifier.unwrap(),
+            group_id,
+            identifier: identifier.unwrap(),
             input_type: input_type.unwrap(),
             output_type: output_type.unwrap(),
             span,
-        })
+        }
     }
 
     fn parse_interface_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {

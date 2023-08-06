@@ -101,7 +101,15 @@ impl Resolver {
                 Top::TestConf(test_conf) => {
                     Self::resolve_test_conf(parser, source, test_conf);
                 }
-                _ => panic!(), // TODO: remove this panic!
+                Top::MiddlewareDeclaration(middleware_declaration) => {
+                    continue;
+                }
+                Top::ActionGroupDeclaration(action_group_declaration) => {
+                    continue;
+                }
+                Top::InterfaceDeclaration(interface_declaration) => {
+                    continue;
+                }
             }
         }
         source.to_mut().resolved = true;

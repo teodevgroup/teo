@@ -7,6 +7,7 @@ pub(crate) struct ActionGroupDeclaration {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
     pub(crate) identifier: ASTIdentifier,
+    pub(crate) actions: Vec<ActionDeclaration>,
     pub(crate) span: Span,
 }
 
@@ -14,8 +15,8 @@ pub(crate) struct ActionGroupDeclaration {
 pub(crate) struct ActionDeclaration {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
-    pub(crate) group_identifier: ASTIdentifier,
-    pub(crate) name_identifier: ASTIdentifier,
+    pub(crate) group_id: usize,
+    pub(crate) identifier: ASTIdentifier,
     pub(crate) input_type: TypeWithGenerics,
     pub(crate) output_type: TypeWithGenerics,
     pub(crate) span: Span,
