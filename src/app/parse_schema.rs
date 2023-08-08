@@ -308,13 +308,14 @@ pub(super) fn load_schema() -> Result<()> {
         };
         app_ctx.datasets_mut().push(seeder_data_set);
     }
-    // interfaces
-    for interface_dec in parser.interfaces() {
-    }
-    // middlewares
-    for middleware_dec in parser.middlewares() {
-
-    }
+    // // interfaces
+    // for interface_dec in parser.interfaces() {
+    //
+    // }
+    // // middlewares
+    // for middleware_dec in parser.middlewares() {
+    //
+    // }
     // action groups
     for action_group_dec in parser.action_groups() {
         let group = action_group_dec.identifier.name.clone();
@@ -327,9 +328,9 @@ pub(super) fn load_schema() -> Result<()> {
                 name,
                 input: interface_ref_from(&action_dec.input_type),
                 output: interface_ref_from(&action_dec.output_type),
+                input_fields:
             })?;
         }
-
     }
     Ok(())
 }

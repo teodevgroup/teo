@@ -44,6 +44,7 @@ use crate::core::model::model::Model;
 use crate::core::object::{ErrorIfNotFound, Object};
 use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::error::Error;
+use crate::core::teon::custom_action_decoder::transform_custom_action_json_into_teon;
 use crate::core::teon::decoder::Decoder;
 use crate::prelude::{combine_middleware, Res, UserCtx, Value};
 use crate::seeder::seed::seed;
@@ -728,7 +729,18 @@ fn make_app(
                 }
             } else {
                 // Parse body the user defined way
-                unreachable!("Currently parsing user defined body is not implemented.")
+                let app_ctx = AppCtx::get().unwrap();
+                if app_ctx.has_custom_action_declaration_for(path_components.model.as_str(), path_components.action.as_str()) {
+                    let custom_action_declaration = app_ctx.get_custom_action_declaration_for(path_components.model.as_str(), path_components.action.as_str());
+                    let input = &custom_action_declaration.input_fields;
+                    let result = transform_custom_action_json_into_teon(&parsed_json_body, input, &path![]);
+                    match result {
+                        Err(err) => return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), err),
+                        Ok(value) => value,
+                    }
+                } else {
+                    return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), Error::destination_not_found());
+                }
             };
             let (transformed_teon_body, transformed_action) = if let (Some(original_action), Some(model_def)) = (original_action, model_def) {
                 if model_def.has_action_transformers() || original_teon_body.as_hashmap().unwrap().get("include").is_some() {

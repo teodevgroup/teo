@@ -3,6 +3,7 @@ pub mod json;
 pub mod from;
 pub mod macros;
 pub mod range;
+pub(crate) mod custom_action_decoder;
 pub(crate) mod decoder;
 pub(crate) mod utils;
 
