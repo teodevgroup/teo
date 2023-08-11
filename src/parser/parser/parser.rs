@@ -1,9 +1,9 @@
 use std::borrow::Borrow;
 use snailquote::unescape;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::fs;
-use maplit::{btreemap, btreeset};
+use maplit::{btreemap, btreeset, hashmap};
 use pest::Parser as PestParser;
 use pest::pratt_parser::PrattParser;
 use to_mut::ToMut;
@@ -11,6 +11,7 @@ use to_mut_proc_macro::ToMut;
 use once_cell::sync::Lazy;
 use crate::core::result::Result;
 use crate::core::callbacks::lookup::CallbackLookup;
+use crate::core::interface::ResolvedInterfaceField;
 use crate::parser::ast::action::{ActionDeclaration, ActionGroupDeclaration};
 use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::arith_expr::{ArithExpr, Op};
@@ -95,6 +96,7 @@ pub(crate) struct ASTParser {
     pub(crate) global_pipeline_installers: Option<GlobalPipelineInstallers>,
     pub(crate) global_function_installers: Option<GlobalFunctionInstallers>,
     pub(crate) callback_lookup_table: &'static CallbackLookup,
+    pub(crate) resolved_action_inputs: HashMap<&'static str, HashMap<&'static str, ResolvedInterfaceField>>,
 }
 
 impl ASTParser {
@@ -124,6 +126,7 @@ impl ASTParser {
             global_pipeline_installers: None,
             global_function_installers: None,
             callback_lookup_table: callbacks,
+            resolved_action_inputs: hashmap!{},
         }
     }
 
@@ -610,12 +613,16 @@ impl ASTParser {
             input_type: input_type.unwrap(),
             output_type: output_type.unwrap(),
             span,
+            resolved_input_field_types: None,
+            resolved_input_interface: None,
+            resolved_input_shape: None,
         }
     }
 
     fn parse_interface_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
         let mut name: Option<TypeWithGenerics> = None;
-        let mut args: Vec<TypeWithGenerics> = vec![];
+        let mut args: Vec<ASTIdentifier> = vec![];
+        let mut extends: Vec<TypeWithGenerics> = vec![];
         let mut items: Vec<InterfaceItemDeclaration> = vec![];
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
@@ -623,10 +630,14 @@ impl ASTParser {
                 Rule::identifier_with_generic => {
                     let identifier_with_generic = Self::parse_identifier_with_generic(current);
                     if name.is_some() {
-                        args.push(identifier_with_generic);
+                        extends.push(identifier_with_generic);
                     } else {
                         name = Some(identifier_with_generic);
                     }
+                }
+                Rule::identifier => {
+                    let identifier = Self::parse_identifier(&current);
+                    args.push(identifier);
                 }
                 Rule::interface_item => {
                     let interface_item_decl = self.parse_interface_item_declaration(current);
@@ -640,6 +651,7 @@ impl ASTParser {
             source_id,
             name: name.unwrap(),
             args,
+            extends,
             items,
             span,
         })
@@ -1216,5 +1228,21 @@ impl ASTParser {
 
     pub(crate) fn global_function_installers(&self) -> &GlobalFunctionInstallers {
         self.global_function_installers.as_ref().unwrap()
+    }
+
+    // interfaces
+
+    pub(crate) fn resolved_custom_action_input(&self, action_dec: &ActionDeclaration) -> ResolvedInterfaceField {
+        let input_type = &action_dec.input_type;
+        let interface_name = input_type.name.name.as_str();
+        let interface_def = match self.interfaces().iter().find(|i| i.name.name.name.as_str() == interface_name) {
+            Some(interface_def) => interface_def,
+            None => panic!("Interface with name '{}' is not found.", interface_name)
+        }; // interface AB<T, U, V>
+        let mut generic_map: HashMap<String, String> = interface_def.args.iter().map(|a| {
+            (a.name.clone(), "".to_owned())
+        }).collect();
+        input_type.
+        //interface_def.
     }
 }

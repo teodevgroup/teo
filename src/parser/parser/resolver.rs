@@ -34,13 +34,17 @@ use crate::prelude::Value;
 use to_mut::ToMut;
 use crate::core::action::Action;
 use crate::app::program::ProgramLang;
+use crate::core::interface::{ResolvedInterfaceField, ResolvedInterfaceFieldType};
 use crate::gen::interface::client::kind::Kind;
+use crate::parser::ast::action::{ActionDeclaration, ActionGroupDeclaration};
 use crate::parser::ast::arith_expr::{ArithExpr, Op};
 use crate::parser::ast::client::{ASTClient};
 use crate::parser::ast::data_set::DataSet;
 use crate::parser::ast::debug_conf::ASTDebugConf;
 use crate::parser::ast::generator::ASTEntity;
+use crate::parser::ast::interface::InterfaceDeclaration;
 use crate::parser::ast::test_conf::ASTTestConf;
+use crate::parser::ast::type_with_generic::TypeWithGenerics;
 use crate::parser::std::pipeline::global::{GlobalFunctionInstallers, GlobalPipelineInstallers};
 
 pub(crate) struct Resolver { }
@@ -105,7 +109,7 @@ impl Resolver {
                     continue;
                 }
                 Top::ActionGroupDeclaration(action_group_declaration) => {
-                    continue;
+                    Self::resolve_action_group(parser, source, action_group_declaration);
                 }
                 Top::InterfaceDeclaration(interface_declaration) => {
                     continue;
@@ -620,6 +624,50 @@ impl Resolver {
                     config.reset_after_find = value;
                 },
                 _ => panic!()
+            }
+        }
+    }
+
+    pub(crate) fn resolve_action_group(parser: &ASTParser, source: &Source, action_group_declaration: &mut ActionGroupDeclaration) {
+        for action in &mut action_group_declaration.actions {
+            Self::resolve_custom_action_declaration(parser, source, action)
+        }
+    }
+
+    pub(crate) fn resolve_custom_action_declaration(parser: &ASTParser, source: &Source, action: &mut ActionDeclaration) {
+        let input_interface_name = action.input_type.name.name.as_str();
+        let interface = match parser.interfaces().iter().find(|i| i.name.name.name.as_str() == input_interface_name) {
+            Some(i) => i,
+            None => panic!("Interface with name '{}' is not found.", input_interface_name)
+        };
+        action.resolved_input_interface = Some((interface.source_id, interface.id));
+        action.resolved_input_field_types = Some(Self::resolve_action_input_field_types(parser, source, *interface, &action.input_type))
+    }
+
+    pub(crate) fn resolve_action_input_field_types(parser: &ASTParser, source: &Source, interface: &InterfaceDeclaration, input_type: &TypeWithGenerics) -> Vec<ResolvedInterfaceField> {
+        if input_type.args.len() == 0 {
+            vec![]
+        } else {
+            input_type.args.iter().map(|a| Self::resolve_type_with_filled_generics(parser, source, interface, input_type, a)).collect()
+        }
+    }
+
+    // we're not handle arrays, maps, enums yet
+    pub(crate) fn resolve_type_with_filled_generics(parser: &ASTParser, source: &Source, interface: &InterfaceDeclaration, input_type: &TypeWithGenerics, a: &TypeWithGenerics) -> ResolvedInterfaceField {
+        match a.name.name.as_str() {
+            "String" => ResolvedInterfaceFieldType::String.optional(false),
+            "ObjectId" => ResolvedInterfaceFieldType::ObjectId.optional(false),
+            "Bool" => ResolvedInterfaceFieldType::Bool.optional(false),
+            "Int32" | "Int" => ResolvedInterfaceFieldType::I32.optional(false),
+            "Int64" => ResolvedInterfaceFieldType::I64.optional(false),
+            "Float" | "Float64" => ResolvedInterfaceFieldType::F64.optional(false),
+            "Float32" => ResolvedInterfaceFieldType::F32.optional(false),
+            "Decimal" => ResolvedInterfaceFieldType::Decimal.optional(false),
+            "Date" => ResolvedInterfaceFieldType::Date.optional(false),
+            "DateTime" => ResolvedInterfaceFieldType::DateTime.optional(false),
+            name => {
+                // some other interface
+
             }
         }
     }

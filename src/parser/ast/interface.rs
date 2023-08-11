@@ -7,7 +7,8 @@ pub(crate) struct InterfaceDeclaration {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
     pub(crate) name: TypeWithGenerics,
-    pub(crate) args: Vec<TypeWithGenerics>,
+    pub(crate) args: Vec<ASTIdentifier>,
+    pub(crate) extends: Vec<TypeWithGenerics>,
     pub(crate) items: Vec<InterfaceItemDeclaration>,
     pub(crate) span: Span,
 }

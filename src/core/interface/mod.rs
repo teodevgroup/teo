@@ -52,3 +52,9 @@ pub enum ResolvedInterfaceFieldType {
     HashMap(Box<ResolvedInterfaceField>),
     Shape(HashMap<String, ResolvedInterfaceField>),
 }
+
+impl ResolvedInterfaceFieldType {
+    pub fn optional(self, optional: bool) -> ResolvedInterfaceField {
+        ResolvedInterfaceField { field_type: self, optional }
+    }
+}

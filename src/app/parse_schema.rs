@@ -328,7 +328,7 @@ pub(super) fn load_schema() -> Result<()> {
                 name,
                 input: interface_ref_from(&action_dec.input_type),
                 output: interface_ref_from(&action_dec.output_type),
-                input_fields:
+                input_fields: parser.resolved_custom_action_input(action_dec),
             })?;
         }
     }
