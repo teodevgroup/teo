@@ -636,13 +636,15 @@ impl Resolver {
 
     pub(crate) fn resolve_custom_action_declaration(parser: &ASTParser, source: &Source, action: &mut ActionDeclaration) {
         let input_interface_name = action.input_type.name.name.as_str();
-        let interface = match parser.interfaces().iter().find(|i| i.name.name.name.as_str() == input_interface_name) {
+        let binding = parser.interfaces();
+        let interface = match binding.iter().find(|i| i.name.name.name.as_str() == input_interface_name) {
             Some(i) => i,
             None => panic!("Interface with name '{}' is not found.", input_interface_name)
         };
+//        action.input_type.args
         action.resolved_input_interface = Some((interface.source_id, interface.id));
         let resolved_input_field_types = Self::resolve_action_input_field_types(parser, source, *interface, &action.input_type);
-        action.resolved_input_shape = Some();
+//        action.resolved_input_shape = Some(resolve_action_input_shape(parser, source, *interface, ));
         action.resolved_input_field_types = Some(resolved_input_field_types);
     }
 
@@ -650,7 +652,7 @@ impl Resolver {
         if input_type.args.len() == 0 {
             vec![]
         } else {
-            input_type.args.iter().map(|a| Self::resolve_type_with_filled_generics(parser, source, interface, input_type, a)).collect()
+            input_type.args.iter().map(|a| Self::resolve_type_with_filled_generics(parser, source, a)).collect()
         }
     }
 
@@ -674,7 +676,8 @@ impl Resolver {
 
     pub(crate) fn resolve_interface_field_for(parser: &ASTParser, source: &Source, type_with_generics: &TypeWithGenerics) -> ResolvedInterfaceField {
         let interface_name = type_with_generics.name.name.as_str();
-        let interface = match parser.interfaces().iter().find(|i| i.name.name.name.as_str() == interface_name) {
+        let binding = parser.interfaces();
+        let interface = match binding.iter().find(|i| i.name.name.name.as_str() == interface_name) {
             Some(i) => i,
             None => panic!("Interface with name '{}' is not found.", interface_name)
         };
@@ -693,7 +696,7 @@ impl Resolver {
             return true;
         }
         for arg in &def.args {
-            if Self::need_to_alter_generics_with_map(parser, source, arg) {
+            if Self::need_to_alter_generics_with_map(parser, source, map, arg) {
                 return true;
             }
         }

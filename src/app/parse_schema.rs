@@ -328,7 +328,7 @@ pub(super) fn load_schema() -> Result<()> {
                 name,
                 input: interface_ref_from(&action_dec.input_type),
                 output: interface_ref_from(&action_dec.output_type),
-                input_fields: action_dec.resolved_input_shape.unwrap().clone(),
+                input_fields: action_dec.resolved_input_shape.as_ref().unwrap().clone(),
             })?;
         }
     }
