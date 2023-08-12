@@ -641,7 +641,9 @@ impl Resolver {
             None => panic!("Interface with name '{}' is not found.", input_interface_name)
         };
         action.resolved_input_interface = Some((interface.source_id, interface.id));
-        action.resolved_input_field_types = Some(Self::resolve_action_input_field_types(parser, source, *interface, &action.input_type))
+        let resolved_input_field_types = Self::resolve_action_input_field_types(parser, source, *interface, &action.input_type);
+        action.resolved_input_shape = Some();
+        action.resolved_input_field_types = Some(resolved_input_field_types);
     }
 
     pub(crate) fn resolve_action_input_field_types(parser: &ASTParser, source: &Source, interface: &InterfaceDeclaration, input_type: &TypeWithGenerics) -> Vec<ResolvedInterfaceField> {
@@ -653,7 +655,7 @@ impl Resolver {
     }
 
     // we're not handle arrays, maps, enums yet
-    pub(crate) fn resolve_type_with_filled_generics(parser: &ASTParser, source: &Source, interface: &InterfaceDeclaration, input_type: &TypeWithGenerics, a: &TypeWithGenerics) -> ResolvedInterfaceField {
+    pub(crate) fn resolve_type_with_filled_generics(parser: &ASTParser, source: &Source, a: &TypeWithGenerics) -> ResolvedInterfaceField {
         match a.name.name.as_str() {
             "String" => ResolvedInterfaceFieldType::String.optional(false),
             "ObjectId" => ResolvedInterfaceFieldType::ObjectId.optional(false),
@@ -665,10 +667,45 @@ impl Resolver {
             "Decimal" => ResolvedInterfaceFieldType::Decimal.optional(false),
             "Date" => ResolvedInterfaceFieldType::Date.optional(false),
             "DateTime" => ResolvedInterfaceFieldType::DateTime.optional(false),
-            name => {
-                // some other interface
+            // other user defined interfaces
+            _ => Self::resolve_interface_field_for(parser, source, a)
+        }
+    }
 
+    pub(crate) fn resolve_interface_field_for(parser: &ASTParser, source: &Source, type_with_generics: &TypeWithGenerics) -> ResolvedInterfaceField {
+        let interface_name = type_with_generics.name.name.as_str();
+        let interface = match parser.interfaces().iter().find(|i| i.name.name.name.as_str() == interface_name) {
+            Some(i) => i,
+            None => panic!("Interface with name '{}' is not found.", interface_name)
+        };
+        let map: HashMap<String, String> = interface.args.iter().enumerate().map(|(i, a)| {
+            (a.name.clone(), type_with_generics.args.get(i).unwrap().name.name.clone())
+        }).collect();
+        let mut shape: HashMap<String, ResolvedInterfaceField> = HashMap::new();
+        for item in &interface.items {
+            shape.insert(item.name.name.clone(), Self::resolve_type_with_generics_with_map(parser, source, &map, &item.kind));
+        }
+        ResolvedInterfaceFieldType::Shape(shape).optional(false)
+    }
+
+    pub(crate) fn need_to_alter_generics_with_map(parser: &ASTParser, source: &Source, map: &HashMap<String, String>, def: &TypeWithGenerics) -> bool {
+        if map.contains_key(&def.name.name) {
+            return true;
+        }
+        for arg in &def.args {
+            if Self::need_to_alter_generics_with_map(parser, source, arg) {
+                return true;
             }
+        }
+        return false;
+    }
+
+    pub(crate) fn resolve_type_with_generics_with_map(parser: &ASTParser, source: &Source, map: &HashMap<String, String>, def: &TypeWithGenerics) -> ResolvedInterfaceField {
+        if Self::need_to_alter_generics_with_map(parser, source, map, def) {
+            let replaced_type = def.alter_generics_with(map);
+            Self::resolve_type_with_filled_generics(parser, source, &replaced_type)
+        } else {
+            Self::resolve_type_with_filled_generics(parser, source, def)
         }
     }
 

@@ -29,13 +29,13 @@ pub struct CustomActionDefinition {
     pub input_fields: ResolvedInterfaceField,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ResolvedInterfaceField {
     pub field_type: ResolvedInterfaceFieldType,
     pub optional: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ResolvedInterfaceFieldType {
     ObjectId,
     Bool,

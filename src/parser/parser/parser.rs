@@ -1229,20 +1229,4 @@ impl ASTParser {
     pub(crate) fn global_function_installers(&self) -> &GlobalFunctionInstallers {
         self.global_function_installers.as_ref().unwrap()
     }
-
-    // interfaces
-
-    pub(crate) fn resolved_custom_action_input(&self, action_dec: &ActionDeclaration) -> ResolvedInterfaceField {
-        let input_type = &action_dec.input_type;
-        let interface_name = input_type.name.name.as_str();
-        let interface_def = match self.interfaces().iter().find(|i| i.name.name.name.as_str() == interface_name) {
-            Some(interface_def) => interface_def,
-            None => panic!("Interface with name '{}' is not found.", interface_name)
-        }; // interface AB<T, U, V>
-        let mut generic_map: HashMap<String, String> = interface_def.args.iter().map(|a| {
-            (a.name.clone(), "".to_owned())
-        }).collect();
-        input_type.
-        //interface_def.
-    }
 }
