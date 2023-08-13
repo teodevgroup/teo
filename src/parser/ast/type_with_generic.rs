@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use crate::parser::ast::identifier::ASTIdentifier;
 use crate::parser::ast::span::Span;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct TypeWithGenerics {
     pub(crate) name: ASTIdentifier,
     pub(crate) args: Vec<TypeWithGenerics>,
@@ -11,9 +11,9 @@ pub(crate) struct TypeWithGenerics {
 }
 
 impl TypeWithGenerics {
-    pub(crate) fn alter_generics_with(&self, map: &HashMap<String, String>) -> Self {
+    pub(crate) fn alter_generics_with(&self, map: &HashMap<String, TypeWithGenerics>) -> Self {
         TypeWithGenerics {
-            name: self.name.alter_generics_with(map),
+            name: self.name.alter_generics_with(map).name,
             args: self.args.iter().map(|arg| arg.alter_generics_with(map)).collect(),
             span: self.span.clone(),
         }

@@ -22,7 +22,6 @@ pub(crate) struct ActionDeclaration {
     pub(crate) output_type: TypeWithGenerics,
     pub(crate) span: Span,
     pub(crate) resolved_input_interface: Option<(usize, usize)>,
-    pub(crate) resolved_input_field_types: Option<Vec<ResolvedInterfaceField>>,
     pub(crate) resolved_input_shape: Option<ResolvedInterfaceField>,
 }
 

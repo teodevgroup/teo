@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::str::FromStr;
+use maplit::hashmap;
 use path_absolutize::Absolutize;
 use regex::Regex;
 use snailquote::unescape;
@@ -42,7 +43,7 @@ use crate::parser::ast::client::{ASTClient};
 use crate::parser::ast::data_set::DataSet;
 use crate::parser::ast::debug_conf::ASTDebugConf;
 use crate::parser::ast::generator::ASTEntity;
-use crate::parser::ast::interface::InterfaceDeclaration;
+use crate::parser::ast::interface::{InterfaceDeclaration, InterfaceItemDeclaration};
 use crate::parser::ast::test_conf::ASTTestConf;
 use crate::parser::ast::type_with_generic::TypeWithGenerics;
 use crate::parser::std::pipeline::global::{GlobalFunctionInstallers, GlobalPipelineInstallers};
@@ -641,57 +642,73 @@ impl Resolver {
             Some(i) => i,
             None => panic!("Interface with name '{}' is not found.", input_interface_name)
         };
-//        action.input_type.args
         action.resolved_input_interface = Some((interface.source_id, interface.id));
-        let resolved_input_field_types = Self::resolve_action_input_field_types(parser, source, *interface, &action.input_type);
-//        action.resolved_input_shape = Some(resolve_action_input_shape(parser, source, *interface, ));
-        action.resolved_input_field_types = Some(resolved_input_field_types);
+        action.resolved_input_shape = Some(Self::resolve_action_input_shape(parser, source, *interface, &action.input_type));
     }
 
-    pub(crate) fn resolve_action_input_field_types(parser: &ASTParser, source: &Source, interface: &InterfaceDeclaration, input_type: &TypeWithGenerics) -> Vec<ResolvedInterfaceField> {
-        if input_type.args.len() == 0 {
-            vec![]
-        } else {
-            input_type.args.iter().map(|a| Self::resolve_type_with_filled_generics(parser, source, a)).collect()
-        }
-    }
-
-    // we're not handle arrays, maps, enums yet
-    pub(crate) fn resolve_type_with_filled_generics(parser: &ASTParser, source: &Source, a: &TypeWithGenerics) -> ResolvedInterfaceField {
-        match a.name.name.as_str() {
-            "String" => ResolvedInterfaceFieldType::String.optional(false),
-            "ObjectId" => ResolvedInterfaceFieldType::ObjectId.optional(false),
-            "Bool" => ResolvedInterfaceFieldType::Bool.optional(false),
-            "Int32" | "Int" => ResolvedInterfaceFieldType::I32.optional(false),
-            "Int64" => ResolvedInterfaceFieldType::I64.optional(false),
-            "Float" | "Float64" => ResolvedInterfaceFieldType::F64.optional(false),
-            "Float32" => ResolvedInterfaceFieldType::F32.optional(false),
-            "Decimal" => ResolvedInterfaceFieldType::Decimal.optional(false),
-            "Date" => ResolvedInterfaceFieldType::Date.optional(false),
-            "DateTime" => ResolvedInterfaceFieldType::DateTime.optional(false),
-            // other user defined interfaces
-            _ => Self::resolve_interface_field_for(parser, source, a)
-        }
-    }
-
-    pub(crate) fn resolve_interface_field_for(parser: &ASTParser, source: &Source, type_with_generics: &TypeWithGenerics) -> ResolvedInterfaceField {
-        let interface_name = type_with_generics.name.name.as_str();
-        let binding = parser.interfaces();
-        let interface = match binding.iter().find(|i| i.name.name.name.as_str() == interface_name) {
-            Some(i) => i,
-            None => panic!("Interface with name '{}' is not found.", interface_name)
-        };
-        let map: HashMap<String, String> = interface.args.iter().enumerate().map(|(i, a)| {
-            (a.name.clone(), type_with_generics.args.get(i).unwrap().name.name.clone())
+    pub(crate) fn resolve_action_input_shape(parser: &ASTParser, source: &Source, interface: &InterfaceDeclaration, input_type: &TypeWithGenerics) -> ResolvedInterfaceField {
+        let map: HashMap<String, TypeWithGenerics> = interface.args.iter().enumerate().map(|(i, a)| {
+            (a.name.clone(), input_type.args.get(i).unwrap().clone())
         }).collect();
-        let mut shape: HashMap<String, ResolvedInterfaceField> = HashMap::new();
-        for item in &interface.items {
-            shape.insert(item.name.name.clone(), Self::resolve_type_with_generics_with_map(parser, source, &map, &item.kind));
-        }
+        let mut shape: HashMap<String, ResolvedInterfaceField> = hashmap!{};
+        Self::install_interface_items_to_shape(parser, source, &map, &interface.items, &mut shape);
         ResolvedInterfaceFieldType::Shape(shape).optional(false)
     }
 
-    pub(crate) fn need_to_alter_generics_with_map(parser: &ASTParser, source: &Source, map: &HashMap<String, String>, def: &TypeWithGenerics) -> bool {
+    pub(crate) fn install_interface_items_to_shape(parser: &ASTParser, source: &Source, map: &HashMap<String, TypeWithGenerics>, items: &Vec<InterfaceItemDeclaration>, shape: &mut HashMap<String, ResolvedInterfaceField>) {
+        for item in items {
+            if Self::need_to_alter_generics_with_map(parser, source, map, &item.kind) {
+
+            } else {
+
+            }
+        }
+    }
+
+    // pub(crate) fn resolve_action_input_field_types(parser: &ASTParser, source: &Source, interface: &InterfaceDeclaration, input_type: &TypeWithGenerics) -> Vec<ResolvedInterfaceField> {
+    //     if input_type.args.len() == 0 {
+    //         vec![]
+    //     } else {
+    //         input_type.args.iter().map(|a| Self::resolve_type_with_filled_generics(parser, source, a)).collect()
+    //     }
+    // }
+
+    // we're not handle arrays, maps, enums yet
+    // pub(crate) fn resolve_type_with_filled_generics(parser: &ASTParser, source: &Source, a: &TypeWithGenerics) -> ResolvedInterfaceField {
+    //     match a.name.name.as_str() {
+    //         "String" => ResolvedInterfaceFieldType::String.optional(false),
+    //         "ObjectId" => ResolvedInterfaceFieldType::ObjectId.optional(false),
+    //         "Bool" => ResolvedInterfaceFieldType::Bool.optional(false),
+    //         "Int32" | "Int" => ResolvedInterfaceFieldType::I32.optional(false),
+    //         "Int64" => ResolvedInterfaceFieldType::I64.optional(false),
+    //         "Float" | "Float64" => ResolvedInterfaceFieldType::F64.optional(false),
+    //         "Float32" => ResolvedInterfaceFieldType::F32.optional(false),
+    //         "Decimal" => ResolvedInterfaceFieldType::Decimal.optional(false),
+    //         "Date" => ResolvedInterfaceFieldType::Date.optional(false),
+    //         "DateTime" => ResolvedInterfaceFieldType::DateTime.optional(false),
+    //         // other user defined interfaces
+    //         _ => Self::resolve_interface_field_for(parser, source, a)
+    //     }
+    // }
+
+    // pub(crate) fn resolve_interface_field_for(parser: &ASTParser, source: &Source, type_with_generics: &TypeWithGenerics) -> ResolvedInterfaceField {
+    //     let interface_name = type_with_generics.name.name.as_str();
+    //     let binding = parser.interfaces();
+    //     let interface = match binding.iter().find(|i| i.name.name.name.as_str() == interface_name) {
+    //         Some(i) => i,
+    //         None => panic!("Interface with name '{}' is not found.", interface_name)
+    //     };
+    //     let map: HashMap<String, String> = interface.args.iter().enumerate().map(|(i, a)| {
+    //         (a.name.clone(), type_with_generics.args.get(i).unwrap().name.name.clone())
+    //     }).collect();
+    //     let mut shape: HashMap<String, ResolvedInterfaceField> = HashMap::new();
+    //     for item in &interface.items {
+    //         shape.insert(item.name.name.clone(), Self::resolve_type_with_generics_with_map(parser, source, &map, &item.kind));
+    //     }
+    //     ResolvedInterfaceFieldType::Shape(shape).optional(false)
+    // }
+
+    pub(crate) fn need_to_alter_generics_with_map(parser: &ASTParser, source: &Source, map: &HashMap<String, TypeWithGenerics>, def: &TypeWithGenerics) -> bool {
         if map.contains_key(&def.name.name) {
             return true;
         }
@@ -703,14 +720,14 @@ impl Resolver {
         return false;
     }
 
-    pub(crate) fn resolve_type_with_generics_with_map(parser: &ASTParser, source: &Source, map: &HashMap<String, String>, def: &TypeWithGenerics) -> ResolvedInterfaceField {
-        if Self::need_to_alter_generics_with_map(parser, source, map, def) {
-            let replaced_type = def.alter_generics_with(map);
-            Self::resolve_type_with_filled_generics(parser, source, &replaced_type)
-        } else {
-            Self::resolve_type_with_filled_generics(parser, source, def)
-        }
-    }
+    // pub(crate) fn resolve_type_with_generics_with_map(parser: &ASTParser, source: &Source, map: &HashMap<String, TypeWithGenerics>, def: &TypeWithGenerics) -> ResolvedInterfaceField {
+    //     if Self::need_to_alter_generics_with_map(parser, source, map, def) {
+    //         let replaced_type = def.alter_generics_with(map);
+    //         Self::resolve_type_with_filled_generics(parser, source, &replaced_type)
+    //     } else {
+    //         Self::resolve_type_with_filled_generics(parser, source, def)
+    //     }
+    // }
 
     pub(crate) fn resolve_server_config_block(parser: &ASTParser, source: &Source, config: &mut ASTServer) {
         for item in config.items.iter_mut() {

@@ -613,7 +613,6 @@ impl ASTParser {
             input_type: input_type.unwrap(),
             output_type: output_type.unwrap(),
             span,
-            resolved_input_field_types: None,
             resolved_input_interface: None,
             resolved_input_shape: None,
         }
