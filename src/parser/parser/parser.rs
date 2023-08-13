@@ -599,7 +599,7 @@ impl ASTParser {
                     output_type = Some(Self::parse_identifier_with_generic(current));
                 } else {
                     input_type = Some(Self::parse_identifier_with_generic(current));
-                }
+                },
                 Rule::COLON => (),
                 Rule::req_type => (),
                 _ => unreachable!(),
@@ -620,7 +620,6 @@ impl ASTParser {
 
     fn parse_interface_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
         let mut name: Option<TypeWithGenerics> = None;
-        let mut args: Vec<ASTIdentifier> = vec![];
         let mut extends: Vec<TypeWithGenerics> = vec![];
         let mut items: Vec<InterfaceItemDeclaration> = vec![];
         let span = Self::parse_span(&pair);
@@ -634,10 +633,6 @@ impl ASTParser {
                         name = Some(identifier_with_generic);
                     }
                 }
-                Rule::identifier => {
-                    let identifier = Self::parse_identifier(&current);
-                    args.push(identifier);
-                }
                 Rule::interface_item => {
                     let interface_item_decl = self.parse_interface_item_declaration(current);
                     items.push(interface_item_decl);
@@ -649,7 +644,6 @@ impl ASTParser {
             id: item_id,
             source_id,
             name: name.unwrap(),
-            args,
             extends,
             items,
             span,

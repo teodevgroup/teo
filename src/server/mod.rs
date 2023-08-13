@@ -761,19 +761,19 @@ fn make_app(
                         }
                         let mut new_val = original_teon_body.clone();
                         new_val.as_hashmap_mut().unwrap().insert("create".to_owned(), Value::Vec(transformed_entries));
-                        (new_val, new_action)
+                        (new_val, Some(new_action))
                     } else {
                         let ctx = PipelineCtx::initial_state_with_value(original_teon_body, connection.clone(), Some(teo_req.clone())).with_action(original_action);
                         match model_def.transformed_action(ctx).await {
-                            Ok(result) => result,
+                            Ok(result) => (result.0, Some(result.1)),
                             Err(err) => return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), err),
                         }
                     }
                 } else {
-                    (original_teon_body, original_action)
+                    (original_teon_body, Some(original_action))
                 }
             } else {
-                (original_teon_body, original_action.unwrap())
+                (original_teon_body, original_action)
             };
             // Save the request local data into the extension
             let req_ctx = ReqCtx {
@@ -782,7 +782,7 @@ fn make_app(
                 path_components: path_components.clone(),
                 req: teo_req,
                 user_ctx,
-                transformed_action: Some(transformed_action),
+                transformed_action: transformed_action,
                 transformed_teon_body,
                 identity,
                 req_local: ReqLocal::new()

@@ -647,10 +647,14 @@ impl Resolver {
     }
 
     pub(crate) fn resolve_action_input_shape(parser: &ASTParser, source: &Source, interface: &InterfaceDeclaration, input_type: &TypeWithGenerics) -> ResolvedInterfaceField {
-        let map: HashMap<String, TypeWithGenerics> = interface.args.iter().enumerate().map(|(i, a)| {
-            (a.name.clone(), input_type.args.get(i).unwrap().clone())
+        let map: HashMap<String, TypeWithGenerics> = interface.args().iter().enumerate().map(|(i, a)| {
+            (a.name.name.clone(), input_type.args.get(i).unwrap().clone())
         }).collect();
         let mut shape: HashMap<String, ResolvedInterfaceField> = hashmap!{};
+        for extend in &interface.extends {
+            let interface = Self::search_interface_by_name(parser, source, extend.name.name.as_str());
+            Self::install_interface_items_to_shape(parser, source, &map, &interface.items, &mut shape);
+        }
         Self::install_interface_items_to_shape(parser, source, &map, &interface.items, &mut shape);
         ResolvedInterfaceFieldType::Shape(shape).optional(false)
     }
