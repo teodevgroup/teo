@@ -658,11 +658,16 @@ impl Resolver {
     pub(crate) fn install_interface_items_to_shape(parser: &ASTParser, source: &Source, map: &HashMap<String, TypeWithGenerics>, items: &Vec<InterfaceItemDeclaration>, shape: &mut HashMap<String, ResolvedInterfaceField>) {
         for item in items {
             if Self::need_to_alter_generics_with_map(parser, source, map, &item.kind) {
-
+                let replaced_type = item.kind.alter_generics_with(map);
+                Self::install_interface_items_with_generics_filled_to_shape(parser, source, &item.name, &replaced_type, shape);
             } else {
-
+                Self::install_interface_items_with_generics_filled_to_shape(parser, source, &item.name, &item.kind, shape);
             }
         }
+    }
+
+    pub(crate) fn install_interface_items_with_generics_filled_to_shape(parser: &ASTParser, source: &Source, name: &ASTIdentifier, kind: &TypeWithGenerics, shape: &mut HashMap<String, ResolvedInterfaceField>) {
+        shape.insert(name.name.clone(), Self::resolve_type_with_filled_generics(parser, source, kind));
     }
 
     // pub(crate) fn resolve_action_input_field_types(parser: &ASTParser, source: &Source, interface: &InterfaceDeclaration, input_type: &TypeWithGenerics) -> Vec<ResolvedInterfaceField> {
@@ -674,30 +679,39 @@ impl Resolver {
     // }
 
     // we're not handle arrays, maps, enums yet
-    // pub(crate) fn resolve_type_with_filled_generics(parser: &ASTParser, source: &Source, a: &TypeWithGenerics) -> ResolvedInterfaceField {
-    //     match a.name.name.as_str() {
-    //         "String" => ResolvedInterfaceFieldType::String.optional(false),
-    //         "ObjectId" => ResolvedInterfaceFieldType::ObjectId.optional(false),
-    //         "Bool" => ResolvedInterfaceFieldType::Bool.optional(false),
-    //         "Int32" | "Int" => ResolvedInterfaceFieldType::I32.optional(false),
-    //         "Int64" => ResolvedInterfaceFieldType::I64.optional(false),
-    //         "Float" | "Float64" => ResolvedInterfaceFieldType::F64.optional(false),
-    //         "Float32" => ResolvedInterfaceFieldType::F32.optional(false),
-    //         "Decimal" => ResolvedInterfaceFieldType::Decimal.optional(false),
-    //         "Date" => ResolvedInterfaceFieldType::Date.optional(false),
-    //         "DateTime" => ResolvedInterfaceFieldType::DateTime.optional(false),
-    //         // other user defined interfaces
-    //         _ => Self::resolve_interface_field_for(parser, source, a)
-    //     }
-    // }
+    pub(crate) fn resolve_type_with_filled_generics(parser: &ASTParser, source: &Source, a: &TypeWithGenerics) -> ResolvedInterfaceField {
+        match a.name.name.as_str() {
+            "String" => ResolvedInterfaceFieldType::String.optional(false),
+            "ObjectId" => ResolvedInterfaceFieldType::ObjectId.optional(false),
+            "Bool" => ResolvedInterfaceFieldType::Bool.optional(false),
+            "Int32" | "Int" => ResolvedInterfaceFieldType::I32.optional(false),
+            "Int64" => ResolvedInterfaceFieldType::I64.optional(false),
+            "Float" | "Float64" => ResolvedInterfaceFieldType::F64.optional(false),
+            "Float32" => ResolvedInterfaceFieldType::F32.optional(false),
+            "Decimal" => ResolvedInterfaceFieldType::Decimal.optional(false),
+            "Date" => ResolvedInterfaceFieldType::Date.optional(false),
+            "DateTime" => ResolvedInterfaceFieldType::DateTime.optional(false),
+            // other user defined interfaces
+            _ => {
+                let interface_name = a.name.name.as_str();
+                let interface = Self::search_interface_by_name(parser, source, interface_name);
+                Self::resolve_action_input_shape(parser, source, interface, a)
+            }
+        }
+    }
+
+    pub(crate) fn search_interface_by_name<'a>(parser: &'a ASTParser, _source: &'a Source, name: &str) -> &'a InterfaceDeclaration {
+        let binding = parser.interfaces();
+        let interface = match binding.iter().find(|i| i.name.name.name.as_str() == name) {
+            Some(i) => i,
+            None => panic!("Interface with name '{}' is not found.", name)
+        };
+        *interface
+    }
 
     // pub(crate) fn resolve_interface_field_for(parser: &ASTParser, source: &Source, type_with_generics: &TypeWithGenerics) -> ResolvedInterfaceField {
     //     let interface_name = type_with_generics.name.name.as_str();
-    //     let binding = parser.interfaces();
-    //     let interface = match binding.iter().find(|i| i.name.name.name.as_str() == interface_name) {
-    //         Some(i) => i,
-    //         None => panic!("Interface with name '{}' is not found.", interface_name)
-    //     };
+    //     let interface = Self::search_interface_by_name(parser, source, interface_name);
     //     let map: HashMap<String, String> = interface.args.iter().enumerate().map(|(i, a)| {
     //         (a.name.clone(), type_with_generics.args.get(i).unwrap().name.name.clone())
     //     }).collect();
