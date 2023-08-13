@@ -670,14 +670,6 @@ impl Resolver {
         shape.insert(name.name.clone(), Self::resolve_type_with_filled_generics(parser, source, kind));
     }
 
-    // pub(crate) fn resolve_action_input_field_types(parser: &ASTParser, source: &Source, interface: &InterfaceDeclaration, input_type: &TypeWithGenerics) -> Vec<ResolvedInterfaceField> {
-    //     if input_type.args.len() == 0 {
-    //         vec![]
-    //     } else {
-    //         input_type.args.iter().map(|a| Self::resolve_type_with_filled_generics(parser, source, a)).collect()
-    //     }
-    // }
-
     // we're not handle arrays, maps, enums yet
     pub(crate) fn resolve_type_with_filled_generics(parser: &ASTParser, source: &Source, a: &TypeWithGenerics) -> ResolvedInterfaceField {
         match a.name.name.as_str() {
@@ -709,19 +701,6 @@ impl Resolver {
         *interface
     }
 
-    // pub(crate) fn resolve_interface_field_for(parser: &ASTParser, source: &Source, type_with_generics: &TypeWithGenerics) -> ResolvedInterfaceField {
-    //     let interface_name = type_with_generics.name.name.as_str();
-    //     let interface = Self::search_interface_by_name(parser, source, interface_name);
-    //     let map: HashMap<String, String> = interface.args.iter().enumerate().map(|(i, a)| {
-    //         (a.name.clone(), type_with_generics.args.get(i).unwrap().name.name.clone())
-    //     }).collect();
-    //     let mut shape: HashMap<String, ResolvedInterfaceField> = HashMap::new();
-    //     for item in &interface.items {
-    //         shape.insert(item.name.name.clone(), Self::resolve_type_with_generics_with_map(parser, source, &map, &item.kind));
-    //     }
-    //     ResolvedInterfaceFieldType::Shape(shape).optional(false)
-    // }
-
     pub(crate) fn need_to_alter_generics_with_map(parser: &ASTParser, source: &Source, map: &HashMap<String, TypeWithGenerics>, def: &TypeWithGenerics) -> bool {
         if map.contains_key(&def.name.name) {
             return true;
@@ -733,15 +712,6 @@ impl Resolver {
         }
         return false;
     }
-
-    // pub(crate) fn resolve_type_with_generics_with_map(parser: &ASTParser, source: &Source, map: &HashMap<String, TypeWithGenerics>, def: &TypeWithGenerics) -> ResolvedInterfaceField {
-    //     if Self::need_to_alter_generics_with_map(parser, source, map, def) {
-    //         let replaced_type = def.alter_generics_with(map);
-    //         Self::resolve_type_with_filled_generics(parser, source, &replaced_type)
-    //     } else {
-    //         Self::resolve_type_with_filled_generics(parser, source, def)
-    //     }
-    // }
 
     pub(crate) fn resolve_server_config_block(parser: &ASTParser, source: &Source, config: &mut ASTServer) {
         for item in config.items.iter_mut() {
