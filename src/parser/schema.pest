@@ -325,25 +325,27 @@ req_type = {
     JSON_KEYWORD | FORM_KEYWORD
 }
 action_declaration = {
-    DECLARE_KEYWORD ~ ACTION_KEYWORD ~ identifier ~ "(" ~ identifier_with_generic ~ ")" ~ COLON ~ identifier_with_generic ~ (USING_KEYWORD ~ req_type)?
+    DECLARE_KEYWORD ~ ACTION_KEYWORD ~ identifier ~ "(" ~ interface_type ~ ")" ~ COLON ~ interface_type ~ (USING_KEYWORD ~ req_type)?
 }
 
 // #############
 // interface
 // #############
-identifier_with_generic = {
-    identifier ~ ("<" ~ identifier_with_generic ~ ("," ~ identifier_with_generic)* ~ ","? ~ ">")?
+interface_type = {
+    identifier ~ ("<" ~ interface_type ~ ("," ~ interface_type)* ~ ","? ~ ">")? ~ optionality? ~ arity? ~ optionality?
 }
+
 interface_declaration = {
-    INTERFACE_KEYWORD ~ identifier_with_generic ~ (EXTENDS_KEYWORD ~ identifier_with_generic ~ ("," ~ identifier_with_generic)* ~ ","?)? ~ BLOCK_OPEN
+    INTERFACE_KEYWORD ~ interface_type ~ (EXTENDS_KEYWORD ~ interface_type ~ ("," ~ interface_type)* ~ ","?)? ~ BLOCK_OPEN
     ~ (interface_item | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
     ~ BLOCK_CLOSE
 }
 interface_item = {
-    identifier ~ COLON ~ identifier_with_generic
+    identifier ~ COLON ~ interface_type
 }
+
 interface_enum_declaration = {
-    INTERFACE_KEYWORD ~ ENUM_KEYWORD ~ identifier ~ (EXTENDS_KEYWORD ~ identifier_with_generic ~ ("," ~ identifier_with_generic)* ~ ","?)? ~ BLOCK_OPEN
+    INTERFACE_KEYWORD ~ ENUM_KEYWORD ~ identifier ~ (EXTENDS_KEYWORD ~ interface_type ~ ("," ~ interface_type)* ~ ","?)? ~ BLOCK_OPEN
     ~ (enum_value_declaration | block_decorator | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
     ~ BLOCK_CLOSE
 }

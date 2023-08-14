@@ -1,6 +1,6 @@
 use crate::parser::ast::identifier::ASTIdentifier;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub(crate) enum Arity {
     Scalar,
     Array,

@@ -41,7 +41,7 @@ use crate::parser::ast::span::Span;
 use crate::parser::ast::subscript::Subscript;
 use crate::parser::ast::test_conf::ASTTestConf;
 use crate::parser::ast::top::Top;
-use crate::parser::ast::type_with_generic::TypeWithGenerics;
+use crate::parser::ast::interface_type::InterfaceType;
 use crate::parser::ast::unit::Unit;
 use crate::parser::parser::resolver::Resolver;
 use crate::parser::std::decorators::field::GlobalFieldDecorators;
@@ -521,27 +521,41 @@ impl ASTParser {
         DataSetRecord::new(source_id, item_id, identifier.unwrap(), span, dictionary.unwrap())
     }
 
-    fn parse_identifier_with_generic(pair: Pair<'_>) -> TypeWithGenerics {
+    fn parser_interface_type(pair: Pair<'_>) -> InterfaceType {
         let span = Self::parse_span(&pair);
         let mut name: Option<ASTIdentifier> = None;
-        let mut args: Vec<TypeWithGenerics> = vec![];
+        let mut args: Vec<InterfaceType> = vec![];
+        let mut arity: Arity = Arity::Scalar;
+        let mut collection_optionality: bool = false;
+        let mut optionality: bool = false;
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier => {
                     let identifier = Self::parse_identifier(&current);
                     name = Some(identifier);
                 },
-                Rule::identifier_with_generic => {
-                    let identifier = Self::parse_identifier_with_generic(current);
+                Rule::interface_type => {
+                    let identifier = Self::parser_interface_type(current);
                     args.push(identifier);
                 }
+                Rule::arity => if current.as_str() == "[]" { arity = Arity::Array; } else { arity = Arity::Dictionary; },
+                Rule::optionality => {
+                    if arity == Arity::Scalar {
+                        optionality = true;
+                    } else {
+                        collection_optionality = true;
+                    }
+                },
                 _ => panic!(),
             }
         }
-        TypeWithGenerics {
+        InterfaceType {
             name: name.unwrap(),
             args,
             span,
+            arity,
+            collection_optional: collection_optionality,
+            optional: optionality,
         }
     }
 
@@ -589,16 +603,16 @@ impl ASTParser {
 
     fn parse_action_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, group_id: usize) -> ActionDeclaration {
         let mut identifier: Option<ASTIdentifier> = None;
-        let mut input_type: Option<TypeWithGenerics> = None;
-        let mut output_type: Option<TypeWithGenerics> = None;
+        let mut input_type: Option<InterfaceType> = None;
+        let mut output_type: Option<InterfaceType> = None;
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
-                Rule::identifier_with_generic => if input_type.is_some() {
-                    output_type = Some(Self::parse_identifier_with_generic(current));
+                Rule::interface_type => if input_type.is_some() {
+                    output_type = Some(Self::parser_interface_type(current));
                 } else {
-                    input_type = Some(Self::parse_identifier_with_generic(current));
+                    input_type = Some(Self::parser_interface_type(current));
                 },
                 Rule::COLON => (),
                 Rule::req_type => (),
@@ -619,18 +633,18 @@ impl ASTParser {
     }
 
     fn parse_interface_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
-        let mut name: Option<TypeWithGenerics> = None;
-        let mut extends: Vec<TypeWithGenerics> = vec![];
+        let mut name: Option<InterfaceType> = None;
+        let mut extends: Vec<InterfaceType> = vec![];
         let mut items: Vec<InterfaceItemDeclaration> = vec![];
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::identifier_with_generic => {
-                    let identifier_with_generic = Self::parse_identifier_with_generic(current);
+                Rule::interface_type => {
+                    let interface_type = Self::parser_interface_type(current);
                     if name.is_some() {
-                        extends.push(identifier_with_generic);
+                        extends.push(interface_type);
                     } else {
-                        name = Some(identifier_with_generic);
+                        name = Some(interface_type);
                     }
                 }
                 Rule::interface_item => {
@@ -652,12 +666,12 @@ impl ASTParser {
 
     fn parse_interface_item_declaration(&mut self, pair: Pair<'_>) -> InterfaceItemDeclaration {
         let mut name: Option<ASTIdentifier> = None;
-        let mut kind: Option<TypeWithGenerics> = None;
+        let mut kind: Option<InterfaceType> = None;
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier => name = Some(Self::parse_identifier(&current)),
-                Rule::identifier_with_generic => kind = Some(Self::parse_identifier_with_generic(current)),
+                Rule::interface_type => kind = Some(Self::parser_interface_type(current)),
                 _ => (),
             }
         }

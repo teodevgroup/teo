@@ -22,7 +22,7 @@ use crate::seeder::data_set::{DataSet, Group, Record};
 use crate::seeder::models::define::define_seeder_models;
 use crate::server::conf::ServerConf;
 use crate::core::result::Result;
-use crate::parser::ast::type_with_generic::TypeWithGenerics;
+use crate::parser::ast::interface_type::InterfaceType;
 
 pub(super) fn parse_schema(main: Option<&str>) -> Result<()> {
     // load env first
@@ -335,7 +335,7 @@ pub(super) fn load_schema() -> Result<()> {
     Ok(())
 }
 
-fn interface_ref_from(type_with_generics: &TypeWithGenerics) -> InterfaceRef {
+fn interface_ref_from(type_with_generics: &InterfaceType) -> InterfaceRef {
     InterfaceRef {
         name: type_with_generics.name.name.clone(),
         args: type_with_generics.args.iter().map(|a| {

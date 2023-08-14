@@ -34,4 +34,4 @@ pub(crate) mod debug_conf;
 pub(crate) mod middleware;
 pub(crate) mod action;
 pub(crate) mod interface;
-pub(crate) mod type_with_generic;
+pub(crate) mod interface_type;

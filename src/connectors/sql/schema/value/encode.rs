@@ -125,12 +125,6 @@ impl ToSQLString for &Value {
     }
 }
 
-impl ToSQLString for Value {
-    fn to_string(&self, dialect: SQLDialect) -> String {
-        ToSQLString::to_string(self, dialect)
-    }
-}
-
 pub(crate) trait PSQLArrayToSQLString {
     fn to_string_with_ft(&self, dialect: SQLDialect, field_type: &FieldType) -> String;
 }
