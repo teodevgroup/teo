@@ -10,7 +10,13 @@ pub(crate) mod migrate;
 
 pub mod prelude {
     pub use crate::app::app::App;
+    pub use crate::app::routes::middleware_ctx::*;
+    pub use crate::app::routes::action_ctx::*;
     pub use crate::app::routes::*;
+    pub use crate::app::routes::req_local::*;
+    pub use crate::app::routes::res::*;
+    pub use crate::app::routes::req::*;
+    pub use crate::app::routes::readonly_header_map::*;
     pub use crate::server::ReqCtx;
     pub use crate::app::routes::req::Req;
     pub use crate::app::routes::res::Res;
