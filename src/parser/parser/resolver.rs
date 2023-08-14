@@ -675,6 +675,17 @@ impl Resolver {
         shape.insert(name.name.clone(), Self::resolve_type_with_filled_generics(parser, source, kind));
     }
 
+    pub(crate) fn resolve_predefined_interface_type(parser: &ASTParser, source: &Source, a: &InterfaceType) -> Option<ResolvedInterfaceFieldType> {
+        Some(match a.name.name.as_str() {
+            "Data" => ResolvedInterfaceFieldType::Shape(hashmap!{"data".to_owned() => Self::resolve_type_with_filled_generics(parser, source, a.args.get(0).unwrap())}),
+            "DataMeta" => ResolvedInterfaceFieldType::Shape(hashmap!{
+                "data".to_owned() => Self::resolve_type_with_filled_generics(parser, source, a.args.get(0).unwrap()),
+                "meta".to_owned() => Self::resolve_type_with_filled_generics(parser, source, a.args.get(1).unwrap()),
+            }),
+            _ => None?,
+        })
+    }
+
     // we're not handle arrays, maps, enums yet
     pub(crate) fn resolve_type_with_filled_generics(parser: &ASTParser, source: &Source, a: &InterfaceType) -> ResolvedInterfaceField {
         let result_without_arity = match a.name.name.as_str() {
@@ -692,9 +703,13 @@ impl Resolver {
             "Dict" => ResolvedInterfaceFieldType::HashMap(Box::new(Self::resolve_type_with_filled_generics(parser, source, a.args.get(0).unwrap()))).optional(a.collection_optional),
             // other user defined interfaces
             _ => {
-                let interface_name = a.name.name.as_str();
-                let interface = Self::search_interface_by_name(parser, source, interface_name);
-                Self::resolve_action_input_shape(parser, source, interface, a, a.optional)
+                if let Some(result) = Self::resolve_predefined_interface_type(parser, source, a) {
+                    result.optional(a.optional)
+                } else {
+                    let interface_name = a.name.name.as_str();
+                    let interface = Self::search_interface_by_name(parser, source, interface_name);
+                    Self::resolve_action_input_shape(parser, source, interface, a, a.optional)
+                }
             }
         };
         match a.arity {
