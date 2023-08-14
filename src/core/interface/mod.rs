@@ -37,6 +37,7 @@ pub struct ResolvedInterfaceField {
 
 #[derive(Debug, Clone)]
 pub enum ResolvedInterfaceFieldType {
+    Any,
     ObjectId,
     Bool,
     I32,

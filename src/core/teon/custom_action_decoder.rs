@@ -19,6 +19,7 @@ pub(crate) fn transform_custom_action_json_into_teon(json_value: &JsonValue, rul
     }
     validate_json_value_type(json_value, rule, path)?;
     match &rule.field_type {
+        ResolvedInterfaceFieldType::Any => Ok(Value::from(json_value)),
         ResolvedInterfaceFieldType::ObjectId => match ObjectId::parse_str(json_value.as_str().unwrap()) {
             Ok(s) => Ok(Value::ObjectId(s)),
             Err(_err) => Err(Error::unexpected_input_value("object id string", path)),
@@ -88,6 +89,7 @@ pub(crate) fn transform_custom_action_json_into_teon(json_value: &JsonValue, rul
 
 fn validate_json_value_type(json_value: &JsonValue, rule: &ResolvedInterfaceField, path: &KeyPath<'_>) -> Result<()> {
     match &rule.field_type {
+        ResolvedInterfaceFieldType::Any => (),
         ResolvedInterfaceFieldType::ObjectId => {
             if !json_value.is_string() {
                 return Err(Error::unexpected_input_type("object id string", path));

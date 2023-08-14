@@ -2,8 +2,36 @@ use std::collections::{BTreeMap, HashMap};
 use bson::oid::ObjectId;
 use chrono::{NaiveDate, DateTime, Utc};
 use bigdecimal::BigDecimal;
+use serde_json::Value as JsonValue;
 use crate::core::teon::Value;
 use crate::prelude::Object;
+
+// MARK: - serde_json
+
+impl From<&JsonValue> for Value {
+    fn from(value: &JsonValue) -> Self {
+        match value {
+            JsonValue::Bool(b) => Self::Bool(*b),
+            JsonValue::Number(n) => if n.is_i64() {
+                Self::I64(n.as_i64().unwrap())
+            } else if n.is_f64() {
+                Self::F64(n.as_f64().unwrap())
+            } else if n.is_u64() {
+                Self::I64(n.as_i64().unwrap())
+            } else {
+                unreachable!()
+            },
+            JsonValue::String(s) => Self::String(s.clone()),
+            JsonValue::Null => Self::Null,
+            JsonValue::Array(vec) => Self::Vec(vec.iter().map(|v| {
+                Self::from(v)
+            }).collect()),
+            JsonValue::Object(obj) => Self::HashMap(obj.iter().map(|(k, v)| {
+                (k.to_owned(), Self::from(v))
+            }).collect()),
+        }
+    }
+}
 
 // MARK: - Self
 impl From<&Value> for Value {

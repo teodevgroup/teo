@@ -701,6 +701,7 @@ impl Resolver {
             "DateTime" => ResolvedInterfaceFieldType::DateTime.optional(a.optional),
             "Array" => ResolvedInterfaceFieldType::Vec(Box::new(Self::resolve_type_with_filled_generics(parser, source, a.args.get(0).unwrap()))).optional(a.collection_optional),
             "Dict" => ResolvedInterfaceFieldType::HashMap(Box::new(Self::resolve_type_with_filled_generics(parser, source, a.args.get(0).unwrap()))).optional(a.collection_optional),
+            "Any" => ResolvedInterfaceFieldType::Any.optional(a.optional),
             // other user defined interfaces
             _ => {
                 if let Some(result) = Self::resolve_predefined_interface_type(parser, source, a) {
