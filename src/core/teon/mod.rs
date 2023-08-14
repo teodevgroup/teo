@@ -605,7 +605,7 @@ impl Value {
             Value::Date(d) => Cow::Owned(d.to_string()),
             Value::DateTime(dt) => Cow::Owned(dt.to_rfc3339_opts(SecondsFormat::Millis, true)),
             Value::Vec(v) => Cow::Owned("[".to_string() + v.iter().map(|v| v.fmt_for_display()).join(", ").as_str() + "]"),
-            Value::HashMap(_) => unreachable!(),
+            Value::HashMap(m) => Cow::Owned("{".to_string() + m.iter().map(|(k, v)| format!("\"{k}\": {}", v.fmt_for_display())).join(", ").as_str() + "}"),
             Value::BTreeMap(_) => unreachable!(),
             Value::IndexMap(_) => unreachable!(),
             Value::Range(_) => unreachable!(),
