@@ -444,8 +444,9 @@
 - Better object inspection **[Done]**
 
 #### 0.0.57
-- Custom routes: action
-- Custom routes: middleware
+- Custom routes: action **[Done]**
+- Custom routes: middleware **[Done]**
+- namespace
 
 #### 0.0.58
 - Database specific database types

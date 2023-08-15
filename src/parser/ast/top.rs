@@ -1,4 +1,4 @@
-use crate::parser::ast::action::{ActionDeclaration, ActionGroupDeclaration};
+use crate::parser::ast::action::ActionGroupDeclaration;
 use crate::parser::ast::client::ASTClient;
 use crate::parser::ast::config::ASTServer;
 use crate::parser::ast::connector::ASTConnector;

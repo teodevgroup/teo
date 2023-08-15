@@ -234,6 +234,7 @@ impl ASTParser {
                     self.middlewares.push((source_id, item_id));
                 },
                 Rule::interface_enum_declaration => (),
+                Rule::namespace => (),
                 Rule::CATCH_ALL => panic!("Catch all: {}", current.as_str()),
                 _ => panic!("Parsing panic! {}", current),
             }

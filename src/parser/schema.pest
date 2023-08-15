@@ -1,6 +1,6 @@
 schema = {
     SOI
-    ~ (import_statement | config_declaration | enum_declaration | model_declaration | let_declaration | dataset_declaration | interface_declaration | interface_enum_declaration | middleware_declaration | action_group_declaration | comment_block | EMPTY_LINES | CATCH_ALL)*
+    ~ (namespace | import_statement | config_declaration | enum_declaration | model_declaration | let_declaration | dataset_declaration | interface_declaration | interface_enum_declaration | middleware_declaration | action_group_declaration | comment_block | EMPTY_LINES | CATCH_ALL)*
     ~ EOI
 }
 
@@ -19,6 +19,7 @@ CLIENT_KEYWORD = { "client" }
 ENTITY_KEYWORD = { "entity" }
 DEBUG_KEYWORD = { "debug" }
 TEST_KEYWORD = { "test" }
+NAMESPACE_KEYWORD = { "namespace" }
 IMPORT_KEYWORD = _{ "import" }
 FROM_KEYWORD = _{ "from" }
 DATASET_KEYWORD = _{ "dataset" }
@@ -340,6 +341,7 @@ interface_declaration = {
     ~ (interface_item | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
     ~ BLOCK_CLOSE
 }
+
 interface_item = {
     identifier ~ COLON ~ interface_type
 }
@@ -347,5 +349,15 @@ interface_item = {
 interface_enum_declaration = {
     INTERFACE_KEYWORD ~ ENUM_KEYWORD ~ identifier ~ (EXTENDS_KEYWORD ~ interface_type ~ ("," ~ interface_type)* ~ ","?)? ~ BLOCK_OPEN
     ~ (enum_value_declaration | block_decorator | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
+    ~ BLOCK_CLOSE
+}
+
+// #############
+// namespace
+// #############
+namespace = {
+    NAMESPACE_KEYWORD ~ identifier
+    ~ BLOCK_OPEN
+    ~ (namespace | import_statement | config_declaration | enum_declaration | model_declaration | let_declaration | dataset_declaration | interface_declaration | interface_enum_declaration | middleware_declaration | action_group_declaration | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
     ~ BLOCK_CLOSE
 }
