@@ -448,6 +448,7 @@
 - Custom routes: middleware **[Done]**
 - Fixed action `program code` is recognized as any action bug **[Done]**
 - Fixed where unique input is ordered bug **[Done]**
+- Fixed `teon` macros are not found bug **[Done]**
 - namespace
 
 #### 0.0.58

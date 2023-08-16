@@ -23,6 +23,9 @@ pub mod prelude {
     pub use crate::core::graph::Graph;
     pub use crate::core::teon::Value;
     pub use crate::teon;
+    pub use crate::teon_vec;
+    pub use crate::teon_unexpected;
+    pub use crate::teon_expect_expr_comma;
     pub use crate::core::object::Object;
     pub extern crate tokio;
     pub use tokio::main;
