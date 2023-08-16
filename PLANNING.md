@@ -455,14 +455,10 @@
 - Database specific database types
 - Full custom types for all supported databases
 - Rewrite Node.js client generating with askama engine
-- Refactor Node.js entities
 - The copy action
 - PostgreSQL: Enum types
 
 #### 0.0.59
-- Node.js bindings: error handling
-- Node.js object printing
-- Node.js bindings: date only type
 - Enum value references enum definition
 - Add synthesised enums to graph
 - Foreign key management
@@ -475,16 +471,12 @@
 - Client: distinct in handler args
 - C# client: capitalized names and names with underscore
 - TypeScript client: correct return types for `aggregate` and `groupBy`
-- VSCode highlight for data seeding
-- Node.js client use dedicated `Date` class instead of builtin `Date`
-- Cross language error handling for node.js
 - Connector bug: unique constraint violating: error message should have key path
 - Log SQL queries
 - Migration dry run
 - MongoDB: connector is not using table name
 
 #### 0.0.60
-- Python server
 - Migration decorator docs
 - Dropped decorator docs
 - MongoDB migration
@@ -513,19 +505,25 @@
 - Support code comment tags for VSCode
 
 #### 0.1.0
-- First stable release with unit test covering
+- Node.js bindings: error handling
+- Node.js object printing
+- Node.js bindings: date only type
+- Python server
+- Node.js client use dedicated `Date` class instead of builtin `Date`
+- Cross language error handling for node.js
+- Refactor Node.js entities
 
 #### 0.2.0
-- Database type mapping for field, property and collection types' item field
+- First stable release with unit test covering
 
 #### 0.3.0
-- Support MSSQL
+- Database type mapping for field, property and collection types' item field
 
 #### 0.4.0
-- `@canAccess`
+- Support MSSQL
 
 #### 0.5.0
-- Custom routes
+- `@canAccess`
 
 #### 1.0.0
 - First major version
