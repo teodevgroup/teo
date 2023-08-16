@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::collections::HashSet;
 use array_tool::vec::Join;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::field::field::Sort;
@@ -124,6 +125,10 @@ impl ModelIndex {
 
     pub(crate) fn keys(&self) -> &Vec<&'static str> {
         &self.keys
+    }
+
+    pub(crate) fn keys_set(&self) -> HashSet<&'static str> {
+        self.keys.iter().map(|s| *s).collect::<HashSet<&'static str>>()
     }
 
     pub(crate) fn to_sql_drop(&self, dialect: SQLDialect, table_name: &str) -> String {

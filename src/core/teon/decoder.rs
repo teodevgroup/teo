@@ -803,7 +803,8 @@ impl Decoder {
             return Err(Error::unexpected_input_value_with_reason("Unique where can't be empty.", path));
         }
         for index in model.indices() {
-            if index.keys() == &json_map.keys().into_iter().map(|k| k.to_owned()).collect::<Vec<String>>() {
+            let set = json_map.keys().into_iter().map(|k| k.as_str()).collect::<HashSet<&str>>();
+            if index.keys_set() == set {
                 let mut retval: HashMap<String, Value> = HashMap::new();
                 for (key, value) in json_map {
                     let field = model.field(key).unwrap();
