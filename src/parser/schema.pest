@@ -1,6 +1,6 @@
 schema = {
     SOI
-    ~ (namespace | import_statement | config_declaration | enum_declaration | model_declaration | let_declaration | dataset_declaration | interface_declaration | interface_enum_declaration | middleware_declaration | model_decorator_declaration | field_decorator_declaration | relation_decorator_declaration | property_decorator_declaration | action_group_declaration | comment_block | EMPTY_LINES | CATCH_ALL)*
+    ~ (namespace | import_statement | config_declaration | enum_declaration | model_declaration | let_declaration | dataset_declaration | interface_declaration | interface_enum_declaration | middleware_declaration | model_decorator_declaration | field_decorator_declaration | relation_decorator_declaration | property_decorator_declaration | pipeline_item_declaration | action_group_declaration | comment_block | EMPTY_LINES | CATCH_ALL)*
     ~ EOI
 }
 
@@ -16,6 +16,8 @@ MODEL_KEYWORD = { "model" }
 FIELD_KEYWORD = { "field" }
 RELATION_KEYWORD = { "relation" }
 PROPERTY_KEYWORD = { "property" }
+PIPELINE_KEYWORD = { "pipeline" }
+ITEM_KEYWORD = { "item" }
 SERVER_KEYWORD = { "server" }
 CONNECTOR_KEYWORD = { "connector" }
 CLIENT_KEYWORD = { "client" }
@@ -244,6 +246,12 @@ block_decorator = { "@@" ~ identifier_unit }
 pipeline = { "$" ~ identifier_unit }
 
 // #############
+// arguments declaration
+// #############
+argument_list_declaration = { "(" ~ (NEWLINE | WHITESPACE)* ~ (argument_declaration ~ ((NEWLINE | WHITESPACE)* ~ "," ~ (NEWLINE | WHITESPACE)* ~ argument_declaration ~ (NEWLINE | WHITESPACE)*)*)? ~ TRAILING_COMMA? ~ (NEWLINE | WHITESPACE)* ~ ")" }
+argument_declaration = { identifier ~ ":" ~ interface_type }
+
+// #############
 // config blocks
 // #############
 
@@ -319,23 +327,27 @@ dataset_group_record_declaration = {
 // declare
 // #############
 middleware_declaration = {
-    DECLARE_KEYWORD ~ MIDDLEWARE_KEYWORD ~ identifier
+    DECLARE_KEYWORD ~ MIDDLEWARE_KEYWORD ~ identifier ~ argument_list_declaration?
 }
 
 model_decorator_declaration = {
-    DECLARE_KEYWORD ~ MODEL_KEYWORD ~ DECORATOR_KEYWORD ~ identifier
+    DECLARE_KEYWORD ~ MODEL_KEYWORD ~ DECORATOR_KEYWORD ~ identifier ~ argument_list_declaration?
 }
 
 field_decorator_declaration = {
-    DECLARE_KEYWORD ~ FIELD_KEYWORD ~ DECORATOR_KEYWORD ~ identifier
+    DECLARE_KEYWORD ~ FIELD_KEYWORD ~ DECORATOR_KEYWORD ~ identifier ~ argument_list_declaration?
 }
 
 relation_decorator_declaration = {
-    DECLARE_KEYWORD ~ RELATION_KEYWORD ~ DECORATOR_KEYWORD ~ identifier
+    DECLARE_KEYWORD ~ RELATION_KEYWORD ~ DECORATOR_KEYWORD ~ identifier ~ argument_list_declaration?
 }
 
 property_decorator_declaration = {
-    DECLARE_KEYWORD ~ PROPERTY_KEYWORD ~ DECORATOR_KEYWORD ~ identifier
+    DECLARE_KEYWORD ~ PROPERTY_KEYWORD ~ DECORATOR_KEYWORD ~ identifier ~ argument_list_declaration?
+}
+
+pipeline_item_declaration = {
+    DECLARE_KEYWORD ~ PIPELINE_KEYWORD ~ ITEM_KEYWORD ~ identifier ~ ("<" ~ interface_type ~ ("," ~ interface_type)* ~ ","? ~ ">")? ~ argument_list_declaration?
 }
 
 action_group_declaration = {
@@ -381,6 +393,6 @@ interface_enum_declaration = {
 namespace = {
     NAMESPACE_KEYWORD ~ identifier
     ~ BLOCK_OPEN
-    ~ (namespace | import_statement | config_declaration | enum_declaration | model_declaration | let_declaration | dataset_declaration | interface_declaration | interface_enum_declaration | middleware_declaration | model_decorator_declaration | field_decorator_declaration | relation_decorator_declaration | property_decorator_declaration | action_group_declaration | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
+    ~ (namespace | import_statement | config_declaration | enum_declaration | model_declaration | let_declaration | dataset_declaration | interface_declaration | interface_enum_declaration | middleware_declaration | model_decorator_declaration | field_decorator_declaration | relation_decorator_declaration | property_decorator_declaration | pipeline_item_declaration | action_group_declaration | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
     ~ BLOCK_CLOSE
 }

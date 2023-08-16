@@ -235,6 +235,11 @@ impl ASTParser {
                 },
                 Rule::interface_enum_declaration => (),
                 Rule::namespace => (),
+                Rule::model_decorator_declaration => (),
+                Rule::field_decorator_declaration => (),
+                Rule::relation_decorator_declaration => (),
+                Rule::property_decorator_declaration => (),
+                Rule::pipeline_item_declaration => (),
                 Rule::CATCH_ALL => panic!("Catch all: {}", current.as_str()),
                 _ => panic!("Parsing panic! {}", current),
             }
@@ -566,6 +571,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier => name = Some(Self::parse_identifier(&current)),
+                Rule::argument_list_declaration => (),
                 _ => unreachable!(),
             }
         }

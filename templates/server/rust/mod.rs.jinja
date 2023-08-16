@@ -16,7 +16,7 @@ use bson::oid::ObjectId;
 use teo::core::callbacks::params::callback::{CallbackParam, ExtractFromCallbackParam};
 use teo::core::callbacks::params::compare::{CompareParam, ExtractFromCompareParam};
 use teo::core::ctx::user::UserCtx;
-use teo::prelude::{Object, Value, Result, ModelCtx, ExtractValueFromReqCtx, ActionCtxBase};
+use teo::prelude::{Object, Value, Result, ModelCtx, ExtractValueFromReqCtx, ReqCtx};
 use teo::teon;
 {%- if outline.enums.len() > 0 %}
 use teo::core::error::*;
@@ -444,7 +444,7 @@ pub struct Teo {
 }
 
 impl ExtractValueFromReqCtx for Teo {
-    fn extract(param: &ActionCtxBase) -> Self {
+    fn extract(param: &ReqCtx) -> Self {
         Self { user_ctx: param.user_ctx.clone() }
     }
 }
