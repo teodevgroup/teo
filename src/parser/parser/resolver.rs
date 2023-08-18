@@ -47,13 +47,14 @@ use crate::parser::ast::interface::{InterfaceDeclaration, InterfaceItemDeclarati
 use crate::parser::ast::test_conf::ASTTestConf;
 use crate::parser::ast::interface_type::InterfaceType;
 use crate::parser::ast::r#type::Arity;
+use crate::parser::diagnostics::diagnostics::Diagnostics;
 use crate::parser::std::pipeline::global::{GlobalFunctionInstallers, GlobalPipelineInstallers};
 
 pub(crate) struct Resolver { }
 
 impl Resolver {
 
-    pub(crate) fn resolve_parser(parser: &ASTParser) {
+    pub(crate) fn resolve_parser(parser: &ASTParser, diagnostics: &mut Diagnostics) {
         let database_name = Self::resolve_connector(parser);
         parser.set_global_model_decorators(GlobalModelDecorators::new());
         parser.set_global_field_decorators(GlobalFieldDecorators::new(database_name));
@@ -62,15 +63,15 @@ impl Resolver {
         parser.set_global_pipeline_installers(GlobalPipelineInstallers::new());
         parser.set_global_function_installers(GlobalFunctionInstallers::new());
         let main = parser.get_source(1);
-        Self::resolve_source(parser, main);
+        Self::resolve_source(parser, main, diagnostics);
         for (index, source) in parser.sources.iter() {
             if *index == 1 { continue }
-            Self::resolve_source(parser, source);
+            Self::resolve_source(parser, source, diagnostics);
         }
         parser.to_mut().resolved = true;
     }
 
-    pub(crate) fn resolve_source(parser: &ASTParser, source: &Source) {
+    pub(crate) fn resolve_source(parser: &ASTParser, source: &Source, diagnostics: &mut Diagnostics) {
         if source.resolved { return }
         for (_item_id, top) in source.to_mut().tops.iter_mut() {
             match top {

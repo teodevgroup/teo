@@ -43,6 +43,7 @@ use crate::parser::ast::test_conf::ASTTestConf;
 use crate::parser::ast::top::Top;
 use crate::parser::ast::interface_type::InterfaceType;
 use crate::parser::ast::unit::Unit;
+use crate::parser::diagnostics::diagnostics::Diagnostics;
 use crate::parser::parser::resolver::Resolver;
 use crate::parser::std::decorators::field::GlobalFieldDecorators;
 use crate::parser::std::decorators::model::GlobalModelDecorators;
@@ -136,6 +137,7 @@ impl ASTParser {
     }
 
     pub(crate) fn parse(&mut self, main: Option<&str>) -> () {
+        let mut diagnostics = Diagnostics::new();
         let main = if main.is_some() { main.unwrap() } else {
             let mut result: Option<&str> = None;
             for name in ["schema.teo", "src/schema.teo", "index.teo", "src/index.teo"] {
@@ -160,11 +162,11 @@ impl ASTParser {
             Ok(path) => path,
             Err(_) => panic!("Schema file '{}' is not found.", relative.to_str().unwrap()),
         };
-        self.parse_source(&absolute);
-        Resolver::resolve_parser(self);
+        self.parse_source(&absolute, &mut diagnostics);
+        Resolver::resolve_parser(self, &mut diagnostics);
     }
 
-    fn parse_source(&mut self, path: &PathBuf) {
+    fn parse_source(&mut self, path: &PathBuf, diagnostics: &mut Diagnostics) {
         let source_id = self.next_id();
         let content = match fs::read_to_string(&path) {
             Ok(content) => content,
@@ -256,7 +258,7 @@ impl ASTParser {
         self.sources.insert(source_id, result);
     }
 
-    fn parse_import(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, path: PathBuf) -> Top {
+    fn parse_import(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, path: PathBuf, diagnostics: &mut Diagnostics) -> Top {
         let mut identifiers = vec![];
         let span = Self::parse_span(&pair);
         let mut source: Option<StringLiteral> = None;
@@ -264,7 +266,7 @@ impl ASTParser {
             match current.as_rule() {
                 Rule::string_literal => source = Some(StringLiteral { value: current.as_str().to_string(), span }),
                 Rule::import_identifier_list => identifiers = Self::parse_import_identifier_list(current),
-                _ => unreachable!(),
+                _ => diagnostics.insert_unparsed_rule_and_exit(span, current.as_str()),
             }
         }
         let unescaped = unescape(source.as_ref().unwrap().value.as_str()).unwrap();

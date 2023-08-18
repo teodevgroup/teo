@@ -450,6 +450,7 @@
 - Fixed where unique input is ordered bug **[Done]**
 - Fixed `teon` macros are not found bug **[Done]**
 - namespace
+- Diagnostic messages
 
 #### 0.0.58
 - Database specific database types
