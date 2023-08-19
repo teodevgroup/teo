@@ -188,6 +188,7 @@ impl ASTParser {
         let mut pairs = pairs.into_inner().peekable();
 
         while let Some(current) = pairs.next() {
+            let span = Self::parse_span(&current);
             let item_id = self.next_id();
             match current.as_rule() {
                 Rule::import_statement => {
@@ -245,8 +246,8 @@ impl ASTParser {
                 Rule::relation_decorator_declaration => (),
                 Rule::property_decorator_declaration => (),
                 Rule::pipeline_item_declaration => (),
-                Rule::CATCH_ALL => panic!("Catch all: {}", current.as_str()),
-                _ => panic!("Parsing panic! {}", current),
+                Rule::CATCH_ALL => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         let result = Source::new(source_id, path.clone(), tops, imports, constants, enums, models);
@@ -267,9 +268,12 @@ impl ASTParser {
         let mut source: Option<StringLiteral> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::string_literal => source = Some(StringLiteral { value: current.as_str().to_string(), span }),
+                Rule::string_literal => {
+                    let string_span = Self::parse_span(&current);
+                    source = Some(StringLiteral { value: current.as_str().to_string(), span: string_span });
+                },
                 Rule::import_identifier_list => identifiers = self.parse_import_identifier_list(current, source_id, diagnostics),
-                _ => self.insert_unparsed_rule_and_exit(diagnostics, span, source_id),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         let unescaped = unescape(source.as_ref().unwrap().value.as_str()).unwrap();
@@ -279,7 +283,10 @@ impl ASTParser {
         let new = dir.join(&relative);
         let absolute = match Self::canonicalize(&new) {
             Some(path) => path,
-            None => panic!("Schema file '{}' is not found.", relative.to_str().unwrap()),
+            None => {
+                self.insert_diagnostics_error_and_exit(format!("Schema file '{}' doesn't exist", relative.to_str().unwrap()), diagnostics, source.unwrap().span, source_id);
+                panic!()
+            },
         };
         Top::Import(ASTImport::new(item_id, source_id, identifiers, source.unwrap(), absolute, span))
     }
@@ -322,7 +329,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::triple_comment => {
-                    let (token, doc) = Self::parse_comment_line(current);
+                    let (token, doc) = self.parse_comment_line(current, source_id, diagnostics);
                     if let Some(token) = token {
                         if &token == "@name" {
                             name = doc;
@@ -335,7 +342,7 @@ impl ASTParser {
                 },
                 Rule::double_comment_block => {},
                 Rule::double_comment => {},
-                _ => self.insert_unparsed_rule_and_exit(diagnostics, span, source_id),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         CommentBlock {
@@ -353,14 +360,14 @@ impl ASTParser {
         }
     }
 
-    fn parse_comment_line(pair: Pair<'_>) -> (Option<String>, String) {
+    fn parse_comment_line(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> (Option<String>, String) {
         let mut token = None;
         let mut content = "".to_owned();
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::comment_token => token = Some(current.as_str().to_string()),
                 Rule::doc_content => content = current.as_str().to_string(),
-                _ => unreachable!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         (token, content)
@@ -380,7 +387,7 @@ impl ASTParser {
                 Rule::block_decorator => decorators.push(self.parse_decorator(current, source_id, diagnostics)),
                 Rule::item_decorator => decorators.push(self.parse_decorator(current, source_id, diagnostics)),
                 Rule::triple_comment_block => comment_block = Some(self.parse_comment_block(current, source_id, diagnostics)),
-                _ => self.insert_unparsed_rule_and_exit(diagnostics, span, source_id),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         Top::Model(ASTModel::new(
@@ -408,7 +415,7 @@ impl ASTParser {
                 Rule::field_type => r#type = Some(self.parse_type(current, diagnostics, source_id)),
                 Rule::item_decorator => decorators.push(self.parse_decorator(current, source_id, diagnostics)),
                 Rule::double_comment_block => {},
-                _ => self.insert_unparsed_rule_and_exit(diagnostics, span, source_id),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         ASTField::new(
@@ -433,7 +440,7 @@ impl ASTParser {
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::enum_value_declaration => choices.push(self.parse_enum_value(current, source_id, diagnostics)),
                 Rule::block_decorator => decorators.push(self.parse_decorator(current, source_id, diagnostics)),
-                _ => panic!("error. {}", current.as_str()),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         Top::Enum(ASTEnum::new(
@@ -458,7 +465,7 @@ impl ASTParser {
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::item_decorator => decorators.push(self.parse_decorator(current, source_id, diagnostics)),
                 Rule::triple_comment_block => comment_block = Some(self.parse_comment_block(current, source_id, diagnostics)),
-                _ => panic!("error: {}", current.as_str()),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         EnumChoice::new(identifier.unwrap(),comment_block,decorators, span)
@@ -472,7 +479,7 @@ impl ASTParser {
             match current.as_rule() {
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::expression => expression = Some(self.parse_expression(current, source_id, diagnostics)),
-                _ => panic!("error."),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         Top::Constant(Constant::new(item_id, source_id, identifier.unwrap(), expression.unwrap(), span))
@@ -495,7 +502,7 @@ impl ASTParser {
                     groups.push(self.parse_dataset_group(current, source_id, next_id, diagnostics));
                 },
                 Rule::comment_block => (),
-                _ => panic!("error."),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         Top::DataSet(DataSet::new(span, source_id, item_id, identifier.unwrap(), auto_seed, notrack, groups))
@@ -514,7 +521,7 @@ impl ASTParser {
                     records.push(self.parse_dataset_record_declaration(current, source_id, next_id, diagnostics));
                 },
                 Rule::comment_block => (),
-                _ => panic!("error."),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         DataSetGroup::new(source_id, item_id, identifier.unwrap(), span, records)
@@ -559,7 +566,7 @@ impl ASTParser {
                         collection_optionality = true;
                     }
                 },
-                _ => panic!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         InterfaceType {
@@ -579,7 +586,7 @@ impl ASTParser {
             match current.as_rule() {
                 Rule::identifier => name = Some(Self::parse_identifier(&current)),
                 Rule::argument_list_declaration => (),
-                _ => unreachable!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         Top::MiddlewareDeclaration(MiddlewareDeclaration {
@@ -603,7 +610,7 @@ impl ASTParser {
                     actions.push(self.parse_action_declaration(current, source_id, action_id, item_id, diagnostics));
                 },
                 Rule::EMPTY_LINES | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => (),
-                _ => unreachable!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         Top::ActionGroupDeclaration(ActionGroupDeclaration {
@@ -630,7 +637,7 @@ impl ASTParser {
                 },
                 Rule::COLON => (),
                 Rule::req_type => (),
-                _ => unreachable!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         ActionDeclaration {
@@ -696,29 +703,33 @@ impl ASTParser {
         let mut identifier: Option<ASTIdentifier> = None;
         let mut items: Vec<Item> = vec![];
         let mut keyword = "";
+        let mut keyword_span = None;
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE | Rule::EMPTY_LINES => (),
-                Rule::config_keywords => keyword = current.as_str(),
+                Rule::config_keywords => {
+                    keyword = current.as_str();
+                    keyword_span = Some(Self::parse_span(&current));
+                },
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::config_item => items.push(self.parse_config_item(current, source_id, diagnostics)),
                 Rule::comment_block => (),
-                Rule::BLOCK_LEVEL_CATCH_ALL => println!("error: {:?}", current),
-                _ => unreachable!(),
+                Rule::BLOCK_LEVEL_CATCH_ALL => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         match keyword {
             "server" => {
                 if self.server.is_some() {
-                    panic!("Duplicated config found.");
+                    self.insert_diagnostics_error_and_exit("Duplicated configuration found.", diagnostics, keyword_span.unwrap(), source_id);
                 }
                 self.server = Some((source_id, item_id));
                 Top::ServerConfig(ASTServer::new(item_id, source_id, items, span))
             },
             "connector" => {
                 if self.connector.is_some() {
-                    panic!("Duplicated connector found.");
+                    self.insert_diagnostics_error_and_exit("Duplicated configuration found.", diagnostics, keyword_span.unwrap(), source_id);
                 }
                 self.connector = Some((source_id, item_id));
                 Top::Connector(ASTConnector::new(items, span, source_id, item_id))
@@ -739,7 +750,10 @@ impl ASTParser {
                 self.test_conf = Some((source_id, item_id));
                 Top::TestConf(ASTTestConf::new(items, span, source_id, item_id))
             },
-            _ => panic!(),
+            _ => {
+                self.insert_diagnostics_error_and_exit(format!("Undefined configuration '{}'.", keyword), diagnostics, keyword_span.unwrap(), source_id);
+                panic!()
+            }
         }
     }
 
@@ -751,7 +765,7 @@ impl ASTParser {
             match current.as_rule() {
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::expression => expression = Some(self.parse_expression(current, source_id, diagnostics)),
-                _ => panic!("error."),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         Item { identifier: identifier.unwrap(), expression: expression.unwrap(), span }
@@ -763,7 +777,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier_unit => unit = Some(self.parse_unit(current, source_id, diagnostics)),
-                _ => panic!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         ASTDecorator::new(unit.unwrap(), span)
@@ -775,7 +789,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier_unit => unit = Some(self.parse_unit(current, source_id, diagnostics)),
-                _ => panic!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         ASTPipeline {
@@ -795,7 +809,7 @@ impl ASTParser {
                 },
                 Rule::expression => value = Some(self.parse_expression(current, source_id, diagnostics).kind),
                 Rule::empty_argument => panic!("Empty argument found."),
-                _ => panic!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         Argument { name, value: value.unwrap(), span, resolved: None }
@@ -810,7 +824,7 @@ impl ASTParser {
                 Rule::identifier => name = Some(Self::parse_identifier(&current)),
                 Rule::expression => value = Some(self.parse_expression(current, source_id, diagnostics).kind),
                 Rule::empty_argument => panic!("Empty argument found."),
-                _ => panic!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         Argument { name, value: value.unwrap(), span, resolved: None }
@@ -825,7 +839,7 @@ impl ASTParser {
                 Rule::arith_expr => return Expression::new(ExpressionKind::ArithExpr(self.parse_arith_expr(current, source_id, diagnostics))),
                 Rule::unit => return Expression::new(self.parse_unit(current, source_id, diagnostics)),
                 Rule::pipeline => return Expression::new(ExpressionKind::Pipeline(self.parse_pipeline(current, source_id, diagnostics))),
-                _ => panic!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         panic!();
@@ -850,7 +864,7 @@ impl ASTParser {
                 Rule::identifier => unit.expressions.push(ExpressionKind::Identifier(Self::parse_identifier(&current))),
                 Rule::subscript => unit.expressions.push(ExpressionKind::Subscript(self.parse_subscript(current, source_id, diagnostics))),
                 Rule::argument_list => unit.expressions.push(ExpressionKind::ArgumentList(self.parse_argument_list(current, source_id, diagnostics))),
-                _ => unreachable!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         if unit.expressions.len() == 1 {
@@ -868,7 +882,7 @@ impl ASTParser {
             match current.as_rule() {
                 Rule::identifier => value = Some(current.as_str().to_owned()),
                 Rule::argument_list => arg_list = Some(self.parse_argument_list(current, source_id, diagnostics)),
-                _ => panic!()
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         EnumChoiceLiteral { value: value.unwrap(), span, argument_list: arg_list }
@@ -881,7 +895,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::unit => expressions.push(self.parse_unit(current, source_id, diagnostics)),
-                _ => panic!()
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         NullishCoalescing { expressions, span }
@@ -893,7 +907,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::unit => expression = Some(self.parse_unit(current, source_id, diagnostics)),
-                _ => unreachable!()
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         Negation { expression: Box::new(expression.unwrap()), span }
@@ -905,18 +919,22 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::unit => expression = Some(self.parse_unit(current, source_id, diagnostics)),
-                _ => unreachable!()
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         BitwiseNegation { expression: Box::new(expression.unwrap()), span }
     }
 
     fn parse_arith_expr(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> ArithExpr {
-        PRATT_PARSER.map_primary(|primary| match primary.as_rule() {
+        let result = PRATT_PARSER.map_primary(|primary| match primary.as_rule() {
             Rule::operand => ArithExpr::Expression(Box::new(self.parse_expression(primary, source_id, diagnostics).kind)),
-            _ => unreachable!(),
+            _ => {
+                let error_span = Self::parse_span(&primary);
+                self.insert_diagnostics_error_and_exit(format!("Unexpected operand or operator"), diagnostics, error_span, source_id);
+                panic!()
+            },
         }).map_infix(|lhs, op, rhs| {
-            let op = match op.as_rule() {
+            let ourop = match op.as_rule() {
                 Rule::ADD => Op::Add,
                 Rule::SUB => Op::Sub,
                 Rule::MUL => Op::Mul,
@@ -925,14 +943,17 @@ impl ASTParser {
                 Rule::BI_AND => Op::BitAnd,
                 Rule::BI_XOR => Op::BitXor,
                 Rule::BI_OR => Op::BitOr,
-                rule => unreachable!("Expr::parse expected infix operation, found {:?}", rule),
+                _ => {
+                    panic!()
+                },
             };
             ArithExpr::BinaryOp {
                 lhs: Box::new(lhs),
-                op,
+                op: ourop,
                 rhs: Box::new(rhs),
             }
-        }).parse(pair.into_inner())
+        }).parse(pair.into_inner());
+        result
     }
 
     fn parse_subscript(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> Subscript {
@@ -940,7 +961,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::expression => return Subscript { expression: Box::new(self.parse_expression(current, source_id, diagnostics).kind), span },
-                _ => panic!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         panic!()
@@ -951,7 +972,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::regexp_content => return RegExpLiteral { value: current.as_str().to_string(), span },
-                _ => panic!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         panic!()
@@ -963,7 +984,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::argument => arguments.push(self.parse_argument(current, source_id, diagnostics)),
-                _ => panic!("{}", current),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         ArgumentList { arguments, span, resolved: false }
@@ -974,7 +995,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::expression => return Group { expression: Box::new(self.parse_expression(current, source_id, diagnostics).kind), span },
-                _ => panic!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         panic!()
@@ -989,7 +1010,7 @@ impl ASTParser {
                 Rule::range_end => expressions.push(self.parse_range_end(current, source_id, diagnostics)),
                 Rule::RANGE_OPEN => closed = false,
                 Rule::RANGE_CLOSE => closed = true,
-                _ => panic!("{:?} {:?}", current.as_rule(), current.as_span()),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         RangeLiteral { closed, expressions, span }
@@ -1001,7 +1022,7 @@ impl ASTParser {
             match current.as_rule() {
                 Rule::numeric_literal => return ExpressionKind::NumericLiteral(NumericLiteral { value: current.as_str().to_string(), span }),
                 Rule::unit_without_range_literal => return self.parse_unit(current, source_id, diagnostics),
-                _ => panic!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         panic!()
@@ -1013,7 +1034,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::expression => expressions.push(self.parse_expression(current, source_id, diagnostics).kind),
-                _ => panic!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         TupleLiteral { expressions, span }
@@ -1025,7 +1046,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::expression => expressions.push(self.parse_expression(current, source_id, diagnostics).kind),
-                _ => panic!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         ArrayLiteral { expressions, span }
@@ -1038,7 +1059,7 @@ impl ASTParser {
             match current.as_rule() {
                 Rule::named_expression => expressions.push(self.parse_named_expression(current, source_id, diagnostics)),
                 Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => (),
-                _ => unreachable!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         DictionaryLiteral { expressions, span }
@@ -1054,7 +1075,7 @@ impl ASTParser {
                 } else {
                     value = Some(self.parse_expression(current, source_id, diagnostics).kind);
                 }
-                _ => unreachable!()
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         return (key.unwrap(), value.unwrap())
@@ -1078,7 +1099,7 @@ impl ASTParser {
                         collection_required = false;
                     }
                 },
-                _ => self.insert_unparsed_rule_and_exit(diagnostics, span, source_id),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         Type::new(
@@ -1096,7 +1117,7 @@ impl ASTParser {
             match current.as_rule() {
                 Rule::identifier => identifiers.push(Self::parse_identifier(&current)),
                 Rule::TRAILING_COMMA | Rule::BLOCK_CLOSE => (),
-                _ => panic!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
         identifiers
@@ -1257,6 +1278,12 @@ impl ASTParser {
 
     fn insert_unparsed_rule_and_exit(&self, diagnostics: &mut Diagnostics, span: Span, source_id: usize) {
         diagnostics.insert_unparsed_rule(span, source_id);
+        self.print_diagnostics(diagnostics, true);
+        std::process::exit(1);
+    }
+
+    fn insert_diagnostics_error_and_exit(&self, message: impl Into<String>, diagnostics: &mut Diagnostics, span: Span, source_id: usize) {
+        diagnostics.insert(DiagnosticsError::new(span, message.into(), source_id));
         self.print_diagnostics(diagnostics, true);
         std::process::exit(1);
     }
