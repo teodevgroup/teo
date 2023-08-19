@@ -101,6 +101,7 @@ pub(crate) struct ASTParser {
     pub(crate) global_function_installers: Option<GlobalFunctionInstallers>,
     pub(crate) callback_lookup_table: &'static CallbackLookup,
     pub(crate) resolved_action_inputs: HashMap<&'static str, HashMap<&'static str, ResolvedInterfaceField>>,
+    pub(crate) current_source_path_bufs: Vec<PathBuf>,
 }
 
 impl ASTParser {
@@ -131,6 +132,7 @@ impl ASTParser {
             global_function_installers: None,
             callback_lookup_table: callbacks,
             resolved_action_inputs: hashmap!{},
+            current_source_path_bufs: vec![],
         }
     }
 
@@ -169,8 +171,13 @@ impl ASTParser {
         Resolver::resolve_parser(self, &mut diagnostics);
     }
 
+    fn set_current_source_path_buf(&mut self) {
+
+    }
+
     fn parse_source(&mut self, path: &PathBuf, diagnostics: &mut Diagnostics) {
         let source_id = self.next_id();
+        self.current_source_path_bufs.push(path.clone());
         let content = match fs::read_to_string(&path) {
             Ok(content) => content,
             Err(err) => panic!("{}", err)
@@ -188,7 +195,6 @@ impl ASTParser {
         let mut pairs = pairs.into_inner().peekable();
 
         while let Some(current) = pairs.next() {
-            let span = Self::parse_span(&current);
             let item_id = self.next_id();
             match current.as_rule() {
                 Rule::import_statement => {
@@ -1277,13 +1283,15 @@ impl ASTParser {
     }
 
     fn insert_unparsed_rule_and_exit(&self, diagnostics: &mut Diagnostics, span: Span, source_id: usize) {
-        diagnostics.insert_unparsed_rule(span, source_id);
+        let source_path = self.current_source_path_bufs.last().unwrap().clone();
+        diagnostics.insert_unparsed_rule(span, source_id, source_path);
         self.print_diagnostics(diagnostics, true);
         std::process::exit(1);
     }
 
     fn insert_diagnostics_error_and_exit(&self, message: impl Into<String>, diagnostics: &mut Diagnostics, span: Span, source_id: usize) {
-        diagnostics.insert(DiagnosticsError::new(span, message.into(), source_id));
+        let source_path = self.current_source_path_bufs.last().unwrap().clone();
+        diagnostics.insert(DiagnosticsError::new(span, message.into(), source_id, source_path));
         self.print_diagnostics(diagnostics, true);
         std::process::exit(1);
     }
@@ -1302,12 +1310,21 @@ impl ASTParser {
     }
 
     fn print_diagnostics_log<T>(&self, log: T) where T: DiagnosticsLog {
-        let source = self.get_source(log.source_id());
+        let source = log.source_path();
         let current_dir = &env::current_dir().unwrap();
-        let filename = if let Some(path) = diff_paths(&source.path, current_dir) {
-            path.to_str().unwrap().to_owned()
+        let filename = if let Some(path) = diff_paths(source, current_dir) {
+            let result = path.to_str().unwrap().to_owned();
+            if result.starts_with(".") {
+                result
+            } else {
+                if cfg!(windows) {
+                    ".\\".to_owned() + result.as_str()
+                } else {
+                    "./".to_owned() + result.as_str()
+                }
+            }
         } else {
-            source.path.to_str().unwrap().to_owned()
+            source.to_str().unwrap().to_owned()
         };
         let title = if log.is_warning() {
             "Warning".yellow().bold()

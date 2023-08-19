@@ -1,4 +1,5 @@
 use std::any::TypeId;
+use std::path::{Path, PathBuf};
 use crate::parser::ast::span::Span;
 
 pub trait DiagnosticsLog {
@@ -7,6 +8,8 @@ pub trait DiagnosticsLog {
     fn span(&self) -> &Span;
 
     fn message(&self) -> &str;
+
+    fn source_path(&self) -> &Path;
 
     fn into_warning(self) -> DiagnosticsWarning;
 
@@ -22,6 +25,7 @@ pub struct DiagnosticsError {
     span: Span,
     message: String,
     source_id: usize,
+    source_path: PathBuf,
 }
 
 impl DiagnosticsLog for DiagnosticsError {
@@ -37,12 +41,16 @@ impl DiagnosticsLog for DiagnosticsError {
         self.message.as_str()
     }
 
-    fn into_error(self) -> DiagnosticsError {
-        self
+    fn source_path(&self) -> &Path {
+        &self.source_path
     }
 
     fn into_warning(self) -> DiagnosticsWarning {
         unreachable!()
+    }
+
+    fn into_error(self) -> DiagnosticsError {
+        self
     }
 
     fn is_warning(&self) -> bool {
@@ -67,12 +75,16 @@ impl DiagnosticsLog for &DiagnosticsError {
         self.message.as_str()
     }
 
-    fn into_error(self) -> DiagnosticsError {
-        self.clone()
+    fn source_path(&self) -> &Path {
+        &self.source_path
     }
 
     fn into_warning(self) -> DiagnosticsWarning {
         unreachable!()
+    }
+
+    fn into_error(self) -> DiagnosticsError {
+        self.clone()
     }
 
     fn is_warning(&self) -> bool {
@@ -85,8 +97,8 @@ impl DiagnosticsLog for &DiagnosticsError {
 }
 
 impl DiagnosticsError {
-    pub fn new(span: Span, message: impl Into<String>, source_id: usize) -> Self {
-        Self { span, message: message.into(), source_id }
+    pub fn new(span: Span, message: impl Into<String>, source_id: usize, source_path: PathBuf) -> Self {
+        Self { span, message: message.into(), source_id, source_path }
     }
 }
 
@@ -95,6 +107,7 @@ pub struct DiagnosticsWarning {
     span: Span,
     message: String,
     source_id: usize,
+    source_path: PathBuf,
 }
 
 impl DiagnosticsLog for DiagnosticsWarning {
@@ -110,12 +123,16 @@ impl DiagnosticsLog for DiagnosticsWarning {
         self.message.as_str()
     }
 
-    fn into_error(self) -> DiagnosticsError {
-        unreachable!()
+    fn source_path(&self) -> &Path {
+        &self.source_path
     }
 
     fn into_warning(self) -> DiagnosticsWarning {
         self
+    }
+
+    fn into_error(self) -> DiagnosticsError {
+        unreachable!()
     }
 
     fn is_warning(&self) -> bool {
@@ -140,12 +157,16 @@ impl DiagnosticsLog for &DiagnosticsWarning {
         self.message.as_str()
     }
 
-    fn into_error(self) -> DiagnosticsError {
-        unreachable!()
+    fn source_path(&self) -> &Path {
+        &self.source_path
     }
 
     fn into_warning(self) -> DiagnosticsWarning {
         self.clone()
+    }
+
+    fn into_error(self) -> DiagnosticsError {
+        unreachable!()
     }
 
     fn is_warning(&self) -> bool {
@@ -158,8 +179,8 @@ impl DiagnosticsLog for &DiagnosticsWarning {
 }
 
 impl DiagnosticsWarning {
-    pub fn new(span: Span, message: impl Into<String>, source_id: usize) -> Self {
-        Self { span, message: message.into(), source_id }
+    pub fn new(span: Span, message: impl Into<String>, source_id: usize, source_path: PathBuf) -> Self {
+        Self { span, message: message.into(), source_id, source_path }
     }
 }
 
@@ -202,8 +223,8 @@ impl Diagnostics {
         }
     }
 
-    pub fn insert_unparsed_rule(&mut self, span: Span, source_id: usize) {
-        self.insert(DiagnosticsError::new(span, "Unexpected content.", source_id))
+    pub fn insert_unparsed_rule(&mut self, span: Span, source_id: usize, source_path: PathBuf) {
+        self.insert(DiagnosticsError::new(span, "SyntaxError: Unexpected content.", source_id, source_path))
     }
 }
 
