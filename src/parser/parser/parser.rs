@@ -268,7 +268,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::string_literal => source = Some(StringLiteral { value: current.as_str().to_string(), span }),
-                Rule::import_identifier_list => identifiers = Self::parse_import_identifier_list(current),
+                Rule::import_identifier_list => identifiers = self.parse_import_identifier_list(current, source_id, diagnostics),
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, span, source_id),
             }
         }
@@ -377,8 +377,8 @@ impl ASTParser {
                 Rule::MODEL_KEYWORD | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE | Rule::EMPTY_LINES | Rule::double_comment_block | Rule::comment_block => {}
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::field_declaration => fields.push(self.parse_field(current, diagnostics, source_id)),
-                Rule::block_decorator => decorators.push(self.parse_decorator(current)),
-                Rule::item_decorator => decorators.push(self.parse_decorator(current)),
+                Rule::block_decorator => decorators.push(self.parse_decorator(current, source_id, diagnostics)),
+                Rule::item_decorator => decorators.push(self.parse_decorator(current, source_id, diagnostics)),
                 Rule::triple_comment_block => comment_block = Some(self.parse_comment_block(current, source_id, diagnostics)),
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, span, source_id),
             }
@@ -403,10 +403,10 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::COLON => {},
-                Rule::triple_comment_block => comment_block = Some(Self.parse_comment_block(current, source_id, diagnostics)),
+                Rule::triple_comment_block => comment_block = Some(self.parse_comment_block(current, source_id, diagnostics)),
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
-                Rule::field_type => r#type = Some(Self.parse_type(current, diagnostics, source_id)),
-                Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
+                Rule::field_type => r#type = Some(self.parse_type(current, diagnostics, source_id)),
+                Rule::item_decorator => decorators.push(self.parse_decorator(current, source_id, diagnostics)),
                 Rule::double_comment_block => {},
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, span, source_id),
             }
@@ -420,7 +420,7 @@ impl ASTParser {
         )
     }
 
-    fn parse_enum(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
+    fn parse_enum(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> Top {
         let mut comment_block = None;
         let mut identifier: Option<ASTIdentifier> = None;
         let mut choices: Vec<EnumChoice> = vec![];
@@ -429,10 +429,10 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::ENUM_KEYWORD | Rule::COLON | Rule::EMPTY_LINES | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => {},
-                Rule::comment_block => comment_block = Some(Self::parse_comment_block(current)),
+                Rule::comment_block => comment_block = Some(self.parse_comment_block(current, source_id, diagnostics)),
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
-                Rule::enum_value_declaration => choices.push(self.parse_enum_value(current)),
-                Rule::block_decorator => decorators.push(Self::parse_decorator(current)),
+                Rule::enum_value_declaration => choices.push(self.parse_enum_value(current, source_id, diagnostics)),
+                Rule::block_decorator => decorators.push(self.parse_decorator(current, source_id, diagnostics)),
                 _ => panic!("error. {}", current.as_str()),
             }
         }
@@ -447,7 +447,7 @@ impl ASTParser {
         ))
     }
 
-    fn parse_enum_value(&mut self, pair: Pair<'_>) -> EnumChoice {
+    fn parse_enum_value(&mut self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> EnumChoice {
         let mut comment_block = None;
         let mut identifier: Option<ASTIdentifier> = None;
         let mut decorators: Vec<ASTDecorator> = vec![];
@@ -456,29 +456,29 @@ impl ASTParser {
             match current.as_rule() {
                 Rule::COLON | Rule::EMPTY_LINES | Rule::comment_block => {},
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
-                Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
-                Rule::triple_comment_block => comment_block = Some(Self::parse_comment_block(current)),
+                Rule::item_decorator => decorators.push(self.parse_decorator(current, source_id, diagnostics)),
+                Rule::triple_comment_block => comment_block = Some(self.parse_comment_block(current, source_id, diagnostics)),
                 _ => panic!("error: {}", current.as_str()),
             }
         }
         EnumChoice::new(identifier.unwrap(),comment_block,decorators, span)
     }
 
-    fn parse_let_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
+    fn parse_let_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> Top {
         let span = Self::parse_span(&pair);
         let mut identifier: Option<ASTIdentifier> = None;
         let mut expression: Option<Expression> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
-                Rule::expression => expression = Some(Self::parse_expression(current)),
+                Rule::expression => expression = Some(self.parse_expression(current, source_id, diagnostics)),
                 _ => panic!("error."),
             }
         }
         Top::Constant(Constant::new(item_id, source_id, identifier.unwrap(), expression.unwrap(), span))
     }
 
-    fn parse_dataset_block(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
+    fn parse_dataset_block(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> Top {
         let mut identifier: Option<ASTIdentifier> = None;
         let mut auto_seed = false;
         let mut notrack = false;
@@ -492,7 +492,7 @@ impl ASTParser {
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::dataset_group_declaration => {
                     let next_id = self.next_id();
-                    groups.push(self.parse_dataset_group(current, source_id, next_id));
+                    groups.push(self.parse_dataset_group(current, source_id, next_id, diagnostics));
                 },
                 Rule::comment_block => (),
                 _ => panic!("error."),
@@ -501,7 +501,7 @@ impl ASTParser {
         Top::DataSet(DataSet::new(span, source_id, item_id, identifier.unwrap(), auto_seed, notrack, groups))
     }
 
-    fn parse_dataset_group(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> DataSetGroup {
+    fn parse_dataset_group(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> DataSetGroup {
         let mut identifier: Option<ASTIdentifier> = None;
         let mut records = vec![];
         let span = Self::parse_span(&pair);
@@ -511,7 +511,7 @@ impl ASTParser {
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::dataset_group_record_declaration => {
                     let next_id = self.next_id();
-                    records.push(self.parse_dataset_record_declaration(current, source_id, next_id));
+                    records.push(self.parse_dataset_record_declaration(current, source_id, next_id, diagnostics));
                 },
                 Rule::comment_block => (),
                 _ => panic!("error."),
@@ -520,21 +520,21 @@ impl ASTParser {
         DataSetGroup::new(source_id, item_id, identifier.unwrap(), span, records)
     }
 
-    fn parse_dataset_record_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> DataSetRecord {
+    fn parse_dataset_record_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> DataSetRecord {
         let mut identifier: Option<ASTIdentifier> = None;
         let mut dictionary: Option<DictionaryLiteral> = None;
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
-                Rule::dictionary_literal => dictionary = Some(Self::parse_dictionary_literal(current)),
+                Rule::dictionary_literal => dictionary = Some(self.parse_dictionary_literal(current, source_id, diagnostics)),
                 _ => (),
             }
         }
         DataSetRecord::new(source_id, item_id, identifier.unwrap(), span, dictionary.unwrap())
     }
 
-    fn parser_interface_type(pair: Pair<'_>) -> InterfaceType {
+    fn parser_interface_type(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> InterfaceType {
         let span = Self::parse_span(&pair);
         let mut name: Option<ASTIdentifier> = None;
         let mut args: Vec<InterfaceType> = vec![];
@@ -548,7 +548,7 @@ impl ASTParser {
                     name = Some(identifier);
                 },
                 Rule::interface_type => {
-                    let identifier = Self::parser_interface_type(current);
+                    let identifier = self.parser_interface_type(current, source_id, diagnostics);
                     args.push(identifier);
                 }
                 Rule::arity => if current.as_str() == "[]" { arity = Arity::Array; } else { arity = Arity::Dictionary; },
@@ -572,7 +572,7 @@ impl ASTParser {
         }
     }
 
-    fn parse_middleware_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
+    fn parse_middleware_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> Top {
         let mut name: Option<ASTIdentifier> = None;
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
@@ -590,7 +590,7 @@ impl ASTParser {
         })
     }
 
-    fn parse_action_group_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
+    fn parse_action_group_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> Top {
         let mut name: Option<ASTIdentifier> = None;
         let span = Self::parse_span(&pair);
         let mut actions: Vec<ActionDeclaration> = vec![];
@@ -600,7 +600,7 @@ impl ASTParser {
                 Rule::comment_block => (),
                 Rule::action_declaration => {
                     let action_id = self.next_id();
-                    actions.push(self.parse_action_declaration(current, source_id, action_id, item_id));
+                    actions.push(self.parse_action_declaration(current, source_id, action_id, item_id, diagnostics));
                 },
                 Rule::EMPTY_LINES | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => (),
                 _ => unreachable!(),
@@ -615,7 +615,7 @@ impl ASTParser {
         })
     }
 
-    fn parse_action_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, group_id: usize) -> ActionDeclaration {
+    fn parse_action_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, group_id: usize, diagnostics: &mut Diagnostics) -> ActionDeclaration {
         let mut identifier: Option<ASTIdentifier> = None;
         let mut input_type: Option<InterfaceType> = None;
         let mut output_type: Option<InterfaceType> = None;
@@ -624,9 +624,9 @@ impl ASTParser {
             match current.as_rule() {
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::interface_type => if input_type.is_some() {
-                    output_type = Some(Self::parser_interface_type(current));
+                    output_type = Some(self.parser_interface_type(current, source_id, diagnostics));
                 } else {
-                    input_type = Some(Self::parser_interface_type(current));
+                    input_type = Some(self.parser_interface_type(current, source_id, diagnostics));
                 },
                 Rule::COLON => (),
                 Rule::req_type => (),
@@ -646,7 +646,7 @@ impl ASTParser {
         }
     }
 
-    fn parse_interface_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
+    fn parse_interface_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> Top {
         let mut name: Option<InterfaceType> = None;
         let mut extends: Vec<InterfaceType> = vec![];
         let mut items: Vec<InterfaceItemDeclaration> = vec![];
@@ -654,7 +654,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::interface_type => {
-                    let interface_type = Self::parser_interface_type(current);
+                    let interface_type = self.parser_interface_type(current, source_id, diagnostics);
                     if name.is_some() {
                         extends.push(interface_type);
                     } else {
@@ -662,7 +662,7 @@ impl ASTParser {
                     }
                 }
                 Rule::interface_item => {
-                    let interface_item_decl = self.parse_interface_item_declaration(current);
+                    let interface_item_decl = self.parse_interface_item_declaration(current, source_id, diagnostics);
                     items.push(interface_item_decl);
                 }
                 _ => (),
@@ -678,21 +678,21 @@ impl ASTParser {
         })
     }
 
-    fn parse_interface_item_declaration(&mut self, pair: Pair<'_>) -> InterfaceItemDeclaration {
+    fn parse_interface_item_declaration(&mut self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> InterfaceItemDeclaration {
         let mut name: Option<ASTIdentifier> = None;
         let mut kind: Option<InterfaceType> = None;
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier => name = Some(Self::parse_identifier(&current)),
-                Rule::interface_type => kind = Some(Self::parser_interface_type(current)),
+                Rule::interface_type => kind = Some(self.parser_interface_type(current, source_id, diagnostics)),
                 _ => (),
             }
         }
         InterfaceItemDeclaration { name: name.unwrap(), kind: kind.unwrap(), span }
     }
 
-    fn parse_config_block(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
+    fn parse_config_block(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> Top {
         let mut identifier: Option<ASTIdentifier> = None;
         let mut items: Vec<Item> = vec![];
         let mut keyword = "";
@@ -702,7 +702,7 @@ impl ASTParser {
                 Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE | Rule::EMPTY_LINES => (),
                 Rule::config_keywords => keyword = current.as_str(),
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
-                Rule::config_item => items.push(Self::parse_config_item(current)),
+                Rule::config_item => items.push(self.parse_config_item(current, source_id, diagnostics)),
                 Rule::comment_block => (),
                 Rule::BLOCK_LEVEL_CATCH_ALL => println!("error: {:?}", current),
                 _ => unreachable!(),
@@ -743,38 +743,38 @@ impl ASTParser {
         }
     }
 
-    fn parse_config_item(pair: Pair<'_>) -> Item {
+    fn parse_config_item(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> Item {
         let span = Self::parse_span(&pair);
         let mut identifier: Option<ASTIdentifier> = None;
         let mut expression: Option<Expression> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
-                Rule::expression => expression = Some(Self::parse_expression(current)),
+                Rule::expression => expression = Some(self.parse_expression(current, source_id, diagnostics)),
                 _ => panic!("error."),
             }
         }
         Item { identifier: identifier.unwrap(), expression: expression.unwrap(), span }
     }
 
-    fn parse_decorator(pair: Pair<'_>) -> ASTDecorator {
+    fn parse_decorator(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> ASTDecorator {
         let span = Self::parse_span(&pair);
         let mut unit: Option<ExpressionKind> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::identifier_unit => unit = Some(Self::parse_unit(current)),
+                Rule::identifier_unit => unit = Some(self.parse_unit(current, source_id, diagnostics)),
                 _ => panic!(),
             }
         }
         ASTDecorator::new(unit.unwrap(), span)
     }
 
-    fn parse_pipeline(pair: Pair<'_>) -> ASTPipeline {
+    fn parse_pipeline(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> ASTPipeline {
         let span = Self::parse_span(&pair);
         let mut unit: Option<ExpressionKind> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::identifier_unit => unit = Some(Self::parse_unit(current)),
+                Rule::identifier_unit => unit = Some(self.parse_unit(current, source_id, diagnostics)),
                 _ => panic!(),
             }
         }
@@ -784,16 +784,16 @@ impl ASTParser {
         }
     }
 
-    fn parse_argument(pair: Pair<'_>) -> Argument {
+    fn parse_argument(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> Argument {
         let span = Self::parse_span(&pair);
         let name: Option<ASTIdentifier> = None;
         let mut value: Option<ExpressionKind> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::named_argument => {
-                    return Self::parse_named_argument(current);
+                    return self.parse_named_argument(current, source_id, diagnostics);
                 },
-                Rule::expression => value = Some(Self::parse_expression(current).kind),
+                Rule::expression => value = Some(self.parse_expression(current, source_id, diagnostics).kind),
                 Rule::empty_argument => panic!("Empty argument found."),
                 _ => panic!(),
             }
@@ -801,14 +801,14 @@ impl ASTParser {
         Argument { name, value: value.unwrap(), span, resolved: None }
     }
 
-    fn parse_named_argument(pair: Pair<'_>) -> Argument {
+    fn parse_named_argument(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> Argument {
         let span = Self::parse_span(&pair);
         let mut name: Option<ASTIdentifier> = None;
         let mut value: Option<ExpressionKind> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier => name = Some(Self::parse_identifier(&current)),
-                Rule::expression => value = Some(Self::parse_expression(current).kind),
+                Rule::expression => value = Some(self.parse_expression(current, source_id, diagnostics).kind),
                 Rule::empty_argument => panic!("Empty argument found."),
                 _ => panic!(),
             }
@@ -816,40 +816,40 @@ impl ASTParser {
         Argument { name, value: value.unwrap(), span, resolved: None }
     }
 
-    fn parse_expression(pair: Pair<'_>) -> Expression {
+    fn parse_expression(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> Expression {
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::nullish_coalescing => return Expression::new(ExpressionKind::NullishCoalescing(Self::parse_nullish_coalescing(current))),
-                Rule::negation => return Expression::new(ExpressionKind::Negation(Self::parse_negation(current))),
-                Rule::bitwise_negation => return Expression::new(ExpressionKind::BitwiseNegation(Self::parse_bitwise_negation(current))),
-                Rule::arith_expr => return Expression::new(ExpressionKind::ArithExpr(Self::parse_arith_expr(current))),
-                Rule::unit => return Expression::new(Self::parse_unit(current)),
-                Rule::pipeline => return Expression::new(ExpressionKind::Pipeline(Self::parse_pipeline(current))),
+                Rule::nullish_coalescing => return Expression::new(ExpressionKind::NullishCoalescing(self.parse_nullish_coalescing(current, source_id, diagnostics))),
+                Rule::negation => return Expression::new(ExpressionKind::Negation(self.parse_negation(current, source_id, diagnostics))),
+                Rule::bitwise_negation => return Expression::new(ExpressionKind::BitwiseNegation(self.parse_bitwise_negation(current, source_id, diagnostics))),
+                Rule::arith_expr => return Expression::new(ExpressionKind::ArithExpr(self.parse_arith_expr(current, source_id, diagnostics))),
+                Rule::unit => return Expression::new(self.parse_unit(current, source_id, diagnostics)),
+                Rule::pipeline => return Expression::new(ExpressionKind::Pipeline(self.parse_pipeline(current, source_id, diagnostics))),
                 _ => panic!(),
             }
         }
         panic!();
     }
 
-    fn parse_unit(pair: Pair<'_>) -> ExpressionKind {
+    fn parse_unit(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> ExpressionKind {
         let span = Self::parse_span(&pair);
         let mut unit = Unit { expressions: vec![], span };
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::group => unit.expressions.push(ExpressionKind::Group(Self::parse_group(current))),
+                Rule::group => unit.expressions.push(ExpressionKind::Group(self.parse_group(current, source_id, diagnostics))),
                 Rule::null_literal => unit.expressions.push(ExpressionKind::NullLiteral(NullLiteral { value: current.as_str().to_string(), span })),
                 Rule::bool_literal => unit.expressions.push(ExpressionKind::BoolLiteral(BoolLiteral { value: current.as_str().to_string(), span })),
                 Rule::numeric_literal => unit.expressions.push(ExpressionKind::NumericLiteral(NumericLiteral { value: current.as_str().to_string(), span })),
                 Rule::string_literal => unit.expressions.push(ExpressionKind::StringLiteral(StringLiteral { value: current.as_str().to_string(), span })),
-                Rule::regexp_literal => unit.expressions.push(ExpressionKind::RegExpLiteral(Self::parse_regexp_literal(current))),
-                Rule::enum_choice_literal => unit.expressions.push(ExpressionKind::EnumChoiceLiteral(Self::parse_enum_choice_literal(current))),
-                Rule::tuple_literal => unit.expressions.push(ExpressionKind::TupleLiteral(Self::parse_tuple_literal(current))),
-                Rule::array_literal => unit.expressions.push(ExpressionKind::ArrayLiteral(Self::parse_array_literal(current))),
-                Rule::dictionary_literal => unit.expressions.push(ExpressionKind::DictionaryLiteral(Self::parse_dictionary_literal(current))),
-                Rule::range_literal => unit.expressions.push(ExpressionKind::RangeLiteral(Self::parse_range_literal(current))),
+                Rule::regexp_literal => unit.expressions.push(ExpressionKind::RegExpLiteral(self.parse_regexp_literal(current, source_id, diagnostics))),
+                Rule::enum_choice_literal => unit.expressions.push(ExpressionKind::EnumChoiceLiteral(self.parse_enum_choice_literal(current, source_id, diagnostics))),
+                Rule::tuple_literal => unit.expressions.push(ExpressionKind::TupleLiteral(self.parse_tuple_literal(current, source_id, diagnostics))),
+                Rule::array_literal => unit.expressions.push(ExpressionKind::ArrayLiteral(self.parse_array_literal(current, source_id, diagnostics))),
+                Rule::dictionary_literal => unit.expressions.push(ExpressionKind::DictionaryLiteral(self.parse_dictionary_literal(current, source_id, diagnostics))),
+                Rule::range_literal => unit.expressions.push(ExpressionKind::RangeLiteral(self.parse_range_literal(current, source_id, diagnostics))),
                 Rule::identifier => unit.expressions.push(ExpressionKind::Identifier(Self::parse_identifier(&current))),
-                Rule::subscript => unit.expressions.push(ExpressionKind::Subscript(Self::parse_subscript(current))),
-                Rule::argument_list => unit.expressions.push(ExpressionKind::ArgumentList(Self::parse_argument_list(current))),
+                Rule::subscript => unit.expressions.push(ExpressionKind::Subscript(self.parse_subscript(current, source_id, diagnostics))),
+                Rule::argument_list => unit.expressions.push(ExpressionKind::ArgumentList(self.parse_argument_list(current, source_id, diagnostics))),
                 _ => unreachable!(),
             }
         }
@@ -860,14 +860,14 @@ impl ASTParser {
         }
     }
 
-    fn parse_enum_choice_literal(pair: Pair<'_>) -> EnumChoiceLiteral {
+    fn parse_enum_choice_literal(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> EnumChoiceLiteral {
         let span = Self::parse_span(&pair);
         let mut arg_list: Option<ArgumentList> = None;
         let mut value: Option<String> = None;
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::identifier => value = Some(current.as_str().to_owned()),
-                Rule::argument_list => arg_list = Some(Self::parse_argument_list(current)),
+                Rule::argument_list => arg_list = Some(self.parse_argument_list(current, source_id, diagnostics)),
                 _ => panic!()
             }
         }
@@ -875,46 +875,45 @@ impl ASTParser {
     }
 
 
-    fn parse_nullish_coalescing(pair: Pair<'_>) -> NullishCoalescing {
+    fn parse_nullish_coalescing(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> NullishCoalescing {
         let span = Self::parse_span(&pair);
         let mut expressions = vec![];
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::unit => expressions.push(Self::parse_unit(current)),
+                Rule::unit => expressions.push(self.parse_unit(current, source_id, diagnostics)),
                 _ => panic!()
             }
         }
         NullishCoalescing { expressions, span }
     }
 
-    fn parse_negation(pair: Pair<'_>) -> Negation {
+    fn parse_negation(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> Negation {
         let span = Self::parse_span(&pair);
         let mut expression = None;
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::unit => expression = Some(Self::parse_unit(current)),
+                Rule::unit => expression = Some(self.parse_unit(current, source_id, diagnostics)),
                 _ => unreachable!()
             }
         }
         Negation { expression: Box::new(expression.unwrap()), span }
     }
 
-    fn parse_bitwise_negation(pair: Pair<'_>) -> BitwiseNegation {
+    fn parse_bitwise_negation(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> BitwiseNegation {
         let span = Self::parse_span(&pair);
         let mut expression = None;
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::unit => expression = Some(Self::parse_unit(current)),
+                Rule::unit => expression = Some(self.parse_unit(current, source_id, diagnostics)),
                 _ => unreachable!()
             }
         }
         BitwiseNegation { expression: Box::new(expression.unwrap()), span }
     }
 
-    fn parse_arith_expr(pair: Pair<'_>) -> ArithExpr {
-        // let span = Self::parse_span(&pair);
+    fn parse_arith_expr(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> ArithExpr {
         PRATT_PARSER.map_primary(|primary| match primary.as_rule() {
-            Rule::operand => ArithExpr::Expression(Box::new(Self::parse_expression(primary).kind)),
+            Rule::operand => ArithExpr::Expression(Box::new(self.parse_expression(primary, source_id, diagnostics).kind)),
             _ => unreachable!(),
         }).map_infix(|lhs, op, rhs| {
             let op = match op.as_rule() {
@@ -936,18 +935,18 @@ impl ASTParser {
         }).parse(pair.into_inner())
     }
 
-    fn parse_subscript(pair: Pair<'_>) -> Subscript {
+    fn parse_subscript(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> Subscript {
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::expression => return Subscript { expression: Box::new(Self::parse_expression(current).kind), span },
+                Rule::expression => return Subscript { expression: Box::new(self.parse_expression(current, source_id, diagnostics).kind), span },
                 _ => panic!(),
             }
         }
         panic!()
     }
 
-    fn parse_regexp_literal(pair: Pair<'_>) -> RegExpLiteral {
+    fn parse_regexp_literal(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> RegExpLiteral {
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
@@ -958,36 +957,36 @@ impl ASTParser {
         panic!()
     }
 
-    fn parse_argument_list(pair: Pair<'_>) -> ArgumentList {
+    fn parse_argument_list(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> ArgumentList {
         let span = Self::parse_span(&pair);
         let mut arguments: Vec<Argument> = vec![];
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::argument => arguments.push(Self::parse_argument(current)),
+                Rule::argument => arguments.push(self.parse_argument(current, source_id, diagnostics)),
                 _ => panic!("{}", current),
             }
         }
         ArgumentList { arguments, span, resolved: false }
     }
 
-    fn parse_group(pair: Pair<'_>) -> Group {
+    fn parse_group(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> Group {
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::expression => return Group { expression: Box::new(Self::parse_expression(current).kind), span },
+                Rule::expression => return Group { expression: Box::new(self.parse_expression(current, source_id, diagnostics).kind), span },
                 _ => panic!(),
             }
         }
         panic!()
     }
 
-    fn parse_range_literal(pair: Pair<'_>) -> RangeLiteral {
+    fn parse_range_literal(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> RangeLiteral {
         let span = Self::parse_span(&pair);
         let mut expressions: Vec<ExpressionKind> = vec![];
         let mut closed = false;
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::range_end => expressions.push(Self::parse_range_end(current)),
+                Rule::range_end => expressions.push(self.parse_range_end(current, source_id, diagnostics)),
                 Rule::RANGE_OPEN => closed = false,
                 Rule::RANGE_CLOSE => closed = true,
                 _ => panic!("{:?} {:?}", current.as_rule(), current.as_span()),
@@ -996,48 +995,48 @@ impl ASTParser {
         RangeLiteral { closed, expressions, span }
     }
 
-    fn parse_range_end(pair: Pair<'_>) -> ExpressionKind {
+    fn parse_range_end(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> ExpressionKind {
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::numeric_literal => return ExpressionKind::NumericLiteral(NumericLiteral { value: current.as_str().to_string(), span }),
-                Rule::unit_without_range_literal => return Self::parse_unit(current),
+                Rule::unit_without_range_literal => return self.parse_unit(current, source_id, diagnostics),
                 _ => panic!(),
             }
         }
         panic!()
     }
 
-    fn parse_tuple_literal(pair: Pair<'_>) -> TupleLiteral {
+    fn parse_tuple_literal(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> TupleLiteral {
         let span = Self::parse_span(&pair);
         let mut expressions: Vec<ExpressionKind> = vec![];
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::expression => expressions.push(Self::parse_expression(current).kind),
+                Rule::expression => expressions.push(self.parse_expression(current, source_id, diagnostics).kind),
                 _ => panic!(),
             }
         }
         TupleLiteral { expressions, span }
     }
 
-    fn parse_array_literal(pair: Pair<'_>) -> ArrayLiteral {
+    fn parse_array_literal(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> ArrayLiteral {
         let span = Self::parse_span(&pair);
         let mut expressions: Vec<ExpressionKind> = vec![];
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::expression => expressions.push(Self::parse_expression(current).kind),
+                Rule::expression => expressions.push(self.parse_expression(current, source_id, diagnostics).kind),
                 _ => panic!(),
             }
         }
         ArrayLiteral { expressions, span }
     }
 
-    fn parse_dictionary_literal(pair: Pair<'_>) -> DictionaryLiteral {
+    fn parse_dictionary_literal(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> DictionaryLiteral {
         let span = Self::parse_span(&pair);
         let mut expressions: Vec<(ExpressionKind, ExpressionKind)> = vec![];
         for current in pair.into_inner() {
             match current.as_rule() {
-                Rule::named_expression => expressions.push(Self::parse_named_expression(current)),
+                Rule::named_expression => expressions.push(self.parse_named_expression(current, source_id, diagnostics)),
                 Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => (),
                 _ => unreachable!(),
             }
@@ -1045,15 +1044,15 @@ impl ASTParser {
         DictionaryLiteral { expressions, span }
     }
 
-    fn parse_named_expression(pair: Pair<'_>) -> (ExpressionKind, ExpressionKind) {
+    fn parse_named_expression(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> (ExpressionKind, ExpressionKind) {
         let mut key = None;
         let mut value = None;
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::expression => if key.is_none() {
-                    key = Some(Self::parse_expression(current).kind);
+                    key = Some(self.parse_expression(current, source_id, diagnostics).kind);
                 } else {
-                    value = Some(Self::parse_expression(current).kind);
+                    value = Some(self.parse_expression(current, source_id, diagnostics).kind);
                 }
                 _ => unreachable!()
             }
@@ -1091,7 +1090,7 @@ impl ASTParser {
         )
     }
 
-    fn parse_import_identifier_list(pair: Pair<'_>) -> Vec<ASTIdentifier> {
+    fn parse_import_identifier_list(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> Vec<ASTIdentifier> {
         let mut identifiers = vec![];
         for current in pair.into_inner() {
             match current.as_rule() {
