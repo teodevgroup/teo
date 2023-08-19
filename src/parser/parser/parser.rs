@@ -2,13 +2,16 @@ use std::borrow::Borrow;
 use snailquote::unescape;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
-use std::fs;
+use std::{env, fs};
+use colored::Colorize;
+use itertools::Itertools;
 use maplit::{btreemap, btreeset, hashmap};
 use pest::Parser as PestParser;
 use pest::pratt_parser::PrattParser;
 use to_mut::ToMut;
 use to_mut_proc_macro::ToMut;
 use once_cell::sync::Lazy;
+use pathdiff::diff_paths;
 use crate::core::result::Result;
 use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::interface::ResolvedInterfaceField;
@@ -43,7 +46,7 @@ use crate::parser::ast::test_conf::ASTTestConf;
 use crate::parser::ast::top::Top;
 use crate::parser::ast::interface_type::InterfaceType;
 use crate::parser::ast::unit::Unit;
-use crate::parser::diagnostics::diagnostics::Diagnostics;
+use crate::parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError, DiagnosticsLog, DiagnosticsWarning};
 use crate::parser::parser::resolver::Resolver;
 use crate::parser::std::decorators::field::GlobalFieldDecorators;
 use crate::parser::std::decorators::model::GlobalModelDecorators;
@@ -188,7 +191,7 @@ impl ASTParser {
             let item_id = self.next_id();
             match current.as_rule() {
                 Rule::import_statement => {
-                    let import = self.parse_import(current, source_id, item_id, path.clone());
+                    let import = self.parse_import(current, source_id, item_id, path.clone(), diagnostics);
                     tops.insert(item_id, import);
                     imports.insert(item_id);
                 },
@@ -252,7 +255,7 @@ impl ASTParser {
                 (*v).borrow().path == import.path
             });
             if found.is_none() {
-                self.parse_source(&import.path);
+                self.parse_source(&import.path, diagnostics);
             }
         }
         self.sources.insert(source_id, result);
@@ -266,7 +269,7 @@ impl ASTParser {
             match current.as_rule() {
                 Rule::string_literal => source = Some(StringLiteral { value: current.as_str().to_string(), span }),
                 Rule::import_identifier_list => identifiers = Self::parse_import_identifier_list(current),
-                _ => diagnostics.insert_unparsed_rule_and_exit(span, current.as_str()),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, span, source_id),
             }
         }
         let unescaped = unescape(source.as_ref().unwrap().value.as_str()).unwrap();
@@ -1104,10 +1107,13 @@ impl ASTParser {
     }
 
     fn parse_span(pair: &Pair<'_>) -> Span {
+        let line_col = pair.line_col();
         let span = pair.as_span();
         Span {
             start: span.start(),
             end: span.end(),
+            line: line_col.0,
+            col: line_col.1,
         }
     }
 
@@ -1244,5 +1250,42 @@ impl ASTParser {
 
     pub(crate) fn global_function_installers(&self) -> &GlobalFunctionInstallers {
         self.global_function_installers.as_ref().unwrap()
+    }
+
+    fn insert_unparsed_rule_and_exit(&self, diagnostics: &mut Diagnostics, span: Span, source_id: usize) {
+        diagnostics.insert_unparsed_rule(span, source_id);
+        self.print_diagnostics(diagnostics, true);
+        std::process::exit(1);
+    }
+
+    fn print_diagnostics(&self, diagnostics: &Diagnostics, print_warnings: bool) {
+        if diagnostics.has_warnings() && print_warnings {
+            for log in diagnostics.warnings() {
+                self.print_diagnostics_log(log);
+            }
+        }
+        if diagnostics.has_errors() {
+            for log in diagnostics.errors() {
+                self.print_diagnostics_log(log);
+            }
+        }
+    }
+
+    fn print_diagnostics_log<T>(&self, log: T) where T: DiagnosticsLog {
+        let source = self.get_source(log.source_id());
+        let current_dir = &env::current_dir().unwrap();
+        let filename = if let Some(path) = diff_paths(&source.path, current_dir) {
+            path.to_str().unwrap().to_owned()
+        } else {
+            source.path.to_str().unwrap().to_owned()
+        };
+        let title = if log.is_warning() {
+            "Warning".yellow().bold()
+        } else if log.is_error() {
+            "Error".red().bold()
+        } else {
+            "Unknown".yellow().bold()
+        };
+        println!("{}: {}:{}:{}\n{}", title, filename, log.span().line, log.span().col, log.message());
     }
 }
