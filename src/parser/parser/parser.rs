@@ -196,45 +196,45 @@ impl ASTParser {
                     imports.insert(item_id);
                 },
                 Rule::let_declaration => {
-                    let constant = self.parse_let_declaration(current, source_id, item_id);
+                    let constant = self.parse_let_declaration(current, source_id, item_id, diagnostics);
                     tops.insert(item_id, constant);
                     constants.insert(item_id);
                 },
                 Rule::model_declaration => {
-                    let model = self.parse_model(current, source_id, item_id);
+                    let model = self.parse_model(current, source_id, item_id, diagnostics);
                     tops.insert(item_id, model);
                     models.insert(item_id);
                     self.models.push((source_id, item_id));
                 },
                 Rule::enum_declaration => {
-                    let r#enum = self.parse_enum(current, source_id, item_id);
+                    let r#enum = self.parse_enum(current, source_id, item_id, diagnostics);
                     tops.insert(item_id, r#enum);
                     enums.insert(item_id);
                     self.enums.push((source_id, item_id));
                 },
                 Rule::config_declaration => {
-                    let config_block = self.parse_config_block(current, source_id, item_id);
+                    let config_block = self.parse_config_block(current, source_id, item_id, diagnostics);
                     tops.insert(item_id, config_block);
                 },
                 Rule::dataset_declaration => {
-                    let dataset_block = self.parse_dataset_block(current, source_id, item_id);
+                    let dataset_block = self.parse_dataset_block(current, source_id, item_id, diagnostics);
                     tops.insert(item_id, dataset_block);
                     self.data_sets.push((source_id, item_id));
                 }
                 Rule::EOI | Rule::EMPTY_LINES => {},
                 Rule::comment_block => (),
                 Rule::interface_declaration => {
-                    let interface_declaration = self.parse_interface_declaration(current, source_id, item_id);
+                    let interface_declaration = self.parse_interface_declaration(current, source_id, item_id, diagnostics);
                     tops.insert(item_id, interface_declaration);
                     self.interfaces.push((source_id, item_id));
                 },
                 Rule::action_group_declaration => {
-                    let action_group_declaration = self.parse_action_group_declaration(current, source_id, item_id);
+                    let action_group_declaration = self.parse_action_group_declaration(current, source_id, item_id, diagnostics);
                     tops.insert(item_id, action_group_declaration);
                     self.action_groups.push((source_id, item_id));
                 },
                 Rule::middleware_declaration => {
-                    let middleware_declaration = self.parse_middleware_declaration(current, source_id, item_id);
+                    let middleware_declaration = self.parse_middleware_declaration(current, source_id, item_id, diagnostics);
                     tops.insert(item_id, middleware_declaration);
                     self.middlewares.push((source_id, item_id));
                 },
@@ -315,9 +315,10 @@ impl ASTParser {
         };
     }
 
-    fn parse_comment_block(pair: Pair<'_>) -> CommentBlock {
+    fn parse_comment_block(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> CommentBlock {
         let mut name = "".to_owned();
         let mut desc = "".to_owned();
+        let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::triple_comment => {
@@ -334,12 +335,13 @@ impl ASTParser {
                 },
                 Rule::double_comment_block => {},
                 Rule::double_comment => {},
-                _ => panic!("error. see rule: {:?}", current.as_rule()),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, span, source_id),
             }
         }
         CommentBlock {
             name: if name.is_empty() { None } else { Some(name) },
             desc: if desc.is_empty() { None } else { Some(desc) },
+            span,
         }
     }
 
@@ -364,7 +366,7 @@ impl ASTParser {
         (token, content)
     }
 
-    fn parse_model(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize) -> Top {
+    fn parse_model(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> Top {
         let mut comment_block = None;
         let mut identifier: Option<ASTIdentifier> = None;
         let mut fields: Vec<ASTField> = vec![];
@@ -374,11 +376,11 @@ impl ASTParser {
             match current.as_rule() {
                 Rule::MODEL_KEYWORD | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE | Rule::EMPTY_LINES | Rule::double_comment_block | Rule::comment_block => {}
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
-                Rule::field_declaration => fields.push(Self::parse_field(current)),
-                Rule::block_decorator => decorators.push(Self::parse_decorator(current)),
-                Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
-                Rule::triple_comment_block => comment_block = Some(Self::parse_comment_block(current)),
-                _ => panic!("error. {:?}", current),
+                Rule::field_declaration => fields.push(self.parse_field(current, diagnostics, source_id)),
+                Rule::block_decorator => decorators.push(self.parse_decorator(current)),
+                Rule::item_decorator => decorators.push(self.parse_decorator(current)),
+                Rule::triple_comment_block => comment_block = Some(self.parse_comment_block(current, source_id, diagnostics)),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, span, source_id),
             }
         }
         Top::Model(ASTModel::new(
@@ -392,7 +394,7 @@ impl ASTParser {
         ))
     }
 
-    fn parse_field(pair: Pair<'_>) -> ASTField {
+    fn parse_field(&self, pair: Pair<'_>, diagnostics: &mut Diagnostics, source_id: usize) -> ASTField {
         let mut comment_block = None;
         let mut identifier: Option<ASTIdentifier> = None;
         let mut r#type: Option<Type> = None;
@@ -401,12 +403,12 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::COLON => {},
-                Rule::triple_comment_block => comment_block = Some(Self::parse_comment_block(current)),
+                Rule::triple_comment_block => comment_block = Some(Self.parse_comment_block(current, source_id, diagnostics)),
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
-                Rule::field_type => r#type = Some(Self::parse_type(current)),
+                Rule::field_type => r#type = Some(Self.parse_type(current, diagnostics, source_id)),
                 Rule::item_decorator => decorators.push(Self::parse_decorator(current)),
                 Rule::double_comment_block => {},
-                _ => panic!("syntax error: {:?}", current),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, span, source_id),
             }
         }
         ASTField::new(
@@ -1059,11 +1061,12 @@ impl ASTParser {
         return (key.unwrap(), value.unwrap())
     }
 
-    fn parse_type(pair: Pair<'_>) -> Type {
+    fn parse_type(&self, pair: Pair<'_>, diagnostics: &mut Diagnostics, source_id: usize) -> Type {
         let mut identifier = None;
         let mut arity = Arity::Scalar;
         let mut item_required = true;
         let mut collection_required = true;
+        let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::COLON => {},
@@ -1076,10 +1079,11 @@ impl ASTParser {
                         collection_required = false;
                     }
                 },
-                _ => panic!(),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, span, source_id),
             }
         }
         Type::new(
+            span,
             identifier.unwrap(),
             arity,
             item_required,
