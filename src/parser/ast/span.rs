@@ -2,17 +2,17 @@
 pub struct Span {
     pub start: usize,
     pub end: usize,
-    pub line: usize,
-    pub col: usize,
+    pub start_position: (usize, usize),
+    pub end_position: (usize, usize),
 }
 
 impl Span {
-    pub fn new(start: usize, end: usize, line: usize, col: usize) -> Span {
-        Self { start, end, line, col }
+    pub fn new(start: usize, end: usize, start_position: (usize, usize), end_position: (usize, usize)) -> Span {
+        Self { start, end, start_position, end_position }
     }
 
     pub fn empty() -> Span {
-        Span { start: 0, end: 0, line: 0, col: 0 }
+        Span { start: 0, end: 0, start_position: (0, 0), end_position: (0, 0) }
     }
 
     pub fn contains(&self, position: usize) -> bool {

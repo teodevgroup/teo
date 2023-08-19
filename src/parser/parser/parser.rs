@@ -1137,13 +1137,14 @@ impl ASTParser {
     }
 
     fn parse_span(pair: &Pair<'_>) -> Span {
-        let line_col = pair.line_col();
+        let start_line_col = pair.line_col();
         let span = pair.as_span();
+        let end_line_col = span.end_pos().line_col();
         Span {
             start: span.start(),
             end: span.end(),
-            line: line_col.0,
-            col: line_col.1,
+            start_position: start_line_col,
+            end_position: end_line_col,
         }
     }
 
@@ -1333,6 +1334,6 @@ impl ASTParser {
         } else {
             "Unknown".yellow().bold()
         };
-        println!("{}: {}:{}:{}\n{}", title, filename, log.span().line, log.span().col, log.message());
+        println!("{}: {}:{}:{}\n{}", title, filename, log.span().start_position.0, log.span().start_position.1, log.message());
     }
 }
