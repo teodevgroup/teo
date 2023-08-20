@@ -3,6 +3,8 @@ use snailquote::unescape;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::{env, fs};
+use std::fs::read_to_string;
+use std::iter::repeat;
 use colored::Colorize;
 use itertools::Itertools;
 use maplit::{btreemap, btreeset, hashmap};
@@ -1334,6 +1336,28 @@ impl ASTParser {
         } else {
             "Unknown".yellow().bold()
         };
-        println!("{}: {}:{}:{}\n{}", title, filename, log.span().start_position.0, log.span().start_position.1, log.message());
+        let mut code = "".to_owned();
+        let file_content = read_to_string(source).unwrap();
+        let first_line_content: &str = file_content.lines().nth(log.span().start_position.0 - 1).unwrap();
+        code += format!("{} {}\n", "|".blue().bold(), first_line_content).as_str();
+        if log.span().start_position.0 == log.span().end_position.0 {
+            let before_len = log.span().start_position.1 - 1;
+            let content_len = log.span().end_position.1 - log.span().start_position.1;
+            code += format!("{} {}{}\n", "|".blue().bold(), repeat(" ").take(before_len).collect::<String>(), repeat("^").take(content_len).collect::<String>()).as_str()
+        } else {
+            let before_len = log.span().start_position.1 - 1;
+            let content_len = first_line_content.len() - before_len;
+            code += format!("{} {}{}\n", "|".blue().bold(), repeat(" ").take(before_len).collect::<String>(), repeat("^").take(content_len).collect::<String>()).as_str()
+        }
+        if log.span().start_position.0 != log.span().end_position.0 {
+            if log.span().start_position.0 + 1 != log.span().end_position.0 {
+                code += format!("{} ...\n", "|".blue().bold()).as_str();
+            }
+            let last_line_content = file_content.lines().nth(log.span().end_position.0 - 1).unwrap();
+            code += format!("{} {}\n", "|".blue().bold(), last_line_content).as_str();
+            let len = log.span().end_position.1;
+            code += format!("{} {}\n", "|".blue().bold(), repeat("^").take(len).collect::<String>()).as_str();
+        }
+        println!("{}: {}:{}:{} - {}:{}\n{}{}", title, filename, log.span().start_position.0, log.span().start_position.1, log.span().end_position.0, log.span().end_position.1, code, log.message());
     }
 }
