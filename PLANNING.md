@@ -449,26 +449,29 @@
 - Fixed action `program code` is recognized as any action bug **[Done]**
 - Fixed where unique input is ordered bug **[Done]**
 - Fixed `teon` macros are not found bug **[Done]**
-- namespace
 - Diagnostic messages
+- Unit tests for schemas
+- Auto completion for VSCode
 
 #### 0.0.58
-- Database specific database types
-- Full custom types for all supported databases
-- Rewrite Node.js client generating with askama engine
-- The copy action
+- Unit tests for rust code
+- Database specific database types and tests
 - PostgreSQL: Enum types
 
 #### 0.0.59
+- Documentations
+- Move auth middleware out
+- Rewrite Node.js client generating with askama engine
+
+#### 0.0.60
+- The copy action
 - Enum value references enum definition
 - Add synthesised enums to graph
 - Foreign key management
 - Relation onUpdate
 - Relation onDelete
 - Unit test: handlers
-- Linter: errors and warnings
 - MongoDB transaction
-- TS client: refactor
 - Client: distinct in handler args
 - C# client: capitalized names and names with underscore
 - TypeScript client: correct return types for `aggregate` and `groupBy`
@@ -477,7 +480,7 @@
 - Migration dry run
 - MongoDB: connector is not using table name
 
-#### 0.0.60
+#### 0.0.61
 - Migration decorator docs
 - Dropped decorator docs
 - MongoDB migration
@@ -490,7 +493,8 @@
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 
-#### 0.0.61
+#### 0.0.62
+- namespace
 - Rust entities: optional string array
 - Rust entities: required string array
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
@@ -501,7 +505,7 @@
 - Soft delete documentation
 - Correct count with cursor
 
-#### 0.0.62
+#### 0.0.63
 - Input omissible and output omissible for generated clients
 - Support code comment tags for VSCode
 
@@ -509,13 +513,11 @@
 - Node.js bindings: error handling
 - Node.js object printing
 - Node.js bindings: date only type
-- Python server
 - Node.js client use dedicated `Date` class instead of builtin `Date`
 - Cross language error handling for node.js
-- Refactor Node.js entities
 
 #### 0.2.0
-- First stable release with unit test covering
+- Python server
 
 #### 0.3.0
 - Database type mapping for field, property and collection types' item field
