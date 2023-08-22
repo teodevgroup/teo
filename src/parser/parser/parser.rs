@@ -17,7 +17,7 @@ use pathdiff::diff_paths;
 use crate::core::result::Result;
 use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::interface::ResolvedInterfaceField;
-use crate::parser::ast::action::{ActionDeclaration, ActionGroupDeclaration};
+use crate::parser::ast::action::{ActionDeclaration, ActionGroupDeclaration, ActionInputFormat};
 use crate::parser::ast::argument::{Argument, ArgumentList};
 use crate::parser::ast::arith_expr::{ArithExpr, Op};
 use crate::parser::ast::client::ASTClient;
@@ -634,6 +634,7 @@ impl ASTParser {
         let mut identifier: Option<ASTIdentifier> = None;
         let mut input_type: Option<InterfaceType> = None;
         let mut output_type: Option<InterfaceType> = None;
+        let mut input_format: ActionInputFormat = ActionInputFormat::Json;
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
@@ -644,7 +645,9 @@ impl ASTParser {
                     input_type = Some(self.parser_interface_type(current, source_id, diagnostics));
                 },
                 Rule::COLON => (),
-                Rule::req_type => (),
+                Rule::req_type => if current.as_str() == "form" {
+                    input_format = ActionInputFormat::Form
+                },
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
             }
         }
@@ -655,6 +658,7 @@ impl ASTParser {
             identifier: identifier.unwrap(),
             input_type: input_type.unwrap(),
             output_type: output_type.unwrap(),
+            input_format,
             span,
             resolved_input_interface: None,
             resolved_input_shape: None,

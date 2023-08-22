@@ -20,8 +20,14 @@ pub(crate) struct ActionDeclaration {
     pub(crate) identifier: ASTIdentifier,
     pub(crate) input_type: InterfaceType,
     pub(crate) output_type: InterfaceType,
+    pub(crate) input_format: ActionInputFormat,
     pub(crate) span: Span,
     pub(crate) resolved_input_interface: Option<(usize, usize)>,
     pub(crate) resolved_input_shape: Option<ResolvedInterfaceField>,
 }
 
+#[derive(Debug)]
+pub(crate) enum ActionInputFormat {
+    Json,
+    Form,
+}
