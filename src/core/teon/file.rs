@@ -8,7 +8,6 @@ pub struct TeonFile {
 
 impl TeonFile {
     pub(crate) fn from_json_value(json_value: &serde_json::Value) -> Self {
-        println!("see here json: {}", json_value);
         let obj = json_value.as_object().unwrap();
         Self {
             filepath: obj.get("filepath").unwrap().as_str().unwrap().to_owned(),
