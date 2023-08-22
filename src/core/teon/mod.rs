@@ -524,6 +524,17 @@ impl Value {
         }
     }
 
+    pub fn is_file(&self) -> bool {
+        self.as_file().is_some()
+    }
+
+    pub fn as_file(&self) -> Option<&TeonFile> {
+        match self {
+            Value::File(f) => Some(f),
+            _ => None,
+        }
+    }
+
     pub fn is_pipeline(&self) -> bool {
         self.as_range().is_some()
     }
