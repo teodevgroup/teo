@@ -21,6 +21,7 @@ use colored::Colorize;
 use futures_util::StreamExt;
 use indexmap::IndexMap;
 use key_path::{KeyPath, path};
+use regex::Regex;
 use serde_json::{json, Value as JsonValue};
 use crate::core::action::{
     Action, CREATE, DELETE, ENTRY, FIND, IDENTITY, MANY, SINGLE, UPDATE, UPSERT,
@@ -735,12 +736,40 @@ fn make_app(
                             // filesystem operations are blocking, we have to use threadpool
                             f = web::block(move || f.write_all(&chunk).map(|_| f)).await.unwrap().unwrap();
                         }
-                        result_value.as_object_mut().unwrap().insert(field.name().to_owned(), json!({
-                            "filepath": filepath2,
-                            "contentType": field.content_type().map(|c| c.to_string()),
-                            "filename": filename,
-                            "filenameExt": field.content_disposition().get_filename_ext().map(|e| e.to_string()),
-                        }));
+                        let owned_field_name = field.name().to_owned();
+                        if owned_field_name.ends_with("[]") {
+                            let field_name_without_suffix = owned_field_name.strip_suffix("[]").unwrap();
+                            if !result_value.as_object_mut().unwrap().contains_key(field_name_without_suffix) {
+                                result_value.as_object_mut().unwrap().insert(field_name_without_suffix.to_owned(), json!([]));
+                            }
+                            result_value.as_object_mut().unwrap().get_mut(field_name_without_suffix).unwrap().as_array_mut().unwrap().push(json!({
+                                "filepath": filepath2,
+                                "contentType": field.content_type().map(|c| c.to_string()),
+                                "filename": filename,
+                                "filenameExt": field.content_disposition().get_filename_ext().map(|e| e.to_string()),
+                            }));
+                        } else if owned_field_name.ends_with("]") {
+                            let regex = Regex::new("(.*)\\[(.*)\\]").unwrap();
+                            let found = regex.captures(&owned_field_name).unwrap();
+                            let field_name = found.get(1).unwrap().as_str().to_owned();
+                            let dict_name = found.get(2).unwrap().as_str().to_owned();
+                            if !result_value.as_object_mut().unwrap().contains_key(&field_name) {
+                                result_value.as_object_mut().unwrap().insert(field_name.clone(), json!([]));
+                            }
+                            result_value.as_object_mut().unwrap().get_mut(&field_name).unwrap().as_object_mut().unwrap().insert(dict_name, json!({
+                                "filepath": filepath2,
+                                "contentType": field.content_type().map(|c| c.to_string()),
+                                "filename": filename,
+                                "filenameExt": field.content_disposition().get_filename_ext().map(|e| e.to_string()),
+                            }));
+                        } else {
+                            result_value.as_object_mut().unwrap().insert(field.name().to_owned(), json!({
+                                "filepath": filepath2,
+                                "contentType": field.content_type().map(|c| c.to_string()),
+                                "filename": filename,
+                                "filenameExt": field.content_disposition().get_filename_ext().map(|e| e.to_string()),
+                            }));
+                        }
                     } else {
                         let mut body = web::BytesMut::new();
                         while let Some(chunk) = field.try_next().await.unwrap() {
@@ -829,7 +858,7 @@ fn make_app(
                 path_components: path_components.clone(),
                 req: teo_req,
                 user_ctx,
-                transformed_action: transformed_action,
+                transformed_action,
                 transformed_teon_body,
                 identity,
                 req_local: ReqLocal::new()
