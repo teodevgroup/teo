@@ -31,3 +31,20 @@ pub(crate) enum ActionInputFormat {
     Json,
     Form,
 }
+
+impl ActionInputFormat {
+
+    pub(crate) fn is_json(&self) -> bool {
+        match self {
+            ActionInputFormat::Json => true,
+            _ => false,
+        }
+    }
+
+    pub(crate) fn is_form(&self) -> bool {
+        match self {
+            ActionInputFormat::Form => true,
+            _ => false,
+        }
+    }
+}

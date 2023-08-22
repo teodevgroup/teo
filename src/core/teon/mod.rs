@@ -3,6 +3,7 @@ pub mod json;
 pub mod from;
 pub mod macros;
 pub mod range;
+pub mod file;
 pub(crate) mod custom_action_decoder;
 pub(crate) mod decoder;
 pub(crate) mod utils;
@@ -29,6 +30,7 @@ use crate::core::pipeline::Pipeline;
 use crate::core::teon::index::Index;
 use crate::core::teon::range::Range;
 use crate::core::result::Result;
+use crate::core::teon::file::TeonFile;
 use crate::prelude::Error;
 
 // Code from this file is inspired from serde json
@@ -158,6 +160,10 @@ pub enum Value {
     /// Represents a Teon object.
     ///
     Object(Object),
+
+    /// Represents a file.
+    ///
+    File(TeonFile),
 }
 
 impl Value {
@@ -615,6 +621,7 @@ impl Value {
             Value::RawOptionChoice(_) => unreachable!(),
             Value::RegExp(_) => unreachable!(),
             Value::Object(_) => unreachable!(),
+            Value::File(f) => Cow::Owned(f.filename.to_owned()),
         }
     }
 }

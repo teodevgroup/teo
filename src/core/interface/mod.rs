@@ -48,6 +48,7 @@ pub enum ResolvedInterfaceFieldType {
     String,
     Date,
     DateTime,
+    File,
     Enum(Enum),
     Vec(Box<ResolvedInterfaceField>),
     HashMap(Box<ResolvedInterfaceField>),

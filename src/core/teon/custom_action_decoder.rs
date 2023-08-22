@@ -7,6 +7,7 @@ use itertools::Itertools;
 use key_path::KeyPath;
 use serde_json::Value as JsonValue;
 use crate::core::interface::{ResolvedInterfaceField, ResolvedInterfaceFieldType};
+use crate::core::teon::file::TeonFile;
 use crate::prelude::{Value, Result, Error};
 
 pub(crate) fn transform_custom_action_json_into_teon(json_value: &JsonValue, rule: &ResolvedInterfaceField, path: &KeyPath<'_>) -> Result<Value> {
@@ -48,6 +49,7 @@ pub(crate) fn transform_custom_action_json_into_teon(json_value: &JsonValue, rul
             Ok(fixed_offset_datetime) => Ok(Value::DateTime(fixed_offset_datetime.with_timezone(&Utc))),
             Err(_) => Err(Error::unexpected_input_value("datetime string", path)),
         }
+        ResolvedInterfaceFieldType::File => Ok(Value::File(TeonFile::from_json_value(json_value))),
         ResolvedInterfaceFieldType::Enum(e) => {
             let value = json_value.as_str().unwrap().to_owned();
             if e.values.contains(&value) {
@@ -89,6 +91,7 @@ pub(crate) fn transform_custom_action_json_into_teon(json_value: &JsonValue, rul
 
 fn validate_json_value_type(json_value: &JsonValue, rule: &ResolvedInterfaceField, path: &KeyPath<'_>) -> Result<()> {
     match &rule.field_type {
+        ResolvedInterfaceFieldType::File => (),
         ResolvedInterfaceFieldType::Any => (),
         ResolvedInterfaceFieldType::ObjectId => {
             if !json_value.is_string() {

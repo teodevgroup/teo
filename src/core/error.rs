@@ -45,6 +45,7 @@ pub enum UserErrorType {
     UnexpectedInput,
     DestinationNotFound,
     IncorrectJSONFormat,
+    IncorrectFormFormat,
     MissingRequiredInput,
     ObjectNotFound,
     InvalidAuthToken,
@@ -65,6 +66,7 @@ impl UserErrorType {
             UnexpectedInput => "UnexpectedInput",
             DestinationNotFound => "DestinationNotFound",
             IncorrectJSONFormat => "IncorrectJSONFormat",
+            IncorrectFormFormat => "IncorrectFormFormat",
             MissingRequiredInput => "MissingRequiredInput",
             ObjectNotFound => "ObjectNotFound",
             InvalidAuthToken => "InvalidAuthToken",
@@ -84,6 +86,7 @@ impl UserErrorType {
             UnexpectedInput => 400,
             DestinationNotFound => 404,
             IncorrectJSONFormat => 400,
+            IncorrectFormFormat => 400,
             MissingRequiredInput => 400,
             ObjectNotFound => 404,
             InvalidAuthToken => 401,
@@ -270,6 +273,14 @@ impl Error {
         Error::UserError(UserError {
             r#type: UserErrorType::IncorrectJSONFormat,
             message: Cow::Borrowed("The request JSON body format is incorrect."),
+            errors: None,
+        })
+    }
+
+    pub(crate) fn incorrect_form_format(reason: String) -> Self {
+        Error::UserError(UserError {
+            r#type: UserErrorType::IncorrectFormFormat,
+            message: Cow::Owned(format!("The request form body format is incorrect: {reason}")),
             errors: None,
         })
     }

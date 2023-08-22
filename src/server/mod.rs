@@ -3,13 +3,15 @@ pub(crate) mod jwt_token;
 pub(crate) mod test_context;
 pub(crate) mod conf;
 
+use std::io::Write;
 use crate::core::result::Result;
 use std::sync::Arc;
-use futures_util::{future};
+use futures_util::{future, TryStreamExt};
 use std::time::SystemTime;
 use actix_http::body::MessageBody;
 use actix_http::{HttpMessage, Method};
-use actix_web::{App, HttpRequest, HttpResponse, HttpServer, web};
+use actix_multipart::Multipart;
+use actix_web::{App, FromRequest, HttpRequest, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::DefaultHeaders;
 use actix_web::dev::Service;
@@ -19,7 +21,7 @@ use colored::Colorize;
 use futures_util::StreamExt;
 use indexmap::IndexMap;
 use key_path::{KeyPath, path};
-use serde_json::Value as JsonValue;
+use serde_json::{json, Value as JsonValue};
 use crate::core::action::{
     Action, CREATE, DELETE, ENTRY, FIND, IDENTITY, MANY, SINGLE, UPDATE, UPSERT,
     FIND_UNIQUE_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, CREATE_HANDLER, UPDATE_HANDLER,
@@ -46,6 +48,7 @@ use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::error::Error;
 use crate::core::teon::custom_action_decoder::transform_custom_action_json_into_teon;
 use crate::core::teon::decoder::Decoder;
+use crate::parser::ast::action::ActionInputFormat;
 use crate::prelude::{combine_middleware, Res, UserCtx, Value};
 use crate::seeder::seed::seed;
 use crate::server::conf::ServerConf;
@@ -686,25 +689,69 @@ fn make_app(
             let teo_req = Req::new(http_request.clone());
             let user_ctx = UserCtx::new(connection.clone(), Some(teo_req.clone()));
             // Parse body
-            let mut body = web::BytesMut::new();
-            while let Some(chunk) = payload.next().await {
-                let chunk = chunk.unwrap();
-                // limit max size of in-memory payload
-                if (body.len() + chunk.len()) > 262_144usize {
-                    return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), Error::internal_server_error("Memory overflow."));
-                }
-                body.extend_from_slice(&chunk);
-            }
-            let parsed_json_body_result: std::result::Result<JsonValue, serde_json::Error> = serde_json::from_slice(&body);
-            let parsed_json_body = match parsed_json_body_result {
-                Ok(b) => b,
-                Err(_) => {
-                    return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), Error::incorrect_json_format());
-                }
+            let format = if http_request.content_type() == "multipart/form-data" {
+                ActionInputFormat::Form
+            } else {
+                ActionInputFormat::Json
             };
-            if !parsed_json_body.is_object() {
-                return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), Error::unexpected_input_root_type("object"));
-            }
+            let parsed_json_body = if format.is_json() {
+                let mut body = web::BytesMut::new();
+                while let Some(chunk) = payload.next().await {
+                    let chunk = chunk.unwrap();
+                    // limit max size of in-memory payload
+                    if (body.len() + chunk.len()) > 262_144usize {
+                        return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), Error::internal_server_error("Memory overflow."));
+                    }
+                    body.extend_from_slice(&chunk);
+                }
+                let parsed_json_body_result: std::result::Result<JsonValue, serde_json::Error> = serde_json::from_slice(&body);
+                let parsed_json_body = match parsed_json_body_result {
+                    Ok(b) => b,
+                    Err(_) => {
+                        return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), Error::incorrect_json_format());
+                    }
+                };
+                if !parsed_json_body.is_object() {
+                    return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), Error::unexpected_input_root_type("object"));
+                }
+                parsed_json_body
+            } else {
+                let mut inner_payload = payload.into_inner();
+                let mut multipart_result = Multipart::from_request(&http_request, &mut inner_payload).await;
+                let mut multipart = match multipart_result {
+                    Ok(multipart) => multipart,
+                    Err(err) => return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), Error::incorrect_form_format(err.to_string()))
+                };
+                let mut result_value = json!({});
+                while let Some(mut field) = multipart.try_next().await.unwrap() {
+                    // A multipart/form-data stream has to contain `content_disposition`
+                    if let Some(filename) = field.content_disposition().get_filename().map(|f| f.to_owned()) {
+                        let filepath = format!("./tmp/{filename}");
+                        let filepath2 = filepath.clone();
+                        // File::create is blocking operation, use threadpool
+                        let mut f = web::block(move || std::fs::File::create(&filepath)).await.unwrap().unwrap();
+                        // Field in turn is stream of *Bytes* object
+                        while let Some(chunk) = field.try_next().await.unwrap() {
+                            // filesystem operations are blocking, we have to use threadpool
+                            f = web::block(move || f.write_all(&chunk).map(|_| f)).await.unwrap().unwrap();
+                        }
+                        result_value.as_object_mut().unwrap().insert(field.name().to_owned(), json!({
+                            "filepath": filepath2,
+                            "contentType": field.content_type().map(|c| c.to_string()),
+                            "filename": filename,
+                            "filenameExt": field.content_disposition().get_filename_ext().map(|e| e.to_string()),
+                        }));
+                    } else {
+                        let mut body = web::BytesMut::new();
+                        while let Some(chunk) = field.try_next().await.unwrap() {
+                            body.extend_from_slice(&chunk);
+                        }
+                        result_value.as_object_mut().unwrap().insert(field.name().to_owned(), serde_json::Value::String(String::from_utf8(body.as_ref().to_vec()).unwrap()));
+                    }
+                }
+                result_value
+            };
+
             // Teo Req
             let teo_req = Req::new(http_request.clone());
             // Identity

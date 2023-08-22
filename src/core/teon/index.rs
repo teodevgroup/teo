@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::{fmt, ops};
-use std::fmt::Display;
+use std::fmt::{Display, Write};
 use super::Value;
 
 // Code from this file is inspired from serde json
@@ -121,6 +121,7 @@ impl<'a> Display for Type<'a> {
             Value::RawEnumChoice(_, __) => formatter.write_str("raw enum choice"),
             Value::RawOptionChoice(_) => formatter.write_str("raw option choice"),
             Value::RegExp(_) => formatter.write_str("regular expression"),
+            Value::File(_) => formatter.write_str("file"),
         }
     }
 }
