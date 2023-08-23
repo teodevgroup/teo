@@ -449,6 +449,8 @@
 - Fixed action `program code` is recognized as any action bug **[Done]**
 - Fixed where unique input is ordered bug **[Done]**
 - Fixed `teon` macros are not found bug **[Done]**
+- File uploading with form data **[Done]**
+- Serving static files **[Done]**
 - Diagnostic messages
 - Unit tests for schemas
 - Auto completion for VSCode
