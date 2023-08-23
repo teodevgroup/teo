@@ -1267,6 +1267,13 @@ impl ASTParser {
         }).collect()
     }
 
+    pub(crate) fn static_files(&self) -> Vec<&StaticFiles> {
+        self.static_files.iter().map(|m| {
+            let source = self.get_source(m.0);
+            source.get_static_files(m.1)
+        }).collect()
+    }
+
     pub(crate) fn set_global_model_decorators(&self, deco: GlobalModelDecorators) {
         self.to_mut().global_model_decorators = Some(deco);
     }

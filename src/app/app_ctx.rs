@@ -44,6 +44,7 @@ pub struct AppCtx {
     action_map: HashMap<&'static str, HashMap<&'static str, &'static dyn ActionHandlerDefTrait>>,
     test_context: Option<&'static TestContext>,
     custom_action_declarations: HashMap<&'static str, HashMap<&'static str, CustomActionDefinition>>,
+    static_files: HashMap<&'static str, &'static str>,
 }
 
 impl AppCtx {
@@ -70,6 +71,7 @@ impl AppCtx {
             action_map: hashmap!{},
             test_context: None,
             custom_action_declarations: hashmap!{},
+            static_files: hashmap!{},
         }
     }
 
@@ -346,6 +348,15 @@ impl AppCtx {
 
     pub(crate) fn test_context(&self) -> Option<&'static TestContext> {
         self.test_context
+    }
+
+    pub(crate) fn insert_static_files(&self, path: &'static str, map: &'static str) -> Result<()> {
+        AppCtx::get_mut()?.static_files.insert(path, map);
+        Ok(())
+    }
+
+    pub(crate) fn static_files(&self) -> &HashMap<&'static str, &'static str> {
+        &self.static_files
     }
 }
 

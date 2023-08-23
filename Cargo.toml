@@ -13,6 +13,7 @@ repository = "https://github.com/teocloud/teo"
 actix-web = "4.3.1"
 actix-http = "3.3.1"
 actix-multipart = "0.6.0"
+actix-files = "0.6.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
 chrono = { version = "0.4.24", features = ["serde"] }

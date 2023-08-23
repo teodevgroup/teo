@@ -332,6 +332,12 @@ pub(super) fn load_schema() -> Result<()> {
             })?;
         }
     }
+    // static files
+    for static_files in parser.static_files() {
+        let map = Box::leak(Box::new(static_files.resolved_map.as_ref().unwrap().clone())).as_str();
+        let path = Box::leak(Box::new(static_files.resolved_path.as_ref().unwrap().clone())).as_str();
+        app_ctx.insert_static_files(path, map)?;
+    }
     Ok(())
 }
 

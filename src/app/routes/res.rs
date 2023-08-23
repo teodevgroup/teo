@@ -1,6 +1,8 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
 use actix_http::StatusCode;
-use actix_web::HttpResponse;
+use actix_web::{HttpRequest, HttpResponse};
+use actix_files::NamedFile;
 use crate::prelude::Value;
 use crate::teon;
 
@@ -11,9 +13,17 @@ pub enum Res {
     TeonDataRes(Value),
     TeonDataMetaRes(Value, Value),
     TeonErrorRes { code: u16, kind: String, message: String, fields: Option<HashMap<String, String>> },
+    File(PathBuf),
 }
 
 impl Res {
+
+    pub fn is_file(&self) -> bool {
+        match self {
+            Res::File(_) => true,
+            _ => false,
+        }
+    }
 
     pub fn empty() -> Self {
         Self::EmptyRes
@@ -39,6 +49,15 @@ impl Res {
         match self {
             Self::TeonErrorRes{ code, kind: _, message: _, fields: _ } => *code,
             _ => 200,
+        }
+    }
+
+    pub(crate) fn into_response(&self, req: &HttpRequest) -> HttpResponse {
+        match self {
+            Res::File(path) => {
+                NamedFile::open(path).unwrap().into_response(req)
+            },
+            _ => unreachable!()
         }
     }
 }
@@ -67,6 +86,9 @@ impl Into<HttpResponse> for Res {
                 HttpResponse::build(StatusCode::from_u16(code).unwrap()).json(j(teon!({
                     "error": inner
                 })))
+            }
+            Res::File(path_buf) => {
+                unreachable!()
             }
         }
     }

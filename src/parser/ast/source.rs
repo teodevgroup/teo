@@ -16,6 +16,7 @@ use crate::parser::ast::interface::InterfaceDeclaration;
 use crate::parser::ast::middleware::MiddlewareDeclaration;
 use crate::parser::ast::model::ASTModel;
 use crate::parser::ast::r#enum::ASTEnum;
+use crate::parser::ast::static_files::StaticFiles;
 use crate::parser::ast::test_conf::ASTTestConf;
 use crate::parser::ast::top::Top;
 
@@ -125,6 +126,10 @@ impl Source {
 
     pub(crate) fn get_interface(&self, id: usize) -> &InterfaceDeclaration {
         self.tops.get(&id).unwrap().as_interface().unwrap()
+    }
+
+    pub(crate) fn get_static_files(&self, id: usize) -> &StaticFiles {
+        self.tops.get(&id).unwrap().as_static_files().unwrap()
     }
 }
 
