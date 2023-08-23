@@ -909,19 +909,20 @@ pub(crate) struct PathComponents {
     action: String,
 }
 
-fn parse_static_files_path<'a>(path: &'a str, prefix: Option<&'a str>) -> Result<&'a str> {
+fn parse_static_files_path<'a>(path: &'a str, prefix: Option<&'a str>) -> Result<PathBuf> {
     let purified_path = if let Some(prefix) = prefix {
         if path.starts_with(prefix) {
-            path.strip_prefix(prefix).unwrap()
+            PathBuf::from(path.strip_prefix(prefix).unwrap())
         } else {
-            path
+            PathBuf::from(path)
         }
     } else {
-        path
+        PathBuf::from(path)
     };
     for (k, v) in AppCtx::get()?.static_files() {
         if purified_path.starts_with(k) {
-            return Ok(purified_path);
+            let content_path = purified_path.strip_prefix(k).unwrap();
+            return Ok(PathBuf::from(v).join(content_path));
         }
     }
     Err(Error::destination_not_found())
