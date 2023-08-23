@@ -718,7 +718,7 @@ fn make_app(
                 parsed_json_body
             } else {
                 let mut inner_payload = payload.into_inner();
-                let mut multipart_result = Multipart::from_request(&http_request, &mut inner_payload).await;
+                let multipart_result = Multipart::from_request(&http_request, &mut inner_payload).await;
                 let mut multipart = match multipart_result {
                     Ok(multipart) => multipart,
                     Err(err) => return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), Error::incorrect_form_format(err.to_string()))

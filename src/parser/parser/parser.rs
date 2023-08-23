@@ -47,8 +47,9 @@ use crate::parser::ast::subscript::Subscript;
 use crate::parser::ast::test_conf::ASTTestConf;
 use crate::parser::ast::top::Top;
 use crate::parser::ast::interface_type::InterfaceType;
+use crate::parser::ast::static_files::StaticFiles;
 use crate::parser::ast::unit::Unit;
-use crate::parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError, DiagnosticsLog, DiagnosticsWarning};
+use crate::parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError, DiagnosticsLog};
 use crate::parser::parser::resolver::Resolver;
 use crate::parser::std::decorators::field::GlobalFieldDecorators;
 use crate::parser::std::decorators::model::GlobalModelDecorators;
@@ -93,6 +94,7 @@ pub(crate) struct ASTParser {
     pub(crate) action_groups: Vec<(usize, usize)>,
     pub(crate) actions: Vec<(usize, usize)>,
     pub(crate) interfaces: Vec<(usize, usize)>,
+    pub(crate) static_files: Vec<(usize, usize)>,
     pub(crate) next_id: usize,
     pub(crate) resolved: bool,
     pub(crate) global_model_decorators: Option<GlobalModelDecorators>,
@@ -124,6 +126,7 @@ impl ASTParser {
             action_groups: vec![],
             actions: vec![],
             interfaces: vec![],
+            static_files: vec![],
             next_id: 0,
             resolved: false,
             global_model_decorators: None,
@@ -246,6 +249,11 @@ impl ASTParser {
                     let middleware_declaration = self.parse_middleware_declaration(current, source_id, item_id, diagnostics);
                     tops.insert(item_id, middleware_declaration);
                     self.middlewares.push((source_id, item_id));
+                },
+                Rule::static_files_declaration => {
+                    let static_files_declaration = self.parse_static_files_declaration(current, source_id, item_id, diagnostics);
+                    tops.insert(item_id, static_files_declaration);
+                    self.static_files.push((source_id, item_id));
                 },
                 Rule::interface_enum_declaration => (),
                 Rule::namespace => (),
@@ -585,6 +593,24 @@ impl ASTParser {
             collection_optional: collection_optionality,
             optional: optionality,
         }
+    }
+
+    fn parse_static_files_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> Top {
+        let span = Self::parse_span(&pair);
+        let mut map_expr = None;
+        let mut path_expr = None;
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::expression => if path_expr.is_none() {
+                    path_expr = Some(self.parse_expression(current, source_id, diagnostics));
+                } else {
+                    map_expr = Some(self.parse_expression(current, source_id, diagnostics));
+                }
+                Rule::STATIC_FILES_KEYWORD | Rule::FAT_ARROW_KEYWORD => (),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current), source_id),
+            }
+        }
+        Top::StaticFiles(StaticFiles::new(source_id, item_id, span, path_expr.unwrap(), map_expr.unwrap()))
     }
 
     fn parse_middleware_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> Top {

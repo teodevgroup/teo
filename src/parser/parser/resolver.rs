@@ -47,6 +47,7 @@ use crate::parser::ast::interface::{InterfaceDeclaration, InterfaceItemDeclarati
 use crate::parser::ast::test_conf::ASTTestConf;
 use crate::parser::ast::interface_type::InterfaceType;
 use crate::parser::ast::r#type::Arity;
+use crate::parser::ast::static_files::StaticFiles;
 use crate::parser::diagnostics::diagnostics::Diagnostics;
 use crate::parser::std::pipeline::global::{GlobalFunctionInstallers, GlobalPipelineInstallers};
 
@@ -116,6 +117,9 @@ impl Resolver {
                 }
                 Top::InterfaceDeclaration(interface_declaration) => {
                     continue;
+                }
+                Top::StaticFiles(static_files) => {
+                    Self::resolve_static_files(parser, source, static_files);
                 }
             }
         }
@@ -631,6 +635,13 @@ impl Resolver {
         }
     }
 
+    pub(crate) fn resolve_static_files(parser: &ASTParser, source: &Source, static_files: &mut StaticFiles) {
+        Self::resolve_expression(parser, source, &mut static_files.path);
+        Self::resolve_expression(parser, source, &mut static_files.map);
+        static_files.resolved_path = Some(static_files.path.resolved.as_ref().unwrap().as_value().unwrap().as_str().unwrap().to_owned());
+        static_files.resolved_map = Some(static_files.map.resolved.as_ref().unwrap().as_value().unwrap().as_str().unwrap().to_owned());
+    }
+
     pub(crate) fn resolve_action_group(parser: &ASTParser, source: &Source, action_group_declaration: &mut ActionGroupDeclaration) {
         for action in &mut action_group_declaration.actions {
             Self::resolve_custom_action_declaration(parser, source, action)
@@ -732,9 +743,6 @@ impl Resolver {
     }
 
     pub(crate) fn need_to_alter_generics_with_map(parser: &ASTParser, source: &Source, map: &HashMap<String, InterfaceType>, def: &InterfaceType) -> bool {
-        // if def.arity != Arity::Scalar {
-        //     return true;
-        // }
         if map.contains_key(&def.name.name) {
             return true;
         }

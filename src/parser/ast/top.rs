@@ -11,6 +11,7 @@ use crate::parser::ast::interface::InterfaceDeclaration;
 use crate::parser::ast::middleware::MiddlewareDeclaration;
 use crate::parser::ast::model::ASTModel;
 use crate::parser::ast::r#enum::ASTEnum;
+use crate::parser::ast::static_files::StaticFiles;
 use crate::parser::ast::test_conf::ASTTestConf;
 
 #[derive(Debug)]
@@ -29,6 +30,7 @@ pub(crate) enum Top {
     MiddlewareDeclaration(MiddlewareDeclaration),
     ActionGroupDeclaration(ActionGroupDeclaration),
     InterfaceDeclaration(InterfaceDeclaration),
+    StaticFiles(StaticFiles),
 }
 
 impl Top {
@@ -49,6 +51,7 @@ impl Top {
             Top::MiddlewareDeclaration(m) => m.id,
             Top::ActionGroupDeclaration(a) => a.id,
             Top::InterfaceDeclaration(i) => i.id,
+            Top::StaticFiles(s) => s.id,
         }
     }
 
@@ -302,5 +305,23 @@ impl Top {
 
     pub(crate) fn is_interface(&self) -> bool {
         self.as_interface().is_some()
+    }
+
+    pub(crate) fn as_static_files(&self) -> Option<&StaticFiles> {
+        match self {
+            Top::StaticFiles(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_static_files_mut(&mut self) -> Option<&mut StaticFiles> {
+        match self {
+            Top::StaticFiles(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn is_static_files(&self) -> bool {
+        self.as_static_files().is_some()
     }
 }
