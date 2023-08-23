@@ -3,6 +3,7 @@ pub(crate) mod jwt_token;
 pub(crate) mod test_context;
 pub(crate) mod conf;
 
+use std::env;
 use std::io::Write;
 use std::path::PathBuf;
 use crate::core::result::Result;
@@ -749,7 +750,9 @@ fn make_app(
                     while let Some(mut field) = multipart.try_next().await.unwrap() {
                         // A multipart/form-data stream has to contain `content_disposition`
                         if let Some(filename) = field.content_disposition().get_filename().map(|f| f.to_owned()) {
+                            println!("see current dir {:?}", env::current_dir().unwrap());
                             let filepath = format!("./tmp/{filename}");
+                            println!("see file path {:?}", filepath);
                             let filepath2 = filepath.clone();
                             // File::create is blocking operation, use threadpool
                             let mut f = web::block(move || std::fs::File::create(&filepath)).await.unwrap().unwrap();
@@ -765,11 +768,11 @@ fn make_app(
                                     result_value.as_object_mut().unwrap().insert(field_name_without_suffix.to_owned(), json!([]));
                                 }
                                 result_value.as_object_mut().unwrap().get_mut(field_name_without_suffix).unwrap().as_array_mut().unwrap().push(json!({
-                                "filepath": filepath2,
-                                "contentType": field.content_type().map(|c| c.to_string()),
-                                "filename": filename,
-                                "filenameExt": field.content_disposition().get_filename_ext().map(|e| e.to_string()),
-                            }));
+                                    "filepath": filepath2,
+                                    "contentType": field.content_type().map(|c| c.to_string()),
+                                    "filename": filename,
+                                    "filenameExt": field.content_disposition().get_filename_ext().map(|e| e.to_string()),
+                                }));
                             } else if owned_field_name.ends_with("]") {
                                 let regex = Regex::new("(.*)\\[(.*)\\]").unwrap();
                                 let found = regex.captures(&owned_field_name).unwrap();
@@ -779,18 +782,18 @@ fn make_app(
                                     result_value.as_object_mut().unwrap().insert(field_name.clone(), json!([]));
                                 }
                                 result_value.as_object_mut().unwrap().get_mut(&field_name).unwrap().as_object_mut().unwrap().insert(dict_name, json!({
-                                "filepath": filepath2,
-                                "contentType": field.content_type().map(|c| c.to_string()),
-                                "filename": filename,
-                                "filenameExt": field.content_disposition().get_filename_ext().map(|e| e.to_string()),
-                            }));
+                                    "filepath": filepath2,
+                                    "contentType": field.content_type().map(|c| c.to_string()),
+                                    "filename": filename,
+                                    "filenameExt": field.content_disposition().get_filename_ext().map(|e| e.to_string()),
+                                }));
                             } else {
                                 result_value.as_object_mut().unwrap().insert(field.name().to_owned(), json!({
-                                "filepath": filepath2,
-                                "contentType": field.content_type().map(|c| c.to_string()),
-                                "filename": filename,
-                                "filenameExt": field.content_disposition().get_filename_ext().map(|e| e.to_string()),
-                            }));
+                                    "filepath": filepath2,
+                                    "contentType": field.content_type().map(|c| c.to_string()),
+                                    "filename": filename,
+                                    "filenameExt": field.content_disposition().get_filename_ext().map(|e| e.to_string()),
+                                }));
                             }
                         } else {
                             let mut body = web::BytesMut::new();
