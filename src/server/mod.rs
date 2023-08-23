@@ -750,9 +750,7 @@ fn make_app(
                     while let Some(mut field) = multipart.try_next().await.unwrap() {
                         // A multipart/form-data stream has to contain `content_disposition`
                         if let Some(filename) = field.content_disposition().get_filename().map(|f| f.to_owned()) {
-                            println!("see current dir {:?}", env::current_dir().unwrap());
                             let filepath = format!("./tmp/{filename}");
-                            println!("see file path {:?}", filepath);
                             let filepath2 = filepath.clone();
                             // File::create is blocking operation, use threadpool
                             let mut f = web::block(move || std::fs::File::create(&filepath)).await.unwrap().unwrap();
