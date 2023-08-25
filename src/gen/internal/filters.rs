@@ -127,6 +127,8 @@ pub fn rust_ref_if_needed<T: std::fmt::Display>(s: T) -> ::askama::Result<String
     Ok(if string.chars().nth(0).unwrap().is_uppercase() {
         if string.as_str() == "String" {
             "&str".to_owned()
+        } else if string.as_str() == "BigDecimal" {
+            "BigDecimal".to_owned()
         } else {
             "&".to_owned() + string.as_str()
         }
