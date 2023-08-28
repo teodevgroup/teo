@@ -454,10 +454,13 @@
 - Fixed optional decimal bug in rust entities **[Done]**
 - Added a user context parameter to setup callback **[Done]**
 - Diagnostic messages
+- Server response: redirects
+- Server: custom request methods
 - Unit tests for schemas
-- Auto completion for VSCode
 
 #### 0.0.58
+- Custom decorators and pipeline items
+- Auto completion for VSCode
 - Unit tests for rust code
 - Database specific database types and tests
 - PostgreSQL: Enum types
@@ -498,7 +501,6 @@
 - All many actions should throw errors
 
 #### 0.0.62
-- namespace
 - Rust entities: optional string array
 - Rust entities: required string array
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
