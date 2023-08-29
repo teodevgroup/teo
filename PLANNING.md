@@ -452,6 +452,7 @@
 - File uploading with form data **[Done]**
 - Serving static files **[Done]**
 - Fixed optional decimal bug in rust entities **[Done]**
+- Added a user context parameter to setup callback **[Done]**
 - Diagnostic messages
 - Unit tests for schemas
 - Auto completion for VSCode

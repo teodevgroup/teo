@@ -7,7 +7,7 @@ use crate::app::program::Program;
 use crate::app::routes::action_ctx::{ActionCtxArgument, ActionHandlerDef, ActionHandlerDefTrait};
 use crate::app::routes::middleware_ctx::Middleware;
 use crate::core::callbacks::lookup::CallbackLookup;
-use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
+use crate::core::callbacks::types::callback_with_user_ctx::AsyncCallbackWithUserCtx;
 use crate::core::conf::debug::DebugConf;
 use crate::core::conf::test::TestConf;
 use crate::core::connector::connector::Connector;
@@ -37,7 +37,7 @@ pub struct AppCtx {
     clients: Vec<ClientConf>,
     entities: Vec<Conf>,
     datasets: Vec<DataSet>,
-    setup: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
+    setup: Option<Arc<dyn AsyncCallbackWithUserCtx>>,
     ignore_callbacks: bool,
     middlewares: IndexMap<&'static str, &'static dyn Middleware>,
     action_handlers: Vec<&'static dyn ActionHandlerDefTrait>,
@@ -161,11 +161,11 @@ impl AppCtx {
         &mut AppCtx::get_mut().unwrap().datasets
     }
 
-    pub(crate) fn set_setup(&self, setup: Arc<dyn AsyncCallbackWithoutArgs>) {
+    pub(crate) fn set_setup(&self, setup: Arc<dyn AsyncCallbackWithUserCtx>) {
         AppCtx::get_mut().unwrap().setup = Some(setup);
     }
 
-    pub(crate) fn setup(&self) -> Option<Arc<dyn AsyncCallbackWithoutArgs>> {
+    pub(crate) fn setup(&self) -> Option<Arc<dyn AsyncCallbackWithUserCtx>> {
         self.setup.clone()
     }
 

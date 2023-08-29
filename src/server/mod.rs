@@ -978,12 +978,8 @@ pub(crate) async fn serve(
     conf: &'static ServerConf,
     environment_version: &'static Program,
     entrance: &'static Entrance,
-    before_server_start: Option<Arc<dyn AsyncCallbackWithoutArgs>>,
     middlewares: &'static IndexMap<&'static str, &'static dyn Middleware>,
 ) -> Result<()> {
-    if let Some(cb) = before_server_start {
-        cb.call().await.unwrap();
-    }
     let bind = conf.bind.clone();
     let port = bind.1;
     let server = HttpServer::new(move || {

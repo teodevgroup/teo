@@ -9,6 +9,7 @@ use crate::seeder::seed::seed;
 use crate::server::serve;
 use crate::gen::interface::server::gen::gen as gen_entity;
 use crate::gen::interface::client::gen::gen as gen_client;
+use crate::prelude::UserCtx;
 
 pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
     let app_ctx = AppCtx::get()?;
@@ -51,12 +52,15 @@ pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
                     seed(SeedCommandAction::Seed, graph, datasets, names).await?;
                 }
             }
+            if let Some(setup_callback) = app_ctx.setup() {
+                let user_ctx = UserCtx::new(app_ctx.connector()?.connection().await?, None);
+                setup_callback.call(user_ctx).await.unwrap();
+            }
             serve(
                 graph,
                 app_ctx.server_conf()?,
                 app_ctx.program(),
                 app_ctx.entrance(),
-                app_ctx.setup(),
                 app_ctx.middlewares(),
             ).await?
         }
