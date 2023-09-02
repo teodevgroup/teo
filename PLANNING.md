@@ -453,6 +453,7 @@
 - Serving static files **[Done]**
 - Fixed optional decimal bug in rust entities **[Done]**
 - Added a user context parameter to setup callback **[Done]**
+- Fixed a bug which caused generated clients contain internal classes **[Done]**
 - Diagnostic messages
 - Server response: redirects
 - Server: custom request methods

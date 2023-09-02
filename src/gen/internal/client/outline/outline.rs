@@ -1163,7 +1163,7 @@ impl<'a> Outline<'a> {
                 }).flatten().collect::<Vec<Class>>());
                 results
             },
-            delegates: graph.models().iter().map(|m| {
+            delegates: graph.models_without_teo_internal().iter().map(|m| {
                 Delegate {
                     model_name: Cow::Borrowed(m.name()),
                     actions: m.actions().iter().map(|a| DelegateAction {
