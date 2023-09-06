@@ -455,6 +455,7 @@
 - Added a user context parameter to setup callback **[Done]**
 - Fixed a bug which caused generated clients contain internal classes **[Done]**
 - Diagnostic messages
+- Fix memory bug for release
 - Server response: redirects
 - Server: custom request methods
 - Unit tests for schemas

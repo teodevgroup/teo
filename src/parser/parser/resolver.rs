@@ -51,82 +51,105 @@ use crate::parser::ast::static_files::StaticFiles;
 use crate::parser::diagnostics::diagnostics::Diagnostics;
 use crate::parser::std::pipeline::global::{GlobalFunctionInstallers, GlobalPipelineInstallers};
 
-pub(crate) struct Resolver { }
+pub(crate) struct Resolver {
+    pub(crate) global_model_decorators: GlobalModelDecorators,
+    pub(crate) global_field_decorators: GlobalFieldDecorators,
+    pub(crate) global_relation_decorators: GlobalRelationDecorators,
+    pub(crate) global_property_decorators: GlobalPropertyDecorators,
+    pub(crate) global_pipeline_installers: GlobalPipelineInstallers,
+    pub(crate) global_function_installers: GlobalFunctionInstallers,
+}
 
 impl Resolver {
 
-    pub(crate) fn resolve_parser(parser: &ASTParser, diagnostics: &mut Diagnostics) {
-        let database_name = Self::resolve_connector(parser);
-        parser.set_global_model_decorators(GlobalModelDecorators::new());
-        parser.set_global_field_decorators(GlobalFieldDecorators::new(database_name));
-        parser.set_global_relation_decorators(GlobalRelationDecorators::new());
-        parser.set_global_property_decorators(GlobalPropertyDecorators::new());
-        parser.set_global_pipeline_installers(GlobalPipelineInstallers::new());
-        parser.set_global_function_installers(GlobalFunctionInstallers::new());
+    pub(crate) fn new_for_connector() -> Self {
+        Self {
+            global_model_decorators: GlobalModelDecorators::new(),
+            global_field_decorators: GlobalFieldDecorators::new(DatabaseName::SQLite),
+            global_relation_decorators: GlobalRelationDecorators::new(),
+            global_property_decorators: GlobalPropertyDecorators::new(),
+            global_pipeline_installers: GlobalPipelineInstallers::new(),
+            global_function_installers: GlobalFunctionInstallers::new(),
+        }
+    }
+
+    pub(crate) fn new(parser: &ASTParser) -> Self {
+        let database_name = Self::new_for_connector().resolve_connector(parser);
+        Self {
+            global_model_decorators: GlobalModelDecorators::new(),
+            global_field_decorators: GlobalFieldDecorators::new(database_name),
+            global_relation_decorators: GlobalRelationDecorators::new(),
+            global_property_decorators: GlobalPropertyDecorators::new(),
+            global_pipeline_installers: GlobalPipelineInstallers::new(),
+            global_function_installers: GlobalFunctionInstallers::new(),
+        }
+    }
+
+    pub(crate) fn resolve_parser(&self, parser: &ASTParser, diagnostics: &mut Diagnostics) {
         let main = parser.get_source(1);
-        Self::resolve_source(parser, main, diagnostics);
+        self.resolve_source(parser, main, diagnostics);
         for (index, source) in parser.sources.iter() {
             if *index == 1 { continue }
-            Self::resolve_source(parser, source, diagnostics);
+            self.resolve_source(parser, source, diagnostics);
         }
         parser.to_mut().resolved = true;
     }
 
-    pub(crate) fn resolve_source(parser: &ASTParser, source: &Source, diagnostics: &mut Diagnostics) {
+    pub(crate) fn resolve_source(&self, parser: &ASTParser, source: &Source, diagnostics: &mut Diagnostics) {
         if source.resolved { return }
         for (_item_id, top) in source.to_mut().tops.iter_mut() {
             match top {
                 Top::Import(import) => {
-                    Self::resolve_import(parser, source, import);
+                    self.resolve_import(parser, source, import);
                 }
                 Top::Constant(constant) => {
-                    Self::resolve_constant(parser, source, constant);
+                    self.resolve_constant(parser, source, constant);
                 }
                 Top::Enum(r#enum) => {
-                    Self::resolve_enum(parser, source, r#enum);
+                    self.resolve_enum(parser, source, r#enum);
                 }
                 Top::Model(model) => {
-                    Self::resolve_model(parser, source, model);
+                    self.resolve_model(parser, source, model);
                 }
                 Top::Connector(_connector) => {
                     continue;
                 }
                 Top::Generator(generator) => {
-                    Self::resolve_model_entity_generator(parser, source, generator);
+                    self.resolve_model_entity_generator(parser, source, generator);
                 }
                 Top::Client(client) => {
-                    Self::resolve_client_generator(parser, source, client);
+                    self.resolve_client_generator(parser, source, client);
                 }
                 Top::ServerConfig(config) => {
-                    Self::resolve_server_config_block(parser, source, config);
+                    self.resolve_server_config_block(parser, source, config);
                 }
                 Top::DataSet(data_set) => {
-                    Self::resolve_data_set(parser, source, data_set);
+                    self.resolve_data_set(parser, source, data_set);
                 }
                 Top::DebugConf(debug_conf) => {
-                    Self::resolve_debug_conf(parser, source, debug_conf);
+                    self.resolve_debug_conf(parser, source, debug_conf);
                 }
                 Top::TestConf(test_conf) => {
-                    Self::resolve_test_conf(parser, source, test_conf);
+                    self.resolve_test_conf(parser, source, test_conf);
                 }
                 Top::MiddlewareDeclaration(middleware_declaration) => {
                     continue;
                 }
                 Top::ActionGroupDeclaration(action_group_declaration) => {
-                    Self::resolve_action_group(parser, source, action_group_declaration);
+                    self.resolve_action_group(parser, source, action_group_declaration);
                 }
                 Top::InterfaceDeclaration(interface_declaration) => {
                     continue;
                 }
                 Top::StaticFiles(static_files) => {
-                    Self::resolve_static_files(parser, source, static_files);
+                    self.resolve_static_files(parser, source, static_files);
                 }
             }
         }
         source.to_mut().resolved = true;
     }
 
-    pub(crate) fn resolve_import(parser: &ASTParser, _source: &Source, import: &mut ASTImport) {
+    pub(crate) fn resolve_import(&self, parser: &ASTParser, _source: &Source, import: &mut ASTImport) {
         let from_source = parser.sources.iter().find(|(_source_id, source)| {
             &import.path == &source.path
         }).unwrap().1;
@@ -158,47 +181,47 @@ impl Resolver {
         import.resolved = true;
     }
 
-    pub(crate) fn resolve_constant(parser: &ASTParser, source: &Source, constant: &mut Constant) {
-        Self::resolve_expression(parser, source, &mut constant.expression);
+    pub(crate) fn resolve_constant(&self, parser: &ASTParser, source: &Source, constant: &mut Constant) {
+        self.resolve_expression(parser, source, &mut constant.expression);
         constant.resolved = true;
     }
 
-    pub(crate) fn resolve_enum(parser: &ASTParser, source: &Source, r#enum: &mut ASTEnum) {
+    pub(crate) fn resolve_enum(&self, parser: &ASTParser, source: &Source, r#enum: &mut ASTEnum) {
         for choice in r#enum.choices.iter_mut() {
-            Self::resolve_enum_choice(parser, source, choice);
+            self.resolve_enum_choice(parser, source, choice);
         }
         r#enum.resolved = true;
     }
 
-    pub(crate) fn resolve_enum_choice(_parser: &ASTParser, _source: &Source, choice: &mut EnumChoice) {
+    pub(crate) fn resolve_enum_choice(&self, _parser: &ASTParser, _source: &Source, choice: &mut EnumChoice) {
         choice.resolved = true;
     }
 
-    pub(crate) fn resolve_model(parser: &ASTParser, source: &Source, model: &mut ASTModel) {
+    pub(crate) fn resolve_model(&self, parser: &ASTParser, source: &Source, model: &mut ASTModel) {
         // decorators
         for decorator in model.decorators.iter_mut() {
-            Self::resolve_model_decorator(parser, source, decorator);
+            self.resolve_model_decorator(parser, source, decorator);
         }
         // fields
         for field in model.fields.iter_mut() {
-            Self::resolve_field(parser, source, field);
+            self.resolve_field(parser, source, field);
         }
         // cached enums
         //
         model.resolved = true;
     }
 
-    fn resolve_model_decorator(parser: &ASTParser, source: &Source, decorator: &mut ASTDecorator) {
+    fn resolve_model_decorator(&self, parser: &ASTParser, source: &Source, decorator: &mut ASTDecorator) {
         match &decorator.expression {
             ExpressionKind::Identifier(identifier) => {
-                let d = parser.global_model_decorators();
+                let d = &self.global_model_decorators;
                 let accessible = d.get(&identifier.name);
                 decorator.accessible = Some(accessible.clone());
                 decorator.arguments = None;
             }
             ExpressionKind::Unit(unit) => {
                 let identifier = unit.expressions.get(0).unwrap().as_identifier().unwrap();
-                let d = parser.global_model_decorators();
+                let d = &self.global_model_decorators;
                 let mut accessible = d.get(&identifier.name);
                 let mut arg_list: Option<ArgumentList> = None;
                 for (index, expression) in unit.expressions.iter().enumerate() {
@@ -219,7 +242,7 @@ impl Resolver {
                 decorator.accessible = Some(accessible.clone());
                 for argument in arg_list.as_mut().unwrap().arguments.iter_mut() {
                     let when_option = identifier.name.as_str() == "disable";
-                    let result = Self::resolve_expression_kind(parser, source, &argument.value, when_option);
+                    let result = self.resolve_expression_kind(parser, source, &argument.value, when_option);
                     let value = Self::unwrap_into_value_if_needed(parser, source, &result);
                     argument.resolved = Some(Entity::Value(value));
                 }
@@ -230,17 +253,17 @@ impl Resolver {
         decorator.resolved = true;
     }
 
-    fn resolve_field_decorator(parser: &ASTParser, source: &Source, decorator: &mut ASTDecorator) {
+    fn resolve_field_decorator(&self, parser: &ASTParser, source: &Source, decorator: &mut ASTDecorator) {
         match &decorator.expression {
             ExpressionKind::Identifier(identifier) => {
-                let d = parser.global_field_decorators();
+                let d = &self.global_field_decorators;
                 let accessible = d.get(&identifier.name);
                 decorator.accessible = Some(accessible.clone());
                 decorator.arguments = None;
             }
             ExpressionKind::Unit(unit) => {
                 let identifier = unit.expressions.get(0).unwrap().as_identifier().unwrap();
-                let d = parser.global_field_decorators();
+                let d = &self.global_field_decorators;
                 let mut accessible = d.get(&identifier.name);
                 let mut arg_list: Option<ArgumentList> = None;
                 for (index, expression) in unit.expressions.iter().enumerate() {
@@ -260,7 +283,7 @@ impl Resolver {
                 }
                 decorator.accessible = Some(accessible.clone());
                 for argument in arg_list.as_mut().unwrap().arguments.iter_mut() {
-                    let result = Self::resolve_expression_kind(parser, source, &argument.value, false);
+                    let result = self.resolve_expression_kind(parser, source, &argument.value, false);
                     let value = Self::unwrap_into_value_if_needed(parser, source, &result);
                     argument.resolved = Some(Entity::Value(value));
                 }
@@ -271,17 +294,17 @@ impl Resolver {
         decorator.resolved = true;
     }
 
-    fn resolve_property_decorator(parser: &ASTParser, source: &Source, decorator: &mut ASTDecorator) {
+    fn resolve_property_decorator(&self, parser: &ASTParser, source: &Source, decorator: &mut ASTDecorator) {
         match &decorator.expression {
             ExpressionKind::Identifier(identifier) => {
-                let d = parser.global_property_decorators();
+                let d = &self.global_property_decorators;
                 let accessible = d.get(&identifier.name);
                 decorator.accessible = Some(accessible.clone());
                 decorator.arguments = None;
             }
             ExpressionKind::Unit(unit) => {
                 let identifier = unit.expressions.get(0).unwrap().as_identifier().unwrap();
-                let d = parser.global_property_decorators();
+                let d = &self.global_property_decorators;
                 let mut accessible = d.get(&identifier.name);
                 let mut arg_list: Option<ArgumentList> = None;
                 for (index, expression) in unit.expressions.iter().enumerate() {
@@ -301,7 +324,7 @@ impl Resolver {
                 }
                 decorator.accessible = Some(accessible.clone());
                 for argument in arg_list.as_mut().unwrap().arguments.iter_mut() {
-                    let result = Self::resolve_expression_kind(parser, source, &argument.value, false);
+                    let result = self.resolve_expression_kind(parser, source, &argument.value, false);
                     let value = Self::unwrap_into_value_if_needed(parser, source, &result);
                     argument.resolved = Some(Entity::Value(value));
                 }
@@ -312,17 +335,17 @@ impl Resolver {
         decorator.resolved = true;
     }
 
-    fn resolve_relation_decorator(parser: &ASTParser, source: &Source, decorator: &mut ASTDecorator) {
+    fn resolve_relation_decorator(&self, parser: &ASTParser, source: &Source, decorator: &mut ASTDecorator) {
         match &decorator.expression {
             ExpressionKind::Identifier(identifier) => {
-                let d = parser.global_relation_decorators();
+                let d = &self.global_relation_decorators;
                 let accessible = d.get(&identifier.name);
                 decorator.accessible = Some(accessible.clone());
                 decorator.arguments = None;
             }
             ExpressionKind::Unit(unit) => {
                 let identifier = unit.expressions.get(0).unwrap().as_identifier().unwrap();
-                let d = parser.global_relation_decorators();
+                let d = &self.global_relation_decorators;
                 let mut accessible = d.get(&identifier.name);
                 let mut arg_list: Option<ArgumentList> = None;
                 for (index, expression) in unit.expressions.iter().enumerate() {
@@ -342,7 +365,7 @@ impl Resolver {
                 }
                 decorator.accessible = Some(accessible.clone());
                 for argument in arg_list.as_mut().unwrap().arguments.iter_mut() {
-                    let result = Self::resolve_expression_kind(parser, source, &argument.value, false);
+                    let result = self.resolve_expression_kind(parser, source, &argument.value, false);
                     let value = Self::unwrap_into_value_if_needed(parser, source, &result);
                     argument.resolved = Some(Entity::Value(value));
                 }
@@ -353,11 +376,11 @@ impl Resolver {
         decorator.resolved = true;
     }
 
-    fn resolve_pipeline(parser: &ASTParser, source: &Source, pipeline: &ASTPipeline) -> Entity {
+    fn resolve_pipeline(&self, parser: &ASTParser, source: &Source, pipeline: &ASTPipeline) -> Entity {
         let mut items: Vec<ASTPipelineItem> = vec![];
         match pipeline.expression.as_ref() {
             ExpressionKind::Identifier(identifier) => {
-                let installer = parser.global_pipeline_installers().get(&identifier.name);
+                let installer = (&self.global_pipeline_installers).get(&identifier.name);
                 if let Some(installer) = installer {
                     items.push(ASTPipelineItem {
                         installer: Some(installer.clone()),
@@ -366,7 +389,7 @@ impl Resolver {
                         args: vec![]
                     })
                 } else {
-                    let installer = parser.global_function_installers().get(&identifier.name);
+                    let installer = (&self.global_function_installers).get(&identifier.name);
                     if let Some(installer) = installer {
                         items.push(ASTPipelineItem {
                             installer: None,
@@ -385,7 +408,7 @@ impl Resolver {
                     match expression {
                         ExpressionKind::Identifier(identifier) => {
                             if let Some(previous_identifier) = previous_identifier {
-                                let installer = parser.global_pipeline_installers().get(&previous_identifier.name);
+                                let installer = (&self.global_pipeline_installers).get(&previous_identifier.name);
                                 if let Some(installer) = installer {
                                     items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: parser.callback_lookup_table, args: vec![]});
                                 } else {
@@ -398,17 +421,17 @@ impl Resolver {
                             let args = argument_list.to_mut();
                             for (index, arg) in &mut args.arguments.iter_mut().enumerate() {
                                 let value = if ((&previous_identifier.unwrap().name == "when") || (&previous_identifier.unwrap().name == "redirect")) && index == 0 {
-                                    Self::resolve_expression_kind_force_value(parser, source, &arg.value, true)
+                                    self.resolve_expression_kind_force_value(parser, source, &arg.value, true)
                                 } else {
-                                    Self::resolve_expression_kind_force_value(parser, source, &arg.value, false)
+                                    self.resolve_expression_kind_force_value(parser, source, &arg.value, false)
                                 };
                                 arg.resolved = Some(Entity::Value(value));
                             }
-                            let installer = parser.global_pipeline_installers().get(&previous_identifier.unwrap().name);
+                            let installer = (&self.global_pipeline_installers).get(&previous_identifier.unwrap().name);
                             if let Some(installer) = installer {
                                 items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: parser.callback_lookup_table, args: argument_list.arguments().clone()});
                             } else {
-                                let installer = parser.global_function_installers().get(&previous_identifier.unwrap().name);
+                                let installer = (&self.global_function_installers).get(&previous_identifier.unwrap().name);
                                 if let Some(installer) = installer {
                                     items.push(ASTPipelineItem { installer: None, function_installer: Some(installer.clone()), lookup_table: parser.callback_lookup_table, args: argument_list.arguments().clone()});
                                 } else {
@@ -421,7 +444,7 @@ impl Resolver {
                     }
                 }
                 if let Some(previous_identifier) = previous_identifier {
-                    let installer = parser.global_pipeline_installers().get(&previous_identifier.name);
+                    let installer = (&self.global_pipeline_installers).get(&previous_identifier.name);
                     if let Some(installer) = installer {
                         items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: parser.callback_lookup_table, args: vec![]});
                     } else {
@@ -436,22 +459,22 @@ impl Resolver {
         Entity::Value(Value::Pipeline(value_pipeline))
     }
 
-    fn resolve_field(parser: &ASTParser, source: &Source, field: &mut ASTField) {
+    fn resolve_field(&self, parser: &ASTParser, source: &Source, field: &mut ASTField) {
         field.figure_out_class();
         match &field.field_class {
             ASTFieldClass::Field => {
                 for decorator in field.decorators.iter_mut() {
-                    Self::resolve_field_decorator(parser, source, decorator);
+                    self.resolve_field_decorator(parser, source, decorator);
                 }
             }
             ASTFieldClass::Relation => {
                 for decorator in field.decorators.iter_mut() {
-                    Self::resolve_relation_decorator(parser, source, decorator);
+                    self.resolve_relation_decorator(parser, source, decorator);
                 }
             }
             ASTFieldClass::Property => {
                 for decorator in field.decorators.iter_mut() {
-                    Self::resolve_property_decorator(parser, source, decorator);
+                    self.resolve_property_decorator(parser, source, decorator);
                 }
             }
             _ => {}
@@ -459,7 +482,7 @@ impl Resolver {
         field.resolved = true;
     }
 
-    pub(crate) fn resolve_connector(parser: &ASTParser) -> DatabaseName {
+    pub(crate) fn resolve_connector(&self, parser: &ASTParser) -> DatabaseName {
         if parser.connector.is_none() {
             panic!("Connector is not defined.");
         }
@@ -470,7 +493,7 @@ impl Resolver {
         for item in connector.items.iter_mut() {
             match item.identifier.name.as_str() {
                 "provider" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let provider_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let provider_str = provider_value.as_raw_enum_choice().unwrap();
                     match provider_str {
@@ -483,7 +506,7 @@ impl Resolver {
                     }
                 },
                 "url" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let url_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let url_str = url_value.as_str().unwrap();
                     connector.url = Some(url_str.to_owned());
@@ -494,11 +517,11 @@ impl Resolver {
         connector.provider.unwrap()
     }
 
-    pub(crate) fn resolve_client_generator(parser: &ASTParser, source: &Source, client: &mut ASTClient) {
+    pub(crate) fn resolve_client_generator(&self, parser: &ASTParser, source: &Source, client: &mut ASTClient) {
         for item in client.items.iter_mut() {
             match item.identifier.name.as_str() {
                 "provider" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let provider_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let provider_str = provider_value.as_raw_enum_choice().unwrap();
                     match provider_str {
@@ -511,7 +534,7 @@ impl Resolver {
                     }
                 },
                 "dest" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let dest_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let dest_str = dest_value.as_str().unwrap();
                     let mut dest_path = source.path.clone();
@@ -521,25 +544,25 @@ impl Resolver {
                     client.dest = Some(absolute.as_ref().to_owned());
                 },
                 "package" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let package_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let package_bool = package_value.as_bool().unwrap();
                     client.package = Some(package_bool);
                 },
                 "host" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let host_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let host_str = host_value.as_str().unwrap();
                     client.host = Some(host_str.to_owned());
                 },
                 "objectName" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let object_name_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let object_name_str = object_name_value.as_str().unwrap();
                     client.object_name = object_name_str.to_owned();
                 },
                 "gitCommit" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let git_commit_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let git_commit_bool = git_commit_value.as_bool().unwrap();
                     client.git_commit = git_commit_bool;
@@ -549,11 +572,11 @@ impl Resolver {
         }
     }
 
-    pub(crate) fn resolve_model_entity_generator(parser: &ASTParser, source: &Source, generator: &mut ASTEntity) {
+    pub(crate) fn resolve_model_entity_generator(&self, parser: &ASTParser, source: &Source, generator: &mut ASTEntity) {
         for item in generator.items.iter_mut() {
             match item.identifier.name.as_str() {
                 "provider" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let provider_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let provider_str = provider_value.as_raw_enum_choice().unwrap();
                     match provider_str {
@@ -566,7 +589,7 @@ impl Resolver {
                     }
                 },
                 "dest" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let dest_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     let mut dest = source.path.clone();
                     dest.pop();
@@ -579,19 +602,19 @@ impl Resolver {
         }
     }
 
-    pub(crate) fn resolve_data_set(parser: &ASTParser, source: &Source, data_set: &mut DataSet) {
+    pub(crate) fn resolve_data_set(&self, parser: &ASTParser, source: &Source, data_set: &mut DataSet) {
         for group in data_set.groups.iter_mut() {
             for record in group.records.iter_mut() {
-                record.resolved = Some(Self::resolve_dictionary_literal(parser, source, &record.dictionary).as_value().unwrap().clone());
+                record.resolved = Some(self.resolve_dictionary_literal(parser, source, &record.dictionary).as_value().unwrap().clone());
             }
         }
     }
 
-    pub(crate) fn resolve_debug_conf(parser: &ASTParser, source: &Source, config: &mut ASTDebugConf) {
+    pub(crate) fn resolve_debug_conf(&self, parser: &ASTParser, source: &Source, config: &mut ASTDebugConf) {
         for item in config.items.iter_mut() {
             match item.identifier.name.as_str() {
                 "logQueries" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     match value {
                         Value::Bool(_b) => config.log_queries = true,
@@ -600,7 +623,7 @@ impl Resolver {
                     }
                 },
                 "logMigrations" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     match value {
                         Value::Bool(_b) => config.log_migrations = true,
@@ -609,7 +632,7 @@ impl Resolver {
                     }
                 },
                 "logSeedRecords" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     match value {
                         Value::Bool(_b) => config.log_seed_records = true,
@@ -622,11 +645,11 @@ impl Resolver {
         }
     }
 
-    pub(crate) fn resolve_test_conf(parser: &ASTParser, source: &Source, config: &mut ASTTestConf) {
+    pub(crate) fn resolve_test_conf(&self, parser: &ASTParser, source: &Source, config: &mut ASTTestConf) {
         for item in config.items.iter_mut() {
             match item.identifier.name.as_str() {
                 "resetAfterFind" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     config.reset_after_find = value;
                 },
@@ -635,20 +658,20 @@ impl Resolver {
         }
     }
 
-    pub(crate) fn resolve_static_files(parser: &ASTParser, source: &Source, static_files: &mut StaticFiles) {
-        Self::resolve_expression(parser, source, &mut static_files.path);
-        Self::resolve_expression(parser, source, &mut static_files.map);
+    pub(crate) fn resolve_static_files(&self, parser: &ASTParser, source: &Source, static_files: &mut StaticFiles) {
+        self.resolve_expression(parser, source, &mut static_files.path);
+        self.resolve_expression(parser, source, &mut static_files.map);
         static_files.resolved_path = Some(static_files.path.resolved.as_ref().unwrap().as_value().unwrap().as_str().unwrap().to_owned());
         static_files.resolved_map = Some(static_files.map.resolved.as_ref().unwrap().as_value().unwrap().as_str().unwrap().to_owned());
     }
 
-    pub(crate) fn resolve_action_group(parser: &ASTParser, source: &Source, action_group_declaration: &mut ActionGroupDeclaration) {
+    pub(crate) fn resolve_action_group(&self, parser: &ASTParser, source: &Source, action_group_declaration: &mut ActionGroupDeclaration) {
         for action in &mut action_group_declaration.actions {
-            Self::resolve_custom_action_declaration(parser, source, action)
+            self.resolve_custom_action_declaration(parser, source, action)
         }
     }
 
-    pub(crate) fn resolve_custom_action_declaration(parser: &ASTParser, source: &Source, action: &mut ActionDeclaration) {
+    pub(crate) fn resolve_custom_action_declaration(&self, parser: &ASTParser, source: &Source, action: &mut ActionDeclaration) {
         let input_interface_name = action.input_type.name.name.as_str();
         let binding = parser.interfaces();
         let interface = match binding.iter().find(|i| i.name.name.name.as_str() == input_interface_name) {
@@ -656,50 +679,50 @@ impl Resolver {
             None => panic!("Interface with name '{}' is not found.", input_interface_name)
         };
         action.resolved_input_interface = Some((interface.source_id, interface.id));
-        action.resolved_input_shape = Some(Self::resolve_action_input_shape(parser, source, *interface, &action.input_type, false));
+        action.resolved_input_shape = Some(self.resolve_action_input_shape(parser, source, *interface, &action.input_type, false));
     }
 
-    pub(crate) fn resolve_action_input_shape(parser: &ASTParser, source: &Source, interface: &InterfaceDeclaration, input_type: &InterfaceType, optional: bool) -> ResolvedInterfaceField {
+    pub(crate) fn resolve_action_input_shape(&self, parser: &ASTParser, source: &Source, interface: &InterfaceDeclaration, input_type: &InterfaceType, optional: bool) -> ResolvedInterfaceField {
         let map: HashMap<String, InterfaceType> = interface.args().iter().enumerate().map(|(i, a)| {
             (a.name.name.clone(), input_type.args.get(i).unwrap().clone())
         }).collect();
         let mut shape: HashMap<String, ResolvedInterfaceField> = hashmap!{};
         for extend in &interface.extends {
             let interface = Self::search_interface_by_name(parser, source, extend.name.name.as_str());
-            Self::install_interface_items_to_shape(parser, source, &map, &interface.items, &mut shape);
+            self.install_interface_items_to_shape(parser, source, &map, &interface.items, &mut shape);
         }
-        Self::install_interface_items_to_shape(parser, source, &map, &interface.items, &mut shape);
+        self.install_interface_items_to_shape(parser, source, &map, &interface.items, &mut shape);
         ResolvedInterfaceFieldType::Shape(shape).optional(optional)
     }
 
-    pub(crate) fn install_interface_items_to_shape(parser: &ASTParser, source: &Source, map: &HashMap<String, InterfaceType>, items: &Vec<InterfaceItemDeclaration>, shape: &mut HashMap<String, ResolvedInterfaceField>) {
+    pub(crate) fn install_interface_items_to_shape(&self, parser: &ASTParser, source: &Source, map: &HashMap<String, InterfaceType>, items: &Vec<InterfaceItemDeclaration>, shape: &mut HashMap<String, ResolvedInterfaceField>) {
         for item in items {
             if Self::need_to_alter_generics_with_map(parser, source, map, &item.kind) {
                 let replaced_type = item.kind.alter_generics_with(map);
-                Self::install_interface_items_with_generics_filled_to_shape(parser, source, &item.name, &replaced_type, shape);
+                self.install_interface_items_with_generics_filled_to_shape(parser, source, &item.name, &replaced_type, shape);
             } else {
-                Self::install_interface_items_with_generics_filled_to_shape(parser, source, &item.name, &item.kind, shape);
+                self.install_interface_items_with_generics_filled_to_shape(parser, source, &item.name, &item.kind, shape);
             }
         }
     }
 
-    pub(crate) fn install_interface_items_with_generics_filled_to_shape(parser: &ASTParser, source: &Source, name: &ASTIdentifier, kind: &InterfaceType, shape: &mut HashMap<String, ResolvedInterfaceField>) {
-        shape.insert(name.name.clone(), Self::resolve_type_with_filled_generics(parser, source, kind));
+    pub(crate) fn install_interface_items_with_generics_filled_to_shape(&self, parser: &ASTParser, source: &Source, name: &ASTIdentifier, kind: &InterfaceType, shape: &mut HashMap<String, ResolvedInterfaceField>) {
+        shape.insert(name.name.clone(), self.resolve_type_with_filled_generics(parser, source, kind));
     }
 
-    pub(crate) fn resolve_predefined_interface_type(parser: &ASTParser, source: &Source, a: &InterfaceType) -> Option<ResolvedInterfaceFieldType> {
+    pub(crate) fn resolve_predefined_interface_type(&self, parser: &ASTParser, source: &Source, a: &InterfaceType) -> Option<ResolvedInterfaceFieldType> {
         Some(match a.name.name.as_str() {
-            "Data" => ResolvedInterfaceFieldType::Shape(hashmap!{"data".to_owned() => Self::resolve_type_with_filled_generics(parser, source, a.args.get(0).unwrap())}),
+            "Data" => ResolvedInterfaceFieldType::Shape(hashmap!{"data".to_owned() => self.resolve_type_with_filled_generics(parser, source, a.args.get(0).unwrap())}),
             "DataMeta" => ResolvedInterfaceFieldType::Shape(hashmap!{
-                "data".to_owned() => Self::resolve_type_with_filled_generics(parser, source, a.args.get(0).unwrap()),
-                "meta".to_owned() => Self::resolve_type_with_filled_generics(parser, source, a.args.get(1).unwrap()),
+                "data".to_owned() => self.resolve_type_with_filled_generics(parser, source, a.args.get(0).unwrap()),
+                "meta".to_owned() => self.resolve_type_with_filled_generics(parser, source, a.args.get(1).unwrap()),
             }),
             _ => None?,
         })
     }
 
     // we're not handle arrays, maps, enums yet
-    pub(crate) fn resolve_type_with_filled_generics(parser: &ASTParser, source: &Source, a: &InterfaceType) -> ResolvedInterfaceField {
+    pub(crate) fn resolve_type_with_filled_generics(&self, parser: &ASTParser, source: &Source, a: &InterfaceType) -> ResolvedInterfaceField {
         let result_without_arity = match a.name.name.as_str() {
             "String" => ResolvedInterfaceFieldType::String.optional(a.optional),
             "ObjectId" => ResolvedInterfaceFieldType::ObjectId.optional(a.optional),
@@ -711,18 +734,18 @@ impl Resolver {
             "Decimal" => ResolvedInterfaceFieldType::Decimal.optional(a.optional),
             "Date" => ResolvedInterfaceFieldType::Date.optional(a.optional),
             "DateTime" => ResolvedInterfaceFieldType::DateTime.optional(a.optional),
-            "Array" => ResolvedInterfaceFieldType::Vec(Box::new(Self::resolve_type_with_filled_generics(parser, source, a.args.get(0).unwrap()))).optional(a.collection_optional),
-            "Dict" => ResolvedInterfaceFieldType::HashMap(Box::new(Self::resolve_type_with_filled_generics(parser, source, a.args.get(0).unwrap()))).optional(a.collection_optional),
+            "Array" => ResolvedInterfaceFieldType::Vec(Box::new(self.resolve_type_with_filled_generics(parser, source, a.args.get(0).unwrap()))).optional(a.collection_optional),
+            "Dict" => ResolvedInterfaceFieldType::HashMap(Box::new(self.resolve_type_with_filled_generics(parser, source, a.args.get(0).unwrap()))).optional(a.collection_optional),
             "Any" => ResolvedInterfaceFieldType::Any.optional(a.optional),
             "File" => ResolvedInterfaceFieldType::File.optional(a.optional),
             // other user defined interfaces
             _ => {
-                if let Some(result) = Self::resolve_predefined_interface_type(parser, source, a) {
+                if let Some(result) = self.resolve_predefined_interface_type(parser, source, a) {
                     result.optional(a.optional)
                 } else {
                     let interface_name = a.name.name.as_str();
                     let interface = Self::search_interface_by_name(parser, source, interface_name);
-                    Self::resolve_action_input_shape(parser, source, interface, a, a.optional)
+                    self.resolve_action_input_shape(parser, source, interface, a, a.optional)
                 }
             }
         };
@@ -754,11 +777,11 @@ impl Resolver {
         return false;
     }
 
-    pub(crate) fn resolve_server_config_block(parser: &ASTParser, source: &Source, config: &mut ASTServer) {
+    pub(crate) fn resolve_server_config_block(&self, parser: &ASTParser, source: &Source, config: &mut ASTServer) {
         for item in config.items.iter_mut() {
             match item.identifier.name.as_str() {
                 "bind" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let bind_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     match bind_value.as_tuple() {
                         Some(tuple_vec) => {
@@ -772,7 +795,7 @@ impl Resolver {
                     }
                 }
                 "jwtSecret" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let jwt_secret_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     match jwt_secret_value {
                         Value::Null => (),
@@ -781,7 +804,7 @@ impl Resolver {
                     }
                 }
                 "pathPrefix" => {
-                    Self::resolve_expression(parser, source, &mut item.expression);
+                    self.resolve_expression(parser, source, &mut item.expression);
                     let path_prefix_value = Self::unwrap_into_value_if_needed(parser, source, item.expression.resolved.as_ref().unwrap());
                     match path_prefix_value {
                         Value::Null => (),
@@ -796,59 +819,59 @@ impl Resolver {
 
     // Expression
 
-    pub(crate) fn resolve_expression<'a>(parser: &ASTParser, source: &Source, expression: &mut Expression) {
-        expression.resolved = Some(Self::resolve_expression_kind(parser, source, &mut expression.kind, false));
+    pub(crate) fn resolve_expression<'a>(&self, parser: &ASTParser, source: &Source, expression: &mut Expression) {
+        expression.resolved = Some(self.resolve_expression_kind(parser, source, &mut expression.kind, false));
     }
 
-    pub(crate) fn resolve_expression_kind(parser: &ASTParser, source: &Source, expression_kind: &ExpressionKind, when_option: bool) -> Entity {
+    pub(crate) fn resolve_expression_kind(&self, parser: &ASTParser, source: &Source, expression_kind: &ExpressionKind, when_option: bool) -> Entity {
         match expression_kind {
             ExpressionKind::Group(group) => {
-                Self::resolve_group(parser, source, group, when_option)
+                self.resolve_group(parser, source, group, when_option)
             }
             ExpressionKind::NullishCoalescing(nullish_coalescing) => {
-                Self::resolve_nullish_coalescing(parser, source, nullish_coalescing)
+                self.resolve_nullish_coalescing(parser, source, nullish_coalescing)
             }
             ExpressionKind::Negation(negation) => {
-                Self::resolve_negation(parser, source, negation)
+                self.resolve_negation(parser, source, negation)
             }
             ExpressionKind::BitwiseNegation(negation) => {
-                Self::resolve_bitwise_negation(parser, source, negation, when_option)
+                self.resolve_bitwise_negation(parser, source, negation, when_option)
             }
             ExpressionKind::ArithExpr(arith) => {
-                Self::resolve_arith_expr(parser, source, arith, when_option)
+                self.resolve_arith_expr(parser, source, arith, when_option)
             }
             ExpressionKind::NumericLiteral(n) => {
-                Self::resolve_numeric_literal(n)
+                self.resolve_numeric_literal(n)
             }
             ExpressionKind::StringLiteral(s) => {
-                Self::resolve_string_literal(s)
+                self.resolve_string_literal(s)
             }
             ExpressionKind::RegExpLiteral(r) => {
-                Self::resolve_regexp_literal(r)
+                self.resolve_regexp_literal(r)
             }
             ExpressionKind::BoolLiteral(b) => {
-                Self::resolve_bool_literal(b)
+                self.resolve_bool_literal(b)
             }
             ExpressionKind::NullLiteral(n) => {
-                Self::resolve_null_literal(n)
+                self.resolve_null_literal(n)
             }
             ExpressionKind::EnumChoiceLiteral(e) => {
-                Self::resolve_enum_choice_literal(parser, source, e)
+                self.resolve_enum_choice_literal(parser, source, e)
             }
             ExpressionKind::RangeLiteral(range_literal) => {
-                Self::resolve_range_literal(parser, source, range_literal)
+                self.resolve_range_literal(parser, source, range_literal)
             }
             ExpressionKind::TupleLiteral(tuple_literal) => {
-                Self::resolve_tuple_literal(parser, source, tuple_literal)
+                self.resolve_tuple_literal(parser, source, tuple_literal)
             }
             ExpressionKind::ArrayLiteral(array_literal) => {
-                Self::resolve_array_literal(parser, source, array_literal, when_option)
+                self.resolve_array_literal(parser, source, array_literal, when_option)
             }
             ExpressionKind::DictionaryLiteral(dictionary_literal) => {
-                Self::resolve_dictionary_literal(parser, source, dictionary_literal)
+                self.resolve_dictionary_literal(parser, source, dictionary_literal)
             }
             ExpressionKind::Identifier(identifier) => {
-                Self::resolve_identifier(parser, source, identifier, None)
+                self.resolve_identifier(parser, source, identifier, None)
             }
             ExpressionKind::ArgumentList(_a) => {
                 panic!("Argument list cannot appear alone.")
@@ -857,26 +880,26 @@ impl Resolver {
                 panic!("Subscript cannot appear alone.")
             }
             ExpressionKind::Unit(unit) => {
-                Self::resolve_unit(parser, source, unit)
+                self.resolve_unit(parser, source, unit)
             }
             ExpressionKind::Pipeline(pipeline) => {
-                Self::resolve_pipeline(parser, source, pipeline)
+                self.resolve_pipeline(parser, source, pipeline)
             }
         }
     }
 
-    fn resolve_expression_kind_force_value(parser: &ASTParser, source: &Source, expression_kind: &ExpressionKind, when_option: bool) -> Value {
-        let entity = Self::resolve_expression_kind(parser, source, expression_kind, when_option);
+    fn resolve_expression_kind_force_value(&self, parser: &ASTParser, source: &Source, expression_kind: &ExpressionKind, when_option: bool) -> Value {
+        let entity = self.resolve_expression_kind(parser, source, expression_kind, when_option);
         Self::unwrap_into_value_if_needed(parser, source, &entity)
     }
 
     // identifier
 
-    fn resolve_group(parser: &ASTParser, source: &Source, group: &Group, when_option: bool) -> Entity {
-        Self::resolve_expression_kind(parser, source, &group.expression, when_option)
+    fn resolve_group(&self, parser: &ASTParser, source: &Source, group: &Group, when_option: bool) -> Entity {
+        self.resolve_expression_kind(parser, source, &group.expression, when_option)
     }
 
-    fn resolve_identifier(parser: &ASTParser, source: &Source, identifier: &ASTIdentifier, parent: Option<&Entity>) -> Entity {
+    fn resolve_identifier(&self, parser: &ASTParser, source: &Source, identifier: &ASTIdentifier, parent: Option<&Entity>) -> Entity {
         match parent {
             Some(parent) => {
                 if parent.is_accessible() {
@@ -904,25 +927,25 @@ impl Resolver {
         }
     }
 
-    fn resolve_unit(parser: &ASTParser, source: &Source, unit: &Unit) -> Entity {
+    fn resolve_unit(&self, parser: &ASTParser, source: &Source, unit: &Unit) -> Entity {
         let first_expression = unit.expressions.get(0).unwrap();
-        let mut entity = Self::resolve_expression_kind(parser, source, first_expression, false);
+        let mut entity = self.resolve_expression_kind(parser, source, first_expression, false);
         for (index, expression) in unit.expressions.iter().enumerate() {
             if index == 0 { continue }
-            entity = Self::resolve_accessor(parser, source, expression, &entity);
+            entity = self.resolve_accessor(parser, source, expression, &entity);
         }
         return entity
     }
 
-    fn resolve_accessor(parser: &ASTParser, source: &Source, expression_kind: &ExpressionKind, entity: &Entity) -> Entity {
+    fn resolve_accessor(&self, parser: &ASTParser, source: &Source, expression_kind: &ExpressionKind, entity: &Entity) -> Entity {
         match expression_kind {
             ExpressionKind::Subscript(subscript) => {
-                Self::resolve_subscript(parser, source, subscript, entity)
+                self.resolve_subscript(parser, source, subscript, entity)
             }
             ExpressionKind::ArgumentList(argument_list) => {
                 let mut args = argument_list.clone();
                 for arg in &mut args.arguments.iter_mut() {
-                    let value = Self::resolve_expression_kind_force_value(parser, source, &arg.value, false);
+                    let value = self.resolve_expression_kind_force_value(parser, source, &arg.value, false);
                     arg.resolved = Some(Entity::Value(value));
                 }
                 match entity.as_accessible().unwrap() {
@@ -931,14 +954,14 @@ impl Resolver {
                 }
             }
             ExpressionKind::Identifier(identifier) => {
-                Self::resolve_identifier(parser, source, identifier, Some(entity))
+                self.resolve_identifier(parser, source, identifier, Some(entity))
             }
             _ => panic!()
         }
     }
 
-    fn resolve_subscript(parser: &ASTParser, source: &Source, subscript: &Subscript, entity: &Entity) -> Entity {
-        let index_entity = Self::resolve_expression_kind(parser, source, &subscript.expression, false);
+    fn resolve_subscript(&self, parser: &ASTParser, source: &Source, subscript: &Subscript, entity: &Entity) -> Entity {
+        let index_entity = self.resolve_expression_kind(parser, source, &subscript.expression, false);
         let index_value = Self::unwrap_into_value_if_needed(parser, source, &index_entity);
         if entity.is_accessible() {
             let accessible = entity.as_accessible().unwrap();
@@ -993,7 +1016,7 @@ impl Resolver {
 
     // literals and operators
 
-    fn resolve_numeric_literal(n: &NumericLiteral) -> Entity {
+    fn resolve_numeric_literal(&self, n: &NumericLiteral) -> Entity {
         let i = i32::from_str(&n.value);
         if i.is_ok() {
             return Entity::Value(Value::I32(i.unwrap()));
@@ -1009,15 +1032,15 @@ impl Resolver {
         panic!("Cannot resolve numeric value: {}.", n.value.as_str())
     }
 
-    fn resolve_string_literal(s: &StringLiteral) -> Entity {
+    fn resolve_string_literal(&self, s: &StringLiteral) -> Entity {
         return Entity::Value(Value::String(unescape(s.value.as_str()).unwrap()));
     }
 
-    fn resolve_regexp_literal(r: &RegExpLiteral) -> Entity {
+    fn resolve_regexp_literal(&self, r: &RegExpLiteral) -> Entity {
         return Entity::Value(Value::RegExp(Regex::new(r.value.as_str()).unwrap()));
     }
 
-    fn resolve_bool_literal(b: &BoolLiteral) -> Entity {
+    fn resolve_bool_literal(&self, b: &BoolLiteral) -> Entity {
         match b.value.as_str() {
             "true" => Entity::Value(Value::Bool(true)),
             "false" => Entity::Value(Value::Bool(false)),
@@ -1025,75 +1048,75 @@ impl Resolver {
         }
     }
 
-    fn resolve_null_literal(_: &NullLiteral) -> Entity {
+    fn resolve_null_literal(&self, _: &NullLiteral) -> Entity {
         Entity::Value(Value::Null)
     }
 
-    fn resolve_enum_choice_literal(parser: &ASTParser, source: &Source, e: &EnumChoiceLiteral) -> Entity {
+    fn resolve_enum_choice_literal(&self, parser: &ASTParser, source: &Source, e: &EnumChoiceLiteral) -> Entity {
         if e.argument_list.is_some() {
-            Entity::Value(Value::RawEnumChoice(e.value.clone(), Some(Self::resolve_argument_list_as_tuple_vec(parser, source, e.argument_list.as_ref().unwrap()))))
+            Entity::Value(Value::RawEnumChoice(e.value.clone(), Some(self.resolve_argument_list_as_tuple_vec(parser, source, e.argument_list.as_ref().unwrap()))))
         } else {
             Entity::Value(Value::RawEnumChoice(e.value.clone(), None))
         }
     }
 
-    fn resolve_argument_list_as_tuple_vec(parser: &ASTParser, source: &Source, arg_list: &ArgumentList) -> Vec<(Option<String>, Value)> {
+    fn resolve_argument_list_as_tuple_vec(&self, parser: &ASTParser, source: &Source, arg_list: &ArgumentList) -> Vec<(Option<String>, Value)> {
         let mut result = vec![];
         for arg in arg_list.arguments.iter() {
             let name = arg.name.as_ref().map(|i| i.name.clone());
-            let resolve_result = Self::resolve_expression_kind(parser, source, &arg.value, false);
+            let resolve_result = self.resolve_expression_kind(parser, source, &arg.value, false);
             let value = Self::unwrap_into_value_if_needed(parser, source, &resolve_result);
             result.push((name, value));
         }
         result
     }
 
-    fn resolve_range_literal(parser: &ASTParser, source: &Source, range_literal: &RangeLiteral) -> Entity {
-        let a = Self::resolve_expression_kind(parser, source, range_literal.expressions.get(0).unwrap(), false);
+    fn resolve_range_literal(&self, parser: &ASTParser, source: &Source, range_literal: &RangeLiteral) -> Entity {
+        let a = self.resolve_expression_kind(parser, source, range_literal.expressions.get(0).unwrap(), false);
         let a_v = Self::unwrap_into_value_if_needed(parser, source, &a);
         let start = Box::new(a_v);
-        let b = Self::resolve_expression_kind(parser, source, range_literal.expressions.get(1).unwrap(), false);
+        let b = self.resolve_expression_kind(parser, source, range_literal.expressions.get(1).unwrap(), false);
         let b_v = Self::unwrap_into_value_if_needed(parser, source, &b);
         let end = Box::new(b_v);
         Entity::Value(Value::Range(Range { closed: range_literal.closed.clone(), start, end }))
     }
 
-    fn resolve_tuple_literal(parser: &ASTParser, source: &Source, tuple_literal: &TupleLiteral) -> Entity {
+    fn resolve_tuple_literal(&self, parser: &ASTParser, source: &Source, tuple_literal: &TupleLiteral) -> Entity {
         let mut resolved = vec![];
         for expression in tuple_literal.expressions.iter() {
-            let e = Self::resolve_expression_kind(parser, source, expression, false);
+            let e = self.resolve_expression_kind(parser, source, expression, false);
             let v = Self::unwrap_into_value_if_needed(parser, source, &e);
             resolved.push(v);
         }
         Entity::Value(Value::Tuple(resolved))
     }
 
-    fn resolve_array_literal(parser: &ASTParser, source: &Source, array_literal: &ArrayLiteral, when_option: bool) -> Entity {
+    fn resolve_array_literal(&self, parser: &ASTParser, source: &Source, array_literal: &ArrayLiteral, when_option: bool) -> Entity {
         let mut resolved = vec![];
         for expression in array_literal.expressions.iter() {
-            let e = Self::resolve_expression_kind(parser, source, expression, when_option);
+            let e = self.resolve_expression_kind(parser, source, expression, when_option);
             let v = Self::unwrap_into_value_if_needed(parser, source, &e);
             resolved.push(v);
         }
         Entity::Value(Value::Vec(resolved))
     }
 
-    fn resolve_dictionary_literal(parser: &ASTParser, source: &Source, dic: &DictionaryLiteral) -> Entity {
+    fn resolve_dictionary_literal(&self, parser: &ASTParser, source: &Source, dic: &DictionaryLiteral) -> Entity {
         let mut resolved: HashMap<String, Value> = HashMap::new();
         for (key, value) in dic.expressions.iter() {
-            let k = Self::resolve_expression_kind(parser, source, key, false);
+            let k = self.resolve_expression_kind(parser, source, key, false);
             let k = Self::unwrap_into_value_if_needed(parser, source, &k);
-            let v = Self::resolve_expression_kind(parser, source, value, false);
+            let v = self.resolve_expression_kind(parser, source, value, false);
             let v = Self::unwrap_into_value_if_needed(parser, source, &v);
             resolved.insert(k.as_str().unwrap().to_string(), v);
         }
         Entity::Value(Value::HashMap(resolved))
     }
 
-    fn resolve_nullish_coalescing(parser: &ASTParser, source: &Source, nullish_coalescing: &NullishCoalescing) -> Entity {
+    fn resolve_nullish_coalescing(&self, parser: &ASTParser, source: &Source, nullish_coalescing: &NullishCoalescing) -> Entity {
         let mut resolved = Entity::Value(Value::Null);
         for e in nullish_coalescing.expressions.iter() {
-            resolved = Self::resolve_expression_kind(parser, source, e, false);
+            resolved = self.resolve_expression_kind(parser, source, e, false);
             if !resolved.is_null() {
                 return resolved;
             }
@@ -1101,8 +1124,8 @@ impl Resolver {
         return resolved
     }
 
-    fn resolve_negation(parser: &ASTParser, source: &Source, negation: &Negation) -> Entity {
-        let value = Self::resolve_expression_kind_force_value(parser, source, &negation.expression, false);
+    fn resolve_negation(&self, parser: &ASTParser, source: &Source, negation: &Negation) -> Entity {
+        let value = self.resolve_expression_kind_force_value(parser, source, &negation.expression, false);
         Entity::Value(match value {
             Value::I32(v) => Value::I32(-v),
             Value::I64(v) => Value::I64(-v),
@@ -1112,8 +1135,8 @@ impl Resolver {
         })
     }
 
-    fn resolve_bitwise_negation(parser: &ASTParser, source: &Source, negation: &BitwiseNegation, when_option: bool) -> Entity {
-        let value = Self::resolve_expression_kind_force_value(parser, source, &negation.expression, when_option);
+    fn resolve_bitwise_negation(&self, parser: &ASTParser, source: &Source, negation: &BitwiseNegation, when_option: bool) -> Entity {
+        let value = self.resolve_expression_kind_force_value(parser, source, &negation.expression, when_option);
         Entity::Value(match value {
             Value::I32(v) => Value::I32(!v),
             Value::I64(v) => Value::I64(!v),
@@ -1131,15 +1154,15 @@ impl Resolver {
         })
     }
 
-    fn resolve_arith_expr(parser: &ASTParser, source: &Source, arith_expr: &ArithExpr, when_option: bool) -> Entity {
+    fn resolve_arith_expr(&self, parser: &ASTParser, source: &Source, arith_expr: &ArithExpr, when_option: bool) -> Entity {
         match arith_expr {
-            ArithExpr::Expression(expression) => return Self::resolve_expression_kind(parser, source, &expression, when_option),
+            ArithExpr::Expression(expression) => return self.resolve_expression_kind(parser, source, &expression, when_option),
             ArithExpr::UnaryNeg(expression) => {
-                let origin = Self::resolve_expression_kind_force_value(parser, source, &expression, when_option);
+                let origin = self.resolve_expression_kind_force_value(parser, source, &expression, when_option);
                 return Entity::Value((-origin).unwrap());
             }
             ArithExpr::UnaryBitNeg(expression) => {
-                let origin = Self::resolve_expression_kind_force_value(parser, source, &expression, when_option);
+                let origin = self.resolve_expression_kind_force_value(parser, source, &expression, when_option);
                 return Entity::Value(match origin {
                     Value::I32(v) => Value::I32(!v),
                     Value::I64(v) => Value::I64(!v),
@@ -1157,8 +1180,8 @@ impl Resolver {
                 });
             }
             ArithExpr::BinaryOp { lhs, op, rhs } => {
-                let lhs_value = Self::resolve_arith_expr(parser, source, &lhs, when_option).as_value().unwrap().clone();
-                let rhs_value = Self::resolve_arith_expr(parser, source, &rhs, when_option).as_value().unwrap().clone();
+                let lhs_value = self.resolve_arith_expr(parser, source, &lhs, when_option).as_value().unwrap().clone();
+                let rhs_value = self.resolve_arith_expr(parser, source, &rhs, when_option).as_value().unwrap().clone();
                 match op {
                     Op::Add => {
                         Entity::Value((lhs_value.clone() + rhs_value.clone()).unwrap())

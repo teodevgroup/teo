@@ -51,11 +51,6 @@ use crate::parser::ast::static_files::StaticFiles;
 use crate::parser::ast::unit::Unit;
 use crate::parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError, DiagnosticsLog};
 use crate::parser::parser::resolver::Resolver;
-use crate::parser::std::decorators::field::GlobalFieldDecorators;
-use crate::parser::std::decorators::model::GlobalModelDecorators;
-use crate::parser::std::decorators::property::GlobalPropertyDecorators;
-use crate::parser::std::decorators::relation::GlobalRelationDecorators;
-use crate::parser::std::pipeline::global::{GlobalFunctionInstallers, GlobalPipelineInstallers};
 
 #[derive(pest_derive::Parser)]
 #[grammar = "./src/parser/schema.pest"]
@@ -97,12 +92,6 @@ pub(crate) struct ASTParser {
     pub(crate) static_files: Vec<(usize, usize)>,
     pub(crate) next_id: usize,
     pub(crate) resolved: bool,
-    pub(crate) global_model_decorators: Option<GlobalModelDecorators>,
-    pub(crate) global_field_decorators: Option<GlobalFieldDecorators>,
-    pub(crate) global_relation_decorators: Option<GlobalRelationDecorators>,
-    pub(crate) global_property_decorators: Option<GlobalPropertyDecorators>,
-    pub(crate) global_pipeline_installers: Option<GlobalPipelineInstallers>,
-    pub(crate) global_function_installers: Option<GlobalFunctionInstallers>,
     pub(crate) callback_lookup_table: &'static CallbackLookup,
     pub(crate) resolved_action_inputs: HashMap<&'static str, HashMap<&'static str, ResolvedInterfaceField>>,
     pub(crate) current_source_path_bufs: Vec<PathBuf>,
@@ -129,12 +118,6 @@ impl ASTParser {
             static_files: vec![],
             next_id: 0,
             resolved: false,
-            global_model_decorators: None,
-            global_field_decorators: None,
-            global_relation_decorators: None,
-            global_property_decorators: None,
-            global_pipeline_installers: None,
-            global_function_installers: None,
             callback_lookup_table: callbacks,
             resolved_action_inputs: hashmap!{},
             current_source_path_bufs: vec![],
@@ -173,7 +156,8 @@ impl ASTParser {
             Err(_) => panic!("Schema file '{}' is not found.", relative.to_str().unwrap()),
         };
         self.parse_source(&absolute, &mut diagnostics);
-        Resolver::resolve_parser(self, &mut diagnostics);
+        let resolver = Resolver::new(self);
+        resolver.resolve_parser(self, &mut diagnostics);
     }
 
     fn set_current_source_path_buf(&mut self) {
@@ -1272,54 +1256,6 @@ impl ASTParser {
             let source = self.get_source(m.0);
             source.get_static_files(m.1)
         }).collect()
-    }
-
-    pub(crate) fn set_global_model_decorators(&self, deco: GlobalModelDecorators) {
-        self.to_mut().global_model_decorators = Some(deco);
-    }
-
-    pub(crate) fn set_global_field_decorators(&self, deco: GlobalFieldDecorators) {
-        self.to_mut().global_field_decorators = Some(deco);
-    }
-
-    pub(crate) fn set_global_relation_decorators(&self, deco: GlobalRelationDecorators) {
-        self.to_mut().global_relation_decorators = Some(deco);
-    }
-
-    pub(crate) fn set_global_property_decorators(&self, deco: GlobalPropertyDecorators) {
-        self.to_mut().global_property_decorators = Some(deco);
-    }
-
-    pub(crate) fn set_global_pipeline_installers(&self, installer: GlobalPipelineInstallers) {
-        self.to_mut().global_pipeline_installers = Some(installer);
-    }
-
-    pub(crate) fn set_global_function_installers(&self, installer: GlobalFunctionInstallers) {
-        self.to_mut().global_function_installers = Some(installer);
-    }
-
-    pub(crate) fn global_model_decorators(&self) -> &GlobalModelDecorators {
-        self.global_model_decorators.as_ref().unwrap()
-    }
-
-    pub(crate) fn global_field_decorators(&self) -> &GlobalFieldDecorators {
-        self.global_field_decorators.as_ref().unwrap()
-    }
-
-    pub(crate) fn global_relation_decorators(&self) -> &GlobalRelationDecorators {
-        self.global_relation_decorators.as_ref().unwrap()
-    }
-
-    pub(crate) fn global_property_decorators(&self) -> &GlobalPropertyDecorators {
-        self.global_property_decorators.as_ref().unwrap()
-    }
-
-    pub(crate) fn global_pipeline_installers(&self) -> &GlobalPipelineInstallers {
-        self.global_pipeline_installers.as_ref().unwrap()
-    }
-
-    pub(crate) fn global_function_installers(&self) -> &GlobalFunctionInstallers {
-        self.global_function_installers.as_ref().unwrap()
     }
 
     fn insert_unparsed_rule_and_exit(&self, diagnostics: &mut Diagnostics, span: Span, source_id: usize) {
