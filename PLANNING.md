@@ -461,6 +461,7 @@
 - Server response: redirects
 - Server: custom request methods
 - Unit tests for schemas
+- Fixed sign in meta token object **[Done]**
 
 #### 0.0.58
 - Custom decorators and pipeline items

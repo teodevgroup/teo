@@ -564,7 +564,7 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
                 return Err(Error::internal_server_error("Missing JWT secret."));
             }
             let token = encode_token(claims, &conf.jwt_secret.as_ref().unwrap());
-            return Ok(Res::teon_data_meta(json_data?, teon!(token)))
+            return Ok(Res::teon_data_meta(json_data?, teon!({"token": token})))
         }
     }
 }
