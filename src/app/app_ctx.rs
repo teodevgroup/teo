@@ -1,7 +1,10 @@
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::fmt::{Debug, Formatter};
+use std::ops::{Deref, DerefMut};
+use std::sync::{Arc, Mutex};
 use indexmap::IndexMap;
 use maplit::hashmap;
+use once_cell::sync::OnceCell;
 use crate::app::entrance::Entrance;
 use crate::app::program::Program;
 use crate::app::routes::action_ctx::{ActionCtxArgument, ActionHandlerDef, ActionHandlerDefTrait};
@@ -47,6 +50,12 @@ pub struct AppCtx {
     static_files: HashMap<&'static str, &'static str>,
 }
 
+impl Debug for AppCtx {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("AppCtx")
+    }
+}
+
 impl AppCtx {
 
     fn new() -> Self {
@@ -76,30 +85,27 @@ impl AppCtx {
     }
 
     pub(in crate::app) fn create() -> bool {
-        unsafe {
-            if CURRENT.is_some() {
-                return false;
-            }
-            let ptr = Box::into_raw(Box::new(AppCtx::new()));
-            let reference = &mut *ptr;
-            CURRENT = Some(reference);
+        if CURRENT.get().is_none() {
+            CURRENT.set(Arc::new(Mutex::new(Self::new()))).unwrap();
             true
+        } else {
+            false
         }
     }
 
     pub(in crate::app) fn drop() {
-        unsafe {
-            let reference = CURRENT.unwrap();
-            let ptr = reference as *const AppCtx as *mut AppCtx;
-            let _app_ctx = Box::from_raw(ptr);
-            CURRENT = None;
-        }
+        // do nothing yet
     }
 
     pub fn get() -> Result<&'static AppCtx> {
         unsafe {
-            match CURRENT {
-                Some(ctx) => Ok(ctx),
+            match CURRENT.get() {
+                Some(ctx) => Ok({
+                    let retval = ctx.lock().unwrap();
+                    unsafe {
+                        &*(retval.deref() as * const AppCtx)
+                    }
+                }),
                 None => Err(Error::fatal("App ctx is accessed while there is none.")),
             }
         }
@@ -107,10 +113,12 @@ impl AppCtx {
 
     fn get_mut() -> Result<&'static mut AppCtx> {
         unsafe {
-            match CURRENT {
+            match CURRENT.get() {
                 Some(ctx) => Ok({
-                    let ptr = ctx as *const AppCtx as *mut AppCtx;
-                    &mut *ptr
+                    let mut retval = ctx.lock().unwrap();
+                    unsafe {
+                        &mut *(retval.deref_mut() as * mut AppCtx)
+                    }
                 }),
                 None => Err(Error::fatal("App ctx is accessed mutably while there is none.")),
             }
@@ -360,4 +368,4 @@ impl AppCtx {
     }
 }
 
-static mut CURRENT: Option<&'static AppCtx> = None;
+static CURRENT: OnceCell<Arc<Mutex<AppCtx>>> = OnceCell::new();
