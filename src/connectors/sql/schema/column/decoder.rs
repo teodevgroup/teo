@@ -59,7 +59,7 @@ pub(crate) struct ColumnDecoder { }
 
 impl ColumnDecoder {
 
-    pub(crate) fn manipulations<'a>(db_columns: &'a HashSet<SQLColumn>, model_columns: &'a HashSet<SQLColumn>, db_indices: &'a HashSet<ModelIndex>, model_indices: &'a HashSet<ModelIndex>, model: &Model) -> Vec<ColumnManipulation<'a>> {
+    pub(crate) fn manipulations<'a>(db_columns: &'a HashSet<SQLColumn>, model_columns: &'a HashSet<SQLColumn>, db_indices: &'a HashSet<ModelIndex>, model_indices: &'a HashSet<Arc<ModelIndex>>, model: &Model) -> Vec<ColumnManipulation<'a>> {
         let mut to_create: Vec<&ModelIndex> = vec![];
         let mut to_drop: Vec<&ModelIndex> = vec![];
         for index in db_indices {

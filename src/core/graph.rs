@@ -4,8 +4,7 @@ use std::future::Future;
 use std::sync::Arc;
 use key_path::KeyPath;
 use maplit::hashmap;
-use to_mut_proc_macro::ToMut;
-use to_mut::ToMut;
+use crate::app::app_ctx::AppCtx;
 use crate::core::action::{Action, CREATE, INTERNAL_AMOUNT, INTERNAL_POSITION, PROGRAM_CODE, SINGLE};
 use crate::core::connector::connection::Connection;
 use crate::core::initiator::Initiator;
@@ -17,37 +16,34 @@ use crate::core::relation::Relation;
 use crate::core::result::Result;
 use crate::prelude::{Req, Value};
 
-#[derive(ToMut)]
-pub struct Graph {
-    pub(crate) enums: HashMap<&'static str, Enum>,
-    pub(crate) models: HashMap<&'static str, Model>,
-}
+pub struct Graph { }
 
 impl Graph {
 
     pub(crate) fn new() -> Self {
-        Self {
-            enums: hashmap!{},
-            models: hashmap!{},
-        }
+        Self { }
     }
 
-    pub(crate) fn add_enum(&self, e: Enum) {
-        let mut_self = self.to_mut();
-        mut_self.enums.insert(e.name, e);
+    pub(crate) fn add_enum(&self, e: Enum) -> Result<()> {
+        AppCtx::get_mut()?.enums_mut().insert(e.name, e);
+        Ok(())
     }
 
-    pub(crate) fn add_model(&self, m: Model, name: &'static str) {
-        let mut_self = self.to_mut();
-        mut_self.models.insert(name, m);
+    pub(crate) fn add_model(&self, m: Model, name: &'static str) -> Result<()> {
+        AppCtx::get_mut()?.models_mut().insert(name, m);
+        Ok(())
     }
 
     pub fn models(&self) -> Vec<&Model> {
-        self.models.values().collect()
+        AppCtx::get().unwrap().models().values().collect()
+    }
+
+    pub(crate) fn models_mut(&self) -> Vec<&mut Model> {
+        AppCtx::get_mut().unwrap().models_mut().values_mut().collect()
     }
 
     pub fn models_without_teo_internal(&self) -> Vec<&Model> {
-        self.models().iter().filter(|m| !m.is_teo_internal()).map(|m| *m).collect()
+        AppCtx::get().unwrap().models().iter().filter(|(_, m)| !m.is_teo_internal()).map(|(_, m)| m).collect()
     }
 
     // MARK: - Queries
@@ -164,20 +160,29 @@ impl Graph {
     }
 
     pub(crate) fn model(&self, name: &str) -> Result<&Model> {
-        match self.models.get(name) {
+        match AppCtx::get().unwrap().models().get(name) {
+            Some(model) => Ok(model),
+            None => Err(Error::fatal_message(format!("Model `{}' is not found.", name))),
+        }
+    }
+
+    pub(crate) fn model_mut(&self, name: &str) -> Result<&mut Model> {
+        match AppCtx::get_mut().unwrap().models_mut().get_mut(name) {
             Some(model) => Ok(model),
             None => Err(Error::fatal_message(format!("Model `{}' is not found.", name))),
         }
     }
 
     pub(crate) fn r#enum(&self, name: &str) -> Option<&Enum> {
-        self.enums.get(name)
+        AppCtx::get().unwrap().enums().get(name)
     }
 
-    pub(crate) fn enums(&self) -> &HashMap<&'static str, Enum> { &self.enums }
+    pub(crate) fn enums(&self) -> &HashMap<&'static str, Enum> {
+        AppCtx::get().unwrap().enums()
+    }
 
     pub(crate) fn enum_values(&self, name: &str) -> Option<&Vec<String>> {
-        match self.enums.get(name) {
+        match AppCtx::get().unwrap().enums().get(name) {
             Some(e) => Some(e.values()),
             None => None,
         }

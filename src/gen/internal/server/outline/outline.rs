@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::sync::Arc;
+use crate::app::app_ctx::AppCtx;
 use crate::core::field::field::Field;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::gen::internal::server::outline::class::Class;
@@ -18,7 +19,7 @@ pub(in crate::gen) struct EntityOutline<'a> {
 impl<'a> EntityOutline<'a> {
     pub(in crate::gen) fn new<L>(graph: &'a Graph, lookup: L) -> Self where L: ServerTypeLookup {
         EntityOutline {
-            classes: graph.models.values().filter_map(|m| {
+            classes: AppCtx::get().unwrap().models().values().filter_map(|m| {
                 if m.is_teo_internal() {
                     None
                 } else {
@@ -81,7 +82,7 @@ impl<'a> EntityOutline<'a> {
                     })
                 }
             }).collect(),
-            enums: graph.enums.values().map(|e| {
+            enums: AppCtx::get().unwrap().enums().values().map(|e| {
                 Enum {
                     name: e.name(),
                     variants: e.variants().iter().map(|v| {

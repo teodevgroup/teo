@@ -24,6 +24,8 @@ use crate::server::conf::ServerConf;
 use crate::core::result::Result;
 use crate::core::error::Error;
 use crate::core::interface::CustomActionDefinition;
+use crate::core::model::model::Model;
+use crate::core::r#enum::Enum;
 use crate::server::test_context::TestContext;
 
 pub struct AppCtx {
@@ -32,7 +34,9 @@ pub struct AppCtx {
     program: Program,
     parser: Option<Box<ASTParser>>,
     connector: Option<Box<dyn Connector>>,
-    graph: Option<Box<Graph>>,
+    graph: Graph,
+    enums: HashMap<&'static str, Enum>,
+    models: HashMap<&'static str, Model>,
     connector_conf: Option<Box<ConnectorConf>>,
     server_conf: Option<Box<ServerConf>>,
     debug_conf: Option<Box<DebugConf>>,
@@ -65,7 +69,9 @@ impl AppCtx {
             entrance: Entrance::APP,
             program: Program::Rust(env!("TEO_RUSTC_VERSION")),
             connector: None,
-            graph: None,
+            graph: Graph::new(),
+            enums: HashMap::new(),
+            models: HashMap::new(),
             server_conf: None,
             connector_conf: None,
             clients: vec![],
@@ -111,7 +117,11 @@ impl AppCtx {
         }
     }
 
-    fn get_mut() -> Result<&'static mut AppCtx> {
+    pub(crate) fn graph(&self) -> &Graph {
+        &self.graph
+    }
+
+    pub(crate) fn get_mut() -> Result<&'static mut AppCtx> {
         unsafe {
             match CURRENT.get() {
                 Some(ctx) => Ok({
@@ -204,22 +214,20 @@ impl AppCtx {
         }
     }
 
-    pub(crate) fn set_graph(&self, graph: Box<Graph>) {
-        AppCtx::get_mut().unwrap().graph = Some(graph);
+    pub fn models(&self) -> &HashMap<&'static str, Model> {
+        &self.models
     }
 
-    pub fn graph(&self) -> Result<&Graph> {
-        match &self.graph {
-            Some(graph) => Ok(graph.as_ref()),
-            None => Err(Error::fatal("Graph is accessed while it's not set.")),
-        }
+    pub fn models_mut(&mut self) -> &mut HashMap<&'static str, Model> {
+        &mut self.models
     }
 
-    pub(crate) fn graph_mut(&self) -> Result<&mut Graph> {
-        match &mut AppCtx::get_mut()?.graph {
-            Some(graph) => Ok(graph.as_mut()),
-            None => Err(Error::fatal("Graph is accessed mutably while it's not set.")),
-        }
+    pub fn enums(&self) -> &HashMap<&'static str, Enum> {
+        &self.enums
+    }
+
+    pub fn enums_mut(&mut self) -> &mut HashMap<&'static str, Enum> {
+        &mut self.enums
     }
 
     pub(crate) fn set_connector(&self, connector: Box<dyn Connector>) {

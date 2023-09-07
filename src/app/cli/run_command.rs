@@ -13,12 +13,12 @@ use crate::prelude::UserCtx;
 
 pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
     let app_ctx = AppCtx::get()?;
-    let graph = app_ctx.graph()?;
+    let graph = app_ctx.graph();
     let datasets = app_ctx.datasets();
     match &cli.command {
         CLICommand::Serve(serve_command) => {
             if !serve_command.no_migration {
-                migrate(app_ctx.graph()?, false).await?;
+                migrate(app_ctx.graph(), false).await?;
             }
             let env = serve_command.env.as_ref().cloned().unwrap_or(std::env::var("TEO_ENV").unwrap_or("debug".to_string()));
             let test_context: Option<&'static TestContext> = if env.as_str() == "test" {

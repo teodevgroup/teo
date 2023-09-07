@@ -456,6 +456,7 @@
 - Fixed a bug which caused generated clients contain internal classes **[Done]**
 - Diagnostic messages
 - Fix memory bug for release
+- Remove `ToMut` crate
 - Server response: redirects
 - Server: custom request methods
 - Unit tests for schemas

@@ -587,7 +587,7 @@ async fn handle_identity<'a>(_graph: &'static Graph, input: &'a Value, model: &'
 
 async fn handler(req_ctx: ReqCtx) -> Result<Res> {
     let app_ctx = AppCtx::get()?;
-    let graph = app_ctx.graph()?;
+    let graph = app_ctx.graph();
     let test_context = app_ctx.test_context();
     let conf = app_ctx.server_conf()?;
     let connection = req_ctx.connection.clone();

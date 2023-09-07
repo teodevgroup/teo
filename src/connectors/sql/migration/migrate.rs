@@ -297,18 +297,18 @@ impl SQLMigration {
         result
     }
 
-    fn normalized_model_indices(indices: &Vec<ModelIndex>, dialect: SQLDialect, table_name: &str) -> HashSet<ModelIndex> {
-        let mut results: Vec<ModelIndex> = indices.iter().map(|index| {
-            let mut index = index.clone();
+    fn normalized_model_indices(indices: &Vec<Arc<ModelIndex>>, dialect: SQLDialect, table_name: &str) -> HashSet<Arc<ModelIndex>> {
+        let mut results: Vec<Arc<ModelIndex>> = indices.iter().map(|index| {
+            let mut index = index.as_ref().clone();
             let sql_name_cow = index.sql_name(table_name, dialect);
             let sql_name = sql_name_cow.as_ref().to_owned();
             index.set_name(sql_name);
-            index
+            Arc::new(index)
         }).collect();
         if dialect == SQLDialect::PostgreSQL {
             if let Some(primary) = results.iter().find(|r| r.r#type().is_primary()) {
                 let unique_for_primary = primary.psql_primary_to_unique(table_name);
-                results.push(unique_for_primary);
+                results.push(Arc::new(unique_for_primary));
             }
         }
         results.into_iter().collect()

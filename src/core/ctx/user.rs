@@ -19,7 +19,7 @@ impl UserCtx {
     }
 
     pub fn model_ctx(&self, name: &str) -> Result<ModelCtx> {
-        let model = AppCtx::get()?.graph()?.model(name)?;
+        let model = AppCtx::get()?.graph().model(name)?;
         Ok(ModelCtx {
             conn: self.conn.clone(),
             model,

@@ -36,6 +36,7 @@ pub(super) fn parse_schema(main: Option<&str>) -> Result<()> {
 
 pub(super) fn load_schema() -> Result<()> {
     let app_ctx = AppCtx::get()?;
+    let graph = app_ctx.graph();
     let parser = app_ctx.parser()?;
     // connector conf
     let connector = parser.connector()?;
@@ -87,8 +88,6 @@ pub(super) fn load_schema() -> Result<()> {
             git_commit: client.git_commit,
         })
     }
-    app_ctx.set_graph(Box::new(Graph::new()));
-    let graph = app_ctx.graph_mut()?;
     // enums
     for ast_enum in parser.enums() {
         let enum_def = Enum::new(
@@ -287,9 +286,9 @@ pub(super) fn load_schema() -> Result<()> {
             }
         }
         graph.add_model(model, ast_model.identifier.name.as_str());
-        graph.model(ast_model.identifier.name.as_str())?.finalize();
+        graph.model_mut(ast_model.identifier.name.as_str())?.finalize();
     }
-    define_seeder_models(app_ctx.graph_mut()?);
+    define_seeder_models(app_ctx.graph());
     // datasets
     for data_set_ref in parser.data_sets.clone() {
         let source = parser.get_source(data_set_ref.0);

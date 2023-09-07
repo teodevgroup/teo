@@ -332,7 +332,7 @@ impl Connection for MongoDBConnection {
                         // drop this index
                         let _ = collection.drop_index(name, None).await.unwrap();
                     } else {
-                        let result = result.unwrap();
+                        let result = result.unwrap().as_ref();
                         let our_format_index: ModelIndex = (&index).into();
                         if result != &our_format_index {
                             // alter this index

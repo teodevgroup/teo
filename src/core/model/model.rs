@@ -41,8 +41,8 @@ pub struct Model {
     relations_map: HashMap<&'static str, Arc<Relation>>,
     properties_vec: Vec<Arc<Property>>,
     properties_map: HashMap<&'static str, Arc<Property>>,
-    indices: Vec<ModelIndex>,
-    primary: Option<ModelIndex>,
+    indices: Vec<Arc<ModelIndex>>,
+    primary: Option<Arc<ModelIndex>>,
     before_save_pipeline: Pipeline,
     after_save_pipeline: Pipeline,
     before_delete_pipeline: Pipeline,
@@ -311,7 +311,7 @@ impl Model {
         self.relations_map.get(name).is_some()
     }
 
-    pub(crate) fn indices(&self) -> &Vec<ModelIndex> {
+    pub(crate) fn indices(&self) -> &Vec<Arc<ModelIndex>> {
         &self.indices
     }
 
@@ -363,7 +363,7 @@ impl Model {
                 let mut transformed_include = teon!({});
                 for (key, included_value) in include.as_hashmap().unwrap() {
                     let relation = self.relation(key).unwrap();
-                    let (opposite_model, _opposite_relation) = AppCtx::get()?.graph()?.opposite_relation(relation);
+                    let (opposite_model, _opposite_relation) = AppCtx::get()?.graph().opposite_relation(relation);
                     let find_action = if relation.is_vec() {
                         Action::from_u32(NESTED | FIND | MANY)
                     } else {
@@ -386,38 +386,40 @@ impl Model {
     pub(crate) fn install_field_index(&mut self, field_name: &'static str, field_index: &FieldIndex) {
         match field_index {
             FieldIndex::Index(settings) => {
-                self.indices.push(ModelIndex::new(ModelIndexType::Index, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                self.indices.push(Arc::new(ModelIndex::new(ModelIndexType::Index, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
                     ModelIndexItem::new(field_name, settings.sort, settings.length)
-                ]));
+                ])));
             }
             FieldIndex::Unique(settings) => {
-                self.indices.push(ModelIndex::new(ModelIndexType::Unique, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                self.indices.push(Arc::new(ModelIndex::new(ModelIndexType::Unique, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
                     ModelIndexItem::new(field_name, settings.sort, settings.length)
-                ]));
+                ])));
             }
             FieldIndex::Primary(settings) => {
-                self.primary = Some(ModelIndex::new(ModelIndexType::Primary, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
+                let primary = Arc::new(ModelIndex::new(ModelIndexType::Primary, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
                     ModelIndexItem::new(field_name, settings.sort, settings.length)
                 ]));
-                self.indices.push(self.primary.as_ref().unwrap().clone());
+                self.primary = Some(primary.clone());
+                self.indices.push(primary.clone());
             }
         }
     }
 
-    pub(crate) fn finalize(&'static self) {
-        let mut_self = self.to_mut();
+    pub(crate) fn finalize(&'static mut self) {
         // generate indices from fields
-        for field in &self.fields_vec {
+        let fields_vec = self.fields_vec.clone();
+        let properties_vec = self.properties_vec.clone();
+        for field in &fields_vec {
             let field_name = Box::leak(Box::new(field.name().to_string())).as_str();
             if let Some(field_index) = field.index() {
-                mut_self.install_field_index(field_name, field_index);
+                self.install_field_index(field_name, field_index);
             }
         }
         // generate indices from properties
-        for property in &self.properties_vec {
+        for property in &properties_vec {
             let field_name = Box::leak(Box::new(property.name().to_string())).as_str();
             if let Some(field_index) = property.index() {
-                mut_self.install_field_index(field_name, field_index);
+                self.install_field_index(field_name, field_index);
             }
         }
         if self.primary.is_none() && !self.r#virtual {
@@ -428,6 +430,8 @@ impl Model {
             let field = self.fields_map.get(key).unwrap();
             field.as_ref().to_mut().previous_value_rule = PreviousValueRule::Keep;
         }
+        //
+        let indices = self.indices.clone();
         // load caches
         let all_field_keys: Vec<&str> = self.fields_vec.iter().map(|f| f.name()).collect();
         let all_relation_keys: Vec<&str> = self.relations_vec.iter().map(|r| r.name()).collect();
@@ -469,9 +473,9 @@ impl Model {
         };
         let unique_query_keys: Vec<HashSet<&str>> = {
             let mut result = vec![];
-            for index in self.indices() {
+            for index in &indices {
                 let set = HashSet::from_iter(index.items().iter().map(|i| {
-                    i.field_name()
+                    Box::leak(Box::new(i.field_name().to_owned())).as_str()
                 }));
                 result.push(set);
             }
@@ -508,26 +512,26 @@ impl Model {
             .map(|f| f.name.clone())
             .collect();
         // assign cache keys
-        mut_self.all_keys = all_keys;
-        mut_self.input_keys = input_keys;
-        mut_self.save_keys = save_keys;
-        mut_self.save_keys_and_virtual_keys = save_keys_and_virtual_keys;
-        mut_self.output_keys = output_keys;
-        mut_self.query_keys = query_keys;
-        mut_self.sort_keys = sort_keys;
-        mut_self.unique_query_keys = unique_query_keys;
-        mut_self.auth_identity_keys = auth_identity_keys;
-        mut_self.auth_by_keys = auth_by_keys;
-        mut_self.auto_keys = auto_keys;
-        mut_self.deny_relation_keys = deny_relation_keys;
-        mut_self.scalar_keys = scalar_keys;
-        mut_self.scalar_number_keys = scalar_number_keys;
-        mut_self.local_output_keys = output_field_keys_and_property_keys;
-        mut_self.relation_output_keys = output_relation_keys;
+        self.all_keys = all_keys.clone();
+        self.input_keys = input_keys;
+        self.save_keys = save_keys;
+        self.save_keys_and_virtual_keys = save_keys_and_virtual_keys;
+        self.output_keys = output_keys;
+        self.query_keys = query_keys;
+        self.sort_keys = sort_keys;
+        self.unique_query_keys = unique_query_keys;
+        self.auth_identity_keys = auth_identity_keys;
+        self.auth_by_keys = auth_by_keys;
+        self.auto_keys = auto_keys;
+        self.deny_relation_keys = deny_relation_keys;
+        self.scalar_keys = scalar_keys;
+        self.scalar_number_keys = scalar_number_keys;
+        self.local_output_keys = output_field_keys_and_property_keys;
+        self.relation_output_keys = output_relation_keys;
 
         // figure out actions
-        mut_self.handler_actions = {
-            let mut default = if mut_self.internal {
+        self.handler_actions = {
+            let mut default = if self.internal {
                 HashSet::new()
             } else if self.r#virtual {
                 HashSet::from([Action::from_u32(CREATE_HANDLER), Action::from_u32(CREATE_MANY_HANDLER)])
@@ -547,7 +551,7 @@ impl Model {
             }
         };
         // field property map
-        mut_self.field_property_map = {
+        self.field_property_map = {
             let mut map = HashMap::new();
             for property in self.properties_vec.iter() {
                 if property.cached {
@@ -597,9 +601,9 @@ impl Model {
 
     pub(crate) fn add_index(&mut self, index: ModelIndex) {
         if index.r#type().is_primary() {
-            self.primary = Some(index.clone());
+            self.primary = Some(index.clone().into());
         }
-        self.indices.push(index);
+        self.indices.push(index.into());
     }
 
     pub(crate) fn set_identity(&mut self, identity: bool) {
