@@ -455,7 +455,7 @@
 - Added a user context parameter to setup callback **[Done]**
 - Fixed a bug which caused generated clients contain internal classes **[Done]**
 - Diagnostic messages
-- Fix memory bug for release
+- Fix app ctx and graph memory bug for release **[Done]**
 - Remove `ToMut` crate
 - Server response: redirects
 - Server: custom request methods
