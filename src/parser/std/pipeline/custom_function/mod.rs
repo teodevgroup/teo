@@ -9,6 +9,9 @@ use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
 
 pub(crate) fn custom_transform(lookup_table: &'static CallbackLookup, args: &Vec<Argument>) -> Arc<dyn Item> {
+    if AppCtx::get().unwrap().ignore_callbacks() {
+        return Arc::new(ValidItem::new());
+    }
     let arg_value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
     match arg_value {
         Value::String(s) => {
@@ -43,6 +46,9 @@ pub(crate) fn custom_callback(lookup_table: &'static CallbackLookup, args: &Vec<
 }
 
 pub(crate) fn custom_validate(lookup_table: &'static CallbackLookup, args: &Vec<Argument>) -> Arc<dyn Item> {
+    if AppCtx::get().unwrap().ignore_callbacks() {
+        return Arc::new(ValidItem::new());
+    }
     let arg_value = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap();
     match arg_value {
         Value::String(s) => {
@@ -62,6 +68,9 @@ pub(crate) fn custom_validate(lookup_table: &'static CallbackLookup, args: &Vec<
 }
 
 pub(crate) fn custom_compare(lookup_table: &'static CallbackLookup, args: &Vec<Argument>) -> Arc<dyn Item> {
+    if AppCtx::get().unwrap().ignore_callbacks() {
+        return Arc::new(ValidItem::new());
+    }
     let name = args.get(0).unwrap().resolved.as_ref().unwrap().as_value().unwrap().as_str().unwrap();
     let modifier = lookup_table.compare(name);
     if let Some(modifier) = modifier {

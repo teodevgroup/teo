@@ -456,6 +456,7 @@
 - Fixed a bug which caused generated clients contain internal classes **[Done]**
 - Diagnostic messages
 - Fix app ctx and graph memory bug for release **[Done]**
+- Fix command line tool entity generation **[Done]**
 - Remove `ToMut` crate
 - Server response: redirects
 - Server: custom request methods
