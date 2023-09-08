@@ -462,6 +462,7 @@
 - Server: custom request methods
 - Unit tests for schemas
 - Fixed sign in meta token object **[Done]**
+- Uploaded file is now placed at temporary directory **[Done]**
 
 #### 0.0.58
 - Custom decorators and pipeline items
