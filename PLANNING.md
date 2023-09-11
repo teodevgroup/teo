@@ -464,6 +464,9 @@
 - Fixed sign in meta token object **[Done]**
 - Uploaded file is now placed at temporary directory **[Done]**
 - Fixed where unique decode bug **[DONE]**
+- Fixed previous record trigger when setting object value **[DONE]**
+- When updating an object, use its previous value **[DONE]**
+- Do not seed records for dropped tables and delete the seed record **[DONE]**
 
 #### 0.0.58
 - Custom decorators and pipeline items

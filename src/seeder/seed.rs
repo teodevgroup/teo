@@ -78,7 +78,13 @@ async fn remove_records_for_user_removed_groups(dataset: &'static DataSet, order
         }
     }), connection.clone()).await.unwrap();
     for record in user_removed_seed_records_for_group {
-        perform_remove_from_database(dataset, &record, graph.model(record.group().as_str()).unwrap(), graph, connection.clone()).await;
+        let model = graph.model(record.group().as_str());
+        if model.is_ok() {
+            perform_remove_from_database(dataset, &record, model.unwrap(), graph, connection.clone()).await;
+        } else {
+            // this table is already dropped
+            record.delete().await.unwrap();
+        }
     }
 }
 

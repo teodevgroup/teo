@@ -178,8 +178,6 @@ impl Object {
                     match Input::decode_field(value) {
                         AtomicUpdater(updator) => self.set_value_to_atomic_updator_map(key, updator),
                         SetValue(value) => {
-                            // record previous value if needed
-                            self.record_previous_value_for_field_if_needed(field);
                             // on set pipeline
                             let context = PipelineCtx::initial_state_with_object(self.clone(), self.connection(), self.initiator().as_req())
                                 .with_path(path.clone())
@@ -238,7 +236,8 @@ impl Object {
         field.can_read_pipeline.process_into_permission_result(ctx).await
     }
 
-    fn record_previous_value_for_field_if_needed(&self, field: &Field) {
+    fn record_previous_value_for_field_if_needed(&self, key: &str) {
+        let field = self.model().field(key).unwrap();
         if !self.is_new() && field.previous_value_rule == PreviousValueRule::Keep {
             if self.inner.previous_value_map.lock().unwrap().get(field.name()).is_none() {
                 self.inner.previous_value_map.lock().unwrap().insert(field.name().to_string(), self.get_value(field.name()).unwrap());
@@ -333,6 +332,9 @@ impl Object {
     }
 
     fn set_value_to_value_map(&self, key: &str, value: Value) {
+        // record previous value if needed
+        self.record_previous_value_for_field_if_needed(key);
+
         if value.is_null() {
             self.inner.value_map.lock().unwrap().remove(key);
         } else {
@@ -916,7 +918,30 @@ impl Object {
         let mut identifier: HashMap<String, Value> = HashMap::new();
         for item in model.primary_index().items() {
             let val = self.get_value(item.field_name()).unwrap();
-            identifier.insert(item.field_name().to_owned(), val.clone());
+            identifier.insert(item.field_name().to_owned(), val);
+        }
+        Value::HashMap(identifier)
+    }
+
+    pub(crate) fn previous_identifier(&self) -> Value {
+        let model = self.model();
+        let mut identifier: HashMap<String, Value> = HashMap::new();
+        for item in model.primary_index().items() {
+            let modify_map = self.inner.modified_fields.lock().unwrap();
+            let val = if modify_map.contains(item.field_name()) {
+                if let Ok(val) = self.get_previous_value(item.field_name()) {
+                    if val.is_null() {
+                        self.get_value(item.field_name()).unwrap()
+                    } else {
+                        val
+                    }
+                } else {
+                    self.get_value(item.field_name()).unwrap()
+                }
+            } else {
+                self.get_value(item.field_name()).unwrap()
+            };
+            identifier.insert(item.field_name().to_owned(), val);
         }
         Value::HashMap(identifier)
     }

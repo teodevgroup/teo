@@ -143,7 +143,7 @@ impl SQLConnection {
         }
         let value_refs: Vec<(&str, &str)> = values.iter().map(|(k, v)| (*k, v.as_str())).collect();
         let identifier = object.identifier();
-        let r#where = Query::where_from_identifier(object, self.dialect());
+        let r#where = Query::where_from_previous_identifier(object, self.dialect());
         if !value_refs.is_empty() {
             let stmt = SQL::update(model.table_name()).values(value_refs).r#where(&r#where).to_string(self.dialect());
             // println!("update stmt: {}", stmt);

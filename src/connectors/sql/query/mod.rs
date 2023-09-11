@@ -25,6 +25,10 @@ impl Query {
         Self::where_from_value(object.model(), object.graph(), &object.identifier(), dialect)
     }
 
+    pub(crate) fn where_from_previous_identifier(object: &Object, dialect: SQLDialect) -> String {
+        Self::where_from_value(object.model(), object.graph(), &object.previous_identifier(), dialect)
+    }
+
     fn where_entry_array(
         column_name: &str,
         r#type: &FieldType,
