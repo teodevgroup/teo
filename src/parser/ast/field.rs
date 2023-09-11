@@ -24,6 +24,7 @@ impl ASTFieldClass {
 
 #[derive(Debug)]
 pub(crate) struct ASTField {
+    pub(crate) source_id: usize,
     pub(crate) comment_block: Option<CommentBlock>,
     pub(crate) identifier: ASTIdentifier,
     pub(crate) r#type: Type,
@@ -34,9 +35,9 @@ pub(crate) struct ASTField {
 }
 
 impl ASTField {
-    pub(crate) fn new(comment_block: Option<CommentBlock>, identifier: ASTIdentifier, r#type: Type, decorators: Vec<ASTDecorator>, span: Span) -> Self {
+    pub(crate) fn new(source_id: usize, comment_block: Option<CommentBlock>, identifier: ASTIdentifier, r#type: Type, decorators: Vec<ASTDecorator>, span: Span) -> Self {
         Self {
-            comment_block, identifier, r#type, decorators, span, resolved: false, field_class: ASTFieldClass::Unresolved,
+            source_id, comment_block, identifier, r#type, decorators, span, resolved: false, field_class: ASTFieldClass::Unresolved,
         }
     }
 

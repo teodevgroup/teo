@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::sync::Arc;
 use key_path::KeyPath;
-use maplit::hashmap;
 use crate::app::app_ctx::AppCtx;
 use crate::core::action::{Action, CREATE, INTERNAL_AMOUNT, INTERNAL_POSITION, PROGRAM_CODE, SINGLE};
 use crate::core::connector::connection::Connection;

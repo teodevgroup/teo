@@ -8,8 +8,6 @@ use crate::app::parse_schema::{load_schema, parse_schema};
 use crate::app::routes::action_ctx::{ActionCtxArgument};
 use crate::app::routes::middleware_ctx::Middleware;
 use crate::core::callbacks::types::callback::{CallbackArgument, CallbackResult};
-use crate::core::callbacks::types::callback_with_user_ctx::AsyncCallbackWithUserCtx;
-use crate::core::callbacks::types::callback_without_args::AsyncCallbackWithoutArgs;
 use crate::core::callbacks::types::compare::CompareArgument;
 use crate::core::callbacks::types::transform::{TransformArgument, TransformResult};
 use crate::core::callbacks::types::validate::{ValidateArgument, ValidateResult};
@@ -21,6 +19,7 @@ use crate::prelude::{UserCtx, Value};
 use crate::core::error::Error;
 use super::app_ctx::AppCtx;
 use crate::core::result::Result;
+use crate::parser::diagnostics::diagnostics::Diagnostics;
 
 pub struct App(usize);
 
@@ -94,8 +93,9 @@ impl App {
 
     pub fn prepare(&self) -> Result<CLI> {
         let cli = parse_cli()?;
-        parse_schema(cli.main())?;
-        load_schema()?;
+        let mut diagnostics = Diagnostics::new();
+        parse_schema(cli.main(), &mut diagnostics)?;
+        load_schema(&mut diagnostics)?;
         Ok(cli)
     }
 

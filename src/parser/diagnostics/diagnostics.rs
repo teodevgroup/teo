@@ -3,8 +3,6 @@ use std::path::{Path, PathBuf};
 use crate::parser::ast::span::Span;
 
 pub trait DiagnosticsLog {
-    fn source_id(&self) -> usize;
-
     fn span(&self) -> &Span;
 
     fn message(&self) -> &str;
@@ -24,15 +22,10 @@ pub trait DiagnosticsLog {
 pub struct DiagnosticsError {
     span: Span,
     message: String,
-    source_id: usize,
     source_path: PathBuf,
 }
 
 impl DiagnosticsLog for DiagnosticsError {
-    fn source_id(&self) -> usize {
-        self.source_id
-    }
-
     fn span(&self) -> &Span {
         &self.span
     }
@@ -63,9 +56,6 @@ impl DiagnosticsLog for DiagnosticsError {
 }
 
 impl DiagnosticsLog for &DiagnosticsError {
-    fn source_id(&self) -> usize {
-        self.source_id
-    }
 
     fn span(&self) -> &Span {
         &self.span
@@ -97,8 +87,8 @@ impl DiagnosticsLog for &DiagnosticsError {
 }
 
 impl DiagnosticsError {
-    pub fn new(span: Span, message: impl Into<String>, source_id: usize, source_path: PathBuf) -> Self {
-        Self { span, message: message.into(), source_id, source_path }
+    pub fn new(span: Span, message: impl Into<String>, source_path: PathBuf) -> Self {
+        Self { span, message: message.into(), source_path }
     }
 }
 
@@ -106,15 +96,10 @@ impl DiagnosticsError {
 pub struct DiagnosticsWarning {
     span: Span,
     message: String,
-    source_id: usize,
     source_path: PathBuf,
 }
 
 impl DiagnosticsLog for DiagnosticsWarning {
-    fn source_id(&self) -> usize {
-        self.source_id
-    }
-
     fn span(&self) -> &Span {
         &self.span
     }
@@ -145,10 +130,6 @@ impl DiagnosticsLog for DiagnosticsWarning {
 }
 
 impl DiagnosticsLog for &DiagnosticsWarning {
-    fn source_id(&self) -> usize {
-        self.source_id
-    }
-
     fn span(&self) -> &Span {
         &self.span
     }
@@ -179,8 +160,8 @@ impl DiagnosticsLog for &DiagnosticsWarning {
 }
 
 impl DiagnosticsWarning {
-    pub fn new(span: Span, message: impl Into<String>, source_id: usize, source_path: PathBuf) -> Self {
-        Self { span, message: message.into(), source_id, source_path }
+    pub fn new(span: Span, message: impl Into<String>, source_path: PathBuf) -> Self {
+        Self { span, message: message.into(), source_path }
     }
 }
 
@@ -223,8 +204,8 @@ impl Diagnostics {
         }
     }
 
-    pub fn insert_unparsed_rule(&mut self, span: Span, source_id: usize, source_path: PathBuf) {
-        self.insert(DiagnosticsError::new(span, "SyntaxError: Unexpected content.", source_id, source_path))
+    pub fn insert_unparsed_rule(&mut self, span: Span, source_path: PathBuf) {
+        self.insert(DiagnosticsError::new(span, "SyntaxError: Unexpected content.", source_path))
     }
 }
 

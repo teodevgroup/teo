@@ -13,28 +13,35 @@ use crate::core::property::Property;
 use crate::gen::interface::client::conf::Conf as ClientConf;
 use crate::gen::interface::server::conf::Conf as EntityConf;
 use crate::parser::parser::parser::ASTParser;
-use crate::prelude::Graph;
 use crate::core::r#enum::{Enum, EnumVariant};
 use crate::core::relation::Relation;
-use crate::parser::ast::field::ASTFieldClass;
+use crate::parser::ast::field::{ASTField, ASTFieldClass};
 use crate::parser::ast::r#type::Arity;
 use crate::seeder::data_set::{DataSet, Group, Record};
 use crate::seeder::models::define::define_seeder_models;
 use crate::server::conf::ServerConf;
 use crate::core::result::Result;
 use crate::parser::ast::interface_type::InterfaceType;
+use crate::parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError};
+use crate::parser::diagnostics::printer;
 
-pub(super) fn parse_schema(main: Option<&str>) -> Result<()> {
+fn exit_with_parser_error(diagnostics: &mut Diagnostics, error: DiagnosticsError) {
+    diagnostics.insert(error);
+    printer::print_diagnostics(diagnostics, true);
+    std::process::exit(1);
+}
+
+pub(super) fn parse_schema(main: Option<&str>, diagnostics: &mut Diagnostics) -> Result<()> {
     // load env first
     let _ = dotenv();
     let app_ctx = AppCtx::get()?;
     app_ctx.set_parser(Box::new(ASTParser::new(AppCtx::get()?.callbacks())));
     let parser = app_ctx.parser_mut()?;
-    parser.parse(main);
+    parser.parse(main, diagnostics);
     Ok(())
 }
 
-pub(super) fn load_schema() -> Result<()> {
+pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
     let app_ctx = AppCtx::get()?;
     let graph = app_ctx.graph();
     let parser = app_ctx.parser()?;
@@ -130,7 +137,7 @@ pub(super) fn load_schema() -> Result<()> {
                             } else {
                                 model_field.set_optional();
                             }
-                            install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut model_field, graph.enums());
+                            install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut model_field, graph.enums(), diagnostics, ast_field);
                         }
                         Arity::Array => {
                             if ast_field.r#type.collection_required {
@@ -145,7 +152,7 @@ pub(super) fn load_schema() -> Result<()> {
                                 } else {
                                     inner.set_optional();
                                 }
-                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums());
+                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums(), diagnostics, ast_field);
                                 inner
                             })));
                         }
@@ -162,7 +169,7 @@ pub(super) fn load_schema() -> Result<()> {
                                 } else {
                                     inner.set_optional();
                                 }
-                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums());
+                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums(), diagnostics, ast_field);
                                 inner
                             })));
                         }
@@ -238,7 +245,7 @@ pub(super) fn load_schema() -> Result<()> {
                             } else {
                                 model_property.set_optional();
                             }
-                            install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut model_property, graph.enums());
+                            install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut model_property, graph.enums(), diagnostics, ast_field);
                         }
                         Arity::Array => {
                             if ast_field.r#type.collection_required {
@@ -253,7 +260,7 @@ pub(super) fn load_schema() -> Result<()> {
                                 } else {
                                     inner.set_optional();
                                 }
-                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums());
+                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums(), diagnostics, ast_field);
                                 inner
                             })));
                         }
@@ -270,7 +277,7 @@ pub(super) fn load_schema() -> Result<()> {
                                 } else {
                                     inner.set_optional();
                                 }
-                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums());
+                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums(), diagnostics, ast_field);
                                 inner
                             })));
                         }
@@ -349,7 +356,7 @@ fn interface_ref_from(type_with_generics: &InterfaceType) -> InterfaceRef {
     }
 }
 
-fn install_types_to_field_owner<F>(name: &str, field: &mut F, enums: &HashMap<&'static str, Enum>) where F: FieldTypeOwner {
+fn install_types_to_field_owner<F>(name: &str, field: &mut F, enums: &HashMap<&'static str, Enum>, diagnostics: &mut Diagnostics, ast_field: &ASTField) where F: FieldTypeOwner {
     match name {
         "String" => field.set_field_type(FieldType::String),
         "Bool" => field.set_field_type(FieldType::Bool),
@@ -362,7 +369,14 @@ fn install_types_to_field_owner<F>(name: &str, field: &mut F, enums: &HashMap<&'
         "Decimal" => field.set_field_type(FieldType::Decimal),
         #[cfg(feature = "data-source-mongodb")]
         "ObjectId" => field.set_field_type(FieldType::ObjectId),
-        // _ => panic!("Unrecognized type: '{}'.", name)
-        _ => field.set_field_type(FieldType::Enum(enums.get(name).unwrap().clone())),
+        _ => {
+            if let Some(enum_def) = enums.get(name) {
+                field.set_field_type(FieldType::Enum(enum_def.clone()))
+            } else {
+                let source = AppCtx::get().unwrap().parser().unwrap().get_source(ast_field.source_id);
+                diagnostics.insert(DiagnosticsError::new(ast_field.r#type.span, "Unknown type specified", source.path.clone()));
+                printer::print_diagnostics_and_exit(diagnostics, true)
+            }
+        }
     };
 }

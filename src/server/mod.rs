@@ -545,7 +545,7 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
     let result = pipeline.process(ctx).await;
     return match result {
         Err(_err) => {
-            return Err(Error::unexpected_input_value_with_reason("Authentication failed.", path!["credentials", by_key.unwrap()]));
+            Err(Error::unexpected_input_value_with_reason("Authentication failed.", path!["credentials", by_key.unwrap()]))
         }
         Ok(_v) => {
             let include = input.get("include");
@@ -564,7 +564,7 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
                 return Err(Error::internal_server_error("Missing JWT secret."));
             }
             let token = encode_token(claims, &conf.jwt_secret.as_ref().unwrap());
-            return Ok(Res::teon_data_meta(json_data?, teon!({"token": token})))
+            Ok(Res::teon_data_meta(json_data?, teon!({"token": token})))
         }
     }
 }
