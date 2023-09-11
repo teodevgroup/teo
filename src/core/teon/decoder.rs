@@ -810,8 +810,8 @@ impl Decoder {
                     let field = model.field(key).unwrap();
                     let path = path + key;
                     retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, field.field_type(), field.is_optional(), value, path)?);
-                    return Ok(Value::HashMap(retval));
                 }
+                return Ok(Value::HashMap(retval));
             }
         }
         Err(Error::unexpected_input_key(json_map.keys().next().unwrap(), path))
