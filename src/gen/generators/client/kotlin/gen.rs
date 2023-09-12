@@ -1,4 +1,5 @@
 use std::env;
+use std::path::Path;
 use std::process::Command;
 use askama::Template;
 use async_trait::async_trait;
@@ -10,6 +11,23 @@ use crate::gen::internal::file_util::FileUtil;
 use crate::gen::internal::filters;
 use crate::gen::internal::message::green_message;
 use crate::core::result::Result;
+
+pub(self) struct KotlinConf {
+    package_name: String
+}
+
+impl KotlinConf {
+    pub(self) fn new(dest: &Path) -> Self {
+        let mut slice = dest.to_str().unwrap();
+        for prefix in ["src/main/java", "src\\main\\java"] {
+            if let Some(index) = slice.rfind(prefix) {
+                slice = &slice[(index + 1 + prefix.len())..]
+            }
+        }
+        let package_name = slice.replace("/", ".").replace("\\", ".");
+        Self { package_name }
+    }
+}
 
 #[derive(Template)]
 #[template(path = "client/kotlin/readme.md.jinja", escape = "none")]
@@ -34,6 +52,7 @@ pub(self) struct KotlinSettingsGradleTemplate<'a> {
 pub(self) struct KotlinMainTemplate<'a> {
     pub(self) outline: &'a Outline<'a>,
     pub(self) conf: &'a Conf,
+    pub(self) kotlin: &'a KotlinConf,
 }
 
 pub(crate) struct KotlinClientGenerator { }
@@ -83,6 +102,7 @@ impl Generator for KotlinClientGenerator {
         generator.generate_file(format!("{}.kt", ctx.conf.inferred_package_name_camel_case()), KotlinMainTemplate {
             outline: &ctx.outline,
             conf: ctx.conf,
+            kotlin: &KotlinConf::new(&ctx.conf.dest)
         }.render().unwrap()).await?;
         Ok(())
     }

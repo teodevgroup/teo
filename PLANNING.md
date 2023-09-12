@@ -467,6 +467,8 @@
 - Do not seed records for dropped tables and delete the seed record **[DONE]**
 - Fixed "equals": null and "not": null for SQL queries **[DONE]**
 - Generated models in clients and entities are in alphabetic order **[DONE]**
+- Kotlin client: when generating into a project, infer its package name from the path **[DONE]**
+- Node.js client: Rewrite with askama engine
 
 #### 0.0.58
 - Server response: redirects
@@ -480,7 +482,6 @@
 #### 0.0.59
 - Documentations
 - Move auth middleware out
-- Rewrite Node.js client generating with askama engine
 
 #### 0.0.60
 - The copy action
