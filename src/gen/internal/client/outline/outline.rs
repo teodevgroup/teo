@@ -36,7 +36,7 @@ impl<'a> Outline<'a> {
                             kind: FieldKind::EnumVariant,
                         }).collect(),
                     }
-                }).collect::<Vec<Class>>();
+                }).sorted_by(|a, b| a.model_name.cmp(b.model_name)).collect::<Vec<Class>>();
                 results.extend(graph.models_without_teo_internal().iter().map(|m| {
                     let mut classes: Vec<Class> = vec![
                         // data output
@@ -1160,7 +1160,7 @@ impl<'a> Outline<'a> {
                         });
                     }
                     classes
-                }).flatten().collect::<Vec<Class>>());
+                }).flatten().sorted_by(|a, b| a.model_name.cmp(b.model_name)).collect::<Vec<Class>>());
                 results
             },
             delegates: graph.models_without_teo_internal().iter().map(|m| {
@@ -1172,7 +1172,7 @@ impl<'a> Outline<'a> {
                         docs: None,
                     }).collect(),
                 }
-            }).collect()
+            }).sorted_by(|a, b| a.model_name.cmp(&b.model_name)).collect()
         }
     }
 }

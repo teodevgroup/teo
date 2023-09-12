@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::sync::Arc;
+use itertools::Itertools;
 use crate::app::app_ctx::AppCtx;
 use crate::core::field::field::Field;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
@@ -81,7 +82,7 @@ impl<'a> EntityOutline<'a> {
                         desc: m.description(),
                     })
                 }
-            }).collect(),
+            }).sorted_by(|a, b| a.name.cmp(b.name)).collect(),
             enums: AppCtx::get().unwrap().enums().values().map(|e| {
                 Enum {
                     name: e.name(),
@@ -95,7 +96,7 @@ impl<'a> EntityOutline<'a> {
                     localized_name: e.localized_name(),
                     desc: e.description_with_default(),
                 }
-            }).collect(),
+            }).sorted_by(|a, b| a.name.cmp(b.name)).collect(),
         }
     }
 

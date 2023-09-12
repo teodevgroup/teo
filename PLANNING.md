@@ -458,8 +458,6 @@
 - Fix app ctx and graph memory bug for release **[Done]**
 - Fix command line tool entity generation **[Done]**
 - Remove `ToMut` crate
-- Server response: redirects
-- Server: custom request methods
 - Unit tests for schemas
 - Fixed sign in meta token object **[Done]**
 - Uploaded file is now placed at temporary directory **[Done]**
@@ -468,8 +466,11 @@
 - When updating an object, use its previous value **[DONE]**
 - Do not seed records for dropped tables and delete the seed record **[DONE]**
 - Fixed "equals": null and "not": null for SQL queries **[DONE]**
+- Generated models in clients and entities are in alphabetic order **[DONE]**
 
 #### 0.0.58
+- Server response: redirects
+- Server: custom request methods
 - Custom decorators and pipeline items
 - Auto completion for VSCode
 - Unit tests for rust code

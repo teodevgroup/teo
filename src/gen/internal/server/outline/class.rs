@@ -1,5 +1,3 @@
-
-
 use crate::gen::internal::server::outline::class_field::ClassField;
 
 pub(in crate::gen) struct Class<'a> {
