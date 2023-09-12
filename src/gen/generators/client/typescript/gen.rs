@@ -5,6 +5,7 @@ use crate::gen::internal::client::ctx::Ctx;
 use crate::gen::internal::client::generator::Generator;
 use crate::gen::internal::client::outline::outline::Outline;
 use crate::gen::internal::file_util::FileUtil;
+use crate::gen::internal::filters;
 use crate::core::result::Result;
 use crate::gen::generators::client::typescript::pkg::package_json::{generate_package_json, update_package_json};
 use crate::gen::generators::client::typescript::pkg::src::index_d_ts::generate_index_d_ts;
@@ -31,10 +32,29 @@ pub(self) struct TsIndexDTsTemplate<'a> {
     pub(self) ts_conf: &'a TsGenerationConf,
 }
 
-pub(self) struct TsGenerationConf {
-    pub(self) datetime_input: &'static str,
-    pub(self) date_input: &'static str,
-    pub(self) decimal_input: &'static str,
+pub(in crate::gen) struct TsGenerationConf {
+    pub(in crate::gen) datetime_input: &'static str,
+    pub(in crate::gen) date_input: &'static str,
+    pub(in crate::gen) decimal_input: &'static str,
+}
+
+impl TsGenerationConf {
+
+    pub(in crate::gen) fn client() -> Self {
+        Self {
+            date_input: "string",
+            datetime_input: "Date | string",
+            decimal_input: "Decimal | string"
+        }
+    }
+
+    pub(in crate::gen) fn server() -> Self {
+        Self {
+            date_input: "string",
+            datetime_input: "Date",
+            decimal_input: "Decimal"
+        }
+    }
 }
 
 pub(crate) struct TsClientGenerator { }
@@ -73,11 +93,7 @@ impl Generator for TsClientGenerator {
         generator.generate_file("new.index.d.ts", TsIndexDTsTemplate {
             outline: &ctx.outline,
             conf: ctx.conf,
-            ts_conf: &TsGenerationConf {
-                date_input: "string",
-                datetime_input: "Date | string",
-                decimal_input: "Decimal | string"
-            },
+            ts_conf: &TsGenerationConf::client(),
         }.render().unwrap()).await?;
         generator.generate_file("new.index.js", TsIndexJsTemplate { outline: &ctx.outline, conf: ctx.conf }.render().unwrap()).await?;
         Ok(())

@@ -335,3 +335,14 @@ export declare class TeoError extends Error {
     get name(): string
 }
 
+{%- for class in outline.classes %}
+    {%- if class.kind.is_any_kind_of_enum() %}
+export type {{ class.model_name }}{{ class.name_suffix }} = {{ class.joined_enum_variant_names() }}
+    {%- else %}
+export type {{ class.model_name }}{{ class.name_suffix }} = {
+        {%- for field in class.fields %}
+    {{ field.name|escape_ts }}{%- if field.optional %}?{% endif %}: {{ field.field_type }}
+        {%- endfor %}
+}
+    {%- endif %}
+{%- endfor %}

@@ -59,6 +59,15 @@ pub fn escape_swift<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     }
 }
 
+pub fn escape_ts<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
+    let s = s.to_string();
+    if vec!["for", "break", "case", "continue", "catch", "do", "else", "for", "while", "return", "throw"].contains(&s.as_str()) {
+        Ok(format!("'{}'", s))
+    } else {
+        Ok(s)
+    }
+}
+
 pub fn escape_csharp<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
     let s = s.to_string();
     if vec!["is", "where"].contains(&s.as_str()) {
