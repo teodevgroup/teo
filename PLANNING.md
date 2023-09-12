@@ -472,6 +472,8 @@
 - Generated clients: vec relations are optional instead of required **[DONE]**
 
 #### 0.0.58
+- Generate interfaces for clients
+- Generate custom groups and actions for clients
 - Server response: redirects
 - Server: custom request methods
 - Custom decorators and pipeline items
