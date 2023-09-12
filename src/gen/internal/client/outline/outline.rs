@@ -480,7 +480,11 @@ impl<'a> Outline<'a> {
                                                 Cow::Owned(format!("{}CreateNested{}Input", relation.model(), if relation.is_vec() { "Many" } else { "One" }))
                                             }
                                         },
-                                        optional: if relation.has_foreign_key() { true } else { relation.is_optional() },
+                                        optional: if relation.is_optional() { true } else {
+                                            if relation.is_vec() { true } else {
+                                                if relation.has_foreign_key() { true } else { false }
+                                            }
+                                        },
                                         kind: FieldKind::Relation,
                                     })
                                 }
@@ -1170,7 +1174,7 @@ impl<'a> Outline<'a> {
                         name: a.as_handler_str(),
                         response: lookup.action_result_type(*a, m.name()),
                         docs: None,
-                    }).collect(),
+                    }).sorted_by(|a, b| a.name.cmp(b.name)).collect(),
                 }
             }).sorted_by(|a, b| a.model_name.cmp(&b.model_name)).collect()
         }

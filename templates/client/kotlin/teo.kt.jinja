@@ -43,7 +43,7 @@ data class TeoException(override val message: String, val type: String, val erro
 
 inline fun<reified I, reified O> request(action: String, model: String, input: I, token: String? = null): O {
     val client = OkHttpClient()
-    val builder = Request.Builder().url("http://localhost:5500/$model/action/$action");
+    val builder = Request.Builder().url("{{ conf.host }}/$model/action/$action");
     if (token != null) {
         builder.addHeader("Authorization", "Bearer $token")
     }

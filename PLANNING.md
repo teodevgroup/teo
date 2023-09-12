@@ -469,6 +469,7 @@
 - Generated models in clients and entities are in alphabetic order **[DONE]**
 - Kotlin client: when generating into a project, infer its package name from the path **[DONE]**
 - Node.js client: Rewrite with askama engine
+- Generated clients: vec relations are optional instead of required **[DONE]**
 
 #### 0.0.58
 - Server response: redirects
