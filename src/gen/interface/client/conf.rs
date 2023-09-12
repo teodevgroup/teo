@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::path::PathBuf;
 use inflector::Inflector;
 use crate::gen::interface::client::kind::Kind;
@@ -19,12 +18,12 @@ pub struct Conf {
 
 impl Conf {
 
-    pub(crate) fn class_name(&self) -> Cow<str> {
+    pub(crate) fn class_name(&self) -> String {
         let first_char = self.object_name.chars().nth(0).unwrap();
         if first_char.is_uppercase() {
-            Cow::Owned(format!("{}Class", self.object_name))
+            format!("{}Class", self.object_name)
         } else {
-            Cow::Borrowed(self.object_name.as_str())
+            format!("{}{}", self.object_name.chars().nth(0).unwrap().to_uppercase(), &self.object_name[1..])
         }
     }
 

@@ -1,0 +1,337 @@
+import Decimal from "decimal.js"
+
+export type ExistKeys<T> = {
+    [key in keyof T]: T[key] extends false | undefined | null ? never : key
+}[keyof T]
+
+type HasSelect = {
+    select: any
+}
+
+type HasInclude = {
+    include: any
+}
+
+export type CheckSelectInclude<T, S, U> = T extends HasSelect
+    ? U
+    : T extends HasInclude
+    ? U
+    : S
+
+export type SelectSubset<T, U> = U extends HasSelect
+    ? {
+        [K in ExistKeys<U['select']>]: K extends keyof T ? T[K] : never
+    }
+    : T
+
+export type Enumerable<T> = T | Array<T>
+
+export type SortOrder = "asc" | "desc"
+
+export interface Response<Meta, Data> {
+    meta: Meta
+    data: Data
+}
+
+export interface ResponseError {
+    type: string
+    message: string
+    errors: {[key: string]: string} | null
+}
+
+export type PagingInfo = {
+    count: number
+    numberOfPages?: number
+}
+
+export type TokenInfo = {
+    token: string
+}
+
+export type ObjectIdFilter = {
+    equals?: string
+    in?: string[]
+    notIn?: string[]
+    lt?: string
+    lte?: string
+    gt?: string
+    gte?: string
+    not?: ObjectIdFilter | string
+}
+
+export type ObjectIdNullableFilter = {
+    equals?: string | null
+    in?: (string | null)[]
+    notIn?: (string | null)[]
+    lt?: string
+    lte?: string
+    gt?: string
+    gte?: string
+    not?: ObjectIdNullableFilter | string | null
+}
+
+export type BoolFilter = {
+    equals?: boolean
+    not?: BoolFilter | boolean
+}
+
+export type BoolNullableFilter = {
+    equals?: boolean | null
+    not?: BoolNullableFilter | boolean | null
+}
+
+export type NumberFilter = {
+    equals?: number
+    in?: number[]
+    notIn?: number[]
+    lt?: number
+    lte?: number
+    gt?: number
+    gte?: number
+    not?: NumberFilter | number
+}
+
+export type NumberNullableFilter = {
+    equals?: number | null
+    in?: (number | null)[]
+    notIn?: (number | null)[]
+    lt?: number
+    lte?: number
+    gt?: number
+    gte?: number
+    not?: NumberNullableFilter | number | null
+}
+
+export type DecimalFilter = {
+    equals?: {{ ts_conf.decimal_input }}
+    in?: ({{ ts_conf.decimal_input }})[]
+    notIn?: ({{ ts_conf.decimal_input }})[]
+    lt?: {{ ts_conf.decimal_input }}
+    lte?: {{ ts_conf.decimal_input }}
+    gt?: {{ ts_conf.decimal_input }}
+    gte?: {{ ts_conf.decimal_input }}
+    not?: DecimalFilter | {{ ts_conf.decimal_input }}
+}
+
+export type DecimalNullableFilter = {
+    equals?: {{ ts_conf.decimal_input }} | null
+    in?: ({{ ts_conf.decimal_input }} | null)[]
+    notIn?: ({{ ts_conf.decimal_input }} | null)[]
+    lt?: {{ ts_conf.decimal_input }}
+    lte?: {{ ts_conf.decimal_input }}
+    gt?: {{ ts_conf.decimal_input }}
+    gte?: {{ ts_conf.decimal_input }}
+    not?: DecimalNullableFilter | {{ ts_conf.decimal_input }} | null
+}
+
+export type StringFilter = {
+    equals?: string
+    in?: string[]
+    notIn?: string[]
+    lt?: string
+    lte?: string
+    gt?: string
+    gte?: string
+    contains?: string
+    startsWith?: string
+    endsWith?: string
+    matches?: string
+    not?: StringFilter | string
+}
+
+export type StringNullableFilter = {
+    equals?: string | null
+    in?: (string | null)[]
+    notIn?: (string | null)[]
+    lt?: string
+    lte?: string
+    gt?: string
+    gte?: string
+    contains?: string
+    startsWith?: string
+    endsWith?: string
+    matches?: string
+    not?: StringNullableFilter | string | null
+}
+
+export type DateFilter = {
+    equals?: {{ ts_conf.date_input }}
+    in?: {{ ts_conf.date_input }}[]
+    notIn?: {{ ts_conf.date_input }}[]
+    lt?: {{ ts_conf.date_input }}
+    lte?: {{ ts_conf.date_input }}
+    gt?: {{ ts_conf.date_input }}
+    gte?: {{ ts_conf.date_input }}
+    not?: DateFilter | {{ ts_conf.date_input }}
+}
+
+export type DateNullableFilter = {
+    equals?: {{ ts_conf.date_input }} | null
+    in?: ({{ ts_conf.date_input }} | null)[]
+    notIn?: ({{ ts_conf.date_input }} | null)[]
+    lt?: {{ ts_conf.date_input }}
+    lte?: {{ ts_conf.date_input }}
+    gt?: {{ ts_conf.date_input }}
+    gte?: {{ ts_conf.date_input }}
+    not?: DateNullableFilter | {{ ts_conf.date_input }} | null
+}
+
+export type DateTimeFilter = {
+    equals?: {{ ts_conf.datetime_input }}
+    in?: {{ ts_conf.datetime_input }}[]
+    notIn?: {{ ts_conf.datetime_input }}[]
+    lt?: {{ ts_conf.datetime_input }}
+    lte?: {{ ts_conf.datetime_input }}
+    gt?: {{ ts_conf.datetime_input }}
+    gte?: {{ ts_conf.datetime_input }}
+    not?: DateFilter | {{ ts_conf.datetime_input }}
+}
+
+export type DateTimeNullableFilter = {
+    equals?: {{ ts_conf.datetime_input }} | null
+    in?: ({{ ts_conf.datetime_input }} | null)[]
+    notIn?: ({{ ts_conf.datetime_input }} | null)[]
+    lt?: {{ ts_conf.datetime_input }}
+    lte?: {{ ts_conf.datetime_input }}
+    gt?: {{ ts_conf.datetime_input }}
+    gte?: {{ ts_conf.datetime_input }}
+    not?: DateNullableFilter | {{ ts_conf.datetime_input }} | null
+}
+
+export type EnumFilter<T> = {
+    equals?: T
+    in?: T[]
+    notIn?: T[]
+    not?: EnumFilter<T>
+}
+
+export type EnumNullableFilter<T> = {
+    equals?: T | null
+    in?: (T | null)[]
+    notIn?: (T | null)[]
+    not?: EnumNullableFilter<T> | T | null
+}
+
+export type ArrayFilter<T> = {
+    equals?: T[]
+    has?: T
+    hasSome?: T[]
+    hasEvery?: T[]
+    isEmpty?: boolean
+    length?: number
+}
+
+export type ArrayNullableFilter<T> = {
+    equals?: T[] | null
+    has?: T
+    hasSome?: T[]
+    hasEvery?: T[]
+    isEmpty?: boolean
+    length?: number
+}
+
+export type ObjectIdFieldUpdateOperationsInput = {
+    set?: string
+}
+
+export type NullableObjectIdFieldUpdateOperationsInput = {
+    set?: string | null
+}
+
+export type StringFieldUpdateOperationsInput = {
+    set?: string
+}
+
+export type NullableStringFieldUpdateOperationsInput = {
+    set?: string | null
+}
+
+export type NumberFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+}
+
+export type NullableNumberFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+}
+
+export type DecimalFieldUpdateOperationsInput = {
+    set?: {{ ts_conf.decimal_input }}
+    increment?: {{ ts_conf.decimal_input }}
+    decrement?: {{ ts_conf.decimal_input }}
+    multiply?: {{ ts_conf.decimal_input }}
+    divide?: {{ ts_conf.decimal_input }}
+}
+
+export type NullableDecimalFieldUpdateOperationsInput = {
+    set?: {{ ts_conf.decimal_input }} | null
+    increment?: {{ ts_conf.decimal_input }}
+    decrement?: {{ ts_conf.decimal_input }}
+    multiply?: {{ ts_conf.decimal_input }}
+    divide?: {{ ts_conf.decimal_input }}
+}
+
+export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+}
+
+export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
+}
+
+export type DateFieldUpdateOperationsInput = {
+    set?: string
+}
+
+export type NullableDateFieldUpdateOperationsInput = {
+    set?: string | null
+}
+
+export type DateTimeFieldUpdateOperationsInput = {
+    set?: {{ ts_conf.datetime_input }}
+}
+
+export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: {{ ts_conf.datetime_input }} | null
+}
+
+export type EnumFieldUpdateOperationsInput<T> = {
+    set?: T
+}
+
+export type NullableEnumFieldUpdateOperationsInput<T> = {
+    set?: T | null
+}
+
+export type ArrayFieldUpdateOperationsInput<T> = {
+    set?: T[],
+    push?: T
+}
+
+export type NullableArrayFieldUpdateOperationsInput<T> = {
+    set?: T[] | null,
+    push?: T
+}
+
+export declare function setBearerToken(token: string | undefined)
+
+export declare function getBearerToken(): string | undefined
+
+export declare class TeoError extends Error {
+
+    type: string
+
+    errors: {[key: string]: string} | null
+
+    constructor(responseError: ResponseError)
+
+    get name(): string
+}
+

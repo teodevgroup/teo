@@ -45,7 +45,7 @@ use crate::parser::ast::top::Top;
 use crate::parser::ast::interface_type::InterfaceType;
 use crate::parser::ast::static_files::StaticFiles;
 use crate::parser::ast::unit::Unit;
-use crate::parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError, DiagnosticsLog};
+use crate::parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError};
 use crate::parser::diagnostics::printer;
 use crate::parser::parser::resolver::Resolver;
 

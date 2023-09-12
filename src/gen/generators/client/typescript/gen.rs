@@ -28,6 +28,13 @@ pub(self) struct TsIndexJsTemplate<'a> {
 pub(self) struct TsIndexDTsTemplate<'a> {
     pub(self) outline: &'a Outline<'a>,
     pub(self) conf: &'a Conf,
+    pub(self) ts_conf: &'a TsGenerationConf,
+}
+
+pub(self) struct TsGenerationConf {
+    pub(self) datetime_input: &'static str,
+    pub(self) date_input: &'static str,
+    pub(self) decimal_input: &'static str,
 }
 
 pub(crate) struct TsClientGenerator { }
@@ -63,7 +70,15 @@ impl Generator for TsClientGenerator {
     async fn generate_main(&self, ctx: &Ctx, generator: &FileUtil) -> Result<()> {
         generator.generate_file("index.d.ts", generate_index_d_ts(ctx.graph, ctx.conf.object_name.clone(), false)).await?;
         generator.generate_file("index.js", generate_index_js(ctx.graph, ctx.conf).await).await?;
-        generator.generate_file("new.index.d.ts", TsIndexDTsTemplate { outline: &ctx.outline, conf: ctx.conf }.render().unwrap()).await?;
+        generator.generate_file("new.index.d.ts", TsIndexDTsTemplate {
+            outline: &ctx.outline,
+            conf: ctx.conf,
+            ts_conf: &TsGenerationConf {
+                date_input: "string",
+                datetime_input: "Date | string",
+                decimal_input: "Decimal | string"
+            },
+        }.render().unwrap()).await?;
         generator.generate_file("new.index.js", TsIndexJsTemplate { outline: &ctx.outline, conf: ctx.conf }.render().unwrap()).await?;
         Ok(())
     }
