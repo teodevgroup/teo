@@ -484,6 +484,7 @@
 
 #### 0.0.59
 - Documentations
+- Migration decorator docs
 - Move auth middleware out
 
 #### 0.0.60
@@ -504,7 +505,6 @@
 - MongoDB: connector is not using table name
 
 #### 0.0.61
-- Migration decorator docs
 - Dropped decorator docs
 - MongoDB migration
 - MongoDB `$queryRaw`

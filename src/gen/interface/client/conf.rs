@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::path::PathBuf;
 use inflector::Inflector;
 use crate::gen::interface::client::kind::Kind;
@@ -17,6 +18,16 @@ pub struct Conf {
 }
 
 impl Conf {
+
+    pub(crate) fn class_name(&self) -> Cow<str> {
+        let first_char = self.object_name.chars().nth(0).unwrap();
+        if first_char.is_uppercase() {
+            Cow::Owned(format!("{}Class", self.object_name))
+        } else {
+            Cow::Borrowed(self.object_name.as_str())
+        }
+    }
+
     /// # Inferred package name
     ///
     /// Infer the package name from last path component

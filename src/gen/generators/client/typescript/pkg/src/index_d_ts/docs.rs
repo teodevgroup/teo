@@ -255,7 +255,7 @@ pub(crate) fn nested_create_or_connect_doc(model: &Model, many: bool) -> String 
     let article = if many { "" } else { "an " };
     let _article2 = if many { "zero or more " } else { "an " };
     format!(r#"/**
- * Connect to {article}existing {object} if it's exist, otherwise create {article}{object}.
+ * Connect to {article}existing {object} if it exists, otherwise create {article}{object}.
  */"#)
 }
 
@@ -295,7 +295,7 @@ pub(crate) fn nested_upsert_doc(model: &Model, many: bool) -> String {
     let article = if many { "" } else { "an " };
     let _article2 = if many { "zero or more " } else { "an " };
     format!(r#"/**
- * Update {article}existing {object} if it's exist, otherwise create {article}{object}.
+ * Update {article}existing {object} if it exists, otherwise create {article}{object}.
  */"#)
 }
 
