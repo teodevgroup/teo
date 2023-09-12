@@ -467,6 +467,7 @@
 - Fixed previous record trigger when setting object value **[DONE]**
 - When updating an object, use its previous value **[DONE]**
 - Do not seed records for dropped tables and delete the seed record **[DONE]**
+- Fixed "equals": null and "not": null for SQL queries **[DONE]**
 
 #### 0.0.58
 - Custom decorators and pipeline items

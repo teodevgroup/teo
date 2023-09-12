@@ -59,10 +59,14 @@ impl Query {
             let mut result: Vec<String> = vec![];
             for (key, value) in map {
                 match key.as_str() {
-                    "equals" => {
+                    "equals" => if value.is_null() {
+                        result.push(Self::where_item(&column_name, "IS", "NULL"));
+                    } else {
                         result.push(Self::where_item(&column_name, "=", &value.to_sql_string(r#type, optional, graph, dialect)));
                     }
-                    "not" => {
+                    "not" => if value.is_null() {
+                        result.push(Self::where_item(&column_name, "IS NOT", "NULL"));
+                    } else {
                         result.push(Self::where_item(&column_name, "<>", &value.to_sql_string(r#type, optional, graph, dialect)));
                     }
                     "gt" => {

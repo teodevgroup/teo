@@ -112,7 +112,7 @@ impl Execution {
             Cow::Borrowed(value)
         };
         let stmt = Query::build(model, graph, value_for_build.as_ref(), dialect, additional_where, additional_left_join, join_table_results, force_negative_take);
-        // println!("sql stmt: {}", &stmt);
+        // println!("sql query stmt: {}", &stmt);
         let reverse = Input::has_negative_take(value);
         let rows = match conn.query(QuaintQuery::from(stmt)).await {
             Ok(rows) => rows,

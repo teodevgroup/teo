@@ -831,7 +831,7 @@ impl Decoder {
                         retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, r#type, optional, value, path)?);
                     }
                     "not" => {
-                        retval.insert(key.to_owned(), Self::decode_where_for_field(graph, r#type, optional, value, path)?);
+                        retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, r#type, optional, value, path)?);
                     }
                     "gt" | "gte" | "lt" | "lte" | "contains" | "startsWith" | "endsWith" | "matches" => {
                         retval.insert(key.to_owned(), Self::decode_value_for_field_type(graph, r#type, false, value, path)?);
