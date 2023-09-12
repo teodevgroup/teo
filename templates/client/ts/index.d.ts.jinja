@@ -184,7 +184,7 @@ export type DateTimeFilter = {
     lte?: {{ ts_conf.datetime_input }}
     gt?: {{ ts_conf.datetime_input }}
     gte?: {{ ts_conf.datetime_input }}
-    not?: DateFilter | {{ ts_conf.datetime_input }}
+    not?: DateTimeFilter | {{ ts_conf.datetime_input }}
 }
 
 export type DateTimeNullableFilter = {
@@ -195,7 +195,7 @@ export type DateTimeNullableFilter = {
     lte?: {{ ts_conf.datetime_input }}
     gt?: {{ ts_conf.datetime_input }}
     gte?: {{ ts_conf.datetime_input }}
-    not?: DateNullableFilter | {{ ts_conf.datetime_input }} | null
+    not?: DateTimeNullableFilter | {{ ts_conf.datetime_input }} | null
 }
 
 export type EnumFilter<T> = {
