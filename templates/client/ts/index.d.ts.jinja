@@ -346,6 +346,51 @@ export type {{ class.model_name }}{{ class.name_suffix }} = {
     {%- endif %}
 {%- endfor %}
 
+{% for delegate in outline.delegates %}
+declare class {{ delegate.model_name }}Delegate {
+{%- for action in delegate.actions %}
+    /**
+     * {{ action.docs }}
+     * @param {{ "{" }}{{ delegate.model_name }}{{ action.name|capitalize_first }}Args{{ "}" }} args - Arguments to {{ action.docs|wordcase }}
+     * @example
+     * // {{ action.docs }}
+     * const result = await {{ conf.object_name }}.{{ delegate.model_name|camelcase }}.{{ action.name }}({
+     *     // data to {{ action.docs|wordcase }}
+     * })
+     */
+    {{ action.name }}<T extends {{ delegate.model_name }}{{ action.name|capitalize_first }}Args>(args?: T): Promise<{{ action.response }}>
+{%- endfor %}
+}
+{% endfor %}
+
+declare class {{ conf.class_name() }} {
+{% for delegate in outline.delegates %}
+    /**
+     * ## {{ delegate.model_localized_name }}
+     *
+     * {{ delegate.model_description }}
+     *
+     * @example
+     * ```ts
+     * // Fetch zero or more {{ delegate.model_name|pluralize|wordcase }}
+     * const { {{ delegate.model_name|camelcase }}: data } = await teo.{{ delegate.model_name|camelcase }}.findMany()
+     * ```
+     *
+     */
+    {{ delegate.model_name|camelcase }}: {{ delegate.model_name|capitalize_first }}Delegate
+{% endfor %}
+
+    /**
+     * Create a new {{ conf.class_name() }} client instance.
+     */
+    constructor(token?: string)
+    /**
+     * Get a new client altered with `token`. This is useful if you use this on a backend server.
+     * @param {string?} token - The new identity token.
+     */
+    $withToken(token?: string): {{ conf.class_name() }}
+}
+
 /**
  * ##  {{ conf.class_name() }} API Client
  *

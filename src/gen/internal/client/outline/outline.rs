@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use inflector::Inflector;
 use itertools::Itertools;
-use crate::core::action::{Action, IDENTITY_HANDLER, SIGN_IN_HANDLER};
+use crate::core::action::{Action, IDENTITY_HANDLER, SIGN_IN_HANDLER, FIND_UNIQUE_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, CREATE_HANDLER, UPDATE_HANDLER, CREATE_MANY_HANDLER, UPDATE_MANY_HANDLER, UPSERT_HANDLER, };
 use crate::core::field::r#type::FieldTypeOwner;
 use crate::gen::internal::client::outline::class::Class;
 use crate::gen::internal::client::outline::class_kind::ClassKind;
@@ -1170,10 +1170,12 @@ impl<'a> Outline<'a> {
             delegates: graph.models_without_teo_internal().iter().map(|m| {
                 Delegate {
                     model_name: Cow::Borrowed(m.name()),
+                    model_localized_name: Cow::Borrowed(m.localized_name()),
+                    model_description: Cow::Borrowed(m.description()),
                     actions: m.actions().iter().map(|a| DelegateAction {
                         name: a.as_handler_str(),
                         response: lookup.action_result_type(*a, m.name()),
-                        docs: None,
+                        docs: helper::predefined_action_handler_doc(*m, *a),
                     }).sorted_by(|a, b| a.name.cmp(b.name)).collect(),
                 }
             }).sorted_by(|a, b| a.model_name.cmp(&b.model_name)).collect()
@@ -1188,9 +1190,32 @@ impl<'a> Outline<'a> {
 mod helper {
     use std::borrow::Cow;
     use inflector::Inflector;
+    use crate::core::action::Action;
+    use crate::core::model::model::Model;
     use crate::gen::internal::client::outline::field::Field;
     use crate::gen::internal::client::outline::field_kind::FieldKind;
     use crate::gen::internal::type_lookup::TypeLookup;
+
+    pub(super) fn predefined_action_handler_doc(model: &Model, action_handler: Action) -> String {
+        match action_handler.to_u32() {
+            FIND_UNIQUE_HANDLER => format!("Find a unique {}.", model.name().to_word_case()),
+            FIND_FIRST_HANDLER => format!("Find {}.", model.name().to_word_case().articlize()),
+            FIND_MANY_HANDLER => format!("Find many {}.", model.name().to_plural().to_word_case()),
+            CREATE_HANDLER => format!("Create {}.", model.name().to_word_case().articlize()),
+            UPDATE_HANDLER => format!("Update {}.", model.name().to_word_case().articlize()),
+            UPSERT_HANDLER => format!("Create or update {}.", model.name().to_word_case().articlize()),
+            DELETE_HANDLER => format!("Delete {}.", model.name().to_word_case().articlize()),
+            CREATE_MANY_HANDLER => format!("Create many {}.", model.name().to_plural().to_word_case()),
+            UPDATE_MANY_HANDLER => format!("Update many {}.", model.name().to_plural().to_word_case()),
+            DELETE_MANY_HANDLER => format!("Delete many {}.", model.name().to_plural().to_word_case()),
+            COUNT_HANDLER => format!("Count {}.", model.name().to_plural().to_word_case()),
+            AGGREGATE_HANDLER => format!("Aggregate on {}.", model.name().to_plural().to_word_case()),
+            GROUP_BY_HANDLER => format!("Group by {}.", model.name().to_plural().to_word_case()),
+            SIGN_IN_HANDLER => format!("Sign in {}.", model.name().articlize().to_word_case()),
+            IDENTITY_HANDLER => format!("Get the {} identity profile from the token.", model.name().to_word_case()),
+            _ => unreachable!()
+        }
+    }
 
     pub(super) fn without_infix<'a>(model_name: &str, before: &str, without: &str, after: &str) -> Cow<'a, str> {
         if without.is_empty() {

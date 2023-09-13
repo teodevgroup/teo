@@ -3,11 +3,13 @@ use std::borrow::Cow;
 pub(in crate::gen) struct DelegateAction<'a> {
     pub(in crate::gen) name: &'static str,
     pub(in crate::gen) response: Cow<'a, str>,
-    pub(in crate::gen) docs: Option<Cow<'a, str>>,
+    pub(in crate::gen) docs: String,
 }
 
 pub(in crate::gen) struct Delegate<'a> {
     pub(in crate::gen) model_name: Cow<'a, str>,
+    pub(in crate::gen) model_localized_name: Cow<'a, str>,
+    pub(in crate::gen) model_description: Cow<'a, str>,
     pub(in crate::gen) actions: Vec<DelegateAction<'a>>,
 }
 

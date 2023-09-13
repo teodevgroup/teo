@@ -491,7 +491,7 @@ public struct {{ conf.object_name|capitalize_first }} {
     fileprivate init(_ token: String? = nil) { self.token = nil }
     public func withToken(token: String?) -> Self { Teo(token) }
 {%- for delegate in outline.delegates %}
-    lazy var {{ delegate.model_name }} = { {{ delegate.model_name|capitalize_first }}Delegate(token) }()
+    lazy var {{ delegate.model_name|camelcase }} = { {{ delegate.model_name|capitalize_first }}Delegate(token) }()
 {%- endfor %}
 }
 
