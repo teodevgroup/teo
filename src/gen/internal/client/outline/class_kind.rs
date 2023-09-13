@@ -1,4 +1,4 @@
-#[derive(Copy, Clone)]
+#[derive(PartialEq, Copy, Clone)]
 pub(in crate::gen) enum ClassKind {
     DataOutput,
     WhereInput,

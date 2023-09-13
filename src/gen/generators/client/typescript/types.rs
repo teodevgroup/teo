@@ -1,5 +1,4 @@
 use std::borrow::Cow;
-use std::ptr::null;
 use crate::core::action::{Action, AGGREGATE_HANDLER, COUNT_HANDLER, CREATE_HANDLER, CREATE_MANY_HANDLER, DELETE_HANDLER, DELETE_MANY_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, FIND_UNIQUE_HANDLER, GROUP_BY_HANDLER, IDENTITY_HANDLER, SIGN_IN_HANDLER, UPDATE_HANDLER, UPDATE_MANY_HANDLER, UPSERT_HANDLER};
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::gen::generators::client::typescript::gen::TsGenerationConf;

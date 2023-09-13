@@ -1179,6 +1179,10 @@ impl<'a> Outline<'a> {
             }).sorted_by(|a, b| a.model_name.cmp(&b.model_name)).collect()
         }
     }
+
+    pub(in crate::gen) fn example_model(&self) -> &'a Class {
+        self.classes.iter().find(|c| c.kind == ClassKind::DataOutput).unwrap()
+    }
 }
 
 mod helper {
