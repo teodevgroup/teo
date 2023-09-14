@@ -392,10 +392,11 @@ impl Error {
     }
 
     pub(crate) fn internal_server_error_with_path<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
+        let msg = reason.into();
         Error::UserError(UserError {
             r#type: UserErrorType::CustomInternalServerError,
-            message: Cow::Owned(reason.into()),
-            errors: Some(hashmap!{path.as_ref().to_string() => Cow::Owned(reason.into())})
+            message: Cow::Owned(msg.clone()),
+            errors: Some(hashmap!{path.as_ref().to_string() => Cow::Owned(msg)})
         })
     }
 
