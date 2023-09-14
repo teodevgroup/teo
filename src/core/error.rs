@@ -391,18 +391,12 @@ impl Error {
         })
     }
 
-    pub(crate) fn internal_server_error_with_path<'a>(_path: impl AsRef<KeyPath<'a>>, _reason: impl Into<String>) -> Self {
-        todo!()
-        // Error::UserError(UserError {
-        //     r#type: UserErrorType::CustomInternalServerError,
-        //     message: Cow::Owned(format!("Validation failed.")),
-        //     errors: Some(hashmap!{Cow::Owned(path.as_ref().to_string()) => Cow::Owned(reason.into())}),
-        // })
-        // Error {
-        //     r#type: ErrorType::InternalServerError,
-        //     message: "Internal server error.".to_string(),
-        //     errors: Some(hashmap!{path.as_ref().to_string() => reason.into()})
-        // }
+    pub(crate) fn internal_server_error_with_path<'a>(_path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
+        Error::UserError(UserError {
+            r#type: UserErrorType::CustomInternalServerError,
+            message: Cow::Owned(reason.into()),
+            errors: Some(hashmap!{path.as_ref().to_string() => Cow::Owned(reason.into())})
+        })
     }
 
     pub(crate) fn permission_error<'a>(path: impl AsRef<KeyPath<'a>>, reason: impl Into<String>) -> Self {
