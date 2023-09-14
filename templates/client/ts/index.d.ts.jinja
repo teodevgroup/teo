@@ -340,9 +340,12 @@ export type {{ class.model_name }}{{ class.name_suffix }} = {{ class.joined_enum
     {%- else %}
 export type {{ class.model_name }}{{ class.name_suffix }} = {
         {%- for field in class.fields %}
-            {%- if field.docs.len() > 0 %}
+            {%- if field.docs.len() > 0 || field.localized_name.len() > 0 %}
     /**
-     * {{ field.docs }}
+     {%- if field.localized_name.len() > 0 %}
+     * **{{ field.localized_name }}**{% endif %}
+     {%- if field.docs.len() > 0 %}
+     * {{ field.docs }}{% endif %}
      */
             {%- endif %}
     {{ field.name|escape_ts }}{%- if field.optional %}?{% endif %}: {{ field.field_type }}

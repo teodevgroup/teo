@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use inflector::Inflector;
 use itertools::Itertools;
-use crate::core::action::{Action, IDENTITY_HANDLER, SIGN_IN_HANDLER, FIND_UNIQUE_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, CREATE_HANDLER, UPDATE_HANDLER, CREATE_MANY_HANDLER, UPDATE_MANY_HANDLER, UPSERT_HANDLER, };
+use crate::core::action::{Action, IDENTITY_HANDLER, SIGN_IN_HANDLER };
 use crate::core::field::r#type::FieldTypeOwner;
 use crate::gen::internal::client::outline::class::Class;
 use crate::gen::internal::client::outline::class_kind::ClassKind;
@@ -1190,11 +1190,11 @@ impl<'a> Outline<'a> {
 mod helper {
     use std::borrow::Cow;
     use inflector::Inflector;
-    use crate::core::action::Action;
     use crate::core::model::model::Model;
     use crate::gen::internal::client::outline::field::Field;
     use crate::gen::internal::client::outline::field_kind::FieldKind;
     use crate::gen::internal::type_lookup::TypeLookup;
+    use crate::core::action::{Action, IDENTITY_HANDLER, SIGN_IN_HANDLER, FIND_UNIQUE_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, CREATE_HANDLER, UPDATE_HANDLER, DELETE_HANDLER, DELETE_MANY_HANDLER, COUNT_HANDLER, AGGREGATE_HANDLER, GROUP_BY_HANDLER, CREATE_MANY_HANDLER, UPDATE_MANY_HANDLER, UPSERT_HANDLER, };
 
     pub(super) fn predefined_action_handler_doc(model: &Model, action_handler: Action) -> String {
         match action_handler.to_u32() {
