@@ -244,7 +244,6 @@ named_argument = { identifier ~ ":" ~ expression }
 // function call, decorator and pipeline
 // #############
 item_decorator = { "@" ~ identifier_unit }
-block_decorator = { "@@" ~ identifier_unit }
 pipeline = { "$" ~ identifier_unit }
 
 // #############
@@ -280,11 +279,15 @@ enum_declaration = {
     ~ ENUM_KEYWORD
     ~ identifier
     ~ BLOCK_OPEN
-    ~ (enum_value_declaration | block_decorator | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
+    ~ (enum_value_declaration | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
     ~ BLOCK_CLOSE
 }
 
-enum_value_declaration = { triple_comment_block? ~ item_decorator* ~ identifier ~ NEWLINE? }
+enum_value_declaration = {
+    triple_comment_block? ~
+    (item_decorator ~ double_comment_block? ~ (NEWLINE | WHITESPACE)*)* ~
+    identifier
+}
 
 // #############
 // model
@@ -295,7 +298,7 @@ model_declaration = {
     ~ MODEL_KEYWORD
     ~ identifier
     ~ BLOCK_OPEN
-    ~ (field_declaration | block_decorator | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
+    ~ (field_declaration | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
     ~ BLOCK_CLOSE
 }
 
@@ -385,7 +388,7 @@ interface_item = {
 
 interface_enum_declaration = {
     INTERFACE_KEYWORD ~ ENUM_KEYWORD ~ identifier ~ (EXTENDS_KEYWORD ~ interface_type ~ ("," ~ interface_type)* ~ ","?)? ~ BLOCK_OPEN
-    ~ (enum_value_declaration | block_decorator | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
+    ~ (enum_value_declaration | comment_block | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
     ~ BLOCK_CLOSE
 }
 

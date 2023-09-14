@@ -470,6 +470,8 @@
 - Kotlin client: when generating into a project, infer its package name from the path **[DONE]**
 - Node.js client: Rewrite with askama engine
 - Generated clients: vec relations are optional instead of required **[DONE]**
+- Fixed enum triple comment block parsing bug **[DONE]**
+- Remove block decorators **[DONE]**
 
 #### 0.0.58
 - Generate interfaces for clients
@@ -505,6 +507,8 @@
 - MongoDB: connector is not using table name
 
 #### 0.0.61
+- model extends model
+- enum extends enum
 - Dropped decorator docs
 - MongoDB migration
 - MongoDB `$queryRaw`

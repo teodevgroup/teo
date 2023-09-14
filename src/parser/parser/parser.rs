@@ -380,7 +380,6 @@ impl ASTParser {
                 Rule::MODEL_KEYWORD | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE | Rule::EMPTY_LINES | Rule::double_comment_block | Rule::comment_block => {}
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::field_declaration => fields.push(self.parse_field(current, diagnostics, source_id)),
-                Rule::block_decorator => decorators.push(self.parse_decorator(current, source_id, diagnostics)),
                 Rule::item_decorator => decorators.push(self.parse_decorator(current, source_id, diagnostics)),
                 Rule::triple_comment_block => comment_block = Some(self.parse_comment_block(current, source_id, diagnostics)),
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
@@ -436,7 +435,7 @@ impl ASTParser {
                 Rule::comment_block => comment_block = Some(self.parse_comment_block(current, source_id, diagnostics)),
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
                 Rule::enum_value_declaration => choices.push(self.parse_enum_value(current, source_id, diagnostics)),
-                Rule::block_decorator => decorators.push(self.parse_decorator(current, source_id, diagnostics)),
+                Rule::triple_comment_block => comment_block = Some(self.parse_comment_block(current, source_id, diagnostics)),
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
             }
         }
