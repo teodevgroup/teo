@@ -472,6 +472,7 @@
 - Generated clients: vec relations are optional instead of required **[DONE]**
 - Fixed enum triple comment block parsing bug **[DONE]**
 - Remove block decorators **[DONE]**
+- Added `toDate` item **[DONE]**
 
 #### 0.0.58
 - Generate interfaces for clients

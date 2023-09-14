@@ -449,7 +449,7 @@ impl<'a> Outline<'a> {
                             fields: m.input_keys().iter().filter_map(|k| if let Some(field) = m.field(k) {
                                 Some(Field {
                                     name: field.name(),
-                                    localized_name: Cow::Borrowed(""),
+                                    localized_name: Cow::Borrowed(field.localized_name().as_str()),
                                     docs: Cow::Borrowed(field.description().unwrap_or("")),
                                     field_type: lookup.field_type_to_create_type(field.field_type(), false),
                                     optional: field.input_omissible,
@@ -458,7 +458,7 @@ impl<'a> Outline<'a> {
                             } else if let Some(property) = m.property(k) {
                                 Some(Field {
                                     name: property.name(),
-                                    localized_name: Cow::Borrowed(""),
+                                    localized_name: Cow::Borrowed(property.localized_name().as_str()),
                                     docs: Cow::Borrowed(property.description.as_ref().map(|v| v.as_str()).unwrap_or("")),
                                     field_type: lookup.field_type_to_create_type(property.field_type(), false),
                                     optional: property.input_omissible,
@@ -470,7 +470,7 @@ impl<'a> Outline<'a> {
                                 } else {
                                     Some(Field {
                                         name: relation.name(),
-                                        localized_name: Cow::Borrowed(""),
+                                        localized_name: Cow::Borrowed(relation.localized_name().as_str()),
                                         docs: Cow::Borrowed(relation.description().unwrap_or("")),
                                         field_type: {
                                             if let Some(opposite) = graph.opposite_relation(relation).1 {
@@ -597,7 +597,7 @@ impl<'a> Outline<'a> {
                             fields: m.input_keys().iter().filter_map(|k| if let Some(field) = m.field(k) {
                                 Some(Field {
                                     name: field.name(),
-                                    localized_name: Cow::Borrowed(""),
+                                    localized_name: Cow::Borrowed(field.localized_name().as_str()),
                                     docs: Cow::Borrowed(field.description().unwrap_or("")),
                                     field_type: lookup.field_type_to_update_type(field.field_type(), field.is_optional()),
                                     optional: true,
@@ -606,7 +606,7 @@ impl<'a> Outline<'a> {
                             } else if let Some(property) = m.property(k) {
                                 Some(Field {
                                     name: property.name(),
-                                    localized_name: Cow::Borrowed(""),
+                                    localized_name: Cow::Borrowed(property.localized_name().as_str()),
                                     docs: Cow::Borrowed(property.description.as_ref().map(|v| v.as_str()).unwrap_or("")),
                                     field_type: lookup.field_type_to_update_type(property.field_type(), property.is_optional()),
                                     optional: true,
@@ -618,7 +618,7 @@ impl<'a> Outline<'a> {
                                 } else {
                                     Some(Field {
                                         name: relation.name(),
-                                        localized_name: Cow::Borrowed(""),
+                                        localized_name: Cow::Borrowed(relation.localized_name().as_str()),
                                         docs: Cow::Borrowed(relation.description().unwrap_or("")),
                                         field_type: {
                                             if let Some(opposite) = graph.opposite_relation(relation).1 {
@@ -1536,7 +1536,7 @@ mod helper {
         vec![
             Field {
                 name: "AND",
-                localized_name: Cow::Borrowed(""),
+                localized_name: Cow::Borrowed("AND"),
                 docs: Cow::Borrowed(""),
                 field_type: field_type.clone(),
                 optional: true,
@@ -1544,7 +1544,7 @@ mod helper {
             },
             Field {
                 name: "OR",
-                localized_name: Cow::Borrowed(""),
+                localized_name: Cow::Borrowed("OR"),
                 docs: Cow::Borrowed(""),
                 field_type: field_type.clone(),
                 optional: true,
@@ -1552,7 +1552,7 @@ mod helper {
             },
             Field {
                 name: "NOT",
-                localized_name: Cow::Borrowed(""),
+                localized_name: Cow::Borrowed("NOT"),
                 docs: Cow::Borrowed(""),
                 field_type,
                 optional: true,

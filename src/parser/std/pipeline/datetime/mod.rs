@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use crate::core::item::Item;
 use crate::core::items::datetime::now::NowItem;
+use crate::core::items::datetime::to_date::ToDateItem;
 use crate::core::items::datetime::today::TodayItem;
 use crate::parser::ast::argument::Argument;
 
@@ -16,4 +17,14 @@ pub(crate) fn today(args: &Vec<Argument>) -> Arc<dyn Item> {
         None => 0
     };
     Arc::new(TodayItem::new(timezone))
+}
+
+pub(crate) fn to_date(args: &Vec<Argument>) -> Arc<dyn Item> {
+    let timezone = match args.get(0) {
+        Some(arg) => {
+            arg.resolved.as_ref().unwrap().as_value().unwrap().as_i32().unwrap()
+        }
+        None => 0
+    };
+    Arc::new(ToDateItem::new(timezone))
 }

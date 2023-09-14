@@ -11,7 +11,7 @@ use crate::parser::std::pipeline::bcrypt::bcrypt_verify::bcrypt_verify;
 use crate::parser::std::pipeline::custom_function::{
     custom_callback, custom_compare, custom_transform, custom_validate,
 };
-use crate::parser::std::pipeline::datetime::{now, today};
+use crate::parser::std::pipeline::datetime::{now, to_date, today};
 use crate::parser::std::pipeline::debug::print;
 use crate::parser::std::pipeline::identity::identity;
 use crate::parser::std::pipeline::logical::{
@@ -65,6 +65,7 @@ impl GlobalPipelineInstallers {
         // datetime
         objects.insert("now".to_owned(), now);
         objects.insert("today".to_owned(), today);
+        objects.insert("toDate".to_owned(), to_date);
         // debug
         objects.insert("print".to_owned(), print);
         // identity
