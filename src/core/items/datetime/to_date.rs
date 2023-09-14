@@ -23,7 +23,7 @@ impl Item for ToDateItem {
 
     async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>> {
         let datetime = ctx.value.as_datetime().unwrap();
-        let calculated = datetime + Duration::hours(self.timezone as i64);
+        let calculated = datetime.clone() + Duration::hours(self.timezone as i64);
         Ok(ctx.with_value(Value::Date(calculated.date_naive())))
     }
 }
