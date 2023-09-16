@@ -94,8 +94,8 @@ impl<'a> Outline<'a> {
                             docs: Cow::Owned(format!("Select fields from the {} model.", m.name().to_word_case())),
                             fields: m.output_keys().iter().filter_map(|k| m.field(k)).map(|f| Field {
                                 name: f.name(),
-                                field_type: lookup.field_type_to_result_type(f.field_type()),
-                                optional: f.is_optional(),
+                                field_type: Cow::Borrowed(lookup.bool_type()),
+                                optional: true,
                                 localized_name: Cow::Owned(f.localized_name()),
                                 docs: f.description().map(|d| Cow::Borrowed(d)).unwrap_or(Cow::Borrowed("")),
                                 kind: FieldKind::Field,

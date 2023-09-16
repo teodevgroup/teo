@@ -7,9 +7,7 @@ use crate::gen::internal::client::outline::outline::Outline;
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::internal::filters;
 use crate::core::result::Result;
-use crate::gen::generators::client::typescript::pkg::package_json::{generate_package_json, update_package_json};
-use crate::gen::generators::client::typescript::pkg::src::index_d_ts::generate_index_d_ts;
-use crate::gen::generators::client::typescript::pkg::src::index_js::generate_index_js;
+use crate::gen::generators::client::typescript::package_json::{generate_package_json, update_package_json};
 
 #[derive(Template)]
 #[template(path = "client/ts/readme.md.jinja", escape = "none")]
@@ -88,14 +86,12 @@ impl Generator for TsClientGenerator {
     }
 
     async fn generate_main(&self, ctx: &Ctx, generator: &FileUtil) -> Result<()> {
-        generator.generate_file("index.d.ts", generate_index_d_ts(ctx.graph, ctx.conf.object_name.clone(), false)).await?;
-        generator.generate_file("index.js", generate_index_js(ctx.graph, ctx.conf).await).await?;
-        generator.generate_file("new.index.d.ts", TsIndexDTsTemplate {
+        generator.generate_file("index.d.ts", TsIndexDTsTemplate {
             outline: &ctx.outline,
             conf: ctx.conf,
             ts_conf: &TsGenerationConf::client(),
         }.render().unwrap()).await?;
-        generator.generate_file("new.index.js", TsIndexJsTemplate { outline: &ctx.outline, conf: ctx.conf }.render().unwrap()).await?;
+        generator.generate_file("index.js", TsIndexJsTemplate { outline: &ctx.outline, conf: ctx.conf }.render().unwrap()).await?;
         Ok(())
     }
 }

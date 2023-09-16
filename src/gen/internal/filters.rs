@@ -145,3 +145,12 @@ pub fn rust_ref_if_needed<T: std::fmt::Display>(s: T) -> ::askama::Result<String
         string
     })
 }
+
+pub fn append_slash<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
+    let string = s.to_string();
+    if string.ends_with("/") {
+        Ok(string)
+    } else {
+        Ok(string + "/")
+    }
+}

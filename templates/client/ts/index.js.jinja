@@ -63,7 +63,7 @@ function getBearerToken() {
 }
 
 async function request(urlSegmentName, action, args, token = getBearerToken()) {
-  let url = "{{ conf.host }}" + urlSegmentName + "/action/" + action
+  let url = "{{ conf.host|append_slash }}" + urlSegmentName + "/action/" + action
   let response = await fetch(url, {
       method: "POST",
       headers: token ? { "Authorization": `Bearer ${token}` } : undefined,

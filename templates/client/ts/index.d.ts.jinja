@@ -352,6 +352,25 @@ export type {{ class.model_name }}{{ class.name_suffix }} = {
         {%- endfor %}
 }
     {%- endif %}
+    {%- if class.kind.is_output() %}
+export type {{ class.model_name }}GetPayload<S extends boolean | null | undefined | {{ class.model_name }}Args, U = keyof S> = S extends true
+    ? {{ class.model_name }}
+    : S extends undefined
+        ? never
+        : S extends {{ class.model_name }}Args | {{ class.model_name }}FindManyArgs
+            ? 'include' extends U
+                ? SelectSubset<{{ class.model_name }}, S> & {
+                    [P in ExistKeys<S['include']>]:
+                    {%- for field in class.fields %}
+                        {%- if field.kind.is_relation() %}
+                        P extends '{{ field.name|camelcase }}' ? {{ field.field_type }}GetPayload<S['include'][P]> :
+                        {%- endif %}
+                    {%- endfor %}
+                    never
+                }
+                : SelectSubset<{{ class.model_name }}, S>
+            : {{ class.model_name }}
+    {%- endif %}
 {%- endfor %}
 
 {% for delegate in outline.delegates %}

@@ -454,11 +454,8 @@
 - Fixed optional decimal bug in rust entities **[Done]**
 - Added a user context parameter to setup callback **[Done]**
 - Fixed a bug which caused generated clients contain internal classes **[Done]**
-- Diagnostic messages
 - Fix app ctx and graph memory bug for release **[Done]**
 - Fix command line tool entity generation **[Done]**
-- Remove `ToMut` crate
-- Unit tests for schemas
 - Fixed sign in meta token object **[Done]**
 - Uploaded file is now placed at temporary directory **[Done]**
 - Fixed where unique decode bug **[DONE]**
@@ -468,13 +465,18 @@
 - Fixed "equals": null and "not": null for SQL queries **[DONE]**
 - Generated models in clients and entities are in alphabetic order **[DONE]**
 - Kotlin client: when generating into a project, infer its package name from the path **[DONE]**
-- Node.js client: Rewrite with askama engine
+- Node.js client: Rewrite with askama engine **[DONE]**
 - Generated clients: vec relations are optional instead of required **[DONE]**
 - Fixed enum triple comment block parsing bug **[DONE]**
 - Remove block decorators **[DONE]**
 - Added `toDate` item **[DONE]**
 
 #### 0.0.58
+- Diagnostic messages
+- Remove `ToMut` crate
+- Unit tests for schemas
+- Rewrite app loading process
+- Rewrite decorators loading and pipeline items loading 
 - Generate interfaces for clients
 - Generate custom groups and actions for clients
 - Server response: redirects
