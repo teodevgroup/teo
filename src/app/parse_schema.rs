@@ -12,7 +12,6 @@ use crate::core::model::model::Model;
 use crate::core::property::Property;
 use crate::gen::interface::client::conf::Conf as ClientConf;
 use crate::gen::interface::server::conf::Conf as EntityConf;
-use crate::parser::parser::parser::ASTParser;
 use crate::core::r#enum::{Enum, EnumVariant};
 use crate::core::relation::Relation;
 use crate::parser::ast::field::{ASTField, ASTFieldClass};
@@ -35,7 +34,7 @@ pub(super) fn parse_schema(main: Option<&str>, diagnostics: &mut Diagnostics) ->
     // load env first
     let _ = dotenv();
     let app_ctx = AppCtx::get()?;
-    let parser = app_ctx.parser_mut()?;
+    let parser = app_ctx.parser_mut();
     parser.parse(main, diagnostics);
     Ok(())
 }
@@ -43,7 +42,7 @@ pub(super) fn parse_schema(main: Option<&str>, diagnostics: &mut Diagnostics) ->
 pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
     let app_ctx = AppCtx::get()?;
     let graph = app_ctx.graph();
-    let parser = app_ctx.parser()?;
+    let parser = app_ctx.parser();
     // connector conf
     let connector = parser.connector()?;
     app_ctx.set_connector_conf(Box::new(ConnectorConf {

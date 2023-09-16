@@ -10,6 +10,7 @@ use crate::parser::ast::import::ASTImport;
 use crate::parser::ast::interface::InterfaceDeclaration;
 use crate::parser::ast::middleware::MiddlewareDeclaration;
 use crate::parser::ast::model::ASTModel;
+use crate::parser::ast::namespace::ASTNamespace;
 use crate::parser::ast::r#enum::ASTEnum;
 use crate::parser::ast::static_files::StaticFiles;
 use crate::parser::ast::test_conf::ASTTestConf;
@@ -31,6 +32,7 @@ pub(crate) enum Top {
     ActionGroupDeclaration(ActionGroupDeclaration),
     InterfaceDeclaration(InterfaceDeclaration),
     StaticFiles(StaticFiles),
+    ASTNamespace(ASTNamespace),
 }
 
 impl Top {
@@ -52,6 +54,7 @@ impl Top {
             Top::ActionGroupDeclaration(a) => a.id,
             Top::InterfaceDeclaration(i) => i.id,
             Top::StaticFiles(s) => s.id,
+            Top::ASTNamespace(n) => n.id,
         }
     }
 
@@ -323,5 +326,23 @@ impl Top {
 
     pub(crate) fn is_static_files(&self) -> bool {
         self.as_static_files().is_some()
+    }
+
+    pub(crate) fn as_namespace(&self) -> Option<&ASTNamespace> {
+        match self {
+            Top::ASTNamespace(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_namespace_mut(&mut self) -> Option<&mut ASTNamespace> {
+        match self {
+            Top::ASTNamespace(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn is_namespace(&self) -> bool {
+        self.as_namespace().is_some()
     }
 }

@@ -4,6 +4,7 @@ use crate::app::cli::command::CLI;
 use crate::app::cli::parse_cli::parse_cli;
 use crate::app::cli::run_command::run_command;
 use crate::app::connect_to_database::connect_to_database;
+use crate::app::namespace::Namespace;
 use crate::app::parse_schema::{load_schema, parse_schema};
 use crate::app::routes::action_ctx::{ActionCtxArgument};
 use crate::app::routes::middleware_ctx::Middleware;
@@ -33,17 +34,21 @@ impl App {
         }
     }
 
+    pub fn namespace(&self, name: &'static str) -> &mut Namespace {
+        AppCtx::get().unwrap().main_namespace_mut().child_namespace(name)
+    }
+
     pub fn middleware<F>(&self, name: &'static str, f: F) -> Result<()> where
         F: Middleware + 'static,
     {
-        AppCtx::get()?.add_middleware(name, f)
+        AppCtx::get()?.main_namespace_mut().add_middleware(name, f)
     }
 
     pub fn action<T, F>(&self, group: &'static str, name: &'static str, f: F) -> Result<()> where
         T: 'static,
         F: ActionCtxArgument<T> + 'static,
     {
-        AppCtx::get()?.add_action_handler(group, name, f)
+        AppCtx::get()?.main_namespace_mut().add_action_handler(group, name, f)
     }
 
     pub fn transform<A, O, F, R>(&self, name: &'static str, f: F) -> Result<&Self> where

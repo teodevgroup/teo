@@ -9,11 +9,13 @@ use crate::app::namespace::Namespace;
 use crate::app::program::Program;
 use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::callbacks::types::callback_with_user_ctx::AsyncCallbackWithUserCtx;
+use crate::core::connector::conf::ConnectorConf;
 use crate::core::connector::connector::Connector;
 use crate::parser::parser::parser::ASTParser;
 use crate::prelude::{Graph};
 use crate::core::result::Result;
 use crate::core::error::Error;
+use crate::server::conf::ServerConf;
 use crate::server::test_context::TestContext;
 
 pub struct AppCtx {
@@ -191,6 +193,20 @@ impl AppCtx {
 
     pub(crate) fn static_files(&self) -> &HashMap<&'static str, &'static str> {
         &self.static_files
+    }
+
+    pub(crate) fn connector_conf(&self) -> Result<&ConnectorConf> {
+        match self.main_namespace().connector_conf() {
+            Some(c) => Ok(c),
+            None => Err(Error::fatal("Connector conf is accessed while it's not set.")),
+        }
+    }
+
+    pub(crate) fn server_conf(&self) -> Result<&ServerConf> {
+        match self.main_namespace().server_conf() {
+            Some(s) => Ok(s),
+            None => Err(Error::fatal("Server conf is accessed while it's not set.")),
+        }
     }
 }
 

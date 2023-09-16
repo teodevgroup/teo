@@ -826,8 +826,8 @@ fn make_app(
                 } else {
                     // Parse body the user defined way
                     let app_ctx = AppCtx::get().unwrap();
-                    if app_ctx.has_custom_action_declaration_for(path_components.model.as_str(), path_components.action.as_str()) {
-                        let custom_action_declaration = app_ctx.get_custom_action_declaration_for(path_components.model.as_str(), path_components.action.as_str());
+                    if app_ctx.main_namespace().has_custom_action_declaration_for(path_components.model.as_str(), path_components.action.as_str()) {
+                        let custom_action_declaration = app_ctx.main_namespace().get_custom_action_declaration_for(path_components.model.as_str(), path_components.action.as_str());
                         let input = &custom_action_declaration.input_fields;
                         let result = transform_custom_action_json_into_teon(&parsed_json_body, input, &path![]);
                         match result {
@@ -883,10 +883,10 @@ fn make_app(
                     identity,
                     req_local: ReqLocal::new()
                 };
-                let result = if AppCtx::get().unwrap().has_action_handler_for(&path_components.model, &path_components.action) {
+                let result = if AppCtx::get().unwrap().main_namespace().has_action_handler_for(&path_components.model, &path_components.action) {
                     combined_middleware.call(req_ctx, &|req_ctx: ReqCtx| async {
                         let path_components = req_ctx.path_components.clone();
-                        let action_def = AppCtx::get().unwrap().get_action_handler(&path_components.model, &path_components.action);
+                        let action_def = AppCtx::get().unwrap().main_namespace().get_action_handler(&path_components.model, &path_components.action);
                         action_def.call(req_ctx).await
                     }).await
                 } else {

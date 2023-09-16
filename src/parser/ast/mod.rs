@@ -35,5 +35,5 @@ pub(crate) mod middleware;
 pub(crate) mod action;
 pub(crate) mod interface;
 pub(crate) mod interface_type;
-
+pub(crate) mod namespace;
 pub(crate) mod static_files;

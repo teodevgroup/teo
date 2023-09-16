@@ -16,10 +16,9 @@ use crate::prelude::{ActionCtxArgument, ActionHandlerDef, ActionHandlerDefTrait,
 use crate::seeder::data_set::DataSet;
 use crate::core::result::Result;
 
-#[derive(Debug)]
 pub struct Namespace {
     pub(crate) is_main: bool,
-    pub(crate) namespaces: Vec<Namespace>,
+    pub(crate) namespaces: HashMap<&'static str, Namespace>,
     // configuration and declarations
     pub(crate) connector_conf: Option<Box<ConnectorConf>>,
     pub(crate) server_conf: Option<Box<ServerConf>>,
@@ -50,7 +49,7 @@ impl Namespace {
     fn new_internal(is_main: bool) -> Self {
         Self {
             is_main,
-            namespaces: vec![],
+            namespaces: hashmap!{},
             connector_conf: None,
             server_conf: None,
             debug_conf: None,
@@ -66,6 +65,19 @@ impl Namespace {
             custom_action_declarations: hashmap!{},
             constants: hashmap!{},
         }
+    }
+
+    pub fn middleware<F>(&mut self, name: &'static str, f: F) -> Result<()> where
+        F: Middleware + 'static,
+    {
+        self.add_middleware(name, f)
+    }
+
+    pub fn action<T, F>(&mut self, group: &'static str, name: &'static str, f: F) -> Result<()> where
+        T: 'static,
+        F: ActionCtxArgument<T> + 'static,
+    {
+        self.add_action_handler(group, name, f)
     }
 
     pub(crate) fn datasets(&self) -> &Vec<DataSet> {
@@ -209,5 +221,16 @@ impl Namespace {
 
     pub(crate) fn get_custom_action_declaration_for(&self, group: &str, name: &str) -> &CustomActionDefinition {
         self.custom_action_declaration().get(group).unwrap().get(name).unwrap()
+    }
+
+    pub(crate) fn has_child_namespace(&self, name: &'static str) -> bool {
+        self.namespaces.contains_key(name)
+    }
+
+    pub(crate) fn child_namespace(&mut self, name: &'static str) -> &mut Namespace {
+        if !self.has_child_namespace(name) {
+            self.namespaces.insert(name, Namespace::new());
+        }
+        self.namespaces.get_mut(name).unwrap()
     }
 }
