@@ -472,9 +472,6 @@
 - Added `toDate` item **[DONE]**
 
 #### 0.0.58
-- Diagnostic messages
-- Remove `ToMut` crate
-- Unit tests for schemas
 - Rewrite app loading process
 - Rewrite decorators loading and pipeline items loading 
 - Generate interfaces for clients
@@ -486,6 +483,10 @@
 - Unit tests for rust code
 - Database specific database types and tests
 - PostgreSQL: Enum types
+- Diagnostic messages
+- Remove `ToMut` crate
+- Unit tests for schemas
+- TS Client: fixed include args with boolean inputs
 
 #### 0.0.59
 - Documentations

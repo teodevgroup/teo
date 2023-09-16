@@ -35,7 +35,6 @@ pub(super) fn parse_schema(main: Option<&str>, diagnostics: &mut Diagnostics) ->
     // load env first
     let _ = dotenv();
     let app_ctx = AppCtx::get()?;
-    app_ctx.set_parser(Box::new(ASTParser::new(AppCtx::get()?.callbacks())));
     let parser = app_ctx.parser_mut()?;
     parser.parse(main, diagnostics);
     Ok(())

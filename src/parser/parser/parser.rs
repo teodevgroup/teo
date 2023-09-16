@@ -89,14 +89,13 @@ pub(crate) struct ASTParser {
     pub(crate) static_files: Vec<(usize, usize)>,
     pub(crate) next_id: usize,
     pub(crate) resolved: bool,
-    pub(crate) callback_lookup_table: &'static CallbackLookup,
     pub(crate) resolved_action_inputs: HashMap<&'static str, HashMap<&'static str, ResolvedInterfaceField>>,
     pub(crate) current_source_path_bufs: Vec<PathBuf>,
 }
 
 impl ASTParser {
 
-    pub(crate) fn new(callbacks: &'static CallbackLookup) -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             sources: btreemap!{},
             enums: vec![],
@@ -115,7 +114,6 @@ impl ASTParser {
             static_files: vec![],
             next_id: 0,
             resolved: false,
-            callback_lookup_table: callbacks,
             resolved_action_inputs: hashmap!{},
             current_source_path_bufs: vec![],
         }

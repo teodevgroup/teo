@@ -116,6 +116,6 @@ impl App {
 
 impl Drop for App {
     fn drop(&mut self) {
-        AppCtx::drop()
+        AppCtx::drop().unwrap()
     }
 }
