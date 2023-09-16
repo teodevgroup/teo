@@ -473,7 +473,10 @@
 
 #### 0.0.58
 - Rewrite app loading process
+- Namespaces
 - Rewrite decorators loading and pipeline items loading 
+
+#### 0.0.59
 - Generate interfaces for clients
 - Generate custom groups and actions for clients
 - Server response: redirects
@@ -488,12 +491,12 @@
 - Unit tests for schemas
 - TS Client: fixed include args with boolean inputs
 
-#### 0.0.59
+#### 0.0.60
 - Documentations
 - Migration decorator docs
 - Move auth middleware out
 
-#### 0.0.60
+#### 0.0.61
 - The copy action
 - Enum value references enum definition
 - Add synthesised enums to graph
@@ -510,7 +513,7 @@
 - Migration dry run
 - MongoDB: connector is not using table name
 
-#### 0.0.61
+#### 0.0.62
 - model extends model
 - enum extends enum
 - Dropped decorator docs
@@ -524,7 +527,7 @@
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 
-#### 0.0.62
+#### 0.0.63
 - Rust entities: optional string array
 - Rust entities: required string array
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
@@ -535,7 +538,7 @@
 - Soft delete documentation
 - Correct count with cursor
 
-#### 0.0.63
+#### 0.0.64
 - Input omissible and output omissible for generated clients
 - Support code comment tags for VSCode
 
