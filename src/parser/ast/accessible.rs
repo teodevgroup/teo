@@ -39,7 +39,6 @@ pub(crate) type ASTFunctionInstaller = fn(lookup_table: &'static CallbackLookup,
 pub(crate) struct ASTPipelineItem {
     pub(crate) installer: Option<ASTPipelineInstaller>,
     pub(crate) function_installer: Option<ASTFunctionInstaller>,
-    pub(crate) lookup_table: &'static CallbackLookup,
     pub(crate) args: Vec<Argument>,
 }
 

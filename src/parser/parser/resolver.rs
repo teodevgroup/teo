@@ -385,7 +385,6 @@ impl Resolver {
                     items.push(ASTPipelineItem {
                         installer: Some(installer.clone()),
                         function_installer: None,
-                        lookup_table: parser.callback_lookup_table,
                         args: vec![]
                     })
                 } else {
@@ -394,7 +393,6 @@ impl Resolver {
                         items.push(ASTPipelineItem {
                             installer: None,
                             function_installer: Some(installer.clone()),
-                            lookup_table: parser.callback_lookup_table,
                             args: vec![]
                         })
                     } else {
@@ -410,7 +408,7 @@ impl Resolver {
                             if let Some(previous_identifier) = previous_identifier {
                                 let installer = (&self.global_pipeline_installers).get(&previous_identifier.name);
                                 if let Some(installer) = installer {
-                                    items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: parser.callback_lookup_table, args: vec![]});
+                                    items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, args: vec![]});
                                 } else {
                                     panic!("Cannot find pipeline item named '{}'.", identifier.name);
                                 }
@@ -429,11 +427,11 @@ impl Resolver {
                             }
                             let installer = (&self.global_pipeline_installers).get(&previous_identifier.unwrap().name);
                             if let Some(installer) = installer {
-                                items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: parser.callback_lookup_table, args: argument_list.arguments().clone()});
+                                items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, args: argument_list.arguments().clone()});
                             } else {
                                 let installer = (&self.global_function_installers).get(&previous_identifier.unwrap().name);
                                 if let Some(installer) = installer {
-                                    items.push(ASTPipelineItem { installer: None, function_installer: Some(installer.clone()), lookup_table: parser.callback_lookup_table, args: argument_list.arguments().clone()});
+                                    items.push(ASTPipelineItem { installer: None, function_installer: Some(installer.clone()), args: argument_list.arguments().clone()});
                                 } else {
                                     panic!("Cannot find pipeline item named '{}'.", previous_identifier.unwrap().name);
                                 }
@@ -446,7 +444,7 @@ impl Resolver {
                 if let Some(previous_identifier) = previous_identifier {
                     let installer = (&self.global_pipeline_installers).get(&previous_identifier.name);
                     if let Some(installer) = installer {
-                        items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, lookup_table: parser.callback_lookup_table, args: vec![]});
+                        items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, args: vec![]});
                     } else {
                         panic!("Cannot find pipeline item named '{}'.", previous_identifier.name);
                     }
@@ -487,8 +485,8 @@ impl Resolver {
             panic!("Connector is not defined.");
         }
         let connector_ref = parser.connector.unwrap();
-        let source = parser.get_source(connector_ref.0);
-        let top = source.to_mut().tops.get_mut(&connector_ref.1).unwrap();
+        let source = parser.get_source(*connector_ref.get(0).unwrap());
+        let top = source.to_mut().tops.get_mut(&connector_ref.get(1).unwrap()).unwrap();
         let connector = top.as_connector_mut().unwrap();
         for item in connector.items.iter_mut() {
             match item.identifier.name.as_str() {

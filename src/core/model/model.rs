@@ -27,6 +27,7 @@ use crate::teon;
 #[derive(ToMut)]
 pub struct Model {
     name: &'static str,
+    ns_path: Vec<String>,
     table_name: Cow<'static, str>,
     localized_name: Cow<'static, str>,
     description: Cow<'static, str>,
@@ -76,9 +77,10 @@ pub struct Model {
 
 impl Model {
 
-    pub(crate) fn new(name: &'static str, localized_name: Option<&'static str>, description: Option<&'static str>) -> Self {
+    pub(crate) fn new(name: &'static str, ns_path: Vec<String>, localized_name: Option<&'static str>, description: Option<&'static str>) -> Self {
         Self {
             name,
+            ns_path,
             table_name: Cow::Owned(name.to_lowercase().to_plural()),
             localized_name: localized_name.map_or_else(|| Cow::Owned(name.to_sentence_case()), |n| Cow::Borrowed(n)),
             description: description.map_or_else(|| Cow::Borrowed("This model doesn't have a description."), |n| Cow::Borrowed(n)),

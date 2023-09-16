@@ -192,13 +192,13 @@ impl ASTParser {
                     constants.insert(item_id);
                 },
                 Rule::model_declaration => {
-                    let model = self.parse_model(current, source_id, item_id, diagnostics);
+                    let model = self.parse_model(current, source_id, item_id, diagnostics, vec![]);
                     tops.insert(item_id, model);
                     models.insert(item_id);
                     self.models.push(vec![source_id, item_id]);
                 },
                 Rule::enum_declaration => {
-                    let r#enum = self.parse_enum(current, source_id, item_id, diagnostics);
+                    let r#enum = self.parse_enum(current, source_id, item_id, vec![], diagnostics);
                     tops.insert(item_id, r#enum);
                     enums.insert(item_id);
                     self.enums.push(vec![source_id, item_id]);
@@ -236,7 +236,7 @@ impl ASTParser {
                 },
                 Rule::interface_enum_declaration => (),
                 Rule::namespace => {
-                    let namespace_declaration = self.parse_namespace_declaration(current, path, source_id, item_id, vec![], diagnostics);
+                    let namespace_declaration = self.parse_namespace_declaration(current, path, source_id, item_id, vec![], vec![], diagnostics);
                     tops.insert(item_id, Top::ASTNamespace(namespace_declaration));
                     namespaces.insert(item_id);
                     self.namespaces.push(vec![source_id, item_id]);
@@ -373,7 +373,7 @@ impl ASTParser {
         (token, content)
     }
 
-    fn parse_model(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> Top {
+    fn parse_model(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics, ns_path: Vec<String>) -> Top {
         let mut comment_block = None;
         let mut identifier: Option<ASTIdentifier> = None;
         let mut fields: Vec<ASTField> = vec![];
@@ -393,6 +393,7 @@ impl ASTParser {
             item_id,
             source_id,
             identifier.unwrap(),
+            ns_path,
             comment_block,
             fields,
             decorators,
@@ -427,7 +428,7 @@ impl ASTParser {
         )
     }
 
-    fn parse_enum(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> Top {
+    fn parse_enum(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, ns_path: Vec<String>, diagnostics: &mut Diagnostics) -> Top {
         let mut comment_block = None;
         let mut identifier: Option<ASTIdentifier> = None;
         let mut choices: Vec<EnumChoice> = vec![];
@@ -448,6 +449,7 @@ impl ASTParser {
             source_id,
             comment_block,
             identifier.unwrap(),
+            ns_path,
             decorators,
             choices,
             span,
@@ -579,7 +581,7 @@ impl ASTParser {
         }
     }
 
-    fn parse_namespace_declaration(&mut self, pair: Pair<'_>, path: &Path, source_id: usize, item_id: usize, parent_ids: Vec<usize>, diagnostics: &mut Diagnostics) -> ASTNamespace {
+    fn parse_namespace_declaration(&mut self, pair: Pair<'_>, path: &Path, source_id: usize, item_id: usize, parent_ids: Vec<usize>, ns_path: Vec<String>, diagnostics: &mut Diagnostics) -> ASTNamespace {
         let span = Self::parse_span(&pair);
         let mut name = None;
         let mut tops: BTreeMap<usize, Top> = btreemap![];
@@ -610,14 +612,22 @@ impl ASTParser {
                 },
                 Rule::model_declaration => {
                     let content_item_id = self.next_id();
-                    let model = self.parse_model(current, source_id, content_item_id, diagnostics);
+                    let model = self.parse_model(current, source_id, content_item_id, diagnostics, {
+                        let mut new_path = ns_path.clone();
+                        new_path.push(name.unwrap().name.clone());
+                        new_path
+                    });
                     tops.insert(content_item_id, model);
                     models.insert(content_item_id);
                     self.models.push(vec_join(source_id, &content_parent_ids, content_item_id));
                 },
                 Rule::enum_declaration => {
                     let content_item_id = self.next_id();
-                    let r#enum = self.parse_enum(current, source_id, content_item_id, diagnostics);
+                    let r#enum = self.parse_enum(current, source_id, content_item_id, {
+                        let mut new_path = ns_path.clone();
+                        new_path.push(name.unwrap().name.clone());
+                        new_path
+                    }, diagnostics);
                     tops.insert(content_item_id, r#enum);
                     enums.insert(content_item_id);
                     self.enums.push(vec_join(source_id, &content_parent_ids, content_item_id));
@@ -664,7 +674,11 @@ impl ASTParser {
                     let content_item_id = self.next_id();
                     let mut ns_content_parent_ids = parent_ids.clone();
                     ns_content_parent_ids.push(item_id);
-                    let namespace_declaration = self.parse_namespace_declaration(current, path, source_id, content_item_id, ns_content_parent_ids, diagnostics);
+                    let namespace_declaration = self.parse_namespace_declaration(current, path, source_id, content_item_id, ns_content_parent_ids, {
+                        let mut new_path = ns_path.clone();
+                        new_path.push(name.unwrap().name.clone());
+                        new_path
+                    }, diagnostics);
                     tops.insert(content_item_id, Top::ASTNamespace(namespace_declaration));
                     namespaces.insert(content_item_id);
                     self.namespaces.push(vec_join(source_id, &content_parent_ids, content_item_id));

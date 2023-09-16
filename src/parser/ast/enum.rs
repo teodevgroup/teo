@@ -9,6 +9,7 @@ pub(crate) struct ASTEnum {
     pub(crate) source_id: usize,
     pub(crate) comment_block: Option<CommentBlock>,
     pub(crate) identifier: ASTIdentifier,
+    pub(crate) ns_path: Vec<String>,
     pub(crate) decorators: Vec<ASTDecorator>,
     pub(crate) choices: Vec<EnumChoice>,
     pub(crate) span: Span,
@@ -16,7 +17,7 @@ pub(crate) struct ASTEnum {
 }
 
 impl ASTEnum {
-    pub(crate) fn new(item_id: usize, source_id: usize, comment_block: Option<CommentBlock>, identifier: ASTIdentifier, decorators: Vec<ASTDecorator>, choices: Vec<EnumChoice>, span: Span) -> Self {
+    pub(crate) fn new(item_id: usize, source_id: usize, comment_block: Option<CommentBlock>, identifier: ASTIdentifier, ns_path: Vec<String>, decorators: Vec<ASTDecorator>, choices: Vec<EnumChoice>, span: Span) -> Self {
         Self {
             id: item_id,
             source_id,
@@ -25,6 +26,7 @@ impl ASTEnum {
             decorators,
             choices,
             span,
+            ns_path,
             resolved: false,
         }
     }

@@ -11,6 +11,7 @@ pub struct ASTModel {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
     pub(crate) identifier: ASTIdentifier,
+    pub(crate) ns_path: Vec<String>,
     pub(crate) comment_block: Option<CommentBlock>,
     pub(crate) fields: Vec<ASTField>,
     pub(crate) decorators: Vec<ASTDecorator>,
@@ -22,9 +23,9 @@ pub struct ASTModel {
 }
 
 impl ASTModel {
-    pub(crate) fn new(id: usize, source_id: usize, identifier: ASTIdentifier, comment_block: Option<CommentBlock>, fields: Vec<ASTField>, decorators: Vec<ASTDecorator>, span: Span) -> Self {
+    pub(crate) fn new(id: usize, source_id: usize, identifier: ASTIdentifier, ns_path: Vec<String>, comment_block: Option<CommentBlock>, fields: Vec<ASTField>, decorators: Vec<ASTDecorator>, span: Span) -> Self {
         Self {
-            id, source_id, identifier, comment_block, fields, decorators, span, resolved: false,
+            id, source_id, identifier, comment_block, fields, ns_path, decorators, span, resolved: false,
             scalar_field_enum: vec![], scalar_field_and_cached_property_enum: vec![],
             direct_relation_enum: vec![],
         }

@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::{Debug, Formatter};
 use crate::parser::ast::action::ActionGroupDeclaration;
 use crate::parser::ast::client::ASTClient;
 use crate::parser::ast::config::ASTServer;
@@ -104,6 +105,12 @@ impl ASTNamespace {
 
     pub(crate) fn get_static_files(&self, id: usize) -> &StaticFiles {
         self.tops.get(&id).unwrap().as_static_files().unwrap()
+    }
+}
+
+impl Debug for ASTNamespace {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Namespace")
     }
 }
 

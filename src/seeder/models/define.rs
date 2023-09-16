@@ -10,7 +10,7 @@ use crate::prelude::{Graph, Value};
 
 pub(crate) fn define_seeder_models(graph: &'static Graph) {
     let group_record_model_name = "__TeoGroupRecord";
-    let mut group_record = Model::new(group_record_model_name, None, None);
+    let mut group_record = Model::new(group_record_model_name, vec![], None, None);
     group_record.set_table_name("__teogrouprecord");
     group_record.set_is_teo_internal();
     install_string_id_and_dataset(&mut group_record);
@@ -20,7 +20,7 @@ pub(crate) fn define_seeder_models(graph: &'static Graph) {
     graph.add_model(group_record, group_record_model_name);
     graph.model_mut(group_record_model_name).unwrap().finalize();
     let group_relation_model_name = "__TeoGroupRelation";
-    let mut group_relation = Model::new(group_relation_model_name, None, None);
+    let mut group_relation = Model::new(group_relation_model_name, vec![], None, None);
     group_relation.set_table_name("__teogrouprelation");
     group_relation.set_is_teo_internal();
     install_string_id_and_dataset(&mut group_relation);

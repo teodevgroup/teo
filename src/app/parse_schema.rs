@@ -97,6 +97,7 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
     for ast_enum in parser.enums() {
         let enum_def = Enum::new(
             ast_enum.identifier.name.as_str(),
+            ast_enum.ns_path.clone(),
             None,
             None,
             ast_enum.choices.iter().map(|ast_choice| {
@@ -109,6 +110,7 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
     for ast_model in parser.models() {
         let mut model = Model::new(
             ast_model.identifier.name.as_str(),
+            ast_model.ns_path.clone(),
             ast_model.comment_block.as_ref().map(|c|c.name()).flatten(),
             ast_model.comment_block.as_ref().map(|c|c.desc()).flatten());
         for ast_decorator in ast_model.decorators.iter() {
