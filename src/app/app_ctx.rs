@@ -300,6 +300,30 @@ impl AppCtx {
             })
         }
     }
+
+    pub fn r#enum(&self, path: Vec<&str>) -> Result<Option<&Enum>> {
+        match path.len() {
+            0 => Err(Error::fatal("Access enum on AppCtx with 0 length path.")),
+            1 => Ok(self.main_namespace().r#enum(*path.get(0).unwrap())),
+            _ => Ok({
+                let mut ns = self.main_namespace();
+                let mut retval = None;
+                for (index, path_item) in path.iter().enumerate() {
+                    if index == path.len() - 1 {
+                        retval = ns.r#enum(*path_item);
+                        break
+                    } else {
+                        if ns.has_child_namespace(*path_item) {
+                            ns = ns.child_namespace(*path_item).unwrap();
+                        } else {
+                            break
+                        }
+                    }
+                }
+                retval
+            })
+        }
+    }
 }
 
 static CURRENT: OnceCell<Arc<Mutex<AppCtx>>> = OnceCell::new();

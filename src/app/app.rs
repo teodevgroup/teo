@@ -18,7 +18,6 @@ use crate::core::items::function::transform::TransformItem;
 use crate::core::items::function::validate::ValidateItem;
 use crate::prelude::{UserCtx, Value};
 use crate::core::error::Error;
-use crate::core::model::model::Model;
 use super::app_ctx::AppCtx;
 use crate::core::result::Result;
 use crate::parser::diagnostics::diagnostics::Diagnostics;
