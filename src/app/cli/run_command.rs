@@ -27,13 +27,13 @@ pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
                         match &reset.datasets {
                             ResetDatasets::Auto => Some(Box::leak(Box::new(TestContext {
                                 reset_mode: ResetMode::AfterQuery,
-                                datasets: app_ctx.datasets().iter().filter(|d| d.autoseed == true).map(|d| d.clone()).collect(),
+                                datasets: app_ctx.datasets().iter().filter(|d| d.autoseed == true).map(|d| (*d).clone()).collect(),
                             }))),
                             ResetDatasets::Names(names) => {
                                 let sv: Vec<String> = names.iter().map(|v| v.to_string()).collect();
                                 Some(Box::leak(Box::new(TestContext {
                                     reset_mode: ResetMode::AfterQuery,
-                                    datasets: app_ctx.datasets().iter().filter(|d| sv.contains(&d.name)).map(|d| d.clone()).collect(),
+                                    datasets: app_ctx.datasets().iter().filter(|d| sv.contains(&d.name)).map(|d| (*d).clone()).collect(),
                                 })))
                             }
                         }
@@ -45,7 +45,7 @@ pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
             app_ctx.set_test_context(test_context)?;
             if let Some(test_context) = test_context {
                 app_ctx.connector()?.connection().await?.purge(graph).await.unwrap();
-                seed(SeedCommandAction::Seed, graph, &test_context.datasets, test_context.datasets.iter().map(|d| d.name.clone()).collect()).await?;
+                seed(SeedCommandAction::Seed, graph, test_context.datasets.iter().collect(), test_context.datasets.iter().map(|d| d.name.clone()).collect()).await?;
             } else if !serve_command.no_autoseed && !datasets.is_empty() {
                 let names: Vec<String> = datasets.iter().filter_map(|d| if d.autoseed { Some(d.name.clone()) } else { None }).collect();
                 if !names.is_empty() {

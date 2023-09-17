@@ -5,7 +5,7 @@ use crate::gen::generators::server::java::JavaEntityGenerator;
 use crate::gen::generators::server::nodejs::gen::NodeJSEntityGenerator;
 use crate::gen::generators::server::python::PythonEntityGenerator;
 use crate::gen::generators::server::rust::gen::RustEntityGenerator;
-use crate::gen::interface::server::conf::Conf;
+use crate::gen::interface::server::conf::EntityConf;
 use crate::prelude::Graph;
 use crate::core::result::Result;
 
@@ -14,7 +14,7 @@ use crate::gen::generators::server::rust::types::RustTypes;
 use crate::gen::internal::server::ctx::Ctx;
 use crate::gen::internal::server::generator::EntityGenerator;
 
-pub(crate) async fn gen(graph: &Graph, conf: &Conf) -> Result<()> {
+pub(crate) async fn gen(graph: &Graph, conf: &EntityConf) -> Result<()> {
     match conf.provider {
         ProgramLang::Rust => generate_entity_typed(RustEntityGenerator::new(), &Ctx::build(graph, conf, RustTypes::new(), RustTypes::new())).await,
         ProgramLang::Go => generate_entity_typed(GoEntityGenerator::new(), &Ctx::build(graph, conf, RustTypes::new(), RustTypes::new())).await,

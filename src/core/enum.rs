@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 #[derive(Debug, Clone)]
 pub struct EnumVariant {
     pub(crate) name: &'static str,
@@ -37,6 +39,7 @@ impl EnumVariant {
 pub struct Enum {
     pub(crate) name: &'static str,
     pub(crate) ns_path: Vec<String>,
+    pub(crate) db_name: Cow<'static, str>,
     pub(crate) localized_name: Option<String>,
     pub(crate) description: Option<String>,
     pub(crate) variants: Vec<EnumVariant>,
@@ -50,6 +53,7 @@ impl Enum {
         Self {
             name,
             ns_path,
+            db_name: if ns_path.is_empty() { Cow::Borrowed(name) } else { Cow::Owned("_".to_owned() + ns_path.join("_").as_str() + "_" + name) },
             localized_name,
             description,
             variants: choices,
@@ -67,6 +71,10 @@ impl Enum {
         } else {
             self.name()
         }
+    }
+
+    pub(crate) fn db_name(&self) -> &str {
+        self.db_name.as_ref()
     }
 
     pub(crate) fn description(&self) -> Option<&str> {

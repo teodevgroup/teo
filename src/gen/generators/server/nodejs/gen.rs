@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use askama::Template;
 
-use crate::gen::interface::server::conf::Conf;
+use crate::gen::interface::server::conf::EntityConf;
 use crate::gen::internal::server::ctx::Ctx;
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::internal::server::generator::EntityGenerator;
@@ -13,11 +13,11 @@ use crate::gen::internal::filters;
 #[template(path = "server/nodejs/index.js.jinja", escape = "none")]
 pub(self) struct NodeJSIndexJsTemplate<'a> {
     pub(self) outline: &'a EntityOutline<'a>,
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a EntityConf,
 }
 
 impl<'a> NodeJSIndexJsTemplate<'a> {
-    fn new(outline: &'a EntityOutline<'a>, conf: &'a Conf) -> Self {
+    fn new(outline: &'a EntityOutline<'a>, conf: &'a EntityConf) -> Self {
         Self {
             outline,
             conf,
@@ -29,7 +29,7 @@ impl<'a> NodeJSIndexJsTemplate<'a> {
 #[template(path = "server/nodejs/index.d.ts.jinja", escape = "none")]
 pub(self) struct NodeJSIndexDTsTemplate<'a> {
     pub(self) outline: &'a EntityOutline<'a>,
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a EntityConf,
     pub(self) has_date: bool,
     pub(self) has_decimal: bool,
     pub(self) has_object_id: bool,
@@ -37,7 +37,7 @@ pub(self) struct NodeJSIndexDTsTemplate<'a> {
 }
 
 impl<'a> NodeJSIndexDTsTemplate<'a> {
-    fn new(outline: &'a EntityOutline<'a>, conf: &'a Conf) -> Self {
+    fn new(outline: &'a EntityOutline<'a>, conf: &'a EntityConf) -> Self {
         let has_date = outline.classes.iter().find(|c| c.fields.iter().find(|f| {
             !f.kind.is_relation() &&
                 (f.input_field_type.as_ref().contains("DateOnly") ||

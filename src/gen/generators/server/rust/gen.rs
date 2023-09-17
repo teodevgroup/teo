@@ -4,7 +4,7 @@ use askama::Template;
 use maplit::btreeset;
 use tokio::fs;
 use toml_edit::{Document, value};
-use crate::gen::interface::server::conf::Conf;
+use crate::gen::interface::server::conf::EntityConf;
 use crate::gen::internal::server::ctx::Ctx;
 use crate::gen::internal::file_util::FileUtil;
 use crate::gen::internal::server::generator::EntityGenerator;
@@ -16,7 +16,7 @@ use crate::gen::internal::filters;
 #[template(path = "server/rust/mod.rs.jinja", escape = "none")]
 pub(self) struct RustMainTemplate<'a> {
     pub(self) outline: &'a EntityOutline<'a>,
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a EntityConf,
     pub(self) has_date: bool,
     pub(self) has_datetime: bool,
     pub(self) has_decimal: bool,
@@ -24,7 +24,7 @@ pub(self) struct RustMainTemplate<'a> {
 }
 
 impl<'a> RustMainTemplate<'a> {
-    fn new(outline: &'a EntityOutline<'a>, conf: &'a Conf) -> Self {
+    fn new(outline: &'a EntityOutline<'a>, conf: &'a EntityConf) -> Self {
         let has_date = outline.classes.iter().find(|c| c.fields.iter().find(|f| {
             !f.kind.is_relation() &&
                 (f.input_field_type.as_ref().contains("NaiveDate") ||

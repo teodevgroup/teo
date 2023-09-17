@@ -9,7 +9,7 @@ use crate::gen::generators::client::kotlin::types::KotlinTypes;
 use crate::gen::generators::client::swift::gen::SwiftClientGenerator;
 use crate::gen::generators::client::swift::types::SwiftTypes;
 use crate::gen::generators::client::typescript::gen::{TsClientGenerator, TsGenerationConf};
-use crate::gen::interface::client::conf::Conf;
+use crate::gen::interface::client::conf::ClientConf;
 use crate::gen::interface::client::kind::Kind;
 use crate::gen::internal::client::ctx::Ctx;
 use crate::gen::internal::client::generator::Generator;
@@ -19,7 +19,7 @@ use crate::prelude::Graph;
 use crate::core::result::Result;
 use crate::gen::generators::client::typescript::types::TsTypes;
 
-pub(crate) async fn gen(graph: &Graph, conf: &Conf) -> Result<()> {
+pub(crate) async fn gen(graph: &Graph, conf: &ClientConf) -> Result<()> {
     match conf.kind {
         Kind::TypeScript => generate_client_typed(TsClientGenerator::new(), &Ctx::build(graph, conf, TsTypes::new(TsGenerationConf::client()))).await,
         Kind::Swift => generate_client_typed(SwiftClientGenerator::new(), &Ctx::build(graph, conf, SwiftTypes::new())).await,

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex};
+use indexmap::IndexMap;
 use maplit::hashmap;
 use once_cell::sync::OnceCell;
 use crate::app::entrance::Entrance;
@@ -9,12 +10,16 @@ use crate::app::namespace::Namespace;
 use crate::app::program::Program;
 use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::callbacks::types::callback_with_user_ctx::AsyncCallbackWithUserCtx;
+use crate::core::conf::test::TestConf;
 use crate::core::connector::conf::ConnectorConf;
 use crate::core::connector::connector::Connector;
 use crate::parser::parser::parser::ASTParser;
-use crate::prelude::{Graph};
+use crate::prelude::{Graph, Middleware};
 use crate::core::result::Result;
 use crate::core::error::Error;
+use crate::gen::interface::client::conf::ClientConf;
+use crate::gen::interface::server::conf::EntityConf;
+use crate::seeder::data_set::DataSet;
 use crate::server::conf::ServerConf;
 use crate::server::test_context::TestContext;
 
@@ -208,6 +213,40 @@ impl AppCtx {
             None => Err(Error::fatal("Server conf is accessed while it's not set.")),
         }
     }
+
+    pub(crate) fn datasets(&self) -> Vec<&DataSet> {
+        self.datasets_for_namespace(self.main_namespace())
+    }
+
+    fn datasets_for_namespace(&self, namespace: &Namespace) -> Vec<&DataSet> {
+        let mut result = vec![];
+        let datasets = namespace.datasets();
+        for dataset in datasets {
+            result.push(dataset);
+        }
+        for namespace in namespace.namespaces.values() {
+            result.extend(self.datasets_for_namespace(namespace));
+        }
+        result
+    }
+
+    pub(crate) fn test_conf(&self) -> Option<&TestConf> {
+        self.main_namespace().test_conf()
+    }
+
+    // TODO: get all middlewares
+    pub(crate) fn middlewares(&self) -> &'static IndexMap<&'static str, &'static dyn Middleware> {
+        self.main_namespace().middlewares()
+    }
+
+    pub(crate) fn entities(&self) -> &Vec<EntityConf> {
+        self.main_namespace().entities()
+    }
+
+    pub(crate) fn clients(&self) -> &Vec<ClientConf> {
+        self.main_namespace().clients()
+    }
+
 }
 
 static CURRENT: OnceCell<Arc<Mutex<AppCtx>>> = OnceCell::new();

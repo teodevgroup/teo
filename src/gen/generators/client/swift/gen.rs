@@ -1,7 +1,7 @@
 use askama::Template;
 use async_trait::async_trait;
 use crate::core::result::Result;
-use crate::gen::interface::client::conf::Conf;
+use crate::gen::interface::client::conf::ClientConf;
 use crate::gen::internal::client::ctx::Ctx;
 use crate::gen::internal::client::generator::Generator;
 use crate::gen::internal::client::outline::outline::Outline;
@@ -12,20 +12,20 @@ use crate::gen::internal::filters;
 #[derive(Template)]
 #[template(path = "client/swift/readme.md.jinja", escape = "none")]
 pub(self) struct SwiftReadMeTemplate<'a> {
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a ClientConf,
 }
 
 #[derive(Template)]
 #[template(path = "client/swift/package.swift.jinja", escape = "none")]
 pub(self) struct SwiftPackageSwiftTemplate<'a> {
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a ClientConf,
 }
 
 #[derive(Template)]
 #[template(path = "client/swift/teo.swift.jinja", escape = "none")]
 pub(self) struct SwiftMainTemplate<'a> {
     pub(self) outline: &'a Outline<'a>,
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a ClientConf,
 }
 
 pub(crate) struct SwiftClientGenerator { }
@@ -36,7 +36,7 @@ impl SwiftClientGenerator {
 
 #[async_trait]
 impl Generator for SwiftClientGenerator {
-    fn module_directory_in_package(&self, conf: &Conf) -> String {
+    fn module_directory_in_package(&self, conf: &ClientConf) -> String {
         return format!("Sources/{}", conf.inferred_package_name())
     }
 

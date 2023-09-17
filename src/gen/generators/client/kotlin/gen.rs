@@ -3,7 +3,7 @@ use std::path::Path;
 use std::process::Command;
 use askama::Template;
 use async_trait::async_trait;
-use crate::gen::interface::client::conf::Conf;
+use crate::gen::interface::client::conf::ClientConf;
 use crate::gen::internal::client::ctx::Ctx;
 use crate::gen::internal::client::generator::Generator;
 use crate::gen::internal::client::outline::outline::Outline;
@@ -32,26 +32,26 @@ impl KotlinConf {
 #[derive(Template)]
 #[template(path = "client/kotlin/readme.md.jinja", escape = "none")]
 pub(self) struct KotlinReadMeTemplate<'a> {
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a ClientConf,
 }
 
 #[derive(Template)]
 #[template(path = "client/kotlin/build.gradle.kts.jinja", escape = "none")]
 pub(self) struct KotlinBuildGradleTemplate<'a> {
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a ClientConf,
 }
 
 #[derive(Template)]
 #[template(path = "client/kotlin/settings.gradle.kts.jinja", escape = "none")]
 pub(self) struct KotlinSettingsGradleTemplate<'a> {
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a ClientConf,
 }
 
 #[derive(Template)]
 #[template(path = "client/kotlin/teo.kt.jinja", escape = "none")]
 pub(self) struct KotlinMainTemplate<'a> {
     pub(self) outline: &'a Outline<'a>,
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a ClientConf,
     pub(self) kotlin: &'a KotlinConf,
 }
 
@@ -63,7 +63,7 @@ impl KotlinClientGenerator {
 
 #[async_trait]
 impl Generator for KotlinClientGenerator {
-    fn module_directory_in_package(&self, _conf: &Conf) -> String {
+    fn module_directory_in_package(&self, _conf: &ClientConf) -> String {
         "src/main/kotlin".to_owned()
     }
 

@@ -1,6 +1,6 @@
 use askama::Template;
 use async_trait::async_trait;
-use crate::gen::interface::client::conf::Conf;
+use crate::gen::interface::client::conf::ClientConf;
 use crate::gen::internal::client::ctx::Ctx;
 use crate::gen::internal::client::generator::Generator;
 use crate::gen::internal::client::outline::outline::Outline;
@@ -12,21 +12,21 @@ use crate::gen::generators::client::typescript::package_json::{generate_package_
 #[derive(Template)]
 #[template(path = "client/ts/readme.md.jinja", escape = "none")]
 pub(self) struct TsReadMeTemplate<'a> {
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a ClientConf,
 }
 
 #[derive(Template)]
 #[template(path = "client/ts/index.js.jinja", escape = "none")]
 pub(self) struct TsIndexJsTemplate<'a> {
     pub(self) outline: &'a Outline<'a>,
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a ClientConf,
 }
 
 #[derive(Template)]
 #[template(path = "client/ts/index.d.ts.jinja", escape = "none")]
 pub(self) struct TsIndexDTsTemplate<'a> {
     pub(self) outline: &'a Outline<'a>,
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a ClientConf,
     pub(self) ts_conf: &'a TsGenerationConf,
 }
 
@@ -64,7 +64,7 @@ impl TsClientGenerator {
 #[async_trait]
 impl Generator for TsClientGenerator {
 
-    fn module_directory_in_package(&self, _conf: &Conf) -> String {
+    fn module_directory_in_package(&self, _conf: &ClientConf) -> String {
         return "src".to_owned();
     }
 

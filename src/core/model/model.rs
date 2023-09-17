@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::ops::BitOr;
 use std::sync::Arc;
+use array_tool::vec::Join;
 use async_recursion::async_recursion;
 use inflector::Inflector;
 use maplit::{hashmap, hashset};
@@ -81,7 +82,7 @@ impl Model {
         Self {
             name,
             ns_path,
-            table_name: Cow::Owned(name.to_lowercase().to_plural()),
+            table_name: Cow::Owned(if ns_path.is_empty() { name.to_lowercase() } else { "_".to_owned() + &ns_path.join("_") + "_" + &name.to_lowercase() }),
             localized_name: localized_name.map_or_else(|| Cow::Owned(name.to_sentence_case()), |n| Cow::Borrowed(n)),
             description: description.map_or_else(|| Cow::Borrowed("This model doesn't have a description."), |n| Cow::Borrowed(n)),
             identity: false,
@@ -130,7 +131,11 @@ impl Model {
     }
 
     pub(crate) fn set_table_name(&mut self, table_name: &'static str) {
-        self.table_name = Cow::Borrowed(table_name);
+        if self.ns_path.is_empty() {
+            self.table_name = Cow::Borrowed(table_name);
+        } else {
+            self.table_name = Cow::Owned("_".to_owned() + &self.ns_path.join("_") + "_" + table_name);
+        }
     }
 
     pub(crate) fn set_is_teo_internal(&mut self) {

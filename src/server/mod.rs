@@ -993,7 +993,7 @@ async fn reset_after_mutation_if_needed(test_context: Option<&'static TestContex
     if let Some(test_context) = test_context {
         if test_context.reset_mode.after_mutation() {
             connection.purge(graph).await.unwrap();
-            let _ = seed(SeedCommandAction::Seed, graph, &test_context.datasets, test_context.datasets.iter().map(|d| d.name.clone()).collect()).await;
+            let _ = seed(SeedCommandAction::Seed, graph, test_context.datasets.iter().collect(), test_context.datasets.iter().map(|d| d.name.clone()).collect()).await;
         }
     }
     Ok(())
@@ -1003,7 +1003,7 @@ async fn reset_after_query_if_needed(test_context: Option<&'static TestContext>,
     if let Some(test_context) = test_context {
         if test_context.reset_mode.after_query() {
             connection.purge(graph).await.unwrap();
-            let _ = seed(SeedCommandAction::Seed, graph, &test_context.datasets, test_context.datasets.iter().map(|d| d.name.clone()).collect()).await;
+            let _ = seed(SeedCommandAction::Seed, graph, test_context.datasets.iter().collect(), test_context.datasets.iter().map(|d| d.name.clone()).collect()).await;
         }
     }
     Ok(())

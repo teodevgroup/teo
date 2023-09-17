@@ -17,7 +17,7 @@ use crate::seeder::models::group_relation::GroupRelation;
 use crate::teon;
 use crate::core::result::Result;
 
-pub(crate) async fn seed(action: SeedCommandAction, graph: &'static Graph, datasets: &'static Vec<DataSet>, names: Vec<String>) -> Result<()> {
+pub(crate) async fn seed(action: SeedCommandAction, graph: &'static Graph, datasets: Vec<&'static DataSet>, names: Vec<String>) -> Result<()> {
     let connection = AppCtx::get()?.connector()?.connection().await?;
     // seed for user
     for name in &names {
@@ -570,7 +570,7 @@ fn ordered_group<'a>(groups: &'a Vec<Group>, graph: &'static Graph) -> Vec<&'a G
     result
 }
 
-async fn remove_user_deleted_dataset_records_and_relations(datasets: &'static Vec<DataSet>, connection: Arc<dyn Connection>) {
+async fn remove_user_deleted_dataset_records_and_relations(datasets: Vec<&'static DataSet>, connection: Arc<dyn Connection>) {
     // remove seed data set records if user removed some seed data set
     let names = Value::Vec(datasets.iter().map(|d| Value::String(d.name.clone())).collect::<Vec<Value>>());
     let records_to_remove = GroupRecord::find_many(teon!({

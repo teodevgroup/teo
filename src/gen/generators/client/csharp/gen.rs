@@ -1,6 +1,6 @@
 use askama::Template;
 use async_trait::async_trait;
-use crate::gen::interface::client::conf::Conf;
+use crate::gen::interface::client::conf::ClientConf;
 use crate::gen::internal::client::ctx::Ctx;
 use crate::gen::internal::client::generator::Generator;
 use crate::gen::internal::client::outline::outline::Outline;
@@ -11,20 +11,20 @@ use crate::core::result::Result;
 #[derive(Template)]
 #[template(path = "client/csharp/readme.md.jinja", escape = "none")]
 pub(self) struct CSharpReadMeTemplate<'a> {
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a ClientConf,
 }
 
 #[derive(Template)]
 #[template(path = "client/csharp/proj.sln.jinja", escape = "none")]
 pub(self) struct CSharpSlnTemplate<'a> {
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a ClientConf,
 }
 
 #[derive(Template)]
 #[template(path = "client/csharp/teo.cs.jinja", escape = "none")]
 pub(self) struct CSharpMainTemplate<'a> {
     pub(self) outline: &'a Outline<'a>,
-    pub(self) conf: &'a Conf,
+    pub(self) conf: &'a ClientConf,
 }
 
 pub(crate) struct CSharpClientGenerator { }
@@ -35,7 +35,7 @@ impl CSharpClientGenerator {
 
 #[async_trait]
 impl Generator for CSharpClientGenerator {
-    fn module_directory_in_package(&self, _conf: &Conf) -> String {
+    fn module_directory_in_package(&self, _conf: &ClientConf) -> String {
         return "src".to_owned();
     }
 

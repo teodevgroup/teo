@@ -6,7 +6,7 @@ use crate::gen::interface::client::kind::Kind;
 ///
 /// Client configuration.
 #[derive(Clone, Debug)]
-pub struct Conf {
+pub struct ClientConf {
     pub(crate) kind: Kind,
     pub(crate) name: Option<String>,
     pub(crate) dest: PathBuf,
@@ -16,7 +16,7 @@ pub struct Conf {
     pub(crate) git_commit: bool,
 }
 
-impl Conf {
+impl ClientConf {
 
     pub(crate) fn class_name(&self) -> String {
         let first_char = self.object_name.chars().nth(0).unwrap();
