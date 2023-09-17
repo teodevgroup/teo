@@ -60,17 +60,17 @@ impl Graph {
         }
     }
 
-    pub(crate) async fn find_unique_internal<'a>(&'static self, model: &'a str, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator, connection: Arc<dyn Connection>) -> Result<Option<Object>> {
-        let model = self.model(model)?;
-        connection.find_unique(self, model, finder, mutation_mode, action, action_source).await
+    pub(crate) async fn find_unique_internal<'a>(&self, model: &'a str, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator, connection: Arc<dyn Connection>) -> Result<Option<Object>> {
+        let model = AppCtx::get().unwrap().main_namespace().model(model).unwrap();
+        connection.find_unique(model, finder, mutation_mode, action, action_source).await
     }
 
     pub(crate) async fn find_first_internal<'a>(&'static self, model: &'a str, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator, connection: Arc<dyn Connection>) -> Result<Option<Object>> {
-        let model = self.model(model)?;
+        let model = AppCtx::get().unwrap().main_namespace().model(model).unwrap();
         let mut finder = finder.as_hashmap().clone().unwrap().clone();
         finder.insert("take".to_string(), 1.into());
         let finder = Value::HashMap(finder);
-        let result = connection.find_many(self, model, &finder, mutation_mode, action, action_source).await;
+        let result = connection.find_many(model, &finder, mutation_mode, action, action_source).await;
         match result {
             Err(err) => Err(err),
             Ok(retval) => {
@@ -84,8 +84,8 @@ impl Graph {
     }
 
     pub(crate) async fn find_many_internal<'a>(&'static self, model: &'a str, finder: &'a Value, mutation_mode: bool, action: Action, action_source: Initiator, connection: Arc<dyn Connection>) -> Result<Vec<Object>> {
-        let model = self.model(model)?;
-        connection.find_many(self, model, finder, mutation_mode, action, action_source).await
+        let model = AppCtx::get().unwrap().main_namespace().model(model).unwrap();
+        connection.find_many(model, finder, mutation_mode, action, action_source).await
     }
 
     pub(crate) async fn batch<'a, F, Fut>(&'static self, model: &'a str, finder: &'a Value, action: Action, action_source: Initiator, f: F, connection: Arc<dyn Connection>) -> Result<()> where
@@ -109,18 +109,18 @@ impl Graph {
     }
 
     pub(crate) async fn count<'a>(&'static self, model: &'a str, finder: &'a Value, connection: Arc<dyn Connection>) -> Result<usize> {
-        let model = self.model(model)?;
-        connection.count(self, model, finder).await
+        let model = AppCtx::get().unwrap().main_namespace().model(model).unwrap();
+        connection.count(model, finder).await
     }
 
     pub(crate) async fn aggregate<'a>(&'static self, model: &'a str, finder: &'a Value, connection: Arc<dyn Connection>) -> Result<Value> {
-        let model = self.model(model)?;
-        connection.aggregate(self, model, finder).await
+        let model = AppCtx::get().unwrap().main_namespace().model(model).unwrap();
+        connection.aggregate(model, finder).await
     }
 
     pub(crate) async fn group_by<'a>(&'static self, model: &'a str, finder: &'a Value, connection: Arc<dyn Connection>) -> Result<Value> {
-        let model = self.model(model)?;
-        connection.group_by(self, model, finder).await
+        let model = AppCtx::get().unwrap().main_namespace().model(model).unwrap();
+        connection.group_by(model, finder).await
     }
 
     // MARK: - Create an object
@@ -162,7 +162,7 @@ impl Graph {
         AppCtx::get().unwrap().main_namespace().r#enum(name)
     }
 
-    pub(crate) fn enums(&self) -> &HashMap<&'static str, Enum> {
+    pub(crate) fn enums(&self) -> &HashMap<&str, Enum> {
         AppCtx::get().unwrap().main_namespace().enums()
     }
 

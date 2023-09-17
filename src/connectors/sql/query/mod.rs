@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use itertools::Itertools;
 use maplit::{btreemap, hashmap};
 use once_cell::sync::Lazy;
+use crate::app::app_ctx::AppCtx;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::connectors::sql::schema::value::encode::{IfIMode, SQLEscape, ToLike, ToSQLString, ToWrapped, ValueToSQLString, WrapInArray};
 use crate::connectors::sql::stmts::select::r#where::{ToWrappedSQLString, WhereClause};
@@ -11,7 +12,7 @@ use crate::connectors::sql::stmts::SQL;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::input::Input;
 use crate::core::model::model::Model;
-use crate::prelude::{Graph, Object, Value};
+use crate::prelude::{Object, Value};
 
 pub(crate) struct Query { }
 
@@ -22,11 +23,11 @@ impl Query {
     }
 
     pub(crate) fn where_from_identifier(object: &Object, dialect: SQLDialect) -> String {
-        Self::where_from_value(object.model(), object.graph(), &object.identifier(), dialect)
+        Self::where_from_value(object.model(), &object.identifier(), dialect)
     }
 
     pub(crate) fn where_from_previous_identifier(object: &Object, dialect: SQLDialect) -> String {
-        Self::where_from_value(object.model(), object.graph(), &object.previous_identifier(), dialect)
+        Self::where_from_value(object.model(), &object.previous_identifier(), dialect)
     }
 
     fn where_entry_array(
@@ -34,14 +35,13 @@ impl Query {
         r#type: &FieldType,
         optional: bool,
         value: &Value,
-        graph: &Graph,
         op: &str,
         dialect: SQLDialect,
     ) -> String {
         let arr_val = value.as_vec().unwrap();
         let mut arr: Vec<String> = Vec::new();
         for val in arr_val {
-            arr.push(val.to_sql_string(r#type, optional, graph, dialect));
+            arr.push(val.to_sql_string(r#type, optional, dialect));
         }
         Query::where_item(column_name, op, &arr.join(", ").to_wrapped())
     }
@@ -51,7 +51,6 @@ impl Query {
         r#type: &FieldType,
         optional: bool,
         value: &Value,
-        graph: &Graph,
         dialect: SQLDialect,
     ) -> String {
         let column_name = escape_wisdom(column_name, dialect);
@@ -62,83 +61,83 @@ impl Query {
                     "equals" => if value.is_null() {
                         result.push(Self::where_item(&column_name, "IS", "NULL"));
                     } else {
-                        result.push(Self::where_item(&column_name, "=", &value.to_sql_string(r#type, optional, graph, dialect)));
+                        result.push(Self::where_item(&column_name, "=", &value.to_sql_string(r#type, optional, dialect)));
                     }
                     "not" => if value.is_null() {
                         result.push(Self::where_item(&column_name, "IS NOT", "NULL"));
                     } else {
-                        result.push(Self::where_item(&column_name, "<>", &value.to_sql_string(r#type, optional, graph, dialect)));
+                        result.push(Self::where_item(&column_name, "<>", &value.to_sql_string(r#type, optional, dialect)));
                     }
                     "gt" => {
-                        result.push(Self::where_item(&column_name, ">", &value.to_sql_string(r#type, false, graph, dialect)));
+                        result.push(Self::where_item(&column_name, ">", &value.to_sql_string(r#type, false, dialect)));
                     }
                     "gte" => {
-                        result.push(Self::where_item(&column_name, ">=", &value.to_sql_string(r#type, false, graph, dialect)));
+                        result.push(Self::where_item(&column_name, ">=", &value.to_sql_string(r#type, false, dialect)));
                     }
                     "lt" => {
-                        result.push(Self::where_item(&column_name, "<", &value.to_sql_string(r#type, false, graph, dialect)));
+                        result.push(Self::where_item(&column_name, "<", &value.to_sql_string(r#type, false, dialect)));
                     }
                     "lte" => {
-                        result.push(Self::where_item(&column_name, "<=", &value.to_sql_string(r#type, false, graph, dialect)));
+                        result.push(Self::where_item(&column_name, "<=", &value.to_sql_string(r#type, false, dialect)));
                     }
                     "in" => {
                         if !value.as_vec().unwrap().is_empty() {
-                            result.push(Self::where_entry_array(&column_name, r#type, optional, value, graph, "IN", dialect));
+                            result.push(Self::where_entry_array(&column_name, r#type, optional, value, "IN", dialect));
                         }
                     }
                     "notIn" => {
                         if !value.as_vec().unwrap().is_empty() {
-                            result.push(Self::where_entry_array(&column_name, r#type, optional, value, graph, "NOT IN", dialect));
+                            result.push(Self::where_entry_array(&column_name, r#type, optional, value, "NOT IN", dialect));
                         }
                     }
                     "contains" => {
                         let i_mode = Input::has_i_mode(map);
-                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "LIKE", &value.to_sql_string(r#type, false, graph, dialect).to_like(true, true).to_i_mode(i_mode)));
+                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "LIKE", &value.to_sql_string(r#type, false, dialect).to_like(true, true).to_i_mode(i_mode)));
                     }
                     "startsWith" => {
                         let i_mode = Input::has_i_mode(map);
-                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "LIKE", &value.to_sql_string(r#type, false, graph, dialect).to_like(false, true).to_i_mode(i_mode)));
+                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "LIKE", &value.to_sql_string(r#type, false, dialect).to_like(false, true).to_i_mode(i_mode)));
                     }
                     "endsWith" => {
                         let i_mode = Input::has_i_mode(map);
-                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "LIKE", &value.to_sql_string(r#type, false, graph, dialect).to_like(true, false).to_i_mode(i_mode)));
+                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "LIKE", &value.to_sql_string(r#type, false, dialect).to_like(true, false).to_i_mode(i_mode)));
                     }
                     "matches" => {
                         let i_mode = Input::has_i_mode(map);
-                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "REGEXP", &value.to_sql_string(r#type, false, graph, dialect).to_i_mode(i_mode)));
+                        result.push(Self::where_item(&column_name.to_i_mode(i_mode), "REGEXP", &value.to_sql_string(r#type, false, dialect).to_i_mode(i_mode)));
                     }
                     "mode" => { }
                     "has" => {
                         let element_type = r#type.element_field().unwrap();
-                        result.push(Self::where_item(&column_name, "@>", &value.to_sql_string_array_arg(element_type.field_type(), element_type.is_optional(), graph, dialect).wrap_in_array()));
+                        result.push(Self::where_item(&column_name, "@>", &value.to_sql_string_array_arg(element_type.field_type(), element_type.is_optional(), dialect).wrap_in_array()));
                     }
                     "hasEvery" => {
-                        result.push(Self::where_item(&column_name, "@>", &value.to_sql_string_array_arg(r#type, false, graph, dialect)));
+                        result.push(Self::where_item(&column_name, "@>", &value.to_sql_string_array_arg(r#type, false, dialect)));
                     }
                     "hasSome" => {
-                        result.push(Self::where_item(&column_name, "&&", &value.to_sql_string_array_arg(r#type, false, graph, dialect)));
+                        result.push(Self::where_item(&column_name, "&&", &value.to_sql_string_array_arg(r#type, false, dialect)));
                     }
                     "isEmpty" => {
                         result.push(Self::where_item(&format!("ARRAY_LENGTH({})", &column_name), "=", "0"));
                     }
                     "length" => {
-                        result.push(Self::where_item(&format!("ARRAY_LENGTH({})", &column_name), "=", &value.to_sql_string(&FieldType::I64, false, graph, dialect)));
+                        result.push(Self::where_item(&format!("ARRAY_LENGTH({})", &column_name), "=", &value.to_sql_string(&FieldType::I64, false, dialect)));
                     }
                     "_count" => {
-                        result.push(Self::where_entry_item(&format!("COUNT({})", &column_name), &FieldType::I64, false, value, graph, dialect));
+                        result.push(Self::where_entry_item(&format!("COUNT({})", &column_name), &FieldType::I64, false, value, dialect));
                     }
                     "_avg" | "_sum" => {
-                        result.push(Self::where_entry_item(&format!("{}({})", key[1..].to_uppercase(), &column_name), &FieldType::F64, true, value, graph, dialect));
+                        result.push(Self::where_entry_item(&format!("{}({})", key[1..].to_uppercase(), &column_name), &FieldType::F64, true, value, dialect));
                     }
                     "_min" | "_max" => {
-                        result.push(Self::where_entry_item(&format!("{}({})", key[1..].to_uppercase(), &column_name), r#type, optional, value, graph, dialect));
+                        result.push(Self::where_entry_item(&format!("{}({})", key[1..].to_uppercase(), &column_name), r#type, optional, value, dialect));
                     }
                     _ => panic!("Unhandled key."),
                 }
             }
             And(result).to_wrapped_string(dialect)
         } else {
-            Query::where_item(column_name, "=", &value.to_sql_string(r#type, optional, graph, dialect))
+            Query::where_item(column_name, "=", &value.to_sql_string(r#type, optional, dialect))
         }
     }
 
@@ -147,13 +146,12 @@ impl Query {
         field_type: &FieldType,
         optional: bool,
         value: &Value,
-        graph: &Graph,
         dialect: SQLDialect,
     ) -> String {
-        Self::where_entry_item(column_name, field_type, optional, value, graph, dialect)
+        Self::where_entry_item(column_name, field_type, optional, value, dialect)
     }
 
-    pub(crate) fn where_from_value(model: &Model, _graph: &Graph, identifier: &Value, dialect: SQLDialect) -> String {
+    pub(crate) fn where_from_value(model: &Model, identifier: &Value, dialect: SQLDialect) -> String {
         let mut retval: Vec<String> = vec![];
         for (key, value) in identifier.as_hashmap().unwrap() {
             let field = model.field(key).unwrap();
@@ -164,20 +162,20 @@ impl Query {
         And(retval).to_string(dialect)
     }
 
-    pub(crate) fn r#where(model: &Model, graph: &Graph, r#where: &Value, dialect: SQLDialect, table_alias: Option<&str>) -> String {
+    pub(crate) fn r#where(model: &Model, r#where: &Value, dialect: SQLDialect, table_alias: Option<&str>) -> String {
         let r#where = r#where.as_hashmap().unwrap();
         let mut retval: Vec<String> = vec![];
         for (key, value) in r#where.iter() {
             if key == "AND" {
-                let inner = WhereClause::And(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, graph, w, dialect, table_alias)).collect()).to_string(dialect);
+                let inner = WhereClause::And(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, w, dialect, table_alias)).collect()).to_string(dialect);
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);
             } else if key == "OR" {
-                let inner = WhereClause::Or(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, graph, w, dialect, table_alias)).collect()).to_string(dialect);
+                let inner = WhereClause::Or(value.as_vec().unwrap().iter().map(|w| Self::r#where(model, w, dialect, table_alias)).collect()).to_string(dialect);
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);
             } else if key == "NOT" {
-                let inner = WhereClause::Not(Self::r#where(model, graph, value, dialect, table_alias)).to_string(dialect);
+                let inner = WhereClause::Not(Self::r#where(model, value, dialect, table_alias)).to_string(dialect);
                 let val = "(".to_owned() + &inner + ")";
                 retval.push(val);
             } else {
@@ -190,7 +188,7 @@ impl Query {
                     } else {
                         Cow::Borrowed(column_name)
                     };
-                    let where_entry = Query::where_entry(&entry_column_name, field.field_type(), optional, value, graph, dialect);
+                    let where_entry = Query::where_entry(&entry_column_name, field.field_type(), optional, value, dialect);
                     retval.push(where_entry);
                 } else if let Some(relation) = model.relation(key) {
                     let has_join_table = relation.has_join_table();
@@ -198,6 +196,7 @@ impl Query {
                     let id_columns_string = id_columns.iter().map(|k| k.escape(dialect)).collect::<Vec<String>>().join(",").to_wrapped();
                     let id_columns_prefixed_string = id_columns.iter().map(|s| format!("t.{}", s)).collect::<Vec<String>>();
                     let id_columns_prefixed = id_columns_prefixed_string.iter().map(|s| s.as_str()).collect::<Vec<&str>>();
+                    let graph = AppCtx::get().unwrap().graph();
                     let _join_columns = if has_join_table {
                         let (_m, r) = graph.through_relation(relation);
                         Some(r.references().iter().map(|k| model.field(k).unwrap().column_name()).collect::<Vec<&str>>())
@@ -246,7 +245,7 @@ impl Query {
                                 format!("t.{} IS NOT NULL", f.escape(dialect))
                             }).collect::<Vec<String>>().join(" AND ")
                         };
-                        let mut inner_where = Query::r#where(opposite_model, graph, value, dialect, Some("j"));
+                        let mut inner_where = Query::r#where(opposite_model, value, dialect, Some("j"));
                         if key.as_str() == "every" {
                             inner_where = Not(inner_where.to_wrapped()).to_string(dialect).to_wrapped();
                         }
@@ -277,7 +276,6 @@ impl Query {
 
     pub(crate) fn order_by(
         model: &Model,
-        _graph: &Graph,
         order_by: &Value,
         _dialect: SQLDialect,
         negative_take: bool,
@@ -304,7 +302,6 @@ impl Query {
 
     pub(crate) fn build_for_count(
         model: &Model,
-        graph: &Graph,
         value: &Value,
         dialect: SQLDialect,
         additional_where: Option<String>,
@@ -312,23 +309,22 @@ impl Query {
         join_table_results: Option<Vec<String>>,
         force_negative_take: bool,
     ) -> String {
-        format!("SELECT COUNT(*) FROM ({}) AS _", Self::build(model, graph, value, dialect, additional_where, additional_left_join, join_table_results, force_negative_take))
+        format!("SELECT COUNT(*) FROM ({}) AS _", Self::build(model, value, dialect, additional_where, additional_left_join, join_table_results, force_negative_take))
     }
 
     pub(crate) fn build_for_group_by(
         model: &Model,
-        graph: &Graph,
         value: &Value,
         dialect: SQLDialect,
     ) -> String {
-        let aggregate = Self::build_for_aggregate(model, graph, value, dialect);
+        let aggregate = Self::build_for_aggregate(model, value, dialect);
         let map = value.as_hashmap().unwrap();
         let by = map.get("by").unwrap().as_vec().unwrap().iter().map(|v| {
             let field_name = v.as_str().unwrap();
             model.field(field_name).unwrap().column_name()
         }).collect::<Vec<&str>>().join(",");
         let having = if let Some(having) = map.get("having") {
-            let inner = Query::r#where(model, graph, having, dialect, None);
+            let inner = Query::r#where(model, having, dialect, None);
             " HAVING (".to_owned() + &inner + ")"
         } else {
             "".to_owned()
@@ -338,7 +334,6 @@ impl Query {
 
     pub(crate) fn build_for_aggregate(
         model: &Model,
-        graph: &Graph,
         value: &Value,
         dialect: SQLDialect,
     ) -> String {
@@ -377,12 +372,11 @@ impl Query {
                 results.push(model.field(field_name).unwrap().column_name().to_string());
             }
         }
-        format!("SELECT {} FROM ({}) AS _", results.join(","), Self::build(model, graph, value, dialect, None, None, None, false))
+        format!("SELECT {} FROM ({}) AS _", results.join(","), Self::build(model, value, dialect, None, None, None, false))
     }
 
     pub(crate) fn build(
         model: &Model,
-        graph: &Graph,
         value: &Value,
         dialect: SQLDialect,
         additional_where: Option<String>,
@@ -431,7 +425,7 @@ impl Query {
                 }
             }).collect::<Vec<String>>();
             let column_refs: Vec<&str> = columns.iter().map(|k| k.as_str()).collect();
-            let sub_where = Query::r#where(model, graph, cursor, dialect, None);
+            let sub_where = Query::r#where(model, cursor, dialect, None);
             let mut query = SQL::select(Some(&column_refs), &table_name);
             query.r#where(sub_where);
             Cow::Owned(format!("{}, ({}) AS c", &table_name, &query.to_string(dialect)))
@@ -441,7 +435,7 @@ impl Query {
         let mut stmt = SQL::select(if columns.is_empty() { None } else { Some(&column_refs) }, from.as_ref());
         if let Some(r#where) = r#where {
             if !r#where.as_hashmap().unwrap().is_empty() {
-                stmt.r#where(Query::r#where(model, graph, r#where, dialect, None));
+                stmt.r#where(Query::r#where(model, r#where, dialect, None));
             }
         }
         if let Some(additional_where) = additional_where {
@@ -467,10 +461,10 @@ impl Query {
             stmt.left_join(additional_left_join);
         }
         if let Some(order_bys) = order_by {
-            stmt.order_by(Query::order_by(model, graph, order_bys, dialect, negative_take));
+            stmt.order_by(Query::order_by(model, order_bys, dialect, negative_take));
         } else if negative_take {
             let val = Self::default_desc_order(model);
-            stmt.order_by(Query::order_by(model, graph, &val, dialect, false));
+            stmt.order_by(Query::order_by(model, &val, dialect, false));
         }
         if page_size.is_some() && page_number.is_some() {
             let skip: u64 = ((page_number.unwrap().as_i64().unwrap() - 1) * page_size.unwrap().as_i64().unwrap()) as u64;

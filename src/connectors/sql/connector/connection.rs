@@ -7,6 +7,7 @@ use quaint_forked::error::ErrorKind::UniqueConstraintViolation;
 use quaint_forked::pooled::PooledConnection;
 use quaint_forked::connector::owned_transaction::OwnedTransaction;
 use quaint_forked::connector::start_owned_transaction;
+use crate::app::app_ctx::AppCtx;
 use crate::core::model::model::Model;
 use crate::connectors::sql::execution::Execution;
 use crate::connectors::sql::migration::migrate::SQLMigration;
@@ -23,7 +24,7 @@ use crate::core::error::Error;
 use crate::core::field::r#type::FieldTypeOwner;
 use crate::core::input::Input;
 use crate::core::result::Result;
-use crate::prelude::{Graph, Object, Value};
+use crate::prelude::{Object, Value};
 use crate::teon;
 
 #[derive(Clone)]
@@ -81,7 +82,7 @@ impl SQLConnection {
                     let columns = result_set.columns().clone();
                     let result = result_set.into_iter().next();
                     if result.is_some() {
-                        let value = Execution::row_to_value(model, object.graph(), &result.unwrap(), &columns, self.dialect());
+                        let value = Execution::row_to_value(model, &result.unwrap(), &columns, self.dialect());
                         for (k, v) in value.as_hashmap().unwrap() {
                             object.set_value(k, v.clone())?;
                         }
@@ -153,7 +154,7 @@ impl SQLConnection {
                 return Err(Error::unknown_database_write_error());
             }
         }
-        let result = Execution::query(self.conn(), model, object.graph(), &teon!({"where": identifier, "take": 1}), self.dialect()).await?;
+        let result = Execution::query(self.conn(), model, &teon!({"where": identifier, "take": 1}), self.dialect()).await?;
         if result.is_empty() {
             Err(Error::object_not_found())
         } else {
@@ -193,8 +194,8 @@ impl Connection for SQLConnection {
         Ok(())
     }
 
-    async fn purge(&self, graph: &Graph) -> Result<()> {
-        for model in graph.models() {
+    async fn purge(&self) -> Result<()> {
+        for model in AppCtx::get().unwrap().models() {
             let escape = self.dialect().escape();
             self.conn().execute(QuaintQuery::from(format!("DELETE FROM {escape}{}{escape}", model.table_name()))).await.unwrap();
         }
@@ -243,8 +244,8 @@ impl Connection for SQLConnection {
         }
     }
 
-    async fn find_unique<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
-        let objects = Execution::query_objects(self.conn(), model, graph, finder, self.dialect(), action, action_source.clone(), Arc::new(self.clone())).await?;
+    async fn find_unique<'a>(&'a self, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
+        let objects = Execution::query_objects(self.conn(), model, finder, self.dialect(), action, action_source.clone(), Arc::new(self.clone())).await?;
         if objects.is_empty() {
             Ok(None)
         } else {
@@ -252,23 +253,23 @@ impl Connection for SQLConnection {
         }
     }
 
-    async fn find_many<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
-        Execution::query_objects(self.conn(), model, graph, finder, self.dialect(), action, action_source, Arc::new(self.clone())).await
+    async fn find_many<'a>(&'a self, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
+        Execution::query_objects(self.conn(), model, finder, self.dialect(), action, action_source, Arc::new(self.clone())).await
     }
 
-    async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize> {
-        match Execution::query_count(self.conn(), model, graph, finder, self.dialect()).await {
+    async fn count(&self, model: &Model, finder: &Value) -> Result<usize> {
+        match Execution::query_count(self.conn(), model, finder, self.dialect()).await {
             Ok(c) => Ok(c as usize),
             Err(e) => Err(e),
         }
     }
 
-    async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value> {
-        Execution::query_aggregate(self.conn(), model, graph, finder, self.dialect()).await
+    async fn aggregate(&self, model: &Model, finder: &Value) -> Result<Value> {
+        Execution::query_aggregate(self.conn(), model, finder, self.dialect()).await
     }
 
-    async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value> {
-        Execution::query_group_by(self.conn(), model, graph, finder, self.dialect()).await
+    async fn group_by(&self, model: &Model, finder: &Value) -> Result<Value> {
+        Execution::query_group_by(self.conn(), model, finder, self.dialect()).await
     }
 
     async fn transaction(&self) -> Result<Arc<dyn Connection>> {

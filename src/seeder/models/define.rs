@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use crate::app::app_ctx::AppCtx;
 use crate::core::field::field::{Field, Sort};
 use crate::core::field::optionality::Optionality;
 use crate::core::field::r#type::FieldType;
@@ -6,9 +7,9 @@ use crate::core::model::model::Model;
 use crate::core::model::index::{ModelIndex, ModelIndexItem, ModelIndexType};
 use crate::core::items::string::generation::cuid::CUIDItem;
 use crate::core::pipeline::Pipeline;
-use crate::prelude::{Graph, Value};
+use crate::prelude::Value;
 
-pub(crate) fn define_seeder_models(graph: &'static Graph) {
+pub(crate) fn define_seeder_models() {
     let group_record_model_name = "__TeoGroupRecord";
     let mut group_record = Model::new(group_record_model_name, vec![], None, None);
     group_record.set_table_name("__teogrouprecord");
@@ -17,8 +18,8 @@ pub(crate) fn define_seeder_models(graph: &'static Graph) {
     install_plain_required_string_field(&mut group_record, "group");
     install_plain_required_string_field(&mut group_record, "name");
     install_plain_required_string_field(&mut group_record, "record");
-    graph.add_model(group_record, group_record_model_name);
-    graph.model_mut(group_record_model_name).unwrap().finalize();
+    AppCtx::get().unwrap().main_namespace_mut().add_model(group_record, group_record_model_name).unwrap();
+    AppCtx::get().unwrap().main_namespace_mut().model_mut(group_record_model_name).unwrap().finalize();
     let group_relation_model_name = "__TeoGroupRelation";
     let mut group_relation = Model::new(group_relation_model_name, vec![], None, None);
     group_relation.set_table_name("__teogrouprelation");
@@ -30,8 +31,8 @@ pub(crate) fn define_seeder_models(graph: &'static Graph) {
     install_plain_required_string_field(&mut group_relation, "groupB");
     install_plain_optional_string_field(&mut group_relation, "relationB");
     install_plain_required_string_field(&mut group_relation, "nameB");
-    graph.add_model(group_relation, group_relation_model_name);
-    graph.model_mut(group_relation_model_name).unwrap().finalize();
+    AppCtx::get().unwrap().main_namespace_mut().add_model(group_relation, group_relation_model_name).unwrap();
+    AppCtx::get().unwrap().main_namespace_mut().model_mut(group_relation_model_name).unwrap().finalize();
 }
 
 fn install_string_id_and_dataset(m: &mut Model) {

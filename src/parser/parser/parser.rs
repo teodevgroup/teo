@@ -3,7 +3,7 @@ use snailquote::unescape;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::fs;
-use itertools::Itertools;
+//use itertools::Itertools;
 use maplit::{btreemap, btreeset, hashmap};
 use pest::Parser as PestParser;
 use pest::pratt_parser::PrattParser;

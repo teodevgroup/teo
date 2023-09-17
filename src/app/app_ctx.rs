@@ -141,11 +141,11 @@ impl AppCtx {
         &mut AppCtx::get_mut().unwrap().parser.as_mut()
     }
 
-    pub(crate) fn main_namespace(&self) -> &Namespace {
+    pub(crate) fn main_namespace(&'static self) -> &'static Namespace {
         &self.main_namespace
     }
 
-    pub(crate) fn main_namespace_mut(&self) -> &mut Namespace {
+    pub(crate) fn main_namespace_mut(&'static self) -> &'static mut Namespace {
         &mut AppCtx::get_mut().unwrap().main_namespace
     }
 

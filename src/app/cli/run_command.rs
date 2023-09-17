@@ -44,7 +44,7 @@ pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
             } else { None };
             app_ctx.set_test_context(test_context)?;
             if let Some(test_context) = test_context {
-                app_ctx.connector()?.connection().await?.purge(graph).await.unwrap();
+                app_ctx.connector()?.connection().await?.purge().await.unwrap();
                 seed(SeedCommandAction::Seed, graph, test_context.datasets.iter().collect(), test_context.datasets.iter().map(|d| d.name.clone()).collect()).await?;
             } else if !serve_command.no_autoseed && !datasets.is_empty() {
                 let names: Vec<String> = datasets.iter().filter_map(|d| if d.autoseed { Some(d.name.clone()) } else { None }).collect();
@@ -119,7 +119,7 @@ pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
             seed(seed_command.action, graph, datasets, names).await?;
         }
         CLICommand::Purge(_) => {
-            purge(graph).await.unwrap()
+            purge().await.unwrap()
         }
     }
     Ok(())

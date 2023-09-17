@@ -3,7 +3,7 @@ use chrono::{NaiveDate, Utc, DateTime, SecondsFormat};
 use itertools::Itertools;
 use crate::connectors::sql::schema::dialect::SQLDialect;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
-use crate::prelude::{Graph, Value};
+use crate::prelude::Value;
 
 pub trait ToSQLString {
     fn to_string(&self, dialect: SQLDialect) -> String;
@@ -20,12 +20,12 @@ impl TypeOrNull for &str {
 }
 
 pub(crate) trait ValueToSQLString {
-    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph, dialect: SQLDialect) -> String;
-    fn to_sql_string_array_arg<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph, dialect: SQLDialect) -> String;
+    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, dialect: SQLDialect) -> String;
+    fn to_sql_string_array_arg<'a>(&self, r#type: &FieldType, optional: bool, dialect: SQLDialect) -> String;
 }
 
 impl ValueToSQLString for Value {
-    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph, dialect: SQLDialect) -> String {
+    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, dialect: SQLDialect) -> String {
         if optional {
             if self.is_null() {
                 return "NULL".to_owned()
@@ -49,7 +49,7 @@ impl ValueToSQLString for Value {
                 let val = self.as_vec().unwrap();
                 let mut result: Vec<String> = vec![];
                 for (_i, v) in val.iter().enumerate() {
-                    result.push(v.to_sql_string(element_field.field_type(), element_field.is_optional(), graph, dialect));
+                    result.push(v.to_sql_string(element_field.field_type(), element_field.is_optional(), dialect));
                 }
                 result.join(", ").wrap_in_array()
             }
@@ -60,7 +60,7 @@ impl ValueToSQLString for Value {
         }
     }
 
-    fn to_sql_string_array_arg<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph, dialect: SQLDialect) -> String {
+    fn to_sql_string_array_arg<'a>(&self, r#type: &FieldType, optional: bool, dialect: SQLDialect) -> String {
         if optional {
             if self.is_null() {
                 return "NULL".to_owned()
@@ -84,7 +84,7 @@ impl ValueToSQLString for Value {
                 let val = self.as_vec().unwrap();
                 let mut result: Vec<String> = vec![];
                 for (_i, v) in val.iter().enumerate() {
-                    result.push(v.to_sql_string_array_arg(element_field.field_type(), element_field.is_optional(), graph, dialect));
+                    result.push(v.to_sql_string_array_arg(element_field.field_type(), element_field.is_optional(), dialect));
                 }
                 result.join(",").wrap_in_array()
             }
@@ -97,12 +97,12 @@ impl ValueToSQLString for Value {
 }
 
 impl ValueToSQLString for &Value {
-    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph, dialect: SQLDialect) -> String {
-        (*self).to_sql_string(r#type, optional, graph, dialect)
+    fn to_sql_string<'a>(&self, r#type: &FieldType, optional: bool, dialect: SQLDialect) -> String {
+        (*self).to_sql_string(r#type, optional, dialect)
     }
 
-    fn to_sql_string_array_arg<'a>(&self, r#type: &FieldType, optional: bool, graph: &Graph, dialect: SQLDialect) -> String {
-        (*self).to_sql_string_array_arg(r#type, optional, graph, dialect)
+    fn to_sql_string_array_arg<'a>(&self, r#type: &FieldType, optional: bool, dialect: SQLDialect) -> String {
+        (*self).to_sql_string_array_arg(r#type, optional, dialect)
     }
 }
 

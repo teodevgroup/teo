@@ -45,20 +45,20 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
     let parser = app_ctx.parser();
     // connector conf
     let connector = parser.connector()?;
-    app_ctx.set_connector_conf(Box::new(ConnectorConf {
+    app_ctx.main_namespace_mut().set_connector_conf(Box::new(ConnectorConf {
         provider: connector.provider.unwrap(),
         url: connector.url.as_ref().unwrap().as_str(),
     }));
     // server conf
     let server = parser.server()?;
-    app_ctx.set_server_conf(Box::new(ServerConf {
+    app_ctx.main_namespace_mut().set_server_conf(Box::new(ServerConf {
         bind: server.bind.as_ref().unwrap().clone(),
         jwt_secret: server.jwt_secret.as_ref().map(|s| s.as_str()),
         path_prefix: server.path_prefix.as_ref().map(|s| s.as_str()),
     }));
     // debug conf
     if let Some(debug) = parser.debug() {
-        app_ctx.set_debug_conf(Box::new(DebugConf {
+        app_ctx.main_namespace_mut().set_debug_conf(Box::new(DebugConf {
             log_queries: debug.log_queries,
             log_migrations: debug.log_migrations,
             log_seed_records: debug.log_seed_records,
@@ -66,7 +66,7 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
     }
     // test conf
     if let Some(_test) = parser.test() {
-        app_ctx.set_test_conf(Box::new(TestConf {
+        app_ctx.main_namespace_mut().set_test_conf(Box::new(TestConf {
             reset: Some(Reset {
                 mode: ResetMode::AfterQuery,
                 datasets: ResetDatasets::Auto,
@@ -75,7 +75,7 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
     }
     // entities
     for entity in parser.entities() {
-        app_ctx.entities_mut().push(EntityConf {
+        app_ctx.main_namespace_mut().entities_mut().push(EntityConf {
             name: entity.identifier.as_ref().map(|i| i.name.clone()),
             provider: entity.provider.unwrap(),
             dest: entity.dest.clone().unwrap(),
@@ -83,7 +83,7 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
     }
     // clients
     for client in parser.clients() {
-        app_ctx.clients_mut().push(ClientConf {
+        app_ctx.main_namespace_mut().clients_mut().push(ClientConf {
             name: client.identifier.as_ref().map(|i| i.name.clone()),
             kind: client.provider.unwrap(),
             dest: client.dest.clone().unwrap(),
@@ -104,7 +104,7 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
                 EnumVariant::new(ast_choice.identifier.name.as_str(), None, None)
             }).collect()
         );
-        graph.add_enum(enum_def);
+        AppCtx::get().unwrap().main_namespace_mut().add_enum(enum_def);
     }
     // models
     for ast_model in parser.models() {
@@ -292,14 +292,14 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
                 ASTFieldClass::Unresolved => unreachable!()
             }
         }
-        graph.add_model(model, ast_model.identifier.name.as_str());
-        graph.model_mut(ast_model.identifier.name.as_str())?.finalize();
+        AppCtx::get().unwrap().main_namespace_mut().add_model(model, ast_model.identifier.name.as_str()).unwrap();
+        AppCtx::get().unwrap().main_namespace_mut().model_mut(ast_model.identifier.name.as_str()).unwrap().finalize();
     }
-    define_seeder_models(app_ctx.graph());
+    define_seeder_models();
     // datasets
     for data_set_ref in parser.data_sets.clone() {
-        let source = parser.get_source(data_set_ref.0);
-        let parser_data_set = source.get_data_set(data_set_ref.1);
+        let source = parser.get_source(*data_set_ref.get(0).unwrap());
+        let parser_data_set = source.get_data_set(*data_set_ref.get(1).unwrap());
         let seeder_data_set = DataSet {
             name: parser_data_set.identifier.name.clone(),
             groups: parser_data_set.groups.iter().map(|g| Group {
@@ -312,7 +312,7 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
             autoseed: parser_data_set.auto_seed,
             notrack: parser_data_set.notrack,
         };
-        app_ctx.datasets_mut().push(seeder_data_set);
+        app_ctx.main_namespace_mut().datasets_mut().push(seeder_data_set);
     }
     // // interfaces
     // for interface_dec in parser.interfaces() {
@@ -329,7 +329,7 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
         for action_dec in action_group_dec.actions.iter() {
             let name = action_dec.identifier.name.clone();
             let name_str = Box::leak(Box::new(name.clone()));
-            app_ctx.add_custom_action_declaration(group_str, name_str, CustomActionDefinition {
+            app_ctx.main_namespace_mut().add_custom_action_declaration(group_str, name_str, CustomActionDefinition {
                 group: group.clone(),
                 name,
                 input: interface_ref_from(&action_dec.input_type),
@@ -373,7 +373,7 @@ fn install_types_to_field_owner<F>(name: &str, field: &mut F, enums: &HashMap<&'
             if let Some(enum_def) = enums.get(name) {
                 field.set_field_type(FieldType::Enum(enum_def.clone()))
             } else {
-                let source = AppCtx::get().unwrap().parser().unwrap().get_source(ast_field.source_id);
+                let source = AppCtx::get().unwrap().parser().get_source(ast_field.source_id);
                 diagnostics.insert(DiagnosticsError::new(ast_field.r#type.span, "Unknown type specified", source.path.clone()));
                 printer::print_diagnostics_and_exit(diagnostics, true)
             }

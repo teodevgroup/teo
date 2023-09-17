@@ -3,15 +3,14 @@ use std::borrow::Cow;
 #[derive(Debug, Clone)]
 pub struct EnumVariant {
     pub(crate) name: &'static str,
-    pub(crate) ns_path: Vec<String>,
     pub(crate) localized_name: Option<String>,
     pub(crate) description: Option<String>,
 }
 
 impl EnumVariant {
 
-    pub(crate) fn new(name: &'static str, ns_path: Vec<String>, localized_name: Option<String>, description: Option<String>) -> Self {
-        Self { name, ns_path, localized_name, description }
+    pub(crate) fn new(name: &'static str, localized_name: Option<String>, description: Option<String>) -> Self {
+        Self { name, localized_name, description }
     }
 
     pub(crate) fn name(&self) -> &str {

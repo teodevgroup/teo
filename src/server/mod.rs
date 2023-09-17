@@ -16,7 +16,7 @@ use actix_multipart::Multipart;
 use actix_web::{App, FromRequest, HttpRequest, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::DefaultHeaders;
-use futures_util::FutureExt;
+//use futures_util::FutureExt;
 use chrono::{DateTime, Duration, Local, Utc};
 use colored::Colorize;
 use futures_util::StreamExt;
@@ -992,7 +992,7 @@ pub(crate) async fn serve(
 async fn reset_after_mutation_if_needed(test_context: Option<&'static TestContext>, graph: &'static Graph, connection: Arc<dyn Connection>) -> Result<()> {
     if let Some(test_context) = test_context {
         if test_context.reset_mode.after_mutation() {
-            connection.purge(graph).await.unwrap();
+            connection.purge().await.unwrap();
             let _ = seed(SeedCommandAction::Seed, graph, test_context.datasets.iter().collect(), test_context.datasets.iter().map(|d| d.name.clone()).collect()).await;
         }
     }
@@ -1002,7 +1002,7 @@ async fn reset_after_mutation_if_needed(test_context: Option<&'static TestContex
 async fn reset_after_query_if_needed(test_context: Option<&'static TestContext>, graph: &'static Graph, connection: Arc<dyn Connection>) -> Result<()> {
     if let Some(test_context) = test_context {
         if test_context.reset_mode.after_query() {
-            connection.purge(graph).await.unwrap();
+            connection.purge().await.unwrap();
             let _ = seed(SeedCommandAction::Seed, graph, test_context.datasets.iter().collect(), test_context.datasets.iter().map(|d| d.name.clone()).collect()).await;
         }
     }

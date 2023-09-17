@@ -2,12 +2,13 @@ use std::collections::{HashMap, HashSet};
 use bson::{Bson, doc, Document, Regex as BsonRegex};
 
 use maplit::hashmap;
+use crate::app::app_ctx::AppCtx;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::input::Input;
 use crate::core::model::model::Model;
 use crate::core::relation::Relation;
 use crate::core::result::Result;
-use crate::prelude::{Graph, Value};
+use crate::prelude::Value;
 use crate::teon;
 
 pub(crate) struct Aggregation { }
@@ -57,8 +58,8 @@ impl Aggregation {
         }
     }
 
-    pub(crate) fn build_for_aggregate(model: &Model, graph: &Graph, value: &Value) -> Result<Vec<Document>> {
-        let mut retval = Self::build(model, graph, value)?;
+    pub(crate) fn build_for_aggregate(model: &Model, value: &Value) -> Result<Vec<Document>> {
+        let mut retval = Self::build(model, value)?;
         let by = value.get("by");
         let having = value.get("having");
         let mut aggregates = teon!({});
@@ -117,7 +118,7 @@ impl Aggregation {
                 let dbk = model.field(k).unwrap().column_name();
                 for (g, matcher) in o.as_hashmap().unwrap() {
                     let g = g.strip_prefix("_").unwrap();
-                    let matcher_bson = Self::build_where_item(model, graph, &FieldType::F64, true, matcher)?;
+                    let matcher_bson = Self::build_where_item(model, &FieldType::F64, true, matcher)?;
                     having_match.insert(format!("_having_{g}.{dbk}"), matcher_bson);
                     let having_group = format!("_having_{g}");
                     if !having_unset.contains(&having_group) {
@@ -142,13 +143,13 @@ impl Aggregation {
         Ok(retval)
     }
 
-    pub(crate) fn build_for_count(model: &Model, graph: &Graph, value: &Value) -> Result<Vec<Document>> {
-        let mut retval = Self::build(model, graph, value)?;
+    pub(crate) fn build_for_count(model: &Model, value: &Value) -> Result<Vec<Document>> {
+        let mut retval = Self::build(model, value)?;
         retval.push(doc! {"$count": "count"});
         Ok(retval)
     }
 
-    pub(crate) fn build(model: &Model, graph: &Graph, value: &Value) -> Result<Vec<Document>> {
+    pub(crate) fn build(model: &Model, value: &Value) -> Result<Vec<Document>> {
         let mut retval: Vec<Document> = vec![];
         let r#where = value.get("where");
         let order_by = value.get("orderBy");
@@ -172,19 +173,19 @@ impl Aggregation {
                 }
             }
             let cursor_where_key = if order_asc { "gte" } else { "lte" };
-            let cursor_additional_where = Self::build_where(model, graph, &teon!({cursor_key: {cursor_where_key: cursor_value}}));
+            let cursor_additional_where = Self::build_where(model, &teon!({cursor_key: {cursor_where_key: cursor_value}}));
             Some(cursor_additional_where?)
         } else {
             None
         };
         // build `$lookup`s for relation where
         if let Some(r#where) = r#where {
-            let lookups_for_relation_where = Self::build_lookups_for_relation_where(model, graph, r#where)?;
+            let lookups_for_relation_where = Self::build_lookups_for_relation_where(model, r#where)?;
             retval.extend(lookups_for_relation_where)
         }
         // $match
         if let Some(r#where) = r#where {
-            let r#match = Self::build_where(model, graph, r#where)?;
+            let r#match = Self::build_where(model, r#where)?;
             if !r#match.is_empty() {
                 if let Some(cursor_where_additions) = cursor_where_additions {
                     retval.push(doc!{"$match": {"$and": [r#match, cursor_where_additions]}});
@@ -248,7 +249,7 @@ impl Aggregation {
                 group_id.insert(val, format!("${val}"));
             }
             let _empty = teon!({});
-            let mut group_data = Self::build_select(model, graph, select.unwrap_or(&teon!({})), Some(distinct))?;
+            let mut group_data = Self::build_select(model, select.unwrap_or(&teon!({})), Some(distinct))?;
             group_data.insert("_id", group_id);
             retval.push(doc!{"$group": &group_data});
             if group_data.get("__id").is_some() {
@@ -272,7 +273,7 @@ impl Aggregation {
             // $project
             if let Some(select) = select {
                 if !select.as_hashmap().unwrap().is_empty() {
-                    let select_input = Self::build_select(model, graph, select, distinct)?;
+                    let select_input = Self::build_select(model, select, distinct)?;
                     if !select_input.is_empty() {
                         retval.push(doc!{"$project": select_input})
                     }
@@ -281,7 +282,7 @@ impl Aggregation {
         }
         // $lookup
         if let Some(include) = include {
-            let mut lookups = Self::build_lookups(model, graph, include)?;
+            let mut lookups = Self::build_lookups(model, include)?;
             if !lookups.is_empty() {
                 retval.append(&mut lookups);
             }
@@ -289,7 +290,7 @@ impl Aggregation {
         Ok(retval)
     }
 
-    fn build_select(model: &Model, _graph: &Graph, select: &Value, distinct: Option<&Value>) -> Result<Document> {
+    fn build_select(model: &Model, select: &Value, distinct: Option<&Value>) -> Result<Document> {
         let map = select.as_hashmap().unwrap();
         let true_keys: Vec<&str> = map.iter().filter(|(_k, v)| v.as_bool().unwrap() == true).map(|(k, _)| k.as_str()).collect();
         let false_keys: Vec<&str> = map.iter().filter(|(_k, v)| v.as_bool().unwrap() == false).map(|(k, _)| k.as_str()).collect();
@@ -341,7 +342,7 @@ impl Aggregation {
         Ok(retval)
     }
 
-    fn build_where(model: &Model, graph: &Graph, value: &Value) -> Result<Document> {
+    fn build_where(model: &Model, value: &Value) -> Result<Document> {
         let value_map = value.as_hashmap().unwrap();
         let mut retval = doc!{};
         for (key, value) in value_map.iter() {
@@ -350,28 +351,28 @@ impl Aggregation {
                 "AND" => {
                     let mut vals: Vec<Document> = vec![];
                     for val in value.as_vec().unwrap() {
-                        vals.push(Self::build_where(model, graph, val)?);
+                        vals.push(Self::build_where(model, val)?);
                     }
                     retval.insert("$and", vals);
                 }
                 "OR" => {
                     let mut vals: Vec<Document> = vec![];
                     for val in value.as_vec().unwrap() {
-                        vals.push(Self::build_where(model, graph, val)?);
+                        vals.push(Self::build_where(model, val)?);
                     }
                     retval.insert("$or", vals);
                 }
                 "NOT" => {
-                    retval.insert("$nor", vec![Self::build_where(model, graph, value)?]);
+                    retval.insert("$nor", vec![Self::build_where(model, value)?]);
                 }
                 _ => {
                     if let Some(field) = model.field(key) {
                         let column_name = field.column_name();
-                        retval.insert(column_name, Self::build_where_item(model, graph, field.field_type(), field.is_optional(), value)?);
+                        retval.insert(column_name, Self::build_where_item(model, field.field_type(), field.is_optional(), value)?);
                     } else if let Some(relation) = model.relation(key) {
-                        let relation_model = graph.model(relation.model()).unwrap();
+                        let relation_model = AppCtx::get().unwrap().graph().model(relation.model()).unwrap();
                         let (command, inner_where) = Input::key_value(value.as_hashmap().unwrap());
-                        let _inner_where = Self::build_where(relation_model, graph, inner_where)?;
+                        let _inner_where = Self::build_where(relation_model, inner_where)?;
                         match command {
                             "none" | "isNot" => {
                                 retval.insert(key, doc!{"$size": 0});
@@ -391,7 +392,7 @@ impl Aggregation {
         Ok(retval)
     }
 
-    fn build_where_item(_model: &Model, _graph: &Graph, _type: &FieldType, _optional: bool, value: &Value) -> Result<Bson> {
+    fn build_where_item(_model: &Model, _type: &FieldType, _optional: bool, value: &Value) -> Result<Bson> {
         if let Some(map) = value.as_hashmap() {
             Ok(Bson::Document(map.iter().filter(|(k, _)| k.as_str() != "mode").map(|(k, v)| {
                 let k = k.as_str();
@@ -457,25 +458,25 @@ impl Aggregation {
         }.to_owned())
     }
 
-    fn build_lookups(model: &Model, graph: &Graph, include: &Value) -> Result<Vec<Document>> {
+    fn build_lookups(model: &Model, include: &Value) -> Result<Vec<Document>> {
         let include = include.as_hashmap().unwrap();
         let mut retval: Vec<Document> = vec![];
         for (key, value) in include {
             let relation = model.relation(key).unwrap();
-            let _relation_model = graph.model(relation.model()).unwrap();
             if (value.is_bool() && (value.as_bool().unwrap() == true)) || (value.is_hashmap()) {
                 if relation.has_join_table() {
-                    retval.extend(Self::build_lookup_with_join_table(model, graph, key, relation, value)?)
+                    retval.extend(Self::build_lookup_with_join_table(model, key, relation, value)?)
                 } else {
-                    retval.extend(Self::build_lookup_without_join_table(model, graph, key, relation, value)?)
+                    retval.extend(Self::build_lookup_without_join_table(model, key, relation, value)?)
                 }
             }
         }
         Ok(retval)
     }
 
-    fn build_lookup_with_join_table(model: &Model, graph: &Graph, _key: &str, relation: &Relation, value: &Value) -> Result<Vec<Document>> {
+    fn build_lookup_with_join_table(model: &Model, _key: &str, relation: &Relation, value: &Value) -> Result<Vec<Document>> {
         let mut retval = vec![];
+        let graph = AppCtx::get().unwrap().graph();
         let join_model = graph.model(relation.through().unwrap()).unwrap();
         let local_relation_on_join_table = join_model.relation(relation.local()).unwrap();
         let foreign_relation_on_join_table = join_model.relation(relation.foreign()).unwrap();
@@ -498,7 +499,7 @@ impl Aggregation {
             inner_eq_values.push(doc! {"$eq": [format!("${foreign_column_name}"), format!("$${jt_column_name}")]});
         }
         let mut original_inner_pipeline = if value.is_hashmap() {
-            Self::build(opposite_model, graph, value)?
+            Self::build(opposite_model, value)?
         } else {
             vec![]
         };
@@ -643,10 +644,11 @@ impl Aggregation {
         Ok(retval)
     }
 
-    fn build_lookup_without_join_table(model: &Model, graph: &Graph, key: &str, relation: &Relation, value: &Value) -> Result<Vec<Document>> {
+    fn build_lookup_without_join_table(model: &Model, key: &str, relation: &Relation, value: &Value) -> Result<Vec<Document>> {
         let mut retval = vec![];
         let mut let_value = doc!{};
         let mut eq_values: Vec<Document> = vec![];
+        let graph = AppCtx::get().unwrap().graph();
         let (opposite_model, _opposite_relation) = graph.opposite_relation(relation);
         for (field, reference) in relation.iter() {
             let _field_name = model.field(field).unwrap().name();
@@ -657,7 +659,7 @@ impl Aggregation {
             eq_values.push(doc!{"$eq": [format!("${reference_column_name}"), format!("$${reference_name}")]});
         }
         let mut inner_pipeline = if value.is_hashmap() {
-            Self::build(opposite_model, graph, value)?
+            Self::build(opposite_model, value)?
         } else {
             vec![]
         };
@@ -710,7 +712,7 @@ impl Aggregation {
         Ok(retval)
     }
 
-    fn build_lookups_for_relation_where(model: &Model, graph: &Graph, r#where: &Value) -> Result<Vec<Document>> {
+    fn build_lookups_for_relation_where(model: &Model, r#where: &Value) -> Result<Vec<Document>> {
         let r#where = r#where.as_hashmap().unwrap();
         let mut include_input = HashMap::new();
         for (key, value) in r#where.iter() {
@@ -741,7 +743,7 @@ impl Aggregation {
             }
         }
         Ok(if !include_input.is_empty() {
-            Self::build_lookups(model, graph, &Value::HashMap(include_input))?
+            Self::build_lookups(model, &Value::HashMap(include_input))?
         } else {
             vec![]
         })

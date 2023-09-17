@@ -1,12 +1,13 @@
 use std::collections::{BTreeMap, HashMap};
 use bson::Bson;
 use key_path::KeyPath;
+use crate::app::app_ctx::AppCtx;
 
 use crate::core::error::Error;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
 use crate::core::model::model::Model;
 use crate::core::result::Result;
-use crate::prelude::{Graph, Value};
+use crate::prelude::Value;
 
 pub(crate) struct BsonCoder { }
 
@@ -32,7 +33,7 @@ impl BsonCoder {
         }
     }
 
-    pub(crate) fn decode<'a>(model: &Model, graph: &Graph, r#type: &FieldType, optional: bool, bson_value: &Bson, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
+    pub(crate) fn decode<'a>(model: &Model, r#type: &FieldType, optional: bool, bson_value: &Bson, path: impl AsRef<KeyPath<'a>>) -> Result<Value> {
         if bson_value.as_null().is_some() && optional {
             return Ok(Value::Null);
         }
@@ -78,6 +79,7 @@ impl BsonCoder {
             FieldType::Enum(enum_def) => match bson_value.as_str() {
                 Some(val) => {
                     let enum_name = enum_def.name();
+                    let graph = AppCtx::get().unwrap().graph();
                     if graph.enum_values(enum_name).unwrap().contains(&val.to_string()) {
                         Ok(Value::String(val.to_owned()))
                     } else {
@@ -90,7 +92,7 @@ impl BsonCoder {
                 match bson_value.as_array() {
                     Some(arr) => Ok(Value::Vec(arr.iter().enumerate().map(|(i, v)| {
                         let path = path + i;
-                        Self::decode(model, graph, inner_field.field_type(), inner_field.is_optional(), v, path)
+                        Self::decode(model, inner_field.field_type(), inner_field.is_optional(), v, path)
                     }).collect::<Result<Vec<Value>>>()?)),
                     None => Err(Error::record_decoding_error(model.name(), path, "array")),
                 }
@@ -99,7 +101,7 @@ impl BsonCoder {
                 match bson_value.as_document() {
                     Some(doc) => Ok(Value::HashMap(doc.iter().map(|(k, v)| {
                         let path = path + k;
-                        Ok((k.to_owned(), Self::decode(model, graph, inner_field.field_type(), inner_field.is_optional(), v, path)?))
+                        Ok((k.to_owned(), Self::decode(model, inner_field.field_type(), inner_field.is_optional(), v, path)?))
                     }).collect::<Result<HashMap<String, Value>>>()?)),
                     None => Err(Error::record_decoding_error(model.name(), path, "document")),
                 }
@@ -108,7 +110,7 @@ impl BsonCoder {
                 match bson_value.as_document() {
                     Some(doc) => Ok(Value::BTreeMap(doc.iter().map(|(k, v)| {
                         let path = path + k;
-                        Ok((k.to_owned(), Self::decode(model, graph, inner_field.field_type(), inner_field.is_optional(), v, path)?))
+                        Ok((k.to_owned(), Self::decode(model, inner_field.field_type(), inner_field.is_optional(), v, path)?))
                     }).collect::<Result<BTreeMap<String, Value>>>()?)),
                     None => Err(Error::record_decoding_error(model.name(), path, "document")),
                 }

@@ -248,7 +248,7 @@ impl Namespace {
         self.enums().get(name)
     }
 
-    pub(crate) fn model(&self, name: &'static str) -> Option<&Model> {
+    pub(crate) fn model(&self, name: &'static str) -> Option<&'static Model> {
         self.models.get(name)
     }
 

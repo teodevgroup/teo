@@ -10,13 +10,13 @@ use mongodb::{Database, Collection, IndexModel};
 use mongodb::error::{ErrorKind, WriteFailure, Error as MongoDBError};
 use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use regex::Regex;
+use crate::app::app_ctx::AppCtx;
 use crate::connectors::mongodb::aggregation::Aggregation;
 use crate::connectors::mongodb::bson::coder::BsonCoder;
 use crate::core::action::{Action, FIND, MANY, NESTED, SINGLE};
 use crate::core::connector::connection::Connection;
 use crate::core::initiator::Initiator;
 use crate::core::object::Object;
-use crate::core::graph::Graph;
 use crate::core::model::model::{Model};
 use crate::core::model::index::{ModelIndex, ModelIndexType};
 use crate::core::teon::Value;
@@ -47,7 +47,7 @@ impl MongoDBConnection {
                 let object_key = &object_field.name;
                 let field_type = object_field.field_type();
                 let bson_value = document.get(key).unwrap();
-                let value_result = BsonCoder::decode(object.model(), object.graph(), field_type, object_field.is_optional(), bson_value, path![]);
+                let value_result = BsonCoder::decode(object.model(), field_type, object_field.is_optional(), bson_value, path![]);
                 match value_result {
                     Ok(value) => {
                         object.inner.value_map.lock().unwrap().insert(object_key.to_string(), value);
@@ -124,8 +124,8 @@ impl MongoDBConnection {
         }
     }
 
-    async fn aggregate_or_group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Vec<Value>> {
-        let aggregate_input = Aggregation::build_for_aggregate(model, graph, finder)?;
+    async fn aggregate_or_group_by(&self, model: &Model, finder: &Value) -> Result<Vec<Value>> {
+        let aggregate_input = Aggregation::build_for_aggregate(model, finder)?;
         let col = self.get_collection(model);
         let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
@@ -162,7 +162,7 @@ impl MongoDBConnection {
                     // group by field
                     let field = model.field(g).unwrap();
                     let val = if o.as_null().is_some() { Value::Null } else {
-                        BsonCoder::decode(model, graph, field.field_type(), true, o, path![])?
+                        BsonCoder::decode(model, field.field_type(), true, o, path![])?
                     };
                     let json_val = val;
                     retval.as_hashmap_mut().unwrap().insert(g.to_string(), json_val);
@@ -201,7 +201,7 @@ impl MongoDBConnection {
                 for key in auto_keys {
                     let field = model.field(key).unwrap();
                     if field.column_name() == "_id" {
-                        let new_value = BsonCoder::decode(model, object.graph(), field.field_type(), field.is_optional(), &id, path![]).unwrap();
+                        let new_value = BsonCoder::decode(model, field.field_type(), field.is_optional(), &id, path![]).unwrap();
                         object.set_value(field.name(), new_value)?;
                     }
                 }
@@ -293,7 +293,7 @@ impl MongoDBConnection {
                     for key in object.inner.atomic_updater_map.lock().unwrap().keys() {
                         let bson_new_val = updated_document.as_ref().unwrap().get(key).unwrap();
                         let field = object.model().field(key).unwrap();
-                        let field_value = BsonCoder::decode(model, object.graph(), field.field_type(), field.is_optional(), bson_new_val, path![])?;
+                        let field_value = BsonCoder::decode(model, field.field_type(), field.is_optional(), bson_new_val, path![])?;
                         object.inner.value_map.lock().unwrap().insert(key.to_string(), field_value);
                     }
                 }
@@ -389,8 +389,8 @@ impl Connection for MongoDBConnection {
         Ok(())
     }
 
-    async fn purge(&self, graph: &Graph) -> Result<()> {
-        for model in graph.models() {
+    async fn purge(&self) -> Result<()> {
+        for model in AppCtx::get().unwrap().models() {
             let col = self.get_collection(model);
             col.drop(None).await.unwrap();
         }
@@ -431,10 +431,10 @@ impl Connection for MongoDBConnection {
         }
     }
 
-    async fn find_unique<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
+    async fn find_unique<'a>(&'a self, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Option<Object>> {
         let select = finder.get("select");
         let include = finder.get("include");
-        let aggregate_input = Aggregation::build(model, graph, finder)?;
+        let aggregate_input = Aggregation::build(model, finder)?;
         let col = self.get_collection(model);
         let cur = col.aggregate(aggregate_input, None).await;
         if cur.is_err() {
@@ -446,7 +446,7 @@ impl Connection for MongoDBConnection {
             Ok(None)
         } else {
             for doc in results {
-                let obj = graph.new_object(model.name(), action, action_source.clone(), Arc::new(self.clone()))?;
+                let obj = AppCtx::get().unwrap().graph().new_object(model.name(), action, action_source.clone(), Arc::new(self.clone()))?;
                 self.clone().document_to_object(&doc.unwrap(), &obj, select, include)?;
                 return Ok(Some(obj));
             }
@@ -454,10 +454,10 @@ impl Connection for MongoDBConnection {
         }
     }
 
-    async fn find_many<'a>(&'a self, graph: &'static Graph, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
+    async fn find_many<'a>(&'a self, model: &'static Model, finder: &'a Value, _mutation_mode: bool, action: Action, action_source: Initiator) -> Result<Vec<Object>> {
         let select = finder.get("select");
         let include = finder.get("include");
-        let aggregate_input = Aggregation::build(model, graph, finder)?;
+        let aggregate_input = Aggregation::build(model, finder)?;
         let reverse = Input::has_negative_take(finder);
         let col = self.get_collection(model);
         // println!("see aggregate input: {:?}", aggregate_input);
@@ -470,7 +470,7 @@ impl Connection for MongoDBConnection {
         let mut result: Vec<Object> = vec![];
         let results: Vec<std::result::Result<Document, MongoDBError>> = cur.collect().await;
         for doc in results {
-            let obj = graph.new_object(model.name(), action, action_source.clone(), Arc::new(self.clone()))?;
+            let obj = AppCtx::get().unwrap().graph().new_object(model.name(), action, action_source.clone(), Arc::new(self.clone()))?;
             match self.clone().document_to_object(&doc.unwrap(), &obj, select, include) {
                 Ok(_) => {
                     if reverse {
@@ -487,8 +487,8 @@ impl Connection for MongoDBConnection {
         Ok(result)
     }
 
-    async fn count(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<usize> {
-        let input = Aggregation::build_for_count(model, graph, finder)?;
+    async fn count(&self, model: &Model, finder: &Value) -> Result<usize> {
+        let input = Aggregation::build_for_count(model, finder)?;
         let col = self.get_collection(model);
         let cur = col.aggregate(input, None).await;
         if cur.is_err() {
@@ -510,8 +510,8 @@ impl Connection for MongoDBConnection {
         }
     }
 
-    async fn aggregate(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value> {
-        let results = self.aggregate_or_group_by(graph, model, finder).await?;
+    async fn aggregate(&self, model: &Model, finder: &Value) -> Result<Value> {
+        let results = self.aggregate_or_group_by(model, finder).await?;
         if results.is_empty() {
             // there is no record
             let mut retval = teon!({});
@@ -528,8 +528,8 @@ impl Connection for MongoDBConnection {
         }
     }
 
-    async fn group_by(&self, graph: &Graph, model: &Model, finder: &Value) -> Result<Value> {
-        Ok(Value::Vec(self.aggregate_or_group_by(graph, model, finder).await?))
+    async fn group_by(&self, model: &Model, finder: &Value) -> Result<Value> {
+        Ok(Value::Vec(self.aggregate_or_group_by(model, finder).await?))
     }
 
     async fn transaction(&self) -> Result<Arc<dyn Connection>> {
