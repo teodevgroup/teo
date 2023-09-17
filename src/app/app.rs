@@ -18,24 +18,25 @@ use crate::core::items::function::transform::TransformItem;
 use crate::core::items::function::validate::ValidateItem;
 use crate::prelude::{UserCtx, Value};
 use crate::core::error::Error;
+use crate::core::model::model::Model;
 use super::app_ctx::AppCtx;
 use crate::core::result::Result;
 use crate::parser::diagnostics::diagnostics::Diagnostics;
 
-pub struct App(usize);
+pub struct App;
 
 impl App {
 
     pub fn new() -> Result<Self> {
         if AppCtx::create() {
-            Ok(Self(0))
+            Ok(Self)
         } else {
             Err(Error::fatal("A running Teo application cannot have more than 1 app instance."))
         }
     }
 
     pub fn namespace(&self, name: &'static str) -> &mut Namespace {
-        AppCtx::get().unwrap().main_namespace_mut().child_namespace(name)
+        AppCtx::get().unwrap().main_namespace_mut().child_namespace_mut(name)
     }
 
     pub fn middleware<F>(&self, name: &'static str, f: F) -> Result<()> where

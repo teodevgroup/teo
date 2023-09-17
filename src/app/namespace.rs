@@ -223,11 +223,15 @@ impl Namespace {
         self.custom_action_declaration().get(group).unwrap().get(name).unwrap()
     }
 
-    pub(crate) fn has_child_namespace(&self, name: &'static str) -> bool {
+    pub(crate) fn has_child_namespace(&self, name: &str) -> bool {
         self.namespaces.contains_key(name)
     }
 
-    pub(crate) fn child_namespace(&mut self, name: &'static str) -> &mut Namespace {
+    pub(crate) fn child_namespace(&self, name: &str) -> Option<&Namespace> {
+        self.namespaces.get(name)
+    }
+
+    pub(crate) fn child_namespace_mut(&mut self, name: &'static str) -> &mut Namespace {
         if !self.has_child_namespace(name) {
             self.namespaces.insert(name, Namespace::new());
         }

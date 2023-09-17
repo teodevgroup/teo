@@ -137,7 +137,7 @@ impl AppCtx {
         AppCtx::get_mut().unwrap().parser.as_mut()
     }
 
-    pub(crate) fn main_namespace(&'static self) -> &'static Namespace {
+    pub(crate) fn main_namespace(&self) -> &Namespace {
         &self.main_namespace
     }
 
@@ -275,6 +275,30 @@ impl AppCtx {
             result.extend(self.enums_for_namespace(namespace));
         }
         result
+    }
+
+    pub fn model(&self, path: Vec<&str>) -> Result<Option<&Model>> {
+        match path.len() {
+            0 => Err(Error::fatal("Access model on AppCtx with 0 length path.")),
+            1 => Ok(self.main_namespace().model(*path.get(0).unwrap())),
+            _ => Ok({
+                let mut ns = self.main_namespace();
+                let mut retval = None;
+                for (index, path_item) in path.iter().enumerate() {
+                    if index == path.len() - 1 {
+                        retval = ns.model(*path_item);
+                        break
+                    } else {
+                        if ns.has_child_namespace(*path_item) {
+                            ns = ns.child_namespace(*path_item).unwrap();
+                        } else {
+                            break
+                        }
+                    }
+                }
+                retval
+            })
+        }
     }
 }
 
