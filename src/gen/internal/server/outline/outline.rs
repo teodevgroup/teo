@@ -18,7 +18,7 @@ pub(in crate::gen) struct EntityOutline<'a> {
 }
 
 impl<'a> EntityOutline<'a> {
-    pub(in crate::gen) fn new<L>(graph: &'a Graph, lookup: L) -> Self where L: ServerTypeLookup {
+    pub(in crate::gen) fn new<L>(_graph: &'a Graph, lookup: L) -> Self where L: ServerTypeLookup {
         EntityOutline {
             classes: AppCtx::get().unwrap().models().iter().filter_map(|m| {
                 if m.is_teo_internal() {

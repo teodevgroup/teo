@@ -87,7 +87,7 @@ impl Into<HttpResponse> for Res {
                     "error": inner
                 })))
             }
-            Res::File(path_buf) => {
+            Res::File(_path_buf) => {
                 unreachable!()
             }
         }

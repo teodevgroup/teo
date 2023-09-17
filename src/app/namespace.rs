@@ -109,7 +109,7 @@ impl Namespace {
     }
 
     pub(crate) fn server_conf(&self) -> Option<&ServerConf> {
-        self.server_conf.map(|c| c.as_ref())
+        self.server_conf.as_ref().map(|c| c.as_ref())
     }
 
     pub fn models(&self) -> &HashMap<&'static str, Model> {
@@ -149,7 +149,7 @@ impl Namespace {
     }
 
     pub(crate) fn connector_conf(&self) -> Option<&ConnectorConf> {
-        self.connector_conf.map(|c| c.as_ref())
+        self.connector_conf.as_ref().map(|c| c.as_ref())
     }
 
     pub(crate) fn add_middleware<F>(&mut self, name: &'static str, f: F) -> Result<()> where
@@ -248,7 +248,7 @@ impl Namespace {
         self.enums().get(name)
     }
 
-    pub(crate) fn model(&self, name: &str) -> Option<&'static Model> {
+    pub(crate) fn model(&self, name: &str) -> Option<&Model> {
         self.models.get(name)
     }
 

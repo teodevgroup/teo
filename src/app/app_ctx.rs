@@ -48,30 +48,26 @@ impl Debug for AppCtx {
 impl AppCtx {
 
     pub fn get() -> Result<&'static AppCtx> {
-        unsafe {
-            match CURRENT.get() {
-                Some(ctx) => Ok({
-                    let retval = ctx.lock().unwrap();
-                    unsafe {
-                        &*(retval.deref() as * const AppCtx)
-                    }
-                }),
-                None => Err(Error::fatal("App ctx is accessed when app is not created.")),
-            }
+        match CURRENT.get() {
+            Some(ctx) => Ok({
+                let retval = ctx.lock().unwrap();
+                unsafe {
+                    &*(retval.deref() as * const AppCtx)
+                }
+            }),
+            None => Err(Error::fatal("App ctx is accessed when app is not created.")),
         }
     }
 
     pub(crate) fn get_mut() -> Result<&'static mut AppCtx> {
-        unsafe {
-            match CURRENT.get() {
-                Some(ctx) => Ok({
-                    let mut retval = ctx.lock().unwrap();
-                    unsafe {
-                        &mut *(retval.deref_mut() as * mut AppCtx)
-                    }
-                }),
-                None => Err(Error::fatal("App ctx is mutably accessed when app is not created.")),
-            }
+        match CURRENT.get() {
+            Some(ctx) => Ok({
+                let mut retval = ctx.lock().unwrap();
+                unsafe {
+                    &mut *(retval.deref_mut() as * mut AppCtx)
+                }
+            }),
+            None => Err(Error::fatal("App ctx is mutably accessed when app is not created.")),
         }
     }
 
