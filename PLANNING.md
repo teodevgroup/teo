@@ -475,6 +475,7 @@
 - Rewrite app loading process
 - Namespaces
 - Remove function installers **[DONE]**
+- Table names are lower-cased but not plural anymore **[DONE]**
 - Rewrite decorators loading and pipeline items loading 
 
 #### 0.0.59
