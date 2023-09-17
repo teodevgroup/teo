@@ -49,7 +49,7 @@ use crate::parser::ast::interface_type::InterfaceType;
 use crate::parser::ast::r#type::Arity;
 use crate::parser::ast::static_files::StaticFiles;
 use crate::parser::diagnostics::diagnostics::Diagnostics;
-use crate::parser::std::pipeline::global::{GlobalFunctionInstallers, GlobalPipelineInstallers};
+use crate::parser::std::pipeline::global::{GlobalPipelineInstallers};
 
 pub(crate) struct Resolver {
     pub(crate) global_model_decorators: GlobalModelDecorators,
@@ -57,7 +57,6 @@ pub(crate) struct Resolver {
     pub(crate) global_relation_decorators: GlobalRelationDecorators,
     pub(crate) global_property_decorators: GlobalPropertyDecorators,
     pub(crate) global_pipeline_installers: GlobalPipelineInstallers,
-    pub(crate) global_function_installers: GlobalFunctionInstallers,
 }
 
 impl Resolver {
@@ -69,7 +68,6 @@ impl Resolver {
             global_relation_decorators: GlobalRelationDecorators::new(),
             global_property_decorators: GlobalPropertyDecorators::new(),
             global_pipeline_installers: GlobalPipelineInstallers::new(),
-            global_function_installers: GlobalFunctionInstallers::new(),
         }
     }
 
@@ -81,7 +79,6 @@ impl Resolver {
             global_relation_decorators: GlobalRelationDecorators::new(),
             global_property_decorators: GlobalPropertyDecorators::new(),
             global_pipeline_installers: GlobalPipelineInstallers::new(),
-            global_function_installers: GlobalFunctionInstallers::new(),
         }
     }
 
@@ -384,20 +381,10 @@ impl Resolver {
                 if let Some(installer) = installer {
                     items.push(ASTPipelineItem {
                         installer: Some(installer.clone()),
-                        function_installer: None,
                         args: vec![]
                     })
                 } else {
-                    let installer = (&self.global_function_installers).get(&identifier.name);
-                    if let Some(installer) = installer {
-                        items.push(ASTPipelineItem {
-                            installer: None,
-                            function_installer: Some(installer.clone()),
-                            args: vec![]
-                        })
-                    } else {
-                        panic!("Cannot find pipeline item named '{}'.", identifier.name);
-                    }
+                    panic!("Cannot find pipeline item named '{}'.", identifier.name);
                 }
             }
             ExpressionKind::Unit(unit) => {
@@ -408,7 +395,7 @@ impl Resolver {
                             if let Some(previous_identifier) = previous_identifier {
                                 let installer = (&self.global_pipeline_installers).get(&previous_identifier.name);
                                 if let Some(installer) = installer {
-                                    items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, args: vec![]});
+                                    items.push(ASTPipelineItem { installer: Some(installer.clone()), args: vec![]});
                                 } else {
                                     panic!("Cannot find pipeline item named '{}'.", identifier.name);
                                 }
@@ -427,14 +414,9 @@ impl Resolver {
                             }
                             let installer = (&self.global_pipeline_installers).get(&previous_identifier.unwrap().name);
                             if let Some(installer) = installer {
-                                items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, args: argument_list.arguments().clone()});
+                                items.push(ASTPipelineItem { installer: Some(installer.clone()), args: argument_list.arguments().clone()});
                             } else {
-                                let installer = (&self.global_function_installers).get(&previous_identifier.unwrap().name);
-                                if let Some(installer) = installer {
-                                    items.push(ASTPipelineItem { installer: None, function_installer: Some(installer.clone()), args: argument_list.arguments().clone()});
-                                } else {
-                                    panic!("Cannot find pipeline item named '{}'.", previous_identifier.unwrap().name);
-                                }
+                                panic!("Cannot find pipeline item named '{}'.", previous_identifier.unwrap().name);
                             }
                             previous_identifier = None;
                         }
@@ -444,7 +426,7 @@ impl Resolver {
                 if let Some(previous_identifier) = previous_identifier {
                     let installer = (&self.global_pipeline_installers).get(&previous_identifier.name);
                     if let Some(installer) = installer {
-                        items.push(ASTPipelineItem { installer: Some(installer.clone()), function_installer: None, args: vec![]});
+                        items.push(ASTPipelineItem { installer: Some(installer.clone()), args: vec![]});
                     } else {
                         panic!("Cannot find pipeline item named '{}'.", previous_identifier.name);
                     }

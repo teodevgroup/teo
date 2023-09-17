@@ -17,6 +17,8 @@ use crate::parser::parser::parser::ASTParser;
 use crate::prelude::{Graph, Middleware};
 use crate::core::result::Result;
 use crate::core::error::Error;
+use crate::core::model::model::Model;
+use crate::core::r#enum::Enum;
 use crate::gen::interface::client::conf::ClientConf;
 use crate::gen::interface::server::conf::EntityConf;
 use crate::seeder::data_set::DataSet;
@@ -247,6 +249,37 @@ impl AppCtx {
         self.main_namespace().clients()
     }
 
+    pub fn models(&self) -> Vec<&Model> {
+        self.models_for_namespace(self.main_namespace())
+    }
+
+    fn models_for_namespace(&self, namespace: &Namespace) -> Vec<&Model> {
+        let mut result = vec![];
+        let datasets: Vec<&Model> = namespace.models().values().collect();
+        for dataset in datasets {
+            result.push(dataset);
+        }
+        for namespace in namespace.namespaces.values() {
+            result.extend(self.models_for_namespace(namespace));
+        }
+        result
+    }
+
+    pub fn enums(&self) -> Vec<&Enum> {
+        self.enums_for_namespace(self.main_namespace())
+    }
+
+    fn enums_for_namespace(&self, namespace: &Namespace) -> Vec<&Enum> {
+        let mut result = vec![];
+        let datasets: Vec<&Enum> = namespace.enums().values().collect();
+        for dataset in datasets {
+            result.push(dataset);
+        }
+        for namespace in namespace.namespaces.values() {
+            result.extend(self.enums_for_namespace(namespace));
+        }
+        result
+    }
 }
 
 static CURRENT: OnceCell<Arc<Mutex<AppCtx>>> = OnceCell::new();

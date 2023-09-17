@@ -1,4 +1,4 @@
-use crate::parser::ast::accessible::{ASTFunctionInstaller, ASTPipelineInstaller};
+use crate::parser::ast::accessible::ASTPipelineInstaller;
 use crate::parser::std::pipeline::action::{redirect, when};
 use crate::parser::std::pipeline::array::append::append;
 use crate::parser::std::pipeline::array::get_length::get_length;
@@ -158,28 +158,7 @@ impl GlobalPipelineInstallers {
         objects.insert("map".to_owned(), map);
         // query
         objects.insert("queryRaw".to_owned(), query_raw);
-        Self { objects }
-    }
-
-    pub(crate) fn get(&self, key: &str) -> Option<&ASTPipelineInstaller> {
-        self.objects.get(key)
-    }
-}
-
-pub(crate) struct GlobalFunctionInstallers {
-    objects: HashMap<String, ASTFunctionInstaller>
-}
-
-impl Debug for GlobalFunctionInstallers {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str("GlobalFunctionInstallers")
-    }
-}
-
-impl GlobalFunctionInstallers {
-    pub(crate) fn new() -> Self {
-        let mut objects: HashMap<String, ASTFunctionInstaller> = HashMap::new();
-        // array
+        // callback functions
         objects.insert("transform".to_owned(), custom_transform);
         objects.insert("validate".to_owned(), custom_validate);
         objects.insert("callback".to_owned(), custom_callback);
@@ -187,7 +166,7 @@ impl GlobalFunctionInstallers {
         Self { objects }
     }
 
-    pub(crate) fn get(&self, key: &str) -> Option<&ASTFunctionInstaller> {
+    pub(crate) fn get(&self, key: &str) -> Option<&ASTPipelineInstaller> {
         self.objects.get(key)
     }
 }

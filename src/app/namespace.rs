@@ -233,4 +233,30 @@ impl Namespace {
         }
         self.namespaces.get_mut(name).unwrap()
     }
+
+    pub(crate) fn add_enum(&mut self, e: Enum) -> Result<()> {
+        self.enums.insert(e.name, e);
+        Ok(())
+    }
+
+    pub(crate) fn add_model(&mut self, m: Model, name: &'static str) -> Result<()> {
+        self.models.insert(name, m);
+        Ok(())
+    }
+
+    pub(crate) fn r#enum(&self, name: &'static str) -> Option<&Enum> {
+        self.enums().get(name)
+    }
+
+    pub(crate) fn model(&self, name: &'static str) -> Option<&Model> {
+        self.models.get(name)
+    }
+
+    pub(crate) fn enum_mut(&mut self, name: &'static str) -> Option<&mut Enum> {
+        self.enums_mut().get_mut(name)
+    }
+
+    pub(crate) fn model_mut(&mut self, name: &'static str) -> Option<&mut Model> {
+        self.models_mut().get_mut(name)
+    }
 }

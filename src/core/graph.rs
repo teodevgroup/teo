@@ -23,26 +23,12 @@ impl Graph {
         Self { }
     }
 
-    pub(crate) fn add_enum(&self, e: Enum) -> Result<()> {
-        AppCtx::get_mut()?.enums_mut().insert(e.name, e);
-        Ok(())
-    }
-
-    pub(crate) fn add_model(&self, m: Model, name: &'static str) -> Result<()> {
-        AppCtx::get_mut()?.models_mut().insert(name, m);
-        Ok(())
-    }
-
     pub fn models(&self) -> Vec<&Model> {
-        AppCtx::get().unwrap().models().values().collect()
-    }
-
-    pub(crate) fn models_mut(&self) -> Vec<&mut Model> {
-        AppCtx::get_mut().unwrap().models_mut().values_mut().collect()
+        AppCtx::get().unwrap().models()
     }
 
     pub fn models_without_teo_internal(&self) -> Vec<&Model> {
-        AppCtx::get().unwrap().models().iter().filter(|(_, m)| !m.is_teo_internal()).map(|(_, m)| m).collect()
+        AppCtx::get().unwrap().models().iter().filter(|m| !m.is_teo_internal()).map(|m| *m).collect()
     }
 
     // MARK: - Queries
@@ -159,29 +145,29 @@ impl Graph {
     }
 
     pub(crate) fn model(&self, name: &str) -> Result<&Model> {
-        match AppCtx::get().unwrap().models().get(name) {
+        match AppCtx::get().unwrap().main_namespace().model(name) {
             Some(model) => Ok(model),
             None => Err(Error::fatal_message(format!("Model `{}' is not found.", name))),
         }
     }
 
     pub(crate) fn model_mut(&self, name: &str) -> Result<&mut Model> {
-        match AppCtx::get_mut().unwrap().models_mut().get_mut(name) {
+        match AppCtx::get().unwrap().main_namespace_mut().model_mut(name) {
             Some(model) => Ok(model),
             None => Err(Error::fatal_message(format!("Model `{}' is not found.", name))),
         }
     }
 
     pub(crate) fn r#enum(&self, name: &str) -> Option<&Enum> {
-        AppCtx::get().unwrap().enums().get(name)
+        AppCtx::get().unwrap().main_namespace().r#enum(name)
     }
 
     pub(crate) fn enums(&self) -> &HashMap<&'static str, Enum> {
-        AppCtx::get().unwrap().enums()
+        AppCtx::get().unwrap().main_namespace().enums()
     }
 
     pub(crate) fn enum_values(&self, name: &str) -> Option<&Vec<String>> {
-        match AppCtx::get().unwrap().enums().get(name) {
+        match AppCtx::get().unwrap().main_namespace().enums().get(name) {
             Some(e) => Some(e.values()),
             None => None,
         }

@@ -20,7 +20,7 @@ pub(in crate::gen) struct EntityOutline<'a> {
 impl<'a> EntityOutline<'a> {
     pub(in crate::gen) fn new<L>(graph: &'a Graph, lookup: L) -> Self where L: ServerTypeLookup {
         EntityOutline {
-            classes: AppCtx::get().unwrap().models().values().filter_map(|m| {
+            classes: AppCtx::get().unwrap().models().iter().filter_map(|m| {
                 if m.is_teo_internal() {
                     None
                 } else {
@@ -83,7 +83,7 @@ impl<'a> EntityOutline<'a> {
                     })
                 }
             }).sorted_by(|a, b| a.name.cmp(b.name)).collect(),
-            enums: AppCtx::get().unwrap().enums().values().map(|e| {
+            enums: AppCtx::get().unwrap().enums().iter().map(|e| {
                 Enum {
                     name: e.name(),
                     variants: e.variants().iter().map(|v| {

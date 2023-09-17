@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use maplit::hashmap;
-use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::field::field::Field;
 use crate::core::model::model::Model;
 use crate::core::item::Item;
@@ -33,12 +32,9 @@ pub(crate) type ModelDecorator = fn(args: &'static Vec<Argument>, model: &mut Mo
 
 pub(crate) type ASTPipelineInstaller = fn(args: &Vec<Argument>) -> Arc<dyn Item>;
 
-pub(crate) type ASTFunctionInstaller = fn(lookup_table: &'static CallbackLookup, args: &Vec<Argument>) -> Arc<dyn Item>;
-
 #[derive(Clone)]
 pub(crate) struct ASTPipelineItem {
     pub(crate) installer: Option<ASTPipelineInstaller>,
-    pub(crate) function_installer: Option<ASTFunctionInstaller>,
     pub(crate) args: Vec<Argument>,
 }
 
@@ -60,8 +56,6 @@ impl ASTResolvedPipeline {
         for item in self.items.iter() {
             if let Some(installer) = item.installer {
                 modifiers.push((installer)(item.args()));
-            } else if let Some(function_installer) = item.function_installer {
-                modifiers.push((function_installer)(item.lookup_table, item.args()));
             }
         }
         Pipeline { items: modifiers }

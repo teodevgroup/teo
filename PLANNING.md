@@ -474,6 +474,7 @@
 #### 0.0.58
 - Rewrite app loading process
 - Namespaces
+- Remove function installers **[DONE]**
 - Rewrite decorators loading and pipeline items loading 
 
 #### 0.0.59

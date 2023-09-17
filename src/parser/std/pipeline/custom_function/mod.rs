@@ -1,6 +1,5 @@
 use std::sync::Arc;
 use crate::app::app_ctx::AppCtx;
-use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::item::Item;
 use crate::core::items::logical::transform_with::TransformWithItem;
 use crate::core::items::logical::valid::ValidItem;
@@ -8,7 +7,8 @@ use crate::core::items::logical::validate_with::ValidateWithItem;
 use crate::parser::ast::argument::Argument;
 use crate::prelude::Value;
 
-pub(crate) fn custom_transform(lookup_table: &'static CallbackLookup, args: &Vec<Argument>) -> Arc<dyn Item> {
+pub(crate) fn custom_transform(args: &Vec<Argument>) -> Arc<dyn Item> {
+    let lookup_table = AppCtx::get().unwrap().callbacks();
     if AppCtx::get().unwrap().ignore_callbacks() {
         return Arc::new(ValidItem::new());
     }
@@ -30,7 +30,8 @@ pub(crate) fn custom_transform(lookup_table: &'static CallbackLookup, args: &Vec
     }
 }
 
-pub(crate) fn custom_callback(lookup_table: &'static CallbackLookup, args: &Vec<Argument>) -> Arc<dyn Item> {
+pub(crate) fn custom_callback(args: &Vec<Argument>) -> Arc<dyn Item> {
+    let lookup_table = AppCtx::get().unwrap().callbacks();
     if AppCtx::get().unwrap().ignore_callbacks() {
         Arc::new(ValidItem::new())
     } else {
@@ -45,7 +46,8 @@ pub(crate) fn custom_callback(lookup_table: &'static CallbackLookup, args: &Vec<
 
 }
 
-pub(crate) fn custom_validate(lookup_table: &'static CallbackLookup, args: &Vec<Argument>) -> Arc<dyn Item> {
+pub(crate) fn custom_validate(args: &Vec<Argument>) -> Arc<dyn Item> {
+    let lookup_table = AppCtx::get().unwrap().callbacks();
     if AppCtx::get().unwrap().ignore_callbacks() {
         return Arc::new(ValidItem::new());
     }
@@ -67,7 +69,8 @@ pub(crate) fn custom_validate(lookup_table: &'static CallbackLookup, args: &Vec<
     }
 }
 
-pub(crate) fn custom_compare(lookup_table: &'static CallbackLookup, args: &Vec<Argument>) -> Arc<dyn Item> {
+pub(crate) fn custom_compare(args: &Vec<Argument>) -> Arc<dyn Item> {
+    let lookup_table = AppCtx::get().unwrap().callbacks();
     if AppCtx::get().unwrap().ignore_callbacks() {
         return Arc::new(ValidItem::new());
     }
