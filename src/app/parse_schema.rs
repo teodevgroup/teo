@@ -104,7 +104,7 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
                 EnumVariant::new(ast_choice.identifier.name.as_str(), None, None)
             }).collect()
         );
-        AppCtx::get().unwrap().main_namespace_mut().add_enum(enum_def);
+        AppCtx::get().unwrap().main_namespace_mut().add_enum(enum_def).unwrap();
     }
     // models
     for ast_model in parser.models() {
