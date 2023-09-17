@@ -244,19 +244,19 @@ impl Namespace {
         Ok(())
     }
 
-    pub(crate) fn r#enum(&self, name: &'static str) -> Option<&Enum> {
+    pub(crate) fn r#enum(&self, name: &str) -> Option<&Enum> {
         self.enums().get(name)
     }
 
-    pub(crate) fn model(&self, name: &'static str) -> Option<&'static Model> {
+    pub(crate) fn model(&self, name: &str) -> Option<&'static Model> {
         self.models.get(name)
     }
 
-    pub(crate) fn enum_mut(&mut self, name: &'static str) -> Option<&mut Enum> {
+    pub(crate) fn enum_mut(&mut self, name: &str) -> Option<&mut Enum> {
         self.enums_mut().get_mut(name)
     }
 
-    pub(crate) fn model_mut(&mut self, name: &'static str) -> Option<&mut Model> {
+    pub(crate) fn model_mut(&mut self, name: &str) -> Option<&mut Model> {
         self.models_mut().get_mut(name)
     }
 }

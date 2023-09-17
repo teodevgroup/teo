@@ -138,7 +138,7 @@ impl AppCtx {
     }
 
     pub(crate) fn parser_mut(&self) -> &mut ASTParser {
-        &mut AppCtx::get_mut().unwrap().parser.as_mut()
+        AppCtx::get_mut().unwrap().parser.as_mut()
     }
 
     pub(crate) fn main_namespace(&'static self) -> &'static Namespace {
@@ -202,25 +202,25 @@ impl AppCtx {
         &self.static_files
     }
 
-    pub(crate) fn connector_conf(&self) -> Result<&ConnectorConf> {
+    pub(crate) fn connector_conf(&'static self) -> Result<&'static ConnectorConf> {
         match self.main_namespace().connector_conf() {
             Some(c) => Ok(c),
             None => Err(Error::fatal("Connector conf is accessed while it's not set.")),
         }
     }
 
-    pub(crate) fn server_conf(&self) -> Result<&ServerConf> {
+    pub(crate) fn server_conf(&'static self) -> Result<&'static ServerConf> {
         match self.main_namespace().server_conf() {
             Some(s) => Ok(s),
             None => Err(Error::fatal("Server conf is accessed while it's not set.")),
         }
     }
 
-    pub(crate) fn datasets(&self) -> Vec<&DataSet> {
+    pub(crate) fn datasets(&'static self) -> Vec<&'static DataSet> {
         self.datasets_for_namespace(self.main_namespace())
     }
 
-    fn datasets_for_namespace(&self, namespace: &Namespace) -> Vec<&DataSet> {
+    fn datasets_for_namespace(&self, namespace: &'static Namespace) -> Vec<&'static DataSet> {
         let mut result = vec![];
         let datasets = namespace.datasets();
         for dataset in datasets {
@@ -232,28 +232,28 @@ impl AppCtx {
         result
     }
 
-    pub(crate) fn test_conf(&self) -> Option<&TestConf> {
+    pub(crate) fn test_conf(&'static self) -> Option<&'static TestConf> {
         self.main_namespace().test_conf()
     }
 
     // TODO: get all middlewares
-    pub(crate) fn middlewares(&self) -> &'static IndexMap<&'static str, &'static dyn Middleware> {
+    pub(crate) fn middlewares(&'static self) -> &'static IndexMap<&'static str, &'static dyn Middleware> {
         self.main_namespace().middlewares()
     }
 
-    pub(crate) fn entities(&self) -> &Vec<EntityConf> {
+    pub(crate) fn entities(&'static self) -> &Vec<EntityConf> {
         self.main_namespace().entities()
     }
 
-    pub(crate) fn clients(&self) -> &Vec<ClientConf> {
+    pub(crate) fn clients(&'static self) -> &Vec<ClientConf> {
         self.main_namespace().clients()
     }
 
-    pub fn models(&self) -> Vec<&Model> {
+    pub fn models(&'static self) -> Vec<&'static Model> {
         self.models_for_namespace(self.main_namespace())
     }
 
-    fn models_for_namespace(&self, namespace: &Namespace) -> Vec<&Model> {
+    fn models_for_namespace(&'static self, namespace: &'static Namespace) -> Vec<&'static Model> {
         let mut result = vec![];
         let datasets: Vec<&Model> = namespace.models().values().collect();
         for dataset in datasets {
@@ -265,11 +265,11 @@ impl AppCtx {
         result
     }
 
-    pub fn enums(&self) -> Vec<&Enum> {
+    pub fn enums(&'static self) -> Vec<&'static Enum> {
         self.enums_for_namespace(self.main_namespace())
     }
 
-    fn enums_for_namespace(&self, namespace: &Namespace) -> Vec<&Enum> {
+    fn enums_for_namespace(&'static self, namespace: &'static Namespace) -> Vec<&'static Enum> {
         let mut result = vec![];
         let datasets: Vec<&Enum> = namespace.enums().values().collect();
         for dataset in datasets {

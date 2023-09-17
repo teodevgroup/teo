@@ -51,7 +51,7 @@ impl Enum {
         let values = choices.iter().map(|c| c.name.to_string()).collect();
         Self {
             name,
-            ns_path,
+            ns_path: ns_path.clone(),
             db_name: if ns_path.is_empty() { Cow::Borrowed(name) } else { Cow::Owned("_".to_owned() + ns_path.join("_").as_str() + "_" + name) },
             localized_name,
             description,

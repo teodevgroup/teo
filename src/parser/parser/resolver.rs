@@ -46,6 +46,7 @@ use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::interface::{InterfaceDeclaration, InterfaceItemDeclaration};
 use crate::parser::ast::test_conf::ASTTestConf;
 use crate::parser::ast::interface_type::InterfaceType;
+use crate::parser::ast::namespace::ASTNamespace;
 use crate::parser::ast::r#type::Arity;
 use crate::parser::ast::static_files::StaticFiles;
 use crate::parser::diagnostics::diagnostics::Diagnostics;
@@ -141,9 +142,16 @@ impl Resolver {
                 Top::StaticFiles(static_files) => {
                     self.resolve_static_files(parser, source, static_files);
                 }
+                Top::ASTNamespace(ast_namespace) => {
+                    self.resolve_namespace(parser, source, ast_namespace);
+                }
             }
         }
         source.to_mut().resolved = true;
+    }
+
+    pub(crate) fn resolve_namespace(&self, parser: &ASTParser, source: &Source, ast_namespace: &mut ASTNamespace) {
+
     }
 
     pub(crate) fn resolve_import(&self, parser: &ASTParser, _source: &Source, import: &mut ASTImport) {
@@ -466,7 +474,7 @@ impl Resolver {
         if parser.connector.is_none() {
             panic!("Connector is not defined.");
         }
-        let connector_ref = parser.connector.unwrap();
+        let connector_ref = parser.connector.as_ref().unwrap();
         let source = parser.get_source(*connector_ref.get(0).unwrap());
         let top = source.to_mut().tops.get_mut(&connector_ref.get(1).unwrap()).unwrap();
         let connector = top.as_connector_mut().unwrap();

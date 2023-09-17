@@ -614,7 +614,7 @@ impl ASTParser {
                     let content_item_id = self.next_id();
                     let model = self.parse_model(current, source_id, content_item_id, diagnostics, {
                         let mut new_path = ns_path.clone();
-                        new_path.push(name.unwrap().name.clone());
+                        new_path.push(name.clone().unwrap().name.clone());
                         new_path
                     });
                     tops.insert(content_item_id, model);
@@ -625,7 +625,7 @@ impl ASTParser {
                     let content_item_id = self.next_id();
                     let r#enum = self.parse_enum(current, source_id, content_item_id, {
                         let mut new_path = ns_path.clone();
-                        new_path.push(name.unwrap().name.clone());
+                        new_path.push(name.clone().unwrap().name.clone());
                         new_path
                     }, diagnostics);
                     tops.insert(content_item_id, r#enum);
@@ -676,7 +676,7 @@ impl ASTParser {
                     ns_content_parent_ids.push(item_id);
                     let namespace_declaration = self.parse_namespace_declaration(current, path, source_id, content_item_id, ns_content_parent_ids, {
                         let mut new_path = ns_path.clone();
-                        new_path.push(name.unwrap().name.clone());
+                        new_path.push(name.clone().unwrap().name.clone());
                         new_path
                     }, diagnostics);
                     tops.insert(content_item_id, Top::ASTNamespace(namespace_declaration));
@@ -693,7 +693,7 @@ impl ASTParser {
             }
         }
 
-        let result = ASTNamespace::new(source_id, parent_ids, item_id, span, name.unwrap().name.clone(), tops, imports, constants, enums, models);
+        let result = ASTNamespace::new(source_id, parent_ids, item_id, span, name.clone().unwrap().name.clone(), tops, imports, constants, enums, models);
         for import in result.borrow().imports() {
             let found = self.sources.values().find(|v| {
                 (*v).borrow().path == import.path
@@ -1315,14 +1315,14 @@ impl ASTParser {
     }
 
     pub(crate) fn debug(&self) -> Option<&ASTDebugConf> {
-        self.debug_conf.map(|debug| {
+        self.debug_conf.as_ref().map(|debug| {
             let source = self.get_source(*debug.get(0).unwrap());
             source.get_debug_conf(*debug.get(1).unwrap())
         })
     }
 
     pub(crate) fn test(&self) -> Option<&ASTTestConf> {
-        self.test_conf.map(|test| {
+        self.test_conf.as_ref().map(|test| {
             let source = self.get_source(*test.get(0).unwrap());
             source.get_test_conf(*test.get(1).unwrap())
         })
