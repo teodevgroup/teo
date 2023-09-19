@@ -688,7 +688,8 @@ impl ASTParser {
                 Rule::relation_decorator_declaration => (),
                 Rule::property_decorator_declaration => (),
                 Rule::pipeline_item_declaration => (),
-                Rule::CATCH_ALL => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
+                Rule::NAMESPACE_KEYWORD | Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => (),
+                Rule::BLOCK_LEVEL_CATCH_ALL => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
             }
         }
