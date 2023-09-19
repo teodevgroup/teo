@@ -151,7 +151,59 @@ impl Resolver {
     }
 
     pub(crate) fn resolve_namespace(&self, parser: &ASTParser, source: &Source, ast_namespace: &mut ASTNamespace) {
-
+        for (_item_id, top) in ast_namespace.tops.iter_mut() {
+            match top {
+                Top::Import(import) => {
+                    self.resolve_import(parser, source, import);
+                }
+                Top::Constant(constant) => {
+                    self.resolve_constant(parser, source, constant);
+                }
+                Top::Enum(r#enum) => {
+                    self.resolve_enum(parser, source, r#enum);
+                }
+                Top::Model(model) => {
+                    self.resolve_model(parser, source, model);
+                }
+                Top::Connector(_connector) => {
+                    continue;
+                }
+                Top::Generator(generator) => {
+                    self.resolve_model_entity_generator(parser, source, generator);
+                }
+                Top::Client(client) => {
+                    self.resolve_client_generator(parser, source, client);
+                }
+                Top::ServerConfig(config) => {
+                    self.resolve_server_config_block(parser, source, config);
+                }
+                Top::DataSet(data_set) => {
+                    self.resolve_data_set(parser, source, data_set);
+                }
+                Top::DebugConf(debug_conf) => {
+                    self.resolve_debug_conf(parser, source, debug_conf);
+                }
+                Top::TestConf(test_conf) => {
+                    self.resolve_test_conf(parser, source, test_conf);
+                }
+                Top::MiddlewareDeclaration(middleware_declaration) => {
+                    continue;
+                }
+                Top::ActionGroupDeclaration(action_group_declaration) => {
+                    self.resolve_action_group(parser, source, action_group_declaration);
+                }
+                Top::InterfaceDeclaration(interface_declaration) => {
+                    continue;
+                }
+                Top::StaticFiles(static_files) => {
+                    self.resolve_static_files(parser, source, static_files);
+                }
+                Top::ASTNamespace(ast_namespace) => {
+                    self.resolve_namespace(parser, source, ast_namespace);
+                }
+            }
+        }
+        ast_namespace.resolved = true;
     }
 
     pub(crate) fn resolve_import(&self, parser: &ASTParser, _source: &Source, import: &mut ASTImport) {
