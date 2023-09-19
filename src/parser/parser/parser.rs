@@ -1352,9 +1352,26 @@ impl ASTParser {
 
     pub(crate) fn models(&self) -> Vec<&ASTModel> {
         self.models.iter().map(|m| {
-            let source = self.get_source(*m.get(0).unwrap());
-            source.get_model(*m.get(1).unwrap())
+            if m.len() == 2 {
+                let source = self.get_source(*m.get(0).unwrap());
+                source.get_model(*m.get(1).unwrap())
+            } else {
+                let namespace_path = m.as_slice()[..m.len() - 1].to_vec();
+                let namespace = self.namespace(namespace_path);
+                namespace.get_model(*m.last().unwrap())
+            }
         }).collect()
+    }
+
+    pub(crate) fn namespace(&self, path: Vec<usize>) -> &ASTNamespace {
+        let source = self.get_source(*path.get(0).unwrap());
+        let mut ns = source.get_namespace(*path.get(1).unwrap());
+        if path.len() > 2 {
+            for ns_id in path.as_slice()[2..].iter() {
+                ns = ns.get_namespace(*ns_id);
+            }
+        }
+        ns
     }
 
     pub(crate) fn middlewares(&self) -> Vec<&MiddlewareDeclaration> {

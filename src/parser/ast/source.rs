@@ -15,6 +15,7 @@ use crate::parser::ast::import::ASTImport;
 use crate::parser::ast::interface::InterfaceDeclaration;
 use crate::parser::ast::middleware::MiddlewareDeclaration;
 use crate::parser::ast::model::ASTModel;
+use crate::parser::ast::namespace::ASTNamespace;
 use crate::parser::ast::r#enum::ASTEnum;
 use crate::parser::ast::static_files::StaticFiles;
 use crate::parser::ast::test_conf::ASTTestConf;
@@ -86,6 +87,10 @@ impl Source {
 
     pub(crate) fn get_model(&self, id: usize) -> &ASTModel {
         self.tops.get(&id).unwrap().as_model().unwrap()
+    }
+
+    pub(crate) fn get_namespace(&self, id: usize) -> &ASTNamespace {
+        self.tops.get(&id).unwrap().as_namespace().unwrap()
     }
 
     pub(crate) fn get_connector(&self, id: usize) -> &ASTConnector {

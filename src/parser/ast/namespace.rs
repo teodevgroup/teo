@@ -63,6 +63,10 @@ impl ASTNamespace {
         self.tops.get(&id).unwrap().as_model().unwrap()
     }
 
+    pub(crate) fn get_namespace(&self, id: usize) -> &ASTNamespace {
+        self.tops.get(&id).unwrap().as_namespace().unwrap()
+    }
+
     pub(crate) fn get_connector(&self, id: usize) -> &ASTConnector {
         self.tops.get(&id).unwrap().as_connector().unwrap()
     }
