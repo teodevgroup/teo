@@ -92,7 +92,7 @@ impl Execution {
         let include = finder.as_hashmap().unwrap().get("include");
         let mut results = vec![];
         for value in values {
-            let object = AppCtx::get().unwrap().graph().new_object(model.name(), action, action_source.clone(), connection.clone())?;
+            let object = AppCtx::get().unwrap().graph().new_object(model, action, action_source.clone(), connection.clone())?;
             object.set_from_database_result_value(&value, select, include);
             results.push(object);
         }

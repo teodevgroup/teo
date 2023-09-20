@@ -15,23 +15,27 @@ impl GroupRelation {
 
     /// Find many group relations.
     pub async fn find_many(query: impl Borrow<Value>, connection: Arc<dyn Connection>) -> Result<Vec<GroupRelation>> {
-        AppCtx::get()?.graph().find_many("__TeoGroupRelation", query.borrow(), connection, None).await
+        let model = AppCtx::get()?.model(vec!["__TeoGroupRelation"])?.unwrap();
+        AppCtx::get()?.graph().find_many(model, query.borrow(), connection, None).await
     }
 
     /// Find a unique group relation.
     pub async fn find_unique(query: impl Borrow<Value>, connection: Arc<dyn Connection>) -> Result<Option<GroupRelation>> {
-        AppCtx::get()?.graph().find_unique("__TeoGroupRelation", query.borrow(), connection, None).await
+        let model = AppCtx::get()?.model(vec!["__TeoGroupRelation"])?.unwrap();
+        AppCtx::get()?.graph().find_unique(model, query.borrow(), connection, None).await
     }
 
     /// Find a non unique group relation.
     pub async fn find_first(query: impl Borrow<Value>, connection: Arc<dyn Connection>) -> Result<Option<GroupRelation>> {
-        AppCtx::get()?.graph().find_first("__TeoGroupRelation", query.borrow(), connection, None).await
+        let model = AppCtx::get()?.model(vec!["__TeoGroupRelation"])?.unwrap();
+        AppCtx::get()?.graph().find_first(model, query.borrow(), connection, None).await
     }
 
     /// Create a new group relation.
     pub async fn new(values: impl Borrow<Value>, connection: Arc<dyn Connection>) -> Self {
+        let model = AppCtx::get().unwrap().model(vec!["__TeoGroupRelation"]).unwrap().unwrap();
         Self {
-            inner: AppCtx::get().unwrap().graph().create_object("__TeoGroupRelation", values, connection, None).await.unwrap(),
+            inner: AppCtx::get().unwrap().graph().create_object(model, values, connection, None).await.unwrap(),
         }
     }
 

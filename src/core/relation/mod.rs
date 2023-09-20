@@ -7,8 +7,10 @@ use std::sync::Arc;
 use inflector::Inflector;
 use maplit::hashset;
 use once_cell::sync::Lazy;
+use crate::app::app_ctx::AppCtx;
 use crate::core::field::field::Field;
 use crate::core::field::optionality::Optionality;
+use crate::core::model::model::Model;
 use crate::core::relation::delete_rule::DeleteRule;
 
 #[derive(Debug, Clone)]
@@ -17,8 +19,8 @@ pub struct Relation {
     pub(crate) localized_name: Option<String>,
     pub(crate) description: Option<String>,
     pub(self) optionality: Optionality,
-    pub(self) model: String,
-    pub(self) through: Option<String>,
+    pub(self) model: Vec<String>,
+    pub(self) through: Option<Vec<String>>,
     pub(self) is_vec: bool,
     pub(self) fields: Vec<String>,
     pub(self) references: Vec<String>,
@@ -34,7 +36,7 @@ impl Relation {
             localized_name: None,
             description: None,
             optionality: Optionality::Required,
-            model: "".into(),
+            model: vec![],
             through: None,
             is_vec: false,
             fields: Vec::new(),
@@ -74,16 +76,24 @@ impl Relation {
         self.optionality.is_required()
     }
 
-    pub(crate) fn model(&self) -> &str {
-        &self.model
+    pub(crate) fn model(&self) -> &Model {
+        AppCtx::get().unwrap().model(self.model_path()).unwrap().unwrap()
     }
 
-    pub(crate) fn set_through(&mut self, through: String) {
+    pub(crate) fn model_path(&self) -> Vec<&str> {
+        self.model.iter().map(|s| s.as_str()).collect()
+    }
+
+    pub(crate) fn set_through(&mut self, through: Vec<String>) {
         self.through = Some(through);
     }
 
-    pub(crate) fn through(&self) -> Option<&str> {
-        self.through.as_deref()
+    pub(crate) fn through(&self) -> Option<&Model> {
+        self.through_path().map(|p| AppCtx::get().unwrap().model(p).unwrap().unwrap())
+    }
+
+    pub(crate) fn through_path(&self) -> Option<Vec<&str>> {
+        self.through.map(|t| t.iter().map(|s| s.as_str()).collect())
     }
 
     pub fn is_vec(&self) -> bool {

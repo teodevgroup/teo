@@ -474,6 +474,7 @@
 #### 0.0.58
 - Rewrite app loading process
 - Namespaces
+- Remove `action` from request URLs **[DONE]**
 - Remove function installers **[DONE]**
 - Table names are lower-cased but not plural anymore **[DONE]**
 - Rewrite decorators loading and pipeline items loading 

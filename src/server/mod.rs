@@ -593,7 +593,7 @@ async fn handler(req_ctx: ReqCtx) -> Result<Res> {
     let source = Initiator::Identity(identity, req.clone());
     let action = req_ctx.transformed_action.unwrap();
     let body = &req_ctx.transformed_teon_body;
-    let model_def = graph.model(req_ctx.path_components.model.as_str()).unwrap();
+    let model_def = AppCtx::get().unwrap().model(req_ctx.path_components.model_path())?.unwrap();
     match action.to_u32() {
         FIND_UNIQUE_HANDLER => {
             let result = handle_find_unique(&graph, &body, model_def, source.clone(), connection.clone()).await;
@@ -809,10 +809,8 @@ fn make_app(
                     Err(err) => return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), err),
                 };
                 let original_action = Action::handler_from_name(path_components.action.as_str());
-                let model_def = match graph.model(path_components.model.as_str()) {
-                    Ok(m) => Some(m),
-                    Err(_) => None,
-                };
+
+                let model_def = AppCtx::get().unwrap().model(path_components.model_path())?;
                 let original_teon_body = if let (Some(original_action), Some(model_def)) = (original_action, model_def) {
                     // Check whether this action is supported by this model
                     if !model_def.has_action(original_action) || model_def.is_teo_internal() {
@@ -903,8 +901,17 @@ fn make_app(
 
 #[derive(Clone)]
 pub(crate) struct PathComponents {
+    ns: Vec<String>,
     model: String,
     action: String,
+}
+
+impl PathComponents {
+    pub(crate) fn model_path(&self) -> Vec<&str> {
+        let mut result = self.ns.iter().map(|n| n.as_str()).collect();
+        result.push(self.model.as_str());
+        result
+    }
 }
 
 fn parse_static_files_path<'a>(path: &'a str, prefix: Option<&'a str>) -> Result<PathBuf> {
@@ -943,15 +950,17 @@ fn parse_path(path: &str, prefix: Option<&str>) -> Result<PathComponents> {
         path_striped = path_striped.strip_prefix("/").unwrap();
     }
     let components: Vec<&str> = path_striped.split("/").into_iter().collect();
-    if components.len() != 3 {
+    if components.len() < 2 {
         return Err(Error::destination_not_found());
     }
-    if *components.get(1).unwrap() != "action" {
-        return Err(Error::destination_not_found());
-    }
-    let model = components.get(0).unwrap();
-    let action = components.get(2).unwrap();
-    Ok(PathComponents { model: model.to_string(), action: action.to_string() })
+    let model = components.get(components.len() - 2).unwrap();
+    let action = components.get(components.len() - 1).unwrap();
+    let ns = components.as_slice()[..components.len() - 2].iter().map(|s| s.to_string()).collect();
+    Ok(PathComponents {
+        ns,
+        model: model.to_string(),
+        action: action.to_string()
+    })
 }
 
 async fn server_start_message(port: u16, environment_version: &'static Program, entrance: &'static Entrance) -> Result<()> {

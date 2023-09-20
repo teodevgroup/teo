@@ -13,6 +13,7 @@ use indexmap::IndexMap;
 use itertools::Itertools;
 use to_mut::ToMut;
 use to_mut_proc_macro::ToMut;
+use crate::app::app_ctx::AppCtx;
 use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, PROGRAM_CODE, DELETE, DISCONNECT, FIND, JOIN_CREATE, JOIN_DELETE, MANY, NESTED, SINGLE, UPDATE, UPSERT, NESTED_CREATE_ACTION, NESTED_DISCONNECT_ACTION, NESTED_SET_ACTION, NESTED_CONNECT_ACTION, NESTED_DELETE_MANY_ACTION, NESTED_UPDATE_MANY_ACTION, NESTED_UPDATE_ACTION, NESTED_DELETE_ACTION, NESTED_CONNECT_OR_CREATE_ACTION, NESTED_UPSERT_ACTION, INTERNAL_POSITION, SET};
 use crate::core::connector::connection::Connection;
 use crate::core::initiator::Initiator;
@@ -685,7 +686,7 @@ impl Object {
             if let Some(opposite_relation) = opposite_relation {
                 if opposite_relation.delete_rule() == DeleteRule::Deny {
                     let finder = self.intrinsic_where_unique_for_relation(relation);
-                    let count = graph.count(opposite_model.name(), &finder, self.connection()).await.unwrap();
+                    let count = graph.count(opposite_model, &finder, self.connection()).await.unwrap();
                     if count > 0 {
                         return Err(Error::deletion_denied(relation.name()));
                     }
@@ -709,7 +710,7 @@ impl Object {
                             continue
                         }
                         let finder = self.intrinsic_where_unique_for_relation(relation);
-                        graph.batch(opposite_model.name(), &finder, Action::from_u32(PROGRAM_CODE | DISCONNECT | (if relation.is_vec() { MANY } else { SINGLE })), Initiator::ProgramCode(self.initiator().as_req()), |object| async move {
+                        graph.batch(opposite_model, &finder, Action::from_u32(PROGRAM_CODE | DISCONNECT | (if relation.is_vec() { MANY } else { SINGLE })), Initiator::ProgramCode(self.initiator().as_req()), |object| async move {
                             for key in opposite_relation.fields() {
                                 object.set_value(key, Value::Null)?;
                             }
@@ -719,7 +720,7 @@ impl Object {
                     },
                     DeleteRule::Cascade => {
                         let finder = self.intrinsic_where_unique_for_relation(relation);
-                        graph.batch(opposite_model.name(), &finder, Action::from_u32(PROGRAM_CODE | DELETE | (if relation.is_vec() { MANY } else { SINGLE })), Initiator::ProgramCode(self.initiator().as_req()), |object| async move {
+                        graph.batch(opposite_model, &finder, Action::from_u32(PROGRAM_CODE | DELETE | (if relation.is_vec() { MANY } else { SINGLE })), Initiator::ProgramCode(self.initiator().as_req()), |object| async move {
                             object.delete_from_database().await?;
                             Ok(())
                         }, self.connection()).await?;
@@ -1019,9 +1020,9 @@ impl Object {
     }
 
     async fn create_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, path: &'a KeyPath<'_>) -> Result<()> {
-        let join_model = self.graph().model(relation.through().unwrap()).unwrap();
+        let join_model = AppCtx::get().unwrap().model(relation.through_path().unwrap()).unwrap().unwrap();
         let action = Action::from_u32(JOIN_CREATE | CREATE | SINGLE);
-        let join_object = self.graph().new_object(join_model.name(), action, self.action_source().clone(), self.connection())?;
+        let join_object = self.graph().new_object(join_model, action, self.action_source().clone(), self.connection())?;
         join_object.set_teon(&teon!({})).await?; // initialize
         let local = relation.local();
         let foreign = opposite_relation.local();
@@ -1036,7 +1037,7 @@ impl Object {
     }
 
     async fn delete_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, path: &'a KeyPath<'_>) -> Result<()> {
-        let join_model = self.graph().model(relation.through().unwrap()).unwrap();
+        let join_model = AppCtx::get().unwrap().model(relation.through_path().unwrap()).unwrap().unwrap();
         let action = Action::from_u32(JOIN_DELETE | DELETE | SINGLE);
         let local = relation.local();
         let foreign = opposite_relation.local();
@@ -1050,7 +1051,7 @@ impl Object {
             finder.insert(l.to_owned(), object.get_value(f).unwrap());
         }
         let r#where = Value::HashMap(finder);
-        let object = match self.graph().find_unique_internal(join_model.name(), &teon!({ "where": r#where }), true, action, self.action_source().clone(), self.connection()).await {
+        let object = match self.graph().find_unique_internal(join_model, &teon!({ "where": r#where }), true, action, self.action_source().clone(), self.connection()).await {
             Ok(object) => object,
             Err(_) => return Err(Error::unexpected_input_value_with_reason("Join object is not found.", path)),
         }.into_not_found_error()?;
@@ -1401,7 +1402,7 @@ impl Object {
     }
 
     async fn disconnect_object_which_connects_to<'a>(&'a self, relation: &'static Relation, value: &'a Value) -> Result<()> {
-        if let Ok(that) = self.graph().find_unique::<Object>(self.model().name(), &teon!({
+        if let Ok(that) = self.graph().find_unique::<Object>(self.model(), &teon!({
             "where": {
                 relation.name(): {
                     "is": value
@@ -1551,7 +1552,7 @@ impl Object {
         if let Some(select) = select {
             finder.as_hashmap_mut().unwrap().insert("select".to_string(), select.clone());
         }
-        let target = graph.find_unique_internal(self.model().name(), &finder, false, self.action(), self.action_source().clone(), self.connection()).await.into_not_found_error();
+        let target = graph.find_unique_internal(self.model(), &finder, false, self.action(), self.action_source().clone(), self.connection()).await.into_not_found_error();
         match target {
             Ok(obj) => {
                 if self.model().has_virtual_fields() {
@@ -1649,7 +1650,7 @@ impl Object {
         let action = Action::from_u32(INTERNAL_POSITION | FIND | PROGRAM_CODE | MANY);
         if relation.has_join_table() {
             let identifier = self.identifier();
-            let new_self = self.graph().find_unique_internal(model.name(), &teon!({
+            let new_self = self.graph().find_unique_internal(model, &teon!({
                 "where": identifier,
                 "include": {
                     key.as_ref(): include_inside
@@ -1676,9 +1677,8 @@ impl Object {
                 let json_value = value;
                 finder.as_hashmap_mut().unwrap().get_mut("where").unwrap().as_hashmap_mut().unwrap().insert(foreign_field_name.to_owned(), json_value);
             }
-            let relation_model_name = relation.model();
-            let graph = self.graph();
-            let results = graph.find_many_internal(relation_model_name, &finder, false, action, Initiator::ProgramCode(self.initiator().as_req()), self.connection()).await?;
+            let relation_model = AppCtx::get().unwrap().model(relation.model_path()).unwrap().unwrap();
+            let results = self.graph().find_many_internal(relation_model, &finder, false, action, Initiator::ProgramCode(self.initiator().as_req()), self.connection()).await?;
             Ok(results)
         }
     }
