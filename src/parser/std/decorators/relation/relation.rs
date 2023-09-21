@@ -40,7 +40,7 @@ pub(crate) fn relation_decorator(args: &Vec<Argument>, relation: &mut Relation) 
     } else if through_arg.is_some() {
         // use through, local and foreign
         let through_model_ref = through_arg.unwrap().resolved.as_ref().unwrap().as_value().unwrap().as_raw_enum_choice().unwrap().to_owned();
-        relation.set_through(through_model_ref);
+        relation.set_through(vec![through_model_ref]);
         let local = args.iter().find(|a| {
             a.name.as_ref().unwrap().name == "local"
         }).unwrap();

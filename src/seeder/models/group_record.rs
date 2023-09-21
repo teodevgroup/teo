@@ -1,14 +1,22 @@
 use std::fmt::{Debug, Display, Formatter};
 use std::borrow::Borrow;
-use std::sync::Arc;
+use std::ops::DerefMut;
+use std::sync::{Arc, Mutex};
 use crate::app::app_ctx::AppCtx;
 use crate::core::connector::connection::Connection;
 use crate::prelude::{Object, Value, Result};
 
 /// Group record
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub struct GroupRecord {
-    pub(super) inner: Object
+    pub(super) inner: Object,
+    model_path: Arc<Mutex<Vec<String>>>,
+}
+
+impl PartialEq for GroupRecord {
+    fn eq(&self, other: &Self) -> bool {
+        self.inner.eq(&other.inner)
+    }
 }
 
 impl GroupRecord {
@@ -36,6 +44,7 @@ impl GroupRecord {
         let model = AppCtx::get().unwrap().model(vec!["__TeoGroupRecord"]).unwrap().unwrap();
         Self {
             inner: AppCtx::get().unwrap().graph().create_object(model, values, connection, None).await.unwrap(),
+            model_path: Arc::new(Mutex::new(vec![])),
         }
     }
 
@@ -90,12 +99,21 @@ impl GroupRecord {
     }
 
     /// Group
-    pub fn group(&self) -> String {
-        self.inner.get("group").unwrap()
+    pub fn group(&self) -> Vec<String> {
+        let group_string: String = self.inner.get("group").unwrap();
+        group_string.split(".").map(|s| s.to_string()).collect()
     }
 
-    pub fn set_group(&self, new_value: impl Into<String>) {
-        self.inner.set("group", new_value.into()).unwrap();
+    pub fn set_group(&self, new_value: Vec<String>) {
+        let new_value_string = new_value.join(".");
+        self.inner.set("group", new_value_string).unwrap();
+    }
+
+    pub fn model_path(&self) -> Vec<&str> {
+        let mut model_path = self.model_path.lock().unwrap().deref_mut();
+        model_path.clear();
+        model_path.extend(self.group());
+        model_path.iter().map(|s| s.as_str()).collect()
     }
 
     /// Name
@@ -125,7 +143,7 @@ impl Into<Object> for GroupRecord {
 
 impl From<Object> for GroupRecord {
     fn from(value: Object) -> Self {
-        Self { inner: value }
+        Self { inner: value, model_path: Arc::new(Mutex::new(vec![])) }
     }
 }
 

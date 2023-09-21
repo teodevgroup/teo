@@ -208,14 +208,14 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
                                 model_relation.set_optional();
                             }
                             model_relation.set_is_vec(false);
-                            model_relation.set_model(ast_field.r#type.identifier.name.clone());
+                            model_relation.set_model(vec![ast_field.r#type.identifier.name.clone()]);
                         }
                         Arity::Array => {
                             if !ast_field.r#type.item_required {
                                 panic!("Relation cannot have optional items.")
                             }
                             model_relation.set_is_vec(true);
-                            model_relation.set_model(ast_field.r#type.identifier.name.clone());
+                            model_relation.set_model(vec![ast_field.r#type.identifier.name.clone()]);
                         }
                         Arity::Dictionary => panic!("Relations cannot be dictionary.")
                     }
@@ -303,7 +303,7 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
         let seeder_data_set = DataSet {
             name: parser_data_set.identifier.name.clone(),
             groups: parser_data_set.groups.iter().map(|g| Group {
-                name: g.identifier.name.clone(),
+                name: g.identifier.name.split(".").map(|s| s.to_string()).collect(),
                 records: g.records.iter().map(|r| Record {
                     name: r.identifier.name.clone(),
                     value: r.resolved.as_ref().unwrap().clone()

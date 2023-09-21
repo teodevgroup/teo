@@ -212,10 +212,10 @@ impl Query {
                         let from = if !has_join_table {
                             format!("{} AS t", model.table_name())
                         } else {
-                            let through_table_name = graph.model(relation.through().unwrap()).unwrap().table_name();
+                            let through_table_name = AppCtx::get().unwrap().model(relation.through_path().unwrap()).unwrap().unwrap().table_name();
                             format!("{} AS t", through_table_name)
                         };
-                        let opposite_model = graph.model(relation.model()).unwrap();
+                        let opposite_model = AppCtx::get().unwrap().model(relation.model_path()).unwrap().unwrap();
                         let relation_table_name = opposite_model.table_name();
                         let on = if has_join_table {
                             let (_, opposite_relation) = graph.opposite_relation(relation);

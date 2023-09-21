@@ -6,8 +6,14 @@ use crate::core::error::Error;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub id: JsonValue,
-    pub model: String,
+    pub model: Vec<String>,
     pub exp: usize
+}
+
+impl Claims {
+    pub(crate) fn model_path(&self) -> Vec<&str> {
+        self.model.iter().map(|s| s.as_str()).collect()
+    }
 }
 
 pub fn encode_token(claims: Claims, secret: &str) -> String {

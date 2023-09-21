@@ -123,11 +123,10 @@ async fn get_identity(r: &HttpRequest, graph: &'static Graph, conf: &ServerConf,
         return Err(Error::invalid_auth_token());
     }
     let claims = claims_result.unwrap();
-    let json_identifier = claims.id;
-    let teon_identifier = Decoder::decode_object(graph.model(&claims.model).unwrap(), graph, &json_identifier)?;
-    let _model = graph.model(claims.model.as_str()).unwrap();
+    let json_identifier = &claims.id;
+    let teon_identifier = Decoder::decode_object(AppCtx::get().unwrap().model(claims.model_path()).unwrap().unwrap(), graph, &json_identifier)?;
     let identity = graph.find_unique_internal(
-        graph.model(claims.model.as_str()).unwrap().name(),
+        AppCtx::get().unwrap().model(claims.model_path()).unwrap().unwrap(),
         &teon!({
             "where": teon_identifier
         }),
@@ -140,7 +139,7 @@ async fn get_identity(r: &HttpRequest, graph: &'static Graph, conf: &ServerConf,
 
 async fn handle_find_unique(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let action = Action::from_u32(FIND | SINGLE | ENTRY);
-    let result = graph.find_unique_internal(model.name(), input, false, action, source, connection).await;
+    let result = graph.find_unique_internal(model, input, false, action, source, connection).await;
     match result {
         Ok(obj) => {
             match obj {
@@ -159,7 +158,7 @@ async fn handle_find_unique(graph: &'static Graph, input: &Value, model: &'stati
 
 async fn handle_find_first(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let action = Action::from_u32(FIND | SINGLE | ENTRY);
-    let result = graph.find_first_internal(model.name(), input, false, action, source, connection).await;
+    let result = graph.find_first_internal(model, input, false, action, source, connection).await;
     match result {
         Ok(obj) => {
             match obj {
@@ -178,7 +177,7 @@ async fn handle_find_first(graph: &'static Graph, input: &Value, model: &'static
 
 async fn handle_find_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let action = Action::from_u32(FIND | MANY | ENTRY);
-    let result = graph.find_many_internal(model.name(), input, false, action, source, connection.clone()).await;
+    let result = graph.find_many_internal(model, input, false, action, source, connection.clone()).await;
     match result {
         Ok(results) => {
             let mut count_input = input.clone();
@@ -187,7 +186,7 @@ async fn handle_find_many(graph: &'static Graph, input: &Value, model: &'static 
             count_input_obj.remove("take");
             count_input_obj.remove("pageSize");
             count_input_obj.remove("pageNumber");
-            let count = graph.count(model.name(), &count_input, connection.clone()).await.unwrap();
+            let count = graph.count(model, &count_input, connection.clone()).await.unwrap();
             let mut meta = teon!({"count": count});
             let page_size = input.get("pageSize");
             if page_size.is_some() {
@@ -214,7 +213,7 @@ async fn handle_find_many(graph: &'static Graph, input: &Value, model: &'static 
 }
 
 async fn handle_create_internal<'a>(graph: &'static Graph, create: Option<&'a Value>, include: Option<&'a Value>, select: Option<&'a Value>, model: &'static Model, path: &'a KeyPath<'_>, action: Action, action_source: Initiator, connection: Arc<dyn Connection>) -> Result<Value> {
-    let obj = graph.new_object(model.name(), action, action_source, connection)?;
+    let obj = graph.new_object(model, action, action_source, connection)?;
     let set_json_result = match create {
         Some(create) => {
             if !create.is_hashmap() {
@@ -261,7 +260,7 @@ async fn handle_update_internal<'a>(_graph: &'static Graph, object: Object, upda
 async fn handle_update(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(UPDATE | ENTRY | SINGLE);
-    let result = graph.find_unique_internal(model.name(), input, true, action, source, transaction.clone()).await.into_not_found_error();
+    let result = graph.find_unique_internal(model, input, true, action, source, transaction.clone()).await.into_not_found_error();
     if result.is_err() {
         return Err(result.err().unwrap());
     }
@@ -281,7 +280,7 @@ async fn handle_update(graph: &'static Graph, input: &Value, model: &'static Mod
 async fn handle_upsert(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(UPSERT | UPDATE | ENTRY | SINGLE);
-    let result = graph.find_unique_internal(model.name(), input, true, action, source.clone(), transaction.clone()).await.into_not_found_error();
+    let result = graph.find_unique_internal(model, input, true, action, source.clone(), transaction.clone()).await.into_not_found_error();
     let include = input.get("include");
     let select = input.get("select");
     return match result {
@@ -322,7 +321,7 @@ async fn handle_upsert(graph: &'static Graph, input: &Value, model: &'static Mod
         Err(_) => {
             let create = input.get("create");
             let action = Action::from_u32(UPSERT | CREATE | ENTRY | SINGLE);
-            let obj = graph.new_object(model.name(), action, source, transaction.clone()).unwrap();
+            let obj = graph.new_object(model, action, source, transaction.clone()).unwrap();
             let set_json_result = match create {
                 Some(create) => {
                     obj.set_teon_with_path(create, &path!["create"]).await
@@ -360,7 +359,7 @@ async fn handle_upsert(graph: &'static Graph, input: &Value, model: &'static Mod
 async fn handle_delete(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(DELETE | SINGLE | ENTRY);
-    let result = graph.find_unique_internal(model.name(), input, true, action, source, transaction.clone()).await.into_not_found_error();
+    let result = graph.find_unique_internal(model, input, true, action, source, transaction.clone()).await.into_not_found_error();
     if result.is_err() {
         transaction.clone().commit().await.unwrap();
         return Err(result.err().unwrap())
@@ -419,7 +418,7 @@ async fn handle_create_many(graph: &'static Graph, input: &Value, model: &'stati
 async fn handle_update_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(UPDATE | MANY | ENTRY);
-    let result = graph.find_many_internal(model.name(), input, true, action, source, transaction.clone()).await;
+    let result = graph.find_many_internal(model, input, true, action, source, transaction.clone()).await;
     if result.is_err() {
         transaction.commit().await.unwrap();
         return Err(result.err().unwrap());
@@ -448,7 +447,7 @@ async fn handle_update_many(graph: &'static Graph, input: &Value, model: &'stati
 async fn handle_delete_many(graph: &'static Graph, input: &Value, model: &'static Model, source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
     let transaction = connection.transaction().await.unwrap();
     let action = Action::from_u32(DELETE | MANY | ENTRY);
-    let result = graph.find_many_internal(model.name(), input, true, action, source, transaction.clone()).await;
+    let result = graph.find_many_internal(model, input, true, action, source, transaction.clone()).await;
     if result.is_err() {
         transaction.commit().await.unwrap();
         return Err(result.err().unwrap());
@@ -475,15 +474,15 @@ async fn handle_delete_many(graph: &'static Graph, input: &Value, model: &'stati
 }
 
 async fn handle_count(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
-    graph.count(model.name(), input, connection).await.map(|count| Res::teon_data(teon!(count)))
+    graph.count(model, input, connection).await.map(|count| Res::teon_data(teon!(count)))
 }
 
 async fn handle_aggregate(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
-    graph.aggregate(model.name(), input, connection).await.map(|result| Res::teon_data(result))
+    graph.aggregate(model, input, connection).await.map(|result| Res::teon_data(result))
 }
 
 async fn handle_group_by(graph: &'static Graph, input: &Value, model: &'static Model, _source: Initiator, connection: Arc<dyn Connection>) -> Result<Res> {
-    graph.group_by(model.name(), input, connection).await.map(|result| Res::teon_data(result))
+    graph.group_by(model, input, connection).await.map(|result| Res::teon_data(result))
 }
 
 async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'static Model, conf: &'a ServerConf, connection: Arc<dyn Connection>, req: Req) -> Result<Res> {
@@ -526,7 +525,7 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
         return Err(Error::missing_required_input_with_type("auth checker", path!["credentials"]));
     }
     let by_field = model.field(by_key.unwrap()).unwrap();
-    let obj_result = graph.find_unique_internal(model.name(), &teon!({
+    let obj_result = graph.find_unique_internal(model, &teon!({
         "where": {
             identity_key.unwrap(): identity_value.unwrap()
         }
@@ -554,7 +553,7 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
             let json_identifier: JsonValue = teon_identifier.into();
             let claims = Claims {
                 id: json_identifier,
-                model: obj.model().name().to_string(),
+                model: obj.model().path().iter().map(|s| s.to_string()).collect(),
                 exp
             };
             if conf.jwt_secret.as_ref().is_none() {
@@ -810,7 +809,7 @@ fn make_app(
                 };
                 let original_action = Action::handler_from_name(path_components.action.as_str());
 
-                let model_def = AppCtx::get().unwrap().model(path_components.model_path())?;
+                let model_def = AppCtx::get().unwrap().model(path_components.model_path()).unwrap();
                 let original_teon_body = if let (Some(original_action), Some(model_def)) = (original_action, model_def) {
                     // Check whether this action is supported by this model
                     if !model_def.has_action(original_action) || model_def.is_teo_internal() {
@@ -908,7 +907,7 @@ pub(crate) struct PathComponents {
 
 impl PathComponents {
     pub(crate) fn model_path(&self) -> Vec<&str> {
-        let mut result = self.ns.iter().map(|n| n.as_str()).collect();
+        let mut result: Vec<&str> = self.ns.iter().map(|n| n.as_str()).collect();
         result.push(self.model.as_str());
         result
     }

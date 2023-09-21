@@ -29,6 +29,7 @@ use crate::teon;
 pub struct Model {
     name: &'static str,
     ns_path: Vec<String>,
+    full_path: Vec<String>,
     table_name: Cow<'static, str>,
     localized_name: Cow<'static, str>,
     description: Cow<'static, str>,
@@ -82,6 +83,11 @@ impl Model {
         Self {
             name,
             ns_path: ns_path.clone(),
+            full_path: {
+                let mut path = ns_path.clone();
+                path.push(name.to_string());
+                path
+            },
             table_name: Cow::Owned(if ns_path.is_empty() { name.to_lowercase() } else { "_".to_owned() + &ns_path.join("_") + "_" + &name.to_lowercase() }),
             localized_name: localized_name.map_or_else(|| Cow::Owned(name.to_sentence_case()), |n| Cow::Borrowed(n)),
             description: description.map_or_else(|| Cow::Borrowed("This model doesn't have a description."), |n| Cow::Borrowed(n)),
@@ -128,6 +134,10 @@ impl Model {
             teo_internal: false,
             has_virtual_fields: false,
         }
+    }
+
+    pub(crate) fn path(&self) -> Vec<&str> {
+        self.full_path.iter().map(|s| s.as_str()).collect()
     }
 
     pub(crate) fn set_table_name(&mut self, table_name: &'static str) {

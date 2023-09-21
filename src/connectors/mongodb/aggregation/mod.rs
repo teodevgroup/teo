@@ -370,7 +370,7 @@ impl Aggregation {
                         let column_name = field.column_name();
                         retval.insert(column_name, Self::build_where_item(model, field.field_type(), field.is_optional(), value)?);
                     } else if let Some(relation) = model.relation(key) {
-                        let relation_model = AppCtx::get().unwrap().graph().model(relation.model()).unwrap();
+                        let relation_model = AppCtx::get().unwrap().model(relation.model_path()).unwrap().unwrap();
                         let (command, inner_where) = Input::key_value(value.as_hashmap().unwrap());
                         let _inner_where = Self::build_where(relation_model, inner_where)?;
                         match command {
@@ -477,7 +477,7 @@ impl Aggregation {
     fn build_lookup_with_join_table(model: &Model, _key: &str, relation: &Relation, value: &Value) -> Result<Vec<Document>> {
         let mut retval = vec![];
         let graph = AppCtx::get().unwrap().graph();
-        let join_model = graph.model(relation.through().unwrap()).unwrap();
+        let join_model = AppCtx::get().unwrap().model(relation.through_path().unwrap()).unwrap().unwrap();
         let local_relation_on_join_table = join_model.relation(relation.local()).unwrap();
         let foreign_relation_on_join_table = join_model.relation(relation.foreign()).unwrap();
         let _foreign_model_name = foreign_relation_on_join_table.model();

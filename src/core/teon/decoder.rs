@@ -9,6 +9,7 @@ use key_path::{KeyPath, path};
 use maplit::{hashmap, hashset};
 use once_cell::sync::Lazy;
 use serde_json::{Value as JsonValue, Map as JsonMap};
+use crate::app::app_ctx::AppCtx;
 use crate::core::action::{Action, CONNECT, CONNECT_OR_CREATE, CREATE, CREATE_MANY_HANDLER, DELETE, DISCONNECT, FIND_MANY_HANDLER, FIND_UNIQUE_HANDLER, MANY, NESTED, SET, SINGLE, UPDATE, UPSERT};
 use crate::core::error::Error;
 use crate::core::field::r#type::{FieldType, FieldTypeOwner};
@@ -621,7 +622,7 @@ impl Decoder {
             Ok(Value::Bool(b))
         } else if let Some(_json_map) = json_value.as_object() {
             let relation = model.relation(name).unwrap();
-            let model = graph.model(relation.model()).unwrap();
+            let model = AppCtx::get().unwrap().model(relation.model_path()).unwrap().unwrap();
             if relation.is_vec() {
                 Ok(Self::decode_action_arg_at_path(model, graph, Action::from_u32(FIND_MANY_HANDLER), json_value, path)?)
             } else {
@@ -895,7 +896,7 @@ impl Decoder {
             for (key, value) in json_map {
                 let key = key.as_str();
                 let path = path + key;
-                let model = graph.model(relation.model()).unwrap();
+                let model = AppCtx::get().unwrap().model(relation.model_path()).unwrap().unwrap();
                 retval.insert(key.to_owned(), Self::decode_where(model, graph, value, path)?);
             }
             Ok(Value::HashMap(retval))

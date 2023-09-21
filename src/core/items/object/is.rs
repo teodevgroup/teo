@@ -44,7 +44,7 @@ impl Item for IsItem {
                     }
                     Some(relation_name) => {
                         let rhs_relation = rhs.model().relation(relation_name).unwrap();
-                        if o.model().name() != rhs_relation.model() {
+                        if o.model().path() != rhs_relation.model_path() {
                             return Err(ctx.with_invalid("value object is not target object"))
                         }
                         for (f, r) in rhs_relation.iter() {

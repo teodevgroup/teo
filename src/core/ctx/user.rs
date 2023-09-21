@@ -18,8 +18,8 @@ impl UserCtx {
         Self { conn, req }
     }
 
-    pub fn model_ctx(&self, name: &str) -> Result<ModelCtx> {
-        let model = AppCtx::get()?.graph().model(name)?;
+    pub fn model_ctx(&self, model_path: Vec<&str>) -> Result<ModelCtx> {
+        let model = AppCtx::get()?.model(model_path).unwrap().unwrap();
         Ok(ModelCtx {
             conn: self.conn.clone(),
             model,

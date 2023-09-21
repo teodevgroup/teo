@@ -45,7 +45,7 @@ impl Execution {
                     None
                 } else {
                     let graph = AppCtx::get().unwrap().graph();
-                    let opposite_model = graph.model(model.relation(relation_name).unwrap().model()).unwrap();
+                    let opposite_model = AppCtx::get().unwrap().model(vec![relation_name]).unwrap().unwrap();
                     let field = opposite_model.field(field_name).unwrap();
                     Some((column_name.to_owned(), RowDecoder::decode(field.field_type(), field.is_optional(), row, column_name, dialect)))
                 }

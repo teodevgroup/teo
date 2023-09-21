@@ -446,7 +446,7 @@ impl Connection for MongoDBConnection {
             Ok(None)
         } else {
             for doc in results {
-                let obj = AppCtx::get().unwrap().graph().new_object(model.name(), action, action_source.clone(), Arc::new(self.clone()))?;
+                let obj = AppCtx::get().unwrap().graph().new_object(model, action, action_source.clone(), Arc::new(self.clone()))?;
                 self.clone().document_to_object(&doc.unwrap(), &obj, select, include)?;
                 return Ok(Some(obj));
             }
@@ -470,7 +470,7 @@ impl Connection for MongoDBConnection {
         let mut result: Vec<Object> = vec![];
         let results: Vec<std::result::Result<Document, MongoDBError>> = cur.collect().await;
         for doc in results {
-            let obj = AppCtx::get().unwrap().graph().new_object(model.name(), action, action_source.clone(), Arc::new(self.clone()))?;
+            let obj = AppCtx::get().unwrap().graph().new_object(model, action, action_source.clone(), Arc::new(self.clone()))?;
             match self.clone().document_to_object(&doc.unwrap(), &obj, select, include) {
                 Ok(_) => {
                     if reverse {

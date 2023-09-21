@@ -172,7 +172,7 @@ impl Relation {
         self.is_vec = is_vec
     }
 
-    pub(crate) fn set_model(&mut self, model: String) {
+    pub(crate) fn set_model(&mut self, model: Vec<String>) {
         self.model = model;
     }
 
