@@ -73,9 +73,9 @@ impl<'a> Outline<'a> {
                                     fields.push(Field {
                                         name: relation.name(),
                                         field_type: if relation.is_vec() {
-                                            lookup.generated_type_to_vec(Cow::Borrowed(relation.model()))
+                                            lookup.generated_type_to_vec(Cow::Borrowed(relation.model().name()))
                                         } else {
-                                            Cow::Borrowed(relation.model())
+                                            Cow::Borrowed(relation.model().name())
                                         },
                                         optional: relation.is_optional(),
                                         localized_name: Cow::Owned(relation.localized_name()),
@@ -113,7 +113,7 @@ impl<'a> Outline<'a> {
                                 docs: Cow::Owned(format!("Include relations of the {} model.", m.name().to_word_case())),
                                 fields: m.relations().iter().map(|r| Field {
                                     name: r.name(),
-                                    field_type: Cow::Owned(format!("{}{}Args", r.model(), if r.is_vec() { "FindMany" } else { "" })),
+                                    field_type: Cow::Owned(format!("{}{}Args", r.model().name(), if r.is_vec() { "FindMany" } else { "" })),
                                     optional: true,
                                     localized_name: Cow::Owned(r.localized_name()),
                                     docs: r.description().map(|d| Cow::Borrowed(d)).unwrap_or(Cow::Borrowed("")),
@@ -142,7 +142,7 @@ impl<'a> Outline<'a> {
                                 } else if let Some(relation) = m.relation(k) {
                                     Field {
                                         name: relation.name(),
-                                        field_type: if relation.is_vec() { Cow::Owned(relation.model().to_owned() + "ListRelationFilter") } else { Cow::Owned(relation.model().to_owned() + "RelationFilter") },
+                                        field_type: if relation.is_vec() { Cow::Owned(relation.model().name().to_owned() + "ListRelationFilter") } else { Cow::Owned(relation.model().name().to_owned() + "RelationFilter") },
                                         optional: true,
                                         localized_name: Cow::Owned(relation.localized_name()),
                                         docs: Cow::Borrowed(relation.description().unwrap_or("")),
@@ -475,9 +475,9 @@ impl<'a> Outline<'a> {
                                         field_type: {
                                             if let Some(opposite) = graph.opposite_relation(relation).1 {
                                                 let before = "CreateNested".to_owned() + if relation.is_vec() { "Many" } else { "One" };
-                                                helper::without_infix(relation.model(), before.as_str(), opposite.name(), "Input")
+                                                helper::without_infix(relation.model().name(), before.as_str(), opposite.name(), "Input")
                                             } else {
-                                                Cow::Owned(format!("{}CreateNested{}Input", relation.model(), if relation.is_vec() { "Many" } else { "One" }))
+                                                Cow::Owned(format!("{}CreateNested{}Input", relation.model().name(), if relation.is_vec() { "Many" } else { "One" }))
                                             }
                                         },
                                         optional: if relation.is_optional() { true } else {
@@ -622,9 +622,9 @@ impl<'a> Outline<'a> {
                                         docs: Cow::Borrowed(relation.description().unwrap_or("")),
                                         field_type: {
                                             if let Some(opposite) = graph.opposite_relation(relation).1 {
-                                                helper::without_infix(relation.model(), &("UpdateNested".to_owned() + if relation.is_vec() { "Many" } else { "One" }), opposite.name(), "Input")
+                                                helper::without_infix(relation.model().name(), &("UpdateNested".to_owned() + if relation.is_vec() { "Many" } else { "One" }), opposite.name(), "Input")
                                             } else {
-                                                Cow::Owned(format!("{}UpdateNested{}Input", relation.model(), if relation.is_vec() { "Many" } else { "One" }))
+                                                Cow::Owned(format!("{}UpdateNested{}Input", relation.model().name(), if relation.is_vec() { "Many" } else { "One" }))
                                             }
                                         },
                                         optional: true,

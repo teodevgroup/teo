@@ -93,7 +93,7 @@ impl Relation {
     }
 
     pub(crate) fn through_path(&self) -> Option<Vec<&str>> {
-        self.through.map(|t| t.iter().map(|s| s.as_str()).collect())
+        self.through.as_ref().map(|t| t.iter().map(|s| s.as_str()).collect())
     }
 
     pub fn is_vec(&self) -> bool {

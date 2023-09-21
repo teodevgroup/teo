@@ -20,3 +20,4 @@ pub mod items;
 pub mod item;
 pub(crate) mod conf;
 pub mod interface;
+pub mod cell;

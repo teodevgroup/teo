@@ -1,16 +1,15 @@
 use std::fmt::{Debug, Display, Formatter};
 use std::borrow::Borrow;
-use std::ops::DerefMut;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
 use crate::app::app_ctx::AppCtx;
+use crate::core::cell::SyncUnsafeCell;
 use crate::core::connector::connection::Connection;
 use crate::prelude::{Object, Value, Result};
 
 /// Group record
-#[derive(Clone)]
 pub struct GroupRecord {
     pub(super) inner: Object,
-    model_path: Arc<Mutex<Vec<String>>>,
+    model_path: SyncUnsafeCell<Vec<String>>,
 }
 
 impl PartialEq for GroupRecord {
@@ -44,7 +43,7 @@ impl GroupRecord {
         let model = AppCtx::get().unwrap().model(vec!["__TeoGroupRecord"]).unwrap().unwrap();
         Self {
             inner: AppCtx::get().unwrap().graph().create_object(model, values, connection, None).await.unwrap(),
-            model_path: Arc::new(Mutex::new(vec![])),
+            model_path: SyncUnsafeCell::new(vec![]),
         }
     }
 
@@ -110,7 +109,7 @@ impl GroupRecord {
     }
 
     pub fn model_path(&self) -> Vec<&str> {
-        let mut model_path = self.model_path.lock().unwrap().deref_mut();
+        let mut model_path = unsafe { &mut *self.model_path.get() };
         model_path.clear();
         model_path.extend(self.group());
         model_path.iter().map(|s| s.as_str()).collect()
@@ -143,7 +142,7 @@ impl Into<Object> for GroupRecord {
 
 impl From<Object> for GroupRecord {
     fn from(value: Object) -> Self {
-        Self { inner: value, model_path: Arc::new(Mutex::new(vec![])) }
+        Self { inner: value, model_path: SyncUnsafeCell::new(vec![]) }
     }
 }
 
