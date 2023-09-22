@@ -25,6 +25,7 @@ use crate::parser::ast::action::ActionGroupDeclaration;
 use crate::parser::ast::data_set::ASTDataSet;
 use crate::parser::ast::interface_type::InterfaceType;
 use crate::parser::ast::model::ASTModel;
+use crate::parser::ast::namespace::ASTNamespace;
 use crate::parser::ast::r#enum::ASTEnum;
 use crate::parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError};
 use crate::parser::diagnostics::printer;
@@ -46,7 +47,6 @@ pub(super) fn parse_schema(main: Option<&str>, diagnostics: &mut Diagnostics) ->
 
 pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
     let app_ctx = AppCtx::get()?;
-    let graph = app_ctx.graph();
     let parser = app_ctx.parser();
     // connector conf
     let connector = parser.connector()?;
@@ -98,17 +98,21 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
             git_commit: client.git_commit,
         })
     }
-    // enums
-    install_enums_to_namespace(parser.enums(), AppCtx::get().unwrap().main_namespace_mut());
-    // models
-    install_models_to_namespace(parser.models(), AppCtx::get().unwrap().main_namespace_mut());
     define_seeder_models();
-    // datasets
-    install_datasets_to_namespace(parser.data_sets(), AppCtx::get().unwrap().main_namespace_mut());
-    // interfaces
-    // middlewares
-    // action groups
-    install_action_groups_to_namespace(parser.action_groups(), AppCtx::get().unwrap().main_namespace_mut())?;
+    for source in parser.sources.values() {
+        // enums
+        install_enums_to_namespace(source.enums(), AppCtx::get().unwrap().main_namespace_mut());
+        // models
+        install_models_to_namespace(source.models(), AppCtx::get().unwrap().main_namespace_mut(), diagnostics);
+        // datasets
+        install_datasets_to_namespace(source.data_sets(), AppCtx::get().unwrap().main_namespace_mut());
+        // interfaces
+        // middlewares
+        // action groups
+        install_action_groups_to_namespace(source.action_groups(), AppCtx::get().unwrap().main_namespace_mut())?;
+        // namespaces
+        install_namespaces_to_namespace(source.namespaces(), AppCtx::get().unwrap().main_namespace_mut(), diagnostics)?;
+    }
     // static files
     for static_files in parser.static_files() {
         let map = Box::leak(Box::new(static_files.resolved_map.as_ref().unwrap().clone())).as_str();
@@ -152,7 +156,7 @@ fn install_types_to_field_owner<F>(name: &str, field: &mut F, enums: &HashMap<&'
     };
 }
 
-fn install_enums_to_namespace(enums: Vec<&ASTEnum>, namespace: &mut Namespace) {
+fn install_enums_to_namespace(enums: Vec<&'static ASTEnum>, namespace: &mut Namespace) {
     for ast_enum in enums {
         let enum_def = Enum::new(
             ast_enum.identifier.name.as_str(),
@@ -167,7 +171,8 @@ fn install_enums_to_namespace(enums: Vec<&ASTEnum>, namespace: &mut Namespace) {
     }
 }
 
-fn install_models_to_namespace(models: Vec<&ASTModel>, namespace: &mut Namespace) {
+fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut Namespace, diagnostics: &mut Diagnostics) -> Result<()> {
+    let graph = AppCtx::get().unwrap().graph();
     for ast_model in models {
         let mut model = Model::new(
             ast_model.identifier.name.as_str(),
@@ -353,9 +358,10 @@ fn install_models_to_namespace(models: Vec<&ASTModel>, namespace: &mut Namespace
                 ASTFieldClass::Unresolved => unreachable!()
             }
         }
-        namespace.add_model(model, ast_model.identifier.name.as_str()).unwrap();
+        namespace.add_model(model, ast_model.identifier.name.as_str())?;
         namespace.model_mut(ast_model.identifier.name.as_str()).unwrap().finalize();
     }
+    Ok(())
 }
 
 fn install_datasets_to_namespace(datasets: Vec<&ASTDataSet>, namespace: &mut Namespace) {
@@ -391,6 +397,25 @@ fn install_action_groups_to_namespace(action_groups: Vec<&ActionGroupDeclaration
                 input_fields: action_dec.resolved_input_shape.as_ref().unwrap().clone(),
             })?;
         }
+    }
+    Ok(())
+}
+
+fn install_namespaces_to_namespace(ast_namespaces: Vec<&ASTNamespace>, namespace: &mut Namespace, diagnostics: &mut Diagnostics) -> Result<()> {
+    for child_ast_namespace in ast_namespaces {
+        let child_namespace_mut = namespace.child_namespace_mut(&child_ast_namespace.name);
+        // enums
+        install_enums_to_namespace(child_ast_namespace.enums(), child_namespace_mut);
+        // models
+        install_models_to_namespace(child_ast_namespace.models(), child_namespace_mut, diagnostics);
+        // datasets
+        install_datasets_to_namespace(child_ast_namespace.data_sets(), child_namespace_mut);
+        // interfaces
+        // middlewares
+        // action groups
+        install_action_groups_to_namespace(child_ast_namespace.action_groups(), child_namespace_mut)?;
+        // namespaces
+        install_namespaces_to_namespace(child_ast_namespace.namespaces(), child_namespace_mut, diagnostics)?;
     }
     Ok(())
 }

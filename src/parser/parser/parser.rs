@@ -35,7 +35,7 @@ use crate::parser::ast::model::ASTModel;
 use crate::parser::ast::pipeline::ASTPipeline;
 use crate::parser::ast::r#enum::{ASTEnum, EnumChoice};
 use crate::parser::ast::r#type::{Arity, Type};
-use crate::parser::ast::source::Source;
+use crate::parser::ast::source::ASTSource;
 use crate::parser::ast::span::Span;
 use crate::parser::ast::subscript::Subscript;
 use crate::parser::ast::test_conf::ASTTestConf;
@@ -71,7 +71,7 @@ static PRATT_PARSER: Lazy<PrattParser<Rule>> = Lazy::new(|| {
 
 #[derive(Debug, ToMut)]
 pub(crate) struct ASTParser {
-    pub(crate) sources: BTreeMap<usize, Source>,
+    pub(crate) sources: BTreeMap<usize, ASTSource>,
     pub(crate) enums: Vec<Vec<usize>>,
     pub(crate) models: Vec<Vec<usize>>,
     pub(crate) connector: Option<Vec<usize>>,
@@ -175,6 +175,8 @@ impl ASTParser {
         let mut enums: BTreeSet<usize> = btreeset!{};
         let mut models: BTreeSet<usize> = btreeset!{};
         let mut namespaces: BTreeSet<usize> = btreeset!{};
+        let mut action_groups: BTreeSet<usize> = btreeset!{};
+        let mut data_sets: BTreeSet<usize> = btreeset!{};
         let mut pairs = pairs.into_inner().peekable();
 
         while let Some(current) = pairs.next() {
@@ -209,6 +211,7 @@ impl ASTParser {
                 Rule::dataset_declaration => {
                     let dataset_block = self.parse_dataset_block(current, source_id, item_id, diagnostics);
                     tops.insert(item_id, dataset_block);
+                    data_sets.insert(item_id);
                     self.data_sets.push(vec![source_id, item_id]);
                 }
                 Rule::EOI | Rule::EMPTY_LINES => {},
@@ -221,6 +224,7 @@ impl ASTParser {
                 Rule::action_group_declaration => {
                     let action_group_declaration = self.parse_action_group_declaration(current, source_id, item_id, diagnostics);
                     tops.insert(item_id, action_group_declaration);
+                    action_groups.insert(item_id);
                     self.action_groups.push(vec![source_id, item_id]);
                 },
                 Rule::middleware_declaration => {
@@ -249,7 +253,7 @@ impl ASTParser {
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
             }
         }
-        let result = Source::new(source_id, path.clone(), tops, imports, constants, enums, models);
+        let result = ASTSource::new(source_id, path.clone(), tops, imports, constants, enums, models, namespaces, action_groups, data_sets);
         for import in result.borrow().imports() {
             let found = self.sources.values().find(|v| {
                 (*v).borrow().path == import.path
@@ -589,6 +593,7 @@ impl ASTParser {
         let mut enums: BTreeSet<usize> = btreeset!{};
         let mut models: BTreeSet<usize> = btreeset!{};
         let mut namespaces: BTreeSet<usize> = btreeset!{};
+        let mut data_sets: BTreeSet<usize> = btreeset!{};
         let mut content_parent_ids = parent_ids.clone();
         content_parent_ids.push(item_id);
         for current in pair.into_inner() {
@@ -640,6 +645,7 @@ impl ASTParser {
                     let content_item_id = self.next_id();
                     let dataset_block = self.parse_dataset_block(current, source_id, content_item_id, diagnostics);
                     tops.insert(content_item_id, dataset_block);
+                    data_sets.insert(content_item_id);
                     self.data_sets.push(vec_join(source_id, &content_parent_ids, content_item_id));
                 }
                 Rule::EOI | Rule::EMPTY_LINES => {},
@@ -693,7 +699,7 @@ impl ASTParser {
             }
         }
 
-        let result = ASTNamespace::new(source_id, parent_ids, item_id, span, name.clone().unwrap().name.clone(), tops, imports, constants, enums, models, namespaces);
+        let result = ASTNamespace::new(source_id, parent_ids, item_id, span, name.clone().unwrap().name.clone(), tops, imports, constants, enums, models, namespaces, data_sets);
         for import in result.borrow().imports() {
             let found = self.sources.values().find(|v| {
                 (*v).borrow().path == import.path
@@ -1290,7 +1296,7 @@ impl ASTParser {
         }
     }
 
-    pub(crate) fn get_source(&self, id: usize) -> &Source {
+    pub(crate) fn get_source(&self, id: usize) -> &ASTSource {
         self.sources.get(&id).unwrap()
     }
 

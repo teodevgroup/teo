@@ -30,6 +30,7 @@ pub(crate) struct ASTNamespace {
     pub(crate) enums: BTreeSet<usize>,
     pub(crate) models: BTreeSet<usize>,
     pub(crate) namespaces: BTreeSet<usize>,
+    pub(crate) data_sets: BTreeSet<usize>,
     pub(crate) resolved: bool,
 }
 
@@ -37,10 +38,10 @@ impl ASTNamespace {
     pub(crate) fn new(
         source_id: usize, parent_ids: Vec<usize>, id: usize, span: Span, name: String,
         tops: BTreeMap<usize, Top>, imports: BTreeSet<usize>, constants: BTreeSet<usize>, enums: BTreeSet<usize>,
-        models: BTreeSet<usize>, namespaces: BTreeSet<usize>,
+        models: BTreeSet<usize>, namespaces: BTreeSet<usize>, data_sets: BTreeSet<usize>,
     ) -> Self {
         Self {
-            source_id, parent_ids, id, span, name, tops, imports, constants, enums, models, namespaces, resolved: false
+            source_id, parent_ids, id, span, name, tops, imports, constants, enums, models, namespaces, data_sets, resolved: false
         }
     }
 
@@ -110,6 +111,27 @@ impl ASTNamespace {
 
     pub(crate) fn get_static_files(&self, id: usize) -> &StaticFiles {
         self.tops.get(&id).unwrap().as_static_files().unwrap()
+    }
+
+
+    pub(crate) fn models(&self) -> Vec<&ASTModel> {
+        self.models.iter().map(|m| self.get_model(*m)).collect()
+    }
+
+    pub(crate) fn enums(&self) -> Vec<&ASTEnum> {
+        self.enums.iter().map(|m| self.get_enum(*m)).collect()
+    }
+
+    pub(crate) fn action_groups(&self) -> Vec<&ActionGroupDeclaration> {
+        self.namespaces.iter().map(|m| self.get_action_group(*m)).collect()
+    }
+
+    pub(crate) fn namespaces(&self) -> Vec<&ASTNamespace> {
+        self.namespaces.iter().map(|m| self.get_namespace(*m)).collect()
+    }
+
+    pub(crate) fn data_sets(&self) -> Vec<&ASTDataSet> {
+        self.data_sets.iter().map(|m| self.get_data_set(*m)).collect()
     }
 }
 
