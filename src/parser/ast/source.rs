@@ -184,7 +184,7 @@ impl ASTSource {
     pub(crate) fn get_model_by_path(&self, path: Vec<&str>) -> Option<&ASTModel> {
         if path.len() == 1 {
             self.models().iter().find(|m| {
-                m.ns_path.iter().map(|s| s.as_str()).collect::<Vec<_>>() == path
+                m.identifier.name.as_str() == *path.last().unwrap()
             }).map(|s| *s)
         } else {
             let mut ns_path = path.clone();
