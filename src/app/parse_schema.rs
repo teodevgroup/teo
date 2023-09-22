@@ -276,7 +276,8 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
                                 model_relation.set_optional();
                             }
                             model_relation.set_is_vec(false);
-                            model_relation.set_model(ast_field.r#type.identifiers.path());
+                            let ref_model = AppCtx::get().unwrap().parser().model_by_id(&ast_field.r#type.type_id);
+                            model_relation.set_model(ref_model.path().iter().map(|s| s.to_string()).collect());
                         }
                         Arity::Array => {
                             if !ast_field.r#type.item_required {

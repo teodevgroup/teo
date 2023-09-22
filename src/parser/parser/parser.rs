@@ -3,6 +3,7 @@ use snailquote::unescape;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::fs;
+use array_tool::vec::Shift;
 use maplit::{btreemap, btreeset, hashmap};
 use pest::Parser as PestParser;
 use pest::pratt_parser::PrattParser;
@@ -624,6 +625,7 @@ impl ASTParser {
                         new_path
                     }, {
                         let mut ids = content_parent_ids.clone();
+                        ids.unshift(source_id);
                         ids.push(content_item_id);
                         ids
                     });
@@ -1385,15 +1387,19 @@ impl ASTParser {
 
     pub(crate) fn models(&self) -> Vec<&ASTModel> {
         self.models.iter().map(|m| {
-            if m.len() == 2 {
-                let source = self.get_source(*m.get(0).unwrap());
-                source.get_model(*m.get(1).unwrap())
-            } else {
-                let namespace_path = m.as_slice()[..m.len() - 1].to_vec();
-                let namespace = self.namespace(namespace_path);
-                namespace.get_model(*m.last().unwrap())
-            }
+            self.model_by_id(m)
         }).collect()
+    }
+
+    pub(crate) fn model_by_id(&self, id_path: &Vec<usize>) -> &ASTModel {
+        if id_path.len() == 2 {
+            let source = self.get_source(*id_path.get(0).unwrap());
+            source.get_model(*id_path.get(1).unwrap())
+        } else {
+            let namespace_path = id_path.as_slice()[..id_path.len() - 1].to_vec();
+            let namespace = self.namespace(namespace_path);
+            namespace.get_model(*id_path.last().unwrap())
+        }
     }
 
     pub(crate) fn namespace(&self, path: Vec<usize>) -> &ASTNamespace {

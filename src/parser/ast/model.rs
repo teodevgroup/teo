@@ -47,4 +47,10 @@ impl ASTModel {
         self.scalar_field_and_cached_property_enum = scalar_field_and_cached_property_enum;
         self.direct_relation_enum = direct_relation_enum;
     }
+
+    pub(crate) fn path(&self) -> Vec<&str> {
+        let mut retval: Vec<&str> = self.ns_path.iter().map(|s| s.as_str()).collect();
+        retval.push(self.identifier.name.as_str());
+        retval
+    }
 }
