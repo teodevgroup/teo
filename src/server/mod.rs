@@ -593,6 +593,7 @@ async fn handler(req_ctx: ReqCtx) -> Result<Res> {
     let action = req_ctx.transformed_action.unwrap();
     let body = &req_ctx.transformed_teon_body;
     let model_def = AppCtx::get().unwrap().model(req_ctx.path_components.model_path())?.unwrap();
+    println!("see here model def: {:?}", model_def.path());
     match action.to_u32() {
         FIND_UNIQUE_HANDLER => {
             let result = handle_find_unique(&graph, &body, model_def, source.clone(), connection.clone()).await;
@@ -808,8 +809,8 @@ fn make_app(
                     Err(err) => return log_err_and_return_response(start, path_components.model.as_str(), path_components.action.as_str(), err),
                 };
                 let original_action = Action::handler_from_name(path_components.action.as_str());
-
                 let model_def = AppCtx::get().unwrap().model(path_components.model_path()).unwrap();
+                println!("see here found model def or not : {}", model_def.is_some());
                 let original_teon_body = if let (Some(original_action), Some(model_def)) = (original_action, model_def) {
                     // Check whether this action is supported by this model
                     if !model_def.has_action(original_action) || model_def.is_teo_internal() {

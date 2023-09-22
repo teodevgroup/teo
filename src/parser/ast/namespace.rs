@@ -5,7 +5,7 @@ use crate::parser::ast::client::ASTClient;
 use crate::parser::ast::config::ASTServer;
 use crate::parser::ast::connector::ASTConnector;
 use crate::parser::ast::constant::Constant;
-use crate::parser::ast::data_set::DataSet;
+use crate::parser::ast::data_set::ASTDataSet;
 use crate::parser::ast::debug_conf::ASTDebugConf;
 use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::import::ASTImport;
@@ -29,6 +29,7 @@ pub(crate) struct ASTNamespace {
     pub(crate) constants: BTreeSet<usize>,
     pub(crate) enums: BTreeSet<usize>,
     pub(crate) models: BTreeSet<usize>,
+    pub(crate) namespaces: BTreeSet<usize>,
     pub(crate) resolved: bool,
 }
 
@@ -36,10 +37,10 @@ impl ASTNamespace {
     pub(crate) fn new(
         source_id: usize, parent_ids: Vec<usize>, id: usize, span: Span, name: String,
         tops: BTreeMap<usize, Top>, imports: BTreeSet<usize>, constants: BTreeSet<usize>, enums: BTreeSet<usize>,
-        models: BTreeSet<usize>
+        models: BTreeSet<usize>, namespaces: BTreeSet<usize>,
     ) -> Self {
         Self {
-            source_id, parent_ids, id, span, name, tops, imports, constants, enums, models, resolved: false
+            source_id, parent_ids, id, span, name, tops, imports, constants, enums, models, namespaces, resolved: false
         }
     }
 
@@ -83,7 +84,7 @@ impl ASTNamespace {
         self.tops.get(&id).unwrap().as_client().unwrap()
     }
 
-    pub(crate) fn get_data_set(&self, id: usize) -> &DataSet {
+    pub(crate) fn get_data_set(&self, id: usize) -> &ASTDataSet {
         self.tops.get(&id).unwrap().as_data_set().unwrap()
     }
 

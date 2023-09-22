@@ -3,7 +3,6 @@ use snailquote::unescape;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::fs;
-//use itertools::Itertools;
 use maplit::{btreemap, btreeset, hashmap};
 use pest::Parser as PestParser;
 use pest::pratt_parser::PrattParser;
@@ -20,7 +19,7 @@ use crate::parser::ast::comment_block::CommentBlock;
 use crate::parser::ast::config::ASTServer;
 use crate::parser::ast::connector::ASTConnector;
 use crate::parser::ast::constant::Constant;
-use crate::parser::ast::data_set::{DataSet, DataSetGroup, DataSetRecord};
+use crate::parser::ast::data_set::{ASTDataSet, DataSetGroup, DataSetRecord};
 use crate::parser::ast::debug_conf::ASTDebugConf;
 use crate::parser::ast::decorator::ASTDecorator;
 use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral, RegExpLiteral, NullishCoalescing, Negation, BitwiseNegation };
@@ -507,7 +506,7 @@ impl ASTParser {
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
             }
         }
-        Top::DataSet(DataSet::new(span, source_id, item_id, identifier.unwrap(), auto_seed, notrack, groups))
+        Top::DataSet(ASTDataSet::new(span, source_id, item_id, identifier.unwrap(), auto_seed, notrack, groups))
     }
 
     fn parse_dataset_group(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> DataSetGroup {
@@ -694,7 +693,7 @@ impl ASTParser {
             }
         }
 
-        let result = ASTNamespace::new(source_id, parent_ids, item_id, span, name.clone().unwrap().name.clone(), tops, imports, constants, enums, models);
+        let result = ASTNamespace::new(source_id, parent_ids, item_id, span, name.clone().unwrap().name.clone(), tops, imports, constants, enums, models, namespaces);
         for import in result.borrow().imports() {
             let found = self.sources.values().find(|v| {
                 (*v).borrow().path == import.path
@@ -1340,6 +1339,13 @@ impl ASTParser {
         self.clients.iter().map(|g| {
             let source = self.get_source(*g.get(0).unwrap());
             source.get_client(*g.get(1).unwrap())
+        }).collect()
+    }
+
+    pub(crate) fn data_sets(&self) -> Vec<&ASTDataSet> {
+        self.data_sets.iter().map(|d| {
+            let source = self.get_source(*d.get(0).unwrap());
+            source.get_data_set(*d.get(1).unwrap())
         }).collect()
     }
 

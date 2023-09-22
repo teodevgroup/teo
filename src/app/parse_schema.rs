@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use dotenvy::dotenv;
 
 use crate::app::app_ctx::AppCtx;
+use crate::app::namespace::Namespace;
 use crate::core::conf::debug::DebugConf;
 use crate::core::conf::test::{Reset, ResetDatasets, ResetMode, TestConf};
 use crate::core::connector::conf::ConnectorConf;
@@ -20,7 +21,11 @@ use crate::seeder::data_set::{DataSet, Group, Record};
 use crate::seeder::models::define::define_seeder_models;
 use crate::server::conf::ServerConf;
 use crate::core::result::Result;
+use crate::parser::ast::action::ActionGroupDeclaration;
+use crate::parser::ast::data_set::ASTDataSet;
 use crate::parser::ast::interface_type::InterfaceType;
+use crate::parser::ast::model::ASTModel;
+use crate::parser::ast::r#enum::ASTEnum;
 use crate::parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError};
 use crate::parser::diagnostics::printer;
 
@@ -94,7 +99,61 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
         })
     }
     // enums
-    for ast_enum in parser.enums() {
+    install_enums_to_namespace(parser.enums(), AppCtx::get().unwrap().main_namespace_mut());
+    // models
+    install_models_to_namespace(parser.models(), AppCtx::get().unwrap().main_namespace_mut());
+    define_seeder_models();
+    // datasets
+    install_datasets_to_namespace(parser.data_sets(), AppCtx::get().unwrap().main_namespace_mut());
+    // interfaces
+    // middlewares
+    // action groups
+    install_action_groups_to_namespace(parser.action_groups(), AppCtx::get().unwrap().main_namespace_mut())?;
+    // static files
+    for static_files in parser.static_files() {
+        let map = Box::leak(Box::new(static_files.resolved_map.as_ref().unwrap().clone())).as_str();
+        let path = Box::leak(Box::new(static_files.resolved_path.as_ref().unwrap().clone())).as_str();
+        app_ctx.insert_static_files(path, map)?;
+    }
+    Ok(())
+}
+
+fn interface_ref_from(type_with_generics: &InterfaceType) -> InterfaceRef {
+    InterfaceRef {
+        name: type_with_generics.name.name.clone(),
+        args: type_with_generics.args.iter().map(|a| {
+            interface_ref_from(a)
+        }).collect(),
+    }
+}
+
+fn install_types_to_field_owner<F>(name: &str, field: &mut F, enums: &HashMap<&'static str, Enum>, diagnostics: &mut Diagnostics, ast_field: &ASTField) where F: FieldTypeOwner {
+    match name {
+        "String" => field.set_field_type(FieldType::String),
+        "Bool" => field.set_field_type(FieldType::Bool),
+        "Int" | "Int32" => field.set_field_type(FieldType::I32),
+        "Int64" => field.set_field_type(FieldType::I64),
+        "Float32" => field.set_field_type(FieldType::F32),
+        "Float" | "Float64" => field.set_field_type(FieldType::F64),
+        "Date" => field.set_field_type(FieldType::Date),
+        "DateTime" => field.set_field_type(FieldType::DateTime),
+        "Decimal" => field.set_field_type(FieldType::Decimal),
+        #[cfg(feature = "data-source-mongodb")]
+        "ObjectId" => field.set_field_type(FieldType::ObjectId),
+        _ => {
+            if let Some(enum_def) = enums.get(name) {
+                field.set_field_type(FieldType::Enum(enum_def.clone()))
+            } else {
+                let source = AppCtx::get().unwrap().parser().get_source(ast_field.source_id);
+                diagnostics.insert(DiagnosticsError::new(ast_field.r#type.span, "Unknown type specified", source.path.clone()));
+                printer::print_diagnostics_and_exit(diagnostics, true)
+            }
+        }
+    };
+}
+
+fn install_enums_to_namespace(enums: Vec<&ASTEnum>, namespace: &mut Namespace) {
+    for ast_enum in enums {
         let enum_def = Enum::new(
             ast_enum.identifier.name.as_str(),
             ast_enum.ns_path.clone(),
@@ -104,15 +163,17 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
                 EnumVariant::new(ast_choice.identifier.name.as_str(), None, None)
             }).collect()
         );
-        AppCtx::get().unwrap().main_namespace_mut().add_enum(enum_def).unwrap();
+        namespace.add_enum(enum_def).unwrap();
     }
-    // models
-    for ast_model in parser.models() {
+}
+
+fn install_models_to_namespace(models: Vec<&ASTModel>, namespace: &mut Namespace) {
+    for ast_model in models {
         let mut model = Model::new(
             ast_model.identifier.name.as_str(),
             ast_model.ns_path.clone(),
-            ast_model.comment_block.as_ref().map(|c|c.name()).flatten(),
-            ast_model.comment_block.as_ref().map(|c|c.desc()).flatten());
+            ast_model.comment_block.as_ref().map(|c| c.name()).flatten(),
+            ast_model.comment_block.as_ref().map(|c| c.desc()).flatten());
         for ast_decorator in ast_model.decorators.iter() {
             let model_decorator = ast_decorator.accessible.as_ref().unwrap().as_model_decorator().unwrap();
             model_decorator(ast_decorator.get_argument_list(), &mut model);
@@ -292,44 +353,37 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
                 ASTFieldClass::Unresolved => unreachable!()
             }
         }
-        AppCtx::get().unwrap().main_namespace_mut().add_model(model, ast_model.identifier.name.as_str()).unwrap();
-        AppCtx::get().unwrap().main_namespace_mut().model_mut(ast_model.identifier.name.as_str()).unwrap().finalize();
+        namespace.add_model(model, ast_model.identifier.name.as_str()).unwrap();
+        namespace.model_mut(ast_model.identifier.name.as_str()).unwrap().finalize();
     }
-    define_seeder_models();
-    // datasets
-    for data_set_ref in parser.data_sets.clone() {
-        let source = parser.get_source(*data_set_ref.get(0).unwrap());
-        let parser_data_set = source.get_data_set(*data_set_ref.get(1).unwrap());
+}
+
+fn install_datasets_to_namespace(datasets: Vec<&ASTDataSet>, namespace: &mut Namespace) {
+    for data_set in datasets {
         let seeder_data_set = DataSet {
-            name: parser_data_set.identifier.name.clone(),
-            groups: parser_data_set.groups.iter().map(|g| Group {
+            name: data_set.identifier.name.clone(),
+            groups: data_set.groups.iter().map(|g| Group {
                 name: g.identifier.name.split(".").map(|s| s.to_string()).collect(),
                 records: g.records.iter().map(|r| Record {
                     name: r.identifier.name.clone(),
                     value: r.resolved.as_ref().unwrap().clone()
                 }).collect(),
             }).collect(),
-            autoseed: parser_data_set.auto_seed,
-            notrack: parser_data_set.notrack,
+            autoseed: data_set.auto_seed,
+            notrack: data_set.notrack,
         };
-        app_ctx.main_namespace_mut().datasets_mut().push(seeder_data_set);
+        namespace.datasets_mut().push(seeder_data_set);
     }
-    // // interfaces
-    // for interface_dec in parser.interfaces() {
-    //
-    // }
-    // // middlewares
-    // for middleware_dec in parser.middlewares() {
-    //
-    // }
-    // action groups
-    for action_group_dec in parser.action_groups() {
+}
+
+fn install_action_groups_to_namespace(action_groups: Vec<&ActionGroupDeclaration>, namespace: &mut Namespace) -> Result<()> {
+    for action_group_dec in action_groups {
         let group = action_group_dec.identifier.name.clone();
         let group_str = Box::leak(Box::new(action_group_dec.identifier.name.clone().clone()));
         for action_dec in action_group_dec.actions.iter() {
             let name = action_dec.identifier.name.clone();
             let name_str = Box::leak(Box::new(name.clone()));
-            app_ctx.main_namespace_mut().add_custom_action_declaration(group_str, name_str, CustomActionDefinition {
+            namespace.add_custom_action_declaration(group_str, name_str, CustomActionDefinition {
                 group: group.clone(),
                 name,
                 input: interface_ref_from(&action_dec.input_type),
@@ -338,45 +392,5 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
             })?;
         }
     }
-    // static files
-    for static_files in parser.static_files() {
-        let map = Box::leak(Box::new(static_files.resolved_map.as_ref().unwrap().clone())).as_str();
-        let path = Box::leak(Box::new(static_files.resolved_path.as_ref().unwrap().clone())).as_str();
-        app_ctx.insert_static_files(path, map)?;
-    }
     Ok(())
-}
-
-fn interface_ref_from(type_with_generics: &InterfaceType) -> InterfaceRef {
-    InterfaceRef {
-        name: type_with_generics.name.name.clone(),
-        args: type_with_generics.args.iter().map(|a| {
-            interface_ref_from(a)
-        }).collect(),
-    }
-}
-
-fn install_types_to_field_owner<F>(name: &str, field: &mut F, enums: &HashMap<&'static str, Enum>, diagnostics: &mut Diagnostics, ast_field: &ASTField) where F: FieldTypeOwner {
-    match name {
-        "String" => field.set_field_type(FieldType::String),
-        "Bool" => field.set_field_type(FieldType::Bool),
-        "Int" | "Int32" => field.set_field_type(FieldType::I32),
-        "Int64" => field.set_field_type(FieldType::I64),
-        "Float32" => field.set_field_type(FieldType::F32),
-        "Float" | "Float64" => field.set_field_type(FieldType::F64),
-        "Date" => field.set_field_type(FieldType::Date),
-        "DateTime" => field.set_field_type(FieldType::DateTime),
-        "Decimal" => field.set_field_type(FieldType::Decimal),
-        #[cfg(feature = "data-source-mongodb")]
-        "ObjectId" => field.set_field_type(FieldType::ObjectId),
-        _ => {
-            if let Some(enum_def) = enums.get(name) {
-                field.set_field_type(FieldType::Enum(enum_def.clone()))
-            } else {
-                let source = AppCtx::get().unwrap().parser().get_source(ast_field.source_id);
-                diagnostics.insert(DiagnosticsError::new(ast_field.r#type.span, "Unknown type specified", source.path.clone()));
-                printer::print_diagnostics_and_exit(diagnostics, true)
-            }
-        }
-    };
 }

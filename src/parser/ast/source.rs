@@ -8,7 +8,7 @@ use crate::parser::ast::client::ASTClient;
 use crate::parser::ast::config::ASTServer;
 use crate::parser::ast::connector::ASTConnector;
 use crate::parser::ast::constant::Constant;
-use crate::parser::ast::data_set::DataSet;
+use crate::parser::ast::data_set::ASTDataSet;
 use crate::parser::ast::debug_conf::ASTDebugConf;
 use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::import::ASTImport;
@@ -109,7 +109,7 @@ impl Source {
         self.tops.get(&id).unwrap().as_client().unwrap()
     }
 
-    pub(crate) fn get_data_set(&self, id: usize) -> &DataSet {
+    pub(crate) fn get_data_set(&self, id: usize) -> &ASTDataSet {
         self.tops.get(&id).unwrap().as_data_set().unwrap()
     }
 

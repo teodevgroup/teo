@@ -4,7 +4,7 @@ use crate::parser::ast::span::Span;
 use crate::prelude::Value;
 
 #[derive(Debug, Clone)]
-pub struct DataSet {
+pub struct ASTDataSet {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
     pub(crate) span: Span,
@@ -15,7 +15,7 @@ pub struct DataSet {
 
 }
 
-impl DataSet {
+impl ASTDataSet {
     pub(crate) fn new(span: Span, source_id: usize, item_id: usize, identifier: ASTIdentifier, auto_seed: bool, notrack: bool, groups: Vec<DataSetGroup>) -> Self {
         Self {
             id: item_id, span, source_id, auto_seed, groups, identifier, notrack,

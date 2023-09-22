@@ -40,7 +40,7 @@ use crate::gen::interface::client::kind::Kind;
 use crate::parser::ast::action::{ActionDeclaration, ActionGroupDeclaration};
 use crate::parser::ast::arith_expr::{ArithExpr, Op};
 use crate::parser::ast::client::{ASTClient};
-use crate::parser::ast::data_set::DataSet;
+use crate::parser::ast::data_set::ASTDataSet;
 use crate::parser::ast::debug_conf::ASTDebugConf;
 use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::interface::{InterfaceDeclaration, InterfaceItemDeclaration};
@@ -642,7 +642,7 @@ impl Resolver {
         }
     }
 
-    pub(crate) fn resolve_data_set(&self, parser: &ASTParser, source: &Source, data_set: &mut DataSet) {
+    pub(crate) fn resolve_data_set(&self, parser: &ASTParser, source: &Source, data_set: &mut ASTDataSet) {
         for group in data_set.groups.iter_mut() {
             for record in group.records.iter_mut() {
                 record.resolved = Some(self.resolve_dictionary_literal(parser, source, &record.dictionary).as_value().unwrap().clone());

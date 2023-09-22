@@ -3,7 +3,7 @@ use crate::parser::ast::client::ASTClient;
 use crate::parser::ast::config::ASTServer;
 use crate::parser::ast::connector::ASTConnector;
 use crate::parser::ast::constant::Constant;
-use crate::parser::ast::data_set::DataSet;
+use crate::parser::ast::data_set::ASTDataSet;
 use crate::parser::ast::debug_conf::ASTDebugConf;
 use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::import::ASTImport;
@@ -25,7 +25,7 @@ pub(crate) enum Top {
     Generator(ASTEntity),
     Client(ASTClient),
     ServerConfig(ASTServer),
-    DataSet(DataSet),
+    DataSet(ASTDataSet),
     TestConf(ASTTestConf),
     DebugConf(ASTDebugConf),
     MiddlewareDeclaration(MiddlewareDeclaration),
@@ -202,14 +202,14 @@ impl Top {
         self.as_server_config().is_some()
     }
 
-    pub(crate) fn as_data_set(&self) -> Option<&DataSet> {
+    pub(crate) fn as_data_set(&self) -> Option<&ASTDataSet> {
         match self {
             Top::DataSet(d) => Some(d),
             _ => None,
         }
     }
 
-    pub(crate) fn as_data_set_mut(&mut self) -> Option<&mut DataSet> {
+    pub(crate) fn as_data_set_mut(&mut self) -> Option<&mut ASTDataSet> {
         match self {
             Top::DataSet(d) => Some(d),
             _ => None,
