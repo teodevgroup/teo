@@ -156,15 +156,15 @@ fn install_types_to_field_owner<F>(name: &str, field: &mut F, enums: &HashMap<&'
     };
 }
 
-fn install_enums_to_namespace(enums: Vec<&'static ASTEnum>, namespace: &mut Namespace) {
+fn install_enums_to_namespace(enums: Vec<&ASTEnum>, namespace: &mut Namespace) {
     for ast_enum in enums {
         let enum_def = Enum::new(
-            ast_enum.identifier.name.as_str(),
+            Box::leak(Box::new(ast_enum.identifier.name.clone())).as_str(),
             ast_enum.ns_path.clone(),
             None,
             None,
             ast_enum.choices.iter().map(|ast_choice| {
-                EnumVariant::new(ast_choice.identifier.name.as_str(), None, None)
+                EnumVariant::new(Box::leak(Box::new(ast_choice.identifier.name.clone())).as_str(), None, None)
             }).collect()
         );
         namespace.add_enum(enum_def).unwrap();
@@ -175,10 +175,10 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
     let graph = AppCtx::get().unwrap().graph();
     for ast_model in models {
         let mut model = Model::new(
-            ast_model.identifier.name.as_str(),
+            Box::leak(Box::new(ast_model.identifier.name.clone())).as_str(),
             ast_model.ns_path.clone(),
-            ast_model.comment_block.as_ref().map(|c| c.name()).flatten(),
-            ast_model.comment_block.as_ref().map(|c| c.desc()).flatten());
+            ast_model.comment_block.as_ref().map(|c| c.name().map(|s| s.to_string())).flatten(),
+            ast_model.comment_block.as_ref().map(|c| c.desc().to_owned()).flatten());
         for ast_decorator in ast_model.decorators.iter() {
             let model_decorator = ast_decorator.accessible.as_ref().unwrap().as_model_decorator().unwrap();
             model_decorator(ast_decorator.get_argument_list(), &mut model);
@@ -358,8 +358,8 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
                 ASTFieldClass::Unresolved => unreachable!()
             }
         }
-        namespace.add_model(model, ast_model.identifier.name.as_str())?;
-        namespace.model_mut(ast_model.identifier.name.as_str()).unwrap().finalize();
+        namespace.add_model(model, Box::leak(Box::new(ast_model.identifier.name.clone())).as_str())?;
+        AppCtx::get().unwrap().namespace_mut(namespace.path()).model_mut(ast_model.identifier.name.as_str()).unwrap().finalize();
     }
     Ok(())
 }
@@ -401,13 +401,13 @@ fn install_action_groups_to_namespace(action_groups: Vec<&ActionGroupDeclaration
     Ok(())
 }
 
-fn install_namespaces_to_namespace(ast_namespaces: Vec<&ASTNamespace>, namespace: &mut Namespace, diagnostics: &mut Diagnostics) -> Result<()> {
+fn install_namespaces_to_namespace(ast_namespaces: Vec<&'static ASTNamespace>, namespace: &mut Namespace, diagnostics: &mut Diagnostics) -> Result<()> {
     for child_ast_namespace in ast_namespaces {
         let child_namespace_mut = namespace.child_namespace_mut(&child_ast_namespace.name);
         // enums
         install_enums_to_namespace(child_ast_namespace.enums(), child_namespace_mut);
         // models
-        install_models_to_namespace(child_ast_namespace.models(), child_namespace_mut, diagnostics);
+        install_models_to_namespace(child_ast_namespace.models(), child_namespace_mut, diagnostics)?;
         // datasets
         install_datasets_to_namespace(child_ast_namespace.data_sets(), child_namespace_mut);
         // interfaces

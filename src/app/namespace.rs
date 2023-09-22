@@ -17,7 +17,7 @@ use crate::seeder::data_set::DataSet;
 use crate::core::result::Result;
 
 pub struct Namespace {
-    pub(crate) is_main: bool,
+    pub(crate) path: Vec<String>,
     pub(crate) namespaces: HashMap<&'static str, Namespace>,
     // configuration and declarations
     pub(crate) connector_conf: Option<Box<ConnectorConf>>,
@@ -38,17 +38,17 @@ pub struct Namespace {
 
 impl Namespace {
 
-    pub fn new() -> Self {
-        Self::new_internal(false)
+    pub fn new(path: Vec<String>) -> Self {
+        Self::new_internal(path)
     }
 
     pub(crate) fn main() -> Self {
-        Self::new_internal(true)
+        Self::new_internal(vec![])
     }
 
-    fn new_internal(is_main: bool) -> Self {
+    fn new_internal(path: Vec<String>) -> Self {
         Self {
-            is_main,
+            path,
             namespaces: hashmap!{},
             connector_conf: None,
             server_conf: None,
@@ -65,6 +65,14 @@ impl Namespace {
             custom_action_declarations: hashmap!{},
             constants: hashmap!{},
         }
+    }
+
+    pub fn is_main(&self) -> bool {
+        self.path.len() == 0
+    }
+
+    pub fn path(&self) -> Vec<&str> {
+        self.path.iter().map(|s| s.as_str()).collect()
     }
 
     pub fn middleware<F>(&mut self, name: &'static str, f: F) -> Result<()> where
@@ -231,9 +239,13 @@ impl Namespace {
         self.namespaces.get(name)
     }
 
-    pub(crate) fn child_namespace_mut(&mut self, name: &'static str) -> &mut Namespace {
+    pub(crate) fn child_namespace_mut(&mut self, name: &str) -> &mut Namespace {
         if !self.has_child_namespace(name) {
-            self.namespaces.insert(name, Namespace::new());
+            self.namespaces.insert(Box::leak(Box::new(name.to_owned())).as_str(), Namespace::new({
+                let mut path = self.path.clone();
+                path.push(name.to_owned());
+                path
+            }));
         }
         self.namespaces.get_mut(name).unwrap()
     }

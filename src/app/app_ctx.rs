@@ -91,7 +91,7 @@ impl AppCtx {
         self.parser = Box::new(ASTParser::new());
         self.connector = None;
         self.static_files = hashmap!{};
-        self.main_namespace = Namespace::new();
+        self.main_namespace = Namespace::main();
     }
 
     pub(in crate::app) fn create() -> bool {
@@ -141,7 +141,7 @@ impl AppCtx {
         &self.main_namespace
     }
 
-    pub(crate) fn main_namespace_mut(&'static self) -> &'static mut Namespace {
+    pub(crate) fn main_namespace_mut(&self) -> &'static mut Namespace {
         &mut AppCtx::get_mut().unwrap().main_namespace
     }
 
@@ -323,6 +323,14 @@ impl AppCtx {
                 retval
             })
         }
+    }
+
+    pub(crate) fn namespace_mut(&self, path: Vec<&str>) -> &mut Namespace {
+        let mut ns = self.main_namespace_mut();
+        for item in path {
+            ns = ns.child_namespace_mut(item)
+        }
+        ns
     }
 }
 
