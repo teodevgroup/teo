@@ -135,7 +135,8 @@ impl ASTNamespace {
     }
 
     pub(crate) fn get_model_by_name(&self, name: &str) -> Option<&ASTModel> {
-        self.models().iter().find(|m| m.ns_path.last().unwrap().as_str() == name).map(|r| *r)
+        let retval = self.models().iter().find(|m| m.identifier.name.as_str() == name).map(|r| *r);
+        retval
     }
 }
 
