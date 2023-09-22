@@ -1,4 +1,4 @@
-use crate::parser::ast::identifier::ASTIdentifier;
+use crate::parser::ast::identifier_path::ASTIdentifierPath;
 use crate::parser::ast::span::Span;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -17,9 +17,9 @@ pub(crate) enum TypeClass {
 }
 
 #[derive(Debug)]
-pub(crate) struct Type {
+pub(crate) struct ASTFieldType {
     pub(crate) span: Span,
-    pub(crate) identifier: ASTIdentifier,
+    pub(crate) identifiers: ASTIdentifierPath,
     pub(crate) arity: Arity,
     pub(crate) item_required: bool,
     pub(crate) collection_required: bool,
@@ -28,10 +28,10 @@ pub(crate) struct Type {
     pub(crate) type_class: TypeClass,
 }
 
-impl Type {
-    pub(crate) fn new(span: Span, identifier: ASTIdentifier, arity: Arity, item_required: bool, collection_required: bool) -> Self {
+impl ASTFieldType {
+    pub(crate) fn new(span: Span, identifiers: ASTIdentifierPath, arity: Arity, item_required: bool, collection_required: bool) -> Self {
         Self {
-            span, identifier, arity, item_required, collection_required,
+            span, identifiers, arity, item_required, collection_required,
             resolved: false,
             type_id: (0, 0),
             type_class: TypeClass::Unresolved,

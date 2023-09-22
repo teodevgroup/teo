@@ -1,6 +1,4 @@
-use std::collections::HashMap;
 use dotenvy::dotenv;
-
 use crate::app::app_ctx::AppCtx;
 use crate::app::namespace::Namespace;
 use crate::core::conf::debug::DebugConf;
@@ -131,29 +129,33 @@ fn interface_ref_from(type_with_generics: &InterfaceType) -> InterfaceRef {
     }
 }
 
-fn install_types_to_field_owner<F>(name: &str, field: &mut F, enums: &HashMap<&'static str, Enum>, diagnostics: &mut Diagnostics, ast_field: &ASTField) where F: FieldTypeOwner {
-    match name {
-        "String" => field.set_field_type(FieldType::String),
-        "Bool" => field.set_field_type(FieldType::Bool),
-        "Int" | "Int32" => field.set_field_type(FieldType::I32),
-        "Int64" => field.set_field_type(FieldType::I64),
-        "Float32" => field.set_field_type(FieldType::F32),
-        "Float" | "Float64" => field.set_field_type(FieldType::F64),
-        "Date" => field.set_field_type(FieldType::Date),
-        "DateTime" => field.set_field_type(FieldType::DateTime),
-        "Decimal" => field.set_field_type(FieldType::Decimal),
-        #[cfg(feature = "data-source-mongodb")]
-        "ObjectId" => field.set_field_type(FieldType::ObjectId),
-        _ => {
-            if let Some(enum_def) = enums.get(name) {
-                field.set_field_type(FieldType::Enum(enum_def.clone()))
-            } else {
-                let source = AppCtx::get().unwrap().parser().get_source(ast_field.source_id);
-                diagnostics.insert(DiagnosticsError::new(ast_field.r#type.span, "Unknown type specified", source.path.clone()));
-                printer::print_diagnostics_and_exit(diagnostics, true)
-            }
+fn install_types_to_field_owner<F>(path: Vec<String>, field: &mut F, diagnostics: &mut Diagnostics, ast_field: &ASTField) where F: FieldTypeOwner {
+    if path.len() == 1 {
+        let name = path.get(0).unwrap().as_str();
+        let mut ret = true;
+        match name {
+            "String" => field.set_field_type(FieldType::String),
+            "Bool" => field.set_field_type(FieldType::Bool),
+            "Int" | "Int32" => field.set_field_type(FieldType::I32),
+            "Int64" => field.set_field_type(FieldType::I64),
+            "Float32" => field.set_field_type(FieldType::F32),
+            "Float" | "Float64" => field.set_field_type(FieldType::F64),
+            "Date" => field.set_field_type(FieldType::Date),
+            "DateTime" => field.set_field_type(FieldType::DateTime),
+            "Decimal" => field.set_field_type(FieldType::Decimal),
+            #[cfg(feature = "data-source-mongodb")]
+            "ObjectId" => field.set_field_type(FieldType::ObjectId),
+            _ => ret = false,
         }
-    };
+        if ret { return }
+    }
+    if let Some(enum_def) = AppCtx::get().unwrap().r#enum(path.iter().map(|s| s.as_str()).collect()).unwrap() {
+        field.set_field_type(FieldType::Enum(enum_def.clone()))
+    } else {
+        let source = AppCtx::get().unwrap().parser().get_source(ast_field.source_id);
+        diagnostics.insert(DiagnosticsError::new(ast_field.r#type.span, "Unknown type specified", source.path.clone()));
+        printer::print_diagnostics_and_exit(diagnostics, true)
+    }
 }
 
 fn install_enums_to_namespace(enums: Vec<&ASTEnum>, namespace: &mut Namespace) {
@@ -203,7 +205,7 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
                             } else {
                                 model_field.set_optional();
                             }
-                            install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut model_field, graph.enums(), diagnostics, ast_field);
+                            install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut model_field, diagnostics, ast_field);
                         }
                         Arity::Array => {
                             if ast_field.r#type.collection_required {
@@ -218,7 +220,7 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
                                 } else {
                                     inner.set_optional();
                                 }
-                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums(), diagnostics, ast_field);
+                                install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut inner, diagnostics, ast_field);
                                 inner
                             })));
                         }
@@ -235,7 +237,7 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
                                 } else {
                                     inner.set_optional();
                                 }
-                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums(), diagnostics, ast_field);
+                                install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut inner, diagnostics, ast_field);
                                 inner
                             })));
                         }
@@ -274,14 +276,14 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
                                 model_relation.set_optional();
                             }
                             model_relation.set_is_vec(false);
-                            model_relation.set_model(vec![ast_field.r#type.identifier.name.clone()]);
+                            model_relation.set_model(ast_field.r#type.identifiers.path());
                         }
                         Arity::Array => {
                             if !ast_field.r#type.item_required {
                                 panic!("Relation cannot have optional items.")
                             }
                             model_relation.set_is_vec(true);
-                            model_relation.set_model(vec![ast_field.r#type.identifier.name.clone()]);
+                            model_relation.set_model(ast_field.r#type.identifiers.path());
                         }
                         Arity::Dictionary => panic!("Relations cannot be dictionary.")
                     }
@@ -311,7 +313,7 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
                             } else {
                                 model_property.set_optional();
                             }
-                            install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut model_property, graph.enums(), diagnostics, ast_field);
+                            install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut model_property, diagnostics, ast_field);
                         }
                         Arity::Array => {
                             if ast_field.r#type.collection_required {
@@ -326,7 +328,7 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
                                 } else {
                                     inner.set_optional();
                                 }
-                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums(), diagnostics, ast_field);
+                                install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut inner, diagnostics, ast_field);
                                 inner
                             })));
                         }
@@ -343,7 +345,7 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
                                 } else {
                                     inner.set_optional();
                                 }
-                                install_types_to_field_owner(&ast_field.r#type.identifier.name, &mut inner, graph.enums(), diagnostics, ast_field);
+                                install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut inner, diagnostics, ast_field);
                                 inner
                             })));
                         }

@@ -1,6 +1,7 @@
 pub(crate) mod span;
 pub(crate) mod pos;
 pub(crate) mod identifier;
+pub(crate) mod identifier_path;
 pub(crate) mod top;
 pub(crate) mod r#enum;
 pub(crate) mod model;

@@ -27,6 +27,7 @@ use crate::parser::ast::field::ASTField;
 use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::ASTIdentifier;
+use crate::parser::ast::identifier_path::ASTIdentifierPath;
 use crate::parser::ast::import::ASTImport;
 use crate::parser::ast::interface::{InterfaceDeclaration, InterfaceItemDeclaration};
 use crate::parser::ast::item::Item;
@@ -34,7 +35,7 @@ use crate::parser::ast::middleware::MiddlewareDeclaration;
 use crate::parser::ast::model::ASTModel;
 use crate::parser::ast::pipeline::ASTPipeline;
 use crate::parser::ast::r#enum::{ASTEnum, EnumChoice};
-use crate::parser::ast::r#type::{Arity, Type};
+use crate::parser::ast::r#type::{Arity, ASTFieldType};
 use crate::parser::ast::source::ASTSource;
 use crate::parser::ast::span::Span;
 use crate::parser::ast::subscript::Subscript;
@@ -407,7 +408,7 @@ impl ASTParser {
     fn parse_field(&self, pair: Pair<'_>, diagnostics: &mut Diagnostics, source_id: usize) -> ASTField {
         let mut comment_block = None;
         let mut identifier: Option<ASTIdentifier> = None;
-        let mut r#type: Option<Type> = None;
+        let mut r#type: Option<ASTFieldType> = None;
         let mut decorators: Vec<ASTDecorator> = vec![];
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
@@ -415,7 +416,7 @@ impl ASTParser {
                 Rule::COLON => {},
                 Rule::triple_comment_block => comment_block = Some(self.parse_comment_block(current, source_id, diagnostics)),
                 Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
-                Rule::field_type => r#type = Some(self.parse_type(current, diagnostics, source_id)),
+                Rule::field_type => r#type = Some(self.parse_field_type(current, diagnostics, source_id)),
                 Rule::item_decorator => decorators.push(self.parse_decorator(current, source_id, diagnostics)),
                 Rule::double_comment_block => {},
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
@@ -1235,8 +1236,8 @@ impl ASTParser {
         return (key.unwrap(), value.unwrap())
     }
 
-    fn parse_type(&self, pair: Pair<'_>, diagnostics: &mut Diagnostics, source_id: usize) -> Type {
-        let mut identifier = None;
+    fn parse_field_type(&self, pair: Pair<'_>, diagnostics: &mut Diagnostics, source_id: usize) -> ASTFieldType {
+        let mut identifiers = None;
         let mut arity = Arity::Scalar;
         let mut item_required = true;
         let mut collection_required = true;
@@ -1244,7 +1245,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::COLON => {},
-                Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
+                Rule::identifier => identifiers = Some(self.parse_identifier_path(current, diagnostics)),
                 Rule::arity => if current.as_str() == "[]" { arity = Arity::Array; } else { arity = Arity::Dictionary; },
                 Rule::optionality => {
                     if arity == Arity::Scalar {
@@ -1256,9 +1257,9 @@ impl ASTParser {
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
             }
         }
-        Type::new(
+        ASTFieldType::new(
             span,
-            identifier.unwrap(),
+            identifiers.unwrap(),
             arity,
             item_required,
             collection_required,
@@ -1281,6 +1282,21 @@ impl ASTParser {
         ASTIdentifier {
             name: pair.as_str().to_owned(),
             span: Self::parse_span(pair),
+        }
+    }
+
+    fn parse_identifier_path(&self, pair: Pair<'_>, diagnostics: &mut Diagnostics) -> ASTIdentifierPath {
+        let span = Self::parse_span(&pair);
+        let mut identifiers = vec![];
+        for current in pair.into_inner() {
+            match current.as_rule() {
+                Rule::identifier => identifiers.push(Self::parse_identifier(&current)),
+                _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
+            }
+        }
+        ASTIdentifierPath {
+            span,
+            identifiers,
         }
     }
 

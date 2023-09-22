@@ -54,11 +54,12 @@ BLOCK_LEVEL_CATCH_ALL = { !BLOCK_CLOSE ~ CATCH_ALL }
 // identifier
 // #############
 identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | ASCII_ALPHANUMERIC)* }
+identifier_path = { identifier ~ ("." ~ identifier)* }
 
 // #############
 // type
 // #############
-field_type = { identifier ~ optionality? ~ arity? ~ optionality? }
+field_type = { identifier_path ~ optionality? ~ arity? ~ optionality? }
 arity = {"[]" | "{}" }
 optionality = { "?" }
 
