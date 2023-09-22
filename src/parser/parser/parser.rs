@@ -194,7 +194,7 @@ impl ASTParser {
                     constants.insert(item_id);
                 },
                 Rule::model_declaration => {
-                    let model = self.parse_model(current, source_id, item_id, diagnostics, vec![]);
+                    let model = self.parse_model(current, source_id, item_id, diagnostics, vec![], vec![source_id, item_id]);
                     tops.insert(item_id, model);
                     models.insert(item_id);
                     self.models.push(vec![source_id, item_id]);
@@ -377,7 +377,7 @@ impl ASTParser {
         (token, content)
     }
 
-    fn parse_model(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics, ns_path: Vec<String>) -> Top {
+    fn parse_model(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics, ns_path: Vec<String>, id_path: Vec<usize>) -> Top {
         let mut comment_block = None;
         let mut identifier: Option<ASTIdentifier> = None;
         let mut fields: Vec<ASTField> = vec![];
@@ -396,6 +396,7 @@ impl ASTParser {
         Top::Model(ASTModel::new(
             item_id,
             source_id,
+            id_path,
             identifier.unwrap(),
             ns_path,
             comment_block,
@@ -621,6 +622,10 @@ impl ASTParser {
                         let mut new_path = ns_path.clone();
                         new_path.push(name.clone().unwrap().name.clone());
                         new_path
+                    }, {
+                        let mut ids = content_parent_ids.clone();
+                        ids.push(content_item_id);
+                        ids
                     });
                     tops.insert(content_item_id, model);
                     models.insert(content_item_id);

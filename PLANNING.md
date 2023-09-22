@@ -473,11 +473,14 @@
 
 #### 0.0.58
 - Rewrite app loading process
-- Namespaces
+- When model type is not resolved, display error message and exit 
+- Namespaces **[IN PROGRESS]**
 - Remove `action` from request URLs **[DONE]**
 - Remove function installers **[DONE]**
 - Table names are lower-cased but not plural anymore **[DONE]**
 - Rewrite decorators loading and pipeline items loading 
+- Added `lint` command
+- Added `run` command and `program` definition
 
 #### 0.0.59
 - Generate interfaces for clients

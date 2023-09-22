@@ -162,6 +162,39 @@ impl ASTSource {
     pub(crate) fn data_sets(&self) -> Vec<&ASTDataSet> {
         self.data_sets.iter().map(|m| self.get_data_set(*m)).collect()
     }
+
+    pub(crate) fn get_namespace_by_path(&self, path: Vec<&str>) -> Option<&ASTNamespace> {
+        if path.len() == 1 {
+            self.namespaces().iter().find(|n| n.name.as_str() == *path.get(0).unwrap()).map(|s| *s)
+        } else {
+            let mut ns = self.namespaces().iter().find(|n| n.name.as_str() == *path.get(0).unwrap()).map(|r| *r);
+            for (index, item) in path.iter().enumerate() {
+                if index != 0 {
+                    if let Some(ns_ref) = ns {
+                        ns = ns_ref.namespaces().iter().find(|n| n.name.as_str() == *path.get(0).unwrap()).map(|r| *r);
+                    } else {
+                        return None;
+                    }
+                }
+            }
+            ns
+        }
+    }
+
+    pub(crate) fn get_model_by_path(&self, path: Vec<&str>) -> Option<&ASTModel> {
+        if path.len() == 1 {
+            self.models().iter().find(|m| m.ns_path.iter().map(|s| s.as_str()).collect::<Vec<_>>() == path).map(|s| *s)
+        } else {
+            let mut ns_path = path.clone();
+            ns_path.remove(ns_path.len() - 1);
+            let ns = self.get_namespace_by_path(ns_path);
+            return if let Some(ns) = ns {
+                ns.get_model_by_name(*path.last().unwrap())
+            } else {
+                None
+            }
+        }
+    }
 }
 
 impl fmt::Debug for ASTSource {

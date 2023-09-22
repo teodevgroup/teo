@@ -47,9 +47,11 @@ use crate::parser::ast::interface::{InterfaceDeclaration, InterfaceItemDeclarati
 use crate::parser::ast::test_conf::ASTTestConf;
 use crate::parser::ast::interface_type::InterfaceType;
 use crate::parser::ast::namespace::ASTNamespace;
-use crate::parser::ast::r#type::Arity;
+use crate::parser::ast::r#type::{Arity, ASTFieldType, TypeClass};
+use crate::parser::ast::span::Span;
 use crate::parser::ast::static_files::StaticFiles;
 use crate::parser::diagnostics::diagnostics::Diagnostics;
+use crate::parser::diagnostics::printer;
 use crate::parser::std::pipeline::global::{GlobalPipelineInstallers};
 
 pub(crate) struct Resolver {
@@ -107,7 +109,7 @@ impl Resolver {
                     self.resolve_enum(parser, source, r#enum);
                 }
                 Top::Model(model) => {
-                    self.resolve_model(parser, source, model);
+                    self.resolve_model(parser, source, model, diagnostics);
                 }
                 Top::Connector(_connector) => {
                     continue;
@@ -143,14 +145,14 @@ impl Resolver {
                     self.resolve_static_files(parser, source, static_files);
                 }
                 Top::ASTNamespace(ast_namespace) => {
-                    self.resolve_namespace(parser, source, ast_namespace);
+                    self.resolve_namespace(parser, source, ast_namespace, diagnostics);
                 }
             }
         }
         source.to_mut().resolved = true;
     }
 
-    pub(crate) fn resolve_namespace(&self, parser: &ASTParser, source: &ASTSource, ast_namespace: &mut ASTNamespace) {
+    pub(crate) fn resolve_namespace(&self, parser: &ASTParser, source: &ASTSource, ast_namespace: &mut ASTNamespace, diagnostics: &mut Diagnostics) {
         for (_item_id, top) in ast_namespace.tops.iter_mut() {
             match top {
                 Top::Import(import) => {
@@ -163,7 +165,7 @@ impl Resolver {
                     self.resolve_enum(parser, source, r#enum);
                 }
                 Top::Model(model) => {
-                    self.resolve_model(parser, source, model);
+                    self.resolve_model(parser, source, model, diagnostics);
                 }
                 Top::Connector(_connector) => {
                     continue;
@@ -199,7 +201,7 @@ impl Resolver {
                     self.resolve_static_files(parser, source, static_files);
                 }
                 Top::ASTNamespace(ast_namespace) => {
-                    self.resolve_namespace(parser, source, ast_namespace);
+                    self.resolve_namespace(parser, source, ast_namespace, diagnostics);
                 }
             }
         }
@@ -254,14 +256,15 @@ impl Resolver {
         choice.resolved = true;
     }
 
-    pub(crate) fn resolve_model(&self, parser: &ASTParser, source: &ASTSource, model: &mut ASTModel) {
+    pub(crate) fn resolve_model(&self, parser: &ASTParser, source: &ASTSource, model: &mut ASTModel, diagnostics: &mut Diagnostics) {
         // decorators
         for decorator in model.decorators.iter_mut() {
             self.resolve_model_decorator(parser, source, decorator);
         }
         // fields
+        let ns_path = model.ns_path.clone();
         for field in model.fields.iter_mut() {
-            self.resolve_field(parser, source, field);
+            self.resolve_field(parser, source, field, &ns_path, diagnostics);
         }
         // cached enums
         //
@@ -499,23 +502,27 @@ impl Resolver {
         Entity::Value(Value::Pipeline(value_pipeline))
     }
 
-    fn resolve_field(&self, parser: &ASTParser, source: &ASTSource, field: &mut ASTField) {
+    fn resolve_field(&self, parser: &ASTParser, source: &ASTSource, field: &mut ASTField, ns_path: &Vec<String>, diagnostics: &mut Diagnostics) {
         field.figure_out_class();
         match &field.field_class {
             ASTFieldClass::Field => {
                 for decorator in field.decorators.iter_mut() {
                     self.resolve_field_decorator(parser, source, decorator);
                 }
+                self.resolve_field_primitive_type(parser, source, &mut field.r#type, ns_path);
             }
             ASTFieldClass::Relation => {
                 for decorator in field.decorators.iter_mut() {
                     self.resolve_relation_decorator(parser, source, decorator);
                 }
+                let span = field.r#type.identifiers.span.clone();
+                self.resolve_field_relation_type(parser, source, &mut field.r#type, ns_path, diagnostics, span);
             }
             ASTFieldClass::Property => {
                 for decorator in field.decorators.iter_mut() {
                     self.resolve_property_decorator(parser, source, decorator);
                 }
+                self.resolve_field_primitive_type(parser, source, &mut field.r#type, ns_path);
             }
             _ => {}
         }
@@ -1194,6 +1201,37 @@ impl Resolver {
         })
     }
 
+    fn resolve_field_primitive_type(&self, parser: &ASTParser, source: &ASTSource, field_type: &mut ASTFieldType, ns_path: &Vec<String>) {
+
+    }
+
+    fn resolve_field_relation_type(&self, parser: &ASTParser, source: &ASTSource, field_type: &mut ASTFieldType, ns_path: &Vec<String>, diagnostics: &mut Diagnostics, span: Span) {
+        let id_path = self.resolve_model_from_ns_with_path(parser, source, &field_type.identifiers.path(), ns_path, diagnostics, span);
+        field_type.resolve(id_path, TypeClass::Model);
+    }
+
+    fn resolve_model_from_ns_with_path(&self, parser: &ASTParser, source: &ASTSource, ref_path: &Vec<String>, ns_path: &Vec<String>, diagnostics: &mut Diagnostics, span: Span) -> Vec<usize> {
+        let mut ns_path: Option<Vec<&str>> = Some(ns_path.iter().map(|s| s.as_str()).collect());
+        loop {
+            if let Some(ns_path_ref) = ns_path.as_ref() {
+                if let Some(model) = source.get_model_by_path(ref_path.iter().map(|s| s.as_str()).collect()) {
+                    return model.id_path.clone()
+                }
+                ns_path = Self::next_ns_path(ns_path_ref);
+            } else {
+                self.insert_unresolved_model_and_exit(source, diagnostics, span);
+                unreachable!()
+            }
+        }
+    }
+
+    fn next_ns_path<'a>(prev: &Vec<&'a str>) -> Option<Vec<&'a str>> {
+        if prev.len() == 0 { return None }
+        let mut retval = prev.clone();
+        retval.remove(prev.len() - 1);
+        Some(retval)
+    }
+
     fn resolve_arith_expr(&self, parser: &ASTParser, source: &ASTSource, arith_expr: &ArithExpr, when_option: bool) -> Entity {
         match arith_expr {
             ArithExpr::Expression(expression) => return self.resolve_expression_kind(parser, source, &expression, when_option),
@@ -1329,5 +1367,12 @@ impl Resolver {
         } else {
             panic!("Cannot unwrap accessible into value.")
         }
+    }
+
+    fn insert_unresolved_model_and_exit(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
+        let source_path = source.path.clone();
+        diagnostics.insert_unresolved_model(span, source_path);
+        printer::print_diagnostics(diagnostics, true);
+        std::process::exit(1);
     }
 }

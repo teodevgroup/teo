@@ -133,6 +133,10 @@ impl ASTNamespace {
     pub(crate) fn data_sets(&self) -> Vec<&ASTDataSet> {
         self.data_sets.iter().map(|m| self.get_data_set(*m)).collect()
     }
+
+    pub(crate) fn get_model_by_name(&self, name: &str) -> Option<&ASTModel> {
+        self.models().iter().find(|m| m.ns_path.last().unwrap().as_str() == name).map(|r| *r)
+    }
 }
 
 impl Debug for ASTNamespace {

@@ -24,7 +24,7 @@ pub(crate) struct ASTFieldType {
     pub(crate) item_required: bool,
     pub(crate) collection_required: bool,
     pub(crate) resolved: bool,
-    pub(crate) type_id: (usize, usize),
+    pub(crate) type_id: Vec<usize>,
     pub(crate) type_class: TypeClass,
 }
 
@@ -33,12 +33,12 @@ impl ASTFieldType {
         Self {
             span, identifiers, arity, item_required, collection_required,
             resolved: false,
-            type_id: (0, 0),
+            type_id: vec![],
             type_class: TypeClass::Unresolved,
         }
     }
 
-    pub(crate) fn resolve(&mut self, type_id: (usize, usize), type_class: TypeClass) {
+    pub(crate) fn resolve(&mut self, type_id: Vec<usize>, type_class: TypeClass) {
         self.resolved = true;
         self.type_id = type_id;
         self.type_class = type_class;

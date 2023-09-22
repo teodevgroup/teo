@@ -207,6 +207,10 @@ impl Diagnostics {
     pub fn insert_unparsed_rule(&mut self, span: Span, source_path: PathBuf) {
         self.insert(DiagnosticsError::new(span, "SyntaxError: Unexpected content.", source_path))
     }
+
+    pub fn insert_unresolved_model(&mut self, span: Span, source_path: PathBuf) {
+        self.insert(DiagnosticsError::new(span, "ResolvingError: Model is not defined.", source_path))
+    }
 }
 
 impl Default for Diagnostics {
