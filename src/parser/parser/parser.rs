@@ -1245,7 +1245,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::COLON => {},
-                Rule::identifier => identifiers = Some(self.parse_identifier_path(current, diagnostics)),
+                Rule::identifier_path => identifiers = Some(self.parse_identifier_path(current, diagnostics)),
                 Rule::arity => if current.as_str() == "[]" { arity = Arity::Array; } else { arity = Arity::Dictionary; },
                 Rule::optionality => {
                     if arity == Arity::Scalar {
