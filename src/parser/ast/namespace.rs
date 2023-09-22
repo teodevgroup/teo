@@ -135,8 +135,34 @@ impl ASTNamespace {
     }
 
     pub(crate) fn get_model_by_name(&self, name: &str) -> Option<&ASTModel> {
-        let retval = self.models().iter().find(|m| m.identifier.name.as_str() == name).map(|r| *r);
-        retval
+        self.models().iter().find(|m| m.identifier.name.as_str() == name).map(|r| *r)
+    }
+
+    pub(crate) fn get_namespace_by_path(&self, path: Vec<&str>) -> Option<&ASTNamespace> {
+        let mut retval = self;
+        for item in path {
+            if let Some(child) = retval.namespaces().iter().find(|n| n.name.as_str() == item) {
+                retval = child
+            } else {
+                return None
+            }
+        }
+        Some(retval)
+    }
+
+    pub(crate) fn get_model_by_path(&self, path: Vec<&str>) -> Option<&ASTModel> {
+        if path.len() == 1 {
+            self.get_model_by_name(path.get(0).unwrap())
+        } else {
+            let mut path_for_ns = path.clone();
+            path_for_ns.remove(path_for_ns.len() - 1);
+            let child_ns = self.get_namespace_by_path(path_for_ns.clone());
+            return if let Some(child_ns) = child_ns {
+                child_ns.get_model_by_name(path_for_ns.last().unwrap())
+            } else {
+                None
+            }
+        }
     }
 }
 

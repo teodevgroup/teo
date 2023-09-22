@@ -1214,8 +1214,16 @@ impl Resolver {
         let mut ns_path: Option<Vec<&str>> = Some(ns_path.iter().map(|s| s.as_str()).collect());
         loop {
             if let Some(ns_path_ref) = ns_path.as_ref() {
-                if let Some(model) = source.get_model_by_path(ref_path.iter().map(|s| s.as_str()).collect()) {
-                    return model.id_path.clone()
+                if ns_path_ref.is_empty() {
+                    if let Some(model) = source.get_model_by_path(ref_path.iter().map(|s| s.as_str()).collect()) {
+                        return model.id_path.clone()
+                    }
+                } else {
+                    if let Some(ns) = source.get_namespace_by_path(ns_path_ref.clone()) {
+                        if let Some(model) = ns.get_model_by_path(ref_path.iter().map(|s| s.as_str()).collect()) {
+                            return model.id_path.clone()
+                        }
+                    }
                 }
                 ns_path = Self::next_ns_path(ns_path_ref);
             } else {
