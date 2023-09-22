@@ -152,7 +152,7 @@ impl ASTSource {
     }
 
     pub(crate) fn action_groups(&self) -> Vec<&ActionGroupDeclaration> {
-        self.namespaces.iter().map(|m| self.get_action_group(*m)).collect()
+        self.action_groups.iter().map(|m| self.get_action_group(*m)).collect()
     }
 
     pub(crate) fn namespaces(&self) -> Vec<&ASTNamespace> {
