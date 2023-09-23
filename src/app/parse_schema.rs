@@ -26,6 +26,7 @@ use crate::parser::ast::model::ASTModel;
 use crate::parser::ast::namespace::ASTNamespace;
 use crate::parser::ast::r#enum::ASTEnum;
 use crate::parser::diagnostics::diagnostics::Diagnostics;
+use crate::parser::parser::parser::ASTParser;
 
 pub(super) fn parse_schema(main: Option<&str>, diagnostics: &mut Diagnostics) -> Result<()> {
     // load env first
@@ -96,7 +97,7 @@ pub(super) fn load_schema() -> Result<()> {
         // models
         install_models_to_namespace(source.models(), AppCtx::get().unwrap().main_namespace_mut())?;
         // datasets
-        install_datasets_to_namespace(source.data_sets(), AppCtx::get().unwrap().main_namespace_mut());
+        install_datasets_to_namespace(parser, source.data_sets(), AppCtx::get().unwrap().main_namespace_mut());
         // interfaces
         // middlewares
         // action groups
@@ -357,12 +358,12 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
     Ok(())
 }
 
-fn install_datasets_to_namespace(datasets: Vec<&ASTDataSet>, namespace: &mut Namespace) {
+fn install_datasets_to_namespace(parser: &ASTParser, datasets: Vec<&ASTDataSet>, namespace: &mut Namespace) {
     for data_set in datasets {
         let seeder_data_set = DataSet {
-            name: data_set.identifier.name.clone(),
+            name: data_set.path(),
             groups: data_set.groups.iter().map(|g| Group {
-                name: g.identifiers.path(),
+                name: parser.model_by_id(&g.model_id_path).path().iter().map(|s| s.to_string()).collect(),
                 records: g.records.iter().map(|r| Record {
                     name: r.identifier.name.clone(),
                     value: r.resolved.as_ref().unwrap().clone()
@@ -395,6 +396,7 @@ fn install_action_groups_to_namespace(action_groups: Vec<&ActionGroupDeclaration
 }
 
 fn install_namespaces_to_namespace(ast_namespaces: Vec<&'static ASTNamespace>, namespace: &mut Namespace) -> Result<()> {
+    let parser = AppCtx::get()?.parser();
     for child_ast_namespace in ast_namespaces {
         let child_namespace_mut = namespace.child_namespace_mut(&child_ast_namespace.name);
         // enums
@@ -402,7 +404,7 @@ fn install_namespaces_to_namespace(ast_namespaces: Vec<&'static ASTNamespace>, n
         // models
         install_models_to_namespace(child_ast_namespace.models(), child_namespace_mut)?;
         // datasets
-        install_datasets_to_namespace(child_ast_namespace.data_sets(), child_namespace_mut);
+        install_datasets_to_namespace(parser, child_ast_namespace.data_sets(), child_namespace_mut);
         // interfaces
         // middlewares
         // action groups

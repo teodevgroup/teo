@@ -21,7 +21,8 @@ pub(crate) async fn seed(action: SeedCommandAction, graph: &'static Graph, datas
     let connection = AppCtx::get()?.connector()?.connection().await?;
     // seed for user
     for name in &names {
-        let dataset = datasets.iter().find(|ds| &ds.name == name).unwrap();
+        let dataset_path: Vec<String> = name.split(".").map(|s| s.to_string()).collect();
+        let dataset = datasets.iter().find(|ds| &ds.name == &dataset_path).unwrap();
         match action {
             SeedCommandAction::Seed => seed_dataset(graph, normalize_dataset_relations(dataset, graph), connection.clone()).await,
             SeedCommandAction::Reseed => reseed_dataset(graph, normalize_dataset_relations(dataset, graph), connection.clone()).await,
@@ -43,7 +44,7 @@ pub(crate) async fn seed_dataset(graph: &'static Graph, dataset: &'static DataSe
         let seed_records = GroupRecord::find_many(teon!({
             "where": {
                 "group": group.name.join(".").as_str(),
-                "dataset": dataset.name.as_str(),
+                "dataset": dataset.name.join(".").as_str(),
             }
         }), connection.clone()).await.unwrap();
         for record in group.records.iter() {
@@ -71,7 +72,7 @@ pub(crate) async fn seed_dataset(graph: &'static Graph, dataset: &'static DataSe
 async fn remove_records_for_user_removed_groups(dataset: &'static DataSet, ordered_groups: &Vec<&'static Group>, graph: &'static Graph, connection: Arc<dyn Connection>) {
     let user_removed_seed_records_for_group = GroupRecord::find_many(teon!({
         "where": {
-            "dataset": dataset.name.as_str(),
+            "dataset": dataset.name.join(".").as_str(),
             "group": {
                 "notIn": Value::Vec(ordered_groups.iter().map(|g| Value::String(g.name.join("."))).collect()),
             },
@@ -95,7 +96,7 @@ pub(crate) async fn reseed_dataset(graph: &'static Graph, dataset: &'static Data
         let seed_records = GroupRecord::find_many(teon!({
             "where": {
                 "group": group.name.join(".").as_str(),
-                "dataset": dataset.name.as_str(),
+                "dataset": dataset.name.join(".").as_str(),
             }
         }), connection.clone()).await.unwrap();
         for record in group.records.iter() {
@@ -128,7 +129,7 @@ pub(crate) async fn unseed_dataset(graph: &'static Graph, dataset: &'static Data
         let seed_records = GroupRecord::find_many(teon!({
             "where": {
                 "group": group.name.join(".").as_str(),
-                "dataset": dataset.name.as_str(),
+                "dataset": dataset.name.join(".").as_str(),
             }
         }), connection.clone()).await.unwrap();
         // delete records
@@ -147,7 +148,7 @@ async fn sync_relations(graph: &'static Graph, dataset: &'static DataSet, ordere
         let seed_records = GroupRecord::find_many(teon!({
             "where": {
                 "group": group.name.join(".").as_str(),
-                "dataset": dataset.name.as_str(),
+                "dataset": dataset.name.join(".").as_str(),
             }
         }), connection.clone()).await.unwrap();
         for record in group.records.iter() {
@@ -161,14 +162,14 @@ async fn sync_relations(graph: &'static Graph, dataset: &'static DataSet, ordere
                     "where": {
                         "OR": [
                             {
-                                "dataset": dataset.name.as_str(),
+                                "dataset": dataset.name.join(".").as_str(),
                                 "groupA": object.model().name(),
                                 "relationA": relation.name(),
                                 "nameA": record.name.as_str(),
                                 "groupB": relation.model_path().join("."),
                             },
                             {
-                                "dataset": dataset.name.as_str(),
+                                "dataset": dataset.name.join(".").as_str(),
                                 "groupB": object.model().name(),
                                 "relationB": relation.name(),
                                 "nameB": record.name.as_str(),
@@ -205,7 +206,7 @@ async fn setup_new_relations(graph: &'static Graph, dataset: &'static DataSet, o
         let seed_records = GroupRecord::find_many(teon!({
             "where": {
                 "group": group.name.join(".").as_str(),
-                "dataset": dataset.name.as_str(),
+                "dataset": dataset.name.join(".").as_str(),
             }
         }), connection.clone()).await.unwrap();
         for record in group.records.iter() {
@@ -246,7 +247,7 @@ async fn setup_relations_internal<'a>(record: &'static Record, reference: &'a Va
     let that_seed_record = GroupRecord::find_first(teon!({
         "where": {
             "group": relation.model_path().join("."),
-            "dataset": dataset.name.as_str(),
+            "dataset": dataset.name.join(".").as_str(),
             "name": that_name,
         }
     }), connection.clone()).await.unwrap().unwrap();
@@ -288,7 +289,7 @@ async fn setup_relations_internal<'a>(record: &'static Record, reference: &'a Va
         "where": {
             "OR": [
                 {
-                    "dataset": dataset.name.as_str(),
+                    "dataset": dataset.name.join(".").as_str(),
                     "groupA": object.model().name(),
                     "relationA": relation.name(),
                     "nameA": record.name.as_str(),
@@ -296,7 +297,7 @@ async fn setup_relations_internal<'a>(record: &'static Record, reference: &'a Va
                     "nameB": that_name,
                 },
                 {
-                    "dataset": dataset.name.as_str(),
+                    "dataset": dataset.name.join(".").as_str(),
                     "groupB": object.model().name(),
                     "relationB": relation.name(),
                     "nameB": record.name.as_str(),
@@ -310,7 +311,7 @@ async fn setup_relations_internal<'a>(record: &'static Record, reference: &'a Va
         // not exist, create
         let that_relation = graph.opposite_relation(relation).1;
         let new_relation_record = GroupRelation::new(teon!({
-            "dataset": dataset.name.as_str(),
+            "dataset": dataset.name.join(".").as_str(),
             "groupA": object.model().name(),
             "relationA": relation.name(),
             "nameA": record.name.as_str(),
@@ -339,12 +340,12 @@ async fn perform_remove_from_database<'a>(dataset: &'static DataSet, record: &'a
         "where": {
             "OR": [
                 {
-                    "dataset": dataset.name.as_str(),
+                    "dataset": dataset.name.join(".").as_str(),
                     "groupA": record.group().join(".").as_str(),
                     "nameA": record.name().as_str(),
                 },
                 {
-                    "dataset": dataset.name.as_str(),
+                    "dataset": dataset.name.join(".").as_str(),
                     "groupB": record.group().join(".").as_str(),
                     "nameB": record.name().as_str(),
                 }
@@ -373,7 +374,7 @@ async fn cut_relation<'a>(relation: &'a GroupRelation, record: &'a GroupRecord, 
     let that_model = AppCtx::get().unwrap().model(that_model_path.iter().map(|s| s.as_str()).collect()).unwrap().unwrap();
     let that_name = if record.group().join(".").as_str() == relation.group_a() { relation.name_b() } else { relation.name_a() };
     let seed_record = GroupRecord::find_first(teon!({
-        "dataset": dataset.name.as_str(),
+        "dataset": dataset.name.join(".").as_str(),
         "group": that_model_name.as_str(),
         "name": that_name.as_str()
     }), connection.clone()).await.unwrap().unwrap();
@@ -454,7 +455,7 @@ async fn insert_or_update_input(dataset: &'static DataSet, group: &'static Group
                 let that_record_data = GroupRecord::find_first(teon!({
                     "where": {
                         "group": relation.model_path().join("."),
-                        "dataset": dataset.name.as_str(),
+                        "dataset": dataset.name.join(".").as_str(),
                         "name": that_record_name,
                     }
                 }), connection.clone()).await.unwrap().unwrap();
@@ -469,7 +470,7 @@ async fn insert_or_update_input(dataset: &'static DataSet, group: &'static Group
                 // update relation record
                 let (_, opposite_relation) = graph.opposite_relation(relation);
                 let relation_record = GroupRelation::new(teon!({
-                    "dataset": dataset.name.as_str(),
+                    "dataset": dataset.name.join(".").as_str(),
                     "groupA": group.name.join(".").as_str(),
                     "relationA": relation.name(),
                     "nameA": record.name.as_str(),
@@ -492,7 +493,7 @@ async fn perform_insert_into_database(dataset: &'static DataSet, group: &'static
     object.save_for_seed_without_required_relation().await.unwrap();
     let record_object = GroupRecord::new(teon!({
         "group": group.name.join(".").as_str(),
-        "dataset": dataset.name.as_str(),
+        "dataset": dataset.name.join(".").as_str(),
         "name": record.name.as_str(),
         "record": object_identifier_in_json(&object),
     }), connection).await;
@@ -576,7 +577,7 @@ fn ordered_group<'a>(groups: &'a Vec<Group>, graph: &'static Graph) -> Vec<&'a G
 
 async fn remove_user_deleted_dataset_records_and_relations(datasets: Vec<&'static DataSet>, connection: Arc<dyn Connection>) {
     // remove seed data set records if user removed some seed data set
-    let names = Value::Vec(datasets.iter().map(|d| Value::String(d.name.clone())).collect::<Vec<Value>>());
+    let names = Value::Vec(datasets.iter().map(|d| Value::String(d.name.join(".").clone())).collect::<Vec<Value>>());
     let records_to_remove = GroupRecord::find_many(teon!({
         "where": {
             "dataset": {

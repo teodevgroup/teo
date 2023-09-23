@@ -9,7 +9,7 @@ use crate::teon;
 pub(crate) struct DataSet {
     pub(crate) notrack: bool,
     pub(crate) autoseed: bool,
-    pub(crate) name: String,
+    pub(crate) name: Vec<String>,
     pub(crate) groups: Vec<Group>
 }
 

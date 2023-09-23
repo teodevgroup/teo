@@ -23,6 +23,12 @@ impl ASTDataSet {
             id: item_id, span, source_id, auto_seed, groups, identifier, notrack, ns_path,
         }
     }
+
+    pub(crate) fn path(&self) -> Vec<String> {
+        let mut result = self.ns_path.clone();
+        result.push(self.identifier.name.clone());
+        result
+    }
 }
 
 #[derive(Debug, Clone)]
