@@ -1,4 +1,3 @@
-use std::fmt::{Display, Formatter};
 use crate::parser::ast::identifier::ASTIdentifier;
 use crate::parser::ast::span::Span;
 

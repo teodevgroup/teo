@@ -1221,7 +1221,7 @@ impl Resolver {
                 return
             }
         }
-        let id_path = self.resolve_enum_from_ns_with_path(parser, source, &field_type.identifiers.path(), ns_path, diagnostics, span, source);
+        let id_path = self.resolve_enum_from_ns_with_path(parser, source, &field_type.identifiers.path(), ns_path, diagnostics, span, source, vec![]);
         if let Some(id_path) = id_path {
             field_type.resolve(id_path, TypeClass::Enum);
         } else {
@@ -1231,7 +1231,7 @@ impl Resolver {
     }
 
     fn resolve_field_relation_type(&self, parser: &ASTParser, source: &ASTSource, field_type: &mut ASTFieldType, ns_path: &Vec<String>, diagnostics: &mut Diagnostics, span: Span) {
-        let id_path = self.resolve_model_from_ns_with_path(parser, source, &field_type.identifiers.path(), ns_path, diagnostics, span, source);
+        let id_path = self.resolve_model_from_ns_with_path(parser, source, &field_type.identifiers.path(), ns_path, diagnostics, span, source, vec![]);
         if let Some(id_path) = id_path {
             field_type.resolve(id_path, TypeClass::Model);
         } else {
@@ -1240,7 +1240,10 @@ impl Resolver {
         }
     }
 
-    fn resolve_enum_from_ns_with_path(&self, parser: &ASTParser, source: &ASTSource, ref_path: &Vec<String>, ns_path: &Vec<String>, diagnostics: &mut Diagnostics, span: Span, original_source: &ASTSource) -> Option<Vec<usize>> {
+    fn resolve_enum_from_ns_with_path(&self, parser: &ASTParser, source: &ASTSource, ref_path: &Vec<String>, ns_path: &Vec<String>, diagnostics: &mut Diagnostics, span: Span, original_source: &ASTSource, used_sources: Vec<&ASTSource>) -> Option<Vec<usize>> {
+        if used_sources.contains(&source) {
+            return None
+        }
         let mut ns_path_mut: Option<Vec<&str>> = Some(ns_path.iter().map(|s| s.as_str()).collect());
         loop {
             if let Some(ns_path_ref) = ns_path_mut.as_ref() {
@@ -1266,14 +1269,21 @@ impl Resolver {
             let from_source = parser.sources.iter().find(|(_source_id, source)| {
                 &import.path == &source.path
             }).unwrap().1;
-            if let Some(result) = self.resolve_enum_from_ns_with_path(parser, from_source, ref_path, ns_path, diagnostics, span, original_source) {
+            if let Some(result) = self.resolve_enum_from_ns_with_path(parser, from_source, ref_path, ns_path, diagnostics, span, original_source, {
+                let mut new_sources = used_sources.clone();
+                new_sources.push(source);
+                new_sources
+            }) {
                 return Some(result)
             }
         }
         None
     }
 
-    fn resolve_model_from_ns_with_path(&self, parser: &ASTParser, source: &ASTSource, ref_path: &Vec<String>, ns_path: &Vec<String>, diagnostics: &mut Diagnostics, span: Span, original_source: &ASTSource) -> Option<Vec<usize>> {
+    fn resolve_model_from_ns_with_path(&self, parser: &ASTParser, source: &ASTSource, ref_path: &Vec<String>, ns_path: &Vec<String>, diagnostics: &mut Diagnostics, span: Span, original_source: &ASTSource, used_sources: Vec<&ASTSource>) -> Option<Vec<usize>> {
+        if used_sources.contains(&source) {
+            return None
+        }
         let mut ns_path_mut: Option<Vec<&str>> = Some(ns_path.iter().map(|s| s.as_str()).collect());
         loop {
             if let Some(ns_path_ref) = ns_path_mut.as_ref() {
@@ -1299,7 +1309,11 @@ impl Resolver {
             let from_source = parser.sources.iter().find(|(_source_id, source)| {
                 &import.path == &source.path
             }).unwrap().1;
-            if let Some(result) = self.resolve_model_from_ns_with_path(parser, from_source, ref_path, ns_path, diagnostics, span, original_source) {
+            if let Some(result) = self.resolve_model_from_ns_with_path(parser, from_source, ref_path, ns_path, diagnostics, span, original_source, {
+                let mut new_sources = used_sources.clone();
+                new_sources.push(source);
+                new_sources
+            }) {
                 return Some(result)
             }
         }

@@ -36,6 +36,12 @@ pub(crate) struct ASTSource {
     pub(crate) resolved: bool,
 }
 
+impl PartialEq for ASTSource {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
 pub(crate) struct SourceImportIter<'a> {
     source: &'a ASTSource,
     index: usize,
