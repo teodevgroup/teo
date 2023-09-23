@@ -1206,31 +1206,46 @@ impl Resolver {
     }
 
     fn resolve_field_relation_type(&self, parser: &ASTParser, source: &ASTSource, field_type: &mut ASTFieldType, ns_path: &Vec<String>, diagnostics: &mut Diagnostics, span: Span) {
-        let id_path = self.resolve_model_from_ns_with_path(parser, source, &field_type.identifiers.path(), ns_path, diagnostics, span);
-        field_type.resolve(id_path, TypeClass::Model);
+        let id_path = self.resolve_model_from_ns_with_path(parser, source, &field_type.identifiers.path(), ns_path, diagnostics, span, source);
+        if let Some(id_path) = id_path {
+            field_type.resolve(id_path, TypeClass::Model);
+        } else {
+            self.insert_unresolved_model_and_exit(source, diagnostics, span);
+            unreachable!()
+        }
     }
 
-    fn resolve_model_from_ns_with_path(&self, parser: &ASTParser, source: &ASTSource, ref_path: &Vec<String>, ns_path: &Vec<String>, diagnostics: &mut Diagnostics, span: Span) -> Vec<usize> {
-        let mut ns_path: Option<Vec<&str>> = Some(ns_path.iter().map(|s| s.as_str()).collect());
+    fn resolve_model_from_ns_with_path(&self, parser: &ASTParser, source: &ASTSource, ref_path: &Vec<String>, ns_path: &Vec<String>, diagnostics: &mut Diagnostics, span: Span, original_source: &ASTSource) -> Option<Vec<usize>> {
+        let mut ns_path_mut: Option<Vec<&str>> = Some(ns_path.iter().map(|s| s.as_str()).collect());
         loop {
-            if let Some(ns_path_ref) = ns_path.as_ref() {
+            if let Some(ns_path_ref) = ns_path_mut.as_ref() {
                 if ns_path_ref.is_empty() {
                     if let Some(model) = source.get_model_by_path(ref_path.iter().map(|s| s.as_str()).collect()) {
-                        return model.id_path.clone()
+                        return Some(model.id_path.clone())
                     }
                 } else {
                     if let Some(ns) = source.get_namespace_by_path(ns_path_ref.clone()) {
                         if let Some(model) = ns.get_model_by_path(ref_path.iter().map(|s| s.as_str()).collect()) {
-                            return model.id_path.clone()
+                            return Some(model.id_path.clone())
                         }
                     }
                 }
-                ns_path = Self::next_ns_path(ns_path_ref);
+                ns_path_mut = Self::next_ns_path(ns_path_ref);
             } else {
-                self.insert_unresolved_model_and_exit(source, diagnostics, span);
-                unreachable!()
+                break
             }
         }
+        for import in source.imports() {
+            // find with imports
+            ns_path_mut = Some(ns_path.iter().map(|s| s.as_str()).collect());
+            let from_source = parser.sources.iter().find(|(_source_id, source)| {
+                &import.path == &source.path
+            }).unwrap().1;
+            if let Some(result) = self.resolve_model_from_ns_with_path(parser, from_source, ref_path, ns_path, diagnostics, span, original_source) {
+                return Some(result)
+            }
+        }
+        None
     }
 
     fn next_ns_path<'a>(prev: &Vec<&'a str>) -> Option<Vec<&'a str>> {
