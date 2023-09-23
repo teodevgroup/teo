@@ -9,7 +9,7 @@ schema = {
 // #############
 WHITESPACE = _{ SPACE_SEPARATOR | "\t" }
 EMPTY_LINES = @{ (WHITESPACE* ~ NEWLINE)+ }
-BLOCK_OPEN = { "{" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+BLOCK_OPEN = { "{" ~ (!NEWLINE ~ ANY)* }
 BLOCK_CLOSE = { "}" }
 ENUM_KEYWORD = { "enum" }
 MODEL_KEYWORD = { "model" }

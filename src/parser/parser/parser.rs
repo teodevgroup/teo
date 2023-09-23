@@ -214,7 +214,7 @@ impl ASTParser {
                     tops.insert(item_id, config_block);
                 },
                 Rule::dataset_declaration => {
-                    let dataset_block = self.parse_dataset_block(current, source_id, item_id, diagnostics);
+                    let dataset_block = self.parse_dataset_block(current, source_id, item_id, diagnostics, vec![]);
                     tops.insert(item_id, dataset_block);
                     data_sets.insert(item_id);
                     self.data_sets.push(vec![source_id, item_id]);
@@ -497,7 +497,7 @@ impl ASTParser {
         Top::Constant(Constant::new(item_id, source_id, identifier.unwrap(), expression.unwrap(), span))
     }
 
-    fn parse_dataset_block(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> Top {
+    fn parse_dataset_block(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics, ns_path: Vec<String>) -> Top {
         let mut identifier: Option<ASTIdentifier> = None;
         let mut auto_seed = false;
         let mut notrack = false;
@@ -517,7 +517,7 @@ impl ASTParser {
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
             }
         }
-        Top::DataSet(ASTDataSet::new(span, source_id, item_id, identifier.unwrap(), auto_seed, notrack, groups))
+        Top::DataSet(ASTDataSet::new(span, source_id, item_id, identifier.unwrap(), auto_seed, notrack, groups, ns_path))
     }
 
     fn parse_dataset_group(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> DataSetGroup {
@@ -660,7 +660,11 @@ impl ASTParser {
                 },
                 Rule::dataset_declaration => {
                     let content_item_id = self.next_id();
-                    let dataset_block = self.parse_dataset_block(current, source_id, content_item_id, diagnostics);
+                    let dataset_block = self.parse_dataset_block(current, source_id, content_item_id, diagnostics, {
+                        let mut new_path = ns_path.clone();
+                        new_path.push(name.clone().unwrap().name.clone());
+                        new_path
+                    });
                     tops.insert(content_item_id, dataset_block);
                     data_sets.insert(content_item_id);
                     self.data_sets.push(vec_join(source_id, &content_parent_ids, content_item_id));

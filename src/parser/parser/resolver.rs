@@ -124,7 +124,7 @@ impl Resolver {
                     self.resolve_server_config_block(parser, source, config);
                 }
                 Top::DataSet(data_set) => {
-                    self.resolve_data_set(parser, source, data_set);
+                    self.resolve_data_set(parser, source, data_set, diagnostics);
                 }
                 Top::DebugConf(debug_conf) => {
                     self.resolve_debug_conf(parser, source, debug_conf);
@@ -180,7 +180,7 @@ impl Resolver {
                     self.resolve_server_config_block(parser, source, config);
                 }
                 Top::DataSet(data_set) => {
-                    self.resolve_data_set(parser, source, data_set);
+                    self.resolve_data_set(parser, source, data_set, diagnostics);
                 }
                 Top::DebugConf(debug_conf) => {
                     self.resolve_debug_conf(parser, source, debug_conf);
@@ -651,8 +651,24 @@ impl Resolver {
         }
     }
 
-    pub(crate) fn resolve_data_set(&self, parser: &ASTParser, source: &ASTSource, data_set: &mut ASTDataSet) {
+    pub(crate) fn resolve_data_set(&self, parser: &ASTParser, source: &ASTSource, data_set: &mut ASTDataSet, diagnostics: &mut Diagnostics) {
+        let ns_path = data_set.ns_path.clone();
         for group in data_set.groups.iter_mut() {
+            let span = group.identifiers.span.clone();
+            if let Some(model_id_path) = self.resolve_model_from_ns_with_path(
+                parser,
+                source,
+                &group.identifiers.path(),
+                &ns_path,
+                diagnostics,
+                span,
+                source,
+                vec![]
+            ) {
+                group.resolve(model_id_path);
+            } else {
+                self.insert_unresolved_model_and_exit(source, diagnostics, span);
+            }
             for record in group.records.iter_mut() {
                 record.resolved = Some(self.resolve_dictionary_literal(parser, source, &record.dictionary).as_value().unwrap().clone());
             }

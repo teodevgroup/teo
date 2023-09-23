@@ -8,6 +8,7 @@ use crate::prelude::Value;
 pub struct ASTDataSet {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
+    pub(crate) ns_path: Vec<String>,
     pub(crate) span: Span,
     pub(crate) identifier: ASTIdentifier,
     pub(crate) auto_seed: bool,
@@ -17,9 +18,9 @@ pub struct ASTDataSet {
 }
 
 impl ASTDataSet {
-    pub(crate) fn new(span: Span, source_id: usize, item_id: usize, identifier: ASTIdentifier, auto_seed: bool, notrack: bool, groups: Vec<DataSetGroup>) -> Self {
+    pub(crate) fn new(span: Span, source_id: usize, item_id: usize, identifier: ASTIdentifier, auto_seed: bool, notrack: bool, groups: Vec<DataSetGroup>, ns_path: Vec<String>) -> Self {
         Self {
-            id: item_id, span, source_id, auto_seed, groups, identifier, notrack,
+            id: item_id, span, source_id, auto_seed, groups, identifier, notrack, ns_path,
         }
     }
 }
@@ -31,13 +32,20 @@ pub struct DataSetGroup {
     pub(crate) identifiers: ASTIdentifierPath,
     pub(crate) span: Span,
     pub(crate) records: Vec<DataSetRecord>,
+    pub(crate) model_id_path: Vec<usize>,
+    pub(crate) resolved: bool,
 }
 
 impl DataSetGroup {
     pub(crate) fn new(source_id: usize, item_id: usize, identifiers: ASTIdentifierPath, span: Span, records: Vec<DataSetRecord>) -> Self {
         Self {
-            id: item_id, span, source_id, identifiers, records
+            id: item_id, span, source_id, identifiers, records, model_id_path: vec![], resolved: false,
         }
+    }
+
+    pub(crate) fn resolve(&mut self, model_id_path: Vec<usize>) {
+        self.model_id_path = model_id_path;
+        self.resolved = true;
     }
 }
 
