@@ -479,6 +479,7 @@
 - Remove `action` from request URLs **[DONE]**
 - Remove function installers **[DONE]**
 - Table names are lower-cased but not plural anymore **[DONE]**
+- Fixed empty dictionary literal parsing bug **[DONE]**
 - Display dataset errors and warnings **[IN PROGRESS]**
 - Rewrite decorators loading and pipeline items loading 
 - Added `lint` command

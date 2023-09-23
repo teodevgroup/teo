@@ -9,7 +9,7 @@ schema = {
 // #############
 WHITESPACE = _{ SPACE_SEPARATOR | "\t" }
 EMPTY_LINES = @{ (WHITESPACE* ~ NEWLINE)+ }
-BLOCK_OPEN = { "{" ~ (!NEWLINE ~ ANY)* }
+BLOCK_OPEN = { "{" ~ (!NEWLINE ~ ANY)* ~ NEWLINE? }
 BLOCK_CLOSE = { "}" }
 ENUM_KEYWORD = { "enum" }
 MODEL_KEYWORD = { "model" }
@@ -129,7 +129,7 @@ array_literal = { "[" ~ (expression ~ ( "," ~ expression )* ~ ","?)? ~ "]" }
 // dict literals
 // #############
 named_expression = { expression ~ ":" ~ expression }
-dictionary_literal = { BLOCK_OPEN ~ (named_expression ~ ( NEWLINE* ~ "," ~ NEWLINE* ~ named_expression )* ~ NEWLINE* ~ ","? ~ NEWLINE*)? ~ BLOCK_CLOSE }
+dictionary_literal = { "{" ~ (WHITE_SPACE | NEWLINE)* ~ (named_expression ~ ( NEWLINE* ~ "," ~ NEWLINE* ~ named_expression )* ~ NEWLINE* ~ ","? ~ NEWLINE*)? ~ BLOCK_CLOSE }
 
 // #############
 // subscript
