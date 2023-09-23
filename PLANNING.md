@@ -473,7 +473,8 @@
 
 #### 0.0.58
 - Rewrite app loading process
-- When model type is not resolved, display error message and exit 
+- When a type is not resolved, display error message and exit **[DONE]**
+- Fixed duplicated import bug **[DONE]**
 - Namespaces **[IN PROGRESS]**
 - Remove `action` from request URLs **[DONE]**
 - Remove function installers **[DONE]**

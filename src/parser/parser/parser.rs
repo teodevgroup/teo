@@ -160,6 +160,9 @@ impl ASTParser {
     }
 
     fn parse_source(&mut self, path: &PathBuf, diagnostics: &mut Diagnostics) {
+        if self.current_source_path_bufs.contains(path) {
+            return
+        }
         let source_id = self.next_id();
         self.current_source_path_bufs.push(path.clone());
         let content = match fs::read_to_string(&path) {
