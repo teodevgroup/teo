@@ -323,7 +323,7 @@ dataset_declaration = {
     (AUTOSEED_KEYWORD | NOTRACK_KEYWORD)? ~ DATASET_KEYWORD ~ identifier ~ BLOCK_OPEN ~ (EMPTY_LINES | comment_block | dataset_group_declaration)* ~ BLOCK_CLOSE
 }
 dataset_group_declaration = {
-    GROUP_KEYWORD ~ identifier ~ BLOCK_OPEN ~ (EMPTY_LINES | comment_block | dataset_group_record_declaration)* ~ BLOCK_CLOSE
+    GROUP_KEYWORD ~ identifier_path ~ BLOCK_OPEN ~ (EMPTY_LINES | comment_block | dataset_group_record_declaration)* ~ BLOCK_CLOSE
 }
 dataset_group_record_declaration = {
     RECORD_KEYWORD ~ identifier ~ dictionary_literal

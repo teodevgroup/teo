@@ -25,14 +25,7 @@ use crate::parser::ast::interface_type::InterfaceType;
 use crate::parser::ast::model::ASTModel;
 use crate::parser::ast::namespace::ASTNamespace;
 use crate::parser::ast::r#enum::ASTEnum;
-use crate::parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError};
-use crate::parser::diagnostics::printer;
-
-fn exit_with_parser_error(diagnostics: &mut Diagnostics, error: DiagnosticsError) {
-    diagnostics.insert(error);
-    printer::print_diagnostics(diagnostics, true);
-    std::process::exit(1);
-}
+use crate::parser::diagnostics::diagnostics::Diagnostics;
 
 pub(super) fn parse_schema(main: Option<&str>, diagnostics: &mut Diagnostics) -> Result<()> {
     // load env first
@@ -43,7 +36,7 @@ pub(super) fn parse_schema(main: Option<&str>, diagnostics: &mut Diagnostics) ->
     Ok(())
 }
 
-pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
+pub(super) fn load_schema() -> Result<()> {
     let app_ctx = AppCtx::get()?;
     let parser = app_ctx.parser();
     // connector conf
@@ -101,7 +94,7 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
         // enums
         install_enums_to_namespace(source.enums(), AppCtx::get().unwrap().main_namespace_mut());
         // models
-        install_models_to_namespace(source.models(), AppCtx::get().unwrap().main_namespace_mut(), diagnostics)?;
+        install_models_to_namespace(source.models(), AppCtx::get().unwrap().main_namespace_mut())?;
         // datasets
         install_datasets_to_namespace(source.data_sets(), AppCtx::get().unwrap().main_namespace_mut());
         // interfaces
@@ -109,7 +102,7 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
         // action groups
         install_action_groups_to_namespace(source.action_groups(), AppCtx::get().unwrap().main_namespace_mut())?;
         // namespaces
-        install_namespaces_to_namespace(source.namespaces(), AppCtx::get().unwrap().main_namespace_mut(), diagnostics)?;
+        install_namespaces_to_namespace(source.namespaces(), AppCtx::get().unwrap().main_namespace_mut())?;
     }
     // static files
     for static_files in parser.static_files() {
@@ -129,7 +122,7 @@ fn interface_ref_from(type_with_generics: &InterfaceType) -> InterfaceRef {
     }
 }
 
-fn install_types_to_field_owner<F>(path: Vec<String>, field: &mut F, diagnostics: &mut Diagnostics, ast_field: &ASTField) where F: FieldTypeOwner {
+fn install_types_to_field_owner<F>(path: Vec<String>, field: &mut F, ast_field: &ASTField) where F: FieldTypeOwner {
     if path.len() == 1 {
         let name = path.get(0).unwrap().as_str();
         let mut ret = true;
@@ -170,7 +163,7 @@ fn install_enums_to_namespace(enums: Vec<&ASTEnum>, namespace: &mut Namespace) {
     }
 }
 
-fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut Namespace, diagnostics: &mut Diagnostics) -> Result<()> {
+fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut Namespace) -> Result<()> {
     let graph = AppCtx::get().unwrap().graph();
     for ast_model in models {
         let mut model = Model::new(
@@ -202,7 +195,7 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
                             } else {
                                 model_field.set_optional();
                             }
-                            install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut model_field, diagnostics, ast_field);
+                            install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut model_field, ast_field);
                         }
                         Arity::Array => {
                             if ast_field.r#type.collection_required {
@@ -217,7 +210,7 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
                                 } else {
                                     inner.set_optional();
                                 }
-                                install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut inner, diagnostics, ast_field);
+                                install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut inner, ast_field);
                                 inner
                             })));
                         }
@@ -234,7 +227,7 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
                                 } else {
                                     inner.set_optional();
                                 }
-                                install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut inner, diagnostics, ast_field);
+                                install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut inner, ast_field);
                                 inner
                             })));
                         }
@@ -311,7 +304,7 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
                             } else {
                                 model_property.set_optional();
                             }
-                            install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut model_property, diagnostics, ast_field);
+                            install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut model_property, ast_field);
                         }
                         Arity::Array => {
                             if ast_field.r#type.collection_required {
@@ -326,7 +319,7 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
                                 } else {
                                     inner.set_optional();
                                 }
-                                install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut inner, diagnostics, ast_field);
+                                install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut inner, ast_field);
                                 inner
                             })));
                         }
@@ -343,7 +336,7 @@ fn install_models_to_namespace(models: Vec<&'static ASTModel>, namespace: &mut N
                                 } else {
                                     inner.set_optional();
                                 }
-                                install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut inner, diagnostics, ast_field);
+                                install_types_to_field_owner(ast_field.r#type.identifiers.path(), &mut inner, ast_field);
                                 inner
                             })));
                         }
@@ -369,7 +362,7 @@ fn install_datasets_to_namespace(datasets: Vec<&ASTDataSet>, namespace: &mut Nam
         let seeder_data_set = DataSet {
             name: data_set.identifier.name.clone(),
             groups: data_set.groups.iter().map(|g| Group {
-                name: g.identifier.name.split(".").map(|s| s.to_string()).collect(),
+                name: g.identifiers.path(),
                 records: g.records.iter().map(|r| Record {
                     name: r.identifier.name.clone(),
                     value: r.resolved.as_ref().unwrap().clone()
@@ -401,13 +394,13 @@ fn install_action_groups_to_namespace(action_groups: Vec<&ActionGroupDeclaration
     Ok(())
 }
 
-fn install_namespaces_to_namespace(ast_namespaces: Vec<&'static ASTNamespace>, namespace: &mut Namespace, diagnostics: &mut Diagnostics) -> Result<()> {
+fn install_namespaces_to_namespace(ast_namespaces: Vec<&'static ASTNamespace>, namespace: &mut Namespace) -> Result<()> {
     for child_ast_namespace in ast_namespaces {
         let child_namespace_mut = namespace.child_namespace_mut(&child_ast_namespace.name);
         // enums
         install_enums_to_namespace(child_ast_namespace.enums(), child_namespace_mut);
         // models
-        install_models_to_namespace(child_ast_namespace.models(), child_namespace_mut, diagnostics)?;
+        install_models_to_namespace(child_ast_namespace.models(), child_namespace_mut)?;
         // datasets
         install_datasets_to_namespace(child_ast_namespace.data_sets(), child_namespace_mut);
         // interfaces
@@ -415,7 +408,7 @@ fn install_namespaces_to_namespace(ast_namespaces: Vec<&'static ASTNamespace>, n
         // action groups
         install_action_groups_to_namespace(child_ast_namespace.action_groups(), child_namespace_mut)?;
         // namespaces
-        install_namespaces_to_namespace(child_ast_namespace.namespaces(), child_namespace_mut, diagnostics)?;
+        install_namespaces_to_namespace(child_ast_namespace.namespaces(), child_namespace_mut)?;
     }
     Ok(())
 }

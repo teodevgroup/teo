@@ -1,5 +1,6 @@
 use crate::parser::ast::expression::DictionaryLiteral;
 use crate::parser::ast::identifier::ASTIdentifier;
+use crate::parser::ast::identifier_path::ASTIdentifierPath;
 use crate::parser::ast::span::Span;
 use crate::prelude::Value;
 
@@ -27,15 +28,15 @@ impl ASTDataSet {
 pub struct DataSetGroup {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
-    pub(crate) identifier: ASTIdentifier,
+    pub(crate) identifiers: ASTIdentifierPath,
     pub(crate) span: Span,
     pub(crate) records: Vec<DataSetRecord>,
 }
 
 impl DataSetGroup {
-    pub(crate) fn new(source_id: usize, item_id: usize, identifier: ASTIdentifier, span: Span, records: Vec<DataSetRecord>) -> Self {
+    pub(crate) fn new(source_id: usize, item_id: usize, identifiers: ASTIdentifierPath, span: Span, records: Vec<DataSetRecord>) -> Self {
         Self {
-            id: item_id, span, source_id, identifier, records
+            id: item_id, span, source_id, identifiers, records
         }
     }
 }

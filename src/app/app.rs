@@ -100,7 +100,7 @@ impl App {
         let cli = parse_cli()?;
         let mut diagnostics = Diagnostics::new();
         parse_schema(cli.main(), &mut diagnostics)?;
-        load_schema(&mut diagnostics)?;
+        load_schema()?;
         Ok(cli)
     }
 

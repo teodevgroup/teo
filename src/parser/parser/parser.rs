@@ -521,13 +521,13 @@ impl ASTParser {
     }
 
     fn parse_dataset_group(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> DataSetGroup {
-        let mut identifier: Option<ASTIdentifier> = None;
+        let mut identifiers: Option<ASTIdentifierPath> = None;
         let mut records = vec![];
         let span = Self::parse_span(&pair);
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE | Rule::EMPTY_LINES => (),
-                Rule::identifier => identifier = Some(Self::parse_identifier(&current)),
+                Rule::identifier_path => identifiers = Some(self.parse_identifier_path(current, diagnostics)),
                 Rule::dataset_group_record_declaration => {
                     let next_id = self.next_id();
                     records.push(self.parse_dataset_record_declaration(current, source_id, next_id, diagnostics));
@@ -536,7 +536,7 @@ impl ASTParser {
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
             }
         }
-        DataSetGroup::new(source_id, item_id, identifier.unwrap(), span, records)
+        DataSetGroup::new(source_id, item_id, identifiers.unwrap(), span, records)
     }
 
     fn parse_dataset_record_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> DataSetRecord {
