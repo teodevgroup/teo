@@ -18,6 +18,13 @@ impl DatabaseName {
             DatabaseName::SQLite => default_database_type_sqlite(field_type),
         }
     }
+
+    pub(crate) fn is_mongo(&self) -> bool {
+        match self {
+            DatabaseName::MongoDB => true,
+            _ => false,
+        }
+    }
 }
 
 fn default_database_type_mongodb(field_type: &FieldType) -> DatabaseType {
@@ -56,7 +63,7 @@ fn default_database_type_mysql(field_type: &FieldType) -> DatabaseType {
         FieldType::String => DatabaseType::VarChar { m: 191, n: None, c: None },
         FieldType::Date => DatabaseType::Date,
         FieldType::DateTime => DatabaseType::DateTime(3),
-        FieldType::Enum(enum_def) => DatabaseType::Enum(enum_def.into()),
+        FieldType::Enum(_) => DatabaseType::Enum(field_type.unwrap_enum().into()),
         FieldType::Decimal => DatabaseType::Decimal { m: Some(65), d: Some(30) },
         FieldType::Vec(_) => panic!(),
         FieldType::HashMap(_) => panic!(),

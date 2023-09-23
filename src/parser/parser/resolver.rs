@@ -509,7 +509,8 @@ impl Resolver {
                 for decorator in field.decorators.iter_mut() {
                     self.resolve_field_decorator(parser, source, decorator);
                 }
-                self.resolve_field_primitive_type(parser, source, &mut field.r#type, ns_path);
+                let span = field.r#type.identifiers.span.clone();
+                self.resolve_field_primitive_type(parser, source, &mut field.r#type, ns_path, diagnostics, span);
             }
             ASTFieldClass::Relation => {
                 for decorator in field.decorators.iter_mut() {
@@ -522,7 +523,8 @@ impl Resolver {
                 for decorator in field.decorators.iter_mut() {
                     self.resolve_property_decorator(parser, source, decorator);
                 }
-                self.resolve_field_primitive_type(parser, source, &mut field.r#type, ns_path);
+                let span = field.r#type.identifiers.span.clone();
+                self.resolve_field_primitive_type(parser, source, &mut field.r#type, ns_path, diagnostics, span);
             }
             _ => {}
         }
@@ -1201,8 +1203,31 @@ impl Resolver {
         })
     }
 
-    fn resolve_field_primitive_type(&self, parser: &ASTParser, source: &ASTSource, field_type: &mut ASTFieldType, ns_path: &Vec<String>) {
+    fn is_primitive_type_builtin(&self, parser: &ASTParser, name: &str) -> bool {
+        match name {
+            "String" | "Bool" | "Int" | "Int32" | "Int64" | "Float" | "Float32" | "Float64" |
+            "Date" | "DateTime" | "Decimal" => true,
+            "ObjectId" => parser.connector().unwrap().provider.unwrap().is_mongo(),
+            _ => false,
+        }
+    }
 
+    fn resolve_field_primitive_type(&self, parser: &ASTParser, source: &ASTSource, field_type: &mut ASTFieldType, ns_path: &Vec<String>, diagnostics: &mut Diagnostics, span: Span) {
+        let type_path = field_type.identifiers.path();
+        if type_path.len() == 1 {
+            let name = type_path.get(0).unwrap().as_str();
+            if self.is_primitive_type_builtin(parser, name) {
+                field_type.resolve(vec![], TypeClass::Builtin);
+                return
+            }
+        }
+        let id_path = self.resolve_enum_from_ns_with_path(parser, source, &field_type.identifiers.path(), ns_path, diagnostics, span, source);
+        if let Some(id_path) = id_path {
+            field_type.resolve(id_path, TypeClass::Enum);
+        } else {
+            self.insert_unresolved_enum_and_exit(source, diagnostics, span);
+            unreachable!()
+        }
     }
 
     fn resolve_field_relation_type(&self, parser: &ASTParser, source: &ASTSource, field_type: &mut ASTFieldType, ns_path: &Vec<String>, diagnostics: &mut Diagnostics, span: Span) {
@@ -1213,6 +1238,39 @@ impl Resolver {
             self.insert_unresolved_model_and_exit(source, diagnostics, span);
             unreachable!()
         }
+    }
+
+    fn resolve_enum_from_ns_with_path(&self, parser: &ASTParser, source: &ASTSource, ref_path: &Vec<String>, ns_path: &Vec<String>, diagnostics: &mut Diagnostics, span: Span, original_source: &ASTSource) -> Option<Vec<usize>> {
+        let mut ns_path_mut: Option<Vec<&str>> = Some(ns_path.iter().map(|s| s.as_str()).collect());
+        loop {
+            if let Some(ns_path_ref) = ns_path_mut.as_ref() {
+                if ns_path_ref.is_empty() {
+                    if let Some(model) = source.get_enum_by_path(ref_path.iter().map(|s| s.as_str()).collect()) {
+                        return Some(model.id_path.clone())
+                    }
+                } else {
+                    if let Some(ns) = source.get_namespace_by_path(ns_path_ref.clone()) {
+                        if let Some(model) = ns.get_enum_by_path(ref_path.iter().map(|s| s.as_str()).collect()) {
+                            return Some(model.id_path.clone())
+                        }
+                    }
+                }
+                ns_path_mut = Self::next_ns_path(ns_path_ref);
+            } else {
+                break
+            }
+        }
+        for import in source.imports() {
+            // find with imports
+            ns_path_mut = Some(ns_path.iter().map(|s| s.as_str()).collect());
+            let from_source = parser.sources.iter().find(|(_source_id, source)| {
+                &import.path == &source.path
+            }).unwrap().1;
+            if let Some(result) = self.resolve_enum_from_ns_with_path(parser, from_source, ref_path, ns_path, diagnostics, span, original_source) {
+                return Some(result)
+            }
+        }
+        None
     }
 
     fn resolve_model_from_ns_with_path(&self, parser: &ASTParser, source: &ASTSource, ref_path: &Vec<String>, ns_path: &Vec<String>, diagnostics: &mut Diagnostics, span: Span, original_source: &ASTSource) -> Option<Vec<usize>> {
@@ -1395,6 +1453,13 @@ impl Resolver {
     fn insert_unresolved_model_and_exit(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
         let source_path = source.path.clone();
         diagnostics.insert_unresolved_model(span, source_path);
+        printer::print_diagnostics(diagnostics, true);
+        std::process::exit(1);
+    }
+
+    fn insert_unresolved_enum_and_exit(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
+        let source_path = source.path.clone();
+        diagnostics.insert_unresolved_enum(span, source_path);
         printer::print_diagnostics(diagnostics, true);
         std::process::exit(1);
     }

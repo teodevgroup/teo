@@ -204,7 +204,7 @@ impl ASTParser {
                     self.models.push(vec![source_id, item_id]);
                 },
                 Rule::enum_declaration => {
-                    let r#enum = self.parse_enum(current, source_id, item_id, vec![], diagnostics);
+                    let r#enum = self.parse_enum(current, source_id, item_id, vec![source_id, item_id], vec![], diagnostics);
                     tops.insert(item_id, r#enum);
                     enums.insert(item_id);
                     self.enums.push(vec![source_id, item_id]);
@@ -437,7 +437,7 @@ impl ASTParser {
         )
     }
 
-    fn parse_enum(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, ns_path: Vec<String>, diagnostics: &mut Diagnostics) -> Top {
+    fn parse_enum(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, id_path: Vec<usize>, ns_path: Vec<String>, diagnostics: &mut Diagnostics) -> Top {
         let mut comment_block = None;
         let mut identifier: Option<ASTIdentifier> = None;
         let mut choices: Vec<EnumChoice> = vec![];
@@ -456,6 +456,7 @@ impl ASTParser {
         Top::Enum(ASTEnum::new(
             item_id,
             source_id,
+            id_path,
             comment_block,
             identifier.unwrap(),
             ns_path,
@@ -639,6 +640,11 @@ impl ASTParser {
                 Rule::enum_declaration => {
                     let content_item_id = self.next_id();
                     let r#enum = self.parse_enum(current, source_id, content_item_id, {
+                        let mut ids = content_parent_ids.clone();
+                        ids.unshift(source_id);
+                        ids.push(content_item_id);
+                        ids
+                    }, {
                         let mut new_path = ns_path.clone();
                         new_path.push(name.clone().unwrap().name.clone());
                         new_path
@@ -1402,6 +1408,17 @@ impl ASTParser {
             let namespace_path = id_path.as_slice()[..id_path.len() - 1].to_vec();
             let namespace = self.namespace(namespace_path);
             namespace.get_model(*id_path.last().unwrap())
+        }
+    }
+
+    pub(crate) fn enum_by_id(&self, id_path: &Vec<usize>) -> &ASTEnum {
+        if id_path.len() == 2 {
+            let source = self.get_source(*id_path.get(0).unwrap());
+            source.get_enum(*id_path.get(1).unwrap())
+        } else {
+            let namespace_path = id_path.as_slice()[..id_path.len() - 1].to_vec();
+            let namespace = self.namespace(namespace_path);
+            namespace.get_enum(*id_path.last().unwrap())
         }
     }
 

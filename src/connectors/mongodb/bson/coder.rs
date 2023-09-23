@@ -76,8 +76,9 @@ impl BsonCoder {
                 Some(val) => Ok(Value::DateTime(val.to_chrono())),
                 None => Err(Error::record_decoding_error(model.name(), path, "datetime")),
             }
-            FieldType::Enum(enum_def) => match bson_value.as_str() {
+            FieldType::Enum(_) => match bson_value.as_str() {
                 Some(val) => {
+                    let enum_def = r#type.unwrap_enum();
                     let enum_name = enum_def.name();
                     let graph = AppCtx::get().unwrap().graph();
                     if graph.enum_values(enum_name).unwrap().contains(&val.to_string()) {

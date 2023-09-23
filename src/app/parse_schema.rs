@@ -101,7 +101,7 @@ pub(super) fn load_schema(diagnostics: &mut Diagnostics) -> Result<()> {
         // enums
         install_enums_to_namespace(source.enums(), AppCtx::get().unwrap().main_namespace_mut());
         // models
-        install_models_to_namespace(source.models(), AppCtx::get().unwrap().main_namespace_mut(), diagnostics);
+        install_models_to_namespace(source.models(), AppCtx::get().unwrap().main_namespace_mut(), diagnostics)?;
         // datasets
         install_datasets_to_namespace(source.data_sets(), AppCtx::get().unwrap().main_namespace_mut());
         // interfaces
@@ -149,13 +149,10 @@ fn install_types_to_field_owner<F>(path: Vec<String>, field: &mut F, diagnostics
         }
         if ret { return }
     }
-    if let Some(enum_def) = AppCtx::get().unwrap().r#enum(path.iter().map(|s| s.as_str()).collect()).unwrap() {
-        field.set_field_type(FieldType::Enum(enum_def.clone()))
-    } else {
-        let source = AppCtx::get().unwrap().parser().get_source(ast_field.source_id);
-        diagnostics.insert(DiagnosticsError::new(ast_field.r#type.span, "Unknown type specified", source.path.clone()));
-        printer::print_diagnostics_and_exit(diagnostics, true)
-    }
+    let e = AppCtx::get().unwrap().parser().enum_by_id(&ast_field.r#type.type_id);
+    let mut path = e.ns_path.clone();
+    path.push(e.identifier.name.clone());
+    field.set_field_type(FieldType::Enum(path));
 }
 
 fn install_enums_to_namespace(enums: Vec<&ASTEnum>, namespace: &mut Namespace) {

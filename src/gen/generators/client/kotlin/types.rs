@@ -77,7 +77,7 @@ impl TypeLookup for KotlinTypes {
             FieldType::String => Cow::Borrowed("String"),
             FieldType::Date => Cow::Borrowed("LocalDate"),
             FieldType::DateTime => Cow::Borrowed("OffsetDateTime"),
-            FieldType::Enum(enum_def) => Cow::Borrowed(enum_def.name()),
+            FieldType::Enum(_) => Cow::Borrowed(field_type.unwrap_enum().name()),
             FieldType::Vec(inner) => Cow::Owned("List<".to_owned() + self.field_type_to_result_type(inner.field_type()).as_ref() + if inner.is_optional() { "?" } else { "" } + ">"),
             FieldType::HashMap(_) => unreachable!(),
             FieldType::BTreeMap(_) => unreachable!(),

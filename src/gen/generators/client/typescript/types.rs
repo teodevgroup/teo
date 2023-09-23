@@ -24,8 +24,8 @@ impl TsTypes {
             FieldType::Decimal => "Decimal",
             FieldType::Bool => "Bool",
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "Number",
-            FieldType::Enum(enum_def) => {
-                let name = enum_def.name();
+            FieldType::Enum(_) => {
+                let name = field_type.unwrap_enum().name();
                 generic = format!("<{name}>");
                 "Enum"
             },
@@ -54,8 +54,8 @@ impl TypeLookup for TsTypes {
             FieldType::Bool => "boolean | Bool".to_string(),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number | Number".to_string(),
             FieldType::Decimal => self.conf.decimal_input.to_string() + " | Decimal",
-            FieldType::Enum(enum_def) => {
-                let name = enum_def.name();
+            FieldType::Enum(_) => {
+                let name = field_type.unwrap_enum().name();
                 with_generic = true;
                 if nullable {
                     format!(r#"{name} | EnumNullableFilter<{name}> | null"#)
@@ -101,7 +101,7 @@ impl TypeLookup for TsTypes {
             FieldType::Date | FieldType::DateTime => "string".to_string(),
             FieldType::Bool => "boolean".to_string(),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number".to_string(),
-            FieldType::Enum(enum_def) => enum_def.name().to_string(),
+            FieldType::Enum(_) => field_type.unwrap_enum().name().to_string(),
             FieldType::Vec(internal) => (if internal.is_optional() {
                 "(".to_owned() + &self.field_type_to_result_type(internal.field_type()) + " | null)"
             } else {
@@ -133,7 +133,7 @@ impl TypeLookup for TsTypes {
             FieldType::Bool => "boolean".to_string(),
             FieldType::I32 | FieldType::I64 | FieldType::F32 | FieldType::F64 => "number".to_string(),
             FieldType::Decimal => "Decimal".to_string(),
-            FieldType::Enum(enum_def) => enum_def.name().to_string(),
+            FieldType::Enum(_) => field_type.unwrap_enum().name().to_string(),
             FieldType::Vec(internal) => (if internal.is_optional() {
                 "(".to_owned() + &self.field_type_to_result_type(internal.field_type()) + " | null)"
             } else {

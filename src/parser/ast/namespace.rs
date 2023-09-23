@@ -138,6 +138,10 @@ impl ASTNamespace {
         self.models().iter().find(|m| m.identifier.name.as_str() == name).map(|r| *r)
     }
 
+    pub(crate) fn get_enum_by_name(&self, name: &str) -> Option<&ASTEnum> {
+        self.enums().iter().find(|m| m.identifier.name.as_str() == name).map(|r| *r)
+    }
+
     pub(crate) fn get_namespace_by_path(&self, path: Vec<&str>) -> Option<&ASTNamespace> {
         let mut retval = self;
         for item in path {
@@ -159,6 +163,21 @@ impl ASTNamespace {
             let child_ns = self.get_namespace_by_path(path_for_ns.clone());
             return if let Some(child_ns) = child_ns {
                 child_ns.get_model_by_name(path_for_ns.last().unwrap())
+            } else {
+                None
+            }
+        }
+    }
+
+    pub(crate) fn get_enum_by_path(&self, path: Vec<&str>) -> Option<&ASTEnum> {
+        if path.len() == 1 {
+            self.get_enum_by_name(path.get(0).unwrap())
+        } else {
+            let mut path_for_ns = path.clone();
+            path_for_ns.remove(path_for_ns.len() - 1);
+            let child_ns = self.get_namespace_by_path(path_for_ns.clone());
+            return if let Some(child_ns) = child_ns {
+                child_ns.get_enum_by_name(path_for_ns.last().unwrap())
             } else {
                 None
             }

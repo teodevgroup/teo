@@ -1001,10 +1001,11 @@ impl Decoder {
                 }
                 None => Err(Error::unexpected_input_type("datetime string", path))
             }
-            FieldType::Enum(enum_def) => {
-                let enum_name = enum_def.name();
+            FieldType::Enum(enum_path) => {
+                let enum_name = r#type.unwrap_enum().name();
+                let enum_def = AppCtx::get().unwrap().r#enum(enum_path.iter().map(|s| s.as_str()).collect()).unwrap().unwrap();
                 match json_value.as_str() {
-                    Some(s) => if graph.enum_values(enum_name).unwrap().contains(&s.to_string()) {
+                    Some(s) => if enum_def.values().contains(&s.to_string()) {
                         Ok(Value::String(s.to_string()))
                     } else {
                         Err(Error::unexpected_input_type(format!("string represents enum {enum_name}"), path))

@@ -144,7 +144,7 @@ impl TypeLookup for CSharpTypes {
             FieldType::Decimal => Cow::Borrowed("decimal"),
             FieldType::Date => Cow::Borrowed("DateOnly"),
             FieldType::DateTime => Cow::Borrowed("DateTime"),
-            FieldType::Enum(enum_def) => Cow::Owned(enum_def.name().to_string()),
+            FieldType::Enum(_) => Cow::Owned(field_type.unwrap_enum().name().to_string()),
             FieldType::Vec(inner) => Cow::Owned(self.field_type_to_result_type(inner.field_type()).as_ref().to_owned() + "[]"),
             FieldType::HashMap(_) => panic!(),
             FieldType::BTreeMap(_) => panic!(),

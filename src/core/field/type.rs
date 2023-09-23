@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use std::ops::BitOr;
 use maplit::hashset;
 use once_cell::sync::Lazy;
+use crate::app::app_ctx::AppCtx;
 use crate::core::field::field::Field;
 use crate::core::r#enum::Enum;
 
@@ -18,7 +19,7 @@ pub enum FieldType {
     String,
     Date,
     DateTime,
-    Enum(Enum),
+    Enum(Vec<String>),
     Vec(Box<Field>),
     HashMap(Box<Field>),
     BTreeMap(Box<Field>),
@@ -51,9 +52,17 @@ impl FieldType {
 
     pub fn enum_name(&self) -> &str {
         match self {
-            FieldType::Enum(n) => n.name(),
+            FieldType::Enum(n) => n.last().unwrap(),
             _ => panic!(),
         }
+    }
+
+    pub fn unwrap_enum(&self) -> &Enum {
+        let path = match self {
+            FieldType::Enum(s) => s.iter().map(|s| s.as_str()).collect(),
+            _ => panic!(),
+        };
+        AppCtx::get().unwrap().r#enum(path).unwrap().unwrap()
     }
 
     pub fn is_int(&self) -> bool {

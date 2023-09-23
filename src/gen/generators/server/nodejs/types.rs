@@ -38,7 +38,7 @@ impl TypeLookup for NodeJSTypes {
             FieldType::Decimal => "Decimal".to_string(),
             FieldType::Vec(inner) => self.field_type_to_result_type(inner.field_type()).to_string() + "[]",
             FieldType::Object(name) => name.to_string(),
-            FieldType::Enum(enum_def) => enum_def.name().to_string(),
+            FieldType::Enum(_) => field_type.unwrap_enum().name().to_string(),
             _ => unreachable!(),
         };
         Cow::Owned(base)
@@ -85,7 +85,7 @@ impl ServerTypeLookup for NodeJSTypes {
             FieldType::Decimal => "Decimal".to_string(),
             FieldType::Vec(inner) => self.field_type_to_result_type(inner.field_type()).to_string() + "[]",
             FieldType::Object(name) => name.to_string(),
-            FieldType::Enum(enum_def) => enum_def.name().to_string(),
+            FieldType::Enum(_) => field_type.unwrap_enum().name().to_string(),
             _ => unreachable!(),
         };
         return if optional {

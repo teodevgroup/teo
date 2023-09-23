@@ -7,6 +7,7 @@ use crate::parser::ast::span::Span;
 pub(crate) struct ASTEnum {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
+    pub(crate) id_path: Vec<usize>,
     pub(crate) comment_block: Option<CommentBlock>,
     pub(crate) identifier: ASTIdentifier,
     pub(crate) ns_path: Vec<String>,
@@ -17,10 +18,11 @@ pub(crate) struct ASTEnum {
 }
 
 impl ASTEnum {
-    pub(crate) fn new(item_id: usize, source_id: usize, comment_block: Option<CommentBlock>, identifier: ASTIdentifier, ns_path: Vec<String>, decorators: Vec<ASTDecorator>, choices: Vec<EnumChoice>, span: Span) -> Self {
+    pub(crate) fn new(item_id: usize, source_id: usize, id_path: Vec<usize>, comment_block: Option<CommentBlock>, identifier: ASTIdentifier, ns_path: Vec<String>, decorators: Vec<ASTDecorator>, choices: Vec<EnumChoice>, span: Span) -> Self {
         Self {
             id: item_id,
             source_id,
+            id_path,
             comment_block,
             identifier,
             decorators,

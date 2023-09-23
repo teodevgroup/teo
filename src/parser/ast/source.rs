@@ -181,6 +181,23 @@ impl ASTSource {
         }
     }
 
+    pub(crate) fn get_enum_by_path(&self, path: Vec<&str>) -> Option<&ASTEnum> {
+        if path.len() == 1 {
+            self.enums().iter().find(|m| {
+                m.identifier.name.as_str() == *path.last().unwrap()
+            }).map(|s| *s)
+        } else {
+            let mut ns_path = path.clone();
+            ns_path.remove(ns_path.len() - 1);
+            let ns = self.get_namespace_by_path(ns_path);
+            return if let Some(ns) = ns {
+                ns.get_enum_by_name(*path.last().unwrap())
+            } else {
+                None
+            }
+        }
+    }
+
     pub(crate) fn get_model_by_path(&self, path: Vec<&str>) -> Option<&ASTModel> {
         if path.len() == 1 {
             self.models().iter().find(|m| {

@@ -211,6 +211,10 @@ impl Diagnostics {
     pub fn insert_unresolved_model(&mut self, span: Span, source_path: PathBuf) {
         self.insert(DiagnosticsError::new(span, "ResolvingError: Model is not defined.", source_path))
     }
+
+    pub fn insert_unresolved_enum(&mut self, span: Span, source_path: PathBuf) {
+        self.insert(DiagnosticsError::new(span, "ResolvingError: Type is not defined.", source_path))
+    }
 }
 
 impl Default for Diagnostics {
