@@ -16,6 +16,15 @@ pub(crate) enum TypeClass {
     Model,
 }
 
+impl TypeClass {
+    pub(crate) fn is_enum(&self) -> bool {
+        match self {
+            TypeClass::Enum => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub(crate) struct ASTFieldType {
     pub(crate) span: Span,

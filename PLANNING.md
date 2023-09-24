@@ -481,6 +481,9 @@
 - Table names are lower-cased but not plural anymore **[DONE]**
 - Fixed empty dictionary literal parsing bug **[DONE]**
 - Display dataset errors and warnings **[IN PROGRESS]**
+- Allow comments in dictionary literal
+- Allow comments in array literal
+- Allow comments in tuple literal
 - Rewrite decorators loading and pipeline items loading 
 - Added `lint` command
 - Added `run` command and `program` definition

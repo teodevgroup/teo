@@ -52,22 +52,3 @@ pub fn one_match(matcher: impl Borrow<Matcher>) -> impl Fn(&Value) -> bool {
         false
     }
 }
-
-static EQUAL_TOKENS: Lazy<Mutex<HashMap<String, Value>>> = Lazy::new(|| {
-    Mutex::new(hashmap! {})
-});
-
-pub fn equal_token() -> Arc<dyn Fn(&Value) -> bool> {
-    let random_key = Uuid::new_v4().to_string();
-    return Arc::new(move |v: &Value| {
-        let mut map = EQUAL_TOKENS.lock().unwrap();
-        if map.contains_key(&random_key) {
-            let fetched_value = map.get(&random_key).unwrap();
-            println!("compare: v fv: {} {}", v, fetched_value);
-            v == fetched_value
-        } else {
-            map.insert(random_key.clone(), v.clone());
-            true
-        }
-    })
-}

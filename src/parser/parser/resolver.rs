@@ -265,8 +265,6 @@ impl Resolver {
         for field in model.fields.iter_mut() {
             self.resolve_field(parser, source, field, &ns_path, diagnostics);
         }
-        // cached enums
-        //
         model.resolved = true;
     }
 
@@ -1196,12 +1194,15 @@ impl Resolver {
             }
             used_keys.push(k.as_str().unwrap().to_string());
             if let Some(field) = model.field_for_key(k.as_str().unwrap()) {
+                println!("see field: {} {:?} {:?}", field.identifier.name, field.field_class, field.r#type.type_class);
                 if field.field_class.is_relation() {
                     // validate relation input
 
-                } else if field.field_class.is_primitive_field() {
+                } else if field.field_class.is_primitive_field() || field.r#type.type_class.is_enum() {
                     // validate primitive input
-
+                    if let Some(message) = field.validate_primitive_value(&v) {
+                        self.insert_data_set_record_primitive_value_type_error(source, diagnostics, v_span.clone(), message);
+                    }
                 } else if field.field_class.is_dropped() {
                     self.insert_data_set_record_key_is_dropped(source, diagnostics, k_span.clone(), k.as_str().unwrap(), &model.path().join("."));
                 } else { // property
@@ -1547,5 +1548,9 @@ impl Resolver {
 
     fn insert_data_set_record_key_is_dropped(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span, key: &str, model: &str) {
         diagnostics.insert(DiagnosticsError::new(span, format!("Field with name '{key}' is dropped on model `{model}'"), source.path.clone()));
+    }
+
+    fn insert_data_set_record_primitive_value_type_error(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span, message: String) {
+        diagnostics.insert(DiagnosticsError::new(span, message, source.path.clone()));
     }
 }

@@ -32,6 +32,12 @@ impl ASTEnum {
             resolved: false,
         }
     }
+
+    pub(crate) fn path(&self) -> Vec<String> {
+        let mut result = self.ns_path.clone();
+        result.push(self.identifier.name.clone());
+        result
+    }
 }
 
 #[derive(Debug)]
