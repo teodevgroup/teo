@@ -6,11 +6,11 @@ use crate::app::cli::command::{CLI, CLICommand, GenerateClientCommand, GenerateC
 use crate::app::app_ctx::AppCtx;
 use crate::app::entrance::Entrance;
 use crate::core::result::Result;
-use crate::app::program::Program;
+use crate::app::program::LanguagePlatform;
 
 pub(crate) fn parse_cli() -> Result<CLI> {
     let app_ctx = AppCtx::get()?;
-    let program = app_ctx.program();
+    let program = app_ctx.langauge_platform();
     let entrance = app_ctx.entrance();
     let version = Box::leak(Box::new(format!("Teo {} ({}) [{}]", env!("CARGO_PKG_VERSION"), program.to_string(), entrance.to_str())));
     let about = Box::leak(Box::new(match entrance {
@@ -124,14 +124,15 @@ pub(crate) fn parse_cli() -> Result<CLI> {
         .subcommand(ClapCommand::new("run")
             .about("Run a defined program")
             .arg(Arg::new("NAME")
+                .required(true)
                 .action(ArgAction::Append)
                 .help("Program name to run")
                 .num_args(1)))
         .get_matches_from(match program {
-            Program::Python(_) | Program::NodeJS(_) => {
+            LanguagePlatform::Python(_) | LanguagePlatform::NodeJS(_) => {
                 env::args_os().enumerate().filter(|(i, x)| (*i != 1) && (!x.to_str().unwrap().ends_with("ts-node") && !x.to_str().unwrap().ends_with(".ts"))).map(|(_i, x)| x).collect::<Vec<OsString>>()
             },
-            Program::Rust(_) => env::args_os().enumerate().filter(|(i, x)| {
+            LanguagePlatform::Rust(_) => env::args_os().enumerate().filter(|(i, x)| {
                 !((*i == 1) && x.to_str().unwrap() == "teo")
             }).map(|(_i, x)| x).collect::<Vec<OsString>>(),
             _ => env::args_os().collect::<Vec<OsString>>(),
@@ -182,7 +183,7 @@ pub(crate) fn parse_cli() -> Result<CLI> {
         }
         Some(("run", submatches)) => {
             let name: Option<String> = submatches.get_one::<String>("NAME").map(|s| s.clone());
-            CLICommand::Run(RunCommand { name })
+            CLICommand::Run(RunCommand { name: name.unwrap() })
         }
         _ => unreachable!()
     };

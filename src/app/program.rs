@@ -9,7 +9,7 @@ pub enum ProgramLang {
 }
 
 #[derive(Clone, Debug)]
-pub enum Program {
+pub enum LanguagePlatform {
     Rust(&'static str),
     NodeJS(String),
     Python(String),
@@ -18,15 +18,15 @@ pub enum Program {
     C(String),
 }
 
-impl Program {
+impl LanguagePlatform {
     pub fn to_string(&self) -> String {
         match self {
-            Program::Rust(v) => format!("Rust {v}"),
-            Program::NodeJS(v) => format!("Node.js {v}"),
-            Program::Python(v) => format!("Python {v}"),
-            Program::Go(v) => format!("Go {v}"),
-            Program::Java(v) => format!("Java {v}"),
-            Program::C(v) => format!("C {v}"),
+            LanguagePlatform::Rust(v) => format!("Rust {v}"),
+            LanguagePlatform::NodeJS(v) => format!("Node.js {v}"),
+            LanguagePlatform::Python(v) => format!("Python {v}"),
+            LanguagePlatform::Go(v) => format!("Go {v}"),
+            LanguagePlatform::Java(v) => format!("Java {v}"),
+            LanguagePlatform::C(v) => format!("C {v}"),
         }
     }
 }

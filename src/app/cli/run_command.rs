@@ -59,7 +59,7 @@ pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
             serve(
                 graph,
                 app_ctx.server_conf()?,
-                app_ctx.program(),
+                app_ctx.langauge_platform(),
                 app_ctx.entrance(),
                 app_ctx.middlewares(),
             ).await?

@@ -34,7 +34,7 @@ use crate::core::initiator::Initiator;
 use crate::app::cli::command::SeedCommandAction;
 use crate::app::app_ctx::AppCtx;
 use crate::app::entrance::Entrance;
-use crate::app::program::Program;
+use crate::app::program::LanguagePlatform;
 use crate::app::routes::middleware_ctx::Middleware;
 use crate::app::routes::req::Req;
 use crate::app::routes::req_local::ReqLocal;
@@ -961,7 +961,7 @@ fn parse_path(path: &str, prefix: Option<&str>) -> Result<PathComponents> {
     })
 }
 
-async fn server_start_message(port: u16, environment_version: &'static Program, entrance: &'static Entrance) -> Result<()> {
+async fn server_start_message(port: u16, environment_version: &'static LanguagePlatform, entrance: &'static Entrance) -> Result<()> {
     // Introducing
     let now: DateTime<Local> = Local::now();
     let now_formatted = format!("{now}").dimmed();
@@ -980,7 +980,7 @@ async fn server_start_message(port: u16, environment_version: &'static Program, 
 pub(crate) async fn serve(
     graph: &'static Graph,
     conf: &'static ServerConf,
-    environment_version: &'static Program,
+    environment_version: &'static LanguagePlatform,
     entrance: &'static Entrance,
     middlewares: &'static IndexMap<&'static str, &'static dyn Middleware>,
 ) -> Result<()> {

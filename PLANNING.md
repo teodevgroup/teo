@@ -486,6 +486,7 @@
 - Added `run` command and `program` definition **[DONE]**
 
 #### 0.0.59
+- Code diagnostics for VSCode 
 - Allow no connector in a project
 - Rewrite decorators loading and pipeline items loading
 - TS Client: fixed include args with boolean inputs

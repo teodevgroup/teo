@@ -97,6 +97,18 @@ impl App {
         Ok(self)
     }
 
+    pub fn program<F, T, Fut>(&self, name: impl Into<String>, f: F) -> Result<&Self> where
+        F: Fn(T) -> Fut + Sync + Send + 'static,
+        T: From<UserCtx> + Send,
+        Fut: Future<Output = Result<()>> + Send,
+    {
+        let capture_f = Box::leak(Box::new(f));
+        AppCtx::get()?.insert_program(name.into(), Arc::new(|user_ctx: UserCtx| async {
+            capture_f(user_ctx.into()).await
+        }));
+        Ok(self)
+    }
+
     pub fn prepare(&self) -> Result<CLI> {
         let cli = parse_cli()?;
         let mut diagnostics = Diagnostics::new();

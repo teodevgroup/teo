@@ -7,7 +7,7 @@ use maplit::hashmap;
 use once_cell::sync::OnceCell;
 use crate::app::entrance::Entrance;
 use crate::app::namespace::Namespace;
-use crate::app::program::Program;
+use crate::app::program::LanguagePlatform;
 use crate::core::callbacks::lookup::CallbackLookup;
 use crate::core::callbacks::types::callback_with_user_ctx::AsyncCallbackWithUserCtx;
 use crate::core::conf::test::TestConf;
@@ -27,12 +27,13 @@ use crate::server::test_context::TestContext;
 
 pub struct AppCtx {
     entrance: Entrance,
-    program: Program,
+    language_platform: LanguagePlatform,
     parser: Box<ASTParser>,
     callbacks: CallbackLookup,
     connector: Option<Box<dyn Connector>>,
     graph: Graph,
     setup: Option<Arc<dyn AsyncCallbackWithUserCtx>>,
+    programs: HashMap<String, Arc<dyn AsyncCallbackWithUserCtx>>,
     ignore_callbacks: bool,
     test_context: Option<&'static TestContext>,
     static_files: HashMap<&'static str, &'static str>,
@@ -74,13 +75,14 @@ impl AppCtx {
     fn new() -> Self {
         Self {
             entrance: Entrance::APP,
-            program: Program::Rust(env!("TEO_RUSTC_VERSION")),
+            language_platform: LanguagePlatform::Rust(env!("TEO_RUSTC_VERSION")),
             callbacks: CallbackLookup::new(),
             graph: Graph::new(),
             setup: None,
             ignore_callbacks: false,
             test_context: None,
             static_files: hashmap!{},
+            programs: hashmap!{},
             main_namespace: Namespace::main(),
             parser: Box::new(ASTParser::new()),
             connector: None,
@@ -116,8 +118,8 @@ impl AppCtx {
         Ok(())
     }
 
-    pub fn set_program(&self, program: Program) -> Result<()> {
-        Self::get_mut()?.program = program;
+    pub fn set_program(&self, program: LanguagePlatform) -> Result<()> {
+        Self::get_mut()?.language_platform = program;
         Ok(())
     }
 
@@ -145,6 +147,14 @@ impl AppCtx {
         &mut AppCtx::get_mut().unwrap().main_namespace
     }
 
+    pub(crate) fn insert_program(&self, name: String, program: Arc<dyn AsyncCallbackWithUserCtx>) {
+        AppCtx::get_mut().unwrap().programs.insert(name, program);
+    }
+
+    pub(crate) fn program(&self, name: &str) -> Option<Arc<dyn AsyncCallbackWithUserCtx>> {
+        self.programs.get(name).cloned()
+    }
+
     pub(crate) fn set_setup(&self, setup: Arc<dyn AsyncCallbackWithUserCtx>) {
         AppCtx::get_mut().unwrap().setup = Some(setup);
     }
@@ -164,8 +174,8 @@ impl AppCtx {
         }
     }
 
-    pub(crate) fn program(&self) -> &Program {
-        &self.program
+    pub(crate) fn langauge_platform(&self) -> &LanguagePlatform {
+        &self.language_platform
     }
 
     pub(crate) fn entrance(&self) -> &Entrance {
