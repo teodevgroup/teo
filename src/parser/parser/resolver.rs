@@ -1,7 +1,8 @@
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::str::FromStr;
-use maplit::hashmap;
+use std::sync::Mutex;
+use maplit::{btreeset, hashmap};
 use path_absolutize::Absolutize;
 use regex::Regex;
 use snailquote::unescape;
@@ -61,6 +62,41 @@ pub(crate) struct Resolver {
     pub(crate) global_pipeline_installers: GlobalPipelineInstallers,
 }
 
+pub(crate) struct ResolverState {
+    pub(crate) examined_model_paths: Mutex<BTreeSet<Vec<String>>>,
+    pub(crate) examined_model_fields: Mutex<BTreeSet<String>>,
+}
+
+impl ResolverState {
+
+    pub(crate) fn new() -> Self {
+        Self {
+            examined_model_paths: Mutex::new(btreeset!{}),
+            examined_model_fields: Mutex::new(btreeset!{}),
+        }
+    }
+
+    pub(crate) fn add_examined_model_path(&self, model_path: Vec<String>) {
+        self.examined_model_paths.lock().unwrap().insert(model_path);
+    }
+
+    pub(crate) fn has_examined_model_path(&self, model_path: &Vec<String>) -> bool {
+        self.examined_model_paths.lock().unwrap().contains(model_path)
+    }
+
+    pub(crate) fn add_examined_model_field(&self, field: String) {
+        self.examined_model_fields.lock().unwrap().insert(field);
+    }
+
+    pub(crate) fn has_examined_model_field(&self, field: &String) -> bool {
+        self.examined_model_fields.lock().unwrap().contains(field)
+    }
+
+    pub(crate) fn clear_examined_model_fields(&self) {
+        self.examined_model_fields.lock().unwrap().clear();
+    }
+}
+
 impl Resolver {
 
     pub(crate) fn new_for_connector() -> Self {
@@ -85,11 +121,12 @@ impl Resolver {
     }
 
     pub(crate) fn resolve_parser(&self, parser: &ASTParser, diagnostics: &mut Diagnostics) {
+        let state = ResolverState::new();
         let main = parser.get_source(1);
-        self.resolve_source_first_time(parser, main, diagnostics);
+        self.resolve_source_first_time(parser, main, diagnostics, &state);
         for (index, source) in parser.sources.iter() {
             if *index == 1 { continue }
-            self.resolve_source_first_time(parser, source, diagnostics);
+            self.resolve_source_first_time(parser, source, diagnostics, &state);
         }
         for (index, source) in parser.sources.iter() {
             self.resolve_source_second_time(parser, source, diagnostics);
@@ -100,7 +137,7 @@ impl Resolver {
         parser.to_mut().resolved = true;
     }
 
-    pub(crate) fn resolve_source_first_time(&self, parser: &ASTParser, source: &ASTSource, diagnostics: &mut Diagnostics) {
+    pub(crate) fn resolve_source_first_time(&self, parser: &ASTParser, source: &ASTSource, diagnostics: &mut Diagnostics, state: &ResolverState) {
         if source.resolved_first { return }
         for (_item_id, top) in source.to_mut().tops.iter_mut() {
             match top {
@@ -114,7 +151,7 @@ impl Resolver {
                     self.resolve_enum(parser, source, r#enum);
                 }
                 Top::Model(model) => {
-                    self.resolve_model(parser, source, model, diagnostics);
+                    self.resolve_model(parser, source, model, diagnostics, state);
                 }
                 Top::Connector(_connector) => {
                     continue;
@@ -150,7 +187,7 @@ impl Resolver {
                     self.resolve_static_files(parser, source, static_files);
                 }
                 Top::ASTNamespace(ast_namespace) => {
-                    self.resolve_namespace_first_time(parser, source, ast_namespace, diagnostics);
+                    self.resolve_namespace_first_time(parser, source, ast_namespace, diagnostics, state);
                 }
             }
         }
@@ -216,7 +253,7 @@ impl Resolver {
         ast_namespace.resolved = true;
     }
 
-    pub(crate) fn resolve_namespace_first_time(&self, parser: &ASTParser, source: &ASTSource, ast_namespace: &mut ASTNamespace, diagnostics: &mut Diagnostics) {
+    pub(crate) fn resolve_namespace_first_time(&self, parser: &ASTParser, source: &ASTSource, ast_namespace: &mut ASTNamespace, diagnostics: &mut Diagnostics, state: &ResolverState) {
         for (_item_id, top) in ast_namespace.tops.iter_mut() {
             match top {
                 Top::Import(import) => {
@@ -229,7 +266,7 @@ impl Resolver {
                     self.resolve_enum(parser, source, r#enum);
                 }
                 Top::Model(model) => {
-                    self.resolve_model(parser, source, model, diagnostics);
+                    self.resolve_model(parser, source, model, diagnostics, state);
                 }
                 Top::Connector(_connector) => {
                     continue;
@@ -266,7 +303,7 @@ impl Resolver {
                     self.resolve_static_files(parser, source, static_files);
                 }
                 Top::ASTNamespace(ast_namespace) => {
-                    self.resolve_namespace_first_time(parser, source, ast_namespace, diagnostics);
+                    self.resolve_namespace_first_time(parser, source, ast_namespace, diagnostics, state);
                 }
             }
         }
@@ -320,7 +357,11 @@ impl Resolver {
         choice.resolved = true;
     }
 
-    pub(crate) fn resolve_model(&self, parser: &ASTParser, source: &ASTSource, model: &mut ASTModel, diagnostics: &mut Diagnostics) {
+    pub(crate) fn resolve_model(&self, parser: &ASTParser, source: &ASTSource, model: &mut ASTModel, diagnostics: &mut Diagnostics, state: &ResolverState) {
+        if state.has_examined_model_path(&model.path().iter().map(|s| s.to_string()).collect()) {
+            self.insert_duplicated_model_error(source, diagnostics, model.identifier.span.clone());
+        }
+        state.clear_examined_model_fields();
         // decorators
         for decorator in model.decorators.iter_mut() {
             self.resolve_model_decorator(parser, source, decorator);
@@ -328,9 +369,10 @@ impl Resolver {
         // fields
         let ns_path = model.ns_path.clone();
         for field in model.fields.iter_mut() {
-            self.resolve_field(parser, source, field, &ns_path, diagnostics);
+            self.resolve_field(parser, source, field, &ns_path, diagnostics, state);
         }
         model.resolved = true;
+        state.add_examined_model_path(model.path().iter().map(|s| s.to_string()).collect());
     }
 
     fn resolve_model_decorator(&self, parser: &ASTParser, source: &ASTSource, decorator: &mut ASTDecorator) {
@@ -564,7 +606,10 @@ impl Resolver {
         Entity::Value(Value::Pipeline(value_pipeline))
     }
 
-    fn resolve_field(&self, parser: &ASTParser, source: &ASTSource, field: &mut ASTField, ns_path: &Vec<String>, diagnostics: &mut Diagnostics) {
+    fn resolve_field(&self, parser: &ASTParser, source: &ASTSource, field: &mut ASTField, ns_path: &Vec<String>, diagnostics: &mut Diagnostics, state: &ResolverState) {
+        if state.has_examined_model_field(&field.identifier.name.clone()) {
+            self.insert_duplicated_model_field_error(source, diagnostics, field.identifier.span.clone());
+        }
         field.figure_out_class();
         match &field.field_class {
             ASTFieldClass::Field => {
@@ -591,6 +636,7 @@ impl Resolver {
             _ => {}
         }
         field.resolved = true;
+        state.add_examined_model_field(field.identifier.name.clone());
     }
 
     pub(crate) fn resolve_connector(&self, parser: &ASTParser) -> DatabaseName {
@@ -1699,5 +1745,13 @@ impl Resolver {
 
     fn insert_data_set_record_relation_value_is_not_enum_variant(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span, model_name: &str, dataset_path: &str) {
         diagnostics.insert(DiagnosticsError::new(span, format!("Relation value is not enum variant of `{model_name}` records in dataset `{dataset_path}`"), source.path.clone()));
+    }
+
+    fn insert_duplicated_model_error(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
+        diagnostics.insert(DiagnosticsError::new(span, format!("Duplicated model definition"), source.path.clone()));
+    }
+
+    fn insert_duplicated_model_field_error(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
+        diagnostics.insert(DiagnosticsError::new(span, format!("Duplicated model field definition"), source.path.clone()));
     }
 }
