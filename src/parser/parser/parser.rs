@@ -1211,6 +1211,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::expression => expressions.push(self.parse_expression(current, source_id, diagnostics).kind),
+                Rule::comment_block => (),
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
             }
         }
@@ -1223,6 +1224,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::expression => expressions.push(self.parse_expression(current, source_id, diagnostics).kind),
+                Rule::comment_block => (),
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
             }
         }
@@ -1235,7 +1237,7 @@ impl ASTParser {
         for current in pair.into_inner() {
             match current.as_rule() {
                 Rule::named_expression => expressions.push(self.parse_named_expression(current, source_id, diagnostics)),
-                Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => (),
+                Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE | Rule::comment_block => (),
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
             }
         }

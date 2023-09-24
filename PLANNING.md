@@ -481,9 +481,7 @@
 - Table names are lower-cased but not plural anymore **[DONE]**
 - Fixed empty dictionary literal parsing bug **[DONE]**
 - Display dataset errors and warnings **[IN PROGRESS]**
-- Allow comments in dictionary literal
-- Allow comments in array literal
-- Allow comments in tuple literal
+- Allow comments in dictionary literal, array literal and tuple literal **[DONE]**
 - Fix insert raw enum variant into SQL bug **[DONE]**
 - Rewrite decorators loading and pipeline items loading 
 - Added `lint` command

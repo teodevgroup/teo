@@ -118,18 +118,18 @@ range_end = { numeric_literal | unit_without_range_literal }
 // #############
 // tuple literals
 // #############
-tuple_literal = { "(" ~ ("," | (expression ~ "," ~ ( expression ~ ("," ~ expression)* ~ ","?)*)) ~ ")" }
+tuple_literal = { "(" ~ (WHITE_SPACE | NEWLINE | comment_block)* ~ ("," | (expression ~ (WHITE_SPACE | NEWLINE | comment_block)* ~ "," ~ (WHITE_SPACE | NEWLINE | comment_block)* ~ ( expression ~ (WHITE_SPACE | NEWLINE | comment_block)* ~ ("," ~ (WHITE_SPACE | NEWLINE | comment_block)* ~ expression)* ~ (WHITE_SPACE | NEWLINE | comment_block)* ~ ","?)*)) ~ (WHITE_SPACE | NEWLINE | comment_block)* ~ ")" }
 
 // #############
 // array literals
 // #############
-array_literal = { "[" ~ (expression ~ ( "," ~ expression )* ~ ","?)? ~ "]" }
+array_literal = { "[" ~ (WHITE_SPACE | NEWLINE | comment_block)* ~ (expression ~ (NEWLINE | comment_block)* ~ ( "," ~ (NEWLINE | comment_block)* ~ expression )* ~ (NEWLINE | comment_block)* ~ ","?)? ~ (NEWLINE | comment_block)* ~ "]" }
 
 // #############
 // dict literals
 // #############
 named_expression = { expression ~ ":" ~ expression }
-dictionary_literal = { "{" ~ (WHITE_SPACE | NEWLINE)* ~ (named_expression ~ ( NEWLINE* ~ "," ~ NEWLINE* ~ named_expression )* ~ NEWLINE* ~ ","? ~ NEWLINE*)? ~ BLOCK_CLOSE }
+dictionary_literal = { "{" ~ (WHITE_SPACE | NEWLINE | comment_block)* ~ (named_expression ~ ( (NEWLINE | comment_block)* ~ "," ~ (NEWLINE | comment_block)* ~ named_expression )* ~ (NEWLINE | comment_block)* ~ ","? ~ (NEWLINE | comment_block)*)? ~ BLOCK_CLOSE }
 
 // #############
 // subscript
