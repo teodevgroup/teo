@@ -86,16 +86,19 @@ impl Resolver {
 
     pub(crate) fn resolve_parser(&self, parser: &ASTParser, diagnostics: &mut Diagnostics) {
         let main = parser.get_source(1);
-        self.resolve_source(parser, main, diagnostics);
+        self.resolve_source_first_time(parser, main, diagnostics);
         for (index, source) in parser.sources.iter() {
             if *index == 1 { continue }
-            self.resolve_source(parser, source, diagnostics);
+            self.resolve_source_first_time(parser, source, diagnostics);
+        }
+        for (index, source) in parser.sources.iter() {
+            self.resolve_source_second_time(parser, source, diagnostics);
         }
         parser.to_mut().resolved = true;
     }
 
-    pub(crate) fn resolve_source(&self, parser: &ASTParser, source: &ASTSource, diagnostics: &mut Diagnostics) {
-        if source.resolved { return }
+    pub(crate) fn resolve_source_first_time(&self, parser: &ASTParser, source: &ASTSource, diagnostics: &mut Diagnostics) {
+        if source.resolved_first { return }
         for (_item_id, top) in source.to_mut().tops.iter_mut() {
             match top {
                 Top::Import(import) => {
@@ -123,7 +126,7 @@ impl Resolver {
                     self.resolve_server_config_block(parser, source, config);
                 }
                 Top::DataSet(data_set) => {
-                    self.resolve_data_set(parser, source, data_set, diagnostics);
+                    // do not resolve yet
                 }
                 Top::DebugConf(debug_conf) => {
                     self.resolve_debug_conf(parser, source, debug_conf);
@@ -144,14 +147,45 @@ impl Resolver {
                     self.resolve_static_files(parser, source, static_files);
                 }
                 Top::ASTNamespace(ast_namespace) => {
-                    self.resolve_namespace(parser, source, ast_namespace, diagnostics);
+                    self.resolve_namespace_first_time(parser, source, ast_namespace, diagnostics);
                 }
             }
         }
-        source.to_mut().resolved = true;
+        source.to_mut().resolved_first = true;
     }
 
-    pub(crate) fn resolve_namespace(&self, parser: &ASTParser, source: &ASTSource, ast_namespace: &mut ASTNamespace, diagnostics: &mut Diagnostics) {
+    pub(crate) fn resolve_source_second_time(&self, parser: &ASTParser, source: &ASTSource, diagnostics: &mut Diagnostics) {
+        for (_item_id, top) in source.to_mut().tops.iter_mut() {
+            match top {
+                Top::DataSet(data_set) => {
+                    self.resolve_data_set(parser, source, data_set, diagnostics);
+                },
+                Top::ASTNamespace(ast_namespace) => {
+                    self.resolve_namespace_second_time(parser, source, ast_namespace, diagnostics);
+                }
+                _ => (),
+            }
+        }
+        source.to_mut().resolved_second = true;
+    }
+
+    pub(crate) fn resolve_namespace_second_time(&self, parser: &ASTParser, source: &ASTSource, ast_namespace: &mut ASTNamespace, diagnostics: &mut Diagnostics) {
+        for (_item_id, top) in ast_namespace.tops.iter_mut() {
+            match top {
+                Top::DataSet(data_set) => {
+                    self.resolve_data_set(parser, source, data_set, diagnostics);
+                },
+                Top::ASTNamespace(ast_namespace) => {
+                    self.resolve_namespace_second_time(parser, source, ast_namespace, diagnostics);
+                }
+                _ => ()
+            }
+        }
+        ast_namespace.resolved = true;
+    }
+
+
+    pub(crate) fn resolve_namespace_first_time(&self, parser: &ASTParser, source: &ASTSource, ast_namespace: &mut ASTNamespace, diagnostics: &mut Diagnostics) {
         for (_item_id, top) in ast_namespace.tops.iter_mut() {
             match top {
                 Top::Import(import) => {
@@ -178,8 +212,9 @@ impl Resolver {
                 Top::ServerConfig(config) => {
                     self.resolve_server_config_block(parser, source, config);
                 }
-                Top::DataSet(data_set) => {
-                    self.resolve_data_set(parser, source, data_set, diagnostics);
+                Top::DataSet(_data_set) => {
+                    // resolve later
+                    // self.resolve_data_set(parser, source, data_set, diagnostics);
                 }
                 Top::DebugConf(debug_conf) => {
                     self.resolve_debug_conf(parser, source, debug_conf);
@@ -200,11 +235,10 @@ impl Resolver {
                     self.resolve_static_files(parser, source, static_files);
                 }
                 Top::ASTNamespace(ast_namespace) => {
-                    self.resolve_namespace(parser, source, ast_namespace, diagnostics);
+                    self.resolve_namespace_first_time(parser, source, ast_namespace, diagnostics);
                 }
             }
         }
-        ast_namespace.resolved = true;
     }
 
     pub(crate) fn resolve_import(&self, parser: &ASTParser, _source: &ASTSource, import: &mut ASTImport) {
@@ -1194,7 +1228,6 @@ impl Resolver {
             }
             used_keys.push(k.as_str().unwrap().to_string());
             if let Some(field) = model.field_for_key(k.as_str().unwrap()) {
-                println!("see field: {} {:?} {:?}", field.identifier.name, field.field_class, field.r#type.type_class);
                 if field.field_class.is_relation() {
                     // validate relation input
 

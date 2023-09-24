@@ -33,7 +33,8 @@ pub(crate) struct ASTSource {
     pub(crate) namespaces: BTreeSet<usize>,
     pub(crate) action_groups: BTreeSet<usize>,
     pub(crate) data_sets: BTreeSet<usize>,
-    pub(crate) resolved: bool,
+    pub(crate) resolved_first: bool,
+    pub(crate) resolved_second: bool,
 }
 
 impl PartialEq for ASTSource {
@@ -77,7 +78,8 @@ impl ASTSource {
             namespaces,
             action_groups,
             data_sets,
-            resolved: false,
+            resolved_first: false,
+            resolved_second: false,
         }
     }
 
