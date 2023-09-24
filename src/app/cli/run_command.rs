@@ -10,6 +10,7 @@ use crate::server::serve;
 use crate::gen::interface::server::gen::gen as gen_entity;
 use crate::gen::interface::client::gen::gen as gen_client;
 use crate::prelude::UserCtx;
+use crate::run::run_program;
 
 pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
     let app_ctx = AppCtx::get()?;
@@ -125,7 +126,7 @@ pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
 
         }
         CLICommand::Run(run_command) => {
-
+            run_program(&run_command.name).await.unwrap()
         }
     }
     Ok(())

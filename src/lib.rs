@@ -7,6 +7,7 @@ pub(crate) mod purger;
 pub mod app;
 pub(crate) mod server;
 pub(crate) mod migrate;
+pub(crate) mod run;
 
 pub mod prelude {
     pub use crate::app::app::App;
