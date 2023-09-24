@@ -472,7 +472,6 @@
 - Added `toDate` item **[DONE]**
 
 #### 0.0.58
-- Rewrite app loading process
 - When a type is not resolved, display error message and exit **[DONE]**
 - Fixed duplicated import bug **[DONE]**
 - Namespaces **[IN PROGRESS]**
@@ -480,15 +479,17 @@
 - Remove function installers **[DONE]**
 - Table names are lower-cased but not plural anymore **[DONE]**
 - Fixed empty dictionary literal parsing bug **[DONE]**
-- Display dataset errors and warnings **[IN PROGRESS]**
+- Display errors and warnings **[IN PROGRESS]**
 - Allow comments in dictionary literal, array literal and tuple literal **[DONE]**
 - Fix insert raw enum variant into SQL bug **[DONE]**
-- Rewrite decorators loading and pipeline items loading 
 - Added `lint` command
 - Added `run` command and `program` definition
-- TS Client: fixed include args with boolean inputs
 
 #### 0.0.59
+- Rewrite decorators loading and pipeline items loading
+- TS Client: fixed include args with boolean inputs
+
+#### 0.0.60
 - Generate interfaces for clients
 - Generate custom groups and actions for clients
 - Server response: redirects
@@ -500,12 +501,6 @@
 - PostgreSQL: Enum types
 - Diagnostic messages
 - Unit tests for schemas
-
-#### 0.0.60
-- Documentations
-- Remove `ToMut` crate
-- Migration decorator docs
-- Move auth middleware out
 
 #### 0.0.61
 - The copy action
@@ -523,6 +518,7 @@
 - Log SQL queries
 - Migration dry run
 - MongoDB: connector is not using table name
+- Remove `ToMut` crate
 
 #### 0.0.62
 - model extends model
@@ -541,19 +537,17 @@
 #### 0.0.63
 - Rust entities: optional string array
 - Rust entities: required string array
-- Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
-- Remove `unqueryable` and `unsortable` fields from generated clients
 - Relation with read write rules
-- Pipeline documentation
-- CLI mode: When running server, panic if custom programming callback is provided
-- Soft delete documentation
 - Correct count with cursor
+- Database type mapping for field, property and collection types' item field
 
 #### 0.0.64
 - Input omissible and output omissible for generated clients
-- Support code comment tags for VSCode
+- Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
+- Remove `unqueryable` and `unsortable` fields from generated clients
 
 #### 0.1.0
+- Rewrite Node.js server
 - Node.js bindings: error handling
 - Node.js object printing
 - Node.js bindings: date only type
@@ -561,16 +555,16 @@
 - Cross language error handling for node.js
 
 #### 0.2.0
-- Python server
+- Packages
 
 #### 0.3.0
-- Database type mapping for field, property and collection types' item field
-
-#### 0.4.0
 - Support MSSQL
 
-#### 0.5.0
+#### 0.4.0
 - `@canAccess`
 
 #### 1.0.0
-- First major version
+- First stable major version
+
+#### 2.0.0
+- Python server
