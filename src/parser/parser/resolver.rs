@@ -148,7 +148,7 @@ impl Resolver {
                     self.resolve_constant(parser, source, constant);
                 }
                 Top::Enum(r#enum) => {
-                    self.resolve_enum(parser, source, r#enum);
+                    self.resolve_enum(parser, source, r#enum, diagnostics, state);
                 }
                 Top::Model(model) => {
                     self.resolve_model(parser, source, model, diagnostics, state);
@@ -263,7 +263,7 @@ impl Resolver {
                     self.resolve_constant(parser, source, constant);
                 }
                 Top::Enum(r#enum) => {
-                    self.resolve_enum(parser, source, r#enum);
+                    self.resolve_enum(parser, source, r#enum, diagnostics, state);
                 }
                 Top::Model(model) => {
                     self.resolve_model(parser, source, model, diagnostics, state);
@@ -346,15 +346,24 @@ impl Resolver {
         constant.resolved = true;
     }
 
-    pub(crate) fn resolve_enum(&self, parser: &ASTParser, source: &ASTSource, r#enum: &mut ASTEnum) {
+    pub(crate) fn resolve_enum(&self, parser: &ASTParser, source: &ASTSource, r#enum: &mut ASTEnum, diagnostics: &mut Diagnostics, state: &ResolverState) {
+        if state.has_examined_model_path(&r#enum.path()) {
+            self.insert_duplicated_enum_error(source, diagnostics, r#enum.identifier.span.clone());
+        }
+        state.clear_examined_model_fields();
         for choice in r#enum.choices.iter_mut() {
-            self.resolve_enum_choice(parser, source, choice);
+            self.resolve_enum_choice(parser, source, choice, diagnostics, state);
         }
         r#enum.resolved = true;
+        state.add_examined_model_path(r#enum.path());
     }
 
-    pub(crate) fn resolve_enum_choice(&self, _parser: &ASTParser, _source: &ASTSource, choice: &mut EnumChoice) {
+    pub(crate) fn resolve_enum_choice(&self, _parser: &ASTParser, source: &ASTSource, choice: &mut EnumChoice, diagnostics: &mut Diagnostics, state: &ResolverState) {
+        if state.has_examined_model_field(&choice.identifier.name.clone()) {
+            self.insert_duplicated_enum_variant_error(source, diagnostics, choice.identifier.span.clone());
+        }
         choice.resolved = true;
+        state.add_examined_model_field(choice.identifier.name.clone());
     }
 
     pub(crate) fn resolve_model(&self, parser: &ASTParser, source: &ASTSource, model: &mut ASTModel, diagnostics: &mut Diagnostics, state: &ResolverState) {
@@ -1748,10 +1757,18 @@ impl Resolver {
     }
 
     fn insert_duplicated_model_error(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
-        diagnostics.insert(DiagnosticsError::new(span, format!("Duplicated model definition"), source.path.clone()));
+        diagnostics.insert(DiagnosticsError::new(span, format!("Duplicated model definition, identifier is defined"), source.path.clone()));
     }
 
     fn insert_duplicated_model_field_error(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
         diagnostics.insert(DiagnosticsError::new(span, format!("Duplicated model field definition"), source.path.clone()));
+    }
+
+    fn insert_duplicated_enum_error(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
+        diagnostics.insert(DiagnosticsError::new(span, format!("Duplicated enum definition, identifier is defined"), source.path.clone()));
+    }
+
+    fn insert_duplicated_enum_variant_error(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
+        diagnostics.insert(DiagnosticsError::new(span, format!("Duplicated enum variant definition"), source.path.clone()));
     }
 }
