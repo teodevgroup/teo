@@ -484,6 +484,7 @@
 - Allow comments in dictionary literal
 - Allow comments in array literal
 - Allow comments in tuple literal
+- Fix insert raw enum variant into SQL bug **[DONE]**
 - Rewrite decorators loading and pipeline items loading 
 - Added `lint` command
 - Added `run` command and `program` definition

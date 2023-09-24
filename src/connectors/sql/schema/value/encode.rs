@@ -120,6 +120,7 @@ impl ToSQLString for &Value {
             Value::DateTime(d) => d.to_sql_input(dialect),
             Value::Decimal(d) => d.to_sql_input(dialect),
             Value::Vec(values) => format!("array[{}]", values.iter().map(|v| ToSQLString::to_string(&v, dialect)).join(",")),
+            Value::RawEnumChoice(string, _) => string.to_sql_input(dialect),
             _ => panic!("unhandled value: {:?}", self),
         }
     }
