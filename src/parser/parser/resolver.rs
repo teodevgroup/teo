@@ -94,6 +94,9 @@ impl Resolver {
         for (index, source) in parser.sources.iter() {
             self.resolve_source_second_time(parser, source, diagnostics);
         }
+        for (index, source) in parser.sources.iter() {
+            self.resolve_source_third_time(parser, source, diagnostics);
+        }
         parser.to_mut().resolved = true;
     }
 
@@ -169,6 +172,21 @@ impl Resolver {
         source.to_mut().resolved_second = true;
     }
 
+    pub(crate) fn resolve_source_third_time(&self, parser: &ASTParser, source: &ASTSource, diagnostics: &mut Diagnostics) {
+        for (_item_id, top) in source.to_mut().tops.iter_mut() {
+            match top {
+                Top::DataSet(data_set) => {
+                    self.resolve_data_set_record(parser, source, data_set, diagnostics);
+                },
+                Top::ASTNamespace(ast_namespace) => {
+                    self.resolve_namespace_third_time(parser, source, ast_namespace, diagnostics);
+                }
+                _ => (),
+            }
+        }
+        source.to_mut().resolved_third = true;
+    }
+
     pub(crate) fn resolve_namespace_second_time(&self, parser: &ASTParser, source: &ASTSource, ast_namespace: &mut ASTNamespace, diagnostics: &mut Diagnostics) {
         for (_item_id, top) in ast_namespace.tops.iter_mut() {
             match top {
@@ -181,9 +199,22 @@ impl Resolver {
                 _ => ()
             }
         }
-        ast_namespace.resolved = true;
     }
 
+    pub(crate) fn resolve_namespace_third_time(&self, parser: &ASTParser, source: &ASTSource, ast_namespace: &mut ASTNamespace, diagnostics: &mut Diagnostics) {
+        for (_item_id, top) in ast_namespace.tops.iter_mut() {
+            match top {
+                Top::DataSet(data_set) => {
+                    self.resolve_data_set_record(parser, source, data_set, diagnostics);
+                },
+                Top::ASTNamespace(ast_namespace) => {
+                    self.resolve_namespace_third_time(parser, source, ast_namespace, diagnostics);
+                }
+                _ => ()
+            }
+        }
+        ast_namespace.resolved = true;
+    }
 
     pub(crate) fn resolve_namespace_first_time(&self, parser: &ASTParser, source: &ASTSource, ast_namespace: &mut ASTNamespace, diagnostics: &mut Diagnostics) {
         for (_item_id, top) in ast_namespace.tops.iter_mut() {
@@ -682,6 +713,18 @@ impl Resolver {
         }
     }
 
+    pub(crate) fn resolve_data_set_record(&self, parser: &ASTParser, source: &ASTSource, data_set: &mut ASTDataSet, diagnostics: &mut Diagnostics) {
+        let ns_path = data_set.ns_path.clone();
+        let mut dataset_path: Vec<String> = ns_path.clone();
+        dataset_path.push(data_set.identifier.name.clone());
+        for group in data_set.groups.iter_mut() {
+            let model = parser.model_by_id(&group.model_id_path);
+            for record in group.records.iter_mut() {
+                record.resolved = Some(self.resolve_dataset_record_dictionary_literal(parser, source, &record.dictionary, model, diagnostics, &dataset_path).as_value().unwrap().clone());
+            }
+        }
+    }
+
     pub(crate) fn resolve_data_set(&self, parser: &ASTParser, source: &ASTSource, data_set: &mut ASTDataSet, diagnostics: &mut Diagnostics) {
         let ns_path = data_set.ns_path.clone();
         let mut dataset_path: Vec<String> = ns_path.clone();
@@ -702,10 +745,6 @@ impl Resolver {
                 return
             };
             group.resolve(model_id_path.clone());
-            let model = parser.model_by_id(&model_id_path);
-            for record in group.records.iter_mut() {
-                record.resolved = Some(self.resolve_dataset_record_dictionary_literal(parser, source, &record.dictionary, model, diagnostics, &dataset_path).as_value().unwrap().clone());
-            }
         }
     }
 
