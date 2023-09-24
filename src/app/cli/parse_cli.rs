@@ -2,7 +2,7 @@ use std::env;
 use std::ffi::OsString;
 use clap::{Arg, ArgAction};
 use clap::{Command as ClapCommand};
-use crate::app::cli::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, MigrateCommand, PurgeCommand, SeedCommand, SeedCommandAction, ServeCommand};
+use crate::app::cli::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, LintCommand, MigrateCommand, PurgeCommand, RunCommand, SeedCommand, SeedCommandAction, ServeCommand};
 use crate::app::app_ctx::AppCtx;
 use crate::app::entrance::Entrance;
 use crate::core::result::Result;
@@ -119,6 +119,14 @@ pub(crate) fn parse_cli() -> Result<CLI> {
                 .num_args(1..)))
         .subcommand(ClapCommand::new("purge")
             .about("Purge and clear the database without dropping tables."))
+        .subcommand(ClapCommand::new("lint")
+            .about("Lint the schema files"))
+        .subcommand(ClapCommand::new("run")
+            .about("Run a defined program")
+            .arg(Arg::new("NAME")
+                .action(ArgAction::Append)
+                .help("Program name to run")
+                .num_args(1)))
         .get_matches_from(match program {
             Program::Python(_) | Program::NodeJS(_) => {
                 env::args_os().enumerate().filter(|(i, x)| (*i != 1) && (!x.to_str().unwrap().ends_with("ts-node") && !x.to_str().unwrap().ends_with(".ts"))).map(|(_i, x)| x).collect::<Vec<OsString>>()
@@ -168,6 +176,13 @@ pub(crate) fn parse_cli() -> Result<CLI> {
         }
         Some(("purge", _submatches)) => {
             CLICommand::Purge(PurgeCommand { })
+        }
+        Some(("lint", _submatches)) => {
+            CLICommand::Lint(LintCommand { })
+        }
+        Some(("run", submatches)) => {
+            let name: Option<String> = submatches.get_one::<String>("NAME").map(|s| s.clone());
+            CLICommand::Run(RunCommand { name })
         }
         _ => unreachable!()
     };

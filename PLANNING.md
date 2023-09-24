@@ -482,10 +482,11 @@
 - Display errors and warnings **[IN PROGRESS]**
 - Allow comments in dictionary literal, array literal and tuple literal **[DONE]**
 - Fix insert raw enum variant into SQL bug **[DONE]**
-- Added `lint` command
-- Added `run` command and `program` definition
+- Added `lint` command **[DONE]**
+- Added `run` command and `program` definition **[DONE]**
 
 #### 0.0.59
+- Allow no connector in a project
 - Rewrite decorators loading and pipeline items loading
 - TS Client: fixed include args with boolean inputs
 

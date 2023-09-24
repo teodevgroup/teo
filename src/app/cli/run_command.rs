@@ -121,6 +121,12 @@ pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
         CLICommand::Purge(_) => {
             purge().await.unwrap()
         }
+        CLICommand::Lint(_) => {
+
+        }
+        CLICommand::Run(run_command) => {
+
+        }
     }
     Ok(())
 }
