@@ -13,7 +13,7 @@ use crate::parser::ast::config::ASTServer;
 use crate::parser::ast::constant::Constant;
 use crate::parser::ast::decorator::ASTDecorator;
 use crate::parser::ast::entity::Entity;
-use crate::parser::ast::expression::{ArrayLiteral, BitwiseNegation, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, Expression, ExpressionKind, Negation, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
+use crate::parser::ast::expression::{ArrayLiteral, BitwiseNegation, BoolLiteral, DictionaryLiteral, EnumVariantLiteral, Expression, ExpressionKind, Negation, NullishCoalescing, NullLiteral, NumericLiteral, RangeLiteral, RegExpLiteral, StringLiteral, TupleLiteral};
 use crate::parser::ast::field::{ASTField, ASTFieldClass};
 use crate::parser::ast::group::Group;
 use crate::parser::ast::identifier::ASTIdentifier;
@@ -952,7 +952,7 @@ impl Resolver {
             ExpressionKind::NullLiteral(n) => {
                 self.resolve_null_literal(n)
             }
-            ExpressionKind::EnumChoiceLiteral(e) => {
+            ExpressionKind::EnumVariantLiteral(e) => {
                 self.resolve_enum_choice_literal(parser, source, e)
             }
             ExpressionKind::RangeLiteral(range_literal) => {
@@ -1149,7 +1149,7 @@ impl Resolver {
         Entity::Value(Value::Null)
     }
 
-    fn resolve_enum_choice_literal(&self, parser: &ASTParser, source: &ASTSource, e: &EnumChoiceLiteral) -> Entity {
+    fn resolve_enum_choice_literal(&self, parser: &ASTParser, source: &ASTSource, e: &EnumVariantLiteral) -> Entity {
         if e.argument_list.is_some() {
             Entity::Value(Value::RawEnumChoice(e.value.clone(), Some(self.resolve_argument_list_as_tuple_vec(parser, source, e.argument_list.as_ref().unwrap()))))
         } else {
@@ -1217,9 +1217,6 @@ impl Resolver {
             let k_span = key.span();
             let k = self.resolve_expression_kind(parser, source, key, false);
             let k = Self::unwrap_into_value_if_needed(parser, source, &k);
-            let v_span = value.span();
-            let v = self.resolve_expression_kind(parser, source, value, false);
-            let v = Self::unwrap_into_value_if_needed(parser, source, &v);
             if !k.is_string() {
                 self.insert_data_set_record_key_type_is_not_string(source, diagnostics, k_span.clone());
             }
@@ -1229,13 +1226,35 @@ impl Resolver {
             used_keys.push(k.as_str().unwrap().to_string());
             if let Some(field) = model.field_for_key(k.as_str().unwrap()) {
                 if field.field_class.is_relation() {
-                    // validate relation input
+                    let v_span = value.span();
+                    if field.r#type.arity.is_array() { // to many relation
+                        if value.is_array_literal() {
 
-                } else if field.field_class.is_primitive_field() || field.r#type.type_class.is_enum() {
+                        } else {
+
+                        }
+                    } else { // to one relation
+                        if value.is_null_literal() {
+
+                        } else if value.is_enum_variant_literal() {
+
+                        } else {
+
+                        }
+                    }
+                    // let v = self.resolve_expression_kind_for_data_set_record(parser, source, value, false);
+                    let v = self.resolve_expression_kind(parser, source, value, false);
+                    let v = Self::unwrap_into_value_if_needed(parser, source, &v);
+                    resolved.insert(if k.is_string() { k.as_str().unwrap().to_string() } else { "".to_owned() }, v);
+                } else if field.field_class.is_primitive_field() {
+                    let v_span = value.span();
+                    let v = self.resolve_expression_kind(parser, source, value, false);
+                    let v = Self::unwrap_into_value_if_needed(parser, source, &v);
                     // validate primitive input
                     if let Some(message) = field.validate_primitive_value(&v) {
                         self.insert_data_set_record_primitive_value_type_error(source, diagnostics, v_span.clone(), message);
                     }
+                    resolved.insert(if k.is_string() { k.as_str().unwrap().to_string() } else { "".to_owned() }, v);
                 } else if field.field_class.is_dropped() {
                     self.insert_data_set_record_key_is_dropped(source, diagnostics, k_span.clone(), k.as_str().unwrap(), &model.path().join("."));
                 } else { // property
@@ -1244,7 +1263,6 @@ impl Resolver {
             } else {
                 self.insert_data_set_record_key_is_undefined(source, diagnostics, k_span.clone(), k.as_str().unwrap(), &model.path().join("."));
             }
-            resolved.insert(if k.is_string() { k.as_str().unwrap().to_string() } else { "".to_owned() }, v);
         }
         Entity::Value(Value::HashMap(resolved))
     }

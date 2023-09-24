@@ -8,6 +8,30 @@ pub(crate) enum Arity {
     Dictionary,
 }
 
+impl Arity {
+
+    pub(crate) fn is_scalar(&self) -> bool {
+        match self {
+            Arity::Scalar => true,
+            _ => false,
+        }
+    }
+
+    pub(crate) fn is_array(&self) -> bool {
+        match self {
+            Arity::Array => true,
+            _ => false,
+        }
+    }
+
+    pub(crate) fn is_dictionary(&self) -> bool {
+        match self {
+            Arity::Dictionary => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub(crate) enum TypeClass {
     Unresolved,

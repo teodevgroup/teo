@@ -117,13 +117,13 @@ impl Display for NullLiteral {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct EnumChoiceLiteral {
+pub(crate) struct EnumVariantLiteral {
     pub(crate) value: String,
     pub(crate) span: Span,
     pub(crate) argument_list: Option<ArgumentList>,
 }
 
-impl Display for EnumChoiceLiteral {
+impl Display for EnumVariantLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str(".")?;
         f.write_str(&self.value)?;
@@ -228,7 +228,7 @@ pub(crate) enum ExpressionKind {
     RegExpLiteral(RegExpLiteral),
     BoolLiteral(BoolLiteral),
     NullLiteral(NullLiteral),
-    EnumChoiceLiteral(EnumChoiceLiteral),
+    EnumVariantLiteral(EnumVariantLiteral),
     RangeLiteral(RangeLiteral),
     TupleLiteral(TupleLiteral),
     ArrayLiteral(ArrayLiteral),
@@ -254,7 +254,7 @@ impl ExpressionKind {
             ExpressionKind::RegExpLiteral(e) => &e.span,
             ExpressionKind::BoolLiteral(e) => &e.span,
             ExpressionKind::NullLiteral(e) => &e.span,
-            ExpressionKind::EnumChoiceLiteral(e) => &e.span,
+            ExpressionKind::EnumVariantLiteral(e) => &e.span,
             ExpressionKind::RangeLiteral(e) => &e.span,
             ExpressionKind::TupleLiteral(e) => &e.span,
             ExpressionKind::ArrayLiteral(e) => &e.span,
@@ -274,91 +274,115 @@ impl ExpressionKind {
         }
     }
 
-    pub(crate) fn as_numeric_mut(&mut self) -> Option<&mut NumericLiteral> {
+    pub(crate) fn as_numeric_literal_mut(&mut self) -> Option<&mut NumericLiteral> {
         match self {
             ExpressionKind::NumericLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_string(&self) -> Option<&StringLiteral> {
+    pub(crate) fn is_numeric_literal(&self) -> bool {
+        self.as_numeric_literal().is_some()
+    }
+
+    pub(crate) fn as_string_literal(&self) -> Option<&StringLiteral> {
         match self {
             ExpressionKind::StringLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_string_mut(&mut self) -> Option<&mut StringLiteral> {
+    pub(crate) fn as_string_literal_mut(&mut self) -> Option<&mut StringLiteral> {
         match self {
             ExpressionKind::StringLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_regexp(&self) -> Option<&RegExpLiteral> {
+    pub(crate) fn is_string_literal(&self) -> bool {
+        self.as_string_literal().is_some()
+    }
+
+    pub(crate) fn as_regexp_literal(&self) -> Option<&RegExpLiteral> {
         match self {
             ExpressionKind::RegExpLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_regexp_mut(&mut self) -> Option<&mut RegExpLiteral> {
+    pub(crate) fn as_regexp_literal_mut(&mut self) -> Option<&mut RegExpLiteral> {
         match self {
             ExpressionKind::RegExpLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_bool(&self) -> Option<&BoolLiteral> {
+    pub(crate) fn is_regexp_literal(&self) -> bool {
+        self.as_regexp_literal().is_some()
+    }
+
+    pub(crate) fn as_bool_literal(&self) -> Option<&BoolLiteral> {
         match self {
             ExpressionKind::BoolLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_bool_mut(&mut self) -> Option<&mut BoolLiteral> {
+    pub(crate) fn as_bool_literal_mut(&mut self) -> Option<&mut BoolLiteral> {
         match self {
             ExpressionKind::BoolLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_null(&self) -> Option<&NullLiteral> {
+    pub(crate) fn is_bool_literal(&self) -> bool {
+        self.as_bool_literal().is_some()
+    }
+
+    pub(crate) fn as_null_literal(&self) -> Option<&NullLiteral> {
         match self {
             ExpressionKind::NullLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_null_mut(&mut self) -> Option<&mut NullLiteral> {
+    pub(crate) fn as_null_literal_mut(&mut self) -> Option<&mut NullLiteral> {
         match self {
             ExpressionKind::NullLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_enum_choice(&self) -> Option<&EnumChoiceLiteral> {
+    pub(crate) fn is_null_literal(&self) -> bool {
+        self.as_null_literal().is_some()
+    }
+
+    pub(crate) fn as_enum_variant_literal(&self) -> Option<&EnumVariantLiteral> {
         match self {
-            ExpressionKind::EnumChoiceLiteral(n) => Some(n),
+            ExpressionKind::EnumVariantLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_enum_choice_mut(&mut self) -> Option<&mut EnumChoiceLiteral> {
+    pub(crate) fn as_enum_variant_literal_mut(&mut self) -> Option<&mut EnumVariantLiteral> {
         match self {
-            ExpressionKind::EnumChoiceLiteral(n) => Some(n),
+            ExpressionKind::EnumVariantLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_range(&self) -> Option<&RangeLiteral> {
+    pub(crate) fn is_enum_variant_literal(&self) -> bool {
+        self.as_enum_variant_literal().is_some()
+    }
+
+    pub(crate) fn as_range_literal(&self) -> Option<&RangeLiteral> {
         match self {
             ExpressionKind::RangeLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_range_mut(&mut self) -> Option<&mut RangeLiteral> {
+    pub(crate) fn as_range_literal_mut(&mut self) -> Option<&mut RangeLiteral> {
         match self {
             ExpressionKind::RangeLiteral(n) => Some(n),
             _ => None,
@@ -379,18 +403,22 @@ impl ExpressionKind {
         }
     }
 
-    pub(crate) fn as_array(&self) -> Option<&ArrayLiteral> {
+    pub(crate) fn as_array_literal(&self) -> Option<&ArrayLiteral> {
         match self {
             ExpressionKind::ArrayLiteral(n) => Some(n),
             _ => None,
         }
     }
 
-    pub(crate) fn as_array_mut(&mut self) -> Option<&mut ArrayLiteral> {
+    pub(crate) fn as_array_literal_mut(&mut self) -> Option<&mut ArrayLiteral> {
         match self {
             ExpressionKind::ArrayLiteral(n) => Some(n),
             _ => None,
         }
+    }
+
+    pub(crate) fn is_array_literal(&self) -> bool {
+        self.as_array_literal().is_some()
     }
 
     pub(crate) fn as_dictionary(&self) -> Option<&DictionaryLiteral> {
@@ -490,7 +518,7 @@ impl Display for ExpressionKind {
             ExpressionKind::RegExpLiteral(r) => Display::fmt(r, f),
             ExpressionKind::BoolLiteral(b) => Display::fmt(b, f),
             ExpressionKind::NullLiteral(n) => Display::fmt(n, f),
-            ExpressionKind::EnumChoiceLiteral(e) => Display::fmt(e, f),
+            ExpressionKind::EnumVariantLiteral(e) => Display::fmt(e, f),
             ExpressionKind::RangeLiteral(r) => Display::fmt(r, f),
             ExpressionKind::TupleLiteral(t) => Display::fmt(t, f),
             ExpressionKind::ArrayLiteral(a) => Display::fmt(a, f),

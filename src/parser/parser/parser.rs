@@ -23,7 +23,7 @@ use crate::parser::ast::constant::Constant;
 use crate::parser::ast::data_set::{ASTDataSet, ASTDataSetGroup, ASTDataSetRecord};
 use crate::parser::ast::debug_conf::ASTDebugConf;
 use crate::parser::ast::decorator::ASTDecorator;
-use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral, RegExpLiteral, NullishCoalescing, Negation, BitwiseNegation };
+use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumVariantLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral, RegExpLiteral, NullishCoalescing, Negation, BitwiseNegation };
 use crate::parser::ast::field::ASTField;
 use crate::parser::ast::generator::ASTEntity;
 use crate::parser::ast::group::Group;
@@ -1031,7 +1031,7 @@ impl ASTParser {
                 Rule::numeric_literal => unit.expressions.push(ExpressionKind::NumericLiteral(NumericLiteral { value: current.as_str().to_string(), span })),
                 Rule::string_literal => unit.expressions.push(ExpressionKind::StringLiteral(StringLiteral { value: current.as_str().to_string(), span })),
                 Rule::regexp_literal => unit.expressions.push(ExpressionKind::RegExpLiteral(self.parse_regexp_literal(current, source_id, diagnostics))),
-                Rule::enum_choice_literal => unit.expressions.push(ExpressionKind::EnumChoiceLiteral(self.parse_enum_choice_literal(current, source_id, diagnostics))),
+                Rule::enum_choice_literal => unit.expressions.push(ExpressionKind::EnumVariantLiteral(self.parse_enum_choice_literal(current, source_id, diagnostics))),
                 Rule::tuple_literal => unit.expressions.push(ExpressionKind::TupleLiteral(self.parse_tuple_literal(current, source_id, diagnostics))),
                 Rule::array_literal => unit.expressions.push(ExpressionKind::ArrayLiteral(self.parse_array_literal(current, source_id, diagnostics))),
                 Rule::dictionary_literal => unit.expressions.push(ExpressionKind::DictionaryLiteral(self.parse_dictionary_literal(current, source_id, diagnostics))),
@@ -1049,7 +1049,7 @@ impl ASTParser {
         }
     }
 
-    fn parse_enum_choice_literal(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> EnumChoiceLiteral {
+    fn parse_enum_choice_literal(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> EnumVariantLiteral {
         let span = Self::parse_span(&pair);
         let mut arg_list: Option<ArgumentList> = None;
         let mut value: Option<String> = None;
@@ -1060,7 +1060,7 @@ impl ASTParser {
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
             }
         }
-        EnumChoiceLiteral { value: value.unwrap(), span, argument_list: arg_list }
+        EnumVariantLiteral { value: value.unwrap(), span, argument_list: arg_list }
     }
 
 
