@@ -62,9 +62,17 @@ pub(crate) struct Resolver {
     pub(crate) global_pipeline_installers: GlobalPipelineInstallers,
 }
 
+#[derive(PartialEq, Eq, Hash, Ord, PartialOrd)]
+pub(crate) struct ExaminedDataSetRecord {
+    pub(crate) data_set: Vec<String>,
+    pub(crate) group: Vec<String>,
+    pub(crate) record: String,
+}
+
 pub(crate) struct ResolverState {
     pub(crate) examined_model_paths: Mutex<BTreeSet<Vec<String>>>,
     pub(crate) examined_model_fields: Mutex<BTreeSet<String>>,
+    pub(crate) examined_data_set_records: Mutex<BTreeSet<ExaminedDataSetRecord>>,
 }
 
 impl ResolverState {
@@ -73,6 +81,7 @@ impl ResolverState {
         Self {
             examined_model_paths: Mutex::new(btreeset!{}),
             examined_model_fields: Mutex::new(btreeset!{}),
+            examined_data_set_records: Mutex::new(btreeset!{})
         }
     }
 
@@ -94,6 +103,14 @@ impl ResolverState {
 
     pub(crate) fn clear_examined_model_fields(&self) {
         self.examined_model_fields.lock().unwrap().clear();
+    }
+
+    pub(crate) fn add_examined_data_set_record(&self, record: ExaminedDataSetRecord) {
+        self.examined_data_set_records.lock().unwrap().insert(record);
+    }
+
+    pub(crate) fn has_examined_data_set_record(&self, record: &ExaminedDataSetRecord) -> bool {
+        self.examined_data_set_records.lock().unwrap().contains(record)
     }
 }
 
@@ -132,7 +149,7 @@ impl Resolver {
             self.resolve_source_second_time(parser, source, diagnostics);
         }
         for (index, source) in parser.sources.iter() {
-            self.resolve_source_third_time(parser, source, diagnostics);
+            self.resolve_source_third_time(parser, source, diagnostics, &state);
         }
         parser.to_mut().resolved = true;
     }
@@ -209,14 +226,14 @@ impl Resolver {
         source.to_mut().resolved_second = true;
     }
 
-    pub(crate) fn resolve_source_third_time(&self, parser: &ASTParser, source: &ASTSource, diagnostics: &mut Diagnostics) {
+    pub(crate) fn resolve_source_third_time(&self, parser: &ASTParser, source: &ASTSource, diagnostics: &mut Diagnostics, state: &ResolverState) {
         for (_item_id, top) in source.to_mut().tops.iter_mut() {
             match top {
                 Top::DataSet(data_set) => {
-                    self.resolve_data_set_record(parser, source, data_set, diagnostics);
+                    self.resolve_data_set_records(parser, source, data_set, diagnostics, state);
                 },
                 Top::ASTNamespace(ast_namespace) => {
-                    self.resolve_namespace_third_time(parser, source, ast_namespace, diagnostics);
+                    self.resolve_namespace_third_time(parser, source, ast_namespace, diagnostics, state);
                 }
                 _ => (),
             }
@@ -238,14 +255,14 @@ impl Resolver {
         }
     }
 
-    pub(crate) fn resolve_namespace_third_time(&self, parser: &ASTParser, source: &ASTSource, ast_namespace: &mut ASTNamespace, diagnostics: &mut Diagnostics) {
+    pub(crate) fn resolve_namespace_third_time(&self, parser: &ASTParser, source: &ASTSource, ast_namespace: &mut ASTNamespace, diagnostics: &mut Diagnostics, state: &ResolverState) {
         for (_item_id, top) in ast_namespace.tops.iter_mut() {
             match top {
                 Top::DataSet(data_set) => {
-                    self.resolve_data_set_record(parser, source, data_set, diagnostics);
+                    self.resolve_data_set_records(parser, source, data_set, diagnostics, state);
                 },
                 Top::ASTNamespace(ast_namespace) => {
-                    self.resolve_namespace_third_time(parser, source, ast_namespace, diagnostics);
+                    self.resolve_namespace_third_time(parser, source, ast_namespace, diagnostics, state);
                 }
                 _ => ()
             }
@@ -768,14 +785,23 @@ impl Resolver {
         }
     }
 
-    pub(crate) fn resolve_data_set_record(&self, parser: &ASTParser, source: &ASTSource, data_set: &mut ASTDataSet, diagnostics: &mut Diagnostics) {
+    pub(crate) fn resolve_data_set_records(&self, parser: &ASTParser, source: &ASTSource, data_set: &mut ASTDataSet, diagnostics: &mut Diagnostics, state: &ResolverState) {
         let ns_path = data_set.ns_path.clone();
         let mut dataset_path: Vec<String> = ns_path.clone();
         dataset_path.push(data_set.identifier.name.clone());
         for group in data_set.groups.iter_mut() {
             let model = parser.model_by_id(&group.model_id_path);
             for record in group.records.iter_mut() {
+                let record_for_duplication_check = ExaminedDataSetRecord {
+                    data_set: dataset_path.clone(),
+                    group: model.path().iter().map(|s| s.to_string()).collect(),
+                    record: record.identifier.name.clone()
+                };
+                if state.has_examined_data_set_record(&record_for_duplication_check) {
+                    self.insert_duplicated_data_set_record_error(source, diagnostics, record.identifier.span.clone());
+                }
                 record.resolved = Some(self.resolve_dataset_record_dictionary_literal(parser, source, &record.dictionary, model, diagnostics, &dataset_path).as_value().unwrap().clone());
+                state.add_examined_data_set_record(record_for_duplication_check);
             }
         }
     }
@@ -1770,5 +1796,9 @@ impl Resolver {
 
     fn insert_duplicated_enum_variant_error(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
         diagnostics.insert(DiagnosticsError::new(span, format!("Duplicated enum variant definition"), source.path.clone()));
+    }
+
+    fn insert_duplicated_data_set_record_error(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
+        diagnostics.insert(DiagnosticsError::new(span, format!("Duplicated data set record"), source.path.clone()));
     }
 }
