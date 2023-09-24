@@ -53,4 +53,8 @@ impl ASTModel {
         retval.push(self.identifier.name.as_str());
         retval
     }
+
+    pub(crate) fn field_for_key(&self, key: &str) -> Option<&ASTField> {
+        self.fields.iter().find(|f| f.name() == key)
+    }
 }

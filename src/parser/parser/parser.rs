@@ -20,7 +20,7 @@ use crate::parser::ast::comment_block::CommentBlock;
 use crate::parser::ast::config::ASTServer;
 use crate::parser::ast::connector::ASTConnector;
 use crate::parser::ast::constant::Constant;
-use crate::parser::ast::data_set::{ASTDataSet, DataSetGroup, DataSetRecord};
+use crate::parser::ast::data_set::{ASTDataSet, ASTDataSetGroup, ASTDataSetRecord};
 use crate::parser::ast::debug_conf::ASTDebugConf;
 use crate::parser::ast::decorator::ASTDecorator;
 use crate::parser::ast::expression::{Expression, ExpressionKind, ArrayLiteral, BoolLiteral, DictionaryLiteral, EnumChoiceLiteral, NullLiteral, NumericLiteral, RangeLiteral, StringLiteral, TupleLiteral, RegExpLiteral, NullishCoalescing, Negation, BitwiseNegation };
@@ -520,7 +520,7 @@ impl ASTParser {
         Top::DataSet(ASTDataSet::new(span, source_id, item_id, identifier.unwrap(), auto_seed, notrack, groups, ns_path))
     }
 
-    fn parse_dataset_group(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> DataSetGroup {
+    fn parse_dataset_group(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> ASTDataSetGroup {
         let mut identifiers: Option<ASTIdentifierPath> = None;
         let mut records = vec![];
         let span = Self::parse_span(&pair);
@@ -536,10 +536,10 @@ impl ASTParser {
                 _ => self.insert_unparsed_rule_and_exit(diagnostics, Self::parse_span(&current)),
             }
         }
-        DataSetGroup::new(source_id, item_id, identifiers.unwrap(), span, records)
+        ASTDataSetGroup::new(source_id, item_id, identifiers.unwrap(), span, records)
     }
 
-    fn parse_dataset_record_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> DataSetRecord {
+    fn parse_dataset_record_declaration(&mut self, pair: Pair<'_>, source_id: usize, item_id: usize, diagnostics: &mut Diagnostics) -> ASTDataSetRecord {
         let mut identifier: Option<ASTIdentifier> = None;
         let mut dictionary: Option<DictionaryLiteral> = None;
         let span = Self::parse_span(&pair);
@@ -550,7 +550,7 @@ impl ASTParser {
                 _ => (),
             }
         }
-        DataSetRecord::new(source_id, item_id, identifier.unwrap(), span, dictionary.unwrap())
+        ASTDataSetRecord::new(source_id, item_id, identifier.unwrap(), span, dictionary.unwrap())
     }
 
     fn parser_interface_type(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> InterfaceType {
@@ -1101,6 +1101,7 @@ impl ASTParser {
     }
 
     fn parse_arith_expr(&self, pair: Pair<'_>, source_id: usize, diagnostics: &mut Diagnostics) -> ArithExpr {
+        let span = Self::parse_span(&pair);
         let result = PRATT_PARSER.map_primary(|primary| match primary.as_rule() {
             Rule::operand => ArithExpr::Expression(Box::new(self.parse_expression(primary, source_id, diagnostics).kind)),
             _ => {
@@ -1123,6 +1124,7 @@ impl ASTParser {
                 },
             };
             ArithExpr::BinaryOp {
+                span,
                 lhs: Box::new(lhs),
                 op: ourop,
                 rhs: Box::new(rhs),

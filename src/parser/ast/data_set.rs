@@ -13,12 +13,12 @@ pub struct ASTDataSet {
     pub(crate) identifier: ASTIdentifier,
     pub(crate) auto_seed: bool,
     pub(crate) notrack: bool,
-    pub(crate) groups: Vec<DataSetGroup>,
+    pub(crate) groups: Vec<ASTDataSetGroup>,
 
 }
 
 impl ASTDataSet {
-    pub(crate) fn new(span: Span, source_id: usize, item_id: usize, identifier: ASTIdentifier, auto_seed: bool, notrack: bool, groups: Vec<DataSetGroup>, ns_path: Vec<String>) -> Self {
+    pub(crate) fn new(span: Span, source_id: usize, item_id: usize, identifier: ASTIdentifier, auto_seed: bool, notrack: bool, groups: Vec<ASTDataSetGroup>, ns_path: Vec<String>) -> Self {
         Self {
             id: item_id, span, source_id, auto_seed, groups, identifier, notrack, ns_path,
         }
@@ -32,18 +32,18 @@ impl ASTDataSet {
 }
 
 #[derive(Debug, Clone)]
-pub struct DataSetGroup {
+pub struct ASTDataSetGroup {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
     pub(crate) identifiers: ASTIdentifierPath,
     pub(crate) span: Span,
-    pub(crate) records: Vec<DataSetRecord>,
+    pub(crate) records: Vec<ASTDataSetRecord>,
     pub(crate) model_id_path: Vec<usize>,
     pub(crate) resolved: bool,
 }
 
-impl DataSetGroup {
-    pub(crate) fn new(source_id: usize, item_id: usize, identifiers: ASTIdentifierPath, span: Span, records: Vec<DataSetRecord>) -> Self {
+impl ASTDataSetGroup {
+    pub(crate) fn new(source_id: usize, item_id: usize, identifiers: ASTIdentifierPath, span: Span, records: Vec<ASTDataSetRecord>) -> Self {
         Self {
             id: item_id, span, source_id, identifiers, records, model_id_path: vec![], resolved: false,
         }
@@ -56,7 +56,7 @@ impl DataSetGroup {
 }
 
 #[derive(Debug, Clone)]
-pub struct DataSetRecord {
+pub struct ASTDataSetRecord {
     pub(crate) id: usize,
     pub(crate) source_id: usize,
     pub(crate) identifier: ASTIdentifier,
@@ -65,7 +65,7 @@ pub struct DataSetRecord {
     pub(crate) resolved: Option<Value>,
 }
 
-impl DataSetRecord {
+impl ASTDataSetRecord {
     pub(crate) fn new(source_id: usize, item_id: usize, identifier: ASTIdentifier, span: Span, dictionary: DictionaryLiteral) -> Self {
         Self {
             id: item_id, source_id, identifier, span, dictionary, resolved: None

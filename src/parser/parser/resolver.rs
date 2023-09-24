@@ -50,8 +50,7 @@ use crate::parser::ast::namespace::ASTNamespace;
 use crate::parser::ast::r#type::{Arity, ASTFieldType, TypeClass};
 use crate::parser::ast::span::Span;
 use crate::parser::ast::static_files::StaticFiles;
-use crate::parser::diagnostics::diagnostics::Diagnostics;
-use crate::parser::diagnostics::printer;
+use crate::parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError};
 use crate::parser::std::pipeline::global::{GlobalPipelineInstallers};
 
 pub(crate) struct Resolver {
@@ -655,7 +654,7 @@ impl Resolver {
         let ns_path = data_set.ns_path.clone();
         for group in data_set.groups.iter_mut() {
             let span = group.identifiers.span.clone();
-            if let Some(model_id_path) = self.resolve_model_from_ns_with_path(
+            let Some(model_id_path) = self.resolve_model_from_ns_with_path(
                 parser,
                 source,
                 &group.identifiers.path(),
@@ -664,13 +663,14 @@ impl Resolver {
                 span,
                 source,
                 vec![]
-            ) {
-                group.resolve(model_id_path);
-            } else {
-                self.insert_unresolved_model_and_exit(source, diagnostics, span);
-            }
+            ) else {
+                self.insert_unresolved_model(source, diagnostics, span);
+                return
+            };
+            group.resolve(model_id_path.clone());
+            let model = parser.model_by_id(&model_id_path);
             for record in group.records.iter_mut() {
-                record.resolved = Some(self.resolve_dictionary_literal(parser, source, &record.dictionary).as_value().unwrap().clone());
+                record.resolved = Some(self.resolve_dataset_record_dictionary_literal(parser, source, &record.dictionary, model, diagnostics).as_value().unwrap().clone());
             }
         }
     }
@@ -1178,6 +1178,33 @@ impl Resolver {
         Entity::Value(Value::HashMap(resolved))
     }
 
+    fn resolve_dataset_record_dictionary_literal(&self, parser: &ASTParser, source: &ASTSource, dic: &DictionaryLiteral, model: &ASTModel, diagnostics: &mut Diagnostics) -> Entity {
+        let mut resolved: HashMap<String, Value> = HashMap::new();
+        let mut used_keys = vec![];
+        for (key, value) in dic.expressions.iter() {
+            let k_span = key.span();
+            let k = self.resolve_expression_kind(parser, source, key, false);
+            let k = Self::unwrap_into_value_if_needed(parser, source, &k);
+            let v_span = value.span();
+            let v = self.resolve_expression_kind(parser, source, value, false);
+            let v = Self::unwrap_into_value_if_needed(parser, source, &v);
+            if !k.is_string() {
+                self.insert_data_set_record_key_type_is_not_string(source, diagnostics, k_span.clone());
+            }
+            if used_keys.contains(&k.as_str().unwrap().to_string()) {
+                self.insert_data_set_record_key_is_duplicated(source, diagnostics, k_span.clone());
+            }
+            used_keys.push(k.as_str().unwrap().to_string());
+            if let Some(field) = model.field_for_key(k.as_str().unwrap()) {
+
+            } else {
+                self.insert_data_set_record_key_is_undefined(source, diagnostics, k_span.clone(), k.as_str().unwrap(), &model.path().join("."));
+            }
+            resolved.insert(if k.is_string() { k.as_str().unwrap().to_string() } else { "".to_owned() }, v);
+        }
+        Entity::Value(Value::HashMap(resolved))
+    }
+
     fn resolve_nullish_coalescing(&self, parser: &ASTParser, source: &ASTSource, nullish_coalescing: &NullishCoalescing) -> Entity {
         let mut resolved = Entity::Value(Value::Null);
         for e in nullish_coalescing.expressions.iter() {
@@ -1241,7 +1268,7 @@ impl Resolver {
         if let Some(id_path) = id_path {
             field_type.resolve(id_path, TypeClass::Enum);
         } else {
-            self.insert_unresolved_enum_and_exit(source, diagnostics, span);
+            self.insert_unresolved_enum(source, diagnostics, span);
             unreachable!()
         }
     }
@@ -1251,7 +1278,7 @@ impl Resolver {
         if let Some(id_path) = id_path {
             field_type.resolve(id_path, TypeClass::Model);
         } else {
-            self.insert_unresolved_model_and_exit(source, diagnostics, span);
+            self.insert_unresolved_model(source, diagnostics, span);
             unreachable!()
         }
     }
@@ -1368,7 +1395,7 @@ impl Resolver {
                     _ => panic!("Cannot negate value {:?}", origin)
                 });
             }
-            ArithExpr::BinaryOp { lhs, op, rhs } => {
+            ArithExpr::BinaryOp { span, lhs, op, rhs } => {
                 let lhs_value = self.resolve_arith_expr(parser, source, &lhs, when_option).as_value().unwrap().clone();
                 let rhs_value = self.resolve_arith_expr(parser, source, &rhs, when_option).as_value().unwrap().clone();
                 match op {
@@ -1480,17 +1507,27 @@ impl Resolver {
         }
     }
 
-    fn insert_unresolved_model_and_exit(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
+    fn insert_unresolved_model(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
         let source_path = source.path.clone();
         diagnostics.insert_unresolved_model(span, source_path);
-        printer::print_diagnostics(diagnostics, true);
-        std::process::exit(1);
     }
 
-    fn insert_unresolved_enum_and_exit(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
+    fn insert_unresolved_enum(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
         let source_path = source.path.clone();
         diagnostics.insert_unresolved_enum(span, source_path);
-        printer::print_diagnostics(diagnostics, true);
-        std::process::exit(1);
+    }
+
+    fn insert_data_set_record_key_type_is_not_string(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
+        let source_path = source.path.clone();
+        diagnostics.insert(DiagnosticsError::new(span, "Data set record key is not string", source_path));
+    }
+
+    fn insert_data_set_record_key_is_duplicated(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
+        let source_path = source.path.clone();
+        diagnostics.insert(DiagnosticsError::new(span, "Data set record key is duplicated", source_path));
+    }
+
+    fn insert_data_set_record_key_is_undefined(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span, key: &str, model: &str) {
+        diagnostics.insert(DiagnosticsError::new(span, format!("Field with name '{key}' is undefined on model `{model}'"), source.path.clone()));
     }
 }

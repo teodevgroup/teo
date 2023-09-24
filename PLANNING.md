@@ -484,24 +484,24 @@
 - Rewrite decorators loading and pipeline items loading 
 - Added `lint` command
 - Added `run` command and `program` definition
+- TS Client: fixed include args with boolean inputs
 
 #### 0.0.59
 - Generate interfaces for clients
 - Generate custom groups and actions for clients
 - Server response: redirects
-- Server: custom request methods
+- Server: custom request methods and url params
 - Custom decorators and pipeline items
 - Auto completion for VSCode
 - Unit tests for rust code
 - Database specific database types and tests
 - PostgreSQL: Enum types
 - Diagnostic messages
-- Remove `ToMut` crate
 - Unit tests for schemas
-- TS Client: fixed include args with boolean inputs
 
 #### 0.0.60
 - Documentations
+- Remove `ToMut` crate
 - Migration decorator docs
 - Move auth middleware out
 

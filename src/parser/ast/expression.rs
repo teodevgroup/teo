@@ -242,6 +242,31 @@ pub(crate) enum ExpressionKind {
 
 impl ExpressionKind {
 
+    pub(crate) fn span(&self) -> &Span {
+        match self {
+            ExpressionKind::Group(e) => &e.span,
+            ExpressionKind::NullishCoalescing(e) => &e.span,
+            ExpressionKind::Negation(e) => &e.span,
+            ExpressionKind::BitwiseNegation(e) => &e.span,
+            ExpressionKind::ArithExpr(e) => e.span(),
+            ExpressionKind::NumericLiteral(e) => &e.span,
+            ExpressionKind::StringLiteral(e) => &e.span,
+            ExpressionKind::RegExpLiteral(e) => &e.span,
+            ExpressionKind::BoolLiteral(e) => &e.span,
+            ExpressionKind::NullLiteral(e) => &e.span,
+            ExpressionKind::EnumChoiceLiteral(e) => &e.span,
+            ExpressionKind::RangeLiteral(e) => &e.span,
+            ExpressionKind::TupleLiteral(e) => &e.span,
+            ExpressionKind::ArrayLiteral(e) => &e.span,
+            ExpressionKind::DictionaryLiteral(e) => &e.span,
+            ExpressionKind::Identifier(e) => &e.span,
+            ExpressionKind::ArgumentList(e) => &e.span,
+            ExpressionKind::Subscript(e) => &e.span,
+            ExpressionKind::Unit(e) => &e.span,
+            ExpressionKind::Pipeline(e) => &e.span,
+        }
+    }
+
     pub(crate) fn as_numeric_literal(&self) -> Option<&NumericLiteral> {
         match self {
             ExpressionKind::NumericLiteral(n) => Some(n),

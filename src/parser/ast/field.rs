@@ -67,4 +67,8 @@ impl ASTField {
         }
         self.field_class = ASTFieldClass::Field;
     }
+
+    pub(crate) fn name(&self) -> &str {
+        self.identifier.name.as_str()
+    }
 }

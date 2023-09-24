@@ -21,6 +21,7 @@ use crate::core::error::Error;
 use super::app_ctx::AppCtx;
 use crate::core::result::Result;
 use crate::parser::diagnostics::diagnostics::Diagnostics;
+use crate::parser::diagnostics::printer;
 
 pub struct App;
 
@@ -100,6 +101,10 @@ impl App {
         let cli = parse_cli()?;
         let mut diagnostics = Diagnostics::new();
         parse_schema(cli.main(), &mut diagnostics)?;
+        printer::print_diagnostics(&diagnostics, true);
+        if diagnostics.has_errors() {
+            std::process::exit(1);
+        }
         load_schema()?;
         Ok(cli)
     }

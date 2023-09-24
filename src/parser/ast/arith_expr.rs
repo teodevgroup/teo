@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter};
 use crate::parser::ast::expression::ExpressionKind;
+use crate::parser::ast::span::Span;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Op {
@@ -38,10 +39,22 @@ pub(crate) enum ArithExpr {
     UnaryNeg(Box<ExpressionKind>),
     UnaryBitNeg(Box<ExpressionKind>),
     BinaryOp {
+        span: Span,
         lhs: Box<ArithExpr>,
         op: Op,
         rhs: Box<ArithExpr>,
     },
+}
+
+impl ArithExpr {
+    pub(crate) fn span(&self) -> &Span {
+        match self {
+            ArithExpr::Expression(e) => e.span(),
+            ArithExpr::UnaryNeg(e) => e.span(),
+            ArithExpr::UnaryBitNeg(e) => e.span(),
+            ArithExpr::BinaryOp { span, lhs, op, rhs } => span,
+        }
+    }
 }
 
 impl Display for ArithExpr {
@@ -50,7 +63,7 @@ impl Display for ArithExpr {
             ArithExpr::UnaryNeg(e) => Display::fmt(&e, f),
             ArithExpr::UnaryBitNeg(e) => Display::fmt(&e, f),
             ArithExpr::Expression(e) => Display::fmt(&e, f),
-            ArithExpr::BinaryOp { lhs, op, rhs } => {
+            ArithExpr::BinaryOp { lhs, op, rhs, span } => {
                 Display::fmt(&lhs, f)?;
                 f.write_str(" ")?;
                 Display::fmt(op, f)?;
