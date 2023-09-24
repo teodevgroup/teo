@@ -1390,8 +1390,7 @@ impl ASTParser {
 
     pub(crate) fn data_sets(&self) -> Vec<&ASTDataSet> {
         self.data_sets.iter().map(|d| {
-            let source = self.get_source(*d.get(0).unwrap());
-            source.get_data_set(*d.get(1).unwrap())
+            self.dataset_by_id(d)
         }).collect()
     }
 
@@ -1427,6 +1426,17 @@ impl ASTParser {
             let namespace_path = id_path.as_slice()[..id_path.len() - 1].to_vec();
             let namespace = self.namespace(namespace_path);
             namespace.get_enum(*id_path.last().unwrap())
+        }
+    }
+
+    pub(crate) fn dataset_by_id(&self, id_path: &Vec<usize>) -> &ASTDataSet {
+        if id_path.len() == 2 {
+            let source = self.get_source(*id_path.get(0).unwrap());
+            source.get_data_set(*id_path.get(1).unwrap())
+        } else {
+            let namespace_path = id_path.as_slice()[..id_path.len() - 1].to_vec();
+            let namespace = self.namespace(namespace_path);
+            namespace.get_data_set(*id_path.last().unwrap())
         }
     }
 
