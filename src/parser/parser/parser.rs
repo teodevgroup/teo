@@ -1469,6 +1469,20 @@ impl ASTParser {
         }).collect()
     }
 
+    pub(crate) fn data_set_record_counts(&self, referenced_model: &ASTModel, dataset_path: &Vec<String>, record_name: &str) -> usize {
+        let mut count = 0;
+        for dataset in self.data_sets() {
+            if &dataset.path() == dataset_path {
+                if let Some(group) = dataset.groups.iter().find(|g| &g.model_id_path == &referenced_model.id_path) {
+                    if group.records.iter().find(|r| r.identifier.name.as_str() == record_name).is_some() {
+                        count += 1;
+                    }
+                }
+            }
+        }
+        count
+    }
+
     fn insert_unparsed_rule_and_exit(&self, diagnostics: &mut Diagnostics, span: Span) {
         let source_path = self.current_source_path_bufs.last().unwrap().clone();
         diagnostics.insert_unparsed_rule(span, source_path);

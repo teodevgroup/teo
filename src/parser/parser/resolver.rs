@@ -684,6 +684,8 @@ impl Resolver {
 
     pub(crate) fn resolve_data_set(&self, parser: &ASTParser, source: &ASTSource, data_set: &mut ASTDataSet, diagnostics: &mut Diagnostics) {
         let ns_path = data_set.ns_path.clone();
+        let mut dataset_path: Vec<String> = ns_path.clone();
+        dataset_path.push(data_set.identifier.name.clone());
         for group in data_set.groups.iter_mut() {
             let span = group.identifiers.span.clone();
             let Some(model_id_path) = self.resolve_model_from_ns_with_path(
@@ -702,7 +704,7 @@ impl Resolver {
             group.resolve(model_id_path.clone());
             let model = parser.model_by_id(&model_id_path);
             for record in group.records.iter_mut() {
-                record.resolved = Some(self.resolve_dataset_record_dictionary_literal(parser, source, &record.dictionary, model, diagnostics).as_value().unwrap().clone());
+                record.resolved = Some(self.resolve_dataset_record_dictionary_literal(parser, source, &record.dictionary, model, diagnostics, &dataset_path).as_value().unwrap().clone());
             }
         }
     }
@@ -1198,6 +1200,25 @@ impl Resolver {
         Entity::Value(Value::Vec(resolved))
     }
 
+    fn resolve_array_literal_for_dataset_record_relation(&self, parser: &ASTParser, source: &ASTSource, array_literal: &ArrayLiteral, ref_model: &ASTModel, ds_path: &Vec<String>, diagnostics: &mut Diagnostics) -> Entity {
+        let mut resolved = vec![];
+        for expression in array_literal.expressions.iter() {
+            let v_span = expression.span();
+            let e = self.resolve_expression_kind(parser, source, expression, false);
+            let v = Self::unwrap_into_value_if_needed(parser, source, &e);
+            if v.is_raw_enum_choice() {
+                let record_name = v.as_raw_enum_choice().unwrap();
+                if parser.data_set_record_counts(ref_model, ds_path, record_name) < 1 {
+                    self.insert_data_set_record_relation_value_is_not_enum_variant(source, diagnostics, v_span.clone(), ref_model.path().join(".").as_str(), ds_path.join(".").as_str());
+                }
+            } else {
+                self.insert_data_set_record_relation_value_is_not_enum_variant(source, diagnostics, v_span.clone(), ref_model.path().join(".").as_str(), ds_path.join(".").as_str());
+            }
+            resolved.push(v);
+        }
+        Entity::Value(Value::Vec(resolved))
+    }
+
     fn resolve_dictionary_literal(&self, parser: &ASTParser, source: &ASTSource, dic: &DictionaryLiteral) -> Entity {
         let mut resolved: HashMap<String, Value> = HashMap::new();
         for (key, value) in dic.expressions.iter() {
@@ -1210,7 +1231,7 @@ impl Resolver {
         Entity::Value(Value::HashMap(resolved))
     }
 
-    fn resolve_dataset_record_dictionary_literal(&self, parser: &ASTParser, source: &ASTSource, dic: &DictionaryLiteral, model: &ASTModel, diagnostics: &mut Diagnostics) -> Entity {
+    fn resolve_dataset_record_dictionary_literal(&self, parser: &ASTParser, source: &ASTSource, dic: &DictionaryLiteral, model: &ASTModel, diagnostics: &mut Diagnostics, dataset_path: &Vec<String>) -> Entity {
         let mut resolved: HashMap<String, Value> = HashMap::new();
         let mut used_keys = vec![];
         for (key, value) in dic.expressions.iter() {
@@ -1226,26 +1247,50 @@ impl Resolver {
             used_keys.push(k.as_str().unwrap().to_string());
             if let Some(field) = model.field_for_key(k.as_str().unwrap()) {
                 if field.field_class.is_relation() {
+                    let referenced_model = parser.model_by_id(&field.r#type.type_id);
                     let v_span = value.span();
                     if field.r#type.arity.is_array() { // to many relation
                         if value.is_array_literal() {
-
+                            let v = self.resolve_array_literal_for_dataset_record_relation(parser, source, value.as_array_literal().unwrap(), referenced_model, dataset_path, diagnostics);
+                            let v = Self::unwrap_into_value_if_needed(parser, source, &v);
+                            resolved.insert(if k.is_string() { k.as_str().unwrap().to_string() } else { "".to_owned() }, v);
                         } else {
-
+                            let v = self.resolve_expression_kind(parser, source, value, false);
+                            let v = Self::unwrap_into_value_if_needed(parser, source, &v);
+                            if v.is_vec() {
+                                for vec_item in v.as_vec().unwrap() {
+                                    if vec_item.is_raw_enum_choice() {
+                                        let record_name = vec_item.as_raw_enum_choice().unwrap();
+                                        if parser.data_set_record_counts(referenced_model, dataset_path, record_name) < 1 {
+                                            self.insert_data_set_record_relation_value_is_not_records_array(source, diagnostics, v_span.clone(), referenced_model.path().join(".").as_str(), dataset_path.join(".").as_str());
+                                        }
+                                    } else {
+                                        self.insert_data_set_record_relation_value_is_not_records_array(source, diagnostics, v_span.clone(), referenced_model.path().join(".").as_str(), dataset_path.join(".").as_str());
+                                    }
+                                }
+                            } else {
+                                self.insert_data_set_record_relation_value_is_not_array(source, diagnostics, v_span.clone());
+                            }
+                            resolved.insert(if k.is_string() { k.as_str().unwrap().to_string() } else { "".to_owned() }, v);
                         }
                     } else { // to one relation
                         if value.is_null_literal() {
-
+                            // do nothing yet
                         } else if value.is_enum_variant_literal() {
-
+                            let v = self.resolve_expression_kind(parser, source, value, false);
+                            let v = Self::unwrap_into_value_if_needed(parser, source, &v);
+                            let record_name = v.as_raw_enum_choice().unwrap();
+                            if parser.data_set_record_counts(referenced_model, dataset_path, record_name) < 1 {
+                                self.insert_data_set_record_relation_value_is_not_enum_variant(source, diagnostics, v_span.clone(), referenced_model.path().join(".").as_str(), dataset_path.join(".").as_str());
+                            }
+                            resolved.insert(if k.is_string() { k.as_str().unwrap().to_string() } else { "".to_owned() }, v);
                         } else {
-
+                            let v = self.resolve_expression_kind(parser, source, value, false);
+                            let v = Self::unwrap_into_value_if_needed(parser, source, &v);
+                            resolved.insert(if k.is_string() { k.as_str().unwrap().to_string() } else { "".to_owned() }, v);
                         }
                     }
                     // let v = self.resolve_expression_kind_for_data_set_record(parser, source, value, false);
-                    let v = self.resolve_expression_kind(parser, source, value, false);
-                    let v = Self::unwrap_into_value_if_needed(parser, source, &v);
-                    resolved.insert(if k.is_string() { k.as_str().unwrap().to_string() } else { "".to_owned() }, v);
                 } else if field.field_class.is_primitive_field() {
                     let v_span = value.span();
                     let v = self.resolve_expression_kind(parser, source, value, false);
@@ -1603,5 +1648,17 @@ impl Resolver {
 
     fn insert_data_set_record_primitive_value_type_error(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span, message: String) {
         diagnostics.insert(DiagnosticsError::new(span, message, source.path.clone()));
+    }
+
+    fn insert_data_set_record_relation_value_is_not_array(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
+        diagnostics.insert(DiagnosticsError::new(span, "Relation value is not array", source.path.clone()));
+    }
+
+    fn insert_data_set_record_relation_value_is_not_records_array(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span, model_name: &str, dataset_path: &str) {
+        diagnostics.insert(DiagnosticsError::new(span, format!("Relation value is not array of `{model_name}` records in dataset `{dataset_path}`"), source.path.clone()));
+    }
+
+    fn insert_data_set_record_relation_value_is_not_enum_variant(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span, model_name: &str, dataset_path: &str) {
+        diagnostics.insert(DiagnosticsError::new(span, format!("Relation value is not enum variant of `{model_name}` records in dataset `{dataset_path}`"), source.path.clone()));
     }
 }
