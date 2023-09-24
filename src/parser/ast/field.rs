@@ -20,6 +20,20 @@ impl ASTFieldClass {
             _ => false,
         }
     }
+
+    pub(crate) fn is_primitive_field(&self) -> bool {
+        match self {
+            ASTFieldClass::Field => true,
+            _ => false,
+        }
+    }
+
+    pub(crate) fn is_dropped(&self) -> bool {
+        match self {
+            ASTFieldClass::DroppedField => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Debug)]

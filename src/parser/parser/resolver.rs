@@ -1196,7 +1196,17 @@ impl Resolver {
             }
             used_keys.push(k.as_str().unwrap().to_string());
             if let Some(field) = model.field_for_key(k.as_str().unwrap()) {
+                if field.field_class.is_relation() {
+                    // validate relation input
 
+                } else if field.field_class.is_primitive_field() {
+                    // validate primitive input
+
+                } else if field.field_class.is_dropped() {
+                    self.insert_data_set_record_key_is_dropped(source, diagnostics, k_span.clone(), k.as_str().unwrap(), &model.path().join("."));
+                } else { // property
+                    self.insert_data_set_record_key_is_property(source, diagnostics, k_span.clone());
+                }
             } else {
                 self.insert_data_set_record_key_is_undefined(source, diagnostics, k_span.clone(), k.as_str().unwrap(), &model.path().join("."));
             }
@@ -1529,5 +1539,13 @@ impl Resolver {
 
     fn insert_data_set_record_key_is_undefined(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span, key: &str, model: &str) {
         diagnostics.insert(DiagnosticsError::new(span, format!("Field with name '{key}' is undefined on model `{model}'"), source.path.clone()));
+    }
+
+    fn insert_data_set_record_key_is_property(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span) {
+        diagnostics.insert(DiagnosticsError::new(span, format!("Property is not allowed in data set record"), source.path.clone()));
+    }
+
+    fn insert_data_set_record_key_is_dropped(&self, source: &ASTSource, diagnostics: &mut Diagnostics, span: Span, key: &str, model: &str) {
+        diagnostics.insert(DiagnosticsError::new(span, format!("Field with name '{key}' is dropped on model `{model}'"), source.path.clone()));
     }
 }
