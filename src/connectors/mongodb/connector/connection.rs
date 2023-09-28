@@ -19,13 +19,14 @@ use crate::core::initiator::Initiator;
 use crate::core::object::Object;
 use crate::core::model::model::{Model};
 use crate::core::model::index::{ModelIndex, ModelIndexType};
-use crate::core::teon::Value;
+use teo_teon::value::Value;
 use crate::core::error::Error;
 use crate::core::field::field::Sort;
 use crate::core::field::r#type::FieldTypeOwner;
 use crate::core::input::Input;
 use crate::core::result::Result;
-use crate::teon;
+use teo_teon::teon;
+use crate::connectors::mongodb::bson::teon_value_to_bson;
 
 #[derive(Debug, Clone)]
 pub(crate) struct MongoDBConnection {
@@ -217,7 +218,7 @@ impl MongoDBConnection {
         let model = object.model();
         let keys = object.keys_for_save();
         let col = self.get_collection(model);
-        let identifier: Bson = object.db_identifier().into();
+        let identifier: Bson = teon_value_to_bson(object.db_identifier());
         let identifier = identifier.as_document().unwrap();
         let mut set = doc!{};
         let mut unset = doc!{};
@@ -230,11 +231,11 @@ impl MongoDBConnection {
                 if let Some(updator) = object.get_atomic_updator(key) {
                     let (key, val) = Input::key_value(updator.as_hashmap().unwrap());
                     match key {
-                        "increment" => inc.insert(column_name, Bson::from(val)),
-                        "decrement" => inc.insert(column_name, Bson::from(&val.neg().unwrap())),
-                        "multiply" => mul.insert(column_name, Bson::from(val)),
+                        "increment" => inc.insert(column_name, teon_value_to_bson(val)),
+                        "decrement" => inc.insert(column_name, teon_value_to_bson(&val.neg().unwrap())),
+                        "multiply" => mul.insert(column_name, teon_value_to_bson(val)),
                         "divide" => mul.insert(column_name, Bson::Double(val.recip())),
-                        "push" => push.insert(column_name, Bson::from(val)),
+                        "push" => push.insert(column_name, teon_value_to_bson(val)),
                         _ => panic!("Unhandled key."),
                     };
                 } else {
@@ -420,7 +421,7 @@ impl Connection for MongoDBConnection {
         }
         let model = object.model();
         let col = self.get_collection(model);
-        let bson_identifier: Bson = object.db_identifier().into();
+        let bson_identifier: Bson = teon_value_to_bson(&object.db_identifier());
         let document_identifier = bson_identifier.as_document().unwrap();
         let result = col.delete_one(document_identifier.clone(), None).await;
         return match result {

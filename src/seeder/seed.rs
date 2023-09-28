@@ -14,7 +14,7 @@ use crate::prelude::{Graph, Object, Value};
 use crate::seeder::data_set::{DataSet, Group, normalize_dataset_relations, Record};
 use crate::seeder::models::group_record::GroupRecord;
 use crate::seeder::models::group_relation::GroupRelation;
-use crate::teon;
+use teo_teon::teon;
 use crate::core::result::Result;
 
 pub(crate) async fn seed(action: SeedCommandAction, graph: &'static Graph, datasets: Vec<&'static DataSet>, names: Vec<String>) -> Result<()> {

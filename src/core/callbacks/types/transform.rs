@@ -1,7 +1,7 @@
 use futures_util::future::BoxFuture;
 use std::future::Future;
 use crate::core::callbacks::params::callback::{CallbackParam, ExtractFromCallbackParam, ExtractValueFromCallbackParam};
-use crate::core::teon::Value;
+use teo_teon::value::Value;
 use crate::core::error::Error;
 use crate::core::result::Result;
 

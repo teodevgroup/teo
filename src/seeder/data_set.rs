@@ -3,7 +3,7 @@ use to_mut::ToMut;
 use crate::app::app_ctx::AppCtx;
 use crate::core::relation::Relation;
 use crate::prelude::{Graph, Value};
-use crate::teon;
+use teo_teon::teon;
 
 #[derive(Debug, Clone)]
 pub(crate) struct DataSet {

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use crate::core::input::Input::{AtomicUpdater, SetValue};
-use crate::core::teon::Value;
+use teo_teon::value::Value;
 
 
 pub(crate) enum Input {

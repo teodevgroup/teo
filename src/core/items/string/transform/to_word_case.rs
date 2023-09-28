@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use crate::core::item::Item;
-use crate::core::teon::Value;
+use teo_teon::value::Value;
 use crate::core::result::Result;
 use crate::core::pipeline::ctx::PipelineCtx;
 use inflector::cases::wordcase::to_word_case;

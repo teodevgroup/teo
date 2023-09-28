@@ -96,7 +96,7 @@ impl RustEntityGenerator {
 impl EntityGenerator for RustEntityGenerator {
     async fn generate_entity_files(&self, ctx: &Ctx, generator: &FileUtil) -> crate::prelude::Result<()> {
         let template = RustMainTemplate::new(&ctx.entity_outline, ctx.conf);
-        generator.generate_file("mod.rs", template.render().unwrap()).await?;
+        generator.generate_file("decode", template.render().unwrap()).await?;
         // Modify files
         let mut package_requirements = btreeset![];
         if template.has_date || template.has_datetime {

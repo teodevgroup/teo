@@ -7,7 +7,7 @@ use path_absolutize::Absolutize;
 use regex::Regex;
 use snailquote::unescape;
 use crate::core::database::name::DatabaseName;
-use crate::core::teon::range::Range;
+use teo_teon::range::TeonRange;
 use crate::parser::ast::accessible::{Accessible, ASTResolvedPipeline, ASTPipelineItem, Container};
 use crate::parser::ast::argument::{ArgumentList};
 use crate::parser::ast::config::ASTServer;
@@ -1297,7 +1297,7 @@ impl Resolver {
         let b = self.resolve_expression_kind(parser, source, range_literal.expressions.get(1).unwrap(), false);
         let b_v = Self::unwrap_into_value_if_needed(parser, source, &b);
         let end = Box::new(b_v);
-        Entity::Value(Value::Range(Range { closed: range_literal.closed.clone(), start, end }))
+        Entity::Value(Value::Range(TeonRange { closed: range_literal.closed.clone(), start, end }))
     }
 
     fn resolve_tuple_literal(&self, parser: &ASTParser, source: &ASTSource, tuple_literal: &TupleLiteral) -> Entity {

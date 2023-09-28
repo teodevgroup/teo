@@ -25,12 +25,12 @@ use crate::core::graph::Graph;
 use crate::core::model::model::Model;
 use crate::core::relation::Relation;
 use crate::core::pipeline::ctx::{PipelineCtx};
-use crate::core::teon::Value;
+use teo_teon::value::Value;
 use crate::core::error::Error;
 use crate::core::field::write_rule::WriteRule;
 use crate::core::relation::delete_rule::DeleteRule;
 use crate::core::result::Result;
-use crate::teon;
+use teo_teon::teon;
 
 #[derive(Clone)]
 pub struct Object {

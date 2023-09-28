@@ -1,7 +1,7 @@
 use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::item::Item;
 use crate::core::result::Result;
-use crate::core::teon::Value;
+use teo_teon::value::Value;
 use async_trait::async_trait;
 use rand::{thread_rng, Rng};
 

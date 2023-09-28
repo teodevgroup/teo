@@ -20,10 +20,10 @@ use crate::core::relation::Relation;
 use crate::core::pipeline::Pipeline;
 use crate::core::property::Property;
 use crate::core::relation::delete_rule::DeleteRule;
-use crate::prelude::Value;
+use teo_teon::value::Value;
 use crate::core::result::Result;
 use crate::core::field::indexable::FieldIndexable;
-use crate::teon;
+use teo_teon::teon;
 
 #[derive(ToMut)]
 pub struct Model {

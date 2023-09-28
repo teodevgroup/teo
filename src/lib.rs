@@ -22,11 +22,11 @@ pub mod prelude {
     pub use crate::app::routes::req::Req;
     pub use crate::app::routes::res::Res;
     pub use crate::core::graph::Graph;
-    pub use crate::core::teon::Value;
-    pub use crate::teon;
-    pub use crate::teon_vec;
-    pub use crate::teon_unexpected;
-    pub use crate::teon_expect_expr_comma;
+    pub use teo_teon::value::Value;
+    pub use teo_teon::teon;
+    pub use teo_teon::teon_vec;
+    pub use teo_teon::teon_unexpected;
+    pub use teo_teon::teon_expect_expr_comma;
     pub use crate::core::object::Object;
     pub extern crate tokio;
     pub use tokio::main;

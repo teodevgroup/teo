@@ -20,7 +20,7 @@ use crate::core::input::Input;
 use crate::core::model::model::Model;
 use crate::core::result::Result;
 use crate::prelude::{Object, Value};
-use crate::teon;
+use teo_teon::teon;
 
 pub(crate) struct Execution { }
 

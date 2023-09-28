@@ -4,7 +4,7 @@ use actix_http::StatusCode;
 use actix_web::{HttpRequest, HttpResponse};
 use actix_files::NamedFile;
 use crate::prelude::Value;
-use crate::teon;
+use teo_teon::teon;
 
 
 pub enum Res {

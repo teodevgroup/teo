@@ -6,7 +6,7 @@ pub mod r#enum;
 pub mod database;
 pub mod pipeline;
 pub mod object;
-pub mod teon;
+pub mod decode;
 pub mod callbacks;
 pub mod ctx;
 pub(crate) mod connector;

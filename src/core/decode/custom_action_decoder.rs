@@ -7,7 +7,7 @@ use chrono::{NaiveDate, Utc, DateTime};
 use key_path::KeyPath;
 use serde_json::Value as JsonValue;
 use crate::core::interface::{ResolvedInterfaceField, ResolvedInterfaceFieldType};
-use crate::core::teon::file::TeonFile;
+use teo_teon::file::TeonFile;
 use crate::prelude::{Value, Result, Error};
 
 pub(crate) fn transform_custom_action_json_into_teon(json_value: &JsonValue, rule: &ResolvedInterfaceField, path: &KeyPath<'_>) -> Result<Value> {

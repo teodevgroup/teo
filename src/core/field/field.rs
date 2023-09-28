@@ -12,7 +12,7 @@ use crate::core::field::read_rule::ReadRule;
 use crate::core::field::write_rule::WriteRule;
 use crate::core::pipeline::Pipeline;
 use crate::core::pipeline::ctx::PipelineCtx;
-use crate::core::teon::Value;
+use teo_teon::value::Value;
 use crate::core::result::Result;
 
 #[derive(Debug, Clone, PartialEq)]

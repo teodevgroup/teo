@@ -9,7 +9,7 @@ use crate::core::model::model::Model;
 use crate::core::relation::Relation;
 use crate::core::result::Result;
 use crate::prelude::Value;
-use crate::teon;
+use teo_teon::teon;
 
 pub(crate) struct Aggregation { }
 

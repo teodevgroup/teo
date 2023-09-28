@@ -46,13 +46,13 @@ use crate::core::model::model::Model;
 use crate::core::object::{ErrorIfNotFound, Object};
 use crate::core::pipeline::ctx::PipelineCtx;
 use crate::core::error::Error;
-use crate::core::teon::custom_action_decoder::transform_custom_action_json_into_teon;
-use crate::core::teon::decoder::Decoder;
+use crate::core::decode::custom_action_decoder::transform_custom_action_json_into_teon;
+use crate::core::decode::decoder::Decoder;
 use crate::parser::ast::action::ActionInputFormat;
 use crate::prelude::{combine_middleware, Res, UserCtx, Value};
 use crate::seeder::seed::seed;
 use crate::server::conf::ServerConf;
-use crate::teon;
+use teo_teon::teon;
 
 fn log_err_and_return_response(start: SystemTime, model: &str, action: &str, err: Error) -> HttpResponse {
     let http_response: HttpResponse = err.into();

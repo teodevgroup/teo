@@ -17,7 +17,7 @@ use crate::core::model::model::Model;
 use crate::core::result::Result;
 use crate::core::graph::Graph;
 use crate::core::relation::Relation;
-use crate::core::teon::Value;
+use teo_teon::value::Value;
 
 pub(crate) struct Decoder { }
 

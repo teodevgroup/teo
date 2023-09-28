@@ -5,7 +5,7 @@ use crate::core::connector::connection::Connection;
 use crate::core::ctx::user::UserCtx;
 use crate::core::object::Object;
 use crate::core::result::Result;
-use crate::core::teon::Value;
+use teo_teon::value::Value;
 use crate::prelude::{Error, Req};
 
 #[derive(Clone)]

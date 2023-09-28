@@ -3,7 +3,6 @@ use std::process::exit;
 use colored::Colorize;
 use pathdiff::diff_paths;
 use std::fs::read_to_string;
-//use futures_util::StreamExt;
 use std::iter::repeat;
 use crate::parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsLog};
 

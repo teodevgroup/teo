@@ -25,7 +25,7 @@ use crate::core::field::r#type::FieldTypeOwner;
 use crate::core::input::Input;
 use crate::core::result::Result;
 use crate::prelude::{Object, Value};
-use crate::teon;
+use teo_teon::teon;
 
 #[derive(Clone)]
 pub(crate) struct SQLConnection {
