@@ -504,9 +504,6 @@
 
 #### 0.1.2
 - The copy action
-- Enum value references enum definition
-- Add synthesised enums to graph
-- Foreign key management
 - Relation onUpdate
 - Relation onDelete
 - MongoDB transaction
@@ -520,9 +517,9 @@
 - Remove `ToMut` crate
 
 #### 0.1.3
+- Model fragments
 - model extends model
 - enum extends enum
-- Dropped decorator docs
 - MongoDB migration
 - MongoDB `$queryRaw`
 - MongoDB: root skip take and distinct bug
@@ -531,7 +528,7 @@
 - MongoDB: relation where: multiple keys should be allowed
 - MongoDB: relation where: 'every' results is incorrect
 - MongoDB: aggregate and group by for string and dates
-- All many actions should throw errors
+- All `many` actions should throw errors
 
 #### 0.1.4
 - Rust entities: optional string array
