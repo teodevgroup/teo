@@ -493,6 +493,7 @@
 - Generate interfaces for clients
 - Generate custom groups and actions for clients
 - Custom decorators and pipeline items
+- Full set of binary operators
 
 #### 0.1.1
 - Move soft delete to custom middleware
