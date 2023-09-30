@@ -472,7 +472,6 @@
 - Added `toDate` item **[DONE]**
 
 #### 0.1.0
-- When a type is not resolved, display error message and exit **[DONE]**
 - Fixed duplicated import bug **[DONE]**
 - Namespaces **[IN PROGRESS]**
 - Remove `action` from request URLs **[DONE]**
@@ -485,7 +484,7 @@
 - Added `lint` command **[DONE]**
 - Added `run` command and `program` definition **[DONE]**
 - Type system in schema
-- Remove soft delete
+- Remove soft delete **[DONE]**
 - Code diagnostics for VSCode
 - Allow no connector in a project
 - Rewrite decorators loading and pipeline items loading
@@ -494,16 +493,14 @@
 - Generate custom groups and actions for clients
 - Custom decorators and pipeline items
 - Full set of binary operators
+- Specific database types
 
 #### 0.1.1
 - Move soft delete to custom middleware
 - Server response: redirects
 - Server: custom request methods and url params
 - Auto completion for VSCode
-- Database specific database types and tests
 - PostgreSQL: Enum types
-- Diagnostic messages
-- Unit tests for schemas
 
 #### 0.1.2
 - The copy action
@@ -512,7 +509,6 @@
 - Foreign key management
 - Relation onUpdate
 - Relation onDelete
-- Unit test: handlers
 - MongoDB transaction
 - Client: distinct in handler args
 - C# client: capitalized names and names with underscore
