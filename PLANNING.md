@@ -471,7 +471,7 @@
 - Remove block decorators **[DONE]**
 - Added `toDate` item **[DONE]**
 
-#### 0.0.58
+#### 0.1.0
 - When a type is not resolved, display error message and exit **[DONE]**
 - Fixed duplicated import bug **[DONE]**
 - Namespaces **[IN PROGRESS]**
@@ -484,27 +484,27 @@
 - Fix insert raw enum variant into SQL bug **[DONE]**
 - Added `lint` command **[DONE]**
 - Added `run` command and `program` definition **[DONE]**
-
-#### 0.0.59
-- Code diagnostics for VSCode 
+- Type system in schema
+- Remove soft delete
+- Code diagnostics for VSCode
 - Allow no connector in a project
 - Rewrite decorators loading and pipeline items loading
 - TS Client: fixed include args with boolean inputs
-
-#### 0.0.60
 - Generate interfaces for clients
 - Generate custom groups and actions for clients
+- Custom decorators and pipeline items
+
+#### 0.1.1
+- Move soft delete to custom middleware
 - Server response: redirects
 - Server: custom request methods and url params
-- Custom decorators and pipeline items
 - Auto completion for VSCode
-- Unit tests for rust code
 - Database specific database types and tests
 - PostgreSQL: Enum types
 - Diagnostic messages
 - Unit tests for schemas
 
-#### 0.0.61
+#### 0.1.2
 - The copy action
 - Enum value references enum definition
 - Add synthesised enums to graph
@@ -522,7 +522,7 @@
 - MongoDB: connector is not using table name
 - Remove `ToMut` crate
 
-#### 0.0.62
+#### 0.1.3
 - model extends model
 - enum extends enum
 - Dropped decorator docs
@@ -536,19 +536,19 @@
 - MongoDB: aggregate and group by for string and dates
 - All many actions should throw errors
 
-#### 0.0.63
+#### 0.1.4
 - Rust entities: optional string array
 - Rust entities: required string array
 - Relation with read write rules
 - Correct count with cursor
 - Database type mapping for field, property and collection types' item field
 
-#### 0.0.64
+#### 0.1.5
 - Input omissible and output omissible for generated clients
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
 - Remove `unqueryable` and `unsortable` fields from generated clients
 
-#### 0.1.0
+#### 0.2.0
 - Rewrite Node.js server
 - Node.js bindings: error handling
 - Node.js object printing
@@ -556,13 +556,13 @@
 - Node.js client use dedicated `Date` class instead of builtin `Date`
 - Cross language error handling for node.js
 
-#### 0.2.0
+#### 0.3.0
 - Packages
 
-#### 0.3.0
+#### 0.4.0
 - Support MSSQL
 
-#### 0.4.0
+#### 0.5.0
 - `@canAccess`
 
 #### 1.0.0
