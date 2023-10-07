@@ -471,9 +471,9 @@
 - Remove block decorators **[DONE]**
 - Added `toDate` item **[DONE]**
 
-#### 0.1.0
+#### 0.0.58
 - Fixed duplicated import bug **[DONE]**
-- Namespaces **[IN PROGRESS]**
+- Namespaces **[DONE]**
 - Remove `action` from request URLs **[DONE]**
 - Remove function installers **[DONE]**
 - Table names are lower-cased but not plural anymore **[DONE]**
@@ -483,26 +483,31 @@
 - Fix insert raw enum variant into SQL bug **[DONE]**
 - Added `lint` command **[DONE]**
 - Added `run` command and `program` definition **[DONE]**
-- Type system in schema
+- Type system in schema **[IN PROGRESS]**
 - Remove soft delete **[DONE]**
-- Code diagnostics for VSCode
+- Code diagnostics for VSCode **[DONE]**
+- Auto completion **[IN PROGRESS]**
+- Jump to definition **[IN PROGRESS]**
 - Allow no connector in a project
 - Rewrite decorators loading and pipeline items loading
+- Custom decorators and pipeline items
+- Full set of binary operators **[DONE]**
+- Specific database types
+
+#### 0.1.0
+- Model fragments
+- model extends model
+- enum extends enum
 - TS Client: fixed include args with boolean inputs
 - Generate interfaces for clients
 - Generate custom groups and actions for clients
-- Custom decorators and pipeline items
-- Full set of binary operators
-- Specific database types
-
-#### 0.1.1
+- Namespace for generated clients
 - Move soft delete to custom middleware
 - Server response: redirects
 - Server: custom request methods and url params
-- Auto completion for VSCode
 - PostgreSQL: Enum types
 
-#### 0.1.2
+#### 0.1.1
 - The copy action
 - Relation onUpdate
 - Relation onDelete
@@ -516,10 +521,7 @@
 - MongoDB: connector is not using table name
 - Remove `ToMut` crate
 
-#### 0.1.3
-- Model fragments
-- model extends model
-- enum extends enum
+#### 0.1.2
 - MongoDB migration
 - MongoDB `$queryRaw`
 - MongoDB: root skip take and distinct bug
@@ -530,14 +532,14 @@
 - MongoDB: aggregate and group by for string and dates
 - All `many` actions should throw errors
 
-#### 0.1.4
+#### 0.1.3
 - Rust entities: optional string array
 - Rust entities: required string array
 - Relation with read write rules
 - Correct count with cursor
 - Database type mapping for field, property and collection types' item field
 
-#### 0.1.5
+#### 0.1.4
 - Input omissible and output omissible for generated clients
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
 - Remove `unqueryable` and `unsortable` fields from generated clients
