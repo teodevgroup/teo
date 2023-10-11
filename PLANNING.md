@@ -478,7 +478,7 @@
 - Remove function installers **[DONE]**
 - Table names are lower-cased but not plural anymore **[DONE]**
 - Fixed empty dictionary literal parsing bug **[DONE]**
-- Display errors and warnings **[IN PROGRESS]**
+- Display errors and warnings **[DONE]**
 - Allow comments in dictionary literal, array literal and tuple literal **[DONE]**
 - Fix insert raw enum variant into SQL bug **[DONE]**
 - Added `lint` command **[DONE]**
@@ -489,10 +489,13 @@
 - Auto completion **[IN PROGRESS]**
 - Jump to definition **[IN PROGRESS]**
 - Allow no connector in a project
-- Rewrite decorators loading and pipeline items loading
-- Custom decorators and pipeline items
+- Rewrite decorators loading and pipeline items loading **[IN PROGRESS]**
+- Custom decorators and pipeline items **[DONE]**
 - Full set of binary operators **[DONE]**
 - Specific database types
+
+#### 0.0.59
+- Rewrite generators with namespaces
 
 #### 0.1.0
 - Model fragments

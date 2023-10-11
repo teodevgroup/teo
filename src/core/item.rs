@@ -10,3 +10,4 @@ pub trait Item: Debug + Send + Sync {
 
     async fn call<'a>(&self, ctx: PipelineCtx<'a>) -> Result<PipelineCtx<'a>>;
 }
+
