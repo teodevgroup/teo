@@ -25,7 +25,7 @@ impl Item for IsEmailItem {
                 if self.regex.is_match(s) {
                     Ok(ctx)
                 } else {
-                    Err(ctx.with_invalid("string value is not email"))
+                    Err(ctx.with_invalid("input is not email"))
                 }
             }
             None => {

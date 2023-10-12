@@ -483,45 +483,56 @@
 - Fix insert raw enum variant into SQL bug **[DONE]**
 - Added `lint` command **[DONE]**
 - Added `run` command and `program` definition **[DONE]**
-- Type system in schema **[IN PROGRESS]**
+- Type system in schema **[DONE]**
 - Remove soft delete **[DONE]**
 - Code diagnostics for VSCode **[DONE]**
 - Auto completion **[IN PROGRESS]**
 - Jump to definition **[IN PROGRESS]**
 - Allow no connector in a project
+- Multiple connectors
 - Rewrite decorators loading and pipeline items loading **[IN PROGRESS]**
 - Custom decorators and pipeline items **[DONE]**
 - Full set of binary operators **[DONE]**
 - Specific database types
+- Server response: redirects
+- Server response: file
+- Server response: string in HTML format and other formats
+- The copy action
+- Move logging to custom middleware
 
 #### 0.0.59
-- Rewrite generators with namespaces
-
-#### 0.1.0
-- Model fragments
-- model extends model
-- enum extends enum
+- Rewrite generators with namespaces and actions
 - TS Client: fixed include args with boolean inputs
-- Generate interfaces for clients
-- Generate custom groups and actions for clients
-- Namespace for generated clients
-- Move soft delete to custom middleware
-- Server response: redirects
+- Input omissible and output omissible for generated clients
+- Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
+- Remove `unqueryable` and `unsortable` fields from generated clients
+- Custom decorators for actions including custom routes: @ignoreNamespace: true
 - Server: custom request methods and url params
-- PostgreSQL: Enum types
-
-#### 0.1.1
-- The copy action
-- Relation onUpdate
-- Relation onDelete
-- MongoDB transaction
+- Debug logging SQL
+- Migration dry run
 - Client: distinct in handler args
 - C# client: capitalized names and names with underscore
 - TypeScript client: correct return types for `aggregate` and `groupBy`
 - Connector bug: unique constraint violating: error message should have key path
-- Log SQL queries
-- Migration dry run
 - MongoDB: connector is not using table name
+
+#### 0.0.60
+- Rewrite parser error messages with code
+- Custom SQL query scopes
+- Custom MongoDB query scopes
+
+#### 0.1.0
+- Recreate soft delete with custom middleware
+- PostgreSQL: Enum types
+- Separate documentation site
+
+#### 0.1.1
+- Model fragments
+- model extends model
+- enum extends enum
+- Relation onUpdate
+- Relation onDelete
+- MongoDB transaction
 - Remove `ToMut` crate
 
 #### 0.1.2
@@ -536,16 +547,9 @@
 - All `many` actions should throw errors
 
 #### 0.1.3
-- Rust entities: optional string array
-- Rust entities: required string array
 - Relation with read write rules
 - Correct count with cursor
 - Database type mapping for field, property and collection types' item field
-
-#### 0.1.4
-- Input omissible and output omissible for generated clients
-- Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
-- Remove `unqueryable` and `unsortable` fields from generated clients
 
 #### 0.2.0
 - Rewrite Node.js server
