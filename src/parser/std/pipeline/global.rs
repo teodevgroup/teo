@@ -52,7 +52,7 @@ impl GlobalPipelineInstallers {
         // action
         objects.insert("redirect".to_owned(), redirect);
         objects.insert("when".to_owned(), when);
-        // array
+        // array and string
         objects.insert("append".to_owned(), append);
         objects.insert("prepend".to_owned(), prepend);
         objects.insert("getLength".to_owned(), get_length);
@@ -151,7 +151,7 @@ impl GlobalPipelineInstallers {
         objects.insert("lte".to_owned(), lte);
         objects.insert("neq".to_owned(), neq);
         objects.insert("oneOf".to_owned(), one_of);
-        // vector
+        // array
         objects.insert("join".to_owned(), join);
         objects.insert("at".to_owned(), item_at);
         objects.insert("filter".to_owned(), filter);

@@ -487,55 +487,59 @@
 - Remove soft delete **[DONE]**
 - Code diagnostics for VSCode **[DONE]**
 - Auto completion **[IN PROGRESS]**
-- Jump to definition **[IN PROGRESS]**
-- Allow no connector in a project
+- Jump to definition **[DONE]**
+- Allow no connector in a project **[DONE]**
 - Multiple connectors
-- Rewrite decorators loading and pipeline items loading **[IN PROGRESS]**
+- Rewrite decorators loading and pipeline items loading **[DONE]**
 - Custom decorators and pipeline items **[DONE]**
 - Full set of binary operators **[DONE]**
+- Enum member with arguments
+- Force unwrap operator
 - Specific database types
 - Server response: redirects
 - Server response: file
 - Server response: string in HTML format and other formats
 - The copy action
 - Move logging to custom middleware
+- Move jwt to middleware
+- Move identity to middleware
+- Custom decorators for actions including custom routes: @ignoreNamespace: true
+- Server: custom request methods and url params
+- Availability flags
+- Database type mapping for field, property
 
 #### 0.0.59
 - Rewrite generators with namespaces and actions
+
+#### 0.0.60
 - TS Client: fixed include args with boolean inputs
 - Input omissible and output omissible for generated clients
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
 - Remove `unqueryable` and `unsortable` fields from generated clients
-- Custom decorators for actions including custom routes: @ignoreNamespace: true
-- Server: custom request methods and url params
 - Debug logging SQL
 - Migration dry run
 - Client: distinct in handler args
 - C# client: capitalized names and names with underscore
 - TypeScript client: correct return types for `aggregate` and `groupBy`
-- Connector bug: unique constraint violating: error message should have key path
 - MongoDB: connector is not using table name
-
-#### 0.0.60
-- Rewrite parser error messages with code
-- Custom SQL query scopes
-- Custom MongoDB query scopes
-
-#### 0.1.0
-- Recreate soft delete with custom middleware
-- PostgreSQL: Enum types
-- Separate documentation site
-
-#### 0.1.1
-- Model fragments
-- model extends model
-- enum extends enum
 - Relation onUpdate
 - Relation onDelete
 - MongoDB transaction
-- Remove `ToMut` crate
+- All `many` actions should throw errors
+- Json type
 
-#### 0.1.2
+#### 0.0.61
+- Rewrite parser error messages with code
+- Custom SQL query scopes
+- Custom MongoDB query scopes
+- Model fragments
+- model extends model
+- enum extends enum
+
+#### 0.0.62
+- Recreate soft delete with custom middleware
+- PostgreSQL: Enum types
+- Separate documentation site
 - MongoDB migration
 - MongoDB `$queryRaw`
 - MongoDB: root skip take and distinct bug
@@ -544,12 +548,10 @@
 - MongoDB: relation where: multiple keys should be allowed
 - MongoDB: relation where: 'every' results is incorrect
 - MongoDB: aggregate and group by for string and dates
-- All `many` actions should throw errors
-
-#### 0.1.3
-- Relation with read write rules
 - Correct count with cursor
-- Database type mapping for field, property and collection types' item field
+
+#### 0.1.0
+- First stable minor version
 
 #### 0.2.0
 - Rewrite Node.js server
@@ -564,9 +566,6 @@
 
 #### 0.4.0
 - Support MSSQL
-
-#### 0.5.0
-- `@canAccess`
 
 #### 1.0.0
 - First stable major version
