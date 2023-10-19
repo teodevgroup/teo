@@ -37,7 +37,7 @@ RECORD_KEYWORD = _{ "record" }
 DECLARE_KEYWORD = _{ "declare" }
 MIDDLEWARE_KEYWORD = _{ "middleware" }
 DECORATOR_KEYWORD = _{ "decorator" }
-ACTION_KEYWORD = _{ "action" }
+HANDLER_KEYWORD = _{ "handler" }
 USING_KEYWORD = _{ "using" }
 JSON_KEYWORD = _{ "json" }
 FORM_KEYWORD = _{ "form" }
@@ -357,7 +357,7 @@ pipeline_item_declaration = {
 }
 
 action_group_declaration = {
-    DECLARE_KEYWORD ~ ACTION_KEYWORD ~ GROUP_KEYWORD ~ identifier ~ BLOCK_OPEN
+    DECLARE_KEYWORD ~ HANDLER_KEYWORD ~ GROUP_KEYWORD ~ identifier ~ BLOCK_OPEN
     ~ (comment_block | action_declaration | EMPTY_LINES | BLOCK_LEVEL_CATCH_ALL)*
     ~ BLOCK_CLOSE
 }
@@ -367,7 +367,7 @@ req_type = {
 }
 
 action_declaration = {
-    DECLARE_KEYWORD ~ ACTION_KEYWORD ~ identifier ~ "(" ~ interface_type ~ ")" ~ COLON ~ interface_type ~ (USING_KEYWORD ~ req_type)?
+    DECLARE_KEYWORD ~ HANDLER_KEYWORD ~ identifier ~ "(" ~ interface_type ~ ")" ~ COLON ~ interface_type ~ (USING_KEYWORD ~ req_type)?
 }
 
 // #############

@@ -489,13 +489,13 @@
 - Auto completion **[IN PROGRESS]**
 - Jump to definition **[DONE]**
 - Allow no connector in a project **[DONE]**
-- Multiple connectors
+- Multiple connectors **[IN PROGRESS]**
 - Rewrite decorators loading and pipeline items loading **[DONE]**
 - Custom decorators and pipeline items **[DONE]**
 - Full set of binary operators **[DONE]**
-- Enum member with arguments
-- Force unwrap operator
-- Specific database types
+- Enum member with arguments **[DONE]**
+- Force unwrap operator **[DONE]**
+- Specific database types **[IN PROGRESS]**
 - Server response: redirects
 - Server response: file
 - Server response: string in HTML format and other formats
@@ -507,6 +507,7 @@
 - Server: custom request methods and url params
 - Availability flags
 - Database type mapping for field, property
+- Default argument for argument list and config declaration
 
 #### 0.0.59
 - Rewrite generators with namespaces and actions
