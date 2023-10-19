@@ -46,7 +46,7 @@ pub(super) fn load_schema() -> Result<()> {
         provider: connector.provider.unwrap(),
         url: connector.url.as_ref().unwrap().as_str(),
     }));
-    // server conf
+    // old_server conf
     let server = parser.server()?;
     app_ctx.main_namespace_mut().set_server_conf(Box::new(ServerConf {
         bind: server.bind.as_ref().unwrap().clone(),

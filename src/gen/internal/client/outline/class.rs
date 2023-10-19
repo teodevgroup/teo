@@ -10,7 +10,7 @@ use crate::gen::internal::client::outline::class_kind::ClassKind;
 /// Swift, class for other languages. This is interpreted by underlying client generators. A class
 /// represents an input, output or internal type.
 ///
-/// Use this in the template engine to generate correct classes or types for the client or server.
+/// Use this in the template engine to generate correct classes or types for the client or old_server.
 pub(in crate::gen) struct Class<'a> {
     pub(in crate::gen) model_name: &'a str,
     pub(in crate::gen) localized_name: Cow<'a, str>,

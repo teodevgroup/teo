@@ -56,7 +56,7 @@ impl AppCtx {
                     &*(retval.deref() as * const AppCtx)
                 }
             }),
-            None => Err(Error::fatal("App ctx is accessed when app is not created.")),
+            None => Err(Error::fatal("App ctx is accessed when old_app is not created.")),
         }
     }
 
@@ -68,7 +68,7 @@ impl AppCtx {
                     &mut *(retval.deref_mut() as * mut AppCtx)
                 }
             }),
-            None => Err(Error::fatal("App ctx is mutably accessed when app is not created.")),
+            None => Err(Error::fatal("App ctx is mutably accessed when old_app is not created.")),
         }
     }
 

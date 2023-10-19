@@ -3,8 +3,8 @@ use teo_result::Result;
 
 #[main]
 async fn main() -> Result<()> {
-    // let app = App::new()?;
+    // let old_app = App::new()?;
     // AppCtx::get()?.set_entrance(Entrance::CLI)?;
-    // app.run().await
+    // old_app.run().await
     Ok(())
 }

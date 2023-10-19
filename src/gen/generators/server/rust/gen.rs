@@ -13,7 +13,7 @@ use crate::gen::internal::server::outline::outline::EntityOutline;
 use crate::gen::internal::filters;
 
 #[derive(Template)]
-#[template(path = "server/rust/mod.rs.jinja", escape = "none")]
+#[template(path = "old_server/rust/old_server.jinja", escape = "none")]
 pub(self) struct RustMainTemplate<'a> {
     pub(self) outline: &'a EntityOutline<'a>,
     pub(self) conf: &'a EntityConf,

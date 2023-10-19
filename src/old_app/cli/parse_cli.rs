@@ -1,8 +1,5 @@
 use std::env;
 use std::ffi::OsString;
-use clap::{Arg, ArgAction};
-use clap::{Command as ClapCommand};
-use crate::app::cli::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, LintCommand, MigrateCommand, PurgeCommand, RunCommand, SeedCommand, SeedCommandAction, ServeCommand};
 use crate::app::app_ctx::AppCtx;
 use crate::app::entrance::Entrance;
 use crate::core::result::Result;
@@ -45,17 +42,17 @@ pub(crate) fn parse_cli() -> Result<CLI> {
             .help("Print version information")
             .action(ArgAction::Version))
         .subcommand(ClapCommand::new("serve")
-            .about("Run migration and start the server")
+            .about("Run migration and start the old_server")
             .arg_required_else_help(false)
             .arg(Arg::new("no-migration")
                 .short('M')
                 .long("no-migration")
-                .help("Start server without running migration")
+                .help("Start old_server without running migration")
                 .action(ArgAction::SetTrue))
             .arg(Arg::new("no-autoseed")
                 .short('S')
                 .long("no-autoseed")
-                .help("Start server without auto seeding autoseed dataset")
+                .help("Start old_server without auto seeding autoseed dataset")
                 .action(ArgAction::SetTrue)))
         .subcommand(ClapCommand::new("generate")
             .about("Generate code")
