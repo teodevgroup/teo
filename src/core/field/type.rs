@@ -57,14 +57,6 @@ impl FieldType {
         }
     }
 
-    pub fn unwrap_enum(&self) -> &Enum {
-        let path = match self {
-            FieldType::Enum(s) => s.iter().map(|s| s.as_str()).collect(),
-            _ => panic!(),
-        };
-        AppCtx::get().unwrap().r#enum(path).unwrap().unwrap()
-    }
-
     pub fn is_int(&self) -> bool {
         match self {
             FieldType::I32 | FieldType::I64 => true,
