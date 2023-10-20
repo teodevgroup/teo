@@ -10,14 +10,18 @@ Official documentation: https://teocloud.io/docs
 
 ## Features
 
-* Innovative schema language inspired by GraphQL and Prisma
-* Supports Rust, Node.js and Python
+* Innovative schema definition inspired by GraphQL and Prisma
+* Auto database migration
+* Supports Rust and Node.js
 * Supports MySQL, PostgreSQL, SQLite and MongoDB
 * Generated ORM entities
 * Generated query clients for frontend
 * Very efficient and performant
 * Data sanitization, transformation and validation
 * Builtin user sessions
+* Builtin permission check
+* First in last out middlewares
+* Custom routes and handlers
 
 ## Get started
 
