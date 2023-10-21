@@ -57,6 +57,7 @@ whoami = { version = "1.4.1" }
 rand = "0.8.4"
 askama = "0.12.1"
 pathdiff = "0.2.1"
+educe = "0.4.23"
 
 [dev-dependencies]
 serial_test = "2.0.0"

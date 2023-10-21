@@ -400,53 +400,8 @@ impl Model {
         self.migration.as_ref().map_or(false, |m| m.drop)
     }
 
-    pub(crate) fn install_field_index(&mut self, field_name: &'static str, field_index: &FieldIndex) {
-        match field_index {
-            FieldIndex::Index(settings) => {
-                self.indices.push(Arc::new(ModelIndex::new(ModelIndexType::Index, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
-                    ModelIndexItem::new(field_name, settings.sort, settings.length)
-                ])));
-            }
-            FieldIndex::Unique(settings) => {
-                self.indices.push(Arc::new(ModelIndex::new(ModelIndexType::Unique, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
-                    ModelIndexItem::new(field_name, settings.sort, settings.length)
-                ])));
-            }
-            FieldIndex::Primary(settings) => {
-                let primary = Arc::new(ModelIndex::new(ModelIndexType::Primary, if settings.name.is_some() { Some(settings.name.as_ref().unwrap().clone()) } else { None }, vec![
-                    ModelIndexItem::new(field_name, settings.sort, settings.length)
-                ]));
-                self.primary = Some(primary.clone());
-                self.indices.push(primary.clone());
-            }
-        }
-    }
-
     pub(crate) fn finalize(&'static mut self) {
-        // generate indices from fields
-        let fields_vec = self.fields_vec.clone();
-        let properties_vec = self.properties_vec.clone();
-        for field in &fields_vec {
-            let field_name = Box::leak(Box::new(field.name().to_string())).as_str();
-            if let Some(field_index) = field.index() {
-                self.install_field_index(field_name, field_index);
-            }
-        }
-        // generate indices from properties
-        for property in &properties_vec {
-            let field_name = Box::leak(Box::new(property.name().to_string())).as_str();
-            if let Some(field_index) = property.index() {
-                self.install_field_index(field_name, field_index);
-            }
-        }
-        if self.primary.is_none() && !self.r#virtual {
-            panic!("Model '{}' must has a primary field.", self.name);
-        }
-        // install recordPrevious for primary
-        for key in self.primary.as_ref().unwrap().keys() {
-            let field = self.fields_map.get(key).unwrap();
-            field.as_ref().to_mut().previous_value_rule = PreviousValueRule::Keep;
-        }
+
         //
         let indices = self.indices.clone();
         // load caches

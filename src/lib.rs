@@ -1,5 +1,7 @@
 mod cli;
 pub mod app;
+pub mod server;
+
 // pub mod core;
 // pub(crate) mod parser;
 // pub(crate) mod connectors;

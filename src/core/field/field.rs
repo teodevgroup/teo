@@ -136,13 +136,6 @@ pub struct Field {
     pub(crate) dropped: bool,
 }
 
-impl Debug for Field {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut result = f.debug_struct("Field");
-        result.finish()
-    }
-}
-
 impl Field {
 
     pub(crate) fn new(name: &'static str) -> Self {
@@ -251,15 +244,7 @@ impl Field {
         }
     }
 
-    pub(crate) fn set_required(&mut self) {
-        self.optionality = Optionality::Required;
-    }
 
-    pub(crate) fn set_optional(&mut self) {
-        self.optionality = Optionality::Optional;
-        self.input_omissible = true;
-        self.output_omissible = true;
-    }
 
     pub(crate) fn migration(&self) -> Option<&FieldMigration> {
         self.migration.as_ref()

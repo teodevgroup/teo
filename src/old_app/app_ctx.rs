@@ -31,7 +31,7 @@ pub struct AppCtx {
     parser: Box<ASTParser>,
     callbacks: CallbackLookup,
     connector: Option<Box<dyn Connector>>,
-    graph: Graph,
+
     setup: Option<Arc<dyn AsyncCallbackWithUserCtx>>,
     programs: HashMap<String, Arc<dyn AsyncCallbackWithUserCtx>>,
     ignore_callbacks: bool,
@@ -96,18 +96,6 @@ impl AppCtx {
         self.main_namespace = Namespace::main();
     }
 
-    pub(in crate::app) fn create() -> bool {
-        if CURRENT.get().is_none() {
-            CURRENT.set(Arc::new(Mutex::new(Self::new()))).unwrap();
-            true
-        } else {
-            false
-        }
-    }
-
-    pub(in crate::app) fn drop() -> Result<()> {
-        Ok(Self::get_mut()?.reset())
-    }
 
     pub(crate) fn graph(&self) -> &Graph {
         &self.graph
