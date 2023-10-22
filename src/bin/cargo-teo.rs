@@ -1,10 +1,12 @@
 use tokio::main;
 use teo_result::Result;
+use teo::app::App;
+use teo::app::ctx::Ctx;
+use teo::cli::entrance::Entrance;
 
 #[main]
 async fn main() -> Result<()> {
-    // let old_app = App::new()?;
-    // AppCtx::get()?.set_entrance(Entrance::CLI)?;
-    // old_app.run().await
-    Ok(())
+    let app = App::new()?;
+    Ctx::set_entrance(Entrance::CLI);
+    app.run().await
 }

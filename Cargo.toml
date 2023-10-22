@@ -14,6 +14,8 @@ teo-result = "0.0.58-alpha.1"
 teo-teon = { path = "../teo-teon" }
 teo-parser = { path = "../teo-parser" }
 teo-runtime = { path = "../teo-runtime" }
+#teo-sql-connector = { path = "../teo-sql-connector" }
+#teo-mongodb-connector = { path = "../teo-mongodb-connector" }
 actix-web = "4.4.0"
 actix-http = "3.4.0"
 actix-multipart = "0.6.1"
@@ -27,7 +29,6 @@ futures = "0.3.28"
 futures-util = "0.3.28"
 regex = "1.10.2"
 tokio = { version = "1.0", features = ["macros"] }
-async-trait = "0.1.74"
 inflector-plus = "0.11.7"
 url = "2.4.1"
 bcrypt = "0.15.0"
@@ -38,6 +39,7 @@ mongodb = { version = "2.7.0", optional = true }
 bson = { version = "2.7.0", features = ["chrono-0_4", "serde_with"], optional = true }
 bigdecimal = "=0.3.1"
 async-recursion = "1.0.5"
+async-trait = "0.1.74"
 colored = "2.0.0"
 num-integer = "0.1.45"
 pad = "0.1.6"
@@ -52,8 +54,6 @@ clap = { version = "4.4.6", features = ["derive"] }
 path-absolutize = "3.1.1"
 dotenvy = "0.15.7"
 toml_edit = "0.20.2"
-quaint-forked = { version = "0.1.3-alpha.5", features = [ "all" ], optional = true }
-whoami = { version = "1.4.1" }
 rand = "0.8.4"
 askama = "0.12.1"
 pathdiff = "0.2.1"
@@ -68,9 +68,9 @@ reqwest = { version = "0.11", features = ["json", "blocking"] }
 rustc_version = "0.4.0"
 
 [features]
-default = ["data-source-mongodb", "data-source-mysql", "data-source-postgres", "data-source-sqlite", "data-source-mssql"]
-data-source-mongodb = ["mongodb", "bson"]
-data-source-mysql = ["quaint-forked"]
-data-source-postgres = ["quaint-forked"]
-data-source-sqlite = ["quaint-forked"]
-data-source-mssql = ["quaint-forked"]
+#default = ["data-source-mongodb", "data-source-mysql", "data-source-postgres", "data-source-sqlite", "data-source-mssql"]
+#data-source-mongodb = ["mongodb", "bson"]
+#data-source-mysql = ["quaint-forked"]
+#data-source-postgres = ["quaint-forked"]
+#data-source-sqlite = ["quaint-forked"]
+#data-source-mssql = ["quaint-forked"]

@@ -100,6 +100,10 @@ impl Ctx {
     pub fn cli() -> &'static CLI {
         Ctx::get().cli.as_ref().unwrap()
     }
+
+    pub fn set_entrance(entrance: Entrance) {
+        Ctx::get_mut().entrance = entrance;
+    }
 }
 
 static CURRENT: OnceCell<Arc<Mutex<Ctx>>> = OnceCell::new();
