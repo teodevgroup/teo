@@ -77,9 +77,11 @@ pub(crate) enum CLICommand {
 }
 
 impl CLICommand {
-    pub(crate) fn is_generate(&self) -> bool {
+
+    pub(crate) fn ignores_loading(&self) -> bool {
         match self {
             CLICommand::Generate(_) => true,
+            CLICommand::Lint(_) => true,
             _ => false,
         }
     }

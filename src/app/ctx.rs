@@ -7,6 +7,7 @@ use once_cell::sync::OnceCell;
 use teo_result::{Error, Result};
 use teo_runtime::namespace::Namespace;
 use crate::app::callbacks::callback::AsyncCallback;
+use crate::cli::command::CLI;
 use crate::cli::entrance::Entrance;
 use crate::cli::runtime_version::RuntimeVersion;
 
@@ -17,6 +18,7 @@ pub struct Ctx {
     pub(crate) runtime_version: RuntimeVersion,
     pub(crate) entrance: Entrance,
     pub(crate) main_namespace: Namespace,
+    pub(crate) cli: Option<CLI>,
     #[educe(Debug(ignore))]
     pub(crate) setup: Option<Arc<dyn AsyncCallback>>,
     #[educe(Debug(ignore))]
@@ -31,6 +33,7 @@ impl Ctx {
             runtime_version: RuntimeVersion::Rust(env!("TEO_RUSTC_VERSION")),
             entrance: Entrance::APP,
             main_namespace: Namespace::main(),
+            cli: None,
             setup: None,
             programs: btreemap!{}
         }
@@ -80,6 +83,22 @@ impl Ctx {
     fn reload(&mut self) {
         self.main_namespace = Namespace::main();
         self.loaded = true;
+    }
+
+    pub fn main_namespace() -> &'static Namespace {
+        &Ctx::get().main_namespace
+    }
+
+    pub fn main_namespace_mut() -> &'static mut Namespace {
+        &mut Ctx::get_mut().main_namespace
+    }
+
+    pub fn set_cli(cli: CLI) {
+        Ctx::get_mut().cli = Some(cli)
+    }
+
+    pub fn cli() -> &'static CLI {
+        Ctx::get().cli.as_ref().unwrap()
     }
 }
 

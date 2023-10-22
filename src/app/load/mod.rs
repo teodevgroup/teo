@@ -2,7 +2,7 @@ use teo_result::{Error, Result};
 use std::env::current_dir;
 use std::path::PathBuf;
 
-pub(super) fn find_main_schema_file(file: Option<String>) -> Result<PathBuf> {
+pub(super) fn find_main_schema_file(file: Option<&String>) -> Result<PathBuf> {
     let current_dir = match current_dir() {
         Ok(current_dir) => current_dir,
         Err(e) => Err(Error::new(format!("{}", e)))?,

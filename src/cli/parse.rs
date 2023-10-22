@@ -9,7 +9,7 @@ pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance) -> CLI 
     let version = Box::leak(Box::new(format!("Teo {} ({}) [{}]", env!("CARGO_PKG_VERSION"), runtime_version.to_string(), entrance.to_str())));
     let about = Box::leak(Box::new(match entrance {
         Entrance::CLI => format!("{version}\n\nRun Teo application with CLI."),
-        Entrance::APP => format!("{version}\n\nRun Teo application with custom code loaded."),
+        Entrance::APP => format!("{version}\n\nRun Teo application with user app loaded."),
     }));
     let matches = ClapCommand::new("teo")
         .version(version.as_str())
