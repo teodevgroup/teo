@@ -2,6 +2,16 @@ pub mod cli;
 pub mod app;
 pub mod server;
 
+pub mod prelude {
+    pub use crate::app::App;
+    pub extern crate teo_result;
+    pub use teo_result::{Error, Result, ResultExt};
+    pub extern crate tokio;
+    pub use tokio::main;
+    pub extern crate key_path;
+    pub use key_path::path;
+}
+
 // pub mod core;
 // pub(crate) mod parser;
 // pub(crate) mod connectors;
@@ -32,12 +42,6 @@ pub mod server;
 //     pub use teo_teon::teon_unexpected;
 //     pub use teo_teon::teon_expect_expr_comma;
 //     pub use crate::core::object::Object;
-//     pub extern crate tokio;
-//     pub use tokio::main;
-//     pub extern crate key_path;
-//     pub use key_path::path;
-//     pub use crate::core::result::Result;
-//     pub use crate::core::error::Error;
 //     pub use crate::core::ctx::model::ModelCtx;
 //     pub use crate::core::ctx::user::UserCtx;
 // }
