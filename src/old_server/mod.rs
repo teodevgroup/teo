@@ -977,24 +977,7 @@ async fn server_start_message(port: u16, environment_version: &'static LanguageP
     Ok(())
 }
 
-pub(crate) async fn serve(
-    graph: &'static Graph,
-    conf: &'static ServerConf,
-    environment_version: &'static LanguagePlatform,
-    entrance: &'static Entrance,
-    middlewares: &'static IndexMap<&'static str, &'static dyn Middleware>,
-) -> Result<()> {
-    let bind = conf.bind.clone();
-    let port = bind.1;
-    let server = HttpServer::new(move || {
-        make_app(graph, conf, middlewares)
-    })
-        .bind(bind)
-        .unwrap()
-        .run();
-    let result = future::join(server, server_start_message(port, environment_version, entrance)).await;
-    result.1
-}
+
 
 async fn reset_after_mutation_if_needed(test_context: Option<&'static TestContext>, graph: &'static Graph, connection: Arc<dyn Connection>) -> Result<()> {
     if let Some(test_context) = test_context {
