@@ -10,6 +10,7 @@ use teo_runtime::stdlib::load::{load as load_std};
 use teo_runtime::schema::load::load_schema::load_schema;
 use crate::cli::run::run;
 
+#[derive(Debug)]
 pub struct App { }
 
 impl App {
@@ -40,6 +41,7 @@ impl App {
     }
 
     pub async fn run(&self) -> Result<()> {
+        println!("here run");
         run(Ctx::cli()).await
     }
 }
