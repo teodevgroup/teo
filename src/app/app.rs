@@ -41,7 +41,6 @@ impl App {
     }
 
     pub async fn run(&self) -> Result<()> {
-        println!("here run");
         run(Ctx::cli()).await
     }
 }

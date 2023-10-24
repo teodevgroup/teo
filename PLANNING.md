@@ -495,19 +495,18 @@
 - Full set of binary operators **[DONE]**
 - Enum member with arguments **[DONE]**
 - Force unwrap operator **[DONE]**
-- Specific database types **[IN PROGRESS]**
+- Specific database types **[DONE]**
 - Server response: redirects
 - Server response: file
 - Server response: string in HTML format and other formats
 - The copy action
-- Move logging to custom middleware
-- Move jwt to middleware
-- Move identity to middleware
-- Custom decorators for actions including custom routes: @ignoreNamespace: true
-- Server: custom request methods and url params
-- Availability flags
-- Database type mapping for field, property
-- Default argument for argument list and config declaration
+- Move logging to custom middleware**[IN PROGRESS]**
+- Move jwt to middleware**[IN PROGRESS]**
+- Move identity to middleware**[IN PROGRESS]**
+- Custom decorators for actions including custom routes: @ignoreNamespace: true**[IN PROGRESS]**
+- Server: custom request methods and url params**[IN PROGRESS]**
+- Availability flags **[DONE]**
+- Database type mapping for field, property **[IN PROGRESS]**
 
 #### 0.0.59
 - Rewrite generators with namespaces and actions
@@ -536,6 +535,7 @@
 - Model fragments
 - model extends model
 - enum extends enum
+- Default argument for argument list and config declaration
 
 #### 0.0.62
 - Recreate soft delete with custom middleware
