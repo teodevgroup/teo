@@ -288,13 +288,7 @@ impl Model {
 
     pub(crate) fn scalar_number_keys(&self) -> &Vec<&str> { &self.scalar_number_keys }
 
-    pub(crate) fn allowed_keys_for_aggregate(&self, name: &str) -> HashSet<&str> {
-        match name {
-            "_count" => self.scalar_keys().iter().map(|k| *k).collect::<HashSet<&str>>().bitor(&hashset!{"_all"}),
-            "_min" | "_max" => self.scalar_keys().iter().map(|k| *k).collect(),
-            _ => self.scalar_number_keys().iter().map(|k| *k).collect(),
-        }
-    }
+
 
     pub(crate) fn local_output_keys(&self) -> &Vec<&'static str> {
         &self.local_output_keys
@@ -396,9 +390,7 @@ impl Model {
         Ok((surface_value, ctx.action))
     }
 
-    pub(crate) fn allows_drop_when_migrate(&self) -> bool {
-        self.migration.as_ref().map_or(false, |m| m.drop)
-    }
+
 
     pub(crate) fn finalize(&'static mut self) {
 
