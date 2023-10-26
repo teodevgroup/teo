@@ -489,17 +489,17 @@
 - Auto completion **[IN PROGRESS]**
 - Jump to definition **[DONE]**
 - Allow no connector in a project **[DONE]**
-- Multiple connectors **[IN PROGRESS]**
+- Multiple connectors **[DONE]**
 - Rewrite decorators loading and pipeline items loading **[DONE]**
 - Custom decorators and pipeline items **[DONE]**
 - Full set of binary operators **[DONE]**
 - Enum member with arguments **[DONE]**
 - Force unwrap operator **[DONE]**
 - Specific database types **[DONE]**
-- Server response: redirects
-- Server response: file
-- Server response: string in HTML format and other formats
-- The copy action
+- Server response: redirects **[IN PROGRESS]**
+- Server response: file **[IN PROGRESS]**
+- Server response: string in HTML format and other formats **[IN PROGRESS]**
+- The copy action **[IN PROGRESS]**
 - Move logging to custom middleware**[IN PROGRESS]**
 - Move jwt to middleware**[IN PROGRESS]**
 - Move identity to middleware**[IN PROGRESS]**
