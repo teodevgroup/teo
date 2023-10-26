@@ -1,6 +1,6 @@
 use std::future::Future;
 use futures_util::future::BoxFuture;
-use teo_runtime::connection::Ctx;
+use teo_runtime::connection::transaction::Ctx;
 use teo_result::Result;
 
 pub trait AsyncCallback: Send + Sync {

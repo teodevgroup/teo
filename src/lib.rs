@@ -2,6 +2,7 @@ pub mod cli;
 pub mod app;
 pub mod server;
 pub mod migrate;
+pub mod purge;
 
 pub mod prelude {
     pub use crate::app::App;
@@ -14,7 +15,7 @@ pub mod prelude {
 }
 
 // pub(crate) mod seeder;
-// pub(crate) mod purger;
+// pub(crate) mod purge;
 
 // pub mod prelude {
 //     pub use crate::old_app::old_app::App;

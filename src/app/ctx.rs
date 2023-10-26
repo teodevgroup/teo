@@ -112,6 +112,10 @@ impl Ctx {
     pub fn conn_ctx() -> &'static connection::Ctx {
         Ctx::get().conn_ctx.as_ref().unwrap()
     }
+
+    pub fn setup() -> Option<&'static Arc<dyn AsyncCallback>> {
+        Ctx::get().setup.as_ref()
+    }
 }
 
 static CURRENT: OnceCell<Arc<Mutex<Ctx>>> = OnceCell::new();
