@@ -6,6 +6,7 @@ use teo_runtime::database::database::Database;
 use teo_runtime::namespace::Namespace;
 use teo_sql_connector::connector::SQLConnection;
 use teo_sql_connector::schema::dialect::SQLDialect;
+use teo_mongodb_connector::connector::MongoDBConnection;
 
 pub async fn connect_databases(namespace: &mut Namespace) -> Result<()> {
     may_connect_database(namespace).await?;
@@ -24,14 +25,19 @@ pub async fn may_connect_database(namespace: &mut Namespace) -> Result<()> {
 }
 
 async fn connection_for_connector(connector: &Connector) -> Arc<dyn Connection> {
-    Arc::new(SQLConnection::new(
-        match connector.provider {
-            Database::MongoDB => unreachable!(),
-            Database::MySQL => SQLDialect::MySQL,
-            Database::PostgreSQL => SQLDialect::PostgreSQL,
-            Database::SQLite => SQLDialect::SQLite,
-        },
-        connector.url.as_str(),
-        false,
-    ).await)
+    if connector.provider.is_mongo() {
+        Arc::new(MongoDBConnection::new(connector.url.as_str()).await)
+    } else {
+        Arc::new(SQLConnection::new(
+            match connector.provider {
+                Database::MongoDB => unreachable!(),
+                Database::MySQL => SQLDialect::MySQL,
+                Database::PostgreSQL => SQLDialect::PostgreSQL,
+                Database::SQLite => SQLDialect::SQLite,
+            },
+            connector.url.as_str(),
+            false,
+        ).await)
+    }
+
 }
