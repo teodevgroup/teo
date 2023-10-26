@@ -38,6 +38,11 @@ pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance) -> CLI 
             .long("version")
             .help("Print version information")
             .action(ArgAction::Version))
+        .arg(Arg::new("silent")
+            .short('S')
+            .long("silent")
+            .help("Silent outputs")
+            .action(ArgAction::SetTrue))
         .subcommand(ClapCommand::new("serve")
             .about("Run migration and start the old_server")
             .arg_required_else_help(false)
@@ -130,6 +135,7 @@ pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance) -> CLI 
                 !((*i == 1) && x.to_str().unwrap() == "teo")
             }).map(|(_i, x)| x).collect::<Vec<OsString>>(),
         });
+    let silent: bool = matches.get_flag("silent");
     let schema: Option<&String> = matches.get_one("SCHEMA_FILE");
     let command = match matches.subcommand() {
         Some(("serve", submatches)) => {
@@ -179,5 +185,5 @@ pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance) -> CLI 
         }
         _ => unreachable!()
     };
-    CLI { command, schema: schema.map(|s| s.to_string()) }
+    CLI { command, schema: schema.map(|s| s.to_string()), silent }
 }

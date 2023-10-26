@@ -57,6 +57,7 @@ pub(crate) struct RunCommand {
 pub struct CLI {
     pub(crate) command: CLICommand,
     pub(crate) schema: Option<String>,
+    pub(crate) silent: bool,
 }
 
 impl CLI {

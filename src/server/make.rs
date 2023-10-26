@@ -245,6 +245,7 @@ pub(crate) async fn serve(
     conf: &'static Server,
     runtime_version: &'static RuntimeVersion,
     entrance: &'static Entrance,
+    silent: bool,
     //middlewares: &'static IndexMap<&'static str, &'static dyn Middleware>,
 ) -> Result<()> {
     let bind = conf.bind.clone();
@@ -255,11 +256,12 @@ pub(crate) async fn serve(
         .bind((bind.0, bind.1 as u16))
         .unwrap()
         .run();
-    let result = future::join(server, server_start_message(port as u16, runtime_version, entrance)).await;
+    let result = future::join(server, server_start_message(port as u16, runtime_version, entrance, silent)).await;
     result.1
 }
 
-async fn server_start_message(port: u16, runtime_version: &'static RuntimeVersion, entrance: &'static Entrance) -> Result<()> {
+async fn server_start_message(port: u16, runtime_version: &'static RuntimeVersion, entrance: &'static Entrance, silent: bool) -> Result<()> {
+    if silent { return Ok(()) }
     // Introducing
     let now: DateTime<Local> = Local::now();
     let now_formatted = format!("{now}").dimmed();
