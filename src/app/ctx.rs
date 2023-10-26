@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 use maplit::btreemap;
 use once_cell::sync::OnceCell;
 use teo_result::{Error, Result};
+use teo_runtime::connection;
 use teo_runtime::namespace::Namespace;
 use crate::app::callbacks::callback::AsyncCallback;
 use crate::cli::command::CLI;
@@ -23,6 +24,8 @@ pub struct Ctx {
     pub(crate) setup: Option<Arc<dyn AsyncCallback>>,
     #[educe(Debug(ignore))]
     pub(crate) programs: BTreeMap<String, Arc<dyn AsyncCallback>>,
+    #[educe(Debug(ignore))]
+    pub(crate) conn_ctx: Option<connection::Ctx>,
 }
 
 impl Ctx {
@@ -35,7 +38,8 @@ impl Ctx {
             main_namespace: Namespace::main(),
             cli: None,
             setup: None,
-            programs: btreemap!{}
+            programs: btreemap!{},
+            conn_ctx: None,
         }
     }
 
@@ -103,6 +107,10 @@ impl Ctx {
 
     pub fn set_entrance(entrance: Entrance) {
         Ctx::get_mut().entrance = entrance;
+    }
+
+    pub fn conn_ctx() -> &'static connection::Ctx {
+        Ctx::get().conn_ctx.as_ref().unwrap()
     }
 }
 

@@ -7,12 +7,16 @@ use teo_runtime::namespace::Namespace;
 use teo_sql_connector::connector::SQLConnection;
 use teo_sql_connector::schema::dialect::SQLDialect;
 use teo_mongodb_connector::connector::MongoDBConnection;
+use crate::app::ctx::Ctx;
+use teo_runtime::connection::Ctx as ConnCtx;
 
 pub async fn connect_databases(namespace: &mut Namespace) -> Result<()> {
     may_connect_database(namespace).await?;
     for namespace in namespace.namespaces.values_mut() {
         may_connect_database(namespace).await?;
     }
+    let ctx = ConnCtx::from_namespace(Ctx::main_namespace());
+    Ctx::get_mut().conn_ctx = Some(ctx);
     Ok(())
 }
 
