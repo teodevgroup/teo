@@ -1,6 +1,7 @@
 pub mod cli;
 pub mod app;
 pub mod server;
+pub mod migrate;
 
 pub mod prelude {
     pub use crate::app::App;
@@ -12,17 +13,9 @@ pub mod prelude {
     pub use key_path::path;
 }
 
-// pub mod core;
-// pub(crate) mod parser;
-// pub(crate) mod connectors;
-// pub(crate) mod gen;
 // pub(crate) mod seeder;
 // pub(crate) mod purger;
-// pub mod old_app;
-// pub(crate) mod old_server;
-// pub(crate) mod migrate;
-// pub(crate) mod run;
-//
+
 // pub mod prelude {
 //     pub use crate::old_app::old_app::App;
 //     pub use crate::old_app::routes::middleware_ctx::*;

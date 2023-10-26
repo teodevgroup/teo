@@ -10,6 +10,9 @@ pub async fn run(cli: &CLI) -> Result<()> {
         CLICommand::Serve(serve_command) => {
             connect_databases(Ctx::main_namespace_mut()).await?;
             let conn_ctx = Ctx::conn_ctx();
+            if !serve_command.no_migration {
+
+            }
             serve(conn_ctx.namespace(), conn_ctx.namespace().server.as_ref().unwrap(), &Ctx::get().runtime_version, &Ctx::get().entrance).await
         }
         CLICommand::Generate(generate_command) => {

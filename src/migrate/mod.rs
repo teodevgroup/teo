@@ -1,12 +1,12 @@
-use crate::app::app_ctx::AppCtx;
-use crate::prelude::{Graph};
-use crate::core::result::Result;
+use teo_result::{Error, Result};
+use crate::app::ctx::Ctx;
 
-pub(crate) async fn migrate(graph: &Graph, _dry_run: bool) -> Result<()> {
-    let app_ctx = AppCtx::get()?;
-    let result = app_ctx.connector()?.connection().await?.migrate(graph.models(), false).await;
-    if result.is_err() {
-        panic!("Migration error");
+pub async fn migrate(dry_run: bool, reset: bool) -> Result<()> {
+    let ctx = Ctx::conn_ctx();
+    for (namespace_path, connection) in ctx.connections_iter() {
+        let namespace = ctx.namespace().namespace_at_path(&namespace_path.iter().map(AsRef::as_ref).collect()).unwrap();
+        let transaction = connection.no_transaction().await?;
+        transaction.migrate(namespace.models_under_connector(), reset).await?;
     }
     Ok(())
 }
