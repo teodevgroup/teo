@@ -14,7 +14,7 @@ use actix_web::middleware::DefaultHeaders;
 use crate::cli::entrance::Entrance;
 use crate::cli::runtime_version::RuntimeVersion;
 
-fn make_app(
+fn make_server_app(
     namespace: &'static Namespace,
     conf: &'static Server,
     // middlewares: &'static IndexMap<&'static str, &'static dyn Middleware>,
@@ -250,7 +250,7 @@ pub(crate) async fn serve(
     let bind = conf.bind.clone();
     let port = bind.1;
     let server = HttpServer::new(move || {
-        make_app(namespace, conf)
+        make_server_app(namespace, conf)
     })
         .bind((bind.0, bind.1 as u16))
         .unwrap()
