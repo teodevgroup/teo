@@ -26,7 +26,7 @@ pub async fn may_connect_database(namespace: &mut Namespace, silent: bool) -> Re
     let connector = namespace.connector.as_ref().unwrap();
     let connection = connection_for_connector(connector).await;
     if !silent {
-        println!("Connection setup for {}: {}(\"{}\")", if namespace.path.is_empty() { "main".to_string() } else { namespace.path().join(".") }, connector.provider, connector.url);
+        println!("Connection setup for `{}`: {}(\"{}\")", if namespace.path.is_empty() { "main".to_string() } else { namespace.path().join(".") }, connector.provider, connector.url);
     }
     namespace.connection = Some(connection);
     Ok(())
