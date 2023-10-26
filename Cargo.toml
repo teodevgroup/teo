@@ -14,6 +14,7 @@ teo-result = "0.0.58-alpha.2"
 teo-teon = { path = "../teo-teon" }
 teo-parser = { path = "../teo-parser" }
 teo-runtime = { path = "../teo-runtime" }
+teo-sql-connector = { path = "../teo-sql-connector" }
 #teo-sql-connector = { path = "../teo-sql-connector" }
 #teo-mongodb-connector = { path = "../teo-mongodb-connector" }
 actix-web = "4.4.0"
