@@ -496,14 +496,14 @@
 - Enum member with arguments **[DONE]**
 - Force unwrap operator **[DONE]**
 - Specific database types **[DONE]**
-- Server response: redirects **[IN PROGRESS]**
+- Server response: redirects **[DONE]**
 - Server response: file **[IN PROGRESS]**
 - Server response: string in HTML format and other formats **[IN PROGRESS]**
-- The copy action **[IN PROGRESS]**
+- The copy action **[DONE]**
 - Move logging to custom middleware**[IN PROGRESS]**
 - Move jwt to middleware**[IN PROGRESS]**
 - Move identity to middleware**[IN PROGRESS]**
-- Custom decorators for actions including custom routes: @ignoreNamespace: true**[IN PROGRESS]**
+- Custom decorators for actions including custom routes: @ignoreNamespace: true**[DONE]**
 - Server: custom request methods and url params**[IN PROGRESS]**
 - Availability flags **[DONE]**
 - Database type mapping for field, property **[IN PROGRESS]**
