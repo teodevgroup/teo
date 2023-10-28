@@ -334,29 +334,6 @@ impl Action {
         }
     }
 
-    pub(crate) fn handler_from_name(name: &str) -> Option<Self> {
-        Some(Action {
-            value: match name {
-                "findUnique" => FIND_UNIQUE_HANDLER,
-                "findFirst" => FIND_FIRST_HANDLER,
-                "findMany" => FIND_MANY_HANDLER,
-                "create" => CREATE_HANDLER,
-                "update" => UPDATE_HANDLER,
-                "upsert" => UPSERT_HANDLER,
-                "delete" => DELETE_HANDLER,
-                "createMany" => CREATE_MANY_HANDLER,
-                "updateMany" => UPDATE_MANY_HANDLER,
-                "deleteMany" => DELETE_MANY_HANDLER,
-                "count" => COUNT_HANDLER,
-                "aggregate" => AGGREGATE_HANDLER,
-                "groupBy" => GROUP_BY_HANDLER,
-                "signIn" => SIGN_IN_HANDLER,
-                "identity" => IDENTITY_HANDLER,
-                _ => None?
-            }
-        })
-    }
-
     pub(crate) fn handlers_iter() -> Iter<'static, Action> {
         static HANDLER_TYPES: [Action; 15] = [
             Action::from_u32(FIND_UNIQUE_HANDLER),
