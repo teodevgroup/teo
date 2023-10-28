@@ -26,10 +26,9 @@ use crate::cli::entrance::Entrance;
 use crate::cli::runtime_version::RuntimeVersion;
 use crate::server::parse::{parse_form_body, parse_json_body};
 use teo_runtime::handler::input::{validate_and_transform_json_input_for_handler, validate_and_transform_json_input_for_builtin_action};
-use crate::server::error::ErrorIntoHttpResponse;
+use crate::server::error::WrapError;
 use crate::server::request::RequestImpl;
 use crate::server::responder::IntoHttpResponse;
-use crate::server::result::ResultIntoHttpResponse;
 
 fn make_server_app(
     main_namespace: &'static Namespace,
@@ -51,18 +50,18 @@ fn make_server_app(
 
             // validate path
             let path = main_namespace.handler_map.remove_path_prefix(http_request.path(), conf.path_prefix.as_ref().map(|s| s.as_str()));
-            let method = method_from(http_request.method()).result_into_http_response()?;
+            let method = method_from(http_request.method())?;
             let match_result = if let Some(m_result) = main_namespace.handler_map.r#match(method, path) {
                 m_result
             } else if let Some(m_result) = main_namespace.handler_map.default_match(method, path) {
                 m_result
             } else {
-                Err(teo_runtime::path::Error::not_found(path![]).error_into_http_response())?
+                Err(teo_runtime::path::Error::not_found(path![]))?
             };
             let dest_namespace = if let Some(d) = main_namespace.namespace_at_path(&match_result.namespace_path()) {
                 d
             } else {
-                Err(teo_runtime::path::Error::not_found_message_only().error_into_http_response())?
+                Err(teo_runtime::path::Error::not_found_message_only())?
             };
             let handler_resolved = if let Some(model) = dest_namespace.models.get(match_result.group_name()) {
                 if let Some(group) = dest_namespace.model_handler_groups.get(match_result.group_name()) {
@@ -72,24 +71,24 @@ fn make_server_app(
                         if let Some(action) = builtin_action_handler_from_name(match_result.handler_name()) {
                             (dest_namespace, HandlerResolved::Builtin(model, action))
                         } else {
-                            Err(teo_runtime::path::Error::not_found_message_only().error_into_http_response())?
+                            Err(teo_runtime::path::Error::not_found_message_only())?
                         }
                     }
                 } else {
                     if let Some(action) = builtin_action_handler_from_name(match_result.handler_name()) {
                         (dest_namespace, HandlerResolved::Builtin(model, action))
                     } else {
-                        Err(teo_runtime::path::Error::not_found_message_only().error_into_http_response())?
+                        Err(teo_runtime::path::Error::not_found_message_only())?
                     }
                 }
             } else if let Some(group) = dest_namespace.handler_groups.get(match_result.group_name()) {
                 if let Some(handler) = group.handlers.get(match_result.handler_name()) {
                     (dest_namespace, HandlerResolved::Custom(handler))
                 } else {
-                    Err(teo_runtime::path::Error::not_found_message_only().error_into_http_response())?
+                    Err(teo_runtime::path::Error::not_found_message_only())?
                 }
             } else {
-                Err(teo_runtime::path::Error::not_found_message_only().error_into_http_response())?
+                Err(teo_runtime::path::Error::not_found_message_only())?
             };
             let dest_namespace = handler_resolved.0;
             let handler_resolved = handler_resolved.1;
@@ -103,9 +102,9 @@ fn make_server_app(
                     transaction_ctx,
                     match_result
                 );
-                return Ok::<HttpResponse, HttpResponse>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async {
+                return Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async {
                     Ok(Response::empty())
-                }).await.result_into_http_response()?.into_http_response(http_request.clone()));
+                }).await?.into_http_response(http_request.clone()));
             }
             // parse body
             let mut format = HandlerInputFormat::Json;
@@ -116,12 +115,12 @@ fn make_server_app(
                 _ => (),
             }
             let json_body = match format {
-                HandlerInputFormat::Json => parse_json_body(payload).await.result_into_http_response()?,
-                HandlerInputFormat::Form => parse_form_body(http_request, payload).await.result_into_http_response()?,
+                HandlerInputFormat::Json => parse_json_body(payload).await?,
+                HandlerInputFormat::Form => parse_form_body(http_request, payload).await?,
             };
             match handler_resolved {
                 HandlerResolved::Builtin(model, action) => {
-                    let body = validate_and_transform_json_input_for_builtin_action(model, action, &json_body).result_into_http_response()?;
+                    let body = validate_and_transform_json_input_for_builtin_action(model, action, &json_body)?;
                     let conn_ctx = connection::Ctx::from_namespace(main_namespace);
                     let transaction_ctx = transaction::Ctx::new(conn_ctx);
                     let ctx = request::Ctx::new(
@@ -130,17 +129,17 @@ fn make_server_app(
                         transaction_ctx,
                         match_result
                     );
-                    return Ok::<HttpResponse, HttpResponse>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async {
+                    return Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async {
                         match match_result.handler_name() {
                             "findMany" => find_many(&ctx).await,
                             "findUnique" => find_unique(&ctx).await,
                             "findFirst" => find_first(&ctx).await,
                             _ => Err(teo_runtime::path::Error::not_found_message_only())?,
                         }
-                    }).await.result_into_http_response()?.into_http_response(http_request.clone()));
+                    }).await?.into_http_response(http_request.clone()));
                 },
                 HandlerResolved::Custom(handler) => {
-                    let body = validate_and_transform_json_input_for_handler(handler, &json_body).result_into_http_response()?;
+                    let body = validate_and_transform_json_input_for_handler(handler, &json_body)?;
                     let conn_ctx = connection::Ctx::from_namespace(main_namespace);
                     let transaction_ctx = transaction::Ctx::new(conn_ctx);
                     let ctx = request::Ctx::new(
@@ -149,9 +148,9 @@ fn make_server_app(
                         transaction_ctx,
                         match_result
                     );
-                    return Ok::<HttpResponse, HttpResponse>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async {
+                    return Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async {
                         handler.call.call(ctx).await
-                    }).await.result_into_http_response()?.into_http_response(http_request.clone()));
+                    }).await?.into_http_response(http_request.clone()));
                 }
             }
         }));
