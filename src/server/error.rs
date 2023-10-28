@@ -52,8 +52,6 @@ impl ResponseError for WrapError {
             },
         };
         let json_value: serde_json::Value = value.try_into().unwrap();
-        let mut response = HttpResponse::new(self.status_code());
-        response.set_body(json_value);
-        response
+        HttpResponse::Ok().status(self.status_code()).json(json_value)
     }
 }

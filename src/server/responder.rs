@@ -12,14 +12,16 @@ pub trait IntoHttpResponse {
 impl IntoHttpResponse for Response {
 
     fn into_http_response(self, http_request: HttpRequest) -> HttpResponse {
-        let mut http_response = HttpResponse::new(StatusCode::from_u16(self.code()).unwrap());
+        let mut builder = HttpResponse::Ok();
+        builder.status(StatusCode::from_u16(self.code()).unwrap());
         for key in self.headers().keys() {
-            http_response.headers_mut().insert(HeaderName::from_str(&key).unwrap(), HeaderValue::from_str(self.headers().get(&key).unwrap().as_str()).unwrap());
+            builder.insert_header((key.clone(), self.headers().get(&key).unwrap().as_str()));
         }
         match self.body().inner.as_ref() {
-            BodyInner::Empty => { return http_response; }
-            BodyInner::String(content) => { return http_response.set_body(content); },
-            BodyInner::File(file) => { return http_response.set_body(file.to_str().unwrap().to_string()); },
+            BodyInner::Empty => (),
+            BodyInner::String(content) => return builder.body(content.to_string()),
+            BodyInner::File(file) => return builder.body(file.to_str().unwrap().to_string()),
         }
+        builder.finish()
     }
 }
