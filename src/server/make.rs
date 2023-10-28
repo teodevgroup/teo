@@ -26,6 +26,7 @@ use crate::cli::entrance::Entrance;
 use crate::cli::runtime_version::RuntimeVersion;
 use crate::server::parse::{parse_form_body, parse_json_body};
 use teo_runtime::handler::input::{validate_and_transform_json_input_for_handler, validate_and_transform_json_input_for_builtin_action};
+use crate::server::request::RequestImpl;
 
 fn make_server_app(
     main_namespace: &'static Namespace,
@@ -94,7 +95,7 @@ fn make_server_app(
                 let conn_ctx = connection::Ctx::from_namespace(main_namespace);
                 let transaction_ctx = transaction::Ctx::new(conn_ctx);
                 let ctx = request::Ctx::new(
-                    request::Request::new(Arc::new(http_request.clone())),
+                    request::Request::new(Arc::new(RequestImpl::new(http_request.clone()))),
                     Arc::new(Value::Null),
                     transaction_ctx,
                     match_result
@@ -113,7 +114,7 @@ fn make_server_app(
             }
             let json_body = match format {
                 HandlerInputFormat::Json => parse_json_body(payload).await?,
-                HandlerInputFormat::Form => parse_form_body(http_request, payload),
+                HandlerInputFormat::Form => parse_form_body(http_request, payload).await?,
             };
             match handler_resolved {
                 HandlerResolved::Builtin(model, action) => {
@@ -121,7 +122,7 @@ fn make_server_app(
                     let conn_ctx = connection::Ctx::from_namespace(main_namespace);
                     let transaction_ctx = transaction::Ctx::new(conn_ctx);
                     let ctx = request::Ctx::new(
-                        request::Request::new(Arc::new(http_request.clone())),
+                        request::Request::new(Arc::new(RequestImpl::new(http_request.clone()))),
                         Arc::new(body),
                         transaction_ctx,
                         match_result
@@ -131,7 +132,7 @@ fn make_server_app(
                             "findMany" => find_many(&ctx).await,
                             "findUnique" => find_unique(&ctx).await,
                             "findFirst" => find_first(&ctx).await,
-                            _ => Err(teo_runtime::path::Error::not_found_message_only()),
+                            _ => Err(teo_runtime::path::Error::not_found_message_only())?,
                         }
                     }).await;
                 },
@@ -140,7 +141,7 @@ fn make_server_app(
                     let conn_ctx = connection::Ctx::from_namespace(main_namespace);
                     let transaction_ctx = transaction::Ctx::new(conn_ctx);
                     let ctx = request::Ctx::new(
-                        request::Request::new(Arc::new(http_request.clone())),
+                        request::Request::new(Arc::new(RequestImpl::new(http_request.clone()))),
                         Arc::new(body),
                         transaction_ctx,
                         match_result
