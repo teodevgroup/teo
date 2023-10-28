@@ -12,7 +12,7 @@ pub struct HeadersImpl {
 impl teo_runtime::request::header::readonly::r#trait::HeaderMap for HeadersImpl {
 
     fn keys(&self) -> Vec<&str> {
-        self.http_headers.keys().collect()
+        self.http_headers.keys().map(|k| k.as_str()).collect()
     }
 
     fn len(&self) -> usize {
@@ -37,7 +37,7 @@ impl RequestImpl {
 
     pub fn new(http_request: HttpRequest) -> Self {
         Self {
-            http_request,
+            http_request: http_request.clone(),
             header_map: HeaderMap {
                 inner: Arc::new(HeadersImpl {
                     http_headers: http_request.headers().clone()

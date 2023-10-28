@@ -116,7 +116,7 @@ fn make_server_app(
             }
             let json_body = match format {
                 HandlerInputFormat::Json => parse_json_body(payload).await?,
-                HandlerInputFormat::Form => parse_form_body(http_request, payload).await?,
+                HandlerInputFormat::Form => parse_form_body(http_request.clone(), payload).await?,
             };
             match handler_resolved {
                 HandlerResolved::Builtin(model, action) => {
@@ -127,16 +127,17 @@ fn make_server_app(
                         request::Request::new(Arc::new(RequestImpl::new(http_request.clone()))),
                         Arc::new(body),
                         transaction_ctx,
-                        match_result
+                        match_result.clone(),
                     );
-                    return Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async {
-                        match match_result.handler_name() {
-                            "findMany" => find_many(&ctx).await,
-                            "findUnique" => find_unique(&ctx).await,
-                            "findFirst" => find_first(&ctx).await,
-                            _ => Err(teo_runtime::path::Error::not_found_message_only())?,
-                        }
-                    }).await?.into_http_response(http_request.clone()));
+                    return match match_result.handler_name() {
+                        "findMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                            find_many(&ctx).await
+                        }).await?.into_http_response(http_request.clone())),
+                        "findFirst" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                            find_many(&ctx).await
+                        }).await?.into_http_response(http_request.clone())),
+                        _ => Err(teo_runtime::path::Error::not_found_message_only())?,
+                    };
                 },
                 HandlerResolved::Custom(handler) => {
                     let body = validate_and_transform_json_input_for_handler(handler, &json_body)?;
@@ -148,9 +149,7 @@ fn make_server_app(
                         transaction_ctx,
                         match_result
                     );
-                    return Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async {
-                        handler.call.call(ctx).await
-                    }).await?.into_http_response(http_request.clone()));
+                    return Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, handler.call).await?.into_http_response(http_request.clone()));
                 }
             }
         }));

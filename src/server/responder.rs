@@ -17,10 +17,9 @@ impl IntoHttpResponse for Response {
             http_response.headers_mut().insert(HeaderName::from_str(&key).unwrap(), HeaderValue::from_str(self.headers().get(&key).unwrap().as_str()).unwrap());
         }
         match self.body().inner.as_ref() {
-            BodyInner::Empty => {}
-            BodyInner::String(content) => http_response.set_body(content),
-            BodyInner::File(file) => http_response.set_body(file.to_str().unwrap().to_string()),
+            BodyInner::Empty => { return http_response; }
+            BodyInner::String(content) => { return http_response.set_body(content); },
+            BodyInner::File(file) => { return http_response.set_body(file.to_str().unwrap().to_string()); },
         }
-        http_response
     }
 }

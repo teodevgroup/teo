@@ -46,7 +46,10 @@ impl ResponseError for WrapError {
     fn error_response(&self) -> HttpResponse<BoxBody> {
         let value: Value = match self {
             WrapError::PathError(e) => e.into(),
-            WrapError::ResultError(e) => e.into(),
+            WrapError::ResultError(e) => {
+                let path_error = teo_runtime::path::Error::from(e);
+                path_error.into()
+            },
         };
         let json_value: serde_json::Value = value.try_into().unwrap();
         let mut response = HttpResponse::new(self.status_code());
