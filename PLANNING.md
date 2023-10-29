@@ -500,35 +500,40 @@
 - Server response: file **[IN PROGRESS]**
 - Server response: string in HTML format and other formats **[IN PROGRESS]**
 - The copy action **[DONE]**
-- Move logging to custom middleware**[IN PROGRESS]**
-- Move jwt to middleware**[IN PROGRESS]**
-- Move identity to middleware**[IN PROGRESS]**
 - Custom decorators for actions including custom routes: @ignoreNamespace: true**[DONE]**
-- Server: custom request methods and url params**[IN PROGRESS]**
+- Server: custom request methods and url params**[DONE]**
 - Availability flags **[DONE]**
-- Database type mapping for field, property **[IN PROGRESS]**
+- Database type mapping for field, property **[DONE]**
+- All `many` actions should throw errors **[DONE]**
+- Rewrite model and interface validator and decoder
 
 #### 0.0.59
 - Rewrite generators with namespaces and actions
-
-#### 0.0.60
-- TS Client: fixed include args with boolean inputs
 - Input omissible and output omissible for generated clients
+- TS Client: fixed include args with boolean inputs
 - Use `queryable`, `unqueryable`, `sortable`, `unsortable` to limit API
 - Remove `unqueryable` and `unsortable` fields from generated clients
-- Debug logging SQL
-- Migration dry run
 - Client: distinct in handler args
 - C# client: capitalized names and names with underscore
 - TypeScript client: correct return types for `aggregate` and `groupBy`
-- MongoDB: connector is not using table name
+
+#### 0.0.60
+- Move jwt to middleware**[IN PROGRESS]**
+- Move identity to middleware**[IN PROGRESS]**
+- Bug fixes
+- Debug logging SQL
+- Migration dry run
 - Relation onUpdate
 - Relation onDelete
-- MongoDB transaction
-- All `many` actions should throw errors
-- Json type
+- MongoDB: connector is not using table name
+- First version of Teo Studio
 
-#### 0.0.61
+#### 0.1.0
+- Bug fixes
+
+#### 0.2.0
+- MongoDB transaction
+- Json type
 - Rewrite parser error messages with code
 - Custom SQL query scopes
 - Custom MongoDB query scopes
@@ -537,7 +542,7 @@
 - enum extends enum
 - Default argument for argument list and config declaration
 
-#### 0.0.62
+#### 0.3.0
 - Recreate soft delete with custom middleware
 - PostgreSQL: Enum types
 - Separate documentation site
@@ -551,10 +556,11 @@
 - MongoDB: aggregate and group by for string and dates
 - Correct count with cursor
 
-#### 0.1.0
-- First stable minor version
+#### 0.4.0
+- Bug fixes
+- Full database type mapping
 
-#### 0.2.0
+#### 0.5.0
 - Rewrite Node.js server
 - Node.js bindings: error handling
 - Node.js object printing
@@ -562,10 +568,10 @@
 - Node.js client use dedicated `Date` class instead of builtin `Date`
 - Cross language error handling for node.js
 
-#### 0.3.0
+#### 0.6.0
 - Packages
 
-#### 0.4.0
+#### 0.7.0
 - Support MSSQL
 
 #### 1.0.0
