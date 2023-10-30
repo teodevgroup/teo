@@ -14,7 +14,7 @@ pub mod prelude {
     pub use key_path::path;
 }
 
-// pub(crate) mod seeder;
+// pub(crate) mod old_seeder;
 // pub(crate) mod purge;
 
 // pub mod prelude {
@@ -29,13 +29,13 @@ pub mod prelude {
 //     pub use crate::old_server::ReqCtx;
 //     pub use crate::old_app::routes::req::Req;
 //     pub use crate::old_app::routes::res::Res;
-//     pub use crate::core::graph::Graph;
+//     pub use crate::old_core::graph::Graph;
 //     pub use teo_teon::value::Value;
 //     pub use teo_teon::teon;
 //     pub use teo_teon::teon_vec;
 //     pub use teo_teon::teon_unexpected;
 //     pub use teo_teon::teon_expect_expr_comma;
-//     pub use crate::core::object::Object;
-//     pub use crate::core::ctx::model::ModelCtx;
-//     pub use crate::core::ctx::user::UserCtx;
+//     pub use crate::old_core::object::Object;
+//     pub use crate::old_core::ctx::model::ModelCtx;
+//     pub use crate::old_core::ctx::user::UserCtx;
 // }
