@@ -505,7 +505,8 @@
 - Availability flags **[DONE]**
 - Database type mapping for field, property **[DONE]**
 - All `many` actions should throw errors **[DONE]**
-- Rewrite model and interface validator and decoder **[IN PROGRESS]**
+- Rewrite model validator and decoder **[DONE]**
+- Rewrite interface validator and decoder **[IN PROGRESS]**
 
 #### 0.0.59
 - Rewrite generators with namespaces and actions
