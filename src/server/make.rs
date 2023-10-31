@@ -18,7 +18,7 @@ use teo_runtime::handler::Handler;
 use teo_runtime::handler::handler::Method;
 use teo_runtime::{connection, request};
 use teo_runtime::connection::transaction;
-use teo_runtime::handler::default::{find_first, find_many, find_unique};
+use teo_runtime::handler::default::{create, find_first, find_many, find_unique, update, upsert, copy, create_many, update_many, copy_many, delete_many, count, aggregate, group_by, delete};
 use teo_runtime::model::Model;
 use teo_runtime::response::Response;
 use teo_teon::Value;
@@ -135,6 +135,45 @@ fn make_server_app(
                         }).await?.into_http_response(http_request.clone())),
                         "findFirst" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
                             find_many(&ctx).await
+                        }).await?.into_http_response(http_request.clone())),
+                        "findUnique" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                            find_unique(&ctx).await
+                        }).await?.into_http_response(http_request.clone())),
+                        "create" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                            create(&ctx).await
+                        }).await?.into_http_response(http_request.clone())),
+                        "delete" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                            delete(&ctx).await
+                        }).await?.into_http_response(http_request.clone())),
+                        "update" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                            update(&ctx).await
+                        }).await?.into_http_response(http_request.clone())),
+                        "upsert" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                            upsert(&ctx).await
+                        }).await?.into_http_response(http_request.clone())),
+                        "copy" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                            copy(&ctx).await
+                        }).await?.into_http_response(http_request.clone())),
+                        "createMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                            create_many(&ctx).await
+                        }).await?.into_http_response(http_request.clone())),
+                        "updateMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                            update_many(&ctx).await
+                        }).await?.into_http_response(http_request.clone())),
+                        "copyMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                            copy_many(&ctx).await
+                        }).await?.into_http_response(http_request.clone())),
+                        "deleteMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                            delete_many(&ctx).await
+                        }).await?.into_http_response(http_request.clone())),
+                        "count" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                            count(&ctx).await
+                        }).await?.into_http_response(http_request.clone())),
+                        "aggregate" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                            aggregate(&ctx).await
+                        }).await?.into_http_response(http_request.clone())),
+                        "groupBy" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                            group_by(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
                         _ => Err(teo_runtime::path::Error::not_found_message_only())?,
                     };
