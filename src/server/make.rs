@@ -120,7 +120,7 @@ fn make_server_app(
             };
             match handler_resolved {
                 HandlerResolved::Builtin(model, action) => {
-                    let body = validate_and_transform_json_input_for_builtin_action(model, action, &json_body)?;
+                    let body = validate_and_transform_json_input_for_builtin_action(model, action, &json_body, main_namespace)?;
                     let conn_ctx = connection::Ctx::from_namespace(main_namespace);
                     let transaction_ctx = transaction::Ctx::new(conn_ctx);
                     let ctx = request::Ctx::new(
@@ -140,7 +140,7 @@ fn make_server_app(
                     };
                 },
                 HandlerResolved::Custom(handler) => {
-                    let body = validate_and_transform_json_input_for_handler(handler, &json_body)?;
+                    let body = validate_and_transform_json_input_for_handler(handler, &json_body, main_namespace)?;
                     let conn_ctx = connection::Ctx::from_namespace(main_namespace);
                     let transaction_ctx = transaction::Ctx::new(conn_ctx);
                     let ctx = request::Ctx::new(
