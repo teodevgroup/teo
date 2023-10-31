@@ -134,7 +134,7 @@ fn make_server_app(
                             find_many(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
                         "findFirst" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
-                            find_many(&ctx).await
+                            find_first(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
                         "findUnique" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
                             find_unique(&ctx).await
