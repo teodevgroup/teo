@@ -27,7 +27,7 @@ impl App {
             exit(1);
         }
         load_std(Ctx::main_namespace_mut());
-        load_schema(Ctx::main_namespace_mut(), &schema, cli.command.ignores_loading())?;
+        Ctx::set_schema(schema);
         Ctx::set_cli(cli);
         Ok(Self { })
     }
@@ -41,6 +41,8 @@ impl App {
     }
 
     pub async fn run(&self) -> Result<()> {
+        load_schema(Ctx::main_namespace_mut(), Ctx::schema(), Ctx::cli().command.ignores_loading())?;
+
         run(Ctx::cli()).await
     }
 }

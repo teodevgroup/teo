@@ -4,6 +4,7 @@ use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex};
 use maplit::btreemap;
 use once_cell::sync::OnceCell;
+use teo_parser::ast::schema::Schema;
 use teo_result::{Error, Result};
 use teo_runtime::connection;
 use teo_runtime::namespace::Namespace;
@@ -21,6 +22,8 @@ pub struct Ctx {
     pub(crate) main_namespace: Namespace,
     pub(crate) cli: Option<CLI>,
     #[educe(Debug(ignore))]
+    pub(crate) schema: Option<Schema>,
+    #[educe(Debug(ignore))]
     pub(crate) setup: Option<Arc<dyn AsyncCallback>>,
     #[educe(Debug(ignore))]
     pub(crate) programs: BTreeMap<String, Arc<dyn AsyncCallback>>,
@@ -37,6 +40,7 @@ impl Ctx {
             entrance: Entrance::APP,
             main_namespace: Namespace::main(),
             cli: None,
+            schema: None,
             setup: None,
             programs: btreemap!{},
             conn_ctx: None,
@@ -104,6 +108,15 @@ impl Ctx {
     pub fn cli() -> &'static CLI {
         Ctx::get().cli.as_ref().unwrap()
     }
+
+    pub fn set_schema(schema: Schema) {
+        Ctx::get_mut().schema = Some(schema)
+    }
+
+    pub fn schema() -> &'static Schema {
+        Ctx::get().schema.as_ref().unwrap()
+    }
+
 
     pub fn set_entrance(entrance: Entrance) {
         Ctx::get_mut().entrance = entrance;

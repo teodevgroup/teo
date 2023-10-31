@@ -12,6 +12,9 @@ pub mod prelude {
     pub use tokio::main;
     pub extern crate key_path;
     pub use key_path::path;
+    pub use teo_runtime::request;
+    pub use teo_runtime::response::Response;
+    pub use teo_runtime::path;
 }
 
 // pub(crate) mod old_seeder;
