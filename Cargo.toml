@@ -10,7 +10,7 @@ documentation = "https://teocloud.io/docs"
 repository = "https://github.com/teocloud/teo"
 
 [dependencies]
-teo-result = "0.0.58-alpha.2"
+teo-result = "0.0.58-alpha.3"
 teo-teon = { path = "../teo-teon" }
 teo-parser = { path = "../teo-parser" }
 teo-runtime = { path = "../teo-runtime" }
