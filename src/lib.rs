@@ -16,6 +16,7 @@ pub mod prelude {
     pub use teo_runtime::request;
     pub use teo_runtime::response::Response;
     pub use teo_runtime::path;
+    pub use teo_runtime::traits::generated_enum_to_value::{GeneratedEnumToValue, ValueToGeneratedEnum};
 }
 
 // pub(crate) mod old_seeder;
