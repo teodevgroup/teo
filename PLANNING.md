@@ -507,8 +507,6 @@
 - All `many` actions should throw errors **[DONE]**
 - Rewrite model validator and decoder **[DONE]**
 - Rewrite interface validator and decoder **[DONE]**
-
-#### 0.0.59
 - Rewrite generators with namespaces and actions
 - Input omissible and output omissible for generated clients
 - TS Client: fixed include args with boolean inputs
@@ -516,7 +514,7 @@
 - C# client: capitalized names and names with underscore
 - TypeScript client: correct return types for `aggregate` and `groupBy`
 
-#### 0.0.60
+#### 0.0.59
 - Move jwt to middleware**[IN PROGRESS]**
 - Move identity to middleware**[IN PROGRESS]**
 - Bug fixes
@@ -525,10 +523,14 @@
 - Relation onUpdate
 - Relation onDelete
 - MongoDB: connector is not using table name
-- First version of Teo Studio
+
+#### 0.0.60
+- Support first version of Teo Studio
 
 #### 0.1.0
 - Bug fixes
+- Update documentations
+- Update design of website
 
 #### 0.2.0
 - MongoDB transaction
