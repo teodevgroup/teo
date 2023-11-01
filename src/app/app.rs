@@ -9,6 +9,7 @@ use teo_parser::diagnostics::printer::print_diagnostics;
 use teo_runtime::stdlib::load::{load as load_std};
 use teo_runtime::schema::load::load_schema::load_schema;
 use crate::cli::run::run;
+use dotenvy::dotenv;
 
 #[derive(Debug)]
 pub struct App { }
@@ -16,6 +17,8 @@ pub struct App { }
 impl App {
 
     pub fn new() -> Result<Self> {
+        // load env first
+        let _ = dotenv();
         if !Ctx::create() {
             Err(Error::new("cannot create app while there is an existing instance"))?
         }
