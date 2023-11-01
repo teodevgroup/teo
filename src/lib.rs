@@ -3,6 +3,7 @@ pub mod app;
 pub mod server;
 pub mod migrate;
 pub mod purge;
+mod message;
 
 pub mod prelude {
     pub use crate::app::App;

@@ -1,7 +1,7 @@
 use teo_result::{Error, Result};
 use crate::app::ctx::Ctx;
 use crate::app::database::connect_databases;
-use crate::cli::command::{CLI, CLICommand};
+use crate::cli::command::{CLI, CLICommand, GenerateCommand};
 use crate::server::make::serve;
 use teo_runtime::connection::transaction;
 use crate::migrate::migrate;
@@ -22,7 +22,50 @@ pub async fn run(cli: &CLI) -> Result<()> {
             serve(conn_ctx.namespace(), conn_ctx.namespace().server.as_ref().unwrap(), &Ctx::get().runtime_version, &Ctx::get().entrance, cli.silent).await
         }
         CLICommand::Generate(generate_command) => {
-            todo!()
+            match generate_command {
+                GenerateCommand::GenerateClientCommand(command) => {
+                    let names = if let Some(names) = command.names.as_ref() {
+                        names.clone()
+                    } else if command.all {
+                        Ctx::main_namespace().clients.keys().map(|k| k.clone()).collect()
+                    } else {
+                        match Ctx::main_namespace().clients.len() {
+                            0 => Err(Error::new("no clients found"))?,
+                            1 => return teo_generator::client::generate(Ctx::main_namespace(), Ctx::main_namespace().clients.first_key_value().unwrap().1).await,
+                            _ => Err(Error::new("requires client name"))?,
+                        }
+                    };
+                    for name in names {
+                        if let Some(client) = Ctx::main_namespace().clients.get(&name) {
+                            teo_generator::client::generate(Ctx::main_namespace(), client).await?;
+                        } else {
+                            Err(Error::new("client not found"))?
+                        }
+                    }
+                    Ok(())
+                }
+                GenerateCommand::GenerateEntityCommand(command) => {
+                    let names = if let Some(names) = command.names.as_ref() {
+                        names.clone()
+                    } else if command.all {
+                        Ctx::main_namespace().entities.keys().map(|k| k.clone()).collect()
+                    } else {
+                        match Ctx::main_namespace().entities.len() {
+                            0 => Err(Error::new("no entities found"))?,
+                            1 => return teo_generator::entity::generate(Ctx::main_namespace(), Ctx::main_namespace().entities.first_key_value().unwrap().1).await,
+                            _ => Err(Error::new("requires entity name"))?,
+                        }
+                    };
+                    for name in names {
+                        if let Some(entity) = Ctx::main_namespace().entities.get(&name) {
+                            teo_generator::entity::generate(Ctx::main_namespace(), entity).await?;
+                        } else {
+                            Err(Error::new("entity not found"))?
+                        }
+                    }
+                    Ok(())
+                }
+            }
         }
         CLICommand::Migrate(migrate_command) => {
             connect_databases(Ctx::main_namespace_mut(), cli.silent).await?;
