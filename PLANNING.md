@@ -507,10 +507,11 @@
 - All `many` actions should throw errors **[DONE]**
 - Rewrite model validator and decoder **[DONE]**
 - Rewrite interface validator and decoder **[DONE]**
-- Rewrite generators with namespaces and actions
-- Input omissible and output omissible for generated clients
+- Rewrite rust generators with namespaces and interfaces **[IN PROGRESS]**
+- Rewrite client generators with namespaces and interfaces
+- Input omissible and output omissible for generated clients **[DONE]**
 - TS Client: fixed include args with boolean inputs
-- Client: distinct in handler args
+- Client: distinct in handler args **[DONE]**
 - C# client: capitalized names and names with underscore
 - TypeScript client: correct return types for `aggregate` and `groupBy`
 
