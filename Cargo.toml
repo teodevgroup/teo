@@ -16,6 +16,7 @@ teo-parser = { path = "../teo-parser" }
 teo-runtime = { path = "../teo-runtime" }
 teo-sql-connector = { path = "../teo-sql-connector" }
 teo-mongodb-connector = { path = "../teo-mongodb-connector" }
+teo-generator = { path = "../teo-generator" }
 actix-web = "4.4.0"
 actix-http = "3.4.0"
 actix-multipart = "0.6.1"
@@ -50,6 +51,7 @@ dotenvy = "0.15.7"
 toml_edit = "0.20.2"
 rand = "0.8.5"
 educe = "0.4.23"
+colored = "2.0.4"
 
 [dev-dependencies]
 serial_test = "2.0.0"
