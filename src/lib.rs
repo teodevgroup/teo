@@ -18,6 +18,7 @@ pub mod prelude {
     pub use teo_runtime::path;
     pub use teo_runtime::model;
     pub use teo_runtime::interface;
+    pub use teo_runtime::connection::transaction;
     pub use teo_teon::value::Value;
     pub use teo_teon::teon;
     pub use teo_teon::teon_vec;
