@@ -61,7 +61,7 @@ pub(crate) fn transform_custom_action_json_into_teon(json_value: &JsonValue, rul
         ResolvedInterfaceFieldType::Vec(inner) => Ok(Value::Vec(json_value.as_array().unwrap().iter().enumerate().map(|(index, json_value)| {
             transform_custom_action_json_into_teon(json_value, inner.as_ref(), &(path + index))
         }).collect::<Result<Vec<Value>>>()?)),
-        ResolvedInterfaceFieldType::HashMap(inner) => Ok(Value::HashMap(json_value.as_object().unwrap().iter().map(|(key, json_value)| {
+        ResolvedInterfaceFieldType::HashMap(inner) => Ok(Value::Dictionary(json_value.as_object().unwrap().iter().map(|(key, json_value)| {
             Ok((key.clone(), transform_custom_action_json_into_teon(json_value, inner.as_ref(), &(path + key.as_str()))?))
         }).collect::<Result<HashMap<String, Value>>>()?)),
         ResolvedInterfaceFieldType::Shape(definition) => {
@@ -84,7 +84,7 @@ pub(crate) fn transform_custom_action_json_into_teon(json_value: &JsonValue, rul
                     return Err(Error::missing_required_input(item_path));
                 }
             }
-            Ok(Value::HashMap(result))
+            Ok(Value::Dictionary(result))
         }
     }
 }

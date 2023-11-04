@@ -70,11 +70,11 @@ impl Item for SetItem {
                         None => Err(ctx.internal_server_error("set: ctx value is not array"))
                     }
                     Value::String(s) => match &ctx.value {
-                        Value::HashMap(hashmap) => {
+                        Value::Dictionary(hashmap) => {
                             let value = self.value.resolve(ctx.clone()).await?;
                             let mut new_map = hashmap.clone();
                             new_map.insert(s.to_owned(), value);
-                            Ok(ctx.with_value(Value::HashMap(new_map)))
+                            Ok(ctx.with_value(Value::Dictionary(new_map)))
                         }
                         Value::BTreeMap(btreemap) => {
                             let value = self.value.resolve(ctx.clone()).await?;

@@ -52,7 +52,7 @@ impl Item for GetItem {
                 None => Err(ctx.internal_server_error("get: ctx value is not array"))
             }
             Value::String(s) => match &ctx.value {
-                Value::HashMap(hashmap) => {
+                Value::Dictionary(hashmap) => {
                     match hashmap.get(&s) {
                         Some(val) => Ok(ctx.with_value(val.clone())),
                         None => {

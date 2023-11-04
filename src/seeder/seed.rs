@@ -1,9 +1,7 @@
-use std::collections::HashMap;
 use bson::oid::ObjectId;
-use indexmap::IndexMap;
+use indexmap::{IndexMap, indexmap};
 use itertools::Itertools;
 use key_path::path;
-use maplit::hashmap;
 use serde_json::json;
 use teo_parser::r#type::Type;
 use crate::prelude::{Value};
@@ -36,7 +34,7 @@ pub(crate) async fn seed(action: SeedCommandAction, datasets: Vec<DataSet>, ctx:
 pub(crate) async fn seed_dataset(dataset: &DataSet, ctx: transaction::Ctx) {
     let ordered_groups = ordered_group(&dataset.groups, ctx.clone());
     // newly added records, we only update reference and relationships for these records.
-    let mut added_records: HashMap<String, Vec<String>> = hashmap!{};
+    let mut added_records: IndexMap<String, Vec<String>> = indexmap!{};
     // First, insert into database with required foreign key relations
     for group in &ordered_groups {
         let group_model = ctx.namespace().model_at_path(&group.model_path()).unwrap();
@@ -69,17 +67,17 @@ pub(crate) async fn seed_dataset(dataset: &DataSet, ctx: transaction::Ctx) {
     remove_records_for_user_removed_groups(dataset, &ordered_groups, ctx.clone()).await;
 }
 
-async fn remove_records_for_user_removed_groups(dataset: &'static DataSet, ordered_groups: &Vec<&'static Group>, ctx: transaction::Ctx) {
+async fn remove_records_for_user_removed_groups(dataset: &DataSet, ordered_groups: &Vec<&Group>, ctx: transaction::Ctx) {
     let user_removed_seed_records_for_group = GroupRecord::find_many(teon!({
         "where": {
             "dataset": dataset.name.join(".").as_str(),
             "group": {
-                "notIn": Value::Vec(ordered_groups.iter().map(|g| Value::String(g.name.join("."))).collect()),
+                "notIn": Value::Array(ordered_groups.iter().map(|g| Value::String(g.name.join("."))).collect()),
             },
         }
     }), ctx.clone()).await.unwrap();
     for record in user_removed_seed_records_for_group {
-        let model = ctx.namespace().model_at_path(&record.model_path()).unwrap();
+        let model = ctx.namespace().model_at_path(&record.group().iter().map(AsRef::as_ref).collect());
         if model.is_some() {
             perform_remove_from_database(dataset, &record, model.unwrap(), ctx.clone()).await;
         } else {
@@ -89,7 +87,7 @@ async fn remove_records_for_user_removed_groups(dataset: &'static DataSet, order
     }
 }
 
-pub(crate) async fn reseed_dataset(dataset: &'static DataSet, ctx: transaction::Ctx) {
+pub(crate) async fn reseed_dataset(dataset: &DataSet, ctx: transaction::Ctx) {
     let ordered_groups = ordered_group(&dataset.groups, ctx.clone());
     for group in &ordered_groups {
         let group_model = ctx.namespace().model_at_path(&group.model_path()).unwrap();
@@ -122,7 +120,7 @@ pub(crate) async fn reseed_dataset(dataset: &'static DataSet, ctx: transaction::
     remove_records_for_user_removed_groups(dataset, &ordered_groups, ctx.clone()).await;
 }
 
-pub(crate) async fn unseed_dataset(dataset: &'static DataSet, ctx: transaction::Ctx) {
+pub(crate) async fn unseed_dataset(dataset: &DataSet, ctx: transaction::Ctx) {
     let mut ordered_groups = ordered_group(&dataset.groups, ctx.clone());
     ordered_groups.reverse();
     for group in ordered_groups {
@@ -134,16 +132,16 @@ pub(crate) async fn unseed_dataset(dataset: &'static DataSet, ctx: transaction::
         }), ctx.clone()).await.unwrap();
         // delete records
         for seed_record in seed_records.iter() {
-            let model = ctx.namespace().model_at_path(&seed_record.model_path()).unwrap();
+            let model = ctx.namespace().model_at_path(&seed_record.group().iter().map(AsRef::as_ref).collect()).unwrap();
             perform_remove_from_database(dataset, seed_record, model, ctx.clone()).await;
         }
     }
 }
 
-async fn sync_relations(dataset: &'static DataSet, ordered_groups: &Vec<&'static Group>, ctx: transaction::Ctx) {
+async fn sync_relations(dataset: &DataSet, ordered_groups: &Vec<&Group>, ctx: transaction::Ctx) {
     for group in ordered_groups {
         let group_model = ctx.namespace().model_at_path(&group.model_path()).unwrap();
-        let should_process = group_model.relations().iter().find(|r| !(r.has_foreign_key() && r.is_required())).is_some();
+        let should_process = group_model.relations().iter().find(|r| !(r.has_foreign_key && r.is_required())).is_some();
         if !should_process { continue }
         let seed_records = GroupRecord::find_many(teon!({
             "where": {
@@ -179,8 +177,8 @@ async fn sync_relations(dataset: &'static DataSet, ordered_groups: &Vec<&'static
                     }
                 }), ctx.clone()).await.unwrap();
                 let mut relation_record_refs: Vec<&GroupRelation> = relation_records.iter().collect();
-                if let Some(reference) = record.value.as_hashmap().unwrap().get(relation.name()) {
-                    if let Some(references) = reference.as_vec() {
+                if let Some(reference) = record.value.as_dictionary().unwrap().get(relation.name()) {
+                    if let Some(references) = reference.as_array() {
                         for reference in references {
                             sync_relation_internal(record, reference, relation, dataset, &object, &relation_records, &mut relation_record_refs, ctx.clone()).await;
                         }
@@ -198,10 +196,10 @@ async fn sync_relations(dataset: &'static DataSet, ordered_groups: &Vec<&'static
     }
 }
 
-async fn setup_new_relations(dataset: &'static DataSet, ordered_groups: &Vec<&'static Group>, limit: Option<&HashMap<String, Vec<String>>>, ctx: transaction::Ctx) {
+async fn setup_new_relations(dataset: &DataSet, ordered_groups: &Vec<&Group>, limit: Option<&IndexMap<String, Vec<String>>>, ctx: transaction::Ctx) {
     for group in ordered_groups {
         let group_model = ctx.namespace().model_at_path(&group.model_path()).unwrap();
-        let should_process = group_model.relations().iter().find(|r| !(r.has_foreign_key() && r.is_required())).is_some();
+        let should_process = group_model.relations().iter().find(|r| !(r.has_foreign_key && r.is_required())).is_some();
         if !should_process { continue }
         let seed_records = GroupRecord::find_many(teon!({
             "where": {
@@ -216,8 +214,8 @@ async fn setup_new_relations(dataset: &'static DataSet, ordered_groups: &Vec<&'s
                 "where": record_json_string_to_where_unique(seed_record.record().as_str(), group_model)
             }), None, path![]).await.unwrap().unwrap();
             for relation in group_model.relations() {
-                if let Some(reference) = record.value.as_hashmap().unwrap().get(relation.name()) {
-                    if let Some(references) = reference.as_vec() {
+                if let Some(reference) = record.value.as_dictionary().unwrap().get(relation.name()) {
+                    if let Some(references) = reference.as_array() {
                         for reference in references {
                             setup_relations_internal(record, reference, relation, dataset, &object, ctx.clone()).await;
                         }
@@ -230,8 +228,8 @@ async fn setup_new_relations(dataset: &'static DataSet, ordered_groups: &Vec<&'s
     }
 }
 
-async fn sync_relation_internal<'a>(record: &'static Record, reference: &'a Value, relation: &'static Relation, dataset: &'static DataSet, object: &'a Object, relation_records: &'a Vec<GroupRelation>, relation_record_refs: &mut Vec<&'a GroupRelation>, ctx: transaction::Ctx) {
-    let that_name = reference.as_raw_enum_choice().unwrap();
+async fn sync_relation_internal<'a>(record: &Record, reference: &'a Value, relation: &'static Relation, dataset: &DataSet, object: &'a Object, relation_records: &'a Vec<GroupRelation>, relation_record_refs: &mut Vec<&'a GroupRelation>, ctx: transaction::Ctx) {
+    let that_name = reference.as_enum_variant().unwrap().to_string().unwrap().to_string();
     if let Some(existing_relation_record) = relation_records.iter().find(|r| {
         (&r.name_a() == record.name.as_str() && r.name_b() == that_name) ||
             (&r.name_b() == record.name.as_str() && r.name_a() == that_name)
@@ -242,19 +240,19 @@ async fn sync_relation_internal<'a>(record: &'static Record, reference: &'a Valu
     setup_relations_internal(record, reference, relation, dataset, object, ctx.clone()).await;
 }
 
-async fn setup_relations_internal<'a>(record: &'static Record, reference: &'a Value, relation: &'static Relation, dataset: &'static DataSet, object: &'a Object, ctx: transaction::Ctx) {
-    let that_name = reference.as_raw_enum_choice().unwrap();
+async fn setup_relations_internal<'a>(record: &Record, reference: &'a Value, relation: &'static Relation, dataset: &DataSet, object: &'a Object, ctx: transaction::Ctx) {
+    let that_name = reference.as_enum_variant().unwrap().to_string().unwrap().to_string();
     let that_seed_record = GroupRecord::find_first(teon!({
         "where": {
             "group": relation.model_path().join("."),
             "dataset": dataset.name.join(".").as_str(),
-            "name": that_name,
+            "name": that_name.clone(),
         }
-    }), ctx.clone()).await.unwrap();
-    let that_object: Object = ctx.namespace().find_unique(relation.model(), &teon!({
+    }), ctx.clone()).await.unwrap().unwrap();
+    let that_object: Object = ctx.find_unique(ctx.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({
         "where": record_json_string_to_where_unique(that_seed_record.record(), ctx.namespace().model_at_path(&relation.model_path()).unwrap())
     }), None, path![]).await.unwrap().unwrap();
-    if relation.is_optional() && relation.has_foreign_key() {
+    if relation.is_optional() && relation.has_foreign_key {
         // update this record
         for (local, foreign) in relation.iter() {
             object.set_value(local, that_object.get_value(foreign).unwrap()).unwrap();
@@ -277,7 +275,7 @@ async fn setup_relations_internal<'a>(record: &'static Record, reference: &'a Va
             where_unique.insert(local.to_string(), that_object.get_value(foreign).unwrap());
         }
         let link_record: Option<Object> = ctx.find_first(through_model, &teon!({
-            "where": Value::HashMap(where_unique.clone())
+            "where": Value::Dictionary(where_unique.clone())
         }), None, path![]).await.unwrap();
         if link_record.is_none() {
             let link_object = ctx.create_object(through_model, Value::Dictionary(where_unique), None).await.unwrap();
@@ -294,7 +292,7 @@ async fn setup_relations_internal<'a>(record: &'static Record, reference: &'a Va
                     "relationA": relation.name(),
                     "nameA": record.name.as_str(),
                     "groupB": that_object.model().name(),
-                    "nameB": that_name,
+                    "nameB": that_name.clone(),
                 },
                 {
                     "dataset": dataset.name.join(".").as_str(),
@@ -302,7 +300,7 @@ async fn setup_relations_internal<'a>(record: &'static Record, reference: &'a Va
                     "relationB": relation.name(),
                     "nameB": record.name.as_str(),
                     "groupA": that_object.model().name(),
-                    "nameA": that_name
+                    "nameA": that_name.clone()
                 }
             ]
         }
@@ -317,14 +315,14 @@ async fn setup_relations_internal<'a>(record: &'static Record, reference: &'a Va
             "nameA": record.name.as_str(),
             "groupB": that_object.model().name(),
             "relationB": if that_relation.is_some() { Value::String(that_relation.unwrap().name().to_owned()) } else { Value::Null },
-            "nameB": that_name,
-        }), ctx.clone()).await;
+            "nameB": that_name.clone(),
+        }), ctx.clone()).await.unwrap();
         new_relation_record.save().await.unwrap();
     }
 }
 
 /// This perform, deletes an object from the databse.
-async fn perform_remove_from_database<'a>(dataset: &'static DataSet, record: &'a GroupRecord, group_model: &'static Model, ctx: transaction::Ctx) {
+async fn perform_remove_from_database<'a>(dataset: &DataSet, record: &'a GroupRecord, group_model: &'static Model, ctx: transaction::Ctx) {
     let json_identifier = record.record();
     let exist: Option<Object> = ctx.find_unique(group_model, &teon!({
         "where": record_json_string_to_where_unique(json_identifier, group_model)
@@ -360,10 +358,10 @@ async fn perform_remove_from_database<'a>(dataset: &'static DataSet, record: &'a
     record.delete().await.unwrap();
 }
 
-async fn cut_relation<'a>(relation: &'a GroupRelation, record: &'a GroupRecord, group_model: &'static Model, dataset: &'static DataSet, exist: &'a Object, ctx: transaction::Ctx) {
+async fn cut_relation<'a>(relation: &'a GroupRelation, record: &'a GroupRecord, group_model: &'static Model, dataset: &DataSet, exist: &'a Object, ctx: transaction::Ctx) {
     let rel_name = if record.group().join(".").as_str() == relation.group_a() { relation.relation_a() } else { relation.relation_b() };
     let model_relation = group_model.relation(&rel_name).unwrap();
-    if model_relation.has_foreign_key() {
+    if model_relation.has_foreign_key {
         // If has foreign keys, this relation is already cut
         relation.delete().await.unwrap();
         return
@@ -391,7 +389,7 @@ async fn cut_relation<'a>(relation: &'a GroupRelation, record: &'a GroupRecord, 
     if model_relation.has_join_table() {
         let (through_model, through_relation) = ctx.namespace().through_relation(model_relation);
         let (_, through_that_relation) = ctx.namespace().through_opposite_relation(model_relation);
-        let mut where_unique: HashMap<String, Value> = HashMap::new();
+        let mut where_unique: IndexMap<String, Value> = IndexMap::new();
         for (local, foreign) in through_relation.iter() {
             where_unique.insert(local.to_string(), exist.get_value(foreign).unwrap());
         }
@@ -399,7 +397,7 @@ async fn cut_relation<'a>(relation: &'a GroupRelation, record: &'a GroupRecord, 
             where_unique.insert(local.to_string(), that_record.get_value(foreign).unwrap());
         }
         let link_record: Option<Object> = ctx.find_first(through_model, &teon!({
-            "where": Value::HashMap(where_unique)
+            "where": Value::Dictionary(where_unique)
         }), None, path![]).await.unwrap();
         if link_record.is_none() {
             // Maybe this record is deleted already
@@ -426,7 +424,7 @@ async fn cut_relation<'a>(relation: &'a GroupRelation, record: &'a GroupRecord, 
     relation.delete().await.unwrap();
 }
 
-async fn perform_recreate_or_update_an_record<'a>(dataset: &'static DataSet, group: &'static Group, record: &'static Record, group_model: &'static Model, seed_record: &'a GroupRecord, ctx: transaction::Ctx) {
+async fn perform_recreate_or_update_an_record<'a>(dataset: &DataSet, group: &Group, record: &Record, group_model: &'static Model, seed_record: &'a GroupRecord, ctx: transaction::Ctx) {
     let object: Option<Object> = ctx.find_unique(group_model, &teon!({
         "where": record_json_string_to_where_unique(seed_record.record(), group_model)
     }), None, path![]).await.unwrap();
@@ -443,15 +441,15 @@ async fn perform_recreate_or_update_an_record<'a>(dataset: &'static DataSet, gro
     seed_record.save().await.unwrap();
 }
 
-async fn insert_or_update_input(dataset: &'static DataSet, group: &'static Group, record: &'static Record, group_model: &'static Model, ctx: transaction::Ctx) -> Value {
+async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Record, group_model: &'static Model, ctx: transaction::Ctx) -> Value {
     let mut input = teon!({});
-    for (k, v) in record.value.as_hashmap().unwrap() {
+    for (k, v) in record.value.as_dictionary().unwrap() {
         if group_model.field(k).is_some() {
-            input.as_hashmap_mut().unwrap().insert(k.to_owned(), v.clone());
+            input.as_dictionary_mut().unwrap().insert(k.to_owned(), v.clone());
         } else if let Some(relation) = group_model.relation(k) {
-            if relation.is_required() && relation.has_foreign_key() {
+            if relation.is_required() && relation.has_foreign_key {
                 // setup required relationship
-                let that_record_name = v.as_raw_enum_choice().unwrap();
+                let that_record_name = v.as_enum_variant().unwrap().to_string().unwrap().to_string();
                 let that_record_data = GroupRecord::find_first(teon!({
                     "where": {
                         "group": relation.model_path().join("."),
@@ -465,7 +463,7 @@ async fn insert_or_update_input(dataset: &'static DataSet, group: &'static Group
                     "where": record_json_string_to_where_unique(&that_record_identifier_json, ctx.namespace().model_at_path(&relation.model_path()).unwrap())
                 }), None, path![]).await.unwrap().unwrap();
                 for (field, reference) in relation.iter() {
-                    input.as_hashmap_mut().unwrap().insert(field.to_owned(), that_record.get_value(reference).unwrap());
+                    input.as_dictionary_mut().unwrap().insert(field.to_owned(), that_record.get_value(reference).unwrap());
                 }
                 // update relation record
                 let (_, opposite_relation) = ctx.namespace().opposite_relation(relation);
@@ -476,8 +474,8 @@ async fn insert_or_update_input(dataset: &'static DataSet, group: &'static Group
                     "nameA": record.name.as_str(),
                     "groupB": that_record.model().name(),
                     "relationB": if opposite_relation.is_some() { Value::String(opposite_relation.unwrap().name().to_owned()) } else { Value::Null },
-                    "nameB": v.as_raw_enum_choice().unwrap()
-                }), ctx.clone()).await;
+                    "nameB": v.as_enum_variant().unwrap().to_string().unwrap().to_string()
+                }), ctx.clone()).await.unwrap();
                 relation_record.save().await.unwrap();
             }
         }
@@ -487,7 +485,7 @@ async fn insert_or_update_input(dataset: &'static DataSet, group: &'static Group
 
 /// This perform, saves an object into the database. It doesn't setup relationships without
 /// required foreign keys.
-async fn perform_insert_into_database(dataset: &'static DataSet, group: &'static Group, record: &'static Record, group_model: &'static Model, ctx: transaction::Ctx) {
+async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: &Record, group_model: &'static Model, ctx: transaction::Ctx) {
     let input = insert_or_update_input(dataset, group, record, group_model, ctx.clone()).await;
     let object = ctx.create_object(group_model, &input, None).await.unwrap();
     object.save_for_seed_without_required_relation().await.unwrap();
@@ -496,7 +494,7 @@ async fn perform_insert_into_database(dataset: &'static DataSet, group: &'static
         "dataset": dataset.name.join(".").as_str(),
         "name": record.name.as_str(),
         "record": object_identifier_in_json(&object),
-    }), ctx.clone()).await;
+    }), ctx.clone()).await.unwrap();
     record_object.save().await.unwrap();
 }
 
@@ -506,10 +504,10 @@ fn record_json_string_to_where_unique(json_str: impl AsRef<str>, model: &'static
     let mut result_teon_value = teon!({});
     for (k, v) in json_object {
         match model.field(k).unwrap().r#type() {
-            Type::String => result_teon_value.as_hashmap_mut().unwrap().insert(k.to_owned(), Value::String(v.as_str().unwrap().to_string())),
-            Type::ObjectId => result_teon_value.as_hashmap_mut().unwrap().insert(k.to_owned(), Value::ObjectId(ObjectId::parse_str(v.as_str().unwrap()).unwrap())),
-            Type::Int => result_teon_value.as_hashmap_mut().unwrap().insert(k.to_owned(), Value::Int(v.as_i64().unwrap() as i32)),
-            Type::Int64 => result_teon_value.as_hashmap_mut().unwrap().insert(k.to_owned(), Value::Int64(v.as_i64().unwrap())),
+            Type::String => result_teon_value.as_dictionary_mut().unwrap().insert(k.to_owned(), Value::String(v.as_str().unwrap().to_string())),
+            Type::ObjectId => result_teon_value.as_dictionary_mut().unwrap().insert(k.to_owned(), Value::ObjectId(ObjectId::parse_str(v.as_str().unwrap()).unwrap())),
+            Type::Int => result_teon_value.as_dictionary_mut().unwrap().insert(k.to_owned(), Value::Int(v.as_i64().unwrap() as i32)),
+            Type::Int64 => result_teon_value.as_dictionary_mut().unwrap().insert(k.to_owned(), Value::Int64(v.as_i64().unwrap())),
             _ => unreachable!()
         };
     }
@@ -519,12 +517,12 @@ fn record_json_string_to_where_unique(json_str: impl AsRef<str>, model: &'static
 fn object_identifier_in_json(object: &Object) -> String {
     let identifier = object.identifier();
     let mut result = json!({});
-    for (k, v) in identifier.as_hashmap().unwrap() {
+    for (k, v) in identifier.as_dictionary().unwrap() {
         match object.model().field(k).unwrap().r#type() {
             Type::ObjectId => result.as_object_mut().unwrap().insert(k.to_owned(), serde_json::Value::String(v.as_object_id().unwrap().to_string())),
             Type::String => result.as_object_mut().unwrap().insert(k.to_owned(), serde_json::Value::String(v.as_str().unwrap().to_string())),
-            Type::Int => result.as_object_mut().unwrap().insert(k.to_owned(), serde_json::Value::Number(serde_json::Number::from(v.as_i32().unwrap()))),
-            Type::Int64 => result.as_object_mut().unwrap().insert(k.to_owned(), serde_json::Value::Number(serde_json::Number::from(v.as_i64().unwrap()))),
+            Type::Int => result.as_object_mut().unwrap().insert(k.to_owned(), serde_json::Value::Number(serde_json::Number::from(v.as_int().unwrap()))),
+            Type::Int64 => result.as_object_mut().unwrap().insert(k.to_owned(), serde_json::Value::Number(serde_json::Number::from(v.as_int64().unwrap()))),
             _ => unreachable!(),
         };
     }
@@ -532,7 +530,7 @@ fn object_identifier_in_json(object: &Object) -> String {
 }
 
 fn ordered_group(groups: &Vec<Group>, ctx: transaction::Ctx) -> Vec<&Group> {
-    let mut deps: HashMap<String, Vec<String>> = HashMap::new();
+    let mut deps: IndexMap<String, Vec<String>> = IndexMap::new();
     for group in groups {
         let model_name = &group.name.join(".");
         let model = ctx.namespace().model_at_path(&group.name.iter().map(|s| s.as_str()).collect()).unwrap();
