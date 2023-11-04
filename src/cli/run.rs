@@ -78,7 +78,7 @@ pub async fn run(cli: &CLI) -> Result<()> {
             connect_databases(Ctx::main_namespace_mut(), cli.silent).await?;
             let data_sets = load_data_sets(Ctx::main_namespace(), seed_command.names.as_ref(), seed_command.all, Ctx::schema())?;
             let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());
-            seed(seed_command.action, Ctx::main_namespace(), data_sets, transaction_ctx).await?;
+            seed(seed_command.action, data_sets, transaction_ctx).await?;
             Ok(())
         }
         CLICommand::Purge(purge_command) => {
