@@ -3,6 +3,7 @@ pub mod app;
 pub mod server;
 pub mod migrate;
 pub mod purge;
+pub mod seeder;
 mod message;
 
 pub mod prelude {

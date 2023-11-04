@@ -1,15 +1,13 @@
 use std::fmt::{Debug, Display, Formatter};
 use std::borrow::Borrow;
-use std::sync::{Arc};
-use crate::app::app_ctx::AppCtx;
-use crate::core::cell::SyncUnsafeCell;
-use crate::core::connector::connection::Connection;
-use crate::prelude::{Object, Value, Result};
+use key_path::path;
+use teo_runtime::connection::transaction;
+use teo_runtime::model;
+use crate::prelude::{Value, Result};
 
 /// Group record
 pub struct GroupRecord {
-    pub(super) inner: Object,
-    model_path: SyncUnsafeCell<Vec<String>>,
+    pub(super) inner: model::Object,
 }
 
 impl PartialEq for GroupRecord {
@@ -21,30 +19,27 @@ impl PartialEq for GroupRecord {
 impl GroupRecord {
 
     /// Find many group records.
-    pub async fn find_many(query: impl Borrow<Value>, connection: Arc<dyn Connection>) -> Result<Vec<GroupRecord>> {
-        let model = AppCtx::get()?.model(vec!["__TeoGroupRecord"])?.unwrap();
-        AppCtx::get()?.graph().find_many(model, query.borrow(), connection, None).await
+    pub async fn find_many(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Vec<GroupRecord>> {
+        let model = ctx.namespace().model_at_path(&vec!["std", "GroupRecord"]).unwrap();
+        Ok(ctx.find_many(model, query.borrow(), None, path![]).await?)
     }
 
     /// Find a unique group record.
-    pub async fn find_unique(query: impl Borrow<Value>, connection: Arc<dyn Connection>) -> Result<Option<GroupRecord>> {
-        let model = AppCtx::get()?.model(vec!["__TeoGroupRecord"])?.unwrap();
-        AppCtx::get()?.graph().find_unique(model, query.borrow(), connection, None).await
+    pub async fn find_unique(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Option<GroupRecord>> {
+        let model = ctx.namespace().model_at_path(&vec!["std", "GroupRecord"]).unwrap();
+        Ok(ctx.find_unique(model, query.borrow(), None, path![]).await?)
     }
 
     /// Find a non unique group record.
-    pub async fn find_first(query: impl Borrow<Value>, connection: Arc<dyn Connection>) -> Result<Option<GroupRecord>> {
-        let model = AppCtx::get()?.model(vec!["__TeoGroupRecord"])?.unwrap();
-        AppCtx::get()?.graph().find_first(model, query.borrow(), connection, None).await
+    pub async fn find_first(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Option<GroupRecord>> {
+        let model = ctx.namespace().model_at_path(&vec!["std", "GroupRecord"]).unwrap();
+        Ok(ctx.find_first(model, query.borrow(), None, path![]).await?)
     }
 
     /// Create a new group record.
-    pub async fn new(values: impl Borrow<Value>, connection: Arc<dyn Connection>) -> Self {
-        let model = AppCtx::get().unwrap().model(vec!["__TeoGroupRecord"]).unwrap().unwrap();
-        Self {
-            inner: AppCtx::get().unwrap().graph().create_object(model, values, connection, None).await.unwrap(),
-            model_path: SyncUnsafeCell::new(vec![]),
-        }
+    pub async fn new(values: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Self> {
+        let model = ctx.namespace().model_at_path(&vec!["std", "GroupRecord"]).unwrap();
+        Ok(ctx.create_object(model, values.borrow(), None).await?.into())
     }
 
     /// Whether this group record is new.
@@ -108,13 +103,6 @@ impl GroupRecord {
         self.inner.set("group", new_value_string).unwrap();
     }
 
-    pub fn model_path(&self) -> Vec<&str> {
-        let mut model_path = unsafe { &mut *self.model_path.get() };
-        model_path.clear();
-        model_path.extend(self.group());
-        model_path.iter().map(|s| s.as_str()).collect()
-    }
-
     /// Name
     pub fn name(&self) -> String {
         self.inner.get("name").unwrap()
@@ -134,27 +122,15 @@ impl GroupRecord {
     }
 }
 
-impl Into<Object> for GroupRecord {
-    fn into(self) -> Object {
+impl Into<model::Object> for GroupRecord {
+    fn into(self) -> model::Object {
         self.inner.clone()
     }
 }
 
-impl From<Object> for GroupRecord {
-    fn from(value: Object) -> Self {
-        Self { inner: value, model_path: SyncUnsafeCell::new(vec![]) }
-    }
-}
-
-impl Into<Value> for GroupRecord {
-    fn into(self) -> Value {
-        Value::Object(self.into())
-    }
-}
-
-impl From<Value> for GroupRecord {
-    fn from(value: Value) -> Self {
-        Self::from(value.as_object().unwrap().clone())
+impl From<model::Object> for GroupRecord {
+    fn from(value: model::Object) -> Self {
+        Self { inner: value }
     }
 }
 

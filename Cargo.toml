@@ -51,6 +51,7 @@ dotenvy = "0.15.7"
 rand = "0.8.5"
 educe = "0.4.23"
 colored = "2.0.4"
+bson = { version = "2.7.0", features = ["chrono-0_4", "serde_with"] }
 
 [dev-dependencies]
 serial_test = "2.0.0"

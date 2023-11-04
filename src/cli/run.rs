@@ -4,8 +4,10 @@ use crate::app::database::connect_databases;
 use crate::cli::command::{CLI, CLICommand, GenerateCommand};
 use crate::server::make::serve;
 use teo_runtime::connection::transaction;
+use teo_runtime::schema::load::load_data_sets::load_data_sets;
 use crate::migrate::migrate;
 use crate::purge::purge;
+use crate::seeder::seed::seed;
 
 pub async fn run(cli: &CLI) -> Result<()> {
     match &cli.command {
@@ -74,6 +76,9 @@ pub async fn run(cli: &CLI) -> Result<()> {
         }
         CLICommand::Seed(seed_command) => {
             connect_databases(Ctx::main_namespace_mut(), cli.silent).await?;
+            let data_sets = load_data_sets(Ctx::main_namespace(), seed_command.names.as_ref(), seed_command.all, Ctx::schema())?;
+            let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());
+            seed(seed_command.action, Ctx::main_namespace(), data_sets, transaction_ctx).await?;
             Ok(())
         }
         CLICommand::Purge(purge_command) => {
