@@ -65,69 +65,6 @@ pub(crate) async fn run_command(cli: &CLI) -> Result<()> {
                 app_ctx.middlewares(),
             ).await?
         }
-        CLICommand::Generate(cmd) => {
-            match cmd {
-                GenerateCommand::GenerateEntityCommand(entity_command) => {
-                    match app_ctx.entities().len() {
-                        0 => println!("Cannot find an entity generator declaration."),
-                        1 => {
-                            let conf = app_ctx.entities().get(0).unwrap();
-                            gen_entity(graph, conf).await?;
-                        },
-                        _ => {
-                            let mut names = entity_command.names.clone().unwrap_or(vec![]);
-                            if entity_command.all {
-                                names = app_ctx.entities().iter().map(|c| c.name.clone().unwrap()).collect();
-                            }
-                            for name in names.iter() {
-                                let conf = app_ctx.entities().iter().find(|c| c.name.as_ref().unwrap() == name).unwrap();
-                                gen_entity(graph, conf).await?;
-                            }
-                        }
-                    }
-                }
-                GenerateCommand::GenerateClientCommand(client_command) => {
-                    match app_ctx.clients().len() {
-                        0 => println!("Cannot find a client generator declaration."),
-                        1 => {
-                            let conf = app_ctx.clients().get(0).unwrap();
-                            gen_client(graph, conf).await?;
-                        },
-                        _ => {
-                            let mut names = client_command.names.clone().unwrap_or(vec![]);
-                            if client_command.all {
-                                names = app_ctx.clients().iter().map(|c| c.name.clone().unwrap()).collect();
-                            }
-                            for name in names.iter() {
-                                let conf = app_ctx.clients().iter().find(|c| c.name.as_ref().unwrap() == name).unwrap();
-                                gen_client(graph, conf).await?;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        CLICommand::Migrate(migrate_command) => {
-            migrate(graph, migrate_command.dry).await?;
-        }
-        CLICommand::Seed(seed_command) => {
-            let names = if seed_command.all {
-                datasets.iter().map(|d| d.name.join(".")).collect()
-            } else {
-                seed_command.names.clone().unwrap()
-            };
-            migrate(graph, false).await?;
-            seed(seed_command.action, graph, datasets, names).await?;
-        }
-        CLICommand::Purge(_) => {
-            purge().await.unwrap()
-        }
-        CLICommand::Lint(_) => {
-
-        }
-        CLICommand::Run(run_command) => {
-            run_program(&run_command.name).await.unwrap()
-        }
     }
     Ok(())
 }
