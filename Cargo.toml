@@ -16,7 +16,7 @@ teo-parser = "0.0.58"
 teo-runtime = "0.0.58"
 teo-sql-connector = "0.0.58"
 teo-mongodb-connector = "0.0.58"
-teo-generator = { path = "../teo-generator" }
+teo-generator = "0.0.58"
 actix-web = "4.4.0"
 actix-http = "3.4.0"
 actix-multipart = "0.6.1"
