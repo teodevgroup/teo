@@ -526,15 +526,19 @@
 - Relation onDelete
 - MongoDB: connector is not using table name
 
-#### 0.0.60
-- Support first version of Teo Studio
-
 #### 0.1.0
 - Bug fixes
 - Update documentations
 - Update design of website
 
 #### 0.2.0
+- Support first version of Teo Studio
+- Swift client
+- Kotlin client
+- C# client
+- Dart client
+
+#### 0.3.0
 - MongoDB transaction
 - Json type
 - Rewrite parser error messages with code
@@ -545,7 +549,7 @@
 - enum extends enum
 - Default argument for argument list and config declaration
 
-#### 0.3.0
+#### 0.4.0
 - Recreate soft delete with custom middleware
 - PostgreSQL: Enum types
 - Separate documentation site
@@ -559,11 +563,11 @@
 - MongoDB: aggregate and group by for string and dates
 - Correct count with cursor
 
-#### 0.4.0
+#### 0.5.0
 - Bug fixes
 - Full database type mapping
 
-#### 0.5.0
+#### 0.6.0
 - Rewrite Node.js server
 - Node.js bindings: error handling
 - Node.js object printing
@@ -571,10 +575,10 @@
 - Node.js client use dedicated `Date` class instead of builtin `Date`
 - Cross language error handling for node.js
 
-#### 0.6.0
+#### 0.7.0
 - Packages
 
-#### 0.7.0
+#### 0.8.0
 - Support MSSQL
 
 #### 1.0.0
