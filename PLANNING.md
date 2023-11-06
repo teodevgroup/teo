@@ -486,7 +486,7 @@
 - Type system in schema **[DONE]**
 - Remove soft delete **[DONE]**
 - Code diagnostics for VSCode **[DONE]**
-- Auto completion **[IN PROGRESS]**
+- Auto completion **[DONE]**
 - Jump to definition **[DONE]**
 - Allow no connector in a project **[DONE]**
 - Multiple connectors **[DONE]**
@@ -497,8 +497,6 @@
 - Force unwrap operator **[DONE]**
 - Specific database types **[DONE]**
 - Server response: redirects **[DONE]**
-- Server response: file **[IN PROGRESS]**
-- Server response: string in HTML format and other formats **[IN PROGRESS]**
 - The copy action **[DONE]**
 - Custom decorators for actions including custom routes: @ignoreNamespace: true**[DONE]**
 - Server: custom request methods and url params**[DONE]**
@@ -507,15 +505,18 @@
 - All `many` actions should throw errors **[DONE]**
 - Rewrite model validator and decoder **[DONE]**
 - Rewrite interface validator and decoder **[DONE]**
-- Rewrite rust generators with namespaces and interfaces **[IN PROGRESS]**
-- Rewrite client generators with namespaces and interfaces
 - Input omissible and output omissible for generated clients **[DONE]**
-- TS Client: fixed include args with boolean inputs
 - Client: distinct in handler args **[DONE]**
-- C# client: capitalized names and names with underscore
-- TypeScript client: correct return types for `aggregate` and `groupBy`
 
 #### 0.0.59
+- Bug fixes
+- Server response: file **[IN PROGRESS]**
+- Server response: string in HTML format and other formats **[IN PROGRESS]**
+- Rewrite rust generators with namespaces and interfaces **[IN PROGRESS]**
+- Rewrite TS client generators with namespaces and interfaces
+- C# client: capitalized names and names with underscore
+- TypeScript client: correct return types for `aggregate` and `groupBy`
+- TS Client: fixed include args with boolean inputs
 - Move jwt to middleware**[IN PROGRESS]**
 - Move identity to middleware**[IN PROGRESS]**
 - Bug fixes
