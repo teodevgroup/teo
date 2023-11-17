@@ -11,7 +11,7 @@ repository = "https://github.com/teocloud/teo"
 
 [dependencies]
 teo-result = "0.0.58"
-teo-teon = "0.0.58"
+teo-teon = { path = "../teo-teon" }
 teo-parser = { path = "../teo-parser" }
 teo-runtime = { path = "../teo-runtime" }
 teo-sql-connector = "0.0.58"
