@@ -509,6 +509,7 @@
 - Client: distinct in handler args **[DONE]**
 
 #### 0.0.59
+- Format source files **[DONE]**
 - Bug fixes
 - Server response: file **[IN PROGRESS]**
 - Server response: string in HTML format and other formats **[IN PROGRESS]**
@@ -519,7 +520,6 @@
 - TS Client: fixed include args with boolean inputs
 - Move jwt to middleware**[IN PROGRESS]**
 - Move identity to middleware**[IN PROGRESS]**
-- Bug fixes
 - Debug logging SQL
 - Migration dry run
 - Relation onUpdate
