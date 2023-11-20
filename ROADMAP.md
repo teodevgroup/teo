@@ -1,9 +1,9 @@
-# Feature Planning
+# Roadmap
 
-#### 0.0.20
+### 0.0.20
 - `on_output` pipeline is called in save function **[DONE]**
 
-#### 0.0.21
+### 0.0.21
 - `when_many_results` modifier **[DONE]**
 - Rename `Purpose` to `Intent` **[DONE]**
 - `when_create` and `when_update` supports upsert and outputs **[DONE]**
@@ -14,23 +14,23 @@
 - Fix validation pipeline is before relation manipulation bug **[DONE]**
 - Do not trigger connected object's `on_save` pipeline if it's not actually updated **[DONE]**
 
-#### 0.0.22
+### 0.0.22
 - Ellipsis modifier (especially useful on output) **[DONE]**
 - `get_object` modifier to reach the object itself **[DONE]**
 - Property **[DONE]**
 
-#### 0.0.23
+### 0.0.23
 - SQL: Migration: insert/delete columns for most simple cases **[DONE]**
 - SQL: Mutation: most simple inserts **[DONE]**
 - SQL: Query: most simple queries **[DONE]**
 
-#### 0.0.24
+### 0.0.24
 - SQL: Mutation: most simple updates **[DONE]**
 - SQL: Query: find many and find one **[DONE]**
 - SQL: Query: count **[DONE]**
 - SQL: Mutation: deletion **[DONE]**
 
-#### 0.0.25
+### 0.0.25
 - SQL: Sorting **[DONE]**
 - SQL: Paging **[DONE]**
 - SQL: Handle optional values **[DONE]**
@@ -39,17 +39,17 @@
 - SQL: Including with batch query caches for relations with join table **[DONE]**
 - SQL: Update object saving order for SQL **[DONE]**
 
-#### 0.0.26
+### 0.0.26
 - MongoDB: Remove async mutex introduced by SQL features **[DONE]**
 - Update key path APIs **[DONE]**
 - Fix token decoding and encoding after modifying `identifier` **[DONE]**
 - Make key path APIs better **[DONE]**
 - SQL: Correct result json key order **[DONE]**
 
-#### 0.0.27
+### 0.0.27
 - Updated with some new style key path error messages **[DONE]**
 
-#### 0.0.28
+### 0.0.28
 - Fix pipeline valid check **[DONE]**
 - Cached property: save into database **[DONE]**
 - Cached property: mark for save on dependency update **[DONE]**
@@ -60,7 +60,7 @@
 - Write and read rule **[DONE]**
 - Property setter error uses path **[DONE]**
 
-#### 0.0.29
+### 0.0.29
 - Remove primary name from MongoDB connector's `save` method **[DONE]**
 - For relationship with join table, link them after both objects are created **[DONE]**
 - Read rule: check in to_json **[DONE]**
@@ -70,33 +70,33 @@
 - New style key path error messages **[DONE]**
 - Object environment **[DONE]**
 
-#### 0.0.30
+### 0.0.30
 - Delete rules **[DONE]**
 - Fix HTTP API result format **[DONE]**
 
-#### 0.0.31
+### 0.0.31
 - Replace `serde_json` with our own `tson` **[DONE]**
 
-#### 0.0.32
+### 0.0.32
 - Handle manipulation uses single or many **[DONE]**
 - Bug fixes **[DONE]**
 - Remove position from env, it can be inferred from `intent` **[DONE]**
 
-#### 0.0.33
+### 0.0.33
 - MongoDB Aggregation: rewrite **[DONE]**
 - MongoDB update: column keys **[DONE]**
 - SQL: MySQL: Fix bool column is always altered bug **[DONE]**
 - SQL query process: rewrite **[DONE]**
 - SQL update: column keys **[DONE]**
 
-#### 0.0.34
+### 0.0.34
 - Bug fixes for MySQL CRUD without relations **[DONE]**
 
-#### 0.0.35
+### 0.0.35
 - Bug fixes for select and nested select **[DONE]**
 - SQL: join table relationship: cannot insert into object query map **[DONE]**
 
-#### 0.0.36
+### 0.0.36
 - SQL: Cursor **[DONE]**
 - SQL: Negative take **[DONE]**
 - SQL: Nested skip and take **[DONE]**
@@ -106,31 +106,31 @@
 - SQL: Relation where for without join table **[DONE]**
 - SQL: Relation where for with join table **[DONE]**
 
-#### 0.0.37
+### 0.0.37
 - SQL: Aggregation **[DONE]**
 - SQL: Group by without having **[DONE]**
 - SQL: Group by with having **[DONE]**
 
-#### 0.0.38
+### 0.0.38
 - MongoDB: Bug fixes for one-to-many relationship **[DONE]**
 
-#### 0.0.39
+### 0.0.39
 - Merge json pipeline into pipeline **[DONE]**
 - Fix decode credentials **[DONE]**
 
-#### 0.0.40
+### 0.0.40
 - PostgreSQL: CRUD and decoding **[DONE]**
 - Fix including has no result keys bug **[DONE]**
 - SQLite: auto create or delete database file **[DONE]**
 
-#### 0.0.41
+### 0.0.41
 - Rewrite app & graph **[DONE]**
 - Rewrite client generation **[DONE]**
 
-#### 0.0.42
+### 0.0.42
 - Schema parser **[DONE]**
 
-#### 0.0.43
+### 0.0.43
 - Message output for starting server **[DONE]**
 - Great README for VSCode teo plugin **[DONE]**
 - Better syntax highlighting for VSCode **[DONE]**
@@ -155,7 +155,7 @@
 - Fix Node.js cannot Ctrl+C bug **[DONE]**
 - TypeScript docs and index.d.ts for Node.js **[DONE]**
 
-#### 0.0.44
+### 0.0.44
 - Syntax highlighting for official website **[DONE]**
 - Syntax highlighting for IntelliJ IDEA **[DONE]**
 - `invalid` modifier **[DONE]**
@@ -180,7 +180,7 @@
 - Fix pipeline highlighting bug for VSCode **[DONE]**
 - Rename config keyword to server **[DONE]**
 
-#### 0.0.45
+### 0.0.45
 - More detailed API documentation **[DONE]**
 - `$print` pipeline item **[DONE]**
 - Support highlighting `import` and `let` for VSCode plugin **[DONE]**
@@ -218,7 +218,7 @@
 - Improved teon value eq to support across number types **[DONE]**
 - Always record previous id value and support modifying `@id` fields **[DONE]**
 
-#### 0.0.46
+### 0.0.46
 - Error in pipeline **[DONE]**
 - Rename pipeline modifier to pipeline item **[DONE]**
 - Error in pipeline program functions **[DONE]**
@@ -252,7 +252,7 @@
 - MongoDB bug: fix pipeline set value, int 64 and int 32 issue **[DONE]**
 - Fix soft delete bugs **[DONE]**
 
-#### 0.0.47
+### 0.0.47
 - Code comment parsing in schema parser **[DONE]**
 - Rust entities with documentation **[DONE]**
 - TypeScript client: package files **[DONE]**
@@ -268,7 +268,7 @@
 - Remove unused `copy` decorator **[DONE]**
 - Fixed nested create key bug **[DONE]**
 
-#### 0.0.48
+### 0.0.48
 - Fixed a pipeline parsing bug **[DONE]**
 - Fixed a bug which causes checker value being not passed into pipeline **[DONE]**
 - Added an HTTP error message when JWT token is not defined **[DONE]**
@@ -280,13 +280,13 @@
 - `$isA` throws correct error message if value is null **[DONE]**
 - Fixed upsert and update handler has wrong user mode bug **[DONE]**
 
-#### 0.0.49
+### 0.0.49
 - Fixed SQLite connector create a strange file when `:memory:` **[DONE]**
 - Fixed TypeScript client `$withToken` is not called correctly bug **[DONE]**
 - Fixed TypeScript client date parsing bug when encountered null **[DONE]**
 - Fixed `$ellipsis` argument passing bug **[DONE]**
 
-#### 0.0.50
+### 0.0.50
 - Replace buggy sqlx with quaint which powers Prisma **[DONE]**
 - SQLite: unique constraint error **[DONE]**
 - MySQL: auto insert `root:` to connection URL **[DONE]**
@@ -301,7 +301,7 @@
 - SQLite: fix in memory connection **[DONE]**
 - SQL migration: add column: default value **[DONE]**
 
-#### 0.0.51
+### 0.0.51
 - SQL migration: when adding required column without `default: ..` or `drop: true`, throws **[DONE]**
 - SQL migration: drop table if needed when adding required column **[DONE]**
 - `$queryRaw` item for SQL **[DONE]**
@@ -317,7 +317,7 @@
 - PostgreSQL: fix alter column with multiple clauses **[DONE]**
 - Fix query bug for date, datetime and decimal **[DONE]**
 
-#### 0.0.52
+### 0.0.52
 - Fix slug and cuid format **[DONE]**
 - Add cuid2 modifier **[DONE]**
 - SQL migration: Separate index and columns **[DONE]**
@@ -337,10 +337,10 @@
 - Fix PostgreSQL drop index **[DONE]**
 - Generate decimal in rust entities **[DONE]**
 
-#### 0.0.53
+### 0.0.53
 - Fix Node.js run loop bug **[DONE]**
 
-#### 0.0.54
+### 0.0.54
 - Setup integration tests: test lib **[DONE]**
 - Setup integration tests: docker **[DONE]**
 - Fix rust command line arguments **[DONE]**
@@ -353,7 +353,7 @@
 - Fixed SQLite migration primary key bug **[DONE]**
 - Fixed PostgreSQL migration primary key bug **[DONE]**
 
-#### 0.0.55
+### 0.0.55
 - Remove URL segment name **[DONE]**
 - Refactor the generator code to make it production ready **[DONE]**
 - Swift client **[DONE]**
@@ -401,7 +401,7 @@
 - Unit test: relations for SQLite connector **[DONE]**
 - Fix: SQL encode escape bug for SQLite **[DONE]**
 
-#### 0.0.56
+### 0.0.56
 - Find unique and find first returns null instead of `ObjectNotFound` error **[DONE]**
 - Fix: on save now displays correct validate error message **[DONE]**
 - Fix: compare should not be called when field is not `recordPrevious` **[DONE]**
@@ -443,7 +443,7 @@
 - Cached properties can be indexed **[Done]**
 - Better object inspection **[Done]**
 
-#### 0.0.57
+### 0.0.57
 - Custom routes: action **[Done]**
 - Custom routes: middleware **[Done]**
 - Fixed action `program code` is recognized as any action bug **[Done]**
@@ -471,7 +471,7 @@
 - Remove block decorators **[DONE]**
 - Added `toDate` item **[DONE]**
 
-#### 0.0.58
+### 0.0.58
 - Fixed duplicated import bug **[DONE]**
 - Namespaces **[DONE]**
 - Remove `action` from request URLs **[DONE]**
@@ -508,8 +508,10 @@
 - Input omissible and output omissible for generated clients **[DONE]**
 - Client: distinct in handler args **[DONE]**
 
-#### 0.0.59
+### 0.0.59
 - Format source files **[DONE]**
+- Dictionary uses javaScript object syntax **[DONE]**
+- Alter config block with dictionary literal syntax **[DONE]**
 - Bug fixes
 - Server response: file **[IN PROGRESS]**
 - Server response: string in HTML format and other formats **[IN PROGRESS]**
@@ -526,19 +528,19 @@
 - Relation onDelete
 - MongoDB: connector is not using table name
 
-#### 0.1.0
+### 0.1.0
 - Bug fixes
 - Update documentations
 - Update design of website
 
-#### 0.2.0
+### 0.2.0
 - Support first version of Teo Studio
 - Swift client
 - Kotlin client
 - C# client
 - Dart client
 
-#### 0.3.0
+### 0.3.0
 - MongoDB transaction
 - Json type
 - Rewrite parser error messages with code
@@ -549,7 +551,7 @@
 - enum extends enum
 - Default argument for argument list and config declaration
 
-#### 0.4.0
+### 0.4.0
 - Recreate soft delete with custom middleware
 - PostgreSQL: Enum types
 - Separate documentation site
@@ -563,11 +565,11 @@
 - MongoDB: aggregate and group by for string and dates
 - Correct count with cursor
 
-#### 0.5.0
+### 0.5.0
 - Bug fixes
 - Full database type mapping
 
-#### 0.6.0
+### 0.6.0
 - Rewrite Node.js server
 - Node.js bindings: error handling
 - Node.js object printing
@@ -575,14 +577,14 @@
 - Node.js client use dedicated `Date` class instead of builtin `Date`
 - Cross language error handling for node.js
 
-#### 0.7.0
+### 0.7.0
 - Packages
 
-#### 0.8.0
+### 0.8.0
 - Support MSSQL
 
-#### 1.0.0
+### 1.0.0
 - First stable major version
 
-#### 2.0.0
+### 2.0.0
 - Python server
