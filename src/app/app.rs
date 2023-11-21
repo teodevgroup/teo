@@ -28,7 +28,7 @@ impl App {
             Ok(current_dir) => current_dir,
             Err(e) => Err(Error::new(format!("{}", e)))?,
         };
-        let main_schema_file = find_main_schema_file(cli.schema.as_ref(), &current_dir)?;
+        let main_schema_file = find_main_schema_file(cli.schema.as_ref().map(AsRef::as_ref), &current_dir)?;
         let (schema, diagnostics) = schema_parse(main_schema_file.as_path().to_str().unwrap(), None, None);
         print_diagnostics(&diagnostics, true);
         if diagnostics.has_errors() {
