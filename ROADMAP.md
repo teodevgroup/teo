@@ -512,14 +512,22 @@
 - Format source files **[DONE]**
 - Dictionary uses javaScript object syntax **[DONE]**
 - Alter config block with dictionary literal syntax **[DONE]**
-- Bug fixes
+- Bug fixes **[IN PROGRESS]**
 - Server response: file **[IN PROGRESS]**
 - Server response: string in HTML format and other formats **[IN PROGRESS]**
 - Rewrite rust generators with namespaces and interfaces **[IN PROGRESS]**
+
+### 0.0.60
+- Add back model action transformers
+- Add back extractors for rust entities
 - Rewrite TS client generators with namespaces and interfaces
 - C# client: capitalized names and names with underscore
 - TypeScript client: correct return types for `aggregate` and `groupBy`
 - TS Client: fixed include args with boolean inputs
+- Swift client
+- Kotlin client
+- C# client
+- Dart client
 - Move jwt to middleware**[IN PROGRESS]**
 - Move identity to middleware**[IN PROGRESS]**
 - Debug logging SQL
@@ -527,28 +535,30 @@
 - Relation onUpdate
 - Relation onDelete
 - MongoDB: connector is not using table name
-
-### 0.1.0
 - Bug fixes
 - Update documentations
 - Update design of website
+- Support first version of Teo Studio
+
+### 0.1.0
+- Rewrite Node.js server
+- Node.js bindings: error handling
+- Node.js object printing
+- Node.js bindings: date only type
+- Node.js client use dedicated `Date` class instead of builtin `Date`
+- Cross language error handling for node.js
 
 ### 0.2.0
-- Support first version of Teo Studio
-- Swift client
-- Kotlin client
-- C# client
-- Dart client
-
-### 0.3.0
-- MongoDB transaction
-- Json type
-- Rewrite parser error messages with code
-- Custom SQL query scopes
-- Custom MongoDB query scopes
 - Model fragments
 - model extends model
 - enum extends enum
+- Json type
+
+### 0.3.0
+- MongoDB transaction
+- Rewrite parser error messages with code
+- Custom SQL query scopes
+- Custom MongoDB query scopes
 - Default argument for argument list and config declaration
 
 ### 0.4.0
@@ -570,21 +580,11 @@
 - Full database type mapping
 
 ### 0.6.0
-- Rewrite Node.js server
-- Node.js bindings: error handling
-- Node.js object printing
-- Node.js bindings: date only type
-- Node.js client use dedicated `Date` class instead of builtin `Date`
-- Cross language error handling for node.js
-
-### 0.7.0
 - Packages
-
-### 0.8.0
-- Support MSSQL
 
 ### 1.0.0
 - First stable major version
 
 ### 2.0.0
 - Python server
+- Support MSSQL
