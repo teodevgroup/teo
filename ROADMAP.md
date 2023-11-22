@@ -516,6 +516,7 @@
 - Server response: file **[IN PROGRESS]**
 - Server response: string in HTML format and other formats **[IN PROGRESS]**
 - Rewrite rust generators with namespaces and interfaces **[IN PROGRESS]**
+- Add back request logs
 
 ### 0.0.60
 - Add back model action transformers
@@ -528,8 +529,6 @@
 - Kotlin client
 - C# client
 - Dart client
-- Move jwt to middleware**[IN PROGRESS]**
-- Move identity to middleware**[IN PROGRESS]**
 - Debug logging SQL
 - Migration dry run
 - Relation onUpdate
@@ -541,6 +540,10 @@
 - Support first version of Teo Studio
 
 ### 0.1.0
+- Move jwt to middleware **[IN PROGRESS]**
+- Move identity to middleware **[IN PROGRESS]**
+
+### 0.2.0
 - Rewrite Node.js server
 - Node.js bindings: error handling
 - Node.js object printing
@@ -548,20 +551,20 @@
 - Node.js client use dedicated `Date` class instead of builtin `Date`
 - Cross language error handling for node.js
 
-### 0.2.0
+### 0.3.0
 - Model fragments
 - model extends model
 - enum extends enum
 - Json type
 
-### 0.3.0
+### 0.4.0
 - MongoDB transaction
 - Rewrite parser error messages with code
 - Custom SQL query scopes
 - Custom MongoDB query scopes
 - Default argument for argument list and config declaration
 
-### 0.4.0
+### 0.5.0
 - Recreate soft delete with custom middleware
 - PostgreSQL: Enum types
 - Separate documentation site
@@ -575,11 +578,11 @@
 - MongoDB: aggregate and group by for string and dates
 - Correct count with cursor
 
-### 0.5.0
+### 0.6.0
 - Bug fixes
 - Full database type mapping
 
-### 0.6.0
+### 0.7.0
 - Packages
 
 ### 1.0.0
