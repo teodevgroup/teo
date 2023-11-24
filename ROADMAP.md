@@ -512,6 +512,10 @@
 - Format source files **[DONE]**
 - Dictionary uses javaScript object syntax **[DONE]**
 - Alter config block with dictionary literal syntax **[DONE]**
+- Declare enum in type **[DONE]**
+- Declare object in type **[DONE]**
+- Interface extending shapes **[IN PROGRESS]**
+- Type coercing **[DONE]**
 - Bug fixes **[IN PROGRESS]**
 - Server response: file **[IN PROGRESS]**
 - Server response: string in HTML format and other formats **[IN PROGRESS]**
