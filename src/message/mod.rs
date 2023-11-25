@@ -25,7 +25,7 @@ pub fn request_message(
     let code_string = format_code_into_string(code);
     let ms = time_elapsed.as_millis();
     let ms_str = format!("{ms}ms").normal().clear();
-    println!("{} {}: {} => {}{} {} {}", timestamp(), method.bright_blue().bold(), path.bright_yellow(), handler_str.magenta(), action.purple(), code_string, ms_str)
+    println!("{} {} {} => {}{} {} {}", timestamp(), method.bright_blue().bold(), path.bright_yellow(), handler_str.magenta(), action.purple(), code_string, ms_str)
 }
 
 pub fn unhandled_request_message(
@@ -37,7 +37,7 @@ pub fn unhandled_request_message(
     let code_string = format_code_into_string(code);
     let ms = time_elapsed.as_millis();
     let ms_str = format!("{ms}ms").normal().clear();
-    println!("{} {}: {} {} {}", timestamp(), method.bright_yellow(), path.yellow(), code_string, ms_str)
+    println!("{} {} {} {} {}", timestamp(), method.bright_blue().bold(), path.bright_yellow(), code_string, ms_str)
 }
 
 fn format_code_into_string(code: u16) -> ColoredString {
