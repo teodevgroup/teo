@@ -29,7 +29,7 @@ use crate::cli::entrance::Entrance;
 use crate::cli::runtime_version::RuntimeVersion;
 use crate::server::parse::{parse_form_body, parse_json_body};
 use teo_runtime::handler::input::{validate_and_transform_json_input_for_handler, validate_and_transform_json_input_for_builtin_action};
-use crate::message::{request_message, unhandled_request_message};
+use crate::message::{info_message, request_message, unhandled_request_message};
 use crate::server::error::WrapError;
 use crate::server::handler_found_info::HandlerFoundInfo;
 use crate::server::request::RequestImpl;
@@ -242,17 +242,12 @@ pub(crate) async fn serve(
 async fn server_start_message(port: u16, runtime_version: &'static RuntimeVersion, entrance: &'static Entrance, silent: bool) -> Result<()> {
     if silent { return Ok(()) }
     // Introducing
-    let now: DateTime<Local> = Local::now();
-    let now_formatted = format!("{now}").dimmed();
     let teo_version = env!("CARGO_PKG_VERSION");
     let teo = format!("Teo {}", teo_version);
-    println!("{} {} ({}, {})", now_formatted, teo, runtime_version.to_string(), entrance.to_str());
+    info_message(format!("{} ({}, {})", teo, runtime_version.to_string(), entrance.to_str()));
     // Listening
-    let now: DateTime<Local> = Local::now();
-    let now_formatted = format!("{now}").dimmed();
     let port_str = format!("{port}").bold();
-    let text = "Listening";
-    println!("{} {} on port {}", now_formatted, text, port_str);
+    info_message(format!("listening on port {}", port_str));
     Ok(())
 }
 
