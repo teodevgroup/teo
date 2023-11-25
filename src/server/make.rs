@@ -1,4 +1,7 @@
 use std::sync::Arc;
+use std::time::SystemTime;
+use actix_web::dev::Service;
+use futures_util::FutureExt;
 use chrono::{DateTime, Local};
 use colored::Colorize;
 use futures_util::future;
@@ -6,7 +9,7 @@ use teo_result::{Error, Result};
 use teo_runtime::config::server::Server;
 use teo_runtime::namespace::Namespace;
 use actix_http::body::MessageBody;
-use actix_http::{Method as HttpMethod};
+use actix_http::{HttpMessage, Method as HttpMethod};
 use actix_web::{App, FromRequest, HttpRequest, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::DefaultHeaders;
@@ -26,7 +29,9 @@ use crate::cli::entrance::Entrance;
 use crate::cli::runtime_version::RuntimeVersion;
 use crate::server::parse::{parse_form_body, parse_json_body};
 use teo_runtime::handler::input::{validate_and_transform_json_input_for_handler, validate_and_transform_json_input_for_builtin_action};
+use crate::message::{request_message, unhandled_request_message};
 use crate::server::error::WrapError;
+use crate::server::handler_found_info::HandlerFoundInfo;
 use crate::server::request::RequestImpl;
 use crate::server::responder::IntoHttpResponse;
 
@@ -46,8 +51,28 @@ fn make_server_app(
             .add(("Access-Control-Allow-Methods", "OPTIONS, POST, GET"))
             .add(("Access-Control-Allow-Headers", "*"))
             .add(("Access-Control-Max-Age", "86400")))
-        .default_service(web::route().to(move |http_request: HttpRequest, mut payload: web::Payload| async move {
-
+        .wrap_fn(|req, srv| {
+            let start = SystemTime::now();
+            let fut = srv.call(req);
+            async move {
+                let res = fut.await?;
+                {
+                    let binding = res.request().extensions();
+                    let handler_found_info = binding.get::<HandlerFoundInfo>().clone();
+                    let time_elapsed = SystemTime::now().duration_since(start).unwrap();
+                    if let Some(handler_found_info) = handler_found_info {
+                        request_message(time_elapsed, &handler_found_info.handler_group_path, handler_found_info.handler_name.as_str(), res.response().status().as_u16());
+                    } else {
+                        let path = res.request().path();
+                        let method = res.request().method().as_str();
+                        unhandled_request_message(time_elapsed, method, path, res.response().status().as_u16());
+                    }
+                }
+                Ok(res)
+            }
+        })
+        .default_service(web::route().to(move |http_request: HttpRequest, payload: web::Payload| async move {
+            http_request.extensions_mut().insert(5usize);
             // validate path
             let path = main_namespace.handler_map.remove_path_prefix(http_request.path(), conf.path_prefix.as_ref().map(|s| s.as_str()));
             let method = method_from(http_request.method())?;
@@ -118,7 +143,7 @@ fn make_server_app(
                 HandlerInputFormat::Json => parse_json_body(payload).await?,
                 HandlerInputFormat::Form => parse_form_body(http_request.clone(), payload).await?,
             };
-            match handler_resolved {
+            return match handler_resolved {
                 HandlerResolved::Builtin(model, action) => {
                     let body = validate_and_transform_json_input_for_builtin_action(model, action, &json_body, main_namespace)?;
                     let conn_ctx = connection::Ctx::from_namespace(main_namespace);
@@ -129,7 +154,7 @@ fn make_server_app(
                         transaction_ctx,
                         match_result.clone(),
                     );
-                    return match match_result.handler_name() {
+                    match match_result.handler_name() {
                         "findMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
                             find_many(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
@@ -176,7 +201,7 @@ fn make_server_app(
                             group_by(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
                         _ => Err(teo_runtime::path::Error::not_found_message_only())?,
-                    };
+                    }
                 },
                 HandlerResolved::Custom(handler) => {
                     let body = validate_and_transform_json_input_for_handler(handler, &json_body, main_namespace)?;
@@ -188,7 +213,7 @@ fn make_server_app(
                         transaction_ctx,
                         match_result
                     );
-                    return Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, handler.call).await?.into_http_response(http_request.clone()));
+                    Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, handler.call).await?.into_http_response(http_request.clone()))
                 }
             }
         }));

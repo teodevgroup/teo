@@ -1,4 +1,3 @@
-pub(crate) mod response;
 pub(crate) mod test_context;
 
 use std::env;
@@ -71,39 +70,6 @@ fn log_file_req_and_return_response(start: SystemTime, model: &str, action: &str
     let code = http_res.status().as_u16();
     log_request(start, action, model, code);
     http_res
-}
-
-fn log_unhandled(start: SystemTime, method: &str, path: &str, code: u16) {
-    let now = SystemTime::now();
-    let local: DateTime<Local> = Local::now();
-    let code_string = match code {
-        0..=199 => code.to_string().purple().bold(),
-        200..=299 => code.to_string().green().bold(),
-        300..=399 => code.to_string().yellow().bold(),
-        _ => code.to_string().red().bold(),
-    };
-    let elapsed = now.duration_since(start).unwrap();
-    let ms = elapsed.as_millis();
-    let ms_str = format!("{ms}ms").dimmed();
-    let local_formatted = format!("{local}").dimmed();
-    let unhandled = "Unhandled".red();
-    println!("{} {} {} on {} - {} {}", local_formatted, unhandled, method.bold(), path, code_string, ms_str);
-}
-
-fn log_request(start: SystemTime, action: &str, model: &str, code: u16) {
-    let now = SystemTime::now();
-    let local: DateTime<Local> = Local::now();
-    let code_string = match code {
-        0..=199 => code.to_string().purple().bold(),
-        200..=299 => code.to_string().green().bold(),
-        300..=399 => code.to_string().yellow().bold(),
-        _ => code.to_string().red().bold(),
-    };
-    let elapsed = now.duration_since(start).unwrap();
-    let ms = elapsed.as_millis();
-    let ms_str = format!("{ms}ms").normal().clear();
-    let local_formatted = format!("{local}").dimmed();
-    println!("{} {} on {} - {} {}", local_formatted, action.bold(), model, code_string, ms_str.dimmed());
 }
 
 async fn get_identity(r: &HttpRequest, graph: &'static Graph, conf: &ServerConf, connection: Arc<dyn Connection>, req: Req) -> Result<Option<Object>> {
