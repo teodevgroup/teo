@@ -15,6 +15,8 @@ pub fn info_message(content: impl AsRef<str>) {
 
 pub fn request_message(
     time_elapsed: Duration,
+    method: &str,
+    path: &str,
     handler_group_path: &Vec<String>,
     action: &str,
     code: u16,
@@ -23,7 +25,7 @@ pub fn request_message(
     let code_string = format_code_into_string(code);
     let ms = time_elapsed.as_millis();
     let ms_str = format!("{ms}ms").normal().clear();
-    println!("{} {}.{} {} {}", timestamp(), handler_str.bright_yellow(), action.yellow(), code_string, ms_str)
+    println!("{} {}: {} => {}{} {} {}", timestamp(), method.bright_blue().bold(), path.bright_yellow(), handler_str.magenta(), action.purple(), code_string, ms_str)
 }
 
 pub fn unhandled_request_message(

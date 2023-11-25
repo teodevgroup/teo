@@ -2,7 +2,6 @@ use std::sync::Arc;
 use std::time::SystemTime;
 use actix_web::dev::Service;
 use futures_util::FutureExt;
-use chrono::{DateTime, Local};
 use colored::Colorize;
 use futures_util::future;
 use teo_result::{Error, Result};
@@ -29,9 +28,9 @@ use crate::cli::entrance::Entrance;
 use crate::cli::runtime_version::RuntimeVersion;
 use crate::server::parse::{parse_form_body, parse_json_body};
 use teo_runtime::handler::input::{validate_and_transform_json_input_for_handler, validate_and_transform_json_input_for_builtin_action};
+use teo_runtime::handler::r#match::HandlerMatch;
 use crate::message::{info_message, request_message, unhandled_request_message};
 use crate::server::error::WrapError;
-use crate::server::handler_found_info::HandlerFoundInfo;
 use crate::server::request::RequestImpl;
 use crate::server::responder::IntoHttpResponse;
 
@@ -58,13 +57,13 @@ fn make_server_app(
                 let res = fut.await?;
                 {
                     let binding = res.request().extensions();
-                    let handler_found_info = binding.get::<HandlerFoundInfo>().clone();
+                    let handler_found_info = binding.get::<HandlerMatch>().clone();
                     let time_elapsed = SystemTime::now().duration_since(start).unwrap();
+                    let path = res.request().path();
+                    let method = res.request().method().as_str();
                     if let Some(handler_found_info) = handler_found_info {
-                        request_message(time_elapsed, &handler_found_info.handler_group_path, handler_found_info.handler_name.as_str(), res.response().status().as_u16());
+                        request_message(time_elapsed, method, path, &handler_found_info.path, handler_found_info.name.as_str(), res.response().status().as_u16());
                     } else {
-                        let path = res.request().path();
-                        let method = res.request().method().as_str();
                         unhandled_request_message(time_elapsed, method, path, res.response().status().as_u16());
                     }
                 }
@@ -131,6 +130,7 @@ fn make_server_app(
                     Ok(Response::empty())
                 }).await?.into_http_response(http_request.clone()));
             }
+            http_request.extensions_mut().insert(match_result.clone());
             // parse body
             let mut format = HandlerInputFormat::Json;
             match handler_resolved {
