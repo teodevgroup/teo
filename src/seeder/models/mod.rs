@@ -1,2 +1,2 @@
-pub mod group_record;
-pub mod group_relation;
+pub mod data_set_record;
+pub mod data_set_relation;

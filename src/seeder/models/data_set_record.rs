@@ -6,39 +6,39 @@ use teo_runtime::model;
 use crate::prelude::{Value, Result};
 
 /// Group record
-pub struct GroupRecord {
+pub struct DataSetRecord {
     pub(super) inner: model::Object,
 }
 
-impl PartialEq for GroupRecord {
+impl PartialEq for DataSetRecord {
     fn eq(&self, other: &Self) -> bool {
         self.inner.eq(&other.inner)
     }
 }
 
-impl GroupRecord {
+impl DataSetRecord {
 
     /// Find many group records.
-    pub async fn find_many(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Vec<GroupRecord>> {
-        let model = ctx.namespace().model_at_path(&vec!["std", "GroupRecord"]).unwrap();
+    pub async fn find_many(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Vec<DataSetRecord>> {
+        let model = ctx.namespace().model_at_path(&vec!["std", "DataSetRecord"]).unwrap();
         Ok(ctx.find_many(model, query.borrow(), None, path![]).await?)
     }
 
     /// Find a unique group record.
-    pub async fn find_unique(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Option<GroupRecord>> {
-        let model = ctx.namespace().model_at_path(&vec!["std", "GroupRecord"]).unwrap();
+    pub async fn find_unique(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Option<DataSetRecord>> {
+        let model = ctx.namespace().model_at_path(&vec!["std", "DataSetRecord"]).unwrap();
         Ok(ctx.find_unique(model, query.borrow(), None, path![]).await?)
     }
 
     /// Find a non unique group record.
-    pub async fn find_first(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Option<GroupRecord>> {
-        let model = ctx.namespace().model_at_path(&vec!["std", "GroupRecord"]).unwrap();
+    pub async fn find_first(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Option<DataSetRecord>> {
+        let model = ctx.namespace().model_at_path(&vec!["std", "DataSetRecord"]).unwrap();
         Ok(ctx.find_first(model, query.borrow(), None, path![]).await?)
     }
 
     /// Create a new group record.
     pub async fn new(values: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Self> {
-        let model = ctx.namespace().model_at_path(&vec!["std", "GroupRecord"]).unwrap();
+        let model = ctx.namespace().model_at_path(&vec!["std", "DataSetRecord"]).unwrap();
         Ok(ctx.create_object(model, values.borrow(), None).await?.into())
     }
 
@@ -122,25 +122,25 @@ impl GroupRecord {
     }
 }
 
-impl Into<model::Object> for GroupRecord {
+impl Into<model::Object> for DataSetRecord {
     fn into(self) -> model::Object {
         self.inner.clone()
     }
 }
 
-impl From<model::Object> for GroupRecord {
+impl From<model::Object> for DataSetRecord {
     fn from(value: model::Object) -> Self {
         Self { inner: value }
     }
 }
 
-impl Debug for GroupRecord {
+impl Debug for DataSetRecord {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         Debug::fmt(&self.inner, f)
     }
 }
 
-impl Display for GroupRecord {
+impl Display for DataSetRecord {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         Display::fmt(&self.inner, f)
     }

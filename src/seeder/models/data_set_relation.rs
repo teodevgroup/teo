@@ -7,33 +7,33 @@ use crate::prelude::{Value, Result};
 
 /// Group relation
 #[derive(Clone, PartialEq)]
-pub struct GroupRelation {
+pub struct DataSetRelation {
     pub(super) inner: model::Object,
 }
 
-impl GroupRelation {
+impl DataSetRelation {
 
     /// Find many group records.
-    pub async fn find_many(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Vec<GroupRelation>> {
-        let model = ctx.namespace().model_at_path(&vec!["std", "GroupRelation"]).unwrap();
+    pub async fn find_many(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Vec<DataSetRelation>> {
+        let model = ctx.namespace().model_at_path(&vec!["std", "DataSetRelation"]).unwrap();
         Ok(ctx.find_many(model, query.borrow(), None, path![]).await?)
     }
 
     /// Find a unique group record.
-    pub async fn find_unique(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Option<GroupRelation>> {
-        let model = ctx.namespace().model_at_path(&vec!["std", "GroupRelation"]).unwrap();
+    pub async fn find_unique(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Option<DataSetRelation>> {
+        let model = ctx.namespace().model_at_path(&vec!["std", "DataSetRelation"]).unwrap();
         Ok(ctx.find_unique(model, query.borrow(), None, path![]).await?)
     }
 
     /// Find a non unique group record.
-    pub async fn find_first(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Option<GroupRelation>> {
-        let model = ctx.namespace().model_at_path(&vec!["std", "GroupRelation"]).unwrap();
+    pub async fn find_first(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Option<DataSetRelation>> {
+        let model = ctx.namespace().model_at_path(&vec!["std", "DataSetRelation"]).unwrap();
         Ok(ctx.find_first(model, query.borrow(), None, path![]).await?)
     }
 
     /// Create a new group relation.
     pub async fn new(values: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Self> {
-        let model = ctx.namespace().model_at_path(&vec!["std", "GroupRelation"]).unwrap();
+        let model = ctx.namespace().model_at_path(&vec!["std", "DataSetRelation"]).unwrap();
         Ok(ctx.create_object(model, values.borrow(), None).await?.into())
     }
 
@@ -142,25 +142,25 @@ impl GroupRelation {
     }
 }
 
-impl Into<model::Object> for GroupRelation {
+impl Into<model::Object> for DataSetRelation {
     fn into(self) -> model::Object {
         self.inner.clone()
     }
 }
 
-impl From<model::Object> for GroupRelation {
+impl From<model::Object> for DataSetRelation {
     fn from(value: model::Object) -> Self {
         Self { inner: value }
     }
 }
 
-impl Debug for GroupRelation {
+impl Debug for DataSetRelation {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         Debug::fmt(&self.inner, f)
     }
 }
 
-impl Display for GroupRelation {
+impl Display for DataSetRelation {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         Display::fmt(&self.inner, f)
     }

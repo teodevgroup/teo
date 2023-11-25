@@ -5,8 +5,8 @@ use key_path::path;
 use serde_json::json;
 use teo_parser::r#type::Type;
 use crate::prelude::{Value};
-use crate::seeder::models::group_record::GroupRecord;
-use crate::seeder::models::group_relation::GroupRelation;
+use crate::seeder::models::data_set_record::DataSetRecord;
+use crate::seeder::models::data_set_relation::DataSetRelation;
 use teo_teon::teon;
 use crate::cli::command::SeedCommandAction;
 use teo_result::Result;
@@ -39,7 +39,7 @@ pub(crate) async fn seed_dataset(dataset: &DataSet, ctx: transaction::Ctx) {
     for group in &ordered_groups {
         let group_model = ctx.namespace().model_at_path(&group.model_path()).unwrap();
         let mut added_names = vec![];
-        let seed_records = GroupRecord::find_many(teon!({
+        let seed_records = DataSetRecord::find_many(teon!({
             "where": {
                 "group": group.name.join(".").as_str(),
                 "dataset": dataset.name.join(".").as_str(),
@@ -68,7 +68,7 @@ pub(crate) async fn seed_dataset(dataset: &DataSet, ctx: transaction::Ctx) {
 }
 
 async fn remove_records_for_user_removed_groups(dataset: &DataSet, ordered_groups: &Vec<&Group>, ctx: transaction::Ctx) {
-    let user_removed_seed_records_for_group = GroupRecord::find_many(teon!({
+    let user_removed_seed_records_for_group = DataSetRecord::find_many(teon!({
         "where": {
             "dataset": dataset.name.join(".").as_str(),
             "group": {
@@ -91,7 +91,7 @@ pub(crate) async fn reseed_dataset(dataset: &DataSet, ctx: transaction::Ctx) {
     let ordered_groups = ordered_group(&dataset.groups, ctx.clone());
     for group in &ordered_groups {
         let group_model = ctx.namespace().model_at_path(&group.model_path()).unwrap();
-        let seed_records = GroupRecord::find_many(teon!({
+        let seed_records = DataSetRecord::find_many(teon!({
             "where": {
                 "group": group.name.join(".").as_str(),
                 "dataset": dataset.name.join(".").as_str(),
@@ -124,7 +124,7 @@ pub(crate) async fn unseed_dataset(dataset: &DataSet, ctx: transaction::Ctx) {
     let mut ordered_groups = ordered_group(&dataset.groups, ctx.clone());
     ordered_groups.reverse();
     for group in ordered_groups {
-        let seed_records = GroupRecord::find_many(teon!({
+        let seed_records = DataSetRecord::find_many(teon!({
             "where": {
                 "group": group.name.join(".").as_str(),
                 "dataset": dataset.name.join(".").as_str(),
@@ -143,7 +143,7 @@ async fn sync_relations(dataset: &DataSet, ordered_groups: &Vec<&Group>, ctx: tr
         let group_model = ctx.namespace().model_at_path(&group.model_path()).unwrap();
         let should_process = group_model.relations().iter().find(|r| !(r.has_foreign_key && r.is_required())).is_some();
         if !should_process { continue }
-        let seed_records = GroupRecord::find_many(teon!({
+        let seed_records = DataSetRecord::find_many(teon!({
             "where": {
                 "group": group.name.join(".").as_str(),
                 "dataset": dataset.name.join(".").as_str(),
@@ -156,7 +156,7 @@ async fn sync_relations(dataset: &DataSet, ordered_groups: &Vec<&Group>, ctx: tr
             }), None, path![]).await.unwrap().unwrap();
             for relation in group_model.relations() {
                 // find relations
-                let relation_records = GroupRelation::find_many(teon!({
+                let relation_records = DataSetRelation::find_many(teon!({
                     "where": {
                         "OR": [
                             {
@@ -176,7 +176,7 @@ async fn sync_relations(dataset: &DataSet, ordered_groups: &Vec<&Group>, ctx: tr
                         ]
                     }
                 }), ctx.clone()).await.unwrap();
-                let mut relation_record_refs: Vec<&GroupRelation> = relation_records.iter().collect();
+                let mut relation_record_refs: Vec<&DataSetRelation> = relation_records.iter().collect();
                 if let Some(reference) = record.value.as_dictionary().unwrap().get(relation.name()) {
                     if let Some(references) = reference.as_array() {
                         for reference in references {
@@ -201,7 +201,7 @@ async fn setup_new_relations(dataset: &DataSet, ordered_groups: &Vec<&Group>, li
         let group_model = ctx.namespace().model_at_path(&group.model_path()).unwrap();
         let should_process = group_model.relations().iter().find(|r| !(r.has_foreign_key && r.is_required())).is_some();
         if !should_process { continue }
-        let seed_records = GroupRecord::find_many(teon!({
+        let seed_records = DataSetRecord::find_many(teon!({
             "where": {
                 "group": group.name.join(".").as_str(),
                 "dataset": dataset.name.join(".").as_str(),
@@ -228,7 +228,7 @@ async fn setup_new_relations(dataset: &DataSet, ordered_groups: &Vec<&Group>, li
     }
 }
 
-async fn sync_relation_internal<'a>(record: &Record, reference: &'a Value, relation: &'static Relation, dataset: &DataSet, object: &'a Object, relation_records: &'a Vec<GroupRelation>, relation_record_refs: &mut Vec<&'a GroupRelation>, ctx: transaction::Ctx) {
+async fn sync_relation_internal<'a>(record: &Record, reference: &'a Value, relation: &'static Relation, dataset: &DataSet, object: &'a Object, relation_records: &'a Vec<DataSetRelation>, relation_record_refs: &mut Vec<&'a DataSetRelation>, ctx: transaction::Ctx) {
     let that_name = reference.as_enum_variant().unwrap().value.clone();
     if let Some(existing_relation_record) = relation_records.iter().find(|r| {
         (&r.name_a() == record.name.as_str() && r.name_b() == that_name) ||
@@ -242,7 +242,7 @@ async fn sync_relation_internal<'a>(record: &Record, reference: &'a Value, relat
 
 async fn setup_relations_internal<'a>(record: &Record, reference: &'a Value, relation: &'static Relation, dataset: &DataSet, object: &'a Object, ctx: transaction::Ctx) {
     let that_name = reference.as_enum_variant().unwrap().value.clone();
-    let that_seed_record = GroupRecord::find_first(teon!({
+    let that_seed_record = DataSetRecord::find_first(teon!({
         "where": {
             "group": relation.model_path().join("."),
             "dataset": dataset.name.join(".").as_str(),
@@ -283,7 +283,7 @@ async fn setup_relations_internal<'a>(record: &Record, reference: &'a Value, rel
         }
     }
     // update relation record
-    let exist_relation_record = GroupRelation::find_first(teon!({
+    let exist_relation_record = DataSetRelation::find_first(teon!({
         "where": {
             "OR": [
                 {
@@ -308,7 +308,7 @@ async fn setup_relations_internal<'a>(record: &Record, reference: &'a Value, rel
     if exist_relation_record.is_err() {
         // not exist, create
         let that_relation = ctx.namespace().opposite_relation(relation).1;
-        let new_relation_record = GroupRelation::new(teon!({
+        let new_relation_record = DataSetRelation::new(teon!({
             "dataset": dataset.name.join(".").as_str(),
             "groupA": object.model().name(),
             "relationA": relation.name(),
@@ -322,7 +322,7 @@ async fn setup_relations_internal<'a>(record: &Record, reference: &'a Value, rel
 }
 
 /// This perform, deletes an object from the databse.
-async fn perform_remove_from_database<'a>(dataset: &DataSet, record: &'a GroupRecord, group_model: &'static Model, ctx: transaction::Ctx) {
+async fn perform_remove_from_database<'a>(dataset: &DataSet, record: &'a DataSetRecord, group_model: &'static Model, ctx: transaction::Ctx) {
     let json_identifier = record.record();
     let exist: Option<Object> = ctx.find_unique(group_model, &teon!({
         "where": record_json_string_to_where_unique(json_identifier, group_model)
@@ -334,7 +334,7 @@ async fn perform_remove_from_database<'a>(dataset: &DataSet, record: &'a GroupRe
     }
     // First, cut relations
     let exist = exist.unwrap();
-    let relations = GroupRelation::find_many(teon!({
+    let relations = DataSetRelation::find_many(teon!({
         "where": {
             "OR": [
                 {
@@ -358,7 +358,7 @@ async fn perform_remove_from_database<'a>(dataset: &DataSet, record: &'a GroupRe
     record.delete().await.unwrap();
 }
 
-async fn cut_relation<'a>(relation: &'a GroupRelation, record: &'a GroupRecord, group_model: &'static Model, dataset: &DataSet, exist: &'a Object, ctx: transaction::Ctx) {
+async fn cut_relation<'a>(relation: &'a DataSetRelation, record: &'a DataSetRecord, group_model: &'static Model, dataset: &DataSet, exist: &'a Object, ctx: transaction::Ctx) {
     let rel_name = if record.group().join(".").as_str() == relation.group_a() { relation.relation_a() } else { relation.relation_b() };
     let model_relation = group_model.relation(&rel_name).unwrap();
     if model_relation.has_foreign_key {
@@ -371,7 +371,7 @@ async fn cut_relation<'a>(relation: &'a GroupRelation, record: &'a GroupRecord, 
     let that_model_path: Vec<String> = that_model_name.split(".").map(|s| s.to_string()).collect();
     let that_model = ctx.namespace().model_at_path(&that_model_path.iter().map(|s| s.as_str()).collect()).unwrap();
     let that_name = if record.group().join(".").as_str() == relation.group_a() { relation.name_b() } else { relation.name_a() };
-    let seed_record = GroupRecord::find_first(teon!({
+    let seed_record = DataSetRecord::find_first(teon!({
         "dataset": dataset.name.join(".").as_str(),
         "group": that_model_name.as_str(),
         "name": that_name.as_str()
@@ -424,7 +424,7 @@ async fn cut_relation<'a>(relation: &'a GroupRelation, record: &'a GroupRecord, 
     relation.delete().await.unwrap();
 }
 
-async fn perform_recreate_or_update_an_record<'a>(dataset: &DataSet, group: &Group, record: &Record, group_model: &'static Model, seed_record: &'a GroupRecord, ctx: transaction::Ctx) {
+async fn perform_recreate_or_update_an_record<'a>(dataset: &DataSet, group: &Group, record: &Record, group_model: &'static Model, seed_record: &'a DataSetRecord, ctx: transaction::Ctx) {
     let object: Option<Object> = ctx.find_unique(group_model, &teon!({
         "where": record_json_string_to_where_unique(seed_record.record(), group_model)
     }), None, path![]).await.unwrap();
@@ -450,7 +450,7 @@ async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Recor
             if relation.is_required() && relation.has_foreign_key {
                 // setup required relationship
                 let that_record_name = v.as_enum_variant().unwrap().value.clone();
-                let that_record_data = GroupRecord::find_first(teon!({
+                let that_record_data = DataSetRecord::find_first(teon!({
                     "where": {
                         "group": relation.model_path().join("."),
                         "dataset": dataset.name.join(".").as_str(),
@@ -467,7 +467,7 @@ async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Recor
                 }
                 // update relation record
                 let (_, opposite_relation) = ctx.namespace().opposite_relation(relation);
-                let relation_record = GroupRelation::new(teon!({
+                let relation_record = DataSetRelation::new(teon!({
                     "dataset": dataset.name.join(".").as_str(),
                     "groupA": group.name.join(".").as_str(),
                     "relationA": relation.name(),
@@ -489,7 +489,7 @@ async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: 
     let input = insert_or_update_input(dataset, group, record, group_model, ctx.clone()).await;
     let object = ctx.create_object(group_model, &input, None).await.unwrap();
     object.save_for_seed_without_required_relation().await.unwrap();
-    let record_object = GroupRecord::new(teon!({
+    let record_object = DataSetRecord::new(teon!({
         "group": group.name.join(".").as_str(),
         "dataset": dataset.name.join(".").as_str(),
         "name": record.name.as_str(),
@@ -576,7 +576,7 @@ fn ordered_group(groups: &Vec<Group>, ctx: transaction::Ctx) -> Vec<&Group> {
 async fn remove_user_deleted_dataset_records_and_relations(datasets: &Vec<DataSet>, ctx: transaction::Ctx) {
     // remove seed data set records if user removed some seed data set
     let names = Value::Array(datasets.iter().map(|d| Value::String(d.name.join(".").clone())).collect::<Vec<Value>>());
-    let records_to_remove = GroupRecord::find_many(teon!({
+    let records_to_remove = DataSetRecord::find_many(teon!({
         "where": {
             "dataset": {
                 "notIn": &names,
@@ -586,7 +586,7 @@ async fn remove_user_deleted_dataset_records_and_relations(datasets: &Vec<DataSe
     for record in records_to_remove {
         record.delete().await.unwrap();
     }
-    let relations_to_remove = GroupRelation::find_many(teon!({
+    let relations_to_remove = DataSetRelation::find_many(teon!({
         "where": {
             "dataset": {
                 "notIn": names,
