@@ -520,7 +520,7 @@
 - Server response: file **[IN PROGRESS]**
 - Server response: string in HTML format and other formats **[IN PROGRESS]**
 - Rewrite rust generators with namespaces and interfaces **[IN PROGRESS]**
-- Add back request logs
+- Add back request logs **[DONE]**
 
 ### 0.0.60
 - Add back model action transformers
