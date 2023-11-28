@@ -11,6 +11,8 @@ use teo_runtime::stdlib::load::{load as load_std};
 use teo_runtime::schema::load::load_schema::load_schema;
 use crate::cli::run::run;
 use dotenvy::dotenv;
+use teo_runtime::connection::transaction;
+use crate::app::callbacks::callback::{AsyncCallback, AsyncCallbackArgument};
 
 #[derive(Debug)]
 pub struct App { }
@@ -40,6 +42,20 @@ impl App {
         Ok(Self { })
     }
 
+    pub fn setup<A, F>(f: F) where F: AsyncCallbackArgument<A> + 'static {
+        let wrap_call = Box::leak(Box::new(f));
+        Ctx::set_setup(|ctx: transaction::Ctx| async {
+            wrap_call.call(ctx).await
+        });
+    }
+
+    pub fn program<A, F>(name: &str, f: F) where F: AsyncCallbackArgument<A> + 'static {
+        let wrap_call = Box::leak(Box::new(f));
+        Ctx::insert_program(name, |ctx: transaction::Ctx| async {
+            wrap_call.call(ctx).await
+        });
+    }
+
     pub fn main_namespace(&self) -> &Namespace {
         Ctx::main_namespace()
     }
@@ -50,7 +66,6 @@ impl App {
 
     pub async fn run(&self) -> Result<()> {
         load_schema(Ctx::main_namespace_mut(), Ctx::schema(), Ctx::cli().command.ignores_loading())?;
-
         run(Ctx::cli()).await
     }
 }

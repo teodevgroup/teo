@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 use maplit::btreemap;
 use once_cell::sync::OnceCell;
 use teo_parser::ast::schema::Schema;
-use teo_result::{Error, Result};
+use teo_result:: Result;
 use teo_runtime::connection;
 use teo_runtime::namespace::Namespace;
 use crate::app::callbacks::callback::AsyncCallback;
@@ -117,7 +117,6 @@ impl Ctx {
         Ctx::get().schema.as_ref().unwrap()
     }
 
-
     pub fn set_entrance(entrance: Entrance) {
         Ctx::get_mut().entrance = entrance;
     }
@@ -128,6 +127,14 @@ impl Ctx {
 
     pub fn setup() -> Option<&'static Arc<dyn AsyncCallback>> {
         Ctx::get().setup.as_ref()
+    }
+
+    pub fn set_setup<F>(f: F) where F: AsyncCallback + 'static {
+        Ctx::get_mut().setup = Some(Arc::new(f));
+    }
+
+    pub fn insert_program<F>(name: &str, f: F) where F: AsyncCallback + 'static {
+        Ctx::get_mut().programs.insert(name.to_owned(), Arc::new(f));
     }
 }
 

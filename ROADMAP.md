@@ -514,17 +514,18 @@
 - Alter config block with dictionary literal syntax **[DONE]**
 - Declare enum in type **[DONE]**
 - Declare object in type **[DONE]**
-- Interface extending shapes **[IN PROGRESS]**
+- Interface extending shapes **[DONE]**
 - Type coercing **[DONE]**
 - Bug fixes **[IN PROGRESS]**
 - Server response: file **[IN PROGRESS]**
 - Server response: string in HTML format and other formats **[IN PROGRESS]**
-- Rewrite rust generators with namespaces and interfaces **[IN PROGRESS]**
+- Rewrite rust generators with namespaces and interfaces **[DONE]**
 - Add back request logs **[DONE]**
+- Add back extractors for rust entities **[DONE]**
 
 ### 0.0.60
+- Bug fixes
 - Add back model action transformers
-- Add back extractors for rust entities
 - Rewrite TS client generators with namespaces and interfaces
 - C# client: capitalized names and names with underscore
 - TypeScript client: correct return types for `aggregate` and `groupBy`
