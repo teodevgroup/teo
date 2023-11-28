@@ -30,4 +30,6 @@ pub mod prelude {
     pub use teo_teon::types::enum_variant::EnumVariant;
     pub use teo_runtime::request::ctx::extract::ExtractFromRequestCtx;
     pub use teo_runtime::request::Request;
+    pub use teo_runtime::pipeline;
+    pub use teo_runtime::pipeline::ctx::extract::ExtractFromPipelineCtx;
 }
