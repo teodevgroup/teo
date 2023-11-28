@@ -51,20 +51,6 @@ use crate::seeder::seed::seed;
 use crate::server::conf::ServerConf;
 use teo_teon::teon;
 
-fn log_err_and_return_response(start: SystemTime, model: &str, action: &str, err: Error) -> HttpResponse {
-    let http_response: HttpResponse = err.into();
-    let code = http_response.status().as_u16();
-    log_unhandled(start, action, model, code);
-    http_response
-}
-
-fn log_req_and_return_response(start: SystemTime, model: &str, action: &str, res: Res) -> HttpResponse {
-    let http_response: HttpResponse = res.into();
-    let code = http_response.status().as_u16();
-    log_request(start, action, model, code);
-    http_response
-}
-
 fn log_file_req_and_return_response(start: SystemTime, model: &str, action: &str, req: &HttpRequest, res: Res) -> HttpResponse {
     let http_res = res.into_response(req);
     let code = http_res.status().as_u16();
