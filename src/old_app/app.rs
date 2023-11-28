@@ -27,12 +27,6 @@ pub struct App;
 
 impl App {
 
-    pub fn middleware<F>(&self, name: &'static str, f: F) -> Result<()> where
-        F: Middleware + 'static,
-    {
-        AppCtx::get()?.main_namespace_mut().add_middleware(name, f)
-    }
-
     pub fn setup<F, T, Fut>(&self, f: F) -> Result<&Self> where
         F: Fn(T) -> Fut + Sync + Send + 'static,
         T: From<UserCtx> + Send,
