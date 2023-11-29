@@ -522,6 +522,7 @@
 - Rewrite rust generators with namespaces and interfaces **[DONE]**
 - Add back request logs **[DONE]**
 - Add back extractors for rust entities **[DONE]**
+- Add back model index decorators **[DONE]**
 
 ### 0.0.60
 - Bug fixes
