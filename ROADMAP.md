@@ -516,15 +516,15 @@
 - Declare object in type **[DONE]**
 - Interface extending shapes **[DONE]**
 - Type coercing **[DONE]**
-- Bug fixes **[IN PROGRESS]**
-- Server response: file **[IN PROGRESS]**
-- Server response: string in HTML format and other formats **[IN PROGRESS]**
+- Bug fixes **[DONE]**
 - Rewrite rust generators with namespaces and interfaces **[DONE]**
 - Add back request logs **[DONE]**
 - Add back extractors for rust entities **[DONE]**
 - Add back model index decorators **[DONE]**
 
 ### 0.0.60
+- Server response: file **[IN PROGRESS]**
+- Server response: string in HTML format and other formats **[IN PROGRESS]**
 - Bug fixes
 - Add back model action transformers
 - Rewrite TS client generators with namespaces and interfaces
