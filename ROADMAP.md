@@ -526,11 +526,22 @@
 - Server response: file **[IN PROGRESS]**
 - Server response: string in HTML format and other formats **[IN PROGRESS]**
 - Bug fixes
-- Add back model action transformers
 - Rewrite TS client generators with namespaces and interfaces
-- C# client: capitalized names and names with underscore
 - TypeScript client: correct return types for `aggregate` and `groupBy`
 - TS Client: fixed include args with boolean inputs
+- Update documentations
+- Update design of website
+- Rewrite syntax highlighting
+- Improve performance for VSCode plugin
+
+### 0.1.0
+- JWT middleware **[IN PROGRESS]**
+- Identity middleware **[IN PROGRESS]**
+- Support first version of Teo Studio
+
+### 0.1.1
+- Add back model action transformers
+- C# client: capitalized names and names with underscore
 - Swift client
 - Kotlin client
 - C# client
@@ -541,13 +552,6 @@
 - Relation onDelete
 - MongoDB: connector is not using table name
 - Bug fixes
-- Update documentations
-- Update design of website
-- Support first version of Teo Studio
-
-### 0.1.0
-- Move jwt to middleware **[IN PROGRESS]**
-- Move identity to middleware **[IN PROGRESS]**
 
 ### 0.2.0
 - Rewrite Node.js server
