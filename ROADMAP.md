@@ -528,6 +528,8 @@
 - Fix rust entity `type` method escaping bug **[DONE]**
 - Add borrowing from teon value for generated rust interfaces **[DONE]**
 - Fix rust entity `&Value` to &interface conversion bug **[DONE]**
+- Do not parse JSON body for get request and delete request **[DONE]**
+- Fix use middlewares parsing bugs **[DONE]**
 - Server response: file **[IN PROGRESS]**
 - Server response: string in HTML format and other formats **[IN PROGRESS]**
 - Bug fixes

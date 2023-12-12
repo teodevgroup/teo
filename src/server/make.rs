@@ -4,6 +4,7 @@ use actix_web::dev::Service;
 use futures_util::FutureExt;
 use colored::Colorize;
 use futures_util::future;
+use serde_json::{Value as JsonValue};
 use teo_result::{Error, Result};
 use teo_runtime::config::server::Server;
 use teo_runtime::namespace::Namespace;
@@ -140,7 +141,11 @@ fn make_server_app(
                 _ => (),
             }
             let json_body = match format {
-                HandlerInputFormat::Json => parse_json_body(payload).await?,
+                HandlerInputFormat::Json => if method == Method::Get || method == Method::Delete {
+                    JsonValue::Null
+                } else {
+                    parse_json_body(payload).await?
+                },
                 HandlerInputFormat::Form => parse_form_body(http_request.clone(), payload).await?,
             };
             return match handler_resolved {
