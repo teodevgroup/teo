@@ -149,7 +149,7 @@ async fn handle_sign_in<'a>(graph: &'static Graph, input: &'a Value, model: &'st
             let include = input.get("include");
             let select = input.get("select");
             let obj = obj.refreshed(include, select).await.unwrap();
-            let json_data = obj.to_json_internal(&path!["data"]).await;
+            let json_data = obj.to_teon_internal(&path!["data"]).await;
             let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
             let teon_identifier = obj.identifier();
             let json_identifier: JsonValue = teon_identifier.into();
@@ -176,7 +176,7 @@ async fn handle_identity<'a>(_graph: &'static Graph, input: &'a Value, model: &'
         let select = input.get("select");
         let include = input.get("include");
         let refreshed = identity.refreshed(include, select).await.unwrap();
-        let json_data = refreshed.to_json_internal(&path!["data"]).await;
+        let json_data = refreshed.to_teon_internal(&path!["data"]).await;
         Ok(Res::TeonDataRes(json_data?))
     } else {
         Ok(Res::TeonDataRes(teon!(null)))

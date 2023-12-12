@@ -523,10 +523,14 @@
 - Add back model index decorators **[DONE]**
 
 ### 0.0.60
+- Custom handler takes synthesized types **[DONE]**
+- Add `to_teon` for generated rust objects **[DONE]**
+- Fix rust entity `type` method escaping bug **[DONE]**
+- Add borrowing from teon value for generated rust interfaces **[DONE]**
 - Server response: file **[IN PROGRESS]**
 - Server response: string in HTML format and other formats **[IN PROGRESS]**
 - Bug fixes
-- Rewrite TS client generators with namespaces and interfaces
+- Rewrite TS client generators with namespaces and interfaces **[DONE]**
 - TypeScript client: correct return types for `aggregate` and `groupBy`
 - TS Client: fixed include args with boolean inputs
 - Update documentations
