@@ -527,6 +527,7 @@
 - Add `to_teon` for generated rust objects **[DONE]**
 - Fix rust entity `type` method escaping bug **[DONE]**
 - Add borrowing from teon value for generated rust interfaces **[DONE]**
+- Fix rust entity `&Value` to &interface conversion bug **[DONE]**
 - Server response: file **[IN PROGRESS]**
 - Server response: string in HTML format and other formats **[IN PROGRESS]**
 - Bug fixes
