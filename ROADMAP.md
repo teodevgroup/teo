@@ -536,14 +536,17 @@
 - Rewrite TS client generators with namespaces and interfaces **[DONE]**
 - TypeScript client: correct return types for `aggregate` and `groupBy`
 - TS Client: fixed include args with boolean inputs
-- Update documentations
-- Update design of website
+- Update documentation **[DONE]**
+- Update design of website **[DONE]**
+
+### 0.0.61
 - Rewrite syntax highlighting
 - Improve performance for VSCode plugin
 
 ### 0.1.0
 - JWT middleware **[IN PROGRESS]**
 - Identity middleware **[IN PROGRESS]**
+- Soft delete
 - Support first version of Teo Studio
 
 ### 0.1.1

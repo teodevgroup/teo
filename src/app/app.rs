@@ -12,7 +12,7 @@ use teo_runtime::schema::load::load_schema::load_schema;
 use crate::cli::run::run;
 use dotenvy::dotenv;
 use teo_runtime::connection::transaction;
-use crate::app::callbacks::callback::{AsyncCallback, AsyncCallbackArgument};
+use crate::app::callbacks::callback::AsyncCallbackArgument;
 
 #[derive(Debug)]
 pub struct App { }
