@@ -545,7 +545,6 @@
 - Server response: string in HTML format and other formats **[DONE]**
 - Rewrite TS client generators with namespaces and interfaces **[DONE]**
 - TS Client: fix running bugs **[DONE]**
-- TS Client: correct return types for `aggregate` and `groupBy`
 - TS Client: fixed include args with boolean inputs **[DONE]**
 - Fix reference shape with without bug **[DONE]**
 - Remove `using` keyword from syntax **[DONE]**
@@ -555,6 +554,7 @@
 
 ### 0.0.61
 - Improve performance for VSCode plugin
+- TS Client: correct return types for `aggregate` and `groupBy`
 
 ### 0.1.0
 - Add back model action transformers
