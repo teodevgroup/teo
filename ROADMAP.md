@@ -548,6 +548,7 @@
 - TS Client: correct return types for `aggregate` and `groupBy`
 - TS Client: fixed include args with boolean inputs **[DONE]**
 - Fix reference shape with without bug **[DONE]**
+- Remove `using` keyword from syntax **[DONE]**
 - Update documentation **[DONE]**
 - Update design of website **[DONE]**
 - Rewrite syntax highlighting
@@ -559,6 +560,7 @@
 - Add back model action transformers
 - JWT middleware **[IN PROGRESS]**
 - Identity middleware **[IN PROGRESS]**
+- Refactor bcrypt pipeline items
 - Soft delete
 - Rewrite Node.js server
 - Node.js bindings: error handling
