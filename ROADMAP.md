@@ -538,8 +538,9 @@
 - Fix `$hasLength` pipeline item bug **[DONE]**
 - Fix argument resolving bug when type is optional **[DONE]**
 - Fix server error message class error **[DONE]**
-- Fix MongoDB unique record error message
-- Fix SQL databases unique record error message
+- Update MongoDB unique record error message **[DONE]**
+- Update SQL databases unique record error message **[DONE]**
+- Fix model `@migration` renamed bug **[DONE]**
 - Server response: file **[IN PROGRESS]**
 - Server response: string in HTML format and other formats **[IN PROGRESS]**
 - Rewrite TS client generators with namespaces and interfaces **[DONE]**
