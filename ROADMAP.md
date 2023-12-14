@@ -544,7 +544,8 @@
 - Server response: file **[DONE]**
 - Server response: string in HTML format and other formats **[DONE]**
 - Rewrite TS client generators with namespaces and interfaces **[DONE]**
-- TypeScript client: correct return types for `aggregate` and `groupBy`
+- TS Client: fix running bugs **[DONE]**
+- TS Client: correct return types for `aggregate` and `groupBy`
 - TS Client: fixed include args with boolean inputs
 - Update documentation **[DONE]**
 - Update design of website **[DONE]**
