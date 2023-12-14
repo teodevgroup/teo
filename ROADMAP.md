@@ -546,7 +546,8 @@
 - Rewrite TS client generators with namespaces and interfaces **[DONE]**
 - TS Client: fix running bugs **[DONE]**
 - TS Client: correct return types for `aggregate` and `groupBy`
-- TS Client: fixed include args with boolean inputs
+- TS Client: fixed include args with boolean inputs **[DONE]**
+- Fix reference shape with without bug **[DONE]**
 - Update documentation **[DONE]**
 - Update design of website **[DONE]**
 - Rewrite syntax highlighting
@@ -555,13 +556,21 @@
 - Improve performance for VSCode plugin
 
 ### 0.1.0
+- Add back model action transformers
 - JWT middleware **[IN PROGRESS]**
 - Identity middleware **[IN PROGRESS]**
 - Soft delete
+- Rewrite Node.js server
+- Node.js bindings: error handling
+- Node.js object printing
+- Node.js bindings: date only type
+- Node.js client use dedicated `Date` class instead of builtin `Date`
+- Cross language error handling for node.js
+
+### 0.2.0
 - Support first version of Teo Studio
 
-### 0.1.1
-- Add back model action transformers
+### 0.3.0
 - C# client: capitalized names and names with underscore
 - Swift client
 - Kotlin client
@@ -574,28 +583,20 @@
 - MongoDB: connector is not using table name
 - Bug fixes
 
-### 0.2.0
-- Rewrite Node.js server
-- Node.js bindings: error handling
-- Node.js object printing
-- Node.js bindings: date only type
-- Node.js client use dedicated `Date` class instead of builtin `Date`
-- Cross language error handling for node.js
-
-### 0.3.0
+### 0.4.0
 - Model fragments
 - model extends model
 - enum extends enum
 - Json type
 
-### 0.4.0
+### 0.5.0
 - MongoDB transaction
 - Rewrite parser error messages with code
 - Custom SQL query scopes
 - Custom MongoDB query scopes
 - Default argument for argument list and config declaration
 
-### 0.5.0
+### 0.6.0
 - Recreate soft delete with custom middleware
 - PostgreSQL: Enum types
 - Separate documentation site
@@ -609,11 +610,11 @@
 - MongoDB: aggregate and group by for string and dates
 - Correct count with cursor
 
-### 0.6.0
+### 0.7.0
 - Bug fixes
 - Full database type mapping
 
-### 0.7.0
+### 0.8.0
 - Packages
 
 ### 1.0.0
