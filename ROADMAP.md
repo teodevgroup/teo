@@ -530,17 +530,26 @@
 - Fix rust entity `&Value` to &interface conversion bug **[DONE]**
 - Do not parse JSON body for get request and delete request **[DONE]**
 - Fix use middlewares parsing bugs **[DONE]**
+- Fix unsigned type bug in MySQL **[DONE]**
+- Fix table name encoding bug in PostgreSQL **[DONE]**
+- Fix create bug in PostgreSQL **[DONE]**
+- Fix primary key is dropped bug in PostgreSQL **[DONE]**
+- Fix MongoDB record decoding bugs **[DONE]**
+- Fix `$hasLength` pipeline item bug **[DONE]**
+- Fix argument resolving bug when type is optional **[DONE]**
+- Fix server error message class error **[DONE]**
+- Fix MongoDB unique record error message
+- Fix SQL databases unique record error message
 - Server response: file **[IN PROGRESS]**
 - Server response: string in HTML format and other formats **[IN PROGRESS]**
-- Bug fixes
 - Rewrite TS client generators with namespaces and interfaces **[DONE]**
 - TypeScript client: correct return types for `aggregate` and `groupBy`
 - TS Client: fixed include args with boolean inputs
 - Update documentation **[DONE]**
 - Update design of website **[DONE]**
+- Rewrite syntax highlighting
 
 ### 0.0.61
-- Rewrite syntax highlighting
 - Improve performance for VSCode plugin
 
 ### 0.1.0
