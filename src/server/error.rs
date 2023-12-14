@@ -2,6 +2,7 @@ use std::fmt::{Display, Formatter};
 use actix_http::body::BoxBody;
 use actix_http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
+use serde_json::json;
 use teo_teon::Value;
 
 #[derive(Debug)]
@@ -52,6 +53,8 @@ impl ResponseError for WrapError {
             },
         };
         let json_value: serde_json::Value = value.try_into().unwrap();
-        HttpResponse::Ok().status(self.status_code()).json(json_value)
+        HttpResponse::Ok().status(self.status_code()).json(json!({
+            "error": json_value
+        }))
     }
 }
