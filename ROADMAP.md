@@ -541,8 +541,8 @@
 - Update MongoDB unique record error message **[DONE]**
 - Update SQL databases unique record error message **[DONE]**
 - Fix model `@migration` renamed bug **[DONE]**
-- Server response: file **[IN PROGRESS]**
-- Server response: string in HTML format and other formats **[IN PROGRESS]**
+- Server response: file **[DONE]**
+- Server response: string in HTML format and other formats **[DONE]**
 - Rewrite TS client generators with namespaces and interfaces **[DONE]**
 - TypeScript client: correct return types for `aggregate` and `groupBy`
 - TS Client: fixed include args with boolean inputs

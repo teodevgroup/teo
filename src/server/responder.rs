@@ -1,9 +1,8 @@
-use std::str::FromStr;
 use actix_web::{HttpRequest, HttpResponse};
-use actix_web::http::header::{HeaderName, HeaderValue};
 use actix_web::http::StatusCode;
 use teo_runtime::response::body::BodyInner;
 use teo_runtime::response::Response;
+use actix_files::NamedFile;
 
 pub trait IntoHttpResponse {
     fn into_http_response(self, http_request: HttpRequest) -> HttpResponse;
@@ -20,7 +19,7 @@ impl IntoHttpResponse for Response {
         match self.body().inner.as_ref() {
             BodyInner::Empty => (),
             BodyInner::String(content) => return builder.body(content.to_string()),
-            BodyInner::File(file) => return builder.body(file.to_str().unwrap().to_string()),
+            BodyInner::File(file) => return NamedFile::open(file).unwrap().into_response(&http_request),
         }
         builder.finish()
     }
