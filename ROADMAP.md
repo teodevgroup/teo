@@ -569,6 +569,9 @@
 - Node.js client use dedicated `Date` class instead of builtin `Date`
 - Cross language error handling for node.js
 
+### 0.1.1
+- Add `onDecode`, `onOutput` and `default` for interface fields
+
 ### 0.2.0
 - Support first version of Teo Studio
 
