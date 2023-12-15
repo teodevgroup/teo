@@ -593,7 +593,6 @@
 
 ### 0.5.0
 - MongoDB transaction
-- Rewrite parser error messages with code
 - Custom SQL query scopes
 - Custom MongoDB query scopes
 - Default argument for argument list and config declaration
