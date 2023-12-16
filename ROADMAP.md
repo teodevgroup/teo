@@ -550,7 +550,7 @@
 - Remove `using` keyword from syntax **[DONE]**
 - Update documentation **[DONE]**
 - Update design of website **[DONE]**
-- Rewrite syntax highlighting
+- Rewrite syntax highlighting **[DONE]**
 
 ### 0.0.61
 - Improve performance for VSCode plugin
