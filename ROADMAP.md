@@ -555,6 +555,7 @@
 ### 0.1.0
 - Simplified transaction API **[DONE]**
 - Fix without shape bug for create and update when generating **[DONE]**
+- Allow doc comment in dictionary literal **[DONE]**
 - Revamped request extension API
 - Add back model action transformers
 - JWT middleware **[IN PROGRESS]**

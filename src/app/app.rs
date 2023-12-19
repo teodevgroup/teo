@@ -13,6 +13,7 @@ use crate::cli::run::run;
 use dotenvy::dotenv;
 use teo_runtime::connection::transaction;
 use crate::app::callbacks::callback::AsyncCallbackArgument;
+use crate::prelude::{Entrance, RuntimeVersion};
 
 #[derive(Debug)]
 pub struct App { }
@@ -20,10 +21,20 @@ pub struct App { }
 impl App {
 
     pub fn new() -> Result<Self> {
+        Self::new_with_entrance_and_runtime_version(None, None)
+    }
+
+    pub fn new_with_entrance_and_runtime_version(entrance: Option<Entrance>, runtime_version: Option<RuntimeVersion>) -> Result<Self> {
         // load env first
         let _ = dotenv();
         if !Ctx::create() {
             Err(Error::new("cannot create app while there is an existing instance"))?
+        }
+        if let Some(entrance) = entrance {
+            Ctx::set_entrance(entrance);
+        }
+        if let Some(runtime_version) = runtime_version {
+            Ctx::set_runtime_version(runtime_version);
         }
         let cli = cli_parse(Ctx::get().runtime_version.clone(), Ctx::get().entrance);
         let current_dir = match current_dir() {
