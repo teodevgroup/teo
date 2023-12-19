@@ -552,10 +552,13 @@
 - Update design of website **[DONE]**
 - Rewrite syntax highlighting **[DONE]**
 
-### 0.1.0
+### 0.0.61
+- Fix MySQL primary key migration bug **[DONE]**
 - Simplified transaction API **[DONE]**
 - Fix without shape bug for create and update when generating **[DONE]**
 - Allow doc comment in dictionary literal **[DONE]**
+
+### 0.1.0
 - Revamped request extension API
 - Add back model action transformers
 - JWT middleware **[IN PROGRESS]**
