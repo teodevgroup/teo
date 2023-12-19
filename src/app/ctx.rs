@@ -121,6 +121,11 @@ impl Ctx {
         Ctx::get_mut().entrance = entrance;
     }
 
+    pub fn set_runtime_version(runtime_version: RuntimeVersion) {
+        Ctx::get_mut().runtime_version = runtime_version;
+    }
+
+
     pub fn conn_ctx() -> &'static connection::Ctx {
         Ctx::get().conn_ctx.as_ref().unwrap()
     }

@@ -8,6 +8,9 @@ mod message;
 
 pub mod prelude {
     pub use crate::app::App;
+    pub use crate::app;
+    pub use crate::cli::entrance::Entrance;
+    pub use crate::cli::runtime_version::RuntimeVersion;
     pub extern crate teo_result;
     pub use teo_result::{Error, Result, ResultExt};
     pub extern crate tokio;
