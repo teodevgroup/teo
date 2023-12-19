@@ -19,6 +19,9 @@ pub mod prelude {
     pub use teo_runtime::path;
     pub use teo_runtime::model;
     pub use teo_runtime::model::Model;
+    pub use teo_runtime::r#struct;
+    pub use teo_runtime::r#struct::Struct;
+    pub use teo_runtime::interface_enum_variant::InterfaceEnumVariant;
     pub use teo_runtime::object;
     pub use teo_runtime::interface;
     pub use teo_runtime::connection::transaction;
@@ -28,9 +31,13 @@ pub mod prelude {
     pub use teo_teon::teon_unexpected;
     pub use teo_teon::teon_expect_expr_comma;
     pub use teo_teon::types::enum_variant::EnumVariant;
+    pub use teo_teon::types::option_variant::OptionVariant;
+    pub use teo_teon::types::range::Range;
+    pub use teo_teon::types::file::File;
     pub use teo_runtime::request::ctx::extract::ExtractFromRequestCtx;
     pub use teo_runtime::request::Request;
     pub use teo_runtime::pipeline;
+    pub use teo_runtime::pipeline::Pipeline;
     pub use teo_runtime::pipeline::ctx::extract::ExtractFromPipelineCtx;
     pub use teo_runtime::middleware::middleware::middleware_wrap_fn;
     pub use teo_runtime::connection::transaction::ExtractFromTransactionCtx;

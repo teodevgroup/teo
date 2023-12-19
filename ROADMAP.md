@@ -552,22 +552,23 @@
 - Update design of website **[DONE]**
 - Rewrite syntax highlighting **[DONE]**
 
-### 0.0.61
-- Improve performance for VSCode plugin
-- TS Client: correct return types for `aggregate` and `groupBy`
-
 ### 0.1.0
+- Simplified transaction API **[DONE]**
+- Fix without shape bug for create and update when generating **[DONE]**
+- Revamped request extension API
 - Add back model action transformers
 - JWT middleware **[IN PROGRESS]**
 - Identity middleware **[IN PROGRESS]**
 - Refactor bcrypt pipeline items
 - Soft delete
-- Rewrite Node.js server
+- Rewrite Node.js server **[IN PROGRESS]**
 - Node.js bindings: error handling
 - Node.js object printing
-- Node.js bindings: date only type
+- Node.js bindings: date only type **[IN PROGRESS]**
 - Node.js client use dedicated `Date` class instead of builtin `Date`
 - Cross language error handling for node.js
+- Improve performance for VSCode plugin
+- TS Client: correct return types for `aggregate` and `groupBy`
 
 ### 0.1.1
 - Add `onDecode`, `onOutput` and `default` for interface fields
