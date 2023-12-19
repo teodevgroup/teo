@@ -558,6 +558,11 @@
 - Fix without shape bug for create and update when generating **[DONE]**
 - Allow doc comment in dictionary literal **[DONE]**
 
+### 0.0.62
+- Fix `import` keyword is unrecognized bug **[DONE]**
+- Improve performance when auto completing **[DONE]**
+- Fix SQL string quote bugs when performing join **[DONE]**
+
 ### 0.1.0
 - Revamped request extension API
 - Add back model action transformers
