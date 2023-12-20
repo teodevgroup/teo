@@ -565,6 +565,9 @@
 - Fix MongoDB object update bug **[DONE]**
 - Fix enum types migration bug for SQL databases **[DONE]**
 
+### 0.0.63
+- Fix app entrance display bug for Rust CLI **[DONE]**
+
 ### 0.1.0
 - Revamped request extension API
 - Add back model action transformers
