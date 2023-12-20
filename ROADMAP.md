@@ -562,6 +562,8 @@
 - Fix `import` keyword is unrecognized bug **[DONE]**
 - Improve performance when auto completing **[DONE]**
 - Fix SQL string quote bugs when performing join **[DONE]**
+- Fix MongoDB object update bug **[DONE]**
+- Fix enum types migration bug for SQL databases **[DONE]**
 
 ### 0.1.0
 - Revamped request extension API
