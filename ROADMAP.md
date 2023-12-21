@@ -567,9 +567,18 @@
 
 ### 0.0.63
 - Fix app entrance display bug for Rust CLI **[DONE]**
+- Allow handler declaration in namespace and top level **[DONE]**
+- Allow optional handler input type **[DONE]**
+- Add `nonapi` keyword to handler declaration **[DONE]**
+- Handler decorator `map` **[DONE]**
+- Fix launching bugs for no database server apps **[DONE]**
+- Add handler with no arguments **[DONE]**
+
+### 0.0.64
+- Fix data seeding bugs
+- Revamped request extension API
 
 ### 0.1.0
-- Revamped request extension API
 - Add back model action transformers
 - JWT middleware **[IN PROGRESS]**
 - Identity middleware **[IN PROGRESS]**

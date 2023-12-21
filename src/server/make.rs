@@ -81,7 +81,7 @@ fn make_server_app(
             } else if let Some(m_result) = main_namespace.handler_map.default_match(method, path) {
                 m_result
             } else {
-                Err(teo_runtime::path::Error::not_found(path![]))?
+                Err(teo_runtime::path::Error::not_found_message_only())?
             };
             let dest_namespace = if let Some(d) = main_namespace.namespace_at_path(&match_result.namespace_path()) {
                 d
