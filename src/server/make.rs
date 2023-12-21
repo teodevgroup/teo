@@ -72,7 +72,6 @@ fn make_server_app(
             }
         })
         .default_service(web::route().to(move |http_request: HttpRequest, payload: web::Payload| async move {
-            http_request.extensions_mut().insert(5usize);
             // validate path
             let path = main_namespace.handler_map.remove_path_prefix(http_request.path(), conf.path_prefix.as_ref().map(|s| s.as_str()));
             let method = method_from(http_request.method())?;
@@ -83,15 +82,31 @@ fn make_server_app(
             } else {
                 Err(teo_runtime::path::Error::not_found_message_only())?
             };
-            let dest_namespace = if let Some(d) = main_namespace.namespace_at_path(&match_result.namespace_path()) {
+            let mut group = false;
+            let dest_namespace = if let Some(d) = main_namespace.namespace_at_path(&match_result.path()) {
                 d
+            } else if match_result.path().len() > 0 {
+                if let Some(d) = main_namespace.namespace_at_path(&match_result.path_without_last()) {
+                    group = true;
+                    d
+                } else {
+                    Err(teo_runtime::path::Error::not_found_message_only())?
+                }
             } else {
                 Err(teo_runtime::path::Error::not_found_message_only())?
             };
-            let handler_resolved = if let Some(model) = dest_namespace.models.get(match_result.group_name()) {
-                if let Some(group) = dest_namespace.model_handler_groups.get(match_result.group_name()) {
-                    if let Some(handler) = group.handlers.get(match_result.handler_name()) {
-                        (dest_namespace, HandlerResolved::Custom(handler))
+            let handler_resolved = if group {
+                if let Some(model) = dest_namespace.models.get(match_result.group_name()) {
+                    if let Some(group) = dest_namespace.model_handler_groups.get(match_result.group_name()) {
+                        if let Some(handler) = group.handlers.get(match_result.handler_name()) {
+                            (dest_namespace, HandlerResolved::Custom(handler))
+                        } else {
+                            if let Some(action) = builtin_action_handler_from_name(match_result.handler_name()) {
+                                (dest_namespace, HandlerResolved::Builtin(model, action))
+                            } else {
+                                Err(teo_runtime::path::Error::not_found_message_only())?
+                            }
+                        }
                     } else {
                         if let Some(action) = builtin_action_handler_from_name(match_result.handler_name()) {
                             (dest_namespace, HandlerResolved::Builtin(model, action))
@@ -99,21 +114,21 @@ fn make_server_app(
                             Err(teo_runtime::path::Error::not_found_message_only())?
                         }
                     }
-                } else {
-                    if let Some(action) = builtin_action_handler_from_name(match_result.handler_name()) {
-                        (dest_namespace, HandlerResolved::Builtin(model, action))
+                } else if let Some(group) = dest_namespace.handler_groups.get(match_result.group_name()) {
+                    if let Some(handler) = group.handlers.get(match_result.handler_name()) {
+                        (dest_namespace, HandlerResolved::Custom(handler))
                     } else {
                         Err(teo_runtime::path::Error::not_found_message_only())?
                     }
-                }
-            } else if let Some(group) = dest_namespace.handler_groups.get(match_result.group_name()) {
-                if let Some(handler) = group.handlers.get(match_result.handler_name()) {
-                    (dest_namespace, HandlerResolved::Custom(handler))
                 } else {
                     Err(teo_runtime::path::Error::not_found_message_only())?
                 }
             } else {
-                Err(teo_runtime::path::Error::not_found_message_only())?
+                if let Some(handler) = dest_namespace.handlers.get(match_result.handler_name()) {
+                    (dest_namespace, HandlerResolved::Custom(handler))
+                } else {
+                    Err(teo_runtime::path::Error::not_found_message_only())?
+                }
             };
             let dest_namespace = handler_resolved.0;
             let handler_resolved = handler_resolved.1;

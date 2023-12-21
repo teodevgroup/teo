@@ -642,9 +642,6 @@
 - Bug fixes
 - Full database type mapping
 
-### 0.8.0
-- Packages
-
 ### 1.0.0
 - First stable major version
 
