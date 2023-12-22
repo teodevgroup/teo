@@ -576,7 +576,7 @@
 - Add `interface` parameter and generate interface for handler path arguments **[DONE]**
 - Fix handler URL matching bug **[DONE]**
 - Fix output type of `$when` **[DONE]**
-- Fix `teon` trait is recursive bug **[DONE]**
+- Add `indexmap` to generated Rust entity **[DONE]**
 
 ### 0.0.64
 - Fix VSCode crashing when completing relation decorators
