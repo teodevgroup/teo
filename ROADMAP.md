@@ -573,8 +573,13 @@
 - Handler decorator `map` **[DONE]**
 - Fix launching bugs for no database server apps **[DONE]**
 - Add handler with no arguments **[DONE]**
+- Add `interface` parameter and generate interface for handler path arguments **[DONE]**
+- Fix handler URL matching bug **[DONE]**
+- Fix output type of `$when` **[DONE]**
+- Fix `teon` trait is recursive bug **[DONE]**
 
 ### 0.0.64
+- Fix VSCode crashing when completing relation decorators
 - Fix data seeding bugs
 - Revamped request extension API
 

@@ -11,6 +11,7 @@ pub mod prelude {
     pub use crate::app;
     pub use crate::cli::entrance::Entrance;
     pub use crate::cli::runtime_version::RuntimeVersion;
+    pub use crate::server::static_files::serve_static_files;
     pub use teo_runtime::namespace::Namespace;
     pub extern crate teo_result;
     pub use teo_result::{Error, Result, ResultExt};

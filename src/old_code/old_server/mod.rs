@@ -280,18 +280,7 @@ fn make_app(
             // Validate method
             let method = http_request.method();
             if method == Method::GET {
-                match parse_static_files_path(http_request.path(), conf.path_prefix) {
-                    Ok(filepath) => {
-                        let path = PathBuf::from(filepath);
-                        return if path.is_file() {
-                            let res = Res::File(path);
-                            log_file_req_and_return_response(start, "GET", http_request.path(), &http_request, res)
-                        } else {
-                            log_err_and_return_response(start, "GET", http_request.path(), Error::destination_not_found())
-                        }
-                    },
-                    Err(err) => return log_err_and_return_response(start, "GET", http_request.path(), err),
-                }
+
             } else {
                 if (method != Method::POST) && (method != Method::OPTIONS) {
                     return log_err_and_return_response(start, method.as_str(), http_request.path(), Error::destination_not_found());
@@ -512,25 +501,6 @@ impl PathComponents {
         result.push(self.model.as_str());
         result
     }
-}
-
-fn parse_static_files_path<'a>(path: &'a str, prefix: Option<&'a str>) -> Result<PathBuf> {
-    let purified_path = if let Some(prefix) = prefix {
-        if path.starts_with(prefix) {
-            PathBuf::from(path.strip_prefix(prefix).unwrap())
-        } else {
-            PathBuf::from(path)
-        }
-    } else {
-        PathBuf::from(path)
-    };
-    for (k, v) in AppCtx::get()?.static_files() {
-        if purified_path.starts_with(k) {
-            let content_path = purified_path.strip_prefix(k).unwrap();
-            return Ok(PathBuf::from(v).join(content_path));
-        }
-    }
-    Err(Error::destination_not_found())
 }
 
 fn parse_path(path: &str, prefix: Option<&str>) -> Result<PathComponents> {
