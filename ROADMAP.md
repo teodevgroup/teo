@@ -577,6 +577,7 @@
 - Fix handler URL matching bug **[DONE]**
 - Fix output type of `$when` **[DONE]**
 - Add `indexmap` to generated Rust entity **[DONE]**
+- Fix file uploading bugs **[DONE]**
 
 ### 0.0.64
 - Fix VSCode crashing when completing relation decorators
