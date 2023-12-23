@@ -598,6 +598,9 @@
 ### 0.0.67
 - TS Client: correct return types for `count`, `aggregate` and `groupBy`
 
+### 0.0.68
+- Add back integration tests
+
 ### 0.1.0
 - Rewrite Node.js server **[IN PROGRESS]**
 - Node.js bindings: error handling
