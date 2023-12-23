@@ -586,24 +586,28 @@
 
 ### 0.0.65
 - Improved middleware system
+- Custom wrapped pipeline item with arguments
 
-### 0.1.0
+### 0.0.66
 - Add back model action transformers
 - JWT middleware **[IN PROGRESS]**
 - Identity middleware **[IN PROGRESS]**
 - Refactor bcrypt pipeline items
 - Soft delete
+
+### 0.0.67
+- TS Client: correct return types for `count`, `aggregate` and `groupBy`
+
+### 0.1.0
 - Rewrite Node.js server **[IN PROGRESS]**
 - Node.js bindings: error handling
 - Node.js object printing
 - Node.js bindings: date only type **[IN PROGRESS]**
 - Node.js client use dedicated `Date` class instead of builtin `Date`
 - Cross language error handling for node.js
-- Improve performance for VSCode plugin
-- TS Client: correct return types for `aggregate` and `groupBy`
 
 ### 0.1.1
-- Add `onDecode`, `onOutput` and `default` for interface fields
+- Add `onSet`, `onOutput` and `default` for interface fields
 
 ### 0.2.0
 - Support first version of Teo Studio
@@ -619,7 +623,6 @@
 - Relation onUpdate
 - Relation onDelete
 - MongoDB: connector is not using table name
-- Bug fixes
 
 ### 0.4.0
 - Model fragments
@@ -634,9 +637,7 @@
 - Default argument for argument list and config declaration
 
 ### 0.6.0
-- Recreate soft delete with custom middleware
 - PostgreSQL: Enum types
-- Separate documentation site
 - MongoDB migration
 - MongoDB `$queryRaw`
 - MongoDB: root skip take and distinct bug
@@ -648,7 +649,6 @@
 - Correct count with cursor
 
 ### 0.7.0
-- Bug fixes
 - Full database type mapping
 
 ### 1.0.0
