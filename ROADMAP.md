@@ -583,6 +583,8 @@
 - Fix VSCode crashing when completing relation decorators
 - Fix data seeding bugs **[DONE]**
 - Revamped request extension API
+- Add back relation delete rule
+- Add relation update rule
 
 ### 0.0.65
 - Improved middleware system
