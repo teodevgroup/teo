@@ -471,6 +471,10 @@ async fn perform_recreate_or_update_an_record<'a>(dataset: &DataSet, group: &Gro
 
 async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Record, group_model: &'static Model, ctx: transaction::Ctx) -> Value {
     let mut input = teon!({});
+    // nullify exist relations and reset
+    for field in group_model.fields.values().filter(|f| f.foreign_key) {
+        input.as_dictionary_mut().unwrap().insert(field.name().to_owned(), Value::Null);
+    }
     for (k, v) in record.value.as_dictionary().unwrap() {
         if group_model.field(k).is_some() {
             input.as_dictionary_mut().unwrap().insert(k.to_owned(), v.clone());
