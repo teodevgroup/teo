@@ -15,7 +15,6 @@ use teo_runtime::data_set::{DataSet, Group, Record};
 use teo_runtime::model::field::is_optional::IsOptional;
 use teo_runtime::model::{Model, Object, Relation};
 use teo_runtime::model::field::typed::Typed;
-use teo_runtime::namespace::Namespace;
 use teo_runtime::traits::named::Named;
 
 pub(crate) async fn seed(action: SeedCommandAction, datasets: Vec<DataSet>, ctx: transaction::Ctx) -> Result<()> {
@@ -161,14 +160,14 @@ async fn sync_relations(dataset: &DataSet, ordered_groups: &Vec<&Group>, ctx: tr
                         "OR": [
                             {
                                 "dataSet": dataset.name.join(".").as_str(),
-                                "groupA": object.model().name(),
+                                "groupA": object.model().path().join("."),
                                 "relationA": relation.name(),
                                 "nameA": record.name.as_str(),
                                 "groupB": relation.model_path().join("."),
                             },
                             {
                                 "dataSet": dataset.name.join(".").as_str(),
-                                "groupB": object.model().name(),
+                                "groupB": object.model().path().join("."),
                                 "relationB": relation.name(),
                                 "nameB": record.name.as_str(),
                                 "groupA": relation.model_path().join("."),
@@ -288,32 +287,32 @@ async fn setup_relations_internal<'a>(record: &Record, reference: &'a Value, rel
             "OR": [
                 {
                     "dataSet": dataset.name.join(".").as_str(),
-                    "groupA": object.model().name(),
+                    "groupA": object.model().path().join("."),
                     "relationA": relation.name(),
                     "nameA": record.name.as_str(),
-                    "groupB": that_object.model().name(),
+                    "groupB": that_object.model().path().join("."),
                     "nameB": that_name.clone(),
                 },
                 {
                     "dataSet": dataset.name.join(".").as_str(),
-                    "groupB": object.model().name(),
+                    "groupB": object.model().path().join("."),
                     "relationB": relation.name(),
                     "nameB": record.name.as_str(),
-                    "groupA": that_object.model().name(),
+                    "groupA": that_object.model().path().join("."),
                     "nameA": that_name.clone()
                 }
             ]
         }
-    }), ctx.clone()).await;
-    if exist_relation_record.is_err() {
+    }), ctx.clone()).await.unwrap();
+    if exist_relation_record.is_none() {
         // not exist, create
         let that_relation = ctx.namespace().opposite_relation(relation).1;
         let new_relation_record = DataSetRelation::new(teon!({
             "dataSet": dataset.name.join(".").as_str(),
-            "groupA": object.model().name(),
+            "groupA": object.model().path().join("."),
             "relationA": relation.name(),
             "nameA": record.name.as_str(),
-            "groupB": that_object.model().name(),
+            "groupB": that_object.model().path().join("."),
             "relationB": if that_relation.is_some() { Value::String(that_relation.unwrap().name().to_owned()) } else { Value::Null },
             "nameB": that_name.clone(),
         }), ctx.clone()).await.unwrap();
@@ -472,7 +471,7 @@ async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Recor
                     "groupA": group.name.join(".").as_str(),
                     "relationA": relation.name(),
                     "nameA": record.name.as_str(),
-                    "groupB": that_record.model().name(),
+                    "groupB": that_record.model().path().join("."),
                     "relationB": if opposite_relation.is_some() { Value::String(opposite_relation.unwrap().name().to_owned()) } else { Value::Null },
                     "nameB": v.as_enum_variant().unwrap().value.clone()
                 }), ctx.clone()).await.unwrap();
