@@ -84,6 +84,35 @@ async fn remove_records_for_user_removed_groups(dataset: &DataSet, ordered_group
             record.delete().await.unwrap();
         }
     }
+    let user_removed_seed_relations_for_group = DataSetRelation::find_many(teon!({
+        "where": {
+            "OR": [
+                {
+                    "dataSet": dataset.name.join(".").as_str(),
+                    "groupA": {
+                        "notIn": Value::Array(ordered_groups.iter().map(|g| Value::String(g.name.join("."))).collect())
+                    },
+                },
+                {
+                    "dataSet": dataset.name.join(".").as_str(),
+                    "groupB": {
+                        "notIn": Value::Array(ordered_groups.iter().map(|g| Value::String(g.name.join("."))).collect()),
+                    }
+                }
+            ]
+        }
+    }), ctx.clone()).await.unwrap();
+    for relation in user_removed_seed_relations_for_group {
+        let group_a_string = relation.group_a();
+        let group_b_string = relation.group_b();
+        let group_a: Vec<&str> = group_a_string.split(".").collect();
+        let group_b: Vec<&str> = group_b_string.split(".").collect();
+        let model_a = ctx.namespace().model_at_path(&group_a);
+        let model_b = ctx.namespace().model_at_path(&group_b);
+        if model_a.is_none() || model_b.is_none() {
+            relation.delete().await.unwrap();
+        }
+    }
 }
 
 pub(crate) async fn reseed_dataset(dataset: &DataSet, ctx: transaction::Ctx) {
@@ -320,7 +349,7 @@ async fn setup_relations_internal<'a>(record: &Record, reference: &'a Value, rel
     }
 }
 
-/// This perform, deletes an object from the databse.
+/// This perform, deletes an object from the database.
 async fn perform_remove_from_database<'a>(dataset: &DataSet, record: &'a DataSetRecord, group_model: &'static Model, ctx: transaction::Ctx) {
     let json_identifier = record.record();
     let exist: Option<Object> = ctx.find_unique(group_model, &teon!({
