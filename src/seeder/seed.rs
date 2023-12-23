@@ -42,7 +42,7 @@ pub(crate) async fn seed_dataset(dataset: &DataSet, ctx: transaction::Ctx) {
         let seed_records = DataSetRecord::find_many(teon!({
             "where": {
                 "group": group.name.join(".").as_str(),
-                "dataset": dataset.name.join(".").as_str(),
+                "dataSet": dataset.name.join(".").as_str(),
             }
         }), ctx.clone()).await.unwrap();
         for record in group.records.iter() {
@@ -70,7 +70,7 @@ pub(crate) async fn seed_dataset(dataset: &DataSet, ctx: transaction::Ctx) {
 async fn remove_records_for_user_removed_groups(dataset: &DataSet, ordered_groups: &Vec<&Group>, ctx: transaction::Ctx) {
     let user_removed_seed_records_for_group = DataSetRecord::find_many(teon!({
         "where": {
-            "dataset": dataset.name.join(".").as_str(),
+            "dataSet": dataset.name.join(".").as_str(),
             "group": {
                 "notIn": Value::Array(ordered_groups.iter().map(|g| Value::String(g.name.join("."))).collect()),
             },
@@ -94,7 +94,7 @@ pub(crate) async fn reseed_dataset(dataset: &DataSet, ctx: transaction::Ctx) {
         let seed_records = DataSetRecord::find_many(teon!({
             "where": {
                 "group": group.name.join(".").as_str(),
-                "dataset": dataset.name.join(".").as_str(),
+                "dataSet": dataset.name.join(".").as_str(),
             }
         }), ctx.clone()).await.unwrap();
         for record in group.records.iter() {
@@ -127,7 +127,7 @@ pub(crate) async fn unseed_dataset(dataset: &DataSet, ctx: transaction::Ctx) {
         let seed_records = DataSetRecord::find_many(teon!({
             "where": {
                 "group": group.name.join(".").as_str(),
-                "dataset": dataset.name.join(".").as_str(),
+                "dataSet": dataset.name.join(".").as_str(),
             }
         }), ctx.clone()).await.unwrap();
         // delete records
@@ -146,7 +146,7 @@ async fn sync_relations(dataset: &DataSet, ordered_groups: &Vec<&Group>, ctx: tr
         let seed_records = DataSetRecord::find_many(teon!({
             "where": {
                 "group": group.name.join(".").as_str(),
-                "dataset": dataset.name.join(".").as_str(),
+                "dataSet": dataset.name.join(".").as_str(),
             }
         }), ctx.clone()).await.unwrap();
         for record in group.records.iter() {
@@ -160,14 +160,14 @@ async fn sync_relations(dataset: &DataSet, ordered_groups: &Vec<&Group>, ctx: tr
                     "where": {
                         "OR": [
                             {
-                                "dataset": dataset.name.join(".").as_str(),
+                                "dataSet": dataset.name.join(".").as_str(),
                                 "groupA": object.model().name(),
                                 "relationA": relation.name(),
                                 "nameA": record.name.as_str(),
                                 "groupB": relation.model_path().join("."),
                             },
                             {
-                                "dataset": dataset.name.join(".").as_str(),
+                                "dataSet": dataset.name.join(".").as_str(),
                                 "groupB": object.model().name(),
                                 "relationB": relation.name(),
                                 "nameB": record.name.as_str(),
@@ -204,7 +204,7 @@ async fn setup_new_relations(dataset: &DataSet, ordered_groups: &Vec<&Group>, li
         let seed_records = DataSetRecord::find_many(teon!({
             "where": {
                 "group": group.name.join(".").as_str(),
-                "dataset": dataset.name.join(".").as_str(),
+                "dataSet": dataset.name.join(".").as_str(),
             }
         }), ctx.clone()).await.unwrap();
         for record in group.records.iter() {
@@ -245,7 +245,7 @@ async fn setup_relations_internal<'a>(record: &Record, reference: &'a Value, rel
     let that_seed_record = DataSetRecord::find_first(teon!({
         "where": {
             "group": relation.model_path().join("."),
-            "dataset": dataset.name.join(".").as_str(),
+            "dataSet": dataset.name.join(".").as_str(),
             "name": that_name.clone(),
         }
     }), ctx.clone()).await.unwrap().unwrap();
@@ -287,7 +287,7 @@ async fn setup_relations_internal<'a>(record: &Record, reference: &'a Value, rel
         "where": {
             "OR": [
                 {
-                    "dataset": dataset.name.join(".").as_str(),
+                    "dataSet": dataset.name.join(".").as_str(),
                     "groupA": object.model().name(),
                     "relationA": relation.name(),
                     "nameA": record.name.as_str(),
@@ -295,7 +295,7 @@ async fn setup_relations_internal<'a>(record: &Record, reference: &'a Value, rel
                     "nameB": that_name.clone(),
                 },
                 {
-                    "dataset": dataset.name.join(".").as_str(),
+                    "dataSet": dataset.name.join(".").as_str(),
                     "groupB": object.model().name(),
                     "relationB": relation.name(),
                     "nameB": record.name.as_str(),
@@ -309,7 +309,7 @@ async fn setup_relations_internal<'a>(record: &Record, reference: &'a Value, rel
         // not exist, create
         let that_relation = ctx.namespace().opposite_relation(relation).1;
         let new_relation_record = DataSetRelation::new(teon!({
-            "dataset": dataset.name.join(".").as_str(),
+            "dataSet": dataset.name.join(".").as_str(),
             "groupA": object.model().name(),
             "relationA": relation.name(),
             "nameA": record.name.as_str(),
@@ -338,12 +338,12 @@ async fn perform_remove_from_database<'a>(dataset: &DataSet, record: &'a DataSet
         "where": {
             "OR": [
                 {
-                    "dataset": dataset.name.join(".").as_str(),
+                    "dataSet": dataset.name.join(".").as_str(),
                     "groupA": record.group().join(".").as_str(),
                     "nameA": record.name().as_str(),
                 },
                 {
-                    "dataset": dataset.name.join(".").as_str(),
+                    "dataSet": dataset.name.join(".").as_str(),
                     "groupB": record.group().join(".").as_str(),
                     "nameB": record.name().as_str(),
                 }
@@ -372,7 +372,7 @@ async fn cut_relation<'a>(relation: &'a DataSetRelation, record: &'a DataSetReco
     let that_model = ctx.namespace().model_at_path(&that_model_path.iter().map(|s| s.as_str()).collect()).unwrap();
     let that_name = if record.group().join(".").as_str() == relation.group_a() { relation.name_b() } else { relation.name_a() };
     let seed_record = DataSetRecord::find_first(teon!({
-        "dataset": dataset.name.join(".").as_str(),
+        "dataSet": dataset.name.join(".").as_str(),
         "group": that_model_name.as_str(),
         "name": that_name.as_str()
     }), ctx.clone()).await.unwrap().unwrap();
@@ -453,7 +453,7 @@ async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Recor
                 let that_record_data = DataSetRecord::find_first(teon!({
                     "where": {
                         "group": relation.model_path().join("."),
-                        "dataset": dataset.name.join(".").as_str(),
+                        "dataSet": dataset.name.join(".").as_str(),
                         "name": that_record_name,
                     }
                 }), ctx.clone()).await.unwrap().unwrap();
@@ -468,7 +468,7 @@ async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Recor
                 // update relation record
                 let (_, opposite_relation) = ctx.namespace().opposite_relation(relation);
                 let relation_record = DataSetRelation::new(teon!({
-                    "dataset": dataset.name.join(".").as_str(),
+                    "dataSet": dataset.name.join(".").as_str(),
                     "groupA": group.name.join(".").as_str(),
                     "relationA": relation.name(),
                     "nameA": record.name.as_str(),
@@ -491,7 +491,7 @@ async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: 
     object.save_for_seed_without_required_relation().await.unwrap();
     let record_object = DataSetRecord::new(teon!({
         "group": group.name.join(".").as_str(),
-        "dataset": dataset.name.join(".").as_str(),
+        "dataSet": dataset.name.join(".").as_str(),
         "name": record.name.as_str(),
         "record": object_identifier_in_json(&object),
     }), ctx.clone()).await.unwrap();
@@ -578,7 +578,7 @@ async fn remove_user_deleted_dataset_records_and_relations(datasets: &Vec<DataSe
     let names = Value::Array(datasets.iter().map(|d| Value::String(d.name.join(".").clone())).collect::<Vec<Value>>());
     let records_to_remove = DataSetRecord::find_many(teon!({
         "where": {
-            "dataset": {
+            "dataSet": {
                 "notIn": &names,
             }
         }
@@ -588,7 +588,7 @@ async fn remove_user_deleted_dataset_records_and_relations(datasets: &Vec<DataSe
     }
     let relations_to_remove = DataSetRelation::find_many(teon!({
         "where": {
-            "dataset": {
+            "dataSet": {
                 "notIn": names,
             }
         }

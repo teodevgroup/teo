@@ -581,8 +581,11 @@
 
 ### 0.0.64
 - Fix VSCode crashing when completing relation decorators
-- Fix data seeding bugs
+- Fix data seeding bugs **[DONE]**
 - Revamped request extension API
+
+### 0.0.65
+- Improved middleware system
 
 ### 0.1.0
 - Add back model action transformers

@@ -80,11 +80,11 @@ impl DataSetRelation {
 
     /// Dataset
     pub fn dataset(&self) -> String {
-        self.inner.get("dataset").unwrap()
+        self.inner.get("dataSet").unwrap()
     }
 
     pub fn set_dataset(&self, new_value: impl Into<String>) {
-        self.inner.set("dataset", new_value.into()).unwrap();
+        self.inner.set("dataSet", new_value.into()).unwrap();
     }
 
     /// Group a
