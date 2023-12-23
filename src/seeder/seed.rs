@@ -466,7 +466,30 @@ async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Recor
                 }
                 // update relation record
                 let (_, opposite_relation) = ctx.namespace().opposite_relation(relation);
-                let relation_record = DataSetRelation::new(teon!({
+                let exist_relation_record = DataSetRelation::find_first(teon!({
+                    "where": {
+                        "OR": [
+                            {
+                                "dataSet": dataset.name.join(".").as_str(),
+                                "groupA": group.name.join(".").as_str(),
+                                "relationA": relation.name(),
+                                "nameA": record.name.as_str(),
+                                "groupB": that_record.model().path().join("."),
+                                "nameB": v.as_enum_variant().unwrap().value.clone(),
+                            },
+                            {
+                                "dataSet": dataset.name.join(".").as_str(),
+                                "groupB": group.name.join(".").as_str(),
+                                "relationB": relation.name(),
+                                "nameB": record.name.as_str(),
+                                "groupA": that_record.model().path().join("."),
+                                "nameA": v.as_enum_variant().unwrap().value.clone()
+                            }
+                        ]
+                    }
+                }), ctx.clone()).await.unwrap();
+                if exist_relation_record.is_none() {
+                    let relation_record = DataSetRelation::new(teon!({
                     "dataSet": dataset.name.join(".").as_str(),
                     "groupA": group.name.join(".").as_str(),
                     "relationA": relation.name(),
@@ -475,7 +498,8 @@ async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Recor
                     "relationB": if opposite_relation.is_some() { Value::String(opposite_relation.unwrap().name().to_owned()) } else { Value::Null },
                     "nameB": v.as_enum_variant().unwrap().value.clone()
                 }), ctx.clone()).await.unwrap();
-                relation_record.save().await.unwrap();
+                    relation_record.save().await.unwrap();
+                }
             }
         }
     }
