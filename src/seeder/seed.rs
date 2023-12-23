@@ -399,11 +399,6 @@ async fn cut_relation<'a>(relation: &'a DataSetRelation, record: &'a DataSetReco
     let that_model_path: Vec<String> = that_model_name.split(".").map(|s| s.to_string()).collect();
     let that_model = ctx.namespace().model_at_path(&that_model_path.iter().map(|s| s.as_str()).collect()).unwrap();
     let that_name = if record.group().join(".").as_str() == relation.group_a() { relation.name_b() } else { relation.name_a() };
-    let strange_teon = teon!({
-        "dataSet": dataset.name.join(".").as_str(),
-        "group": that_model_name.as_str(),
-        "name": that_name.as_str()
-    });
     let that_record_record = DataSetRecord::find_first(teon!({
         "where": {
             "dataSet": dataset.name.join(".").as_str(),
@@ -414,7 +409,7 @@ async fn cut_relation<'a>(relation: &'a DataSetRelation, record: &'a DataSetReco
     let identifier = that_record_record.record();
     let that_record_where_unique = record_json_string_to_where_unique(&identifier, that_model);
     let that_record: Option<Object> = ctx.find_unique(that_model, &teon!({
-            "where": that_record_where_unique.clone()
+            "where": that_record_where_unique
         }), None, path![]).await.unwrap();
     if that_record.is_none() {
         relation.delete().await.unwrap();
