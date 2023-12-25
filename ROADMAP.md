@@ -580,7 +580,7 @@
 - Fix file uploading bugs **[DONE]**
 
 ### 0.0.64
-- Fix VSCode crashing when completing relation decorators
+- Fix VSCode crashing when completing relation decorators **[DONE]**
 - Fix data seeding bugs **[DONE]**
 - Add back relation delete rule **[DONE]**
 - Add relation update rule **[DONE]**
