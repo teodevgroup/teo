@@ -582,13 +582,15 @@
 ### 0.0.64
 - Fix VSCode crashing when completing relation decorators
 - Fix data seeding bugs **[DONE]**
-- Revamped request extension API
-- Add back relation delete rule
-- Add relation update rule
+- Add back relation delete rule **[DONE]**
+- Add relation update rule **[DONE]**
+- Remove `@recordPrevious` **[DONE]**
+- Fix update input is not optional bug **[DONE]**
 
 ### 0.0.65
-- Improved middleware system
+- Revamped request extension API
 - Custom wrapped pipeline item with arguments
+- Improved middleware system
 
 ### 0.0.66
 - Add back model action transformers
