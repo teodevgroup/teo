@@ -67,11 +67,11 @@ impl App {
         });
     }
 
-    pub fn main_namespace(&self) -> &Namespace {
+    pub fn main_namespace(&self) -> &'static Namespace {
         Ctx::main_namespace()
     }
 
-    pub fn main_namespace_mut(&self) -> &mut Namespace {
+    pub fn main_namespace_mut(&self) -> &'static mut Namespace {
         Ctx::main_namespace_mut()
     }
 

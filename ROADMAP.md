@@ -610,8 +610,8 @@
 - Node.js bindings: error handling
 - Node.js object printing
 - Node.js bindings: date only type **[IN PROGRESS]**
-- Node.js client use dedicated `Date` class instead of builtin `Date`
-- Cross language error handling for node.js
+- Node.js client use dedicated `DateOnly` class instead of builtin `Date`
+- Cross language error handling for node.js **[IN PROGRESS]**
 
 ### 0.1.1
 - Add `onSet`, `onOutput` and `default` for interface fields
