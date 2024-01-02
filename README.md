@@ -6,7 +6,6 @@
   <br />
   <div>Next-generation web framework for Rust, Node.js and Python.</div>
   <br />
-  <br />
   <a href="https://teocloud.io/docs/getting-started/quickstart">Quickstart</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
   <a href="https://teocloud.io/">Official website</a>
@@ -51,8 +50,3 @@ Welcome to submit issues in this repo.
 ## License
 
 TEO is under Apache 2.0 license.
-
-[license-image]: https://img.shields.io/github/license/teocloud/teo.svg?style=flat-square
-[license-url]: https://github.com/teocloud/teo/blob/master/LICENSE
-[pr-image]: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
-[pr-url]: https://github.com/teocloud/teo
