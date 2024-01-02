@@ -100,7 +100,8 @@ pub async fn run(cli: &CLI) -> Result<()> {
             connect_databases(Ctx::main_namespace_mut(), cli.silent).await?;
             if let Some(program) = Ctx::get_mut().programs.get(&run_command.name) {
                 let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());
-                program.call(transaction_ctx).await
+                program.call(transaction_ctx).await?;
+                std::process::exit(0);
             } else {
                 Err(Error::new(format!("program '{}' is not defined", &run_command.name)))
             }
