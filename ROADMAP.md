@@ -592,6 +592,7 @@
 - Fix transaction bug for Node.js and Python **[DONE]**
 
 ### 0.0.66
+- Update design of README.md **[DONE]**
 - Revamped request extension API
 - Custom wrapped pipeline item with arguments
 - Improved middleware system
@@ -609,10 +610,8 @@
 
 ### 0.1.0
 - Rewrite Node.js server **[IN PROGRESS]**
-- Node.js bindings: error handling
 - Node.js object printing
-- Node.js bindings: date only type **[IN PROGRESS]**
-- Node.js client use dedicated `DateOnly` class instead of builtin `Date`
+- Node.js client use dedicated `DateOnly` class instead of builtin `Date` **[IN PROGRESS]**
 - Cross language error handling for node.js **[IN PROGRESS]**
 
 ### 0.1.1
