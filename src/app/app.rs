@@ -53,14 +53,14 @@ impl App {
         Ok(Self { })
     }
 
-    pub fn setup<A, F>(f: F) where F: AsyncCallbackArgument<A> + 'static {
+    pub fn setup<A, F>(&self, f: F) where F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
         Ctx::set_setup(|ctx: transaction::Ctx| async {
             wrap_call.call(ctx).await
         });
     }
 
-    pub fn program<A, F>(name: &str, f: F) where F: AsyncCallbackArgument<A> + 'static {
+    pub fn program<A, F>(&self, name: &str, f: F) where F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
         Ctx::insert_program(name, |ctx: transaction::Ctx| async {
             wrap_call.call(ctx).await

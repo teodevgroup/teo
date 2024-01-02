@@ -588,11 +588,13 @@
 - Fix update input is not optional bug **[DONE]**
 
 ### 0.0.65
+- Fix seeding query bug that sometimes occurs **[DONE]**
+- Fix transaction bug for Node.js and Python **[DONE]**
+
+### 0.0.66
 - Revamped request extension API
 - Custom wrapped pipeline item with arguments
 - Improved middleware system
-
-### 0.0.66
 - Add back model action transformers
 - JWT middleware **[IN PROGRESS]**
 - Identity middleware **[IN PROGRESS]**
