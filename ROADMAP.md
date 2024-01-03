@@ -602,20 +602,18 @@
 - Refactor bcrypt pipeline items
 - Soft delete
 
-### 0.0.67
-- TS Client: correct return types for `count`, `aggregate` and `groupBy`
-
-### 0.0.68
-- Add back integration tests
-
 ### 0.1.0
 - Rewrite Node.js server **[IN PROGRESS]**
 - Node.js object printing
 - Node.js client use dedicated `DateOnly` class instead of builtin `Date` **[IN PROGRESS]**
-- Cross language error handling for node.js **[IN PROGRESS]**
+- Cross language error handling for node.js **[DONE]**
+- Reverse middleware stack order **[DONE]**
+- Asynchronous schema loading **[DONE]**
+- Add back integration tests
 
 ### 0.1.1
 - Add `onSet`, `onOutput` and `default` for interface fields
+- TS Client: correct return types for `count`, `aggregate` and `groupBy`
 
 ### 0.2.0
 - Support first version of Teo Studio
