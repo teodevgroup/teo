@@ -51,4 +51,6 @@ pub mod prelude {
     pub use teo_runtime::arguments::Arguments;
     pub use teo_runtime::middleware::next::Next;
     pub use teo_runtime::middleware::middleware::Middleware;
+    pub use teo_runtime::r#enum::Enum;
+    pub use teo_runtime::r#enum::member::Member;
 }

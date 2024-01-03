@@ -76,12 +76,12 @@ impl App {
     }
 
     pub async fn run(&self) -> Result<()> {
-        self.prepare_for_run()?;
+        self.prepare_for_run().await?;
         self.run_without_prepare().await
     }
 
-    pub fn prepare_for_run(&self) -> Result<()> {
-        load_schema(Ctx::main_namespace_mut(), Ctx::schema(), Ctx::cli().command.ignores_loading())
+    pub async fn prepare_for_run(&self) -> Result<()> {
+        load_schema(Ctx::main_namespace_mut(), Ctx::schema(), Ctx::cli().command.ignores_loading()).await
     }
 
     pub async fn run_without_prepare(&self) -> Result<()> {
