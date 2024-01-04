@@ -604,11 +604,12 @@
 
 ### 0.1.0
 - Rewrite Node.js server **[IN PROGRESS]**
-- Node.js object printing
-- Node.js client use dedicated `DateOnly` class instead of builtin `Date` **[IN PROGRESS]**
+- Node.js object printing **[DONE]**
+- Node.js client use dedicated `DateOnly` class instead of builtin `Date` **[DONE]**
 - Cross language error handling for node.js **[DONE]**
 - Reverse middleware stack order **[DONE]**
 - Asynchronous schema loading **[DONE]**
+- Rewrite Node.js entity generation **[IN PROGRESS]**
 - Add back integration tests
 
 ### 0.1.1
