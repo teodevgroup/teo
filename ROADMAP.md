@@ -609,7 +609,7 @@
 - Cross language error handling for node.js **[DONE]**
 - Reverse middleware stack order **[DONE]**
 - Asynchronous schema loading **[DONE]**
-- Rewrite Node.js entity generation **[IN PROGRESS]**
+- Rewrite Node.js entity generation **[DONE]**
 - Add back integration tests
 
 ### 0.1.1
