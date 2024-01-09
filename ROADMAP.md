@@ -591,18 +591,8 @@
 - Fix seeding query bug that sometimes occurs **[DONE]**
 - Fix transaction bug for Node.js and Python **[DONE]**
 
-### 0.0.66
-- Update design of README.md **[DONE]**
-- Revamped request extension API
-- Custom wrapped pipeline item with arguments
-- Improved middleware system
-- Add back model action transformers
-- JWT middleware **[IN PROGRESS]**
-- Identity middleware **[IN PROGRESS]**
-- Refactor bcrypt pipeline items
-- Soft delete
-
 ### 0.1.0
+- Update design of README.md **[DONE]**
 - Rewrite Node.js server **[IN PROGRESS]**
 - Node.js object printing **[DONE]**
 - Node.js client use dedicated `DateOnly` class instead of builtin `Date` **[DONE]**
@@ -610,13 +600,25 @@
 - Reverse middleware stack order **[DONE]**
 - Asynchronous schema loading **[DONE]**
 - Rewrite Node.js entity generation **[DONE]**
+- Fix MySQL migration bug for `DateTime` **[DONE]**
 - Add back integration tests
+- TS Client: correct return types for `count`, `aggregate` and `groupBy`
+- Custom wrapped pipeline item with arguments
 
 ### 0.1.1
+- Revamped request extension API
+- Improved middleware system
+- Add back model action transformers
+- JWT middleware **[IN PROGRESS]**
+- Identity middleware **[IN PROGRESS]**
+- Refactor bcrypt pipeline items
+- Soft delete
+
+### 0.1.2
 - Add `onSet`, `onOutput` and `default` for interface fields
-- TS Client: correct return types for `count`, `aggregate` and `groupBy`
 
 ### 0.2.0
+- Python integration
 - Support first version of Teo Studio
 
 ### 0.3.0
@@ -659,8 +661,5 @@
 - Full database type mapping
 
 ### 1.0.0
-- First stable major version
-
-### 2.0.0
-- Python server
 - Support MSSQL
+- First stable major version
