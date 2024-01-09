@@ -20,6 +20,12 @@ impl IntoHttpResponse for Response {
             BodyInner::Empty => (),
             BodyInner::String(content) => return builder.body(content.to_string()),
             BodyInner::File(file) => return NamedFile::open(file).unwrap().into_response(&http_request),
+            BodyInner::Teon(value) => {
+                builder.content_type("application/json");
+                let json_value = serde_json::Value::try_from(value).unwrap();
+                let string_value = serde_json::to_string(&json_value).unwrap();
+                return builder.body(string_value);
+            }
         }
         builder.finish()
     }
