@@ -603,7 +603,7 @@
 - Fix MySQL migration bug for `DateTime` **[DONE]**
 - Add back integration tests
 - TS Client: correct return types for `count`, `aggregate` and `groupBy`
-- Custom wrapped pipeline item with arguments
+- Extract arguments in wrapped pipeline item with **[DONE]**
 
 ### 0.1.1
 - Revamped request extension API
