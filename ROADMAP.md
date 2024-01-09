@@ -592,8 +592,8 @@
 - Fix transaction bug for Node.js and Python **[DONE]**
 
 ### 0.1.0
+- Rewrite Node.js server **[DONE]**
 - Update design of README.md **[DONE]**
-- Rewrite Node.js server **[IN PROGRESS]**
 - Node.js object printing **[DONE]**
 - Node.js client use dedicated `DateOnly` class instead of builtin `Date` **[DONE]**
 - Cross language error handling for node.js **[DONE]**
@@ -601,6 +601,7 @@
 - Asynchronous schema loading **[DONE]**
 - Rewrite Node.js entity generation **[DONE]**
 - Fix MySQL migration bug for `DateTime` **[DONE]**
+- Pipeline item target type casting **[IN PROGRESS]**
 - Add back integration tests
 - TS Client: correct return types for `count`, `aggregate` and `groupBy`
 - Extract arguments in wrapped pipeline item with **[DONE]**
