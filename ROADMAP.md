@@ -601,7 +601,7 @@
 - Asynchronous schema loading **[DONE]**
 - Rewrite Node.js entity generation **[DONE]**
 - Fix MySQL migration bug for `DateTime` **[DONE]**
-- Pipeline item target type casting **[IN PROGRESS]**
+- Pipeline item target type casting **[DONE]**
 - Add back integration tests
 - TS Client: correct return types for `count`, `aggregate` and `groupBy`
 - Extract arguments in wrapped pipeline item with **[DONE]**
