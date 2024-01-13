@@ -604,6 +604,7 @@
 - Pipeline item target type casting **[DONE]**
 - Add back integration tests
 - TS Client: correct return types for `count`, `aggregate` and `groupBy`
+- TS Client: fix `DateOnly` and `ObjectId` type to string **[DONE]**
 - Extract arguments in wrapped pipeline item with **[DONE]**
 
 ### 0.1.1
