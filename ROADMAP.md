@@ -602,12 +602,15 @@
 - Rewrite Node.js entity generation **[DONE]**
 - Fix MySQL migration bug for `DateTime` **[DONE]**
 - Pipeline item target type casting **[DONE]**
-- Add back integration tests
-- TS Client: correct return types for `count`, `aggregate` and `groupBy`
+- TS Client: correct return types for `count`, `aggregate` and `groupBy` **[DONE]**
 - TS Client: fix `DateOnly` and `ObjectId` type to string **[DONE]**
 - Extract arguments in wrapped pipeline item with **[DONE]**
+- Node.js: add `count`, `aggregate` and `groupBy`
+- Node.js: type safe database methods
+- TS Client: add `decimal.js` to package.json
 
 ### 0.1.1
+- Add back integration tests
 - Revamped request extension API
 - Improved middleware system
 - Add back model action transformers
