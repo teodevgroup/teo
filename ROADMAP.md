@@ -605,7 +605,7 @@
 - TS Client: correct return types for `count`, `aggregate` and `groupBy` **[DONE]**
 - TS Client: fix `DateOnly` and `ObjectId` type to string **[DONE]**
 - Extract arguments in wrapped pipeline item with **[DONE]**
-- Node.js: add `count`, `aggregate` and `groupBy`
+- Node.js: add `count`, `aggregate` and `groupBy` **[DONE]**
 - Node.js: type safe database methods
 - TS Client: add `decimal.js` to package.json
 
