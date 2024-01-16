@@ -606,8 +606,8 @@
 - TS Client: fix `DateOnly` and `ObjectId` type to string **[DONE]**
 - Extract arguments in wrapped pipeline item with **[DONE]**
 - Node.js: add `count`, `aggregate` and `groupBy` **[DONE]**
-- Node.js: type safe database methods
-- TS Client: add `decimal.js` to package.json
+- Node.js: type safe database methods **[DONE]**
+- TS Client: add `decimal.js` to package.json **[DONE]**
 
 ### 0.1.1
 - Add back integration tests
