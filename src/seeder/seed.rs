@@ -27,7 +27,7 @@ pub(crate) async fn seed(action: SeedCommandAction, datasets: Vec<DataSet>, ctx:
         }
     }
     remove_user_deleted_dataset_records_and_relations(&datasets, ctx).await;
-    Ok(())
+    std::process::exit(0);
 }
 
 pub(crate) async fn seed_dataset(dataset: &DataSet, ctx: transaction::Ctx) {
