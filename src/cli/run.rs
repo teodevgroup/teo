@@ -22,7 +22,7 @@ pub async fn run(cli: &CLI) -> Result<()> {
             if Ctx::main_namespace().database.is_some() {
                 let data_sets = load_data_sets(Ctx::main_namespace(), None, false, Ctx::schema())?;
                 let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());
-                seed(SeedCommandAction::Seed, data_sets, transaction_ctx).await?;
+                seed(SeedCommandAction::Seed, data_sets, transaction_ctx, false).await?;
             }
             // setup
             if let Some(setup) = Ctx::setup() {
@@ -87,7 +87,7 @@ pub async fn run(cli: &CLI) -> Result<()> {
             connect_databases(Ctx::main_namespace_mut(), cli.silent).await?;
             let data_sets = load_data_sets(Ctx::main_namespace(), seed_command.names.as_ref(), seed_command.all, Ctx::schema())?;
             let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());
-            seed(seed_command.action, data_sets, transaction_ctx).await?;
+            seed(seed_command.action, data_sets, transaction_ctx, true).await?;
             Ok(())
         }
         CLICommand::Purge(purge_command) => {

@@ -17,7 +17,7 @@ use teo_runtime::model::{Model, Object, Relation};
 use teo_runtime::model::field::typed::Typed;
 use teo_runtime::traits::named::Named;
 
-pub(crate) async fn seed(action: SeedCommandAction, datasets: Vec<DataSet>, ctx: transaction::Ctx) -> Result<()> {
+pub(crate) async fn seed(action: SeedCommandAction, datasets: Vec<DataSet>, ctx: transaction::Ctx, exit: bool) -> Result<()> {
     // seed for user
     for dataset in &datasets {
         match action {
@@ -27,7 +27,11 @@ pub(crate) async fn seed(action: SeedCommandAction, datasets: Vec<DataSet>, ctx:
         }
     }
     remove_user_deleted_dataset_records_and_relations(&datasets, ctx).await;
-    std::process::exit(0);
+    if exit {
+        std::process::exit(0);
+    } else {
+        Ok(())
+    }
 }
 
 pub(crate) async fn seed_dataset(dataset: &DataSet, ctx: transaction::Ctx) {

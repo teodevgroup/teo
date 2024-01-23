@@ -610,6 +610,13 @@
 - TS Client: add `decimal.js` to package.json **[DONE]**
 
 ### 0.1.1
+- Fix auto seeding bug which causes exiting **[DONE]**
+
+### 0.2.0
+- Python integration
+
+### 0.3.0
+- Add `onSet`, `onOutput` and `default` for interface fields
 - Add back integration tests
 - Revamped request extension API
 - Improved middleware system
@@ -619,14 +626,10 @@
 - Refactor bcrypt pipeline items
 - Soft delete
 
-### 0.1.2
-- Add `onSet`, `onOutput` and `default` for interface fields
-
-### 0.2.0
-- Python integration
+### 0.3.5
 - Support first version of Teo Studio
 
-### 0.3.0
+### 0.4.0
 - C# client: capitalized names and names with underscore
 - Swift client
 - Kotlin client
@@ -638,19 +641,19 @@
 - Relation onDelete
 - MongoDB: connector is not using table name
 
-### 0.4.0
+### 0.5.0
 - Model fragments
 - model extends model
 - enum extends enum
 - Json type
 
-### 0.5.0
+### 0.6.0
 - MongoDB transaction
 - Custom SQL query scopes
 - Custom MongoDB query scopes
 - Default argument for argument list and config declaration
 
-### 0.6.0
+### 0.7.0
 - PostgreSQL: Enum types
 - MongoDB migration
 - MongoDB `$queryRaw`
@@ -662,7 +665,7 @@
 - MongoDB: aggregate and group by for string and dates
 - Correct count with cursor
 
-### 0.7.0
+### 0.8.0
 - Full database type mapping
 
 ### 1.0.0
