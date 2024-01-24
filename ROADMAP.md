@@ -612,12 +612,17 @@
 ### 0.1.1
 - Fix auto seeding bug which causes exiting **[DONE]**
 
+### 0.1.2
+- Fixed Node.js package release bug **[DONE]**
+
+### 0.1.3
+- Fixed TypeScript client array result type bug **[DONE]**
+
 ### 0.2.0
 - Python integration
 
 ### 0.3.0
 - Add `onSet`, `onOutput` and `default` for interface fields
-- Add back integration tests
 - Revamped request extension API
 - Improved middleware system
 - Add back model action transformers
@@ -630,15 +635,14 @@
 - Support first version of Teo Studio
 
 ### 0.4.0
-- C# client: capitalized names and names with underscore
+- Add back integration tests
 - Swift client
 - Kotlin client
 - C# client
 - Dart client
+- C# client: capitalized names and names with underscore
 - Debug logging SQL
 - Migration dry run
-- Relation onUpdate
-- Relation onDelete
 - MongoDB: connector is not using table name
 
 ### 0.5.0
@@ -671,3 +675,6 @@
 ### 1.0.0
 - Support MSSQL
 - First stable major version
+
+### 1.5.0
+- Full set of unit tests
