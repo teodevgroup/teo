@@ -610,7 +610,7 @@
 - TS Client: add `decimal.js` to package.json **[DONE]**
 
 ### 0.1.1
-- Fix auto seeding bug which causes exiting **[DONE]**
+- Fixed auto seeding bug which causes exiting **[DONE]**
 
 ### 0.1.2
 - Fixed Node.js package release bug **[DONE]**
@@ -620,6 +620,10 @@
 
 ### 0.1.4
 - Fixed `orderBy` input definition bug **[DONE]**
+
+### 0.1.5
+- Fixed client generation for `orderBy` **[DONE]**
+- Fixed pipeline item and model decorators loading in CLI mode **[DONE]**
 
 ### 0.2.0
 - Python integration
