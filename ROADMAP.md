@@ -618,6 +618,9 @@
 ### 0.1.3
 - Fixed TypeScript client array result type bug **[DONE]**
 
+### 0.1.4
+- Fixed `orderBy` input definition bug **[DONE]**
+
 ### 0.2.0
 - Python integration
 
