@@ -625,6 +625,9 @@
 - Fixed client generation for `orderBy` **[DONE]**
 - Fixed pipeline item and model decorators loading in CLI mode **[DONE]**
 
+### 0.1.6
+- Fixed `DateTime` encoding bug in TypeScript client **[DONE]**
+
 ### 0.2.0
 - Python integration
 
