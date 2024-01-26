@@ -628,6 +628,9 @@
 ### 0.1.6
 - Fixed `DateTime` encoding bug in TypeScript client **[DONE]**
 
+### 0.1.7
+- Fixed meta decoding bug for `findMany` **[DONE]**
+
 ### 0.2.0
 - Python integration
 
