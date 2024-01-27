@@ -631,6 +631,9 @@
 ### 0.1.7
 - Fixed meta decoding bug for `findMany` **[DONE]**
 
+### 0.1.8
+- Fixed `Int64` and `Float32` SQL encoding bug **[DONE]**
+
 ### 0.2.0
 - Python integration
 
