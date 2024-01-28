@@ -634,6 +634,9 @@
 ### 0.1.8
 - Fixed `Int64` and `Float32` SQL encoding bug **[DONE]**
 
+### 0.1.9
+- Fixed middleware creator arguments are not found bug **[DONE]**
+
 ### 0.2.0
 - Python integration
 
