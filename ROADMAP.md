@@ -636,6 +636,7 @@
 
 ### 0.1.9
 - Fixed middleware creator arguments are not found bug **[DONE]**
+- When cursor is invalidly used, display error message instead of panicking **[DONE]**
 
 ### 0.2.0
 - Python integration
