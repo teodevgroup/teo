@@ -639,9 +639,11 @@
 - When cursor is invalidly used, display error message instead of panicking **[DONE]**
 
 ### 0.2.0
-- Python integration
+- Support Python server
 
 ### 0.3.0
+- Update error mechanism to include code and path
+- Remove teon package, use parser value and runtime value instead
 - Add `onSet`, `onOutput` and `default` for interface fields
 - Revamped request extension API
 - Improved middleware system
