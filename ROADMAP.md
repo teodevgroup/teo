@@ -655,9 +655,6 @@
 - Refactor bcrypt pipeline items
 - Soft delete
 
-### 0.3.5
-- Support first version of Teo Studio
-
 ### 0.4.0
 - Add back integration tests
 - Swift client
@@ -670,9 +667,6 @@
 - MongoDB: connector is not using table name
 
 ### 0.5.0
-- Model fragments
-- model extends model
-- enum extends enum
 - Json type
 
 ### 0.6.0
@@ -695,10 +689,18 @@
 
 ### 0.8.0
 - Full database type mapping
+- Model fragments
+- model extends model
+- enum extends enum
+
+### 0.9.0
+- Support first version of Teo Studio
 
 ### 1.0.0
-- Support MSSQL
 - First stable major version
+
+### 1.3.0
+- Support MSSQL
 
 ### 1.5.0
 - Full set of unit tests
