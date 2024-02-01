@@ -639,7 +639,9 @@
 - When cursor is invalidly used, display error message instead of panicking **[DONE]**
 
 ### 0.2.0
-- Support Python server
+- Support Python server **[DONE]**
+- Fix relation filters are required bug **[DONE]**
+- Format new lines in generated javaScript entities and clients **[DONE]**
 
 ### 0.3.0
 - Update error mechanism to include code and path
