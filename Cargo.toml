@@ -1,6 +1,6 @@
 [package]
 name = "teo"
-version = "0.2.1-alpha.0"
+version = "0.2.1-alpha.1"
 edition = "2021"
 description = "Next-generation web framework for Rust, Node.js and Python."
 license = "Apache-2.0"
@@ -52,6 +52,8 @@ rand = "0.8.5"
 educe = "0.5.9"
 colored = "2.1.0"
 bson = { version = "2.7.0", features = ["chrono-0_4", "serde_with"] }
+
+[target.'cfg(linux)'.dependencies]
 openssl = { version = "0.10", features = ["vendored"] }
 
 [dev-dependencies]
