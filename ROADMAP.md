@@ -643,12 +643,16 @@
 - Fix relation filters are required bug **[DONE]**
 - Format new lines in generated javaScript entities and clients **[DONE]**
 
+### 0.2.1
+- Fix Linux GitHub CI building for Python package **[DONE]**
+- Fix Linux GitHub CI building for Node.js package **[DONE]**
+
 ### 0.3.0
 - Update error mechanism to include code and path
 - Remove teon package, use parser value and runtime value instead
 - Add `onSet`, `onOutput` and `default` for interface fields
 - Revamped request extension API
-- Improved middleware system
+- Improved middleware system including middleware skipping and model middlewares
 - Add back model action transformers
 - JWT middleware **[IN PROGRESS]**
 - Identity middleware **[IN PROGRESS]**
