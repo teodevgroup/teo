@@ -6,11 +6,11 @@
   <br />
   <div>Next-generation web framework for Rust, Node.js and Python.</div>
   <br />
-  <a href="https://teocloud.io/docs/getting-started/quickstart">Quickstart</a>
+  <a href="https://docs.teocloud.io/getting-started/quickstart">Quickstart</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
   <a href="https://teocloud.io/">Official website</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-  <a href="https://teocloud.io/docs">Docs</a>
+  <a href="https://docs.teocloud.io/">Docs</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
   <a href="https://teocloud.io/blog">Blog</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
@@ -21,11 +21,11 @@
 
 ## Getting started
 
-The fastest way to get started with Teo is by following the [Quickstart guide](https://teocloud.io/docs/getting-started/quickstart).
+The fastest way to get started with Teo is by following the [Quickstart guide](https://docs.teocloud.io/getting-started/quickstart).
 
 ## Tutorials
 
-We prepared a [Beginner tutorial series](https://teocloud.io/docs/getting-started/beginner-tutorial/write-a-schema-only-app)
+We prepared a [Beginner tutorial series](https://docs.teocloud.io/guides)
 to help you learn and understand Teo.
 
 ## Highlights & Features
