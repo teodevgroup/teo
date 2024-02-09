@@ -25,7 +25,7 @@ The fastest way to get started with Teo is by following the [Quickstart guide](h
 
 ## Tutorials
 
-We prepared a [Beginner tutorial series](https://docs.teocloud.io/guides)
+We prepared a [Beginner tutorial series](https://docs.teocloud.io/getting-started/beginner-tutorial/write-a-schema-only-app)
 to help you learn and understand Teo.
 
 ## Highlights & Features
