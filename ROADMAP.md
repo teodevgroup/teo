@@ -651,9 +651,10 @@
 - Python: Fix declaration and signature of decorator APIs
 - Python: Fix signatures for `TypedDict` optional fields
 - Python: Add slash to python generated APIs
-- Python: Fix CLI run loop bug
-- Node.js: Type annotation for define handler group
+- Python: Fix CLI run loop bug **[DONE]**
+- Node.js: Type annotation for define handler group **[DONE]**
 - Parser: When data set group is not found, display an error
+- SQL: fix `notIn` and `in` query bug **[DONE]**
 
 ### 0.3.0
 - Update error mechanism to include code and path
