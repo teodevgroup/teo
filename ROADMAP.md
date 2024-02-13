@@ -647,6 +647,14 @@
 - Fix Linux GitHub CI building for Python package **[DONE]**
 - Fix Linux GitHub CI building for Node.js package **[DONE]**
 
+### 0.2.2
+- Python: Fix declaration and signature of decorator APIs
+- Python: Fix signatures for `TypedDict` optional fields
+- Python: Add slash to python generated APIs
+- Python: Fix CLI run loop bug
+- Node.js: Type annotation for define handler group
+- Parser: When data set group is not found, display an error
+
 ### 0.3.0
 - Update error mechanism to include code and path
 - Remove teon package, use parser value and runtime value instead
