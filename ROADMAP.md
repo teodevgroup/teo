@@ -648,12 +648,13 @@
 - Fix Linux GitHub CI building for Node.js package **[DONE]**
 
 ### 0.2.2
-- Python: Fix declaration and signature of decorator APIs
-- Python: Fix signatures for `TypedDict` optional fields
-- Python: Add slash to python generated APIs
+- Python: Fix declaration and signature of decorator APIs **[DONE]**
+- Python: Fix signatures for `TypedDict` optional fields **[DONE]**
+- Python: Add slash to python generated APIs **[DONE]**
 - Python: Fix CLI run loop bug **[DONE]**
 - Node.js: Type annotation for define handler group **[DONE]**
-- Parser: When data set group is not found, display an error
+- Node.js: Fix type annotation for decorator APIs **[DONE]**
+- Parser: When data set group is not found, display an error **[DONE]**
 - SQL: fix `notIn` and `in` query bug **[DONE]**
 
 ### 0.3.0

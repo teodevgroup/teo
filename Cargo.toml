@@ -12,11 +12,11 @@ repository = "https://github.com/teocloud/teo"
 [dependencies]
 teo-result = "0.2.0"
 teo-teon = "0.2.0"
-teo-parser = { path = "../teo-parser" }
-teo-runtime = { path = "../teo-runtime" }
-teo-sql-connector = { path = "../teo-sql-connector" }
-teo-mongodb-connector = { path = "../teo-mongodb-connector" }
-teo-generator = { path = "../teo-generator" }
+teo-parser = "0.2.2"
+teo-runtime = "0.2.2"
+teo-sql-connector = "0.2.2"
+teo-mongodb-connector = "0.2.2"
+teo-generator = "0.2.2"
 actix-web = "4.5.1"
 actix-http = "3.6.0"
 actix-multipart = "0.6.1"
