@@ -657,6 +657,12 @@
 - Parser: When data set group is not found, display an error **[DONE]**
 - SQL: fix `notIn` and `in` query bug **[DONE]**
 
+### 0.2.3
+- Replace `count` with `count_objects` and `count_fields` in Python and Rust entities
+
+### 0.2.4
+- Update swift client package with new namespaces API
+
 ### 0.3.0
 - Update error mechanism to include code and path
 - Remove teon package, use parser value and runtime value instead
