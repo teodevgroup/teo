@@ -1,4 +1,5 @@
-use rustc_version::{version};
+use rustc_version::version;
+
 fn main() {
     // export rustc version to the executable
     let version_string = version().unwrap().to_string();
