@@ -658,7 +658,8 @@
 - SQL: fix `notIn` and `in` query bug **[DONE]**
 
 ### 0.2.3
-- Replace `count` with `count_objects` and `count_fields` in Python and Rust entities
+- Node.js: Fix warnings in generated Node.js interface **[DONE]**
+- Replace `count` with `count_objects` and `count_fields` in Python and Rust entities **[DONE]**
 
 ### 0.2.4
 - Update swift client package with new namespaces API
