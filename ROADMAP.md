@@ -663,7 +663,12 @@
 ### 0.2.4
 - Update swift client package with new namespaces API
 
+### 0.2.5
+- Add back integration tests
+
 ### 0.3.0
+- Debug logging SQL
+- Migration dry run
 - Update error mechanism to include code and path
 - Remove teon package, use parser value and runtime value instead
 - Add `onSet`, `onOutput` and `default` for interface fields
@@ -676,14 +681,10 @@
 - Soft delete
 
 ### 0.4.0
-- Add back integration tests
-- Swift client
 - Kotlin client
 - C# client
 - Dart client
 - C# client: capitalized names and names with underscore
-- Debug logging SQL
-- Migration dry run
 - MongoDB: connector is not using table name
 
 ### 0.5.0
