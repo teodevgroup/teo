@@ -660,6 +660,8 @@
 ### 0.2.3
 - Node.js: Fix warnings in generated Node.js interface **[DONE]**
 - Replace `count` with `count_objects` and `count_fields` in Python and Rust entities **[DONE]**
+- SQL: count fields
+- MongoDB: count fields
 
 ### 0.2.4
 - Update swift client package with new namespaces API
