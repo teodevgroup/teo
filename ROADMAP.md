@@ -664,9 +664,11 @@
 - MongoDB: count fields **[DONE]**
 
 ### 0.2.4
-- Update swift client package with new namespaces API
+- `count_fields` now takes generic argument **[DONE]**
+- Rust entity: Fix root context object is wrongly generated submodules bug **[DONE]**
 
 ### 0.2.5
+- Update swift client package with new namespaces API
 - Add back integration tests
 
 ### 0.3.0
