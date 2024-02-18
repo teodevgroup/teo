@@ -673,6 +673,8 @@
 - Node.js: Add `serveStaticFiles` function **[DONE]**
 - Python: Add `serve_static_files` function
 - Node.js: Fix model is not generated into entities bug **[DONE]**
+- Node.js: Fix `RequestCtx` methods return type annotation bug **[DONE]**
+- Node.js: Fix entity generation type annotation errors **[DONE]**
 
 ### 0.2.5
 - Update swift client package with new namespaces API
