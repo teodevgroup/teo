@@ -667,6 +667,7 @@
 - `count_fields` now takes generic argument **[DONE]**
 - Rust entity: Fix root context object is wrongly generated submodules bug **[DONE]**
 - Parser: update model pipeline trigger arguments **[DONE]**
+- Fix typo in command option messages **[DONE]** 
 
 ### 0.2.5
 - Update swift client package with new namespaces API
