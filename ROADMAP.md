@@ -667,7 +667,12 @@
 - `count_fields` now takes generic argument **[DONE]**
 - Rust entity: Fix root context object is wrongly generated submodules bug **[DONE]**
 - Parser: update model pipeline trigger arguments **[DONE]**
-- Fix typo in command option messages **[DONE]** 
+- Fix typo in command option messages **[DONE]**
+- Node.js: Update `defineHandler` to use `RequestCtx` argument **[DONE]**
+- Python: Update `define_handler` to use `RequestCtx` argument
+- Node.js: Add `serveStaticFiles` function **[DONE]**
+- Python: Add `serve_static_files` function
+- Node.js: Fix model is not generated into entities bug **[DONE]**
 
 ### 0.2.5
 - Update swift client package with new namespaces API
