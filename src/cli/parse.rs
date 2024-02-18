@@ -78,7 +78,7 @@ pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance) -> CLI 
                 .arg(Arg::new("all")
                     .short('a')
                     .long("all")
-                    .help("Generate all clients")
+                    .help("Generate all entities")
                     .action(ArgAction::SetTrue)
                     .conflicts_with("NAME"))
                 .arg(Arg::new("NAME")
