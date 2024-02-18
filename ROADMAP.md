@@ -679,14 +679,20 @@
 - Python: Add `path_arguments` to `RequestCtx` **[DONE]**
 
 ### 0.2.5
+- Update error mechanism to include code and path
+
+### 0.2.6
 - Update swift client package with new namespaces API
 - Add back integration tests
 
 ### 0.3.0
+- Remove teon package, use parser value and runtime value instead
+
+### 0.3.1
 - Debug logging SQL
 - Migration dry run
-- Update error mechanism to include code and path
-- Remove teon package, use parser value and runtime value instead
+
+### 0.3.2
 - Add `onSet`, `onOutput` and `default` for interface fields
 - Revamped request extension API
 - Improved middleware system including middleware skipping and model middlewares
