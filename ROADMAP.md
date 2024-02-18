@@ -669,12 +669,14 @@
 - Parser: update model pipeline trigger arguments **[DONE]**
 - Fix typo in command option messages **[DONE]**
 - Node.js: Update `defineHandler` to use `RequestCtx` argument **[DONE]**
-- Python: Update `define_handler` to use `RequestCtx` argument
+- Python: Update `define_handler` to use `RequestCtx` argument **[DONE]**
 - Node.js: Add `serveStaticFiles` function **[DONE]**
-- Python: Add `serve_static_files` function
+- Python: Add `serve_static_files` function **[DONE]**
 - Node.js: Fix model is not generated into entities bug **[DONE]**
 - Node.js: Fix `RequestCtx` methods return type annotation bug **[DONE]**
 - Node.js: Fix entity generation type annotation errors **[DONE]**
+- Node.js: Add `pathArguments` to `RequestCtx` **[DONE]**
+- Python: Add `path_arguments` to `RequestCtx` **[DONE]**
 
 ### 0.2.5
 - Update swift client package with new namespaces API
