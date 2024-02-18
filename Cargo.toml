@@ -65,10 +65,3 @@ reqwest = { version = "0.11", features = ["json", "blocking"] }
 [build-dependencies]
 rustc_version = "0.4.0"
 
-[features]
-#default = ["data-source-mongodb", "data-source-mysql", "data-source-postgres", "data-source-sqlite", "data-source-mssql"]
-#data-source-mongodb = ["mongodb", "bson"]
-#data-source-mysql = ["quaint-forked"]
-#data-source-postgres = ["quaint-forked"]
-#data-source-sqlite = ["quaint-forked"]
-#data-source-mssql = ["quaint-forked"]
