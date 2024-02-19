@@ -1,6 +1,6 @@
 [package]
 name = "teo"
-version = "0.2.4"
+version = "0.2.5"
 edition = "2021"
 description = "Next-generation web framework for Rust, Node.js and Python."
 license = "Apache-2.0"
@@ -13,7 +13,7 @@ repository = "https://github.com/teocloud/teo"
 teo-result = "0.2.0"
 teo-teon = "0.2.0"
 teo-parser = { version = "0.2.4", path = "../teo-parser" }
-teo-runtime = { version = "0.2.4", path = "../teo-runtime" }
+teo-runtime = { version = "0.2.5", path = "../teo-runtime" }
 teo-sql-connector = { version = "0.2.4", path = "../teo-sql-connector" }
 teo-mongodb-connector = { version = "0.2.4", path = "../teo-mongodb-connector" }
 teo-generator = { version = "0.2.4", path = "../teo-generator" }

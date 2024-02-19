@@ -679,9 +679,12 @@
 - Python: Add `path_arguments` to `RequestCtx` **[DONE]**
 
 ### 0.2.5
-- Update error mechanism to include code and path
+- Node.js: Fix `DateTime` encoding bug **[DONE]**
 
 ### 0.2.6
+- Update error mechanism to include code and path
+
+### 0.2.7
 - Update swift client package with new namespaces API
 - Add back integration tests
 
