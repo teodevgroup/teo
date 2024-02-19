@@ -680,6 +680,7 @@
 
 ### 0.2.5
 - Node.js: Fix `DateTime` encoding bug **[DONE]**
+- Node.js: Fix memory bug for define handler groups **[DONE]**
 
 ### 0.2.6
 - Update error mechanism to include code and path
