@@ -683,6 +683,10 @@
 - Node.js: Fix memory bug for define handler groups **[DONE]**
 - Node.js: Fix define handler error strategy **[DONE]**
 - Python: Fix `DateTime` encoding bug **[DONE]**
+- Python: Fix field name is not snake-cased bug **[DONE]**
+- Python: Fix `File` class instance variable bug **[DONE]**
+- Python: implement `__repr__` for `File` **[DONE]**
+- Fix stack overflow bug
 
 ### 0.2.6
 - Update error mechanism to include code and path

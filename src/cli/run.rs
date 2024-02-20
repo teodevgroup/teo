@@ -19,10 +19,12 @@ pub async fn run(cli: &CLI) -> Result<()> {
                 migrate(false, false, cli.silent).await?;
             }
             // seed auto seed data sets
-            if Ctx::main_namespace().database.is_some() {
-                let data_sets = load_data_sets(Ctx::main_namespace(), None, false, Ctx::schema())?;
-                let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());
-                seed(SeedCommandAction::Seed, data_sets, transaction_ctx, false).await?;
+            if !serve_command.no_autoseed {
+                if Ctx::main_namespace().database.is_some() {
+                    let data_sets = load_data_sets(Ctx::main_namespace(), None, false, Ctx::schema())?;
+                    let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());
+                    seed(SeedCommandAction::Seed, data_sets, transaction_ctx, false).await?;
+                }
             }
             // setup
             if let Some(setup) = Ctx::setup() {
