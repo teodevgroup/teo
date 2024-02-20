@@ -682,6 +682,7 @@
 - Node.js: Fix `DateTime` encoding bug **[DONE]**
 - Node.js: Fix memory bug for define handler groups **[DONE]**
 - Node.js: Fix define handler error strategy **[DONE]**
+- Python: Fix `DateTime` encoding bug **[DONE]**
 
 ### 0.2.6
 - Update error mechanism to include code and path
