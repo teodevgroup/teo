@@ -687,7 +687,7 @@
 - Python: Fix `File` class instance variable bug **[DONE]**
 - Python: implement `__repr__` for `File` **[DONE]**
 - CLI: Fix `--no-autoseed` doesn't work bug **[DONE]**
-- Fix stack overflow bug
+- Fix update rule causes stack overflow bug
 
 ### 0.2.6
 - Update error mechanism to include code and path
