@@ -27,20 +27,20 @@
 
 我们准备了[新手教程系列](https://docs.teocloud.io/getting-started/beginner-tutorial/write-a-schema-only-app)，来帮助您学习和理解Teo.
 
-## Highlights & Features
+## 亮点 & 功能
 
-* Innovative schema definition inspired by GraphQL and Prisma
-* Auto database migration
-* Supports Rust and Node.js
-* Supports MySQL, PostgreSQL, SQLite and MongoDB
-* Generated ORM entities
-* Generated query clients for frontend
-* Very efficient and performant
-* Data sanitization, transformation and validation
-* Builtin user sessions
-* Builtin permission check
-* First in last out middlewares
-* Custom routes and handlers
+* 极具创新的受GraphQL和Prisma启发的结构定义
+* 自动的数据库迁移
+* 支持Rust、Node.js和Python
+* 支持MySQL，PostgreSQL，SQLite和MongoDB
+* 生成的ORM类型定义
+* 生成的前端请求代码
+* 非常效率和高性能
+* 数据净化、转换和验证
+* 内建的用户session
+* 内建的权限检查
+* 先进后出的中间件
+* 自定义的路由处理
 
 ## 问题
 

@@ -32,9 +32,9 @@ to help you learn and understand Teo.
 
 * Innovative schema definition inspired by GraphQL and Prisma
 * Auto database migration
-* Supports Rust and Node.js
+* Supports Rust, Node.js and Python
 * Supports MySQL, PostgreSQL, SQLite and MongoDB
-* Generated ORM entities
+* Generated ORM types and interfaces
 * Generated query clients for frontend
 * Very efficient and performant
 * Data sanitization, transformation and validation
