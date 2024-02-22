@@ -21,10 +21,10 @@ pub struct App { }
 impl App {
 
     pub fn new() -> Result<Self> {
-        Self::new_with_entrance_and_runtime_version(None, None)
+        Self::new_with_entrance_and_runtime_version(None, None, None)
     }
 
-    pub fn new_with_entrance_and_runtime_version(entrance: Option<Entrance>, runtime_version: Option<RuntimeVersion>) -> Result<Self> {
+    pub fn new_with_entrance_and_runtime_version(entrance: Option<Entrance>, runtime_version: Option<RuntimeVersion>, argv: Option<Vec<String>>) -> Result<Self> {
         // load env first
         let _ = dotenv();
         if !Ctx::create() {
@@ -35,6 +35,9 @@ impl App {
         }
         if let Some(runtime_version) = runtime_version {
             Ctx::set_runtime_version(runtime_version);
+        }
+        if let Some(argv) = argv {
+            Ctx::set_argv(argv);
         }
         let cli = cli_parse(Ctx::get().runtime_version.clone(), Ctx::get().entrance, Some(Ctx::argv()));
         let current_dir = match current_dir() {
