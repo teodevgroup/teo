@@ -691,6 +691,8 @@
 
 ### 0.2.6
 - Fix CLI description in serve **[DONE]**
+- Node.js: Fix no ARGV bug in Linux systems **[DONE]**
+- Python: Fix no ARGV bg in Linux systems **[DONE]**
 
 ### 0.2.7
 - Update error mechanism to include code and path
