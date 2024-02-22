@@ -129,7 +129,9 @@ pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance) -> CLI 
                 .num_args(1)))
         .get_matches_from(match runtime_version {
             RuntimeVersion::Python(_) | RuntimeVersion::NodeJS(_) => {
-                env::args_os().enumerate().filter(|(i, x)| (*i != 1) && (!x.to_str().unwrap().ends_with("ts-node") && !x.to_str().unwrap().ends_with(".ts"))).map(|(_i, x)| x).collect::<Vec<OsString>>()
+                let result = env::args_os().enumerate().filter(|(i, x)| (*i != 1) && (!x.to_str().unwrap().ends_with("ts-node") && !x.to_str().unwrap().ends_with(".ts"))).map(|(_i, x)| x).collect::<Vec<OsString>>();
+                println!("see result {:?}", result);
+                result
             },
             RuntimeVersion::Rust(_) => env::args_os().enumerate().filter(|(i, x)| {
                 !((*i == 1) && x.to_str().unwrap() == "teo")
