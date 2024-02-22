@@ -17,6 +17,7 @@ use crate::cli::runtime_version::RuntimeVersion;
 #[educe(Debug)]
 pub struct Ctx {
     loaded: bool,
+    pub(crate) argv: Vec<String>,
     pub(crate) runtime_version: RuntimeVersion,
     pub(crate) entrance: Entrance,
     pub(crate) main_namespace: Namespace,
@@ -36,6 +37,7 @@ impl Ctx {
     fn new() -> Self {
         Self {
             loaded: true,
+            argv: vec![],
             runtime_version: RuntimeVersion::Rust(env!("TEO_RUSTC_VERSION")),
             entrance: Entrance::APP,
             main_namespace: Namespace::main(),
@@ -107,6 +109,14 @@ impl Ctx {
 
     pub fn cli() -> &'static CLI {
         Ctx::get().cli.as_ref().unwrap()
+    }
+
+    pub fn argv() -> Vec<String> {
+        Ctx::get().argv.clone()
+    }
+
+    pub fn set_argv(argv: Vec<String>) {
+        Ctx::get_mut().argv = argv;
     }
 
     pub fn set_schema(schema: Schema) {

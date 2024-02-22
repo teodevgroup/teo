@@ -5,7 +5,8 @@ use crate::cli::entrance::Entrance;
 use crate::cli::runtime_version::RuntimeVersion;
 use crate::cli::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, LintCommand, MigrateCommand, PurgeCommand, RunCommand, SeedCommand, SeedCommandAction, ServeCommand};
 
-pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance) -> CLI {
+pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance, argv: Option<Vec<String>>) -> CLI {
+    let argv = argv.unwrap_or(env::args_os().map(|s| s.to_str().unwrap().to_owned()).collect());
     let version = Box::leak(Box::new(format!("Teo {} ({}) [{}]", env!("CARGO_PKG_VERSION"), runtime_version.to_string(), entrance.to_str())));
     let about = Box::leak(Box::new(match entrance {
         Entrance::CLI => format!("{version}\n\nRun Teo application with CLI."),
@@ -129,14 +130,12 @@ pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance) -> CLI 
                 .num_args(1)))
         .get_matches_from(match runtime_version {
             RuntimeVersion::Python(_) | RuntimeVersion::NodeJS(_) => {
-                println!("see result before handle: {:?} {:?}", env::args_os(), env::args());
-                let result = env::args_os().enumerate().filter(|(i, x)| (*i != 1) && (!x.to_str().unwrap().ends_with("ts-node") && !x.to_str().unwrap().ends_with(".ts"))).map(|(_i, x)| x).collect::<Vec<OsString>>();
-                println!("see result {:?}", result);
+                let result = argv.iter().enumerate().filter(|(i, x)| (*i != 1) && (!x.as_str().ends_with("ts-node") && !x.as_str().ends_with(".ts"))).map(|(_i, x)| x.clone()).collect::<Vec<String>>();
                 result
             },
-            RuntimeVersion::Rust(_) => env::args_os().enumerate().filter(|(i, x)| {
-                !((*i == 1) && x.to_str().unwrap() == "teo")
-            }).map(|(_i, x)| x).collect::<Vec<OsString>>(),
+            RuntimeVersion::Rust(_) => argv.iter().enumerate().filter(|(i, x)| {
+                !((*i == 1) && x.as_str() == "teo")
+            }).map(|(_i, x)| x.clone()).collect::<Vec<String>>(),
         });
     let silent: bool = matches.get_flag("silent");
     let schema: Option<&String> = matches.get_one("SCHEMA_FILE");

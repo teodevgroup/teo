@@ -36,7 +36,7 @@ impl App {
         if let Some(runtime_version) = runtime_version {
             Ctx::set_runtime_version(runtime_version);
         }
-        let cli = cli_parse(Ctx::get().runtime_version.clone(), Ctx::get().entrance);
+        let cli = cli_parse(Ctx::get().runtime_version.clone(), Ctx::get().entrance, Some(Ctx::argv()));
         let current_dir = match current_dir() {
             Ok(current_dir) => current_dir,
             Err(e) => Err(Error::new(format!("{}", e)))?,
