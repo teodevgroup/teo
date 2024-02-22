@@ -44,7 +44,7 @@ pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance) -> CLI 
             .help("Silent outputs")
             .action(ArgAction::SetTrue))
         .subcommand(ClapCommand::new("serve")
-            .about("Run migration and start the old_server")
+            .about("Run migration and start the server")
             .arg_required_else_help(false)
             .arg(Arg::new("no-migration")
                 .short('M')

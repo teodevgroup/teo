@@ -690,10 +690,14 @@
 - Fix update rule causes stack overflow bug **[DONE]**
 
 ### 0.2.6
-- Update error mechanism to include code and path
+- Fix CLI description in serve **[DONE]**
 
 ### 0.2.7
+- Update error mechanism to include code and path
+
+### 0.2.8
 - Update swift client package with new namespaces API
+- Update dart client package with new namespaces API
 - Add back integration tests
 
 ### 0.3.0
