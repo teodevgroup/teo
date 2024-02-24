@@ -695,9 +695,12 @@
 - Python: Fix no ARGV bg in Linux systems **[DONE]**
 
 ### 0.2.7
-- Update error mechanism to include code and path
+- Fix argv bug in Rust **[DONE]**
 
 ### 0.2.8
+- Update error mechanism to include code and path
+
+### 0.2.9
 - Update swift client package with new namespaces API
 - Update dart client package with new namespaces API
 - Add back integration tests
