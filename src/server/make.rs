@@ -13,7 +13,6 @@ use actix_http::{HttpMessage, Method as HttpMethod};
 use actix_web::{App, FromRequest, HttpRequest, HttpResponse, HttpServer, web};
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::DefaultHeaders;
-use key_path::path;
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_runtime::action::Action;
 use teo_runtime::handler::action::builtin_action_handler_from_name;
@@ -34,6 +33,7 @@ use crate::message::{info_message, request_message, unhandled_request_message};
 use crate::server::error::WrapError;
 use crate::server::request::RequestImpl;
 use crate::server::responder::IntoHttpResponse;
+use teo_runtime::error_runtime_ext::ErrorRuntimeExt;
 
 fn make_server_app(
     main_namespace: &'static Namespace,
@@ -80,7 +80,7 @@ fn make_server_app(
             } else if let Some(m_result) = main_namespace.handler_map.default_match(method, path) {
                 m_result
             } else {
-                Err(teo_runtime::path::Error::not_found_message_only())?
+                Err(Error::not_found_message_only())?
             };
             let mut group = false;
             let dest_namespace = if let Some(d) = main_namespace.namespace_at_path(&match_result.path()) {
@@ -90,10 +90,10 @@ fn make_server_app(
                     group = true;
                     d
                 } else {
-                    Err(teo_runtime::path::Error::not_found_message_only())?
+                    Err(Error::not_found_message_only())?
                 }
             } else {
-                Err(teo_runtime::path::Error::not_found_message_only())?
+                Err(Error::not_found_message_only())?
             };
             let handler_resolved = if group {
                 if let Some(model) = dest_namespace.models.get(match_result.group_name()) {
@@ -104,30 +104,30 @@ fn make_server_app(
                             if let Some(action) = builtin_action_handler_from_name(match_result.handler_name()) {
                                 (dest_namespace, HandlerResolved::Builtin(model, action))
                             } else {
-                                Err(teo_runtime::path::Error::not_found_message_only())?
+                                Err(Error::not_found_message_only())?
                             }
                         }
                     } else {
                         if let Some(action) = builtin_action_handler_from_name(match_result.handler_name()) {
                             (dest_namespace, HandlerResolved::Builtin(model, action))
                         } else {
-                            Err(teo_runtime::path::Error::not_found_message_only())?
+                            Err(Error::not_found_message_only())?
                         }
                     }
                 } else if let Some(group) = dest_namespace.handler_groups.get(match_result.group_name()) {
                     if let Some(handler) = group.handlers.get(match_result.handler_name()) {
                         (dest_namespace, HandlerResolved::Custom(handler))
                     } else {
-                        Err(teo_runtime::path::Error::not_found_message_only())?
+                        Err(Error::not_found_message_only())?
                     }
                 } else {
-                    Err(teo_runtime::path::Error::not_found_message_only())?
+                    Err(Error::not_found_message_only())?
                 }
             } else {
                 if let Some(handler) = dest_namespace.handlers.get(match_result.handler_name()) {
                     (dest_namespace, HandlerResolved::Custom(handler))
                 } else {
-                    Err(teo_runtime::path::Error::not_found_message_only())?
+                    Err(Error::not_found_message_only())?
                 }
             };
             let dest_namespace = handler_resolved.0;
@@ -220,7 +220,7 @@ fn make_server_app(
                         "groupBy" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
                             group_by(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        _ => Err(teo_runtime::path::Error::not_found_message_only())?,
+                        _ => Err(Error::not_found_message_only())?,
                     }
                 },
                 HandlerResolved::Custom(handler) => {

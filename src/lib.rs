@@ -21,7 +21,6 @@ pub mod prelude {
     pub use key_path::path;
     pub use teo_runtime::request;
     pub use teo_runtime::response::Response;
-    pub use teo_runtime::path;
     pub use teo_runtime::model;
     pub use teo_runtime::model::Model;
     pub use teo_runtime::r#struct;

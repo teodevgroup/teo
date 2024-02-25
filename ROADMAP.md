@@ -698,7 +698,10 @@
 - Fix argv bug in Rust **[DONE]**
 
 ### 0.2.8
-- Update error mechanism to include code and path
+- Parser & Client Generator: Dynamic host URL in clients **[DONE]**
+- Update error mechanism to include code and path **[DONE]**
+- Node.js: native TeoError
+- Python: native TeoException
 
 ### 0.2.9
 - Update swift client package with new namespaces API

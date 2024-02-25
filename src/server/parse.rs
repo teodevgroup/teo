@@ -4,9 +4,10 @@ use actix_web::{FromRequest, HttpRequest, web};
 use futures_util::{StreamExt, TryStreamExt};
 use regex::Regex;
 use serde_json::{json, Value as JsonValue};
-use teo_runtime::path::{Result, Error};
+use teo_result::{Result, Error};
+use teo_runtime::error_runtime_ext::ErrorRuntimeExt;
 
-pub(super) async fn parse_json_body(mut payload: web::Payload) -> teo_runtime::path::Result<JsonValue> {
+pub(super) async fn parse_json_body(mut payload: web::Payload) -> Result<JsonValue> {
     let mut body = web::BytesMut::new();
     while let Some(chunk) = payload.next().await {
         let chunk = chunk.unwrap();
