@@ -90,15 +90,16 @@ fn make_server_app(
             };
 
             // High-risk operations for testing
-            if cfg!(test) {
-                if match_result.path()[0] == "danger" {
-                    return Ok::<HttpResponse, WrapError>(
-                        dangerous_operation(match_result.handler_name())
-                            .await?
-                            .into_http_response(http_request.clone()),
-                    );
-                }
+            #[cfg(test)]
+            if match_result.path()[0] == "danger" {
+                return Ok::<HttpResponse, WrapError>(
+                    dangerous_operation(match_result.handler_name())
+                        .await?
+                        .into_http_response(http_request.clone()),
+                );
             }
+
+            // Normal handling
             let mut group = false;
             let dest_namespace = if let Some(d) = main_namespace.namespace_at_path(&match_result.path()) {
                 d

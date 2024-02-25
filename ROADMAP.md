@@ -702,6 +702,7 @@
 - Update error mechanism to include code and path **[DONE]**
 - Node.js: native TeoError
 - Python: native TeoException
+- Integration test: refactor **[IN PROGRESS]**
 
 ### 0.2.9
 - Update swift client package with new namespaces API
