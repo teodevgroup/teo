@@ -700,9 +700,10 @@
 ### 0.2.8
 - Parser & Client Generator: Dynamic host URL in clients **[DONE]**
 - Update error mechanism to include code and path **[DONE]**
-- Node.js: native TeoError
+- Node.js: native TeoError **[DONE]**
 - Python: native TeoException
 - Integration test: refactor **[IN PROGRESS]**
+- Node.js: Fix app entrance argv bug **[DONE]**
 
 ### 0.2.9
 - Update swift client package with new namespaces API

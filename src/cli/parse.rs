@@ -130,7 +130,7 @@ pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance, argv: O
                 .num_args(1)))
         .get_matches_from(match runtime_version {
             RuntimeVersion::Python(_) | RuntimeVersion::NodeJS(_) => {
-                let result = argv.iter().enumerate().filter(|(i, x)| (*i != 1) && (!x.as_str().ends_with("ts-node") && !x.as_str().ends_with(".ts"))).map(|(_i, x)| x.clone()).collect::<Vec<String>>();
+                let result = argv.iter().enumerate().filter(|(i, x)| (*i != 1) && !x.as_str().ends_with(".ts")).map(|(_i, x)| x.clone()).collect::<Vec<String>>();
                 result
             },
             RuntimeVersion::Rust(_) => argv.iter().enumerate().filter(|(i, x)| {
