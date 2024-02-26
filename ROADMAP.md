@@ -701,8 +701,8 @@
 - Parser & Client Generator: Dynamic host URL in clients **[DONE]**
 - Update error mechanism to include code and path **[DONE]**
 - Node.js: added native TeoError, but napi-rs doesn't support it **[DONE]**
-- Python: native TeoException
-- Integration test: refactor **[IN PROGRESS]**
+- Python: native TeoException **[DONE]**
+- Integration test: additional HTTP apis **[DONE]**
 - Node.js: Fix app entrance argv bug **[DONE]**
 
 ### 0.2.9
