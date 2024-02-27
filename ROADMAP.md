@@ -706,8 +706,10 @@
 - Node.js: Fix app entrance argv bug **[DONE]**
 
 ### 0.2.9
+- Update dart client package with new namespaces API **[IN PROGRESS]**
+
+### 0.2.10
 - Update swift client package with new namespaces API
-- Update dart client package with new namespaces API
 - Add back integration tests
 
 ### 0.3.0
