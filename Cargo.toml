@@ -9,6 +9,9 @@ homepage = "https://teocloud.io"
 documentation = "https://teocloud.io/docs"
 repository = "https://github.com/teocloud/teo"
 
+[features]
+dangerous_operation = []
+
 [dependencies]
 teo-result = { version = "0.2.8", path = "../teo-result" }
 teo-teon = { version = "0.2.8", path = "../teo-teon" }
@@ -65,4 +68,3 @@ whoami = "1.4.1"
 
 [build-dependencies]
 rustc_version = "0.4.0"
-
