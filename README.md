@@ -4,7 +4,7 @@
   <a href="https://github.com/teocloud/teo"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" /></a>
   <br />
   <br />
-  <div>Next-generation web framework for Rust, Node.js and Python.</div>
+  <div><strong>Schema-centered</strong> next-generation web framework for Rust, Node.js and Python.</div>
   <br />
   <a href="https://docs.teocloud.io/getting-started/quickstart">Quickstart</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
@@ -18,6 +18,10 @@
   <br />
   <hr />
 </div>
+
+## Introduction
+
+Teo is a **schema-centered** next-generation web framework for Rust, Node.js and Python.
 
 ## Getting started
 
