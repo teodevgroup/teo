@@ -4,7 +4,7 @@
   <a href="https://github.com/teocloud/teo"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" /></a>
   <br />
   <br />
-  <div><strong>以结构为核心的</strong>新一代网络框架，支持Rust, Node.js和Python。</div>
+  <div><strong>以结构为核心的</strong>新一代网络框架，支持Node.js、Python和Rust。</div>
   <br />
   <a href="https://docs.teocloud.io/getting-started/quickstart">快速开始</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
@@ -21,7 +21,7 @@
 
 ## 简介
 
-Teo是一个**以结构为核心的**新一代网络框架，支持Rust, Node.js和Python。
+Teo是一个**以结构为核心的**新一代网络框架，支持Node.js、Python和Rust。
 
 ## 现在开始入门
 
