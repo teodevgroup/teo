@@ -90,7 +90,7 @@ fn make_server_app(
             };
 
             // High-risk operations for testing
-            #[cfg(test)]
+            #[cfg(feature="dangerous_operation")]
             if match_result.path()[0] == "danger" {
                 return Ok::<HttpResponse, WrapError>(
                     dangerous_operation(match_result.handler_name())
