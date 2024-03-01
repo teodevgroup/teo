@@ -706,7 +706,8 @@
 - Node.js: Fix app entrance argv bug **[DONE]**
 
 ### 0.2.9
-- Update dart client package with new namespaces API **[IN PROGRESS]**
+- Fix TypeScript client date only type decoding **[DONE]**
+- Update dart client package with new namespaces API **[DONE]**
 
 ### 0.2.10
 - Update swift client package with new namespaces API
