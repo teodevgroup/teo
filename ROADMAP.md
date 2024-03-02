@@ -710,6 +710,9 @@
 - Update dart client package with new namespaces API **[DONE]**
 
 ### 0.2.10
+- TypeScript Client: Add `wechat` and `taro` API **[DONE]**
+
+### 0.2.20
 - Update swift client package with new namespaces API
 - Add back integration tests
 
