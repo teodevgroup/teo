@@ -711,6 +711,7 @@
 
 ### 0.2.10
 - TypeScript Client: Add `wechat` and `taro` API **[DONE]**
+- Allows no argument list if every enum variant argument is optional **[DONE]**
 
 ### 0.2.20
 - Update swift client package with new namespaces API
