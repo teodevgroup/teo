@@ -713,6 +713,9 @@
 - TypeScript Client: Add `wechat` and `taro` API **[DONE]**
 - Allows no argument list if every enum variant argument is optional **[DONE]**
 
+### 0.2.11
+- Node.js: upgrade to napi-rs and fix broken APIs introduced by napi-rs **[DONE]**
+
 ### 0.2.20
 - Update swift client package with new namespaces API
 - Add back integration tests
