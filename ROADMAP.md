@@ -726,6 +726,7 @@
 - Runtime: Fix `$pow` argument bug **[DONE]**
 - Runtime: Fix json to teon conversion bug for float with int input **[DONE]**
 - Add input omissible and output omissible to properties **[DONE]**
+- Runtime: Fix nested a lot of levels object saving causing recursive bug **[DONE]**
 
 ### 0.2.20
 - Reintroduce `bcrypt` pipeline items
