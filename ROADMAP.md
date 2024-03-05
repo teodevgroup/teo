@@ -728,6 +728,9 @@
 - Add input omissible and output omissible to properties **[DONE]**
 
 ### 0.2.20
+- Reintroduce `bcrypt` pipeline items
+- New implementation of identity
+- New implementation of permissions
 - Update swift client package with new namespaces API
 - Add back integration tests
 
