@@ -716,6 +716,15 @@
 ### 0.2.11
 - Node.js: upgrade to napi-rs and fix broken APIs introduced by napi-rs **[DONE]**
 
+### 0.2.12
+- Parser: Fix environment variable is invalid expression bug **[DONE]**
+- Parser: Fix subscription alters current namespace path bug **[DONE]**
+- Parser: Update math items declarations and fix type checking bug **[DONE]**
+- Parser: Fix `$assign` declaration bug **[DONE]**
+- Runtime: Fix value fetching bug for field names **[DONE]**
+- PostgreSQL: Fix time zoned type migration bug **[DONE]**
+- Runtime: Fix `$pow` argument bug **[DONE]**
+
 ### 0.2.20
 - Update swift client package with new namespaces API
 - Add back integration tests
