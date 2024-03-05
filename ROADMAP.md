@@ -727,6 +727,7 @@
 - Runtime: Fix json to teon conversion bug for float with int input **[DONE]**
 - Add input omissible and output omissible to properties **[DONE]**
 - Runtime: Fix nested a lot of levels object saving causing recursive bug **[DONE]**
+- SQL Connector: Fix group by encoding bug **[DONE]**
 
 ### 0.2.20
 - Reintroduce `bcrypt` pipeline items
