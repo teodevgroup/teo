@@ -724,6 +724,8 @@
 - Runtime: Fix value fetching bug for field names **[DONE]**
 - PostgreSQL: Fix time zoned type migration bug **[DONE]**
 - Runtime: Fix `$pow` argument bug **[DONE]**
+- Runtime: Fix json to teon conversion bug for float with int input **[DONE]**
+- Add input omissible and output omissible to properties **[DONE]**
 
 ### 0.2.20
 - Update swift client package with new namespaces API
