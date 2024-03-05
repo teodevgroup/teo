@@ -728,6 +728,7 @@
 - Add input omissible and output omissible to properties **[DONE]**
 - Runtime: Fix nested a lot of levels object saving causing recursive bug **[DONE]**
 - SQL Connector: Fix group by encoding bug **[DONE]**
+- PostgreSQL: Fix group by SQL building bug **[DONE]**
 
 ### 0.2.20
 - Reintroduce `bcrypt` pipeline items
