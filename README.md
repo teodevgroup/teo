@@ -23,15 +23,6 @@
 
 Teo is a **schema-centered** next-generation web framework for Rust, Node.js and Python.
 
-## Getting started
-
-The fastest way to get started with Teo is by following the [Quickstart guide](https://docs.teocloud.io/getting-started/quickstart).
-
-## Tutorials
-
-We prepared a [Beginner tutorial series](https://docs.teocloud.io/getting-started/beginner-tutorial/write-a-schema-only-app)
-to help you learn and understand Teo.
-
 ## Highlights & Features
 
 * Innovative schema definition inspired by GraphQL and Prisma
@@ -46,6 +37,79 @@ to help you learn and understand Teo.
 * Builtin permission check
 * First in last out middlewares
 * Custom routes and handlers
+
+## Getting started
+
+The fastest way to get started with Teo is by following the [Quickstart guide](https://docs.teocloud.io/getting-started/quickstart).
+
+### Installation
+
+Install Node.js edition.
+
+```sh
+npm install @teocloud/teo
+```
+
+Install Python edition.
+
+```sh
+pip install teo
+```
+
+Install Rust edition.
+
+```sh
+cargo install teo
+```
+
+### Write a schema-only server
+
+To write a server is quite simple with Teo. Create a file named `schema.teo`.
+Specify which database to connect and which port to listen.
+
+```teo
+connector {
+  provider: .sqlite,
+  url: "sqlite::memory:"
+}
+ 
+server {
+  bind: ("0.0.0.0", 5050)
+}
+ 
+model User {
+  @id @autoIncrement @readonly
+  id: Int
+  @unique @onSet($if($presents, $isEmail))
+  email: String
+  name: String?
+  @relation(fields: .id, references: .authorId)
+  posts: Post[]
+}
+ 
+model Post {
+  @id @autoIncrement @readonly
+  id: Int
+  title: String
+  content: String?
+  @default(false)
+  published: Bool
+  @foreignKey
+  authorId: Int
+  @relation(fields: .authorId, references: .id)
+  author: User
+}
+```
+
+Start the server with `teo serve` command. Now you can create, update, delete,
+read, aggregate and group by. Read our
+[Query client guide](https://docs.teocloud.io/guides/query-client-guides/crud)
+for detailed usage.
+
+## Tutorials
+
+We prepared a [Beginner tutorial series](https://docs.teocloud.io/getting-started/beginner-tutorial/write-a-schema-only-app)
+to help you learn and understand Teo.
 
 ## Issues
 

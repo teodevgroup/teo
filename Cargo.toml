@@ -2,7 +2,7 @@
 name = "teo"
 version = "0.2.12"
 edition = "2021"
-description = "Next-generation web framework for Rust, Node.js and Python."
+description = "Schema-centered next-generation web framework for Rust, Node.js and Python."
 license = "Apache-2.0"
 build = "build.rs"
 homepage = "https://teocloud.io"
