@@ -2,11 +2,12 @@ use test_helpers::*;
 
 #[before_all]
 #[after_all]
+#[after_each]
 mod test {
     use serial_test::serial;
     use std::sync::Mutex;
     use serde_json::{json};
-    use crate::lib::{ExecutionHandle, req};
+    use crate::lib::{ExecutionHandle, purge_and_seed, req};
     use crate::{assert_json, matcher};
     use crate::lib::matcher_functions::one_match;
     use once_cell::sync::Lazy;
@@ -18,10 +19,15 @@ mod test {
 
     fn before_all() {
         HANDLE.lock().unwrap().execute(file!(), "serve");
+        purge_and_seed(4030);
     }
 
     fn after_all() {
         HANDLE.lock().unwrap().exit();
+    }
+
+    fn after_each(){
+        purge_and_seed(PORT);
     }
 
     #[serial]
@@ -62,7 +68,7 @@ mod test {
             "create": {
                 "name": "Taylor Swift",
                 "songs": {
-                    "createMany": [
+                    "create": [
                         {
                             "name": "Love Story"
                         },

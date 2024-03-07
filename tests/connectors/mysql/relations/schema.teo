@@ -1,16 +1,12 @@
-import { default } from "./data"
+import "./data"
 
 connector {
-  provider .mysql
-  url "mysql://127.0.0.1:3307/test_connectors_mysql_relations"
+  provider: .mysql,
+  url: "mysql://127.0.0.1:3307/test_connectors_mysql_relations"
 }
 
 server {
-  bind ("0.0.0.0", 4030)
-}
-
-test {
-  resetAfterFind .auto
+  bind: ("0.0.0.0", 4030)
 }
 
 // User & Profile represents an 1 to 1 required relationship

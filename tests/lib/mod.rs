@@ -48,8 +48,12 @@ impl ExecutionHandle {
 
     pub fn execute(&mut self, file: &str, args: &str) {
         env::set_var("TEO_ENV", "test");
-        self.child = Some(Command::new(teo_exe_path()).arg("-s").arg(schema_from_file(file)).arg(args).stdout(Stdio::null()).spawn().unwrap());
-        thread::sleep(std::time::Duration::from_secs(3))
+        self.child = Some(Command::new(teo_exe_path())
+            .arg("-s")
+            .arg(schema_from_file(file))
+            .arg(args)
+            .stdout(Stdio::null()).spawn().unwrap());
+        thread::sleep(std::time::Duration::from_secs(3));
     }
 
     pub fn exit(&mut self) {
@@ -66,6 +70,15 @@ pub fn req<J: Borrow<Value>>(port: i32, action: &str, model: &str, data: J) -> V
     let client = reqwest::blocking::Client::new();
     let res = client.post(url).json(data.borrow()).send().unwrap();
     res.json().unwrap()
+}
+
+pub fn purge_and_seed(port: i32) {
+    println!("purge_and_seed start");
+    let url = format!("http://127.0.0.1:{}/danger/purge_seed", port);
+    let client = reqwest::blocking::Client::new();
+    let res = client.post(url).send().unwrap();
+    let text = res.text().unwrap();
+    println!("{:?}" , text);
 }
 
 pub fn json_match<J: Borrow<Value>, M: Borrow<Matcher>>(value: J, matcher: M) -> Result<(), String> {
