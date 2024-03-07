@@ -18,19 +18,18 @@ Welcome to the monorepo for the TEO HTTP server framework.
 
 * Core: Rust `>=1.67`, latest is recommended
 * Clients:
-  * TypeScript & JavaScript: Node.js `>=17`, latest or lastest LTS is recommended
+  * TypeScript & JavaScript: Node.js `>=20`, latest or lastest LTS is recommended
 * Servers:
-  * Node.js: Node.js `>=17`, latest or lastest LTS is recommended
-  * Python: Python `>=3.11`, latest is recommended
-  * Go: Go `>=1.20`, latest is recommended
+  * Node.js: Node.js `>=20`, latest or lastest LTS is recommended
+  * Python: Python `>=3.12`, latest is recommended
+
+## Checkout repositories
+
+> This section will be completed.
 
 ## Building Teo when you make changes
 
 * Core: `cargo run`
-
-## Tests
-
-Unit tests will be set up later on.
 
 ## Conventions
 
