@@ -732,6 +732,7 @@
 
 ### 0.2.13
 - Runtime: Fix main namespace handler without mapping is not found bug **[DONE]**
+- Parser & Runtime: Fix broken case sensitivity mode to string filters **[DONE]**
 
 ### 0.2.20
 - Reintroduce `bcrypt` pipeline items
