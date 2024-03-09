@@ -734,6 +734,7 @@
 - Runtime: Fix main namespace handler without mapping is not found bug **[DONE]**
 - Parser & Runtime: Fix broken case sensitivity mode to string filters **[DONE]**
 - MongoDB Connector: Fix query bugs **[DONE]**
+- MongoDB transaction **[DONE]**
 
 ### 0.2.20
 - Reintroduce `bcrypt` pipeline items
@@ -762,7 +763,6 @@
 ### 0.4.0
 - Kotlin client
 - C# client
-- Dart client
 - C# client: capitalized names and names with underscore
 - MongoDB: connector is not using table name
 
@@ -770,7 +770,6 @@
 - Json type
 
 ### 0.6.0
-- MongoDB transaction
 - Custom SQL query scopes
 - Custom MongoDB query scopes
 - Default argument for argument list and config declaration

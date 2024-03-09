@@ -48,5 +48,4 @@ async fn connection_for_connector(connector: &Connector) -> Arc<dyn Connection> 
             false,
         ).await)
     }
-
 }
