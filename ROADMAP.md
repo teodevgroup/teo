@@ -730,6 +730,9 @@
 - SQL Connector: Fix group by encoding bug **[DONE]**
 - PostgreSQL: Fix group by SQL building bug **[DONE]**
 
+### 0.2.13
+- Runtime: Fix main namespace handler without mapping is not found bug **[DONE]**
+
 ### 0.2.20
 - Reintroduce `bcrypt` pipeline items
 - New implementation of identity
