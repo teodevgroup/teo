@@ -736,12 +736,21 @@
 - MongoDB Connector: Fix query bugs **[DONE]**
 - MongoDB transaction **[DONE]**
 
-### 0.2.20
-- Reintroduce `bcrypt` pipeline items
+### 0.2.14
+- Reintroduce `bcrypt` pipeline items **[DONE]**
 - New implementation of identity
+- Parser & Runtime: add declared synthesized shape
+- Parser & Runtime: add handler template
+- Parser & Runtime: add handler template including
+- Windows: When server startup, fix port is not taken bug
+
+### 0.2.20
 - New implementation of permissions
 - Update swift client package with new namespaces API
 - Add back integration tests
+
+### 0.2.22
+- `@onSet!()` and `@onSet?()`
 
 ### 0.3.0
 - Remove teon package, use parser value and runtime value instead
