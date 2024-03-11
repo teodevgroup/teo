@@ -738,14 +738,19 @@
 
 ### 0.2.14
 - Reintroduce `bcrypt` pipeline items **[DONE]**
+- Rust entity: Fix error and result types **[DONE]**
 - New implementation of identity
 - Parser & Runtime: add declared synthesized shape
 - Parser & Runtime: add handler template
 - Parser & Runtime: add handler template including
+
+### 0.2.15
 - Windows: When server startup, fix port is not taken bug
 
-### 0.2.20
+### 0.2.16
 - New implementation of permissions
+
+### 0.2.20
 - Update swift client package with new namespaces API
 - Add back integration tests
 
