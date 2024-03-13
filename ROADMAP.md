@@ -739,10 +739,11 @@
 ### 0.2.14
 - Reintroduce `bcrypt` pipeline items **[DONE]**
 - Rust entity: Fix error and result types **[DONE]**
-- New implementation of identity
-- Parser & Runtime: add declared synthesized shape
-- Parser & Runtime: add handler template
-- Parser & Runtime: add handler template including
+- Dart client: Fix escape `default` **[DONE]**
+- New implementation of identity **[DONE]**
+- Parser & Runtime: add declared synthesized shape **[DONE]**
+- Parser & Runtime: add handler template **[DONE]**
+- Parser & Runtime: add handler template including **[DONE]**
 
 ### 0.2.15
 - Windows: When server startup, fix port is not taken bug
