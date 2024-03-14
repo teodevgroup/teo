@@ -61,7 +61,7 @@ ring = "0.17.7"
 openssl = { version = "0.10", features = ["vendored"] }
 
 [dev-dependencies]
-serial_test = "2.0.0"
+serial_test = "3.0.0"
 test-helpers = "0.2.3"
 reqwest = { version = "0.11", features = ["json", "blocking"] }
 whoami = "1.4.1"

@@ -744,6 +744,9 @@
 - Parser & Runtime: add declared synthesized shape **[DONE]**
 - Parser & Runtime: add handler template **[DONE]**
 - Parser & Runtime: add handler template including **[DONE]**
+- Parser: `$set` and `$get` accept shape params **[DONE]**
+- TSClient: fix error field `errors` **[DONE]**
+- Fix use middlewares availability bug **[DONE]**
 
 ### 0.2.15
 - Windows: When server startup, fix port is not taken bug
