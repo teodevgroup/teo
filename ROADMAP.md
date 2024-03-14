@@ -747,6 +747,7 @@
 - Parser: `$set` and `$get` accept shape params **[DONE]**
 - TSClient: fix error field `errors` **[DONE]**
 - Fix use middlewares availability bug **[DONE]**
+- Runtime: add pipeline items `$do` and `$not` **[DONE]**
 
 ### 0.2.15
 - Windows: When server startup, fix port is not taken bug
