@@ -749,18 +749,17 @@
 - Fix use middlewares availability bug **[DONE]**
 - Runtime: add pipeline items `$do` and `$not` **[DONE]**
 
-### 0.2.15
-- Windows: When server startup, fix port is not taken bug
-
 ### 0.2.16
 - New implementation of permissions
 
 ### 0.2.20
 - Update swift client package with new namespaces API
 - Add back integration tests
+- Windows: When server startup, fix port is not taken bug
 
 ### 0.2.22
 - `@onSet!()` and `@onSet?()`
+- `$get!()` and `$get?()`
 
 ### 0.3.0
 - Remove teon package, use parser value and runtime value instead
