@@ -753,6 +753,7 @@
 - Fix shapes for client & entity generation **[DONE]**
 - Add interface decorator `@generateClient` and `@generateEntity` **[DONE]**
 - TS Client: fix custom handler bugs **[DONE]**
+- Fix declared synthesized shape optional bug **[DONE]**
 
 ### 0.2.16
 - New implementation of permissions
