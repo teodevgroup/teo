@@ -749,6 +749,9 @@
 - Fix use middlewares availability bug **[DONE]**
 - Runtime: add pipeline items `$do` and `$not` **[DONE]**
 
+### 0.2.15
+- Fix shapes for client & entity generation **[DONE]**
+
 ### 0.2.16
 - New implementation of permissions
 
