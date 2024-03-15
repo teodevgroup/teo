@@ -751,6 +751,7 @@
 
 ### 0.2.15
 - Fix shapes for client & entity generation **[DONE]**
+- Add interface decorator `@generateClient` and `@generateEntity` **[DONE]**
 
 ### 0.2.16
 - New implementation of permissions
