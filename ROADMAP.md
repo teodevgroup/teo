@@ -764,6 +764,7 @@
 
 ### 0.3.0
 - Remove teon package, use parser value and runtime value instead
+- Pipeline items `$all` and `$any`
 
 ### 0.3.1
 - Debug logging SQL
