@@ -31,21 +31,21 @@ Run this setup in a new empty directory script to set up repositories.
 ### GitHub source
 
 ```sh
-curl -o- https://raw.githubusercontent.com/teocloud/teo-development-setup/main/setup.sh | bash
+bash <(curl -o- https://raw.githubusercontent.com/teocloud/teo-development-setup/main/setup.sh)
 ```
 
 ```sh
-wget -qO- https://raw.githubusercontent.com/teocloud/teo-development-setup/main/setup.sh | bash
+bash <(wget -qO- https://raw.githubusercontent.com/teocloud/teo-development-setup/main/setup.sh)
 ```
 
 ### Gitee source (for China users)
 
 ```sh
-curl -o- https://gitee.com/teocloud/teo-development-setup/raw/main/setup.sh | bash
+bash <(curl -o- https://gitee.com/teocloud/teo-development-setup/raw/main/setup.sh)
 ```
 
 ```sh
-wget -qO- https://gitee.com/teocloud/teo-development-setup/raw/main/setup.sh | bash
+bash <(wget -qO- https://gitee.com/teocloud/teo-development-setup/raw/main/setup.sh)
 ```
 
 ## Building Teo when you make changes
