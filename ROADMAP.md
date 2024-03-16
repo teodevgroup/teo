@@ -761,6 +761,9 @@
 - Update `expired` argument of `$jwt` to accept pipeline item **[DONE]**
 - Runtime:  Fix `@migration` default value bug **[DONE]**
 - Add `$message` pipeline item **[DONE]**
+- Add `ids` to identity checker args **[DONE]**
+- SQLite: Fix duplicated index name in different tables bug **[DONE]**
+- Node.js: Fix model name case bug **[DONE]**
 
 ### 0.2.17
 - New implementation of permissions
