@@ -756,6 +756,10 @@
 - Fix declared synthesized shape optional bug **[DONE]**
 
 ### 0.2.16
+- Writeonly fields considered as scalar fields **[DONE]**
+- Update pipeline error code handling **[DONE]**
+
+### 0.2.17
 - New implementation of permissions
 
 ### 0.2.20
