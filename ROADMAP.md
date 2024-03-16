@@ -758,6 +758,9 @@
 ### 0.2.16
 - Writeonly fields considered as scalar fields **[DONE]**
 - Update pipeline error code handling **[DONE]**
+- Update `expired` argument of `$jwt` to accept pipeline item **[DONE]**
+- Runtime:  Fix `@migration` default value bug **[DONE]**
+- Add `$message` pipeline item **[DONE]**
 
 ### 0.2.17
 - New implementation of permissions
