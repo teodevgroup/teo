@@ -762,8 +762,12 @@
 - Runtime:  Fix `@migration` default value bug **[DONE]**
 - Add `$message` pipeline item **[DONE]**
 - Add `ids` to identity checker args **[DONE]**
+- Fix optional type resolving into nested bug **[DONE]**
 - SQLite: Fix duplicated index name in different tables bug **[DONE]**
 - Node.js: Fix model name case bug **[DONE]**
+- Python: Fix entity generation bugs **[DONE]**
+- Dart: Fix client generation bugs **[DONE]**
+- Rust: Fix entity generation bugs **[DONE]**
 
 ### 0.2.17
 - New implementation of permissions
