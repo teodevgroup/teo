@@ -17,7 +17,7 @@ teo-result = { version = "0.2.8", path = "../teo-result" }
 teo-teon = { version = "0.2.13", path = "../teo-teon" }
 teo-parser = { version = "0.2.16", path = "../teo-parser" }
 teo-runtime = { version = "0.2.16", path = "../teo-runtime" }
-teo-sql-connector = { version = "0.2.13", path = "../teo-sql-connector" }
+teo-sql-connector = { version = "0.2.16", path = "../teo-sql-connector" }
 teo-mongodb-connector = { version = "0.2.13", path = "../teo-mongodb-connector" }
 teo-generator = { version = "0.2.15", path = "../teo-generator" }
 actix-web = "4.5.1"
