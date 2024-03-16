@@ -770,9 +770,12 @@
 - Rust: Fix entity generation bugs **[DONE]**
 
 ### 0.2.17
-- New implementation of permissions
+- Fix bugs
 
 ### 0.2.20
+- New implementation of permissions
+
+### 0.2.21
 - Update swift client package with new namespaces API
 - Add back integration tests
 - Windows: When server startup, fix port is not taken bug
