@@ -119,6 +119,11 @@ to help you learn and understand Teo.
 
 Welcome to submit issues in this repo.
 
+## Contributing
+
+Read our [Contributing guide](https://github.com/teocloud/teo/blob/main/CONTRIBUTING.md)
+to set projects up and start contributing.
+
 ## License
 
 TEO is under Apache 2.0 license.

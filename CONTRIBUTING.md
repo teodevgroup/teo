@@ -12,20 +12,41 @@ of Teo.
 
 ## Contributing Code
 
-Welcome to the monorepo for the TEO HTTP server framework.
+Welcome to the repository for the TEO HTTP server framework.
 
 ## General Prerequisites
 
 * Core: Rust `>=1.67`, latest is recommended
 * Clients:
   * TypeScript & JavaScript: Node.js `>=20`, latest or lastest LTS is recommended
+  * Dart & Flutter: Dart `>=3.3`, latest is recommended
 * Servers:
-  * Node.js: Node.js `>=20`, latest or lastest LTS is recommended
+  * Node.js: Node.js `>=20`, latest or latest LTS is recommended
   * Python: Python `>=3.12`, latest is recommended
 
 ## Checkout repositories
 
-> This section will be completed.
+Run this setup in a new empty directory script to set up repositories.
+
+### GitHub source
+
+```sh
+curl -o- https://raw.githubusercontent.com/teocloud/teo-development-setup/main/setup.sh | bash
+```
+
+```sh
+wget -qO- https://raw.githubusercontent.com/teocloud/teo-development-setup/main/setup.sh | bash
+```
+
+### Gitee source (for China users)
+
+```sh
+curl -o- https://gitee.com/teocloud/teo-development-setup/raw/main/setup.sh | bash
+```
+
+```sh
+wget -qO- https://gitee.com/teocloud/teo-development-setup/raw/main/setup.sh | bash
+```
 
 ## Building Teo when you make changes
 

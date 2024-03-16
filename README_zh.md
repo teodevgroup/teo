@@ -116,6 +116,10 @@ model Post {
 
 欢迎提交问题。
 
+## 贡献
+
+阅读我们的[贡献指南](https://gitee.com/teocloud/teo/blob/main/CONTRIBUTING.md)来搭建项目和开始贡献。
+
 ## 微信群
 
 在Gitee为我们的项目点赞，带着截图添加群管微信caofz007，即可加入我们的微信群。
