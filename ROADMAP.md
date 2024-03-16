@@ -770,6 +770,7 @@
 - Rust: Fix entity generation bugs **[DONE]**
 
 ### 0.2.17
+- Fix Python entity circular reference bug and empty items bug
 - Fix bugs
 
 ### 0.2.20
