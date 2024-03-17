@@ -770,20 +770,27 @@
 - Rust: Fix entity generation bugs **[DONE]**
 
 ### 0.2.17
-- Fix Python entity circular reference bug and empty items bug
-- Fix bugs
+- Fix Python entity circular reference bug and empty items bug **[DONE]**
+
+### 0.2.18
+- Remove error title and inspect the title from the error code
+- Node.js: update error representation
+- Python: update error representation
+- Optimize pipeline item error API
+
+### 0.2.19
+- Permissions
 
 ### 0.2.20
-- New implementation of permissions
-
-### 0.2.21
-- Update swift client package with new namespaces API
-- Add back integration tests
-- Windows: When server startup, fix port is not taken bug
-
-### 0.2.22
 - `@onSet!()` and `@onSet?()`
 - `$get!()` and `$get?()`
+
+### 0.2.21
+- Management system generation
+
+### 0.2.26
+- Add back integration tests
+- Windows: When server startup, fix port is not taken bug
 
 ### 0.3.0
 - Remove teon package, use parser value and runtime value instead
@@ -794,13 +801,10 @@
 - Migration dry run
 
 ### 0.3.2
-- Add `onSet`, `onOutput` and `default` for interface fields
+- Update swift client package with new namespaces API
 - Revamped request extension API
 - Improved middleware system including middleware skipping and model middlewares
 - Add back model action transformers
-- JWT middleware **[IN PROGRESS]**
-- Identity middleware **[IN PROGRESS]**
-- Refactor bcrypt pipeline items
 - Soft delete
 
 ### 0.4.0
