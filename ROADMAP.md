@@ -773,19 +773,22 @@
 - Fix Python entity circular reference bug and empty items bug **[DONE]**
 
 ### 0.2.18
+- Dart: fix code generating bugs **[DONE]**
+
+### 0.2.19
 - Remove error title and inspect the title from the error code
 - Node.js: update error representation
 - Python: update error representation
 - Optimize pipeline item error API
 
-### 0.2.19
+### 0.2.20
 - Permissions
 
-### 0.2.20
+### 0.2.21
 - `@onSet!()` and `@onSet?()`
 - `$get!()` and `$get?()`
 
-### 0.2.21
+### 0.2.22
 - Management system generation
 
 ### 0.2.26
