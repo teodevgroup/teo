@@ -26,7 +26,7 @@ impl From<Error> for WrapError {
 impl ResponseError for WrapError {
 
     fn status_code(&self) -> StatusCode {
-        StatusCode::from_u16(self.0.code.unwrap_or(500)).unwrap()
+        StatusCode::from_u16(self.0.code).unwrap()
     }
 
     fn error_response(&self) -> HttpResponse<BoxBody> {

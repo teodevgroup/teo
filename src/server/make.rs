@@ -39,7 +39,6 @@ use crate::message::{info_message, request_message, unhandled_request_message};
 use crate::server::error::WrapError;
 use crate::server::request::RequestImpl;
 use crate::server::responder::IntoHttpResponse;
-use teo_runtime::error_runtime_ext::ErrorRuntimeExt;
 
 fn make_server_app(
     main_namespace: &'static Namespace,
@@ -86,7 +85,7 @@ fn make_server_app(
             } else if let Some(m_result) = main_namespace.handler_map.default_match(method, path) {
                 m_result
             } else {
-                Err(Error::not_found_message_only())?
+                Err(Error::not_found())?
             };
 
             // High-risk operations for testing
@@ -108,10 +107,10 @@ fn make_server_app(
                     group = true;
                     d
                 } else {
-                    Err(Error::not_found_message_only())?
+                    Err(Error::not_found())?
                 }
             } else {
-                Err(Error::not_found_message_only())?
+                Err(Error::not_found())?
             };
             let handler_resolved = if group {
                 if let Some(model) = dest_namespace.models.get(match_result.group_name()) {
@@ -122,30 +121,30 @@ fn make_server_app(
                             if let Some(action) = builtin_action_handler_from_name(match_result.handler_name()) {
                                 (dest_namespace, HandlerResolved::Builtin(model, action))
                             } else {
-                                Err(Error::not_found_message_only())?
+                                Err(Error::not_found())?
                             }
                         }
                     } else {
                         if let Some(action) = builtin_action_handler_from_name(match_result.handler_name()) {
                             (dest_namespace, HandlerResolved::Builtin(model, action))
                         } else {
-                            Err(Error::not_found_message_only())?
+                            Err(Error::not_found())?
                         }
                     }
                 } else if let Some(group) = dest_namespace.handler_groups.get(match_result.group_name()) {
                     if let Some(handler) = group.handlers.get(match_result.handler_name()) {
                         (dest_namespace, HandlerResolved::Custom(handler))
                     } else {
-                        Err(Error::not_found_message_only())?
+                        Err(Error::not_found())?
                     }
                 } else {
-                    Err(Error::not_found_message_only())?
+                    Err(Error::not_found())?
                 }
             } else {
                 if let Some(handler) = dest_namespace.handlers.get(match_result.handler_name()) {
                     (dest_namespace, HandlerResolved::Custom(handler))
                 } else {
-                    Err(Error::not_found_message_only())?
+                    Err(Error::not_found())?
                 }
             };
             let dest_namespace = handler_resolved.0;
@@ -238,7 +237,7 @@ fn make_server_app(
                         "groupBy" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
                             group_by(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        _ => Err(Error::not_found_message_only())?,
+                        _ => Err(Error::not_found())?,
                     }
                 },
                 HandlerResolved::Custom(handler) => {

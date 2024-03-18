@@ -5,7 +5,6 @@ use futures_util::{StreamExt, TryStreamExt};
 use regex::Regex;
 use serde_json::{json, Value as JsonValue};
 use teo_result::{Result, Error};
-use teo_runtime::error_runtime_ext::ErrorRuntimeExt;
 
 pub(super) async fn parse_json_body(mut payload: web::Payload) -> Result<JsonValue> {
     let mut body = web::BytesMut::new();
@@ -13,7 +12,7 @@ pub(super) async fn parse_json_body(mut payload: web::Payload) -> Result<JsonVal
         let chunk = chunk.unwrap();
         // limit max size of in-memory payload
         if (body.len() + chunk.len()) > 262_144usize {
-            return Err(Error::internal_server_error_message_only("memory overflow"));
+            return Err(Error::internal_server_error_message("memory overflow"));
         }
         body.extend_from_slice(&chunk);
     }
@@ -21,11 +20,11 @@ pub(super) async fn parse_json_body(mut payload: web::Payload) -> Result<JsonVal
     let parsed_json_body = match parsed_json_body_result {
         Ok(b) => b,
         Err(_) => {
-            return Err(Error::value_error_message_only("incorrect json format"));
+            return Err(Error::invalid_request_message("incorrect json format"));
         }
     };
     if !parsed_json_body.is_object() {
-        return Err(Error::value_error_message_only("expect json root object"));
+        return Err(Error::invalid_request_message("expect json root object"));
     }
     Ok(parsed_json_body)
 }
@@ -35,7 +34,7 @@ pub(super) async fn parse_form_body(http_request: HttpRequest, mut payload: web:
     let multipart_result = Multipart::from_request(&http_request, &mut inner_payload).await;
     let mut multipart = match multipart_result {
         Ok(multipart) => multipart,
-        Err(err) => return Err(Error::value_error_message_only("incorrect form format")),
+        Err(err) => return Err(Error::invalid_request_message("incorrect form format")),
     };
     let mut result_value = json!({});
     while let Some(mut field) = multipart.try_next().await.unwrap() {
