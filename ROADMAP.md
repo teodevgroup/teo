@@ -785,11 +785,11 @@
 - Permissions
 
 ### 0.2.21
-- `@onSet!()` and `@onSet?()`
-- `$get!()` and `$get?()`
+- Management system generation
 
 ### 0.2.22
-- Management system generation
+- `@onSet!()` and `@onSet?()`
+- `$get!()` and `$get?()`
 
 ### 0.2.26
 - Add back integration tests
