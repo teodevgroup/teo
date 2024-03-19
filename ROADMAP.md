@@ -782,22 +782,22 @@
 - Optimize pipeline item error API **[DONE]**
 
 ### 0.2.20
+- Remove teon package, use parser value and runtime value instead
+- Pipeline items `$all` and `$any`
+- Pipeline item `$account`
+- Pipeline item `$match` and `$cast`
 - Permissions
 
 ### 0.2.21
 - Management system generation
 
 ### 0.2.22
-- `@onSet!()` and `@onSet?()`
-- `$get!()` and `$get?()`
-
-### 0.2.26
 - Add back integration tests
 - Windows: When server startup, fix port is not taken bug
 
 ### 0.3.0
-- Remove teon package, use parser value and runtime value instead
-- Pipeline items `$all` and `$any`
+- `@onSet!()` and `@onSet?()`
+- `$get!()` and `$get?()`
 
 ### 0.3.1
 - Debug logging SQL
