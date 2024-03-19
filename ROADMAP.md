@@ -776,10 +776,10 @@
 - Dart: fix code generating bugs **[DONE]**
 
 ### 0.2.19
-- Remove error title and inspect the title from the error code
-- Node.js: update error representation
-- Python: update error representation
-- Optimize pipeline item error API
+- Remove error title and inspect the title from the error code **[DONE]**
+- Node.js: update error representation **[DONE]**
+- Python: update error representation **[DONE]**
+- Optimize pipeline item error API **[DONE]**
 
 ### 0.2.20
 - Permissions
