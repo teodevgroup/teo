@@ -23,7 +23,7 @@ use teo_runtime::connection::transaction;
 use teo_runtime::handler::default::{create, find_first, find_many, find_unique, update, upsert, copy, create_many, update_many, copy_many, delete_many, count, aggregate, group_by, delete};
 use teo_runtime::model::Model;
 use teo_runtime::response::Response;
-use teo_teon::Value;
+use teo_runtime::Value;
 use crate::cli::entrance::Entrance;
 use crate::cli::runtime_version::RuntimeVersion;
 use crate::purge;

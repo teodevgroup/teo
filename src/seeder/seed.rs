@@ -4,10 +4,10 @@ use itertools::Itertools;
 use key_path::path;
 use serde_json::json;
 use teo_parser::r#type::Type;
-use crate::prelude::{Value};
+use crate::prelude::Value;
 use crate::seeder::models::data_set_record::DataSetRecord;
 use crate::seeder::models::data_set_relation::DataSetRelation;
-use teo_teon::teon;
+use teo_runtime::teon;
 use crate::cli::command::SeedCommandAction;
 use teo_result::Result;
 use teo_runtime::connection::transaction;
@@ -261,7 +261,7 @@ async fn setup_new_relations(dataset: &DataSet, ordered_groups: &Vec<&Group>, li
 }
 
 async fn sync_relation_internal<'a>(record: &Record, reference: &'a Value, relation: &'static Relation, dataset: &DataSet, object: &'a Object, relation_records: &'a Vec<DataSetRelation>, relation_record_refs: &mut Vec<&'a DataSetRelation>, ctx: transaction::Ctx) {
-    let that_name = reference.as_enum_variant().unwrap().value.clone();
+    let that_name = reference.as_str().unwrap().to_string();
     if let Some(existing_relation_record) = relation_records.iter().find(|r| {
         (&r.name_a() == record.name.as_str() && r.name_b() == that_name) ||
             (&r.name_b() == record.name.as_str() && r.name_a() == that_name)
@@ -273,7 +273,7 @@ async fn sync_relation_internal<'a>(record: &Record, reference: &'a Value, relat
 }
 
 async fn setup_relations_internal<'a>(record: &Record, reference: &'a Value, relation: &'static Relation, dataset: &DataSet, object: &'a Object, ctx: transaction::Ctx) {
-    let that_name = reference.as_enum_variant().unwrap().value.clone();
+    let that_name = reference.as_str().unwrap().to_string();
     let that_seed_record = DataSetRecord::find_first(teon!({
         "where": {
             "group": relation.model_path().join("."),
@@ -487,7 +487,7 @@ async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Recor
         } else if let Some(relation) = group_model.relation(k) {
             if relation.is_required() && relation.has_foreign_key {
                 // setup required relationship
-                let that_record_name = v.as_enum_variant().unwrap().value.clone();
+                let that_record_name = v.as_str().unwrap().to_string();
                 let that_record_data = DataSetRecord::find_first(teon!({
                     "where": {
                         "group": relation.model_path().join("."),
@@ -514,7 +514,7 @@ async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Recor
                                 "relationA": relation.name(),
                                 "nameA": record.name.as_str(),
                                 "groupB": that_record.model().path().join("."),
-                                "nameB": v.as_enum_variant().unwrap().value.clone(),
+                                "nameB": v.as_str().unwrap().to_string(),
                             },
                             {
                                 "dataSet": dataset.name.join(".").as_str(),
@@ -522,7 +522,7 @@ async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Recor
                                 "relationB": relation.name(),
                                 "nameB": record.name.as_str(),
                                 "groupA": that_record.model().path().join("."),
-                                "nameA": v.as_enum_variant().unwrap().value.clone()
+                                "nameA": v.as_str().unwrap().to_string()
                             }
                         ]
                     }
@@ -535,7 +535,7 @@ async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Recor
                     "nameA": record.name.as_str(),
                     "groupB": that_record.model().path().join("."),
                     "relationB": if opposite_relation.is_some() { Value::String(opposite_relation.unwrap().name().to_owned()) } else { Value::Null },
-                    "nameB": v.as_enum_variant().unwrap().value.clone()
+                    "nameB": v.as_str().unwrap().to_string()
                 }), ctx.clone()).await.unwrap();
                     relation_record.save().await.unwrap();
                 }
