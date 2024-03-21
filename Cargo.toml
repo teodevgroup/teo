@@ -15,7 +15,7 @@ dangerous_operation = []
 [dependencies]
 teo-result = { version = "0.2.20", path = "../teo-result" }
 teo-parser = { version = "0.2.21", path = "../teo-parser" }
-teo-runtime = { version = "0.2.20", path = "../teo-runtime" }
+teo-runtime = { version = "0.2.21", path = "../teo-runtime" }
 teo-sql-connector = { version = "0.2.20", path = "../teo-sql-connector" }
 teo-mongodb-connector = { version = "0.2.20", path = "../teo-mongodb-connector" }
 teo-generator = { version = "0.2.20", path = "../teo-generator" }
