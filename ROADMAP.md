@@ -788,13 +788,13 @@
 ### 0.2.21
 - Parser: fix interface enum variant parsing **[DONE]**
 - Parser: fix argument list resolving bug when no generics are provided **[DONE]**
-- CLI: Add `teo run --list` to list programs
 - Parser: `type` keyword and type value expression **[DONE]**
-- Parser & Runtime: allow using type as value
-
-### 0.2.22
-- Pipeline items `$all` and `$any`
-- Pipeline item `$match` and `$cast`
+- Parser & Runtime: allow using type as value **[DONE]**
+- Parser & Runtime: Pipeline item `$match`, `$cast`, `$case` and `$asAny` **[DONE]**
+- Parser & Runtime: Pipeline item `$is` **[DONE]**
+- Parser & Runtime: Pipeline items `$all` and `$any` **[DONE]**
+- Parser: remove deprecated test config block **[DONE]**
+- CLI: Add `teo run --list` to list programs
 - Permissions
 
 ### 0.2.23
