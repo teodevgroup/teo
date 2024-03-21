@@ -782,16 +782,18 @@
 - Optimize pipeline item error API **[DONE]**
 
 ### 0.2.20
-- Remove teon package, use parser value and runtime value instead
+- Remove teon package, use parser value and runtime value instead **[DONE]**
+- Pipeline item `$account` **[DONE]**
+
+### 0.2.21
 - Pipeline items `$all` and `$any`
-- Pipeline item `$account`
 - Pipeline item `$match` and `$cast`
 - Permissions
 
-### 0.2.21
+### 0.2.22
 - Management system generation
 
-### 0.2.22
+### 0.2.23
 - Add back integration tests
 - Windows: When server startup, fix port is not taken bug
 
