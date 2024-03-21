@@ -787,6 +787,7 @@
 
 ### 0.2.21
 - Parser: fix interface enum variant parsing **[DONE]**
+- Parser: fix option enum argument resolving bug
 
 ### 0.2.22
 - Pipeline items `$all` and `$any`
