@@ -786,14 +786,17 @@
 - Pipeline item `$account` **[DONE]**
 
 ### 0.2.21
+- Parser: fix interface enum variant parsing **[DONE]**
+
+### 0.2.22
 - Pipeline items `$all` and `$any`
 - Pipeline item `$match` and `$cast`
 - Permissions
 
-### 0.2.22
+### 0.2.23
 - Management system generation
 
-### 0.2.23
+### 0.2.24
 - Add back integration tests
 - Windows: When server startup, fix port is not taken bug
 
