@@ -787,7 +787,10 @@
 
 ### 0.2.21
 - Parser: fix interface enum variant parsing **[DONE]**
-- Parser: fix option enum argument resolving bug
+- Parser: fix argument list resolving bug when no generics are provided **[DONE]**
+- CLI: Add `teo run --list` to list programs
+- Parser: `type` keyword and type value expression **[DONE]**
+- Parser & Runtime: allow using type as value
 
 ### 0.2.22
 - Pipeline items `$all` and `$any`
@@ -795,11 +798,11 @@
 - Permissions
 
 ### 0.2.23
-- Management system generation
-
-### 0.2.24
 - Add back integration tests
 - Windows: When server startup, fix port is not taken bug
+
+### 0.2.25
+- Management system generation
 
 ### 0.3.0
 - `@onSet!()` and `@onSet?()`
