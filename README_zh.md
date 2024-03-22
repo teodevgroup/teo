@@ -108,6 +108,68 @@ model Post {
 [前端查询指南](https://docs.teocloud.io/guides/query-client-guides/crud)
 来了解具体的请求方式。
 
+### 编写编程路由
+
+在schema中声明handler。
+
+```teo
+@map(.get, "/echo/:data", interface: "EchoPathArguments")
+declare nonapi handler echo(): Any
+```
+
+使用编程代码实现handler。
+
+#### Node.js实现
+
+```ts
+import { App, Response, RequestCtx } from '@teocloud/teo'
+import { EchoPathArguments } from './entities'
+ 
+const app = new App()
+app.mainNamespace().defineHandler("echo", (ctx: RequestCtx) => {
+    const pathArguments: EchoPathArguments = ctx.pathArguments()
+    return Response.string(pathArguments.data, "text/plain")
+})
+app.run()
+```
+
+#### Python实现
+
+```python
+from asyncio import run
+from teo import App, Response, RequestCtx
+from entities import EchoPathArguments
+ 
+async def main():
+    app = App()
+    def echo_handler(ctx: RequestCtx):
+        path_arguments: EchoPathArguments = ctx.path_arguments()
+        return Response.string(path_arguments["data"], "text/plain")
+    app.main_namespace().define_handler("echo", echo_handler)
+    await app.run()
+ 
+run(main())
+```
+
+#### Rust实现
+
+```rust
+mod entities;
+ 
+use tokio::main;
+use teo::prelude::{App, Response, Result, path};
+use crate::entities::EchoPathArguments;
+ 
+#[main]
+async fn main() -> Result<()> {
+    let app = App::new()?;
+    app.main_namespace_mut().define_handler("echo", |path_args: EchoPathArguments| async move {
+        Ok::<Response, Error>(Response::string(path_args.data(), "text/plain"))
+    });
+    app.run().await
+}
+```
+
 ## 教程
 
 我们准备了[新手教程系列](https://docs.teocloud.io/getting-started/beginner-tutorial/write-a-schema-only-app)，来帮助您学习和理解Teo.

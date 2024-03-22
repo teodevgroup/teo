@@ -110,6 +110,68 @@ read, aggregate and group by. Read our
 [Query client guide](https://docs.teocloud.io/guides/query-client-guides/crud)
 for detailed usage.
 
+### Write custom handlers
+
+Declare the handler in the schema.
+
+```teo
+@map(.get, "/echo/:data", interface: "EchoPathArguments")
+declare nonapi handler echo(): Any
+```
+
+Implement the handler with program code.
+
+#### Node.js implementation
+
+```ts
+import { App, Response, RequestCtx } from '@teocloud/teo'
+import { EchoPathArguments } from './entities'
+ 
+const app = new App()
+app.mainNamespace().defineHandler("echo", (ctx: RequestCtx) => {
+    const pathArguments: EchoPathArguments = ctx.pathArguments()
+    return Response.string(pathArguments.data, "text/plain")
+})
+app.run()
+```
+
+#### Python implementation
+
+```python
+from asyncio import run
+from teo import App, Response, RequestCtx
+from entities import EchoPathArguments
+ 
+async def main():
+    app = App()
+    def echo_handler(ctx: RequestCtx):
+        path_arguments: EchoPathArguments = ctx.path_arguments()
+        return Response.string(path_arguments["data"], "text/plain")
+    app.main_namespace().define_handler("echo", echo_handler)
+    await app.run()
+ 
+run(main())
+```
+
+#### Rust implementation
+
+```rust
+mod entities;
+ 
+use tokio::main;
+use teo::prelude::{App, Response, Result, path};
+use crate::entities::EchoPathArguments;
+ 
+#[main]
+async fn main() -> Result<()> {
+    let app = App::new()?;
+    app.main_namespace_mut().define_handler("echo", |path_args: EchoPathArguments| async move {
+        Ok::<Response, Error>(Response::string(path_args.data(), "text/plain"))
+    });
+    app.run().await
+}
+```
+
 ## Tutorials
 
 We prepared a [Beginner tutorial series](https://docs.teocloud.io/getting-started/beginner-tutorial/write-a-schema-only-app)
