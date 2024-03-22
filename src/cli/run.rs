@@ -99,14 +99,34 @@ pub async fn run(cli: &CLI) -> Result<()> {
         }
         CLICommand::Lint(lint_command) => Ok(()),
         CLICommand::Run(run_command) => {
-            connect_databases(Ctx::main_namespace_mut(), cli.silent).await?;
-            if let Some(program) = Ctx::get_mut().programs.get(&run_command.name) {
-                let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());
-                program.call(transaction_ctx).await?;
-                std::process::exit(0);
+            if run_command.list {
+                println!("+-{:<32}-+-{:<64}-+", "--------------------------------", "----------------------------------------------------------------");
+                println!("| {:^32} | {:^64} |", "Name", "Description");
+                println!("+-{:<32}-+-{:<64}-+", "--------------------------------", "----------------------------------------------------------------");
+                if Ctx::get().programs.is_empty() {
+                    println!("| {:^99} |", "No programs.");
+                } else {
+                    for (name, program) in &Ctx::get().programs {
+                        let desc_str = program.desc.as_ref().map_or_else(
+                            || "(No description)".to_string(),
+                            |desc| desc.into()
+                        );
+                        println!("| {:<32} | {:<64} |", name, desc_str);
+                    }
+                }
+                println!("+-{:<32}---{:<64}-+", "--------------------------------", "----------------------------------------------------------------");
             } else {
-                Err(Error::new(format!("program '{}' is not defined", &run_command.name)))
+                if let Some(name) = &run_command.name {
+                    connect_databases(Ctx::main_namespace_mut(), cli.silent).await?;
+                    let program = Ctx::get_mut().programs.get(name).ok_or_else(|| Error::new(format!("Program '{}' is not defined", name)))?;
+                    let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());
+                    program.func.call(transaction_ctx).await?;
+                    std::process::exit(0);
+                } else {
+                    return Err(Error::new("No program name provided"));
+                }
             }
+            Ok(())
         },
     }
 }
