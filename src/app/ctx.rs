@@ -5,13 +5,24 @@ use std::sync::{Arc, Mutex};
 use maplit::btreemap;
 use once_cell::sync::OnceCell;
 use teo_parser::ast::schema::Schema;
-use teo_result:: Result;
+use teo_result::Result;
 use teo_runtime::connection;
 use teo_runtime::namespace::Namespace;
 use crate::app::callbacks::callback::AsyncCallback;
 use crate::cli::command::CLI;
 use crate::cli::entrance::Entrance;
 use crate::cli::runtime_version::RuntimeVersion;
+
+
+#[derive(Educe)]
+#[educe(Debug)]
+pub struct Program<T> where T: Into<String> {
+    #[educe(Debug(ignore))]
+    pub(crate) func: Arc<dyn AsyncCallback>,
+    #[educe(Debug(ignore))]
+    pub(crate) desc: Option<T>,
+}
+
 
 #[derive(Educe)]
 #[educe(Debug)]
@@ -27,7 +38,7 @@ pub struct Ctx {
     #[educe(Debug(ignore))]
     pub(crate) setup: Option<Arc<dyn AsyncCallback>>,
     #[educe(Debug(ignore))]
-    pub(crate) programs: BTreeMap<String, Arc<dyn AsyncCallback>>,
+    pub(crate) programs: BTreeMap<String, Program<String>>,
     #[educe(Debug(ignore))]
     pub(crate) conn_ctx: Option<connection::Ctx>,
 }
@@ -148,8 +159,12 @@ impl Ctx {
         Ctx::get_mut().setup = Some(Arc::new(f));
     }
 
-    pub fn insert_program<F>(name: &str, f: F) where F: AsyncCallback + 'static {
-        Ctx::get_mut().programs.insert(name.to_owned(), Arc::new(f));
+    pub fn insert_program<T, F>(name: &str, desc: Option<T>, f: F) where T: Into<String>, F: AsyncCallback + 'static {
+        let desc_str = desc.map(|desc| desc.into());
+        Ctx::get_mut().programs.insert(
+            name.to_owned(),
+            Program { func: Arc::new(f), desc: desc_str }
+        );
     }
 }
 
