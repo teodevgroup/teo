@@ -794,8 +794,8 @@
 - Parser & Runtime: Pipeline item `$is` **[DONE]**
 - Parser & Runtime: Pipeline items `$all` and `$any` **[DONE]**
 - Parser: remove deprecated test config block **[DONE]**
-- CLI: Add `teo run --list` to list programs
-- Permissions
+- CLI: Add `teo run --list` to list programs **[DONE]**
+- Fix permissions **[DONE]**
 
 ### 0.2.23
 - Add back integration tests
