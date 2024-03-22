@@ -797,7 +797,13 @@
 - CLI: Add `teo run --list` to list programs **[DONE]**
 - Fix permissions **[DONE]**
 
+### 0.2.22
+- Disable actions
+
 ### 0.2.23
+- Action transformers
+
+### 0.2.24
 - Add back integration tests
 - Windows: When server startup, fix port is not taken bug
 
@@ -814,7 +820,6 @@
 
 ### 0.3.2
 - Update swift client package with new namespaces API
-- Revamped request extension API
 - Improved middleware system including middleware skipping and model middlewares
 - Add back model action transformers
 - Soft delete
@@ -827,6 +832,9 @@
 
 ### 0.5.0
 - Json type
+
+### 0.5.10
+- Support first version of Teo Studio
 
 ### 0.6.0
 - Custom SQL query scopes
@@ -847,12 +855,6 @@
 
 ### 0.8.0
 - Full database type mapping
-- Model fragments
-- model extends model
-- enum extends enum
-
-### 0.9.0
-- Support first version of Teo Studio
 
 ### 1.0.0
 - First stable major version
