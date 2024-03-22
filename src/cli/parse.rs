@@ -1,5 +1,4 @@
 use std::env;
-use std::ffi::OsString;
 use clap::{Arg, ArgAction, Command as ClapCommand};
 use crate::cli::entrance::Entrance;
 use crate::cli::runtime_version::RuntimeVersion;
@@ -123,6 +122,12 @@ pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance, argv: O
             .about("Lint the schema files"))
         .subcommand(ClapCommand::new("run")
             .about("Run a defined program")
+            .arg(Arg::new("list")
+                .short('l')
+                .long("list")
+                .help("List all defined programs")
+                .action(ArgAction::SetTrue)
+                .conflicts_with("NAME"))
             .arg(Arg::new("NAME")
                 .required(true)
                 .action(ArgAction::Append)
@@ -183,7 +188,10 @@ pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance, argv: O
         }
         Some(("run", submatches)) => {
             let name: Option<String> = submatches.get_one::<String>("NAME").map(|s| s.clone());
-            CLICommand::Run(RunCommand { name: name.unwrap() })
+            CLICommand::Run(RunCommand {
+                list: submatches.get_flag("list"),
+                name,
+            })
         }
         _ => unreachable!()
     };
