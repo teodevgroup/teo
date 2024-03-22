@@ -50,7 +50,8 @@ pub(crate) struct LintCommand { }
 
 #[derive(Debug)]
 pub(crate) struct RunCommand {
-    pub(crate) name: String
+    pub(crate) list: bool,
+    pub(crate) name: Option<String>,
 }
 
 #[derive(Debug)]

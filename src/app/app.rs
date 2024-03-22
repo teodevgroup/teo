@@ -61,9 +61,9 @@ impl App {
         });
     }
 
-    pub fn program<A, F>(&self, name: &str, f: F) where F: AsyncCallbackArgument<A> + 'static {
+    pub fn program<A, T, F>(&self, name: &str, desc: Option<T>, f: F) where T: Into<String>, F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
-        Ctx::insert_program(name, |ctx: transaction::Ctx| async {
+        Ctx::insert_program(name, desc.map(|desc| desc.into()), |ctx: transaction::Ctx| async {
             wrap_call.call(ctx).await
         });
     }
