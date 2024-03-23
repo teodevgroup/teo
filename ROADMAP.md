@@ -798,16 +798,19 @@
 - Fix permissions **[DONE]**
 
 ### 0.2.22
-- Disable actions
+- Update permission check order for creating new object **[DONE]**
 
 ### 0.2.23
-- Action transformers
+- Disable actions
 
 ### 0.2.24
+- Action transformers
+
+### 0.2.25
 - Add back integration tests
 - Windows: When server startup, fix port is not taken bug
 
-### 0.2.25
+### 0.2.50
 - Management system generation
 
 ### 0.3.0
