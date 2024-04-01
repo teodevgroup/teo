@@ -801,14 +801,13 @@
 - Update permission check order for creating new object **[DONE]**
 
 ### 0.2.23
-- Disable actions
-
-### 0.2.24
-- Action transformers
+- Generate admin command **[DONE]**
 
 ### 0.2.25
 - Add back integration tests
 - Windows: When server startup, fix port is not taken bug
+- Disable actions
+- Action transformers
 
 ### 0.2.50
 - Management system generation
