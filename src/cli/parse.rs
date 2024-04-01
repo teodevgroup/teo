@@ -2,7 +2,7 @@ use std::env;
 use clap::{Arg, ArgAction, Command as ClapCommand};
 use crate::cli::entrance::Entrance;
 use crate::cli::runtime_version::RuntimeVersion;
-use crate::cli::command::{CLI, CLICommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, LintCommand, MigrateCommand, PurgeCommand, RunCommand, SeedCommand, SeedCommandAction, ServeCommand};
+use crate::cli::command::{CLI, CLICommand, GenerateAdminCommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, LintCommand, MigrateCommand, PurgeCommand, RunCommand, SeedCommand, SeedCommandAction, ServeCommand};
 
 pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance, argv: Option<Vec<String>>) -> CLI {
     let argv = argv.unwrap_or(env::args_os().map(|s| s.to_str().unwrap().to_owned()).collect());
@@ -85,7 +85,10 @@ pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance, argv: O
                     .action(ArgAction::Append)
                     .conflicts_with("all")
                     .help("Entity names to generate")
-                    .num_args(1..))))
+                    .num_args(1..)))
+            .subcommand(ClapCommand::new("admin")
+                .about("Generate admin dashboard")
+                .arg_required_else_help(false)))
         .subcommand(ClapCommand::new("migrate")
             .about("Run migration")
             .arg(Arg::new("dry")
@@ -158,6 +161,9 @@ pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance, argv: O
                 Some(("entity", submatches)) => {
                     let names: Option<Vec<String>> = submatches.get_many::<String>("NAME").map(|s| s.map(|v| v.to_string()).collect::<Vec<String>>());
                     CLICommand::Generate(GenerateCommand::GenerateEntityCommand(GenerateEntityCommand { all: submatches.get_flag("all"), names }))
+                }
+                Some(("admin", _)) => {
+                    CLICommand::Generate(GenerateCommand::GenerateAdminCommand(GenerateAdminCommand {}))
                 }
                 _ => unreachable!()
             }

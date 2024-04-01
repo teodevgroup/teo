@@ -9,6 +9,7 @@ pub(crate) struct ServeCommand {
 pub(crate) enum GenerateCommand {
     GenerateClientCommand(GenerateClientCommand),
     GenerateEntityCommand(GenerateEntityCommand),
+    GenerateAdminCommand(GenerateAdminCommand),
 }
 
 #[derive(Debug)]
@@ -22,6 +23,9 @@ pub(crate) struct GenerateEntityCommand {
     pub(crate) all: bool,
     pub(crate) names: Option<Vec<String>>,
 }
+
+#[derive(Debug)]
+pub(crate) struct GenerateAdminCommand { }
 
 #[derive(Debug)]
 pub(crate) struct MigrateCommand {

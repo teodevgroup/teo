@@ -78,6 +78,12 @@ pub async fn run(cli: &CLI) -> Result<()> {
                     }
                     Ok(())
                 }
+                GenerateCommand::GenerateAdminCommand(_) => {
+                    if let Some(admin) = &Ctx::main_namespace().admin {
+                        teo_generator::admin::generate(Ctx::main_namespace(), admin).await?;
+                    }
+                    Ok(())
+                }
             }
         }
         CLICommand::Migrate(migrate_command) => {
