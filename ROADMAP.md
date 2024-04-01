@@ -810,7 +810,7 @@
 - Action transformers
 
 ### 0.2.50
-- Management system generation
+- Admin dashboard generation
 
 ### 0.3.0
 - `@onSet!()` and `@onSet?()`
