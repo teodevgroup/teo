@@ -802,6 +802,8 @@
 
 ### 0.2.23
 - Generate admin command **[DONE]**
+- Add admin basic field decorators **[DONE]**
+- Fix Rust client recursive trait in `teon!` issue **[DONE]**
 
 ### 0.2.25
 - Add back integration tests
