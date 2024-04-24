@@ -806,7 +806,7 @@
 - Fix Rust client recursive trait in `teon!` issue **[DONE]**
 
 ### 0.2.24
-- Add custom SQL to transaction
+- Add custom SQL to transaction **[DONE]**
 - Update identity handler args **[DONE]**
 - Add `Language` type to schema **[DONE]**
 - Fix copy handler is not found **[DONE]**
