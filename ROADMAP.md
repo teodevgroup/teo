@@ -805,6 +805,12 @@
 - Add admin basic field decorators **[DONE]**
 - Fix Rust client recursive trait in `teon!` issue **[DONE]**
 
+### 0.2.24
+- Add custom SQL to transaction
+- Update identity handler args **[DONE]**
+- Add `Language` type to schema **[DONE]**
+- Fix copy handler is not found **[DONE]**
+
 ### 0.2.25
 - Add back integration tests
 - Windows: When server startup, fix port is not taken bug
