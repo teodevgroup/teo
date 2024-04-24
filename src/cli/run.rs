@@ -1,3 +1,4 @@
+use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_result::{Error, Result};
 use crate::app::ctx::Ctx;
 use crate::app::database::connect_databases;
@@ -21,7 +22,8 @@ pub async fn run(cli: &CLI) -> Result<()> {
             // seed auto seed data sets
             if !serve_command.no_autoseed {
                 if Ctx::main_namespace().database.is_some() {
-                    let data_sets = load_data_sets(Ctx::main_namespace(), None, false, Ctx::schema())?;
+                    let mut diagnostics = Diagnostics::new();
+                    let data_sets = load_data_sets(Ctx::main_namespace(), None, false, Ctx::schema(), &mut diagnostics)?;
                     let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());
                     seed(SeedCommandAction::Seed, data_sets, transaction_ctx, false).await?;
                 }
@@ -93,7 +95,8 @@ pub async fn run(cli: &CLI) -> Result<()> {
         }
         CLICommand::Seed(seed_command) => {
             connect_databases(Ctx::main_namespace_mut(), cli.silent).await?;
-            let data_sets = load_data_sets(Ctx::main_namespace(), seed_command.names.as_ref(), seed_command.all, Ctx::schema())?;
+            let mut diagnostics = Diagnostics::new();
+            let data_sets = load_data_sets(Ctx::main_namespace(), seed_command.names.as_ref(), seed_command.all, Ctx::schema(), &mut diagnostics)?;
             let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());
             seed(seed_command.action, data_sets, transaction_ctx, true).await?;
             Ok(())

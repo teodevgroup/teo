@@ -5,6 +5,7 @@ use futures_util::FutureExt;
 use colored::Colorize;
 use futures_util::future;
 use serde_json::{Value as JsonValue};
+use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_result::{Error, Result};
 use teo_runtime::config::server::Server;
 use teo_runtime::namespace::Namespace;
@@ -304,7 +305,8 @@ async fn dangerous_operation(action :&str)-> Result<Response>{
         let dangerous_operation = DangerousOperations::try_from(action)?;
         match dangerous_operation {
             DangerousOperations::Seed | DangerousOperations::Unseed | DangerousOperations::Reseed => {
-                let data_sets = load_data_sets(Ctx::main_namespace(), None, false, Ctx::schema())?;
+                let mut diagnostics = Diagnostics::new();
+                let data_sets = load_data_sets(Ctx::main_namespace(), None, false, Ctx::schema(), &mut diagnostics)?;
                 let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());
                 seed(
                     seed_from_dangerous_operation(dangerous_operation)?,
@@ -317,7 +319,8 @@ async fn dangerous_operation(action :&str)-> Result<Response>{
             DangerousOperations::PurgeAndSeed => {
                 purge::purge().await?;
                 connect_databases(Ctx::main_namespace_mut(),true).await?;
-                let data_sets = load_data_sets(Ctx::main_namespace(), None, false, Ctx::schema())?;
+                let mut diagnostics = Diagnostics::new();
+                let data_sets = load_data_sets(Ctx::main_namespace(), None, false, Ctx::schema(), &mut diagnostics)?;
                 let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());
                 seed(SeedCommandAction::Seed, data_sets, transaction_ctx, false).await?
             }
