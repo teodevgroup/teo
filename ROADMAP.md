@@ -810,6 +810,7 @@
 - Update identity handler args **[DONE]**
 - Add `Language` type to schema **[DONE]**
 - Fix copy handler is not found **[DONE]**
+- Fix nullish coalescing error message bug **[DONE]**
 
 ### 0.2.25
 - Add back integration tests
