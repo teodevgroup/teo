@@ -14,10 +14,10 @@ dangerous_operation = []
 
 [dependencies]
 teo-result = { version = "0.2.23", path = "../teo-result" }
-teo-parser = { version = "0.2.23", path = "../teo-parser" }
+teo-parser = { version = "0.2.24", path = "../teo-parser" }
 teo-runtime = { version = "0.2.24", path = "../teo-runtime" }
-teo-sql-connector = { version = "0.2.20", path = "../teo-sql-connector" }
-teo-mongodb-connector = { version = "0.2.20", path = "../teo-mongodb-connector" }
+teo-sql-connector = { version = "0.2.24", path = "../teo-sql-connector" }
+teo-mongodb-connector = { version = "0.2.24", path = "../teo-mongodb-connector" }
 teo-generator = { version = "0.2.24", path = "../teo-generator" }
 actix-web = "4.5.1"
 actix-http = "3.6.0"
