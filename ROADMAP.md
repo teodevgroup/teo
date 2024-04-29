@@ -813,13 +813,12 @@
 - Fix nullish coalescing error message bug **[DONE]**
 
 ### 0.2.25
-- Add back integration tests
-- Windows: When server startup, fix port is not taken bug
-- Disable actions
-- Action transformers
+- Admin dashboard generation beta **[IN PROGRESS]**
 
 ### 0.2.50
-- Admin dashboard generation
+- Add back integration tests
+- Windows: When server startup, fix port is not taken bug
+- Action transformers
 
 ### 0.3.0
 - `@onSet!()` and `@onSet?()`
