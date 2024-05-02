@@ -82,10 +82,7 @@ pub async fn run(cli: &CLI) -> Result<()> {
                 }
                 GenerateCommand::GenerateAdminCommand(_) => {
                     if let Some(admin) = &Ctx::main_namespace().admin {
-                        let result = teo_generator::admin::generate(Ctx::main_namespace(), admin).await;
-                        if result.is_err() {
-                            println!("result: {}", result.err().unwrap());
-                        }
+                        teo_generator::admin::generate(Ctx::main_namespace(), admin).await?;
                     }
                     Ok(())
                 }
