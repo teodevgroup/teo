@@ -813,7 +813,7 @@
 - Fix nullish coalescing error message bug **[DONE]**
 
 ### 0.2.25
-- Admin dashboard generation beta **[IN PROGRESS]**
+- Admin dashboard generation beta **[DONE]**
 
 ### 0.2.50
 - Add back integration tests
