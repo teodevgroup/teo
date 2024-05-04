@@ -815,6 +815,9 @@
 ### 0.2.25
 - Admin dashboard generation beta **[DONE]**
 
+### 0.2.26
+- Fix admin dashboard generation hosts **[DONE]**
+
 ### 0.2.50
 - Add back integration tests
 - Windows: When server startup, fix port is not taken bug
