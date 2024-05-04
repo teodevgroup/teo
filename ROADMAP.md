@@ -817,6 +817,8 @@
 
 ### 0.2.26
 - Fix admin dashboard generation hosts **[DONE]**
+- Updated admin dashboard menu design **[DONE]**
+- Updated nav area items design **[DONE]**
 
 ### 0.2.50
 - Add back integration tests
