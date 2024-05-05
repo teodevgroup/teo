@@ -821,15 +821,31 @@
 - Updated nav area items design **[DONE]**
 
 ### 0.2.27
-- Admin dashboard: optimize code generation new lines **[IN PROGRESS]**
+- Admin dashboard: optimize code generation new lines **[DONE]**
 - Admin dashboard: form controls of different data types **[IN PROGRESS]**
+
+### 0.2.40
+- Uploaders
+- Form data create & form data update
+- Admin dashboard: dashboards
 
 ### 0.2.50
 - Add back integration tests
 - Windows: When server startup, fix port is not taken bug
 - Action transformers
+- Soft delete
+- Run custom MongoDB query
+- Kotlin client
+- C# client
+- C# client: capitalized names and names with underscore
+- MongoDB: connector is not using table name
 
 ### 0.3.0
+- Rewrite HTTP server with hyper
+- `createObject` in entities
+- Handlers call handlers
+- Remove paging information from `findMany`
+- Combined request in HTTP clients
 - `@onSet!()` and `@onSet?()`
 - `$get!()` and `$get?()`
 
@@ -840,14 +856,6 @@
 ### 0.3.2
 - Update swift client package with new namespaces API
 - Improved middleware system including middleware skipping and model middlewares
-- Add back model action transformers
-- Soft delete
-
-### 0.4.0
-- Kotlin client
-- C# client
-- C# client: capitalized names and names with underscore
-- MongoDB: connector is not using table name
 
 ### 0.5.0
 - Json type
@@ -856,8 +864,6 @@
 - Support first version of Teo Studio
 
 ### 0.6.0
-- Custom SQL query scopes
-- Custom MongoDB query scopes
 - Default argument for argument list and config declaration
 
 ### 0.7.0
