@@ -820,6 +820,10 @@
 - Updated admin dashboard menu design **[DONE]**
 - Updated nav area items design **[DONE]**
 
+### 0.2.27
+- Admin dashboard: optimize code generation new lines **[IN PROGRESS]**
+- Admin dashboard: form controls of different data types **[IN PROGRESS]**
+
 ### 0.2.50
 - Add back integration tests
 - Windows: When server startup, fix port is not taken bug
