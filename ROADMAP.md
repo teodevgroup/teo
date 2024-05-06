@@ -822,7 +822,12 @@
 
 ### 0.2.27
 - Admin dashboard: optimize code generation new lines **[DONE]**
-- Admin dashboard: form controls of different data types **[IN PROGRESS]**
+- Admin dashboard: form controls of different data types **[DONE]**
+- SQLite: fix decimal encoding bug **[DONE]**
+
+### 0.2.28
+- Admin dashboard: form controls of enum type
+- Admin dashboard: form controls of array type
 
 ### 0.2.40
 - Uploaders
