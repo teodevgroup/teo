@@ -41,6 +41,7 @@ Teo is a **schema-centered** next-generation web framework for Rust, Node.js and
 * Builtin permission check
 * First in last out middlewares
 * Custom routes and handlers
+* Generated customizable admin dashboard
 
 ## Getting started
 
