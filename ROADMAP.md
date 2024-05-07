@@ -826,6 +826,7 @@
 - SQLite: fix decimal encoding bug **[DONE]**
 
 ### 0.2.28
+- Parser: fix comment token bug **[DONE]**
 - Admin dashboard: add enum entries to translations **[DONE]**
 - Admin dashboard: translate bool values **[DONE]**
 - Admin dashboard: form controls of enum type
