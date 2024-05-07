@@ -826,15 +826,31 @@
 - SQLite: fix decimal encoding bug **[DONE]**
 
 ### 0.2.28
+- Admin dashboard: add enum entries to translations **[DONE]**
+- Admin dashboard: translate bool values **[DONE]**
 - Admin dashboard: form controls of enum type
 - Admin dashboard: form controls of array type
 
-### 0.2.40
+### 0.2.29
+- Admin dashboard: Custom width of form controls
+
+### 0.2.30
+- Admin dashboard: dark mode
+
+### 0.2.31
+- Admin dashboard: developers can copy config
+
+### 0.2.32
 - Uploaders
-- Form data create & form data update
-- Admin dashboard: dashboards
+- Amazon S3 uploader
+- Aliyun OSS uploader
+- Local file directory uploader
+- Create and update with form data
 
 ### 0.2.50
+- Admin dashboard: dashboards
+
+### 0.2.70
 - Add back integration tests
 - Windows: When server startup, fix port is not taken bug
 - Action transformers
@@ -862,16 +878,14 @@
 - Update swift client package with new namespaces API
 - Improved middleware system including middleware skipping and model middlewares
 
-### 0.5.0
+### 0.4.0
 - Json type
 
-### 0.5.10
+### 0.5.0
 - Support first version of Teo Studio
-
-### 0.6.0
 - Default argument for argument list and config declaration
 
-### 0.7.0
+### 0.6.0
 - PostgreSQL: Enum types
 - MongoDB migration
 - MongoDB `$queryRaw`
@@ -883,14 +897,20 @@
 - MongoDB: aggregate and group by for string and dates
 - Correct count with cursor
 
-### 0.8.0
+### 0.7.0
 - Full database type mapping
+
+### 0.8.0
+- Data subscriptions
+
+### 0.9.0
+- Full text indexes
 
 ### 1.0.0
 - First stable major version
 
-### 1.3.0
+### 1.1.0
 - Support MSSQL
 
-### 1.5.0
+### 1.2.0
 - Full set of unit tests
