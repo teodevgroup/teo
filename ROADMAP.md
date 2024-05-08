@@ -828,12 +828,14 @@
 ### 0.2.28
 - Parser: fix comment token bug **[DONE]**
 - PostgreSQL: fix index creation bug **[DONE]**
+- Fix array value is not returned bug **[DONE]**
 - Admin dashboard: add enum entries to translations **[DONE]**
 - Admin dashboard: translate bool values **[DONE]**
 - Admin dashboard: form controls of enum type **[DONE]**
 - Admin dashboard: fix page content scroll bug **[DONE]**
 - Admin dashboard: record list display for enum value **[DONE]**
-- Admin dashboard: form controls of array type
+- Admin dashboard: form controls of array type **[DONE]**
+- Admin dashboard: record list display for array value **[IN PROGRESS]**
 
 ### 0.2.29
 - Admin dashboard: Custom width of form controls
@@ -848,6 +850,12 @@
 - Aliyun OSS uploader
 - Local file directory uploader
 - Create and update with form data
+
+### 0.2.32
+- Admin dashboard: Filters
+
+### 0.2.33
+- Admin dashboard: Sort
 
 ### 0.2.50
 - Admin dashboard: dashboards
