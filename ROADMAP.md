@@ -827,7 +827,7 @@
 
 ### 0.2.28
 - Parser: fix comment token bug **[DONE]**
-- PostgreSQL: fix index creation bug **[IN PROGRESS]**
+- PostgreSQL: fix index creation bug **[DONE]**
 - Admin dashboard: add enum entries to translations **[DONE]**
 - Admin dashboard: translate bool values **[DONE]**
 - Admin dashboard: form controls of enum type **[DONE]**
