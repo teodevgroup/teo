@@ -829,7 +829,9 @@
 - Parser: fix comment token bug **[DONE]**
 - Admin dashboard: add enum entries to translations **[DONE]**
 - Admin dashboard: translate bool values **[DONE]**
-- Admin dashboard: form controls of enum type
+- Admin dashboard: form controls of enum type **[DONE]**
+- Admin dashboard: fix record list scroll bug
+- Admin dashboard: record list display for enum value
 - Admin dashboard: form controls of array type
 
 ### 0.2.29
