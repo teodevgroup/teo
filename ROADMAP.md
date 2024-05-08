@@ -835,7 +835,7 @@
 - Admin dashboard: fix page content scroll bug **[DONE]**
 - Admin dashboard: record list display for enum value **[DONE]**
 - Admin dashboard: form controls of array type **[DONE]**
-- Admin dashboard: record list display for array value **[IN PROGRESS]**
+- Admin dashboard: record list display for array value **[DONE]**
 
 ### 0.2.29
 - Admin dashboard: Custom width of form controls
