@@ -827,11 +827,12 @@
 
 ### 0.2.28
 - Parser: fix comment token bug **[DONE]**
+- PostgreSQL: fix index creation bug **[IN PROGRESS]**
 - Admin dashboard: add enum entries to translations **[DONE]**
 - Admin dashboard: translate bool values **[DONE]**
 - Admin dashboard: form controls of enum type **[DONE]**
 - Admin dashboard: fix page content scroll bug **[DONE]**
-- Admin dashboard: record list display for enum value
+- Admin dashboard: record list display for enum value **[DONE]**
 - Admin dashboard: form controls of array type
 
 ### 0.2.29
