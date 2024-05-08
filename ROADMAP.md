@@ -837,14 +837,12 @@
 
 ### 0.2.29
 - Admin dashboard: Custom width of form controls
+- Admin dashboard: developers can copy config
 
 ### 0.2.30
 - Admin dashboard: dark mode
 
 ### 0.2.31
-- Admin dashboard: developers can copy config
-
-### 0.2.32
 - Uploaders
 - Amazon S3 uploader
 - Aliyun OSS uploader
