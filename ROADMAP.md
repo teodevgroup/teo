@@ -840,6 +840,7 @@
 ### 0.2.29
 - Admin dashboard: Custom width of form controls
 - Admin dashboard: developers can copy config
+- Admin dashboard: do not display foreign key fields
 
 ### 0.2.30
 - Admin dashboard: dark mode
