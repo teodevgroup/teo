@@ -857,6 +857,9 @@
 ### 0.2.33
 - Admin dashboard: Sort
 
+### 0.2.24
+- Load records on scroll 
+
 ### 0.2.50
 - Admin dashboard: dashboards
 
