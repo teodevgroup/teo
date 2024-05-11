@@ -10,15 +10,15 @@
   <br />
   <div><strong>Schema-centered</strong> next-generation web framework for Rust, Node.js and Python.</div>
   <br />
-  <a href="https://docs.teocloud.io/getting-started/quickstart">Quickstart</a>
+  <a href="https://docs.teodev.io/getting-started/quickstart">Quickstart</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-  <a href="https://teocloud.io/">Official website</a>
+  <a href="https://teodev.io/">Official website</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-  <a href="https://docs.teocloud.io/">Docs</a>
+  <a href="https://docs.teodev.io/">Docs</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-  <a href="https://teocloud.io/blog">Blog</a>
+  <a href="https://blog.teodev.io">Blog</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-  <a href="https://teocloud.io/discord">Discord</a>
+  <a href="https://teodev.io/discord">Discord</a>
   <br />
   <hr />
 </div>
@@ -45,7 +45,7 @@ Teo is a **schema-centered** next-generation web framework for Rust, Node.js and
 
 ## Getting started
 
-The fastest way to get started with Teo is by following the [Quickstart guide](https://docs.teocloud.io/getting-started/quickstart).
+The fastest way to get started with Teo is by following the [Quickstart guide](https://docs.teodev.io/getting-started/quickstart).
 
 ### Installation
 
@@ -108,7 +108,7 @@ model Post {
 
 Start the server with `teo serve` command. Now you can create, update, delete,
 read, aggregate and group by. Read our
-[Query client guide](https://docs.teocloud.io/guides/query-client-guides/crud)
+[Query client guide](https://docs.teodev.io/guides/query-client-guides/crud)
 for detailed usage.
 
 ### Write custom handlers
@@ -175,7 +175,7 @@ async fn main() -> Result<()> {
 
 ## Tutorials
 
-We prepared a [Beginner tutorial series](https://docs.teocloud.io/getting-started/beginner-tutorial/write-a-schema-only-app)
+We prepared a [Beginner tutorial series](https://docs.teodev.io/getting-started/beginner-tutorial/write-a-schema-only-app)
 to help you learn and understand Teo.
 
 ## Issues

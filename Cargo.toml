@@ -5,8 +5,8 @@ edition = "2021"
 description = "Schema-centered next-generation web framework for Rust, Node.js and Python."
 license = "Apache-2.0"
 build = "build.rs"
-homepage = "https://teocloud.io"
-documentation = "https://teocloud.io/docs"
+homepage = "https://teodev.io"
+documentation = "https://docs.teodev.io"
 repository = "https://github.com/teocloud/teo"
 
 [features]

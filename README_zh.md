@@ -10,13 +10,13 @@
   <br />
   <div><strong>以结构为核心的</strong>新一代网络框架，支持Node.js、Python和Rust。</div>
   <br />
-  <a href="https://docs.teocloud.io/getting-started/quickstart">快速开始</a>
+  <a href="https://docs.teodev.io/getting-started/quickstart">快速开始</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-  <a href="https://teocloud.io/">官方网站</a>
+  <a href="https://teodev.io/">官方网站</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-  <a href="https://docs.teocloud.io/">文档</a>
+  <a href="https://docs.teodev.io/">文档</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-  <a href="https://teocloud.io/blog">博客</a>
+  <a href="https://blog.teodev.io">博客</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
   <a href="#微信群">微信群</a>
   <br />
@@ -45,7 +45,7 @@ Teo是一个**以结构为核心的**新一代网络框架，支持Node.js、Pyt
 
 ## 现在开始入门
 
-最快的开始入门方法就是阅读我们的[快速开始指南](https://docs.teocloud.io/getting-started/quickstart)。
+最快的开始入门方法就是阅读我们的[快速开始指南](https://docs.teodev.io/getting-started/quickstart)。
 
 ### 安装
 
@@ -106,7 +106,7 @@ model Post {
 ```
 
 用`teo serve`命令启动服务器，现在，你可以增删改查，聚合和分组。阅读我们的
-[前端查询指南](https://docs.teocloud.io/guides/query-client-guides/crud)
+[前端查询指南](https://docs.teodev.io/guides/query-client-guides/crud)
 来了解具体的请求方式。
 
 ### 编写编程路由
@@ -173,7 +173,7 @@ async fn main() -> Result<()> {
 
 ## 教程
 
-我们准备了[新手教程系列](https://docs.teocloud.io/getting-started/beginner-tutorial/write-a-schema-only-app)，来帮助您学习和理解Teo.
+我们准备了[新手教程系列](https://docs.teodev.io/getting-started/beginner-tutorial/write-a-schema-only-app)，来帮助您学习和理解Teo.
 
 ## 问题
 
