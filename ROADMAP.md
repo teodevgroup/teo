@@ -838,7 +838,9 @@
 - Admin dashboard: record list display for array value **[DONE]**
 
 ### 0.2.29
-- Admin dashboard: Custom width of form controls
+- Admin dashboard: custom width of form controls **[DONE]**
+- Admin dashboard: fix submenu bugs **[DONE]**
+- Admin dashboard: menu locks scroll **[DONE]**
 - Admin dashboard: developers can copy config
 - Admin dashboard: do not display foreign key fields
 
