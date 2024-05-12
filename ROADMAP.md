@@ -841,26 +841,30 @@
 - Admin dashboard: custom width of form controls **[DONE]**
 - Admin dashboard: fix submenu bugs **[DONE]**
 - Admin dashboard: menu locks scroll **[DONE]**
-- Admin dashboard: developers can copy config
-- Admin dashboard: do not display foreign key fields
+- Admin dashboard: do not display foreign key fields **[DONE]**
 
 ### 0.2.30
 - Admin dashboard: dark mode
+- Admin dashboard: developers can copy config
+- Admin dashboard: handle null value in forms
 
 ### 0.2.31
+- Admin dashboard: field error messages
+
+### 0.2.32
 - Uploaders
 - Amazon S3 uploader
 - Aliyun OSS uploader
 - Local file directory uploader
 - Create and update with form data
 
-### 0.2.32
+### 0.2.33
 - Admin dashboard: Filters
 
-### 0.2.33
+### 0.2.34
 - Admin dashboard: Sort
 
-### 0.2.34
+### 0.2.35
 - Load records on scroll
 
 ### 0.2.50
