@@ -840,7 +840,8 @@
 ### 0.2.29
 - Admin dashboard: custom width of form controls **[DONE]**
 - Admin dashboard: fix submenu bugs **[DONE]**
-- Admin dashboard: menu locks scroll **[DONE]**
+- Admin dashboard: update preferences initialization **[DONE]**
+- Admin dashboard: update form buttons layout **[DONE]**
 - Admin dashboard: do not display foreign key fields **[DONE]**
 
 ### 0.2.30
