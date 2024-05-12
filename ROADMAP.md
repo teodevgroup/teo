@@ -845,6 +845,7 @@
 - Admin dashboard: do not display foreign key fields **[DONE]**
 
 ### 0.2.30
+- Admin dashboard: generated icon list **[DONE]**
 - Runtime, Node.js and Python: sessions and cookies
 - MongoDB: use `@map` on collection names
 
