@@ -845,28 +845,35 @@
 - Admin dashboard: do not display foreign key fields **[DONE]**
 
 ### 0.2.30
+- Runtime, Node.js and Python: sessions and cookies
+- MongoDB: use `@map` on collection names
+
+### 0.2.31
 - Admin dashboard: dark mode
 - Admin dashboard: developers can copy config
 - Admin dashboard: handle null value in forms
 
-### 0.2.31
+### 0.2.32
 - Admin dashboard: field error messages
 
-### 0.2.32
+### 0.2.33
 - Uploaders
 - Amazon S3 uploader
 - Aliyun OSS uploader
 - Local file directory uploader
 - Create and update with form data
 
-### 0.2.33
+### 0.2.34
 - Admin dashboard: Filters
 
-### 0.2.34
+### 0.2.35
 - Admin dashboard: Sort
 
-### 0.2.35
+### 0.2.36
 - Load records on scroll
+
+### 0.2.37
+- Embedded forms
 
 ### 0.2.50
 - Admin dashboard: dashboards
