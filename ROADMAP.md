@@ -846,34 +846,31 @@
 
 ### 0.2.30
 - Admin dashboard: generated icon list **[DONE]**
-- Runtime, Node.js and Python: sessions and cookies
-- MongoDB: use `@map` on collection names
+- Rust Runtime: cookies **[DONE]**
+- Admin dashboard: dark mode **[DONE]**
+- Admin dashboard: developers can copy config **[DONE]**
+- Admin dashboard: handle null value in forms **[IN PROGRESS]**
 
 ### 0.2.31
-- Admin dashboard: dark mode
-- Admin dashboard: developers can copy config
-- Admin dashboard: handle null value in forms
-
-### 0.2.32
 - Admin dashboard: field error messages
 
-### 0.2.33
+### 0.2.32
 - Uploaders
 - Amazon S3 uploader
 - Aliyun OSS uploader
 - Local file directory uploader
 - Create and update with form data
 
-### 0.2.34
+### 0.2.33
 - Admin dashboard: Filters
 
-### 0.2.35
+### 0.2.34
 - Admin dashboard: Sort
 
-### 0.2.36
+### 0.2.35
 - Load records on scroll
 
-### 0.2.37
+### 0.2.36
 - Embedded forms
 
 ### 0.2.50
