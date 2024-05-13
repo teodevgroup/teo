@@ -849,17 +849,14 @@
 - Rust Runtime: cookies **[DONE]**
 - Admin dashboard: dark mode **[DONE]**
 - Admin dashboard: developers can copy config **[DONE]**
-- Admin dashboard: handle null value in forms **[IN PROGRESS]**
+- Admin dashboard: handle null value in forms **[DONE]**
 
 ### 0.2.31
+- Admin dashboard: required array default value to empty array
 - Admin dashboard: field error messages
 
 ### 0.2.32
-- Uploaders
-- Amazon S3 uploader
-- Aliyun OSS uploader
-- Local file directory uploader
-- Create and update with form data
+- Embedded forms
 
 ### 0.2.33
 - Admin dashboard: Filters
@@ -871,7 +868,11 @@
 - Load records on scroll
 
 ### 0.2.36
-- Embedded forms
+- Uploaders
+- Amazon S3 uploader
+- Aliyun OSS uploader
+- Local file directory uploader
+- Create and update with form data
 
 ### 0.2.50
 - Admin dashboard: dashboards
