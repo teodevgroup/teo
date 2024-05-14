@@ -856,6 +856,7 @@
 - SQLConnector: Fix PostgreSQL drop column bug **[DONE]**
 
 ### 0.2.32
+- SQLConnector: Fix PostgreSQL empty enum array bug **[DONE]**
 - Admin dashboard: required array default value to empty array **[DONE]**
 - Admin dashboard: required bool default value to false **[DONE]**
 - Admin dashboard: field error messages **[DONE]**
