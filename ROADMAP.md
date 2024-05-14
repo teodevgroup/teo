@@ -856,7 +856,10 @@
 - SQLConnector: Fix PostgreSQL drop column bug **[DONE]**
 
 ### 0.2.32
+- Runtime: fix string validation pipeline item error code **[DONE]**
+- Runtime: fix pipeline error errors object representation **[DONE]**
 - SQLConnector: Fix PostgreSQL empty enum array bug **[DONE]**
+- TypeScript client: fix TeoError class declaration **[DONE]**
 - Admin dashboard: required array default value to empty array **[DONE]**
 - Admin dashboard: required bool default value to false **[DONE]**
 - Admin dashboard: field error messages **[DONE]**
