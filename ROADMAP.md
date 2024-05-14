@@ -852,7 +852,8 @@
 - Admin dashboard: handle null value in forms **[DONE]**
 
 ### 0.2.31
-- SQLConnector: PostgreSQL migration bug
+- SQLConnector: Fix virtual fields are created in table create statement bug **[DONE]**
+- SQLConnector: Fix PostgreSQL drop column bug **[DONE]**
 
 ### 0.2.32
 - Admin dashboard: required array default value to empty array
