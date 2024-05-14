@@ -856,8 +856,8 @@
 - SQLConnector: Fix PostgreSQL drop column bug **[DONE]**
 
 ### 0.2.32
-- Admin dashboard: required array default value to empty array
-- Admin dashboard: required bool default value to false
+- Admin dashboard: required array default value to empty array **[DONE]**
+- Admin dashboard: required bool default value to false **[DONE]**
 - Admin dashboard: field error messages **[DONE]**
 
 ### 0.2.33
