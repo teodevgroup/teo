@@ -857,7 +857,8 @@
 
 ### 0.2.32
 - Admin dashboard: required array default value to empty array
-- Admin dashboard: field error messages
+- Admin dashboard: required bool default value to false
+- Admin dashboard: field error messages **[DONE]**
 
 ### 0.2.33
 - Embedded forms
