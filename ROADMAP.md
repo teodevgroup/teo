@@ -868,19 +868,19 @@
 ### 0.2.33
 - Admin dashboard: Fix `useRerender` file path **[DONE]**
 
-### 0.2.33
+### 0.2.34
 - Embedded forms
 
-### 0.2.34
+### 0.2.35
 - Admin dashboard: Filters
 
-### 0.2.35
+### 0.2.36
 - Admin dashboard: Sort
 
-### 0.2.36
+### 0.2.37
 - Load records on scroll
 
-### 0.2.37
+### 0.2.38
 - Uploaders
 - Amazon S3 uploader
 - Aliyun OSS uploader
@@ -891,7 +891,6 @@
 - Admin dashboard: dashboards
 
 ### 0.2.70
-- Add back integration tests
 - Windows: When server startup, fix port is not taken bug
 - Action transformers
 - Soft delete
@@ -899,7 +898,7 @@
 - Kotlin client
 - C# client
 - C# client: capitalized names and names with underscore
-- MongoDB: connector is not using table name
+- Update swift client package with new namespaces API
 
 ### 0.3.0
 - Rewrite HTTP server with hyper
@@ -909,14 +908,11 @@
 - Combined request in HTTP clients
 - `@onSet!()` and `@onSet?()`
 - `$get!()` and `$get?()`
+- Add back integration tests
 
 ### 0.3.1
 - Debug logging SQL
 - Migration dry run
-
-### 0.3.2
-- Update swift client package with new namespaces API
-- Improved middleware system including middleware skipping and model middlewares
 
 ### 0.4.0
 - Json type
