@@ -866,6 +866,9 @@
 - Admin dashboard: Remove foreign key fields from record list **[DONE]**
 
 ### 0.2.33
+- Admin dashboard: Fix `useRerender` file path **[DONE]**
+
+### 0.2.33
 - Embedded forms
 
 ### 0.2.34
