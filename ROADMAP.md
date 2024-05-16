@@ -869,18 +869,21 @@
 - Admin dashboard: Fix `useRerender` file path **[DONE]**
 
 ### 0.2.34
-- Embedded forms
+- Admin dashboard: Fix form loading state **[DONE]**
 
 ### 0.2.35
-- Admin dashboard: Filters
+- Embedded forms
 
 ### 0.2.36
-- Admin dashboard: Sort
+- Admin dashboard: Filters
 
 ### 0.2.37
-- Load records on scroll
+- Admin dashboard: Sort
 
 ### 0.2.38
+- Load records on scroll
+
+### 0.2.39
 - Uploaders
 - Amazon S3 uploader
 - Aliyun OSS uploader
