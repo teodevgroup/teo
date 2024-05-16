@@ -898,10 +898,10 @@
 - Action transformers
 - Soft delete
 - Run custom MongoDB query
-- Kotlin client
-- C# client
+- Update Kotlin client with new namespace API
+- Update C# client with new namespace API
 - C# client: capitalized names and names with underscore
-- Update swift client package with new namespaces API
+- Update swift client package with new namespace API
 
 ### 0.3.0
 - Rewrite HTTP server with hyper
