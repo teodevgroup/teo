@@ -872,16 +872,16 @@
 - Admin dashboard: Fix form loading state **[DONE]**
 
 ### 0.2.35
-- Embedded forms
-
-### 0.2.36
 - Admin dashboard: Filters
 
-### 0.2.37
+### 0.2.36
 - Admin dashboard: Sort
 
-### 0.2.38
+### 0.2.37
 - Load records on scroll
+
+### 0.2.38
+- Embedded forms
 
 ### 0.2.39
 - Uploaders
