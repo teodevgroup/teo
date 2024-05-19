@@ -872,18 +872,23 @@
 - Admin dashboard: Fix form loading state **[DONE]**
 
 ### 0.2.35
-- Admin dashboard: Filters
+- Translations **[DONE]**
+- Update Kotlin client with new namespace API
+- Update swift client package with new namespace API
 
 ### 0.2.36
-- Admin dashboard: Sort
+- Admin dashboard: Filters
 
 ### 0.2.37
-- Load records on scroll
+- Admin dashboard: Sort
 
 ### 0.2.38
-- Embedded forms
+- Load records on scroll
 
 ### 0.2.39
+- Embedded forms
+
+### 0.2.40
 - Uploaders
 - Amazon S3 uploader
 - Aliyun OSS uploader
@@ -898,10 +903,8 @@
 - Action transformers
 - Soft delete
 - Run custom MongoDB query
-- Update Kotlin client with new namespace API
 - Update C# client with new namespace API
 - C# client: capitalized names and names with underscore
-- Update swift client package with new namespace API
 
 ### 0.3.0
 - Rewrite HTTP server with hyper
