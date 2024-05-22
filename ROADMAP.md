@@ -875,6 +875,7 @@
 - Translations **[DONE]**
 - Update Kotlin client with new namespace API
 - Update swift client package with new namespace API
+- Node.js: Support more linux systems
 
 ### 0.2.36
 - Admin dashboard: Filters
