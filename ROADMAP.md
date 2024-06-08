@@ -874,10 +874,10 @@
 ### 0.2.35
 - Translations **[DONE]**
 - Update Kotlin client with new namespace API
-- Update swift client package with new namespace API
-- Node.js: Support more linux systems
 
 ### 0.2.36
+- Update swift client package with new namespace API
+- Node.js: Support more linux systems
 - Admin dashboard: Filters
 
 ### 0.2.37
