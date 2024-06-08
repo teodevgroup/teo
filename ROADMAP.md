@@ -873,7 +873,7 @@
 
 ### 0.2.35
 - Translations **[DONE]**
-- Update Kotlin client with new namespace API **[IN PROGRESS]**
+- Update Kotlin client with new namespace API **[DONE]**
 - Update swift client package with new namespace API **[IN PROGRESS]**
 
 ### 0.2.36
