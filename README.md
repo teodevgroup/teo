@@ -25,7 +25,7 @@
 
 ## Introduction
 
-Teo is a **schema-driven** web server framework. The API is native to Rust, Node.js and Python.
+Teo is a **schema-driven** web server framework. The server side API is native to Rust, Node.js and Python.
 
 ## Highlights & Features
 
