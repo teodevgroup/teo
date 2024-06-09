@@ -42,6 +42,7 @@ Teo is **schema-driven** web server framework. The server side API is native to 
 * First in last out **middlewares**
 * Custom **route handlers**
 * Generated customizable **admin dashboard**
+* Plays great with AI tools
 
 ## Getting started
 
