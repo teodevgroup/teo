@@ -877,10 +877,11 @@
 - Update Swift client package with new namespace API **[DONE]**
 
 ### 0.2.36
+- Bug fixes
 - Node.js: Support more linux systems
-- Admin dashboard: Filters
 
 ### 0.2.37
+- Admin dashboard: Filters
 - Admin dashboard: Sort
 
 ### 0.2.38
