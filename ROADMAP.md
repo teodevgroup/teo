@@ -874,7 +874,7 @@
 ### 0.2.35
 - Translations **[DONE]**
 - Update Kotlin client with new namespace API **[DONE]**
-- Update swift client package with new namespace API **[DONE]**
+- Update Swift client package with new namespace API **[DONE]**
 
 ### 0.2.36
 - Node.js: Support more linux systems

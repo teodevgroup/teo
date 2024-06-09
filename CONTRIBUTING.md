@@ -7,7 +7,7 @@ of building features and fixing bugs directly with us - and we're thrilled to ha
 
 To get you started on a good foot, we've created an easy overview of the most important things to get you started 
 contributing code to Teo below as well as a 
-[Code of Conduct](https://github.com/teocloud/teo/blob/master/CODE_OF_CONDUCT.md) for contributing to the development 
+[Code of Conduct](https://github.com/teodevgroup/teo/blob/master/CODE_OF_CONDUCT.md) for contributing to the development 
 of Teo.
 
 ## Contributing Code

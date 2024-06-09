@@ -2,12 +2,12 @@
 name = "teo"
 version = "0.2.35"
 edition = "2021"
-description = "Schema-centered next-generation web framework for Rust, Node.js and Python."
+description = "Schema-driven web server framework."
 license = "Apache-2.0"
 build = "build.rs"
 homepage = "https://teodev.io"
 documentation = "https://docs.teodev.io"
-repository = "https://github.com/teocloud/teo"
+repository = "https://github.com/teodevgroup/teo"
 
 [features]
 dangerous_operation = []
