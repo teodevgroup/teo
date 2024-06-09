@@ -25,24 +25,23 @@
 
 ## Introduction
 
-Teo is a **schema-driven** web server framework. The server side API is native to Rust, Node.js and Python.
+Teo is **schema-driven** web server framework. The server side API is native to Rust, Node.js and Python.
 
 ## Highlights & Features
 
-* Native to Rust, Node.js and Python
-* Innovative schema definition inspired by GraphQL and Prisma
+* Native to **Rust**, **Node.js** and **Python**
+* Innovative schema definition inspired by **GraphQL** and **Prisma**
 * Auto database migration
-* Supports Rust, Node.js and Python
-* Supports MySQL, PostgreSQL, SQLite and MongoDB
-* Generated ORM types and interfaces
-* Generated query clients for frontend
+* Supports **MySQL**, **PostgreSQL**, **SQLite** and **MongoDB**
+* Generated **ORM** types and interfaces
+* Generated **query clients** for frontend
 * Very efficient and performant
 * Data sanitization, transformation and validation
-* Builtin user sessions
-* Builtin permission check
-* First in last out middlewares
-* Custom routes and handlers
-* Generated customizable admin dashboard
+* Builtin user **sessions**
+* Builtin **permission** check
+* First in last out **middlewares**
+* Custom **route handlers**
+* Generated customizable **admin dashboard**
 
 ## Getting started
 
