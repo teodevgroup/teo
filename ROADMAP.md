@@ -910,6 +910,7 @@
 - Run custom MongoDB query
 - Update C# client with new namespace API
 - C# client: capitalized names and names with underscore
+- Revamp all client APIs
 
 ### 0.3.0
 - Rewrite HTTP server with hyper
