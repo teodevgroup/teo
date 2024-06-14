@@ -877,12 +877,12 @@
 - Update Swift client package with new namespace API **[DONE]**
 
 ### 0.2.36
-- Bug fixes
-- Node.js: Support more linux systems
+- Fix Rust `File` interface bug **[DONE]**
 
 ### 0.2.37
 - Admin dashboard: Filters
 - Admin dashboard: Sort
+- Node.js: Support more linux systems
 
 ### 0.2.38
 - Load records on scroll
