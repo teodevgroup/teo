@@ -18,7 +18,7 @@ use teo_parser::ast::handler::HandlerInputFormat;
 use teo_runtime::action::Action;
 use teo_runtime::handler::action::builtin_action_handler_from_name;
 use teo_runtime::handler::Handler;
-use teo_runtime::handler::handler::Method;
+use hyper::Method;
 use teo_runtime::{connection, request};
 use teo_runtime::connection::transaction;
 use teo_runtime::handler::default::{create, find_first, find_many, find_unique, update, upsert, copy, create_many, update_many, copy_many, delete_many, count, aggregate, group_by, delete};
@@ -81,9 +81,9 @@ fn make_server_app(
             // validate path
             let path = main_namespace.handler_map.remove_path_prefix(http_request.path(), conf.path_prefix.as_ref().map(|s| s.as_str()));
             let method = method_from(http_request.method())?;
-            let match_result = if let Some(m_result) = main_namespace.handler_map.r#match(method, path) {
+            let match_result = if let Some(m_result) = main_namespace.handler_map.r#match(method.clone(), path) {
                 m_result
-            } else if let Some(m_result) = main_namespace.handler_map.default_match(method, path) {
+            } else if let Some(m_result) = main_namespace.handler_map.default_match(method.clone(), path) {
                 m_result
             } else {
                 Err(Error::not_found())?
@@ -150,7 +150,7 @@ fn make_server_app(
             };
             let dest_namespace = handler_resolved.0;
             let handler_resolved = handler_resolved.1;
-            if method == Method::Options {
+            if method == Method::OPTIONS {
                 // special handle for options
                 let conn_ctx = connection::Ctx::from_namespace(main_namespace);
                 let transaction_ctx = transaction::Ctx::new(conn_ctx);
@@ -174,7 +174,7 @@ fn make_server_app(
                 _ => (),
             }
             let json_body = match format {
-                HandlerInputFormat::Json => if method == Method::Get || method == Method::Delete {
+                HandlerInputFormat::Json => if method == Method::GET || method == Method::DELETE {
                     JsonValue::Null
                 } else {
                     parse_json_body(payload).await?
@@ -291,12 +291,12 @@ async fn server_start_message(port: u16, runtime_version: &'static RuntimeVersio
 
 fn method_from(m: &HttpMethod) -> Result<Method> {
     Ok(match m.as_str() {
-        "GET" => Method::Get,
-        "POST" => Method::Post,
-        "PATCH" => Method::Patch,
-        "PUT" => Method::Put,
-        "DELETE" => Method::Delete,
-        "OPTIONS" => Method::Options,
+        "GET" => Method::GET,
+        "POST" => Method::POST,
+        "PATCH" => Method::PATCH,
+        "PUT" => Method::PUT,
+        "DELETE" => Method::DELETE,
+        "OPTIONS" => Method::OPTIONS,
         _ => Err(Error::new(format!("unknown http method {}", m.as_str())))?
     })
 }
