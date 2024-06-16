@@ -6,6 +6,7 @@ use crate::cli::command::{CLI, CLICommand, GenerateCommand, SeedCommandAction};
 use crate::server::make::serve;
 use teo_runtime::connection::transaction;
 use teo_runtime::schema::load::load_data_sets::load_data_sets;
+use crate::hyper_server::serve::hyper_serve;
 use crate::migrate::migrate;
 use crate::purge::purge;
 use crate::seeder::seed::seed;
@@ -34,7 +35,8 @@ pub async fn run(cli: &CLI) -> Result<()> {
                 setup.call(transaction_ctx).await?;
             }
             // start server
-            serve(conn_ctx.namespace(), conn_ctx.namespace().server.as_ref().unwrap(), &Ctx::get().runtime_version, &Ctx::get().entrance, cli.silent).await
+            //serve(conn_ctx.namespace(), conn_ctx.namespace().server.as_ref().unwrap(), &Ctx::get().runtime_version, &Ctx::get().entrance, cli.silent).await
+            hyper_serve(conn_ctx.namespace(), conn_ctx.namespace().server.as_ref().unwrap(), &Ctx::get().runtime_version, &Ctx::get().entrance, cli.silent).await
         }
         CLICommand::Generate(generate_command) => {
             match generate_command {

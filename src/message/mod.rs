@@ -2,6 +2,16 @@ use std::time::Duration;
 use chrono::{DateTime, Local};
 use colored::{ColoredString, Colorize};
 use array_tool::vec::Join;
+use crate::prelude::{Entrance, RuntimeVersion};
+
+fn format_code_into_string(code: u16) -> ColoredString {
+    match code {
+        0..=199 => code.to_string().purple().bold(),
+        200..=299 => code.to_string().green().bold(),
+        300..=399 => code.to_string().yellow().bold(),
+        _ => code.to_string().red().bold(),
+    }
+}
 
 fn timestamp() -> ColoredString {
     let local: DateTime<Local> = Local::now();
@@ -40,11 +50,14 @@ pub fn unhandled_request_message(
     println!("{} {} {} {} {}", timestamp(), method.bright_blue().bold(), path.bright_yellow(), code_string, ms_str)
 }
 
-fn format_code_into_string(code: u16) -> ColoredString {
-    match code {
-        0..=199 => code.to_string().purple().bold(),
-        200..=299 => code.to_string().green().bold(),
-        300..=399 => code.to_string().yellow().bold(),
-        _ => code.to_string().red().bold(),
-    }
+async fn server_start_message(port: u16, runtime_version: &'static RuntimeVersion, entrance: &'static Entrance, silent: bool) -> teo_result::Result<()> {
+    if silent { return Ok(()) }
+    // Introducing
+    let teo_version = env!("CARGO_PKG_VERSION");
+    let teo = format!("Teo {}", teo_version);
+    info_message(format!("{} ({}, {})", teo, runtime_version.to_string(), entrance.to_str()));
+    // Listening
+    let port_str = format!("{port}").bold();
+    info_message(format!("listening on port {}", port_str));
+    Ok(())
 }

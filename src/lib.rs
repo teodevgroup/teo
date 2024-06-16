@@ -1,6 +1,7 @@
 pub mod cli;
 pub mod app;
 pub mod server;
+pub mod hyper_server;
 pub mod migrate;
 pub mod purge;
 pub mod seeder;
