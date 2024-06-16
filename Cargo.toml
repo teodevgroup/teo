@@ -13,12 +13,16 @@ repository = "https://github.com/teodevgroup/teo"
 dangerous_operation = []
 
 [dependencies]
-teo-result = { version = "0.3.0-alpha.0", path = "../teo-result" }
+teo-result = { version = "0.2.32", path = "../teo-result" }
 teo-parser = { version = "0.2.28", path = "../teo-parser" }
-teo-runtime = { version = "0.2.32", path = "../teo-runtime" }
+teo-runtime = { version = "0.2.37", path = "../teo-runtime" }
 teo-sql-connector = { version = "0.2.32", path = "../teo-sql-connector" }
 teo-mongodb-connector = { version = "0.2.24", path = "../teo-mongodb-connector" }
 teo-generator = { version = "0.2.36", path = "../teo-generator" }
+tokio = { version = "1.0", features = ["full"] }
+hyper = { version = "1.0", features = ["full"] }
+http-body-util = "0.1"
+hyper-util = { version = "0.1", features = ["full"] }
 actix-web = "4.5.1"
 actix-http = "3.6.0"
 actix-multipart = "0.6.1"
@@ -30,7 +34,6 @@ random-string = "1.0"
 futures = "0.3"
 futures-util = "0.3"
 regex = "1.10.2"
-tokio = { version = "1.0", features = ["full"] }
 url = "2.5"
 bcrypt = "0.15.0"
 uuid = { version = "1.6", features = ["v4", "fast-rng"] }
