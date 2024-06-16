@@ -879,39 +879,6 @@
 ### 0.2.36
 - Fix Rust `File` interface bug **[DONE]**
 
-### 0.2.37
-- Admin dashboard: Filters
-- Admin dashboard: Sort
-- Node.js: Support more linux systems
-
-### 0.2.38
-- Load records on scroll
-
-### 0.2.39
-- Embedded forms
-
-### 0.2.40
-- Uploaders
-- Amazon S3 uploader
-- Aliyun OSS uploader
-- Local file directory uploader
-- Create and update with form data
-
-### 0.2.41
-- Add `@example` to comment
-
-### 0.2.50
-- Admin dashboard: dashboards
-
-### 0.2.70
-- Windows: When server startup, fix port is not taken bug
-- Action transformers
-- Soft delete
-- Run custom MongoDB query
-- Update C# client with new namespace API
-- C# client: capitalized names and names with underscore
-- Revamp all client APIs
-
 ### 0.3.0
 - Rewrite HTTP server with hyper
 - `createObject` in entities
@@ -925,6 +892,39 @@
 ### 0.3.1
 - Debug logging SQL
 - Migration dry run
+
+### 0.3.10
+- Admin dashboard: Filters
+- Admin dashboard: Sort
+- Node.js: Support more linux systems
+
+### 0.3.11
+- Load records on scroll
+
+### 0.3.12
+- Embedded forms
+
+### 0.3.13
+- Uploaders
+- Amazon S3 uploader
+- Aliyun OSS uploader
+- Local file directory uploader
+- Create and update with form data
+
+### 0.3.14
+- Add `@example` to comment
+
+### 0.3.15
+- Admin dashboard: dashboards
+
+### 0.3.16
+- Windows: When server startup, fix port is not taken bug
+- Action transformers
+- Soft delete
+- Run custom MongoDB query
+- Update C# client with new namespace API
+- C# client: capitalized names and names with underscore
+- Revamp all client APIs
 
 ### 0.4.0
 - Json type
