@@ -256,8 +256,8 @@ fn make_server_app(
 pub(crate) async fn serve(
     namespace: &'static Namespace,
     conf: &'static Server,
-    runtime_version: &'static RuntimeVersion,
-    entrance: &'static Entrance,
+    runtime_version: RuntimeVersion,
+    entrance: Entrance,
     silent: bool,
 ) -> Result<()> {
     let bind = conf.bind.clone();
@@ -268,11 +268,11 @@ pub(crate) async fn serve(
         .bind((bind.0, bind.1 as u16))
         .unwrap()
         .run();
-    let result = future::join(server, server_start_message(port as u16, runtime_version, entrance, silent)).await;
+    let result = future::join(server, server_start_message(port as u16, &runtime_version, &entrance, silent)).await;
     result.1
 }
 
-async fn server_start_message(port: u16, runtime_version: &'static RuntimeVersion, entrance: &'static Entrance, silent: bool) -> Result<()> {
+async fn server_start_message(port: u16, runtime_version: &RuntimeVersion, entrance: &Entrance, silent: bool) -> Result<()> {
     if silent { return Ok(()) }
     // Introducing
     let teo_version = env!("CARGO_PKG_VERSION");

@@ -118,24 +118,20 @@ impl App {
         self.conn_ctx.lock().unwrap().clone().unwrap()
     }
 
-    pub fn runtime_version(&self) -> &'static RuntimeVersion {
-        let r = &self.runtime_version;
-        unsafe { &*(r as *const RuntimeVersion) }
+    pub fn runtime_version(&self) -> RuntimeVersion {
+        self.runtime_version.clone()
     }
 
-    pub fn entrance(&self) -> &'static Entrance {
-        let r = &self.entrance;
-        unsafe { &*(r as *const Entrance) }
+    pub fn entrance(&self) -> Entrance {
+        self.entrance.clone()
     }
 
-    pub fn schema(&self) -> &'static Schema {
-        let r = &self.schema;
-        unsafe { &*(r as *const Schema) }
+    pub fn schema(&self) -> &Schema {
+        &self.schema
     }
 
-    pub fn cli(&self) -> &'static CLI {
-        let r = &self.cli;
-        unsafe { &*(r as *const CLI) }
+    pub fn cli(&self) -> &CLI {
+        &self.cli
     }
 
     pub fn programs(&self) -> &BTreeMap<String, Program> {
