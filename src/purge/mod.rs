@@ -1,6 +1,5 @@
 use teo_result::Result;
 use crate::app::App;
-use crate::app::ctx::Ctx;
 
 pub(crate) async fn purge(app: &App) -> Result<()> {
     let ctx = app.conn_ctx();

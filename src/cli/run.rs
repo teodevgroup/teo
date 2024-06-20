@@ -1,6 +1,5 @@
 use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_result::{Error, Result};
-use crate::app::ctx::Ctx;
 use crate::app::database::connect_databases;
 use crate::cli::command::{CLI, CLICommand, GenerateCommand, SeedCommandAction};
 use crate::server::make::serve;
@@ -12,7 +11,7 @@ use crate::purge::purge;
 use crate::seeder::seed::seed;
 
 pub async fn run(app: &App) -> Result<()> {
-    let cli = &app.ctx.cli;
+    let cli = &app.cli;
     match &cli.command {
         CLICommand::Serve(serve_command) => {
             connect_databases(app, app.main_namespace_mut(), cli.silent).await?;
@@ -31,7 +30,7 @@ pub async fn run(app: &App) -> Result<()> {
                 }
             }
             // setup
-            if let Some(setup) = app.ctx.setup.clone() {
+            if let Some(setup) = app.setup.clone() {
                 let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
                 setup.call(transaction_ctx).await?;
             }

@@ -1,6 +1,5 @@
 use teo_result::{Error, Result};
 use crate::app::App;
-use crate::app::ctx::Ctx;
 
 pub async fn migrate(app: &App, dry_run: bool, reset: bool, silent: bool) -> Result<()> {
     let ctx = app.conn_ctx();
