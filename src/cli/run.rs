@@ -12,7 +12,7 @@ use crate::purge::purge;
 use crate::seeder::seed::seed;
 
 pub async fn run(app: &App) -> Result<()> {
-    let cli = &app.ctx.lock().unwrap().cli;
+    let cli = &app.ctx.cli;
     match &cli.command {
         CLICommand::Serve(serve_command) => {
             connect_databases(app, app.main_namespace_mut(), cli.silent).await?;
@@ -31,7 +31,7 @@ pub async fn run(app: &App) -> Result<()> {
                 }
             }
             // setup
-            if let Some(setup) = app.ctx.lock().unwrap().setup.clone() {
+            if let Some(setup) = app.ctx.setup.clone() {
                 let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
                 setup.call(transaction_ctx).await?;
             }

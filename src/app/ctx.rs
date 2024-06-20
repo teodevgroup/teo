@@ -1,9 +1,9 @@
+use std::cell::UnsafeCell;
 use educe::Educe;
 use std::collections::BTreeMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use maplit::btreemap;
 use teo_parser::ast::schema::Schema;
-use teo_result::Result;
 use teo_runtime::connection;
 use teo_runtime::namespace::Namespace;
 use crate::app::callbacks::callback::AsyncCallback;
@@ -18,7 +18,7 @@ pub struct Ctx {
     pub(crate) argv: Option<Vec<String>>,
     pub(crate) runtime_version: RuntimeVersion,
     pub(crate) entrance: Entrance,
-    pub(crate) main_namespace: Namespace,
+    pub(crate) main_namespace: UnsafeCell<Namespace>,
     pub(crate) cli: CLI,
     #[educe(Debug(ignore))]
     pub(crate) schema: Schema,
@@ -27,7 +27,7 @@ pub struct Ctx {
     #[educe(Debug(ignore))]
     pub(crate) programs: BTreeMap<String, Program>,
     #[educe(Debug(ignore))]
-    pub(crate) conn_ctx: Option<connection::Ctx>,
+    pub(crate) conn_ctx: Arc<Mutex<Option<connection::Ctx>>>,
 }
 
 impl Ctx {
@@ -37,16 +37,12 @@ impl Ctx {
             argv,
             runtime_version,
             entrance,
-            main_namespace,
+            main_namespace: UnsafeCell::new(main_namespace),
             cli,
             schema,
             setup: None,
             programs: btreemap!{},
-            conn_ctx: None,
+            conn_ctx: Arc::new(Mutex::new(None)),
         }
-    }
-
-    fn reload(&mut self) {
-        self.main_namespace = Namespace::main();
     }
 }

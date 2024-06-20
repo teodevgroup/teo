@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::process::exit;
 use std::env::current_dir;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use teo_result::{Error, Result};
 use teo_runtime::namespace::Namespace;
 use crate::app::ctx::Ctx;
@@ -23,7 +23,7 @@ use crate::prelude::{Entrance, RuntimeVersion};
 
 #[derive(Debug)]
 pub struct App {
-    pub ctx: Arc<Mutex<Ctx>>
+    pub ctx: Ctx
 }
 
 impl App {
@@ -50,31 +50,30 @@ impl App {
         }
         let mut namespace = Namespace::main();
         load_std(&mut namespace);
-        Ok(Self { ctx: Arc::new(Mutex::new(Ctx::new(entrance, runtime_version, argv, schema, cli, namespace))) })
+        Ok(Self { ctx: Ctx::new(entrance, runtime_version, argv, schema, cli, namespace) })
     }
 
-    pub fn setup<A, F>(&self, f: F) where F: AsyncCallbackArgument<A> + 'static {
+    pub fn setup<A, F>(&mut self, f: F) where F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
-        self.ctx.lock().unwrap().setup = Some(Arc::new(|ctx: transaction::Ctx| async {
+        self.ctx.setup = Some(Arc::new(|ctx: transaction::Ctx| async {
             wrap_call.call(ctx).await
         }));
     }
 
-    pub fn program<A, T, F>(&self, name: &str, desc: Option<T>, f: F) where T: Into<String>, F: AsyncCallbackArgument<A> + 'static {
+    pub fn program<A, T, F>(&mut self, name: &str, desc: Option<T>, f: F) where T: Into<String>, F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
-        self.ctx.lock().unwrap().programs.insert(name.to_owned(), Program::new(desc.map(|desc| desc.into()), Arc::new(|ctx: transaction::Ctx| async {
+        self.ctx.programs.insert(name.to_owned(), Program::new(desc.map(|desc| desc.into()), Arc::new(|ctx: transaction::Ctx| async {
             wrap_call.call(ctx).await
         })));
     }
 
     pub fn main_namespace(&self) -> &'static Namespace {
-        let r = &self.ctx.lock().unwrap().main_namespace;
-        unsafe { &*(r as *const Namespace) }
+        let r = &self.ctx.main_namespace;
+        unsafe { &*(r.get() as *const Namespace) }
     }
 
     pub fn main_namespace_mut(&self) -> &'static mut Namespace {
-        let r = &mut self.ctx.lock().unwrap().main_namespace;
-        unsafe { &mut *(r as *mut Namespace) }
+        unsafe { &mut *(self.ctx.main_namespace.get() as *const Namespace as *mut Namespace) }
     }
 
     pub async fn run(&self) -> Result<()> {
@@ -91,31 +90,31 @@ impl App {
     }
 
     pub fn conn_ctx(&self) -> connection::Ctx {
-        self.ctx.lock().unwrap().conn_ctx.as_ref().unwrap().clone()
+        self.ctx.conn_ctx.lock().unwrap().clone().unwrap()
     }
 
     pub fn runtime_version(&self) -> &'static RuntimeVersion {
-        let r = &self.ctx.lock().unwrap().runtime_version;
+        let r = &self.ctx.runtime_version;
         unsafe { &*(r as *const RuntimeVersion) }
     }
 
     pub fn entrance(&self) -> &'static Entrance {
-        let r = &self.ctx.lock().unwrap().entrance;
+        let r = &self.ctx.entrance;
         unsafe { &*(r as *const Entrance) }
     }
 
     pub fn schema(&self) -> &'static Schema {
-        let r = &self.ctx.lock().unwrap().schema;
+        let r = &self.ctx.schema;
         unsafe { &*(r as *const Schema) }
     }
 
     pub fn cli(&self) -> &'static CLI {
-        let r = &self.ctx.lock().unwrap().cli;
+        let r = &self.ctx.cli;
         unsafe { &*(r as *const CLI) }
     }
 
     pub fn programs(&self) -> &BTreeMap<String, Program> {
-        let r = &self.ctx.lock().unwrap().programs;
+        let r = &self.ctx.programs;
         unsafe { &*(r as *const BTreeMap<String, Program>) }
     }
 }
