@@ -4,7 +4,7 @@ use crate::cli::entrance::Entrance;
 use crate::cli::runtime_version::RuntimeVersion;
 use crate::cli::command::{CLI, CLICommand, GenerateAdminCommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, LintCommand, MigrateCommand, PurgeCommand, RunCommand, SeedCommand, SeedCommandAction, ServeCommand};
 
-pub(crate) fn parse(runtime_version: RuntimeVersion, entrance: Entrance, argv: Option<Vec<String>>) -> CLI {
+pub(crate) fn parse(runtime_version: &RuntimeVersion, entrance: &Entrance, argv: Option<Vec<String>>) -> CLI {
     let argv = argv.unwrap_or(env::args_os().map(|s| s.to_str().unwrap().to_owned()).collect());
     let version = Box::leak(Box::new(format!("Teo {} ({}) [{}]", env!("CARGO_PKG_VERSION"), runtime_version.to_string(), entrance.to_str())));
     let about = Box::leak(Box::new(match entrance {

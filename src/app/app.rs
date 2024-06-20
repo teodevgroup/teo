@@ -1,5 +1,7 @@
+use std::collections::BTreeMap;
 use std::process::exit;
 use std::env::current_dir;
+use std::sync::{Arc, Mutex};
 use teo_result::{Error, Result};
 use teo_runtime::namespace::Namespace;
 use crate::app::ctx::Ctx;
@@ -11,12 +13,18 @@ use teo_runtime::stdlib::load::{load as load_std};
 use teo_runtime::schema::load::load_schema::load_schema;
 use crate::cli::run::run;
 use dotenvy::dotenv;
+use teo_parser::ast::schema::Schema;
 use teo_runtime::connection::transaction;
+use teo_runtime::connection;
 use crate::app::callbacks::callback::AsyncCallbackArgument;
+use crate::app::program::Program;
+use crate::cli::command::CLI;
 use crate::prelude::{Entrance, RuntimeVersion};
 
 #[derive(Debug)]
-pub struct App { }
+pub struct App {
+    pub ctx: Arc<Mutex<Ctx>>
+}
 
 impl App {
 
@@ -27,17 +35,9 @@ impl App {
     pub fn new_with_entrance_and_runtime_version(entrance: Option<Entrance>, runtime_version: Option<RuntimeVersion>, argv: Option<Vec<String>>) -> Result<Self> {
         // load env first
         let _ = dotenv();
-        if !Ctx::create() {
-            Err(Error::new("cannot create app while there is an existing instance"))?
-        }
-        if let Some(entrance) = entrance {
-            Ctx::set_entrance(entrance);
-        }
-        if let Some(runtime_version) = runtime_version {
-            Ctx::set_runtime_version(runtime_version);
-        }
-        Ctx::set_argv(argv);
-        let cli = cli_parse(Ctx::get().runtime_version.clone(), Ctx::get().entrance, Ctx::argv());
+        let entrance = entrance.unwrap_or(Entrance::APP);
+        let runtime_version = runtime_version.unwrap_or(RuntimeVersion::Rust(env!("TEO_RUSTC_VERSION")));
+        let cli = cli_parse(&runtime_version, &entrance, argv.clone());
         let current_dir = match current_dir() {
             Ok(current_dir) => current_dir,
             Err(e) => Err(Error::new(format!("{}", e)))?,
@@ -48,32 +48,33 @@ impl App {
         if diagnostics.has_errors() {
             exit(1);
         }
-        load_std(Ctx::main_namespace_mut());
-        Ctx::set_schema(schema);
-        Ctx::set_cli(cli);
-        Ok(Self { })
+        let mut namespace = Namespace::main();
+        load_std(&mut namespace);
+        Ok(Self { ctx: Arc::new(Mutex::new(Ctx::new(entrance, runtime_version, argv, schema, cli, namespace))) })
     }
 
     pub fn setup<A, F>(&self, f: F) where F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
-        Ctx::set_setup(|ctx: transaction::Ctx| async {
+        self.ctx.lock().unwrap().setup = Some(Arc::new(|ctx: transaction::Ctx| async {
             wrap_call.call(ctx).await
-        });
+        }));
     }
 
     pub fn program<A, T, F>(&self, name: &str, desc: Option<T>, f: F) where T: Into<String>, F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
-        Ctx::insert_program(name, desc.map(|desc| desc.into()), |ctx: transaction::Ctx| async {
+        self.ctx.lock().unwrap().programs.insert(name.to_owned(), Program::new(desc.map(|desc| desc.into()), Arc::new(|ctx: transaction::Ctx| async {
             wrap_call.call(ctx).await
-        });
+        })));
     }
 
     pub fn main_namespace(&self) -> &'static Namespace {
-        Ctx::main_namespace()
+        let r = &self.ctx.lock().unwrap().main_namespace;
+        unsafe { &*(r as *const Namespace) }
     }
 
     pub fn main_namespace_mut(&self) -> &'static mut Namespace {
-        Ctx::main_namespace_mut()
+        let r = &mut self.ctx.lock().unwrap().main_namespace;
+        unsafe { &mut *(r as *mut Namespace) }
     }
 
     pub async fn run(&self) -> Result<()> {
@@ -82,10 +83,39 @@ impl App {
     }
 
     pub async fn prepare_for_run(&self) -> Result<()> {
-        load_schema(Ctx::main_namespace_mut(), Ctx::schema(), Ctx::cli().command.ignores_loading()).await
+        load_schema(self.main_namespace_mut(), self.schema(), self.cli().command.ignores_loading()).await
     }
 
     pub async fn run_without_prepare(&self) -> Result<()> {
-        run(Ctx::cli()).await
+        run(self).await
+    }
+
+    pub fn conn_ctx(&self) -> connection::Ctx {
+        self.ctx.lock().unwrap().conn_ctx.as_ref().unwrap().clone()
+    }
+
+    pub fn runtime_version(&self) -> &'static RuntimeVersion {
+        let r = &self.ctx.lock().unwrap().runtime_version;
+        unsafe { &*(r as *const RuntimeVersion) }
+    }
+
+    pub fn entrance(&self) -> &'static Entrance {
+        let r = &self.ctx.lock().unwrap().entrance;
+        unsafe { &*(r as *const Entrance) }
+    }
+
+    pub fn schema(&self) -> &'static Schema {
+        let r = &self.ctx.lock().unwrap().schema;
+        unsafe { &*(r as *const Schema) }
+    }
+
+    pub fn cli(&self) -> &'static CLI {
+        let r = &self.ctx.lock().unwrap().cli;
+        unsafe { &*(r as *const CLI) }
+    }
+
+    pub fn programs(&self) -> &BTreeMap<String, Program> {
+        let r = &self.ctx.lock().unwrap().programs;
+        unsafe { &*(r as *const BTreeMap<String, Program>) }
     }
 }

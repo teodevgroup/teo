@@ -10,15 +10,16 @@ use teo_sql_connector::schema::dialect::SQLDialect;
 use teo_mongodb_connector::connector::MongoDBConnection;
 use crate::app::ctx::Ctx;
 use teo_runtime::connection::Ctx as ConnCtx;
+use crate::app::App;
 use crate::message::info_message;
 
-pub async fn connect_databases(namespace: &mut Namespace, silent: bool) -> Result<()> {
+pub async fn connect_databases(app: &App, namespace: &mut Namespace, silent: bool) -> Result<()> {
     may_connect_database(namespace, silent).await?;
     for namespace in namespace.namespaces.values_mut() {
         may_connect_database(namespace, silent).await?;
     }
-    let ctx = ConnCtx::from_namespace(Ctx::main_namespace());
-    Ctx::get_mut().conn_ctx = Some(ctx);
+    let ctx = ConnCtx::from_namespace(app.main_namespace());
+    app.ctx.lock().unwrap().conn_ctx = Some(ctx);
     Ok(())
 }
 

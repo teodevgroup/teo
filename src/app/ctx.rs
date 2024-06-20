@@ -1,39 +1,27 @@
 use educe::Educe;
 use std::collections::BTreeMap;
-use std::ops::{Deref, DerefMut};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use maplit::btreemap;
-use once_cell::sync::OnceCell;
 use teo_parser::ast::schema::Schema;
 use teo_result::Result;
 use teo_runtime::connection;
 use teo_runtime::namespace::Namespace;
 use crate::app::callbacks::callback::AsyncCallback;
+use crate::app::program::Program;
 use crate::cli::command::CLI;
 use crate::cli::entrance::Entrance;
 use crate::cli::runtime_version::RuntimeVersion;
 
-
-#[derive(Educe)]
-#[educe(Debug)]
-pub struct Program {
-    #[educe(Debug(ignore))]
-    pub(crate) func: Arc<dyn AsyncCallback>,
-    pub(crate) desc: Option<String>,
-}
-
-
 #[derive(Educe)]
 #[educe(Debug)]
 pub struct Ctx {
-    loaded: bool,
     pub(crate) argv: Option<Vec<String>>,
     pub(crate) runtime_version: RuntimeVersion,
     pub(crate) entrance: Entrance,
     pub(crate) main_namespace: Namespace,
-    pub(crate) cli: Option<CLI>,
+    pub(crate) cli: CLI,
     #[educe(Debug(ignore))]
-    pub(crate) schema: Option<Schema>,
+    pub(crate) schema: Schema,
     #[educe(Debug(ignore))]
     pub(crate) setup: Option<Arc<dyn AsyncCallback>>,
     #[educe(Debug(ignore))]
@@ -44,126 +32,21 @@ pub struct Ctx {
 
 impl Ctx {
 
-    fn new() -> Self {
+    pub(super) fn new(entrance: Entrance, runtime_version: RuntimeVersion, argv: Option<Vec<String>>, schema: Schema, cli: CLI, main_namespace: Namespace) -> Self {
         Self {
-            loaded: true,
-            argv: None,
-            runtime_version: RuntimeVersion::Rust(env!("TEO_RUSTC_VERSION")),
-            entrance: Entrance::APP,
-            main_namespace: Namespace::main(),
-            cli: None,
-            schema: None,
+            argv,
+            runtime_version,
+            entrance,
+            main_namespace,
+            cli,
+            schema,
             setup: None,
             programs: btreemap!{},
             conn_ctx: None,
         }
     }
 
-    pub(in crate::app) fn create() -> bool {
-        if CURRENT.get().is_none() {
-            CURRENT.set(Arc::new(Mutex::new(Self::new()))).unwrap();
-            true
-        } else {
-            false
-        }
-    }
-
-    pub(in crate::app) fn drop() -> Result<()> {
-        Ok(Self::get_mut().reset())
-    }
-
-    pub fn get() -> &'static Ctx {
-        match CURRENT.get() {
-            Some(ctx) => {
-                let retval = ctx.lock().unwrap();
-                unsafe {
-                    &*(retval.deref() as * const Ctx)
-                }
-            },
-            None => panic!("app ctx is accessed when it's not created"),
-        }
-    }
-
-    pub fn get_mut() -> &'static mut Ctx {
-        match CURRENT.get() {
-            Some(ctx) => {
-                let mut retval = ctx.lock().unwrap();
-                unsafe {
-                    &mut *(retval.deref_mut() as * mut Ctx)
-                }
-            },
-            None => panic!("app ctx is accessed mutably when it's not created"),
-        }
-    }
-
-    fn reset(&mut self) {
-        self.loaded = false;
-    }
-
     fn reload(&mut self) {
         self.main_namespace = Namespace::main();
-        self.loaded = true;
-    }
-
-    pub fn main_namespace() -> &'static Namespace {
-        &Ctx::get().main_namespace
-    }
-
-    pub fn main_namespace_mut() -> &'static mut Namespace {
-        &mut Ctx::get_mut().main_namespace
-    }
-
-    pub fn set_cli(cli: CLI) {
-        Ctx::get_mut().cli = Some(cli)
-    }
-
-    pub fn cli() -> &'static CLI {
-        Ctx::get().cli.as_ref().unwrap()
-    }
-
-    pub fn argv() -> Option<Vec<String>> {
-        Ctx::get().argv.clone()
-    }
-
-    pub fn set_argv(argv: Option<Vec<String>>) {
-        Ctx::get_mut().argv = argv;
-    }
-
-    pub fn set_schema(schema: Schema) {
-        Ctx::get_mut().schema = Some(schema)
-    }
-
-    pub fn schema() -> &'static Schema {
-        Ctx::get().schema.as_ref().unwrap()
-    }
-
-    pub fn set_entrance(entrance: Entrance) {
-        Ctx::get_mut().entrance = entrance;
-    }
-
-    pub fn set_runtime_version(runtime_version: RuntimeVersion) {
-        Ctx::get_mut().runtime_version = runtime_version;
-    }
-
-
-    pub fn conn_ctx() -> &'static connection::Ctx {
-        Ctx::get().conn_ctx.as_ref().unwrap()
-    }
-
-    pub fn setup() -> Option<&'static Arc<dyn AsyncCallback>> {
-        Ctx::get().setup.as_ref()
-    }
-
-    pub fn set_setup<F>(f: F) where F: AsyncCallback + 'static {
-        Ctx::get_mut().setup = Some(Arc::new(f));
-    }
-
-    pub fn insert_program<F>(name: &str, desc: Option<String>, f: F) where F: AsyncCallback + 'static {
-        Ctx::get_mut().programs.insert(
-            name.to_owned(),
-            Program { func: Arc::new(f), desc }
-        );
     }
 }
-
-static CURRENT: OnceCell<Arc<Mutex<Ctx>>> = OnceCell::new();

@@ -879,8 +879,11 @@
 ### 0.2.36
 - Fix Rust `File` interface bug **[DONE]**
 
+### 0.2.37
+- Remove global static variables **[IN PROGRESS]**
+- Unit test utilities **[IN PROGRESS]**
+
 ### 0.3.0
-- Rewrite HTTP server with hyper
 - `createObject` in entities
 - Handlers call handlers
 - Remove paging information from `findMany`
