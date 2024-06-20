@@ -6,6 +6,7 @@ use maplit::btreemap;
 use teo_parser::ast::schema::Schema;
 use teo_runtime::connection;
 use teo_runtime::namespace::Namespace;
+use crate::app::App;
 use crate::app::callbacks::callback::AsyncCallback;
 use crate::app::program::Program;
 use crate::cli::command::CLI;
@@ -46,3 +47,6 @@ impl Ctx {
         }
     }
 }
+
+unsafe impl Send for Ctx {}
+unsafe impl Sync for Ctx {}

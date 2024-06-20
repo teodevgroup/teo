@@ -118,3 +118,6 @@ impl App {
         unsafe { &*(r as *const BTreeMap<String, Program>) }
     }
 }
+
+unsafe impl Send for App {}
+unsafe impl Sync for App {}
