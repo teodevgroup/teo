@@ -3,7 +3,7 @@ use teo_result::{Error, Result};
 use crate::app::ctx::Ctx;
 use crate::app::database::connect_databases;
 use crate::cli::command::{CLI, CLICommand, GenerateCommand, SeedCommandAction};
-use crate::server::make::serve;
+//use crate::server::make::serve;
 use teo_runtime::connection::transaction;
 use teo_runtime::schema::load::load_data_sets::load_data_sets;
 use crate::hyper_server::serve::hyper_serve;
