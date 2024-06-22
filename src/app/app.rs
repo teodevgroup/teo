@@ -1,7 +1,7 @@
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::process::exit;
 use std::env::current_dir;
-use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex};
 use teo_result::{Error, Result};
 use teo_runtime::namespace::Namespace;
@@ -29,7 +29,7 @@ pub struct App {
     pub(crate) argv: Option<Vec<String>>,
     pub(crate) runtime_version: RuntimeVersion,
     pub(crate) entrance: Entrance,
-    pub(crate) main_namespace: * mut Arc<Mutex<Namespace>>,
+    pub(crate) main_namespace: RefCell<Option<Namespace>>,
     pub(crate) cli: CLI,
     #[educe(Debug(ignore))]
     pub(crate) schema: Schema,
@@ -63,15 +63,13 @@ impl App {
         if diagnostics.has_errors() {
             exit(1);
         }
-        let mut namespace = Namespace::main();
-        load_std(&mut namespace);
         Ok(Self {
             argv,
             runtime_version,
             entrance,
-            main_namespace: Box::into_raw(Box::new(Arc::new(Mutex::new(namespace)))),
             cli,
             schema,
+            main_namespace: RefCell::new(None),
             setup: None,
             programs: btreemap!{},
             conn_ctx: Arc::new(Mutex::new(None)),
@@ -93,17 +91,8 @@ impl App {
     }
 
     pub fn main_namespace(&self) -> &'static Namespace {
-        let a = unsafe { (&* self.main_namespace).clone() };
-        let binding = a.lock().unwrap();
-        let r = binding.deref();
-        unsafe { &*(r as *const Namespace) }
-    }
-
-    pub fn main_namespace_mut(&self) -> &'static mut Namespace {
-        let a = unsafe { (&* self.main_namespace).clone() };
-        let mut binding = a.lock().unwrap();
-        let r = binding.deref_mut();
-        unsafe { &mut *(r as *mut Namespace) }
+        let a = unsafe { self.main_namespace.borrow_mut().as_ref().unwrap() as * const Namespace };
+        unsafe { &*a }
     }
 
     pub async fn run(&self) -> Result<()> {
@@ -112,7 +101,11 @@ impl App {
     }
 
     pub async fn prepare_for_run(&self) -> Result<()> {
-        load_schema(self.main_namespace_mut(), self.schema(), self.cli().command.ignores_loading()).await
+        let mut namespace = Namespace::main();
+        load_std(&mut namespace);
+        load_schema(&mut namespace, self.schema(), self.cli().command.ignores_loading()).await?;
+        self.main_namespace.replace(Some(namespace));
+        Ok(())
     }
 
     pub async fn run_without_prepare(&self) -> Result<()> {
@@ -141,12 +134,6 @@ impl App {
 
     pub fn programs(&self) -> &BTreeMap<String, Program> {
         &self.programs
-    }
-}
-
-impl Drop for App {
-    fn drop(&mut self) {
-        unsafe { let _ = Box::from_raw(self.main_namespace); }
     }
 }
 
