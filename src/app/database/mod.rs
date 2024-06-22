@@ -12,9 +12,9 @@ use teo_runtime::connection::Ctx as ConnCtx;
 use crate::app::App;
 use crate::message::info_message;
 
-pub async fn connect_databases(app: &App, namespace: &mut Namespace, silent: bool) -> Result<()> {
+pub async fn connect_databases(app: &App, namespace: &Namespace, silent: bool) -> Result<()> {
     may_connect_database(namespace, silent).await?;
-    for namespace in namespace.namespaces.values_mut() {
+    for namespace in namespace.namespaces.values() {
         may_connect_database(namespace, silent).await?;
     }
     let ctx = ConnCtx::from_namespace(app.main_namespace());
@@ -22,14 +22,14 @@ pub async fn connect_databases(app: &App, namespace: &mut Namespace, silent: boo
     Ok(())
 }
 
-pub async fn may_connect_database(namespace: &mut Namespace, silent: bool) -> Result<()> {
+pub async fn may_connect_database(namespace: &Namespace, silent: bool) -> Result<()> {
     if namespace.connector.is_none() { return Ok(()) }
     let connector = namespace.connector.as_ref().unwrap();
     let connection = connection_for_connector(connector).await;
     if !silent {
         info_message(format!("{} connector connected for `{}` at \"{}\"", connector.provider.lowercase_desc(), if namespace.path.is_empty() { "main".to_string() } else { namespace.path().join(".") }, connector.url));
     }
-    namespace.connection = Some(connection);
+    *namespace.connection.lock().unwrap() = Some(connection);
     Ok(())
 }
 

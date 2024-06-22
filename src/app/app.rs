@@ -1,4 +1,3 @@
-use std::cell::UnsafeCell;
 use std::collections::BTreeMap;
 use std::process::exit;
 use std::env::current_dir;
@@ -29,7 +28,7 @@ pub struct App {
     pub(crate) argv: Option<Vec<String>>,
     pub(crate) runtime_version: RuntimeVersion,
     pub(crate) entrance: Entrance,
-    pub(crate) main_namespace: UnsafeCell<Namespace>,
+    pub(crate) main_namespace: * mut Namespace,
     pub(crate) cli: CLI,
     #[educe(Debug(ignore))]
     pub(crate) schema: Schema,
@@ -69,7 +68,7 @@ impl App {
             argv,
             runtime_version,
             entrance,
-            main_namespace: UnsafeCell::new(namespace),
+            main_namespace: Box::into_raw(Box::new(namespace)),
             cli,
             schema,
             setup: None,
@@ -93,12 +92,11 @@ impl App {
     }
 
     pub fn main_namespace(&self) -> &'static Namespace {
-        let r = &self.main_namespace;
-        unsafe { &*(r.get() as *const Namespace) }
+        unsafe { &*(self.main_namespace as *const Namespace) }
     }
 
     pub fn main_namespace_mut(&self) -> &'static mut Namespace {
-        unsafe { &mut *(self.main_namespace.get() as *const Namespace as *mut Namespace) }
+        unsafe { &mut *(self.main_namespace) }
     }
 
     pub async fn run(&self) -> Result<()> {
@@ -136,6 +134,12 @@ impl App {
 
     pub fn programs(&self) -> &BTreeMap<String, Program> {
         &self.programs
+    }
+}
+
+impl Drop for App {
+    fn drop(&mut self) {
+        unsafe { let _ = Box::from_raw(self.main_namespace); }
     }
 }
 

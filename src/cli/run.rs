@@ -14,7 +14,7 @@ pub async fn run(app: &App) -> Result<()> {
     let cli = &app.cli;
     match &cli.command {
         CLICommand::Serve(serve_command) => {
-            connect_databases(app, app.main_namespace_mut(), cli.silent).await?;
+            connect_databases(app, app.main_namespace(), cli.silent).await?;
             let conn_ctx = app.conn_ctx();
             // migrate
             if !serve_command.no_migration {
@@ -90,12 +90,12 @@ pub async fn run(app: &App) -> Result<()> {
             }
         }
         CLICommand::Migrate(migrate_command) => {
-            connect_databases(app, app.main_namespace_mut(), cli.silent).await?;
+            connect_databases(app, app.main_namespace(), cli.silent).await?;
             migrate(app, migrate_command.dry, false, cli.silent).await?;
             Ok(())
         }
         CLICommand::Seed(seed_command) => {
-            connect_databases(app, app.main_namespace_mut(), cli.silent).await?;
+            connect_databases(app, app.main_namespace(), cli.silent).await?;
             let mut diagnostics = Diagnostics::new();
             let data_sets = load_data_sets(app.main_namespace(), seed_command.names.as_ref(), seed_command.all, app.schema(), &mut diagnostics)?;
             let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
@@ -103,7 +103,7 @@ pub async fn run(app: &App) -> Result<()> {
             Ok(())
         }
         CLICommand::Purge(purge_command) => {
-            connect_databases(app, app.main_namespace_mut(), cli.silent).await?;
+            connect_databases(app, app.main_namespace(), cli.silent).await?;
             purge(app).await?;
             Ok(())
         }
@@ -127,7 +127,7 @@ pub async fn run(app: &App) -> Result<()> {
                 println!("+-{:<32}---{:<64}-+", "--------------------------------", "----------------------------------------------------------------");
             } else {
                 if let Some(name) = &run_command.name {
-                    connect_databases(app, app.main_namespace_mut(), cli.silent).await?;
+                    connect_databases(app, app.main_namespace(), cli.silent).await?;
                     let program = app.programs().get(name).ok_or_else(|| Error::new(format!("Program '{}' is not defined", name)))?;
                     let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
                     program.func.call(transaction_ctx).await?;

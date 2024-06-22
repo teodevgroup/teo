@@ -313,7 +313,7 @@ fn method_from(m: &HttpMethod) -> Result<Method> {
 //             }
 //             DangerousOperations::PurgeAndSeed => {
 //                 purge::purge().await?;
-//                 connect_databases(app.main_namespace_mut(),true).await?;
+//                 connect_databases(app.main_namespace(),true).await?;
 //                 let mut diagnostics = Diagnostics::new();
 //                 let data_sets = load_data_sets(app.main_namespace(), None, false, app.schema(), &mut diagnostics)?;
 //                 let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());

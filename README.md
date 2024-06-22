@@ -167,7 +167,7 @@ use crate::entities::EchoPathArguments;
 #[main]
 async fn main() -> Result<()> {
     let app = App::new()?;
-    app.main_namespace_mut().define_handler("echo", |path_args: EchoPathArguments| async move {
+    app.main_namespace().define_handler("echo", |path_args: EchoPathArguments| async move {
         Ok::<Response, Error>(Response::string(path_args.data(), "text/plain"))
     });
     app.run().await
