@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use std::process::exit;
 use std::env::current_dir;
+use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex};
 use teo_result::{Error, Result};
 use teo_runtime::namespace::Namespace;
@@ -28,7 +29,7 @@ pub struct App {
     pub(crate) argv: Option<Vec<String>>,
     pub(crate) runtime_version: RuntimeVersion,
     pub(crate) entrance: Entrance,
-    pub(crate) main_namespace: * mut Namespace,
+    pub(crate) main_namespace: * mut Arc<Mutex<Namespace>>,
     pub(crate) cli: CLI,
     #[educe(Debug(ignore))]
     pub(crate) schema: Schema,
@@ -68,7 +69,7 @@ impl App {
             argv,
             runtime_version,
             entrance,
-            main_namespace: Box::into_raw(Box::new(namespace)),
+            main_namespace: Box::into_raw(Box::new(Arc::new(Mutex::new(namespace)))),
             cli,
             schema,
             setup: None,
@@ -92,11 +93,17 @@ impl App {
     }
 
     pub fn main_namespace(&self) -> &'static Namespace {
-        unsafe { &*(self.main_namespace as *const Namespace) }
+        let a = unsafe { (&* self.main_namespace).clone() };
+        let binding = a.lock().unwrap();
+        let r = binding.deref();
+        unsafe { &*(r as *const Namespace) }
     }
 
     pub fn main_namespace_mut(&self) -> &'static mut Namespace {
-        unsafe { &mut *(self.main_namespace) }
+        let a = unsafe { (&* self.main_namespace).clone() };
+        let mut binding = a.lock().unwrap();
+        let r = binding.deref_mut();
+        unsafe { &mut *(r as *mut Namespace) }
     }
 
     pub async fn run(&self) -> Result<()> {

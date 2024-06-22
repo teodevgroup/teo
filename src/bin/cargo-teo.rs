@@ -5,6 +5,6 @@ use teo::cli::entrance::Entrance;
 
 #[main]
 async fn main() -> Result<()> {
-    let mut app = App::new_with_entrance_and_runtime_version(Some(Entrance::CLI), None, None)?;
+    let app = App::new_with_entrance_and_runtime_version(Some(Entrance::CLI), None, None)?;
     app.run().await
 }
