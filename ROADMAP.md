@@ -879,30 +879,36 @@
 ### 0.2.36
 - Fix Rust `File` interface bug **[DONE]**
 
-### 0.2.37
-- Remove global static variables **[IN PROGRESS]**
+### 0.3.0-alpha.0
+- Redesign namespace APIs with non `&mut` reference **[IN PROGRESS]**
+- Remove global static `app::Ctx` **[DONE]**
 - Unit test utilities **[IN PROGRESS]**
+- Cookie APIs
+
+### 0.3.0-alpha.1
+- `createObject` in entities
+
+### 0.3.0-alpha.2
+- Handlers call handlers
+
+### 0.3.0-alpha.3
+- Remove paging information from `findMany`
 
 ### 0.3.0
-- `createObject` in entities
-- Handlers call handlers
-- Remove paging information from `findMany`
 - Combined request in HTTP clients
 - `@onSet!()` and `@onSet?()`
 - `$get!()` and `$get?()`
-- Add back integration tests
-
-### 0.3.1
 - Debug logging SQL
 - Migration dry run
 
 ### 0.3.10
 - Admin dashboard: Filters
 - Admin dashboard: Sort
+- Admin dashboard: Redesigned date time controls
 - Node.js: Support more linux systems
 
 ### 0.3.11
-- Load records on scroll
+- Admin dashboard: Load records on scroll
 
 ### 0.3.12
 - Embedded forms
