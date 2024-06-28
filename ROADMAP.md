@@ -880,7 +880,8 @@
 - Fix Rust `File` interface bug **[DONE]**
 
 ### 0.3.0-alpha.0
-- Redesign namespace APIs with non `&mut` reference **[IN PROGRESS]**
+- Redesign namespace APIs with non `&mut` reference **[DONE]**
+- Update APIs with the redesigned namespace API **[IN PROGRESS]**
 - Remove global static `app::Ctx` **[DONE]**
 - Unit test utilities **[IN PROGRESS]**
 - Cookie APIs
@@ -969,5 +970,5 @@
 ### 1.1.0
 - Support MSSQL
 
-### 1.2.0
-- Full set of unit tests
+### 2.0.0
+- PostgreSQL: Support PostgresML and vector type
