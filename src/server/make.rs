@@ -18,7 +18,7 @@ use teo_parser::ast::handler::HandlerInputFormat;
 use teo_runtime::action::Action;
 use teo_runtime::handler::action::builtin_action_handler_from_name;
 use teo_runtime::handler::Handler;
-use teo_runtime::handler::handler::Method;
+use teo_runtime::handler::Method;
 use teo_runtime::{connection, request};
 use teo_runtime::connection::transaction;
 use teo_runtime::handler::default::{create, find_first, find_many, find_unique, update, upsert, copy, create_many, update_many, copy_many, delete_many, count, aggregate, group_by, delete};
@@ -64,7 +64,7 @@ fn make_server_app(
                     let path = res.request().path();
                     let method = res.request().method().as_str();
                     if let Some(handler_found_info) = handler_found_info {
-                        request_message(time_elapsed, method, path, &handler_found_info.path, handler_found_info.name.as_str(), res.response().status().as_u16());
+                        request_message(time_elapsed, method, path, handler_found_info.path(), handler_found_info.name(), res.response().status().as_u16());
                     } else {
                         unhandled_request_message(time_elapsed, method, path, res.response().status().as_u16());
                     }
@@ -111,7 +111,7 @@ fn make_server_app(
             let handler_resolved = if group {
                 if let Some(model) = dest_namespace.models.get(match_result.group_name()) {
                     if let Some(group) = dest_namespace.model_handler_groups.get(match_result.group_name()) {
-                        if let Some(handler) = group.handlers.get(match_result.handler_name()) {
+                        if let Some(handler) = group.handlers().get(match_result.handler_name()) {
                             (dest_namespace, HandlerResolved::Custom(handler))
                         } else {
                             if let Some(action) = builtin_action_handler_from_name(match_result.handler_name()) {
@@ -128,7 +128,7 @@ fn make_server_app(
                         }
                     }
                 } else if let Some(group) = dest_namespace.handler_groups.get(match_result.group_name()) {
-                    if let Some(handler) = group.handlers.get(match_result.handler_name()) {
+                    if let Some(handler) = group.handlers().get(match_result.handler_name()) {
                         (dest_namespace, HandlerResolved::Custom(handler))
                     } else {
                         Err(Error::not_found())?
@@ -164,7 +164,7 @@ fn make_server_app(
             let mut format = HandlerInputFormat::Json;
             match handler_resolved {
                 HandlerResolved::Custom(handler) => {
-                    format = handler.format;
+                    format = handler.format();
                 }
                 _ => (),
             }
@@ -246,7 +246,7 @@ fn make_server_app(
                         transaction_ctx,
                         match_result
                     );
-                    Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, handler.call).await?.into_http_response(http_request.clone()))
+                    Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, handler.call()).await?.into_http_response(http_request.clone()))
                 }
             }
         }));

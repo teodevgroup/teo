@@ -27,24 +27,24 @@ pub async fn may_connect_database(namespace: &Namespace, silent: bool) -> Result
     let connector = namespace.connector.as_ref().unwrap();
     let connection = connection_for_connector(connector).await;
     if !silent {
-        info_message(format!("{} connector connected for `{}` at \"{}\"", connector.provider.lowercase_desc(), if namespace.path.is_empty() { "main".to_string() } else { namespace.path().join(".") }, connector.url));
+        info_message(format!("{} connector connected for `{}` at \"{}\"", connector.provider().lowercase_desc(), if namespace.path.is_empty() { "main".to_string() } else { namespace.path().join(".") }, connector.url()));
     }
     *namespace.connection.lock().unwrap() = Some(connection);
     Ok(())
 }
 
 async fn connection_for_connector(connector: &Connector) -> Arc<dyn Connection> {
-    if connector.provider.is_mongo() {
-        Arc::new(MongoDBConnection::new(connector.url.as_str()).await)
+    if connector.provider().is_mongo() {
+        Arc::new(MongoDBConnection::new(connector.url()).await)
     } else {
         Arc::new(SQLConnection::new(
-            match connector.provider {
+            match connector.provider() {
                 Database::MongoDB => unreachable!(),
                 Database::MySQL => SQLDialect::MySQL,
                 Database::PostgreSQL => SQLDialect::PostgreSQL,
                 Database::SQLite => SQLDialect::SQLite,
             },
-            connector.url.as_str(),
+            connector.url(),
             false,
         ).await)
     }

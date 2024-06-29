@@ -24,7 +24,7 @@ pub async fn run(app: &App) -> Result<()> {
             if !serve_command.no_autoseed {
                 if app.main_namespace().database.is_some() {
                     let mut diagnostics = Diagnostics::new();
-                    let data_sets = load_data_sets(app.main_namespace(), None, false, app.schema(), &mut diagnostics)?;
+                    let data_sets = load_data_sets(app.namespace_builder(), None, false, app.schema(), &mut diagnostics)?;
                     let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
                     seed(SeedCommandAction::Seed, data_sets, transaction_ctx, false).await?;
                 }
@@ -97,7 +97,7 @@ pub async fn run(app: &App) -> Result<()> {
         CLICommand::Seed(seed_command) => {
             connect_databases(app, app.main_namespace(), cli.silent).await?;
             let mut diagnostics = Diagnostics::new();
-            let data_sets = load_data_sets(app.main_namespace(), seed_command.names.as_ref(), seed_command.all, app.schema(), &mut diagnostics)?;
+            let data_sets = load_data_sets(app.namespace_builder(), seed_command.names.as_ref(), seed_command.all, app.schema(), &mut diagnostics)?;
             let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
             seed(seed_command.action, data_sets, transaction_ctx, true).await?;
             Ok(())

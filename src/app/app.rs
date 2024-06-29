@@ -4,7 +4,8 @@ use std::process::exit;
 use std::env::current_dir;
 use std::sync::{Arc, Mutex};
 use teo_result::{Error, Result};
-use teo_runtime::namespace::{Namespace, builder::NamespaceBuilder};
+use teo_runtime::namespace::Namespace;
+use teo_runtime::namespace;
 use teo_runtime::utils::find_main_schema_file;
 use crate::cli::parse::{parse as cli_parse};
 use teo_parser::{parse as schema_parse};
@@ -29,7 +30,7 @@ pub struct App {
     pub(crate) argv: Option<Vec<String>>,
     pub(crate) runtime_version: RuntimeVersion,
     pub(crate) entrance: Entrance,
-    pub(crate) namespace_builder: NamespaceBuilder,
+    pub(crate) namespace_builder: namespace::Builder,
     pub(crate) main_namespace: RefCell<Option<Namespace>>,
     pub(crate) cli: CLI,
     #[educe(Debug(ignore))]
@@ -64,7 +65,7 @@ impl App {
         if diagnostics.has_errors() {
             exit(1);
         }
-        let namespace_builder = NamespaceBuilder::main();
+        let namespace_builder = namespace::Builder::main();
         load_std(&namespace_builder);
         Ok(Self {
             argv,
@@ -72,7 +73,7 @@ impl App {
             entrance,
             cli,
             schema,
-            namespace_builder: NamespaceBuilder::main(),
+            namespace_builder,
             main_namespace: RefCell::new(None),
             setup: None,
             programs: btreemap!{},
@@ -99,7 +100,7 @@ impl App {
         unsafe { &*a }
     }
 
-    pub fn namespace_builder(&self) -> &NamespaceBuilder {
+    pub fn namespace_builder(&self) -> &namespace::Builder {
         &self.namespace_builder
     }
 
