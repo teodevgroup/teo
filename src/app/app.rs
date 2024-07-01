@@ -31,14 +31,14 @@ pub struct App {
     pub(crate) runtime_version: RuntimeVersion,
     pub(crate) entrance: Entrance,
     pub(crate) namespace_builder: namespace::Builder,
-    pub(crate) main_namespace: &'static Namespace,
+    pub(crate) main_namespace: Arc<Mutex<&'static Namespace>>,
     pub(crate) cli: CLI,
     #[educe(Debug(ignore))]
     pub(crate) schema: Schema,
     #[educe(Debug(ignore))]
-    pub(crate) setup: Option<Arc<dyn AsyncCallback>>,
+    pub(crate) setup: Arc<Mutex<Option<Arc<dyn AsyncCallback>>>>,
     #[educe(Debug(ignore))]
-    pub(crate) programs: BTreeMap<String, Program>,
+    pub(crate) programs: Arc<Mutex<BTreeMap<String, Program>>>,
     #[educe(Debug(ignore))]
     pub(crate) conn_ctx: Arc<Mutex<Option<connection::Ctx>>>,
 }
@@ -74,44 +74,44 @@ impl App {
             cli,
             schema,
             namespace_builder,
-            main_namespace: unsafe { &*null() },
-            setup: None,
-            programs: btreemap!{},
+            main_namespace: Arc::new(Mutex::new(unsafe { &*null() })),
+            setup: Arc::new(Mutex::new(None)),
+            programs: Arc::new(Mutex::new(btreemap!{})),
             conn_ctx: Arc::new(Mutex::new(None)),
         })
     }
 
-    pub fn setup<A, F>(&mut self, f: F) where F: AsyncCallbackArgument<A> + 'static {
+    pub fn setup<A, F>(&self, f: F) where F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
-        self.setup = Some(Arc::new(|ctx: transaction::Ctx| async {
+        *self.setup.lock().unwrap() = Some(Arc::new(|ctx: transaction::Ctx| async {
             wrap_call.call(ctx).await
         }));
     }
 
-    pub fn program<A, T, F>(&mut self, name: &str, desc: Option<T>, f: F) where T: Into<String>, F: AsyncCallbackArgument<A> + 'static {
+    pub fn program<A, T, F>(&self, name: &str, desc: Option<T>, f: F) where T: Into<String>, F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
-        self.programs.insert(name.to_owned(), Program::new(desc.map(|desc| desc.into()), Arc::new(|ctx: transaction::Ctx| async {
+        self.programs.lock().unwrap().insert(name.to_owned(), Program::new(desc.map(|desc| desc.into()), Arc::new(|ctx: transaction::Ctx| async {
             wrap_call.call(ctx).await
         })));
     }
 
     pub fn main_namespace(&self) -> &'static Namespace {
-        self.main_namespace
+        *self.main_namespace.lock().unwrap()
     }
 
     pub fn namespace_builder(&self) -> &namespace::Builder {
         &self.namespace_builder
     }
 
-    pub async fn run(&mut self) -> Result<()> {
+    pub async fn run(&self) -> Result<()> {
         self.prepare_for_run().await?;
         self.run_without_prepare().await
     }
 
-    pub async fn prepare_for_run(&mut self) -> Result<()> {
+    pub async fn prepare_for_run(&self) -> Result<()> {
         load_schema(self.namespace_builder(), self.schema(), self.cli().command.ignores_loading()).await?;
         let namespace = Box::into_raw(Box::new(self.namespace_builder().build()));
-        self.main_namespace = unsafe { &*namespace };
+        *self.main_namespace.lock().unwrap() = unsafe { &*namespace };
         Ok(())
     }
 
@@ -137,10 +137,6 @@ impl App {
 
     pub fn cli(&self) -> &CLI {
         &self.cli
-    }
-
-    pub fn programs(&self) -> &BTreeMap<String, Program> {
-        &self.programs
     }
 }
 

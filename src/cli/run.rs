@@ -30,7 +30,7 @@ pub async fn run(app: &App) -> Result<()> {
                 }
             }
             // setup
-            if let Some(setup) = app.setup.clone() {
+            if let Some(setup) = app.setup.lock().unwrap().clone() {
                 let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
                 setup.call(transaction_ctx).await?;
             }
@@ -113,10 +113,10 @@ pub async fn run(app: &App) -> Result<()> {
                 println!("+-{:<32}-+-{:<64}-+", "--------------------------------", "----------------------------------------------------------------");
                 println!("| {:^32} | {:^64} |", "Name", "Description");
                 println!("+-{:<32}-+-{:<64}-+", "--------------------------------", "----------------------------------------------------------------");
-                if app.programs().is_empty() {
+                if app.programs.lock().unwrap().is_empty() {
                     println!("| {:^99} |", "No programs.");
                 } else {
-                    for (name, program) in app.programs() {
+                    for (name, program) in app.programs.lock().unwrap().iter() {
                         let desc_str = program.desc.as_ref().map_or_else(
                             || "(No description)".to_string(),
                             |desc| desc.into()
@@ -128,7 +128,8 @@ pub async fn run(app: &App) -> Result<()> {
             } else {
                 if let Some(name) = &run_command.name {
                     connect_databases(app, app.main_namespace(), cli.silent).await?;
-                    let program = app.programs().get(name).ok_or_else(|| Error::new(format!("Program '{}' is not defined", name)))?;
+                    let binding = app.programs.lock().unwrap();
+                    let program = binding.get(name).ok_or_else(|| Error::new(format!("Program '{}' is not defined", name)))?;
                     let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
                     program.func.call(transaction_ctx).await?;
                     std::process::exit(0);
