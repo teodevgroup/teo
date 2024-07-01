@@ -1,7 +1,7 @@
-use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::process::exit;
 use std::env::current_dir;
+use std::ptr::null;
 use std::sync::{Arc, Mutex};
 use teo_result::{Error, Result};
 use teo_runtime::namespace::Namespace;
@@ -31,7 +31,7 @@ pub struct App {
     pub(crate) runtime_version: RuntimeVersion,
     pub(crate) entrance: Entrance,
     pub(crate) namespace_builder: namespace::Builder,
-    pub(crate) main_namespace: RefCell<Option<Namespace>>,
+    pub(crate) main_namespace: &'static Namespace,
     pub(crate) cli: CLI,
     #[educe(Debug(ignore))]
     pub(crate) schema: Schema,
@@ -74,7 +74,7 @@ impl App {
             cli,
             schema,
             namespace_builder,
-            main_namespace: RefCell::new(None),
+            main_namespace: unsafe { &*null() },
             setup: None,
             programs: btreemap!{},
             conn_ctx: Arc::new(Mutex::new(None)),
@@ -96,23 +96,22 @@ impl App {
     }
 
     pub fn main_namespace(&self) -> &'static Namespace {
-        let a = unsafe { self.main_namespace.borrow_mut().as_ref().unwrap() as * const Namespace };
-        unsafe { &*a }
+        self.main_namespace
     }
 
     pub fn namespace_builder(&self) -> &namespace::Builder {
         &self.namespace_builder
     }
 
-    pub async fn run(&self) -> Result<()> {
+    pub async fn run(&mut self) -> Result<()> {
         self.prepare_for_run().await?;
         self.run_without_prepare().await
     }
 
-    pub async fn prepare_for_run(&self) -> Result<()> {
+    pub async fn prepare_for_run(&mut self) -> Result<()> {
         load_schema(self.namespace_builder(), self.schema(), self.cli().command.ignores_loading()).await?;
-        let namespace = self.namespace_builder().build();
-        self.main_namespace.replace(Some(namespace));
+        let namespace = Box::into_raw(Box::new(self.namespace_builder().build()));
+        self.main_namespace = unsafe { &*namespace };
         Ok(())
     }
 
@@ -142,6 +141,15 @@ impl App {
 
     pub fn programs(&self) -> &BTreeMap<String, Program> {
         &self.programs
+    }
+}
+
+impl Drop for App {
+    fn drop(&mut self) {
+        let p = unsafe { self.main_namespace() as *const Namespace as *mut Namespace };
+        if (!p.is_null()) {
+            let _ = unsafe { Box::from_raw(p) };
+        }
     }
 }
 
