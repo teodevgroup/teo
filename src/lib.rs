@@ -19,6 +19,9 @@ pub mod prelude {
     pub use tokio::main;
     pub extern crate key_path;
     pub use key_path::path;
+    pub use teo_runtime::namespace;
+    pub use teo_runtime::r#enum;
+    pub use teo_runtime::traits;
     pub use teo_runtime::request;
     pub use teo_runtime::response::Response;
     pub use teo_runtime::model;
