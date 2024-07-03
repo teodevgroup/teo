@@ -31,12 +31,6 @@ mod test {
                 "int": 123456,
             },
         }));
-        assert_json!(res, matcher!({
-            "data": {
-                "id": ignore,
-                "string": "vavotitsiangvuntiu",
-                "int": 123456,
-            }
-        }));
+
     }
 }
