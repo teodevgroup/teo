@@ -36,9 +36,9 @@ pub struct App {
     #[educe(Debug(ignore))]
     pub(crate) schema: Schema,
     #[educe(Debug(ignore))]
-    pub(crate) setup: Arc<Mutex<Option<Arc<dyn AsyncCallback>>>>,
+    pub(crate) setup: Option<Arc<dyn AsyncCallback>>,
     #[educe(Debug(ignore))]
-    pub(crate) programs: Arc<Mutex<BTreeMap<String, Program>>>,
+    pub(crate) programs: BTreeMap<String, Program>,
     #[educe(Debug(ignore))]
     pub(crate) conn_ctx: Arc<Mutex<Option<connection::Ctx>>>,
 }
@@ -75,22 +75,22 @@ impl App {
             schema,
             namespace_builder,
             main_namespace: Arc::new(Mutex::new(unsafe { &*null() })),
-            setup: Arc::new(Mutex::new(None)),
-            programs: Arc::new(Mutex::new(btreemap!{})),
+            setup: None,
+            programs: btreemap!{},
             conn_ctx: Arc::new(Mutex::new(None)),
         })
     }
 
-    pub fn setup<A, F>(&self, f: F) where F: AsyncCallbackArgument<A> + 'static {
+    pub fn setup<A, F>(&mut self, f: F) where F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
-        *self.setup.lock().unwrap() = Some(Arc::new(|ctx: transaction::Ctx| async {
+        self.setup = Some(Arc::new(|ctx: transaction::Ctx| async {
             wrap_call.call(ctx).await
         }));
     }
 
-    pub fn program<A, T, F>(&self, name: &str, desc: Option<T>, f: F) where T: Into<String>, F: AsyncCallbackArgument<A> + 'static {
+    pub fn program<A, T, F>(&mut self, name: &str, desc: Option<T>, f: F) where T: Into<String>, F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
-        self.programs.lock().unwrap().insert(name.to_owned(), Program::new(desc.map(|desc| desc.into()), Arc::new(|ctx: transaction::Ctx| async {
+        self.programs.insert(name.to_owned(), Program::new(desc.map(|desc| desc.into()), Arc::new(|ctx: transaction::Ctx| async {
             wrap_call.call(ctx).await
         })));
     }
@@ -138,16 +138,20 @@ impl App {
     pub fn cli(&self) -> &CLI {
         &self.cli
     }
-}
 
-impl Drop for App {
-    fn drop(&mut self) {
-        let p = unsafe { self.main_namespace() as *const Namespace as *mut Namespace };
-        if (!p.is_null()) {
-            let _ = unsafe { Box::from_raw(p) };
-        }
+    pub(crate) fn programs(&self) -> &BTreeMap<String, Program> {
+        &self.programs
     }
 }
+
+// impl Drop for App {
+//     fn drop(&mut self) {
+//         let p = unsafe { self.main_namespace() as *const Namespace as *mut Namespace };
+//         if (!p.is_null()) {
+//             let _ = unsafe { Box::from_raw(p) };
+//         }
+//     }
+// }
 
 unsafe impl Send for App {}
 unsafe impl Sync for App {}

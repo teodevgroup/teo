@@ -5,7 +5,6 @@ use futures_util::FutureExt;
 use colored::Colorize;
 use futures_util::future;
 use serde_json::{Value as JsonValue};
-use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_result::{Error, Result};
 use teo_runtime::config::server::Server;
 use teo_runtime::namespace::Namespace;
@@ -74,11 +73,11 @@ fn make_server_app(
         })
         .default_service(web::route().to(move |http_request: HttpRequest, payload: web::Payload| async move {
             // validate path
-            let path = main_namespace.handler_map.remove_path_prefix(http_request.path(), conf.path_prefix.as_ref().map(|s| s.as_str()));
+            let path = main_namespace.handler_map().remove_path_prefix(http_request.path(), conf.path_prefix.as_ref().map(|s| s.as_str()));
             let method = method_from(http_request.method())?;
-            let match_result = if let Some(m_result) = main_namespace.handler_map.r#match(method, path) {
+            let match_result = if let Some(m_result) = main_namespace.handler_map().r#match(method, path) {
                 m_result
-            } else if let Some(m_result) = main_namespace.handler_map.default_match(method, path) {
+            } else if let Some(m_result) = main_namespace.handler_map().default_match(method, path) {
                 m_result
             } else {
                 Err(Error::not_found())?
@@ -109,8 +108,8 @@ fn make_server_app(
                 Err(Error::not_found())?
             };
             let handler_resolved = if group {
-                if let Some(model) = dest_namespace.models.get(match_result.group_name()) {
-                    if let Some(group) = dest_namespace.model_handler_groups.get(match_result.group_name()) {
+                if let Some(model) = dest_namespace.models().get(match_result.group_name()) {
+                    if let Some(group) = dest_namespace.model_handler_groups().get(match_result.group_name()) {
                         if let Some(handler) = group.handlers().get(match_result.handler_name()) {
                             (dest_namespace, HandlerResolved::Custom(handler))
                         } else {
@@ -127,7 +126,7 @@ fn make_server_app(
                             Err(Error::not_found())?
                         }
                     }
-                } else if let Some(group) = dest_namespace.handler_groups.get(match_result.group_name()) {
+                } else if let Some(group) = dest_namespace.handler_groups().get(match_result.group_name()) {
                     if let Some(handler) = group.handlers().get(match_result.handler_name()) {
                         (dest_namespace, HandlerResolved::Custom(handler))
                     } else {
@@ -137,7 +136,7 @@ fn make_server_app(
                     Err(Error::not_found())?
                 }
             } else {
-                if let Some(handler) = dest_namespace.handlers.get(match_result.handler_name()) {
+                if let Some(handler) = dest_namespace.handlers().get(match_result.handler_name()) {
                     (dest_namespace, HandlerResolved::Custom(handler))
                 } else {
                     Err(Error::not_found())?
@@ -155,7 +154,7 @@ fn make_server_app(
                     transaction_ctx,
                     match_result
                 );
-                return Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async {
+                return Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async {
                     Ok(Response::empty())
                 }).await?.into_http_response(http_request.clone()));
             }
@@ -188,49 +187,49 @@ fn make_server_app(
                         match_result.clone(),
                     );
                     match match_result.handler_name() {
-                        "findMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                        "findMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async move {
                             find_many(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        "findFirst" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                        "findFirst" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async move {
                             find_first(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        "findUnique" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                        "findUnique" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async move {
                             find_unique(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        "create" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                        "create" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async move {
                             create(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        "delete" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                        "delete" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async move {
                             delete(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        "update" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                        "update" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async move {
                             update(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        "upsert" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                        "upsert" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async move {
                             upsert(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        "copy" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                        "copy" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async move {
                             copy(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        "createMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                        "createMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async move {
                             create_many(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        "updateMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                        "updateMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async move {
                             update_many(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        "copyMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                        "copyMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async move {
                             copy_many(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        "deleteMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                        "deleteMany" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async move {
                             delete_many(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        "count" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                        "count" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async move {
                             count(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        "aggregate" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                        "aggregate" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async move {
                             aggregate(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
-                        "groupBy" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, &|ctx: request::Ctx| async move {
+                        "groupBy" => Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, &|ctx: request::Ctx| async move {
                             group_by(&ctx).await
                         }).await?.into_http_response(http_request.clone())),
                         _ => Err(Error::not_found())?,
@@ -246,7 +245,7 @@ fn make_server_app(
                         transaction_ctx,
                         match_result
                     );
-                    Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack.call(ctx, handler.call()).await?.into_http_response(http_request.clone()))
+                    Ok::<HttpResponse, WrapError>(dest_namespace.middleware_stack().call(ctx, handler.call()).await?.into_http_response(http_request.clone()))
                 }
             }
         }));
