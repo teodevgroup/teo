@@ -36,7 +36,7 @@ pub struct App {
     #[educe(Debug(ignore))]
     pub(crate) schema: Schema,
     #[educe(Debug(ignore))]
-    pub(crate) setup: Option<Arc<dyn AsyncCallback>>,
+    pub setup: Option<Arc<dyn AsyncCallback>>,
     #[educe(Debug(ignore))]
     pub(crate) programs: BTreeMap<String, Program>,
     #[educe(Debug(ignore))]
@@ -47,6 +47,10 @@ impl App {
 
     pub fn new() -> Result<Self> {
         Self::new_with_entrance_and_runtime_version(None, None, None)
+    }
+
+    pub fn new_with_argv(argv: Option<Vec<String>>) -> Result<Self> {
+        Self::new_with_entrance_and_runtime_version(None, None, argv)
     }
 
     pub fn new_with_entrance_and_runtime_version(entrance: Option<Entrance>, runtime_version: Option<RuntimeVersion>, argv: Option<Vec<String>>) -> Result<Self> {

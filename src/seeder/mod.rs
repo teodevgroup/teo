@@ -1,2 +1,2 @@
-pub(crate) mod seed;
+pub mod seed;
 pub(crate) mod models;

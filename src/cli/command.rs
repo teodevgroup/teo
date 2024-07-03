@@ -40,7 +40,7 @@ pub(crate) struct SeedCommand {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub(crate) enum SeedCommandAction {
+pub enum SeedCommandAction {
     Seed,
     Unseed,
     Reseed,

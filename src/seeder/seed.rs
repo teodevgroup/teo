@@ -17,7 +17,7 @@ use teo_runtime::model::{Model, Object, Relation};
 use teo_runtime::model::field::typed::Typed;
 use teo_runtime::traits::named::Named;
 
-pub(crate) async fn seed(action: SeedCommandAction, datasets: Vec<DataSet>, ctx: transaction::Ctx, exit: bool) -> Result<()> {
+pub async fn seed(action: SeedCommandAction, datasets: Vec<DataSet>, ctx: transaction::Ctx, exit: bool) -> Result<()> {
     // seed for user
     for dataset in &datasets {
         match action {

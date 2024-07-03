@@ -4,6 +4,7 @@ pub mod server;
 pub mod migrate;
 pub mod purge;
 pub mod seeder;
+pub mod result;
 mod message;
 
 pub mod prelude {
@@ -54,4 +55,7 @@ pub mod prelude {
     pub use teo_runtime::middleware::middleware::Middleware;
     pub use teo_runtime::r#enum::Enum;
     pub use teo_runtime::r#enum::member::Member;
+    pub mod result {
+        pub use teo_result::{Result, Error, ResultExt, ErrorSerializable};
+    }
 }

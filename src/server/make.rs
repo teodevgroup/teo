@@ -35,7 +35,7 @@ use crate::server::error::WrapError;
 use crate::server::request::RequestImpl;
 use crate::server::responder::IntoHttpResponse;
 
-fn make_server_app(
+pub fn make_server_app(
     main_namespace: &'static Namespace,
     conf: &'static Server,
 ) -> App<impl ServiceFactory<
