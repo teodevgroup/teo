@@ -147,7 +147,7 @@ impl App {
 // impl Drop for App {
 //     fn drop(&mut self) {
 //         let p = unsafe { self.main_namespace() as *const Namespace as *mut Namespace };
-//         if (!p.is_null()) {
+//         if !p.is_null() {
 //             let _ = unsafe { Box::from_raw(p) };
 //         }
 //     }
