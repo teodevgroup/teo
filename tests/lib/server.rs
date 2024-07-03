@@ -11,13 +11,14 @@ use teo::result::Result;
 use teo::seeder::seed::seed;
 use teo::server::make::make_server_app;
 
-pub async fn make_actix_app(app: &teo::prelude::App) -> Result<App<impl ServiceFactory<
+pub(crate) async fn make_actix_app(app: &teo::prelude::App) -> Result<App<impl ServiceFactory<
     ServiceRequest,
     Response = ServiceResponse<impl MessageBody>,
     Config = (),
     InitError = (),
     Error = actix_web::Error,
 > + 'static>> {
+    app.prepare_for_run().await?;
     connect_databases(app, app.main_namespace(), true).await?;
     let conn_ctx = app.conn_ctx();
     migrate(app, false, false, true).await?;

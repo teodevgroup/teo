@@ -1,11 +1,6 @@
 use std::borrow::Borrow;
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use maplit::hashmap;
-use once_cell::sync::Lazy;
 use regex::Regex;
 use serde_json::Value;
-use uuid::Uuid;
 use crate::lib::json_match;
 use crate::lib::matcher::Matcher;
 

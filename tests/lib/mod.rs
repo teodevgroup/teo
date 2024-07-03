@@ -1,6 +1,7 @@
 pub mod matcher;
 pub mod matcher_functions;
 pub mod server;
+pub mod schema_path;
 
 use std::process::{Child, Command, Stdio};
 use std::{env, thread};

@@ -1,10 +1,10 @@
 connector {
-  provider .sqlite
-  url "sqlite::memory:"
+  provider: .sqlite,
+  url: "sqlite::memory:",
 }
 
 server {
-  bind ("0.0.0.0", 4019)
+  bind: ("0.0.0.0", 4019),
 }
 
 model Support {
