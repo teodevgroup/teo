@@ -11,7 +11,6 @@ mod tests {
     use serde_json::{json, Value};
     use test_helpers_async::*;
     use crate::{assert_json, matcher};
-    use tokio::sync::OnceCell;
 
     async fn make_app() -> impl Service<
         actix_http::Request,
