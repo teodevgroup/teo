@@ -1,28 +1,19 @@
 use test_helpers_async::*;
 
 #[cfg(test)]
-#[before_all]
-#[after_all_async]
 mod tests {
     use actix_web::{http::header::ContentType, test};
     use crate::lib::server::make_actix_app;
     use teo::prelude::App;
     use std::file;
+    use actix_http::body::MessageBody;
     use actix_http::Method;
+    use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
     use crate::lib::schema_path::schema_path_args;
     use serde_json::{json, Value};
     use test_helpers_async::*;
     use crate::{assert_json, matcher};
-
-
-
-    fn before_all() {
-        println!("before all");
-    }
-
-    fn after_all_async() {
-        println!("after all");
-    }
+    use tokio::sync::OnceCell;
 
     #[actix_web::test]
     async fn test_get_index() {
