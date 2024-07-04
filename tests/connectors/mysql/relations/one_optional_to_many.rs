@@ -38,8 +38,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn create_with_nested_create() {
+    #[actix_web::test]
+    async fn create_with_nested_create() {
         let _create_res = req(PORT, "create", "Product", json!({
             "create": {
                 "name": "Shampoo",
@@ -68,8 +68,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn create_with_nested_connect() {
+    #[actix_web::test]
+    async fn create_with_nested_connect() {
         let _create_res = req(PORT, "create", "Product", json!({
             "create": {
                 "name": "Shampoo",
@@ -98,8 +98,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_create() {
+    #[actix_web::test]
+    async fn update_with_nested_create() {
         let _create_res = req(PORT, "update", "Product", json!({
             "where": {
                 "name": "Hair Jelly"
@@ -130,8 +130,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_connect() {
+    #[actix_web::test]
+    async fn update_with_nested_connect() {
         let _create_res = req(PORT, "update", "Product", json!({
             "where": {
                 "name": "Hair Jelly"
@@ -162,8 +162,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_set_to_another_one() {
+    #[actix_web::test]
+    async fn update_with_nested_set_to_another_one() {
         let _create_res = req(PORT, "update", "Product", json!({
             "where": {
                 "name": "Lipstick"
@@ -194,8 +194,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_set_to_null() {
+    #[actix_web::test]
+    async fn update_with_nested_set_to_null() {
         let _create_res = req(PORT, "update", "Product", json!({
             "where": {
                 "name": "Lipstick"
@@ -219,8 +219,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_disconnect() {
+    #[actix_web::test]
+    async fn update_with_nested_disconnect() {
         let _create_res = req(PORT, "update", "Product", json!({
             "where": {
                 "name": "Lipstick"
@@ -244,8 +244,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_update() {
+    #[actix_web::test]
+    async fn update_with_nested_update() {
         let _create_res = req(PORT, "update", "Product", json!({
             "where": {
                 "name": "Lipstick"
@@ -276,8 +276,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_delete() {
+    #[actix_web::test]
+    async fn update_with_nested_delete() {
         let _create_res = req(PORT, "update", "Product", json!({
             "where": {
                 "name": "Lipstick"

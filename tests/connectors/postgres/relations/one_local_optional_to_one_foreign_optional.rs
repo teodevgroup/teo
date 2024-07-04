@@ -38,8 +38,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn create_with_nested_create() {
+    #[actix_web::test]
+    async fn create_with_nested_create() {
         let _create_res = req(PORT, "create", "KOFPlayer", json!({
             "create": {
                 "name": "Dan",
@@ -68,8 +68,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn create_with_nested_connect() {
+    #[actix_web::test]
+    async fn create_with_nested_connect() {
         let _create_res = req(PORT, "create", "KOFPlayer", json!({
             "create": {
                 "name": "Dan",
@@ -102,8 +102,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_create() {
+    #[actix_web::test]
+    async fn update_with_nested_create() {
         let _create_res = req(PORT, "update", "KOFPlayer", json!({
             "where": {
                 "name": "Laggia"
@@ -134,8 +134,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_connect() {
+    #[actix_web::test]
+    async fn update_with_nested_connect() {
         let _create_res = req(PORT, "update", "KOFPlayer", json!({
             "where": {
                 "name": "Laggia"
@@ -170,8 +170,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_set_to_another_one() {
+    #[actix_web::test]
+    async fn update_with_nested_set_to_another_one() {
         let _create_res = req(PORT, "update", "KOFPlayer", json!({
             "where": {
                 "name": "Laggia"
@@ -206,8 +206,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_set_to_null() {
+    #[actix_web::test]
+    async fn update_with_nested_set_to_null() {
         let _create_res = req(PORT, "update", "KOFPlayer", json!({
             "where": {
                 "name": "Laggia"
@@ -240,8 +240,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_disconnect() {
+    #[actix_web::test]
+    async fn update_with_nested_disconnect() {
         let _create_res = req(PORT, "update", "KOFPlayer", json!({
             "where": {
                 "name": "Laggia"
@@ -274,8 +274,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_update() {
+    #[actix_web::test]
+    async fn update_with_nested_update() {
         let _create_res = req(PORT, "update", "KOFPlayer", json!({
             "where": {
                 "name": "Justin Wong plays KOF"
@@ -306,8 +306,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_delete() {
+    #[actix_web::test]
+    async fn update_with_nested_delete() {
         let _create_res = req(PORT, "update", "KOFPlayer", json!({
             "where": {
                 "name": "Justin Wong plays KOF"

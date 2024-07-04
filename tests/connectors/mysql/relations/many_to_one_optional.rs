@@ -38,8 +38,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn create_with_nested_create() {
+    #[actix_web::test]
+    async fn create_with_nested_create() {
         let _create_res = req(PORT, "create", "Category", json!({
             "create": {
                 "name": "Toiletries",
@@ -70,8 +70,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn create_with_nested_create_many() {
+    #[actix_web::test]
+    async fn create_with_nested_create_many() {
         let _create_res = req(PORT, "create", "Category", json!({
             "create": {
                 "name": "Toiletries",
@@ -116,8 +116,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn create_with_nested_connect_one() {
+    #[actix_web::test]
+    async fn create_with_nested_connect_one() {
         let _create_res = req(PORT, "create", "Category", json!({
             "create": {
                 "name": "Toiletries",
@@ -148,8 +148,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn create_with_nested_connect_more_than_one() {
+    #[actix_web::test]
+    async fn create_with_nested_connect_more_than_one() {
         let _create_res = req(PORT, "create", "Category", json!({
             "create": {
                 "name": "Toiletries",
@@ -194,8 +194,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_create_one() {
+    #[actix_web::test]
+    async fn update_with_nested_create_one() {
         let _update_res = req(PORT, "update", "Category", json!({
             "where": {
                 "name": "Skincares"
@@ -242,8 +242,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_create_many() {
+    #[actix_web::test]
+    async fn update_with_nested_create_many() {
         let _update_res = req(PORT, "update", "Category", json!({
             "where": {
                 "name": "Skincares"
@@ -300,8 +300,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_connect_one() {
+    #[actix_web::test]
+    async fn update_with_nested_connect_one() {
         let _update_res = req(PORT, "update", "Category", json!({
             "where": {
                 "name": "Skincares"
@@ -348,8 +348,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_connect_more_than_one() {
+    #[actix_web::test]
+    async fn update_with_nested_connect_more_than_one() {
         let _update_res = req(PORT, "update", "Category", json!({
             "where": {
                 "name": "Skincares"
@@ -406,8 +406,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_set() {
+    #[actix_web::test]
+    async fn update_with_nested_set() {
         let _update_res = req(PORT, "update", "Category", json!({
             "where": {
                 "name": "Skincares"
@@ -457,8 +457,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_disconnect_one() {
+    #[actix_web::test]
+    async fn update_with_nested_disconnect_one() {
         let _update_res = req(PORT, "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
@@ -491,8 +491,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_disconnect_more_than_one() {
+    #[actix_web::test]
+    async fn update_with_nested_disconnect_more_than_one() {
         let _update_res = req(PORT, "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
@@ -524,8 +524,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_update_one() {
+    #[actix_web::test]
+    async fn update_with_nested_update_one() {
         let _update_res = req(PORT, "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
@@ -572,8 +572,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_update_more_than_one() {
+    #[actix_web::test]
+    async fn update_with_nested_update_more_than_one() {
         let _update_res = req(PORT, "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
@@ -630,8 +630,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_update_many() {
+    #[actix_web::test]
+    async fn update_with_nested_update_many() {
         let _update_res = req(PORT, "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
@@ -678,8 +678,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_update_many_more() {
+    #[actix_web::test]
+    async fn update_with_nested_update_many_more() {
         let _update_res = req(PORT, "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
@@ -736,8 +736,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_delete_one() {
+    #[actix_web::test]
+    async fn update_with_nested_delete_one() {
         let _update_res = req(PORT, "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
@@ -770,8 +770,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_delete_more_than_one() {
+    #[actix_web::test]
+    async fn update_with_nested_delete_more_than_one() {
         let _update_res = req(PORT, "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
@@ -807,8 +807,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_delete_many() {
+    #[actix_web::test]
+    async fn update_with_nested_delete_many() {
         let _update_res = req(PORT, "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
@@ -841,8 +841,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_delete_many_more() {
+    #[actix_web::test]
+    async fn update_with_nested_delete_many_more() {
         let _update_res = req(PORT, "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"

@@ -38,8 +38,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn create_with_nested_create() {
+    #[actix_web::test]
+    async fn create_with_nested_create() {
         let _create_res = req(PORT, "create", "User", json!({
             "create": {
                 "name": "Dan",
@@ -68,8 +68,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_update() {
+    #[actix_web::test]
+    async fn update_with_nested_update() {
         let _update_res = req(PORT, "update", "User", json!({
             "where": {
                 "name": "John"

@@ -38,8 +38,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn create_with_nested_create() {
+    #[actix_web::test]
+    async fn create_with_nested_create() {
         let _create_res = req(PORT, "create", "Note", json!({
             "create": {
                 "name": "Note of The Russian Revolutions",
@@ -68,8 +68,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn create_with_nested_connect() {
+    #[actix_web::test]
+    async fn create_with_nested_connect() {
         let _create_res = req(PORT, "create", "Note", json!({
             "create": {
                 "name": "Note of The Russian Revolutions",
@@ -98,8 +98,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_create() {
+    #[actix_web::test]
+    async fn update_with_nested_create() {
         let _update_res = req(PORT, "update", "Note", json!({
             "where": {
                 "name": "Note of The Renaissance",
@@ -130,8 +130,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_connect() {
+    #[actix_web::test]
+    async fn update_with_nested_connect() {
         let _update_res = req(PORT, "update", "Note", json!({
             "where": {
                 "name": "Note of The Renaissance",
@@ -162,8 +162,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_set_to_another_one() {
+    #[actix_web::test]
+    async fn update_with_nested_set_to_another_one() {
         let _update_res = req(PORT, "update", "Note", json!({
             "where": {
                 "name": "Note of The Renaissance",
@@ -194,8 +194,8 @@ mod tests {
     }
 
     #[serial]
-    #[test]
-    fn update_with_nested_update() {
+    #[actix_web::test]
+    async fn update_with_nested_update() {
         let _update_res = req(PORT, "update", "Note", json!({
             "where": {
                 "name": "Note of The Renaissance",

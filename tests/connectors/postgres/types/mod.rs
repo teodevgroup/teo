@@ -37,13 +37,19 @@ mod tests {
         }
     }
 
-    #[test]
-    fn int32() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "int32": 1,
-            },
-        }));
+    #[actix_web::test]
+    async fn int32() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "int32": 1,
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -52,13 +58,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn int64() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "int64": 1,
-            },
-        }));
+    #[actix_web::test]
+    async fn int64() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "int64": 1,
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -67,13 +79,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn float32() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "float32": 1.5,
-            },
-        }));
+    #[actix_web::test]
+    async fn float32() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "float32": 1.5,
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -83,13 +101,19 @@ mod tests {
     }
 
 
-    #[test]
-    fn float64() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "float64": 1.2,
-            },
-        }));
+    #[actix_web::test]
+    async fn float64() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "float64": 1.2,
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -98,13 +122,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn bool() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "bool": true,
-            },
-        }));
+    #[actix_web::test]
+    async fn bool() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "bool": true,
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -113,13 +143,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn string() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "string": "KOF XV",
-            },
-        }));
+    #[actix_web::test]
+    async fn string() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "string": "KOF XV",
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -128,13 +164,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn date() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "date": "2005-12-25",
-            },
-        }));
+    #[actix_web::test]
+    async fn date() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "date": "2005-12-25",
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -143,13 +185,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn date_time() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "dateTime": "2003-04-17T08:12:34.567Z",
-            },
-        }));
+    #[actix_web::test]
+    async fn date_time() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "dateTime": "2003-04-17T08:12:34.567Z",
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -158,13 +206,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn decimal() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "decimal": "5.78",
-            },
-        }));
+    #[actix_web::test]
+    async fn decimal() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "decimal": "5.78",
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -173,13 +227,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn r#enum() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "sex": "FEMALE",
-            },
-        }));
+    #[actix_web::test]
+    async fn r#enum() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "sex": "FEMALE",
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -188,13 +248,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn int32_array() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "int32Array": [1, 2, 3],
-            },
-        }));
+    #[actix_web::test]
+    async fn int32_array() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "int32Array": [1, 2, 3],
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -203,13 +269,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn int64_array() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "int64Array": [1, 2, 3],
-            },
-        }));
+    #[actix_web::test]
+    async fn int64_array() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "int64Array": [1, 2, 3],
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -218,13 +290,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn float32_array() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "float32Array": [1.5, -1.5],
-            },
-        }));
+    #[actix_web::test]
+    async fn float32_array() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "float32Array": [1.5, -1.5],
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -233,13 +311,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn float64_array() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "float64Array": [1.2, -1.2],
-            },
-        }));
+    #[actix_web::test]
+    async fn float64_array() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "float64Array": [1.2, -1.2],
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -248,13 +332,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn bool_array() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "boolArray": [true, false],
-            },
-        }));
+    #[actix_web::test]
+    async fn bool_array() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "boolArray": [true, false],
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -263,13 +353,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn string_array() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "stringArray": ["foo", "bar"],
-            },
-        }));
+    #[actix_web::test]
+    async fn string_array() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "stringArray": ["foo", "bar"],
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -278,13 +374,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn date_array() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "dateArray": ["2005-12-25", "2023-03-27"],
-            },
-        }));
+    #[actix_web::test]
+    async fn date_array() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "dateArray": ["2005-12-25", "2023-03-27"],
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -293,13 +395,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn date_time_array() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "dateTimeArray": ["2003-04-17T08:12:34.567Z", "1997-10-19T08:12:34.567Z"],
-            },
-        }));
+    #[actix_web::test]
+    async fn date_time_array() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "dateTimeArray": ["2003-04-17T08:12:34.567Z", "1997-10-19T08:12:34.567Z"],
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -308,13 +416,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn decimal_array() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "decimalArray": ["5.78", "-5.78"],
-            },
-        }));
+    #[actix_web::test]
+    async fn decimal_array() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "decimalArray": ["5.78", "-5.78"],
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -323,13 +437,19 @@ mod tests {
         }))
     }
 
-    #[test]
-    fn enum_array() {
-        let res = req(PORT, "create", "Support", json!({
-            "create": {
-                "sexesArray": ["FEMALE", "MALE"],
-            },
-        }));
+    #[actix_web::test]
+    async fn enum_array() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/Support/create")
+            .set_json(json!({
+                "create": {
+                    "sexesArray": ["FEMALE", "MALE"],
+                },
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
