@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use std::cell::OnceCell;
     use actix_web::{http::header::ContentType, test};
     use crate::lib::server::make_actix_app;
     use teo::prelude::App;
@@ -11,20 +12,31 @@ mod tests {
     use serde_json::{json, Value};
     use test_helpers_async::*;
     use crate::{assert_json, matcher};
+    use crate::lib::handle::Handle;
+
+    static mut handle: OnceCell<Handle> = OnceCell::new();
 
     async fn make_app() -> impl Service<
         actix_http::Request,
         Response = ServiceResponse<impl MessageBody>,
         Error = actix_web::Error,
     > {
-        let teo_app = App::new_with_argv(
-            schema_path_args(file!(), "schema.teo")
-        ).unwrap();
-        test::init_service(
-            make_actix_app(
-                &teo_app
-            ).await.unwrap()
-        ).await
+        unsafe {
+            let teo_app = handle.get_or_init(|| {
+                let mut h = Handle::new();
+                h.load(|| {
+                    App::new_with_argv(
+                        schema_path_args(file!(), "schema.teo")
+                    ).unwrap()
+                });
+                h
+            }).teo_app();
+            test::init_service(
+                make_actix_app(
+                    &teo_app
+                ).await.unwrap()
+            ).await
+        }
     }
 
     #[actix_web::test]
