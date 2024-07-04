@@ -1,4 +1,4 @@
-use test_helpers::*;
+use test_helpers_async::*;
 
 #[before_all]
 #[after_all]

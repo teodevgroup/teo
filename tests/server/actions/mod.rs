@@ -1,4 +1,10 @@
+use test_helpers_async::*;
+
 #[cfg(test)]
+#[before_all]
+#[before_each]
+#[after_each]
+#[after_all_async]
 mod tests {
     use actix_web::{http::header::ContentType, test};
     use crate::lib::server::make_actix_app;
@@ -8,6 +14,22 @@ mod tests {
     use crate::lib::schema_path::schema_path_args;
     use serde_json::{json, Value};
     use crate::{assert_json, matcher};
+
+    fn before_all() {
+        println!("before all");
+    }
+
+    fn before_each() {
+        println!("before each");
+    }
+
+    fn after_each() {
+        println!("after each");
+    }
+
+    fn after_all_async() {
+        println!("after all");
+    }
 
     #[actix_web::test]
     async fn test_get_index() {

@@ -117,12 +117,17 @@ docker-compose -f databases.yml up -d
 
 To run integration tests, use this command:
 ```shell
-RUST_TEST_THREADS=1 cargo test --test '*' 
+RUST_TEST_THREADS=1 cargo test
+```
+
+To see debug messages, append these arguments:
+```shell
+RUST_TEST_THREADS=1 cargo test --test mod -- --nocapture
 ```
 
 ## Legal
 
-Pull Request authors must sign the [TEO Cloud CLA](https://cla-assistant.io/teocloud/teo), it will show up in an 
+Pull Request authors must sign the [TEO Dev Group CLA](https://cla-assistant.io/teodevgroup/teo), it will show up in an 
 automated comment after you create a PR.
 
 If you cannot or do not want to sign this CLA (e.g. your employment contract for your employer may not allow this), you 
