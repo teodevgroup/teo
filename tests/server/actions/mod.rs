@@ -1,5 +1,3 @@
-use test_helpers_async::*;
-
 #[cfg(test)]
 mod tests {
     use actix_web::{http::header::ContentType, test};
@@ -8,23 +6,31 @@ mod tests {
     use std::file;
     use actix_http::body::MessageBody;
     use actix_http::Method;
-    use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
+    use actix_web::dev::{Service, ServiceRequest, ServiceResponse};
     use crate::lib::schema_path::schema_path_args;
     use serde_json::{json, Value};
     use test_helpers_async::*;
     use crate::{assert_json, matcher};
     use tokio::sync::OnceCell;
 
-    #[actix_web::test]
-    async fn test_get_index() {
+    async fn make_app() -> impl Service<
+        actix_http::Request,
+        Response = ServiceResponse<impl MessageBody>,
+        Error = actix_web::Error,
+    > {
         let teo_app = App::new_with_argv(
             schema_path_args(file!(), "schema.teo")
         ).unwrap();
-        let app = test::init_service(
+        test::init_service(
             make_actix_app(
                 &teo_app
             ).await.unwrap()
-        ).await;
+        ).await
+    }
+
+    #[actix_web::test]
+    async fn test_get_index() {
+        let app = make_app().await;
         let req = test::TestRequest::default()
             .insert_header(ContentType::plaintext())
             .to_request();
@@ -34,14 +40,7 @@ mod tests {
 
     #[actix_web::test]
     async fn test_create_record() {
-        let teo_app = App::new_with_argv(
-            schema_path_args(file!(), "schema.teo")
-        ).unwrap();
-        let app = test::init_service(
-            make_actix_app(
-                &teo_app
-            ).await.unwrap()
-        ).await;
+        let app = make_app().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
