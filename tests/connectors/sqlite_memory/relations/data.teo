@@ -1,0 +1,161 @@
+import "./schema"
+
+autoseed dataset default {
+  group User {
+    record john {
+      "name": "John",
+      "profile": .johnProfile,
+    }
+    record peter {
+      "name": "Peter",
+    }
+  }
+  group Profile {
+    record johnProfile {
+      "name": "John's profile",
+    }
+    record peterProfile {
+      "name": "Peter's profile",
+      "user": .peter
+    }
+  }
+  group Game {
+    record kof97 {
+      "name": "KOF97"
+    }
+    record kof98 {
+      "name": "KOF98"
+    }
+    record kofxv {
+      "name": "KOFXV"
+    }
+  }
+  group CommandList {
+    record kof97c {
+      "name": "KOF97 Command List",
+      "game": .kof97
+    }
+    record kof98c {
+      "name": "KOF98 Command List",
+      "game": .kof98
+    }
+  }
+  group Player {
+    record justin {
+      "name": "Justin Wong",
+      "kof": .justin
+    }
+    record daigo {
+      "name": "Umehara Daigo",
+    }
+  }
+  group KOFPlayer {
+    record justin {
+      "name": "Justin Wong plays KOF"
+    }
+    record laggia {
+      "name": "Laggia"
+    }
+  }
+  group Author {
+    record paul {
+      "name": "Paul",
+      "posts": [.swift1, .swift2, .swift3]
+    }
+    record david {
+      "name": "David",
+    }
+  }
+  group Post {
+    record swift1 {
+      "name": "Swift 1.0"
+    }
+    record swift2 {
+      "name": "Swift 2.0"
+    }
+    record swift3 {
+      "name": "Swift 3.0"
+    }
+    record rails1 {
+      "name": "Ruby on Rails 1.0",
+      "author": .david
+    }
+    record rails2 {
+      "name": "Ruby on Rails 2.0",
+      "author": .david
+    }
+  }
+  group Artist {
+    record ed {
+      "name": "Ed Sheeran",
+      "songs": [.perfect, .shapeOfYou]
+    }
+    record maroon5 {
+      "name": "Maroon 5",
+    }
+  }
+  group Song {
+    record perfect {
+      "name": "Perfect",
+    }
+    record shapeOfYou {
+      "name": "Shape of You"
+    }
+    record maps {
+      "name": "Maps",
+      "artists": [.maroon5]
+    }
+    record payphone {
+      "name": "Payphone",
+      "artists": [.maroon5]
+    }
+  }
+  group Product {
+    record lipstick {
+      "name": "Lipstick"
+    }
+    record nailPolish {
+      "name": "Nail Polish"
+    }
+    record lipidRestore {
+      "name": "Lipid Restore"
+    }
+    record serum {
+      "name": "Sérum"
+    }
+    record hairJelly {
+      "name": "Hair Jelly"
+    }
+  }
+  group Category {
+    record cosmetics {
+      "name": "Cosmetics",
+      "products": [.lipstick, .nailPolish]
+    }
+    record skincares {
+      "name": "Skincares",
+      "products": [.lipidRestore, .serum]
+    }
+  }
+  group Event {
+    record renaissance {
+      "name": "The Renaissance"
+    }
+    record frenchRevolution {
+      "name": "The French Revolution"
+    }
+    record industrialRevolution {
+      "name": "The Industrial Revolution"
+    }
+  }
+  group Note {
+    record renaissanceNote {
+      "name": "Note of The Renaissance",
+      "event": .renaissance
+    }
+    record frenchRevolutionNote {
+      "name": "Note of The French Revolution",
+      "event": .frenchRevolution
+    }
+  }
+}

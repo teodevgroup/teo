@@ -1,0 +1,178 @@
+import "./data"
+
+connector {
+  provider .mongo
+  url "mongodb://127.0.0.1:27018/test_connectors_mongodb_relations"
+}
+
+server {
+  bind ("0.0.0.0", 4020)
+}
+
+test {
+  resetAfterFind .auto
+}
+
+// User & Profile represents an 1 to 1 required relationship
+
+model User {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @relation(fields: .id, references: .userId)
+  profile: Profile
+}
+
+model Profile {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @foreignKey
+  userId: ObjectId
+  @relation(fields: .userId, references: .id)
+  user: User
+}
+
+// Player & KOFPlayer represents an 1 to 1 optional relationship
+
+model Player {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @relation(fields: .id, references: .playerId)
+  kof: KOFPlayer?
+}
+
+model KOFPlayer {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @foreignKey
+  playerId: ObjectId?
+  @relation(fields: .playerId, references: .id)
+  player: Player?
+}
+
+// Event & Note represents an 1 optional to 1 required relationship
+
+model Event {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @foreignKey
+  noteId: ObjectId?
+  @relation(fields: .noteId, references: .id)
+  note: Note?
+}
+
+model Note {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @relation(fields: .id, references: .noteId)
+  event: Event
+}
+
+// Game & CommandList represents an 1 optional to 1 required relationship
+
+model Game {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @relation(fields: .id, references: .gameId)
+  commandList: CommandList?
+}
+
+model CommandList {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @foreignKey
+  gameId: ObjectId
+  @relation(fields: .gameId, references: .id)
+  game: Game
+}
+
+// Product & Category represents an 1 optional to many relationship
+
+model Product {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @foreignKey
+  categoryId: ObjectId?
+  @relation(fields: .categoryId, references: .id)
+  category: Category?
+}
+
+model Category {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @relation(fields: .id, references: .categoryId)
+  products: Product[]
+}
+
+// Author & Post represents an 1 required to many relationship
+
+model Author {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @relation(fields: .id, references: .authorId)
+  posts: Post[]
+}
+
+model Post {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @foreignKey
+  authorId: ObjectId
+  @relation(fields: .authorId, references: .id)
+  author: Author
+}
+
+// Artist & Song represents a many to many relationship
+
+model Artist {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @relation(through: Perform, local: .artist, foreign: .song)
+  songs: Song[]
+}
+
+model Song {
+  @id @auto @map("_id") @readonly
+  id: ObjectId
+  @unique
+  name: String
+  @relation(through: Perform, local: .song, foreign: .artist)
+  artists: Artist[]
+}
+
+@id([.artistId, .songId])
+model Perform {
+  @foreignKey
+  artistId: ObjectId
+  @foreignKey
+  songId: ObjectId
+  @relation(fields: .artistId, references: .id)
+  artist: Artist
+  @relation(fields: .songId, references: .id)
+  song: Song
+}
