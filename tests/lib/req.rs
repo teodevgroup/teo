@@ -11,7 +11,7 @@ pub(crate) async fn req(app: &impl Service<
 >, action: &str, model: &str, data: Value) -> Value {
     let req = test::TestRequest::default()
         .method(Method::POST)
-        .uri(&format!("{}/{}", model, action))
+        .uri(&format!("/{}/{}", model, action))
         .set_json(data)
         .to_request();
     let res: Value = test::call_and_read_body_json(app, req).await;
