@@ -48,7 +48,8 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_create() {
-        let _create_res = req(PORT, "create", "Note", json!({
+        let app = make_app().await;
+        let _create_res = req(&app, "create", "Note", json!({
             "create": {
                 "name": "Note of The Russian Revolutions",
                 "event": {
@@ -58,7 +59,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Note", json!({
+        let find_many_res = req(&app, "findMany", "Note", json!({
             "include": {
                 "event": true
             }
@@ -78,7 +79,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_connect() {
-        let _create_res = req(PORT, "create", "Note", json!({
+        let _create_res = req(&app, "create", "Note", json!({
             "create": {
                 "name": "Note of The Russian Revolutions",
                 "event": {
@@ -88,7 +89,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Note", json!({
+        let find_many_res = req(&app, "findMany", "Note", json!({
             "include": {
                 "event": true
             }
@@ -108,7 +109,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_create() {
-        let _update_res = req(PORT, "update", "Note", json!({
+        let _update_res = req(&app, "update", "Note", json!({
             "where": {
                 "name": "Note of The Renaissance",
             },
@@ -120,7 +121,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Note", json!({
+        let find_many_res = req(&app, "findMany", "Note", json!({
             "include": {
                 "event": true
             }
@@ -140,7 +141,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_connect() {
-        let _update_res = req(PORT, "update", "Note", json!({
+        let _update_res = req(&app, "update", "Note", json!({
             "where": {
                 "name": "Note of The Renaissance",
             },
@@ -152,7 +153,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Note", json!({
+        let find_many_res = req(&app, "findMany", "Note", json!({
             "include": {
                 "event": true
             }
@@ -172,7 +173,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_set_to_another_one() {
-        let _update_res = req(PORT, "update", "Note", json!({
+        let _update_res = req(&app, "update", "Note", json!({
             "where": {
                 "name": "Note of The Renaissance",
             },
@@ -184,7 +185,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Note", json!({
+        let find_many_res = req(&app, "findMany", "Note", json!({
             "include": {
                 "event": true
             }
@@ -204,7 +205,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_update() {
-        let _update_res = req(PORT, "update", "Note", json!({
+        let _update_res = req(&app, "update", "Note", json!({
             "where": {
                 "name": "Note of The Renaissance",
             },
@@ -216,7 +217,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Note", json!({
+        let find_many_res = req(&app, "findMany", "Note", json!({
             "include": {
                 "event": true
             }

@@ -48,7 +48,8 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_create() {
-        let _create_res = req(PORT, "create", "Product", json!({
+        let app = make_app().await;
+        let _create_res = req(&app, "create", "Product", json!({
             "create": {
                 "name": "Shampoo",
                 "category": {
@@ -58,7 +59,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Product", json!({
+        let find_many_res = req(&app, "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -78,7 +79,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_connect() {
-        let _create_res = req(PORT, "create", "Product", json!({
+        let _create_res = req(&app, "create", "Product", json!({
             "create": {
                 "name": "Shampoo",
                 "category": {
@@ -88,7 +89,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Product", json!({
+        let find_many_res = req(&app, "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -108,7 +109,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_create() {
-        let _create_res = req(PORT, "update", "Product", json!({
+        let _create_res = req(&app, "update", "Product", json!({
             "where": {
                 "name": "Hair Jelly"
             },
@@ -120,7 +121,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Product", json!({
+        let find_many_res = req(&app, "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -140,7 +141,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_connect() {
-        let _create_res = req(PORT, "update", "Product", json!({
+        let _create_res = req(&app, "update", "Product", json!({
             "where": {
                 "name": "Hair Jelly"
             },
@@ -152,7 +153,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Product", json!({
+        let find_many_res = req(&app, "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -172,7 +173,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_set_to_another_one() {
-        let _create_res = req(PORT, "update", "Product", json!({
+        let _create_res = req(&app, "update", "Product", json!({
             "where": {
                 "name": "Lipstick"
             },
@@ -184,7 +185,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Product", json!({
+        let find_many_res = req(&app, "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -204,7 +205,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_set_to_null() {
-        let _create_res = req(PORT, "update", "Product", json!({
+        let _create_res = req(&app, "update", "Product", json!({
             "where": {
                 "name": "Lipstick"
             },
@@ -214,7 +215,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Product", json!({
+        let find_many_res = req(&app, "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -229,7 +230,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_disconnect() {
-        let _create_res = req(PORT, "update", "Product", json!({
+        let _create_res = req(&app, "update", "Product", json!({
             "where": {
                 "name": "Lipstick"
             },
@@ -239,7 +240,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Product", json!({
+        let find_many_res = req(&app, "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -254,7 +255,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_update() {
-        let _create_res = req(PORT, "update", "Product", json!({
+        let _create_res = req(&app, "update", "Product", json!({
             "where": {
                 "name": "Lipstick"
             },
@@ -266,7 +267,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Product", json!({
+        let find_many_res = req(&app, "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -286,7 +287,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_delete() {
-        let _create_res = req(PORT, "update", "Product", json!({
+        let _create_res = req(&app, "update", "Product", json!({
             "where": {
                 "name": "Lipstick"
             },
@@ -296,7 +297,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Product", json!({
+        let find_many_res = req(&app, "findMany", "Product", json!({
             "include": {
                 "category": true
             }

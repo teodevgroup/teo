@@ -48,7 +48,8 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_create() {
-        let _create_res = req(PORT, "create", "KOFPlayer", json!({
+        let app = make_app().await;
+        let _create_res = req(&app, "create", "KOFPlayer", json!({
             "create": {
                 "name": "Dan",
                 "player": {
@@ -58,7 +59,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "KOFPlayer", json!({
+        let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
@@ -78,7 +79,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_connect() {
-        let _create_res = req(PORT, "create", "KOFPlayer", json!({
+        let _create_res = req(&app, "create", "KOFPlayer", json!({
             "create": {
                 "name": "Dan",
                 "player": {
@@ -88,7 +89,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "KOFPlayer", json!({
+        let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
@@ -112,7 +113,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_create() {
-        let _create_res = req(PORT, "update", "KOFPlayer", json!({
+        let _create_res = req(&app, "update", "KOFPlayer", json!({
             "where": {
                 "name": "Laggia"
             },
@@ -124,7 +125,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "KOFPlayer", json!({
+        let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
@@ -144,7 +145,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_connect() {
-        let _create_res = req(PORT, "update", "KOFPlayer", json!({
+        let _create_res = req(&app, "update", "KOFPlayer", json!({
             "where": {
                 "name": "Laggia"
             },
@@ -156,7 +157,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "KOFPlayer", json!({
+        let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
@@ -180,7 +181,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_set_to_another_one() {
-        let _create_res = req(PORT, "update", "KOFPlayer", json!({
+        let _create_res = req(&app, "update", "KOFPlayer", json!({
             "where": {
                 "name": "Laggia"
             },
@@ -192,7 +193,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "KOFPlayer", json!({
+        let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
@@ -216,7 +217,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_set_to_null() {
-        let _create_res = req(PORT, "update", "KOFPlayer", json!({
+        let _create_res = req(&app, "update", "KOFPlayer", json!({
             "where": {
                 "name": "Laggia"
             },
@@ -226,7 +227,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "KOFPlayer", json!({
+        let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
@@ -250,7 +251,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_disconnect() {
-        let _create_res = req(PORT, "update", "KOFPlayer", json!({
+        let _create_res = req(&app, "update", "KOFPlayer", json!({
             "where": {
                 "name": "Laggia"
             },
@@ -260,7 +261,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "KOFPlayer", json!({
+        let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
@@ -284,7 +285,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_update() {
-        let _create_res = req(PORT, "update", "KOFPlayer", json!({
+        let _create_res = req(&app, "update", "KOFPlayer", json!({
             "where": {
                 "name": "Justin Wong plays KOF"
             },
@@ -296,7 +297,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "KOFPlayer", json!({
+        let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
@@ -316,7 +317,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_delete() {
-        let _create_res = req(PORT, "update", "KOFPlayer", json!({
+        let _create_res = req(&app, "update", "KOFPlayer", json!({
             "where": {
                 "name": "Justin Wong plays KOF"
             },
@@ -326,7 +327,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "KOFPlayer", json!({
+        let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }

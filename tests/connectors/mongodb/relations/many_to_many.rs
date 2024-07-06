@@ -12,7 +12,9 @@ mod tests {
     use crate::{assert_json, matcher};
     use crate::lib::handle::Handle;
     use serial_test::serial;
+    use crate::lib::matcher_functions::one_match;
     use crate::lib::purge_and_seed::purge_and_seed;
+    use crate::lib::req::req;
 
     static mut HANDLE: OnceCell<Handle> = OnceCell::new();
 
@@ -48,7 +50,8 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_create_one() {
-        let _create_res = req(PORT, "create", "Artist", json!({
+        let app = make_app().await;
+        let _create_res = req(&app, "create", "Artist", json!({
             "create": {
                 "name": "Taylor Swift",
                 "songs": {
@@ -58,7 +61,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": true
             }
@@ -79,7 +82,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_create_many() {
-        let _create_res = req(PORT, "create", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _create_res = req(&app, "create", "Artist", json!({
             "create": {
                 "name": "Taylor Swift",
                 "songs": {
@@ -94,7 +99,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -123,7 +128,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_connect_one() {
-        let _create_res = req(PORT, "create", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _create_res = req(&app, "create", "Artist", json!({
             "create": {
                 "name": "Taylor Swift",
                 "songs": {
@@ -133,7 +140,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -172,7 +179,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_connect_more_than_one() {
-        let _create_res = req(PORT, "create", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _create_res = req(&app, "create", "Artist", json!({
             "create": {
                 "name": "Taylor Swift",
                 "songs": {
@@ -187,7 +196,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -244,7 +253,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_create_one() {
-        let _update_res = req(PORT, "update", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -256,7 +267,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -289,7 +300,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_create_many() {
-        let _update_res = req(PORT, "update", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -306,7 +319,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -343,7 +356,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_connect_one() {
-        let _update_res = req(PORT, "update", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -355,7 +370,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -402,7 +417,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_connect_more_than_one() {
-        let _update_res = req(PORT, "update", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -419,7 +436,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -470,7 +487,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_set() {
-        let _update_res = req(PORT, "update", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -487,7 +506,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -530,7 +549,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_disconnect_one() {
-        let _update_res = req(PORT, "update", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -542,7 +563,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": true
             }
@@ -563,7 +584,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_disconnect_more_than_one() {
-        let _update_res = req(PORT, "update", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -580,7 +603,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": true
             }
@@ -596,7 +619,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_update_one() {
-        let _update_res = req(PORT, "update", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -613,7 +638,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -642,7 +667,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_update_more_than_one() {
-        let _update_res = req(PORT, "update", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -669,7 +696,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -698,7 +725,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_update_many() {
-        let _update_res = req(PORT, "update", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -715,7 +744,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -744,7 +773,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_update_many_more() {
-        let _update_res = req(PORT, "update", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -771,7 +802,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -800,7 +831,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_delete_one() {
-        let _update_res = req(PORT, "update", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -812,7 +845,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": true
             }
@@ -833,7 +866,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_delete_more_than_one() {
-        let _update_res = req(PORT, "update", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -850,7 +885,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": true
             }
@@ -866,7 +901,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_delete_many() {
-        let _update_res = req(PORT, "update", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -878,7 +915,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": true
             }
@@ -899,7 +936,9 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_delete_many_more() {
-        let _update_res = req(PORT, "update", "Artist", json!({
+        let app = make_app().await;
+        let app = make_app().await;
+        let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -916,7 +955,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Artist", json!({
+        let find_many_res = req(&app, "findMany", "Artist", json!({
             "include": {
                 "songs": true
             }

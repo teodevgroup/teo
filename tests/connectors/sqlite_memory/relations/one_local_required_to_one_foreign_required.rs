@@ -48,7 +48,8 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_create() {
-        let _create_res = req(PORT, "create", "Profile", json!({
+        let app = make_app().await;
+        let _create_res = req(&app, "create", "Profile", json!({
             "create": {
                 "name": "Dan",
                 "user": {
@@ -58,7 +59,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Profile", json!({
+        let find_many_res = req(&app, "findMany", "Profile", json!({
             "include": {
                 "user": true
             }
@@ -78,7 +79,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_update() {
-        let _update_res = req(PORT, "update", "Profile", json!({
+        let _update_res = req(&app, "update", "Profile", json!({
             "where": {
                 "name": "John's profile"
             },
@@ -90,7 +91,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Profile", json!({
+        let find_many_res = req(&app, "findMany", "Profile", json!({
             "include": {
                 "user": true
             }

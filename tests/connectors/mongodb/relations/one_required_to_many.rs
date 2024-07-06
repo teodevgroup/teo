@@ -48,7 +48,8 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_create() {
-        let _create_res = req(PORT, "create", "Post", json!({
+        let app = make_app().await;
+        let _create_res = req(&app, "create", "Post", json!({
             "create": {
                 "name": "UIKit",
                 "author": {
@@ -58,7 +59,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Post", json!({
+        let find_many_res = req(&app, "findMany", "Post", json!({
             "include": {
                 "author": true
             }
@@ -78,7 +79,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_connect() {
-        let _create_res = req(PORT, "create", "Post", json!({
+        let _create_res = req(&app, "create", "Post", json!({
             "create": {
                 "name": "UIKit",
                 "author": {
@@ -88,7 +89,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Post", json!({
+        let find_many_res = req(&app, "findMany", "Post", json!({
             "include": {
                 "author": true
             }
@@ -108,7 +109,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_create() {
-        let _create_res = req(PORT, "update", "Post", json!({
+        let _create_res = req(&app, "update", "Post", json!({
             "where": {
                 "name": "Swift 1.0"
             },
@@ -120,7 +121,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Post", json!({
+        let find_many_res = req(&app, "findMany", "Post", json!({
             "include": {
                 "author": true
             }
@@ -140,7 +141,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_connect() {
-        let _create_res = req(PORT, "update", "Post", json!({
+        let _create_res = req(&app, "update", "Post", json!({
             "where": {
                 "name": "Swift 1.0"
             },
@@ -152,7 +153,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Post", json!({
+        let find_many_res = req(&app, "findMany", "Post", json!({
             "include": {
                 "author": true
             }
@@ -172,7 +173,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_set_to_another_one() {
-        let _create_res = req(PORT, "update", "Post", json!({
+        let _create_res = req(&app, "update", "Post", json!({
             "where": {
                 "name": "Swift 1.0"
             },
@@ -184,7 +185,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Post", json!({
+        let find_many_res = req(&app, "findMany", "Post", json!({
             "include": {
                 "author": true
             }
@@ -205,7 +206,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_update() {
-        let _create_res = req(PORT, "update", "Post", json!({
+        let _create_res = req(&app, "update", "Post", json!({
             "where": {
                 "name": "Swift 1.0"
             },
@@ -217,7 +218,7 @@ mod tests {
                 }
             },
         }));
-        let find_many_res = req(PORT, "findMany", "Post", json!({
+        let find_many_res = req(&app, "findMany", "Post", json!({
             "include": {
                 "author": true
             }
