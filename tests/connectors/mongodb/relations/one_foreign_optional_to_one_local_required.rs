@@ -12,7 +12,9 @@ mod tests {
     use crate::{assert_json, matcher};
     use crate::lib::handle::Handle;
     use serial_test::serial;
+    use crate::lib::matcher_functions::one_match;
     use crate::lib::purge_and_seed::purge_and_seed;
+    use crate::lib::req::req;
 
     static mut HANDLE: OnceCell<Handle> = OnceCell::new();
 
@@ -79,6 +81,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_connect() {
+        let app = make_app().await;
         let _create_res = req(&app, "create", "Game", json!({
             "create": {
                 "name": "KOFXIII",
@@ -109,6 +112,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_create() {
+        let app = make_app().await;
         let _update_res = req(&app, "update", "Game", json!({
             "where": {
                 "name": "KOFXV"
@@ -141,6 +145,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_connect() {
+        let app = make_app().await;
         let _update_res = req(&app, "update", "Game", json!({
             "where": {
                 "name": "KOFXV"
@@ -173,6 +178,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_set_to_another_one() {
+        let app = make_app().await;
         let _update_res = req(&app, "update", "Game", json!({
             "where": {
                 "name": "KOFXV"
@@ -205,6 +211,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_update() {
+        let app = make_app().await;
         let _update_res = req(&app, "update", "Game", json!({
             "where": {
                 "name": "KOF98"
@@ -237,6 +244,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_delete() {
+        let app = make_app().await;
         let _update_res = req(&app, "update", "Game", json!({
             "where": {
                 "name": "KOF98"

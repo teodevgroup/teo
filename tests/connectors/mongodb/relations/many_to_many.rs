@@ -51,6 +51,7 @@ mod tests {
     #[actix_web::test]
     async fn create_with_nested_create_one() {
         let app = make_app().await;
+        let app = make_app().await;
         let _create_res = req(&app, "create", "Artist", json!({
             "create": {
                 "name": "Taylor Swift",

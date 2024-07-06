@@ -13,6 +13,8 @@ mod tests {
     use crate::lib::handle::Handle;
     use serial_test::serial;
     use crate::lib::purge_and_seed::purge_and_seed;
+    use crate::lib::matcher_functions::one_match;
+    use crate::lib::req::req;
 
     static mut HANDLE: OnceCell<Handle> = OnceCell::new();
 
@@ -48,6 +50,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_create_one() {
+        let app = make_app().await;
         let _create_res = req(&app, "create", "Artist", json!({
             "create": {
                 "name": "Taylor Swift",

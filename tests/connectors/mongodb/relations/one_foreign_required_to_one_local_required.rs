@@ -12,7 +12,9 @@ mod tests {
     use crate::{assert_json, matcher};
     use crate::lib::handle::Handle;
     use serial_test::serial;
+    use crate::lib::matcher_functions::one_match;
     use crate::lib::purge_and_seed::purge_and_seed;
+    use crate::lib::req::req;
 
     static mut HANDLE: OnceCell<Handle> = OnceCell::new();
 
@@ -79,6 +81,7 @@ mod tests {
     #[serial]
     #[actix_web::test]
     async fn update_with_nested_update() {
+        let app = make_app().await;
         let _update_res = req(&app, "update", "User", json!({
             "where": {
                 "name": "John"
